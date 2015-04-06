@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:45496 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753334AbbDXOnJ (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35275 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750804AbbDFFZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2015 10:43:09 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 6 Apr 2015 01:25:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21818.22087.358832.866965@gargle.gargle.HOWL> (sfid-20150424_164314_103432_7B036739)
-Date: Fri, 24 Apr 2015 20:12:15 +0530
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
-In-Reply-To: <55304F9D.1060301@candelatech.com>
-References: <5523273F.4060803@candelatech.com>
-	<CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com>
-	<CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>
-	<552406E4.50600@candelatech.com>
-	<55241567.3010703@candelatech.com>
-	<21796.40851.132919.363957@gargle.gargle.HOWL>
-	<55304F9D.1060301@candelatech.com>
+Date: Mon, 6 Apr 2015 10:55:45 +0530
+Message-ID: <CAGKQeFjwX-xU6gxF7E-oyiuJzWpAOqApyrfmcWv3To6pUDAkzg@mail.gmail.com> (sfid-20150406_073740_064246_5A3577A4)
+Subject: stp broadcast packet not receving with the bridge and wpa_supplicant
+From: deepak kumar Pradhan <hydipu@gmail.com>
+To: linux-wireless@vger.kernel.org, majordomo@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> > TSF would jump around since the HW would sync with the
-> > received beacons and this will happen in both IBSS and station
-> > mode. Hence the limitation, but I think OpenWrt has a one-liner
-> > to remove this restriction...
-> 
-> It seems I can only do a single VAP on ath9k as well?
-> 
-> Is that per design?
+Hi,
 
-I was referring to ath9k, but it probably applies to ath10k too.
-But yes, IBSS is restricted to a single interface by design.
+We are using IXDP465 intel board which is running kernel 3.12.2 with a
+wireless Atheros card (driver ath9k) for wireless driver.
 
-Sujith
+We had configured the wireless client on this board and try to connect
+Target board Access point.
+Wireless client able to connect this Access point (With open and
+secure mode).ping also working between Access point to wireless client
+bridge.
+But we are not observing any stp & arp broadcast packet passing
+through the wireless client(capture the data using the tcpdump).
+>From the Target board this packet are trasmited confirm by tcpdump.
+I had also kept some debug prints in our kernel (3.12.3) and this
+packet also passing through the ath9k driver but not receiving on the
+application layer.
+
+Our Board configuration:
+We have two wireless card and two ethernet interface,which are added
+to the bridge.
+wpa_supplicant(0.7.3) running on the wireless interface with the drive
+nl80211 and set 4addr flag on using iw command.
+
+Target board configuration:
+Running with the kernel 2.6.15 and for access point they had used the
+hostapd (0.5.8).
+Driver used for Access point is madwifi(0.9.3) and Access point also
+added to the Bridge with the wds support.
+(We don't have access to target source code so we can't modify code on
+target platform)
+
+So it looks like madwifi + stp interoperability issue.
+Has someone observed this issue. Any inputs on this is much appreciated.
+Please forgive me if I have posted to a wrong list, and please guide
+me where should I post this?
+
+Thanks & regards,
+Deepak Kumar Pradhan
