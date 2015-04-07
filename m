@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:61566 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932118AbbD0I7K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 04:59:10 -0400
-Message-ID: <553DFA5A.3090802@broadcom.com> (sfid-20150427_105932_365799_B453EDDB)
-Date: Mon, 27 Apr 2015 10:59:06 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-CC: "brudley@broadcom.com" <brudley@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	"meuleman@broadcom.com" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
-	"hdegoede@redhat.com" <hdegoede@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Adrian Hunter <adrian.hunter@intel.com>
-Subject: Re: [PATCH 1/2] brcmfmac: prohibit ACPI power management for brcmfmac
- driver
-References: <553DC280.6080503@linux.intel.com>
-In-Reply-To: <553DC280.6080503@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:56741 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755111AbbDGQFg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 12:05:36 -0400
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH 2/2] mac80211_hwsim: Fix the supported VHT mcs rates
+Date: Tue,  7 Apr 2015 19:05:22 +0300
+Message-Id: <1428422722-655-2-git-send-email-ilan.peer@intel.com> (sfid-20150407_180543_406719_3DA9D5FF)
+In-Reply-To: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
+References: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/27/15 07:00, Fu, Zhonghui wrote:
-> ACPI will manage WiFi chip's power state during suspend/resume
-> process on some tablet platforms(such as ASUS T100TA). This is
-> not supported by brcmfmac driver now, and the context of WiFi
-> chip will be damaged after resume. This patch disconnects the
-> relationship between WiFi chip and it's ACPI companion, and
-> prohibit ACPI PM for it.
+Declare that MCS 0-9 are supported for all Rx chains.
 
-Nice. However, ACPI may contain configuration data that brcmfmac needs 
-on some platforms and Adrian Hunter is looking into this. So it is 
-probably better to do this operation at the end of the probe before 
-returning successful.
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 2f0ebda..c5f5841 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2453,14 +2453,14 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 				IEEE80211_VHT_CAP_RXSTBC_4 |
+ 				IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
+ 			sband->vht_cap.vht_mcs.rx_mcs_map =
+-				cpu_to_le16(IEEE80211_VHT_MCS_SUPPORT_0_8 << 0 |
+-					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 2 |
++				cpu_to_le16(IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 |
++					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 2 |
+ 					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 |
+-					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 6 |
+-					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 8 |
++					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 6 |
++					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 8 |
+ 					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 10 |
+ 					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 12 |
+-					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 14);
++					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 14);
+ 			sband->vht_cap.vht_mcs.tx_mcs_map =
+ 				sband->vht_cap.vht_mcs.rx_mcs_map;
+ 			break;
+-- 
+1.9.1
 
-> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    5 +++++
->   1 files changed, 5 insertions(+), 0 deletions(-)
->
