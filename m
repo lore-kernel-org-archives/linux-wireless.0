@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:33063 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969AbbD3A5w (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:32958 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753576AbbDGRJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 20:57:52 -0400
-Received: by oica37 with SMTP id a37so36272520oic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 17:57:51 -0700 (PDT)
-Message-ID: <55417E0C.2010206@lwfinger.net> (sfid-20150430_025908_986124_D3923F4A)
-Date: Wed, 29 Apr 2015 19:57:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 7 Apr 2015 13:09:55 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Source of Reason 7 disconnects
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: rtlwifi: Add encryption argument in rtl_is_special_data for
+ checkingDHCP packet.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1427469759-21549-1-git-send-email-ap420073@gmail.com>
+To: Taehee Yoo <ap420073@gmail.com>
+Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
+	linux-wireless@vger.kernel.org
+Message-Id: <20150407170954.DE80E140CFC@smtp.codeaurora.org> (sfid-20150407_191000_136475_0B7E5EB3)
+Date: Tue,  7 Apr 2015 17:09:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel and Johannes,
 
-I am trying to fix "Reason: 7=CLASS3_FRAME_FROM_NONASSOC_STA" disconnections for 
-the Realtek drivers. When I did a search for similar examples from other 
-drivers, I found some forum entries for the same disconnects happening on Intel 
-7260 hardware. It appears that the problem was fixed in the 3.16 timeframe. I 
-looked through the iwlwifi commits from that time, but I failed to see any 
-patches that appeared to be appropriate.
+> rtl8192cu can't connect to AP after physical reconnect.
+> according to dmesg, that problem's cause was DHCP timeout.
+> 
+> rtl_is_special_data function checks packet type for adjusting rate.
+> when that function is called from _rtl_rc_get_highest_rix, it can not
+> calculate offset correctly. so i add argument is_encn in rtl_is_special_data.
+> is_enc variable mean that iv header is added in skb parameter.
+> 
+> i test only rtl8192cu chipset. because i doesn't have other rtlwifi chipsets.
+> 
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 
-Do either of you happen to remember what was needed to fix the problem? So far, 
-I have determined that disabling power save helps, but it is not the complete 
-solution.
+Thanks, applied to wireless-drivers-next.git.
 
-Thanks,
-
-Larry
+Kalle Valo
