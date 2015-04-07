@@ -1,94 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:40240 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932724AbbD0Ngk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 09:36:40 -0400
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] cfg80211: Allow GO concurrent relaxation after BSS disconnection
-Date: Mon, 27 Apr 2015 16:38:38 +0300
-Message-Id: <1430141918-21176-1-git-send-email-ilan.peer@intel.com> (sfid-20150427_153643_981699_D2F2E3AE)
+Received: from smtp.codeaurora.org ([198.145.29.96]:55645 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855AbbDGQao (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 12:30:44 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH 4/5] wil6210: stop_ap to leave interface closed
+References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1427705156.26117.12.camel@sipsolutions.net>
+	<3799169.j0UvFx0Mjg@lx-wigig-72>
+Date: Tue, 07 Apr 2015 19:30:35 +0300
+In-Reply-To: <3799169.j0UvFx0Mjg@lx-wigig-72> (Vladimir Kondratiev's message
+	of "Mon, 30 Mar 2015 16:56:55 +0300")
+Message-ID: <87k2xnx5n8.fsf@kamboji.qca.qualcomm.com> (sfid-20150407_183047_343988_041769CF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-If a P2P GO was allowed on a channel because of the GO concurrent
-relaxation, i.e., another station interface was associated to an AP on
-the same channel or the same UNII band, and the station interface
-disconnected from the AP, allow the following use cases unless the
-channel is marked as indoor only and the device is not operating in an
-indoor environment:
+> On Monday, March 30, 2015 10:45:56 AM Johannes Berg wrote:
+>> On Mon, 2015-03-30 at 11:28 +0300, Vladimir Kondratiev wrote:
+>> > cfg80211_ops.stop_ap supposed to have interface closed
+>> > as post condition. Fulfill this requirement.
+>> 
+>> "closed" is rather misleading, since you most certainly should *not* do
+>> dev_close() [and don't, but how should I know reading the commit log?]
+>> 
+>> johannes
+>> 
+>
+> Yes, I see.
+> I meant that actually stop_ap leaves device in state similar to ndo_stop,
+> where it is non operational.
+>
+> Would you suggest better wording? "Inactive", "down", "non operational"
+> or something else?
 
-1. Allow the P2P GO to stay on its current channel. The rationale behind
-   this is that if the channel or UNII band were allowed by the AP they
-   could still be used to continue the P2P GO operation, and avoid connection
-   breakage.
-2. Allow another P2P GO to start on the same channel or another channel
-   that is in the same UNII band as the previous instantiated P2P GO.
+Isn't "down" good enough here? So can I change it to:
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/wireless/chan.c | 29 +++++++++++++++++++----------
- 1 file changed, 19 insertions(+), 10 deletions(-)
+  cfg80211_ops.stop_ap supposed to have interface down as post
+  condition. Fulfill this requirement.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 7aaf741..0069480 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -709,7 +709,7 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
- static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 					struct ieee80211_channel *chan)
- {
--	struct wireless_dev *wdev_iter;
-+	struct wireless_dev *wdev;
- 	struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
- 
- 	ASSERT_RTNL();
-@@ -732,18 +732,27 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 	 * and thus fail the GO instantiation, consider only the interfaces of
- 	 * the current registered device.
- 	 */
--	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
-+	list_for_each_entry(wdev, &rdev->wdev_list, list) {
- 		struct ieee80211_channel *other_chan = NULL;
- 		int r1, r2;
- 
--		if (wdev_iter->iftype != NL80211_IFTYPE_STATION ||
--		    !netif_running(wdev_iter->netdev))
--			continue;
--
--		wdev_lock(wdev_iter);
--		if (wdev_iter->current_bss)
--			other_chan = wdev_iter->current_bss->pub.channel;
--		wdev_unlock(wdev_iter);
-+		wdev_lock(wdev);
-+		if (wdev->iftype == NL80211_IFTYPE_STATION &&
-+		    netif_running(wdev->netdev))
-+			other_chan = wdev->current_bss->pub.channel;
-+
-+		/*
-+		 * If a GO already operates on the same GO_CONCURRENT channel,
-+		 * this one (maybe the same one) can beacon as well. We allow
-+		 * the operation even if the station we relied on with
-+		 * GO_CONCURRENT is disconnected now. But then we must make sure
-+		 * we're not outdoor on an indoor-only channel.
-+		 */
-+		if (wdev->iftype == NL80211_IFTYPE_P2P_GO &&
-+		    wdev->beacon_interval &&
-+		    !(chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
-+			other_chan = wdev->chandef.chan;
-+		wdev_unlock(wdev);
- 
- 		if (!other_chan)
- 			continue;
 -- 
-1.9.1
-
+Kalle Valo
