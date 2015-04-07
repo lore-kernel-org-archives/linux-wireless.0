@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:36051 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031166AbbD2Axw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 20:53:52 -0400
-Received: by obbeb7 with SMTP id eb7so9383833obb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2015 17:53:51 -0700 (PDT)
-Message-ID: <55402B9C.5020607@lwfinger.net> (sfid-20150429_025716_972688_558E4843)
-Date: Tue, 28 Apr 2015 19:53:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Taehee Yoo <ap420073@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix some beacon issue
-References: <1424443813-13634-1-git-send-email-ap420073@gmail.com>	<87383k5img.fsf@kamboji.qca.qualcomm.com> <CAMArcTUuAK3cTf4L-Kp__Kmn3np2xRkfXKsOnY37M+00zzXPpg@mail.gmail.com>
-In-Reply-To: <CAMArcTUuAK3cTf4L-Kp__Kmn3np2xRkfXKsOnY37M+00zzXPpg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:39126 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754777AbbDGO25 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 10:28:57 -0400
+Message-ID: <1428416926.1841.17.camel@sipsolutions.net> (sfid-20150407_162914_475985_1BDC46A6)
+Subject: Re: [PATCH] mac80211: Move message tracepoints to their own header
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Date: Tue, 07 Apr 2015 16:28:46 +0200
+In-Reply-To: <20150407102146.216cf90b@gandalf.local.home>
+References: <20150406231357.2b8e452d@grimm.local.home>
+	 <1428389938.1841.1.camel@sipsolutions.net>
+	 <20150407102146.216cf90b@gandalf.local.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/28/2015 11:40 AM, Taehee Yoo wrote:
-> 2015-04-29 1:21 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
->> Taehee Yoo <ap420073@gmail.com> writes:
->>
->>> Sometimes rtl8192cu is not sending beacon frame.
->>> This patch fix this issue.
->>>
->>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
->>
->> Larry, what do you think? Should I apply this?
->>
->> https://patchwork.kernel.org/patch/5856761/
->>
->> --
->> Kalle Valo
->
->
->
-> i think that it is incomplete patch.
-> because it can not solve Mike's problem.
->
-> Apologize about incomplete patch.
+On Tue, 2015-04-07 at 10:21 -0400, Steven Rostedt wrote:
+> On Tue, 07 Apr 2015 08:58:58 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > On Mon, 2015-04-06 at 23:13 -0400, Steven Rostedt wrote:
+> > > Every tracing file must have its own TRACE_SYSTEM defined.
+> > 
+> > Oh, that requirement is new to me. I also have the same in iwlwifi, with
+> > even more TRACE_SYSTEMs.
+> 
+> OK, the reason I did not stumble over this is because the previous
+> patch broke the build before I got here.
+> 
+> During my latest tests, this breaks it too.
+> 
+> You OK if I make more patches to split that file apart?
 
-Kalle,
+Sure, no problem. I don't think we have any work on them that could
+possibly conflict now.
 
-I have not been able to reproduce the problem, thus I could not comment as to 
-whether the patch actually fixed anything.
-
-Clearly, the patch should be dropped.
-
-Thanks,
-
-Larry
-
+johannes
 
