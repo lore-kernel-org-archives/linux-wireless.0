@@ -1,94 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6907 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbbDTRMW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 13:12:22 -0400
-Message-ID: <55353364.3050101@broadcom.com> (sfid-20150420_191231_184144_F99F7C01)
-Date: Mon, 20 Apr 2015 19:12:04 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Hante Meuleman <meuleman@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	mailinglist <openwrt-devel@lists.openwrt.org>,
-	Florian Fainelli <fainelli@broadcom.com>
-Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices
- in nvram.
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-11-git-send-email-arend@broadcom.com>	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com>	<CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>	<5530C940.6010407@broadcom.com> <CACna6ryZYvVN_svcv3W+4F6yiJf2QYHxYD-VXhGcUUTAHZDYSg@mail.gmail.com>
-In-Reply-To: <CACna6ryZYvVN_svcv3W+4F6yiJf2QYHxYD-VXhGcUUTAHZDYSg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:37639 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751150AbbDGIrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 04:47:36 -0400
+Message-ID: <1428396454.1841.4.camel@sipsolutions.net> (sfid-20150407_104740_484868_CFF798E0)
+Subject: Re: stp broadcast packet not receving with the bridge and
+ wpa_supplicant
+From: Johannes Berg <johannes@sipsolutions.net>
+To: deepak kumar Pradhan <hydipu@gmail.com>
+Cc: linux-wireless@vger.kernel.org, majordomo@vger.kernel.org
+Date: Tue, 07 Apr 2015 10:47:34 +0200
+In-Reply-To: <CAGKQeFjwX-xU6gxF7E-oyiuJzWpAOqApyrfmcWv3To6pUDAkzg@mail.gmail.com> (sfid-20150406_073740_064246_5A3577A4)
+References: <CAGKQeFjwX-xU6gxF7E-oyiuJzWpAOqApyrfmcWv3To6pUDAkzg@mail.gmail.com>
+	 (sfid-20150406_073740_064246_5A3577A4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/20/15 13:26, Rafał Miłecki wrote:
-> On 17 April 2015 at 10:50, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 04/17/15 09:45, Rafał Miłecki wrote:
->>>
->>> Huh, why dropping linux-wireless (and top posting btw)? Please let
->>> everyone follow the discussion :)
->>>
->>> On 15 April 2015 at 21:20, Hante Meuleman<meuleman@broadcom.com>   wrote:
->>>>
->>>> As I wrote to you in a mail and on the openwrt forum, this patch is
->>>> indeed an attempt to support more complex nvram files. I also wrote, that in
->>>> order to be able to use it, the nvram contents of the device (r8000) needs
->>>> to be put a specific file. Now for your concerns, we can perhaps add
->>>> something which will read the nvram contents directly from an nvram store.
->>>> But that is irrelevant to this patch. The parsing is still needed, and all
->>>> we would need to add is something which is reading the nvram contents from
->>>> some other place
->>>
->>>
->>> So it makes me wonder if we need this patch in its current form. I
->>> think getting NVRAM directly from the platform is much user friendly.
->>> It doesn't require user to install some extra tools for dumping NVRAM
->>> and putting it in a specific file. One extra layer less.
->>> With that said I think it's hard to review your code for parsing
->>> NVRAM. We don't know how it's going to be fetched in the first place.
->>
->> You already made that point and we agreed to look for a solution.
->
-> OK, it wasn't supposed to be rude or anything :) Thanks.
+On Mon, 2015-04-06 at 10:55 +0530, deepak kumar Pradhan wrote:
 
-No problem. Just wanted to make sure we are moving forward.
+> Driver used for Access point is madwifi(0.9.3) and Access point also
+> added to the Bridge with the wds support.
+> (We don't have access to target source code so we can't modify code on
+> target platform)
+> 
+> So it looks like madwifi + stp interoperability issue.
+> Has someone observed this issue. Any inputs on this is much appreciated.
+> Please forgive me if I have posted to a wrong list, and please guide
+> me where should I post this?
 
->>>> though it would have to be put under some kernel config flag as this
->>>> would not be supported in non-router systems. The contents of the nvram
->>>> would however still need to be parsed in exactly the same way as the nvram
->>>> files we read from disk.
->>>
->>>
->>> Again, it's hard to say for me. Are you going to use
->>> bcm47xx_nvram_getenv? Are you going to use MTD subsystem? Are you
->>> going to develop different solution? When using e.g.
->>> bcm47xx_nvram_getenv you won't want all this parsing stuff at all.
->>
->>
->> Please look at the usage scenario here. The brcmfmac driver is not needing a
->> few key,value pairs. It needs a portion of NVRAM to download to the device.
->> The patch provides the functionality to do just that. Get the appropriate
->> portion, strip comments and whitespace, and send it to the device. Using
->> bcm47xx_nvram_getenv is not a useful api as it would mean we need brcmfmac
->> to know which key ids to ask for, reassemble it to key=value string and send
->> it to the fullmac device.
->>
->> In bcm47xx_nvram_getenv() it does have the whole nvram content available in
->> nvram_buf which is filled by nvram_init(). So if something similar is made
->> available on r8000 (or ARM routers in general) build target all we need is
->> an api to get the nvram_buf.
->>
->> Another option is to add the parsing stuff in that nvram code and have an
->> api to get the appropriate portion based on pcie domain and bus number as
->> used in brcmf_fw_get_firmwares_pcie(). However, I would prefer to have this
->> in the driver and not in arch specific code as there may be other platforms
->> like our set-top boxes needing this.
->
-> This is some plan for the future I was lacking from the beginning. It
-> makes things more clear now, thanks.
+No idea. This list is concerned with upstream wifi development, not
+madwifi.
 
-You're welcome. Do you want to see this clarification in the commit message?
+Keep in mind that bridging to a real *client* interface is not actually
+possible.
 
-Regards,
-Arend
+johannes
+
