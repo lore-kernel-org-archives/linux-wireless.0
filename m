@@ -1,115 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27880 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422899AbbD2Lpq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 07:45:46 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 4/7] wil6210: fix for probe_resp IE's
-Date: Wed, 29 Apr 2015 14:45:03 +0300
-Message-Id: <1430307906-28393-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150429_134553_111317_85C796CD)
-In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38383 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753120AbbDGL5F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 07:57:05 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] cfg80211: move IE split utilities here from mac80211
+Date: Tue,  7 Apr 2015 13:56:59 +0200
+Message-Id: <1428407820-4099-1-git-send-email-johannes@sipsolutions.net> (sfid-20150407_135711_304303_23F47CFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Parameters for the start_ap and change_bcon contains
-probe response template and probe response IE's.
+From: Johannes Berg <johannes.berg@intel.com>
 
-supplicant puts in the proberesp_ies only WPS related IE's,
-while firmware need all IE's, most notable is RSN that is not
-included in the proberesp_ies.
+As the next patch will require the IE splitting utility functions
+in cfg80211, move them there from mac80211.
 
-Always use IE's provided by the bcon->probe_resp
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 31 +++++++++++++++++++----------
- 1 file changed, 21 insertions(+), 10 deletions(-)
+ include/net/cfg80211.h     | 58 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/net/mac80211.h     | 28 ----------------------
+ net/mac80211/ieee80211_i.h |  4 ----
+ net/mac80211/util.c        | 40 --------------------------------
+ net/wireless/util.c        | 41 ++++++++++++++++++++++++++++++++
+ 5 files changed, 99 insertions(+), 72 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index ea331e4..f53a190 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -669,11 +669,6 @@ static int wil_fix_bcon(struct wil6210_priv *wil,
- 	if (bcon->probe_resp_len <= hlen)
- 		return 0;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 441306436569..f8d6813cd5b2 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5001,6 +5001,64 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
+ 			  u8 *buf, unsigned int bufsize);
  
--	if (!bcon->proberesp_ies) {
--		bcon->proberesp_ies = f->u.probe_resp.variable;
--		bcon->proberesp_ies_len = bcon->probe_resp_len - hlen;
--		rc = 1;
+ /**
++ * ieee80211_ie_split_ric - split an IE buffer according to ordering (with RIC)
++ * @ies: the IE buffer
++ * @ielen: the length of the IE buffer
++ * @ids: an array with element IDs that are allowed before
++ *	the split
++ * @n_ids: the size of the element ID array
++ * @after_ric: array IE types that come after the RIC element
++ * @n_after_ric: size of the @after_ric array
++ * @offset: offset where to start splitting in the buffer
++ *
++ * This function splits an IE buffer by updating the @offset
++ * variable to point to the location where the buffer should be
++ * split.
++ *
++ * It assumes that the given IE buffer is well-formed, this
++ * has to be guaranteed by the caller!
++ *
++ * It also assumes that the IEs in the buffer are ordered
++ * correctly, if not the result of using this function will not
++ * be ordered correctly either, i.e. it does no reordering.
++ *
++ * The function returns the offset where the next part of the
++ * buffer starts, which may be @ielen if the entire (remainder)
++ * of the buffer should be used.
++ */
++size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
++			      const u8 *ids, int n_ids,
++			      const u8 *after_ric, int n_after_ric,
++			      size_t offset);
++
++/**
++ * ieee80211_ie_split - split an IE buffer according to ordering
++ * @ies: the IE buffer
++ * @ielen: the length of the IE buffer
++ * @ids: an array with element IDs that are allowed before
++ *	the split
++ * @n_ids: the size of the element ID array
++ * @offset: offset where to start splitting in the buffer
++ *
++ * This function splits an IE buffer by updating the @offset
++ * variable to point to the location where the buffer should be
++ * split.
++ *
++ * It assumes that the given IE buffer is well-formed, this
++ * has to be guaranteed by the caller!
++ *
++ * It also assumes that the IEs in the buffer are ordered
++ * correctly, if not the result of using this function will not
++ * be ordered correctly either, i.e. it does no reordering.
++ *
++ * The function returns the offset where the next part of the
++ * buffer starts, which may be @ielen if the entire (remainder)
++ * of the buffer should be used.
++ */
++size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
++			  const u8 *ids, int n_ids, size_t offset);
++
++/**
+  * cfg80211_report_wowlan_wakeup - report wakeup from WoWLAN
+  * @wdev: the wireless device reporting the wakeup
+  * @wakeup: the wakeup report
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3578da96b41a..b4bef1152c05 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5380,34 +5380,6 @@ int ieee80211_reserve_tid(struct ieee80211_sta *sta, u8 tid);
+ void ieee80211_unreserve_tid(struct ieee80211_sta *sta, u8 tid);
+ 
+ /**
+- * ieee80211_ie_split - split an IE buffer according to ordering
+- *
+- * @ies: the IE buffer
+- * @ielen: the length of the IE buffer
+- * @ids: an array with element IDs that are allowed before
+- *	the split
+- * @n_ids: the size of the element ID array
+- * @offset: offset where to start splitting in the buffer
+- *
+- * This function splits an IE buffer by updating the @offset
+- * variable to point to the location where the buffer should be
+- * split.
+- *
+- * It assumes that the given IE buffer is well-formed, this
+- * has to be guaranteed by the caller!
+- *
+- * It also assumes that the IEs in the buffer are ordered
+- * correctly, if not the result of using this function will not
+- * be ordered correctly either, i.e. it does no reordering.
+- *
+- * The function returns the offset where the next part of the
+- * buffer starts, which may be @ielen if the entire (remainder)
+- * of the buffer should be used.
+- */
+-size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+-			  const u8 *ids, int n_ids, size_t offset);
+-
+-/**
+  * ieee80211_tx_dequeue - dequeue a packet from a software tx queue
+  *
+  * @hw: pointer as obtained from ieee80211_alloc_hw()
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 04b32f3e0395..ab46ab4a7249 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1965,10 +1965,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_recalc_smps(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_recalc_min_chandef(struct ieee80211_sub_if_data *sdata);
+ 
+-size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
+-			      const u8 *ids, int n_ids,
+-			      const u8 *after_ric, int n_after_ric,
+-			      size_t offset);
+ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
+ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			      u16 cap);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 482b85c19a36..79412f16b61d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2194,46 +2194,6 @@ void ieee80211_recalc_min_chandef(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&local->chanctx_mtx);
+ }
+ 
+-static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
+-{
+-	int i;
+-
+-	for (i = 0; i < n_ids; i++)
+-		if (ids[i] == id)
+-			return true;
+-	return false;
+-}
+-
+-size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
+-			      const u8 *ids, int n_ids,
+-			      const u8 *after_ric, int n_after_ric,
+-			      size_t offset)
+-{
+-	size_t pos = offset;
+-
+-	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos])) {
+-		if (ies[pos] == WLAN_EID_RIC_DATA && n_after_ric) {
+-			pos += 2 + ies[pos + 1];
+-
+-			while (pos < ielen &&
+-			       !ieee80211_id_in_list(after_ric, n_after_ric,
+-						     ies[pos]))
+-				pos += 2 + ies[pos + 1];
+-		} else {
+-			pos += 2 + ies[pos + 1];
+-		}
 -	}
- 	if (!bcon->assocresp_ies) {
- 		bcon->assocresp_ies = f->u.probe_resp.variable;
- 		bcon->assocresp_ies_len = bcon->probe_resp_len - hlen;
-@@ -688,9 +683,19 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
- 				      struct cfg80211_beacon_data *bcon)
+-
+-	return pos;
+-}
+-
+-size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+-			  const u8 *ids, int n_ids, size_t offset)
+-{
+-	return ieee80211_ie_split_ric(ies, ielen, ids, n_ids, NULL, 0, offset);
+-}
+-EXPORT_SYMBOL(ieee80211_ie_split);
+-
+ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset)
  {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
-+	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
-+	const u8 *pr_ies = NULL;
-+	size_t pr_ies_len = 0;
- 	int rc;
+ 	size_t pos = offset;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index f218b151530a..70051ab52f4f 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1290,6 +1290,47 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
+ }
+ EXPORT_SYMBOL(cfg80211_get_p2p_attr);
  
- 	wil_dbg_misc(wil, "%s()\n", __func__);
-+	wil_print_bcon_data(bcon);
++static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
++{
++	int i;
 +
-+	if (bcon->probe_resp_len > hlen) {
-+		pr_ies = f->u.probe_resp.variable;
-+		pr_ies_len = bcon->probe_resp_len - hlen;
-+	}
- 
- 	if (wil_fix_bcon(wil, bcon)) {
- 		wil_dbg_misc(wil, "Fixed bcon\n");
-@@ -703,9 +708,7 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
- 	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
- 	 * bcon->beacon_ies);
- 	 */
--	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP,
--			bcon->proberesp_ies_len,
--			bcon->proberesp_ies);
-+	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
- 	if (rc) {
- 		wil_err(wil, "set_ie(PROBE_RESP) failed\n");
- 		return rc;
-@@ -733,6 +736,10 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	struct cfg80211_beacon_data *bcon = &info->beacon;
- 	struct cfg80211_crypto_settings *crypto = &info->crypto;
- 	u8 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
-+	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
-+	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
-+	const u8 *pr_ies = NULL;
-+	size_t pr_ies_len = 0;
- 
- 	wil_dbg_misc(wil, "%s()\n", __func__);
- 
-@@ -752,6 +759,11 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	wil_print_bcon_data(bcon);
- 	wil_print_crypto(wil, crypto);
- 
-+	if (bcon->probe_resp_len > hlen) {
-+		pr_ies = f->u.probe_resp.variable;
-+		pr_ies_len = bcon->probe_resp_len - hlen;
++	for (i = 0; i < n_ids; i++)
++		if (ids[i] == id)
++			return true;
++	return false;
++}
++
++size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
++			      const u8 *ids, int n_ids,
++			      const u8 *after_ric, int n_after_ric,
++			      size_t offset)
++{
++	size_t pos = offset;
++
++	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos])) {
++		if (ies[pos] == WLAN_EID_RIC_DATA && n_after_ric) {
++			pos += 2 + ies[pos + 1];
++
++			while (pos < ielen &&
++			       !ieee80211_id_in_list(after_ric, n_after_ric,
++						     ies[pos]))
++				pos += 2 + ies[pos + 1];
++		} else {
++			pos += 2 + ies[pos + 1];
++		}
 +	}
 +
- 	if (wil_fix_bcon(wil, bcon)) {
- 		wil_dbg_misc(wil, "Fixed bcon\n");
- 		wil_print_bcon_data(bcon);
-@@ -779,8 +791,7 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
- 	 * bcon->beacon_ies);
- 	 */
--	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
--		   bcon->proberesp_ies);
-+	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
- 	wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
- 		   bcon->assocresp_ies);
- 
++	return pos;
++}
++EXPORT_SYMBOL(ieee80211_ie_split_ric);
++
++size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
++			  const u8 *ids, int n_ids, size_t offset)
++{
++	return ieee80211_ie_split_ric(ies, ielen, ids, n_ids, NULL, 0, offset);
++}
++EXPORT_SYMBOL(ieee80211_ie_split);
++
+ bool ieee80211_operating_class_to_band(u8 operating_class,
+ 				       enum ieee80211_band *band)
+ {
 -- 
-2.1.0
+2.1.4
 
