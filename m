@@ -1,121 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34618 "EHLO
+Received: from mail2.candelatech.com ([208.74.158.173]:33097 "EHLO
 	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116AbbDCVNP (ORCPT
+	with ESMTP id S1753597AbbDGRfg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2015 17:13:15 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/4] mac80211-hwsim: notify user-space about channel change.
-Date: Fri,  3 Apr 2015 14:13:07 -0700
-Message-Id: <1428095590-600-1-git-send-email-greearb@candelatech.com> (sfid-20150403_231318_610932_3171D5F9)
+	Tue, 7 Apr 2015 13:35:36 -0400
+Message-ID: <55241567.3010703@candelatech.com> (sfid-20150407_193629_455713_C0EAE63B)
+Date: Tue, 07 Apr 2015 10:35:35 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
+References: <5523273F.4060803@candelatech.com> <CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com> <CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com> <552406E4.50600@candelatech.com>
+In-Reply-To: <552406E4.50600@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 04/07/2015 09:33 AM, Ben Greear wrote:
+> On 04/06/2015 10:17 PM, Janusz Dziedzic wrote:
+>> On 7 April 2015 at 07:12, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>> On 7 April 2015 at 02:39, Ben Greear <greearb@candelatech.com> wrote:
+>>>> Has anyone tried running ath10k to ath9k IBSS?
+>>>>
+>>>> I'm trying this with a somewhat hacked 4.0-rc6 kernel,
+>>>> and latest wpa_supplicant.
+>>>>
+>>>> ath9k to ath9k works with and without encryption, and ath10k to ath10k works
+>>>> (w/out encryption at least).
+>>>>
+>>>> But, if I try to tell ath10k to connect to ath9k, then the ath9k reports
+>>>> interface combinations
+>>>> issues and will not associate.  I've added some debug, and the issue is the
+>>>> 'num==0' part here:
+>>>>
+>>>>
+>>>> int cfg80211_check_combinations(struct wiphy *wiphy,
+>>>>                                 const int num_different_channels,
+>>>>                                 const u8 radar_detect,
+>>>>                                 const int iftype_num[NUM_NL80211_IFTYPES])
+>>>> {
+>>>>         int err, num = 0;
+>>>>
+>>>>         err = cfg80211_iter_combinations(wiphy, num_different_channels,
+>>>>                                          radar_detect, iftype_num,
+>>>>                                          cfg80211_iter_sum_ifcombs, &num);
+>>>>         if (err) {
+>>>>                 pr_info("cfg-comb-check: failed to iterate combinations\n");
+>>>>                 return err;
+>>>>         }
+>>>>         if (num == 0) {
+>>>>                 pr_info("cfg-comb-check: iter-combinations returned
+>>>> num==0\n");
+>>>>                 return -EBUSY;
+>>>>         }
+>>>>
+>>>>         return 0;
+>>>> }
+>>>> EXPORT_SYMBOL(cfg80211_check_combinations);
+>>>>
+>>>> There should be exactly one interface on this radio that is admin-up, and it
+>>>> is the
+>>>> one that I am trying to make run in adhoc mode.
+>>>>
+>>>> Any ideas on this?
+>>>
+>>> IBSS with non-fixed or dfs channel? It would bump
+>>> num_different_channels and yield no valid combinations. But why would
+>>> that work fine with, e.g. ath9k-ath9k otherwise - no idea.
+>>>
+>>
+>> Check this discussion (ibss + p2p_device - this could be one you hit).
+>> http://www.spinics.net/lists/linux-wireless/msg134447.html
+> 
+> That patch is in my tree already, so must be something else.
 
-The goal is to allow the user-space application to properly
-filter packets before sending them down to the kernel.  This
-should more closely mimic what a real piece of hardware would
-do.
+First, I was wrong...I have some bug (or maybe user-error) and
+I had 2 VAP running on this radio when I did not think they were
+running.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 48 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/mac80211_hwsim.h |  6 +++++
- 2 files changed, 54 insertions(+)
+The combination check is failing because this check below is failing for the third set of combinations:
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 8908be6..d0e88b2 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -871,6 +871,52 @@ static bool hwsim_ps_rx_ok(struct mac80211_hwsim_data *data,
- 	return true;
- }
- 
-+static void mac80211_hwsim_check_nl_notify(struct mac80211_hwsim_data *data)
-+{
-+	struct sk_buff *skb;
-+	u32 center_freq = 0;
-+	u32 _portid;
-+	void *msg_head;
-+
-+	/* wmediumd mode check */
-+	_portid = ACCESS_ONCE(wmediumd_portid);
-+
-+	if (!_portid)
-+		return;
-+
-+	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_ATOMIC);
-+	if (skb == NULL)
-+		goto err_print;
-+
-+	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
-+			       HWSIM_CMD_NOTIFY);
-+	if (msg_head == NULL) {
-+		printk(KERN_DEBUG "mac80211_hwsim: problem with msg_head, notify\n");
-+		goto nla_put_failure;
-+	}
-+
-+	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER,
-+		    ETH_ALEN, data->addresses[1].addr))
-+		goto nla_put_failure;
-+
-+	if (data->channel)
-+		center_freq = data->channel->center_freq;
-+
-+	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, center_freq))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(skb, msg_head);
-+	if (genlmsg_unicast(&init_net, skb, _portid))
-+		goto err_print;
-+
-+	return;
-+
-+nla_put_failure:
-+	nlmsg_free(skb);
-+err_print:
-+	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
-+}
-+
- static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 				       struct sk_buff *my_skb,
- 				       int dst_portid)
-@@ -1465,6 +1511,8 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 				      HRTIMER_MODE_REL);
- 	}
- 
-+	mac80211_hwsim_check_nl_notify(data);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index 66e1c73..f0fc495c 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -71,6 +71,11 @@ enum hwsim_tx_control_flags {
-  * @HWSIM_CMD_DEL_RADIO: destroy a radio, reply is multicasted
-  * @HWSIM_CMD_GET_RADIO: fetch information about existing radios, uses:
-  *	%HWSIM_ATTR_RADIO_ID
-+ * @HWSIM_CMD_NOTIFY: notify user-space about driver changes.  This is
-+ * designed to help the user-space app better emulate radio hardware.
-+ * This command uses:
-+ *      %HWSIM_ATTR_FREQ # Notify current operating center frequency.
-+ *      %HWSIM_ATTR_ADDR_TRANSMITTER # ID which radio we are notifying about.
-  * @__HWSIM_CMD_MAX: enum limit
-  */
- enum {
-@@ -81,6 +86,7 @@ enum {
- 	HWSIM_CMD_NEW_RADIO,
- 	HWSIM_CMD_DEL_RADIO,
- 	HWSIM_CMD_GET_RADIO,
-+	HWSIM_CMD_NOTIFY,
- 	__HWSIM_CMD_MAX,
- };
- #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
+int cfg80211_iter_combinations(struct wiphy *wiphy,
+			       const int num_different_channels,
+			       const u8 radar_detect,
+			       const int iftype_num[NUM_NL80211_IFTYPES],
+			       void (*iter)(const struct ieee80211_iface_combination *c,
+					    void *data),
+			       void *data)
+.....
+		if (num_interfaces > c->max_interfaces) {
+			pr_info("%i: iter-comb, num > max: %d > %d\n",
+				i, num_interfaces, c->max_interfaces);
+			continue;
+		}
+
+In my case, num_interfaces is 3 here when I get to i == 2.
+
+'iw phy wiphy1 info' has this:
+
+	valid interface combinations:
+		 * #{ managed } <= 2048, #{ AP, mesh point } <= 8, #{ P2P-client, P2P-GO } <= 1,
+		   total <= 2048, #channels <= 1, STA/AP BI must match
+		 * #{ WDS } <= 2048,
+		   total <= 2048, #channels <= 1, STA/AP BI must match
+		 * #{ IBSS, AP, mesh point } <= 1,
+		   total <= 1, #channels <= 1, STA/AP BI must match, radar detect widths: { 20 MHz (no HT), 20 MHz }
+
+For the third set, why limit to a single interface.  Can't we run IBSS + AP
+(and plus stations, for that matter), all at the same time with ath9k?
+
+Thanks,
+Ben
+
+
 -- 
-1.7.11.7
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
