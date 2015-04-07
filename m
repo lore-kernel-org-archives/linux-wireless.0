@@ -1,50 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:35528 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934099AbbDVWOy (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59897 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753736AbbDGQdl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 18:14:54 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH v2 8/8] kernel/module.c: use module_param_config_on() for sig_enforce
-Date: Wed, 22 Apr 2015 14:55:11 -0700
-Message-Id: <1429739711-9415-9-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_001514_508001_A272E3D9)
-In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 7 Apr 2015 12:33:41 -0400
+Message-ID: <552406E4.50600@candelatech.com> (sfid-20150407_183346_718883_53B7D9C0)
+Date: Tue, 07 Apr 2015 09:33:40 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
+References: <5523273F.4060803@candelatech.com> <CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com> <CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>
+In-Reply-To: <CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On 04/06/2015 10:17 PM, Janusz Dziedzic wrote:
+> On 7 April 2015 at 07:12, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> On 7 April 2015 at 02:39, Ben Greear <greearb@candelatech.com> wrote:
+>>> Has anyone tried running ath10k to ath9k IBSS?
+>>>
+>>> I'm trying this with a somewhat hacked 4.0-rc6 kernel,
+>>> and latest wpa_supplicant.
+>>>
+>>> ath9k to ath9k works with and without encryption, and ath10k to ath10k works
+>>> (w/out encryption at least).
+>>>
+>>> But, if I try to tell ath10k to connect to ath9k, then the ath9k reports
+>>> interface combinations
+>>> issues and will not associate.  I've added some debug, and the issue is the
+>>> 'num==0' part here:
+>>>
+>>>
+>>> int cfg80211_check_combinations(struct wiphy *wiphy,
+>>>                                 const int num_different_channels,
+>>>                                 const u8 radar_detect,
+>>>                                 const int iftype_num[NUM_NL80211_IFTYPES])
+>>> {
+>>>         int err, num = 0;
+>>>
+>>>         err = cfg80211_iter_combinations(wiphy, num_different_channels,
+>>>                                          radar_detect, iftype_num,
+>>>                                          cfg80211_iter_sum_ifcombs, &num);
+>>>         if (err) {
+>>>                 pr_info("cfg-comb-check: failed to iterate combinations\n");
+>>>                 return err;
+>>>         }
+>>>         if (num == 0) {
+>>>                 pr_info("cfg-comb-check: iter-combinations returned
+>>> num==0\n");
+>>>                 return -EBUSY;
+>>>         }
+>>>
+>>>         return 0;
+>>> }
+>>> EXPORT_SYMBOL(cfg80211_check_combinations);
+>>>
+>>> There should be exactly one interface on this radio that is admin-up, and it
+>>> is the
+>>> one that I am trying to make run in adhoc mode.
+>>>
+>>> Any ideas on this?
+>>
+>> IBSS with non-fixed or dfs channel? It would bump
+>> num_different_channels and yield no valid combinations. But why would
+>> that work fine with, e.g. ath9k-ath9k otherwise - no idea.
+>>
+> 
+> Check this discussion (ibss + p2p_device - this could be one you hit).
+> http://www.spinics.net/lists/linux-wireless/msg134447.html
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- kernel/module.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That patch is in my tree already, so must be something else.
 
-diff --git a/kernel/module.c b/kernel/module.c
-index 9e51b37..3a61e25 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -107,7 +107,7 @@ struct list_head *kdb_modules = &modules; /* kdb needs the list of modules */
- 
- static bool sig_enforce = IS_ENABLED(CONFIG_MODULE_SIG_FORCE);
- #ifndef CONFIG_MODULE_SIG_FORCE
--module_param(sig_enforce, bool_enable_only, 0644);
-+module_param_config_on(sig_enforce, sig_enforce, 0644, CONFIG_MODULE_SIG_FORCE);
- #endif /* !CONFIG_MODULE_SIG_FORCE */
- 
- /* Block module loading/unloading? */
+Thanks,
+Ben
+
+> 
+> BR
+> Janusz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
 -- 
-2.3.2.209.gd67f9d5.dirty
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
