@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40402 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbbDGTwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 15:52:25 -0400
-In-Reply-To: <87k2xnx5n8.fsf@kamboji.qca.qualcomm.com>
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com> <1427705156.26117.12.camel@sipsolutions.net> <3799169.j0UvFx0Mjg@lx-wigig-72> <87k2xnx5n8.fsf@kamboji.qca.qualcomm.com>
+Received: from smtprelay0094.hostedemail.com ([216.40.44.94]:47518 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755908AbbDGOVu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 10:21:50 -0400
+Date: Tue, 7 Apr 2015 10:21:46 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Move message tracepoints to their own header
+Message-ID: <20150407102146.216cf90b@gandalf.local.home> (sfid-20150407_162228_182653_EFB58B50)
+In-Reply-To: <1428389938.1841.1.camel@sipsolutions.net>
+References: <20150406231357.2b8e452d@grimm.local.home>
+	<1428389938.1841.1.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH 4/5] wil6210: stop_ap to leave interface closed
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 07 Apr 2015 21:52:16 +0200
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Message-ID: <4C0E19B4-8F05-47B6-B32F-B60F0BC03D3A@sipsolutions.net> (sfid-20150407_215229_525406_AF4D1E78)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 07 Apr 2015 08:58:58 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
+> On Mon, 2015-04-06 at 23:13 -0400, Steven Rostedt wrote:
+> > Every tracing file must have its own TRACE_SYSTEM defined.
+> 
+> Oh, that requirement is new to me. I also have the same in iwlwifi, with
+> even more TRACE_SYSTEMs.
 
+OK, the reason I did not stumble over this is because the previous
+patch broke the build before I got here.
 
->>> "closed" is rather misleading, since you most certainly should *not*
->do
->>> dev_close() [and don't, but how should I know reading the commit
->log?]
->>> 
->>> johannes
->>> 
->>
->> Yes, I see.
->> I meant that actually stop_ap leaves device in state similar to
->ndo_stop,
->> where it is non operational.
->>
->> Would you suggest better wording? "Inactive", "down", "non
->operational"
->> or something else?
->
->Isn't "down" good enough here? So can I change it to:
+During my latest tests, this breaks it too.
 
-Well that kinda proves my point - down is wrong.
+You OK if I make more patches to split that file apart?
 
-Carrier turned off is probably the right thing to do here.
+Thanks,
 
-johannes
+-- Steve
