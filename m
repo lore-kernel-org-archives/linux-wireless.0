@@ -1,75 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:36848 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757041AbbDWMsu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2015 08:48:50 -0400
-MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1504231114290.3695@pobox.suse.cz>
-References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz>
-	<1429764440.4084.5.camel@intel.com>
-	<alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>
-	<1429780366.11859.1.camel@intel.com>
-	<alpine.LNX.2.00.1504231114290.3695@pobox.suse.cz>
-Date: Thu, 23 Apr 2015 14:48:49 +0200
-Message-ID: <CA+uBNfxXoLj9Nfss+j1G3PY9A2t=N6KRiYUAdoxiUOZvigwyAw@mail.gmail.com> (sfid-20150423_144855_458377_389EBD10)
-Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
-From: Piotr Karbowski <piotr.karbowski@gmail.com>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:38387 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753676AbbDGL5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 07:57:15 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] cfg80211: send extended capabilities IE in connect
+Date: Tue,  7 Apr 2015 13:57:00 +0200
+Message-Id: <1428407820-4099-2-git-send-email-johannes@sipsolutions.net> (sfid-20150407_135718_195032_D2FD09DA)
+In-Reply-To: <1428407820-4099-1-git-send-email-johannes@sipsolutions.net>
+References: <1428407820-4099-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Thu, Apr 23, 2015 at 11:15 AM, Jiri Kosina <jkosina@suse.cz> wrote:
-> On Thu, 23 Apr 2015, Grumbach, Emmanuel wrote:
->
->> > I will try it, but I expect the result to be bogus because of this,
->> > unfortunately.
->>
->> I can understand. A few users reported that this bug occurred more
->> reliably when moving their system, although it seems very weird to me.
->
-> My "feeling" was that it sometimes was related to start of audio playback,
-> but not 100% relieble either.
->
->> > > First question is: Are you sure that 4.0-rc6 was good?
->> >
->> > Pretty much, yes. I've been running it for quite some time on this
->> > machine without any issues. But after updating to current HEAD two days
->> > ago, the issue triggered like 6 or 7 times already.
->>
->> Ok - I will try to look at the PCI commits there although I am not sure
->> I'll be able to make much sense of them...
->
-> Thanks,
+If the connect request from userspace didn't include an extended
+capabilities IE, create one using the driver capabilities. This
+fixes VHT associations, since those need to set the operating mode
+notification capability.
 
-i've also started noticing hard system lockups with iwlwifi. What's
-worth noticing is that I've started to see this on 3.19 and I also
-have it on 4.0 kernel thus allow me to report it in this very thread.
-I had over month uptime, untill I've updated iwl ucode, maybe this was
-introduced not by kernel but firmware?. The lockups are random and
-result in hard system lockup, frozen Xorg, screen artifacts/glitches,
-audio playback keeps repeating last second or so of music, sysrq
-cannot handle it as well as auto-reboot after kernel panic does not
-kicks in.
+Reviewed-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/sme.c | 74 ++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 64 insertions(+), 10 deletions(-)
 
-The hardware I see this problem on is iwl 7260. The only workaround
-I've found so far was to disable power save via `iw dev wlan0 set
-power_save off` and not a single lockup since. What's rather
-disturbing is that by 'modinfo iwlwifi' it does say that power_save is
-default off, but it is not. I am sure that nothing else enables
-power_save on my system because I don't even have udev, and for the
-test I've also disabled wicd, then simple `modprobe iwlwifi` and `iw
-dev wlan0 get power_save` reports 'on'.
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index ea1da6621ff0..d11454f87bac 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -42,7 +42,7 @@ struct cfg80211_conn {
+ 		CFG80211_CONN_CONNECTED,
+ 	} state;
+ 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
+-	u8 *ie;
++	const u8 *ie;
+ 	size_t ie_len;
+ 	bool auto_auth, prev_bssid_valid;
+ };
+@@ -423,6 +423,62 @@ void cfg80211_sme_assoc_timeout(struct wireless_dev *wdev)
+ 	schedule_work(&rdev->conn_work);
+ }
+ 
++static int cfg80211_sme_get_conn_ies(struct wireless_dev *wdev,
++				     const u8 *ies, size_t ies_len,
++				     const u8 **out_ies, size_t *out_ies_len)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
++	u8 *buf;
++	size_t offs;
++
++	if (!rdev->wiphy.extended_capabilities_len ||
++	    (ies && cfg80211_find_ie(WLAN_EID_EXT_CAPABILITY, ies, ies_len))) {
++		*out_ies = kmemdup(ies, ies_len, GFP_KERNEL);
++		if (!*out_ies)
++			return -ENOMEM;
++		*out_ies_len = ies_len;
++		return 0;
++	}
++
++	buf = kmalloc(ies_len + rdev->wiphy.extended_capabilities_len + 2,
++		      GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	if (ies_len) {
++		static const u8 before_extcapa[] = {
++			/* not listing IEs expected to be created by driver */
++			WLAN_EID_RSN,
++			WLAN_EID_QOS_CAPA,
++			WLAN_EID_RRM_ENABLED_CAPABILITIES,
++			WLAN_EID_MOBILITY_DOMAIN,
++			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
++			WLAN_EID_BSS_COEX_2040,
++		};
++
++		offs = ieee80211_ie_split(ies, ies_len, before_extcapa,
++					  ARRAY_SIZE(before_extcapa), 0);
++		memcpy(buf, ies, offs);
++		/* leave a whole for extended capabilities IE */
++		memcpy(buf + offs + rdev->wiphy.extended_capabilities_len + 2,
++		       ies + offs, ies_len - offs);
++	} else {
++		offs = 0;
++	}
++
++	/* place extended capabilities IE (with only driver capabilities) */
++	buf[offs] = WLAN_EID_EXT_CAPABILITY;
++	buf[offs + 1] = rdev->wiphy.extended_capabilities_len;
++	memcpy(buf + offs + 2,
++	       rdev->wiphy.extended_capabilities,
++	       rdev->wiphy.extended_capabilities_len);
++
++	*out_ies = buf;
++	*out_ies_len = ies_len + rdev->wiphy.extended_capabilities_len + 2;
++
++	return 0;
++}
++
+ static int cfg80211_sme_connect(struct wireless_dev *wdev,
+ 				struct cfg80211_connect_params *connect,
+ 				const u8 *prev_bssid)
+@@ -453,16 +509,14 @@ static int cfg80211_sme_connect(struct wireless_dev *wdev,
+ 		memcpy(wdev->conn->bssid, connect->bssid, ETH_ALEN);
+ 	}
+ 
+-	if (connect->ie) {
+-		wdev->conn->ie = kmemdup(connect->ie, connect->ie_len,
+-					GFP_KERNEL);
+-		wdev->conn->params.ie = wdev->conn->ie;
+-		if (!wdev->conn->ie) {
+-			kfree(wdev->conn);
+-			wdev->conn = NULL;
+-			return -ENOMEM;
+-		}
++	if (cfg80211_sme_get_conn_ies(wdev, connect->ie, connect->ie_len,
++				      &wdev->conn->ie,
++				      &wdev->conn->params.ie_len)) {
++		kfree(wdev->conn);
++		wdev->conn = NULL;
++		return -ENOMEM;
+ 	}
++	wdev->conn->params.ie = wdev->conn->ie;
+ 
+ 	if (connect->auth_type == NL80211_AUTHTYPE_AUTOMATIC) {
+ 		wdev->conn->auto_auth = true;
+-- 
+2.1.4
 
-I also have another system iwl 6205 and no single lockup was noted,
-but it indeed have power_save disabled, so that may be the case.
-
--- Piotr.
