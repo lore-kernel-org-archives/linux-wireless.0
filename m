@@ -1,118 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:35525 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbbDPRCG (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:35202 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752868AbbDHSwA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 13:02:06 -0400
-Received: by obbfy7 with SMTP id fy7so46119879obb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2015 10:02:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CALhHN=pDDwx=AA=wnkbqrckXCu4JnBvJ=iDv=6MNrygVc73fNw@mail.gmail.com>
-References: <1428911141-6534-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1428911141-6534-2-git-send-email-janusz.dziedzic@tieto.com>
-	<CAFuUQkhQeCwP098DH7_R4mNCvrJ7WxdT7wnHi52DSOKm8c0k1Q@mail.gmail.com>
-	<CALhHN=pefUssihniviRiBWg+EU2wYp3excwodJBDt1+H0tiiHQ@mail.gmail.com>
-	<CAFuUQkieJ0CC83wPFm=c_gA5a6OzdbWBF-0EaDL0N=nNAsU2_g@mail.gmail.com>
-	<CALhHN=pDDwx=AA=wnkbqrckXCu4JnBvJ=iDv=6MNrygVc73fNw@mail.gmail.com>
-Date: Thu, 16 Apr 2015 10:02:05 -0700
-Message-ID: <CAFuUQkhhUVshtsuuEVJuTEAwejq6D2fPUnF5rsSnSynaCni4Fg@mail.gmail.com> (sfid-20150416_190210_907584_DC93F9B7)
-Subject: Re: [RFC 2/2] ath10k: don't disable PS when not connected
-From: YanBo <dreamfly281@gmail.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 8 Apr 2015 14:52:00 -0400
+Received: by wgyo15 with SMTP id o15so86967646wgy.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Apr 2015 11:51:59 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org
+Subject: [PATCH] ath9k: fix per-packet tx power configuration
+Date: Wed,  8 Apr 2015 20:51:57 +0200
+Message-Id: <1428519117-15833-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150408_205206_612623_7BD935E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 15, 2015 at 9:35 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> On 15 April 2015 at 19:10, YanBo <dreamfly281@gmail.com> wrote:
->> On Tue, Apr 14, 2015 at 10:00 PM, Janusz Dziedzic
->> <janusz.dziedzic@tieto.com> wrote:
->>> On 15 April 2015 at 00:45, YanBo <dreamfly281@gmail.com> wrote:
->>>> On Mon, Apr 13, 2015 at 12:45 AM, Janusz Dziedzic
->>>> <janusz.dziedzic@tieto.com> wrote:
->>>>> Don't disable PS while we are not connected.
->>>>> In other case we will get higher power consumption.
->>>>>
->>>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->>>>> ---
->>>>>  drivers/net/wireless/ath/ath10k/mac.c | 8 +++++++-
->>>>>  1 file changed, 7 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->>>>> index 52c5b1f..b896dd4 100644
->>>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
->>>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->>>>> @@ -1730,7 +1730,13 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
->>>>>                 enable_ps = false;
->>>>>         }
->>>>>
->>>>> -       if (enable_ps) {
->>>>> +       if (!arvif->is_started) {
->>>>> +               /* enable power save mode while not connected,
->>>>> +                * in other case after iface up we will get
->>>>> +                * higher power consumption - firmware design
->>>>> +                */
->>>>> +               psmode = WMI_STA_PS_MODE_ENABLED;
->>>>> +       } else if (enable_ps) {
->>>>>                 psmode = WMI_STA_PS_MODE_ENABLED;
->>>>>                 param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
->>>>>
->>>>> --
->>>>
->>>> What the expectation behavior after we enable the
->>>> WMI_STA_PS_MODE_ENABLED at Idle status?
->>>> Is there any effect for TX or RX chain after set it?
->>>>
->>>
->>> First I think that WMI_STA_PS_MODE_ENABLED is important only when we
->>> are connected.
->>> But, I see current consumption drop in my test environtment from 88mA
->>> to 33mA when:
->>> 1) load driver, iface up
->>> 2) disconnect network, iface down, iface up
->>> So, seems WMI_STA_PS_MODE_ENABLED do something more in FW (not only
->>> standard PS enable/disable when
->>> connected to AP). Probably someone from FW team should answer that, if
->>> that is a feature or a bug.
->>>
->> I guess the chip enter Idle  mode power save  after set this,  did you
->> run the the
->> test on QCA61XX or QCA 98XX?   Can it still auto scan to get all the APs around
->> it, cause for IMPS mode it will only looks in its existing profile
->> list and sends a probe request,
->> with SSID specified in profile for what I know
->>
-> I see iw scan works correctly after iface up (same scan results like ath9k):
->
-> In my laptop I have 3 cards
-> wlan0 - ath9k
-> wlan1 - QCA9888
-> wlan4 - QCA6174
->
-> janusz@dell6430:~$ sudo iw wlan0 scan dump|grep SSID |wc -l
-> 0
-> janusz@dell6430:~$ sudo iw wlan0 scan |grep SSID| wc -l
-> 21
-> janusz@dell6430:~$ sudo ifconfig wlan0 down
->
-> janusz@dell6430:~$ sudo iw wlan1 scan dump|grep SSID|wc -l
-> 0
-> janusz@dell6430:~$ sudo iw wlan1 scan |grep SSID|wc -l
-> 21
-> janusz@dell6430:~$ sudo ifconfig wlan1 down
->
-> janusz@dell6430:~$ sudo iw wlan4 scan dump|grep SSID|wc -l
-> 0
-> janusz@dell6430:~$ sudo iw wlan4 scan |grep SSID|wc -l
-> 22
->
-> Should I run any other scan tests?
->
+Do not use ieee80211_vif pointer in ath_get_rate_txpower() since it has been
+overwritten by setup_frame_info() and it will result in a corrupted tx power
+configuration. Set per-packet tx power in setup_frame_info() according to
+current vif tx power.
 
-Thanks for the verification, I also get the confirmation that the card will
-leave IMPS mode when scanning, so it works as expected.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 52 +++++++++++++++++------------------
+ 1 file changed, 25 insertions(+), 27 deletions(-)
 
-BR /Yanbo
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 0acd079..3ad79bb 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1103,28 +1103,14 @@ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct sk_buff *skb;
+ 	struct ath_frame_info *fi;
+ 	struct ieee80211_tx_info *info;
+-	struct ieee80211_vif *vif;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 
+ 	if (sc->tx99_state || !ah->tpc_enabled)
+ 		return MAX_RATE_POWER;
+ 
+ 	skb = bf->bf_mpdu;
+-	info = IEEE80211_SKB_CB(skb);
+-	vif = info->control.vif;
+-
+-	if (!vif) {
+-		max_power = sc->cur_chan->cur_txpower;
+-		goto out;
+-	}
+-
+-	if (vif->bss_conf.txpower_type != NL80211_TX_POWER_LIMITED) {
+-		max_power = min_t(u8, sc->cur_chan->cur_txpower,
+-				  2 * vif->bss_conf.txpower);
+-		goto out;
+-	}
+-
+ 	fi = get_frame_info(skb);
++	info = IEEE80211_SKB_CB(skb);
+ 
+ 	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+ 		int txpower = fi->tx_power;
+@@ -1161,25 +1147,26 @@ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+ 			txpower -= 2;
+ 
+ 		txpower = max(txpower, 0);
+-		max_power = min_t(u8, ah->tx_power[rateidx],
+-				  2 * vif->bss_conf.txpower);
+-		max_power = min_t(u8, max_power, txpower);
++		max_power = min_t(u8, ah->tx_power[rateidx], txpower);
++
++		/* XXX: clamp minimum TX power at 1 for AR9160 since if
++		 * max_power is set to 0, frames are transmitted at max
++		 * TX power
++		 */
++		if (!max_power && !AR_SREV_9280_20_OR_LATER(ah))
++			max_power = 1;
+ 	} else if (!bf->bf_state.bfs_paprd) {
+ 		if (rateidx < 8 && (info->flags & IEEE80211_TX_CTL_STBC))
+ 			max_power = min_t(u8, ah->tx_power_stbc[rateidx],
+-					  2 * vif->bss_conf.txpower);
++					  fi->tx_power);
+ 		else
+ 			max_power = min_t(u8, ah->tx_power[rateidx],
+-					  2 * vif->bss_conf.txpower);
+-		max_power = min(max_power, fi->tx_power);
++					  fi->tx_power);
+ 	} else {
+ 		max_power = ah->paprd_training_power;
+ 	}
+-out:
+-	/* XXX: clamp minimum TX power at 1 for AR9160 since if max_power
+-	 * is set to 0, frames are transmitted at max TX power
+-	 */
+-	return (!max_power && !AR_SREV_9280_20_OR_LATER(ah)) ? 1 : max_power;
++
++	return max_power;
+ }
+ 
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+@@ -2129,6 +2116,7 @@ static void setup_frame_info(struct ieee80211_hw *hw,
+ 	struct ath_node *an = NULL;
+ 	enum ath9k_key_type keytype;
+ 	bool short_preamble = false;
++	u8 txpower;
+ 
+ 	/*
+ 	 * We check if Short Preamble is needed for the CTS rate by
+@@ -2145,6 +2133,16 @@ static void setup_frame_info(struct ieee80211_hw *hw,
+ 	if (sta)
+ 		an = (struct ath_node *) sta->drv_priv;
+ 
++	if (tx_info->control.vif) {
++		struct ieee80211_vif *vif = tx_info->control.vif;
++
++		txpower = 2 * vif->bss_conf.txpower;
++	} else {
++		struct ath_softc *sc = hw->priv;
++
++		txpower = sc->cur_chan->cur_txpower;
++	}
++
+ 	memset(fi, 0, sizeof(*fi));
+ 	fi->txq = -1;
+ 	if (hw_key)
+@@ -2155,7 +2153,7 @@ static void setup_frame_info(struct ieee80211_hw *hw,
+ 		fi->keyix = ATH9K_TXKEYIX_INVALID;
+ 	fi->keytype = keytype;
+ 	fi->framelen = framelen;
+-	fi->tx_power = MAX_RATE_POWER;
++	fi->tx_power = txpower;
+ 
+ 	if (!rate)
+ 		return;
+-- 
+2.1.0
+
