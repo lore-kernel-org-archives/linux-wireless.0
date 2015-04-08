@@ -1,86 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ja.ssi.bg ([178.16.129.10]:54784 "EHLO ja.ssi.bg"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753765AbbDKKkz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2015 06:40:55 -0400
-Date: Sat, 11 Apr 2015 13:39:05 +0300 (EEST)
-From: Julian Anastasov <ja@ssi.bg>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	matti.gottlieb@intel.com
-Subject: Re: [PATCH 1/4] ipv4: add option to drop unicast encapsulated in L2
- multicast
-In-Reply-To: <1428671435.1890.22.camel@sipsolutions.net>
-Message-ID: <alpine.LFD.2.11.1504111305440.2449@ja.home.ssi.bg> (sfid-20150411_124105_741553_D04ABD2B)
-References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>  <alpine.LFD.2.11.1504101445330.1538@ja.home.ssi.bg> <1428671435.1890.22.camel@sipsolutions.net>
+Received: from s72.web-hosting.com ([198.187.29.22]:59988 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbbDHD0G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Apr 2015 23:26:06 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21796.40851.132919.363957@gargle.gargle.HOWL> (sfid-20150408_052612_853362_A958AEFE)
+Date: Wed, 8 Apr 2015 08:55:07 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
+In-Reply-To: <55241567.3010703@candelatech.com>
+References: <5523273F.4060803@candelatech.com>
+	<CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com>
+	<CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>
+	<552406E4.50600@candelatech.com>
+	<55241567.3010703@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ben Greear wrote:
+> For the third set, why limit to a single interface.  Can't we run IBSS + AP
+> (and plus stations, for that matter), all at the same time with ath9k?
 
-	Hello,
+TSF would jump around since the HW would sync with the
+received beacons and this will happen in both IBSS and station
+mode. Hence the limitation, but I think OpenWrt has a one-liner
+to remove this restriction...
 
-On Fri, 10 Apr 2015, Johannes Berg wrote:
-
-> > - no way to select correct skb->pkt_type in inet_rtm_getroute
-> > before ip_route_input, this is a chiken-egg problem, of course,
-> > skb->pkt_type = PACKET_HOST can work for now
-> 
-> This is interesting. Why does that even build an skb and route it, if it
-> really just cares about the struct rtable? Anyway, you're right, using
-> PACKET_HOST would work. I'm not really sure I see the chicken-and-egg
-> problem though, it's not like the result of this is used to route the
-> skb again or something, afaict?
-
-	If we want to set correct pkt_type here we should
-know the type of daddr (multicast => PACKET_MULTICAST,
-broadcast => PACKET_BROADCAST, etc) and we can know it only
-after routing (rt_type). I hope we will not do other checks
-with pkt_type, so we can put some comment that
-skb->pkt_type = PACKET_HOST is just to make
-DROP_UNICAST_IN_L2_MULTICAST check happy.
-
-> > - ip_route_input is called also for ARP, so incoming ARP
-> > broadcasts are not replied anymore
-> 
-> Hm. I didn't see this in my testing so far, but I only enable this
-> temporarily, so perhaps by that time it was already done.
-
-	I didn't tested it myself, may be you can try:
-
-other_host_on_LAN# arp -d patched_box
-other_host_on_LAN# arping -c 1 -I eth0 patched_box
-
-	There must be reply for broadcast requests.
-
-> This looks like another case of using this function to not really route
-> anything but to just look up the route, similar to the
-> inet_rtm_getroute() function you pointed out. Perhaps that would warrant
-> splitting out somewhat.
-
-	Yes, ARP essentially performs rp_filter check (note
-that arp_filter check is limited only to local targets, not
-to proxy_arp) and target address type check.
-
-	The solution would be to add skb->protocol == htons(ETH_P_IP)
-check.
-
-> On the other hand, there's not all that much reason not to put this into
-> ip_rcv_finish(), we already touch the rt->rt_type there for MIB
-> counters. I'll look into that.
-
-	May be in ip_local_deliver_finish because:
-
-- ip_forward() already has PACKET_HOST check.
-
-- for broadcast/multicast dests we do not care
-
-- CLUSTERIP works in LOCAL_IN (after ip_rcv_finish), LOCAL_IN
-is here: ip_rcv_finish->dst_input->ip_local_deliver->
-ip_local_deliver_finish
-
-Regards
-
---
-Julian Anastasov <ja@ssi.bg>
+Sujith
