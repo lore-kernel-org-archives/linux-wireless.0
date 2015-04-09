@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp28.msg.oleane.net ([62.161.4.28]:47479 "EHLO
-	smtp28.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205AbbDNIaB convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:35269 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755046AbbDILCS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 04:30:01 -0400
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"'Luis R. Rodriguez'" <mcgrof@suse.com>
-Cc: <wireless-regdb@lists.infradead.org>,
-	"'Seth Forshee'" <seth.forshee@canonical.com>
-Subject: RE: [linux-wireless] was [wireless-regdb] [RFC] [PATCH] crda: enforce ETSI CAC timer of 600s on the weather band
-Date: Tue, 14 Apr 2015 10:28:33 +0200
-Message-ID: <002801d0768c$ff2f66e0$fd8e34a0$@acksys.fr> (sfid-20150414_103009_427373_3F58DF6B)
+	Thu, 9 Apr 2015 07:02:18 -0400
+Received: by widdi4 with SMTP id di4so87597218wid.0
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Apr 2015 04:02:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+In-Reply-To: <20150409073525.GA21000@w1.fi>
+References: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
+ <552400F4.5010701@candelatech.com> <CB3B3D4774441E42AA3EA0E1BA8230A04D09BD1B@HASMSX106.ger.corp.intel.com>
+ <20150409073525.GA21000@w1.fi>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 9 Apr 2015 16:31:57 +0530
+Message-ID: <CABPxzYKh2y8n8oqyYUmVH7UvGPhk0AuNcC2ruwcb6CWZoL1+qg@mail.gmail.com> (sfid-20150409_130225_707275_04CA9630)
+Subject: Re: [PATCH 1/2] mac80211_hwsim: Set VHT capabilities only for the 5.2
+ GHz band
+To: Jouni Malinen <j@w1.fi>
+Cc: "Peer, Ilan" <ilan.peer@intel.com>,
+	Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> De : Seth Forshee [mailto:seth.forshee@canonical.com] Envoyé : lundi 13
-avril 2015 21:54
-> On Mon, Apr 13, 2015 at 09:36:33PM +0200, Johannes Berg wrote:
-> > On Mon, 2015-04-13 at 14:18 -0500, Seth Forshee wrote:
-> > > On Mon, Apr 13, 2015 at 08:56:36PM +0200, Johannes Berg wrote:
-> > > > On Mon, 2015-04-13 at 11:23 -0500, Seth Forshee wrote:
-> > > > > On Mon, Apr 13, 2015 at 05:31:14PM +0200, Jean-Pierre Tosoni
-> wrote:
-> > > > > > A really weird patch that splits the U-NII-2e band into 1, 2
-> > > > > > or 3 sub-bands to enforce a CAC time of 10 minutes in the range
-> 5600-5650 MHz.
-> > > > >
-> > > > > Wrong maintainer / list. CRDA patches should be directed to Luis
-> > > > > and the linux-wireless list (feel free to Cc wireless-regdb if you
-> like).
-> > > >
-> > > > However, I'm not convinced that this actually *belongs* into the
-> > > > crda code? That seems like the wrong approach - shouldn't these
-> > > > rules be captured in the database? We do have AUTO-BW now so it
-> > > > should be possible, no?
-> > > >
-> > > > And if the timings aren't captured in the db.txt file they really
-> > > > should be.
-> > >
-> > > Yeah with AUTO-BW the bands could be broken up in db.txt, and we
-> > > could even put in the CAC times. But we still can't get the CAC
-> > > times into the current regulatory.bin format, so it doesn't really
-> accomplish anything.
-> >
-> > But then there's also little point in putting any code for it into the
-> > crda binary, no?
-
-I agree that this belongs to db.txt and regulatory.bin rather than crda, but
-until the problem of defining a new format for regulatory.bin is settled,
-there is no other way.
-However I am not sure my patch should go to mainstream since in my mind it
-is temporary approach. But it does enforce ETSI regulations and still allow
-using weather frequencies.
-
-> 
-> Just to be clear, I'm not arguing for or against the patch at all. I'm
-> only trying to explain why Jean-Pierre is proposing to change CRDA rather
-> than db.txt. Maybe I should just let him speak for himself ...
-> 
-> As I understand it Jean-Pierre is looking for a stop-gap to get CAC times
-> into the kernel until such time as we have a file format which allows
-> getting them from regulatory.bin. Changing CRDA can accomplish this,
-> whereas modifying db.txt cannot.
-
-That's exactly what I meant.
-
-Jean-Pierre
-
+On Thu, Apr 9, 2015 at 1:05 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Wed, Apr 08, 2015 at 06:29:38PM +0000, Peer, Ilan wrote:
+>> According to the 802.11ac amendment: "The IEEE 802.11 VHT STA operates in frequency bands below 6 GHz excluding the 2.4 GHz band", so at least the spec. is clear about it. However, I guess it would be possible to enable VHT for 2.4 as well to enjoy some of benefits, but do you see a reason/use case to enable it also for hwsim?
+>
+> It does not matter what the standard says on VHT in general; there are
+> clearly already products out there that allow some capabilities defined
+> in 802.11ac (mainly, 256-QAM) to be used on the 2.4 GHz band.
+Can you name a few for reference?
+>As far as
+> hwsim is concerned, I'm already using it to verify the negotiation part
+> for this (see ap_vht_on_24ghz test case). The main remaining question
+> for cfg80211/nl80211 is on whether we can come up with a clean way of
+> advertising driver capability for doing this.
+In order to properly utilize these we need to incorporate these capabilities
+ in to minstrel RC as well. Any plans for that?
