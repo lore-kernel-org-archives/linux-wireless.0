@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56877 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754098AbbDNPGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 11:06:33 -0400
-Message-ID: <1429023990.3019.15.camel@sipsolutions.net> (sfid-20150414_170636_623307_EB650C0A)
-Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Apr 2015 17:06:30 +0200
-In-Reply-To: <552D2A90.1070307@candelatech.com>
-References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>
-		  	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>
-		  	 <54EB66CC.1030800@candelatech.com>
-		   <1424772714.2192.16.camel@sipsolutions.net>
-		   <54EC8C5D.5090400@candelatech.com>
-		  <1424788834.2192.34.camel@sipsolutions.net>
-		  <5500AE12.6040103@candelatech.com>
-		 <1427812067.2057.27.camel@sipsolutions.net>
-		 <551AC3B6.1040001@candelatech.com>
-	 <1428999215.3019.6.camel@sipsolutions.net>
-	 <552D2A90.1070307@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13929 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755189AbbDIMII (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2015 08:08:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<michal.kazior@tieto.com>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Change the fw stats access mask
+References: <1427476680-5532-1-git-send-email-yanbol@qca.qualcomm.com>
+Date: Thu, 9 Apr 2015 15:08:01 +0300
+In-Reply-To: <1427476680-5532-1-git-send-email-yanbol@qca.qualcomm.com> (Yanbo
+	Li's message of "Fri, 27 Mar 2015 10:18:00 -0700")
+Message-ID: <87vbh5ec7y.fsf@kamboji.qca.qualcomm.com> (sfid-20150409_140811_764967_959F2FEB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-04-14 at 07:56 -0700, Ben Greear wrote:
+Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-> > Well, the question isn't really that offloading, the question is what
-> > happens with the hw-scan logic in hwsim? Though I guess now that I think
-> > about it, that wouldn't show up in userspace at all with your changes.
-> 
-> I think for HW scan and related matters, you treat user-space like a firmware
-> target, so you send it a message, and then get some response or action, similar
-> to how you would request ath10k or some USB dongle NIC to do things for you.
+> This fix the regerssion introduced after "ath10k_wmi_requests_stats()
+> call to use more stat bits", both the 10.2.X FW and community FW 10.1.X
+> will return time out when access the fw_stats with the STAT_VDEV and
+> STAT_PDEV. Add the condition to use different fw_stats mask for different
+> FW versions.
+>
+> Fixes:7777d8c7ef6f("ath10k: implement fw stats for wmi-tlv")
+> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
 
-That's not really how it works today, but it's one possible (probably
-the only possible) approach.
+Thanks, applied.
 
-> My own interest in hwsim user-space is to make it act more like ath9k
-> than a firmware target driver, but I don't think my changes preclude doing
-> target based emulation in the future.
-
-True, although I'd like to see the multi-channel issue addressed better.
-
-johannes
-
+-- 
+Kalle Valo
