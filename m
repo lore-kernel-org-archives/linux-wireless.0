@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:33458 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964780AbbDXQD6 (ORCPT
+Received: from mail.sigma-star.at ([95.130.255.111]:14389 "EHLO
+	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754146AbbDIV5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2015 12:03:58 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Bernhard Wiedemann <bwiedemann@suse.com>,
-	Takashi Iwai <tiwai@suse.com>
-Subject: [PATCH for 4.1] rtlwifi: rtl8192cu: Fix kernel deadlock
-Date: Fri, 24 Apr 2015 11:03:37 -0500
-Message-Id: <1429891417-1224-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150424_180552_768552_3865F4DF)
+	Thu, 9 Apr 2015 17:57:35 -0400
+From: Richard Weinberger <richard@nod.at>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
+	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH 5/5 v2] netfilter: Fix format string of nfnetlink_log proc file
+Date: Thu,  9 Apr 2015 23:57:17 +0200
+Message-Id: <1428616637-21690-5-git-send-email-richard@nod.at> (sfid-20150409_235935_617075_2C3A259D)
+In-Reply-To: <1428616637-21690-1-git-send-email-richard@nod.at>
+References: <1428616637-21690-1-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The USB mini-driver in rtlwifi, which is used by rtl8192cu, issues a call to
-usb_control_msg() with a timeout value of 0. In some instances where the
-interface is shutting down, this infinite wait results in a CPU deadlock. A
-one second timeout fixes this problem without affecting any normal operations.
+The printed values are all of type unsigned integer, therefore use
+%u instead of %d. Otherwise an user can face negative values.
 
-This bug is reported at https://bugzilla.novell.com/show_bug.cgi?id=927786.
-
-Reported-by: Bernhard Wiedemann <bwiedemann@suse.com>
-Tested-by: Bernhard Wiedemann <bwiedemann@suse.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
-Cc: Bernhard Wiedemann <bwiedemann@suse.com>
-Cc: Takashi Iwai<tiwai@suse.com>
+Signed-off-by: Richard Weinberger <richard@nod.at>
 ---
-
-Kalle,
-
-I marked this patch for V4.1, and I hope that timing can be met.
-
-Thanks,
-
-Larry
----
-
- drivers/net/wireless/rtlwifi/usb.c | 2 +-
+ net/netfilter/nfnetlink_log.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 46ee956..27cd6ca 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -126,7 +126,7 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
+diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
+index 7150d11..313c26c 100644
+--- a/net/netfilter/nfnetlink_log.c
++++ b/net/netfilter/nfnetlink_log.c
+@@ -998,7 +998,7 @@ static int seq_show(struct seq_file *s, void *v)
+ {
+ 	const struct nfulnl_instance *inst = v;
  
- 	do {
- 		status = usb_control_msg(udev, pipe, request, reqtype, value,
--					 index, pdata, len, 0); /*max. timeout*/
-+					 index, pdata, len, 1000);
- 		if (status < 0) {
- 			/* firmware download is checksumed, don't retry */
- 			if ((value >= FW_8192C_START_ADDRESS &&
+-	return seq_printf(s, "%5d %6d %5d %1d %5d %6d %2d\n",
++	return seq_printf(s, "%5u %6u %5u %1u %5u %6u %2u\n",
+ 			  inst->group_num,
+ 			  inst->peer_portid, inst->qlen,
+ 			  inst->copy_mode, inst->copy_range,
 -- 
-2.1.4
+1.8.4.5
 
