@@ -1,106 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55633 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbbDPCYT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2015 22:24:19 -0400
-From: <miaoqing@qti.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: fix soft lockup - CPU stuck
-Date: Thu, 16 Apr 2015 10:24:10 +0800
-Message-ID: <1429151050-22488-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150416_042423_459299_2F2229E6)
+Received: from a.ns.miles-group.at ([95.130.255.143]:65277 "EHLO radon.swed.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755219AbbDIV6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2015 17:58:18 -0400
+Message-ID: <5526F5F6.4010907@nod.at> (sfid-20150409_235827_908274_C8CD40D3)
+Date: Thu, 09 Apr 2015 23:58:14 +0200
+From: Richard Weinberger <richard@nod.at>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Pablo Neira Ayuso <pablo@netfilter.org>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
+Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
+ file
+References: <1426246276-15839-1-git-send-email-richard@nod.at> <1426246276-15839-5-git-send-email-richard@nod.at> <20150313121539.GA14488@salvia> <5502E99A.2060901@nod.at> <20150313135329.GA6054@salvia> <5502F28F.9050601@nod.at> <20150316131113.GA5744@salvia>
+In-Reply-To: <20150316131113.GA5744@salvia>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+Am 16.03.2015 um 14:11 schrieb Pablo Neira Ayuso:
+> On Fri, Mar 13, 2015 at 03:22:07PM +0100, Richard Weinberger wrote:
+>> Am 13.03.2015 um 14:53 schrieb Pablo Neira Ayuso:
+>>>> You mean statistics via netlink attributes? I can add that!
+>>>
+>>> Add a new NFQNL_CFG_CMD_STATS command to request the statistics. If
+>>> NLM_F_DUMP is set, then we'll basically provide the full list of
+>>> instances. Otherwise, in case you want to retrieve stats for a
+>>> specific netlink socket, you can use the netlink portID as index.
+>>> And you'll have to add attributes for this new command, yes.
+>>
+>> This was my plan. Thanks for the pointer!
+> 
+> It would be great if you can contribute this new interface.
 
-BUG: soft lockup - CPU#0 stuck for 22s! [hostapd:965]
-CPU: 0 PID: 965 Comm: hostapd Not tainted 3.14.0 #1
-task: 82e29c40 ti: 82fb2000 task.ti: 82fb2000
-$ 0   : 00000000 00000000 83281f90 00004018
-$ 4   : 832a0010 b810403c 00004030 00000600
-$ 8   : 8036a980 ffd23940 00000000 00000000
-$12   : 00000060 00000007 00000000 0000000c
-$16   : 832a0010 00023f40 00000002 00000000
-$20   : 832a0010 832a0298 832ba994 832bb83c
-$24   : 00000002 800aa2d4
-$28   : 82fb2000 82fb3c08 832bbf0c 8339edc4
-Hi    : 00000006
-Lo    : 009b9500
-epc   : 8339ede0 ath9k_hw_enable_interrupts+0xf8/0x194 [ath9k_hw]
-Not tainted
-ra    : 8339edc4 ath9k_hw_enable_interrupts+0xdc/0x194 [ath9k_hw]
-Status: 1000fc03	KERNEL EXL IE
-Cause : 5080d400
-PrId  : 00019374 (MIPS 24Kc)
-	Kernel panic - not syncing: softlockup: hung tasks
+FYI, it is still on my TODO.
+I fear I won't find the time to do a patch for the upcoming merge window
+and it has to wait for v4.2.
 
-The original intention of commit e3f31175a3("ath9k: fix race condition
-in irq processing during hardware reset") is to avoid the IRQ storms,it
-disabled the IRQ entirely for the duration of the reset, but it introducted
-a new IRQ storms in handle_level_irq() when call ath9k_hw_enable_interrupts(),
-meanwhile the irq is disabled by disable_irq(). Remove disable_irq/enable_irq
-paire, instead of diabling tasklet to re-enable IRQ during the reset.
+>>>> But I think we should also fix the format string of the proc file
+>>>> as the fix is easy and non-intrusive.
+>>>
+>>> Unfortunately we don't know how many people are relying on that
+>>> output, I prefer to remain conservative and provide a proper netlink
+>>> interface for this.
+>>
+>> I understand your concerns but an application which is able to parse positive
+>> and negative numbers can also parse pure positives.
+>> Just made a small test application, glibc's %d in sscanf() can also deal with UINT_MAX.
+>> And I don't expect that applications to check whether the returned values from
+>> /proc/net/netfilter/nfnetlink_queue are between INT_MIN and INT_MAX.
+>>
+>> That said, I'd have assumed that an user would report negative values as plain kernel bug.
+> 
+> Makes sense, please fix net/netfilter/nfnetlink_log.c too.
 
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Patches sent! :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b0badef..06560b5 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -285,7 +285,6 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 
- 	__ath_cancel_work(sc);
- 
--	disable_irq(sc->irq);
- 	tasklet_disable(&sc->intr_tq);
- 	tasklet_disable(&sc->bcon_tasklet);
- 	spin_lock_bh(&sc->sc_pcu_lock);
-@@ -332,7 +331,6 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 		r = -EIO;
- 
- out:
--	enable_irq(sc->irq);
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 	tasklet_enable(&sc->bcon_tasklet);
- 	tasklet_enable(&sc->intr_tq);
-@@ -475,7 +473,8 @@ void ath9k_tasklet(unsigned long data)
- 	ath9k_btcoex_handle_interrupt(sc, status);
- 
- 	/* re-enable hardware interrupt */
--	ath9k_hw_enable_interrupts(ah);
-+	if (!test_bit(ATH_OP_HW_RESET, &common->op_flags))
-+		ath9k_hw_enable_interrupts(ah);
- out:
- 	spin_unlock(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
-@@ -603,8 +602,8 @@ int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int r;
- 
--	ath9k_hw_kill_interrupts(sc->sc_ah);
- 	set_bit(ATH_OP_HW_RESET, &common->op_flags);
-+	ath9k_hw_kill_interrupts(sc->sc_ah);
- 
- 	ath9k_ps_wakeup(sc);
- 	r = ath_reset_internal(sc, hchan);
-@@ -624,8 +623,8 @@ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type)
- #ifdef CONFIG_ATH9K_DEBUGFS
- 	RESET_STAT_INC(sc, type);
- #endif
--	ath9k_hw_kill_interrupts(sc->sc_ah);
- 	set_bit(ATH_OP_HW_RESET, &common->op_flags);
-+	ath9k_hw_kill_interrupts(sc->sc_ah);
- 	ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- }
- 
--- 
-1.9.1
-
+Thanks,
+//richard
