@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55107 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933659AbbDVOqi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 10:46:38 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't update dev->trans_start
-Date: Wed, 22 Apr 2015 16:46:34 +0200
-Message-Id: <1429713994-17828-1-git-send-email-johannes@sipsolutions.net> (sfid-20150422_164641_174664_8FD2972C)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:6197 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755286AbbDIMLQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2015 08:11:16 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 3/4] ath10k: Fix no-ack frame status
+References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
+	<1418226973-13779-3-git-send-email-sujith@msujith.org>
+Date: Thu, 9 Apr 2015 15:11:09 +0300
+In-Reply-To: <1418226973-13779-3-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Wed, 10 Dec 2014 21:26:12 +0530")
+Message-ID: <87lhi1ec2q.fsf@kamboji.qca.qualcomm.com> (sfid-20150409_141120_141460_550909FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Sujith Manoharan <sujith@msujith.org> writes:
 
-This isn't necessary any more as the stack will automatically
-update the TXQ's trans_start after calling ndo_start_xmit().
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> Use the new IEEE80211_TX_STAT_NOACK_TRANSMITTED flag
+> to indicate successful transmission of no-ack frames.
+> This fixes multicast frame accounting.
+>
+> Cc: ath10k@lists.infradead.org
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 2 --
- 1 file changed, 2 deletions(-)
+Thanks, applied.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index df62942653ad..83e3261dbf67 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2729,7 +2729,6 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 
- 	dev->stats.tx_packets++;
- 	dev->stats.tx_bytes += skb->len + extra_head;
--	dev->trans_start = jiffies;
- 
- 	/* will not be crypto-handled beyond what we do here, so use false
- 	 * as the may-encrypt argument for the resize to not account for
-@@ -2912,7 +2911,6 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 
- 		dev->stats.tx_packets++;
- 		dev->stats.tx_bytes += skb->len;
--		dev->trans_start = jiffies;
- 
- 		ieee80211_xmit(sdata, sta, skb);
- 	}
 -- 
-2.1.4
-
+Kalle Valo
