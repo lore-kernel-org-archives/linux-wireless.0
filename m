@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33988 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933012AbbD1K4A (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:33403 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755991AbbDITyP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 06:56:00 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [for,4.1] rtlwifi: rtl8192cu: Fix kernel deadlock
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1429891417-1224-1-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 9 Apr 2015 15:54:15 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Bernhard Wiedemann <bwiedemann@suse.com>,
-	Takashi Iwai <tiwai@suse.com>
-Message-Id: <20150428105559.12144141A32@smtp.codeaurora.org> (sfid-20150428_125609_860951_500A0CBA)
-Date: Tue, 28 Apr 2015 10:55:59 +0000 (UTC)
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 1/2] staging: vt6655: device_free_tx_buf use only ieee80211_tx_status_irqsafe
+Date: Thu,  9 Apr 2015 20:53:43 +0100
+Message-Id: <1428609224-3237-1-git-send-email-tvboxspy@gmail.com> (sfid-20150409_215422_033456_20F8DA6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+TD_FLAGS_NETIF_SKB is only for data.
 
-> The USB mini-driver in rtlwifi, which is used by rtl8192cu, issues a call to
-> usb_control_msg() with a timeout value of 0. In some instances where the
-> interface is shutting down, this infinite wait results in a CPU deadlock. A
-> one second timeout fixes this problem without affecting any normal operations.
-> 
-> This bug is reported at https://bugzilla.novell.com/show_bug.cgi?id=927786.
-> 
-> Reported-by: Bernhard Wiedemann <bwiedemann@suse.com>
-> Tested-by: Bernhard Wiedemann <bwiedemann@suse.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
-> Cc: Bernhard Wiedemann <bwiedemann@suse.com>
-> Cc: Takashi Iwai<tiwai@suse.com>
+Fixes issue of ack frames not being reported.
 
-Thanks, applied to wireless-drivers.git.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.19+
+---
+ drivers/staging/vt6655/device_main.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Kalle Valo
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 5b3de43..8f48c84 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -989,10 +989,8 @@ static void device_free_tx_buf(struct vnt_private *pDevice, PSTxDesc pDesc)
+ 				 skb->len, DMA_TO_DEVICE);
+ 	}
+ 
+-	if (pTDInfo->byFlags & TD_FLAGS_NETIF_SKB)
++	if (skb)
+ 		ieee80211_tx_status_irqsafe(pDevice->hw, skb);
+-	else
+-		dev_kfree_skb_irq(skb);
+ 
+ 	pTDInfo->skb_dma = 0;
+ 	pTDInfo->skb = NULL;
+-- 
+2.1.0
+
