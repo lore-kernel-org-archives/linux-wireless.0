@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fopen.at ([151.236.7.194]:43992 "EHLO fopen.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754512AbbDPKnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 06:43:16 -0400
-From: Florian Achleitner <flo@fopen.at>
-To: James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>
-Subject: Re: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
-Date: Thu, 16 Apr 2015 12:43:14 +0200
-Message-ID: <3204550.d2SRA167I8@r90b40zn> (sfid-20150416_124321_560600_4E6BB3EB)
-In-Reply-To: <20150416101913.GA26748@us.netrek.org>
-References: <3169170.GKjfvNuGRf@r90b40zn> <20150416101913.GA26748@us.netrek.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.sigma-star.at ([95.130.255.111]:14388 "EHLO
+	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754137AbbDIV5e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2015 17:57:34 -0400
+From: Richard Weinberger <richard@nod.at>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
+	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH 4/5 v2] netfilter: Fix format string of nfnetlink_queue proc file
+Date: Thu,  9 Apr 2015 23:57:16 +0200
+Message-Id: <1428616637-21690-4-git-send-email-richard@nod.at> (sfid-20150409_235743_082148_89291511)
+In-Reply-To: <1428616637-21690-1-git-send-email-richard@nod.at>
+References: <1428616637-21690-1-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 16 April 2015 20:19:13 James Cameron wrote:
-> On Thu, Apr 16, 2015 at 11:10:02AM +0200, Florian Achleitner wrote:
-> > Is the necessity of frequent hardware resets a commonly known issue
-> > with this chip/firmware? Anybody else experiencing these?
-> 
-> Yes, but how frequent?
+The printed values are all of type unsigned integer, therefore use
+%u instead of %d. Otherwise an user can face negative values.
 
-Depends on the specific hardware. Averages follow.
+Fixes:
+$ cat /proc/net/netfilter/nfnetlink_queue
+    0  29508   278 2 65531     0 2004213241 -2129885586  1
+    1 -27747     0 2 65531     0     0        0  1
+    2 -27748     0 2 65531     0     0        0  1
 
-> 
-> > Currently, we see three different scenarios. One of them is
-> > currently not answered by reset. Refer to the upcoming patch.
-> > 
-> > (1)  mwifiex_cmd_timeout_func: Timeout cmd .. Ok, after reset.
-> 
-> See this a lot during heavy testing.
+Signed-off-by: Richard Weinberger <richard@nod.at>
+---
+ net/netfilter/nfnetlink_queue_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Also a lot, maybe once a day in low load.
-
-> 
-> > (2)  Firmware wakeup failed.. Ok, after reset.
-> 
-> Never see this.
-
-Once a day.
-
-> 
-> > (3) DNLD_CMD: host to card failed. No reset triggered. See patch.
-> 
-> Very rarely see this.
-
-Also very rarely. Once a week, probably.
-
-> 
-> However, our experience may not be comparable; we are using 8787 with
-> a 3.5 kernel, because we haven't the resources to use a later kernel
-> or get backports working.
-> 
-> Also, we use WOL (wake on lan) heavily; frequent automatic suspends,
-> with a GPIO wakeup in addition to the SDHCI.
-
-We don't use WOL or suspends.
-
-Regards,
-Florian
+diff --git a/net/netfilter/nfnetlink_queue_core.c b/net/netfilter/nfnetlink_queue_core.c
+index 0aba0b9..017e3cd 100644
+--- a/net/netfilter/nfnetlink_queue_core.c
++++ b/net/netfilter/nfnetlink_queue_core.c
+@@ -1241,7 +1241,7 @@ static int seq_show(struct seq_file *s, void *v)
+ {
+ 	const struct nfqnl_instance *inst = v;
+ 
+-	seq_printf(s, "%5d %6d %5d %1d %5d %5d %5d %8d %2d\n",
++	seq_printf(s, "%5u %6u %5u %1u %5u %5u %5u %8u %2d\n",
+ 		   inst->queue_num,
+ 		   inst->peer_portid, inst->queue_total,
+ 		   inst->copy_mode, inst->copy_range,
+-- 
+1.8.4.5
 
