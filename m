@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47620 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754632AbbDQPQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 11:16:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 06/11] wlcore: enable IEEE80211_HW_SUPPORT_FAST_XMIT
-Date: Fri, 17 Apr 2015 17:15:46 +0200
-Message-Id: <1429283751-5104-6-git-send-email-johannes@sipsolutions.net> (sfid-20150417_171621_614883_4379B933)
-In-Reply-To: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
-References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.sigma-star.at ([95.130.255.111]:14386 "EHLO
+	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754107AbbDIV5e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Apr 2015 17:57:34 -0400
+From: Richard Weinberger <richard@nod.at>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
+	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH 2/5 v2] nfc: Fix portid type in urelease_work
+Date: Thu,  9 Apr 2015 23:57:14 +0200
+Message-Id: <1428616637-21690-2-git-send-email-richard@nod.at> (sfid-20150409_235948_799405_051BFB5C)
+In-Reply-To: <1428616637-21690-1-git-send-email-richard@nod.at>
+References: <1428616637-21690-1-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+portid is an unsigned integer. Fix urelease_work to
+match all other portid user in the kernel.
 
-The driver can clearly enable fast-xmit since it does rate
-control in the device and thus must do duration calculation
-there as well.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Richard Weinberger <richard@nod.at>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/nfc/netlink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 1e136993580f..34cef10aefc5 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -6077,7 +6077,8 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_AMPDU_AGGREGATION |
- 		IEEE80211_HW_TX_AMPDU_SETUP_IN_HW |
- 		IEEE80211_HW_QUEUE_CONTROL |
--		IEEE80211_HW_CHANCTX_STA_CSA;
-+		IEEE80211_HW_CHANCTX_STA_CSA |
-+		IEEE80211_HW_SUPPORT_FAST_XMIT;
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 14a2d11..3763036 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -1584,7 +1584,7 @@ static const struct genl_ops nfc_genl_ops[] = {
  
- 	wl->hw->wiphy->cipher_suites = cipher_suites;
- 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ struct urelease_work {
+ 	struct	work_struct w;
+-	int	portid;
++	u32	portid;
+ };
+ 
+ static void nfc_urelease_event_work(struct work_struct *work)
 -- 
-2.1.4
+1.8.4.5
 
