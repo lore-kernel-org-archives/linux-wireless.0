@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:14385 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbbDLWws (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4655 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755294AbbDIMF2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 18:52:48 -0400
-From: Richard Weinberger <richard@nod.at>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, davem@davemloft.net,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
-	Richard Weinberger <richard@nod.at>
-Subject: [PATCH 1/5 v4] netlink: Fix portid type in netlink_notify
-Date: Mon, 13 Apr 2015 00:52:35 +0200
-Message-Id: <1428879159-19237-1-git-send-email-richard@nod.at> (sfid-20150413_005443_612454_D94734F7)
+	Thu, 9 Apr 2015 08:05:28 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: fix arvif->wep_keys clearing
+References: <1427444516-974-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 9 Apr 2015 15:05:22 +0300
+In-Reply-To: <1427444516-974-1-git-send-email-michal.kazior@tieto.com> (Michal
+	Kazior's message of "Fri, 27 Mar 2015 08:21:55 +0000")
+Message-ID: <87zj6heccd.fsf@kamboji.qca.qualcomm.com> (sfid-20150409_140532_583365_02C1F626)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-portid is an unsigned integer. Fix netlink_notify to
-match all other portid user in the kernel.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- include/linux/netlink.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The variable should be cleared regardless of
+> whether there's a peer associated with the key or
+> not.
+>
+> This fixes case when user first associates with 2
+> WEP keys and then disconnects and connects with 1
+> WEP key. This resulted in WEP key count being 2 in
+> the driver leading to default keyidx fixup
+> failure.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-index 02fc86d..6835c12 100644
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -134,7 +134,7 @@ struct netlink_callback {
- 
- struct netlink_notify {
- 	struct net *net;
--	int portid;
-+	u32 portid;
- 	int protocol;
- };
- 
+Thanks, both patches applied.
+
 -- 
-1.8.4.5
-
+Kalle Valo
