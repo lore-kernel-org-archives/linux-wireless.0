@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35428 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751546AbbDKGQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2015 02:16:57 -0400
-Message-ID: <1428733011.2139.1.camel@sipsolutions.net> (sfid-20150411_081736_813105_6AC0FB50)
-Subject: Re: [PATCH] net/wireless: CFG80211_WEXT_EXPORT requires wireless
- extensions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Sat, 11 Apr 2015 08:16:51 +0200
-In-Reply-To: <2303996.H1mYPouv05@wuerfel>
-References: <2303996.H1mYPouv05@wuerfel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:35306 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755820AbbDJNER (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2015 09:04:17 -0400
+Received: by lbbuc2 with SMTP id uc2so13120938lbb.2
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:04:16 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix error handling in pci_probe
+Date: Fri, 10 Apr 2015 13:01:27 +0000
+Message-Id: <1428670887-7533-1-git-send-email-michal.kazior@tieto.com> (sfid-20150410_150425_818875_111A1AB9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-04-11 at 00:29 +0200, Arnd Bergmann wrote:
-> The CFG80211_WEXT_EXPORT symbol is selected by two drivers that
-> make direct use of compat handlers for the wireless ioctls.
-> However, this has no effect when the wireless extensions themselves
-> are disabled, and results in a link error:
-> 
-> ERROR: "cfg80211_wext_giwrts" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-> ERROR: "cfg80211_wext_siwfrag" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
-> 
-> This changes the Kconfig logic so that CFG80211_WEXT can not
-> be disabled when CFG80211_WEXT_EXPORT is set.
+If chip_id wasn't recognized clean up code wasn't
+executed properly. It would skip freeing memory
+causing a leak and irqs causing possibly MSI
+warning splats later or even kernel crashes.
 
-> +++ b/net/wireless/Kconfig
-> @@ -178,7 +178,6 @@ config CFG80211_WEXT
->  	bool "cfg80211 wireless extensions compatibility"
+Fixes: 1a7fecb766c8 ("ath10k: reset chip before reading chip_id in probe")
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-(I added "if !CFG80211_WEXT_EXPORT" to this line)
-
->  	depends on CFG80211
->  	select WEXT_CORE
-> -	default y if CFG80211_WEXT_EXPORT
->  	help
->  	  Enable this option if you need old userspace for wireless
->  	  extensions with cfg80211-based drivers.
-> @@ -186,6 +185,7 @@ config CFG80211_WEXT
->  config CFG80211_WEXT_EXPORT
->  	bool
->  	depends on CFG80211
-> +	select CFG80211_WEXT
-
-This doesn't work afaict because select won't go through if this is
-selected. I've already sent a fix for this in my latest pull request
-that has the above.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 262a84f67f62..1f770ac28df4 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2684,7 +2684,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	if (!ath10k_pci_chip_is_supported(pdev->device, chip_id)) {
+ 		ath10k_err(ar, "device %04x with chip_id %08x isn't supported\n",
+ 			   pdev->device, chip_id);
+-		goto err_sleep;
++		goto err_free_irq;
+ 	}
+ 
+ 	ret = ath10k_core_register(ar, chip_id);
+-- 
+2.1.4
 
