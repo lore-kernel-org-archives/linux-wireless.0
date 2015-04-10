@@ -1,118 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:22835 "EHLO mga14.intel.com"
+Received: from a.ns.miles-group.at ([95.130.255.143]:65275 "EHLO radon.swed.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965572AbbD1MnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 08:43:22 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/8] iwlwifi: mvm: fix scan iteration complete notification handling
-Date: Tue, 28 Apr 2015 15:43:07 +0300
-Message-Id: <1430224992-20327-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150428_144335_247189_AB6BE904)
-In-Reply-To: <1430224907.4748.3.camel@intel.com>
-References: <1430224907.4748.3.camel@intel.com>
+	id S932151AbbDJHbY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2015 03:31:24 -0400
+Message-ID: <55277C47.4080201@nod.at> (sfid-20150410_093129_238364_BD39CF42)
+Date: Fri, 10 Apr 2015 09:31:19 +0200
+From: Richard Weinberger <richard@nod.at>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>, Steven Rostedt <rostedt@goodmis.org>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net,
+	pablo@netfilter.org
+Subject: Re: [PATCH 5/5 v2] netfilter: Fix format string of nfnetlink_log
+ proc file
+References: <1428616637-21690-1-git-send-email-richard@nod.at>	 <1428616637-21690-5-git-send-email-richard@nod.at> <1428619177.5413.15.camel@perches.com>
+In-Reply-To: <1428619177.5413.15.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+Am 10.04.2015 um 00:39 schrieb Joe Perches:
+> On Thu, 2015-04-09 at 23:57 +0200, Richard Weinberger wrote:
+>> The printed values are all of type unsigned integer, therefore use
+>> %u instead of %d. Otherwise an user can face negative values.
+> 
+> Hey Richard.
+> 
+> Just to clarify, this patch is for net and not for net-next
+> as net-next has removed the seq_printf return uses.
+> 
+> Are you going to submit an equivalent patch for net-next?
 
-Scan iteration complete notification handling uses the wrong FW API
-version (version 2 instead of version 3).
-Fix that by removing version 2 API which is no longer used, and using
-only the updated version.
+Hmm, you are right. It took me a few minutes to figure out what happened
+because I did rebase my patches to net-next and fixed up 5/5 already.
+Reading yesterday's bash history shows that I've used
+git format-patch in a wrong way such that the comments from the old
+branch were taken.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Reviewed-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h | 44 ++------------------------
- drivers/net/wireless/iwlwifi/mvm/scan.c        |  2 +-
- 2 files changed, 3 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-index 4f81dcf..d6cced4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-@@ -122,46 +122,6 @@ enum iwl_scan_complete_status {
- 	SCAN_COMP_STATUS_ERR_ALLOC_TE = 0x0C,
- };
- 
--/**
-- * struct iwl_scan_results_notif - scan results for one channel
-- * ( SCAN_RESULTS_NOTIFICATION = 0x83 )
-- * @channel: which channel the results are from
-- * @band: 0 for 5.2 GHz, 1 for 2.4 GHz
-- * @probe_status: SCAN_PROBE_STATUS_*, indicates success of probe request
-- * @num_probe_not_sent: # of request that weren't sent due to not enough time
-- * @duration: duration spent in channel, in usecs
-- * @statistics: statistics gathered for this channel
-- */
--struct iwl_scan_results_notif {
--	u8 channel;
--	u8 band;
--	u8 probe_status;
--	u8 num_probe_not_sent;
--	__le32 duration;
--	__le32 statistics[SCAN_RESULTS_STATISTICS];
--} __packed; /* SCAN_RESULT_NTF_API_S_VER_2 */
--
--/**
-- * struct iwl_scan_complete_notif - notifies end of scanning (all channels)
-- * ( SCAN_COMPLETE_NOTIFICATION = 0x84 )
-- * @scanned_channels: number of channels scanned (and number of valid results)
-- * @status: one of SCAN_COMP_STATUS_*
-- * @bt_status: BT on/off status
-- * @last_channel: last channel that was scanned
-- * @tsf_low: TSF timer (lower half) in usecs
-- * @tsf_high: TSF timer (higher half) in usecs
-- * @results: array of scan results, only "scanned_channels" of them are valid
-- */
--struct iwl_scan_complete_notif {
--	u8 scanned_channels;
--	u8 status;
--	u8 bt_status;
--	u8 last_channel;
--	__le32 tsf_low;
--	__le32 tsf_high;
--	struct iwl_scan_results_notif results[];
--} __packed; /* SCAN_COMPLETE_NTF_API_S_VER_2 */
--
- /* scan offload */
- #define IWL_SCAN_MAX_BLACKLIST_LEN	64
- #define IWL_SCAN_SHORT_BLACKLIST_LEN	16
-@@ -554,7 +514,7 @@ struct iwl_scan_req_unified_lmac {
- } __packed;
- 
- /**
-- * struct iwl_lmac_scan_results_notif - scan results for one channel -
-+ * struct iwl_scan_results_notif - scan results for one channel -
-  *	SCAN_RESULT_NTF_API_S_VER_3
-  * @channel: which channel the results are from
-  * @band: 0 for 5.2 GHz, 1 for 2.4 GHz
-@@ -562,7 +522,7 @@ struct iwl_scan_req_unified_lmac {
-  * @num_probe_not_sent: # of request that weren't sent due to not enough time
-  * @duration: duration spent in channel, in usecs
-  */
--struct iwl_lmac_scan_results_notif {
-+struct iwl_scan_results_notif {
- 	u8 channel;
- 	u8 band;
- 	u8 probe_status;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 74e1c86..1075a21 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -319,7 +319,7 @@ int iwl_mvm_rx_scan_offload_iter_complete_notif(struct iwl_mvm *mvm,
- 						struct iwl_device_cmd *cmd)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	struct iwl_scan_complete_notif *notif = (void *)pkt->data;
-+	struct iwl_lmac_scan_complete_notif *notif = (void *)pkt->data;
- 
- 	IWL_DEBUG_SCAN(mvm,
- 		       "Scan offload iteration complete: status=0x%x scanned channels=%d\n",
--- 
-2.1.0
-
+Thanks,
+//richard
