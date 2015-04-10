@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:33800 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338AbbDMHq2 (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:33740 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932217AbbDJM40 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 03:46:28 -0400
-Received: by lbcga7 with SMTP id ga7so52297449lbc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2015 00:46:26 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC 2/2] ath10k: don't disable PS when not connected
-Date: Mon, 13 Apr 2015 09:45:41 +0200
-Message-Id: <1428911141-6534-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150413_094631_757387_B41D347F)
-In-Reply-To: <1428911141-6534-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1428911141-6534-1-git-send-email-janusz.dziedzic@tieto.com>
+	Fri, 10 Apr 2015 08:56:26 -0400
+Received: by layy10 with SMTP id y10so12600619lay.0
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 05:56:25 -0700 (PDT)
+Message-ID: <5527C877.6040700@cogentembedded.com> (sfid-20150410_145650_460763_09362DD8)
+Date: Fri, 10 Apr 2015 15:56:23 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+CC: matti.gottlieb@intel.com, Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 3/4] ipv4: add option to drop gratuitous ARP packets
+References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net> <1428652454-1224-3-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1428652454-1224-3-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't disable PS while we are not connected.
-In other case we will get higher power consumption.
+Hello.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+On 4/10/2015 10:54 AM, Johannes Berg wrote:
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 52c5b1f..b896dd4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1730,7 +1730,13 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
- 		enable_ps = false;
- 	}
- 
--	if (enable_ps) {
-+	if (!arvif->is_started) {
-+		/* enable power save mode while not connected,
-+		 * in other case after iface up we will get
-+		 * higher power consumption - firmware design
-+		 */
-+		psmode = WMI_STA_PS_MODE_ENABLED;
-+	} else if (enable_ps) {
- 		psmode = WMI_STA_PS_MODE_ENABLED;
- 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
- 
--- 
-1.9.1
+> From: Johannes Berg <johannes.berg@intel.com>
+
+> In certain 802.11 wireless deployments, there will be ARP proxies
+> that use knowledge of the network to correctly answer requests.
+> To prevent gratuitous ARP frames on the shared medium from being
+> a problem, on such deployments wireless needs to drop them.
+
+> Enable this by providing an option called "drop_gratuitous_arp".
+
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>   Documentation/networking/ip-sysctl.txt | 6 ++++++
+>   include/uapi/linux/ip.h                | 1 +
+>   net/ipv4/arp.c                         | 8 ++++++++
+>   net/ipv4/devinet.c                     | 2 ++
+>   4 files changed, 17 insertions(+)
+
+[...]
+> diff --git a/net/ipv4/arp.c b/net/ipv4/arp.c
+> index 5f5c674e130a..5487d5e5191e 100644
+> --- a/net/ipv4/arp.c
+> +++ b/net/ipv4/arp.c
+> @@ -715,6 +715,14 @@ static int arp_process(struct sk_buff *skb)
+>   	    (!IN_DEV_ROUTE_LOCALNET(in_dev) && ipv4_is_loopback(tip)))
+>   		goto out;
+>
+> + /*
+> +  *	For some 802.11 wireless deployments (and possibly other networks),
+> +  *	there will be an ARP proxy and gratuitous ARP frames are attacks
+> +  *	and thus should not be accepted.
+> +  */
+
+    Hm, why this strange indentation?
+
+> +	if (IN_DEV_CONF_GET(in_dev, DROP_GRATUITOUS_ARP) && sip == tip)
+> +		goto out;
+> +
+>   /*
+>    *     Special case: We must set Frame Relay source Q.922 address
+>    */
+[...]
+
+WBR, Sergei
 
