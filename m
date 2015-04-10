@@ -1,70 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39269 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752715AbbDBGm1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2015 02:42:27 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/31] iwlwifi: mvm: remove unused arguments
-Date: Thu,  2 Apr 2015 09:41:13 +0300
-Message-Id: <1427956879-11725-25-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090419_457036_34B8AB5D)
-In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
-References: <1427956656.8122.2.camel@egrumbacBox>
+Received: from mail2.candelatech.com ([208.74.158.173]:41529 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674AbbDJXcb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2015 19:32:31 -0400
+Message-ID: <55285D8D.6070703@candelatech.com> (sfid-20150411_013240_684208_6E07DCEF)
+Date: Fri, 10 Apr 2015 16:32:29 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: ath10k <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: CT ath10k firmware now supports IBSS + RSN
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+First, thanks to everyone that helped me with questions,
+QCA/Tieto's upstream patches, etc.
 
-The str/len arguments to iwl_fw_dbg_trigger_simple_stop() aren't used,
-and for a simple trigger don't really need to be used as the trigger
-code itself encodes the reason, so remove them.
+This needs more testing, but it appears to at least mostly work.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +--
- drivers/net/wireless/iwlwifi/mvm/mvm.h      | 5 ++---
- 2 files changed, 3 insertions(+), 5 deletions(-)
+I am using this 4.0 related kernel.  I think only the last 3 patches
+are IBSS specific, but possibly there are others that matter as well.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 0bd3373..810b6d3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3711,8 +3711,7 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- 	IWL_DEBUG_MAC80211(mvm, "pre CSA to freq %d\n",
- 			   chsw->chandef.center_freq1);
- 
--	iwl_fw_dbg_trigger_simple_stop(mvm, vif, FW_DBG_TRIGGER_CHANNEL_SWITCH,
--				       NULL, 0);
-+	iwl_fw_dbg_trigger_simple_stop(mvm, vif, FW_DBG_TRIGGER_CHANNEL_SWITCH);
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index a3f2078..500064f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1516,8 +1516,7 @@ iwl_fw_dbg_trigger_check_stop(struct iwl_mvm *mvm,
- static inline void
- iwl_fw_dbg_trigger_simple_stop(struct iwl_mvm *mvm,
- 			       struct ieee80211_vif *vif,
--			       enum iwl_fw_dbg_trigger trig,
--			       const char *str, size_t len)
-+			       enum iwl_fw_dbg_trigger trig)
- {
- 	struct iwl_fw_dbg_trigger_tlv *trigger;
- 
-@@ -1528,7 +1527,7 @@ iwl_fw_dbg_trigger_simple_stop(struct iwl_mvm *mvm,
- 	if (!iwl_fw_dbg_trigger_check_stop(mvm, vif, trigger))
- 		return;
- 
--	iwl_mvm_fw_dbg_collect_trig(mvm, trigger, str, len);
-+	iwl_mvm_fw_dbg_collect_trig(mvm, trigger, NULL, 0);
- }
- 
- #endif /* __IWL_MVM_H__ */
+http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-4.0.dev.y/.git;a=summary
+
+Firmware binaries and release notes are here:
+http://www.candelatech.com/downloads/ath10k-fw-beta/
+
+I'm using a very recent wpa_supplicant..upstream should work I think,
+but I am using this one:
+
+https://github.com/greearb/hostap-ct/tree/master/hostapd
+
+supplicant needs to have this enabled, among other things:
+
+CONFIG_IBSS_RSN=y
+
+
+I suspect there are lingering bugs, perhaps in supplicant, as it seems to take
+a few tries for the 4-way to happen properly, and I have to re-start hostapd
+on each side each time I associate.
+
+My supplicant config files look like this (you can comment out any options
+your supplicant doesn't know about...I have a few extra features not specifically
+related to IBSS in my hostapd tree)
+
+ctrl_interface=/var/run/wpa_supplicant
+fast_reauth=1
+concurrent_assoc_ok=1
+scan_cur_freq=1
+min_scan_gap=5
+freq_list=5180
+
+bss_max_count=2000
+network={
+    ssid="ota-ibss-ssid"
+    disable_ht=0
+    disable_vht=0
+    ieee80211w=0
+    disable_ht40=1
+    disable_sgi=0
+    ht_mcs=""
+    disable_max_amsdu=-1
+    ampdu_factor=-1
+    ampdu_density=-1
+    freq_list=5180
+    fixed_freq=1
+
+    mode=1
+    frequency=5180
+    proto=RSN
+    key_mgmt=WPA-PSK
+    #psk="ben-ota-passwd"
+    psk=fc29b6edf32abd7a9818af3c94b2aa5364c785eee33ed3df11605a3db8f905bc
+    pairwise=CCMP
+    group=CCMP
+    proactive_key_caching=0
+
+}
+
+
+I'm curious to know if anyone tries it out.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
