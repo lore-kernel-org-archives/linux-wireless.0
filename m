@@ -1,41 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:15541 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbbDQGox (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 02:44:53 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: use MAC clock rate same as FW uses for survey accuracy
-References: <6a113cdb1b0dbbb6d98ab6b363b4912474c32bac.1428701627.git.poh@qca.qualcomm.com>
-Date: Fri, 17 Apr 2015 09:44:43 +0300
-In-Reply-To: <6a113cdb1b0dbbb6d98ab6b363b4912474c32bac.1428701627.git.poh@qca.qualcomm.com>
-	(Peter Oh's message of "Mon, 13 Apr 2015 11:01:20 -0700")
-Message-ID: <87egnj45k4.fsf@kamboji.qca.qualcomm.com> (sfid-20150417_084457_488921_92EA88BB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57995 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753241AbbDJHyZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2015 03:54:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: matti.gottlieb@intel.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/4] ipv4: add option to drop unicast encapsulated in L2 multicast
+Date: Fri, 10 Apr 2015 09:54:11 +0200
+Message-Id: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net> (sfid-20150410_095450_402378_114CC381)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> WLAN survey data provides several informative values on each channels
-> such as noise, active time, transmit time, and etc.
-> Regarding the channel activity time data, it is reported from firmware
-> in different form which is number of cycles instead of time itself.
-> Hence host driver converts it to time unit by dividing it by clock rate
-> that is used at baseband MAC.
->
-> Using difference clock rate from that actual HW is using will result in
-> inaccurate survey data. For instance, channel active time can be reported
-> with bigger than 150ms even though we set Dwell time to 150ms.
-> Therefore set the clock rate to 88000 (88 MHz) which is ath10k baseband
-> MAC is using.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+In order to solve a problem with 802.11, the so-called hole-196 attack,
+add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
+enabled, causes the stack to drop IPv4 unicast packets encapsulated in
+link-layer multi- or broadcast frames. Such frames can (as an attack)
+be created by any member of the same wireless network and transmitted
+as valid encrypted frames since the symmetric key for broadcast frames
+is shared between all stations.
 
-Thanks, applied.
+Additionally, enabling this option provides compliance with a SHOULD
+clause of RFC 1122.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/networking/ip-sysctl.txt |  7 +++++++
+ include/uapi/linux/ip.h                |  1 +
+ net/ipv4/devinet.c                     |  2 ++
+ net/ipv4/route.c                       | 20 ++++++++++++++++++++
+ 4 files changed, 30 insertions(+)
+
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 071fb18dc57c..f97ad76e6f82 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1165,6 +1165,13 @@ promote_secondaries - BOOLEAN
+ 	promote a corresponding secondary IP address instead of
+ 	removing all the corresponding secondary IP addresses.
+ 
++drop_unicast_in_l2_multicast - BOOLEAN
++	Drop any unicast IP packets that are received in link-layer
++	multicast (or broadcast) frames.
++	This behavior (for multicast) is actually a SHOULD in RFC
++	1122, but is disabled by default for compatibility reasons.
++	Default: off (0)
++
+ 
+ tag - INTEGER
+ 	Allows you to write a number, which can be used as required.
+diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+index 411959405ab6..c0e594b209ff 100644
+--- a/include/uapi/linux/ip.h
++++ b/include/uapi/linux/ip.h
+@@ -164,6 +164,7 @@ enum
+ 	IPV4_DEVCONF_ROUTE_LOCALNET,
+ 	IPV4_DEVCONF_IGMPV2_UNSOLICITED_REPORT_INTERVAL,
+ 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
++	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
+ 	__IPV4_DEVCONF_MAX
+ };
+ 
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index c6473f365ad1..b608407f96e7 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -2176,6 +2176,8 @@ static struct devinet_sysctl_table {
+ 					      "promote_secondaries"),
+ 		DEVINET_SYSCTL_FLUSHING_ENTRY(ROUTE_LOCALNET,
+ 					      "route_localnet"),
++		DEVINET_SYSCTL_FLUSHING_ENTRY(DROP_UNICAST_IN_L2_MULTICAST,
++					      "drop_unicast_in_l2_multicast"),
+ 	},
+ };
+ 
+diff --git a/net/ipv4/route.c b/net/ipv4/route.c
+index 652b92ebd7ba..5d5e03f9697b 100644
+--- a/net/ipv4/route.c
++++ b/net/ipv4/route.c
+@@ -1727,6 +1727,26 @@ static int ip_route_input_slow(struct sk_buff *skb, __be32 daddr, __be32 saddr,
+ 	if (res.type == RTN_BROADCAST)
+ 		goto brd_input;
+ 
++	/* RFC 1122 3.3.6:
++	 *
++	 *   When a host sends a datagram to a link-layer broadcast address,
++	 *   the IP destination address MUST be a legal IP broadcast or IP
++	 *   multicast address.
++	 *
++	 *   A host SHOULD silently discard a datagram that is received via
++	 *   a link-layer broadcast (see Section 2.4) but does not specify
++	 *   an IP multicast or broadcast destination address.
++	 *
++	 * This doesn't explicitly say L2 *broadcast*, but broadcast is in a
++	 * way a form of multicast and the most common use case for this is
++	 * 802.11 protecting against cross-station spoofing (the so-called
++	 * "hole-196" attack) so do it for both.
++	 */
++	if (IN_DEV_CONF_GET(in_dev, DROP_UNICAST_IN_L2_MULTICAST) &&
++	    (skb->pkt_type == PACKET_BROADCAST ||
++	     skb->pkt_type == PACKET_MULTICAST))
++		goto e_inval;
++
+ 	if (res.type == RTN_LOCAL) {
+ 		err = fib_validate_source(skb, saddr, daddr, tos,
+ 					  0, dev, in_dev, &itag);
 -- 
-Kalle Valo
+2.1.4
+
