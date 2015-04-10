@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57066 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753825AbbDTTyU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 15:54:20 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: While associated, force off channel transmission for action frames
-Date: Mon, 20 Apr 2015 22:54:14 +0300
-Message-Id: <1429559654-23126-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150420_215425_182994_BF1BCEB4)
+Received: from mout.kundenserver.de ([212.227.126.187]:63719 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751560AbbDJW3S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2015 18:29:18 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net/wireless: CFG80211_WEXT_EXPORT requires wireless extensions
+Date: Sat, 11 Apr 2015 00:29:14 +0200
+Message-ID: <2303996.H1mYPouv05@wuerfel> (sfid-20150411_002939_394960_BB95F581)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+The CFG80211_WEXT_EXPORT symbol is selected by two drivers that
+make direct use of compat handlers for the wireless ioctls.
+However, this has no effect when the wireless extensions themselves
+are disabled, and results in a link error:
 
-Currently while associated to an AP and sending an action frame to a
-different AP on the same channel, the action frame will be sent
-like a regular tx frame without going off channel.
+ERROR: "cfg80211_wext_giwrts" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_siwfrag" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
 
-When power save is enabled this can cause problems, since the device can
-go into power save and miss the response to the action frame that is sent
-by the other AP.
+This changes the Kconfig logic so that CFG80211_WEXT can not
+be disabled when CFG80211_WEXT_EXPORT is set.
 
-By forcing the frame to be transmitted off channel we avoid this issue.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 2afe38d15cee01 ("cfg80211-wext: export symbols only when needed")
 
-Force the transmitting of the action frame to use off channel in
-case of association
-- If HW off channel is enabled
-- The user did not forbid transmitting frames off channel
-- The frame is not designated to the AP that we are associated with
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/cfg.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 265e427..e38da9f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3336,8 +3336,14 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_P2P_CLIENT:
--		if (!sdata->u.mgd.associated)
-+		sdata_lock(sdata);
-+		if (!sdata->u.mgd.associated ||
-+		    (params->offchan && params->wait &&
-+		     local->ops->remain_on_channel &&
-+		     memcmp(sdata->u.mgd.associated->bssid,
-+			    mgmt->bssid, ETH_ALEN)))
- 			need_offchan = true;
-+		sdata_unlock(sdata);
- 		break;
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		need_offchan = true;
--- 
-2.1.0
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index b13dfb4ff001..cb5eef396d5c 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -178,7 +178,6 @@ config CFG80211_WEXT
+ 	bool "cfg80211 wireless extensions compatibility"
+ 	depends on CFG80211
+ 	select WEXT_CORE
+-	default y if CFG80211_WEXT_EXPORT
+ 	help
+ 	  Enable this option if you need old userspace for wireless
+ 	  extensions with cfg80211-based drivers.
+@@ -186,6 +185,7 @@ config CFG80211_WEXT
+ config CFG80211_WEXT_EXPORT
+ 	bool
+ 	depends on CFG80211
++	select CFG80211_WEXT
+ 	help
+ 	  Drivers should select this option if they require cfg80211's
+ 	  wext compatibility symbols to be exported.
 
