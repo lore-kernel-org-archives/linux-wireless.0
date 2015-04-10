@@ -1,48 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37263 "EHLO sipsolutions.net"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750878AbbDGG71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 02:59:27 -0400
-Message-ID: <1428389938.1841.1.camel@sipsolutions.net> (sfid-20150407_085941_736978_183F2564)
-Subject: Re: [PATCH] mac80211: Move message tracepoints to their own header
+Received: from s3.sipsolutions.net ([5.9.151.49]:58784 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755405AbbDJLTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2015 07:19:05 -0400
+Message-ID: <1428664738.1890.12.camel@sipsolutions.net> (sfid-20150410_131910_014809_BDBF4C3F)
+Subject: pull-request: mac80211-next 2015-04-10
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Date: Tue, 07 Apr 2015 08:58:58 +0200
-In-Reply-To: <20150406231357.2b8e452d@grimm.local.home>
-References: <20150406231357.2b8e452d@grimm.local.home>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 10 Apr 2015 13:18:58 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-04-06 at 23:13 -0400, Steven Rostedt wrote:
-> Every tracing file must have its own TRACE_SYSTEM defined.
+Hi,
 
-Oh, that requirement is new to me. I also have the same in iwlwifi, with
-even more TRACE_SYSTEMs.
+I realize it's late, but what I've got right now has so many fixes that
+I'd be sending even after the merge window, so it felt like there was
+little point in holding it up until after then. The new "intermediate
+queue" feature is unused right now so seems safe enough also, and having
+it in will help modify drivers to use it.
+There's also some rate control refactoring that, as far as I can tell,
+is uncontroversial and over the last couple of weeks has been has been
+reviewed and tested by people who use it, so I'm including it.
 
-> The mac80211 tracepoint header broke this and add in the middle
-> of the file had:
-> 
->  #undef TRACE_SYSTEM
->  #define TRACE_SYSTEM mac80211_msg
-> 
-> Unfortunately, this broke new code in the ftrace infrastructure.
-> Moving the mac80211_msg into its own trace file with its own
-> TRACE_SYSTEM defined fixes the issue.
+Let me know if you want me to change anything here or if there are any
+other problems.
 
-
-
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
-
-Looks fine to me.
-
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-
-I could merge through my tree but I guess you'll want to put it through
-a different one to be able to change the code that depends on this move.
-
+Thanks,
 johannes
+
+The following changes since commit 9911674fcf1f239ff3c87e56177c4826e33dfd95:
+
+  Merge branch 'ptp-ns_to_timespec64' (2015-03-31 17:19:19 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-04-10
+
+for you to fetch changes up to 6d00ec0514bd909e89ede59501342732dbef49fd:
+
+  cfg80211: don't allow disabling WEXT if it's required (2015-04-08 09:19:29 +0200)
+
+----------------------------------------------------------------
+There isn't much left, but we have
+ * new mac80211 internal software queue to allow drivers to have
+   shorter hardware queues and pull on-demand
+ * use rhashtable for mac80211 station table
+ * minstrel rate control debug improvements and some refactoring
+ * fix noisy message about TX power reduction
+ * fix continuous message printing and activity if CRDA doesn't respond
+ * fix VHT-related capabilities with "iw connect" or "iwconfig ..."
+ * fix Kconfig for cfg80211 wireless extensions compatibility
+
+----------------------------------------------------------------
+Felix Fietkau (1):
+      mac80211: add an intermediate software queue implementation
+
+Ilan peer (1):
+      cfg80211: Stop calling crda if it is not responsive
+
+Johannes Berg (4):
+      mac80211: use rhashtable for station table
+      cfg80211: move IE split utilities here from mac80211
+      cfg80211: send extended capabilities IE in connect
+      cfg80211: don't allow disabling WEXT if it's required
+
+John Linville (1):
+      mac80211: reduce log spam from ieee80211_handle_pwr_constr
+
+Thomas Huehn (10):
+      mac80211: enhance readability of Minstrels rc_stats output
+      mac80211: enhance readability of Minstrel-HTs rc_stats output
+      mac80211: add new Minstrel statistic output via csv
+      mac80211: add new Minstrel-HT statistic output via csv
+      mac80211: unify Minstrel & Minstrel-HTs calculation of rate statistics
+      mac80211: improve Minstrel variable & function naming
+      mac80211: restructure per-rate throughput calculation into function
+      mac80211: add max lossless throughput per rate
+      mac80211: reduce calculation costs of EWMA
+      mac80211: add standard deviation to Minstrel stats
+
+ include/net/cfg80211.h                     |  58 ++++++++
+ include/net/mac80211.h                     | 101 +++++++++++---
+ net/mac80211/agg-tx.c                      |  44 ++++++
+ net/mac80211/driver-ops.h                  |  12 ++
+ net/mac80211/ieee80211_i.h                 |  28 +++-
+ net/mac80211/iface.c                       |  23 ++-
+ net/mac80211/main.c                        |  12 +-
+ net/mac80211/mlme.c                        |  14 +-
+ net/mac80211/rc80211_minstrel.c            | 125 +++++++++++------
+ net/mac80211/rc80211_minstrel.h            |  49 +++++--
+ net/mac80211/rc80211_minstrel_debugfs.c    | 125 ++++++++++++++---
+ net/mac80211/rc80211_minstrel_ht.c         | 217 ++++++++++++++---------------
+ net/mac80211/rc80211_minstrel_ht.h         |   5 +-
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 216 ++++++++++++++++++++++++----
+ net/mac80211/rx.c                          |  22 ++-
+ net/mac80211/sta_info.c                    | 186 +++++++++++++++++--------
+ net/mac80211/sta_info.h                    |  40 ++----
+ net/mac80211/status.c                      |   8 +-
+ net/mac80211/trace.h                       |  31 +++++
+ net/mac80211/tx.c                          | 115 +++++++++++++--
+ net/mac80211/util.c                        |  62 +++------
+ net/wireless/Kconfig                       |   2 +-
+ net/wireless/nl80211.c                     |   2 +-
+ net/wireless/reg.c                         |  34 ++++-
+ net/wireless/reg.h                         |   9 +-
+ net/wireless/sme.c                         |  74 ++++++++--
+ net/wireless/util.c                        |  41 ++++++
+ 27 files changed, 1249 insertions(+), 406 deletions(-)
+
 
