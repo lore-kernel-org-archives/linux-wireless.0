@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:59560 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952AbbDASUX (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:33343 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933475AbbDJNao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 14:20:23 -0400
-Date: Wed, 01 Apr 2015 14:20:19 -0400 (EDT)
-Message-Id: <20150401.142019.102151219462061481.davem@davemloft.net> (sfid-20150401_202031_421573_0C357621)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2015-04-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1427895969.3428.9.camel@sipsolutions.net>
-References: <1427895969.3428.9.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 10 Apr 2015 09:30:44 -0400
+Received: by lbbzk7 with SMTP id zk7so13756911lbb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:42 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/4] ath10k: don't use reassoc flag
+Date: Fri, 10 Apr 2015 13:23:20 +0000
+Message-Id: <1428672203-8604-2-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153053_190729_662BB9C7)
+In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 01 Apr 2015 15:46:09 +0200
+Firmware actually re-creates peer entry when
+reassoc flag is set. This is undesired and could
+cause trouble with IBSS crypto-wise. This is also
+important for upcomming bitrate mask improvement.
 
-> This morning I randomly ran into a kernel crash and then I looked into
-> it and came up with this fix. It's clearly been around for quite a while
-> without anyone having seen it before (to my knowledge), so if you think
-> you don't want to pull it into net.git at this point that should be
-> fine.
-> 
-> Let me know what you want to do with it, I can also put it into
-> mac80211-next instead (although then Greg complains that he gets a lot
-> of Cc stable patches in rc1, but all the processes need time ...).
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Pulled, thanks Johannes.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a7a84f52b8b4..6664bcc9ba88 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2593,7 +2593,6 @@ static int ath10k_station_assoc(struct ath10k *ar,
+ 		return ret;
+ 	}
+ 
+-	peer_arg.peer_reassoc = reassoc;
+ 	ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
+-- 
+2.1.4
+
