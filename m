@@ -1,97 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ja.ssi.bg ([178.16.129.10]:54214 "EHLO ja.ssi.bg"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756077AbbDJM0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 08:26:54 -0400
-Date: Fri, 10 Apr 2015 15:19:54 +0300 (EEST)
-From: Julian Anastasov <ja@ssi.bg>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	matti.gottlieb@intel.com, Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 1/4] ipv4: add option to drop unicast encapsulated in L2
- multicast
-In-Reply-To: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>
-Message-ID: <alpine.LFD.2.11.1504101445330.1538@ja.home.ssi.bg> (sfid-20150410_142657_994292_9D9D47CC)
-References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mail-la0-f46.google.com ([209.85.215.46]:35144 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933443AbbDJNar (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Apr 2015 09:30:47 -0400
+Received: by labbd9 with SMTP id bd9so13284006lab.2
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:46 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/4] ath10k: enable ibss-rsn
+Date: Fri, 10 Apr 2015 13:23:23 +0000
+Message-Id: <1428672203-8604-5-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153101_054357_E7893778)
+In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-	Hello,
+With latest additions to the driver it seems
+viable to enable support for IBSS-RSN.
 
-On Fri, 10 Apr 2015, Johannes Berg wrote:
+It seems to work on QCA988X and 999.999.0.636 but
+is a bit slow to exchange RSN keys for some
+reason. This may be a firmware quirk or ath10k is
+missing something. Nevertheless it makes sense to
+finally enable IBSS-RSN in ath10k even if somewhat
+handicapped.
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In order to solve a problem with 802.11, the so-called hole-196 attack,
-> add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
-> enabled, causes the stack to drop IPv4 unicast packets encapsulated in
-> link-layer multi- or broadcast frames. Such frames can (as an attack)
-> be created by any member of the same wireless network and transmitted
-> as valid encrypted frames since the symmetric key for broadcast frames
-> is shared between all stations.
-> 
-> Additionally, enabling this option provides compliance with a SHOULD
-> clause of RFC 1122.
-> 
+QCA6174 firmware doesn't seem to be able to Tx
+EAPOL frames at all now (they get stuck in hw
+queues for some reason) so it never gets to set
+the keys in driver. It's fairly safe to assume that
+once this is fixed IBSS-RSN will work with QCA6174
+firmware without any additional changes. Hence no
+special handling for advertising
+IEEE80211_HW_SUPPORTS_PER_STA_GTK and
+WIPHY_FLAG_IBSS_RSN is done now.
 
-> +++ b/net/ipv4/route.c
-> @@ -1727,6 +1727,26 @@ static int ip_route_input_slow(struct sk_buff *skb, __be32 daddr, __be32 saddr,
->  	if (res.type == RTN_BROADCAST)
->  		goto brd_input;
->  
-> +	/* RFC 1122 3.3.6:
-> +	 *
-> +	 *   When a host sends a datagram to a link-layer broadcast address,
-> +	 *   the IP destination address MUST be a legal IP broadcast or IP
-> +	 *   multicast address.
-> +	 *
-> +	 *   A host SHOULD silently discard a datagram that is received via
-> +	 *   a link-layer broadcast (see Section 2.4) but does not specify
-> +	 *   an IP multicast or broadcast destination address.
-> +	 *
-> +	 * This doesn't explicitly say L2 *broadcast*, but broadcast is in a
-> +	 * way a form of multicast and the most common use case for this is
-> +	 * 802.11 protecting against cross-station spoofing (the so-called
-> +	 * "hole-196" attack) so do it for both.
-> +	 */
-> +	if (IN_DEV_CONF_GET(in_dev, DROP_UNICAST_IN_L2_MULTICAST) &&
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-	For this flag IN_DEV_ORCONF can be used, by this way
-all/drop_unicast_in_l2_multicast=1 can enable it for all
-interfaces.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9428d75d0d76..7485d5ccee3d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6720,11 +6720,13 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			IEEE80211_HW_SPECTRUM_MGMT |
+ 			IEEE80211_HW_SW_CRYPTO_CONTROL |
+ 			IEEE80211_HW_CONNECTION_MONITOR |
++			IEEE80211_HW_SUPPORTS_PER_STA_GTK |
+ 			IEEE80211_HW_WANT_MONITOR_VIF |
+ 			IEEE80211_HW_CHANCTX_STA_CSA |
+ 			IEEE80211_HW_QUEUE_CONTROL;
+ 
+ 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
++	ar->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
+ 	if (ar->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS)
+ 		ar->hw->wiphy->features |= NL80211_FEATURE_DYNAMIC_SMPS;
+-- 
+2.1.4
 
-> +	    (skb->pkt_type == PACKET_BROADCAST ||
-> +	     skb->pkt_type == PACKET_MULTICAST))
-> +		goto e_inval;
-> +
-
-	So, this is the same patch as the 2014-Aug version
-but this time with flag? But how the previous problems were
-addressed? May be something is changed in kernel afterwards?
-
-	So, if your are back at step 1 can you check again
-the problems with this implementation?:
-
-http://marc.info/?l=linux-netdev&m=140865079120355&w=2
-
-Thread:
-http://marc.info/?t=140864197300004&r=1&w=2
-
-	In short:
-
-- no way to select correct skb->pkt_type in inet_rtm_getroute
-before ip_route_input, this is a chiken-egg problem, of course,
-skb->pkt_type = PACKET_HOST can work for now
-
-- ip_route_input is called also for ARP, so incoming ARP
-broadcasts are not replied anymore
-
-- CLUSTERIP
-
-Regards
-
---
-Julian Anastasov <ja@ssi.bg>
