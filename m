@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:8252 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbbDAROz (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:34378 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933443AbbDJNam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 13:14:55 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: htc: match wait_for_completion_timeout return type
-References: <1426271901-20596-1-git-send-email-hofrat@osadl.org>
-Date: Wed, 1 Apr 2015 20:14:45 +0300
-In-Reply-To: <1426271901-20596-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
-	Guire's message of "Fri, 13 Mar 2015 14:38:21 -0400")
-Message-ID: <87a8yrzs6y.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_191514_755905_A0B4967A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 10 Apr 2015 09:30:42 -0400
+Received: by lbcga7 with SMTP id ga7so13738392lbc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:41 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/4] ath10k: ibss crypto fixes
+Date: Fri, 10 Apr 2015 13:23:19 +0000
+Message-Id: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153101_751190_14F71CBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <hofrat@osadl.org> writes:
+I've mainly tested this on kvalo/pending branch.
+Currently master branch contains 0f611d28fc2e
+("mac80211: count interfaces correctly for
+combination checks") which breaks IBSS in
+wpa_supplicant due to P2P Device and interface
+combinations. This has been pointed out in the
+following thread:
 
-> Return type of wait_for_completion_timeout is unsigned long not int.
-> An appropriately named unsigned long is added and the assignments fixed up.
->
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+ [1]: http://thread.gmane.org/gmane.linux.kernel.wireless.general/135570/focus=136643
 
-Thanks, applied.
+If someone's interested in running ath10k IBSS
+make sure to use kernel prior to 4.0, revert the
+mentioned mac80211 patch or apply wpa_supplicant
+workaround patch from [1].
+
+
+Janusz Dziedzic (1):
+  ath10k: enable ibss-rsn
+
+Michal Kazior (3):
+  ath10k: don't use reassoc flag
+  ath10k: fix multiple key static wep with ibss
+  ath10k: set def key idx for ibss
+
+ drivers/net/wireless/ath/ath10k/mac.c | 44 +++++++++++++++++++++++++++++------
+ 1 file changed, 37 insertions(+), 7 deletions(-)
 
 -- 
-Kalle Valo
+2.1.4
+
