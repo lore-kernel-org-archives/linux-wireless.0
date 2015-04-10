@@ -1,48 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:34772 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932426AbbD0Lek (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:35114 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933477AbbDJNap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 07:34:40 -0400
-Received: by oiko83 with SMTP id o83so86358473oik.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Apr 2015 04:34:40 -0700 (PDT)
-Date: Mon, 27 Apr 2015 06:34:37 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Nuno =?utf-8?Q?Gon=C3=A7alves?= <nunojpg@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Ubuntu regulatory database
-Message-ID: <20150427113437.GA4268@ubuntu-hedt> (sfid-20150427_133444_475176_6F87F1E2)
-References: <CAEXMXLSucPD3x6igB6pLs=8cBmc-oY0Ah+nLA3kVfS1y6kLhLQ@mail.gmail.com>
- <20150425190912.GA1706@ubuntu-xps13>
- <87y4leqhu6.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <87y4leqhu6.fsf@kamboji.qca.qualcomm.com>
+	Fri, 10 Apr 2015 09:30:45 -0400
+Received: by labbd9 with SMTP id bd9so13283145lab.2
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:43 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/4] ath10k: fix multiple key static wep with ibss
+Date: Fri, 10 Apr 2015 13:23:21 +0000
+Message-Id: <1428672203-8604-3-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153052_402893_E82A7F02)
+In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 27, 2015 at 08:08:01AM +0300, Kalle Valo wrote:
-> Seth Forshee <seth.forshee@canonical.com> writes:
-> 
-> > On Sat, Apr 25, 2015 at 06:26:34PM +0100, Nuno Gonçalves wrote:
-> >> I was surprised that the wireless regdb provided with Ubuntu 15.04 is
-> >> almost 2 years old.
-> >> 
-> >> Are you aware of the reason Ubuntu is not providing a updated regdb by default?
-> >
-> > This doesn't really seem on topic for the mailing list as it's a distro
-> > issue.
-> >
-> > But yes, it recently came to my attention that our distro package hadn't
-> > been updated in a while (I don't maintain the distro package and
-> > obviously wasn't paying close enough attention). It will be updated
-> > soon.
-> 
-> Oh, so does this mean that the old regdb doesn't support 80 MHz
-> channels? Is there any way to make it easier to update the regdb in
-> older Ubuntu versions?
+Apparently firmware requires both pairwise and
+groupwise keys to be installed per-peer for static
+WEP in IBSS. This wasn't necessary for AP mode
+(and installing both doesn't seem to break AP
+mode thus there's no special handling).
 
-It's likely we'll start pulling in updates on a continuing basis for as
-long as a release is supported. It's been on the list of things to get
-worked out right after 15.04 releases, i.e. this week.
+Also there seems to be some kind of issue with
+mapping tx/rx keys in firmware properly which
+resulted in wrong keys being used and broken
+communication between devices.
+
+It can be argued the vdev param part is more of a
+workaround than a real fix. However I couldn't
+figure out how to fix this differently. It works
+and isn't super ugly.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 6664bcc9ba88..93f753cb839a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -230,9 +230,13 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
+ 		flags = 0;
+ 		flags |= WMI_KEY_PAIRWISE;
+ 
+-		/* set TX_USAGE flag for default key id */
+-		if (arvif->def_wep_key_idx == i)
+-			flags |= WMI_KEY_TX_USAGE;
++		ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
++					 addr, flags);
++		if (ret)
++			return ret;
++
++		flags = 0;
++		flags |= WMI_KEY_GROUP;
+ 
+ 		ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
+ 					 addr, flags);
+@@ -244,6 +248,27 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
+ 		spin_unlock_bh(&ar->data_lock);
+ 	}
+ 
++	/* In some cases (notably with static WEP IBSS with multiple keys)
++	 * multicast Tx becomes broken. Both pairwise and groupwise keys are
++	 * installed already. Using WMI_KEY_TX_USAGE in different combinations
++	 * didn't seem help. Using def_keyid vdev parameter seems to be
++	 * effective so use that.
++	 *
++	 * FIXME: Revisit. Perhaps this can be done in a less hacky way.
++	 */
++	if (arvif->def_wep_key_idx == -1)
++		return 0;
++
++	ret = ath10k_wmi_vdev_set_param(arvif->ar,
++					arvif->vdev_id,
++					arvif->ar->wmi.vdev_param->def_keyid,
++					arvif->def_wep_key_idx);
++	if (ret) {
++		ath10k_warn(ar, "failed to re-set def wpa key idxon vdev %i: %d\n",
++			    arvif->vdev_id, ret);
++		return ret;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+2.1.4
+
