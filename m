@@ -1,82 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:32942 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758150AbbDVWBw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 18:01:52 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jani Nikula <jani.nikula@intel.com>
-Subject: [PATCH v2 2/8] kernel/module.c: use generic module param operaters for sig_enforce
-Date: Wed, 22 Apr 2015 14:55:05 -0700
-Message-Id: <1429739711-9415-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_000211_481821_1D9EFE08)
-In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from ja.ssi.bg ([178.16.129.10]:54784 "EHLO ja.ssi.bg"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753765AbbDKKkz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Apr 2015 06:40:55 -0400
+Date: Sat, 11 Apr 2015 13:39:05 +0300 (EEST)
+From: Julian Anastasov <ja@ssi.bg>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	matti.gottlieb@intel.com
+Subject: Re: [PATCH 1/4] ipv4: add option to drop unicast encapsulated in L2
+ multicast
+In-Reply-To: <1428671435.1890.22.camel@sipsolutions.net>
+Message-ID: <alpine.LFD.2.11.1504111305440.2449@ja.home.ssi.bg> (sfid-20150411_124105_741553_D04ABD2B)
+References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>  <alpine.LFD.2.11.1504101445330.1538@ja.home.ssi.bg> <1428671435.1890.22.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-We're directly checking and modifying sig_enforce when needed instead
-of using the generic helpers. This prevents us from generalizing this
-helper so that others can use it. Use indirect helpers to allow us
-to generalize this code a bit and to make it a bit more clear what
-this is doing.
+	Hello,
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jani Nikula <jani.nikula@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- kernel/module.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+On Fri, 10 Apr 2015, Johannes Berg wrote:
 
-diff --git a/kernel/module.c b/kernel/module.c
-index 42a1d2a..de12c4a 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -114,23 +114,25 @@ static bool sig_enforce = false;
- static int param_set_bool_enable_only(const char *val,
- 				      const struct kernel_param *kp)
- {
--	int err;
--	bool test;
-+	int err = 0;
-+	bool new_value;
-+	bool orig_value = *(bool *)kp->arg;
- 	struct kernel_param dummy_kp = *kp;
- 
--	dummy_kp.arg = &test;
-+	dummy_kp.arg = &new_value;
- 
- 	err = param_set_bool(val, &dummy_kp);
- 	if (err)
- 		return err;
- 
- 	/* Don't let them unset it once it's set! */
--	if (!test && sig_enforce)
-+	if (!new_value && orig_value)
- 		return -EROFS;
- 
--	if (test)
--		sig_enforce = true;
--	return 0;
-+	if (new_value)
-+		err = param_set_bool(val, kp);
-+
-+	return err;
- }
- 
- static const struct kernel_param_ops param_ops_bool_enable_only = {
--- 
-2.3.2.209.gd67f9d5.dirty
+> > - no way to select correct skb->pkt_type in inet_rtm_getroute
+> > before ip_route_input, this is a chiken-egg problem, of course,
+> > skb->pkt_type = PACKET_HOST can work for now
+> 
+> This is interesting. Why does that even build an skb and route it, if it
+> really just cares about the struct rtable? Anyway, you're right, using
+> PACKET_HOST would work. I'm not really sure I see the chicken-and-egg
+> problem though, it's not like the result of this is used to route the
+> skb again or something, afaict?
 
+	If we want to set correct pkt_type here we should
+know the type of daddr (multicast => PACKET_MULTICAST,
+broadcast => PACKET_BROADCAST, etc) and we can know it only
+after routing (rt_type). I hope we will not do other checks
+with pkt_type, so we can put some comment that
+skb->pkt_type = PACKET_HOST is just to make
+DROP_UNICAST_IN_L2_MULTICAST check happy.
+
+> > - ip_route_input is called also for ARP, so incoming ARP
+> > broadcasts are not replied anymore
+> 
+> Hm. I didn't see this in my testing so far, but I only enable this
+> temporarily, so perhaps by that time it was already done.
+
+	I didn't tested it myself, may be you can try:
+
+other_host_on_LAN# arp -d patched_box
+other_host_on_LAN# arping -c 1 -I eth0 patched_box
+
+	There must be reply for broadcast requests.
+
+> This looks like another case of using this function to not really route
+> anything but to just look up the route, similar to the
+> inet_rtm_getroute() function you pointed out. Perhaps that would warrant
+> splitting out somewhat.
+
+	Yes, ARP essentially performs rp_filter check (note
+that arp_filter check is limited only to local targets, not
+to proxy_arp) and target address type check.
+
+	The solution would be to add skb->protocol == htons(ETH_P_IP)
+check.
+
+> On the other hand, there's not all that much reason not to put this into
+> ip_rcv_finish(), we already touch the rt->rt_type there for MIB
+> counters. I'll look into that.
+
+	May be in ip_local_deliver_finish because:
+
+- ip_forward() already has PACKET_HOST check.
+
+- for broadcast/multicast dests we do not care
+
+- CLUSTERIP works in LOCAL_IN (after ip_rcv_finish), LOCAL_IN
+is here: ip_rcv_finish->dst_input->ip_local_deliver->
+ip_local_deliver_finish
+
+Regards
+
+--
+Julian Anastasov <ja@ssi.bg>
