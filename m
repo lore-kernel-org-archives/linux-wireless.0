@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a.ns.miles-group.at ([95.130.255.143]:65277 "EHLO radon.swed.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755219AbbDIV6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2015 17:58:18 -0400
-Message-ID: <5526F5F6.4010907@nod.at> (sfid-20150409_235827_908274_C8CD40D3)
-Date: Thu, 09 Apr 2015 23:58:14 +0200
-From: Richard Weinberger <richard@nod.at>
-MIME-Version: 1.0
-To: Pablo Neira Ayuso <pablo@netfilter.org>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
-Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
- file
-References: <1426246276-15839-1-git-send-email-richard@nod.at> <1426246276-15839-5-git-send-email-richard@nod.at> <20150313121539.GA14488@salvia> <5502E99A.2060901@nod.at> <20150313135329.GA6054@salvia> <5502F28F.9050601@nod.at> <20150316131113.GA5744@salvia>
-In-Reply-To: <20150316131113.GA5744@salvia>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:35188 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750854AbbDKXr5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Apr 2015 19:47:57 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] staging: vt6655: Fix TX retransmission race condition
+Date: Sun, 12 Apr 2015 00:47:22 +0100
+Message-Id: <1428796042-3390-1-git-send-email-tvboxspy@gmail.com> (sfid-20150412_014809_615097_5B193991)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 16.03.2015 um 14:11 schrieb Pablo Neira Ayuso:
-> On Fri, Mar 13, 2015 at 03:22:07PM +0100, Richard Weinberger wrote:
->> Am 13.03.2015 um 14:53 schrieb Pablo Neira Ayuso:
->>>> You mean statistics via netlink attributes? I can add that!
->>>
->>> Add a new NFQNL_CFG_CMD_STATS command to request the statistics. If
->>> NLM_F_DUMP is set, then we'll basically provide the full list of
->>> instances. Otherwise, in case you want to retrieve stats for a
->>> specific netlink socket, you can use the netlink portID as index.
->>> And you'll have to add attributes for this new command, yes.
->>
->> This was my plan. Thanks for the pointer!
-> 
-> It would be great if you can contribute this new interface.
+With high tx flow the same buffer can transmit  more than
+once and get stuck in loop.
 
-FYI, it is still on my TODO.
-I fear I won't find the time to do a patch for the upcoming merge window
-and it has to wait for v4.2.
+Reset TCR to zero in device_tx_srv.
 
->>>> But I think we should also fix the format string of the proc file
->>>> as the fix is easy and non-intrusive.
->>>
->>> Unfortunately we don't know how many people are relying on that
->>> output, I prefer to remain conservative and provide a proper netlink
->>> interface for this.
->>
->> I understand your concerns but an application which is able to parse positive
->> and negative numbers can also parse pure positives.
->> Just made a small test application, glibc's %d in sscanf() can also deal with UINT_MAX.
->> And I don't expect that applications to check whether the returned values from
->> /proc/net/netfilter/nfnetlink_queue are between INT_MIN and INT_MAX.
->>
->> That said, I'd have assumed that an user would report negative values as plain kernel bug.
-> 
-> Makes sense, please fix net/netfilter/nfnetlink_log.c too.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.19+
+---
+ drivers/staging/vt6655/device_main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Patches sent! :)
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index c5f8233..9b5d840 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -963,6 +963,9 @@ static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
+ 			vnt_int_report_rate(pDevice, pTD->pTDInfo, byTsr0, byTsr1);
+ 
+ 			device_free_tx_buf(pDevice, pTD);
++
++			/* Done with TCR reset to avoid retransmission */
++			pTD->m_td1TD1.byTCR = 0;
+ 			pDevice->iTDUsed[uIdx]--;
+ 		}
+ 	}
+-- 
+2.1.0
 
-Thanks,
-//richard
