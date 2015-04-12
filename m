@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:37855 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753473AbbDPJx3 (ORCPT
+Received: from mail.sigma-star.at ([95.130.255.111]:14386 "EHLO
+	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752485AbbDLWwt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 05:53:29 -0400
-Received: by widdi4 with SMTP id di4so90823786wid.0
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2015 02:53:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1429176257.1842.1.camel@sipsolutions.net>
-References: <1429161337-32680-1-git-send-email-yeohchunyeow@gmail.com>
-	<1429176257.1842.1.camel@sipsolutions.net>
-Date: Thu, 16 Apr 2015 17:53:28 +0800
-Message-ID: <CAEFj986ZH3mUMNR8O_kzrBhQA2ozFKav46Enc6ru4JUTX=qC7g@mail.gmail.com> (sfid-20150416_115333_008142_745EC031)
-Subject: Re: [PATCH] cfg80211: allow the plink state blocking for user managed mesh
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 12 Apr 2015 18:52:49 -0400
+From: Richard Weinberger <richard@nod.at>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
+	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH 2/5 v4] nfc: Fix portid type in urelease_work
+Date: Mon, 13 Apr 2015 00:52:36 +0200
+Message-Id: <1428879159-19237-2-git-send-email-richard@nod.at> (sfid-20150413_005317_248487_E6EE6021)
+In-Reply-To: <1428879159-19237-1-git-send-email-richard@nod.at>
+References: <1428879159-19237-1-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 16, 2015 at 5:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2015-04-16 at 13:15 +0800, Chun-Yeow Yeoh wrote:
->> User managed peering has no way to block the plink state
->> for mesh peering setup by wpa_supp or authsae. Try to do
->> allow this in kernel space, so that we can use iw utility
->> to do that.
->
-> I have no idea what you're trying to say here.
->
+portid is an unsigned integer. Fix urelease_work to
+match all other portid user in the kernel.
 
-wpa_supplicant and authsae allows us to do mesh peering in user space,
-but the plink state is still managed in kernel space.
+Signed-off-by: Richard Weinberger <richard@nod.at>
+---
+ net/nfc/netlink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-But AFAIK, there is no implementation by wpa_supplicant or authsae to
-block the plink state.
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 14a2d11..3763036 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -1584,7 +1584,7 @@ static const struct genl_ops nfc_genl_ops[] = {
+ 
+ struct urelease_work {
+ 	struct	work_struct w;
+-	int	portid;
++	u32	portid;
+ };
+ 
+ static void nfc_urelease_event_work(struct work_struct *work)
+-- 
+1.8.4.5
 
-By applying this patch, we can use the "iw mesh0 station set
-xx:xx:xx:xx:xx:xx plink_action block" to block the peer mesh STA. This
-is useful for experimenting purposes.
-
-> johannes
->
-> PS: don't CC John any more :)
->
-
-Oops, ok.
-
-----
-Chun-Yeow
