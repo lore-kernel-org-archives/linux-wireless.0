@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:59444 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934224AbbDVIKz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 04:10:55 -0400
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jani Nikula <jani.nikula@intel.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v1 4/6] moduleparam.h: add module_param_config_*() helpers
-In-Reply-To: <1429572637-30234-5-git-send-email-mcgrof@do-not-panic.com>
-References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com> <1429572637-30234-5-git-send-email-mcgrof@do-not-panic.com>
-Date: Wed, 22 Apr 2015 16:45:04 +0930
-Message-ID: <87mw20ocqv.fsf@rustcorp.com.au> (sfid-20150422_101102_110694_6CA5FC4C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.sigma-star.at ([95.130.255.111]:14389 "EHLO
+	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752569AbbDLWwv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Apr 2015 18:52:51 -0400
+From: Richard Weinberger <richard@nod.at>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
+	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH 5/5 v4] netfilter: Fix format string of nfnetlink_log proc file
+Date: Mon, 13 Apr 2015 00:52:39 +0200
+Message-Id: <1428879159-19237-5-git-send-email-richard@nod.at> (sfid-20150413_005402_155979_5CB8610E)
+In-Reply-To: <1428879159-19237-1-git-send-email-richard@nod.at>
+References: <1428879159-19237-1-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
->
-> This adds a couple of bool module_param_config_*() helpers
-> which are designed to let us easily associate a booloean
-> module parameter with an associated kernel configuration
-> option, and to help us remove #ifdef'ery eyesores.
+The printed values are all of type unsigned integer, therefore use
+%u instead of %d. Otherwise an user can face negative values.
 
-But they don't.  And I had to read the descriptions twice to understand
-what you're doing.
+Signed-off-by: Richard Weinberger <richard@nod.at>
+---
+ net/netfilter/nfnetlink_log.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-eg you use it like this:
+diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
+index 5c79735..3ad9126 100644
+--- a/net/netfilter/nfnetlink_log.c
++++ b/net/netfilter/nfnetlink_log.c
+@@ -1007,7 +1007,7 @@ static int seq_show(struct seq_file *s, void *v)
+ {
+ 	const struct nfulnl_instance *inst = v;
+ 
+-	seq_printf(s, "%5d %6d %5d %1d %5d %6d %2d\n",
++	seq_printf(s, "%5u %6u %5u %1u %5u %6u %2u\n",
+ 		   inst->group_num,
+ 		   inst->peer_portid, inst->qlen,
+ 		   inst->copy_mode, inst->copy_range,
+-- 
+1.8.4.5
 
- -#ifdef CONFIG_WQ_POWER_EFFICIENT_DEFAULT
- -static bool wq_power_efficient = true;
- -#else
- -static bool wq_power_efficient;
- -#endif
- -
- -module_param_named(power_efficient, wq_power_efficient, bool, 0444);
- +module_param_config_on_off(power_efficient, wq_power_efficient, 0444,
- CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
-
-It would be much clearer to do this:
-
- -#ifdef CONFIG_WQ_POWER_EFFICIENT_DEFAULT
- -static bool wq_power_efficient = true;
- -#else
- -static bool wq_power_efficient;
- -#endif
- +static bool wq_power_efficient = IS_ENABLED(CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
-
-I know exactly what that does without having to notice the difference
-between module_param_config_on_off() and module_param_config_on().
-
-Cheers,
-Rusty.
