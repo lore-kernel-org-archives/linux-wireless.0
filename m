@@ -1,109 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:35810 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695AbbCaXRp (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35316 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751667AbbDLQ7C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 19:17:45 -0400
-Received: by wgdm6 with SMTP id m6so35474624wgd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 16:17:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1427825785-21389-1-git-send-email-poh@qca.qualcomm.com>
-References: <1427825785-21389-1-git-send-email-poh@qca.qualcomm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 1 Apr 2015 10:17:24 +1100
-Message-ID: <CAGRGNgUwxr34b-d_8XY86ZaLq3tJPk_xqf4t8+QnvL+rg3bV_A@mail.gmail.com> (sfid-20150401_011749_367790_5AAB9C3E)
-Subject: Re: [PATCH 1/2] ath: define JP DFS patterns separated from FCC
-To: Peter Oh <poh@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 12 Apr 2015 12:59:02 -0400
+From: Cheolhyun Park <pch851130@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, pch851130@gmail.com, linville@tuxdriver.com,
+	Julia.Lawall@lip6.fr
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH V2] rtlwifi: misspelled code and comments corrected.
+Date: Sun, 12 Apr 2015 16:59:48 +0000
+Message-Id: <1428857988-17932-1-git-send-email-pch851130@gmail.com> (sfid-20150412_185923_683513_4086F9CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Peter,
+Signed-off-by: Cheolhyun Park <pch851130@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Two very minor points:
-
-On Wed, Apr 1, 2015 at 5:16 AM, Peter Oh <poh@qca.qualcomm.com> wrote:
-> Separate Japan's DFS pattern from FCC to control PPB threshold.
->
-> Currently all the radar detectors use the same threshold rate at
-> 50%, but it's not able to achieve if data traffic rate is higher
-> than 40% because WLAN baseband used by ath9k and ath10k often fails
-> detecting radar pulses, so that SW cannot get enough radar reports
-> to achieve the rate.
->
-> Since Japan's W53 band requires 50% data traffic during its DFS
-> test we need to apply different threshold rate than others on it.
-> Hence define its own pattern to give flexibility to threshold rate.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/dfs_pattern_detector.c | 27 ++++++++++++++++---------
->  1 file changed, 17 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-> index b1de8c6..8d1e082 100644
-> --- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-> +++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-> @@ -42,6 +42,7 @@ struct radar_types {
->  /* percentage on ppb threshold to trigger detection */
->  #define MIN_PPB_THRESH 50
->  #define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
-> +#define PPB_THRESH_JP(PPB, RATE) ((PPB * RATE + 100 - RATE) / 100)
-
-These two PPB_THRESH defines are essentially doing the same math.
-
-Would it make sense to define them as:
-
-#define MIN_PPB_THRESH 50
-#define PPB_THRESH_RATE(PPB, RATE) ((PPB * RATE + 100 - RATE) / 100)
-#define PPB_THRESH(PPB) PPB_THRESH_RATE(PPB, MIN_PPB_THRESH)
-
-In case some other country defines a specific rate for their DFS patterns?
-
->  #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
->  /* percentage of pulse width tolerance */
->  #define WIDTH_TOLERANCE 5
-> @@ -96,17 +97,23 @@ static const struct radar_types fcc_radar_types = {
->         .radar_types            = fcc_radar_ref_types,
->  };
->
-> -#define JP_PATTERN FCC_PATTERN
-> +#define JP_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, RATE, CHIRP)  \
-> +{                                                              \
-> +       ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),               \
-> +       PMIN - PRI_TOLERANCE,                                   \
-> +       PMAX * PRF + PRI_TOLERANCE, PRF, PPB * PRF,             \
-> +       PPB_THRESH_JP(PPB, RATE), PRI_TOLERANCE, CHIRP  \
-> +}
->  static const struct radar_detector_specs jp_radar_ref_types[] = {
-> -       JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
-> -       JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, false),
-> -       JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, false),
-> -       JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, false),
-> -       JP_PATTERN(4, 0, 5, 150, 230, 1, 23, false),
-> -       JP_PATTERN(5, 6, 10, 200, 500, 1, 16, false),
-> -       JP_PATTERN(6, 11, 20, 200, 500, 1, 12, false),
-> -       JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, false),
-> -       JP_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
-> +       JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 50, false),
-> +       JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 50, false),
-> +       JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
-> +       JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
-> +       JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
-> +       JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
-> +       JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
-> +       JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, 50, false),
-> +       JP_PATTERN(5, 0, 1, 333, 333, 1, 9, 50, false),
-
-If no JP patterns will have CHIRP set, would it make sense to embed
-that parameter into the define?
-
-Thanks,
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index f5ee67c..1273997 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -312,7 +312,7 @@ static void rtl92c_dm_ctrl_initgain_by_rssi(struct ieee80211_hw *hw)
+ 	struct dig_t *digtable = &rtlpriv->dm_digtable;
+ 	u32 isbt;
+ 
+-	/* modify DIG lower bound, deal with abnorally large false alarm */
++	/* modify DIG lower bound, deal with abnormally large false alarm */
+ 	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
+ 		digtable->large_fa_hit++;
+ 		if (digtable->forbidden_igi < digtable->cur_igvalue) {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index a1be5a6..f209cda 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -420,7 +420,7 @@ static void rtl92d_dm_dig(struct ieee80211_hw *hw)
+ 		 "dm_DIG() Before: Recover_cnt=%d, rx_gain_min=%x\n",
+ 		 de_digtable->recover_cnt, de_digtable->rx_gain_min);
+ 
+-	/* deal with abnorally large false alarm */
++	/* deal with abnormally large false alarm */
+ 	if (falsealm_cnt->cnt_all > 10000) {
+ 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
+ 			 "dm_DIG(): Abnormally false alarm case\n");
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+index 0b2082d..342678d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+@@ -873,7 +873,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
+ 
+ 	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
+ 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
+-			 "Abnornally false alarm case.\n");
++			 "Abnormally false alarm case.\n");
+ 
+ 		if (dm_digtable->large_fa_hit != 3)
+ 			dm_digtable->large_fa_hit++;
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
