@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:35417 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932076AbbDVWMn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 18:12:43 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH v2 7/8] kernel/module.c: avoid ifdefs for sig_enforce declaration
-Date: Wed, 22 Apr 2015 14:55:10 -0700
-Message-Id: <1429739711-9415-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_001246_920015_A8FDB04F)
-In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:48852 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932246AbbDMK5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2015 06:57:31 -0400
+Message-ID: <1428922636.2355.7.camel@sipsolutions.net> (sfid-20150413_125748_635921_11D98BB8)
+Subject: Re: [PATCH 1/4] ipv4: add option to drop unicast encapsulated in L2
+ multicast
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Anastasov <ja@ssi.bg>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	matti.gottlieb@intel.com
+Date: Mon, 13 Apr 2015 12:57:16 +0200
+In-Reply-To: <alpine.LFD.2.11.1504111305440.2449@ja.home.ssi.bg>
+References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>
+	  <alpine.LFD.2.11.1504101445330.1538@ja.home.ssi.bg>
+	 <1428671435.1890.22.camel@sipsolutions.net>
+	 <alpine.LFD.2.11.1504111305440.2449@ja.home.ssi.bg>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Hi Julian,
 
-There's no need to require an ifdef over the declaration
-of sig_enforce as IS_ENABLED() can be used. While at it,
-there's no harm in exposing this kernel parameter outside of
-CONFIG_MODULE_SIG as it'd be a no-op on non module sig
-kernels.
+> > Hm. I didn't see this in my testing so far, but I only enable this
+> > temporarily, so perhaps by that time it was already done.
+> 
+> 	I didn't tested it myself, may be you can try:
+> 
+> other_host_on_LAN# arp -d patched_box
+> other_host_on_LAN# arping -c 1 -I eth0 patched_box
+> 
+> 	There must be reply for broadcast requests.
 
-Now, technically we should in theory be able to remove
-the #ifdef'ery over the declaration of the module parameter
-as we are also trusting the bool_enable_only code for
-CONFIG_MODULE_SIG kernels but for now remain paranoid
-and keep it.
+Sure; I would have expected this to have broken my network but as I
+said, it was only enabled temporarily.
 
-With time if no one can put a bullet through bool_enable_only
-and if there are no technical requirements over not exposing
-CONFIG_MODULE_SIG_FORCE with the measures in place by
-bool_enable_only we could remove this last ifdef.
+> > On the other hand, there's not all that much reason not to put this into
+> > ip_rcv_finish(), we already touch the rt->rt_type there for MIB
+> > counters. I'll look into that.
+> 
+> 	May be in ip_local_deliver_finish because:
+> 
+> - ip_forward() already has PACKET_HOST check.
+> 
+> - for broadcast/multicast dests we do not care
+> 
+> - CLUSTERIP works in LOCAL_IN (after ip_rcv_finish), LOCAL_IN
+> is here: ip_rcv_finish->dst_input->ip_local_deliver->
+> ip_local_deliver_finish
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- kernel/module.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+It's just that the later this is, the more nervous I get about it being
+really effective. :)
 
-diff --git a/kernel/module.c b/kernel/module.c
-index 43a1ef3..9e51b37 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -105,15 +105,10 @@ static LIST_HEAD(modules);
- struct list_head *kdb_modules = &modules; /* kdb needs the list of modules */
- #endif /* CONFIG_KGDB_KDB */
- 
--#ifdef CONFIG_MODULE_SIG
--#ifdef CONFIG_MODULE_SIG_FORCE
--static bool sig_enforce = true;
--#else
--static bool sig_enforce = false;
--
-+static bool sig_enforce = IS_ENABLED(CONFIG_MODULE_SIG_FORCE);
-+#ifndef CONFIG_MODULE_SIG_FORCE
- module_param(sig_enforce, bool_enable_only, 0644);
- #endif /* !CONFIG_MODULE_SIG_FORCE */
--#endif /* CONFIG_MODULE_SIG */
- 
- /* Block module loading/unloading? */
- int modules_disabled = 0;
--- 
-2.3.2.209.gd67f9d5.dirty
+I'm willing to discount the CLUSTERIP case, it seems insane to want to
+run CLUSTERIP over wifi on a network that explicitly limits multicast.
+
+Other than that, do you see any reason for not putting it in
+ip_rcv_finish()?
+
+johannes
 
