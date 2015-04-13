@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33514 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbbDLQDj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 12:03:39 -0400
-From: Cheolhyun Park <pch851130@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, pch851130@gmail.com, linville@tuxdriver.com,
-	Julia.Lawall@lip6.fr
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: misspelled code and comments corrected.
-Date: Sun, 12 Apr 2015 16:04:25 +0000
-Message-Id: <1428854665-5958-1-git-send-email-pch851130@gmail.com> (sfid-20150412_180359_244478_A69FCA95)
+Received: from tex.lwn.net ([70.33.254.29]:59276 "EHLO vena.lwn.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932492AbbDMQ1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2015 12:27:40 -0400
+Date: Mon, 13 Apr 2015 18:27:35 +0200
+From: Jonathan Corbet <corbet@lwn.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jim Davis <jim.epost@gmail.com>
+Subject: [PATCH] mac80211: Fix mac80211.h docbook comments
+Message-ID: <20150413182735.10c381bc@lwn.net> (sfid-20150413_182804_202779_196053DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Cheolhyun Park <pch851130@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 2 +-
- drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+A couple of enums in mac80211.h became structures recently, but the
+comments didn't follow suit, leading to errors like:
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index f5ee67c..1273997 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -312,7 +312,7 @@ static void rtl92c_dm_ctrl_initgain_by_rssi(struct ieee80211_hw *hw)
- 	struct dig_t *digtable = &rtlpriv->dm_digtable;
- 	u32 isbt;
+  Error(.//include/net/mac80211.h:367): Cannot parse enum!
+  Documentation/DocBook/Makefile:93: recipe for target 'Documentation/DocBook/80211.xml' failed
+  make[1]: *** [Documentation/DocBook/80211.xml] Error 1
+  Makefile:1361: recipe for target 'mandocs' failed
+  make: *** [mandocs] Error 2
+
+Fix the comments comments accordingly.  Added a couple of other small
+comment fixes while I was there to silence other recently-added docbook
+warnings.
+
+Reported-by: Jim Davis <jim.epost@gmail.com>
+Signed-off-by: Jonathan Corbet <corbet@lwn.net>
+---
+ include/net/mac80211.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 201bc68e0cff..f1f147e246ff 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -321,7 +321,7 @@ enum ieee80211_rssi_event_data {
+ };
  
--	/* modify DIG lower bound, deal with abnorally large false alarm */
-+	/* modify DIG lower bound, deal with abnormally large false alarm */
- 	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
- 		digtable->large_fa_hit++;
- 		if (digtable->forbidden_igi < digtable->cur_igvalue) {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-index a1be5a6..f209cda 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-@@ -420,7 +420,7 @@ static void rtl92d_dm_dig(struct ieee80211_hw *hw)
- 		 "dm_DIG() Before: Recover_cnt=%d, rx_gain_min=%x\n",
- 		 de_digtable->recover_cnt, de_digtable->rx_gain_min);
+ /**
+- * enum ieee80211_rssi_event - data attached to an %RSSI_EVENT
++ * struct ieee80211_rssi_event - data attached to an %RSSI_EVENT
+  * @data: See &enum ieee80211_rssi_event_data
+  */
+ struct ieee80211_rssi_event {
+@@ -355,7 +355,7 @@ enum ieee80211_mlme_event_status {
+ };
  
--	/* deal with abnorally large false alarm */
-+	/* deal with abnormally large false alarm */
- 	if (falsealm_cnt->cnt_all > 10000) {
- 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
- 			 "dm_DIG(): Abnormally false alarm case\n");
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-index 0b2082d..342678d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-@@ -873,7 +873,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
+ /**
+- * enum ieee80211_mlme_event - data attached to an %MLME_EVENT
++ * struct ieee80211_mlme_event - data attached to an %MLME_EVENT
+  * @data: See &enum ieee80211_mlme_event_data
+  * @status: See &enum ieee80211_mlme_event_status
+  * @reason: the reason code if applicable
+@@ -368,9 +368,10 @@ struct ieee80211_mlme_event {
  
- 	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
- 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "Abnornally false alarm case.\n");
-+			 "Abnormally false alarm case.\n");
- 
- 		if (dm_digtable->large_fa_hit != 3)
- 			dm_digtable->large_fa_hit++;
+ /**
+  * struct ieee80211_event - event to be sent to the driver
+- * @type The event itself. See &enum ieee80211_event_type.
++ * @type: The event itself. See &enum ieee80211_event_type.
+  * @rssi: relevant if &type is %RSSI_EVENT
+  * @mlme: relevant if &type is %AUTH_EVENT
++ * @u:    union holding the above two fields
+  */
+ struct ieee80211_event {
+ 	enum ieee80211_event_type type;
 -- 
-1.9.1
+2.1.0
 
