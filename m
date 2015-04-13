@@ -1,152 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:36679 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752455AbbDTXbZ (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:34806 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbbDMHq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 19:31:25 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jani Nikula <jani.nikula@intel.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH v1 3/6] kernel/params.c: generalize bool_enable_only
-Date: Mon, 20 Apr 2015 16:30:34 -0700
-Message-Id: <1429572637-30234-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20150421_013248_325923_12DB2F66)
-In-Reply-To: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 13 Apr 2015 03:46:26 -0400
+Received: by lbcga7 with SMTP id ga7so52296994lbc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2015 00:46:24 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC 1/2] ath10k: refactor ASPM workaround
+Date: Mon, 13 Apr 2015 09:45:40 +0200
+Message-Id: <1428911141-6534-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150413_094630_477061_70F1E05B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Disable ASPM only when loading firmware.
+After that back to BIOS/system ASMP
+settings. When ASPM is enable by system,
+this decrease power consumtion.
 
-This takes out the bool_enable_only implementation from
-the module loading code and generalizes it so that others
-can make use of it.
-
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jani Nikula <jani.nikula@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- include/linux/moduleparam.h |  6 ++++++
- kernel/module.c             | 31 -------------------------------
- kernel/params.c             | 30 ++++++++++++++++++++++++++++++
- 3 files changed, 36 insertions(+), 31 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 17 ++++++++++++-----
+ drivers/net/wireless/ath/ath10k/pci.h |  3 +++
+ 2 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
-index 5d0f4d9..7e00799 100644
---- a/include/linux/moduleparam.h
-+++ b/include/linux/moduleparam.h
-@@ -427,6 +427,12 @@ extern int param_set_bool(const char *val, const struct kernel_param *kp);
- extern int param_get_bool(char *buffer, const struct kernel_param *kp);
- #define param_check_bool(name, p) __param_check(name, p, bool)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 51e3921..9923c09 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1227,11 +1227,16 @@ static void ath10k_pci_irq_enable(struct ath10k *ar)
  
-+extern const struct kernel_param_ops param_ops_bool_enable_only;
-+extern int param_set_bool_enable_only(const char *val,
-+				      const struct kernel_param *kp);
-+/* getter is the same as for the regular bool */
-+#define param_check_bool_enable_only param_check_bool
-+
- extern const struct kernel_param_ops param_ops_invbool;
- extern int param_set_invbool(const char *val, const struct kernel_param *kp);
- extern int param_get_invbool(char *buffer, const struct kernel_param *kp);
-diff --git a/kernel/module.c b/kernel/module.c
-index de12c4a..43a1ef3 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -111,37 +111,6 @@ static bool sig_enforce = true;
- #else
- static bool sig_enforce = false;
- 
--static int param_set_bool_enable_only(const char *val,
--				      const struct kernel_param *kp)
--{
--	int err = 0;
--	bool new_value;
--	bool orig_value = *(bool *)kp->arg;
--	struct kernel_param dummy_kp = *kp;
--
--	dummy_kp.arg = &new_value;
--
--	err = param_set_bool(val, &dummy_kp);
--	if (err)
--		return err;
--
--	/* Don't let them unset it once it's set! */
--	if (!new_value && orig_value)
--		return -EROFS;
--
--	if (new_value)
--		err = param_set_bool(val, kp);
--
--	return err;
--}
--
--static const struct kernel_param_ops param_ops_bool_enable_only = {
--	.flags = KERNEL_PARAM_OPS_FL_NOARG,
--	.set = param_set_bool_enable_only,
--	.get = param_get_bool,
--};
--#define param_check_bool_enable_only param_check_bool
--
- module_param(sig_enforce, bool_enable_only, 0644);
- #endif /* !CONFIG_MODULE_SIG_FORCE */
- #endif /* CONFIG_MODULE_SIG */
-diff --git a/kernel/params.c b/kernel/params.c
-index b7635c0..324624e 100644
---- a/kernel/params.c
-+++ b/kernel/params.c
-@@ -335,6 +335,36 @@ const struct kernel_param_ops param_ops_bool = {
- };
- EXPORT_SYMBOL(param_ops_bool);
- 
-+int param_set_bool_enable_only(const char *val, const struct kernel_param *kp)
-+{
-+	int err = 0;
-+	bool new_value;
-+	bool orig_value = *(bool *)kp->arg;
-+	struct kernel_param dummy_kp = *kp;
-+
-+	dummy_kp.arg = &new_value;
-+
-+	err = param_set_bool(val, &dummy_kp);
-+	if (err)
-+		return err;
-+
-+	/* Don't let them unset it once it's set! */
-+	if (!new_value && orig_value)
-+		return -EROFS;
-+
-+	if (new_value)
-+		err = param_set_bool(val, kp);
-+
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(param_set_bool_enable_only);
-+
-+const struct kernel_param_ops param_ops_bool_enable_only = {
-+	.flags = KERNEL_PARAM_OPS_FL_NOARG,
-+	.set = param_set_bool_enable_only,
-+	.get = param_get_bool,
-+};
-+
- /* This one must be bool. */
- int param_set_invbool(const char *val, const struct kernel_param *kp)
+ static int ath10k_pci_hif_start(struct ath10k *ar)
  {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");
+ 
+ 	ath10k_pci_irq_enable(ar);
+ 	ath10k_pci_rx_post(ar);
+ 
++	/* Workaround: Back to BIOS/system settings */
++	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
++				   ar_pci->link_ctl);
++
+ 	return 0;
+ }
+ 
+@@ -1982,6 +1987,7 @@ static int ath10k_pci_chip_reset(struct ath10k *ar)
+ 
+ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
+@@ -1992,6 +1998,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
++	/* Workaround: Disable ASPM */
++	pcie_capability_read_word(ar_pci->pdev, PCI_EXP_LNKCTL,
++				  &ar_pci->link_ctl);
++	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
++				   ar_pci->link_ctl & ~PCI_EXP_LNKCTL_ASPMC);
++
+ 	/*
+ 	 * Bring the target up cleanly.
+ 	 *
+@@ -2515,7 +2527,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct pci_dev *pdev = ar_pci->pdev;
+-	u32 lcr_val;
+ 	int ret;
+ 
+ 	pci_set_drvdata(pdev, ar);
+@@ -2549,10 +2560,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
+ 
+ 	pci_set_master(pdev);
+ 
+-	/* Workaround: Disable ASPM */
+-	pci_read_config_dword(pdev, 0x80, &lcr_val);
+-	pci_write_config_dword(pdev, 0x80, (lcr_val & 0xffffff00));
+-
+ 	/* Arrange for access to Target SoC registers. */
+ 	ar_pci->mem = pci_iomap(pdev, BAR_NUM, 0);
+ 	if (!ar_pci->mem) {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 56795ed..a6eafec 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -185,6 +185,9 @@ struct ath10k_pci {
+ 	/* Map CE id to ce_state */
+ 	struct ath10k_ce_pipe ce_states[CE_COUNT_MAX];
+ 	struct timer_list rx_post_retry;
++
++	/* Link Control */
++	u16 link_ctl;
+ };
+ 
+ static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.9.1
 
