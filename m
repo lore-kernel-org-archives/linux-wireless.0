@@ -1,90 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49075 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750887AbbDAJvD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 05:51:03 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Subject: RE: [PATCH 7/7] mac80211: Count correctly interface types
-Date: Wed, 1 Apr 2015 09:50:54 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04D092E46@HASMSX106.ger.corp.intel.com> (sfid-20150401_115109_398186_EFFA9EA6)
-References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
-		 <1426143210-25635-7-git-send-email-emmanuel.grumbach@intel.com>
-		 <CALhHN=qkEmUPEL2XBuuudmq6Rg-6s7jm0TOdRuQCetgSiKyrpg@mail.gmail.com>
-		 (sfid-20150401_080606_876573_33E52A4C)
- <1427872324.2432.3.camel@sipsolutions.net>	 <551BADF5.3000409@broadcom.com>
- <1427877848.3428.1.camel@sipsolutions.net> <551BB741.7050702@broadcom.com>
-In-Reply-To: <551BB741.7050702@broadcom.com>
-Content-Type: multipart/mixed;
-	boundary="_002_CB3B3D4774441E42AA3EA0E1BA8230A04D092E46HASMSX106gercor_"
-MIME-Version: 1.0
+Received: from shards.monkeyblade.net ([149.20.54.216]:54437 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755111AbbDMUfz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2015 16:35:55 -0400
+Date: Mon, 13 Apr 2015 16:35:52 -0400 (EDT)
+Message-Id: <20150413.163552.745090447524548507.davem@davemloft.net> (sfid-20150413_223623_039530_8179214F)
+To: richard@nod.at
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org
+Subject: Re: [PATCH 5/5 v4] netfilter: Fix format string of nfnetlink_log
+ proc file
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1428879159-19237-5-git-send-email-richard@nod.at>
+References: <1428879159-19237-1-git-send-email-richard@nod.at>
+	<1428879159-19237-5-git-send-email-richard@nod.at>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_002_CB3B3D4774441E42AA3EA0E1BA8230A04D092E46HASMSX106gercor_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Richard Weinberger <richard@nod.at>
+Date: Mon, 13 Apr 2015 00:52:39 +0200
 
-SGksDQoNCkNhbiB5b3UgdHJ5IHRoZSBhdHRhY2hlZCBwYXRjaD8gU2V0IHAycF9kaXNhYmxlZD0x
-IGluIHlvdXIgY29uZmlndXJhdGlvbiBmaWxlLg0KDQpBbnl3YXksIHRoaXMgaXMgYSBxdWljayBz
-b2x1dGlvbiwgd2lsbCB0cnkgdG8gd29yayBvbiBhIG1vcmUgY29tcGxldGUgb25lIHRoYXQgYWxz
-byBjaGVja3MgdGhlIGNvbWJpbmF0aW9ucy4NCg0KSWxhbi4NCg0KPiAtLS0tLU9yaWdpbmFsIE1l
-c3NhZ2UtLS0tLQ0KPiBGcm9tOiBBcmVuZCB2YW4gU3ByaWVsIFttYWlsdG86YXJlbmRAYnJvYWRj
-b20uY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDAxLCAyMDE1IDEyOjE2DQo+IFRvOiBK
-b2hhbm5lcyBCZXJnDQo+IENjOiBKYW51c3ogRHppZWR6aWM7IFBlZXIsIElsYW47IEdydW1iYWNo
-LCBFbW1hbnVlbDsgbGludXgtDQo+IHdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgT3RjaGVyZXRp
-YW5za2ksIEFuZHJlaQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDcvN10gbWFjODAyMTE6IENvdW50
-IGNvcnJlY3RseSBpbnRlcmZhY2UgdHlwZXMNCj4gDQo+IE9uIDA0LzAxLzE1IDEwOjQ0LCBKb2hh
-bm5lcyBCZXJnIHdyb3RlOg0KPiA+IE9uIFdlZCwgMjAxNS0wNC0wMSBhdCAxMDozNiArMDIwMCwg
-QXJlbmQgdmFuIFNwcmllbCB3cm90ZToNCj4gPg0KPiA+PiBJIHRoaW5rIGluIGxhdGVzdCB3cGFf
-cyB0aGUgUDJQLURldmljZSBpcyBhbHdheXMgY3JlYXRlZC4gVGhlcmUgdXNlZA0KPiA+PiB0byBi
-ZSBhIGRyaXZlcl9wYXJhbSB0byBjcmVhdGUgaXQuIE5vdCBzdXJlIGlmIHRoYXQgZHJpdmVyX3Bh
-cmFtDQo+ID4+IGNvdWxkIHN0aWxsIGJlIHVzZWQgdG8gYXZvaWQgUDJQLURldmljZSBjcmVhdGlv
-bi4NCj4gPg0KPiA+IFllYWgsIEkgZmVhcmVkIHRoaXMgd2FzIHRoZSBjYXNlIHNvIEkgYWRkZWQg
-SWxhbiA6KQ0KPiA+DQo+ID4gSSB0aGluayB3ZSBuZWVkIHRvIGZpeCB0aGF0IHBlcmhhcHMgaW4g
-c29tZSB3YXk/IEknbSBwcmV0dHkgc3VyZSB3ZQ0KPiA+IGNhbm5vdCBoYXZlIFAyUC1EZXZpY2Ug
-YW5kIElCU1MgYXQgdGhlIHNhbWUgdGltZSBwcm9wZXJseSBpbiBvdXIgZGV2aWNlLg0KPiA+DQo+
-ID4+IFRoZSBpbnRlcmZhY2UgY29tYmluYXRpb25zIGxvb2sgY29uZnVzaW5nIHRvIG1lLiBXaHkg
-aXMgdGhlcmUgbm8gSUJTUw0KPiA+PiBvciBtb25pdG9yIGxpc3RlZCB0aGVyZT8NCj4gPg0KPiA+
-IE9ubHkgInJlYWwiIGNvbWJpbmF0aW9ucyBhcmUgbGlzdGVkIC0gYW55dGhpbmcgdGhhdCdzIGlu
-IHRoZQ0KPiA+ICJTdXBwb3J0ZWQgaW50ZXJmYWNlIG1vZGVzIiBpcywgYnkgZGVmYXVsdCwgb25s
-eSBzdXBwb3J0ZWQgd2l0aCBhDQo+ID4gc2luZ2xlIHZpcnR1YWwgaW50ZXJmYWNlLiBSZWFsIGNv
-bWJpbmF0aW9ucyAob2Y+MSBpbnRlcmZhY2UpIGFyZSBsaXN0ZWQNCj4gc2VwYXJhdGVseS4NCj4g
-DQo+IFRoYW5rcy4gVGhhdCBoZWxwcy4NCj4gDQo+IFJlZ2FyZHMsDQo+IEFyZW5kDQo=
+> The printed values are all of type unsigned integer, therefore use
+> %u instead of %d. Otherwise an user can face negative values.
+> 
+> Signed-off-by: Richard Weinberger <richard@nod.at>
 
---_002_CB3B3D4774441E42AA3EA0E1BA8230A04D092E46HASMSX106gercor_
-Content-Type: application/octet-stream;
-	name="0001-P2P-Do-not-create-a-P2P-Device-interface-is-P2P-is-d.patch"
-Content-Description: 0001-P2P-Do-not-create-a-P2P-Device-interface-is-P2P-is-d.patch
-Content-Disposition: attachment;
-	filename="0001-P2P-Do-not-create-a-P2P-Device-interface-is-P2P-is-d.patch";
-	size=1045; creation-date="Wed, 01 Apr 2015 09:49:26 GMT";
-	modification-date="Wed, 01 Apr 2015 09:49:26 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSAxZjEyYmYxOGJmMGE4NjJkNzk0MmNiZWVkM2M2OGYxOGY3OTM5M2I5IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBJbGFuIFBlZXIgPGlsYW4ucGVlckBpbnRlbC5jb20+CkRhdGU6
-IFdlZCwgMSBBcHIgMjAxNSAxMjo0NzowMiArMDMwMApTdWJqZWN0OiBbUEFUQ0hdIFAyUDogRG8g
-bm90IGNyZWF0ZSBhIFAyUCBEZXZpY2UgaW50ZXJmYWNlIGlzIFAyUCBpcyBkaXNhYmxlZAoKRG8g
-bm90IGFkZCB0aGUgZGVkaWNhdGVkIFAyUCBEZXZpY2UgaW50ZXJmYWNlIGluIGNhc2UgdGhhdApQ
-MlAgaXMgZGlzYWJsZWQgaW4gdGhlIGNvbmZpZ3VyYXRpb24gZmlsZSBvciBnbG9iYWxseS4KClNp
-Z25lZC1vZmYtYnk6IElsYW4gUGVlciA8aWxhbi5wZWVyQGludGVsLmNvbT4KLS0tCiB3cGFfc3Vw
-cGxpY2FudC93cGFfc3VwcGxpY2FudC5jIHwgMSArCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRp
-b24oKykKCmRpZmYgLS1naXQgYS93cGFfc3VwcGxpY2FudC93cGFfc3VwcGxpY2FudC5jIGIvd3Bh
-X3N1cHBsaWNhbnQvd3BhX3N1cHBsaWNhbnQuYwppbmRleCBmNjkwYjkxLi5kZWY2YTE2IDEwMDY0
-NAotLS0gYS93cGFfc3VwcGxpY2FudC93cGFfc3VwcGxpY2FudC5jCisrKyBiL3dwYV9zdXBwbGlj
-YW50L3dwYV9zdXBwbGljYW50LmMKQEAgLTQzODUsNiArNDM4NSw3IEBAIHN0cnVjdCB3cGFfc3Vw
-cGxpY2FudCAqIHdwYV9zdXBwbGljYW50X2FkZF9pZmFjZShzdHJ1Y3Qgd3BhX2dsb2JhbCAqZ2xv
-YmFsLAogCiAjaWZkZWYgQ09ORklHX1AyUAogCWlmICh3cGFfcy0+Z2xvYmFsLT5wMnAgPT0gTlVM
-TCAmJgorCSAgICAhd3BhX3MtPmdsb2JhbC0+cDJwX2Rpc2FibGVkICYmICF3cGFfcy0+Y29uZi0+
-cDJwX2Rpc2FibGVkICYmCiAJICAgICh3cGFfcy0+ZHJ2X2ZsYWdzICYgV1BBX0RSSVZFUl9GTEFH
-U19ERURJQ0FURURfUDJQX0RFVklDRSkgJiYKIAkgICAgd3Bhc19wMnBfYWRkX3AycGRldl9pbnRl
-cmZhY2Uod3BhX3MsIGlmYWNlLT5jb25mX3AycF9kZXYpIDwgMCkgewogCQl3cGFfcHJpbnRmKE1T
-R19JTkZPLAotLSAKMS45LjEKCg==
-
---_002_CB3B3D4774441E42AA3EA0E1BA8230A04D092E46HASMSX106gercor_--
+Applied.
