@@ -1,93 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:35114 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933477AbbDJNap (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:48083 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751776AbbDMAoR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 09:30:45 -0400
-Received: by labbd9 with SMTP id bd9so13283145lab.2
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:43 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/4] ath10k: fix multiple key static wep with ibss
-Date: Fri, 10 Apr 2015 13:23:21 +0000
-Message-Id: <1428672203-8604-3-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153052_402893_E82A7F02)
-In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
-References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 12 Apr 2015 20:44:17 -0400
+Date: Sun, 12 Apr 2015 20:44:15 -0400 (EDT)
+Message-Id: <20150412.204415.314629315160918556.davem@davemloft.net> (sfid-20150413_024423_447617_0DD06647)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2015-04-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1428664738.1890.12.camel@sipsolutions.net>
+References: <1428664738.1890.12.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently firmware requires both pairwise and
-groupwise keys to be installed per-peer for static
-WEP in IBSS. This wasn't necessary for AP mode
-(and installing both doesn't seem to break AP
-mode thus there's no special handling).
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 10 Apr 2015 13:18:58 +0200
 
-Also there seems to be some kind of issue with
-mapping tx/rx keys in firmware properly which
-resulted in wrong keys being used and broken
-communication between devices.
+> I realize it's late, but what I've got right now has so many fixes that
+> I'd be sending even after the merge window, so it felt like there was
+> little point in holding it up until after then. The new "intermediate
+> queue" feature is unused right now so seems safe enough also, and having
+> it in will help modify drivers to use it.
+> There's also some rate control refactoring that, as far as I can tell,
+> is uncontroversial and over the last couple of weeks has been has been
+> reviewed and tested by people who use it, so I'm including it.
+> 
+> Let me know if you want me to change anything here or if there are any
+> other problems.
 
-It can be argued the vdev param part is more of a
-workaround than a real fix. However I couldn't
-figure out how to fix this differently. It works
-and isn't super ugly.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 31 ++++++++++++++++++++++++++++---
- 1 file changed, 28 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6664bcc9ba88..93f753cb839a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -230,9 +230,13 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
- 		flags = 0;
- 		flags |= WMI_KEY_PAIRWISE;
- 
--		/* set TX_USAGE flag for default key id */
--		if (arvif->def_wep_key_idx == i)
--			flags |= WMI_KEY_TX_USAGE;
-+		ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
-+					 addr, flags);
-+		if (ret)
-+			return ret;
-+
-+		flags = 0;
-+		flags |= WMI_KEY_GROUP;
- 
- 		ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
- 					 addr, flags);
-@@ -244,6 +248,27 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
- 		spin_unlock_bh(&ar->data_lock);
- 	}
- 
-+	/* In some cases (notably with static WEP IBSS with multiple keys)
-+	 * multicast Tx becomes broken. Both pairwise and groupwise keys are
-+	 * installed already. Using WMI_KEY_TX_USAGE in different combinations
-+	 * didn't seem help. Using def_keyid vdev parameter seems to be
-+	 * effective so use that.
-+	 *
-+	 * FIXME: Revisit. Perhaps this can be done in a less hacky way.
-+	 */
-+	if (arvif->def_wep_key_idx == -1)
-+		return 0;
-+
-+	ret = ath10k_wmi_vdev_set_param(arvif->ar,
-+					arvif->vdev_id,
-+					arvif->ar->wmi.vdev_param->def_keyid,
-+					arvif->def_wep_key_idx);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to re-set def wpa key idxon vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
- 	return 0;
- }
- 
--- 
-2.1.4
-
+Pulled, thanks Johannes.
