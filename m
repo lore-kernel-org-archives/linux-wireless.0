@@ -1,54 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35275 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750804AbbDFFZq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48328 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754244AbbDMRlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2015 01:25:46 -0400
+	Mon, 13 Apr 2015 13:41:13 -0400
+Message-ID: <552BFFB8.6030301@candelatech.com> (sfid-20150413_194123_953262_0CDA8EF2)
+Date: Mon, 13 Apr 2015 10:41:12 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Date: Mon, 6 Apr 2015 10:55:45 +0530
-Message-ID: <CAGKQeFjwX-xU6gxF7E-oyiuJzWpAOqApyrfmcWv3To6pUDAkzg@mail.gmail.com> (sfid-20150406_073740_064246_5A3577A4)
-Subject: stp broadcast packet not receving with the bridge and wpa_supplicant
-From: deepak kumar Pradhan <hydipu@gmail.com>
-To: linux-wireless@vger.kernel.org, majordomo@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: ath10k <ath10k@lists.infradead.org>
+CC: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: CT ath10k firmware now supports IBSS + RSN
+References: <55285D8D.6070703@candelatech.com>
+In-Reply-To: <55285D8D.6070703@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Looks like I have some more work to do.  For any moderately large frames,
+I am now dropping the last 16 bytes.  Looks like the skb_put_padto logic
+was working around a more serious issue...
 
-We are using IXDP465 intel board which is running kernel 3.12.2 with a
-wireless Atheros card (driver ath9k) for wireless driver.
+Thanks,
+Ben
 
-We had configured the wireless client on this board and try to connect
-Target board Access point.
-Wireless client able to connect this Access point (With open and
-secure mode).ping also working between Access point to wireless client
-bridge.
-But we are not observing any stp & arp broadcast packet passing
-through the wireless client(capture the data using the tcpdump).
->From the Target board this packet are trasmited confirm by tcpdump.
-I had also kept some debug prints in our kernel (3.12.3) and this
-packet also passing through the ath9k driver but not receiving on the
-application layer.
+On 04/10/2015 04:32 PM, Ben Greear wrote:
+> First, thanks to everyone that helped me with questions,
+> QCA/Tieto's upstream patches, etc.
+> 
+> This needs more testing, but it appears to at least mostly work.
+> 
+> I am using this 4.0 related kernel.  I think only the last 3 patches
+> are IBSS specific, but possibly there are others that matter as well.
+> 
+> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-4.0.dev.y/.git;a=summary
+> 
+> Firmware binaries and release notes are here:
+> http://www.candelatech.com/downloads/ath10k-fw-beta/
+> 
+> I'm using a very recent wpa_supplicant..upstream should work I think,
+> but I am using this one:
+> 
+> https://github.com/greearb/hostap-ct/tree/master/hostapd
+> 
+> supplicant needs to have this enabled, among other things:
+> 
+> CONFIG_IBSS_RSN=y
+> 
+> 
+> I suspect there are lingering bugs, perhaps in supplicant, as it seems to take
+> a few tries for the 4-way to happen properly, and I have to re-start hostapd
+> on each side each time I associate.
+> 
+> My supplicant config files look like this (you can comment out any options
+> your supplicant doesn't know about...I have a few extra features not specifically
+> related to IBSS in my hostapd tree)
+> 
+> ctrl_interface=/var/run/wpa_supplicant
+> fast_reauth=1
+> concurrent_assoc_ok=1
+> scan_cur_freq=1
+> min_scan_gap=5
+> freq_list=5180
+> 
+> bss_max_count=2000
+> network={
+>     ssid="ota-ibss-ssid"
+>     disable_ht=0
+>     disable_vht=0
+>     ieee80211w=0
+>     disable_ht40=1
+>     disable_sgi=0
+>     ht_mcs=""
+>     disable_max_amsdu=-1
+>     ampdu_factor=-1
+>     ampdu_density=-1
+>     freq_list=5180
+>     fixed_freq=1
+> 
+>     mode=1
+>     frequency=5180
+>     proto=RSN
+>     key_mgmt=WPA-PSK
+>     #psk="ben-ota-passwd"
+>     psk=fc29b6edf32abd7a9818af3c94b2aa5364c785eee33ed3df11605a3db8f905bc
+>     pairwise=CCMP
+>     group=CCMP
+>     proactive_key_caching=0
+> 
+> }
+> 
+> 
+> I'm curious to know if anyone tries it out.
+> 
+> Thanks,
+> Ben
+> 
 
-Our Board configuration:
-We have two wireless card and two ethernet interface,which are added
-to the bridge.
-wpa_supplicant(0.7.3) running on the wireless interface with the drive
-nl80211 and set 4addr flag on using iw command.
 
-Target board configuration:
-Running with the kernel 2.6.15 and for access point they had used the
-hostapd (0.5.8).
-Driver used for Access point is madwifi(0.9.3) and Access point also
-added to the Bridge with the wds support.
-(We don't have access to target source code so we can't modify code on
-target platform)
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-So it looks like madwifi + stp interoperability issue.
-Has someone observed this issue. Any inputs on this is much appreciated.
-Please forgive me if I have posted to a wrong list, and please guide
-me where should I post this?
-
-Thanks & regards,
-Deepak Kumar Pradhan
