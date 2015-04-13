@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56890 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932176AbbDNPJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 11:09:29 -0400
-Message-ID: <1429024166.3019.17.camel@sipsolutions.net> (sfid-20150414_170933_132487_24A8ECA1)
-Subject: Re: [PATCH] mwifiex: increase number of probes for specific SSID
- scans
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Date: Tue, 14 Apr 2015 17:09:26 +0200
-In-Reply-To: <1429022956-12016-1-git-send-email-akarwar@marvell.com> (sfid-20150414_164959_065629_FE6FF99B)
-References: <1429022956-12016-1-git-send-email-akarwar@marvell.com>
-	 (sfid-20150414_164959_065629_FE6FF99B)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:54423 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755014AbbDMUfn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Apr 2015 16:35:43 -0400
+Date: Mon, 13 Apr 2015 16:35:40 -0400 (EDT)
+Message-Id: <20150413.163540.64651067198865466.davem@davemloft.net> (sfid-20150413_223655_070637_B9C49236)
+To: richard@nod.at
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org
+Subject: Re: [PATCH 3/5 v4] netfilter: Fix portid types
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1428879159-19237-3-git-send-email-richard@nod.at>
+References: <1428879159-19237-1-git-send-email-richard@nod.at>
+	<1428879159-19237-3-git-send-email-richard@nod.at>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-04-14 at 07:49 -0700, Amitkumar Karwar wrote:
-> It's been observed that device sometimes fails to find AP
-> configured in hidden SSID in busy environment. We will increase
-> number of probes for specific SSID scans for getting better results.
+From: Richard Weinberger <richard@nod.at>
+Date: Mon, 13 Apr 2015 00:52:37 +0200
 
-I question the value of making the "busy environment" even more busy by
-sending a lot of probe requests at low rates ...
+> The netlink portid is an unsigned integer, use this type
+> also in netfilter.
+> 
+> Signed-off-by: Richard Weinberger <richard@nod.at>
 
-Scans are never really guaranteed to be perfect and complete anyway.
-
-This is clearly your choice, but given, among other things, the broader
-industry direction of moving away from active scanning this seems like a
-bit short-sighted thing to do.
-
-johannes
-
+Applied.
