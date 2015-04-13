@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:38599 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbbD2XwL (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:54428 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755050AbbDMUfu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 19:52:11 -0400
-Received: by igbhj9 with SMTP id hj9so63879971igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 16:52:10 -0700 (PDT)
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	adrian.chadd@gmail.com, Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 07/11] ath9k: No need for that extra memcpy
-Date: Wed, 29 Apr 2015 23:51:18 +0000
-Message-Id: <1430351482-59418-8-git-send-email-mickflemm@gmail.com> (sfid-20150430_015217_081668_0AF366CA)
-In-Reply-To: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
-References: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
+	Mon, 13 Apr 2015 16:35:50 -0400
+Date: Mon, 13 Apr 2015 16:35:47 -0400 (EDT)
+Message-Id: <20150413.163547.977591531353530005.davem@davemloft.net> (sfid-20150413_223637_686662_61E94A05)
+To: richard@nod.at
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org
+Subject: Re: [PATCH 4/5 v4] netfilter: Fix format string of nfnetlink_queue
+ proc file
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1428879159-19237-4-git-send-email-richard@nod.at>
+References: <1428879159-19237-1-git-send-email-richard@nod.at>
+	<1428879159-19237-4-git-send-email-richard@nod.at>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to copy the frame to the temporary buffer when its length
-is ok.
+From: Richard Weinberger <richard@nod.at>
+Date: Mon, 13 Apr 2015 00:52:38 +0200
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath9k/common-spectral.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> The printed values are all of type unsigned integer, therefore use
+> %u instead of %d. Otherwise an user can face negative values.
+> 
+> Fixes:
+> $ cat /proc/net/netfilter/nfnetlink_queue
+>     0  29508   278 2 65531     0 2004213241 -2129885586  1
+>     1 -27747     0 2 65531     0     0        0  1
+>     2 -27748     0 2 65531     0     0        0  1
+> 
+> Signed-off-by: Richard Weinberger <richard@nod.at>
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
-index 0c9bc9e..b8682bc 100644
---- a/drivers/net/wireless/ath/ath9k/common-spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
-@@ -620,11 +620,9 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
- 			}
- 
- 			/* Process a normal frame */
--			if (sample_bytes == sample_len) {
--				memcpy(sample_buf, sample_start, sample_len);
--				ret = fft_handler(rs, spec_priv, sample_buf,
-+			if (sample_bytes == sample_len)
-+				ret = fft_handler(rs, spec_priv, sample_start,
- 						  tsf, freq, chan_type);
--			}
- 
- 			/* Short report processed, break out of the
- 			 * loop.
--- 
-2.3.5
-
+Applied.
