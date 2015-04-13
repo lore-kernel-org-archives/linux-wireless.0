@@ -1,74 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:40402 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262AbbDUKYm (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:34231 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751273AbbDMSJp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2015 06:24:42 -0400
-Message-ID: <55362568.8040000@broadcom.com> (sfid-20150421_122445_893649_3A297981)
-Date: Tue, 21 Apr 2015 12:24:40 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 13 Apr 2015 14:09:45 -0400
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Hante Meuleman <meuleman@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	mailinglist <openwrt-devel@lists.openwrt.org>,
-	Florian Fainelli <fainelli@broadcom.com>
-Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices
- in nvram.
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-11-git-send-email-arend@broadcom.com>	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com>	<CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>	<5530C940.6010407@broadcom.com>	<CACna6ryZYvVN_svcv3W+4F6yiJf2QYHxYD-VXhGcUUTAHZDYSg@mail.gmail.com>	<55353364.3050101@broadcom.com>	<CACna6ryb_v2Jw1DOudhXvAoQAbjBvdjb_UbdSG_PAC0A=5U9cA@mail.gmail.com>	<55355E9D.30209@broadcom.com> <CACna6rxHOqn3pynTQY0VfP0Gm_R24ogPfUXDLOsQOuVfayBWzw@mail.gmail.com>
-In-Reply-To: <CACna6rxHOqn3pynTQY0VfP0Gm_R24ogPfUXDLOsQOuVfayBWzw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <CAB=NE6W4Q2ngB6CF8pG=OV6=q+9CTcwA6UGhdgS+OCT++N2GJA@mail.gmail.com>
+References: <CAB=NE6W4Q2ngB6CF8pG=OV6=q+9CTcwA6UGhdgS+OCT++N2GJA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Mon, 13 Apr 2015 11:09:21 -0700
+Message-ID: <CAB=NE6Uf9dtFKexFq=k+RYFZWqSCdKT68bpdAEbHsaUofjpSJQ@mail.gmail.com> (sfid-20150413_201010_485027_084930F8)
+Subject: Re: Looking for extensible kernel database format
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Kees Cook <kees@outflux.net>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	netfilter-devel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/21/15 12:16, Rafał Miłecki wrote:
-> On 20 April 2015 at 22:16, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 04/20/15 20:49, Rafał Miłecki wrote:
->>>
->>> On 20 April 2015 at 19:12, Arend van Spriel<arend@broadcom.com>   wrote:
->>>>
->>>> On 04/20/15 13:26, Rafał Miłecki wrote:
->>>>>
->>>>>
->>>>> On 17 April 2015 at 10:50, Arend van Spriel<arend@broadcom.com>    wrote:
->>>>>>
->>>>>> Another option is to add the parsing stuff in that nvram code and have
->>>>>> an
->>>>>> api to get the appropriate portion based on pcie domain and bus number
->>>>>> as
->>>>>> used in brcmf_fw_get_firmwares_pcie(). However, I would prefer to have
->>>>>> this
->>>>>> in the driver and not in arch specific code as there may be other
->>>>>> platforms
->>>>>> like our set-top boxes needing this.
->>>>>
->>>>>
->>>>>
->>>>> This is some plan for the future I was lacking from the beginning. It
->>>>> makes things more clear now, thanks.
->>>>
->>>>
->>>> You're welcome. Do you want to see this clarification in the commit
->>>> message?
->>>
->>>
->>> I don't really need that, I'm leaving it up to you :)
->>>
->>> The last remaining question from me is if  about this NVRAM validation
->>> function (if it exists).
->>
->>
->> Ok. I can try to answer that one. The nvram parsing code in firmware.c
->> intends to do just that. So apart from stripping comments and whitespace it
->> validates each line and gives off a warning if a wrongly formatted entry is
->> found.
+On Thu, Apr 9, 2015 at 5:57 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> Hey folks,
 >
-> OK, thanks. So I guess this patch is OK after all?
+> next week I'd like to address replacing the need for CRDA [0] as a
+> udev helper with in-kernel functionality  There's a few motivations
+> for this but a good one is that the kernel already has now
+> cryptographic support to verify the integrity of the regulatory
+> database, just as it has support for verifying the integrity of
+> modules / firmware. We'd use something like:
+>
+> request_file(file_reqs)
+>
+> Where the file_reqs provides the requirements, including cryptographic
+> requirements, and I suspect we'd use LSM to vet for the cryptographic
+> needs of the file.
+>
+> Now other than this step CRDA currently *reads* a database and today
+> we have our own format. If we want to extend this though we will have
+> to issue a new regdb format and old kernels might not be compatible
+> with the new format. This is a typical database problem and I'm hoping
+> we are not the first to deal with this. What *extensible* kernel
+> database format are there already, are they generic already? I'd
+> prefer something already using netlink.
+>
+> Any recommendations?
+>
+> [0] https://wireless.wiki.kernel.org/en/developers/regulatory/crda
 
-Until proven otherwise. I tested it with a number of format violations, 
-but there could be more creative people out there coming up with a 
-pattern uncovering some issue.
+OK I haven't heard back so will just work towards a very simple
+extensible db and proceed as planned to reuse the existing
+request_firmware_direct() API but with cryptographic requirements and
+vetting through LSM.
 
-Regards,
-Arend
+ Luis
