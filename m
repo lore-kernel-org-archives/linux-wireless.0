@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64411 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965778AbbDVJBJ (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:7457 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753746AbbDMKcp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 05:01:09 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 07/11] ath10k: enable IEEE80211_HW_SUPPORT_FAST_XMIT
-In-Reply-To: <1429283751-5104-7-git-send-email-johannes@sipsolutions.net>
-	(Johannes Berg's message of "Fri, 17 Apr 2015 17:15:47 +0200")
-References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
-	<1429283751-5104-7-git-send-email-johannes@sipsolutions.net>
-Date: Wed, 22 Apr 2015 12:00:39 +0300
-Message-ID: <87h9s8y1u0.fsf@kamboji.qca.qualcomm.com> (sfid-20150422_110116_574388_18C9F0F1)
+	Mon, 13 Apr 2015 06:32:45 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t3DAU62h018936
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2015 03:32:39 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1tpw03vrp9-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2015 03:32:39 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/2] revert "mwifiex: enable aggregation for TID 6 and 7 streams"
+Date: Mon, 13 Apr 2015 21:32:24 +0530
+Message-ID: <1428940945-4123-1-git-send-email-patila@marvell.com> (sfid-20150413_123249_594558_0259326D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+This patch reverts 'commit c5534844cdee ("mwifiex:
+enable aggregation for TID 6 and 7 streams")'.
+TID6 & TID7 is voice traffic which is quite time sensitive.
+Do not enable any type of aggregation on these TIDs.
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> The driver can clearly enable fast-xmit since it does rate
-> control in the device and thus must do duration calculation
-> there as well.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/wmm.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-I quickly tested mac80211-next/fast-xmit (commit cf9f262fdd3f) with
-ath10k and didn't see any problems so:
-
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index b2e9956..8be9d13 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -428,6 +428,15 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 							priv->tos_to_tid_inv[i];
+ 		}
+ 
++		priv->aggr_prio_tbl[6].amsdu
++					= priv->aggr_prio_tbl[6].ampdu_ap
++					= priv->aggr_prio_tbl[6].ampdu_user
++					= BA_STREAM_NOT_ALLOWED;
++
++		priv->aggr_prio_tbl[7].amsdu = priv->aggr_prio_tbl[7].ampdu_ap
++					= priv->aggr_prio_tbl[7].ampdu_user
++					= BA_STREAM_NOT_ALLOWED;
++
+ 		mwifiex_set_ba_params(priv);
+ 		mwifiex_reset_11n_rx_seq_num(priv);
+ 
 -- 
-Kalle Valo
+1.8.1.4
+
