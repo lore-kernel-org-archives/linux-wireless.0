@@ -1,98 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:37198 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752880AbbD0JnB (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:36150 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbbDMBEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 05:43:01 -0400
-Received: by igblo3 with SMTP id lo3so56513583igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Apr 2015 02:43:00 -0700 (PDT)
+	Sun, 12 Apr 2015 21:04:22 -0400
+Received: by wgsk9 with SMTP id k9so65209824wgs.3
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Apr 2015 18:04:21 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 27 Apr 2015 02:43:00 -0700
-Message-ID: <CAKLmikOSs-1x5dbDtRtgim-_nsFfX-6xd=WZArYfwnOS1ULP3A@mail.gmail.com> (sfid-20150427_114305_261571_7289A851)
-Subject: Regression with iw set bitrates
-From: Mitar <mmitar@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <430726FF-98A3-4661-ACEE-87781CADD490@embarqmail.com>
+References: <430726FF-98A3-4661-ACEE-87781CADD490@embarqmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 13 Apr 2015 11:04:00 +1000
+Message-ID: <CAGRGNgUh-n8Grq94YgOAXGR8+hfMHGSx_tQVk6uQaHj9T_U-aQ@mail.gmail.com> (sfid-20150413_030425_694403_A8E11350)
+Subject: Re: DRIVER FOR INTEL2200BG
+To: "J.H. Schmidt" <sophiedoc@embarqmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hi,
 
-On OpenWrt, between these versions:
+On Mon, Apr 13, 2015 at 10:39 AM, J.H. Schmidt <sophiedoc@embarqmail.com> wrote:
+> My IBM(Lenovo) laptop running XP crashed a year ago and I changed to Lupuplus which
+> runs on RAM.No problems with older Sprint modem and D link router running Wi Fi.Enter
+> a nearby lightning strike which killed the router.Century link gave us a new modem router
+> combo which works fine with with 2 computes r running 7 and 2 IMacs.I can't get the
+> Linux machine to work with the new Century Link combo modem router-Any ideas?
 
-https://dev.openwrt.org/log/branches/barrier_breaker?action=stop_on_copy&mode=stop_on_copy&rev=44952&stop_rev=42475&limit=200&mail_addr=&mail_addr_confirm=
+I'm not sure I understand your problem.
 
-there was a regression in how iw set bitrates operate. Because I
-suspect it is an upstream issue, I am reporting it here.
+1. You're running some RAM based Linux distro on your Thinkpad
+2. It has an Intel 2200bg card
+3. You've gotten a new router
+4. Now it doesn't connect
 
-With previous version of our firmware image, I was using the
-/etc/hotplug.d/iface/30-bitrates script you can see in this file:
+If you were connecting to the old router using WiFi, your card is
+already working.
 
-https://github.com/cloyne/network/blob/349297c8bfd115aa68e3b8c47bb3a7197f1e777f/unifi/README.md
+I'm guessing your new router is much newer than the old one. Is it an
+"n" router? (I.e. supports 802.11n, WiFi speeds above 54Mbit/s) Some
+of them default to "n" only operation and need a setting turned on to
+allow "b" or "g" devices to connect.
 
-The goal was to limit on all 2.4 GHz interfaces bitrates to G standard
-and higher, removing all legacy stuff.
+I'd investigate the settings of the router and ensure that
+compatibility for older ("g") devices is turned on.
 
-It seems it worked. But with an upgrade to the new firmware image,
-this script started misbehaving and high-end WiFi devices were able to
-connect only with MSC 0. I determined that the issue is in the
-following command:
-
-iw wlan0 set bitrates legacy-2.4 6 9 12 18 24 36 48 54 ht-mcs-2.4 lgi-2.4
-
-With this command in effect, my client has in station dump the
-following bitrates:
-
-tx bitrate:    6.5 MBit/s MCS 0
-rx bitrate:    216.7 MBit/s MCS 23 short GI
-
-If I change the command to:
-
-iw wlan0 set bitrates legacy-2.4 6 9 12 18 24 36 48 54
-
-tx bitrate:    195.0 MBit/s MCS 23
-rx bitrate:    216.7 MBit/s MCS 23 short GI
-
-Which is the expected bitrate.
-
-If I run only:
-
-iw wlan0 set bitrates ht-mcs-2.4
-
-tx bitrate:    11.0 MBit/s
-rx bitrate:    117.0 MBit/s MCS 20
-
-This goes against the documentation which is saying that this should
-reset bitrates masks to normal:
-
-https://wireless.wiki.kernel.org/en/users/documentation/iw#modifying_tx_ht_mcs_bitrates
-
-Maybe I am not using the command correctly. In general it is unclear
-what should be correct behavior here. I also opened a SuperUser
-question:
-
-http://superuser.com/questions/881025/limiting-low-bitrates-with-iw-on-ath9k
-
-So maybe clearer documentation would make it easier to know what is
-the correct command? So, what is current (and hopefully future proof)
-command to not allow legacy bitrates, but to allow any other (which
-would work also on future devices without having to modify the list of
-allowed MCS when they are added)?
-
-iw --version
-iw version 3.15
-
-kmod-ath - 3.10.49+2014-05-22-1
-kmod-ath9k - 3.10.49+2014-05-22-1
-kmod-ath9k-common - 3.10.49+2014-05-22-1
-kmod-cfg80211 - 3.10.49+2014-05-22-1
-kmod-mac80211 - 3.10.49+2014-05-22-1
-wireless-info - 0.1-1
-wireless-tools - 29-5
-
-
-Mitar
+Thanks,
 
 -- 
-http://mitar.tnode.com/
-https://twitter.com/mitar_m
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
