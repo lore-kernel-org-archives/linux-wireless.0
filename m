@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:35799 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753124AbbDHTTX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2015 15:19:23 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAGrUaU1D_tO9+HrH_mEa0U13xTCuOijyvcn2_mi8cUgkkPeOuw@mail.gmail.com>
-References: <CAGrUaU24vCH6+GpAtBCNiGwdT4_-FNNLDq=_s5zhSPBOp8bbmg@mail.gmail.com>
-	<21764.61660.411242.223378@gargle.gargle.HOWL>
-	<CAGrUaU1D_tO9+HrH_mEa0U13xTCuOijyvcn2_mi8cUgkkPeOuw@mail.gmail.com>
-Date: Wed, 8 Apr 2015 12:19:22 -0700
-Message-ID: <CAJ-VmokVe0dO1kHh8u0ok3G6V70cj-i8qeKHyMRpnWeDEK4w9Q@mail.gmail.com> (sfid-20150408_211926_708851_A682C546)
-Subject: Re: [ath9k-devel] ath9k channel switch
-From: Adrian Chadd <adrian@freebsd.org>
-To: Saurabh Pal <saurabh6321@gmail.com>
-Cc: Sujith Manoharan <sujith@msujith.org>, netdev@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:54267 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752659AbbDNHyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 03:54:24 -0400
+Message-ID: <1428998059.3019.1.camel@sipsolutions.net> (sfid-20150414_095445_876259_BBCD1F7B)
+Subject: Re: [RFC v3] mac80211: lock rate control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Sven Eckelmann <sven@narfation.org>,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	Sven Eckelmann <sven@open-mesh.com>,
+	Arik Nemtsov <arik@wizery.com>, liad.kaufman@intel.com
+Date: Tue, 14 Apr 2015 09:54:19 +0200
+In-Reply-To: <20150413212628.GA7869@localhost> (sfid-20150413_232633_258914_B093F402)
+References: <1426061656-17546-1-git-send-email-sven@narfation.org>
+	 <1426185468.1885.17.camel@sipsolutions.net>
+	 <20150413212628.GA7869@localhost> (sfid-20150413_232633_258914_B093F402)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2015-04-13 at 17:26 -0400, Bob Copeland wrote:
 
-You can do a fast channel switch under very specific conditions. It
-includes but isn't limited to being on the same band (ie, no fast cc
-between 2/5ghz.)
+> mac80211: introduce plink lock for plink fields
+> 
+> The mesh plink code uses sta->lock to serialize access to the
+> plink state fields between the peer link state machine and the
+> peer link timer.  Some paths (e.g. those involving
+> mps_qos_null_tx()) unfortunately hold this spinlock across
+> frame tx, which is soon to be disallowed.  Add a new spinlock
+> just for plink access.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
+Thank you!
 
--adrian
+I've applied both this and the rate control locking patch.
+
+We may later want to pick that up for stable perhaps, but let's let it
+bake a little longer, it's pretty big.
+
+johannes
+
