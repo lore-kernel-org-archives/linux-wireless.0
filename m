@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:64364 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030578AbbD1QuI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 12:50:08 -0400
-Message-ID: <553FBA3B.5010507@broadcom.com> (sfid-20150428_185021_581495_AD37E274)
-Date: Tue, 28 Apr 2015 18:50:03 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Ulf Hansson <ulf.hansson@linaro.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/10] brcmfmac: fix sdio suspend and resume
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-8-git-send-email-arend@broadcom.com>	<CAPDyKFqGb81m9ExECL1ZCea8OuhekH+aWiXC=8zafnLN2T02Vw@mail.gmail.com> <87egn45ixq.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87egn45ixq.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:56841 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753764AbbDNPD7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:03:59 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Yi2NZ-0008I5-O9
+	for linux-wireless@vger.kernel.org; Tue, 14 Apr 2015 17:03:57 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC/RFT 00/11] mac80211: enable fast-xmit and some offloads
+Date: Tue, 14 Apr 2015 17:03:38 +0200
+Message-Id: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net> (sfid-20150414_170402_357343_42C8C498)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/28/15 18:14, Kalle Valo wrote:
-> Ulf Hansson<ulf.hansson@linaro.org>  writes:
->
->> On 14 April 2015 at 20:10, Arend van Spriel<arend@broadcom.com>  wrote:
->>> commit 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
->>> changed the behaviour by removing the MMC_PM_KEEP_POWER flag for
->>> non-wowl scenario, which needs to be restored. Another necessary
->>> change is to mark the card as being non-removable. With this in place
->>> the suspend resume test passes successfully doing:
->>>
->>>   # echo devices>  /sys/power/pm_test
->>>   # echo mem>  /sys/power/state
->>>
->>> Note that power may still be switched off when system is going
->>> in S3 state.
->>>
->>> Reported-by: Fu, Zhonghui<<zhonghui.fu@linux.intel.com>
->>> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
->>> Reviewed-by: Franky (Zhenhui) Lin<frankyl@broadcom.com>
->>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->>> ---
->>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 18 +++++++++++++-----
->>>   1 file changed, 13 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> index 9b508bd..8a69544 100644
->>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> @@ -1011,6 +1011,14 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
->>>          return 0;
->>>   }
->>>
->>> +static void brcmf_sdiod_host_fixup(struct mmc_host *host)
->>> +{
->>> +       /* runtime-pm powers off the device */
->>> +       pm_runtime_forbid(host->parent);
->>
->> That you need this, clearly shows that something is broken in the mmc
->> core/host layer.
->>
->> Could you elaborate a bit on what configuration you are using. Like
->> what mmc host, which SDIO bus speed mode.
->>
->> And have you tested different configurations? Like what happens if you
->> use a different SDIO bus speed mode?
->
-> So what should I do with this patch? Good to commit still?
+First, add the TX fastpath ("fast-xmit") that I've been kicking around for
+a while. I'm pretty happy with the abstraction since it allows me to not
+have to worry about a lot of details in the regular TX path...
 
-I think so, but I am biased ;-) Seriously, this enables people that have 
-brcmfmac devices hooked up through runtime-pm capable host controllers 
-to use wifi. So while we need to work to proper runtime-pm support for 
-SDIO function drivers with proper interaction with the MMC stack this 
-patch provides a short term solution/workaround at the cost of being a 
-bit less power efficient.
+Secondly, I want to enable more offloads. So the first thing to do is to
+actually fix checksum offload - the TI driver has a bug in that if it fails
+to upload keys or so, checksums will be completely bogus.
 
-Regards,
-Arend
+So the first step to fix that bug is to enable checksum offload only on
+the fast-xmit path, while having a software fallback on the regular TX path
+to make software crypto etc. do the right thing. To not cause regressions
+for the TI/ath10k drivers, this requires extending fast-xmit to cover more
+cases, but that's easy.
+
+Secondly then, we can add code to do in software what the driver might do,
+which is actually what the network stack does for us anyway today, but now
+we can do it only on the non-fast-xmit path so that the fast-xmit path can
+pass packets with required checksumming or segmentation to the device.
+
+So far I've only tested the software fallbacks, not the actual hardware
+offloads.
+
+johannes
+
