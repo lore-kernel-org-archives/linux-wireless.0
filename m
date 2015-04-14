@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:37423 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754707AbbDTIZU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 04:25:20 -0400
-Received: by igblo3 with SMTP id lo3so54163387igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2015 01:25:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
-References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
-Date: Mon, 20 Apr 2015 11:25:20 +0300
-Message-ID: <CAB3XZEeraicUA4Vo4tT93yFn7uN4-FapHOu_5wVutBvtJZP+jQ@mail.gmail.com> (sfid-20150420_102534_975801_8A6FAA58)
-Subject: Re: [PATCH 01/11] mac80211: add TX fastpath
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56847 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753764AbbDNPEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:04:07 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT 03/11] mac80211: extend fast-xmit to driver fragmentation
+Date: Tue, 14 Apr 2015 17:03:41 +0200
+Message-Id: <1429023829-3991-4-git-send-email-johannes@sipsolutions.net> (sfid-20150414_170438_926962_4E3E29D6)
+In-Reply-To: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
+References: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 17, 2015 at 6:15 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> In order to speed up mac80211's TX path, add the "fast-xmit" cache
-> that will cache the data frame 802.11 header and other data to be
-> able to build the frame more quickly. This cache is rebuilt when
-> external triggers imply changes, but a lot of the checks done per
-> packet today are simplified away to the check for the cache.
->
-> There's also a more detailed description in the code.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-[...]
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +       build.key = rcu_access_pointer(sta->ptk[sta->ptk_idx]);
-> +       if (!build.key)
-> +               build.key = rcu_access_pointer(sdata->default_unicast_key);
-don't you need rcu_dereference here? (and you don't seem to be inside
-rcu section here)
+If the driver handles fragmentation then it wouldn't
+be done in software so we can still use the fast-xmit
+path in that case.
 
-Eliad.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d5bfa6c4afd0..86d64bd11c01 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2439,7 +2439,8 @@ void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+ 		return;
+ 
+ 	/* fast-xmit doesn't handle fragmentation at all */
+-	if (local->hw.wiphy->frag_threshold != (u32)-1)
++	if (local->hw.wiphy->frag_threshold != (u32)-1 &&
++	    !local->ops->set_frag_threshold)
+ 		return;
+ 
+ 	rcu_read_lock();
+-- 
+2.1.4
+
