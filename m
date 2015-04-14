@@ -1,56 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:41435 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924AbbDARJd (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:36229 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754511AbbDNSKv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 13:09:33 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] ath10k: implement more versatile set_bitrate_mask
-References: <1427798961-7334-1-git-send-email-michal.kazior@tieto.com>
-	<1427798961-7334-3-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQmhEf3fZSo2FPFbXa=Uc4ia0Sg2SD89gceyc8O+jVJeUg@mail.gmail.com>
-Date: Wed, 1 Apr 2015 20:09:23 +0300
-In-Reply-To: <CA+BoTQmhEf3fZSo2FPFbXa=Uc4ia0Sg2SD89gceyc8O+jVJeUg@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 1 Apr 2015 14:38:13 +0200")
-Message-ID: <87iodfzsfw.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_190937_950440_5277FDB8)
+	Tue, 14 Apr 2015 14:10:51 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/10] brcmfmac: add support for BCM4358 PCIe device
+Date: Tue, 14 Apr 2015 20:10:31 +0200
+Message-ID: <1429035033-14076-9-git-send-email-arend@broadcom.com> (sfid-20150414_201113_820076_4B6EC99F)
+In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This patch adds support for the BCM4358 2x2 11ac device.
 
-> On 31 March 2015 at 12:49, Michal Kazior <michal.kazior@tieto.com> wrote:
->> Until now only a single fixed tx rate or nss was
->> allowed to be set.
->>
->> The patch attempts to improve this by allowing
->> most bitrate masks. The limitation is VHT MCS
->> rates cannot be expressed separately and only the
->> following VHT MCS ranges are supported: none, 0-7,
->> 0-8, and 0-9.
->>
->> This keeps the old behaviour when requesting
->> single tx rate or single nss. The new bitrate mask
->> logic is only applied to other cases that would
->> return -EINVAL until now.
->>
->> Depending on firmware revisions some combinations
->> may crash firmware so use with care, please.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
->
-> Hi Kalle,
->
-> Drop this patch ([2/2]) for now, please. It looks like it doesn't work
-> well with crypto networks. I'll need to rework this. The [1/2] is fine
-> as it is though.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c       | 1 +
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c       | 9 +++++++++
+ drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 ++
+ 3 files changed, 12 insertions(+)
 
-Ok, patch 2 dropped.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+index ab2fac8..288f831 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+@@ -649,6 +649,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
+ 	case BRCM_CC_43567_CHIP_ID:
+ 	case BRCM_CC_43569_CHIP_ID:
+ 	case BRCM_CC_43570_CHIP_ID:
++	case BRCM_CC_4358_CHIP_ID:
+ 	case BRCM_CC_43602_CHIP_ID:
+ 		return 0x180000;
+ 	default:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 1831ecd..8815de7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -51,6 +51,8 @@ enum brcmf_pcie_state {
+ #define BRCMF_PCIE_4356_NVRAM_NAME		"brcm/brcmfmac4356-pcie.txt"
+ #define BRCMF_PCIE_43570_FW_NAME		"brcm/brcmfmac43570-pcie.bin"
+ #define BRCMF_PCIE_43570_NVRAM_NAME		"brcm/brcmfmac43570-pcie.txt"
++#define BRCMF_PCIE_4358_FW_NAME			"brcm/brcmfmac4358-pcie.bin"
++#define BRCMF_PCIE_4358_NVRAM_NAME		"brcm/brcmfmac4358-pcie.txt"
+ 
+ #define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
+ 
+@@ -189,6 +191,8 @@ MODULE_FIRMWARE(BRCMF_PCIE_4356_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_4356_NVRAM_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_43570_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_PCIE_43570_NVRAM_NAME);
++MODULE_FIRMWARE(BRCMF_PCIE_4358_FW_NAME);
++MODULE_FIRMWARE(BRCMF_PCIE_4358_NVRAM_NAME);
+ 
+ 
+ struct brcmf_pcie_console {
+@@ -1333,6 +1337,10 @@ static int brcmf_pcie_get_fwnames(struct brcmf_pciedev_info *devinfo)
+ 		fw_name = BRCMF_PCIE_43570_FW_NAME;
+ 		nvram_name = BRCMF_PCIE_43570_NVRAM_NAME;
+ 		break;
++	case BRCM_CC_4358_CHIP_ID:
++		fw_name = BRCMF_PCIE_4358_FW_NAME;
++		nvram_name = BRCMF_PCIE_4358_NVRAM_NAME;
++		break;
+ 	default:
+ 		brcmf_err("Unsupported chip 0x%04x\n", devinfo->ci->chip);
+ 		return -ENODEV;
+@@ -1850,6 +1858,7 @@ static struct pci_device_id brcmf_pcie_devid_table[] = {
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
++	BRCMF_PCIE_DEVICE(BRCM_PCIE_4358_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_2G_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_5G_DEVICE_ID),
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index 4efdd51..2543282 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -45,6 +45,7 @@
+ #define BRCM_CC_43567_CHIP_ID		43567
+ #define BRCM_CC_43569_CHIP_ID		43569
+ #define BRCM_CC_43570_CHIP_ID		43570
++#define BRCM_CC_4358_CHIP_ID		0x4358
+ #define BRCM_CC_43602_CHIP_ID		43602
+ 
+ /* USB Device IDs */
+@@ -59,6 +60,7 @@
+ #define BRCM_PCIE_4356_DEVICE_ID	0x43ec
+ #define BRCM_PCIE_43567_DEVICE_ID	0x43d3
+ #define BRCM_PCIE_43570_DEVICE_ID	0x43d9
++#define BRCM_PCIE_4358_DEVICE_ID	0x43e9
+ #define BRCM_PCIE_43602_DEVICE_ID	0x43ba
+ #define BRCM_PCIE_43602_2G_DEVICE_ID	0x43bb
+ #define BRCM_PCIE_43602_5G_DEVICE_ID	0x43bc
 -- 
-Kalle Valo
+1.9.1
+
