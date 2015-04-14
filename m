@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54660 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030415AbbD1Rt0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 13:49:26 -0400
-Date: Tue, 28 Apr 2015 19:49:31 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwl4965: Enable checking of format strings
-Message-ID: <20150428174929.GA8397@redhat.com> (sfid-20150428_194948_256566_EBEB5CC2)
-References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
- <877fsw5iq1.fsf@kamboji.qca.qualcomm.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:35342 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753940AbbDNPz1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:55:27 -0400
+Message-ID: <552D386E.40306@candelatech.com> (sfid-20150414_175530_563171_7FEF247D)
+Date: Tue, 14 Apr 2015 08:55:26 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <877fsw5iq1.fsf@kamboji.qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
+References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>		  	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>		  	 <54EB66CC.1030800@candelatech.com>		   <1424772714.2192.16.camel@sipsolutions.net>		   <54EC8C5D.5090400@candelatech.com>		  <1424788834.2192.34.camel@sipsolutions.net>		  <5500AE12.6040103@candelatech.com>		 <1427812067.2057.27.camel@sipsolutions.net>		 <551AC3B6.1040001@candelatech.com>	 <1428999215.3019.6.camel@sipsolutions.net>	 <552D2A90.1070307@candelatech.com> <1429023990.3019.15.camel@sipsolutions.net>
+In-Reply-To: <1429023990.3019.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 28, 2015 at 07:19:02PM +0300, Kalle Valo wrote:
-> Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
-> 
-> > Since these fmt_* variables are just const char*, and not const
-> > char[], gcc (and smatch) doesn't to type checking of the arguments to
-> > the printf functions. Since the linker knows perfectly well to merge
-> > identical string constants, there's no point in having three static
-> > pointers waste memory and give an extra level of indirection.
-> >
-> > This removes over 100 "non-constant format argument" warnings from
-> > smatch, accounting for about 20% of all such warnings in an
-> > allmodconfig.
-> >
-> > Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> 
-> So what's the conclusion, should I commit this patch or not?
-> 
-> Full discussion here:
-> 
-> https://patchwork.kernel.org/patch/5814811/
 
-I do not see the point of the patch. If compiler behave not
-optimally, fix the compiler. NACK.
 
-Stanislaw
+On 04/14/2015 08:06 AM, Johannes Berg wrote:
+> On Tue, 2015-04-14 at 07:56 -0700, Ben Greear wrote:
+>
+>>> Well, the question isn't really that offloading, the question is what
+>>> happens with the hw-scan logic in hwsim? Though I guess now that I think
+>>> about it, that wouldn't show up in userspace at all with your changes.
+>>
+>> I think for HW scan and related matters, you treat user-space like a firmware
+>> target, so you send it a message, and then get some response or action, similar
+>> to how you would request ath10k or some USB dongle NIC to do things for you.
+>
+> That's not really how it works today, but it's one possible (probably
+> the only possible) approach.
+>
+>> My own interest in hwsim user-space is to make it act more like ath9k
+>> than a firmware target driver, but I don't think my changes preclude doing
+>> target based emulation in the future.
+>
+> True, although I'd like to see the multi-channel issue addressed better.
+
+I need a hint or two on what exactly you want changed in my patch to
+address your request, or maybe you or someone else can just address
+the issue in follow-on patches?
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
