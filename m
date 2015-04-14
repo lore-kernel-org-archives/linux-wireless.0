@@ -1,47 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64527 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56857 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752555AbbDBGll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2015 02:41:41 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S1755589AbbDNPEK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:04:10 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/31] iwlwifi: mvm: remove d0i3 ref correctly during AP start
-Date: Thu,  2 Apr 2015 09:40:57 +0300
-Message-Id: <1427956879-11725-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_084144_733864_8A71BB03)
-In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
-References: <1427956656.8122.2.camel@egrumbacBox>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT 08/11] mac80211: allow checksum offload only in fast-xmit
+Date: Tue, 14 Apr 2015 17:03:46 +0200
+Message-Id: <1429023829-3991-9-git-send-email-johannes@sipsolutions.net> (sfid-20150414_170432_034235_A2CA8D01)
+In-Reply-To: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
+References: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The AP_START d0i3 reference was never removed if the AP started correctly.
-This has the unpleasant side-effect of preventing D0i3 on Android if the
-WiFi hotspot was ever started on the device.
+When we go through the complete TX processing, there are a number
+of things like fragmentation and software crypto that require the
+checksum to be calculated already.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In favour of maintainability, instead of adding the necessary call
+to skb_checksum_help() in all the places that need it, just do it
+once before the regular TX processing.
+
+Right now this only affects the TI wlcore and QCA ath10k drivers
+since they're the only ones using checksum offload. The previous
+commits enabled fast-xmit for them in almost all cases.
+
+For wlcore this even fixes a corner case: when a key fails to be
+programmed to hardware software encryption gets used, encrypting
+frames with a bad checksum.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ net/mac80211/tx.c | 24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index a3a84d1..b4e28ff 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2215,8 +2215,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 	if (iwl_mvm_phy_ctx_count(mvm) > 1)
- 		iwl_mvm_teardown_tdls_peers(mvm);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0f18ee11f097..e76f3e96eb84 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2835,10 +2835,8 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
  
--	mutex_unlock(&mvm->mutex);
--	return 0;
-+	goto out_unlock;
+ 	rcu_read_lock();
  
- out_quota_failed:
- 	iwl_mvm_power_update_mac(mvm);
+-	if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
+-		kfree_skb(skb);
+-		goto out;
+-	}
++	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
++		goto out_free;
+ 
+ 	if (!IS_ERR_OR_NULL(sta)) {
+ 		struct ieee80211_fast_tx *fast_tx;
+@@ -2850,6 +2848,21 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 			goto out;
+ 	}
+ 
++	/* the frame could be fragmented, software-encrypted, and other things
++	 * so we cannot really handle checksum offload with it - fix it up in
++	 * software before we handle anything else.
++	 */
++	if (skb->ip_summed == CHECKSUM_PARTIAL) {
++		if (skb->encapsulation)
++			skb_set_inner_transport_header(skb,
++						       skb_checksum_start_offset(skb));
++		else
++			skb_set_transport_header(skb,
++						 skb_checksum_start_offset(skb));
++		if (skb_checksum_help(skb))
++			goto out_free;
++	}
++
+ 	skb = ieee80211_build_hdr(sdata, skb, info_flags, sta);
+ 	if (IS_ERR(skb))
+ 		goto out;
+@@ -2859,6 +2872,9 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	dev->trans_start = jiffies;
+ 
+ 	ieee80211_xmit(sdata, sta, skb);
++	goto out;
++ out_free:
++	kfree_skb(skb);
+  out:
+ 	rcu_read_unlock();
+ }
 -- 
-1.9.1
+2.1.4
 
