@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:32991 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754247AbbDTJ1E (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:50863 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983AbbDNUhh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 05:27:04 -0400
-Received: by lbbzk7 with SMTP id zk7so125832231lbb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2015 02:27:03 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix qca61x4 hw2.1 support
-Date: Mon, 20 Apr 2015 09:20:41 +0000
-Message-Id: <1429521641-21993-1-git-send-email-michal.kazior@tieto.com> (sfid-20150420_112712_026900_3180F6E5)
+	Tue, 14 Apr 2015 16:37:37 -0400
+Date: Wed, 15 Apr 2015 06:37:24 +1000
+From: James Cameron <quozl@laptop.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: [PATCH] mwifiex: increase number of probes for specific SSID
+ scans
+Message-ID: <20150414203724.GB32455@us.netrek.org> (sfid-20150414_223741_269481_B892574E)
+References: <1429022956-12016-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1429022956-12016-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During initialization firmware does some sort of
-memory switch between DRAM and IRAM. If
-configuration value for bank switching isn't
-correct device crashes during init.
+On Tue, Apr 14, 2015 at 07:49:16AM -0700, Amitkumar Karwar wrote:
+> It's been observed that device sometimes fails to find AP
+> configured in hidden SSID in busy environment. We will increase
+> number of probes for specific SSID scans for getting better results.
 
-The new value prevents firmware 11.0.0.302 (and
-possibly others) for qca61x4 hw2.1 from crashing
-during init.
+I don't like this.  It worries me.  What is the underlying cause?  If
+it is something other than collision, why?
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+In scenario of tens to a hundred laptops scanning for specific SSID
+for ad-hoc in the Sugar desktop environment, this patch may decrease
+free air time considerably.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 262a84f67f62..b1e522ccb525 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1539,12 +1539,11 @@ static int ath10k_pci_get_num_banks(struct ath10k *ar)
- 		switch (MS(ar->chip_id, SOC_CHIP_ID_REV)) {
- 		case QCA6174_HW_1_0_CHIP_ID_REV:
- 		case QCA6174_HW_1_1_CHIP_ID_REV:
-+		case QCA6174_HW_2_1_CHIP_ID_REV:
-+		case QCA6174_HW_2_2_CHIP_ID_REV:
- 			return 3;
- 		case QCA6174_HW_1_3_CHIP_ID_REV:
- 			return 2;
--		case QCA6174_HW_2_1_CHIP_ID_REV:
--		case QCA6174_HW_2_2_CHIP_ID_REV:
--			return 6;
- 		case QCA6174_HW_3_0_CHIP_ID_REV:
- 		case QCA6174_HW_3_1_CHIP_ID_REV:
- 		case QCA6174_HW_3_2_CHIP_ID_REV:
+Should the number of probes be a choice of user space?
+
 -- 
-2.1.4
-
+James Cameron
+http://quozl.linux.org.au/
