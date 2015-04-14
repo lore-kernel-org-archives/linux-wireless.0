@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0041.hostedemail.com ([216.40.44.41]:35365 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751629AbbDHLtO (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:56584 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755054AbbDNSLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2015 07:49:14 -0400
-Date: Wed, 8 Apr 2015 07:49:10 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: Move each system tracepoints to their own
- header
-Message-ID: <20150408074910.7563a1c8@gandalf.local.home> (sfid-20150408_134931_660768_25EFDD4E)
-In-Reply-To: <5524D99C.1050902@broadcom.com>
-References: <20150407121148.17207bd8@gandalf.local.home>
-	<5524D99C.1050902@broadcom.com>
+	Tue, 14 Apr 2015 14:11:13 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 06/10] brcmfmac: process interrupt regardless sdiod state
+Date: Tue, 14 Apr 2015 20:10:29 +0200
+Message-ID: <1429035033-14076-7-git-send-email-arend@broadcom.com> (sfid-20150414_203417_575562_C34DE8A4)
+In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 8 Apr 2015 09:32:44 +0200
-Arend van Spriel <arend@broadcom.com> wrote:
+When the sdio bus state is not ready to process we abort the
+interrupt service routine. This is not wanted as it keeps the
+interrupt source active. Better clear the interrupt source.
 
-> On 04/07/15 18:11, Steven Rostedt wrote:
-> >
-> > Every tracing file must have its own TRACE_SYSTEM defined.
-> > The brcmsmac tracepoint header broke this and added in the middle
-> > of the file:
-> >
-> >   #undef TRACE_SYSTEM
-> >   #define TRACE_SYSTEM brcmsmac
-> >
-> >   #undef TRACE_SYSTEM
-> >   #define TRACE_SYSTEM brcmsmac_tx
-> >
-> >   #undef TRACE_SYSTEM
-> >   #define TRACE_SYSTEM brcmsmac_msg
-> >
-> > Unfortunately, this broke new code in the ftrace infrastructure.
-> > Moving each of these TRACE_SYSTEMs into their own trace file with
-> > just one TRACE_SYSTEM per file fixes the issue.
-> >
-> > Cc: Arend van Spriel<arend@broadcom.com>
-> 
-> All right. Go ahead and change Cc: into Acked-by:
-> 
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Thanks!
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index cbdda54..bf7a8b1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -3555,10 +3555,6 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
+ 		return;
+ 	}
+ 
+-	if (bus->sdiodev->state != BRCMF_SDIOD_DATA) {
+-		brcmf_err("bus is down. we have nothing to do\n");
+-		return;
+-	}
+ 	/* Count the interrupt call */
+ 	bus->sdcnt.intrcount++;
+ 	if (in_interrupt())
+-- 
+1.9.1
 
--- Steve
