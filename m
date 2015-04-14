@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:33993 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbbD0HHQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 03:07:16 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAD3Xx4+vRhswKAbpHnrYQMRNKOppOQzgFOgoJw_1iAfK4baCtQ@mail.gmail.com>
-References: <CAD3Xx4+vRhswKAbpHnrYQMRNKOppOQzgFOgoJw_1iAfK4baCtQ@mail.gmail.com>
-From: Valentin Rothberg <valentinrothberg@gmail.com>
-Date: Mon, 27 Apr 2015 09:06:45 +0200
-Message-ID: <CAD3Xx4+eZOrgm_ae9UeUWB+EfUdi5B1jqs1R-CxYzYZ5AvHyfQ@mail.gmail.com> (sfid-20150427_090738_175727_14233570)
-Subject: Re: NFC: CONFIG_NFC_DEBUG not defined
-To: clement.perrochaud@effinnov.com
-Cc: sameo@linux.intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, Paul Bolle <pebolle@tiscali.nl>,
-	Andreas Ruprecht <rupran@einserver.de>,
-	hengelein Stefan <stefan.hengelein@fau.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56890 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932176AbbDNPJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:09:29 -0400
+Message-ID: <1429024166.3019.17.camel@sipsolutions.net> (sfid-20150414_170933_132487_24A8ECA1)
+Subject: Re: [PATCH] mwifiex: increase number of probes for specific SSID
+ scans
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Date: Tue, 14 Apr 2015 17:09:26 +0200
+In-Reply-To: <1429022956-12016-1-git-send-email-akarwar@marvell.com> (sfid-20150414_164959_065629_FE6FF99B)
+References: <1429022956-12016-1-git-send-email-akarwar@marvell.com>
+	 (sfid-20150414_164959_065629_FE6FF99B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I took the email from the author field of the commit, which does not
-exists anymore.  Now I added Clément's correct email address.
+On Tue, 2015-04-14 at 07:49 -0700, Amitkumar Karwar wrote:
+> It's been observed that device sometimes fails to find AP
+> configured in hidden SSID in busy environment. We will increase
+> number of probes for specific SSID scans for getting better results.
 
-On Mon, Apr 27, 2015 at 9:03 AM, Valentin Rothberg
-<valentinrothberg@gmail.com> wrote:
-> Hi Clément,
->
-> your commit dece45855a8b ("NFC: nxp-nci: Add support for NXP NCI
-> chips") adds the Makefile drivers/nfc/nxp-nci/Makefile with the
-> following line:
->
-> +ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
->
-> The Kconfig option NFC_DEBUG is not defined so the line turns out to
-> be a nop.  There is another reference in drivers/nfc/Makefile.  Is
-> there a patch queued somewhere to add the option?
->
-> I found this issue with ./scripts/checkkconfigsymbols.py by diffing
-> v4.0 and v4.1-rc1.
->
-> Kind regards,
->  Valentin
+I question the value of making the "busy environment" even more busy by
+sending a lot of probe requests at low rates ...
+
+Scans are never really guaranteed to be perfect and complete anyway.
+
+This is clearly your choice, but given, among other things, the broader
+industry direction of moving away from active scanning this seems like a
+bit short-sighted thing to do.
+
+johannes
+
