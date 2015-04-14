@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58637 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56877 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752117AbbDANqP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 09:46:15 -0400
-Message-ID: <1427895969.3428.9.camel@sipsolutions.net> (sfid-20150401_154624_791097_93BB99A2)
-Subject: pull-request: mac80211 2015-04-01
+	id S1754098AbbDNPGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:06:33 -0400
+Message-ID: <1429023990.3019.15.camel@sipsolutions.net> (sfid-20150414_170636_623307_EB650C0A)
+Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 01 Apr 2015 15:46:09 +0200
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 14 Apr 2015 17:06:30 +0200
+In-Reply-To: <552D2A90.1070307@candelatech.com>
+References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>
+		  	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>
+		  	 <54EB66CC.1030800@candelatech.com>
+		   <1424772714.2192.16.camel@sipsolutions.net>
+		   <54EC8C5D.5090400@candelatech.com>
+		  <1424788834.2192.34.camel@sipsolutions.net>
+		  <5500AE12.6040103@candelatech.com>
+		 <1427812067.2057.27.camel@sipsolutions.net>
+		 <551AC3B6.1040001@candelatech.com>
+	 <1428999215.3019.6.camel@sipsolutions.net>
+	 <552D2A90.1070307@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Tue, 2015-04-14 at 07:56 -0700, Ben Greear wrote:
 
-This morning I randomly ran into a kernel crash and then I looked into
-it and came up with this fix. It's clearly been around for quite a while
-without anyone having seen it before (to my knowledge), so if you think
-you don't want to pull it into net.git at this point that should be
-fine.
+> > Well, the question isn't really that offloading, the question is what
+> > happens with the hw-scan logic in hwsim? Though I guess now that I think
+> > about it, that wouldn't show up in userspace at all with your changes.
+> 
+> I think for HW scan and related matters, you treat user-space like a firmware
+> target, so you send it a message, and then get some response or action, similar
+> to how you would request ath10k or some USB dongle NIC to do things for you.
 
-Let me know what you want to do with it, I can also put it into
-mac80211-next instead (although then Greg complains that he gets a lot
-of Cc stable patches in rc1, but all the processes need time ...).
+That's not really how it works today, but it's one possible (probably
+the only possible) approach.
 
-Thanks,
+> My own interest in hwsim user-space is to make it act more like ath9k
+> than a firmware target driver, but I don't think my changes preclude doing
+> target based emulation in the future.
+
+True, although I'd like to see the multi-channel issue addressed better.
+
 johannes
-
-
-The following changes since commit f84eaa1068315409ffbef57e6fea312180787db3:
-
-  mac80211: ignore CSA to same channel (2015-03-16 09:36:12 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-04-01
-
-for you to fetch changes up to 788211d81bfdf9b6a547d0530f206ba6ee76b107:
-
-  mac80211: fix RX A-MPDU session reorder timer deletion (2015-04-01 14:35:01 +0200)
-
-----------------------------------------------------------------
-This contains just a single fix for a crash I happened to randomly
-run into today during testing. It's clearly been around for a while,
-but is pretty hard to trigger, even when I tried explicitly (and
-modified the code to make it more likely) it rarely did.
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      mac80211: fix RX A-MPDU session reorder timer deletion
-
- net/mac80211/agg-rx.c   | 8 ++++++--
- net/mac80211/rx.c       | 7 ++++---
- net/mac80211/sta_info.h | 2 ++
- 3 files changed, 12 insertions(+), 5 deletions(-)
-
 
