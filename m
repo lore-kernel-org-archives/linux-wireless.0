@@ -1,132 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58002 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932246AbbDJHy0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 03:54:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: matti.gottlieb@intel.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] ipv6: add option to drop unsolicited neighbor advertisements
-Date: Fri, 10 Apr 2015 09:54:14 +0200
-Message-Id: <1428652454-1224-4-git-send-email-johannes@sipsolutions.net> (sfid-20150410_095449_796026_EB40EBD8)
-In-Reply-To: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>
-References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail2.candelatech.com ([208.74.158.173]:34263 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753763AbbDNPBn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:01:43 -0400
+Message-ID: <552D2BD5.7050204@candelatech.com> (sfid-20150414_170146_741026_F8570426)
+Date: Tue, 14 Apr 2015 08:01:41 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: ath10k <ath10k@lists.infradead.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: CT ath10k firmware now supports IBSS + RSN
+References: <55285D8D.6070703@candelatech.com>	<552BFFB8.6030301@candelatech.com>	<552C5AE9.4050304@candelatech.com> <CA+BoTQ=C0xxDifiiQVbyBe=OHYUjzHcu49mULJpU+=2SNCZ-dQ@mail.gmail.com>
+In-Reply-To: <CA+BoTQ=C0xxDifiiQVbyBe=OHYUjzHcu49mULJpU+=2SNCZ-dQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-In certain 802.11 wireless deployments, there will be NA proxies
-that use knowledge of the network to correctly answer requests.
-To prevent unsolicitd advertisements on the shared medium from
-being a problem, on such deployments wireless needs to drop them.
 
-Enable this by providing an option called "drop_unsolicited_na".
+On 04/13/2015 10:34 PM, Michal Kazior wrote:
+> On 14 April 2015 at 02:10, Ben Greear <greearb@candelatech.com> wrote:
+>> On 04/13/2015 10:41 AM, Ben Greear wrote:
+>>> Looks like I have some more work to do.  For any moderately large frames,
+>>> I am now dropping the last 16 bytes.  Looks like the skb_put_padto logic
+>>> was working around a more serious issue...
+>>
+>> A better-tested version of kernel and firmware is uploaded now.
+>>
+>> Looks like I needed to add a hack to firmware to bump pkt-size by
+>> 16 for IBSS + RSN encrypted frames.  Not sure exactly why, but seems
+>> to work in light testing.
+>>
+>> I removed the skb-padto hack from the kernel, and kernel is rebased on
+>> top of official 4.0 now.
+>
+> Hmm.. Maybe this is related to MMIC. Maybe frame fragment length must
+> be different from frame length (ath10k_htt_tx(),
+> htt_data_tx_desc_frag)? Perhaps a similar hack as with RAW txmode[1]
+> needs to be applied..?
+>
+>
+> [1]: https://www.mail-archive.com/ath10k@lists.infradead.org/msg00241.html
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/networking/ip-sysctl.txt | 7 +++++++
- include/linux/ipv6.h                   | 1 +
- include/uapi/linux/ipv6.h              | 1 +
- net/ipv6/addrconf.c                    | 8 ++++++++
- net/ipv6/ndisc.c                       | 9 +++++++++
- 5 files changed, 26 insertions(+)
+This IBSS+RSN hack could be done in the kernel, but if my firmware is the only thing that
+needs it, then it is more convenient for me to hack firmware than have it
+incompatible with upstream drivers.
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index f6f32c21edaf..b0981c586fc4 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1584,6 +1584,13 @@ drop_unicast_in_l2_multicast - BOOLEAN
- 
- 	By default this is turned off.
- 
-+drop_unsolicited_na - BOOLEAN
-+	Drop all unsolicited neighbor advertisements, for example if there's
-+	a known good NA proxy on the network and such frames need not be used
-+	(or in the case of 802.11, must not be used to prevent attacks.)
-+
-+	By default this is turned off.
-+
- icmp/*:
- ratelimit - INTEGER
- 	Limit the maximal rates for sending ICMPv6 packets.
-diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
-index 1ec287a37e1d..cef258173a9d 100644
---- a/include/linux/ipv6.h
-+++ b/include/linux/ipv6.h
-@@ -54,6 +54,7 @@ struct ipv6_devconf {
- 	__s32           ndisc_notify;
- 	__s32		suppress_frag_ndisc;
- 	__s32		accept_ra_mtu;
-+	__s32		drop_unsolicited_na;
- 	struct ipv6_stable_secret {
- 		bool initialized;
- 		struct in6_addr secret;
-diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
-index 5a7061d690cb..73d7f1df6fe1 100644
---- a/include/uapi/linux/ipv6.h
-+++ b/include/uapi/linux/ipv6.h
-@@ -172,6 +172,7 @@ enum {
- 	DEVCONF_ACCEPT_RA_MTU,
- 	DEVCONF_STABLE_SECRET,
- 	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
-+	DEVCONF_DROP_UNSOLICITED_NA,
- 	DEVCONF_MAX
- };
- 
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index c017edf04f30..6d5a680085e8 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -4585,6 +4585,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
- 	array[DEVCONF_ACCEPT_RA_MTU] = cnf->accept_ra_mtu;
- 	/* we omit DEVCONF_STABLE_SECRET for now */
- 	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
-+	array[DEVCONF_DROP_UNSOLICITED_NA] = cnf->drop_unsolicited_na;
- }
- 
- static inline size_t inet6_ifla6_size(void)
-@@ -5591,6 +5592,13 @@ static struct addrconf_sysctl_table
- 			.proc_handler	= proc_dointvec,
- 		},
- 		{
-+			.procname	= "drop_unsolicited_na",
-+			.data		= &ipv6_devconf.drop_unsolicited_na,
-+			.maxlen		= sizeof(int),
-+			.mode		= 0644,
-+			.proc_handler	= proc_dointvec,
-+		},
-+		{
- 			/* sentinel */
- 		}
- 	},
-diff --git a/net/ipv6/ndisc.c b/net/ipv6/ndisc.c
-index c283827d60e2..7291b91e359b 100644
---- a/net/ipv6/ndisc.c
-+++ b/net/ipv6/ndisc.c
-@@ -868,6 +868,7 @@ static void ndisc_recv_na(struct sk_buff *skb)
- 				    offsetof(struct nd_msg, opt));
- 	struct ndisc_options ndopts;
- 	struct net_device *dev = skb->dev;
-+	struct inet6_dev *idev = __in6_dev_get(dev);
- 	struct inet6_ifaddr *ifp;
- 	struct neighbour *neigh;
- 
-@@ -887,6 +888,14 @@ static void ndisc_recv_na(struct sk_buff *skb)
- 		return;
- 	}
- 
-+	/* For some 802.11 wireless deployments (and possibly other networks),
-+	 * there will be a NA proxy and unsolicitd packets are attacks
-+	 * and thus should not be accepted.
-+	 */
-+	if (idev && idev->cnf.drop_unsolicited_na &&
-+	    !msg->icmph.icmp6_solicited)
-+		return;
-+
- 	if (!ndisc_parse_options(msg->opt, ndoptlen, &ndopts)) {
- 		ND_PRINTK(2, warn, "NS: invalid ND option\n");
- 		return;
+If you do find similar problems with other firmware, then certainly a driver
+patch is welcome, and I will back out my firmware hack accordingly.
+
+And, it would be nice if someone put some version if your raw-tx patch upstream.
+I can also adjust length for raw pkts in firmware too, but again, in many cases
+it is better to be similarly broken to existing firmware than to be technically
+correct but break compatibility with the driver.  If I ever get a 'ct-firmware'
+feature flag upstream, then we could of course do the changes to take advantage
+of my firmwares differences as needed.
+
+Thanks,
+Ben
+
 -- 
-2.1.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
