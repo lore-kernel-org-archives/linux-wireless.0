@@ -1,66 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 3.mo5.mail-out.ovh.net ([46.105.40.108]:54925 "EHLO
-	3.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932699AbbD1KvD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 06:51:03 -0400
-Received: from mail624.ha.ovh.net (b9.ovh.net [213.186.33.59])
-	by mo5.mail-out.ovh.net (Postfix) with SMTP id B1092FF9C56
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2015 10:23:37 +0200 (CEST)
-Message-ID: <553F4382.2070402@effinnov.com> (sfid-20150428_125107_838997_C744B47F)
-Date: Tue, 28 Apr 2015 10:23:30 +0200
-From: =?UTF-8?B?Q2zDqW1lbnQgUGVycm9jaGF1ZA==?=
-	<clement.perrochaud@effinnov.com>
-MIME-Version: 1.0
-To: Valentin Rothberg <valentinrothberg@gmail.com>
-CC: sameo@linux.intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, Paul Bolle <pebolle@tiscali.nl>,
-	Andreas Ruprecht <rupran@einserver.de>,
-	hengelein Stefan <stefan.hengelein@fau.de>
-Subject: Re: NFC: CONFIG_NFC_DEBUG not defined
-References: <CAD3Xx4+vRhswKAbpHnrYQMRNKOppOQzgFOgoJw_1iAfK4baCtQ@mail.gmail.com> <CAD3Xx4+eZOrgm_ae9UeUWB+EfUdi5B1jqs1R-CxYzYZ5AvHyfQ@mail.gmail.com>
-In-Reply-To: <CAD3Xx4+eZOrgm_ae9UeUWB+EfUdi5B1jqs1R-CxYzYZ5AvHyfQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56849 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755581AbbDNPEI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:04:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT 04/11] mac80211: extend fast-xmit for more ciphers
+Date: Tue, 14 Apr 2015 17:03:42 +0200
+Message-Id: <1429023829-3991-5-git-send-email-johannes@sipsolutions.net> (sfid-20150414_170435_040173_186B72BB)
+In-Reply-To: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
+References: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 27, 2015 at 9:03 AM, Valentin Rothberg wrote:
-> Hi Clément,
->
-> your commit dece45855a8b ("NFC: nxp-nci: Add support for NXP NCI
-> chips") adds the Makefile drivers/nfc/nxp-nci/Makefile with the
-> following line:
->
-> +ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
->
-> The Kconfig option NFC_DEBUG is not defined so the line turns out to
-> be a nop.  There is another reference in drivers/nfc/Makefile.  Is
-> there a patch queued somewhere to add the option?
->
-> I found this issue with ./scripts/checkkconfigsymbols.py by diffing
-> v4.0 and v4.1-rc1.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Valentin,
+When crypto is offloaded then in some cases it's all handled
+by the device, and in others only some space for the IV must
+be reserved in the frame. Handle both of these cases in the
+fast-xmit path, up to a limit of 18 bytes of space for IVs.
 
-I only included this line because it was present in the upper-level
-Makefile drivers/nfc/Makefile . As far as I know, there is no plan to
-add this option to the configuration.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.h | 10 +++++++---
+ net/mac80211/tx.c       | 40 +++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 44 insertions(+), 6 deletions(-)
 
-What would the most sensible solution to this issue be ? Add the NFC
-Debug feature to the configuration ? Remove it altogether ?
-
-Regards,
-
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index e365f6213702..1d4c73818c54 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -239,6 +239,8 @@ struct sta_ampdu_mlme {
+ /* Value to indicate no TID reservation */
+ #define IEEE80211_TID_UNRESERVED	0xff
+ 
++#define IEEE80211_FAST_XMIT_MAX_IV	18
++
+ /**
+  * struct ieee80211_fast_tx - TX fastpath information
+  * @key: key to use for hw crypto
+@@ -250,15 +252,17 @@ struct sta_ampdu_mlme {
+  * @band: band this will be transmitted on, for tx_info
+  * @rcu_head: RCU head to free this struct
+  *
+- * Try to keep this struct small so it fits into a single cacheline.
++ * This struct is small enough so that the common case (maximum crypto
++ * header length of 8 like for CCMP/GCMP) fits into a single 64-byte
++ * cache line.
+  */
+ struct ieee80211_fast_tx {
+ 	struct ieee80211_key *key;
+-	u8 hdr[30 + 2 + IEEE80211_CCMP_HDR_LEN +
+-	       sizeof(rfc1042_header)];
+ 	u8 hdr_len;
+ 	u8 sa_offs, da_offs, pn_offs;
+ 	u8 band;
++	u8 hdr[30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
++	       sizeof(rfc1042_header)];
+ 
+ 	struct rcu_head rcu_head;
+ };
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 86d64bd11c01..02aafe1cc121 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2519,10 +2519,11 @@ void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+ 	if (!build.key)
+ 		build.key = rcu_access_pointer(sdata->default_unicast_key);
+ 	if (build.key) {
+-		bool gen_iv, iv_spc;
++		bool gen_iv, iv_spc, mmic;
+ 
+ 		gen_iv = build.key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV;
+ 		iv_spc = build.key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE;
++		mmic = build.key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC;
+ 
+ 		/* don't handle software crypto */
+ 		if (!(build.key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+@@ -2551,9 +2552,42 @@ void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+ 			if (gen_iv || iv_spc)
+ 				build.hdr_len += IEEE80211_GCMP_HDR_LEN;
+ 			break;
+-		default:
+-			/* don't do fast-xmit for these ciphers (yet) */
++		case WLAN_CIPHER_SUITE_TKIP:
++			/* cannot handle MMIC or IV generation in xmit-fast */
++			if (mmic || gen_iv)
++				return;
++			if (iv_spc)
++				build.hdr_len += IEEE80211_TKIP_IV_LEN;
++			break;
++		case WLAN_CIPHER_SUITE_WEP40:
++		case WLAN_CIPHER_SUITE_WEP104:
++			/* cannot handle IV generation in fast-xmit */
++			if (gen_iv)
++				return;
++			if (iv_spc)
++				build.hdr_len += IEEE80211_WEP_IV_LEN;
++			break;
++		case WLAN_CIPHER_SUITE_AES_CMAC:
++		case WLAN_CIPHER_SUITE_BIP_CMAC_256:
++		case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++		case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++			WARN(1,
++			     "management cipher suite 0x%x enabled for data\n",
++			     build.key->conf.cipher);
+ 			return;
++		default:
++			/* we don't know how to generate IVs for this at all */
++			if (WARN_ON(gen_iv))
++				return;
++			/* pure hardware keys are OK, of course */
++			if (!(build.key->flags & KEY_FLAG_CIPHER_SCHEME))
++				break;
++			/* cipher scheme might require space allocation */
++			if (iv_spc &&
++			    build.key->conf.iv_len > IEEE80211_FAST_XMIT_MAX_IV)
++				return;
++			if (iv_spc)
++				build.hdr_len += build.key->conf.iv_len;
+ 		}
+ 
+ 		fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
 -- 
-Clément Perrochaud
+2.1.4
 
-Eff'Innov Technologies
-Caen, Aix-En-Provence, Grenoble
-
-Eff'Innov Technologies
-Campus EffiScience
-2, Esplanade Anton Philips
-14460 Colombelles, FRANCE
-
-http://www.effinnov.com
