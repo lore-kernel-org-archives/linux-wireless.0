@@ -1,44 +1,382 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:36066 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbbDRQfZ (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:47535 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754917AbbDNSLG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2015 12:35:25 -0400
-Date: Sat, 18 Apr 2015 09:35:19 -0700
-From: Edward Lipinsky <ellipinsky@gmail.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org
-Cc: devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] Staging: rtl8723au: hal: Remove trailing whitespace in odm.c
-Message-ID: <20150418163519.GA48462@gmail.com> (sfid-20150418_183540_577666_6AE871C1)
+	Tue, 14 Apr 2015 14:11:06 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices in nvram.
+Date: Tue, 14 Apr 2015 20:10:33 +0200
+Message-ID: <1429035033-14076-11-git-send-email-arend@broadcom.com> (sfid-20150414_201136_230806_5C5190B5)
+In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the checkpatch.pl error:
+From: Hante Meuleman <meuleman@broadcom.com>
 
-ERROR: trailing whitespace
+With PCIE it is possible to support multiple devices with the
+same device type. They all load the same nvram file. In order to
+support this the nvram can specify which part of the nvram is
+for which pcie device. This patch adds support for these new
+types of nvram files.
 
-Signed-off-by: Edward Lipinsky <ellipinsky@gmail.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/rtl8723au/hal/odm.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 189 ++++++++++++++++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.h |   6 +
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c     |  15 +-
+ 3 files changed, 197 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/hal/odm.c b/drivers/staging/rtl8723au/hal/odm.c
-index ec543cf..6bdaa3e 100644
---- a/drivers/staging/rtl8723au/hal/odm.c
-+++ b/drivers/staging/rtl8723au/hal/odm.c
-@@ -388,7 +388,7 @@ void odm_CommonInfoSelfInit23a(struct dm_odm_t *pDM_Odm)
- 		pDM_Odm->bCckHighPower = true;
- 	else
- 		pDM_Odm->bCckHighPower = false;
--		
-+
- 	pDM_Odm->RFPathRxEnable =
- 		rtl8723au_read32(pDM_Odm->Adapter, rOFDM0_TRxPathEnable) & 0x0F;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 9cb9915..8ff31ff 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -23,6 +23,10 @@
+ #include "debug.h"
+ #include "firmware.h"
  
++#define BRCMF_FW_MAX_NVRAM_SIZE			64000
++#define BRCMF_FW_NVRAM_DEVPATH_LEN		19	/* devpath0=pcie/1/4/ */
++#define BRCMF_FW_NVRAM_PCIEDEV_LEN		9	/* pcie/1/4/ */
++
+ char brcmf_firmware_path[BRCMF_FW_PATH_LEN];
+ module_param_string(firmware_path, brcmf_firmware_path,
+ 		    BRCMF_FW_PATH_LEN, 0440);
+@@ -46,6 +50,8 @@ enum nvram_parser_state {
+  * @column: current column in line.
+  * @pos: byte offset in input buffer.
+  * @entry: start position of key,value entry.
++ * @multi_dev_v1: detect pcie multi device v1 (compressed).
++ * @multi_dev_v2: detect pcie multi device v2.
+  */
+ struct nvram_parser {
+ 	enum nvram_parser_state state;
+@@ -56,6 +62,8 @@ struct nvram_parser {
+ 	u32 column;
+ 	u32 pos;
+ 	u32 entry;
++	bool multi_dev_v1;
++	bool multi_dev_v2;
+ };
+ 
+ static bool is_nvram_char(char c)
+@@ -108,6 +116,10 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
+ 			st = COMMENT;
+ 		else
+ 			st = VALUE;
++		if (strncmp(&nvp->fwnv->data[nvp->entry], "devpath", 7) == 0)
++			nvp->multi_dev_v1 = true;
++		if (strncmp(&nvp->fwnv->data[nvp->entry], "pcie/", 5) == 0)
++			nvp->multi_dev_v2 = true;
+ 	} else if (!is_nvram_char(c)) {
+ 		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
+ 			  nvp->line, nvp->column);
+@@ -133,6 +145,8 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
+ 		ekv = (u8 *)&nvp->fwnv->data[nvp->pos];
+ 		skv = (u8 *)&nvp->fwnv->data[nvp->entry];
+ 		cplen = ekv - skv;
++		if (nvp->nvram_len + cplen + 1 >= BRCMF_FW_MAX_NVRAM_SIZE)
++			return END;
+ 		/* copy to output buffer */
+ 		memcpy(&nvp->nvram[nvp->nvram_len], skv, cplen);
+ 		nvp->nvram_len += cplen;
+@@ -180,10 +194,18 @@ static enum nvram_parser_state
+ static int brcmf_init_nvram_parser(struct nvram_parser *nvp,
+ 				   const struct firmware *nv)
+ {
++	size_t size;
++
+ 	memset(nvp, 0, sizeof(*nvp));
+ 	nvp->fwnv = nv;
++	/* Limit size to MAX_NVRAM_SIZE, some files contain lot of comment */
++	if (nv->size > BRCMF_FW_MAX_NVRAM_SIZE)
++		size = BRCMF_FW_MAX_NVRAM_SIZE;
++	else
++		size = nv->size;
+ 	/* Alloc for extra 0 byte + roundup by 4 + length field */
+-	nvp->nvram = kzalloc(nv->size + 1 + 3 + sizeof(u32), GFP_KERNEL);
++	size += 1 + 3 + sizeof(u32);
++	nvp->nvram = kzalloc(size, GFP_KERNEL);
+ 	if (!nvp->nvram)
+ 		return -ENOMEM;
+ 
+@@ -192,12 +214,136 @@ static int brcmf_init_nvram_parser(struct nvram_parser *nvp,
+ 	return 0;
+ }
+ 
++/* brcmf_fw_strip_multi_v1 :Some nvram files contain settings for multiple
++ * devices. Strip it down for one device, use domain_nr/bus_nr to determine
++ * which data is to be returned. v1 is the version where nvram is stored
++ * compressed and "devpath" maps to index for valid entries.
++ */
++static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
++				    u16 bus_nr)
++{
++	u32 i, j;
++	bool found;
++	u8 *nvram;
++	u8 id;
++
++	nvram = kzalloc(nvp->nvram_len + 1 + 3 + sizeof(u32), GFP_KERNEL);
++	if (!nvram)
++		goto fail;
++
++	/* min length: devpath0=pcie/1/4/ + 0:x=y */
++	if (nvp->nvram_len < BRCMF_FW_NVRAM_DEVPATH_LEN + 6)
++		goto fail;
++
++	/* First search for the devpathX and see if it is the configuration
++	 * for domain_nr/bus_nr. Search complete nvp
++	 */
++	found = false;
++	i = 0;
++	while (i < nvp->nvram_len - BRCMF_FW_NVRAM_DEVPATH_LEN) {
++		/* Format: devpathX=pcie/Y/Z/
++		 * Y = domain_nr, Z = bus_nr, X = virtual ID
++		 */
++		if ((strncmp(&nvp->nvram[i], "devpath", 7) == 0) &&
++		    (strncmp(&nvp->nvram[i + 8], "=pcie/", 6) == 0)) {
++			if (((nvp->nvram[i + 14] - '0') == domain_nr) &&
++			    ((nvp->nvram[i + 16] - '0') == bus_nr)) {
++				id = nvp->nvram[i + 7] - '0';
++				found = true;
++				break;
++			}
++		}
++		while (nvp->nvram[i] != 0)
++			i++;
++		i++;
++	}
++	if (!found)
++		goto fail;
++
++	/* Now copy all valid entries, release old nvram and assign new one */
++	i = 0;
++	j = 0;
++	while (i < nvp->nvram_len) {
++		if ((nvp->nvram[i] - '0' == id) && (nvp->nvram[i + 1] == ':')) {
++			i += 2;
++			while (nvp->nvram[i] != 0) {
++				nvram[j] = nvp->nvram[i];
++				i++;
++				j++;
++			}
++			nvram[j] = 0;
++			j++;
++		}
++		while (nvp->nvram[i] != 0)
++			i++;
++		i++;
++	}
++	kfree(nvp->nvram);
++	nvp->nvram = nvram;
++	nvp->nvram_len = j;
++	return;
++
++fail:
++	kfree(nvram);
++	nvp->nvram_len = 0;
++}
++
++/* brcmf_fw_strip_multi_v2 :Some nvram files contain settings for multiple
++ * devices. Strip it down for one device, use domain_nr/bus_nr to determine
++ * which data is to be returned. v2 is the version where nvram is stored
++ * uncompressed, all relevant valid entries are identified by
++ * pcie/domain_nr/bus_nr:
++ */
++static void brcmf_fw_strip_multi_v2(struct nvram_parser *nvp, u16 domain_nr,
++				    u16 bus_nr)
++{
++	u32 i, j;
++	u8 *nvram;
++
++	nvram = kzalloc(nvp->nvram_len + 1 + 3 + sizeof(u32), GFP_KERNEL);
++	if (!nvram)
++		goto fail;
++
++	/* Copy all valid entries, release old nvram and assign new one.
++	 * Valid entries are of type pcie/X/Y/ where X = domain_nr and
++	 * Y = bus_nr.
++	 */
++	i = 0;
++	j = 0;
++	while (i < nvp->nvram_len - BRCMF_FW_NVRAM_PCIEDEV_LEN) {
++		if ((strncmp(&nvp->nvram[i], "pcie/", 5) == 0) &&
++		    (nvp->nvram[i + 6] == '/') && (nvp->nvram[i + 8] == '/') &&
++		    ((nvp->nvram[i + 5] - '0') == domain_nr) &&
++		    ((nvp->nvram[i + 7] - '0') == bus_nr)) {
++			i += BRCMF_FW_NVRAM_PCIEDEV_LEN;
++			while (nvp->nvram[i] != 0) {
++				nvram[j] = nvp->nvram[i];
++				i++;
++				j++;
++			}
++			nvram[j] = 0;
++			j++;
++		}
++		while (nvp->nvram[i] != 0)
++			i++;
++		i++;
++	}
++	kfree(nvp->nvram);
++	nvp->nvram = nvram;
++	nvp->nvram_len = j;
++	return;
++fail:
++	kfree(nvram);
++	nvp->nvram_len = 0;
++}
++
+ /* brcmf_nvram_strip :Takes a buffer of "<var>=<value>\n" lines read from a fil
+  * and ending in a NUL. Removes carriage returns, empty lines, comment lines,
+  * and converts newlines to NULs. Shortens buffer as needed and pads with NULs.
+  * End of buffer is completed with token identifying length of buffer.
+  */
+-static void *brcmf_fw_nvram_strip(const struct firmware *nv, u32 *new_length)
++static void *brcmf_fw_nvram_strip(const struct firmware *nv, u32 *new_length,
++				  u16 domain_nr, u16 bus_nr)
+ {
+ 	struct nvram_parser nvp;
+ 	u32 pad;
+@@ -212,6 +358,16 @@ static void *brcmf_fw_nvram_strip(const struct firmware *nv, u32 *new_length)
+ 		if (nvp.state == END)
+ 			break;
+ 	}
++	if (nvp.multi_dev_v1)
++		brcmf_fw_strip_multi_v1(&nvp, domain_nr, bus_nr);
++	else if (nvp.multi_dev_v2)
++		brcmf_fw_strip_multi_v2(&nvp, domain_nr, bus_nr);
++
++	if (nvp.nvram_len == 0) {
++		kfree(nvp.nvram);
++		return NULL;
++	}
++
+ 	pad = nvp.nvram_len;
+ 	*new_length = roundup(nvp.nvram_len + 1, 4);
+ 	while (pad != *new_length) {
+@@ -239,6 +395,8 @@ struct brcmf_fw {
+ 	u16 flags;
+ 	const struct firmware *code;
+ 	const char *nvram_name;
++	u16 domain_nr;
++	u16 bus_nr;
+ 	void (*done)(struct device *dev, const struct firmware *fw,
+ 		     void *nvram_image, u32 nvram_len);
+ };
+@@ -254,7 +412,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 		goto fail;
+ 
+ 	if (fw) {
+-		nvram = brcmf_fw_nvram_strip(fw, &nvram_length);
++		nvram = brcmf_fw_nvram_strip(fw, &nvram_length,
++					     fwctx->domain_nr, fwctx->bus_nr);
+ 		release_firmware(fw);
+ 		if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+ 			goto fail;
+@@ -309,11 +468,12 @@ fail:
+ 	kfree(fwctx);
+ }
+ 
+-int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+-			   const char *code, const char *nvram,
+-			   void (*fw_cb)(struct device *dev,
+-					 const struct firmware *fw,
+-					 void *nvram_image, u32 nvram_len))
++int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
++				const char *code, const char *nvram,
++				void (*fw_cb)(struct device *dev,
++					      const struct firmware *fw,
++					      void *nvram_image, u32 nvram_len),
++				u16 domain_nr, u16 bus_nr)
+ {
+ 	struct brcmf_fw *fwctx;
+ 
+@@ -333,8 +493,21 @@ int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+ 	fwctx->done = fw_cb;
+ 	if (flags & BRCMF_FW_REQUEST_NVRAM)
+ 		fwctx->nvram_name = nvram;
++	fwctx->domain_nr = domain_nr;
++	fwctx->bus_nr = bus_nr;
+ 
+ 	return request_firmware_nowait(THIS_MODULE, true, code, dev,
+ 				       GFP_KERNEL, fwctx,
+ 				       brcmf_fw_request_code_done);
+ }
++
++int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
++			   const char *code, const char *nvram,
++			   void (*fw_cb)(struct device *dev,
++					 const struct firmware *fw,
++					 void *nvram_image, u32 nvram_len))
++{
++	return brcmf_fw_get_firmwares_pcie(dev, flags, code, nvram, fw_cb, 0,
++					   0);
++}
++
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/brcm80211/brcmfmac/firmware.h
+index 4d34823..604dd48 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.h
+@@ -32,6 +32,12 @@ void brcmf_fw_nvram_free(void *nvram);
+  * fails it will not use the callback, but call device_release_driver()
+  * instead which will call the driver .remove() callback.
+  */
++int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
++				const char *code, const char *nvram,
++				void (*fw_cb)(struct device *dev,
++					      const struct firmware *fw,
++					      void *nvram_image, u32 nvram_len),
++				u16 domain_nr, u16 bus_nr);
+ int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+ 			   const char *code, const char *nvram,
+ 			   void (*fw_cb)(struct device *dev,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 5e97a97..0453d10 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -1649,8 +1649,13 @@ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_pciedev *pcie_bus_dev;
+ 	struct brcmf_bus *bus;
++	u16 domain_nr;
++	u16 bus_nr;
+ 
+-	brcmf_dbg(PCIE, "Enter %x:%x\n", pdev->vendor, pdev->device);
++	domain_nr = pci_domain_nr(pdev->bus) + 1;
++	bus_nr = pdev->bus->number;
++	brcmf_dbg(PCIE, "Enter %x:%x (%d/%d)\n", pdev->vendor, pdev->device,
++		  domain_nr, bus_nr);
+ 
+ 	ret = -ENOMEM;
+ 	devinfo = kzalloc(sizeof(*devinfo), GFP_KERNEL);
+@@ -1699,10 +1704,10 @@ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (ret)
+ 		goto fail_bus;
+ 
+-	ret = brcmf_fw_get_firmwares(bus->dev, BRCMF_FW_REQUEST_NVRAM |
+-					       BRCMF_FW_REQ_NV_OPTIONAL,
+-				     devinfo->fw_name, devinfo->nvram_name,
+-				     brcmf_pcie_setup);
++	ret = brcmf_fw_get_firmwares_pcie(bus->dev, BRCMF_FW_REQUEST_NVRAM |
++						    BRCMF_FW_REQ_NV_OPTIONAL,
++					  devinfo->fw_name, devinfo->nvram_name,
++					  brcmf_pcie_setup, domain_nr, bus_nr);
+ 	if (ret == 0)
+ 		return 0;
+ fail_bus:
 -- 
-1.7.9.5
+1.9.1
 
