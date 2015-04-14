@@ -1,159 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39495 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56863 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966777AbbDXJVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2015 05:21:17 -0400
+	id S1755585AbbDNPES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Apr 2015 11:04:18 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] mac80211: clean up global debugfs statistics
-Date: Fri, 24 Apr 2015 11:21:10 +0200
-Message-Id: <1429867273-18271-1-git-send-email-johannes@sipsolutions.net> (sfid-20150424_112121_692068_75E6468D)
+Subject: [RFC/RFT 11/11] mac80211: allow segmenation offloads
+Date: Tue, 14 Apr 2015 17:03:49 +0200
+Message-Id: <1429023829-3991-12-git-send-email-johannes@sipsolutions.net> (sfid-20150414_170428_921455_CDEBA81C)
+In-Reply-To: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
+References: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The debugfs statistics macros are pointlessly verbose, so change
-that macro to just have a single argument. While at it, remove
-the unused counters and rename rx_expand_skb_head2 to the better
-rx_expand_skb_head_defrag.
+Implement the necessary software segmentation on the normal
+TX path so that fast-xmit can use segmentation offload if
+the hardware (or driver) supports it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/debugfs.c     | 74 ++++++++++++++++------------------------------
- net/mac80211/ieee80211_i.h |  4 +--
- net/mac80211/rx.c          |  2 +-
- 3 files changed, 28 insertions(+), 52 deletions(-)
+ net/mac80211/ieee80211_i.h |  3 +-
+ net/mac80211/tx.c          | 70 ++++++++++++++++++++++++++++++----------------
+ 2 files changed, 48 insertions(+), 25 deletions(-)
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 23813ebb349c..854bf42c4804 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -219,8 +219,8 @@ static const struct file_operations stats_ ##name## _ops = {		\
- 	.llseek = generic_file_llseek,					\
- };
- 
--#define DEBUGFS_STATS_ADD(name, field)					\
--	debugfs_create_u32(#name, 0400, statsd, (u32 *) &field);
-+#define DEBUGFS_STATS_ADD(name)					\
-+	debugfs_create_u32(#name, 0400, statsd, &local->name);
- #define DEBUGFS_DEVSTATS_ADD(name)					\
- 	debugfs_create_file(#name, 0400, statsd, local, &stats_ ##name## _ops);
- 
-@@ -255,53 +255,31 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	if (!statsd)
- 		return;
- 
--	DEBUGFS_STATS_ADD(transmitted_fragment_count,
--		local->dot11TransmittedFragmentCount);
--	DEBUGFS_STATS_ADD(multicast_transmitted_frame_count,
--		local->dot11MulticastTransmittedFrameCount);
--	DEBUGFS_STATS_ADD(failed_count, local->dot11FailedCount);
--	DEBUGFS_STATS_ADD(retry_count, local->dot11RetryCount);
--	DEBUGFS_STATS_ADD(multiple_retry_count,
--		local->dot11MultipleRetryCount);
--	DEBUGFS_STATS_ADD(frame_duplicate_count,
--		local->dot11FrameDuplicateCount);
--	DEBUGFS_STATS_ADD(received_fragment_count,
--		local->dot11ReceivedFragmentCount);
--	DEBUGFS_STATS_ADD(multicast_received_frame_count,
--		local->dot11MulticastReceivedFrameCount);
--	DEBUGFS_STATS_ADD(transmitted_frame_count,
--		local->dot11TransmittedFrameCount);
-+	DEBUGFS_STATS_ADD(dot11TransmittedFragmentCount);
-+	DEBUGFS_STATS_ADD(dot11MulticastTransmittedFrameCount);
-+	DEBUGFS_STATS_ADD(dot11FailedCount);
-+	DEBUGFS_STATS_ADD(dot11RetryCount);
-+	DEBUGFS_STATS_ADD(dot11MultipleRetryCount);
-+	DEBUGFS_STATS_ADD(dot11FrameDuplicateCount);
-+	DEBUGFS_STATS_ADD(dot11ReceivedFragmentCount);
-+	DEBUGFS_STATS_ADD(dot11MulticastReceivedFrameCount);
-+	DEBUGFS_STATS_ADD(dot11TransmittedFrameCount);
- #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
--	DEBUGFS_STATS_ADD(tx_handlers_drop, local->tx_handlers_drop);
--	DEBUGFS_STATS_ADD(tx_handlers_queued, local->tx_handlers_queued);
--	DEBUGFS_STATS_ADD(tx_handlers_drop_fragment,
--		local->tx_handlers_drop_fragment);
--	DEBUGFS_STATS_ADD(tx_handlers_drop_wep,
--		local->tx_handlers_drop_wep);
--	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc,
--		local->tx_handlers_drop_not_assoc);
--	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port,
--		local->tx_handlers_drop_unauth_port);
--	DEBUGFS_STATS_ADD(rx_handlers_drop, local->rx_handlers_drop);
--	DEBUGFS_STATS_ADD(rx_handlers_queued, local->rx_handlers_queued);
--	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc,
--		local->rx_handlers_drop_nullfunc);
--	DEBUGFS_STATS_ADD(rx_handlers_drop_defrag,
--		local->rx_handlers_drop_defrag);
--	DEBUGFS_STATS_ADD(rx_handlers_drop_short,
--		local->rx_handlers_drop_short);
--	DEBUGFS_STATS_ADD(tx_expand_skb_head,
--		local->tx_expand_skb_head);
--	DEBUGFS_STATS_ADD(tx_expand_skb_head_cloned,
--		local->tx_expand_skb_head_cloned);
--	DEBUGFS_STATS_ADD(rx_expand_skb_head,
--		local->rx_expand_skb_head);
--	DEBUGFS_STATS_ADD(rx_expand_skb_head2,
--		local->rx_expand_skb_head2);
--	DEBUGFS_STATS_ADD(rx_handlers_fragments,
--		local->rx_handlers_fragments);
--	DEBUGFS_STATS_ADD(tx_status_drop,
--		local->tx_status_drop);
-+	DEBUGFS_STATS_ADD(tx_handlers_drop);
-+	DEBUGFS_STATS_ADD(tx_handlers_queued);
-+	DEBUGFS_STATS_ADD(tx_handlers_drop_wep);
-+	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc);
-+	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port);
-+	DEBUGFS_STATS_ADD(rx_handlers_drop);
-+	DEBUGFS_STATS_ADD(rx_handlers_queued);
-+	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc);
-+	DEBUGFS_STATS_ADD(rx_handlers_drop_defrag);
-+	DEBUGFS_STATS_ADD(rx_handlers_drop_short);
-+	DEBUGFS_STATS_ADD(tx_expand_skb_head);
-+	DEBUGFS_STATS_ADD(tx_expand_skb_head_cloned);
-+	DEBUGFS_STATS_ADD(rx_expand_skb_head_defrag);
-+	DEBUGFS_STATS_ADD(rx_handlers_fragments);
-+	DEBUGFS_STATS_ADD(tx_status_drop);
- #endif
- 	DEBUGFS_DEVSTATS_ADD(dot11ACKFailureCount);
- 	DEBUGFS_DEVSTATS_ADD(dot11RTSFailureCount);
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 51b051b87bda..924ba0ca6bc8 100644
+index 25a456c48043..d912e614f53b 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -1288,7 +1288,6 @@ struct ieee80211_local {
- 	/* TX/RX handler statistics */
- 	unsigned int tx_handlers_drop;
- 	unsigned int tx_handlers_queued;
--	unsigned int tx_handlers_drop_fragment;
- 	unsigned int tx_handlers_drop_wep;
- 	unsigned int tx_handlers_drop_not_assoc;
- 	unsigned int tx_handlers_drop_unauth_port;
-@@ -1299,8 +1298,7 @@ struct ieee80211_local {
- 	unsigned int rx_handlers_drop_short;
- 	unsigned int tx_expand_skb_head;
- 	unsigned int tx_expand_skb_head_cloned;
--	unsigned int rx_expand_skb_head;
--	unsigned int rx_expand_skb_head2;
-+	unsigned int rx_expand_skb_head_defrag;
- 	unsigned int rx_handlers_fragments;
- 	unsigned int tx_status_drop;
- #define I802_DEBUG_INC(c) (c)++
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b69a071d7679..6336a79a7df2 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1868,7 +1868,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+@@ -87,7 +87,8 @@ struct ieee80211_local;
+ #define IEEE80211_SUPPORTED_NETDEV_FEATURES	\
+ 	(NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM |	\
+ 	 NETIF_F_HW_CSUM | NETIF_F_RXCSUM |	\
+-	 NETIF_F_SG | NETIF_F_HIGHDMA)
++	 NETIF_F_SG | NETIF_F_HIGHDMA |		\
++	 NETIF_F_GSO_SOFTWARE)
  
- 	rx->skb = __skb_dequeue(&entry->skb_list);
- 	if (skb_tailroom(rx->skb) < entry->extra_len) {
--		I802_DEBUG_INC(rx->local->rx_expand_skb_head2);
-+		I802_DEBUG_INC(rx->local->rx_expand_skb_head_defrag);
- 		if (unlikely(pskb_expand_head(rx->skb, 0, entry->extra_len,
- 					      GFP_ATOMIC))) {
- 			I802_DEBUG_INC(rx->local->rx_handlers_drop_defrag);
+ struct ieee80211_fragment_entry {
+ 	unsigned long first_frag_time;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 53a16257dfc1..24b082f65a20 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2827,6 +2827,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct sta_info *sta;
++	struct sk_buff *next;
+ 
+ 	if (unlikely(skb->len < ETH_HLEN)) {
+ 		kfree_skb(skb);
+@@ -2848,36 +2849,57 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 			goto out;
+ 	}
+ 
+-	/* we cannot process non-linear frames on this path */
+-	if (skb_linearize(skb)) {
+-		kfree_skb(skb);
+-		goto out;
+-	}
++	if (netif_needs_gso(dev, skb, 0)) {
++		struct sk_buff *segs;
+ 
+-	/* the frame could be fragmented, software-encrypted, and other things
+-	 * so we cannot really handle checksum offload with it - fix it up in
+-	 * software before we handle anything else.
+-	 */
+-	if (skb->ip_summed == CHECKSUM_PARTIAL) {
+-		if (skb->encapsulation)
+-			skb_set_inner_transport_header(skb,
+-						       skb_checksum_start_offset(skb));
+-		else
+-			skb_set_transport_header(skb,
+-						 skb_checksum_start_offset(skb));
+-		if (skb_checksum_help(skb))
++		segs = skb_gso_segment(skb, 0);
++		if (IS_ERR(segs)) {
+ 			goto out_free;
++		} else if (segs) {
++			consume_skb(skb);
++			skb = segs;
++		}
++	} else {
++		/* we cannot process non-linear frames on this path */
++		if (skb_linearize(skb)) {
++			kfree_skb(skb);
++			goto out;
++		}
++
++		/* the frame could be fragmented, software-encrypted, and other
++		 * things so we cannot really handle checksum offload with it -
++		 * fix it up in software before we handle anything else.
++		 */
++		if (skb->ip_summed == CHECKSUM_PARTIAL) {
++			if (skb->encapsulation)
++				skb_set_inner_transport_header(skb,
++							       skb_checksum_start_offset(skb));
++			else
++				skb_set_transport_header(skb,
++							 skb_checksum_start_offset(skb));
++			if (skb_checksum_help(skb))
++				goto out_free;
++		}
+ 	}
+ 
+-	skb = ieee80211_build_hdr(sdata, skb, info_flags, sta);
+-	if (IS_ERR(skb))
+-		goto out;
++	next = skb;
++	while (next) {
++		skb = next;
++		next = skb->next;
+ 
+-	dev->stats.tx_packets++;
+-	dev->stats.tx_bytes += skb->len;
+-	dev->trans_start = jiffies;
++		skb->prev = NULL;
++		skb->next = NULL;
++
++		skb = ieee80211_build_hdr(sdata, skb, info_flags, sta);
++		if (IS_ERR(skb))
++			goto out;
+ 
+-	ieee80211_xmit(sdata, sta, skb);
++		dev->stats.tx_packets++;
++		dev->stats.tx_bytes += skb->len;
++		dev->trans_start = jiffies;
++
++		ieee80211_xmit(sdata, sta, skb);
++	}
+ 	goto out;
+  out_free:
+ 	kfree_skb(skb);
 -- 
 2.1.4
 
