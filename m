@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38858 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753511AbbDGNkU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 09:40:20 -0400
-Message-ID: <1428414006.1841.16.camel@sipsolutions.net> (sfid-20150407_154039_390054_EE2BF258)
-Subject: Re: [PATCH] mac80211: Move message tracepoints to their own header
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Date: Tue, 07 Apr 2015 15:40:06 +0200
-In-Reply-To: <20150407085550.7dc6aaed@gandalf.local.home>
-References: <20150406231357.2b8e452d@grimm.local.home>
-	 <1428389938.1841.1.camel@sipsolutions.net>
-	 <20150407085550.7dc6aaed@gandalf.local.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54574 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549AbbDOMIf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2015 08:08:35 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: fix hw roc expiration
+References: <1427799828-9539-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 15 Apr 2015 15:08:26 +0300
+In-Reply-To: <1427799828-9539-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 31 Mar 2015 11:03:47 +0000")
+Message-ID: <87oamp7fwl.fsf@kamboji.qca.qualcomm.com> (sfid-20150415_140838_914833_9C93BC6F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-04-07 at 08:55 -0400, Steven Rostedt wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Hmm, I must have missed the iwlwifi part, as that should have not built
-> with an allmodconfig :-/
+> It is not guaranteed firmware will switch to
+> foreign channel immediately after starting scan
+> sequence. To account for that don't use duration
+> parameter for scan time. Instead request insanely
+> long scan and use timeout worker to cancel it from
+> driver.
+>
+> This should improve P2P reliability a bit.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Dunno, it seems that should be selected with allmodconfig, and it has 5
-different ones ... :)
+Thanks, applied.
 
-> > I could merge through my tree but I guess you'll want to put it through
-> > a different one to be able to change the code that depends on this move.
-
-> Right, I'll need to pull this in my tree, as I have a set of patches
-> dependent on this.
-
-Makes sense.
-
-johannes
-
+-- 
+Kalle Valo
