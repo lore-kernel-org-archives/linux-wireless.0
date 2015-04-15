@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27880 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422860AbbD2Lpp (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62532 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753281AbbDONDG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 07:45:45 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 1/7] wil6210: increase timeout for the "echo" command
-Date: Wed, 29 Apr 2015 14:45:00 +0300
-Message-Id: <1430307906-28393-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150429_134607_389495_BCEFE5E0)
-In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 15 Apr 2015 09:03:06 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	<janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/4] ath10k: ibss crypto fixes
+References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 15 Apr 2015 16:02:56 +0300
+In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 10 Apr 2015 13:23:19 +0000")
+Message-ID: <87bnip7ddr.fsf@kamboji.qca.qualcomm.com> (sfid-20150415_150312_598144_B0DA58C9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes it takes for the firmware more than 20ms to
-react on "echo" command after reset. Increase timeout
-from 20 to 50ms
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> I've mainly tested this on kvalo/pending branch.
+> Currently master branch contains 0f611d28fc2e
+> ("mac80211: count interfaces correctly for
+> combination checks") which breaks IBSS in
+> wpa_supplicant due to P2P Device and interface
+> combinations. This has been pointed out in the
+> following thread:
+>
+>  [1]: http://thread.gmane.org/gmane.linux.kernel.wireless.general/135570/focus=136643
+>
+> If someone's interested in running ath10k IBSS
+> make sure to use kernel prior to 4.0, revert the
+> mentioned mac80211 patch or apply wpa_supplicant
+> workaround patch from [1].
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 9fe2085..04fad5f 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -844,7 +844,7 @@ int wmi_echo(struct wil6210_priv *wil)
- 	};
- 
- 	return wmi_call(wil, WMI_ECHO_CMDID, &cmd, sizeof(cmd),
--			 WMI_ECHO_RSP_EVENTID, NULL, 0, 20);
-+			WMI_ECHO_RSP_EVENTID, NULL, 0, 50);
- }
- 
- int wmi_set_mac_address(struct wil6210_priv *wil, void *addr)
+Is this IBSS regression fixed now or what's the status?
+
 -- 
-2.1.0
-
+Kalle Valo
