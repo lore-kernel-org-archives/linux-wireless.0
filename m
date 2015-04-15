@@ -1,52 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:6470 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbbDGKHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 06:07:41 -0400
-Date: Tue, 7 Apr 2015 12:07:38 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [resend PATCH] nfc: logging neatening
-Message-ID: <20150407100738.GA9511@ribalta.mp.intel.com> (sfid-20150407_120758_557057_C10A7C53)
-References: <1428391020.20888.31.camel@perches.com>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:35120 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753554AbbDOOeJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2015 10:34:09 -0400
+Received: by obbfy7 with SMTP id fy7so22076652obb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2015 07:34:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428391020.20888.31.camel@perches.com>
+In-Reply-To: <1429103273-89272-2-git-send-email-nbd@openwrt.org>
+References: <1429103273-89272-1-git-send-email-nbd@openwrt.org>
+	<1429103273-89272-2-git-send-email-nbd@openwrt.org>
+Date: Wed, 15 Apr 2015 16:33:32 +0200
+Message-ID: <CACna6ryLjsV4S2NRzFW_dCWd==CEAT+iA+PegDz2PsUvu73N+A@mail.gmail.com> (sfid-20150415_163413_670728_E5DDD129)
+Subject: Re: [PATCH 2/2] bcma: enable 32 GPIO pins for BCM4707
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+On 15 April 2015 at 15:07, Felix Fietkau <nbd@openwrt.org> wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-On Tue, Apr 07, 2015 at 12:17:00AM -0700, Joe Perches wrote:
-> Add missing terminating newlines to nfc_info and nfc_err
-> to avoid possible interleaving from other messages.
-> 
-> Miscellanea:
-> 
-> o typo fix of "unknonwn" in message
-> o remove unnecessary OOM messages as there's a generic dump_stack()
-> o realign arguments
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
-> 
-> Adding Andrew Morton
-> Resending after a 8 weeks with no reply/review.
-> 
->  drivers/nfc/microread/i2c.c |  2 +-
->  drivers/nfc/nfcmrvl/main.c  |  4 ++--
->  drivers/nfc/nfcmrvl/usb.c   | 18 +++++++++---------
->  drivers/nfc/pn533.c         |  2 +-
->  drivers/nfc/pn544/i2c.c     |  7 ++-----
->  drivers/nfc/port100.c       | 36 ++++++++++++++++++------------------
->  drivers/nfc/st21nfcb/i2c.c  |  5 +----
->  drivers/nfc/st21nfcb/ndlc.c |  5 ++---
->  8 files changed, 36 insertions(+), 43 deletions(-)
-Sorry for the lag. Patch applied to nfc-next now.
-
-Cheers,
-Samuel.
+Looks OK, thanks.
