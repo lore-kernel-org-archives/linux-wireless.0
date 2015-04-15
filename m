@@ -1,134 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42637 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33411 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965596AbbD1O16 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 10:27:58 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
-	<87383kps0o.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 28 Apr 2015 10:27:48 -0400
-In-Reply-To: <87383kps0o.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 28 Apr 2015 11:37:59 +0300")
-Message-ID: <wrfjvbggfhuj.fsf@redhat.com> (sfid-20150428_162801_399115_53C3D51B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754134AbbDOJd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Apr 2015 05:33:26 -0400
+Message-ID: <1429090400.1784.2.camel@sipsolutions.net> (sfid-20150415_113330_085328_B36F79CA)
+Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 15 Apr 2015 11:33:20 +0200
+In-Reply-To: <552D386E.40306@candelatech.com>
+References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>
+			  	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>
+			  	 <54EB66CC.1030800@candelatech.com>
+			   <1424772714.2192.16.camel@sipsolutions.net>
+			   <54EC8C5D.5090400@candelatech.com>
+			  <1424788834.2192.34.camel@sipsolutions.net>
+			  <5500AE12.6040103@candelatech.com>
+			 <1427812067.2057.27.camel@sipsolutions.net>
+			 <551AC3B6.1040001@candelatech.com>
+		 <1428999215.3019.6.camel@sipsolutions.net>
+		 <552D2A90.1070307@candelatech.com>
+	 <1429023990.3019.15.camel@sipsolutions.net>
+	 <552D386E.40306@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes.Sorensen@redhat.com writes:
->
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> This is an alternate driver for the Realtek 8723AU (rtl8723au) written
->> from scratch utilizing the mac80211 stack.
->>
->> After spending months cleaning up the vendor provided rtl8723au
->> driver, which comes with it's own 802.11 stack included, I decided to
->> rewrite this driver from the bottom up.
->
-> Where is the vendor driver available, in staging or somewhere else? It
-> would be good to mention that in the commit log.
+On Tue, 2015-04-14 at 08:55 -0700, Ben Greear wrote:
 
-Hi Kalle,
+> > True, although I'd like to see the multi-channel issue addressed better.
+> 
+> I need a hint or two on what exactly you want changed in my patch to
+> address your request, or maybe you or someone else can just address
+> the issue in follow-on patches?
 
-Thanks for the feedback, the vendor driver is drivers/staging/rtl8723au/
+So right now you're basically saying to userspace "switch to channel X".
+But that's not really how the more generic system works, that's more
+"start using channel X (ctx=1)" / "stop using channel X (ctx=1)" /
+"change channel to X (ctx=1)" and similar.
 
->> Many thanks to Johannes Berg for 802.11 insights and help and Larry
->> Finger for help with the vendor driver.
->>
->> The full git log for the development of this driver can be found here:
->> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
->>     branch rtl8723au-mac80211
->>
->> This driver is still experimental, but has proven to be rather stable
->> for me. It lacks some features found in the staging driver, such as
->> power management, AMPDU, and 40MHz channel support. In addition there
->> is no AP and monitor support at this point.
->
-> It's nice to document in the commit log what features are verified to be
-> working.
->
-> Also I see incosistencies with driver naming, in some places I see
-> RTL8723au and elsewhere rtl8xxxu. And commit log title could be
-> improved, for example something like "rtl8xxxu: new wireless mac80211
-> driver for rtl8723au chipsets"
+It seems to me that such an API should probably be the only API to
+userspace. The non-chanctx case in hwsim could simply fake it by
+starting with "start using channel X (ctx=0)" and then changing that
+channel all the time.
 
-The reason for the inconsistencies is that I anticipate adding support
-for more chips in the future, so the 8723au named functions are ones
-that are more likely to be chip specific.
+The issue is that with your patch in this can't be addressed in
+follow-on patches as it fixes the userspace API.
 
-> And I would like to understand the relationship with rtlwifi, can you
-> describe that a bit more? Why a separate driver instead of extending
-> rtlwifi? When I look at the directory drivers/net/wireless/rtlwifi/rtl8723ae 
-> I'm confused what's the bigger plan here. Larry?
+johannes
 
-I looked at rtlwifi and while it has changed a lot from the vendor
-driver, it still has a strong legacy of the vendor codebase. I could
-have opted to do a smaller mini-driver for rtlwifi, but I felt it was
-better to start from scratch and write the driver from the bottom up for
-Linux.
-
->>  MAINTAINERS                          |    8 +
->>  drivers/net/wireless/Kconfig         |   19 +
->>  drivers/net/wireless/Makefile        |    2 +
->>  drivers/net/wireless/rtl8xxxu.c | 4500
->> ++++++++++++++++++++++++++++++++++
->>  drivers/net/wireless/rtl8xxxu.h      |  497 ++++
->>  drivers/net/wireless/rtl8xxxu_regs.h |  941 +++++++
->
-> I think someone else already mentioned, but it would be better that has
-> it's own directory. Or should this actually be under rtlwifi
-> directory?
-
-I didn't see the need here - it's just 3 files, as long as it doesn't
-have a huge hierachy of files, a new directory doesn't add much
-value. If it becomes an issue later, we can move it into a subdirectory.
-
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -8297,6 +8297,14 @@ S:	Maintained
->>  F:	drivers/net/wireless/rtlwifi/
->>  F:	drivers/net/wireless/rtlwifi/rtl8192ce/
->>  
->> +RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
->> +M:	Jes Sorensen <Jes.Sorensen@redhat.com>
->> +L:	linux-wireless@vger.kernel.org
->> +W:	http://intellinuxwireless.org
->
-> The link cannot be right.
-
-That is a mistake for sure, I must have copied an entry as a template
-and forgotten to remove that one.
-
->> +T: git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
->> rtl8723au-mac80211
->
-> I doubt that this will be in active enough development that a separate
-> git tree is needed. wireless-drivers trees should be enough and this
-> line can be removed.
-
-I would like to keep this line, it points to my development tree, which
-allows users to go back and look through my full development logs, as
-well as see ongoing work before it's pushed upstream.
-
-> I'll do more detailed code review later, but my first impression was
-> that there was a lot of #if 0 code which is frowned upon.
-
-Johannes already brought up the #if 0 pieces. I left those in because I
-am not done with the driver, and this helps me map the flow of the
-vendor driver codebase. Those #if 0 lines are not there to sit and rot,
-but to help future development.
-
-> And I pushed this to wireless-drivers-next.git pending branch so that
-> kbuild will run it's tests with this driver.
-
-I saw the kbuild warning, it was a false positive, which I do plan to
-address down the line.
-
-Cheers,
-Jes
