@@ -1,322 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28313 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753659AbbDNSLG (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:48681 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881AbbDOLiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 14:11:06 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 01/10] brcmfmac: use static superset of channels for wiphy bands
-Date: Tue, 14 Apr 2015 20:10:24 +0200
-Message-ID: <1429035033-14076-2-git-send-email-arend@broadcom.com> (sfid-20150414_201135_357864_7783F2DF)
-In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+	Wed, 15 Apr 2015 07:38:09 -0400
+Date: Wed, 15 Apr 2015 21:37:54 +1000
+From: James Cameron <quozl@laptop.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: [PATCH] mwifiex: increase number of probes for specific SSID
+ scans
+Message-ID: <20150415113754.GH32455@us.netrek.org> (sfid-20150415_133814_453347_665B94B5)
+References: <1429022956-12016-1-git-send-email-akarwar@marvell.com>
+ <20150414203724.GB32455@us.netrek.org>
+ <5FF020A1CFFEEC49BD1E09530C4FF5951B16DFC138@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951B16DFC138@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver was constructing a list of channels per wiphy band
-by querying the device. This list is not what the hardware is
-able to do as it is already filtered by the country setting in
-the device. As user-space may change the country this would
-require updating the channel list which is not recommended [1].
-This patch introduces a superset of channels. The individual
-channels are disabled appropriately by querying the device.
+On Wed, Apr 15, 2015 at 02:01:44AM -0700, Amitkumar Karwar wrote:
+> Hi James,
+> 
+> > 
+> > On Tue, Apr 14, 2015 at 07:49:16AM -0700, Amitkumar Karwar wrote:
+> > > It's been observed that device sometimes fails to find AP configured
+> > > in hidden SSID in busy environment. We will increase number of probes
+> > > for specific SSID scans for getting better results.
+> > 
+> > I don't like this.  It worries me.  What is the underlying cause?  If it
+> > is something other than collision, why?
+> > 
+> 
+> Idea was to have better chance of finding an AP configured with
+> hidden SSID when environment is busy by sending multiple probe
+> requests.
 
-[1] http://mid.gmane.org/1426706320.3001.21.camel@sipsolutions.net
+Yes, I understand the intention, but I don't understand why busy
+environment should cause missed probe response from hidden SSID AP.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 193 +++++++++++----------
- 1 file changed, 106 insertions(+), 87 deletions(-)
+Speculating ...
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 8a15ebb..76dff0e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -129,13 +129,47 @@ static struct ieee80211_rate __wl_rates[] = {
- 	RATETAB_ENT(BRCM_RATE_54M, 0),
- };
- 
--#define wl_a_rates		(__wl_rates + 4)
--#define wl_a_rates_size	8
- #define wl_g_rates		(__wl_rates + 0)
--#define wl_g_rates_size	12
-+#define wl_g_rates_size		ARRAY_SIZE(__wl_rates)
-+#define wl_a_rates		(__wl_rates + 4)
-+#define wl_a_rates_size		(wl_g_rates_size - 4)
-+
-+#define CHAN2G(_channel, _freq) {				\
-+	.band			= IEEE80211_BAND_2GHZ,		\
-+	.center_freq		= (_freq),			\
-+	.hw_value		= (_channel),			\
-+	.flags			= IEEE80211_CHAN_DISABLED,	\
-+	.max_antenna_gain	= 0,				\
-+	.max_power		= 30,				\
-+}
-+
-+#define CHAN5G(_channel) {					\
-+	.band			= IEEE80211_BAND_5GHZ,		\
-+	.center_freq		= 5000 + (5 * (_channel)),	\
-+	.hw_value		= (_channel),			\
-+	.flags			= IEEE80211_CHAN_DISABLED,	\
-+	.max_antenna_gain	= 0,				\
-+	.max_power		= 30,				\
-+}
-+
-+static struct ieee80211_channel __wl_2ghz_channels[] = {
-+	CHAN2G(1, 2412), CHAN2G(2, 2417), CHAN2G(3, 2422), CHAN2G(4, 2427),
-+	CHAN2G(5, 2432), CHAN2G(6, 2437), CHAN2G(7, 2442), CHAN2G(8, 2447),
-+	CHAN2G(9, 2452), CHAN2G(10, 2457), CHAN2G(11, 2462), CHAN2G(12, 2467),
-+	CHAN2G(13, 2472), CHAN2G(14, 2484)
-+};
-+
-+static struct ieee80211_channel __wl_5ghz_channels[] = {
-+	CHAN5G(34), CHAN5G(36), CHAN5G(38), CHAN5G(40), CHAN5G(42),
-+	CHAN5G(44), CHAN5G(46), CHAN5G(48), CHAN5G(52), CHAN5G(56),
-+	CHAN5G(60), CHAN5G(64), CHAN5G(100), CHAN5G(104), CHAN5G(108),
-+	CHAN5G(112), CHAN5G(116), CHAN5G(120), CHAN5G(124), CHAN5G(128),
-+	CHAN5G(132), CHAN5G(136), CHAN5G(140), CHAN5G(144), CHAN5G(149),
-+	CHAN5G(153), CHAN5G(157), CHAN5G(161), CHAN5G(165)
-+};
- 
- /* Band templates duplicated per wiphy. The channel info
-- * is filled in after querying the device.
-+ * above is added to the band during setup.
-  */
- static const struct ieee80211_supported_band __wl_band_2ghz = {
- 	.band = IEEE80211_BAND_2GHZ,
-@@ -143,7 +177,7 @@ static const struct ieee80211_supported_band __wl_band_2ghz = {
- 	.n_bitrates = wl_g_rates_size,
- };
- 
--static const struct ieee80211_supported_band __wl_band_5ghz_a = {
-+static const struct ieee80211_supported_band __wl_band_5ghz = {
- 	.band = IEEE80211_BAND_5GHZ,
- 	.bitrates = wl_a_rates,
- 	.n_bitrates = wl_a_rates_size,
-@@ -5253,40 +5287,6 @@ dongle_scantime_out:
- 	return err;
- }
- 
--/* Filter the list of channels received from firmware counting only
-- * the 20MHz channels. The wiphy band data only needs those which get
-- * flagged to indicate if they can take part in higher bandwidth.
-- */
--static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
--				       struct brcmf_chanspec_list *chlist,
--				       u32 chcnt[])
--{
--	u32 total = le32_to_cpu(chlist->count);
--	struct brcmu_chan ch;
--	int i;
--
--	for (i = 0; i < total; i++) {
--		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
--		cfg->d11inf.decchspec(&ch);
--
--		/* Firmware gives a ordered list. We skip non-20MHz
--		 * channels is 2G. For 5G we can abort upon reaching
--		 * a non-20MHz channel in the list.
--		 */
--		if (ch.bw != BRCMU_CHAN_BW_20) {
--			if (ch.band == BRCMU_CHAN_BAND_5G)
--				break;
--			else
--				continue;
--		}
--
--		if (ch.band == BRCMU_CHAN_BAND_2G)
--			chcnt[0] += 1;
--		else if (ch.band == BRCMU_CHAN_BAND_5G)
--			chcnt[1] += 1;
--	}
--}
--
- static void brcmf_update_bw40_channel_flag(struct ieee80211_channel *channel,
- 					   struct brcmu_chan *ch)
- {
-@@ -5322,7 +5322,6 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
- 	u32 i, j;
- 	u32 total;
- 	u32 chaninfo;
--	u32 chcnt[2] = { 0, 0 };
- 	u32 index;
- 
- 	pbuf = kzalloc(BRCMF_DCMD_MEDLEN, GFP_KERNEL);
-@@ -5339,42 +5338,15 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
- 		goto fail_pbuf;
- 	}
- 
--	brcmf_count_20mhz_channels(cfg, list, chcnt);
- 	wiphy = cfg_to_wiphy(cfg);
--	if (chcnt[0]) {
--		band = kmemdup(&__wl_band_2ghz, sizeof(__wl_band_2ghz),
--			       GFP_KERNEL);
--		if (band == NULL) {
--			err = -ENOMEM;
--			goto fail_pbuf;
--		}
--		band->channels = kcalloc(chcnt[0], sizeof(*channel),
--					 GFP_KERNEL);
--		if (band->channels == NULL) {
--			kfree(band);
--			err = -ENOMEM;
--			goto fail_pbuf;
--		}
--		band->n_channels = 0;
--		wiphy->bands[IEEE80211_BAND_2GHZ] = band;
--	}
--	if (chcnt[1]) {
--		band = kmemdup(&__wl_band_5ghz_a, sizeof(__wl_band_5ghz_a),
--			       GFP_KERNEL);
--		if (band == NULL) {
--			err = -ENOMEM;
--			goto fail_band2g;
--		}
--		band->channels = kcalloc(chcnt[1], sizeof(*channel),
--					 GFP_KERNEL);
--		if (band->channels == NULL) {
--			kfree(band);
--			err = -ENOMEM;
--			goto fail_band2g;
--		}
--		band->n_channels = 0;
--		wiphy->bands[IEEE80211_BAND_5GHZ] = band;
--	}
-+	band = wiphy->bands[IEEE80211_BAND_2GHZ];
-+	if (band)
-+		for (i = 0; i < band->n_channels; i++)
-+			band->channels[i].flags = IEEE80211_CHAN_DISABLED;
-+	band = wiphy->bands[IEEE80211_BAND_5GHZ];
-+	if (band)
-+		for (i = 0; i < band->n_channels; i++)
-+			band->channels[i].flags = IEEE80211_CHAN_DISABLED;
- 
- 	total = le32_to_cpu(list->count);
- 	for (i = 0; i < total; i++) {
-@@ -5389,6 +5361,8 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
- 			brcmf_err("Invalid channel Spec. 0x%x.\n", ch.chspec);
- 			continue;
- 		}
-+		if (!band)
-+			continue;
- 		if (!(bw_cap[band->band] & WLC_BW_40MHZ_BIT) &&
- 		    ch.bw == BRCMU_CHAN_BW_40)
- 			continue;
-@@ -5416,9 +5390,9 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
- 		} else if (ch.bw == BRCMU_CHAN_BW_40) {
- 			brcmf_update_bw40_channel_flag(&channel[index], &ch);
- 		} else {
--			/* disable other bandwidths for now as mentioned
--			 * order assure they are enabled for subsequent
--			 * chanspecs.
-+			/* enable the channel and disable other bandwidths
-+			 * for now as mentioned order assure they are enabled
-+			 * for subsequent chanspecs.
- 			 */
- 			channel[index].flags = IEEE80211_CHAN_NO_HT40 |
- 					       IEEE80211_CHAN_NO_80MHZ;
-@@ -5437,16 +5411,8 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
- 						IEEE80211_CHAN_NO_IR;
- 			}
- 		}
--		if (index == band->n_channels)
--			band->n_channels++;
- 	}
--	kfree(pbuf);
--	return 0;
- 
--fail_band2g:
--	kfree(wiphy->bands[IEEE80211_BAND_2GHZ]->channels);
--	kfree(wiphy->bands[IEEE80211_BAND_2GHZ]);
--	wiphy->bands[IEEE80211_BAND_2GHZ] = NULL;
- fail_pbuf:
- 	kfree(pbuf);
- 	return err;
-@@ -5779,7 +5745,12 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy)
- 
- static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
-+	struct ieee80211_supported_band *band;
- 	struct ieee80211_iface_combination ifc_combo;
-+	__le32 bandlist[3];
-+	u32 n_bands;
-+	int err, i;
-+
- 	wiphy->max_scan_ssids = WL_NUM_SCAN_MAX;
- 	wiphy->max_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
- 	wiphy->max_num_pmkids = WL_NUM_PMKIDS_MAX;
-@@ -5821,7 +5792,52 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL))
- 		brcmf_wiphy_wowl_params(wiphy);
- 
--	return brcmf_setup_wiphybands(wiphy);
-+	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_BANDLIST, &bandlist,
-+				     sizeof(bandlist));
-+	if (err) {
-+		brcmf_err("could not obtain band info: err=%d\n", err);
-+		return err;
-+	}
-+	/* first entry in bandlist is number of bands */
-+	n_bands = le32_to_cpu(bandlist[0]);
-+	for (i = 1; i <= n_bands && i < ARRAY_SIZE(bandlist); i++) {
-+		if (bandlist[i] == cpu_to_le32(WLC_BAND_2G)) {
-+			band = kmemdup(&__wl_band_2ghz, sizeof(__wl_band_2ghz),
-+				       GFP_KERNEL);
-+			if (!band)
-+				return -ENOMEM;
-+
-+			band->channels = kmemdup(&__wl_2ghz_channels,
-+						 sizeof(__wl_2ghz_channels),
-+						 GFP_KERNEL);
-+			if (!band->channels) {
-+				kfree(band);
-+				return -ENOMEM;
-+			}
-+
-+			band->n_channels = ARRAY_SIZE(__wl_2ghz_channels);
-+			wiphy->bands[IEEE80211_BAND_2GHZ] = band;
-+		}
-+		if (bandlist[i] == cpu_to_le32(WLC_BAND_5G)) {
-+			band = kmemdup(&__wl_band_5ghz, sizeof(__wl_band_5ghz),
-+				       GFP_KERNEL);
-+			if (!band)
-+				return -ENOMEM;
-+
-+			band->channels = kmemdup(&__wl_5ghz_channels,
-+						 sizeof(__wl_5ghz_channels),
-+						 GFP_KERNEL);
-+			if (!band->channels) {
-+				kfree(band);
-+				return -ENOMEM;
-+			}
-+
-+			band->n_channels = ARRAY_SIZE(__wl_5ghz_channels);
-+			wiphy->bands[IEEE80211_BAND_5GHZ] = band;
-+		}
-+	}
-+	err = brcmf_setup_wiphybands(wiphy);
-+	return err;
- }
- 
- static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
-@@ -6012,6 +6028,9 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
- 
- static void brcmf_free_wiphy(struct wiphy *wiphy)
- {
-+	if (!wiphy)
-+		return;
-+
- 	kfree(wiphy->iface_combinations);
- 	if (wiphy->bands[IEEE80211_BAND_2GHZ]) {
- 		kfree(wiphy->bands[IEEE80211_BAND_2GHZ]->channels);
+Have you tested this?  Are you sure the probe request is being sent
+when the channel is clear?  Are collisions detected?  Is recovery from
+collision correct?
+
+Are you sure it isn't caused by scan results being too large in busy
+environment?  Is scan for specific SSID given priority in scan
+results, by firmware?
+
+I ask because I'm curious; perhaps there is something else happening
+to cause scan failure.
+
+I have reports of scan failure with mwifiex, with 8686 and 8787, but
+I've not been able to prove the cause of the problem, because of high
+complexity of testing.  Customer usually unwilling to go into depth.
+
+> > In scenario of tens to a hundred laptops scanning for specific SSID for
+> > ad-hoc in the Sugar desktop environment, this patch may decrease free
+> > air time considerably.
+> 
+> You are right. Free air time will be decreased. We have discarded
+> this approach considering its consequences.
+> 
+> > 
+> > Should the number of probes be a choice of user space?
+> > 
+> 
+> Do you see any potential use case for multiple probe requests? 
+
+No use case that doesn't risk interference.  I've used it in
+diagnosis, and in Open Firmware driver.
+
+> I think, we should stick to current implementation of sending 1
+> probe request.
+
+That's fine.
+
+> Regards,
+> Amitkumar
+
 -- 
-1.9.1
-
+James Cameron
+http://quozl.linux.org.au/
