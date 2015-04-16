@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:33740 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932217AbbDJM40 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 08:56:26 -0400
-Received: by layy10 with SMTP id y10so12600619lay.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 05:56:25 -0700 (PDT)
-Message-ID: <5527C877.6040700@cogentembedded.com> (sfid-20150410_145650_460763_09362DD8)
-Date: Fri, 10 Apr 2015 15:56:23 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from fopen.at ([151.236.7.194]:38321 "EHLO fopen.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751647AbbDPJRN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2015 05:17:13 -0400
+From: Florian Achleitner <flo@fopen.at>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>
+Subject: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
+Date: Thu, 16 Apr 2015 11:10:02 +0200
+Message-ID: <3169170.GKjfvNuGRf@r90b40zn> (sfid-20150416_111720_328960_392A6DCE)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-CC: matti.gottlieb@intel.com, Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 3/4] ipv4: add option to drop gratuitous ARP packets
-References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net> <1428652454-1224-3-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1428652454-1224-3-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+Hi,
 
-On 4/10/2015 10:54 AM, Johannes Berg wrote:
+we are using a Marvell SD8787-based module by Lesswire, which is connected to 
+an imx28 through sdio. We are testing with the most recent kernel from
+wireless-drivers-next and Firmware 14.66.35.p52.
 
-> From: Johannes Berg <johannes.berg@intel.com>
+Frequently, we see 'glitches' between driver and Firmware. The most recent 
+driver answers most of them with an attempt to reset the module, reload the 
+firmware, and start over. 
 
-> In certain 802.11 wireless deployments, there will be ARP proxies
-> that use knowledge of the network to correctly answer requests.
-> To prevent gratuitous ARP frames on the shared medium from being
-> a problem, on such deployments wireless needs to drop them.
+However, this only works for us, because our sdio interface triggers a 
+hardware reset for the wireless module whenever it probes the device. Without 
+this hardware reset (sdio reset only), the module fails to restart.
 
-> Enable this by providing an option called "drop_gratuitous_arp".
+Is the necessity of frequent hardware resets a commonly known issue with this 
+chip/firmware? Anybody else experiencing these?
 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->   Documentation/networking/ip-sysctl.txt | 6 ++++++
->   include/uapi/linux/ip.h                | 1 +
->   net/ipv4/arp.c                         | 8 ++++++++
->   net/ipv4/devinet.c                     | 2 ++
->   4 files changed, 17 insertions(+)
+Currently, we see three different scenarios. One of them is currently not 
+answered by  reset. Refer to the upcoming patch.
 
-[...]
-> diff --git a/net/ipv4/arp.c b/net/ipv4/arp.c
-> index 5f5c674e130a..5487d5e5191e 100644
-> --- a/net/ipv4/arp.c
-> +++ b/net/ipv4/arp.c
-> @@ -715,6 +715,14 @@ static int arp_process(struct sk_buff *skb)
->   	    (!IN_DEV_ROUTE_LOCALNET(in_dev) && ipv4_is_loopback(tip)))
->   		goto out;
->
-> + /*
-> +  *	For some 802.11 wireless deployments (and possibly other networks),
-> +  *	there will be an ARP proxy and gratuitous ARP frames are attacks
-> +  *	and thus should not be accepted.
-> +  */
+(1)  mwifiex_cmd_timeout_func: Timeout cmd .. Ok, after reset.
+(2)  Firmware wakeup failed.. Ok, after reset.
+(3) DNLD_CMD: host to card failed. No reset triggered. See patch.
 
-    Hm, why this strange indentation?
+I can provide detailed logs, if you want.
 
-> +	if (IN_DEV_CONF_GET(in_dev, DROP_GRATUITOUS_ARP) && sip == tip)
-> +		goto out;
-> +
->   /*
->    *     Special case: We must set Frame Relay source Q.922 address
->    */
-[...]
-
-WBR, Sergei
+Regards,
+Florian
 
