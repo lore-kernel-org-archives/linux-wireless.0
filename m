@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:14386 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754107AbbDIV5e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2015 17:57:34 -0400
-From: Richard Weinberger <richard@nod.at>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, davem@davemloft.net,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
-	Richard Weinberger <richard@nod.at>
-Subject: [PATCH 2/5 v2] nfc: Fix portid type in urelease_work
-Date: Thu,  9 Apr 2015 23:57:14 +0200
-Message-Id: <1428616637-21690-2-git-send-email-richard@nod.at> (sfid-20150409_235948_799405_051BFB5C)
-In-Reply-To: <1428616637-21690-1-git-send-email-richard@nod.at>
-References: <1428616637-21690-1-git-send-email-richard@nod.at>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39527 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756684AbbDPJYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2015 05:24:25 -0400
+Message-ID: <1429176257.1842.1.camel@sipsolutions.net> (sfid-20150416_112435_378420_D8B38DBB)
+Subject: Re: [PATCH] cfg80211: allow the plink state blocking for user
+ managed mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Thu, 16 Apr 2015 11:24:17 +0200
+In-Reply-To: <1429161337-32680-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150416_071609_825617_B1AAAEB9)
+References: <1429161337-32680-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20150416_071609_825617_B1AAAEB9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-portid is an unsigned integer. Fix urelease_work to
-match all other portid user in the kernel.
+On Thu, 2015-04-16 at 13:15 +0800, Chun-Yeow Yeoh wrote:
+> User managed peering has no way to block the plink state
+> for mesh peering setup by wpa_supp or authsae. Try to do
+> allow this in kernel space, so that we can use iw utility
+> to do that.
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- net/nfc/netlink.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have no idea what you're trying to say here.
 
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index 14a2d11..3763036 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -1584,7 +1584,7 @@ static const struct genl_ops nfc_genl_ops[] = {
- 
- struct urelease_work {
- 	struct	work_struct w;
--	int	portid;
-+	u32	portid;
- };
- 
- static void nfc_urelease_event_work(struct work_struct *work)
--- 
-1.8.4.5
+johannes
+
+PS: don't CC John any more :)
 
