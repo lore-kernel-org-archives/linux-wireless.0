@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39677 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668AbbCaXp6 (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:44255 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757045AbbDPKTe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 19:45:58 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/2] ath: lower JP W53 band DFS detection threshold around 30%
-Date: Tue, 31 Mar 2015 16:44:43 -0700
-Message-ID: <bd5498920dcb60bf08a0d6c69e08b297e922b797.1427845453.git.poh@qca.qualcomm.com> (sfid-20150401_014604_108341_74068890)
-In-Reply-To: <413e207292d5c52cd621912762e6d4a40a8dfc48.1427845453.git.poh@qca.qualcomm.com>
-References: <413e207292d5c52cd621912762e6d4a40a8dfc48.1427845453.git.poh@qca.qualcomm.com>
+	Thu, 16 Apr 2015 06:19:34 -0400
+Date: Thu, 16 Apr 2015 20:19:13 +1000
+From: James Cameron <quozl@laptop.org>
+To: Florian Achleitner <flo@fopen.at>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>
+Subject: Re: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
+Message-ID: <20150416101913.GA26748@us.netrek.org> (sfid-20150416_121937_499565_5B447C24)
+References: <3169170.GKjfvNuGRf@r90b40zn>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3169170.GKjfvNuGRf@r90b40zn>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Japan's W53 band requires 50% data traffic during its DFS test,
-but WLAN baseband used by ath9k and ath10k is not able to achieve
-current threshold rate, 50%, under the data traffic rate.
-In other words, HW occasionally fails detecting radar pulses,
-so that SW cannot get enough radar reports to achieve the rate.
+On Thu, Apr 16, 2015 at 11:10:02AM +0200, Florian Achleitner wrote:
+> Is the necessity of frequent hardware resets a commonly known issue
+> with this chip/firmware? Anybody else experiencing these?
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/dfs_pattern_detector.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Yes, but how frequent?
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index 2d4ad45..6f6533a 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -105,8 +105,8 @@ static const struct radar_types fcc_radar_types = {
- 	PPB_THRESH_RATE(PPB, RATE), PRI_TOLERANCE, CHIRP	\
- }
- static const struct radar_detector_specs jp_radar_ref_types[] = {
--	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 50, false),
--	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 50, false),
-+	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 29, false),
-+	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 29, false),
- 	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
- 	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
- 	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
+> Currently, we see three different scenarios. One of them is
+> currently not answered by reset. Refer to the upcoming patch.
+> 
+> (1)  mwifiex_cmd_timeout_func: Timeout cmd .. Ok, after reset.
+
+See this a lot during heavy testing.
+
+> (2)  Firmware wakeup failed.. Ok, after reset.
+
+Never see this.
+
+> (3) DNLD_CMD: host to card failed. No reset triggered. See patch.
+
+Very rarely see this.
+
+However, our experience may not be comparable; we are using 8787 with
+a 3.5 kernel, because we haven't the resources to use a later kernel
+or get backports working.
+
+Also, we use WOL (wake on lan) heavily; frequent automatic suspends,
+with a GPIO wakeup in addition to the SDHCI.
+
 -- 
-1.9.1
-
+James Cameron
+http://quozl.linux.org.au/
