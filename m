@@ -1,37 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:35003 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbbDFTIL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2015 15:08:11 -0400
-Received: by obbfy7 with SMTP id fy7so55200129obb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2015 12:08:10 -0700 (PDT)
-Date: Mon, 6 Apr 2015 14:08:08 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [ANN] wireless-regdb: master-2015-04-06
-Message-ID: <20150406190808.GA29512@ubuntu-hedt> (sfid-20150406_210815_934353_27D44E7A)
+Received: from fopen.at ([151.236.7.194]:43992 "EHLO fopen.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754512AbbDPKnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2015 06:43:16 -0400
+From: Florian Achleitner <flo@fopen.at>
+To: James Cameron <quozl@laptop.org>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>
+Subject: Re: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
+Date: Thu, 16 Apr 2015 12:43:14 +0200
+Message-ID: <3204550.d2SRA167I8@r90b40zn> (sfid-20150416_124321_560600_4E6BB3EB)
+In-Reply-To: <20150416101913.GA26748@us.netrek.org>
+References: <3169170.GKjfvNuGRf@r90b40zn> <20150416101913.GA26748@us.netrek.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2015-04-06) is available at:
+On Thursday 16 April 2015 20:19:13 James Cameron wrote:
+> On Thu, Apr 16, 2015 at 11:10:02AM +0200, Florian Achleitner wrote:
+> > Is the necessity of frequent hardware resets a commonly known issue
+> > with this chip/firmware? Anybody else experiencing these?
+> 
+> Yes, but how frequent?
 
-https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.04.06.tar.gz
+Depends on the specific hardware. Averages follow.
 
-The short log of changes since the 2015-03-13 release is below.
+> 
+> > Currently, we see three different scenarios. One of them is
+> > currently not answered by reset. Refer to the upcoming patch.
+> > 
+> > (1)  mwifiex_cmd_timeout_func: Timeout cmd .. Ok, after reset.
+> 
+> See this a lot during heavy testing.
 
-Thanks,
-Seth
+Also a lot, maybe once a day in low load.
 
----
+> 
+> > (2)  Firmware wakeup failed.. Ok, after reset.
+> 
+> Never see this.
 
-Jouni Malinen (2):
-      wireless-regdb: Update Macau (MO) rules
-      wireless-regdb: Add regulatory rules for Maldives (MV)
+Once a day.
 
-Seth Forshee (1):
-      wireless-regdb: update regulatory.bin based on preceding changes
+> 
+> > (3) DNLD_CMD: host to card failed. No reset triggered. See patch.
+> 
+> Very rarely see this.
+
+Also very rarely. Once a week, probably.
+
+> 
+> However, our experience may not be comparable; we are using 8787 with
+> a 3.5 kernel, because we haven't the resources to use a later kernel
+> or get backports working.
+> 
+> Also, we use WOL (wake on lan) heavily; frequent automatic suspends,
+> with a GPIO wakeup in addition to the SDHCI.
+
+We don't use WOL or suspends.
+
+Regards,
+Florian
+
