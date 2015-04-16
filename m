@@ -1,94 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:28011 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752004AbbDNSeM (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37922 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbbDPEfj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 14:34:12 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: <stable@vger.kernel.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Pontus Fuchs <pontusf@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3.18.y] brcmfmac: Perform bound checking on vendor command buffer
-Date: Tue, 14 Apr 2015 20:34:07 +0200
-Message-ID: <1429036447-26135-1-git-send-email-arend@broadcom.com> (sfid-20150414_203416_251719_90BB8329)
+	Thu, 16 Apr 2015 00:35:39 -0400
+Received: by wiun10 with SMTP id n10so82737113wiu.1
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2015 21:35:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAFuUQkieJ0CC83wPFm=c_gA5a6OzdbWBF-0EaDL0N=nNAsU2_g@mail.gmail.com>
+References: <1428911141-6534-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1428911141-6534-2-git-send-email-janusz.dziedzic@tieto.com>
+	<CAFuUQkhQeCwP098DH7_R4mNCvrJ7WxdT7wnHi52DSOKm8c0k1Q@mail.gmail.com>
+	<CALhHN=pefUssihniviRiBWg+EU2wYp3excwodJBDt1+H0tiiHQ@mail.gmail.com>
+	<CAFuUQkieJ0CC83wPFm=c_gA5a6OzdbWBF-0EaDL0N=nNAsU2_g@mail.gmail.com>
+Date: Thu, 16 Apr 2015 06:35:38 +0200
+Message-ID: <CALhHN=pDDwx=AA=wnkbqrckXCu4JnBvJ=iDv=6MNrygVc73fNw@mail.gmail.com> (sfid-20150416_063543_148037_252A4883)
+Subject: Re: [RFC 2/2] ath10k: don't disable PS when not connected
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: YanBo <dreamfly281@gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontusf@broadcom.com>
+On 15 April 2015 at 19:10, YanBo <dreamfly281@gmail.com> wrote:
+> On Tue, Apr 14, 2015 at 10:00 PM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+>> On 15 April 2015 at 00:45, YanBo <dreamfly281@gmail.com> wrote:
+>>> On Mon, Apr 13, 2015 at 12:45 AM, Janusz Dziedzic
+>>> <janusz.dziedzic@tieto.com> wrote:
+>>>> Don't disable PS while we are not connected.
+>>>> In other case we will get higher power consumption.
+>>>>
+>>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>>> ---
+>>>>  drivers/net/wireless/ath/ath10k/mac.c | 8 +++++++-
+>>>>  1 file changed, 7 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>>> index 52c5b1f..b896dd4 100644
+>>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>>> @@ -1730,7 +1730,13 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+>>>>                 enable_ps = false;
+>>>>         }
+>>>>
+>>>> -       if (enable_ps) {
+>>>> +       if (!arvif->is_started) {
+>>>> +               /* enable power save mode while not connected,
+>>>> +                * in other case after iface up we will get
+>>>> +                * higher power consumption - firmware design
+>>>> +                */
+>>>> +               psmode = WMI_STA_PS_MODE_ENABLED;
+>>>> +       } else if (enable_ps) {
+>>>>                 psmode = WMI_STA_PS_MODE_ENABLED;
+>>>>                 param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
+>>>>
+>>>> --
+>>>
+>>> What the expectation behavior after we enable the
+>>> WMI_STA_PS_MODE_ENABLED at Idle status?
+>>> Is there any effect for TX or RX chain after set it?
+>>>
+>>
+>> First I think that WMI_STA_PS_MODE_ENABLED is important only when we
+>> are connected.
+>> But, I see current consumption drop in my test environtment from 88mA
+>> to 33mA when:
+>> 1) load driver, iface up
+>> 2) disconnect network, iface down, iface up
+>> So, seems WMI_STA_PS_MODE_ENABLED do something more in FW (not only
+>> standard PS enable/disable when
+>> connected to AP). Probably someone from FW team should answer that, if
+>> that is a feature or a bug.
+>>
+> I guess the chip enter Idle  mode power save  after set this,  did you
+> run the the
+> test on QCA61XX or QCA 98XX?   Can it still auto scan to get all the APs around
+> it, cause for IMPS mode it will only looks in its existing profile
+> list and sends a probe request,
+> with SSID specified in profile for what I know
+>
+I see iw scan works correctly after iface up (same scan results like ath9k):
 
-commit 3f1615340acea54e21f4b9d4d65921540dca84b2 upstream.
+In my laptop I have 3 cards
+wlan0 - ath9k
+wlan1 - QCA9888
+wlan4 - QCA6174
 
-A short or malformed vendor command buffer could cause reads outside
-the command buffer.
+janusz@dell6430:~$ sudo iw wlan0 scan dump|grep SSID |wc -l
+0
+janusz@dell6430:~$ sudo iw wlan0 scan |grep SSID| wc -l
+21
+janusz@dell6430:~$ sudo ifconfig wlan0 down
 
-Signed-off-by: Pontus Fuchs <pontusf@broadcom.com>
-[arend@broadcom.com: slightly modified debug trace output]
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/brcm80211/brcmfmac/vendor.c | 30 +++++++++++++++++-------
- 1 file changed, 21 insertions(+), 9 deletions(-)
+janusz@dell6430:~$ sudo iw wlan1 scan dump|grep SSID|wc -l
+0
+janusz@dell6430:~$ sudo iw wlan1 scan |grep SSID|wc -l
+21
+janusz@dell6430:~$ sudo ifconfig wlan1 down
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-index 5960d82..e29674e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-@@ -31,18 +31,30 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
- 						 struct wireless_dev *wdev,
- 						 const void *data, int len)
- {
--	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
--	struct net_device *ndev = cfg_to_ndev(cfg);
-+	struct brcmf_cfg80211_vif *vif;
-+	struct brcmf_if *ifp;
- 	const struct brcmf_vndr_dcmd_hdr *cmdhdr = data;
- 	struct sk_buff *reply;
- 	int ret, payload, ret_len;
- 	void *dcmd_buf = NULL, *wr_pointer;
- 	u16 msglen, maxmsglen = PAGE_SIZE - 0x100;
- 
--	brcmf_dbg(TRACE, "cmd %x set %d len %d\n", cmdhdr->cmd, cmdhdr->set,
--		  cmdhdr->len);
-+	if (len < sizeof(*cmdhdr)) {
-+		brcmf_err("vendor command too short: %d\n", len);
-+		return -EINVAL;
-+	}
-+
-+	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
-+	ifp = vif->ifp;
-+
-+	brcmf_dbg(TRACE, "ifidx=%d, cmd=%d\n", ifp->ifidx, cmdhdr->cmd);
-+
-+	if (cmdhdr->offset > len) {
-+		brcmf_err("bad buffer offset %d > %d\n", cmdhdr->offset, len);
-+		return -EINVAL;
-+	}
- 
--	len -= sizeof(struct brcmf_vndr_dcmd_hdr);
-+	len -= cmdhdr->offset;
- 	ret_len = cmdhdr->len;
- 	if (ret_len > 0 || len > 0) {
- 		if (len > BRCMF_DCMD_MAXLEN) {
-@@ -63,11 +75,11 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
- 	}
- 
- 	if (cmdhdr->set)
--		ret = brcmf_fil_cmd_data_set(netdev_priv(ndev), cmdhdr->cmd,
--					     dcmd_buf, ret_len);
-+		ret = brcmf_fil_cmd_data_set(ifp, cmdhdr->cmd, dcmd_buf,
-+					     ret_len);
- 	else
--		ret = brcmf_fil_cmd_data_get(netdev_priv(ndev), cmdhdr->cmd,
--					     dcmd_buf, ret_len);
-+		ret = brcmf_fil_cmd_data_get(ifp, cmdhdr->cmd, dcmd_buf,
-+					     ret_len);
- 	if (ret != 0)
- 		goto exit;
- 
--- 
-1.9.1
+janusz@dell6430:~$ sudo iw wlan4 scan dump|grep SSID|wc -l
+0
+janusz@dell6430:~$ sudo iw wlan4 scan |grep SSID|wc -l
+22
 
+Should I run any other scan tests?
+
+BR
+Janusz
