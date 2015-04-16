@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:38237 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934279AbbDXI6q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2015 04:58:46 -0400
-Received: by igbhj9 with SMTP id hj9so9606191igb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Apr 2015 01:58:45 -0700 (PDT)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20887 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753354AbbDPJbF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Apr 2015 05:31:05 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Florian Achleitner <flo@fopen.at>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>
+Date: Thu, 16 Apr 2015 02:30:59 -0700
+Subject: RE: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16DFC5A9@SC-VEXCH1.marvell.com> (sfid-20150416_113114_532107_50E41E0F)
+References: <3169170.GKjfvNuGRf@r90b40zn>
+In-Reply-To: <3169170.GKjfvNuGRf@r90b40zn>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1429035033-14076-11-git-send-email-arend@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-	<1429035033-14076-11-git-send-email-arend@broadcom.com>
-Date: Fri, 24 Apr 2015 10:58:45 +0200
-Message-ID: <CACna6rzpRmNCNafi5vk1an2FC+fky+Zm4EJbFASw-cE1oRvBjA@mail.gmail.com> (sfid-20150424_105850_351414_9E3D9B15)
-Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices in nvram.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 April 2015 at 20:10, Arend van Spriel <arend@broadcom.com> wrote:
-> +int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
-> +                          const char *code, const char *nvram,
-> +                          void (*fw_cb)(struct device *dev,
-> +                                        const struct firmware *fw,
-> +                                        void *nvram_image, u32 nvram_len))
-> +{
-> +       return brcmf_fw_get_firmwares_pcie(dev, flags, code, nvram, fw_cb, 0,
-> +                                          0);
-> +}
-> +
+Hi Florian,
 
-git complains about adding an extra (2nd) empty line at EOF
+> 
+> Hi,
+> 
+> we are using a Marvell SD8787-based module by Lesswire, which is
+> connected to an imx28 through sdio. We are testing with the most recent
+> kernel from wireless-drivers-next and Firmware 14.66.35.p52.
+> 
+> Frequently, we see 'glitches' between driver and Firmware. The most
+> recent driver answers most of them with an attempt to reset the module,
+> reload the firmware, and start over.
+> 
+> However, this only works for us, because our sdio interface triggers a
+> hardware reset for the wireless module whenever it probes the device.
+> Without this hardware reset (sdio reset only), the module fails to
+> restart.
+
+We haven't seen this behavior yet. Could you please share complete log?
+
+> 
+> Is the necessity of frequent hardware resets a commonly known issue with
+> this chip/firmware? Anybody else experiencing these?
+> 
+> Currently, we see three different scenarios. One of them is currently
+> not answered by  reset. Refer to the upcoming patch.
+> 
+> (1)  mwifiex_cmd_timeout_func: Timeout cmd .. Ok, after reset.
+> (2)  Firmware wakeup failed.. Ok, after reset.
+
+This is ok. Reset at these places helps us recover if a corner case firmware bug is hit. 
+
+> (3) DNLD_CMD: host to card failed. No reset triggered. See patch.
+> 
+> I can provide detailed logs, if you want.
+
+"DNLD_CMD: host to card failed" error is expected during heavy Tx traffic if data write port is not available. Traffic will be resumed once the port is available.
+Please share detailed logs. It would help us find root cause for the problem.
+
+Regards,
+Amitkumar
+
