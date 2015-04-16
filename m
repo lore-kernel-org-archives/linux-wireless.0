@@ -1,60 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:34013 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933515AbbDJNaq (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55633 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbbDPCYT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 09:30:46 -0400
-Received: by laat2 with SMTP id t2so13308897laa.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:45 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/4] ath10k: set def key idx for ibss
-Date: Fri, 10 Apr 2015 13:23:22 +0000
-Message-Id: <1428672203-8604-4-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153102_336669_501B8103)
-In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
-References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 15 Apr 2015 22:24:19 -0400
+From: <miaoqing@qti.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: fix soft lockup - CPU stuck
+Date: Thu, 16 Apr 2015 10:24:10 +0800
+Message-ID: <1429151050-22488-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150416_042423_459299_2F2229E6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some time ago there was a weird issue with AP
-using wrong multicast keys and generating
-corrupted traffic on 10.1 firmware.
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-Apparently a very similar problem applies for
-IBSS-RSN on 999.999.0.636.
+BUG: soft lockup - CPU#0 stuck for 22s! [hostapd:965]
+CPU: 0 PID: 965 Comm: hostapd Not tainted 3.14.0 #1
+task: 82e29c40 ti: 82fb2000 task.ti: 82fb2000
+$ 0   : 00000000 00000000 83281f90 00004018
+$ 4   : 832a0010 b810403c 00004030 00000600
+$ 8   : 8036a980 ffd23940 00000000 00000000
+$12   : 00000060 00000007 00000000 0000000c
+$16   : 832a0010 00023f40 00000002 00000000
+$20   : 832a0010 832a0298 832ba994 832bb83c
+$24   : 00000002 800aa2d4
+$28   : 82fb2000 82fb3c08 832bbf0c 8339edc4
+Hi    : 00000006
+Lo    : 009b9500
+epc   : 8339ede0 ath9k_hw_enable_interrupts+0xf8/0x194 [ath9k_hw]
+Not tainted
+ra    : 8339edc4 ath9k_hw_enable_interrupts+0xdc/0x194 [ath9k_hw]
+Status: 1000fc03	KERNEL EXL IE
+Cause : 5080d400
+PrId  : 00019374 (MIPS 24Kc)
+	Kernel panic - not syncing: softlockup: hung tasks
 
-ath10k doesn't have IBSS-RSN enabled yet. This
-patch is a prerequisite to support it.
+The original intention of commit e3f31175a3("ath9k: fix race condition
+in irq processing during hardware reset") is to avoid the IRQ storms,it
+disabled the IRQ entirely for the duration of the reset, but it introducted
+a new IRQ storms in handle_level_irq() when call ath9k_hw_enable_interrupts(),
+meanwhile the irq is disabled by disable_irq(). Remove disable_irq/enable_irq
+paire, instead of diabling tasklet to re-enable IRQ during the reset.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 93f753cb839a..9428d75d0d76 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4691,10 +4691,14 @@ static void ath10k_set_key_h_def_keyidx(struct ath10k *ar,
- 	 * frames with multi-vif APs. This is not required for main firmware
- 	 * branch (e.g. 636).
- 	 *
--	 * FIXME: This has been tested only in AP. It remains unknown if this
--	 * is required for multi-vif STA interfaces on 10.1 */
-+	 * This is also needed for 636 fw for IBSS-RSN to work more reliably.
-+	 *
-+	 * FIXME: It remains unknown if this is required for multi-vif STA
-+	 * interfaces on 10.1.
-+	 */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index b0badef..06560b5 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -285,7 +285,6 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
  
--	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
-+	if (arvif->vdev_type != WMI_VDEV_TYPE_AP &&
-+	    arvif->vdev_type != WMI_VDEV_TYPE_IBSS)
- 		return;
+ 	__ath_cancel_work(sc);
  
- 	if (key->cipher == WLAN_CIPHER_SUITE_WEP40)
+-	disable_irq(sc->irq);
+ 	tasklet_disable(&sc->intr_tq);
+ 	tasklet_disable(&sc->bcon_tasklet);
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+@@ -332,7 +331,6 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 		r = -EIO;
+ 
+ out:
+-	enable_irq(sc->irq);
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 	tasklet_enable(&sc->bcon_tasklet);
+ 	tasklet_enable(&sc->intr_tq);
+@@ -475,7 +473,8 @@ void ath9k_tasklet(unsigned long data)
+ 	ath9k_btcoex_handle_interrupt(sc, status);
+ 
+ 	/* re-enable hardware interrupt */
+-	ath9k_hw_enable_interrupts(ah);
++	if (!test_bit(ATH_OP_HW_RESET, &common->op_flags))
++		ath9k_hw_enable_interrupts(ah);
+ out:
+ 	spin_unlock(&sc->sc_pcu_lock);
+ 	ath9k_ps_restore(sc);
+@@ -603,8 +602,8 @@ int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	int r;
+ 
+-	ath9k_hw_kill_interrupts(sc->sc_ah);
+ 	set_bit(ATH_OP_HW_RESET, &common->op_flags);
++	ath9k_hw_kill_interrupts(sc->sc_ah);
+ 
+ 	ath9k_ps_wakeup(sc);
+ 	r = ath_reset_internal(sc, hchan);
+@@ -624,8 +623,8 @@ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type)
+ #ifdef CONFIG_ATH9K_DEBUGFS
+ 	RESET_STAT_INC(sc, type);
+ #endif
+-	ath9k_hw_kill_interrupts(sc->sc_ah);
+ 	set_bit(ATH_OP_HW_RESET, &common->op_flags);
++	ath9k_hw_kill_interrupts(sc->sc_ah);
+ 	ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ }
+ 
 -- 
-2.1.4
+1.9.1
 
