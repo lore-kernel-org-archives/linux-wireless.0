@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55576 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030416AbbDWSKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2015 14:10:17 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "piotr.karbowski@gmail.com" <piotr.karbowski@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"jkosina@suse.cz" <jkosina@suse.cz>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
-Date: Thu, 23 Apr 2015 18:10:11 +0000
-Message-ID: <1429812611.23202.4.camel@intel.com> (sfid-20150423_201022_470178_1ACB4F1C)
-References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz>
-	 <1429764440.4084.5.camel@intel.com>
-	 <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>
-	 <1429780366.11859.1.camel@intel.com>
-	 <alpine.LNX.2.00.1504231114290.3695@pobox.suse.cz>
-	 <CA+uBNfxXoLj9Nfss+j1G3PY9A2t=N6KRiYUAdoxiUOZvigwyAw@mail.gmail.com>
-In-Reply-To: <CA+uBNfxXoLj9Nfss+j1G3PY9A2t=N6KRiYUAdoxiUOZvigwyAw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:6743 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752891AbbDQIuL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2015 04:50:11 -0400
+Message-ID: <5530C940.6010407@broadcom.com> (sfid-20150417_105057_505423_44174BBA)
+Date: Fri, 17 Apr 2015 10:50:08 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Hante Meuleman <meuleman@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	mailinglist <openwrt-devel@lists.openwrt.org>,
+	Florian Fainelli <fainelli@broadcom.com>
+Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices
+ in nvram.
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-11-git-send-email-arend@broadcom.com>	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com> <CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>
+In-Reply-To: <CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE1LTA0LTIzIGF0IDE0OjQ4ICswMjAwLCBQaW90ciBLYXJib3dza2kgd3JvdGU6
-DQo+IEhlbGxvLA0KPiANCj4gT24gVGh1LCBBcHIgMjMsIDIwMTUgYXQgMTE6MTUgQU0sIEppcmkg
-S29zaW5hIDxqa29zaW5hQHN1c2UuY3o+IHdyb3RlOg0KPiA+IE9uIFRodSwgMjMgQXByIDIwMTUs
-IEdydW1iYWNoLCBFbW1hbnVlbCB3cm90ZToNCj4gPg0KPiA+PiA+IEkgd2lsbCB0cnkgaXQsIGJ1
-dCBJIGV4cGVjdCB0aGUgcmVzdWx0IHRvIGJlIGJvZ3VzIGJlY2F1c2Ugb2YgdGhpcywNCj4gPj4g
-PiB1bmZvcnR1bmF0ZWx5Lg0KPiA+Pg0KPiA+PiBJIGNhbiB1bmRlcnN0YW5kLiBBIGZldyB1c2Vy
-cyByZXBvcnRlZCB0aGF0IHRoaXMgYnVnIG9jY3VycmVkIG1vcmUNCj4gPj4gcmVsaWFibHkgd2hl
-biBtb3ZpbmcgdGhlaXIgc3lzdGVtLCBhbHRob3VnaCBpdCBzZWVtcyB2ZXJ5IHdlaXJkIHRvIG1l
-Lg0KPiA+DQo+ID4gTXkgImZlZWxpbmciIHdhcyB0aGF0IGl0IHNvbWV0aW1lcyB3YXMgcmVsYXRl
-ZCB0byBzdGFydCBvZiBhdWRpbyBwbGF5YmFjaywNCj4gPiBidXQgbm90IDEwMCUgcmVsaWVibGUg
-ZWl0aGVyLg0KPiA+DQo+ID4+ID4gPiBGaXJzdCBxdWVzdGlvbiBpczogQXJlIHlvdSBzdXJlIHRo
-YXQgNC4wLXJjNiB3YXMgZ29vZD8NCj4gPj4gPg0KPiA+PiA+IFByZXR0eSBtdWNoLCB5ZXMuIEkn
-dmUgYmVlbiBydW5uaW5nIGl0IGZvciBxdWl0ZSBzb21lIHRpbWUgb24gdGhpcw0KPiA+PiA+IG1h
-Y2hpbmUgd2l0aG91dCBhbnkgaXNzdWVzLiBCdXQgYWZ0ZXIgdXBkYXRpbmcgdG8gY3VycmVudCBI
-RUFEIHR3byBkYXlzDQo+ID4+ID4gYWdvLCB0aGUgaXNzdWUgdHJpZ2dlcmVkIGxpa2UgNiBvciA3
-IHRpbWVzIGFscmVhZHkuDQo+ID4+DQo+ID4+IE9rIC0gSSB3aWxsIHRyeSB0byBsb29rIGF0IHRo
-ZSBQQ0kgY29tbWl0cyB0aGVyZSBhbHRob3VnaCBJIGFtIG5vdCBzdXJlDQo+ID4+IEknbGwgYmUg
-YWJsZSB0byBtYWtlIG11Y2ggc2Vuc2Ugb2YgdGhlbS4uLg0KPiA+DQo+ID4gVGhhbmtzLA0KPiAN
-Cj4gaSd2ZSBhbHNvIHN0YXJ0ZWQgbm90aWNpbmcgaGFyZCBzeXN0ZW0gbG9ja3VwcyB3aXRoIGl3
-bHdpZmkuIFdoYXQncw0KPiB3b3J0aCBub3RpY2luZyBpcyB0aGF0IEkndmUgc3RhcnRlZCB0byBz
-ZWUgdGhpcyBvbiAzLjE5IGFuZCBJIGFsc28NCj4gaGF2ZSBpdCBvbiA0LjAga2VybmVsIHRodXMg
-YWxsb3cgbWUgdG8gcmVwb3J0IGl0IGluIHRoaXMgdmVyeSB0aHJlYWQuDQo+IEkgaGFkIG92ZXIg
-bW9udGggdXB0aW1lLCB1bnRpbGwgSSd2ZSB1cGRhdGVkIGl3bCB1Y29kZSwgbWF5YmUgdGhpcyB3
-YXMNCj4gaW50cm9kdWNlZCBub3QgYnkga2VybmVsIGJ1dCBmaXJtd2FyZT8uIFRoZSBsb2NrdXBz
-IGFyZSByYW5kb20gYW5kDQo+IHJlc3VsdCBpbiBoYXJkIHN5c3RlbSBsb2NrdXAsIGZyb3plbiBY
-b3JnLCBzY3JlZW4gYXJ0aWZhY3RzL2dsaXRjaGVzLA0KPiBhdWRpbyBwbGF5YmFjayBrZWVwcyBy
-ZXBlYXRpbmcgbGFzdCBzZWNvbmQgb3Igc28gb2YgbXVzaWMsIHN5c3JxDQo+IGNhbm5vdCBoYW5k
-bGUgaXQgYXMgd2VsbCBhcyBhdXRvLXJlYm9vdCBhZnRlciBrZXJuZWwgcGFuaWMgZG9lcyBub3QN
-Cj4ga2lja3MgaW4uDQo+IA0KDQpJIGRvbid0IHNlZSBob3cgdGhlIHVjb2RlIGNhbiBjYXVzZSBj
-cmFzaGVzLCBidXQgYSBuZXcgdWNvZGUgY2FuIG1ha2UNCnRoZSBkcml2ZXIgYmVoYXZlIGRpZmZl
-cmVudGx5IChuZXcgQVBJcyBiZWluZyBhdmFpbGFibGUpIGFuZCB0aGF0IGNhbg0KY2F1c2UgY3Jh
-c2hlcy4gUGxlYXNlIHNoYXJlIGFueSBsb2dzIHlvdSBtYXkgaGF2ZS4NCg0KPiBUaGUgaGFyZHdh
-cmUgSSBzZWUgdGhpcyBwcm9ibGVtIG9uIGlzIGl3bCA3MjYwLiBUaGUgb25seSB3b3JrYXJvdW5k
-DQo+IEkndmUgZm91bmQgc28gZmFyIHdhcyB0byBkaXNhYmxlIHBvd2VyIHNhdmUgdmlhIGBpdyBk
-ZXYgd2xhbjAgc2V0DQo+IHBvd2VyX3NhdmUgb2ZmYCBhbmQgbm90IGEgc2luZ2xlIGxvY2t1cCBz
-aW5jZS4gV2hhdCdzIHJhdGhlcg0KPiBkaXN0dXJiaW5nIGlzIHRoYXQgYnkgJ21vZGluZm8gaXds
-d2lmaScgaXQgZG9lcyBzYXkgdGhhdCBwb3dlcl9zYXZlIGlzDQo+IGRlZmF1bHQgb2ZmLCBidXQg
-aXQgaXMgbm90LiBJIGFtIHN1cmUgdGhhdCBub3RoaW5nIGVsc2UgZW5hYmxlcw0KPiBwb3dlcl9z
-YXZlIG9uIG15IHN5c3RlbSBiZWNhdXNlIEkgZG9uJ3QgZXZlbiBoYXZlIHVkZXYsIGFuZCBmb3Ig
-dGhlDQo+IHRlc3QgSSd2ZSBhbHNvIGRpc2FibGVkIHdpY2QsIHRoZW4gc2ltcGxlIGBtb2Rwcm9i
-ZSBpd2x3aWZpYCBhbmQgYGl3DQo+IGRldiB3bGFuMCBnZXQgcG93ZXJfc2F2ZWAgcmVwb3J0cyAn
-b24nLg0KDQpZZWFoIC0gSSBrbm93LiBUaGlzIGlzIGNvbmZ1c2luZy4gVGhpcyBtb2R1bGUgcGFy
-YW1ldGVyIGRvZXNuJ3QgYWZmZWN0DQo3MjYwOiBpdCB1c2VzIGl3bG12bSBtb2R1bGUgd2hpY2gg
-aXRzIG93biBzZXR0aW5nLiBpd2x3aWZpJ3MgcG93ZXJfc2F2ZQ0KcGFyYW1ldGVyIHNlcnZlcyBv
-bGRlciBkZXZpY2VzIHN1Y2ggYXMgNjIwNSB3aGljaCB5b3Ugc2VlbSB0byBoYXZlIGFzDQp3ZWxs
-Lg0KSW4gNjIwNSdzIGNhc2UsIHBvd2VyIHNhdmUgaXMgZGlzYWJsZWQgYnkgZGVmYXVsdC4gQnV0
-IGFsbCB0aGlzIHNlZW1zDQp2ZXJ5IGZhciBhd2F5IGZyb20gdGhlIG9yaWdpbmFsIHRocmVhZC4N
-Cg0KPiANCj4gSSBhbHNvIGhhdmUgYW5vdGhlciBzeXN0ZW0gaXdsIDYyMDUgYW5kIG5vIHNpbmds
-ZSBsb2NrdXAgd2FzIG5vdGVkLA0KPiBidXQgaXQgaW5kZWVkIGhhdmUgcG93ZXJfc2F2ZSBkaXNh
-YmxlZCwgc28gdGhhdCBtYXkgYmUgdGhlIGNhc2UuDQo+IA0KPiAtLSBQaW90ci4NCg0K
++ openwrt-devel list
+
+On 04/17/15 09:45, Rafał Miłecki wrote:
+> Huh, why dropping linux-wireless (and top posting btw)? Please let
+> everyone follow the discussion :)
+>
+> On 15 April 2015 at 21:20, Hante Meuleman<meuleman@broadcom.com>  wrote:
+>> As I wrote to you in a mail and on the openwrt forum, this patch is indeed an attempt to support more complex nvram files. I also wrote, that in order to be able to use it, the nvram contents of the device (r8000) needs to be put a specific file. Now for your concerns, we can perhaps add something which will read the nvram contents directly from an nvram store. But that is irrelevant to this patch. The parsing is still needed, and all we would need to add is something which is reading the nvram contents from some other place
+>
+> So it makes me wonder if we need this patch in its current form. I
+> think getting NVRAM directly from the platform is much user friendly.
+> It doesn't require user to install some extra tools for dumping NVRAM
+> and putting it in a specific file. One extra layer less.
+> With that said I think it's hard to review your code for parsing
+> NVRAM. We don't know how it's going to be fetched in the first place.
+
+You already made that point and we agreed to look for a solution.
+
+>> though it would have to be put under some kernel config flag as this would not be supported in non-router systems. The contents of the nvram would however still need to be parsed in exactly the same way as the nvram files we read from disk.
+>
+> Again, it's hard to say for me. Are you going to use
+> bcm47xx_nvram_getenv? Are you going to use MTD subsystem? Are you
+> going to develop different solution? When using e.g.
+> bcm47xx_nvram_getenv you won't want all this parsing stuff at all.
+
+Please look at the usage scenario here. The brcmfmac driver is not 
+needing a few key,value pairs. It needs a portion of NVRAM to download 
+to the device. The patch provides the functionality to do just that. Get 
+the appropriate portion, strip comments and whitespace, and send it to 
+the device. Using bcm47xx_nvram_getenv is not a useful api as it would 
+mean we need brcmfmac to know which key ids to ask for, reassemble it to 
+key=value string and send it to the fullmac device.
+
+In bcm47xx_nvram_getenv() it does have the whole nvram content available 
+in nvram_buf which is filled by nvram_init(). So if something similar is 
+made available on r8000 (or ARM routers in general) build target all we 
+need is an api to get the nvram_buf.
+
+Another option is to add the parsing stuff in that nvram code and have 
+an api to get the appropriate portion based on pcie domain and bus 
+number as used in brcmf_fw_get_firmwares_pcie(). However, I would prefer 
+to have this in the driver and not in arch specific code as there may be 
+other platforms like our set-top boxes needing this.
+
+Regards,
+Arend
