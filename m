@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:14389 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754146AbbDIV5f (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43642 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbbDQALK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2015 17:57:35 -0400
-From: Richard Weinberger <richard@nod.at>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, davem@davemloft.net,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
-	Richard Weinberger <richard@nod.at>
-Subject: [PATCH 5/5 v2] netfilter: Fix format string of nfnetlink_log proc file
-Date: Thu,  9 Apr 2015 23:57:17 +0200
-Message-Id: <1428616637-21690-5-git-send-email-richard@nod.at> (sfid-20150409_235935_617075_2C3A259D)
-In-Reply-To: <1428616637-21690-1-git-send-email-richard@nod.at>
-References: <1428616637-21690-1-git-send-email-richard@nod.at>
+	Thu, 16 Apr 2015 20:11:10 -0400
+Message-ID: <55304F9D.1060301@candelatech.com> (sfid-20150417_021114_321572_DF990F7F)
+Date: Thu, 16 Apr 2015 17:11:09 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
+References: <5523273F.4060803@candelatech.com> <CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com> <CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com> <552406E4.50600@candelatech.com> <55241567.3010703@candelatech.com> <21796.40851.132919.363957@gargle.gargle.HOWL>
+In-Reply-To: <21796.40851.132919.363957@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The printed values are all of type unsigned integer, therefore use
-%u instead of %d. Otherwise an user can face negative values.
+On 04/07/2015 08:25 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> For the third set, why limit to a single interface.  Can't we run IBSS + AP
+>> (and plus stations, for that matter), all at the same time with ath9k?
+> 
+> TSF would jump around since the HW would sync with the
+> received beacons and this will happen in both IBSS and station
+> mode. Hence the limitation, but I think OpenWrt has a one-liner
+> to remove this restriction...
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- net/netfilter/nfnetlink_log.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It seems I can only do a single VAP on ath9k as well?
 
-diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
-index 7150d11..313c26c 100644
---- a/net/netfilter/nfnetlink_log.c
-+++ b/net/netfilter/nfnetlink_log.c
-@@ -998,7 +998,7 @@ static int seq_show(struct seq_file *s, void *v)
- {
- 	const struct nfulnl_instance *inst = v;
- 
--	return seq_printf(s, "%5d %6d %5d %1d %5d %6d %2d\n",
-+	return seq_printf(s, "%5u %6u %5u %1u %5u %6u %2u\n",
- 			  inst->group_num,
- 			  inst->peer_portid, inst->qlen,
- 			  inst->copy_mode, inst->copy_range,
+Is that per design?
+
+Thanks,
+Ben
+
+
 -- 
-1.8.4.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
