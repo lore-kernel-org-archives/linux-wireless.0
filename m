@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:36052 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932748AbbD0OPV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 10:15:21 -0400
-From: Masanari Iida <standby24x7@gmail.com>
-To: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	davem@davemloft.net, Larry.Finger@lwfinger.net,
-	rdunlap@infradead.org, trivial@kernel.org,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Cc: Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH 1/2] net:treewide: Fix typo in drivers/net
-Date: Mon, 27 Apr 2015 23:14:57 +0900
-Message-Id: <1430144098-4933-1-git-send-email-standby24x7@gmail.com> (sfid-20150427_161551_378171_71E8D823)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:23698 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932457AbbDQJpK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2015 05:45:10 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Florian Achleitner <achleitner.florian@fronius.com>
+CC: Avinash Patil <patila@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Maithili Hinge <maithili@marvell.com>
+Date: Fri, 17 Apr 2015 02:45:02 -0700
+Subject: RE: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16EB7A39@SC-VEXCH1.marvell.com> (sfid-20150417_114523_043893_B80F38C5)
+References: <3169170.GKjfvNuGRf@r90b40zn>
+ <5FF020A1CFFEEC49BD1E09530C4FF5951B16EB768F@SC-VEXCH1.marvell.com>
+ <2293982.N26UvI80V5@r90b40zn> <1675638.uTIoPdU2hg@r90b40zn>
+In-Reply-To: <1675638.uTIoPdU2hg@r90b40zn>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix spelling typo in printk.
+Hi Florian,
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
----
- drivers/net/can/usb/kvaser_usb.c   | 2 +-
- drivers/net/ethernet/8390/etherh.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+> From: Florian Achleitner [mailto:achleitner.florian@fronius.com]
+> Sent: Friday, April 17, 2015 2:00 PM
+> To: Amitkumar Karwar
+> Cc: Avinash Patil; linux-wireless@vger.kernel.org; Maithili Hinge
+> Subject: Re: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
+> 
+> On Thursday 16 April 2015 15:19:27 Florian Achleitner wrote:
+> > I will try to figure out whether the root cause is the MMC interface.
+> > Probably in this case, the reset actually recovers from a bug in the
+> > mmc driver.
+> 
+> Anyways, we have a virtually identical hardware with a Marvell SD8688
+> based wireless module, which uses the libertas driver. Running kernel
+> 3.10.41 we have no problems for 50 days.
+> 
+> Running the same kernel with mwifiex with the SD8788 we see a freeze
+> which requires a hw-reset within about a day. Similar to the most recent
+> kernel.
+> 
+> Are there known sdio issues with SD8788?
+> Will try to get useful information from the mmc system..
 
-diff --git a/drivers/net/can/usb/kvaser_usb.c b/drivers/net/can/usb/kvaser_usb.c
-index 4643914..8b17a90 100644
---- a/drivers/net/can/usb/kvaser_usb.c
-+++ b/drivers/net/can/usb/kvaser_usb.c
-@@ -1102,7 +1102,7 @@ static void kvaser_usb_rx_can_err(const struct kvaser_usb_net_priv *priv,
- 
- 	if (msg->u.rx_can_header.flag & (MSG_FLAG_ERROR_FRAME |
- 					 MSG_FLAG_NERR)) {
--		netdev_err(priv->netdev, "Unknow error (flags: 0x%02x)\n",
-+		netdev_err(priv->netdev, "Unknown error (flags: 0x%02x)\n",
- 			   msg->u.rx_can_header.flag);
- 
- 		stats->rx_errors++;
-diff --git a/drivers/net/ethernet/8390/etherh.c b/drivers/net/ethernet/8390/etherh.c
-index b36ee9e..d686b9c 100644
---- a/drivers/net/ethernet/8390/etherh.c
-+++ b/drivers/net/ethernet/8390/etherh.c
-@@ -523,7 +523,7 @@ static int etherh_addr(char *addr, struct expansion_card *ec)
- 	char *s;
- 	
- 	if (!ecard_readchunk(&cd, ec, 0xf5, 0)) {
--		printk(KERN_ERR "%s: unable to read podule description string\n",
-+		printk(KERN_ERR "%s: unable to read module description string\n",
- 		       dev_name(&ec->dev));
- 		goto no_addr;
- 	}
--- 
-2.4.0.rc3.3.g6eb1401
+Known firmware issues are command timeout and wakeup failure. They are not specific to SDIO. As Avinash mentioned earlier, we need to check CONFIG_MMC_DEBUG enbled dmesg logs for "write iomem (1) failed: -110" issue.
+
+Regards,
+Amitkumar
 
