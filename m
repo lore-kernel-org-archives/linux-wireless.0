@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54710 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756480AbbDVNZl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 09:25:41 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] mac80211: OCB: remove pointless check for broadcast BSSID
-Date: Wed, 22 Apr 2015 15:25:22 +0200
-Message-Id: <1429709122-13734-4-git-send-email-johannes@sipsolutions.net> (sfid-20150422_152549_426862_1EAE0A42)
-In-Reply-To: <1429709122-13734-1-git-send-email-johannes@sipsolutions.net>
-References: <1429709122-13734-1-git-send-email-johannes@sipsolutions.net>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53429 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961AbbDQGp5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2015 02:45:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<michal.kazior@tieto.com>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/2] ath10k: Add the WMI Air Time Fairness service define
+References: <1427739246-2734-1-git-send-email-yanbol@qca.qualcomm.com>
+Date: Fri, 17 Apr 2015 09:45:45 +0300
+In-Reply-To: <1427739246-2734-1-git-send-email-yanbol@qca.qualcomm.com> (Yanbo
+	Li's message of "Mon, 30 Mar 2015 11:14:05 -0700")
+Message-ID: <87a8y745ie.fsf@kamboji.qca.qualcomm.com> (sfid-20150417_084600_808411_AEF76FA7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-The OCB input path already checked that the BSSID is the broadcast
-address, so the later check can never fail.
+> Add the FW ATF (Air Time Fairness) service define to keep consistent
+> with 10.2 FW capability
+>
+> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+Thanks, both patches applied.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5fea34b158fe..11dbbc576491 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1362,11 +1362,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 			}
- 		}
- 	} else if (rx->sdata->vif.type == NL80211_IFTYPE_OCB) {
--		u8 *bssid = ieee80211_get_bssid(hdr, rx->skb->len,
--						NL80211_IFTYPE_OCB);
--		/* OCB uses wild-card BSSID */
--		if (is_broadcast_ether_addr(bssid))
--			sta->last_rx = jiffies;
-+		sta->last_rx = jiffies;
- 	} else if (!is_multicast_ether_addr(hdr->addr1)) {
- 		/*
- 		 * Mesh beacons will update last_rx when if they are found to
 -- 
-2.1.4
-
+Kalle Valo
