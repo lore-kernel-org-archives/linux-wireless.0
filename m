@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40007 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:47618 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752766AbbDBGm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2015 02:42:29 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S1754189AbbDQPQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2015 11:16:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/31] iwlwifi: mvm: don't return uninitialized value in get_survey()
-Date: Thu,  2 Apr 2015 09:41:15 +0300
-Message-Id: <1427956879-11725-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090418_657527_F3815DAA)
-In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
-References: <1427956656.8122.2.camel@egrumbacBox>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 05/11] mac80211: extend fast-xmit to cover IBSS
+Date: Fri, 17 Apr 2015 17:15:45 +0200
+Message-Id: <1429283751-5104-5-git-send-email-johannes@sipsolutions.net> (sfid-20150417_171612_624042_E1E239E9)
+In-Reply-To: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
+References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If ucode_loaded isn't true the function returns the 'ret' variable
-without having assigned a value properly. Fix that.
+IBSS can be supported very easily since it uses the standard station
+authorization state etc. so it just needs to be covered by the header
+building switch statement.
 
-Reported-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/tx.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index fc73cc1..74912e7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3911,6 +3911,7 @@ static int iwl_mvm_mac_get_survey(struct ieee80211_hw *hw, int idx,
- 			    mvm->radio_stats.on_time_scan;
- 	do_div(survey->time_scan, USEC_PER_MSEC);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 02aafe1cc121..0f18ee11f097 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2455,6 +2455,13 @@ void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+ 	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
  
-+	ret = 0;
-  out:
- 	mutex_unlock(&mvm->mutex);
- 	return ret;
+ 	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_ADHOC:
++		/* DA SA BSSID */
++		build.da_offs = offsetof(struct ieee80211_hdr, addr1);
++		build.sa_offs = offsetof(struct ieee80211_hdr, addr2);
++		memcpy(hdr->addr3, sdata->u.ibss.bssid, ETH_ALEN);
++		build.hdr_len = 24;
++		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		if (test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
+ 			/* DA SA BSSID */
 -- 
-1.9.1
+2.1.4
 
