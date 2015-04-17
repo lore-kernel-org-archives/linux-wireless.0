@@ -1,694 +1,684 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:47758 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbbD3I7z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2015 04:59:55 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 0/7] wil6210 patches
-Date: Thu, 30 Apr 2015 11:59:44 +0300
-Message-ID: <2058417.XHv0o6uz9r@lx-wigig-72> (sfid-20150430_110004_603046_7F8B9165)
-In-Reply-To: <87y4la1gdm.fsf@kamboji.qca.qualcomm.com>
-References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <87y4la1gdm.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:47611 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754120AbbDQPP5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2015 11:15:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 01/11] mac80211: add TX fastpath
+Date: Fri, 17 Apr 2015 17:15:41 +0200
+Message-Id: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net> (sfid-20150417_171606_577624_82458E43)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, April 30, 2015 05:47:49 AM Kalle Valo wrote:
-> I see some warnings and errors:
-> 
-> drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 6 has type 'unsigned int' [-Wformat]
-> drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 8 has type 'unsigned int' [-Wformat]
-> drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Wformat]
-> drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 7 has type 'unsigned int' [-Wformat]
-> 
-> [...]
-> 
-> Kernel: arch/x86/boot/bzImage is ready  (#923)
->   Building modules, stage 2.
->   MODPOST 45 modules
-> ERROR: "__divdi3" [drivers/net/wireless/ath/wil6210/wil6210.ko] undefined!
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ops, sorry. I forgot there are still 32-bit platforms here... Following is patch v2,
-it cleanly compiles on 32-bit x86
+In order to speed up mac80211's TX path, add the "fast-xmit" cache
+that will cache the data frame 802.11 header and other data to be
+able to build the frame more quickly. This cache is rebuilt when
+external triggers imply changes, but a lot of the checks done per
+packet today are simplified away to the check for the cache.
 
->From fc505276d22fdcdf61d650ab32b94e3a9f897f39 Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Wed, 29 Apr 2015 14:40:01 +0300
-Subject: [PATCH v2 5/7] wil6210: Add pmc debug mechanism memory management
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-    wil6210@qca.qualcomm.com,
-    Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+There's also a more detailed description in the code.
 
-Pmc is a hardware debug mechanism which allows capturing phy data,
-packets, and internally generated events and messages synchronized
-and time stamped by the hardware. It requires memory buffers
-allocated by the driver in order to be used by hardware dma to
-upstream real time debug data to host memory.
-Driver will handle memory allocation and release, and fetching
-the data from the memory to application layer via debug file
-system. The configuration of pmc is handled entirely by the
-application layer.
-
-Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/Makefile  |   1 +
- drivers/net/wireless/ath/wil6210/debugfs.c |  93 +++++++
- drivers/net/wireless/ath/wil6210/pmc.c     | 375 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/pmc.h     |  27 +++
- drivers/net/wireless/ath/wil6210/wil6210.h |  14 ++
- drivers/net/wireless/ath/wil6210/wmi.h     |  15 ++
- 6 files changed, 525 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wil6210/pmc.c
- create mode 100644 drivers/net/wireless/ath/wil6210/pmc.h
+ include/net/mac80211.h     |   6 +-
+ net/mac80211/cfg.c         |   9 +-
+ net/mac80211/chan.c        |   6 +
+ net/mac80211/ieee80211_i.h |   5 +
+ net/mac80211/key.c         |   2 +
+ net/mac80211/rx.c          |   2 +
+ net/mac80211/sta_info.c    |   4 +
+ net/mac80211/sta_info.h    |  27 +++
+ net/mac80211/tx.c          | 404 ++++++++++++++++++++++++++++++++++++++++++++-
+ 9 files changed, 462 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-index caa717b..050506f 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -12,6 +12,7 @@ wil6210-y += debug.o
- wil6210-y += rx_reorder.o
- wil6210-y += ioctl.o
- wil6210-y += fw.o
-+wil6210-y += pmc.o
- wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
- wil6210-y += wil_platform.o
- wil6210-y += ethtool.o
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index bbc22d8..19f77e5 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -24,6 +24,7 @@
- #include "wil6210.h"
- #include "wmi.h"
- #include "txrx.h"
-+#include "pmc.h"
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 38a5fd790366..9001bd685b1e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1796,6 +1796,10 @@ struct ieee80211_txq {
+  *	the driver returns 1. This also forces the driver to advertise its
+  *	supported cipher suites.
+  *
++ * @IEEE80211_HW_SUPPORT_FAST_XMIT: The driver/hardware supports fast-xmit,
++ *	this currently requires only the ability to calculate the duration
++ *	for frames.
++ *
+  * @IEEE80211_HW_QUEUE_CONTROL: The driver wants to control per-interface
+  *	queue mapping in order to use different queues (not just one per AC)
+  *	for different virtual interfaces. See the doc section on HW queue
+@@ -1844,7 +1848,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
+ 	IEEE80211_HW_NO_AUTO_VIF			= 1<<15,
+ 	IEEE80211_HW_SW_CRYPTO_CONTROL			= 1<<16,
+-	/* free slots */
++	IEEE80211_HW_SUPPORT_FAST_XMIT			= 1<<17,
+ 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
+ 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
+ 	IEEE80211_HW_QUEUE_CONTROL			= 1<<20,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 265e42721a66..4aa5e893cbaa 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -137,6 +137,9 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
- /* Nasty hack. Better have per device instances */
- static u32 mem_addr;
-@@ -702,6 +703,89 @@ static const struct file_operations fops_back = {
- 	.open  = simple_open,
- };
- 
-+/* pmc control, write:
-+ * - "alloc <num descriptors> <descriptor_size>" to allocate PMC
-+ * - "free" to release memory allocated for PMC
-+ */
-+static ssize_t wil_write_pmccfg(struct file *file, const char __user *buf,
-+				size_t len, loff_t *ppos)
-+{
-+	struct wil6210_priv *wil = file->private_data;
-+	int rc;
-+	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
-+	char cmd[9];
-+	int num_descs, desc_size;
+ 	sdata->noack_map = noack_map;
 +
-+	if (!kbuf)
-+		return -ENOMEM;
++	ieee80211_check_fast_xmit_iface(sdata);
 +
-+	rc = simple_write_to_buffer(kbuf, len, ppos, buf, len);
-+	if (rc != len) {
-+		kfree(kbuf);
-+		return rc >= 0 ? -EIO : rc;
-+	}
-+
-+	kbuf[len] = '\0';
-+	rc = sscanf(kbuf, "%8s %d %d", cmd, &num_descs, &desc_size);
-+	kfree(kbuf);
-+
-+	if (rc < 0)
-+		return rc;
-+
-+	if (rc < 1) {
-+		wil_err(wil, "pmccfg: no params given\n");
-+		return -EINVAL;
-+	}
-+
-+	if (0 == strcmp(cmd, "alloc")) {
-+		if (rc != 3) {
-+			wil_err(wil, "pmccfg: alloc requires 2 params\n");
-+			return -EINVAL;
-+		}
-+		wil_pmc_alloc(wil, num_descs, desc_size);
-+	} else if (0 == strcmp(cmd, "free")) {
-+		if (rc != 1) {
-+			wil_err(wil, "pmccfg: free does not have any params\n");
-+			return -EINVAL;
-+		}
-+		wil_pmc_free(wil, true);
-+	} else {
-+		wil_err(wil, "pmccfg: Unrecognized command \"%s\"\n", cmd);
-+		return -EINVAL;
-+	}
-+
-+	return len;
-+}
-+
-+static ssize_t wil_read_pmccfg(struct file *file, char __user *user_buf,
-+			       size_t count, loff_t *ppos)
-+{
-+	struct wil6210_priv *wil = file->private_data;
-+	char text[256];
-+	char help[] = "pmc control, write:\n"
-+	" - \"alloc <num descriptors> <descriptor_size>\" to allocate pmc\n"
-+	" - \"free\" to free memory allocated for pmc\n";
-+
-+	sprintf(text, "Last command status: %d\n\n%s",
-+		wil_pmc_last_cmd_status(wil),
-+		help);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, text,
-+				       strlen(text) + 1);
-+}
-+
-+static const struct file_operations fops_pmccfg = {
-+	.read = wil_read_pmccfg,
-+	.write = wil_write_pmccfg,
-+	.open  = simple_open,
-+};
-+
-+static const struct file_operations fops_pmcdata = {
-+	.open		= simple_open,
-+	.read		= wil_pmc_read,
-+	.llseek		= wil_pmc_llseek,
-+};
-+
- /*---tx_mgmt---*/
- /* Write mgmt frame to this file to send it */
- static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
-@@ -1363,6 +1447,8 @@ static const struct {
- 	{"tx_mgmt",		  S_IWUSR,	&fops_txmgmt},
- 	{"wmi_send",		  S_IWUSR,	&fops_wmi},
- 	{"back",	S_IRUGO | S_IWUSR,	&fops_back},
-+	{"pmccfg",	S_IRUGO | S_IWUSR,	&fops_pmccfg},
-+	{"pmcdata",	S_IRUGO,		&fops_pmcdata},
- 	{"temp",	S_IRUGO,		&fops_temp},
- 	{"freq",	S_IRUGO,		&fops_freq},
- 	{"link",	S_IRUGO,		&fops_link},
-@@ -1440,6 +1526,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 	if (IS_ERR_OR_NULL(dbg))
- 		return -ENODEV;
- 
-+	wil_pmc_init(wil);
-+
- 	wil6210_debugfs_init_files(wil, dbg);
- 	wil6210_debugfs_init_isr(wil, dbg);
- 	wil6210_debugfs_init_blobs(wil, dbg);
-@@ -1459,4 +1547,9 @@ void wil6210_debugfs_remove(struct wil6210_priv *wil)
- {
- 	debugfs_remove_recursive(wil->debug);
- 	wil->debug = NULL;
-+
-+	/* free pmc memory without sending command to fw, as it will
-+	 * be reset on the way down anyway
-+	 */
-+	wil_pmc_free(wil, false);
+ 	return 0;
  }
-diff --git a/drivers/net/wireless/ath/wil6210/pmc.c b/drivers/net/wireless/ath/wil6210/pmc.c
-new file mode 100644
-index 0000000..3cb4f35
---- /dev/null
-+++ b/drivers/net/wireless/ath/wil6210/pmc.c
-@@ -0,0 +1,375 @@
-+/*
-+ * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
+ 
+@@ -2099,10 +2102,14 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	int err;
+ 
+ 	if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
++		ieee80211_check_fast_xmit_all(local);
++
+ 		err = drv_set_frag_threshold(local, wiphy->frag_threshold);
+ 
+-		if (err)
++		if (err) {
++			ieee80211_check_fast_xmit_all(local);
+ 			return err;
++		}
+ 	}
+ 
+ 	if ((changed & WIPHY_PARAM_COVERAGE_CLASS) ||
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 5bcd4e5589d3..7e9b62475400 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -664,6 +664,8 @@ out:
+ 		ieee80211_bss_info_change_notify(sdata,
+ 						 BSS_CHANGED_IDLE);
+ 
++	ieee80211_check_fast_xmit_iface(sdata);
++
+ 	return ret;
+ }
+ 
+@@ -1030,6 +1032,8 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP)
+ 		__ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
+ 
++	ieee80211_check_fast_xmit_iface(sdata);
++
+ 	if (ieee80211_chanctx_refcount(local, old_ctx) == 0)
+ 		ieee80211_free_chanctx(local, old_ctx);
+ 
+@@ -1376,6 +1380,8 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
+ 				__ieee80211_vif_copy_chanctx_to_vlans(sdata,
+ 								      false);
+ 
++			ieee80211_check_fast_xmit_iface(sdata);
++
+ 			sdata->radar_required = sdata->reserved_radar_required;
+ 
+ 			if (sdata->vif.bss_conf.chandef.width !=
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ab46ab4a7249..09a15a855c5a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1651,6 +1651,11 @@ struct sk_buff *
+ ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
+ 			      struct sk_buff *skb, u32 info_flags);
+ 
++void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp);
++void ieee80211_check_fast_xmit_all(struct ieee80211_local *local);
++void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata);
++void ieee80211_clear_fast_xmit(struct sta_info *sta);
++
+ /* HT */
+ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+ 				     struct ieee80211_sta_ht_cap *ht_cap);
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 2291cd730091..ac7eb9201ac1 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -229,6 +229,7 @@ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (uni) {
+ 		rcu_assign_pointer(sdata->default_unicast_key, key);
++		ieee80211_check_fast_xmit_iface(sdata);
+ 		drv_set_default_unicast_key(sdata->local, sdata, idx);
+ 	}
+ 
+@@ -298,6 +299,7 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 		if (pairwise) {
+ 			rcu_assign_pointer(sta->ptk[idx], new);
+ 			sta->ptk_idx = idx;
++			ieee80211_check_fast_xmit(sta, GFP_KERNEL);
+ 		} else {
+ 			rcu_assign_pointer(sta->gtk[idx], new);
+ 			sta->gtk_idx = idx;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bc59c8a20a39..3d890643af2e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1199,6 +1199,8 @@ static void sta_ps_start(struct sta_info *sta)
+ 	ps_dbg(sdata, "STA %pM aid %d enters power save mode\n",
+ 	       sta->sta.addr, sta->sta.aid);
+ 
++	ieee80211_clear_fast_xmit(sta);
++
+ 	if (!sta->sta.txq[0])
+ 		return;
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 0800e02cce05..21462e3e68c9 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1201,6 +1201,8 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 	ps_dbg(sdata,
+ 	       "STA %pM aid %d sending %d filtered/%d PS frames since STA not sleeping anymore\n",
+ 	       sta->sta.addr, sta->sta.aid, filtered, buffered);
++
++	ieee80211_check_fast_xmit(sta, GFP_ATOMIC);
+ }
+ 
+ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
+@@ -1720,6 +1722,7 @@ int sta_info_move_state(struct sta_info *sta,
+ 			     !sta->sdata->u.vlan.sta))
+ 				atomic_dec(&sta->sdata->bss->num_mcast_sta);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
++			ieee80211_clear_fast_xmit(sta);
+ 		}
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+@@ -1729,6 +1732,7 @@ int sta_info_move_state(struct sta_info *sta,
+ 			     !sta->sdata->u.vlan.sta))
+ 				atomic_inc(&sta->sdata->bss->num_mcast_sta);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
++			ieee80211_check_fast_xmit(sta, GFP_KERNEL);
+ 		}
+ 		break;
+ 	default:
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index a875b92c7acf..e365f6213702 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -240,6 +240,30 @@ struct sta_ampdu_mlme {
+ #define IEEE80211_TID_UNRESERVED	0xff
+ 
+ /**
++ * struct ieee80211_fast_tx - TX fastpath information
++ * @key: key to use for hw crypto
++ * @hdr: the 802.11 header to put with the frame
++ * @hdr_len: actual 802.11 header length
++ * @sa_offs: offset of the SA
++ * @da_offs: offset of the DA
++ * @pn_offs: offset where to put PN for crypto (or 0 if not needed)
++ * @band: band this will be transmitted on, for tx_info
++ * @rcu_head: RCU head to free this struct
 + *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ * Try to keep this struct small so it fits into a single cacheline.
 + */
++struct ieee80211_fast_tx {
++	struct ieee80211_key *key;
++	u8 hdr[30 + 2 + IEEE80211_CCMP_HDR_LEN +
++	       sizeof(rfc1042_header)];
++	u8 hdr_len;
++	u8 sa_offs, da_offs, pn_offs;
++	u8 band;
 +
-+#include <linux/types.h>
-+#include <linux/errno.h>
-+#include <linux/fs.h>
-+#include "wmi.h"
-+#include "wil6210.h"
-+#include "txrx.h"
-+#include "pmc.h"
-+
-+struct desc_alloc_info {
-+	dma_addr_t pa;
-+	void	  *va;
++	struct rcu_head rcu_head;
 +};
 +
-+static int wil_is_pmc_allocated(struct pmc_ctx *pmc)
-+{
-+	return !!pmc->pring_va;
-+}
-+
-+void wil_pmc_init(struct wil6210_priv *wil)
-+{
-+	memset(&wil->pmc, 0, sizeof(struct pmc_ctx));
-+	mutex_init(&wil->pmc.lock);
-+}
-+
 +/**
-+ * Allocate the physical ring (p-ring) and the required
-+ * number of descriptors of required size.
-+ * Initialize the descriptors as required by pmc dma.
-+ * The descriptors' buffers dwords are initialized to hold
-+ * dword's serial number in the lsw and reserved value
-+ * PCM_DATA_INVALID_DW_VAL in the msw.
+  * struct sta_info - STA information
+  *
+  * This structure collects information about a station that
+@@ -337,6 +361,7 @@ struct sta_ampdu_mlme {
+  *	using IEEE80211_NUM_TID entry for non-QoS frames
+  * @rx_msdu: MSDUs received from this station, using IEEE80211_NUM_TID
+  *	entry for non-QoS frames
++ * @fast_tx: TX fastpath information
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -354,6 +379,8 @@ struct sta_info {
+ 	spinlock_t rate_ctrl_lock;
+ 	spinlock_t lock;
+ 
++	struct ieee80211_fast_tx __rcu *fast_tx;
++
+ 	struct work_struct drv_deliver_wk;
+ 
+ 	u16 listen_interval;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 667111ee6a20..d5bfa6c4afd0 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1600,7 +1600,7 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
+ 	if (skb_cloned(skb) &&
+ 	    (!(local->hw.flags & IEEE80211_HW_SUPPORTS_CLONED_SKBS) ||
+ 	     !skb_clone_writable(skb, ETH_HLEN) ||
+-	     sdata->crypto_tx_tailroom_needed_cnt))
++	     (may_encrypt && sdata->crypto_tx_tailroom_needed_cnt)))
+ 		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+ 	else if (head_need || tail_need)
+ 		I802_DEBUG_INC(local->tx_expand_skb_head);
+@@ -2387,6 +2387,398 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	return ERR_PTR(ret);
+ }
+ 
++/*
++ * fast-xmit overview
++ *
++ * The core idea of this fast-xmit is to remove per-packet checks by checking
++ * them out of band. ieee80211_check_fast_xmit() implements the out-of-band
++ * checks that are needed to get the sta->fast_tx pointer assigned, after which
++ * much less work can be done per packet. For example, fragmentation must be
++ * disabled or the fast_tx pointer will not be set. All the conditions are seen
++ * in the code here.
++ *
++ * Once assigned, the fast_tx data structure also caches the per-packet 802.11
++ * header and other data to aid packet processing in ieee80211_xmit_fast().
++ *
++ * The most difficult part of this is that when any of these assumptions
++ * change, an external trigger (i.e. a call to ieee80211_clear_fast_xmit(),
++ * ieee80211_check_fast_xmit() or friends) is required to reset the data,
++ * since the per-packet code no longer checks the conditions. This is reflected
++ * by the calls to these functions throughout the rest of the code, and must be
++ * maintained if any of the TX path checks change.
 + */
-+void wil_pmc_alloc(struct wil6210_priv *wil,
-+		   int num_descriptors,
-+		   int descriptor_size)
++
++void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
 +{
-+	u32 i;
-+	struct pmc_ctx *pmc = &wil->pmc;
-+	struct device *dev = wil_to_dev(wil);
-+	struct wmi_pmc_cmd pmc_cmd = {0};
++	struct ieee80211_fast_tx build = {}, *fast_tx, *old;
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_hdr *hdr = (void *)build.hdr;
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	__le16 fc;
 +
-+	mutex_lock(&pmc->lock);
++	if (!(local->hw.flags & IEEE80211_HW_SUPPORT_FAST_XMIT))
++		return;
 +
-+	if (wil_is_pmc_allocated(pmc)) {
-+		/* sanity check */
-+		wil_err(wil, "%s: ERROR pmc is already allocated\n", __func__);
-+		goto no_release_err;
++	ieee80211_clear_fast_xmit(sta);
++
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PS &&
++	    !(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS) &&
++	    sdata->vif.type == NL80211_IFTYPE_STATION)
++		return;
++
++	if (!test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++		return;
++
++	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
++	    test_sta_flag(sta, WLAN_STA_PS_DRIVER) ||
++	    test_sta_flag(sta, WLAN_STA_PS_DELIVER))
++		return;
++
++	if (sdata->noack_map)
++		return;
++
++	/* fast-xmit doesn't handle fragmentation at all */
++	if (local->hw.wiphy->frag_threshold != (u32)-1)
++		return;
++
++	rcu_read_lock();
++	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++	if (!chanctx_conf) {
++		rcu_read_unlock();
++		return;
 +	}
++	build.band = chanctx_conf->def.chan->band;
++	rcu_read_unlock();
 +
-+	pmc->num_descriptors = num_descriptors;
-+	pmc->descriptor_size = descriptor_size;
++	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
 +
-+	wil_dbg_misc(wil, "%s: %d descriptors x %d bytes each\n",
-+		     __func__, num_descriptors, descriptor_size);
-+
-+	/* allocate descriptors info list in pmc context*/
-+	pmc->descriptors = kcalloc(num_descriptors,
-+				  sizeof(struct desc_alloc_info),
-+				  GFP_KERNEL);
-+	if (!pmc->descriptors) {
-+		wil_err(wil, "%s: ERROR allocating pmc skb list\n", __func__);
-+		goto no_release_err;
-+	}
-+
-+	wil_dbg_misc(wil,
-+		     "%s: allocated descriptors info list %p\n",
-+		     __func__, pmc->descriptors);
-+
-+	/* Allocate pring buffer and descriptors.
-+	 * vring->va should be aligned on its size rounded up to power of 2
-+	 * This is granted by the dma_alloc_coherent
-+	 */
-+	pmc->pring_va = dma_alloc_coherent(dev,
-+			sizeof(struct vring_tx_desc) * num_descriptors,
-+			&pmc->pring_pa,
-+			GFP_KERNEL);
-+
-+	wil_dbg_misc(wil,
-+		     "%s: allocated pring %p. %zd x %d = total %zd bytes\n",
-+		     __func__,
-+		     (void *)pmc->pring_pa,
-+		     sizeof(struct vring_tx_desc),
-+		     num_descriptors,
-+		     sizeof(struct vring_tx_desc) * num_descriptors);
-+
-+	if (!pmc->pring_va) {
-+		wil_err(wil, "%s: ERROR allocating pmc pring\n", __func__);
-+		goto release_pmc_skb_list;
-+	}
-+
-+	/* initially, all descriptors are SW owned
-+	 * For Tx, Rx, and PMC, ownership bit is at the same location, thus
-+	 * we can use any
-+	 */
-+	for (i = 0; i < num_descriptors; i++) {
-+		struct vring_tx_desc *_d = &pmc->pring_va[i];
-+		struct vring_tx_desc dd, *d = &dd;
-+		int j = 0;
-+
-+		pmc->descriptors[i].va = dma_alloc_coherent(dev,
-+			descriptor_size,
-+			&pmc->descriptors[i].pa,
-+			GFP_KERNEL);
-+
-+		if (unlikely(!pmc->descriptors[i].va)) {
-+			wil_err(wil,
-+				"%s: ERROR allocating pmc descriptor %d",
-+				__func__, i);
-+			goto release_pmc_skbs;
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_STATION:
++		if (test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++			/* DA SA BSSID */
++			build.da_offs = offsetof(struct ieee80211_hdr, addr1);
++			build.sa_offs = offsetof(struct ieee80211_hdr, addr2);
++			memcpy(hdr->addr3, sdata->u.mgd.bssid, ETH_ALEN);
++			build.hdr_len = 24;
++			break;
 +		}
 +
-+		for (j = 0; j < descriptor_size / sizeof(u32); j++) {
-+			u32 *p = (u32 *)pmc->descriptors[i].va + j;
-+			*p = PCM_DATA_INVALID_DW_VAL | j;
++		if (sdata->u.mgd.use_4addr) {
++			/* non-regular ethertype cannot use the fastpath */
++			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS |
++					  IEEE80211_FCTL_TODS);
++			/* RA TA DA SA */
++			memcpy(hdr->addr1, sdata->u.mgd.bssid, ETH_ALEN);
++			memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
++			build.da_offs = offsetof(struct ieee80211_hdr, addr3);
++			build.sa_offs = offsetof(struct ieee80211_hdr, addr4);
++			build.hdr_len = 30;
++			break;
 +		}
-+
-+		/* configure dma descriptor */
-+		d->dma.addr.addr_low =
-+			cpu_to_le32(lower_32_bits(pmc->descriptors[i].pa));
-+		d->dma.addr.addr_high =
-+			cpu_to_le16((u16)upper_32_bits(pmc->descriptors[i].pa));
-+		d->dma.status = 0; /* 0 = HW_OWNED */
-+		d->dma.length = cpu_to_le16(descriptor_size);
-+		d->dma.d0 = BIT(9) | RX_DMA_D0_CMD_DMA_IT;
-+		*_d = *d;
-+	}
-+
-+	wil_dbg_misc(wil, "%s: allocated successfully\n", __func__);
-+
-+	pmc_cmd.op = WMI_PMC_ALLOCATE;
-+	pmc_cmd.ring_size = cpu_to_le16(pmc->num_descriptors);
-+	pmc_cmd.mem_base = cpu_to_le64(pmc->pring_pa);
-+
-+	wil_dbg_misc(wil, "%s: send WMI_PMC_CMD with ALLOCATE op\n", __func__);
-+	pmc->last_cmd_status = wmi_send(wil,
-+					WMI_PMC_CMDID,
-+					&pmc_cmd,
-+					sizeof(pmc_cmd));
-+	if (pmc->last_cmd_status) {
-+		wil_err(wil,
-+			"%s: WMI_PMC_CMD with ALLOCATE op failed with status %d",
-+			__func__, pmc->last_cmd_status);
-+		goto release_pmc_skbs;
-+	}
-+
-+	mutex_unlock(&pmc->lock);
-+
-+	return;
-+
-+release_pmc_skbs:
-+	wil_err(wil, "%s: exit on error: Releasing skbs...\n", __func__);
-+	for (i = 0; pmc->descriptors[i].va && i < num_descriptors; i++) {
-+		dma_free_coherent(dev,
-+				  descriptor_size,
-+				  pmc->descriptors[i].va,
-+				  pmc->descriptors[i].pa);
-+
-+		pmc->descriptors[i].va = NULL;
-+	}
-+	wil_err(wil, "%s: exit on error: Releasing pring...\n", __func__);
-+
-+	dma_free_coherent(dev,
-+			  sizeof(struct vring_tx_desc) * num_descriptors,
-+			  pmc->pring_va,
-+			  pmc->pring_pa);
-+
-+	pmc->pring_va = NULL;
-+
-+release_pmc_skb_list:
-+	wil_err(wil, "%s: exit on error: Releasing descriptors info list...\n",
-+		__func__);
-+	kfree(pmc->descriptors);
-+	pmc->descriptors = NULL;
-+
-+no_release_err:
-+	pmc->last_cmd_status = -ENOMEM;
-+	mutex_unlock(&pmc->lock);
-+}
-+
-+/**
-+ * Traverse the p-ring and release all buffers.
-+ * At the end release the p-ring memory
-+ */
-+void wil_pmc_free(struct wil6210_priv *wil, int send_pmc_cmd)
-+{
-+	struct pmc_ctx *pmc = &wil->pmc;
-+	struct device *dev = wil_to_dev(wil);
-+	struct wmi_pmc_cmd pmc_cmd = {0};
-+
-+	mutex_lock(&pmc->lock);
-+
-+	pmc->last_cmd_status = 0;
-+
-+	if (!wil_is_pmc_allocated(pmc)) {
-+		wil_dbg_misc(wil, "%s: Error, can't free - not allocated\n",
-+			     __func__);
-+		pmc->last_cmd_status = -EPERM;
-+		mutex_unlock(&pmc->lock);
++		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
++		/* BSSID SA DA */
++		memcpy(hdr->addr1, sdata->u.mgd.bssid, ETH_ALEN);
++		build.da_offs = offsetof(struct ieee80211_hdr, addr3);
++		build.sa_offs = offsetof(struct ieee80211_hdr, addr2);
++		build.hdr_len = 24;
++		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		if (sdata->wdev.use_4addr) {
++			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS |
++					  IEEE80211_FCTL_TODS);
++			/* RA TA DA SA */
++			memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
++			memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
++			build.da_offs = offsetof(struct ieee80211_hdr, addr3);
++			build.sa_offs = offsetof(struct ieee80211_hdr, addr4);
++			build.hdr_len = 30;
++			break;
++		}
++		/* fall through */
++	case NL80211_IFTYPE_AP:
++		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
++		/* DA BSSID SA */
++		build.da_offs = offsetof(struct ieee80211_hdr, addr1);
++		memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
++		build.sa_offs = offsetof(struct ieee80211_hdr, addr3);
++		build.hdr_len = 24;
++		break;
++	default:
++		/* not handled on fast-xmit */
 +		return;
 +	}
 +
-+	if (send_pmc_cmd) {
-+		wil_dbg_misc(wil, "%s: send WMI_PMC_CMD with RELEASE op\n",
-+			     __func__);
-+		pmc_cmd.op = WMI_PMC_RELEASE;
-+		pmc->last_cmd_status =
-+				wmi_send(wil, WMI_PMC_CMDID, &pmc_cmd,
-+					 sizeof(pmc_cmd));
-+		if (pmc->last_cmd_status) {
-+			wil_err(wil,
-+				"%s WMI_PMC_CMD with RELEASE op failed, status %d",
-+				__func__, pmc->last_cmd_status);
-+			/* There's nothing we can do with this error.
-+			 * Normally, it should never occur.
-+			 * Continue to freeing all memory allocated for pmc.
-+			 */
++	if (sta->sta.wme) {
++		build.hdr_len += 2;
++		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
++	}
++
++	build.key = rcu_access_pointer(sta->ptk[sta->ptk_idx]);
++	if (!build.key)
++		build.key = rcu_access_pointer(sdata->default_unicast_key);
++	if (build.key) {
++		bool gen_iv, iv_spc;
++
++		gen_iv = build.key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV;
++		iv_spc = build.key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE;
++
++		/* don't handle software crypto */
++		if (!(build.key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
++			return;
++
++		switch (build.key->conf.cipher) {
++		case WLAN_CIPHER_SUITE_CCMP:
++		case WLAN_CIPHER_SUITE_CCMP_256:
++			/* add fixed key ID */
++			if (gen_iv) {
++				(build.hdr + build.hdr_len)[3] =
++					0x20 | (build.key->conf.keyidx << 6);
++				build.pn_offs = build.hdr_len;
++			}
++			if (gen_iv || iv_spc)
++				build.hdr_len += IEEE80211_CCMP_HDR_LEN;
++			break;
++		case WLAN_CIPHER_SUITE_GCMP:
++		case WLAN_CIPHER_SUITE_GCMP_256:
++			/* add fixed key ID */
++			if (gen_iv) {
++				(build.hdr + build.hdr_len)[3] =
++					0x20 | (build.key->conf.keyidx << 6);
++				build.pn_offs = build.hdr_len;
++			}
++			if (gen_iv || iv_spc)
++				build.hdr_len += IEEE80211_GCMP_HDR_LEN;
++			break;
++		default:
++			/* don't do fast-xmit for these ciphers (yet) */
++			return;
++		}
++
++		fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
++	}
++
++	hdr->frame_control = fc;
++
++	memcpy(build.hdr + build.hdr_len,
++	       rfc1042_header,  sizeof(rfc1042_header));
++	build.hdr_len += sizeof(rfc1042_header);
++
++	fast_tx = kmemdup(&build, sizeof(build), gfp);
++	/* if the kmemdup fails, continue w/o fast_tx */
++	if (!fast_tx)
++		return;
++
++	spin_lock_bh(&sta->lock);
++	/* we might have raced against another call to this function */
++	old = rcu_dereference_protected(sta->fast_tx,
++					lockdep_is_held(&sta->lock));
++	rcu_assign_pointer(sta->fast_tx, fast_tx);
++	spin_unlock_bh(&sta->lock);
++	if (old)
++		kfree_rcu(old, rcu_head);
++}
++
++void ieee80211_check_fast_xmit_all(struct ieee80211_local *local)
++{
++	struct sta_info *sta;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list)
++		ieee80211_check_fast_xmit(sta, GFP_ATOMIC);
++	rcu_read_unlock();
++}
++
++void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	rcu_read_lock();
++
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (sdata != sta->sdata &&
++		    (!sta->sdata->bss || sta->sdata->bss != sdata->bss))
++			continue;
++		ieee80211_check_fast_xmit(sta, GFP_ATOMIC);
++	}
++
++	rcu_read_unlock();
++}
++
++void ieee80211_clear_fast_xmit(struct sta_info *sta)
++{
++	struct ieee80211_fast_tx *fast_tx;
++
++	spin_lock_bh(&sta->lock);
++	fast_tx = rcu_dereference_protected(sta->fast_tx,
++					    lockdep_is_held(&sta->lock));
++	RCU_INIT_POINTER(sta->fast_tx, NULL);
++	spin_unlock_bh(&sta->lock);
++
++	if (fast_tx)
++		kfree_rcu(fast_tx, rcu_head);
++}
++
++static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
++				struct net_device *dev, struct sta_info *sta,
++				struct ieee80211_fast_tx *fast_tx,
++				struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	u16 ethertype = (skb->data[12] << 8) | skb->data[13];
++	int extra_head = fast_tx->hdr_len - (ETH_HLEN - 2);
++	int hw_headroom = sdata->local->hw.extra_tx_headroom;
++	struct ethhdr eth;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (void *)fast_tx->hdr;
++	struct ieee80211_tx_data tx;
++	ieee80211_tx_result r;
++	struct tid_ampdu_tx *tid_tx = NULL;
++	u8 tid = IEEE80211_NUM_TIDS;
++
++	/* control port protocol needs a lot of special handling */
++	if (cpu_to_be16(ethertype) == sdata->control_port_protocol)
++		return false;
++
++	/* only RFC 1042 SNAP */
++	if (ethertype < ETH_P_802_3_MIN)
++		return false;
++
++	/* don't handle TX status request here either */
++	if (skb->sk && skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)
++		return false;
++
++	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
++		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
++		if (tid_tx &&
++		    !test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state))
++			return false;
++	}
++
++	/* after this point (skb is modified) we cannot return false */
++
++	if (skb_shared(skb)) {
++		struct sk_buff *tmp_skb = skb;
++
++		skb = skb_clone(skb, GFP_ATOMIC);
++		kfree_skb(tmp_skb);
++
++		if (!skb)
++			return true;
++	}
++
++	dev->stats.tx_packets++;
++	dev->stats.tx_bytes += skb->len + extra_head;
++	dev->trans_start = jiffies;
++
++	/* will not be crypto-handled beyond what we do here, so use false
++	 * as the may-encrypt argument for the resize to not account for
++	 * more room than we already have in 'extra_head'
++	 */
++	if (unlikely(ieee80211_skb_resize(sdata, skb,
++					  max_t(int, extra_head + hw_headroom -
++						     skb_headroom(skb), 0),
++					  false))) {
++		kfree_skb(skb);
++		return true;
++	}
++
++	memcpy(&eth, skb->data, ETH_HLEN - 2);
++	hdr = (void *)skb_push(skb, extra_head);
++	memcpy(skb->data, fast_tx->hdr, fast_tx->hdr_len);
++	memcpy(skb->data + fast_tx->da_offs, eth.h_dest, ETH_ALEN);
++	memcpy(skb->data + fast_tx->sa_offs, eth.h_source, ETH_ALEN);
++
++	memset(info, 0, sizeof(*info));
++	info->band = fast_tx->band;
++	info->control.vif = &sdata->vif;
++	info->flags = IEEE80211_TX_CTL_FIRST_FRAGMENT |
++		      IEEE80211_TX_CTL_DONTFRAG |
++		      (tid_tx ? IEEE80211_TX_CTL_AMPDU : 0);
++
++	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
++		*ieee80211_get_qos_ctl(hdr) = tid;
++		hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
++	} else {
++		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
++		hdr->seq_ctrl = cpu_to_le16(sdata->sequence_number);
++		sdata->sequence_number += 0x10;
++	}
++
++	sta->tx_msdu[tid]++;
++
++	info->hw_queue = sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
++
++	__skb_queue_head_init(&tx.skbs);
++
++	tx.flags = IEEE80211_TX_UNICAST;
++	tx.local = local;
++	tx.sdata = sdata;
++	tx.sta = sta;
++	tx.key = fast_tx->key;
++
++	if (fast_tx->key)
++		info->control.hw_key = &fast_tx->key->conf;
++
++	if (!(local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)) {
++		tx.skb = skb;
++		r = ieee80211_tx_h_rate_ctrl(&tx);
++		skb = tx.skb;
++		tx.skb = NULL;
++
++		if (r != TX_CONTINUE) {
++			if (r != TX_QUEUED)
++				kfree_skb(skb);
++			return true;
 +		}
 +	}
 +
-+	if (pmc->pring_va) {
-+		size_t buf_size = sizeof(struct vring_tx_desc) *
-+				  pmc->num_descriptors;
++	/* statistics normally done by ieee80211_tx_h_stats (but that
++	 * has to consider fragmentation, so is more complex)
++	 */
++	sta->tx_fragments++;
++	sta->tx_bytes[skb_get_queue_mapping(skb)] += skb->len;
++	sta->tx_packets[skb_get_queue_mapping(skb)]++;
 +
-+		wil_dbg_misc(wil, "%s: free pring va %p\n",
-+			     __func__, pmc->pring_va);
-+		dma_free_coherent(dev, buf_size, pmc->pring_va, pmc->pring_pa);
++	if (fast_tx->pn_offs) {
++		u64 pn;
++		u8 *crypto_hdr = skb->data + fast_tx->pn_offs;
 +
-+		pmc->pring_va = NULL;
-+	} else {
-+		pmc->last_cmd_status = -ENOENT;
-+	}
-+
-+	if (pmc->descriptors) {
-+		int i;
-+
-+		for (i = 0;
-+		     pmc->descriptors[i].va && i < pmc->num_descriptors; i++) {
-+			dma_free_coherent(dev,
-+					  pmc->descriptor_size,
-+					  pmc->descriptors[i].va,
-+					  pmc->descriptors[i].pa);
-+			pmc->descriptors[i].va = NULL;
++		switch (fast_tx->key->conf.cipher) {
++		case WLAN_CIPHER_SUITE_CCMP:
++		case WLAN_CIPHER_SUITE_CCMP_256:
++			pn = atomic64_inc_return(&fast_tx->key->u.ccmp.tx_pn);
++			crypto_hdr[0] = pn;
++			crypto_hdr[1] = pn >> 8;
++			crypto_hdr[4] = pn >> 16;
++			crypto_hdr[5] = pn >> 24;
++			crypto_hdr[6] = pn >> 32;
++			crypto_hdr[7] = pn >> 40;
++			break;
++		case WLAN_CIPHER_SUITE_GCMP:
++		case WLAN_CIPHER_SUITE_GCMP_256:
++			pn = atomic64_inc_return(&fast_tx->key->u.gcmp.tx_pn);
++			crypto_hdr[0] = pn;
++			crypto_hdr[1] = pn >> 8;
++			crypto_hdr[4] = pn >> 16;
++			crypto_hdr[5] = pn >> 24;
++			crypto_hdr[6] = pn >> 32;
++			crypto_hdr[7] = pn >> 40;
++			break;
 +		}
-+		wil_dbg_misc(wil, "%s: free descriptor info %d/%d\n",
-+			     __func__, i, pmc->num_descriptors);
-+		wil_dbg_misc(wil,
-+			     "%s: free pmc descriptors info list %p\n",
-+			     __func__, pmc->descriptors);
-+		kfree(pmc->descriptors);
-+		pmc->descriptors = NULL;
-+	} else {
-+		pmc->last_cmd_status = -ENOENT;
 +	}
 +
-+	mutex_unlock(&pmc->lock);
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		sdata = container_of(sdata->bss,
++				     struct ieee80211_sub_if_data, u.ap);
++
++	__skb_queue_tail(&tx.skbs, skb);
++	ieee80211_tx_frags(local, &sdata->vif, &sta->sta, &tx.skbs, false);
++	return true;
 +}
 +
-+/**
-+ * Status of the last operation requested via debugfs: alloc/free/read.
-+ * 0 - success or negative errno
-+ */
-+int wil_pmc_last_cmd_status(struct wil6210_priv *wil)
-+{
-+	wil_dbg_misc(wil, "%s: status %d\n", __func__,
-+		     wil->pmc.last_cmd_status);
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags)
+@@ -2406,6 +2798,16 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		goto out;
+ 	}
+ 
++	if (!IS_ERR_OR_NULL(sta)) {
++		struct ieee80211_fast_tx *fast_tx;
 +
-+	return wil->pmc.last_cmd_status;
-+}
++		fast_tx = rcu_dereference(sta->fast_tx);
 +
-+/**
-+ * Read from required position up to the end of current descriptor,
-+ * depends on descriptor size configured during alloc request.
-+ */
-+ssize_t wil_pmc_read(struct file *filp, char __user *buf, size_t count,
-+		     loff_t *f_pos)
-+{
-+	struct wil6210_priv *wil = filp->private_data;
-+	struct pmc_ctx *pmc = &wil->pmc;
-+	size_t retval = 0;
-+	unsigned long long idx;
-+	loff_t offset;
-+	size_t pmc_size = pmc->descriptor_size * pmc->num_descriptors;
-+
-+	mutex_lock(&pmc->lock);
-+
-+	if (!wil_is_pmc_allocated(pmc)) {
-+		wil_err(wil, "%s: error, pmc is not allocated!\n", __func__);
-+		pmc->last_cmd_status = -EPERM;
-+		mutex_unlock(&pmc->lock);
-+		return -EPERM;
++		if (fast_tx &&
++		    ieee80211_xmit_fast(sdata, dev, sta, fast_tx, skb))
++			goto out;
 +	}
 +
-+	wil_dbg_misc(wil,
-+		     "%s: size %u, pos %lld\n",
-+		     __func__, (unsigned)count, *f_pos);
-+
-+	pmc->last_cmd_status = 0;
-+
-+	idx = *f_pos;
-+	do_div(idx, pmc->descriptor_size);
-+	offset = *f_pos - (idx * pmc->descriptor_size);
-+
-+	if (*f_pos >= pmc_size) {
-+		wil_dbg_misc(wil, "%s: reached end of pmc buf: %lld >= %u\n",
-+			     __func__, *f_pos, (unsigned)pmc_size);
-+		pmc->last_cmd_status = -ERANGE;
-+		goto out;
-+	}
-+
-+	wil_dbg_misc(wil,
-+		     "%s: read from pos %lld (descriptor %llu, offset %llu) %zu bytes\n",
-+		     __func__, *f_pos, idx, offset, count);
-+
-+	/* if no errors, return the copied byte count */
-+	retval = simple_read_from_buffer(buf,
-+					 count,
-+					 &offset,
-+					 pmc->descriptors[idx].va,
-+					 pmc->descriptor_size);
-+	*f_pos += retval;
-+out:
-+	mutex_unlock(&pmc->lock);
-+
-+	return retval;
-+}
-+
-+loff_t wil_pmc_llseek(struct file *filp, loff_t off, int whence)
-+{
-+	loff_t newpos;
-+	struct wil6210_priv *wil = filp->private_data;
-+	struct pmc_ctx *pmc = &wil->pmc;
-+	size_t pmc_size = pmc->descriptor_size * pmc->num_descriptors;
-+
-+	switch (whence) {
-+	case 0: /* SEEK_SET */
-+		newpos = off;
-+		break;
-+
-+	case 1: /* SEEK_CUR */
-+		newpos = filp->f_pos + off;
-+		break;
-+
-+	case 2: /* SEEK_END */
-+		newpos = pmc_size;
-+		break;
-+
-+	default: /* can't happen */
-+		return -EINVAL;
-+	}
-+
-+	if (newpos < 0)
-+		return -EINVAL;
-+	if (newpos > pmc_size)
-+		newpos = pmc_size;
-+
-+	filp->f_pos = newpos;
-+
-+	return newpos;
-+}
-diff --git a/drivers/net/wireless/ath/wil6210/pmc.h b/drivers/net/wireless/ath/wil6210/pmc.h
-new file mode 100644
-index 0000000..bebc8d5
---- /dev/null
-+++ b/drivers/net/wireless/ath/wil6210/pmc.h
-@@ -0,0 +1,27 @@
-+/*
-+ * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/types.h>
-+
-+#define PCM_DATA_INVALID_DW_VAL (0xB0BA0000)
-+
-+void wil_pmc_init(struct wil6210_priv *wil);
-+void wil_pmc_alloc(struct wil6210_priv *wil,
-+		   int num_descriptors, int descriptor_size);
-+void wil_pmc_free(struct wil6210_priv *wil, int send_pmc_cmd);
-+int wil_pmc_last_cmd_status(struct wil6210_priv *wil);
-+ssize_t wil_pmc_read(struct file *, char __user *, size_t, loff_t *);
-+loff_t wil_pmc_llseek(struct file *filp, loff_t off, int whence);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index abb2080..9d74bd8 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -21,6 +21,7 @@
- #include <linux/wireless.h>
- #include <net/cfg80211.h>
- #include <linux/timex.h>
-+#include <linux/types.h>
- #include "wil_platform.h"
- 
- extern bool no_fw_recovery;
-@@ -527,6 +528,17 @@ struct wil_probe_client_req {
- 	u8 cid;
- };
- 
-+struct pmc_ctx {
-+	/* alloc, free, and read operations must own the lock */
-+	struct mutex		lock;
-+	struct vring_tx_desc	*pring_va;
-+	dma_addr_t		pring_pa;
-+	struct desc_alloc_info  *descriptors;
-+	int			last_cmd_status;
-+	int			num_descriptors;
-+	int			descriptor_size;
-+};
-+
- struct wil6210_priv {
- 	struct pci_dev *pdev;
- 	int n_msi;
-@@ -611,6 +623,8 @@ struct wil6210_priv {
- 
- 	void *platform_handle;
- 	struct wil_platform_ops platform_ops;
-+
-+	struct pmc_ctx pmc;
- };
- 
- #define wil_to_wiphy(i) (i->wdev->wiphy)
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index b290553..24c253d 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -836,6 +836,21 @@ struct wmi_temp_sense_cmd {
- } __packed;
- 
- /*
-+ * WMI_PMC_CMDID
-+ */
-+enum wmi_pmc_op_e {
-+	WMI_PMC_ALLOCATE = 0,
-+	WMI_PMC_RELEASE = 1,
-+};
-+
-+struct wmi_pmc_cmd {
-+	u8 op;		/* enum wmi_pmc_cmd_op_type */
-+	u8 reserved;
-+	__le16 ring_size;
-+	__le64 mem_base;
-+} __packed;
-+
-+/*
-  * WMI Events
-  */
- 
+ 	skb = ieee80211_build_hdr(sdata, skb, info_flags, sta);
+ 	if (IS_ERR(skb))
+ 		goto out;
 -- 
-2.1.0
+2.1.4
 
