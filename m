@@ -1,55 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:36595 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086AbbD3QL6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2015 12:11:58 -0400
-Received: by obbeb7 with SMTP id eb7so47947695obb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2015 09:11:57 -0700 (PDT)
-Message-ID: <5542544A.40102@lwfinger.net> (sfid-20150430_181223_773705_F8088013)
-Date: Thu, 30 Apr 2015 11:11:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Source of Reason 7 disconnects
-References: <55417E0C.2010206@lwfinger.net> <0BA3FCBA62E2DC44AF3030971E174FB31B6FB273@hasmsx107.ger.corp.intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B6FB273@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:47616 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754583AbbDQPQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Apr 2015 11:16:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 04/11] mac80211: extend fast-xmit for more ciphers
+Date: Fri, 17 Apr 2015 17:15:44 +0200
+Message-Id: <1429283751-5104-4-git-send-email-johannes@sipsolutions.net> (sfid-20150417_171610_022707_0B9143D5)
+In-Reply-To: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
+References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/30/2015 12:57 AM, Grumbach, Emmanuel wrote:
->> Emmanuel and Johannes,
->>
->> I am trying to fix "Reason: 7=CLASS3_FRAME_FROM_NONASSOC_STA"
->> disconnections for the Realtek drivers. When I did a search for similar
->> examples from other drivers, I found some forum entries for the same
->> disconnects happening on Intel
->> 7260 hardware. It appears that the problem was fixed in the 3.16 timeframe.
->> I looked through the iwlwifi commits from that time, but I failed to see any
->> patches that appeared to be appropriate.
->>
->> Do either of you happen to remember what was needed to fix the problem?
->> So far, I have determined that disabling power save helps, but it is not the
->> complete solution.
->>
->
-> Oh yeah - this one is annoying. Thing is I don't remember anything specific.
-> We had quite a few issues with our firmware that was going deaf for a while.
-> That made the AP deauth us, but we couldn't even hear that. So when would
-> transmit and assuming the receive path was working again, the AP was kicking
-> us out because from its POV, we weren't associated anymore.
-> I am sorry I can't point to any commit, but the problem was that we actually were
-> disconnected, but didn't know about that.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks for the reply. As far as I can tell, we don't get disconnected without 
-knowing about it, but only when the solution is found will we know for sure. 
-Thus far, I do not have any over-the-air captures to investigate.
+When crypto is offloaded then in some cases it's all handled
+by the device, and in others only some space for the IV must
+be reserved in the frame. Handle both of these cases in the
+fast-xmit path, up to a limit of 18 bytes of space for IVs.
 
-Thanks again,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.h | 10 +++++++---
+ net/mac80211/tx.c       | 40 +++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 44 insertions(+), 6 deletions(-)
 
-Larry
-
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index e365f6213702..1d4c73818c54 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -239,6 +239,8 @@ struct sta_ampdu_mlme {
+ /* Value to indicate no TID reservation */
+ #define IEEE80211_TID_UNRESERVED	0xff
+ 
++#define IEEE80211_FAST_XMIT_MAX_IV	18
++
+ /**
+  * struct ieee80211_fast_tx - TX fastpath information
+  * @key: key to use for hw crypto
+@@ -250,15 +252,17 @@ struct sta_ampdu_mlme {
+  * @band: band this will be transmitted on, for tx_info
+  * @rcu_head: RCU head to free this struct
+  *
+- * Try to keep this struct small so it fits into a single cacheline.
++ * This struct is small enough so that the common case (maximum crypto
++ * header length of 8 like for CCMP/GCMP) fits into a single 64-byte
++ * cache line.
+  */
+ struct ieee80211_fast_tx {
+ 	struct ieee80211_key *key;
+-	u8 hdr[30 + 2 + IEEE80211_CCMP_HDR_LEN +
+-	       sizeof(rfc1042_header)];
+ 	u8 hdr_len;
+ 	u8 sa_offs, da_offs, pn_offs;
+ 	u8 band;
++	u8 hdr[30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
++	       sizeof(rfc1042_header)];
+ 
+ 	struct rcu_head rcu_head;
+ };
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 86d64bd11c01..02aafe1cc121 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2519,10 +2519,11 @@ void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+ 	if (!build.key)
+ 		build.key = rcu_access_pointer(sdata->default_unicast_key);
+ 	if (build.key) {
+-		bool gen_iv, iv_spc;
++		bool gen_iv, iv_spc, mmic;
+ 
+ 		gen_iv = build.key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV;
+ 		iv_spc = build.key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE;
++		mmic = build.key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC;
+ 
+ 		/* don't handle software crypto */
+ 		if (!(build.key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+@@ -2551,9 +2552,42 @@ void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+ 			if (gen_iv || iv_spc)
+ 				build.hdr_len += IEEE80211_GCMP_HDR_LEN;
+ 			break;
+-		default:
+-			/* don't do fast-xmit for these ciphers (yet) */
++		case WLAN_CIPHER_SUITE_TKIP:
++			/* cannot handle MMIC or IV generation in xmit-fast */
++			if (mmic || gen_iv)
++				return;
++			if (iv_spc)
++				build.hdr_len += IEEE80211_TKIP_IV_LEN;
++			break;
++		case WLAN_CIPHER_SUITE_WEP40:
++		case WLAN_CIPHER_SUITE_WEP104:
++			/* cannot handle IV generation in fast-xmit */
++			if (gen_iv)
++				return;
++			if (iv_spc)
++				build.hdr_len += IEEE80211_WEP_IV_LEN;
++			break;
++		case WLAN_CIPHER_SUITE_AES_CMAC:
++		case WLAN_CIPHER_SUITE_BIP_CMAC_256:
++		case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++		case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++			WARN(1,
++			     "management cipher suite 0x%x enabled for data\n",
++			     build.key->conf.cipher);
+ 			return;
++		default:
++			/* we don't know how to generate IVs for this at all */
++			if (WARN_ON(gen_iv))
++				return;
++			/* pure hardware keys are OK, of course */
++			if (!(build.key->flags & KEY_FLAG_CIPHER_SCHEME))
++				break;
++			/* cipher scheme might require space allocation */
++			if (iv_spc &&
++			    build.key->conf.iv_len > IEEE80211_FAST_XMIT_MAX_IV)
++				return;
++			if (iv_spc)
++				build.hdr_len += build.key->conf.iv_len;
+ 		}
+ 
+ 		fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+-- 
+2.1.4
 
