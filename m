@@ -1,52 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38653 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751396AbbDOJCK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2015 05:02:10 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "quozl@laptop.org" <quozl@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Date: Wed, 15 Apr 2015 02:01:44 -0700
-Subject: RE: [PATCH] mwifiex: increase number of probes for specific SSID
- scans
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16DFC138@SC-VEXCH1.marvell.com> (sfid-20150415_110215_682682_D608A456)
-References: <1429022956-12016-1-git-send-email-akarwar@marvell.com>
- <20150414203724.GB32455@us.netrek.org>
-In-Reply-To: <20150414203724.GB32455@us.netrek.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:36679 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455AbbDTXbZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2015 19:31:25 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jani Nikula <jani.nikula@intel.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [PATCH v1 3/6] kernel/params.c: generalize bool_enable_only
+Date: Mon, 20 Apr 2015 16:30:34 -0700
+Message-Id: <1429572637-30234-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20150421_013248_325923_12DB2F66)
+In-Reply-To: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-> 
-> On Tue, Apr 14, 2015 at 07:49:16AM -0700, Amitkumar Karwar wrote:
-> > It's been observed that device sometimes fails to find AP configured
-> > in hidden SSID in busy environment. We will increase number of probes
-> > for specific SSID scans for getting better results.
-> 
-> I don't like this.  It worries me.  What is the underlying cause?  If it
-> is something other than collision, why?
-> 
+This takes out the bool_enable_only implementation from
+the module loading code and generalizes it so that others
+can make use of it.
 
-Idea was to have better chance of finding an AP configured with hidden SSID when environment is busy by sending multiple probe requests.
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jani Nikula <jani.nikula@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: cocci@systeme.lip6.fr
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ include/linux/moduleparam.h |  6 ++++++
+ kernel/module.c             | 31 -------------------------------
+ kernel/params.c             | 30 ++++++++++++++++++++++++++++++
+ 3 files changed, 36 insertions(+), 31 deletions(-)
 
-> In scenario of tens to a hundred laptops scanning for specific SSID for
-> ad-hoc in the Sugar desktop environment, this patch may decrease free
-> air time considerably.
+diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
+index 5d0f4d9..7e00799 100644
+--- a/include/linux/moduleparam.h
++++ b/include/linux/moduleparam.h
+@@ -427,6 +427,12 @@ extern int param_set_bool(const char *val, const struct kernel_param *kp);
+ extern int param_get_bool(char *buffer, const struct kernel_param *kp);
+ #define param_check_bool(name, p) __param_check(name, p, bool)
+ 
++extern const struct kernel_param_ops param_ops_bool_enable_only;
++extern int param_set_bool_enable_only(const char *val,
++				      const struct kernel_param *kp);
++/* getter is the same as for the regular bool */
++#define param_check_bool_enable_only param_check_bool
++
+ extern const struct kernel_param_ops param_ops_invbool;
+ extern int param_set_invbool(const char *val, const struct kernel_param *kp);
+ extern int param_get_invbool(char *buffer, const struct kernel_param *kp);
+diff --git a/kernel/module.c b/kernel/module.c
+index de12c4a..43a1ef3 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -111,37 +111,6 @@ static bool sig_enforce = true;
+ #else
+ static bool sig_enforce = false;
+ 
+-static int param_set_bool_enable_only(const char *val,
+-				      const struct kernel_param *kp)
+-{
+-	int err = 0;
+-	bool new_value;
+-	bool orig_value = *(bool *)kp->arg;
+-	struct kernel_param dummy_kp = *kp;
+-
+-	dummy_kp.arg = &new_value;
+-
+-	err = param_set_bool(val, &dummy_kp);
+-	if (err)
+-		return err;
+-
+-	/* Don't let them unset it once it's set! */
+-	if (!new_value && orig_value)
+-		return -EROFS;
+-
+-	if (new_value)
+-		err = param_set_bool(val, kp);
+-
+-	return err;
+-}
+-
+-static const struct kernel_param_ops param_ops_bool_enable_only = {
+-	.flags = KERNEL_PARAM_OPS_FL_NOARG,
+-	.set = param_set_bool_enable_only,
+-	.get = param_get_bool,
+-};
+-#define param_check_bool_enable_only param_check_bool
+-
+ module_param(sig_enforce, bool_enable_only, 0644);
+ #endif /* !CONFIG_MODULE_SIG_FORCE */
+ #endif /* CONFIG_MODULE_SIG */
+diff --git a/kernel/params.c b/kernel/params.c
+index b7635c0..324624e 100644
+--- a/kernel/params.c
++++ b/kernel/params.c
+@@ -335,6 +335,36 @@ const struct kernel_param_ops param_ops_bool = {
+ };
+ EXPORT_SYMBOL(param_ops_bool);
+ 
++int param_set_bool_enable_only(const char *val, const struct kernel_param *kp)
++{
++	int err = 0;
++	bool new_value;
++	bool orig_value = *(bool *)kp->arg;
++	struct kernel_param dummy_kp = *kp;
++
++	dummy_kp.arg = &new_value;
++
++	err = param_set_bool(val, &dummy_kp);
++	if (err)
++		return err;
++
++	/* Don't let them unset it once it's set! */
++	if (!new_value && orig_value)
++		return -EROFS;
++
++	if (new_value)
++		err = param_set_bool(val, kp);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(param_set_bool_enable_only);
++
++const struct kernel_param_ops param_ops_bool_enable_only = {
++	.flags = KERNEL_PARAM_OPS_FL_NOARG,
++	.set = param_set_bool_enable_only,
++	.get = param_get_bool,
++};
++
+ /* This one must be bool. */
+ int param_set_invbool(const char *val, const struct kernel_param *kp)
+ {
+-- 
+2.3.2.209.gd67f9d5.dirty
 
-You are right. Free air time will be decreased. We have discarded this approach considering its consequences. 
-
-> 
-> Should the number of probes be a choice of user space?
-> 
-
-Do you see any potential use case for multiple probe requests? 
-I think, we should stick to current implementation of sending 1 probe request.
-
-Regards,
-Amitkumar
