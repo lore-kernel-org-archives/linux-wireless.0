@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59277 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753345AbbDGQIV (ORCPT
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:37423 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754707AbbDTIZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 12:08:21 -0400
-Message-ID: <552400F4.5010701@candelatech.com> (sfid-20150407_180824_557093_A9ED31C2)
-Date: Tue, 07 Apr 2015 09:08:20 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 20 Apr 2015 04:25:20 -0400
+Received: by igblo3 with SMTP id lo3so54163387igb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2015 01:25:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Ilan Peer <ilan.peer@intel.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211_hwsim: Set VHT capabilities only for the
- 5.2 GHz band
-References: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
-In-Reply-To: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
+References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
+Date: Mon, 20 Apr 2015 11:25:20 +0300
+Message-ID: <CAB3XZEeraicUA4Vo4tT93yFn7uN4-FapHOu_5wVutBvtJZP+jQ@mail.gmail.com> (sfid-20150420_102534_975801_8A6FAA58)
+Subject: Re: [PATCH 01/11] mac80211: add TX fastpath
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/2015 09:05 AM, Ilan Peer wrote:
-> Previously, VHT capabilities and supported MCSs where set for all
-> bands, although VHT is only allowed on 5.2 GHz band. Fix it.
+On Fri, Apr 17, 2015 at 6:15 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> In order to speed up mac80211's TX path, add the "fast-xmit" cache
+> that will cache the data frame 802.11 header and other data to be
+> able to build the frame more quickly. This cache is rebuilt when
+> external triggers imply changes, but a lot of the checks done per
+> packet today are simplified away to the check for the cache.
+>
+> There's also a more detailed description in the code.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+[...]
 
-I saw a patch on ath10k list that enabled VHT for 2.4Ghz for
-that driver/firmware...are you sure it is absolutely not supported?
+> +       build.key = rcu_access_pointer(sta->ptk[sta->ptk_idx]);
+> +       if (!build.key)
+> +               build.key = rcu_access_pointer(sdata->default_unicast_key);
+don't you need rcu_dereference here? (and you don't seem to be inside
+rcu section here)
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Eliad.
