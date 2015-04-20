@@ -1,78 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:33729 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbbD2XwQ (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34914 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbbDTXbW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 19:52:16 -0400
-Received: by igbpi8 with SMTP id pi8so983519igb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 16:52:16 -0700 (PDT)
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	adrian.chadd@gmail.com, Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 8/11] ath9k: Skip FFT reports if we are out of output buffers
-Date: Wed, 29 Apr 2015 23:51:19 +0000
-Message-Id: <1430351482-59418-9-git-send-email-mickflemm@gmail.com> (sfid-20150430_015221_221094_1C6D4FD7)
-In-Reply-To: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
-References: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
+	Mon, 20 Apr 2015 19:31:22 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jani Nikula <jani.nikula@intel.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [PATCH v1 2/6] kernel/module.c: use generic module param operaters for sig_enforce
+Date: Mon, 20 Apr 2015 16:30:33 -0700
+Message-Id: <1429572637-30234-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150421_013233_832745_F6F31600)
+In-Reply-To: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no reason to keep processing FFT reports if there is no
-space left on the relayfs buffers for the results. This saves
-lots of CPU cycles, especially on normal (non-short) reports.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+We're directly checking and modifying sig_enforce when needed instead
+of using the generic helpers. This prevents us from generalizing this
+helper so that others can use it. Use indirect helpers to allow us
+to generalize this code a bit and to make it a bit more clear what
+this is doing.
+
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jani Nikula <jani.nikula@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: cocci@systeme.lip6.fr
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/net/wireless/ath/ath9k/common-spectral.c | 28 ++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ kernel/module.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
-index b8682bc..4ab08ed 100644
---- a/drivers/net/wireless/ath/ath9k/common-spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
-@@ -473,6 +473,24 @@ ath_cmn_copy_fft_frame(u8 *in, u8 *out, int sample_len, int sample_bytes)
- 	}
+diff --git a/kernel/module.c b/kernel/module.c
+index 42a1d2a..de12c4a 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -114,23 +114,25 @@ static bool sig_enforce = false;
+ static int param_set_bool_enable_only(const char *val,
+ 				      const struct kernel_param *kp)
+ {
+-	int err;
+-	bool test;
++	int err = 0;
++	bool new_value;
++	bool orig_value = *(bool *)kp->arg;
+ 	struct kernel_param dummy_kp = *kp;
+ 
+-	dummy_kp.arg = &test;
++	dummy_kp.arg = &new_value;
+ 
+ 	err = param_set_bool(val, &dummy_kp);
+ 	if (err)
+ 		return err;
+ 
+ 	/* Don't let them unset it once it's set! */
+-	if (!test && sig_enforce)
++	if (!new_value && orig_value)
+ 		return -EROFS;
+ 
+-	if (test)
+-		sig_enforce = true;
+-	return 0;
++	if (new_value)
++		err = param_set_bool(val, kp);
++
++	return err;
  }
  
-+static int
-+ath_cmn_is_fft_buf_full(struct ath_spec_scan_priv *spec_priv)
-+{
-+	int i = 0;
-+	int ret = 0;
-+	struct rchan *rc = spec_priv->rfs_chan_spec_scan;
-+
-+	for_each_online_cpu(i)
-+		ret += relay_buf_full(rc->buf[i]);
-+
-+	i = num_online_cpus();
-+
-+	if (ret == i)
-+		return 1;
-+	else
-+		return 0;
-+}
-+
- /* returns 1 if this was a spectral frame, even if not handled. */
- int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_hdr *hdr,
- 		    struct ath_rx_status *rs, u64 tsf)
-@@ -509,6 +527,16 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
- 	if (!(radar_info->pulse_bw_info & SPECTRAL_SCAN_BITMASK))
- 		return 0;
- 
-+	/* Output buffers are full, no need to process anything
-+	 * since there is no space to put the result anyway
-+	 */
-+	ret = ath_cmn_is_fft_buf_full(spec_priv);
-+	if (ret == 1) {
-+		ath_dbg(common, SPECTRAL_SCAN, "FFT report ignored, no space "
-+						"left on output buffers\n");
-+		return 1;
-+	}
-+
- 	chan_type = cfg80211_get_chandef_type(&common->hw->conf.chandef);
- 	if ((chan_type == NL80211_CHAN_HT40MINUS) ||
- 	    (chan_type == NL80211_CHAN_HT40PLUS)) {
+ static const struct kernel_param_ops param_ops_bool_enable_only = {
 -- 
-2.3.5
+2.3.2.209.gd67f9d5.dirty
 
