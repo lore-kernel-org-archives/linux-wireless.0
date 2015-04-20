@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60464 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576AbbDEXXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Apr 2015 19:23:13 -0400
-Date: Mon, 6 Apr 2015 01:23:09 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	kernel-janitors@vger.kernel.org,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 16/16] NFC: pn533: fix error return code
-Message-ID: <20150405232309.GC12567@ribalta.home> (sfid-20150406_012338_223830_5493E267)
-References: <1428235596-4757-1-git-send-email-Julia.Lawall@lip6.fr>
- <1428235596-4757-17-git-send-email-Julia.Lawall@lip6.fr>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:47230 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753688AbbDTIam (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2015 04:30:42 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/4] brcm: firmware for brcmfmac driver
+Date: Mon, 20 Apr 2015 10:30:22 +0200
+Message-ID: <1429518626-15321-1-git-send-email-arend@broadcom.com> (sfid-20150420_103046_205373_A7E6F218)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428235596-4757-17-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+Couple of new firmware files for devices added to brcmfmac and
+replacing a firmware file that turned out to be not working on
+the intended device.
 
-On Sun, Apr 05, 2015 at 02:06:36PM +0200, Julia Lawall wrote:
-> Return a negative error code on failure.
-> 
-> A simplified version of the semantic match that finds this problem is as
-> follows: (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @@
-> identifier ret; expression e1,e2;
-> @@
-> (
-> if (\(ret < 0\|ret != 0\))
->  { ... return ret; }
-> |
-> ret = 0
-> )
-> ... when != ret = e1
->     when != &ret
-> *if(...)
-> {
->   ... when != ret = e2
->       when forall
->  return ret;
-> }
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> ---
->  drivers/nfc/pn533.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-Applied, thanks.
+This patch applies to the master branch of the linux-firmware
+repository on top of commit ec89525b2ab6 ("firmware: WHENCE: note
+nvidia xusb.bin firmware versions").
 
-Cheers,
-Samuel.
+Arend van Spriel (4):
+  brcm: add firmware for BCM43569 USB device
+  brcm: add firmware for BCM43570 PCIe device
+  brcm: replace non-working firmware for BCM4339
+  brcm: add firmware for BCM4324(1) B5 chipset
+
+ WHENCE                        |   2 ++
+ brcm/brcmfmac43241b5-sdio.bin | Bin 0 -> 408682 bytes
+ brcm/brcmfmac4339-sdio.bin    | Bin 569291 -> 493599 bytes
+ brcm/brcmfmac43569.bin        | Bin 0 -> 557056 bytes
+ brcm/brcmfmac43570-pcie.bin   | Bin 0 -> 550333 bytes
+ 5 files changed, 2 insertions(+)
+ create mode 100644 brcm/brcmfmac43241b5-sdio.bin
+ rewrite brcm/brcmfmac4339-sdio.bin (91%)
+ create mode 100644 brcm/brcmfmac43569.bin
+ create mode 100644 brcm/brcmfmac43570-pcie.bin
+
+-- 
+1.9.1
+
