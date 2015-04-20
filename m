@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42703 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752166AbbDUHHC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2015 03:07:02 -0400
-Message-ID: <1429600019.2045.2.camel@sipsolutions.net> (sfid-20150421_090707_353837_82ABE68B)
-Subject: Re: [PATCH 01/11] mac80211: add TX fastpath
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 21 Apr 2015 09:06:59 +0200
-In-Reply-To: <CAB3XZEeTCSK2qpyBqBXJLyJm_SES4RncUr0AoZLtqqvCz9BprQ@mail.gmail.com> (sfid-20150421_085437_370250_F0858165)
-References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEeraicUA4Vo4tT93yFn7uN4-FapHOu_5wVutBvtJZP+jQ@mail.gmail.com>
-	 <1429519633.2439.11.camel@sipsolutions.net>
-	 <CAB3XZEeTCSK2qpyBqBXJLyJm_SES4RncUr0AoZLtqqvCz9BprQ@mail.gmail.com>
-	 (sfid-20150421_085437_370250_F0858165)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17842 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705AbbDTUQi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2015 16:16:38 -0400
+Message-ID: <55355E9D.30209@broadcom.com> (sfid-20150420_221641_319807_82AC59CB)
+Date: Mon, 20 Apr 2015 22:16:29 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Hante Meuleman <meuleman@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	mailinglist <openwrt-devel@lists.openwrt.org>,
+	Florian Fainelli <fainelli@broadcom.com>
+Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices
+ in nvram.
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-11-git-send-email-arend@broadcom.com>	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com>	<CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>	<5530C940.6010407@broadcom.com>	<CACna6ryZYvVN_svcv3W+4F6yiJf2QYHxYD-VXhGcUUTAHZDYSg@mail.gmail.com>	<55353364.3050101@broadcom.com> <CACna6ryb_v2Jw1DOudhXvAoQAbjBvdjb_UbdSG_PAC0A=5U9cA@mail.gmail.com>
+In-Reply-To: <CACna6ryb_v2Jw1DOudhXvAoQAbjBvdjb_UbdSG_PAC0A=5U9cA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-04-21 at 09:54 +0300, Eliad Peller wrote:
+On 04/20/15 20:49, Rafał Miłecki wrote:
+> On 20 April 2015 at 19:12, Arend van Spriel<arend@broadcom.com>  wrote:
+>> On 04/20/15 13:26, Rafał Miłecki wrote:
+>>>
+>>> On 17 April 2015 at 10:50, Arend van Spriel<arend@broadcom.com>   wrote:
+>>>> Another option is to add the parsing stuff in that nvram code and have an
+>>>> api to get the appropriate portion based on pcie domain and bus number as
+>>>> used in brcmf_fw_get_firmwares_pcie(). However, I would prefer to have
+>>>> this
+>>>> in the driver and not in arch specific code as there may be other
+>>>> platforms
+>>>> like our set-top boxes needing this.
+>>>
+>>>
+>>> This is some plan for the future I was lacking from the beginning. It
+>>> makes things more clear now, thanks.
+>>
+>> You're welcome. Do you want to see this clarification in the commit message?
+>
+> I don't really need that, I'm leaving it up to you :)
+>
+> The last remaining question from me is if  about this NVRAM validation
+> function (if it exists).
 
-> > Hey, somebody is reviewing my patches :-)
-> >
-> i didn't delve into them too much, but generally they look good :)
+Ok. I can try to answer that one. The nvram parsing code in firmware.c 
+intends to do just that. So apart from stripping comments and whitespace 
+it validates each line and gives off a warning if a wrongly formatted 
+entry is found.
 
-:)
-
-> > To fix that, I think I can hold the lock longer, so that the lifetime of
-> > the key and the fast_tx pointer are more closely correlated. If I
-> > acquire the spinlock before checking for the key, then the CPU that
-> > invalidates the key pointer cannot race in this way with another caller,
-> > since the key pointer would (for this purpose) be protected by the lock.
-> > Then either the CPU that deleted the key will have to wait (while the
-> > key is still pretty much valid) and then will overwrite the fast_tx w/o
-> > the key, or the other CPU will have to wait and will find the key
-> > pointer changed/NULL already.
-> >
-> > Right? what do you think?
-> 
-> sounds correct.
-> i guess taking rcu_lock is a valid option as well (for about the same
-> reasons). so either one of them should be good.
-
-I don't think that would be correct - that just prevents the key from
-being freed while we hold it, whereas here we actually need to prevent
-the key from being accessed.
-
-Anyway - I've done a bit more testing on this and will likely merge it
-(the fixed version of course) in the next couple of days.
-
-johannes
-
+Regards,
+Arend
