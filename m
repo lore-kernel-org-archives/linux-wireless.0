@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28313 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754752AbbDNSKv (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:32991 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247AbbDTJ1E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 14:10:51 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 04/10] brcmfmac: make scheduled scan support conditional
-Date: Tue, 14 Apr 2015 20:10:27 +0200
-Message-ID: <1429035033-14076-5-git-send-email-arend@broadcom.com> (sfid-20150414_201116_948359_D74A8E92)
-In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 20 Apr 2015 05:27:04 -0400
+Received: by lbbzk7 with SMTP id zk7so125832231lbb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2015 02:27:03 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix qca61x4 hw2.1 support
+Date: Mon, 20 Apr 2015 09:20:41 +0000
+Message-Id: <1429521641-21993-1-git-send-email-michal.kazior@tieto.com> (sfid-20150420_112712_026900_3180F6E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The scheduled scan support depends on firmware supporting the PNO
-feature. This feature is optional so add a feature flag for this
-in the driver and announce scheduled scan support accordingly.
+During initialization firmware does some sort of
+memory switch between DRAM and IRAM. If
+configuration value for bank switching isn't
+correct device crashes during init.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The new value prevents firmware 11.0.0.302 (and
+possibly others) for qca61x4 hw2.1 from crashing
+during init.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 3 ++-
- drivers/net/wireless/brcm80211/brcmfmac/feature.c  | 1 +
- drivers/net/wireless/brcm80211/brcmfmac/feature.h  | 2 ++
- 3 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 84d9ab1..6fe2b75 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -5783,7 +5783,8 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
- 	wiphy->mgmt_stypes = brcmf_txrx_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
--	brcmf_wiphy_pno_params(wiphy);
-+	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO))
-+		brcmf_wiphy_pno_params(wiphy);
- 
- 	/* vendor commands/events support */
- 	wiphy->vendor_commands = brcmf_vendor_cmds;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-index 7748a1c..2c5fad3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-@@ -124,6 +124,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 	struct brcmf_if *ifp = drvr->iflist[0];
- 
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
-+	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
- 	if (drvr->bus_if->wowl_supported)
- 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
- 	if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/brcm80211/brcmfmac/feature.h
-index 4bf40ff..5469625 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.h
-@@ -21,11 +21,13 @@
-  *
-  * MBSS: multiple BSSID support (eg. guest network in AP mode).
-  * MCHAN: multi-channel for concurrent P2P.
-+ * PNO: preferred network offload.
-  * WOWL: Wake-On-WLAN.
-  */
- #define BRCMF_FEAT_LIST \
- 	BRCMF_FEAT_DEF(MBSS) \
- 	BRCMF_FEAT_DEF(MCHAN) \
-+	BRCMF_FEAT_DEF(PNO) \
- 	BRCMF_FEAT_DEF(WOWL)
- /*
-  * Quirks:
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 262a84f67f62..b1e522ccb525 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1539,12 +1539,11 @@ static int ath10k_pci_get_num_banks(struct ath10k *ar)
+ 		switch (MS(ar->chip_id, SOC_CHIP_ID_REV)) {
+ 		case QCA6174_HW_1_0_CHIP_ID_REV:
+ 		case QCA6174_HW_1_1_CHIP_ID_REV:
++		case QCA6174_HW_2_1_CHIP_ID_REV:
++		case QCA6174_HW_2_2_CHIP_ID_REV:
+ 			return 3;
+ 		case QCA6174_HW_1_3_CHIP_ID_REV:
+ 			return 2;
+-		case QCA6174_HW_2_1_CHIP_ID_REV:
+-		case QCA6174_HW_2_2_CHIP_ID_REV:
+-			return 6;
+ 		case QCA6174_HW_3_0_CHIP_ID_REV:
+ 		case QCA6174_HW_3_1_CHIP_ID_REV:
+ 		case QCA6174_HW_3_2_CHIP_ID_REV:
 -- 
-1.9.1
+2.1.4
 
