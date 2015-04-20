@@ -1,75 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb2-smtp-cloud6.xs4all.net ([194.109.24.28]:48345 "EHLO
-	lb2-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1031401AbbD2I1e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 04:27:34 -0400
-Message-ID: <1430296046.2411.100.camel@x220> (sfid-20150429_102754_080654_7A1ED5E4)
-Subject: Re: [PATCH] drivers/nfc: remove obsolete setting of DEBUG
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Valentin Rothberg <valentinrothberg@gmail.com>
-Cc: Joe Perches <joe@perches.com>, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	clement.perrochaud@effinnov.com, charles.gorand@effinnov.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rupran@einserver.de, stefan.hengelein@fau.de
-Date: Wed, 29 Apr 2015 10:27:26 +0200
-In-Reply-To: <1430212127-5841-1-git-send-email-valentinrothberg@gmail.com>
-References: <1430212127-5841-1-git-send-email-valentinrothberg@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:18138 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752103AbbDTTxp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2015 15:53:45 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/3] mac80211: notify the driver upon BAR Rx
+Date: Mon, 20 Apr 2015 22:53:37 +0300
+Message-Id: <1429559618-23056-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150420_215350_054172_0D5B7B50)
+In-Reply-To: <1429559618-23056-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1429559618-23056-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Added Joe.]
+When we receive a BAR, this typically means that our peer
+doesn't hear our Block-Acks or that we can't hear its
+frames. Either way, it is a good indication that the link
+is in a bad condition. This is why it can serve as a probe
+to the driver.
+Use the event_callback callback for this.
+Since more events with the same data will be added in the
+feature, the structure that describes the data attached to
+the event is called in a generic name: ieee80211_ba_event.
 
-On Tue, 2015-04-28 at 11:08 +0200, Valentin Rothberg wrote:
-> The CPP identifier 'DEBUG' is not used in the source code of nfc at all,
-> so we can safely remove setting it in both Makefiles.
-> 
-> Signed-off-by: Valentin Rothberg <valentinrothberg@gmail.com>
-> ---
-> I detected this issue with ./scripts/checkkconfigsymbols.py since
-> CONFIG_NFC_DEBUG is not defined in Kconfig.
+This also means that from now on, the event_callback can't
+sleep.
 
-The patch should be fine, as there is no NFC_DEBUG Kconfig symbol, but
-I'm not sure whether the commit explanation is correct.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h | 20 ++++++++++++++++++--
+ net/mac80211/rx.c      |  8 ++++++++
+ 2 files changed, 26 insertions(+), 2 deletions(-)
 
-As it turns out I submitted a very similar patch two years ago (see
-https://lkml.kernel.org/r/1365179481.1830.69.camel@x61.thuisdomein ).
-And it was pointed out to me that the DEBUG macro is used by the
-pr_debug() macro and friends. I already forgot the details but, in
-short, DEBUG is a bit of  a gotcha: you can't say whether or not it's
-used by just grepping for it. 
-
-> ---
->  drivers/nfc/Makefile         | 2 --
->  drivers/nfc/nxp-nci/Makefile | 2 --
->  2 files changed, 4 deletions(-)
-> 
-> diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
-> index a4292d790f9b..13b648baf175 100644
-> --- a/drivers/nfc/Makefile
-> +++ b/drivers/nfc/Makefile
-> @@ -14,5 +14,3 @@ obj-$(CONFIG_NFC_TRF7970A)	+= trf7970a.o
->  obj-$(CONFIG_NFC_ST21NFCA)  	+= st21nfca/
->  obj-$(CONFIG_NFC_ST21NFCB)	+= st21nfcb/
->  obj-$(CONFIG_NFC_NXP_NCI)	+= nxp-nci/
-> -
-> -ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
-> diff --git a/drivers/nfc/nxp-nci/Makefile b/drivers/nfc/nxp-nci/Makefile
-> index c008be30bb18..c9ec7869dbd2 100644
-> --- a/drivers/nfc/nxp-nci/Makefile
-> +++ b/drivers/nfc/nxp-nci/Makefile
-> @@ -7,5 +7,3 @@ nxp-nci_i2c-objs = i2c.o
->  
->  obj-$(CONFIG_NFC_NXP_NCI) += nxp-nci.o
->  obj-$(CONFIG_NFC_NXP_NCI_I2C) += nxp-nci_i2c.o
-> -
-> -ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
-
-Thanks,
-
-
-Paul Bolle
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 38a5fd7..e682927 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -337,10 +337,12 @@ enum ieee80211_bss_change {
+  * enum ieee80211_event_type - event to be notified to the low level driver
+  * @RSSI_EVENT: AP's rssi crossed the a threshold set by the driver.
+  * @MLME_EVENT: event related to MLME
++ * @BAR_RX_EVENT: a BAR was received
+  */
+ enum ieee80211_event_type {
+ 	RSSI_EVENT,
+ 	MLME_EVENT,
++	BAR_RX_EVENT,
+ };
+ 
+ /**
+@@ -400,17 +402,31 @@ struct ieee80211_mlme_event {
+ };
+ 
+ /**
++ * struct ieee80211_ba_event - data attached for BlockAck related events
++ * @sta: pointer to the &ieee80211_sta to which this event relates
++ * @tid: the tid
++ * @ssn: the starting sequence number
++ */
++struct ieee80211_ba_event {
++	struct ieee80211_sta *sta;
++	u16 tid;
++	u16 ssn;
++};
++
++/**
+  * struct ieee80211_event - event to be sent to the driver
+  * @type: The event itself. See &enum ieee80211_event_type.
+  * @rssi: relevant if &type is %RSSI_EVENT
+  * @mlme: relevant if &type is %AUTH_EVENT
+- * @u:    union holding the above two fields
++ * @ba: relevant if &type is %BAR_RX_EVENT
++ * @u:union holding the fields above
+  */
+ struct ieee80211_event {
+ 	enum ieee80211_event_type type;
+ 	union {
+ 		struct ieee80211_rssi_event rssi;
+ 		struct ieee80211_mlme_event mlme;
++		struct ieee80211_ba_event ba;
+ 	} u;
+ };
+ 
+@@ -3002,7 +3018,7 @@ enum ieee80211_reconfig_type {
+  *	The callback can sleep.
+  * @event_callback: Notify driver about any event in mac80211. See
+  *	&enum ieee80211_event_type for the different types.
+- *	The callback can sleep.
++ *	The callback must be atomic.
+  *
+  * @release_buffered_frames: Release buffered frames according to the given
+  *	parameters. In the case where the driver buffers some frames for
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bc59c8a..b01468f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2443,6 +2443,9 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx, struct sk_buff_head *frames)
+ 		struct {
+ 			__le16 control, start_seq_num;
+ 		} __packed bar_data;
++		struct ieee80211_event event = {
++			.type = BAR_RX_EVENT,
++		};
+ 
+ 		if (!rx->sta)
+ 			return RX_DROP_MONITOR;
+@@ -2458,6 +2461,9 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx, struct sk_buff_head *frames)
+ 			return RX_DROP_MONITOR;
+ 
+ 		start_seq_num = le16_to_cpu(bar_data.start_seq_num) >> 4;
++		event.u.ba.tid = tid;
++		event.u.ba.ssn = start_seq_num;
++		event.u.ba.sta = &rx->sta->sta;
+ 
+ 		/* reset session timer */
+ 		if (tid_agg_rx->timeout)
+@@ -2470,6 +2476,8 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx, struct sk_buff_head *frames)
+ 						 start_seq_num, frames);
+ 		spin_unlock(&tid_agg_rx->reorder_lock);
+ 
++		drv_event_callback(rx->local, rx->sdata, &event);
++
+ 		kfree_skb(skb);
+ 		return RX_QUEUED;
+ 	}
+-- 
+2.1.0
 
