@@ -1,86 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38493 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755389AbbDVHdH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 03:33:07 -0400
-Received: by wiun10 with SMTP id n10so46827351wiu.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2015 00:33:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87383szni2.fsf@kamboji.qca.qualcomm.com>
-References: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
-	<87618v44jv.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnNNKF7riAgcVj1LupABAGodm751jxOUuZgam8u=wthUA@mail.gmail.com>
-	<87vbgpzfo0.fsf@kamboji.qca.qualcomm.com>
-	<87383szni2.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 22 Apr 2015 09:33:06 +0200
-Message-ID: <CA+BoTQkao3kNSCfqi5KdroHL+iHH2fYjZP=oDShjD2VEOM1KnQ@mail.gmail.com> (sfid-20150422_093314_037980_2858A0CA)
-Subject: Re: [PATCH] ath10k: implement more versatile set_bitrate_mask
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:18138 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751575AbbDTTxo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Apr 2015 15:53:44 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/3] iwlwifi: dvm: don't sleep in event_callback callback
+Date: Mon, 20 Apr 2015 22:53:36 +0300
+Message-Id: <1429559618-23056-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150420_215348_318005_E0B2FADD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 April 2015 at 08:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>>> To reduce support questions from the users it would be nice to give few
->>>> good examples how to use this with iw. And also it makes it easier to
->>>> test the patch. If you could send something I can add it to the commit
->>>> log.
->>>
->>> Should work:
->>>
->>>   iw wlan0 set bitrates legacy 1 6 12 ht-mcs 1 2 3
->>>   iw wlan0 set bitrates legacy-5 mcs-5 7 8 9
+This will allow mac80211 to forbid sleeping from the
+event_callback callback.
 
-Oh, I just noticed I typo'ed: s/mcs-5/ht-mcs-5/.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+Please apply this on mac80211-next.git since other mac80211 patches
+depend on it.
+---
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 5707ba5..1e2c352 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1139,7 +1139,6 @@ static void iwlagn_mac_event_callback(struct ieee80211_hw *hw,
+ 		return;
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+-	mutex_lock(&priv->mutex);
+ 
+ 	if (priv->lib->bt_params &&
+ 	    priv->lib->bt_params->advanced_bt_coexist) {
+@@ -1148,13 +1147,12 @@ static void iwlagn_mac_event_callback(struct ieee80211_hw *hw,
+ 		else if (event->u.rssi.data == RSSI_EVENT_HIGH)
+ 			priv->bt_enable_pspoll = false;
+ 
+-		iwlagn_send_advance_bt_config(priv);
++		queue_work(priv->workqueue, &priv->bt_runtime_config);
+ 	} else {
+ 		IWL_DEBUG_MAC80211(priv, "Advanced BT coex disabled,"
+ 				"ignoring RSSI callback\n");
+ 	}
+ 
+-	mutex_unlock(&priv->mutex);
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+ 
+-- 
+2.1.0
 
->>>   iw wlan0 set bitrates legacy-5 24 ht-mcs-5 vht-mcs-5 1:0-9
->>>
->>> Won't work:
->>>
->>>   iw wlan0 set bitrates legacy-5 ht-mcs-5 vht-mcs-5 1:0-5
->>>   iw wlan0 set bitrates vht-mcs-5 2:7-9
->>>
->>> (note the invalid VHT MCS ranges)
->>
->> Thanks, I added these to the commit log.
->
-> Actually, I had some problems:
->
-> # iw wlan0 set bitrates legacy-2.4 1 6 12 ht-mcs-2.4 1 2 3
-> command failed: Invalid argument (-22)
-> # iw wlan0 set bitrates legacy-5 1 6 12 ht-mcs-5 1 2 3
-> command failed: Invalid argument (-22)
-
-There's no 1mbps (CCK) on 5GHz. If you remove the "1" from legacy-5 it
-should work.
-
-
-> # iw wlan0 set bitrates legacy-5 vht-mcs-5 7 8 9
-> command failed: Invalid argument (-22)
-
-There's a couple of problems here:
-
- * The syntax for VHT MCS is different: vht-mcs-<2.4|5>
-<NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*
-   You used syntax from HT MCS: ht-mcs-<2.4|5> <MCS index>*
-   The correct way to express this would be:
-      iw wlan0 set bitrates legacy-5 vht-mcs-5 1:7,8,9
-   or
-      iw wlan0 set bitrates legacy-5 vht-mcs-5 1:7-9
-   assuming you wanted NSS=1 (VHT MCS don't imply NSS just like HT MCS do)
-
-* As per commit log you can't use just any VHT MCS; you're limited to
-none, 0-7, 0-8, 0-9. You can set a *single* VHT MCS as per
-51ab1a0a09a8 ("ath10k: add set_bitrate_mask callback") though.
-
-
-Michał
