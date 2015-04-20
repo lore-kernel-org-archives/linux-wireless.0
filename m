@@ -1,622 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12634 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226AbbDHHcr (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:34807 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705AbbDTXap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2015 03:32:47 -0400
-Message-ID: <5524D99C.1050902@broadcom.com> (sfid-20150408_093315_613746_A967552E)
-Date: Wed, 8 Apr 2015 09:32:44 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Steven Rostedt <rostedt@goodmis.org>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: Move each system tracepoints to their own header
-References: <20150407121148.17207bd8@gandalf.local.home>
-In-Reply-To: <20150407121148.17207bd8@gandalf.local.home>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Mon, 20 Apr 2015 19:30:45 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v1 0/6] module params: few simplifications
+Date: Mon, 20 Apr 2015 16:30:31 -0700
+Message-Id: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20150421_013103_117090_0ACD9A04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/15 18:11, Steven Rostedt wrote:
->
-> Every tracing file must have its own TRACE_SYSTEM defined.
-> The brcmsmac tracepoint header broke this and added in the middle
-> of the file:
->
->   #undef TRACE_SYSTEM
->   #define TRACE_SYSTEM brcmsmac
->
->   #undef TRACE_SYSTEM
->   #define TRACE_SYSTEM brcmsmac_tx
->
->   #undef TRACE_SYSTEM
->   #define TRACE_SYSTEM brcmsmac_msg
->
-> Unfortunately, this broke new code in the ftrace infrastructure.
-> Moving each of these TRACE_SYSTEMs into their own trace file with
-> just one TRACE_SYSTEM per file fixes the issue.
->
-> Cc: Arend van Spriel<arend@broadcom.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-All right. Go ahead and change Cc: into Acked-by:
+Here are a few simplifications on the sig_force module parameter code.
+I'm digging through this as long term I'd like enable standard use of
+the crypto code for module loading for firmware loading and later
+any file requested (non firmware) to replace udev deamons such as
+CRDA which should no longer be needed.
 
-Regards,
-Arend
+Short term this means seeing what code we could re-use and the option
+to only force enable/passively enable signing is one of the options
+I'd like to see we keep for firmware signing. The same grammar as used
+for module signing can be used, but instead of copy+pasting code I
+decided to take generalize the feature option of sig_force, make it
+generic, learn from its implmentation of using const, making that
+generic and lastly to simplify this even further to one line code
+as I had done for the early_param_on_off() stuff recently. Since I'm
+also adding an on_off() case for module parameters I had to find a
+example simple use case for that, picked workqueue for that.
 
-> Signed-off-by: Steven Rostedt<rostedt@goodmis.org>
-> ---
->
-> Requesting an Acked-by so I can pull this into my tree where this is a
-> prerequisite for my new code.
->
->   .../brcm80211/brcmsmac/brcms_trace_brcmsmac.h      | 102 ++++++++++
->   .../brcm80211/brcmsmac/brcms_trace_brcmsmac_msg.h  |  88 ++++++++
->   .../brcm80211/brcmsmac/brcms_trace_brcmsmac_tx.h   | 110 ++++++++++
->   .../brcm80211/brcmsmac/brcms_trace_events.h        | 225 +--------------------
->   4 files changed, 305 insertions(+), 220 deletions(-)
->   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac.h
->   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_msg.h
->   create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_tx.h
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac.h
-> new file mode 100644
-> index 000000000000..a0da3248b942
-> --- /dev/null
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac.h
-> @@ -0,0 +1,102 @@
-> +/*
-> + * Copyright (c) 2011 Broadcom Corporation
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#if !defined(__TRACE_BRCMSMAC_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define __TRACE_BRCMSMAC_H
-> +
-> +#include<linux/tracepoint.h>
-> +
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM brcmsmac
-> +
-> +/*
-> + * We define a tracepoint, its arguments, its printk format and its
-> + * 'fast binary record' layout.
-> + */
-> +TRACE_EVENT(brcms_timer,
-> +	/* TPPROTO is the prototype of the function called by this tracepoint */
-> +	TP_PROTO(struct brcms_timer *t),
-> +	/*
-> +	 * TPARGS(firstarg, p) are the parameters names, same as found in the
-> +	 * prototype.
-> +	 */
-> +	TP_ARGS(t),
-> +	/*
-> +	 * Fast binary tracing: define the trace record via TP_STRUCT__entry().
-> +	 * You can think about it like a regular C structure local variable
-> +	 * definition.
-> +	 */
-> +	TP_STRUCT__entry(
-> +		__field(uint, ms)
-> +		__field(uint, set)
-> +		__field(uint, periodic)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->ms = t->ms;
-> +		__entry->set = t->set;
-> +		__entry->periodic = t->periodic;
-> +	),
-> +	TP_printk(
-> +		"ms=%u set=%u periodic=%u",
-> +		__entry->ms, __entry->set, __entry->periodic
-> +	)
-> +);
-> +
-> +TRACE_EVENT(brcms_dpc,
-> +	TP_PROTO(unsigned long data),
-> +	TP_ARGS(data),
-> +	TP_STRUCT__entry(
-> +		__field(unsigned long, data)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->data = data;
-> +	),
-> +	TP_printk(
-> +		"data=%p",
-> +		(void *)__entry->data
-> +	)
-> +);
-> +
-> +TRACE_EVENT(brcms_macintstatus,
-> +	TP_PROTO(const struct device *dev, int in_isr, u32 macintstatus,
-> +		 u32 mask),
-> +	TP_ARGS(dev, in_isr, macintstatus, mask),
-> +	TP_STRUCT__entry(
-> +		__string(dev, dev_name(dev))
-> +		__field(int, in_isr)
-> +		__field(u32, macintstatus)
-> +		__field(u32, mask)
-> +	),
-> +	TP_fast_assign(
-> +		__assign_str(dev, dev_name(dev));
-> +		__entry->in_isr = in_isr;
-> +		__entry->macintstatus = macintstatus;
-> +		__entry->mask = mask;
-> +	),
-> +	TP_printk("[%s] in_isr=%d macintstatus=%#x mask=%#x", __get_str(dev),
-> +		  __entry->in_isr, __entry->macintstatus, __entry->mask)
-> +);
-> +#endif /* __TRACE_BRCMSMAC_H */
-> +
-> +#ifdef CONFIG_BRCM_TRACING
-> +
-> +#undef TRACE_INCLUDE_PATH
-> +#define TRACE_INCLUDE_PATH .
-> +#undef TRACE_INCLUDE_FILE
-> +#define TRACE_INCLUDE_FILE brcms_trace_brcmsmac
-> +#include<trace/define_trace.h>
-> +
-> +#endif /* CONFIG_BRCM_TRACING */
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_msg.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_msg.h
-> new file mode 100644
-> index 000000000000..0e8a69ab909f
-> --- /dev/null
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_msg.h
-> @@ -0,0 +1,88 @@
-> +/*
-> + * Copyright (c) 2011 Broadcom Corporation
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#if !defined(__TRACE_BRCMSMAC_MSG_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define __TRACE_BRCMSMAC_MSG_H
-> +
-> +#include<linux/tracepoint.h>
-> +
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM brcmsmac_msg
-> +
-> +#define MAX_MSG_LEN	100
-> +
-> +DECLARE_EVENT_CLASS(brcms_msg_event,
-> +	TP_PROTO(struct va_format *vaf),
-> +	TP_ARGS(vaf),
-> +	TP_STRUCT__entry(
-> +		__dynamic_array(char, msg, MAX_MSG_LEN)
-> +	),
-> +	TP_fast_assign(
-> +		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-> +				       MAX_MSG_LEN, vaf->fmt,
-> +				       *vaf->va)>= MAX_MSG_LEN);
-> +	),
-> +	TP_printk("%s", __get_str(msg))
-> +);
-> +
-> +DEFINE_EVENT(brcms_msg_event, brcms_info,
-> +	TP_PROTO(struct va_format *vaf),
-> +	TP_ARGS(vaf)
-> +);
-> +
-> +DEFINE_EVENT(brcms_msg_event, brcms_warn,
-> +	TP_PROTO(struct va_format *vaf),
-> +	TP_ARGS(vaf)
-> +);
-> +
-> +DEFINE_EVENT(brcms_msg_event, brcms_err,
-> +	TP_PROTO(struct va_format *vaf),
-> +	TP_ARGS(vaf)
-> +);
-> +
-> +DEFINE_EVENT(brcms_msg_event, brcms_crit,
-> +	TP_PROTO(struct va_format *vaf),
-> +	TP_ARGS(vaf)
-> +);
-> +
-> +TRACE_EVENT(brcms_dbg,
-> +	TP_PROTO(u32 level, const char *func, struct va_format *vaf),
-> +	TP_ARGS(level, func, vaf),
-> +	TP_STRUCT__entry(
-> +		__field(u32, level)
-> +		__string(func, func)
-> +		__dynamic_array(char, msg, MAX_MSG_LEN)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->level = level;
-> +		__assign_str(func, func);
-> +		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-> +				       MAX_MSG_LEN, vaf->fmt,
-> +				       *vaf->va)>= MAX_MSG_LEN);
-> +	),
-> +	TP_printk("%s: %s", __get_str(func), __get_str(msg))
-> +);
-> +#endif /* __TRACE_BRCMSMAC_MSG_H */
-> +
-> +#ifdef CONFIG_BRCM_TRACING
-> +
-> +#undef TRACE_INCLUDE_PATH
-> +#define TRACE_INCLUDE_PATH .
-> +#undef TRACE_INCLUDE_FILE
-> +#define TRACE_INCLUDE_FILE brcms_trace_brcmsmac_msg
-> +#include<trace/define_trace.h>
-> +
-> +#endif /* CONFIG_BRCM_TRACING */
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_tx.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_tx.h
-> new file mode 100644
-> index 000000000000..cf2cc070f1e5
-> --- /dev/null
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_brcmsmac_tx.h
-> @@ -0,0 +1,110 @@
-> +/*
-> + * Copyright (c) 2011 Broadcom Corporation
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#if !defined(__TRACE_BRCMSMAC_TX_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define __TRACE_BRCMSMAC_TX_H
-> +
-> +#include<linux/tracepoint.h>
-> +
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM brcmsmac_tx
-> +
-> +TRACE_EVENT(brcms_txdesc,
-> +	TP_PROTO(const struct device *dev,
-> +		 void *txh, size_t txh_len),
-> +	TP_ARGS(dev, txh, txh_len),
-> +	TP_STRUCT__entry(
-> +		__string(dev, dev_name(dev))
-> +		__dynamic_array(u8, txh, txh_len)
-> +	),
-> +	TP_fast_assign(
-> +		__assign_str(dev, dev_name(dev));
-> +		memcpy(__get_dynamic_array(txh), txh, txh_len);
-> +	),
-> +	TP_printk("[%s] txdesc", __get_str(dev))
-> +);
-> +
-> +TRACE_EVENT(brcms_txstatus,
-> +	TP_PROTO(const struct device *dev, u16 framelen, u16 frameid,
-> +		 u16 status, u16 lasttxtime, u16 sequence, u16 phyerr,
-> +		 u16 ackphyrxsh),
-> +	TP_ARGS(dev, framelen, frameid, status, lasttxtime, sequence, phyerr,
-> +		ackphyrxsh),
-> +	TP_STRUCT__entry(
-> +		__string(dev, dev_name(dev))
-> +		__field(u16, framelen)
-> +		__field(u16, frameid)
-> +		__field(u16, status)
-> +		__field(u16, lasttxtime)
-> +		__field(u16, sequence)
-> +		__field(u16, phyerr)
-> +		__field(u16, ackphyrxsh)
-> +	),
-> +	TP_fast_assign(
-> +		__assign_str(dev, dev_name(dev));
-> +		__entry->framelen = framelen;
-> +		__entry->frameid = frameid;
-> +		__entry->status = status;
-> +		__entry->lasttxtime = lasttxtime;
-> +		__entry->sequence = sequence;
-> +		__entry->phyerr = phyerr;
-> +		__entry->ackphyrxsh = ackphyrxsh;
-> +	),
-> +	TP_printk("[%s] FrameId %#04x TxStatus %#04x LastTxTime %#04x "
-> +		  "Seq %#04x PHYTxStatus %#04x RxAck %#04x",
-> +		  __get_str(dev), __entry->frameid, __entry->status,
-> +		  __entry->lasttxtime, __entry->sequence, __entry->phyerr,
-> +		  __entry->ackphyrxsh)
-> +);
-> +
-> +TRACE_EVENT(brcms_ampdu_session,
-> +	TP_PROTO(const struct device *dev, unsigned max_ampdu_len,
-> +		 u16 max_ampdu_frames, u16 ampdu_len, u16 ampdu_frames,
-> +		 u16 dma_len),
-> +	TP_ARGS(dev, max_ampdu_len, max_ampdu_frames, ampdu_len, ampdu_frames,
-> +		dma_len),
-> +	TP_STRUCT__entry(
-> +		__string(dev, dev_name(dev))
-> +		__field(unsigned, max_ampdu_len)
-> +		__field(u16, max_ampdu_frames)
-> +		__field(u16, ampdu_len)
-> +		__field(u16, ampdu_frames)
-> +		__field(u16, dma_len)
-> +	),
-> +	TP_fast_assign(
-> +		__assign_str(dev, dev_name(dev));
-> +		__entry->max_ampdu_len = max_ampdu_len;
-> +		__entry->max_ampdu_frames = max_ampdu_frames;
-> +		__entry->ampdu_len = ampdu_len;
-> +		__entry->ampdu_frames = ampdu_frames;
-> +		__entry->dma_len = dma_len;
-> +	),
-> +	TP_printk("[%s] ampdu session max_len=%u max_frames=%u len=%u frames=%u dma_len=%u",
-> +		  __get_str(dev), __entry->max_ampdu_len,
-> +		  __entry->max_ampdu_frames, __entry->ampdu_len,
-> +		  __entry->ampdu_frames, __entry->dma_len)
-> +);
-> +#endif /* __TRACE_BRCMSMAC_TX_H */
-> +
-> +#ifdef CONFIG_BRCM_TRACING
-> +
-> +#undef TRACE_INCLUDE_PATH
-> +#define TRACE_INCLUDE_PATH .
-> +#undef TRACE_INCLUDE_FILE
-> +#define TRACE_INCLUDE_FILE brcms_trace_brcmsmac_tx
-> +#include<trace/define_trace.h>
-> +
-> +#endif /* CONFIG_BRCM_TRACING */
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-> index 871781e6a713..cbf2f06436fc 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/brcms_trace_events.h
-> @@ -14,9 +14,8 @@
->    * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->    */
->
-> -#if !defined(__TRACE_BRCMSMAC_H) || defined(TRACE_HEADER_MULTI_READ)
-> -
-> -#define __TRACE_BRCMSMAC_H
-> +#ifndef __BRCMS_TRACE_EVENTS_H
-> +#define __BRCMS_TRACE_EVENTS_H
->
->   #include<linux/types.h>
->   #include<linux/device.h>
-> @@ -34,222 +33,8 @@ static inline void trace_ ## name(proto) {}
->   static inline void trace_ ## name(proto) {}
->   #endif
->
-> -#undef TRACE_SYSTEM
-> -#define TRACE_SYSTEM brcmsmac
-> -
-> -/*
-> - * We define a tracepoint, its arguments, its printk format and its
-> - * 'fast binary record' layout.
-> - */
-> -TRACE_EVENT(brcms_timer,
-> -	/* TPPROTO is the prototype of the function called by this tracepoint */
-> -	TP_PROTO(struct brcms_timer *t),
-> -	/*
-> -	 * TPARGS(firstarg, p) are the parameters names, same as found in the
-> -	 * prototype.
-> -	 */
-> -	TP_ARGS(t),
-> -	/*
-> -	 * Fast binary tracing: define the trace record via TP_STRUCT__entry().
-> -	 * You can think about it like a regular C structure local variable
-> -	 * definition.
-> -	 */
-> -	TP_STRUCT__entry(
-> -		__field(uint, ms)
-> -		__field(uint, set)
-> -		__field(uint, periodic)
-> -	),
-> -	TP_fast_assign(
-> -		__entry->ms = t->ms;
-> -		__entry->set = t->set;
-> -		__entry->periodic = t->periodic;
-> -	),
-> -	TP_printk(
-> -		"ms=%u set=%u periodic=%u",
-> -		__entry->ms, __entry->set, __entry->periodic
-> -	)
-> -);
-> -
-> -TRACE_EVENT(brcms_dpc,
-> -	TP_PROTO(unsigned long data),
-> -	TP_ARGS(data),
-> -	TP_STRUCT__entry(
-> -		__field(unsigned long, data)
-> -	),
-> -	TP_fast_assign(
-> -		__entry->data = data;
-> -	),
-> -	TP_printk(
-> -		"data=%p",
-> -		(void *)__entry->data
-> -	)
-> -);
-> -
-> -TRACE_EVENT(brcms_macintstatus,
-> -	TP_PROTO(const struct device *dev, int in_isr, u32 macintstatus,
-> -		 u32 mask),
-> -	TP_ARGS(dev, in_isr, macintstatus, mask),
-> -	TP_STRUCT__entry(
-> -		__string(dev, dev_name(dev))
-> -		__field(int, in_isr)
-> -		__field(u32, macintstatus)
-> -		__field(u32, mask)
-> -	),
-> -	TP_fast_assign(
-> -		__assign_str(dev, dev_name(dev));
-> -		__entry->in_isr = in_isr;
-> -		__entry->macintstatus = macintstatus;
-> -		__entry->mask = mask;
-> -	),
-> -	TP_printk("[%s] in_isr=%d macintstatus=%#x mask=%#x", __get_str(dev),
-> -		  __entry->in_isr, __entry->macintstatus, __entry->mask)
-> -);
-> -
-> -#undef TRACE_SYSTEM
-> -#define TRACE_SYSTEM brcmsmac_tx
-> -
-> -TRACE_EVENT(brcms_txdesc,
-> -	TP_PROTO(const struct device *dev,
-> -		 void *txh, size_t txh_len),
-> -	TP_ARGS(dev, txh, txh_len),
-> -	TP_STRUCT__entry(
-> -		__string(dev, dev_name(dev))
-> -		__dynamic_array(u8, txh, txh_len)
-> -	),
-> -	TP_fast_assign(
-> -		__assign_str(dev, dev_name(dev));
-> -		memcpy(__get_dynamic_array(txh), txh, txh_len);
-> -	),
-> -	TP_printk("[%s] txdesc", __get_str(dev))
-> -);
-> -
-> -TRACE_EVENT(brcms_txstatus,
-> -	TP_PROTO(const struct device *dev, u16 framelen, u16 frameid,
-> -		 u16 status, u16 lasttxtime, u16 sequence, u16 phyerr,
-> -		 u16 ackphyrxsh),
-> -	TP_ARGS(dev, framelen, frameid, status, lasttxtime, sequence, phyerr,
-> -		ackphyrxsh),
-> -	TP_STRUCT__entry(
-> -		__string(dev, dev_name(dev))
-> -		__field(u16, framelen)
-> -		__field(u16, frameid)
-> -		__field(u16, status)
-> -		__field(u16, lasttxtime)
-> -		__field(u16, sequence)
-> -		__field(u16, phyerr)
-> -		__field(u16, ackphyrxsh)
-> -	),
-> -	TP_fast_assign(
-> -		__assign_str(dev, dev_name(dev));
-> -		__entry->framelen = framelen;
-> -		__entry->frameid = frameid;
-> -		__entry->status = status;
-> -		__entry->lasttxtime = lasttxtime;
-> -		__entry->sequence = sequence;
-> -		__entry->phyerr = phyerr;
-> -		__entry->ackphyrxsh = ackphyrxsh;
-> -	),
-> -	TP_printk("[%s] FrameId %#04x TxStatus %#04x LastTxTime %#04x "
-> -		  "Seq %#04x PHYTxStatus %#04x RxAck %#04x",
-> -		  __get_str(dev), __entry->frameid, __entry->status,
-> -		  __entry->lasttxtime, __entry->sequence, __entry->phyerr,
-> -		  __entry->ackphyrxsh)
-> -);
-> -
-> -TRACE_EVENT(brcms_ampdu_session,
-> -	TP_PROTO(const struct device *dev, unsigned max_ampdu_len,
-> -		 u16 max_ampdu_frames, u16 ampdu_len, u16 ampdu_frames,
-> -		 u16 dma_len),
-> -	TP_ARGS(dev, max_ampdu_len, max_ampdu_frames, ampdu_len, ampdu_frames,
-> -		dma_len),
-> -	TP_STRUCT__entry(
-> -		__string(dev, dev_name(dev))
-> -		__field(unsigned, max_ampdu_len)
-> -		__field(u16, max_ampdu_frames)
-> -		__field(u16, ampdu_len)
-> -		__field(u16, ampdu_frames)
-> -		__field(u16, dma_len)
-> -	),
-> -	TP_fast_assign(
-> -		__assign_str(dev, dev_name(dev));
-> -		__entry->max_ampdu_len = max_ampdu_len;
-> -		__entry->max_ampdu_frames = max_ampdu_frames;
-> -		__entry->ampdu_len = ampdu_len;
-> -		__entry->ampdu_frames = ampdu_frames;
-> -		__entry->dma_len = dma_len;
-> -	),
-> -	TP_printk("[%s] ampdu session max_len=%u max_frames=%u len=%u frames=%u dma_len=%u",
-> -		  __get_str(dev), __entry->max_ampdu_len,
-> -		  __entry->max_ampdu_frames, __entry->ampdu_len,
-> -		  __entry->ampdu_frames, __entry->dma_len)
-> -);
-> -
-> -#undef TRACE_SYSTEM
-> -#define TRACE_SYSTEM brcmsmac_msg
-> -
-> -#define MAX_MSG_LEN	100
-> -
-> -DECLARE_EVENT_CLASS(brcms_msg_event,
-> -	TP_PROTO(struct va_format *vaf),
-> -	TP_ARGS(vaf),
-> -	TP_STRUCT__entry(
-> -		__dynamic_array(char, msg, MAX_MSG_LEN)
-> -	),
-> -	TP_fast_assign(
-> -		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-> -				       MAX_MSG_LEN, vaf->fmt,
-> -				       *vaf->va)>= MAX_MSG_LEN);
-> -	),
-> -	TP_printk("%s", __get_str(msg))
-> -);
-> -
-> -DEFINE_EVENT(brcms_msg_event, brcms_info,
-> -	TP_PROTO(struct va_format *vaf),
-> -	TP_ARGS(vaf)
-> -);
-> -
-> -DEFINE_EVENT(brcms_msg_event, brcms_warn,
-> -	TP_PROTO(struct va_format *vaf),
-> -	TP_ARGS(vaf)
-> -);
-> -
-> -DEFINE_EVENT(brcms_msg_event, brcms_err,
-> -	TP_PROTO(struct va_format *vaf),
-> -	TP_ARGS(vaf)
-> -);
-> -
-> -DEFINE_EVENT(brcms_msg_event, brcms_crit,
-> -	TP_PROTO(struct va_format *vaf),
-> -	TP_ARGS(vaf)
-> -);
-> -
-> -TRACE_EVENT(brcms_dbg,
-> -	TP_PROTO(u32 level, const char *func, struct va_format *vaf),
-> -	TP_ARGS(level, func, vaf),
-> -	TP_STRUCT__entry(
-> -		__field(u32, level)
-> -		__string(func, func)
-> -		__dynamic_array(char, msg, MAX_MSG_LEN)
-> -	),
-> -	TP_fast_assign(
-> -		__entry->level = level;
-> -		__assign_str(func, func);
-> -		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-> -				       MAX_MSG_LEN, vaf->fmt,
-> -				       *vaf->va)>= MAX_MSG_LEN);
-> -	),
-> -	TP_printk("%s: %s", __get_str(func), __get_str(msg))
-> -);
-> +#include "brcms_trace_brcmsmac.h"
-> +#include "brcms_trace_brcmsmac_tx.h"
-> +#include "brcms_trace_brcmsmac_msg.h"
->
->   #endif /* __TRACE_BRCMSMAC_H */
-> -
-> -#ifdef CONFIG_BRCM_TRACING
-> -
-> -#undef TRACE_INCLUDE_PATH
-> -#define TRACE_INCLUDE_PATH .
-> -#undef TRACE_INCLUDE_FILE
-> -#define TRACE_INCLUDE_FILE brcms_trace_events
-> -
-> -#include<trace/define_trace.h>
-> -
-> -#endif /* CONFIG_BRCM_TRACING */
+We might later be able to use SmPL grammar to replace a lot of old code
+with these helpers (including early_param_on_off) but will let others look
+into that as I'd like to complete other tasks.
+
+All this goes test compiled on x86_64 on:
+
+  * allnoconfig
+  * allmodconfig
+  * allyesconfig
+
+This series was based on top of linux-next next-20150420.
+
+Luis R. Rodriguez (6):
+  kernel/params: constify struct kernel_param_ops uses
+  kernel/module.c: use generic module param operaters for sig_enforce
+  kernel/params.c: generalize bool_enable_only
+  moduleparam.h: add module_param_config_*() helpers
+  kernel/workqueue.c: use module_param_config_on_off() for
+    power_efficient
+  kernel/module.c: use module_param_config_on() for sig_enforce
+
+ arch/s390/kernel/perf_cpum_sf.c         |  2 +-
+ arch/x86/kvm/mmu_audit.c                |  2 +-
+ arch/x86/platform/uv/uv_nmi.c           |  2 +-
+ drivers/block/null_blk.c                |  4 +-
+ drivers/char/ipmi/ipmi_watchdog.c       |  6 +--
+ drivers/dma/dmatest.c                   |  4 +-
+ drivers/ide/ide.c                       |  2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c     |  4 +-
+ drivers/input/misc/ati_remote2.c        |  4 +-
+ drivers/input/mouse/psmouse-base.c      |  2 +-
+ drivers/misc/lis3lv02d/lis3lv02d.c      |  2 +-
+ drivers/mtd/ubi/block.c                 |  2 +-
+ drivers/net/wireless/ath/wil6210/main.c |  4 +-
+ drivers/power/test_power.c              | 16 ++++----
+ drivers/thermal/intel_powerclamp.c      |  4 +-
+ drivers/tty/hvc/hvc_iucv.c              |  2 +-
+ drivers/tty/sysrq.c                     |  2 +-
+ drivers/video/fbdev/uvesafb.c           |  2 +-
+ drivers/virtio/virtio_mmio.c            |  2 +-
+ fs/nfs/super.c                          |  2 +-
+ include/linux/moduleparam.h             | 73 ++++++++++++++++++++++++++-------
+ kernel/module.c                         | 37 +----------------
+ kernel/params.c                         | 44 ++++++++++++++++----
+ kernel/workqueue.c                      |  8 +---
+ net/sunrpc/auth.c                       |  2 +-
+ net/sunrpc/xprtsock.c                   |  6 +--
+ security/apparmor/lsm.c                 |  6 +--
+ security/integrity/ima/ima_crypto.c     |  2 +-
+ sound/pci/hda/hda_intel.c               |  2 +-
+ 29 files changed, 141 insertions(+), 109 deletions(-)
+
+-- 
+2.3.2.209.gd67f9d5.dirty
 
