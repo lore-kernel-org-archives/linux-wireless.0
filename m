@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:59518 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbbDJTbS (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:36765 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbbDTSti convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 15:31:18 -0400
-Date: Fri, 10 Apr 2015 12:40:27 -0700 (PDT)
-Message-Id: <20150410.124027.1369874709878370130.davem@davemloft.net> (sfid-20150410_213158_724986_0462CA0C)
-To: richard@nod.at
-Cc: joe@perches.com, rostedt@goodmis.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, kadlec@blackhole.kfki.hu,
-	kaber@trash.net, pablo@netfilter.org
-Subject: Re: [PATCH 5/5 v2] netfilter: Fix format string of nfnetlink_log
- proc file
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <55277C47.4080201@nod.at>
-References: <1428616637-21690-5-git-send-email-richard@nod.at>
-	<1428619177.5413.15.camel@perches.com>
-	<55277C47.4080201@nod.at>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 20 Apr 2015 14:49:38 -0400
+Received: by igblo3 with SMTP id lo3so67345086igb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2015 11:49:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <55353364.3050101@broadcom.com>
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+	<1429035033-14076-11-git-send-email-arend@broadcom.com>
+	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>
+	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com>
+	<CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>
+	<5530C940.6010407@broadcom.com>
+	<CACna6ryZYvVN_svcv3W+4F6yiJf2QYHxYD-VXhGcUUTAHZDYSg@mail.gmail.com>
+	<55353364.3050101@broadcom.com>
+Date: Mon, 20 Apr 2015 20:49:37 +0200
+Message-ID: <CACna6ryb_v2Jw1DOudhXvAoQAbjBvdjb_UbdSG_PAC0A=5U9cA@mail.gmail.com> (sfid-20150420_204942_088543_4EA0E07B)
+Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices in nvram.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	mailinglist <openwrt-devel@lists.openwrt.org>,
+	Florian Fainelli <fainelli@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Richard Weinberger <richard@nod.at>
-Date: Fri, 10 Apr 2015 09:31:19 +0200
+On 20 April 2015 at 19:12, Arend van Spriel <arend@broadcom.com> wrote:
+> On 04/20/15 13:26, Rafał Miłecki wrote:
+>>
+>> On 17 April 2015 at 10:50, Arend van Spriel<arend@broadcom.com>  wrote:
+>>> Another option is to add the parsing stuff in that nvram code and have an
+>>> api to get the appropriate portion based on pcie domain and bus number as
+>>> used in brcmf_fw_get_firmwares_pcie(). However, I would prefer to have
+>>> this
+>>> in the driver and not in arch specific code as there may be other
+>>> platforms
+>>> like our set-top boxes needing this.
+>>
+>>
+>> This is some plan for the future I was lacking from the beginning. It
+>> makes things more clear now, thanks.
+>
+> You're welcome. Do you want to see this clarification in the commit message?
 
-> Am 10.04.2015 um 00:39 schrieb Joe Perches:
->> On Thu, 2015-04-09 at 23:57 +0200, Richard Weinberger wrote:
->>> The printed values are all of type unsigned integer, therefore use
->>> %u instead of %d. Otherwise an user can face negative values.
->> 
->> Hey Richard.
->> 
->> Just to clarify, this patch is for net and not for net-next
->> as net-next has removed the seq_printf return uses.
->> 
->> Are you going to submit an equivalent patch for net-next?
-> 
-> Hmm, you are right. It took me a few minutes to figure out what happened
-> because I did rebase my patches to net-next and fixed up 5/5 already.
-> Reading yesterday's bash history shows that I've used
-> git format-patch in a wrong way such that the comments from the old
-> branch were taken.
+I don't really need that, I'm leaving it up to you :)
 
-I'm waiting for you to respin this series against net-next, thanks.
+The last remaining question from me is if  about this NVRAM validation
+function (if it exists).
+
+-- 
+Rafał
