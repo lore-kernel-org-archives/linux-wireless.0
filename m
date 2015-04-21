@@ -1,54 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:33919 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932540AbbDVWKd (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:40402 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262AbbDUKYm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 18:10:33 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH v2 6/8] kernel/workqueue.c: use module_param_config_on_off() for power_efficient
-Date: Wed, 22 Apr 2015 14:55:09 -0700
-Message-Id: <1429739711-9415-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_001049_004695_B0AF3406)
-In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 21 Apr 2015 06:24:42 -0400
+Message-ID: <55362568.8040000@broadcom.com> (sfid-20150421_122445_893649_3A297981)
+Date: Tue, 21 Apr 2015 12:24:40 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Hante Meuleman <meuleman@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	mailinglist <openwrt-devel@lists.openwrt.org>,
+	Florian Fainelli <fainelli@broadcom.com>
+Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices
+ in nvram.
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-11-git-send-email-arend@broadcom.com>	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com>	<CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>	<5530C940.6010407@broadcom.com>	<CACna6ryZYvVN_svcv3W+4F6yiJf2QYHxYD-VXhGcUUTAHZDYSg@mail.gmail.com>	<55353364.3050101@broadcom.com>	<CACna6ryb_v2Jw1DOudhXvAoQAbjBvdjb_UbdSG_PAC0A=5U9cA@mail.gmail.com>	<55355E9D.30209@broadcom.com> <CACna6rxHOqn3pynTQY0VfP0Gm_R24ogPfUXDLOsQOuVfayBWzw@mail.gmail.com>
+In-Reply-To: <CACna6rxHOqn3pynTQY0VfP0Gm_R24ogPfUXDLOsQOuVfayBWzw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On 04/21/15 12:16, Rafał Miłecki wrote:
+> On 20 April 2015 at 22:16, Arend van Spriel<arend@broadcom.com>  wrote:
+>> On 04/20/15 20:49, Rafał Miłecki wrote:
+>>>
+>>> On 20 April 2015 at 19:12, Arend van Spriel<arend@broadcom.com>   wrote:
+>>>>
+>>>> On 04/20/15 13:26, Rafał Miłecki wrote:
+>>>>>
+>>>>>
+>>>>> On 17 April 2015 at 10:50, Arend van Spriel<arend@broadcom.com>    wrote:
+>>>>>>
+>>>>>> Another option is to add the parsing stuff in that nvram code and have
+>>>>>> an
+>>>>>> api to get the appropriate portion based on pcie domain and bus number
+>>>>>> as
+>>>>>> used in brcmf_fw_get_firmwares_pcie(). However, I would prefer to have
+>>>>>> this
+>>>>>> in the driver and not in arch specific code as there may be other
+>>>>>> platforms
+>>>>>> like our set-top boxes needing this.
+>>>>>
+>>>>>
+>>>>>
+>>>>> This is some plan for the future I was lacking from the beginning. It
+>>>>> makes things more clear now, thanks.
+>>>>
+>>>>
+>>>> You're welcome. Do you want to see this clarification in the commit
+>>>> message?
+>>>
+>>>
+>>> I don't really need that, I'm leaving it up to you :)
+>>>
+>>> The last remaining question from me is if  about this NVRAM validation
+>>> function (if it exists).
+>>
+>>
+>> Ok. I can try to answer that one. The nvram parsing code in firmware.c
+>> intends to do just that. So apart from stripping comments and whitespace it
+>> validates each line and gives off a warning if a wrongly formatted entry is
+>> found.
+>
+> OK, thanks. So I guess this patch is OK after all?
 
-Use the new module_param_config_on_off() for setting / disabling of
-CONFIG_WQ_POWER_EFFICIENT_DEFAULT.
+Until proven otherwise. I tested it with a number of format violations, 
+but there could be more creative people out there coming up with a 
+pattern uncovering some issue.
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- kernel/workqueue.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 59bc249..cf6c2f1 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -280,8 +280,7 @@ static bool wq_disable_numa;
- module_param_named(disable_numa, wq_disable_numa, bool, 0444);
- 
- /* see the comment above the definition of WQ_POWER_EFFICIENT */
--static bool wq_power_efficient = IS_ENABLED(CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
--module_param_named(power_efficient, wq_power_efficient, bool, 0444);
-+module_param_config_on_off(power_efficient, wq_power_efficient, 0444, CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
- 
- static bool wq_numa_enabled;		/* unbound NUMA affinity enabled */
- 
--- 
-2.3.2.209.gd67f9d5.dirty
-
+Regards,
+Arend
