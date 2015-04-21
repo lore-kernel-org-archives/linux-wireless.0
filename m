@@ -1,59 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:40997 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933700AbbDJOQe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 10:16:34 -0400
-Date: Fri, 10 Apr 2015 17:16:30 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Peer, Ilan" <ilan.peer@intel.com>,
-	Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211_hwsim: Set VHT capabilities only for the
- 5.2 GHz band
-Message-ID: <20150410141630.GA24572@w1.fi> (sfid-20150410_161637_960021_AFBA6A6A)
-References: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
- <552400F4.5010701@candelatech.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A04D09BD1B@HASMSX106.ger.corp.intel.com>
- <20150409073525.GA21000@w1.fi>
- <1428662388.1890.8.camel@sipsolutions.net>
+Received: from cantor2.suse.de ([195.135.220.15]:34557 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756089AbbDUQly (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2015 12:41:54 -0400
+Date: Tue, 21 Apr 2015 18:41:51 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, Jani Nikula <jani.nikula@intel.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH v1 4/6] moduleparam.h: add module_param_config_*() helpers
+Message-ID: <20150421164151.GK5622@wotan.suse.de> (sfid-20150421_184217_564692_E18CA51E)
+References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
+ <1429572637-30234-5-git-send-email-mcgrof@do-not-panic.com>
+ <CAGRGNgVZyFQgmb9kLq1-rvJQwr5NnBHCEMqgn3CNmD5ki6w=ng@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428662388.1890.8.camel@sipsolutions.net>
+In-Reply-To: <CAGRGNgVZyFQgmb9kLq1-rvJQwr5NnBHCEMqgn3CNmD5ki6w=ng@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 10, 2015 at 12:39:48PM +0200, Johannes Berg wrote:
-> On Thu, 2015-04-09 at 10:35 +0300, Jouni Malinen wrote:
-> > As far as
-> > hwsim is concerned, I'm already using it to verify the negotiation part
-> > for this (see ap_vht_on_24ghz test case).
+On Tue, Apr 21, 2015 at 09:42:21AM +1000, Julian Calaby wrote:
+> Hi Luis,
 > 
-> Oh, I guess I can't apply this patch then. But perhaps we should make
-> this an optional capability so we can create a new virtual radio
-> with/without it.
-
-Well.. It did not look like this patch on its own would actually break
-the test since there is no reliable way of indicating support for this
-special case nor really any part in the test to verify that the special
-TX rates were used (rate control does not even support them for hwsim).
-
-> > The main remaining question
-> > for cfg80211/nl80211 is on whether we can come up with a clean way of
-> > advertising driver capability for doing this.
+> You made a spelling mistake:
 > 
-> I'm not even sure what the question really is. Really you want just high
-> MCSes, but what should happen OTA? Is interoperability even *desired*,
-> given that it will never be tested?
+> On Tue, Apr 21, 2015 at 9:30 AM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> >
+> > This adds a couple of bool module_param_config_*() helpers
+> > which are designed to let us easily associate a booloean
+> > module parameter with an associated kernel configuration
+> > option, and to help us remove #ifdef'ery eyesores.
+> >
+> > Cc: Rusty Russell <rusty@rustcorp.com.au>
+> > Cc: Jani Nikula <jani.nikula@intel.com>
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Cc: Kees Cook <keescook@chromium.org>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: Ingo Molnar <mingo@kernel.org>
+> > Cc: linux-kernel@vger.kernel.org
+> > Cc: cocci@systeme.lip6.fr
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+> > ---
+> >  include/linux/moduleparam.h | 37 +++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 37 insertions(+)
+> >
+> > diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
+> > index 7e00799..fdf7b87 100644
+> > --- a/include/linux/moduleparam.h
+> > +++ b/include/linux/moduleparam.h
+> > @@ -155,6 +155,43 @@ struct kparam_array
+> >         __MODULE_PARM_TYPE(name, #type)
+> >
+> >  /**
+> > + * module_param_config_on_off - bool parameter with run time override
+> > + * @name: a valid C identifier which is the parameter name.
+> > + * @value: the actual lvalue to alter.
+> > + * @perm: visibility in sysfs.
+> > + * @config: kernel parameter which will enable this option if this
+> > + *     kernel configuration option has been enabled.
+> > + *
+> > + * This lets you define a bool module paramter which by default will be
+> 
+> s/paramter/parameter/
+> 
+> > + * set to true if the config option has been set on your kernel's
+> > + * configuration, otherwise it is set to false.
+> > + */
+> > +#define module_param_config_on_off(name, var, perm, config)            \
+> > +       static bool var = IS_ENABLED(config);                           \
+> > +       module_param_named(name, var, bool, perm);
+> > +
+> > +/**
+> > + * module_param_config_on - bool parameter with run time enablement override
+> > + * @name: a valid C identifier which is the parameter name.
+> > + * @value: the actual lvalue to alter.
+> > + * @perm: visibility in sysfs.
+> > + * @config: kernel parameter which will enable this option if this
+> > + *     kernel configuration option has been enabled.
+> > + *
+> > + * This lets you define a bool module paramter which by default will be
+> 
+> Here too.
 
-For now, it looks like there is interoperability between vendors as long
-as there is agreement on which vendor specific extensions to use for
-advertising it. hostapd has an implementation that matches the one used
-by number of Broadcom devices. I'd say that interoperability is desired.
-I'm not sure what you mean with interoperability never being tested,
-though. There may not be a formal certification program for this, but
-this has been tested.
+Fixed, thanks.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
