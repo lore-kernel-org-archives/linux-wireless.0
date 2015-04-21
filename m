@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37639 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751150AbbDGIrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 04:47:36 -0400
-Message-ID: <1428396454.1841.4.camel@sipsolutions.net> (sfid-20150407_104740_484868_CFF798E0)
-Subject: Re: stp broadcast packet not receving with the bridge and
- wpa_supplicant
-From: Johannes Berg <johannes@sipsolutions.net>
-To: deepak kumar Pradhan <hydipu@gmail.com>
-Cc: linux-wireless@vger.kernel.org, majordomo@vger.kernel.org
-Date: Tue, 07 Apr 2015 10:47:34 +0200
-In-Reply-To: <CAGKQeFjwX-xU6gxF7E-oyiuJzWpAOqApyrfmcWv3To6pUDAkzg@mail.gmail.com> (sfid-20150406_073740_064246_5A3577A4)
-References: <CAGKQeFjwX-xU6gxF7E-oyiuJzWpAOqApyrfmcWv3To6pUDAkzg@mail.gmail.com>
-	 (sfid-20150406_073740_064246_5A3577A4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35515 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714AbbDUPEY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2015 11:04:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: implement more versatile set_bitrate_mask
+References: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
+	<87618v44jv.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnNNKF7riAgcVj1LupABAGodm751jxOUuZgam8u=wthUA@mail.gmail.com>
+Date: Tue, 21 Apr 2015 18:04:15 +0300
+In-Reply-To: <CA+BoTQnNNKF7riAgcVj1LupABAGodm751jxOUuZgam8u=wthUA@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 17 Apr 2015 09:30:51 +0200")
+Message-ID: <87vbgpzfo0.fsf@kamboji.qca.qualcomm.com> (sfid-20150421_170432_378259_FC546F5C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-04-06 at 10:55 +0530, deepak kumar Pradhan wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Driver used for Access point is madwifi(0.9.3) and Access point also
-> added to the Bridge with the wds support.
-> (We don't have access to target source code so we can't modify code on
-> target platform)
-> 
-> So it looks like madwifi + stp interoperability issue.
-> Has someone observed this issue. Any inputs on this is much appreciated.
-> Please forgive me if I have posted to a wrong list, and please guide
-> me where should I post this?
+>> To reduce support questions from the users it would be nice to give few
+>> good examples how to use this with iw. And also it makes it easier to
+>> test the patch. If you could send something I can add it to the commit
+>> log.
+>
+> Should work:
+>
+>   iw wlan0 set bitrates legacy 1 6 12 ht-mcs 1 2 3
+>   iw wlan0 set bitrates legacy-5 mcs-5 7 8 9
+>   iw wlan0 set bitrates legacy-5 24 ht-mcs-5 vht-mcs-5 1:0-9
+>
+> Won't work:
+>
+>   iw wlan0 set bitrates legacy-5 ht-mcs-5 vht-mcs-5 1:0-5
+>   iw wlan0 set bitrates vht-mcs-5 2:7-9
+>
+> (note the invalid VHT MCS ranges)
 
-No idea. This list is concerned with upstream wifi development, not
-madwifi.
+Thanks, I added these to the commit log.
 
-Keep in mind that bridging to a real *client* interface is not actually
-possible.
-
-johannes
-
+-- 
+Kalle Valo
