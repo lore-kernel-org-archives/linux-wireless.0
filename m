@@ -1,48 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16870 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422827AbbD2Lpp (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:34788 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933736AbbDUVd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 07:45:45 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 0/7] wil6210 patches
-Date: Wed, 29 Apr 2015 14:44:59 +0300
-Message-Id: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150429_134550_272893_ABC3E394)
+	Tue, 21 Apr 2015 17:33:28 -0400
+Received: by wgso17 with SMTP id o17so227665238wgs.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2015 14:33:27 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/3] staging: vt6655: CARDbUpdateTSF bss timestamp correct tsf counter value.
+Date: Tue, 21 Apr 2015 22:33:01 +0100
+Message-Id: <1429651982-4352-2-git-send-email-tvboxspy@gmail.com> (sfid-20150421_233334_949664_F5EE93E5)
+In-Reply-To: <1429651982-4352-1-git-send-email-tvboxspy@gmail.com>
+References: <1429651982-4352-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- introduced debug trace facility (PMC) that extracts events
-  reported by the hardware
-- introduced real broadcast for secure link
-- other are small fixes here and there
+The TSF counter is not set correctly.
 
-Vladimir Kondratiev (7):
-  wil6210: increase timeout for the "echo" command
-  wil6210: update Rx descriptor fields
-  wil6210: fix boot loader "ready" indication
-  wil6210: fix for probe_resp IE's
-  wil6210: Add pmc debug mechanism memory management
-  wil6210: broadcast for secure link
-  wil6210: support WSC for STA mode
+Use sync_tsf for last beacon value and get tsf local value.
 
- drivers/net/wireless/ath/wil6210/Makefile   |   1 +
- drivers/net/wireless/ath/wil6210/cfg80211.c | 117 ++++++---
- drivers/net/wireless/ath/wil6210/debugfs.c  | 107 +++++++-
- drivers/net/wireless/ath/wil6210/main.c     |  14 +-
- drivers/net/wireless/ath/wil6210/pmc.c      | 374 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/pmc.h      |  27 ++
- drivers/net/wireless/ath/wil6210/txrx.c     |  48 ++--
- drivers/net/wireless/ath/wil6210/txrx.h     |  24 +-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  21 +-
- drivers/net/wireless/ath/wil6210/wmi.c      |  70 ++----
- drivers/net/wireless/ath/wil6210/wmi.h      |  40 ++-
- 11 files changed, 705 insertions(+), 138 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/pmc.c
- create mode 100644 drivers/net/wireless/ath/wil6210/pmc.h
+Remove qwLocalTSF variable and call CARDbGetCurrentTSF.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c        | 10 +++++++---
+ drivers/staging/vt6655/card.h        |  2 +-
+ drivers/staging/vt6655/device_main.c |  2 +-
+ 3 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index 1cdcf49..e00c060 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -362,12 +362,16 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, u8 bb_type)
+  * Return Value: none
+  */
+ bool CARDbUpdateTSF(struct vnt_private *pDevice, unsigned char byRxRate,
+-		    u64 qwBSSTimestamp, u64 qwLocalTSF)
++		    u64 qwBSSTimestamp)
+ {
++	u64 local_tsf;
+ 	u64 qwTSFOffset = 0;
+ 
+-	if (qwBSSTimestamp != qwLocalTSF) {
+-		qwTSFOffset = CARDqGetTSFOffset(byRxRate, qwBSSTimestamp, qwLocalTSF);
++	CARDbGetCurrentTSF(pDevice, &local_tsf);
++
++	if (qwBSSTimestamp != local_tsf) {
++		qwTSFOffset = CARDqGetTSFOffset(byRxRate, qwBSSTimestamp,
++						local_tsf);
+ 		/* adjust TSF, HW's TSF add TSF Offset reg */
+ 		VNSvOutPortD(pDevice->PortOffset + MAC_REG_TSFOFST, (u32)qwTSFOffset);
+ 		VNSvOutPortD(pDevice->PortOffset + MAC_REG_TSFOFST + 4, (u32)(qwTSFOffset >> 32));
+diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
+index 2dfc419..16cca49 100644
+--- a/drivers/staging/vt6655/card.h
++++ b/drivers/staging/vt6655/card.h
+@@ -83,7 +83,7 @@ bool CARDbRadioPowerOff(struct vnt_private *);
+ bool CARDbRadioPowerOn(struct vnt_private *);
+ bool CARDbSetPhyParameter(struct vnt_private *, u8);
+ bool CARDbUpdateTSF(struct vnt_private *, unsigned char byRxRate,
+-		    u64 qwBSSTimestamp, u64 qwLocalTSF);
++		    u64 qwBSSTimestamp);
+ bool CARDbSetBeaconPeriod(struct vnt_private *, unsigned short wBeaconInterval);
+ 
+ #endif /* __CARD_H__ */
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index ed90b6f..26a6f67 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1473,7 +1473,7 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_ASSOC && priv->op_mode != NL80211_IFTYPE_AP) {
+ 		if (conf->assoc) {
+ 			CARDbUpdateTSF(priv, conf->beacon_rate->hw_value,
+-				       conf->sync_device_ts, conf->sync_tsf);
++				       conf->sync_tsf);
+ 
+ 			CARDbSetBeaconPeriod(priv, conf->beacon_int);
+ 
 -- 
-2.1.0
+2.1.4
 
