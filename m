@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18138 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42703 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751575AbbDTTxo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 15:53:44 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/3] iwlwifi: dvm: don't sleep in event_callback callback
-Date: Mon, 20 Apr 2015 22:53:36 +0300
-Message-Id: <1429559618-23056-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150420_215348_318005_E0B2FADD)
+	id S1752166AbbDUHHC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Apr 2015 03:07:02 -0400
+Message-ID: <1429600019.2045.2.camel@sipsolutions.net> (sfid-20150421_090707_353837_82ABE68B)
+Subject: Re: [PATCH 01/11] mac80211: add TX fastpath
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 21 Apr 2015 09:06:59 +0200
+In-Reply-To: <CAB3XZEeTCSK2qpyBqBXJLyJm_SES4RncUr0AoZLtqqvCz9BprQ@mail.gmail.com> (sfid-20150421_085437_370250_F0858165)
+References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEeraicUA4Vo4tT93yFn7uN4-FapHOu_5wVutBvtJZP+jQ@mail.gmail.com>
+	 <1429519633.2439.11.camel@sipsolutions.net>
+	 <CAB3XZEeTCSK2qpyBqBXJLyJm_SES4RncUr0AoZLtqqvCz9BprQ@mail.gmail.com>
+	 (sfid-20150421_085437_370250_F0858165)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will allow mac80211 to forbid sleeping from the
-event_callback callback.
+On Tue, 2015-04-21 at 09:54 +0300, Eliad Peller wrote:
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-Please apply this on mac80211-next.git since other mac80211 patches
-depend on it.
----
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> > Hey, somebody is reviewing my patches :-)
+> >
+> i didn't delve into them too much, but generally they look good :)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index 5707ba5..1e2c352 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -1139,7 +1139,6 @@ static void iwlagn_mac_event_callback(struct ieee80211_hw *hw,
- 		return;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
--	mutex_lock(&priv->mutex);
- 
- 	if (priv->lib->bt_params &&
- 	    priv->lib->bt_params->advanced_bt_coexist) {
-@@ -1148,13 +1147,12 @@ static void iwlagn_mac_event_callback(struct ieee80211_hw *hw,
- 		else if (event->u.rssi.data == RSSI_EVENT_HIGH)
- 			priv->bt_enable_pspoll = false;
- 
--		iwlagn_send_advance_bt_config(priv);
-+		queue_work(priv->workqueue, &priv->bt_runtime_config);
- 	} else {
- 		IWL_DEBUG_MAC80211(priv, "Advanced BT coex disabled,"
- 				"ignoring RSSI callback\n");
- 	}
- 
--	mutex_unlock(&priv->mutex);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
- 
--- 
-2.1.0
+:)
+
+> > To fix that, I think I can hold the lock longer, so that the lifetime of
+> > the key and the fast_tx pointer are more closely correlated. If I
+> > acquire the spinlock before checking for the key, then the CPU that
+> > invalidates the key pointer cannot race in this way with another caller,
+> > since the key pointer would (for this purpose) be protected by the lock.
+> > Then either the CPU that deleted the key will have to wait (while the
+> > key is still pretty much valid) and then will overwrite the fast_tx w/o
+> > the key, or the other CPU will have to wait and will find the key
+> > pointer changed/NULL already.
+> >
+> > Right? what do you think?
+> 
+> sounds correct.
+> i guess taking rcu_lock is a valid option as well (for about the same
+> reasons). so either one of them should be good.
+
+I don't think that would be correct - that just prevents the key from
+being freed while we hold it, whereas here we actually need to prevent
+the key from being accessed.
+
+Anyway - I've done a bit more testing on this and will likely merge it
+(the fixed version of course) in the next couple of days.
+
+johannes
 
