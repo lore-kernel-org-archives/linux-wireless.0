@@ -1,33 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54423 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755014AbbDMUfn (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36849 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932540AbbDVWGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 16:35:43 -0400
-Date: Mon, 13 Apr 2015 16:35:40 -0400 (EDT)
-Message-Id: <20150413.163540.64651067198865466.davem@davemloft.net> (sfid-20150413_223655_070637_B9C49236)
-To: richard@nod.at
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org
-Subject: Re: [PATCH 3/5 v4] netfilter: Fix portid types
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1428879159-19237-3-git-send-email-richard@nod.at>
-References: <1428879159-19237-1-git-send-email-richard@nod.at>
-	<1428879159-19237-3-git-send-email-richard@nod.at>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 22 Apr 2015 18:06:13 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jani Nikula <jani.nikula@intel.com>
+Subject: [PATCH v2 4/8] moduleparam.h: add module_param_config_*() helpers
+Date: Wed, 22 Apr 2015 14:55:07 -0700
+Message-Id: <1429739711-9415-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_000628_173777_6B92D518)
+In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Richard Weinberger <richard@nod.at>
-Date: Mon, 13 Apr 2015 00:52:37 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-> The netlink portid is an unsigned integer, use this type
-> also in netfilter.
-> 
-> Signed-off-by: Richard Weinberger <richard@nod.at>
+This adds a couple of bool module_param_config_*() helpers
+which are designed to let us easily associate a boolean
+module parameter with an associated kernel configuration
+option. Folks can use this to avoid what typically would
+be #ifdef eyesores around module parameter declarations.
 
-Applied.
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jani Nikula <jani.nikula@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: cocci@systeme.lip6.fr
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ include/linux/moduleparam.h | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
+index 7e00799..5416372 100644
+--- a/include/linux/moduleparam.h
++++ b/include/linux/moduleparam.h
+@@ -155,6 +155,43 @@ struct kparam_array
+ 	__MODULE_PARM_TYPE(name, #type)
+ 
+ /**
++ * module_param_config_on_off - bool parameter with run time override
++ * @name: a valid C identifier which is the parameter name.
++ * @value: the actual lvalue to alter.
++ * @perm: visibility in sysfs.
++ * @config: kernel parameter which will enable this option if this
++ * 	kernel configuration option has been enabled.
++ *
++ * This lets you define a bool module parameter which by default will be
++ * set to true if the config option has been set on your kernel's
++ * configuration, otherwise it is set to false.
++ */
++#define module_param_config_on_off(name, var, perm, config) 		\
++	static bool var = IS_ENABLED(config);				\
++	module_param_named(name, var, bool, perm);
++
++/**
++ * module_param_config_on - bool parameter with run time enablement override
++ * @name: a valid C identifier which is the parameter name.
++ * @value: the actual lvalue to alter.
++ * @perm: visibility in sysfs.
++ * @config: kernel parameter which will enable this option if this
++ * 	kernel configuration option has been enabled.
++ *
++ * This lets you define a bool module parameter which by default will be
++ * set to true if the config option has been set on your kernel's
++ * configuration, otherwise it is set to false. This particular helper
++ * will ensure that if the kernel configuration has been set you will not
++ * be able to disable this kernel parameter. You can only use this to let
++ * the an option that was disabled on your kernel configuration be enabled
++ * at run time.
++ */
++#define module_param_config_on(name, var, perm, config) 		\
++	static bool var = IS_ENABLED(config);				\
++	module_param_named(name, var, bool_enable_only, perm);
++
++
++/**
+  * module_param_cb - general callback for a module/cmdline parameter
+  * @name: a valid C identifier which is the parameter name.
+  * @ops: the set & get operations for this parameter.
+-- 
+2.3.2.209.gd67f9d5.dirty
+
