@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:50368 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754451AbbDNSKv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 14:10:51 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 09/10] brcmfmac: add additional 43602 pcie device id.
-Date: Tue, 14 Apr 2015 20:10:32 +0200
-Message-ID: <1429035033-14076-10-git-send-email-arend@broadcom.com> (sfid-20150414_201110_070099_0EA1FD7A)
-In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:55107 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933659AbbDVOqi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2015 10:46:38 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: don't update dev->trans_start
+Date: Wed, 22 Apr 2015 16:46:34 +0200
+Message-Id: <1429713994-17828-1-git-send-email-johannes@sipsolutions.net> (sfid-20150422_164641_174664_8FD2972C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This isn't necessary any more as the stack will automatically
+update the TXQ's trans_start after calling ndo_start_xmit().
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c       | 1 +
- drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 1 +
- 2 files changed, 2 insertions(+)
+ net/mac80211/tx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 8815de7..5e97a97 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -1862,6 +1862,7 @@ static struct pci_device_id brcmf_pcie_devid_table[] = {
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_2G_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_5G_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_RAW_DEVICE_ID),
- 	{ /* end: all zeroes */ }
- };
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index df62942653ad..83e3261dbf67 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2729,7 +2729,6 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
  
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 2543282..7a6daa3 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -64,6 +64,7 @@
- #define BRCM_PCIE_43602_DEVICE_ID	0x43ba
- #define BRCM_PCIE_43602_2G_DEVICE_ID	0x43bb
- #define BRCM_PCIE_43602_5G_DEVICE_ID	0x43bc
-+#define BRCM_PCIE_43602_RAW_DEVICE_ID	43602
+ 	dev->stats.tx_packets++;
+ 	dev->stats.tx_bytes += skb->len + extra_head;
+-	dev->trans_start = jiffies;
  
- /* brcmsmac IDs */
- #define BCM4313_D11N2G_ID	0x4727	/* 4313 802.11n 2.4G device */
+ 	/* will not be crypto-handled beyond what we do here, so use false
+ 	 * as the may-encrypt argument for the resize to not account for
+@@ -2912,7 +2911,6 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 
+ 		dev->stats.tx_packets++;
+ 		dev->stats.tx_bytes += skb->len;
+-		dev->trans_start = jiffies;
+ 
+ 		ieee80211_xmit(sdata, sta, skb);
+ 	}
 -- 
-1.9.1
+2.1.4
 
