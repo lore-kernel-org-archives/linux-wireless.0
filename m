@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9395 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbbDQGiE (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:35449 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758112AbbDVV50 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 02:38:04 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/4] ath10k: ibss crypto fixes
-References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 17 Apr 2015 09:37:51 +0300
-In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 10 Apr 2015 13:23:19 +0000")
-Message-ID: <87iocv45vk.fsf@kamboji.qca.qualcomm.com> (sfid-20150417_083808_148303_3CE469DA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 22 Apr 2015 17:57:26 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v2 0/8] module params: few simplifications
+Date: Wed, 22 Apr 2015 14:55:03 -0700
+Message-Id: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20150422_235732_388840_8BDB04FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-> I've mainly tested this on kvalo/pending branch.
-> Currently master branch contains 0f611d28fc2e
-> ("mac80211: count interfaces correctly for
-> combination checks") which breaks IBSS in
-> wpa_supplicant due to P2P Device and interface
-> combinations. This has been pointed out in the
-> following thread:
->
->  [1]: http://thread.gmane.org/gmane.linux.kernel.wireless.general/135570/focus=136643
->
-> If someone's interested in running ath10k IBSS
-> make sure to use kernel prior to 4.0, revert the
-> mentioned mac80211 patch or apply wpa_supplicant
-> workaround patch from [1].
->
->
-> Janusz Dziedzic (1):
->   ath10k: enable ibss-rsn
->
-> Michal Kazior (3):
->   ath10k: don't use reassoc flag
->   ath10k: fix multiple key static wep with ibss
->   ath10k: set def key idx for ibss
+This v2 splits out the #ifdef'ery eyesores out into separate
+patches to make it clear this is a separate atomic operation
+which requires review in and of itself. It also makes some
+clarifications about how the module_param_config_*() can help
+with eyesores, and also documents our paranoia over avoiding
+bool_enable_only for now on CONFIG_MODULE_SIG_FORCE kernels.
 
-Thanks, all four patches applied.
+It could be that we are comfortable with bool_enable_only's
+implementation even for CONFIG_MODULE_SIG_FORCE kernels -- but
+I'd rather let someone dealing with policy decide that.
+
+Luis R. Rodriguez (8):
+  kernel/params: constify struct kernel_param_ops uses
+  kernel/module.c: use generic module param operaters for sig_enforce
+  kernel/params.c: generalize bool_enable_only
+  moduleparam.h: add module_param_config_*() helpers
+  kernel/workqueue.c: remove ifdefs over wq_power_efficient
+  kernel/workqueue.c: use module_param_config_on_off() for
+    power_efficient
+  kernel/module.c: avoid ifdefs for sig_enforce declaration
+  kernel/module.c: use module_param_config_on() for sig_enforce
+
+ arch/s390/kernel/perf_cpum_sf.c         |  2 +-
+ arch/x86/kvm/mmu_audit.c                |  2 +-
+ arch/x86/platform/uv/uv_nmi.c           |  2 +-
+ drivers/block/null_blk.c                |  4 +-
+ drivers/char/ipmi/ipmi_watchdog.c       |  6 +--
+ drivers/dma/dmatest.c                   |  4 +-
+ drivers/ide/ide.c                       |  2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c     |  4 +-
+ drivers/input/misc/ati_remote2.c        |  4 +-
+ drivers/input/mouse/psmouse-base.c      |  2 +-
+ drivers/misc/lis3lv02d/lis3lv02d.c      |  2 +-
+ drivers/mtd/ubi/block.c                 |  2 +-
+ drivers/net/wireless/ath/wil6210/main.c |  4 +-
+ drivers/power/test_power.c              | 16 ++++----
+ drivers/thermal/intel_powerclamp.c      |  4 +-
+ drivers/tty/hvc/hvc_iucv.c              |  2 +-
+ drivers/tty/sysrq.c                     |  2 +-
+ drivers/video/fbdev/uvesafb.c           |  2 +-
+ drivers/virtio/virtio_mmio.c            |  2 +-
+ fs/nfs/super.c                          |  2 +-
+ include/linux/moduleparam.h             | 73 ++++++++++++++++++++++++++-------
+ kernel/module.c                         | 40 ++----------------
+ kernel/params.c                         | 44 ++++++++++++++++----
+ kernel/workqueue.c                      |  8 +---
+ net/sunrpc/auth.c                       |  2 +-
+ net/sunrpc/xprtsock.c                   |  6 +--
+ security/apparmor/lsm.c                 |  6 +--
+ security/integrity/ima/ima_crypto.c     |  2 +-
+ sound/pci/hda/hda_intel.c               |  2 +-
+ 29 files changed, 143 insertions(+), 110 deletions(-)
 
 -- 
-Kalle Valo
+2.3.2.209.gd67f9d5.dirty
+
