@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:34918 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753340AbbDPJCv (ORCPT
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:32942 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758150AbbDVWBw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 05:02:51 -0400
-Received: by qgej70 with SMTP id j70so2510807qge.2
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Apr 2015 02:02:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951B16DFB8F9@SC-VEXCH1.marvell.com>
-References: <1428916704-9635-1-git-send-email-afenkart@gmail.com>
-	<1428916704-9635-2-git-send-email-afenkart@gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951B16DFB8F9@SC-VEXCH1.marvell.com>
-Date: Thu, 16 Apr 2015 11:02:50 +0200
-Message-ID: <CALtMJECuDTKCRK9YXfTq0vAWmTm4rbNreE5i37T-H7=c5q=T7A@mail.gmail.com> (sfid-20150416_110258_739401_BF855FE6)
-Subject: Re: [PATCH 2/2] mwifiex: sdio: bug: dead-lock in card reset
-From: Andreas Fenkart <afenkart@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Apr 2015 18:01:52 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jani Nikula <jani.nikula@intel.com>
+Subject: [PATCH v2 2/8] kernel/module.c: use generic module param operaters for sig_enforce
+Date: Wed, 22 Apr 2015 14:55:05 -0700
+Message-Id: <1429739711-9415-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_000211_481821_1D9EFE08)
+In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amit,
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-2015-04-13 12:27 GMT+02:00 Amitkumar Karwar <akarwar@marvell.com>:
->
-> We had recently submitted a patch to address this issue. So these two patches won't be needed now.
-> http://www.spinics.net/lists/linux-wireless/msg135146.html
->
-> Could you please check and let us know if you have any suggestions for improvement?
+We're directly checking and modifying sig_enforce when needed instead
+of using the generic helpers. This prevents us from generalizing this
+helper so that others can use it. Use indirect helpers to allow us
+to generalize this code a bit and to make it a bit more clear what
+this is doing.
 
-They work for my use case: 1 adapter / non-removable
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jani Nikula <jani.nikula@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: cocci@systeme.lip6.fr
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ kernel/module.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-Problems not solved:
-- the use of global static variable is racy in case there two
-adapters, and both need reset
-  simultaneously
-- since work struct is independent of the interface (sdio_func), it
-will also not be notified
-  if the card is removed physically
+diff --git a/kernel/module.c b/kernel/module.c
+index 42a1d2a..de12c4a 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -114,23 +114,25 @@ static bool sig_enforce = false;
+ static int param_set_bool_enable_only(const char *val,
+ 				      const struct kernel_param *kp)
+ {
+-	int err;
+-	bool test;
++	int err = 0;
++	bool new_value;
++	bool orig_value = *(bool *)kp->arg;
+ 	struct kernel_param dummy_kp = *kp;
+ 
+-	dummy_kp.arg = &test;
++	dummy_kp.arg = &new_value;
+ 
+ 	err = param_set_bool(val, &dummy_kp);
+ 	if (err)
+ 		return err;
+ 
+ 	/* Don't let them unset it once it's set! */
+-	if (!test && sig_enforce)
++	if (!new_value && orig_value)
+ 		return -EROFS;
+ 
+-	if (test)
+-		sig_enforce = true;
+-	return 0;
++	if (new_value)
++		err = param_set_bool(val, kp);
++
++	return err;
+ }
+ 
+ static const struct kernel_param_ops param_ops_bool_enable_only = {
+-- 
+2.3.2.209.gd67f9d5.dirty
 
-for illustrating the latter:
-- cmd is hung
-- card timeout triggers, and issues card reset, card reset stores adapter
-  pointer in global variable
-- user removes card
-- mmc layer triggers removal of card, global pointer becomes invalid
-- card reset work struct de-references invalid pointer
-
-regards,
-Andreas
