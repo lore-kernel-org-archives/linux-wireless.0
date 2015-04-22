@@ -1,94 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53375 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964835AbbD0NuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 09:50:18 -0400
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v3] cfg80211: Allow GO concurrent relaxation after BSS disconnection
-Date: Mon, 27 Apr 2015 16:52:16 +0300
-Message-Id: <1430142736-24032-1-git-send-email-ilan.peer@intel.com> (sfid-20150427_155022_871329_5457BC68)
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:35417 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932076AbbDVWMn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2015 18:12:43 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v2 7/8] kernel/module.c: avoid ifdefs for sig_enforce declaration
+Date: Wed, 22 Apr 2015 14:55:10 -0700
+Message-Id: <1429739711-9415-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_001246_920015_A8FDB04F)
+In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-If a P2P GO was allowed on a channel because of the GO concurrent
-relaxation, i.e., another station interface was associated to an AP on
-the same channel or the same UNII band, and the station interface
-disconnected from the AP, allow the following use cases unless the
-channel is marked as indoor only and the device is not operating in an
-indoor environment:
+There's no need to require an ifdef over the declaration
+of sig_enforce as IS_ENABLED() can be used. While at it,
+there's no harm in exposing this kernel parameter outside of
+CONFIG_MODULE_SIG as it'd be a no-op on non module sig
+kernels.
 
-1. Allow the P2P GO to stay on its current channel. The rationale behind
-   this is that if the channel or UNII band were allowed by the AP they
-   could still be used to continue the P2P GO operation, and avoid connection
-   breakage.
-2. Allow another P2P GO to start on the same channel or another channel
-   that is in the same UNII band as the previous instantiated P2P GO.
+Now, technically we should in theory be able to remove
+the #ifdef'ery over the declaration of the module parameter
+as we are also trusting the bool_enable_only code for
+CONFIG_MODULE_SIG kernels but for now remain paranoid
+and keep it.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+With time if no one can put a bullet through bool_enable_only
+and if there are no technical requirements over not exposing
+CONFIG_MODULE_SIG_FORCE with the measures in place by
+bool_enable_only we could remove this last ifdef.
+
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: cocci@systeme.lip6.fr
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- net/wireless/chan.c | 29 +++++++++++++++++++----------
- 1 file changed, 19 insertions(+), 10 deletions(-)
+ kernel/module.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 7aaf741..5bcffdb 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -709,7 +709,7 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
- static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 					struct ieee80211_channel *chan)
- {
--	struct wireless_dev *wdev_iter;
-+	struct wireless_dev *wdev;
- 	struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
+diff --git a/kernel/module.c b/kernel/module.c
+index 43a1ef3..9e51b37 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -105,15 +105,10 @@ static LIST_HEAD(modules);
+ struct list_head *kdb_modules = &modules; /* kdb needs the list of modules */
+ #endif /* CONFIG_KGDB_KDB */
  
- 	ASSERT_RTNL();
-@@ -732,18 +732,27 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 	 * and thus fail the GO instantiation, consider only the interfaces of
- 	 * the current registered device.
- 	 */
--	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
-+	list_for_each_entry(wdev, &rdev->wdev_list, list) {
- 		struct ieee80211_channel *other_chan = NULL;
- 		int r1, r2;
- 
--		if (wdev_iter->iftype != NL80211_IFTYPE_STATION ||
--		    !netif_running(wdev_iter->netdev))
--			continue;
+-#ifdef CONFIG_MODULE_SIG
+-#ifdef CONFIG_MODULE_SIG_FORCE
+-static bool sig_enforce = true;
+-#else
+-static bool sig_enforce = false;
 -
--		wdev_lock(wdev_iter);
--		if (wdev_iter->current_bss)
--			other_chan = wdev_iter->current_bss->pub.channel;
--		wdev_unlock(wdev_iter);
-+		wdev_lock(wdev);
-+		if (wdev->iftype == NL80211_IFTYPE_STATION &&
-+		    wdev->current_bss)
-+			other_chan = wdev->current_bss->pub.channel;
-+
-+		/*
-+		 * If a GO already operates on the same GO_CONCURRENT channel,
-+		 * this one (maybe the same one) can beacon as well. We allow
-+		 * the operation even if the station we relied on with
-+		 * GO_CONCURRENT is disconnected now. But then we must make sure
-+		 * we're not outdoor on an indoor-only channel.
-+		 */
-+		if (wdev->iftype == NL80211_IFTYPE_P2P_GO &&
-+		    wdev->beacon_interval &&
-+		    !(chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
-+			other_chan = wdev->chandef.chan;
-+		wdev_unlock(wdev);
++static bool sig_enforce = IS_ENABLED(CONFIG_MODULE_SIG_FORCE);
++#ifndef CONFIG_MODULE_SIG_FORCE
+ module_param(sig_enforce, bool_enable_only, 0644);
+ #endif /* !CONFIG_MODULE_SIG_FORCE */
+-#endif /* CONFIG_MODULE_SIG */
  
- 		if (!other_chan)
- 			continue;
+ /* Block module loading/unloading? */
+ int modules_disabled = 0;
 -- 
-1.9.1
+2.3.2.209.gd67f9d5.dirty
 
