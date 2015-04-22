@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27959 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752992AbbDARTi (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:35528 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934099AbbDVWOy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 13:19:38 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: core: match wait_for_completion_timeout return type
-References: <1426325858-19808-1-git-send-email-hofrat@osadl.org>
-Date: Wed, 1 Apr 2015 20:19:26 +0300
-In-Reply-To: <1426325858-19808-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
-	Guire's message of "Sat, 14 Mar 2015 05:37:37 -0400")
-Message-ID: <87sicjydep.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_191956_778073_3A78EF9A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 22 Apr 2015 18:14:54 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au
+Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v2 8/8] kernel/module.c: use module_param_config_on() for sig_enforce
+Date: Wed, 22 Apr 2015 14:55:11 -0700
+Message-Id: <1429739711-9415-9-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_001514_508001_A272E3D9)
+In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <hofrat@osadl.org> writes:
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-> Return type of wait_for_completion_timeout is unsigned long not int.
-> An appropriately named unsigned long is added and the assignments fixed up.
->
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: cocci@systeme.lip6.fr
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ kernel/module.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks, applied.
-
+diff --git a/kernel/module.c b/kernel/module.c
+index 9e51b37..3a61e25 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -107,7 +107,7 @@ struct list_head *kdb_modules = &modules; /* kdb needs the list of modules */
+ 
+ static bool sig_enforce = IS_ENABLED(CONFIG_MODULE_SIG_FORCE);
+ #ifndef CONFIG_MODULE_SIG_FORCE
+-module_param(sig_enforce, bool_enable_only, 0644);
++module_param_config_on(sig_enforce, sig_enforce, 0644, CONFIG_MODULE_SIG_FORCE);
+ #endif /* !CONFIG_MODULE_SIG_FORCE */
+ 
+ /* Block module loading/unloading? */
 -- 
-Kalle Valo
+2.3.2.209.gd67f9d5.dirty
+
