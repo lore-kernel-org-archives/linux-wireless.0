@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:44255 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757045AbbDPKTe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 06:19:34 -0400
-Date: Thu, 16 Apr 2015 20:19:13 +1000
-From: James Cameron <quozl@laptop.org>
-To: Florian Achleitner <flo@fopen.at>
-Cc: linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>
-Subject: Re: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
-Message-ID: <20150416101913.GA26748@us.netrek.org> (sfid-20150416_121937_499565_5B447C24)
-References: <3169170.GKjfvNuGRf@r90b40zn>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3169170.GKjfvNuGRf@r90b40zn>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33987 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934298AbbDWM0V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2015 08:26:21 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix rhashtable conversion
+Date: Thu, 23 Apr 2015 14:26:09 +0200
+Message-Id: <1429791969-16194-1-git-send-email-johannes@sipsolutions.net> (sfid-20150423_142626_637433_88535220)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 16, 2015 at 11:10:02AM +0200, Florian Achleitner wrote:
-> Is the necessity of frequent hardware resets a commonly known issue
-> with this chip/firmware? Anybody else experiencing these?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes, but how frequent?
+My conversion of the mac80211 station hash table to rhashtable
+completely broke the lookup in two ways:
+ 1) sta_info_get() no longer took into account the virtual interface
+ 2) sta_info_get_bss() no longer compared the MAC address
 
-> Currently, we see three different scenarios. One of them is
-> currently not answered by reset. Refer to the upcoming patch.
-> 
-> (1)  mwifiex_cmd_timeout_func: Timeout cmd .. Ok, after reset.
+Fix both these issues.
 
-See this a lot during heavy testing.
+Fixes: 7bedd0cfad4e1 ("mac80211: use rhashtable for station table")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-> (2)  Firmware wakeup failed.. Ok, after reset.
-
-Never see this.
-
-> (3) DNLD_CMD: host to card failed. No reset triggered. See patch.
-
-Very rarely see this.
-
-However, our experience may not be comparable; we are using 8787 with
-a 3.5 kernel, because we haven't the resources to use a later kernel
-or get backports working.
-
-Also, we use WOL (wake on lan) heavily; frequent automatic suspends,
-with a GPIO wakeup in addition to the SDHCI.
-
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 737730abba6d..75d71f9f9435 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -157,8 +157,25 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+ 			      const u8 *addr)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++	struct rhash_head *tmp;
++	const struct bucket_table *tbl;
++
++	rcu_read_lock();
++	tbl = rht_dereference_rcu(local->sta_hash.tbl, &local->sta_hash);
+ 
+-	return rhashtable_lookup_fast(&local->sta_hash, addr, sta_rht_params);
++	for_each_sta_info(local, tbl, addr, sta, tmp) {
++		if (ether_addr_equal(sta->sta.addr, addr) &&
++		    sta->sdata == sdata) {
++			rcu_read_unlock();
++			/* this is safe as the caller must already hold
++			 * another rcu read section or the mutex
++			 */
++			return sta;
++		}
++	}
++	rcu_read_unlock();
++	return NULL;
+ }
+ 
+ /*
+@@ -177,8 +194,9 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
+ 	tbl = rht_dereference_rcu(local->sta_hash.tbl, &local->sta_hash);
+ 
+ 	for_each_sta_info(local, tbl, addr, sta, tmp) {
+-		if (sta->sdata == sdata ||
+-		    (sta->sdata->bss && sta->sdata->bss == sdata->bss)) {
++		if (ether_addr_equal(sta->sta.addr, addr) &&
++		    (sta->sdata == sdata ||
++		     (sta->sdata->bss && sta->sdata->bss == sdata->bss))) {
+ 			rcu_read_unlock();
+ 			/* this is safe as the caller must already hold
+ 			 * another rcu read section or the mutex
 -- 
-James Cameron
-http://quozl.linux.org.au/
+2.1.4
+
