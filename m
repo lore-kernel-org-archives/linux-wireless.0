@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42786 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030357AbbDWTdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2015 15:33:42 -0400
-Date: Thu, 23 Apr 2015 21:33:39 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Rusty Russell <rusty@rustcorp.com.au>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, Jani Nikula <jani.nikula@intel.com>
-Subject: Re: [PATCH v2 4/8] moduleparam.h: add module_param_config_*() helpers
-Message-ID: <20150423193339.GO5622@wotan.suse.de> (sfid-20150423_213432_697179_D7724C29)
-References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
- <1429739711-9415-5-git-send-email-mcgrof@do-not-panic.com>
- <87618noaj6.fsf@rustcorp.com.au>
+Received: from zimbra.real-time.com ([63.170.91.9]:37357 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756426AbbDWInX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2015 04:43:23 -0400
+Date: Thu, 23 Apr 2015 18:43:09 +1000
+From: James Cameron <quozl@laptop.org>
+To: Florian Achleitner <flo@fopen.at>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Maithili Hinge <maithili@marvell.com>
+Subject: Re: [RFC/PATCH] mwifiex: Driver - Firmware Glitches
+Message-ID: <20150423084309.GL2147@us.netrek.org> (sfid-20150423_104329_398089_2F11E403)
+References: <3169170.GKjfvNuGRf@r90b40zn>
+ <1675638.uTIoPdU2hg@r90b40zn>
+ <5FF020A1CFFEEC49BD1E09530C4FF5951B16EB7A39@SC-VEXCH1.marvell.com>
+ <2079721.JMnuuxDd1J@r90b40zn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87618noaj6.fsf@rustcorp.com.au>
+In-Reply-To: <2079721.JMnuuxDd1J@r90b40zn>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 23, 2015 at 11:45:09AM +0930, Rusty Russell wrote:
-> "Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
-> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> >
-> > This adds a couple of bool module_param_config_*() helpers
-> > which are designed to let us easily associate a boolean
-> > module parameter with an associated kernel configuration
-> > option.
+On Thu, Apr 23, 2015 at 10:33:02AM +0200, Florian Achleitner wrote:
+> On Friday 17 April 2015 02:45:02 Amitkumar Karwar wrote:
+> > Known firmware issues are command timeout and wakeup failure. They
+> > are not specific to SDIO. As Avinash mentioned earlier, we need to
+> > check CONFIG_MMC_DEBUG enbled dmesg logs for "write iomem (1)
+> > failed: -110" issue.
 > 
-> OK.
+> Thx.
+> A kernel with CONFIG_MMC_DEBUG is running since 6 days on 4 devices,
+> but nothing valuable captured yet. Unfortunately, it looks like the
+> debugging code modifies the timing, such that the failure doesn't
+> occur..
 
-So this is really the main gain.
+Yes, I've seen something similar last year, when I began to add
+instrumentation code the problems became less reproducible.
 
-> > Folks can use this to avoid what typically would
-> > be #ifdef eyesores around module parameter declarations.
-> 
-> Really?  So you use this in two patches:
-> 
->   /* see the comment above the definition of WQ_POWER_EFFICIENT */
->  -static bool wq_power_efficient = IS_ENABLED(CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
->  -module_param_named(power_efficient, wq_power_efficient, bool, 0444);
->  +module_param_config_on_off(power_efficient, wq_power_efficient, 0444, CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
-> 
-> And:
-> 
->   static bool sig_enforce = IS_ENABLED(CONFIG_MODULE_SIG_FORCE);
->   #ifndef CONFIG_MODULE_SIG_FORCE
->  -module_param(sig_enforce, bool_enable_only, 0644);
->  +module_param_config_on(sig_enforce, sig_enforce, 0644, CONFIG_MODULE_SIG_FORCE);
->   #endif /* !CONFIG_MODULE_SIG_FORCE */
-> 
-> But neither actually, y'know, cleans up any #ifdefs.
+So in my situation either there was a race condition with the
+firmware, or a signal integrity problem on the SDIO.
 
-OK, sure, its the use of IS_ENABLED() that does that as a first step.
+I wasn't able to go into full signal integrity work at the time.
 
-> Simplicity is a major virtue.  Readability is a major virtue.  Brevity
-> is only a minor virtue.
+I also have rather hazy memory of which particular problem I was
+working on.  ;-)
 
-I was not shooting for brevity but instead aiming at the possible
-grammatical gain of direct and immediate association between a bool, behaviour
-(on_off, or just on), and a config. I don't have a need for the grammatical
-association now so will drop this.
+Perhaps you might review the effects of CONFIG_MMC_DEBUG and remove
+some of it?
 
-  Luis
+-- 
+James Cameron
+http://quozl.linux.org.au/
