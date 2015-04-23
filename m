@@ -1,145 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33234 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758303AbbDVWED (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:36848 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757041AbbDWMsu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 18:04:03 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jani Nikula <jani.nikula@intel.com>
-Subject: [PATCH v2 3/8] kernel/params.c: generalize bool_enable_only
-Date: Wed, 22 Apr 2015 14:55:06 -0700
-Message-Id: <1429739711-9415-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20150423_000408_061917_801B1EA8)
-In-Reply-To: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 23 Apr 2015 08:48:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <alpine.LNX.2.00.1504231114290.3695@pobox.suse.cz>
+References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz>
+	<1429764440.4084.5.camel@intel.com>
+	<alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>
+	<1429780366.11859.1.camel@intel.com>
+	<alpine.LNX.2.00.1504231114290.3695@pobox.suse.cz>
+Date: Thu, 23 Apr 2015 14:48:49 +0200
+Message-ID: <CA+uBNfxXoLj9Nfss+j1G3PY9A2t=N6KRiYUAdoxiUOZvigwyAw@mail.gmail.com> (sfid-20150423_144855_458377_389EBD10)
+Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
+From: Piotr Karbowski <piotr.karbowski@gmail.com>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Hello,
 
-This takes out the bool_enable_only implementation from
-the module loading code and generalizes it so that others
-can make use of it.
+On Thu, Apr 23, 2015 at 11:15 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+> On Thu, 23 Apr 2015, Grumbach, Emmanuel wrote:
+>
+>> > I will try it, but I expect the result to be bogus because of this,
+>> > unfortunately.
+>>
+>> I can understand. A few users reported that this bug occurred more
+>> reliably when moving their system, although it seems very weird to me.
+>
+> My "feeling" was that it sometimes was related to start of audio playback,
+> but not 100% relieble either.
+>
+>> > > First question is: Are you sure that 4.0-rc6 was good?
+>> >
+>> > Pretty much, yes. I've been running it for quite some time on this
+>> > machine without any issues. But after updating to current HEAD two days
+>> > ago, the issue triggered like 6 or 7 times already.
+>>
+>> Ok - I will try to look at the PCI commits there although I am not sure
+>> I'll be able to make much sense of them...
+>
+> Thanks,
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jani Nikula <jani.nikula@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- include/linux/moduleparam.h |  6 ++++++
- kernel/module.c             | 31 -------------------------------
- kernel/params.c             | 30 ++++++++++++++++++++++++++++++
- 3 files changed, 36 insertions(+), 31 deletions(-)
+i've also started noticing hard system lockups with iwlwifi. What's
+worth noticing is that I've started to see this on 3.19 and I also
+have it on 4.0 kernel thus allow me to report it in this very thread.
+I had over month uptime, untill I've updated iwl ucode, maybe this was
+introduced not by kernel but firmware?. The lockups are random and
+result in hard system lockup, frozen Xorg, screen artifacts/glitches,
+audio playback keeps repeating last second or so of music, sysrq
+cannot handle it as well as auto-reboot after kernel panic does not
+kicks in.
 
-diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
-index 5d0f4d9..7e00799 100644
---- a/include/linux/moduleparam.h
-+++ b/include/linux/moduleparam.h
-@@ -427,6 +427,12 @@ extern int param_set_bool(const char *val, const struct kernel_param *kp);
- extern int param_get_bool(char *buffer, const struct kernel_param *kp);
- #define param_check_bool(name, p) __param_check(name, p, bool)
- 
-+extern const struct kernel_param_ops param_ops_bool_enable_only;
-+extern int param_set_bool_enable_only(const char *val,
-+				      const struct kernel_param *kp);
-+/* getter is the same as for the regular bool */
-+#define param_check_bool_enable_only param_check_bool
-+
- extern const struct kernel_param_ops param_ops_invbool;
- extern int param_set_invbool(const char *val, const struct kernel_param *kp);
- extern int param_get_invbool(char *buffer, const struct kernel_param *kp);
-diff --git a/kernel/module.c b/kernel/module.c
-index de12c4a..43a1ef3 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -111,37 +111,6 @@ static bool sig_enforce = true;
- #else
- static bool sig_enforce = false;
- 
--static int param_set_bool_enable_only(const char *val,
--				      const struct kernel_param *kp)
--{
--	int err = 0;
--	bool new_value;
--	bool orig_value = *(bool *)kp->arg;
--	struct kernel_param dummy_kp = *kp;
--
--	dummy_kp.arg = &new_value;
--
--	err = param_set_bool(val, &dummy_kp);
--	if (err)
--		return err;
--
--	/* Don't let them unset it once it's set! */
--	if (!new_value && orig_value)
--		return -EROFS;
--
--	if (new_value)
--		err = param_set_bool(val, kp);
--
--	return err;
--}
--
--static const struct kernel_param_ops param_ops_bool_enable_only = {
--	.flags = KERNEL_PARAM_OPS_FL_NOARG,
--	.set = param_set_bool_enable_only,
--	.get = param_get_bool,
--};
--#define param_check_bool_enable_only param_check_bool
--
- module_param(sig_enforce, bool_enable_only, 0644);
- #endif /* !CONFIG_MODULE_SIG_FORCE */
- #endif /* CONFIG_MODULE_SIG */
-diff --git a/kernel/params.c b/kernel/params.c
-index b7635c0..324624e 100644
---- a/kernel/params.c
-+++ b/kernel/params.c
-@@ -335,6 +335,36 @@ const struct kernel_param_ops param_ops_bool = {
- };
- EXPORT_SYMBOL(param_ops_bool);
- 
-+int param_set_bool_enable_only(const char *val, const struct kernel_param *kp)
-+{
-+	int err = 0;
-+	bool new_value;
-+	bool orig_value = *(bool *)kp->arg;
-+	struct kernel_param dummy_kp = *kp;
-+
-+	dummy_kp.arg = &new_value;
-+
-+	err = param_set_bool(val, &dummy_kp);
-+	if (err)
-+		return err;
-+
-+	/* Don't let them unset it once it's set! */
-+	if (!new_value && orig_value)
-+		return -EROFS;
-+
-+	if (new_value)
-+		err = param_set_bool(val, kp);
-+
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(param_set_bool_enable_only);
-+
-+const struct kernel_param_ops param_ops_bool_enable_only = {
-+	.flags = KERNEL_PARAM_OPS_FL_NOARG,
-+	.set = param_set_bool_enable_only,
-+	.get = param_get_bool,
-+};
-+
- /* This one must be bool. */
- int param_set_invbool(const char *val, const struct kernel_param *kp)
- {
--- 
-2.3.2.209.gd67f9d5.dirty
+The hardware I see this problem on is iwl 7260. The only workaround
+I've found so far was to disable power save via `iw dev wlan0 set
+power_save off` and not a single lockup since. What's rather
+disturbing is that by 'modinfo iwlwifi' it does say that power_save is
+default off, but it is not. I am sure that nothing else enables
+power_save on my system because I don't even have udev, and for the
+test I've also disabled wicd, then simple `modprobe iwlwifi` and `iw
+dev wlan0 get power_save` reports 'on'.
 
+I also have another system iwl 6205 and no single lockup was noted,
+but it indeed have power_save disabled, so that may be the case.
+
+-- Piotr.
