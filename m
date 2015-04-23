@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fopen.at ([151.236.7.194]:47718 "EHLO fopen.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756989AbbDPJWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 05:22:13 -0400
-From: Florian Achleitner <flo@fopen.at>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>
-Subject: [PATCH] mwifiex: Trigger a card reset on "DNLD_CMD: host to card failed".
-Date: Thu, 16 Apr 2015 11:14:48 +0200
-Message-ID: <2350188.9S0zOEq5AR@r90b40zn> (sfid-20150416_112216_708595_BD94C4E5)
-In-Reply-To: <3169170.GKjfvNuGRf@r90b40zn>
-References: <3169170.GKjfvNuGRf@r90b40zn>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:36307 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752618AbbDWPWx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2015 11:22:53 -0400
+Date: Thu, 23 Apr 2015 11:22:49 -0400
+From: Tejun Heo <tj@kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: rusty@rustcorp.com.au, akpm@linux-foundation.org, mingo@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jani Nikula <jani.nikula@intel.com>
+Subject: Re: [PATCH v2 3/8] kernel/params.c: generalize bool_enable_only
+Message-ID: <20150423152249.GK10738@htj.duckdns.org> (sfid-20150423_172314_709475_80B31CCD)
+References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com>
+ <1429739711-9415-4-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1429739711-9415-4-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever this problem occurs, the driver can not continue. Thus,
-trigger a card reset to restart the module firmware. Other firmware
-communication issues are resolved by this last resort.
-Also dump registers, to eventually allow some diagnostics.
+Hello,
 
-Signed-off-by: Florian Achleitner <flo@fopen.at>
----
+On Wed, Apr 22, 2015 at 02:55:06PM -0700, Luis R. Rodriguez wrote:
+> +int param_set_bool_enable_only(const char *val, const struct kernel_param *kp)
+> +{
+> +	int err = 0;
+> +	bool new_value;
+> +	bool orig_value = *(bool *)kp->arg;
+> +	struct kernel_param dummy_kp = *kp;
+> +
+> +	dummy_kp.arg = &new_value;
+> +
+> +	err = param_set_bool(val, &dummy_kp);
+> +	if (err)
+> +		return err;
+> +
+> +	/* Don't let them unset it once it's set! */
+> +	if (!new_value && orig_value)
+> +		return -EROFS;
 
-This works well at least for us.
+I know that this was moved from another place but as we're making it
+generic now I'm a bit curious about -EROFS.  Wouldn't -EINVAL be a
+more conventional choice here?
 
- drivers/net/wireless/mwifiex/cmdevt.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Thanks.
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index c5a14ff..410f4f2 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -233,6 +233,12 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
-                spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
- 
-                adapter->dbg.num_cmd_host_to_card_failure++;
-+
-+               if (adapter->if_ops.fw_dump)
-+                       adapter->if_ops.fw_dump(adapter);
-+
-+               if (adapter->if_ops.card_reset)
-+                       adapter->if_ops.card_reset(adapter);
-                return -1;
-        }
- 
 -- 
-2.1.0
-
-
+tejun
