@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:33496 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752584AbbDCJfw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2015 05:35:52 -0400
+Received: from ozlabs.org ([103.22.144.67]:56826 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932246AbbDWDZp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Apr 2015 23:25:45 -0400
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: akpm@linux-foundation.org, mingo@kernel.org, tj@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	keescook@chromium.org, casey@schaufler-ca.com,
+	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jani Nikula <jani.nikula@intel.com>
+Subject: Re: [PATCH v2 4/8] moduleparam.h: add module_param_config_*() helpers
+In-Reply-To: <1429739711-9415-5-git-send-email-mcgrof@do-not-panic.com>
+References: <1429739711-9415-1-git-send-email-mcgrof@do-not-panic.com> <1429739711-9415-5-git-send-email-mcgrof@do-not-panic.com>
+Date: Thu, 23 Apr 2015 11:45:09 +0930
+Message-ID: <87618noaj6.fsf@rustcorp.com.au> (sfid-20150423_052552_145387_F7221C96)
 MIME-Version: 1.0
-Date: Fri, 3 Apr 2015 15:05:51 +0530
-Message-ID: <CAGKQeFipVR5L1T1fKL-FWLO2HmT3n7cUWH6x=BrgGH43qf5atA@mail.gmail.com> (sfid-20150403_113602_177330_E8FE8331)
-Subject: stp broadcast packet not receving with the bridge and wpa_supplicant
-From: deepak kumar Pradhan <hydipu@gmail.com>
-To: majordomo@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+>
+> This adds a couple of bool module_param_config_*() helpers
+> which are designed to let us easily associate a boolean
+> module parameter with an associated kernel configuration
+> option.
 
-We are using IXDP465 intel board which is running kernel 3.12.2 with a
-wireless Atheros card (driver ath9k) for wireless driver.
+OK.
 
-We had configured the wireless client on this board and try to connect
-Target board Access point.
-Wireless client able to connect this Access point (With open and
-secure mode).ping also working between Access point to wireless client
-bridge.
-But we are not observing any stp & arp broadcast packet passing
-through the wireless client(capture the data using the tcpdump).
->From the Target board this packet are trasmited confirm by tcpdump.
-We had also kept some debug print on our kernel (3.12.3) and this
-packet also passing through the ath9k driver but not receiving on the
-application layer.
+> Folks can use this to avoid what typically would
+> be #ifdef eyesores around module parameter declarations.
 
-Our Board configuration:
-We have two wireless card and two ethernet interface,which are added
-to the bridge.
-wpa_supplicant(0.7.3) running on the wireless interface with the drive
-nl80211 and set 4addr flag on using iw command.
+Really?  So you use this in two patches:
 
-Target board configuration:
-Running with the kernel 2.6.15 and for access point they had used the
-hostapd (0.5.8).
-Driver used for Access point is madwifi(0.9.3) and Access point also
-added to the Bridge with the wds support.
-(We don't have access to target source code so we can't modify code on
-target platform)
+  /* see the comment above the definition of WQ_POWER_EFFICIENT */
+ -static bool wq_power_efficient = IS_ENABLED(CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
+ -module_param_named(power_efficient, wq_power_efficient, bool, 0444);
+ +module_param_config_on_off(power_efficient, wq_power_efficient, 0444, CONFIG_WQ_POWER_EFFICIENT_DEFAULT);
 
-So it looks like madwifi + stp interoperability issue.
-Has someone observed this issue. Any inputs on this is much appreciated.
-Please forgive me if I have posted to a wrong list, and please guide
-me where should I post this?
+And:
 
-Thanks & regards,
-Deepak Kumar Pradhan
+  static bool sig_enforce = IS_ENABLED(CONFIG_MODULE_SIG_FORCE);
+  #ifndef CONFIG_MODULE_SIG_FORCE
+ -module_param(sig_enforce, bool_enable_only, 0644);
+ +module_param_config_on(sig_enforce, sig_enforce, 0644, CONFIG_MODULE_SIG_FORCE);
+  #endif /* !CONFIG_MODULE_SIG_FORCE */
+
+But neither actually, y'know, cleans up any #ifdefs.
+
+Simplicity is a major virtue.  Readability is a major virtue.  Brevity
+is only a minor virtue.
+
+So I have applied the following patches:
+
+[PATCH v2 1/8] kernel/params: constify struct kernel_param_ops uses
+[PATCH v2 2/8] kernel/module.c: use generic module param operaters for sig_enforce
+[PATCH v2 3/8] kernel/params.c: generalize bool_enable_only
+[PATCH v2 5/8] kernel/workqueue.c: remove ifdefs over wq_power_efficient
+[PATCH v2 7/8] kernel/module.c: avoid ifdefs for sig_enforce declaration
+
+Thanks,
+Rusty.
