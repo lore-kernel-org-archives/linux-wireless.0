@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:14388 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbbDLWwu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 18:52:50 -0400
-From: Richard Weinberger <richard@nod.at>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, davem@davemloft.net,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
-	Richard Weinberger <richard@nod.at>
-Subject: [PATCH 4/5 v4] netfilter: Fix format string of nfnetlink_queue proc file
-Date: Mon, 13 Apr 2015 00:52:38 +0200
-Message-Id: <1428879159-19237-4-git-send-email-richard@nod.at> (sfid-20150413_005431_714085_62377450)
-In-Reply-To: <1428879159-19237-1-git-send-email-richard@nod.at>
-References: <1428879159-19237-1-git-send-email-richard@nod.at>
+Received: from cantor2.suse.de ([195.135.220.15]:39221 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755462AbbDWIPp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2015 04:15:45 -0400
+Date: Thu, 23 Apr 2015 10:15:41 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
+In-Reply-To: <1429764440.4084.5.camel@intel.com>
+Message-ID: <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz> (sfid-20150423_101607_123444_0032FB61)
+References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz> <1429764440.4084.5.camel@intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The printed values are all of type unsigned integer, therefore use
-%u instead of %d. Otherwise an user can face negative values.
+On Thu, 23 Apr 2015, Grumbach, Emmanuel wrote:
 
-Fixes:
-$ cat /proc/net/netfilter/nfnetlink_queue
-    0  29508   278 2 65531     0 2004213241 -2129885586  1
-    1 -27747     0 2 65531     0     0        0  1
-    2 -27748     0 2 65531     0     0        0  1
+> > I've been running current Linus' tree and have been getting system lockups 
+> > frequently. After a few "silent" lockups, I was able to obtain a dmesg 
+> > before the machine turned dead again (wifi stopped working shortly before 
+> > that).
+> > 
+> > Before starting to debug / bisect (last known good on this machine is 
+> > 4.0-rc6), I am attaching the dmesg in case someone already knows what the 
+> > issue is.
+> > 
+> 
+> I briefly went over the iwlwifi commits between 4.0-rc6 and linux/master
+> and couldn't find anything obvious.
+> Note that for the device you have, the commits that touch
+> drivers/net/wireless/iwlwifi/mvm are not relevant.
+> 
+> What you are seeing is that the PCI host is disconnecting the WiFi NIC
+> for some weird reason. It is not the first time I see that, but
+> unfortunately, I have never been able to debug this. I am personally not
+> a HW PCI expert and I couldn't reproduce either...
+> 
+> I am afraid I won't save you the time of the bisection, but I am not
+> entirely sure that bisecting the iwlwifi driver is enough to find the
+> commit that broke it. You may want to bisect the pci bus driver as well.
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- net/netfilter/nfnetlink_queue_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The problem is that I can't really reliably reproduce it; it happens 
+rather often, but not so often that I could be certainly sure that my 
+distinction of good and bad kernels would be accurate.
 
-diff --git a/net/netfilter/nfnetlink_queue_core.c b/net/netfilter/nfnetlink_queue_core.c
-index 49267f8..0b98c74 100644
---- a/net/netfilter/nfnetlink_queue_core.c
-+++ b/net/netfilter/nfnetlink_queue_core.c
-@@ -1251,7 +1251,7 @@ static int seq_show(struct seq_file *s, void *v)
- {
- 	const struct nfqnl_instance *inst = v;
- 
--	seq_printf(s, "%5d %6d %5d %1d %5d %5d %5d %8d %2d\n",
-+	seq_printf(s, "%5u %6u %5u %1u %5u %5u %5u %8u %2d\n",
- 		   inst->queue_num,
- 		   inst->peer_portid, inst->queue_total,
- 		   inst->copy_mode, inst->copy_range,
+I will try it, but I expect the result to be bogus because of this, 
+unfortunately.
+
+> First question is: Are you sure that 4.0-rc6 was good?
+
+Pretty much, yes. I've been running it for quite some time on this 
+machine without any issues. But after updating to current HEAD two days 
+ago, the issue triggered like 6 or 7 times already.
+
+Thanks,
+
 -- 
-1.8.4.5
-
+Jiri Kosina
+SUSE Labs
