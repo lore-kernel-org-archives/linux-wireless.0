@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:36705 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932291AbbDOFAd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2015 01:00:33 -0400
-Received: by iebrs15 with SMTP id rs15so32401638ieb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2015 22:00:33 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]:52218 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752256AbbDWJMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Apr 2015 05:12:53 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "jkosina@suse.cz" <jkosina@suse.cz>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
+Date: Thu, 23 Apr 2015 09:12:46 +0000
+Message-ID: <1429780366.11859.1.camel@intel.com> (sfid-20150423_111300_928672_9C5D4A6F)
+References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz>
+	 <1429764440.4084.5.camel@intel.com>
+	 <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAFuUQkhQeCwP098DH7_R4mNCvrJ7WxdT7wnHi52DSOKm8c0k1Q@mail.gmail.com>
-References: <1428911141-6534-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1428911141-6534-2-git-send-email-janusz.dziedzic@tieto.com>
-	<CAFuUQkhQeCwP098DH7_R4mNCvrJ7WxdT7wnHi52DSOKm8c0k1Q@mail.gmail.com>
-Date: Wed, 15 Apr 2015 07:00:32 +0200
-Message-ID: <CALhHN=pefUssihniviRiBWg+EU2wYp3excwodJBDt1+H0tiiHQ@mail.gmail.com> (sfid-20150415_070100_380161_D48F9F58)
-Subject: Re: [RFC 2/2] ath10k: don't disable PS when not connected
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: YanBo <dreamfly281@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 April 2015 at 00:45, YanBo <dreamfly281@gmail.com> wrote:
-> On Mon, Apr 13, 2015 at 12:45 AM, Janusz Dziedzic
-> <janusz.dziedzic@tieto.com> wrote:
->> Don't disable PS while we are not connected.
->> In other case we will get higher power consumption.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c | 8 +++++++-
->>  1 file changed, 7 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 52c5b1f..b896dd4 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -1730,7 +1730,13 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
->>                 enable_ps = false;
->>         }
->>
->> -       if (enable_ps) {
->> +       if (!arvif->is_started) {
->> +               /* enable power save mode while not connected,
->> +                * in other case after iface up we will get
->> +                * higher power consumption - firmware design
->> +                */
->> +               psmode = WMI_STA_PS_MODE_ENABLED;
->> +       } else if (enable_ps) {
->>                 psmode = WMI_STA_PS_MODE_ENABLED;
->>                 param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
->>
->> --
->
-> What the expectation behavior after we enable the
-> WMI_STA_PS_MODE_ENABLED at Idle status?
-> Is there any effect for TX or RX chain after set it?
->
-
-First I think that WMI_STA_PS_MODE_ENABLED is important only when we
-are connected.
-But, I see current consumption drop in my test environtment from 88mA
-to 33mA when:
-1) load driver, iface up
-2) disconnect network, iface down, iface up
-So, seems WMI_STA_PS_MODE_ENABLED do something more in FW (not only
-standard PS enable/disable when
-connected to AP). Probably someone from FW team should answer that, if
-that is a feature or a bug.
-
-BTW.
-Patch don't change behavior we had before, when we are connected. We
-can enable/disable PS using iw.
-
-BR
-Janusz
+T24gVGh1LCAyMDE1LTA0LTIzIGF0IDEwOjE1ICswMjAwLCBKaXJpIEtvc2luYSB3cm90ZToNCj4g
+T24gVGh1LCAyMyBBcHIgMjAxNSwgR3J1bWJhY2gsIEVtbWFudWVsIHdyb3RlOg0KPiANCj4gPiA+
+IEkndmUgYmVlbiBydW5uaW5nIGN1cnJlbnQgTGludXMnIHRyZWUgYW5kIGhhdmUgYmVlbiBnZXR0
+aW5nIHN5c3RlbSBsb2NrdXBzIA0KPiA+ID4gZnJlcXVlbnRseS4gQWZ0ZXIgYSBmZXcgInNpbGVu
+dCIgbG9ja3VwcywgSSB3YXMgYWJsZSB0byBvYnRhaW4gYSBkbWVzZyANCj4gPiA+IGJlZm9yZSB0
+aGUgbWFjaGluZSB0dXJuZWQgZGVhZCBhZ2FpbiAod2lmaSBzdG9wcGVkIHdvcmtpbmcgc2hvcnRs
+eSBiZWZvcmUgDQo+ID4gPiB0aGF0KS4NCj4gPiA+IA0KPiA+ID4gQmVmb3JlIHN0YXJ0aW5nIHRv
+IGRlYnVnIC8gYmlzZWN0IChsYXN0IGtub3duIGdvb2Qgb24gdGhpcyBtYWNoaW5lIGlzIA0KPiA+
+ID4gNC4wLXJjNiksIEkgYW0gYXR0YWNoaW5nIHRoZSBkbWVzZyBpbiBjYXNlIHNvbWVvbmUgYWxy
+ZWFkeSBrbm93cyB3aGF0IHRoZSANCj4gPiA+IGlzc3VlIGlzLg0KPiA+ID4gDQo+ID4gDQo+ID4g
+SSBicmllZmx5IHdlbnQgb3ZlciB0aGUgaXdsd2lmaSBjb21taXRzIGJldHdlZW4gNC4wLXJjNiBh
+bmQgbGludXgvbWFzdGVyDQo+ID4gYW5kIGNvdWxkbid0IGZpbmQgYW55dGhpbmcgb2J2aW91cy4N
+Cj4gPiBOb3RlIHRoYXQgZm9yIHRoZSBkZXZpY2UgeW91IGhhdmUsIHRoZSBjb21taXRzIHRoYXQg
+dG91Y2gNCj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bSBhcmUgbm90IHJlbGV2
+YW50Lg0KPiA+IA0KPiA+IFdoYXQgeW91IGFyZSBzZWVpbmcgaXMgdGhhdCB0aGUgUENJIGhvc3Qg
+aXMgZGlzY29ubmVjdGluZyB0aGUgV2lGaSBOSUMNCj4gPiBmb3Igc29tZSB3ZWlyZCByZWFzb24u
+IEl0IGlzIG5vdCB0aGUgZmlyc3QgdGltZSBJIHNlZSB0aGF0LCBidXQNCj4gPiB1bmZvcnR1bmF0
+ZWx5LCBJIGhhdmUgbmV2ZXIgYmVlbiBhYmxlIHRvIGRlYnVnIHRoaXMuIEkgYW0gcGVyc29uYWxs
+eSBub3QNCj4gPiBhIEhXIFBDSSBleHBlcnQgYW5kIEkgY291bGRuJ3QgcmVwcm9kdWNlIGVpdGhl
+ci4uLg0KPiA+IA0KPiA+IEkgYW0gYWZyYWlkIEkgd29uJ3Qgc2F2ZSB5b3UgdGhlIHRpbWUgb2Yg
+dGhlIGJpc2VjdGlvbiwgYnV0IEkgYW0gbm90DQo+ID4gZW50aXJlbHkgc3VyZSB0aGF0IGJpc2Vj
+dGluZyB0aGUgaXdsd2lmaSBkcml2ZXIgaXMgZW5vdWdoIHRvIGZpbmQgdGhlDQo+ID4gY29tbWl0
+IHRoYXQgYnJva2UgaXQuIFlvdSBtYXkgd2FudCB0byBiaXNlY3QgdGhlIHBjaSBidXMgZHJpdmVy
+IGFzIHdlbGwuDQo+IA0KPiBUaGUgcHJvYmxlbSBpcyB0aGF0IEkgY2FuJ3QgcmVhbGx5IHJlbGlh
+Ymx5IHJlcHJvZHVjZSBpdDsgaXQgaGFwcGVucyANCj4gcmF0aGVyIG9mdGVuLCBidXQgbm90IHNv
+IG9mdGVuIHRoYXQgSSBjb3VsZCBiZSBjZXJ0YWlubHkgc3VyZSB0aGF0IG15IA0KPiBkaXN0aW5j
+dGlvbiBvZiBnb29kIGFuZCBiYWQga2VybmVscyB3b3VsZCBiZSBhY2N1cmF0ZS4NCj4gDQo+IEkg
+d2lsbCB0cnkgaXQsIGJ1dCBJIGV4cGVjdCB0aGUgcmVzdWx0IHRvIGJlIGJvZ3VzIGJlY2F1c2Ug
+b2YgdGhpcywgDQo+IHVuZm9ydHVuYXRlbHkuDQo+IA0KDQpJIGNhbiB1bmRlcnN0YW5kLiBBIGZl
+dyB1c2VycyByZXBvcnRlZCB0aGF0IHRoaXMgYnVnIG9jY3VycmVkIG1vcmUNCnJlbGlhYmx5IHdo
+ZW4gbW92aW5nIHRoZWlyIHN5c3RlbSwgYWx0aG91Z2ggaXQgc2VlbXMgdmVyeSB3ZWlyZCB0byBt
+ZS4NCg0KPiA+IEZpcnN0IHF1ZXN0aW9uIGlzOiBBcmUgeW91IHN1cmUgdGhhdCA0LjAtcmM2IHdh
+cyBnb29kPw0KPiANCj4gUHJldHR5IG11Y2gsIHllcy4gSSd2ZSBiZWVuIHJ1bm5pbmcgaXQgZm9y
+IHF1aXRlIHNvbWUgdGltZSBvbiB0aGlzIA0KPiBtYWNoaW5lIHdpdGhvdXQgYW55IGlzc3Vlcy4g
+QnV0IGFmdGVyIHVwZGF0aW5nIHRvIGN1cnJlbnQgSEVBRCB0d28gZGF5cyANCj4gYWdvLCB0aGUg
+aXNzdWUgdHJpZ2dlcmVkIGxpa2UgNiBvciA3IHRpbWVzIGFscmVhZHkuDQo+IA0KDQpPayAtIEkg
+d2lsbCB0cnkgdG8gbG9vayBhdCB0aGUgUENJIGNvbW1pdHMgdGhlcmUgYWx0aG91Z2ggSSBhbSBu
+b3Qgc3VyZQ0KSSdsbCBiZSBhYmxlIHRvIG1ha2UgbXVjaCBzZW5zZSBvZiB0aGVtLi4uDQoNCj4g
+VGhhbmtzLA0KPiANCg0K
