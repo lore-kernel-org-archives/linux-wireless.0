@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39507 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752353AbbDBKSE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2015 06:18:04 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Piotr Witoslawski <pwitos@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Yannis Damigos <giannis.damigos@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] drivers: staging: rtl8723au: fix "warning: cast to restricted __le16"
-References: <20150402093748.GA24455@pwitoslawski.warsaw.osa>
-	<20150402100756.GH10964@mwanda>
-Date: Thu, 02 Apr 2015 06:17:48 -0400
-In-Reply-To: <20150402100756.GH10964@mwanda> (Dan Carpenter's message of "Thu,
-	2 Apr 2015 13:07:56 +0300")
-Message-ID: <wrfja8yqbzqr.fsf@redhat.com> (sfid-20150402_121823_103250_999E0B6D)
+Received: from mail2.candelatech.com ([208.74.158.173]:40126 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932218AbbDXPfJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2015 11:35:09 -0400
+Message-ID: <553A630B.9060306@candelatech.com> (sfid-20150424_173513_931859_FC6CC55F)
+Date: Fri, 24 Apr 2015 08:36:43 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
+References: <5523273F.4060803@candelatech.com>	<CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com>	<CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>	<552406E4.50600@candelatech.com>	<55241567.3010703@candelatech.com>	<21796.40851.132919.363957@gargle.gargle.HOWL>	<55304F9D.1060301@candelatech.com> <21818.22087.358832.866965@gargle.gargle.HOWL>
+In-Reply-To: <21818.22087.358832.866965@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-> This doesn't look right and it doesn't have a changelog explainly the
-> weirdness.
+On 04/24/2015 07:42 AM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>>> TSF would jump around since the HW would sync with the
+>>> received beacons and this will happen in both IBSS and station
+>>> mode. Hence the limitation, but I think OpenWrt has a one-liner
+>>> to remove this restriction...
+>>
+>> It seems I can only do a single VAP on ath9k as well?
+>>
+>> Is that per design?
+>
+> I was referring to ath9k, but it probably applies to ath10k too.
+> But yes, IBSS is restricted to a single interface by design.
+>
+> Sujith
 >
 
-... and the fix is as ugly as it gets!
+My VAP issues were due to regulatory domain issues it seems,
+after fixing that I could bring up 8 VAPs on ath9k.
 
-If something like this is needed, creating a __le16 *ptr at the
-beginnging of the function would be a lot better.
+I also added that patch to allow IBSS + other combinations, but
+I haven't actually done any real testing with that config.
 
-Jes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
