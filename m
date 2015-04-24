@@ -1,144 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0023.hostedemail.com ([216.40.44.23]:60418 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753529AbbDIWjn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2015 18:39:43 -0400
-Message-ID: <1428619177.5413.15.camel@perches.com> (sfid-20150410_004001_448413_8493EA28)
-Subject: Re: [PATCH 5/5 v2] netfilter: Fix format string of nfnetlink_log
- proc file
-From: Joe Perches <joe@perches.com>
-To: Richard Weinberger <richard@nod.at>,
-	Steven Rostedt <rostedt@goodmis.org>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net,
-	pablo@netfilter.org
-Date: Thu, 09 Apr 2015 15:39:37 -0700
-In-Reply-To: <1428616637-21690-5-git-send-email-richard@nod.at>
-References: <1428616637-21690-1-git-send-email-richard@nod.at>
-	 <1428616637-21690-5-git-send-email-richard@nod.at>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:39495 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966777AbbDXJVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2015 05:21:17 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/4] mac80211: clean up global debugfs statistics
+Date: Fri, 24 Apr 2015 11:21:10 +0200
+Message-Id: <1429867273-18271-1-git-send-email-johannes@sipsolutions.net> (sfid-20150424_112121_692068_75E6468D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-04-09 at 23:57 +0200, Richard Weinberger wrote:
-> The printed values are all of type unsigned integer, therefore use
-> %u instead of %d. Otherwise an user can face negative values.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hey Richard.
+The debugfs statistics macros are pointlessly verbose, so change
+that macro to just have a single argument. While at it, remove
+the unused counters and rename rx_expand_skb_head2 to the better
+rx_expand_skb_head_defrag.
 
-Just to clarify, this patch is for net and not for net-next
-as net-next has removed the seq_printf return uses.
-
-Are you going to submit an equivalent patch for net-next?
-
-> diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
-[]
-> @@ -998,7 +998,7 @@ static int seq_show(struct seq_file *s, void *v)
->  {
->  	const struct nfulnl_instance *inst = v;
->  
-> -	return seq_printf(s, "%5d %6d %5d %1d %5d %6d %2d\n",
-> +	return seq_printf(s, "%5u %6u %5u %1u %5u %6u %2u\n",
->  			  inst->group_num,
->  			  inst->peer_portid, inst->qlen,
->  			  inst->copy_mode, inst->copy_range,
-
-And Steven,
-
-commit e71456ae9871
-("netfilter: Remove checks of seq_printf() return values")
-mistakenly converted this to use seq_has_overflowed()
-
-Ideally all seq_show functions would be converted from
-
-int foo_seq_show(...)
-{
-	seq_printf(s, ...);
-	return seq_has_overflowed(s);
-}
-
-to
-
-int foo_seq_show(...)
-{
-	seq_printf(s, ...);
-	return 0;
-}
-
-I made that mistake in a patch and corrected it later.
-
-Here's a suggested -next patch:
-
-Perhaps it shouldn't be submitted now as it may conflict
-with what Richard might submit if he propses an equivalent
-patch to above for -next.
-
-There is an appropriate use of return seq_has_overflowed in: 
-
-net/netfilter/xt_hashlimit.c:825:       return seq_has_overflowed(s);
-
-That's not a seq_show function, it's a helper for one.
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/netfilter/nfnetlink_queue_core.c |  3 ++-
- net/netfilter/x_tables.c             | 11 +++++------
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ net/mac80211/debugfs.c     | 74 ++++++++++++++++------------------------------
+ net/mac80211/ieee80211_i.h |  4 +--
+ net/mac80211/rx.c          |  2 +-
+ 3 files changed, 28 insertions(+), 52 deletions(-)
 
-diff --git a/net/netfilter/nfnetlink_queue_core.c b/net/netfilter/nfnetlink_queue_core.c
-index 6e74655..5f827a1 100644
---- a/net/netfilter/nfnetlink_queue_core.c
-+++ b/net/netfilter/nfnetlink_queue_core.c
-@@ -1248,7 +1248,8 @@ static int seq_show(struct seq_file *s, void *v)
- 		   inst->copy_mode, inst->copy_range,
- 		   inst->queue_dropped, inst->queue_user_dropped,
- 		   inst->id_sequence, 1);
--	return seq_has_overflowed(s);
-+
-+	return 0;
- }
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 23813ebb349c..854bf42c4804 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -219,8 +219,8 @@ static const struct file_operations stats_ ##name## _ops = {		\
+ 	.llseek = generic_file_llseek,					\
+ };
  
- static const struct seq_operations nfqnl_seq_ops = {
-diff --git a/net/netfilter/x_tables.c b/net/netfilter/x_tables.c
-index 51a459c..4dcbea8 100644
---- a/net/netfilter/x_tables.c
-+++ b/net/netfilter/x_tables.c
-@@ -947,11 +947,10 @@ static int xt_table_seq_show(struct seq_file *seq, void *v)
- {
- 	struct xt_table *table = list_entry(v, struct xt_table, list);
+-#define DEBUGFS_STATS_ADD(name, field)					\
+-	debugfs_create_u32(#name, 0400, statsd, (u32 *) &field);
++#define DEBUGFS_STATS_ADD(name)					\
++	debugfs_create_u32(#name, 0400, statsd, &local->name);
+ #define DEBUGFS_DEVSTATS_ADD(name)					\
+ 	debugfs_create_file(#name, 0400, statsd, local, &stats_ ##name## _ops);
  
--	if (strlen(table->name)) {
-+	if (strlen(table->name))
- 		seq_printf(seq, "%s\n", table->name);
--		return seq_has_overflowed(seq);
--	} else
--		return 0;
-+
-+	return 0;
- }
+@@ -255,53 +255,31 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	if (!statsd)
+ 		return;
  
- static const struct seq_operations xt_table_seq_ops = {
-@@ -1090,7 +1089,7 @@ static int xt_match_seq_show(struct seq_file *seq, void *v)
- 		if (*match->name == '\0')
- 			return 0;
- 		seq_printf(seq, "%s\n", match->name);
--		return seq_has_overflowed(seq);
-+		break;
- 	}
- 	return 0;
- }
-@@ -1145,7 +1144,7 @@ static int xt_target_seq_show(struct seq_file *seq, void *v)
- 		if (*target->name == '\0')
- 			return 0;
- 		seq_printf(seq, "%s\n", target->name);
--		return seq_has_overflowed(seq);
-+		break;
- 	}
- 	return 0;
- }
-
+-	DEBUGFS_STATS_ADD(transmitted_fragment_count,
+-		local->dot11TransmittedFragmentCount);
+-	DEBUGFS_STATS_ADD(multicast_transmitted_frame_count,
+-		local->dot11MulticastTransmittedFrameCount);
+-	DEBUGFS_STATS_ADD(failed_count, local->dot11FailedCount);
+-	DEBUGFS_STATS_ADD(retry_count, local->dot11RetryCount);
+-	DEBUGFS_STATS_ADD(multiple_retry_count,
+-		local->dot11MultipleRetryCount);
+-	DEBUGFS_STATS_ADD(frame_duplicate_count,
+-		local->dot11FrameDuplicateCount);
+-	DEBUGFS_STATS_ADD(received_fragment_count,
+-		local->dot11ReceivedFragmentCount);
+-	DEBUGFS_STATS_ADD(multicast_received_frame_count,
+-		local->dot11MulticastReceivedFrameCount);
+-	DEBUGFS_STATS_ADD(transmitted_frame_count,
+-		local->dot11TransmittedFrameCount);
++	DEBUGFS_STATS_ADD(dot11TransmittedFragmentCount);
++	DEBUGFS_STATS_ADD(dot11MulticastTransmittedFrameCount);
++	DEBUGFS_STATS_ADD(dot11FailedCount);
++	DEBUGFS_STATS_ADD(dot11RetryCount);
++	DEBUGFS_STATS_ADD(dot11MultipleRetryCount);
++	DEBUGFS_STATS_ADD(dot11FrameDuplicateCount);
++	DEBUGFS_STATS_ADD(dot11ReceivedFragmentCount);
++	DEBUGFS_STATS_ADD(dot11MulticastReceivedFrameCount);
++	DEBUGFS_STATS_ADD(dot11TransmittedFrameCount);
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+-	DEBUGFS_STATS_ADD(tx_handlers_drop, local->tx_handlers_drop);
+-	DEBUGFS_STATS_ADD(tx_handlers_queued, local->tx_handlers_queued);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_fragment,
+-		local->tx_handlers_drop_fragment);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_wep,
+-		local->tx_handlers_drop_wep);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc,
+-		local->tx_handlers_drop_not_assoc);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port,
+-		local->tx_handlers_drop_unauth_port);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop, local->rx_handlers_drop);
+-	DEBUGFS_STATS_ADD(rx_handlers_queued, local->rx_handlers_queued);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc,
+-		local->rx_handlers_drop_nullfunc);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop_defrag,
+-		local->rx_handlers_drop_defrag);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop_short,
+-		local->rx_handlers_drop_short);
+-	DEBUGFS_STATS_ADD(tx_expand_skb_head,
+-		local->tx_expand_skb_head);
+-	DEBUGFS_STATS_ADD(tx_expand_skb_head_cloned,
+-		local->tx_expand_skb_head_cloned);
+-	DEBUGFS_STATS_ADD(rx_expand_skb_head,
+-		local->rx_expand_skb_head);
+-	DEBUGFS_STATS_ADD(rx_expand_skb_head2,
+-		local->rx_expand_skb_head2);
+-	DEBUGFS_STATS_ADD(rx_handlers_fragments,
+-		local->rx_handlers_fragments);
+-	DEBUGFS_STATS_ADD(tx_status_drop,
+-		local->tx_status_drop);
++	DEBUGFS_STATS_ADD(tx_handlers_drop);
++	DEBUGFS_STATS_ADD(tx_handlers_queued);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_wep);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port);
++	DEBUGFS_STATS_ADD(rx_handlers_drop);
++	DEBUGFS_STATS_ADD(rx_handlers_queued);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_defrag);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_short);
++	DEBUGFS_STATS_ADD(tx_expand_skb_head);
++	DEBUGFS_STATS_ADD(tx_expand_skb_head_cloned);
++	DEBUGFS_STATS_ADD(rx_expand_skb_head_defrag);
++	DEBUGFS_STATS_ADD(rx_handlers_fragments);
++	DEBUGFS_STATS_ADD(tx_status_drop);
+ #endif
+ 	DEBUGFS_DEVSTATS_ADD(dot11ACKFailureCount);
+ 	DEBUGFS_DEVSTATS_ADD(dot11RTSFailureCount);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 51b051b87bda..924ba0ca6bc8 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1288,7 +1288,6 @@ struct ieee80211_local {
+ 	/* TX/RX handler statistics */
+ 	unsigned int tx_handlers_drop;
+ 	unsigned int tx_handlers_queued;
+-	unsigned int tx_handlers_drop_fragment;
+ 	unsigned int tx_handlers_drop_wep;
+ 	unsigned int tx_handlers_drop_not_assoc;
+ 	unsigned int tx_handlers_drop_unauth_port;
+@@ -1299,8 +1298,7 @@ struct ieee80211_local {
+ 	unsigned int rx_handlers_drop_short;
+ 	unsigned int tx_expand_skb_head;
+ 	unsigned int tx_expand_skb_head_cloned;
+-	unsigned int rx_expand_skb_head;
+-	unsigned int rx_expand_skb_head2;
++	unsigned int rx_expand_skb_head_defrag;
+ 	unsigned int rx_handlers_fragments;
+ 	unsigned int tx_status_drop;
+ #define I802_DEBUG_INC(c) (c)++
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b69a071d7679..6336a79a7df2 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1868,7 +1868,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 
+ 	rx->skb = __skb_dequeue(&entry->skb_list);
+ 	if (skb_tailroom(rx->skb) < entry->extra_len) {
+-		I802_DEBUG_INC(rx->local->rx_expand_skb_head2);
++		I802_DEBUG_INC(rx->local->rx_expand_skb_head_defrag);
+ 		if (unlikely(pskb_expand_head(rx->skb, 0, entry->extra_len,
+ 					      GFP_ATOMIC))) {
+ 			I802_DEBUG_INC(rx->local->rx_handlers_drop_defrag);
+-- 
+2.1.4
 
