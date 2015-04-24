@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:54187 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752856AbbD0Iu5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Apr 2015 04:50:57 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: implement more versatile set_bitrate_mask
-References: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 27 Apr 2015 11:50:47 +0300
-In-Reply-To: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 10 Apr 2015 13:32:52 +0000")
-Message-ID: <878udeq7iw.fsf@kamboji.qca.qualcomm.com> (sfid-20150427_105100_931214_918A2568)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39785 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752501AbbDXKch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2015 06:32:37 -0400
+Message-ID: <1429871554.1852.32.camel@sipsolutions.net> (sfid-20150424_123240_494474_FA06DD12)
+Subject: Re: [PATCH] cfg80211: Allow GO concurrent relaxation after BSS
+ disconnetion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Avraham Stern <avraham.stern@intel.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Date: Fri, 24 Apr 2015 12:32:34 +0200
+In-Reply-To: <1427720905-30872-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1427720905-30872-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, 2015-03-30 at 16:08 +0300, Emmanuel Grumbach wrote:
+> From: Avraham Stern <avraham.stern@intel.com>
+> 
+> If P2P GO was allowed on a channel because of the GO concurrent
+> relaxation and additional station interface associated to an AP on
+> the same channel or the same UNII band, and the station interface
+> disconnected from the AP, allow the P2P GO to stay on that channel
+> unless the channel is marked as indoor only and the device is not
+> operating in an indoor environment.
 
-> Until now only a single fixed tx rate or nss was
-> allowed to be set.
->
-> The patch attempts to improve this by allowing
-> most bitrate masks. The limitation is VHT MCS
-> rates cannot be expressed separately using
-> existing firmware interfaces and only the
-> following VHT MCS ranges are supported: none, 0-7,
-> 0-8, and 0-9.
->
-> This keeps the old behaviour when requesting
-> single tx rate or single nss. The new bitrate mask
-> logic is only applied to other cases that would
-> return -EINVAL until now.
->
-> Depending on firmware revisions some combinations
-> may crash firmware so use with care, please.
->
-> This depends on "ath10k: don't use reassoc flag".
-> Without it key cache would effectively be
-> invalidated upon bitrate change leading to
-> communication being no longer possible.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+I'm not really sure what to do with this - this neither explains why
+this is needed nor why it's actually allowed to do it.
 
-Thanks, applied.
+> +               if (wdev->iftype == NL80211_IFTYPE_STATION &&
+> +                   netif_running(wdev->netdev) && wdev->current_bss)
 
--- 
-Kalle Valo
+having a current_bss implies running
+
+> +               if (wdev->iftype == NL80211_IFTYPE_P2P_GO &&
+> wdev->netdev &&
+> +                   netif_running(wdev->netdev) &&
+> wdev->beacon_interval &&
+> +                   !(chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
+> +                       other_chan = wdev->chandef.chan;
+
+that "wdev->netdev" check is also useless, iftype==P2P_GO must have a
+netdev.
+netif_running() is probably also useless since wdev->beacon_interval
+implies it.
+
+This patch also doesn't really do exactly what you said it does - it
+doesn't just allow that GO to be running but it also allows more to be
+started up there... Not sure if that's desired, but it should be
+documented (again, with the reasons for it)
+
+johannes
+
