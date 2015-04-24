@@ -1,48 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:34378 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933443AbbDJNam (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 09:30:42 -0400
-Received: by lbcga7 with SMTP id ga7so13738392lbc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:41 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/4] ath10k: ibss crypto fixes
-Date: Fri, 10 Apr 2015 13:23:19 +0000
-Message-Id: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153101_751190_14F71CBA)
+Received: from s3.sipsolutions.net ([5.9.151.49]:39769 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750877AbbDXKZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Apr 2015 06:25:22 -0400
+Message-ID: <1429871119.1852.27.camel@sipsolutions.net> (sfid-20150424_122524_951057_08D1981D)
+Subject: Re: [PATCH 1/3] iwlwifi: dvm: don't sleep in event_callback callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 24 Apr 2015 12:25:19 +0200
+In-Reply-To: <1429559618-23056-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1429559618-23056-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've mainly tested this on kvalo/pending branch.
-Currently master branch contains 0f611d28fc2e
-("mac80211: count interfaces correctly for
-combination checks") which breaks IBSS in
-wpa_supplicant due to P2P Device and interface
-combinations. This has been pointed out in the
-following thread:
+On Mon, 2015-04-20 at 22:53 +0300, Emmanuel Grumbach wrote:
+> This will allow mac80211 to forbid sleeping from the
+> event_callback callback.
+> 
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+> Please apply this on mac80211-next.git since other mac80211 patches
+> depend on it.
 
- [1]: http://thread.gmane.org/gmane.linux.kernel.wireless.general/135570/focus=136643
+Applied all 3.
 
-If someone's interested in running ath10k IBSS
-make sure to use kernel prior to 4.0, revert the
-mentioned mac80211 patch or apply wpa_supplicant
-workaround patch from [1].
-
-
-Janusz Dziedzic (1):
-  ath10k: enable ibss-rsn
-
-Michal Kazior (3):
-  ath10k: don't use reassoc flag
-  ath10k: fix multiple key static wep with ibss
-  ath10k: set def key idx for ibss
-
- drivers/net/wireless/ath/ath10k/mac.c | 44 +++++++++++++++++++++++++++++------
- 1 file changed, 37 insertions(+), 7 deletions(-)
-
--- 
-2.1.4
+johannes
 
