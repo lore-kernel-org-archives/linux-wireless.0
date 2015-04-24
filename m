@@ -1,55 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:33306 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbbDRHSI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56017 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755233AbbDXObq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Apr 2015 03:18:08 -0400
-Message-ID: <55320529.6000106@gmail.com> (sfid-20150418_091834_322481_8C1E26F0)
-Date: Sat, 18 Apr 2015 08:18:01 +0100
-From: Malcolm Priestley <tvboxspy@gmail.com>
+	Fri, 24 Apr 2015 10:31:46 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: implement more versatile set_bitrate_mask
+References: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
+	<87618v44jv.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnNNKF7riAgcVj1LupABAGodm751jxOUuZgam8u=wthUA@mail.gmail.com>
+	<87vbgpzfo0.fsf@kamboji.qca.qualcomm.com>
+	<87383szni2.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQkao3kNSCfqi5KdroHL+iHH2fYjZP=oDShjD2VEOM1KnQ@mail.gmail.com>
+Date: Fri, 24 Apr 2015 17:31:36 +0300
+In-Reply-To: <CA+BoTQkao3kNSCfqi5KdroHL+iHH2fYjZP=oDShjD2VEOM1KnQ@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 22 Apr 2015 09:33:06 +0200")
+Message-ID: <87fv7ptx6f.fsf@kamboji.qca.qualcomm.com> (sfid-20150424_163151_425223_049270A7)
 MIME-Version: 1.0
-To: gregkh@linuxfoundation.org
-CC: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] staging: vt6655: Fix TX retransmission race condition
-References: <1428796042-3390-1-git-send-email-tvboxspy@gmail.com>
-In-Reply-To: <1428796042-3390-1-git-send-email-tvboxspy@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-
-On 12/04/15 00:47, Malcolm Priestley wrote:
-> With high tx flow the same buffer can transmit  more than
-> once and get stuck in loop.
+> On 22 April 2015 at 08:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>>
+>>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>>
+>>>>> To reduce support questions from the users it would be nice to give few
+>>>>> good examples how to use this with iw. And also it makes it easier to
+>>>>> test the patch. If you could send something I can add it to the commit
+>>>>> log.
+>>>>
+>>>> Should work:
+>>>>
+>>>>   iw wlan0 set bitrates legacy 1 6 12 ht-mcs 1 2 3
+>>>>   iw wlan0 set bitrates legacy-5 mcs-5 7 8 9
 >
-> Reset TCR to zero in device_tx_srv.
+> Oh, I just noticed I typo'ed: s/mcs-5/ht-mcs-5/.
 >
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> Cc: <stable@vger.kernel.org> # v3.19+
-> ---
->   drivers/staging/vt6655/device_main.c | 3 +++
->   1 file changed, 3 insertions(+)
 >
-> diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-> index c5f8233..9b5d840 100644
-> --- a/drivers/staging/vt6655/device_main.c
-> +++ b/drivers/staging/vt6655/device_main.c
-> @@ -963,6 +963,9 @@ static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
->   			vnt_int_report_rate(pDevice, pTD->pTDInfo, byTsr0, byTsr1);
+>>>>   iw wlan0 set bitrates legacy-5 24 ht-mcs-5 vht-mcs-5 1:0-9
+>>>>
+>>>> Won't work:
+>>>>
+>>>>   iw wlan0 set bitrates legacy-5 ht-mcs-5 vht-mcs-5 1:0-5
+>>>>   iw wlan0 set bitrates vht-mcs-5 2:7-9
+>>>>
+>>>> (note the invalid VHT MCS ranges)
+>>>
+>>> Thanks, I added these to the commit log.
+>>
+>> Actually, I had some problems:
+>>
+>> # iw wlan0 set bitrates legacy-2.4 1 6 12 ht-mcs-2.4 1 2 3
+>> command failed: Invalid argument (-22)
+>> # iw wlan0 set bitrates legacy-5 1 6 12 ht-mcs-5 1 2 3
+>> command failed: Invalid argument (-22)
 >
->   			device_free_tx_buf(pDevice, pTD);
-> +
-> +			/* Done with TCR reset to avoid retransmission */
-> +			pTD->m_td1TD1.byTCR = 0;
->   			pDevice->iTDUsed[uIdx]--;
->   		}
->   	}
+> There's no 1mbps (CCK) on 5GHz. If you remove the "1" from legacy-5 it
+> should work.
 
-Hi Greg
+I fixed the commit now to:
 
-Please could you drop this patch, it causes a regression in driver.
+----------------------------------------------------------------------
+These work:
 
-Thanks
+  iw wlan0 set bitrates legacy-5 6 12 ht-mcs-5 1 2 3
+  iw wlan0 set bitrates legacy-5 ht-mcs-5 7 8 9
+  iw wlan0 set bitrates legacy-5 24 ht-mcs-5 vht-mcs-5 1:0-9
 
-Malcolm
+These won't work:
+
+  iw wlan0 set bitrates legacy-5 ht-mcs-5 vht-mcs-5 1:0-5
+  iw wlan0 set bitrates vht-mcs-5 2:7-9
+
+(note the invalid VHT MCS ranges)
+----------------------------------------------------------------------
+
+>> # iw wlan0 set bitrates legacy-5 vht-mcs-5 7 8 9
+>> command failed: Invalid argument (-22)
+>
+> There's a couple of problems here:
+>
+>  * The syntax for VHT MCS is different: vht-mcs-<2.4|5>
+> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*
+>    You used syntax from HT MCS: ht-mcs-<2.4|5> <MCS index>*
+>    The correct way to express this would be:
+>       iw wlan0 set bitrates legacy-5 vht-mcs-5 1:7,8,9
+>    or
+>       iw wlan0 set bitrates legacy-5 vht-mcs-5 1:7-9
+>    assuming you wanted NSS=1 (VHT MCS don't imply NSS just like HT MCS do)
+>
+> * As per commit log you can't use just any VHT MCS; you're limited to
+> none, 0-7, 0-8, 0-9. You can set a *single* VHT MCS as per
+> 51ab1a0a09a8 ("ath10k: add set_bitrate_mask callback") though.
+
+Thanks, I understand better now.
+
+-- 
+Kalle Valo
