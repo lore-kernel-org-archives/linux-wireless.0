@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53432 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbbD3Cr5 (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:38237 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934279AbbDXI6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 22:47:57 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 0/7] wil6210 patches
-References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Thu, 30 Apr 2015 05:47:49 +0300
-In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Wed, 29 Apr 2015 14:44:59 +0300")
-Message-ID: <87y4la1gdm.fsf@kamboji.qca.qualcomm.com> (sfid-20150430_044813_568922_21BF169F)
+	Fri, 24 Apr 2015 04:58:46 -0400
+Received: by igbhj9 with SMTP id hj9so9606191igb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Apr 2015 01:58:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1429035033-14076-11-git-send-email-arend@broadcom.com>
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+	<1429035033-14076-11-git-send-email-arend@broadcom.com>
+Date: Fri, 24 Apr 2015 10:58:45 +0200
+Message-ID: <CACna6rzpRmNCNafi5vk1an2FC+fky+Zm4EJbFASw-cE1oRvBjA@mail.gmail.com> (sfid-20150424_105850_351414_9E3D9B15)
+Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices in nvram.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+On 14 April 2015 at 20:10, Arend van Spriel <arend@broadcom.com> wrote:
+> +int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+> +                          const char *code, const char *nvram,
+> +                          void (*fw_cb)(struct device *dev,
+> +                                        const struct firmware *fw,
+> +                                        void *nvram_image, u32 nvram_len))
+> +{
+> +       return brcmf_fw_get_firmwares_pcie(dev, flags, code, nvram, fw_cb, 0,
+> +                                          0);
+> +}
+> +
 
-> - introduced debug trace facility (PMC) that extracts events
->   reported by the hardware
-> - introduced real broadcast for secure link
-> - other are small fixes here and there
->
-> Vladimir Kondratiev (7):
->   wil6210: increase timeout for the "echo" command
->   wil6210: update Rx descriptor fields
->   wil6210: fix boot loader "ready" indication
->   wil6210: fix for probe_resp IE's
->   wil6210: Add pmc debug mechanism memory management
->   wil6210: broadcast for secure link
->   wil6210: support WSC for STA mode
-
-I see some warnings and errors:
-
-drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 6 has type 'unsigned int' [-Wformat]
-drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 8 has type 'unsigned int' [-Wformat]
-drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Wformat]
-drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 7 has type 'unsigned int' [-Wformat]
-
-[...]
-
-Kernel: arch/x86/boot/bzImage is ready  (#923)
-  Building modules, stage 2.
-  MODPOST 45 modules
-ERROR: "__divdi3" [drivers/net/wireless/ath/wil6210/wil6210.ko] undefined!
-
--- 
-Kalle Valo
+git complains about adding an extra (2nd) empty line at EOF
