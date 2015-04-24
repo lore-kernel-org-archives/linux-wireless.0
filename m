@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4655 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755294AbbDIMF2 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:33458 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964780AbbDXQD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2015 08:05:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: fix arvif->wep_keys clearing
-References: <1427444516-974-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 9 Apr 2015 15:05:22 +0300
-In-Reply-To: <1427444516-974-1-git-send-email-michal.kazior@tieto.com> (Michal
-	Kazior's message of "Fri, 27 Mar 2015 08:21:55 +0000")
-Message-ID: <87zj6heccd.fsf@kamboji.qca.qualcomm.com> (sfid-20150409_140532_583365_02C1F626)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 24 Apr 2015 12:03:58 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	Bernhard Wiedemann <bwiedemann@suse.com>,
+	Takashi Iwai <tiwai@suse.com>
+Subject: [PATCH for 4.1] rtlwifi: rtl8192cu: Fix kernel deadlock
+Date: Fri, 24 Apr 2015 11:03:37 -0500
+Message-Id: <1429891417-1224-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150424_180552_768552_3865F4DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+The USB mini-driver in rtlwifi, which is used by rtl8192cu, issues a call to
+usb_control_msg() with a timeout value of 0. In some instances where the
+interface is shutting down, this infinite wait results in a CPU deadlock. A
+one second timeout fixes this problem without affecting any normal operations.
 
-> The variable should be cleared regardless of
-> whether there's a peer associated with the key or
-> not.
->
-> This fixes case when user first associates with 2
-> WEP keys and then disconnects and connects with 1
-> WEP key. This resulted in WEP key count being 2 in
-> the driver leading to default keyidx fixup
-> failure.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This bug is reported at https://bugzilla.novell.com/show_bug.cgi?id=927786.
 
-Thanks, both patches applied.
+Reported-by: Bernhard Wiedemann <bwiedemann@suse.com>
+Tested-by: Bernhard Wiedemann <bwiedemann@suse.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+Cc: Bernhard Wiedemann <bwiedemann@suse.com>
+Cc: Takashi Iwai<tiwai@suse.com>
+---
 
+Kalle,
+
+I marked this patch for V4.1, and I hope that timing can be met.
+
+Thanks,
+
+Larry
+---
+
+ drivers/net/wireless/rtlwifi/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 46ee956..27cd6ca 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -126,7 +126,7 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
+ 
+ 	do {
+ 		status = usb_control_msg(udev, pipe, request, reqtype, value,
+-					 index, pdata, len, 0); /*max. timeout*/
++					 index, pdata, len, 1000);
+ 		if (status < 0) {
+ 			/* firmware download is checksumed, don't retry */
+ 			if ((value >= FW_8192C_START_ADDRESS &&
 -- 
-Kalle Valo
+2.1.4
+
