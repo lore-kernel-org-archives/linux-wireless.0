@@ -1,70 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:35144 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933443AbbDJNar (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:33369 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019AbbDYTJP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 09:30:47 -0400
-Received: by labbd9 with SMTP id bd9so13284006lab.2
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:46 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/4] ath10k: enable ibss-rsn
-Date: Fri, 10 Apr 2015 13:23:23 +0000
-Message-Id: <1428672203-8604-5-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153101_054357_E7893778)
-In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
-References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 25 Apr 2015 15:09:15 -0400
+Received: by oblw8 with SMTP id w8so59238710obl.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Apr 2015 12:09:14 -0700 (PDT)
+Date: Sat, 25 Apr 2015 14:09:13 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Nuno =?utf-8?Q?Gon=C3=A7alves?= <nunojpg@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Ubuntu regulatory database
+Message-ID: <20150425190912.GA1706@ubuntu-xps13> (sfid-20150425_211032_335985_AAA082EE)
+References: <CAEXMXLSucPD3x6igB6pLs=8cBmc-oY0Ah+nLA3kVfS1y6kLhLQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAEXMXLSucPD3x6igB6pLs=8cBmc-oY0Ah+nLA3kVfS1y6kLhLQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+On Sat, Apr 25, 2015 at 06:26:34PM +0100, Nuno Gonçalves wrote:
+> I was surprised that the wireless regdb provided with Ubuntu 15.04 is
+> almost 2 years old.
+> 
+> Are you aware of the reason Ubuntu is not providing a updated regdb by default?
 
-With latest additions to the driver it seems
-viable to enable support for IBSS-RSN.
+This doesn't really seem on topic for the mailing list as it's a distro
+issue.
 
-It seems to work on QCA988X and 999.999.0.636 but
-is a bit slow to exchange RSN keys for some
-reason. This may be a firmware quirk or ath10k is
-missing something. Nevertheless it makes sense to
-finally enable IBSS-RSN in ath10k even if somewhat
-handicapped.
+But yes, it recently came to my attention that our distro package hadn't
+been updated in a while (I don't maintain the distro package and
+obviously wasn't paying close enough attention). It will be updated
+soon.
 
-QCA6174 firmware doesn't seem to be able to Tx
-EAPOL frames at all now (they get stuck in hw
-queues for some reason) so it never gets to set
-the keys in driver. It's fairly safe to assume that
-once this is fixed IBSS-RSN will work with QCA6174
-firmware without any additional changes. Hence no
-special handling for advertising
-IEEE80211_HW_SUPPORTS_PER_STA_GTK and
-WIPHY_FLAG_IBSS_RSN is done now.
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9428d75d0d76..7485d5ccee3d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6720,11 +6720,13 @@ int ath10k_mac_register(struct ath10k *ar)
- 			IEEE80211_HW_SPECTRUM_MGMT |
- 			IEEE80211_HW_SW_CRYPTO_CONTROL |
- 			IEEE80211_HW_CONNECTION_MONITOR |
-+			IEEE80211_HW_SUPPORTS_PER_STA_GTK |
- 			IEEE80211_HW_WANT_MONITOR_VIF |
- 			IEEE80211_HW_CHANCTX_STA_CSA |
- 			IEEE80211_HW_QUEUE_CONTROL;
- 
- 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
-+	ar->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
- 	if (ar->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS)
- 		ar->hw->wiphy->features |= NL80211_FEATURE_DYNAMIC_SMPS;
--- 
-2.1.4
-
+Seth
