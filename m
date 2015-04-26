@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:63719 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbbDJW3S (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:35137 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412AbbDZIhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 18:29:18 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net/wireless: CFG80211_WEXT_EXPORT requires wireless extensions
-Date: Sat, 11 Apr 2015 00:29:14 +0200
-Message-ID: <2303996.H1mYPouv05@wuerfel> (sfid-20150411_002939_394960_BB95F581)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 26 Apr 2015 04:37:25 -0400
+From: Firo Yang <firogm@gmail.com>
+To: lauro.venancio@openbossa.org
+Cc: aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	christophe.ricard@gmail.com, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org, Firo Yang <firogm@gmail.com>
+Subject: [PATCH] NFC: st21nfcb: Remove inappropriate kfree on a devm_kzalloc pointer
+Date: Sun, 26 Apr 2015 16:37:18 +0800
+Message-Id: <1430037438-11617-1-git-send-email-firogm@gmail.com> (sfid-20150426_103827_414259_4682347B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The CFG80211_WEXT_EXPORT symbol is selected by two drivers that
-make direct use of compat handlers for the wireless ioctls.
-However, this has no effect when the wireless extensions themselves
-are disabled, and results in a link error:
+Since ndev->driver_data is alloced by devm_kzalloc(), we do not
+need the inappropriate kfree to free it in driver's remove function.
+Freeing will trigger when driver unloads, so I remove it.
 
-ERROR: "cfg80211_wext_giwrts" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_siwfrag" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
+Signed-off-by: Firo Yang <firogm@gmail.com>
+---
+ drivers/nfc/st21nfcb/st21nfcb.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-This changes the Kconfig logic so that CFG80211_WEXT can not
-be disabled when CFG80211_WEXT_EXPORT is set.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 2afe38d15cee01 ("cfg80211-wext: export symbols only when needed")
-
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index b13dfb4ff001..cb5eef396d5c 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -178,7 +178,6 @@ config CFG80211_WEXT
- 	bool "cfg80211 wireless extensions compatibility"
- 	depends on CFG80211
- 	select WEXT_CORE
--	default y if CFG80211_WEXT_EXPORT
- 	help
- 	  Enable this option if you need old userspace for wireless
- 	  extensions with cfg80211-based drivers.
-@@ -186,6 +185,7 @@ config CFG80211_WEXT
- config CFG80211_WEXT_EXPORT
- 	bool
- 	depends on CFG80211
-+	select CFG80211_WEXT
- 	help
- 	  Drivers should select this option if they require cfg80211's
- 	  wext compatibility symbols to be exported.
+diff --git a/drivers/nfc/st21nfcb/st21nfcb.c b/drivers/nfc/st21nfcb/st21nfcb.c
+index ca9871a..c7dc282 100644
+--- a/drivers/nfc/st21nfcb/st21nfcb.c
++++ b/drivers/nfc/st21nfcb/st21nfcb.c
+@@ -131,11 +131,8 @@ EXPORT_SYMBOL_GPL(st21nfcb_nci_probe);
+ 
+ void st21nfcb_nci_remove(struct nci_dev *ndev)
+ {
+-	struct st21nfcb_nci_info *info = nci_get_drvdata(ndev);
+-
+ 	nci_unregister_device(ndev);
+ 	nci_free_device(ndev);
+-	kfree(info);
+ }
+ EXPORT_SYMBOL_GPL(st21nfcb_nci_remove);
+ 
+-- 
+2.1.0
 
