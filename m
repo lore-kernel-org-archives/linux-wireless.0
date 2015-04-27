@@ -1,93 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41529 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674AbbDJXcb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 19:32:31 -0400
-Message-ID: <55285D8D.6070703@candelatech.com> (sfid-20150411_013240_684208_6E07DCEF)
-Date: Fri, 10 Apr 2015 16:32:29 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mga09.intel.com ([134.134.136.24]:3280 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751257AbbD0FAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Apr 2015 01:00:52 -0400
+Message-ID: <553DC280.6080503@linux.intel.com> (sfid-20150427_070119_101275_A39B201E)
+Date: Mon, 27 Apr 2015 13:00:48 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-To: ath10k <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: CT ath10k firmware now supports IBSS + RSN
-Content-Type: text/plain; charset=ISO-8859-1
+To: "brudley@broadcom.com" <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman@broadcom.com" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/2] brcmfmac: prohibit ACPI power management for brcmfmac
+ driver
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First, thanks to everyone that helped me with questions,
-QCA/Tieto's upstream patches, etc.
+ACPI will manage WiFi chip's power state during suspend/resume
+process on some tablet platforms(such as ASUS T100TA). This is
+not supported by brcmfmac driver now, and the context of WiFi
+chip will be damaged after resume. This patch disconnects the
+relationship between WiFi chip and it's ACPI companion, and
+prohibit ACPI PM for it.
 
-This needs more testing, but it appears to at least mostly work.
+Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-I am using this 4.0 related kernel.  I think only the last 3 patches
-are IBSS specific, but possibly there are others that matter as well.
-
-http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-4.0.dev.y/.git;a=summary
-
-Firmware binaries and release notes are here:
-http://www.candelatech.com/downloads/ath10k-fw-beta/
-
-I'm using a very recent wpa_supplicant..upstream should work I think,
-but I am using this one:
-
-https://github.com/greearb/hostap-ct/tree/master/hostapd
-
-supplicant needs to have this enabled, among other things:
-
-CONFIG_IBSS_RSN=y
-
-
-I suspect there are lingering bugs, perhaps in supplicant, as it seems to take
-a few tries for the 4-way to happen properly, and I have to re-start hostapd
-on each side each time I associate.
-
-My supplicant config files look like this (you can comment out any options
-your supplicant doesn't know about...I have a few extra features not specifically
-related to IBSS in my hostapd tree)
-
-ctrl_interface=/var/run/wpa_supplicant
-fast_reauth=1
-concurrent_assoc_ok=1
-scan_cur_freq=1
-min_scan_gap=5
-freq_list=5180
-
-bss_max_count=2000
-network={
-    ssid="ota-ibss-ssid"
-    disable_ht=0
-    disable_vht=0
-    ieee80211w=0
-    disable_ht40=1
-    disable_sgi=0
-    ht_mcs=""
-    disable_max_amsdu=-1
-    ampdu_factor=-1
-    ampdu_density=-1
-    freq_list=5180
-    fixed_freq=1
-
-    mode=1
-    frequency=5180
-    proto=RSN
-    key_mgmt=WPA-PSK
-    #psk="ben-ota-passwd"
-    psk=fc29b6edf32abd7a9818af3c94b2aa5364c785eee33ed3df11605a3db8f905bc
-    pairwise=CCMP
-    group=CCMP
-    proactive_key_caching=0
-
-}
-
-
-I'm curious to know if anyone tries it out.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 9b508bd..fdf8feb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1114,6 +1114,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	int err;
+ 	struct brcmf_sdio_dev *sdiodev;
+ 	struct brcmf_bus *bus_if;
++	struct device *dev;
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 	brcmf_dbg(SDIO, "Class=%x\n", func->class);
+@@ -1121,6 +1122,10 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
+ 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+ 
++	/* prohibit ACPI power management for this device */
++	dev = &func->dev;
++	dev->fwnode = NULL;
++
+ 	/* Consume func num 1 but dont do anything with it. */
+ 	if (func->num == 1)
+ 		return 0;
+-- 1.7.1
 
