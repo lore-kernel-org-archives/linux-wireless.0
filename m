@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47613 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754583AbbDQPP5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 11:15:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 02/11] mac80211_hwsim: enable IEEE80211_HW_SUPPORT_FAST_XMIT
-Date: Fri, 17 Apr 2015 17:15:42 +0200
-Message-Id: <1429283751-5104-2-git-send-email-johannes@sipsolutions.net> (sfid-20150417_171600_860567_35C4362E)
-In-Reply-To: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
-References: <1429283751-5104-1-git-send-email-johannes@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57492 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932284AbbD0MYn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Apr 2015 08:24:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Nuno =?utf-8?Q?Gon=C3=A7alves?= <nunojpg@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Ubuntu regulatory database
+References: <CAEXMXLSucPD3x6igB6pLs=8cBmc-oY0Ah+nLA3kVfS1y6kLhLQ@mail.gmail.com>
+	<20150425190912.GA1706@ubuntu-xps13>
+	<87y4leqhu6.fsf@kamboji.qca.qualcomm.com>
+	<20150427113437.GA4268@ubuntu-hedt>
+Date: Mon, 27 Apr 2015 15:24:35 +0300
+In-Reply-To: <20150427113437.GA4268@ubuntu-hedt> (Seth Forshee's message of
+	"Mon, 27 Apr 2015 06:34:37 -0500")
+Message-ID: <87pp6ppxmk.fsf@kamboji.qca.qualcomm.com> (sfid-20150427_142447_076124_669FE77D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Seth Forshee <seth.forshee@canonical.com> writes:
 
-For hwsim, the duration field in frames is already not valid for
-the common case of HT/VHT MCSes, so there's little point in trying
-to keep it accurate for the legacy rates. Enable the fast-xmit code
-to allow testing that, although given the dependency on hardware
-crypto it will only be enabled in open network configurations.
+> On Mon, Apr 27, 2015 at 08:08:01AM +0300, Kalle Valo wrote:
+>> Seth Forshee <seth.forshee@canonical.com> writes:
+>> 
+>> > On Sat, Apr 25, 2015 at 06:26:34PM +0100, Nuno Gonçalves wrote:
+>> >> I was surprised that the wireless regdb provided with Ubuntu 15.04 is
+>> >> almost 2 years old.
+>> >> 
+>> >> Are you aware of the reason Ubuntu is not providing a updated regdb by default?
+>> >
+>> > This doesn't really seem on topic for the mailing list as it's a distro
+>> > issue.
+>> >
+>> > But yes, it recently came to my attention that our distro package hadn't
+>> > been updated in a while (I don't maintain the distro package and
+>> > obviously wasn't paying close enough attention). It will be updated
+>> > soon.
+>> 
+>> Oh, so does this mean that the old regdb doesn't support 80 MHz
+>> channels? Is there any way to make it easier to update the regdb in
+>> older Ubuntu versions?
+>
+> It's likely we'll start pulling in updates on a continuing basis for as
+> long as a release is supported. It's been on the list of things to get
+> worked out right after 15.04 releases, i.e. this week.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Nice, that would be perfect.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index d5c0a1af08b9..07626cc21d6e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2399,7 +2399,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		    IEEE80211_HW_WANT_MONITOR_VIF |
- 		    IEEE80211_HW_QUEUE_CONTROL |
- 		    IEEE80211_HW_SUPPORTS_HT_CCK_RATES |
--		    IEEE80211_HW_CHANCTX_STA_CSA;
-+		    IEEE80211_HW_CHANCTX_STA_CSA |
-+		    IEEE80211_HW_SUPPORT_FAST_XMIT;
- 	if (rctbl)
- 		hw->flags |= IEEE80211_HW_SUPPORTS_RC_TABLE;
- 
 -- 
-2.1.4
-
+Kalle Valo
