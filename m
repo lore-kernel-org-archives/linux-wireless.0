@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39530 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262AbbDUNc1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Apr 2015 09:32:27 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [RFC] mac80211: clear radar_required while setting up sdata
-Date: Tue, 21 Apr 2015 19:02:05 +0530
-Message-ID: <1429623125-9484-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150421_153231_310946_A19709F6)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dedo.coelho.fi ([88.198.205.34]:35459 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751468AbbD0FWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Apr 2015 01:22:09 -0400
+Message-ID: <1430112118.12579.2.camel@coelho.fi> (sfid-20150427_072213_630892_4B136610)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	Nuno =?ISO-8859-1?Q?Gon=E7alves?= <nunojpg@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 27 Apr 2015 08:21:58 +0300
+In-Reply-To: <87y4leqhu6.fsf@kamboji.qca.qualcomm.com>
+References: <CAEXMXLSucPD3x6igB6pLs=8cBmc-oY0Ah+nLA3kVfS1y6kLhLQ@mail.gmail.com>
+	 <20150425190912.GA1706@ubuntu-xps13>
+	 <87y4leqhu6.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Ubuntu regulatory database
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "mac80211: don't defer scans in case of radar detection"
-drops scan requests when interface is running on radar channel.
-Once the AP interface is brought up on DFS channel,
-sdata->radar_required never be cleared on deinit path unless the
-interface is deleted. This is causing failures while restarting hostapd.
+On Mon, 2015-04-27 at 08:08 +0300, Kalle Valo wrote:
+> Seth Forshee <seth.forshee@canonical.com> writes:
+> 
+> > On Sat, Apr 25, 2015 at 06:26:34PM +0100, Nuno Gonçalves wrote:
+> >> I was surprised that the wireless regdb provided with Ubuntu 15.04 is
+> >> almost 2 years old.
+> >> 
+> >> Are you aware of the reason Ubuntu is not providing a updated regdb by default?
+> >
+> > This doesn't really seem on topic for the mailing list as it's a distro
+> > issue.
+> >
+> > But yes, it recently came to my attention that our distro package hadn't
+> > been updated in a while (I don't maintain the distro package and
+> > obviously wasn't paying close enough attention). It will be updated
+> > soon.
+> 
+> Oh, so does this mean that the old regdb doesn't support 80 MHz
+> channels?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- net/mac80211/iface.c | 1 +
- 1 file changed, 1 insertion(+)
+Yeah, we had a bug reported from the community that turned out to be
+about this:
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b4ac596..c764eb0 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1341,6 +1341,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	sdata->control_port_no_encrypt = false;
- 	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
- 	sdata->vif.bss_conf.idle = true;
-+	sdata->radar_required = false;
- 
- 	sdata->noack_map = 0;
- 
--- 
-2.3.5
+https://bugzilla.kernel.org/show_bug.cgi?id=95901
+
+
+--
+Luca.
 
