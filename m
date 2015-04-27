@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39527 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756684AbbDPJYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 05:24:25 -0400
-Message-ID: <1429176257.1842.1.camel@sipsolutions.net> (sfid-20150416_112435_378420_D8B38DBB)
-Subject: Re: [PATCH] cfg80211: allow the plink state blocking for user
- managed mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Thu, 16 Apr 2015 11:24:17 +0200
-In-Reply-To: <1429161337-32680-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150416_071609_825617_B1AAAEB9)
-References: <1429161337-32680-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20150416_071609_825617_B1AAAEB9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:54187 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752856AbbD0Iu5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Apr 2015 04:50:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: implement more versatile set_bitrate_mask
+References: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 27 Apr 2015 11:50:47 +0300
+In-Reply-To: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 10 Apr 2015 13:32:52 +0000")
+Message-ID: <878udeq7iw.fsf@kamboji.qca.qualcomm.com> (sfid-20150427_105100_931214_918A2568)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-04-16 at 13:15 +0800, Chun-Yeow Yeoh wrote:
-> User managed peering has no way to block the plink state
-> for mesh peering setup by wpa_supp or authsae. Try to do
-> allow this in kernel space, so that we can use iw utility
-> to do that.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I have no idea what you're trying to say here.
+> Until now only a single fixed tx rate or nss was
+> allowed to be set.
+>
+> The patch attempts to improve this by allowing
+> most bitrate masks. The limitation is VHT MCS
+> rates cannot be expressed separately using
+> existing firmware interfaces and only the
+> following VHT MCS ranges are supported: none, 0-7,
+> 0-8, and 0-9.
+>
+> This keeps the old behaviour when requesting
+> single tx rate or single nss. The new bitrate mask
+> logic is only applied to other cases that would
+> return -EINVAL until now.
+>
+> Depending on firmware revisions some combinations
+> may crash firmware so use with care, please.
+>
+> This depends on "ath10k: don't use reassoc flag".
+> Without it key cache would effectively be
+> invalidated upon bitrate change leading to
+> communication being no longer possible.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-johannes
+Thanks, applied.
 
-PS: don't CC John any more :)
-
+-- 
+Kalle Valo
