@@ -1,45 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54267 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:40240 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752659AbbDNHyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 03:54:24 -0400
-Message-ID: <1428998059.3019.1.camel@sipsolutions.net> (sfid-20150414_095445_876259_BBCD1F7B)
-Subject: Re: [RFC v3] mac80211: lock rate control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Sven Eckelmann <sven@narfation.org>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	Sven Eckelmann <sven@open-mesh.com>,
-	Arik Nemtsov <arik@wizery.com>, liad.kaufman@intel.com
-Date: Tue, 14 Apr 2015 09:54:19 +0200
-In-Reply-To: <20150413212628.GA7869@localhost> (sfid-20150413_232633_258914_B093F402)
-References: <1426061656-17546-1-git-send-email-sven@narfation.org>
-	 <1426185468.1885.17.camel@sipsolutions.net>
-	 <20150413212628.GA7869@localhost> (sfid-20150413_232633_258914_B093F402)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S932724AbbD0Ngk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Apr 2015 09:36:40 -0400
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avraham Stern <avraham.stern@intel.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2] cfg80211: Allow GO concurrent relaxation after BSS disconnection
+Date: Mon, 27 Apr 2015 16:38:38 +0300
+Message-Id: <1430141918-21176-1-git-send-email-ilan.peer@intel.com> (sfid-20150427_153643_981699_D2F2E3AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-04-13 at 17:26 -0400, Bob Copeland wrote:
+From: Avraham Stern <avraham.stern@intel.com>
 
-> mac80211: introduce plink lock for plink fields
-> 
-> The mesh plink code uses sta->lock to serialize access to the
-> plink state fields between the peer link state machine and the
-> peer link timer.  Some paths (e.g. those involving
-> mps_qos_null_tx()) unfortunately hold this spinlock across
-> frame tx, which is soon to be disallowed.  Add a new spinlock
-> just for plink access.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+If a P2P GO was allowed on a channel because of the GO concurrent
+relaxation, i.e., another station interface was associated to an AP on
+the same channel or the same UNII band, and the station interface
+disconnected from the AP, allow the following use cases unless the
+channel is marked as indoor only and the device is not operating in an
+indoor environment:
 
-Thank you!
+1. Allow the P2P GO to stay on its current channel. The rationale behind
+   this is that if the channel or UNII band were allowed by the AP they
+   could still be used to continue the P2P GO operation, and avoid connection
+   breakage.
+2. Allow another P2P GO to start on the same channel or another channel
+   that is in the same UNII band as the previous instantiated P2P GO.
 
-I've applied both this and the rate control locking patch.
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/wireless/chan.c | 29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
 
-We may later want to pick that up for stable perhaps, but let's let it
-bake a little longer, it's pretty big.
-
-johannes
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 7aaf741..0069480 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -709,7 +709,7 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
+ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 					struct ieee80211_channel *chan)
+ {
+-	struct wireless_dev *wdev_iter;
++	struct wireless_dev *wdev;
+ 	struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
+ 
+ 	ASSERT_RTNL();
+@@ -732,18 +732,27 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 	 * and thus fail the GO instantiation, consider only the interfaces of
+ 	 * the current registered device.
+ 	 */
+-	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
++	list_for_each_entry(wdev, &rdev->wdev_list, list) {
+ 		struct ieee80211_channel *other_chan = NULL;
+ 		int r1, r2;
+ 
+-		if (wdev_iter->iftype != NL80211_IFTYPE_STATION ||
+-		    !netif_running(wdev_iter->netdev))
+-			continue;
+-
+-		wdev_lock(wdev_iter);
+-		if (wdev_iter->current_bss)
+-			other_chan = wdev_iter->current_bss->pub.channel;
+-		wdev_unlock(wdev_iter);
++		wdev_lock(wdev);
++		if (wdev->iftype == NL80211_IFTYPE_STATION &&
++		    netif_running(wdev->netdev))
++			other_chan = wdev->current_bss->pub.channel;
++
++		/*
++		 * If a GO already operates on the same GO_CONCURRENT channel,
++		 * this one (maybe the same one) can beacon as well. We allow
++		 * the operation even if the station we relied on with
++		 * GO_CONCURRENT is disconnected now. But then we must make sure
++		 * we're not outdoor on an indoor-only channel.
++		 */
++		if (wdev->iftype == NL80211_IFTYPE_P2P_GO &&
++		    wdev->beacon_interval &&
++		    !(chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
++			other_chan = wdev->chandef.chan;
++		wdev_unlock(wdev);
+ 
+ 		if (!other_chan)
+ 			continue;
+-- 
+1.9.1
 
