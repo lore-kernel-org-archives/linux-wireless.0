@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:36299 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753010AbbDDTtf (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:32908 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932653AbbD0Nb1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Apr 2015 15:49:35 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] staging: vt6656: use ieee80211_tx_info to select packet type.
-Date: Sat,  4 Apr 2015 20:49:10 +0100
-Message-Id: <1428176950-3128-1-git-send-email-tvboxspy@gmail.com> (sfid-20150404_214953_325681_B1E0248A)
+	Mon, 27 Apr 2015 09:31:27 -0400
+Received: by layy10 with SMTP id y10so79885636lay.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Apr 2015 06:31:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1429871610.1852.33.camel@sipsolutions.net>
+References: <1427793259-18851-1-git-send-email-arik@wizery.com> <1429871610.1852.33.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 27 Apr 2015 16:31:10 +0300
+Message-ID: <CA+XVXfdAgAvh49-JR24f4J_MBBy+B24xGFOVzO-=jAvo9z7eYg@mail.gmail.com> (sfid-20150427_153130_717326_6D4C6E7B)
+Subject: Re: [PATCH] cfg80211: change GO_CONCURRENT to IR_CONCURRENT for STA
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Information for packet type is in ieee80211_tx_info
+On Fri, Apr 24, 2015 at 1:33 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> On Tue, 2015-03-31 at 12:14 +0300, Arik Nemtsov wrote:
+> > The GO_CONCURRENT regulatory definition can be extended to station
+> > interfaces requesting to IR as part of TDLS off-channel operations.
+> > Rename the GO_CONCURRENT flag to IR_CONCURRENT and allow the added
+> > use-case.
+> >
+> > Change internal users of GO_CONCURRENT to use the new definition.
+> >
+> > Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> > Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> > This patch depends on "cfg80211: Allow GO concurrent relaxation after
+> > BSS disconnetion" which was recently sent by Emmanuel. It will also
+> > conflict with a different change to iwlwifi/iwl-nvm-parse.c that's currently
+> > in Kalle's tree ("iwlwifi: mvm: consider LAR support during NVM parse").
+> > But that's not too hard to fix.
+>
+> Perhaps you should rebase it to not have that dependency since we're
+> still discussing that other patch.
 
-band IEEE80211_BAND_5GHZ for PK_TYPE_11A.
+I think Ilan will send an updated version pretty soon for the
+dependency. Otherwise, the conflict will happen on his side..
 
-IEEE80211_TX_RC_USE_CTS_PROTECT via tx_rate flags selects PK_TYPE_11GB
-
-This ensures that the packet is always the right type.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org> # v3.17+
----
- drivers/staging/vt6656/rxtx.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index f6c2cf8..5c58996 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -805,10 +805,18 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 		vnt_schedule_command(priv, WLAN_CMD_SETPOWER);
- 	}
- 
--	if (current_rate > RATE_11M)
--		pkt_type = priv->packet_type;
--	else
-+	if (current_rate > RATE_11M) {
-+		if (info->band == IEEE80211_BAND_5GHZ) {
-+			pkt_type = PK_TYPE_11A;
-+		} else {
-+			if (tx_rate->flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
-+				pkt_type = PK_TYPE_11GB;
-+			else
-+				pkt_type = PK_TYPE_11GA;
-+		}
-+	} else {
- 		pkt_type = PK_TYPE_11B;
-+	}
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--- 
-2.1.0
-
+Arik
