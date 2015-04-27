@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58419 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752992AbbDARU4 (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35761 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932730AbbD0OPY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 13:20:56 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix survey reporting
-References: <1427200691-7109-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 1 Apr 2015 20:20:47 +0300
-In-Reply-To: <1427200691-7109-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 24 Mar 2015 12:38:11 +0000")
-Message-ID: <87oan7ydcg.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_192059_679470_D45F95C6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 27 Apr 2015 10:15:24 -0400
+From: Masanari Iida <standby24x7@gmail.com>
+To: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	davem@davemloft.net, Larry.Finger@lwfinger.net,
+	rdunlap@infradead.org, trivial@kernel.org,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Cc: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH 2/2] net:wireless:treewide: Fix typo in drivers/net/wireless
+Date: Mon, 27 Apr 2015 23:14:58 +0900
+Message-Id: <1430144098-4933-2-git-send-email-standby24x7@gmail.com> (sfid-20150427_161607_949688_6F95561B)
+In-Reply-To: <1430144098-4933-1-git-send-email-standby24x7@gmail.com>
+References: <1430144098-4933-1-git-send-email-standby24x7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This patch fix some spelling typo in drivers/net/wirless
 
-> Number of channels is stored in a separate macro
-> in a header file and channel list is constructed
-> independently. The macro is used to define survey
-> array.
->
-> This fixes a recent regression introduced after
-> adding support for 144 channel. The regression
-> would lead to a warning and incomplete survey data
-> on channel 165:
->
->   chan info: invalid frequency 5825 (idx 38 out of bounds)
->
-> Also make sure to enforce the sizes and avoid this
-> kind of problem in the future.
->
-> Fixes: 4a7898fed5f3 ("ath10k: enable channel 144 on 5GHz band")
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/net/wireless/mwifiex/tdls.c         | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks, applied.
-
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index 087d847..275a476 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -255,7 +255,7 @@ static int mwifiex_tdls_add_vht_oper(struct mwifiex_private *priv,
+ 		if (sta_ptr->tdls_cap.extcap.ext_capab[7] &
+ 		   WLAN_EXT_CAPA8_TDLS_WIDE_BW_ENABLED) {
+ 			dev_dbg(adapter->dev,
+-				"TDLS peer doesn't support wider bandwitdh\n");
++				"TDLS peer doesn't support wider bandwidth\n");
+ 			return 0;
+ 		}
+ 	} else {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
+index c5d4b80..232865c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
+@@ -875,7 +875,7 @@ static void _rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+ 		break;
+ 	default:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-			 "[C2H], Unkown packet!! CmdId(%#X)!\n", c2h_cmd_id);
++			 "[C2H], Unknown packet!! CmdId(%#X)!\n", c2h_cmd_id);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+index 69d4f0f..d5da0f3 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+@@ -613,7 +613,7 @@ static void _rtl8723be_c2h_content_parsing(struct ieee80211_hw *hw,
+ 		break;
+ 	default:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-			 "[C2H], Unkown packet!! CmdId(%#X)!\n", c2h_cmd_id);
++			 "[C2H], Unknown packet!! CmdId(%#X)!\n", c2h_cmd_id);
+ 		break;
+ 	}
+ }
 -- 
-Kalle Valo
+2.4.0.rc3.3.g6eb1401
+
