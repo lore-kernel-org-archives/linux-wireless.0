@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57390 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474AbbDAI7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 04:59:13 -0400
-Message-ID: <1427878747.3428.3.camel@sipsolutions.net> (sfid-20150401_105917_709309_6A036980)
-Subject: Re: [PATCH v4 0/10] Improve Minstrels & Minstrel-HTs common code
- base & statistics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 01 Apr 2015 10:59:07 +0200
-In-Reply-To: <5511FE44.3070802@openwrt.org>
-References: <1427227783-4531-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <5511FE44.3070802@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:33233 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752657AbbD0HEW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Apr 2015 03:04:22 -0400
+MIME-Version: 1.0
+From: Valentin Rothberg <valentinrothberg@gmail.com>
+Date: Mon, 27 Apr 2015 09:03:50 +0200
+Message-ID: <CAD3Xx4+vRhswKAbpHnrYQMRNKOppOQzgFOgoJw_1iAfK4baCtQ@mail.gmail.com> (sfid-20150427_090426_019911_C3B6E3D7)
+Subject: NFC: CONFIG_NFC_DEBUG not defined
+To: clement.perrochaud@nxp.com
+Cc: sameo@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, Paul Bolle <pebolle@tiscali.nl>,
+	Andreas Ruprecht <rupran@einserver.de>,
+	hengelein Stefan <stefan.hengelein@fau.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-03-25 at 01:16 +0100, Felix Fietkau wrote:
-> On 2015-03-24 21:09, Thomas Huehn wrote:
-> > This patch series adds several improvements to the readability, the
-> > output format of rc_stats and the calculated statistics of Minstrel
-> > and Minstrel-HT. Variable names got more consistent and functions
-> > got unified between both rate control algorithms.
-> Acked-by: Felix Fietkau <nbd@openwrt.org>
+Hi Clément,
 
-All applied, thanks.
+your commit dece45855a8b ("NFC: nxp-nci: Add support for NXP NCI
+chips") adds the Makefile drivers/nfc/nxp-nci/Makefile with the
+following line:
 
-johannes
++ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
 
+The Kconfig option NFC_DEBUG is not defined so the line turns out to
+be a nop.  There is another reference in drivers/nfc/Makefile.  Is
+there a patch queued somewhere to add the option?
+
+I found this issue with ./scripts/checkkconfigsymbols.py by diffing
+v4.0 and v4.1-rc1.
+
+Kind regards,
+ Valentin
