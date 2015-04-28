@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:36150 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199AbbDMBEW (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:36156 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbbD1IgY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 21:04:22 -0400
-Received: by wgsk9 with SMTP id k9so65209824wgs.3
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Apr 2015 18:04:21 -0700 (PDT)
+	Tue, 28 Apr 2015 04:36:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <430726FF-98A3-4661-ACEE-87781CADD490@embarqmail.com>
-References: <430726FF-98A3-4661-ACEE-87781CADD490@embarqmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 13 Apr 2015 11:04:00 +1000
-Message-ID: <CAGRGNgUh-n8Grq94YgOAXGR8+hfMHGSx_tQVk6uQaHj9T_U-aQ@mail.gmail.com> (sfid-20150413_030425_694403_A8E11350)
-Subject: Re: DRIVER FOR INTEL2200BG
-To: "J.H. Schmidt" <sophiedoc@embarqmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <553F4382.2070402@effinnov.com>
+References: <CAD3Xx4+vRhswKAbpHnrYQMRNKOppOQzgFOgoJw_1iAfK4baCtQ@mail.gmail.com>
+ <CAD3Xx4+eZOrgm_ae9UeUWB+EfUdi5B1jqs1R-CxYzYZ5AvHyfQ@mail.gmail.com> <553F4382.2070402@effinnov.com>
+From: Valentin Rothberg <valentinrothberg@gmail.com>
+Date: Tue, 28 Apr 2015 10:35:52 +0200
+Message-ID: <CAD3Xx4LYkvACWZwy5TZUK6eOTLFv78pBCtZFv3y6Tfsm7vuy=w@mail.gmail.com> (sfid-20150428_103632_783237_9978AB2A)
+Subject: Re: NFC: CONFIG_NFC_DEBUG not defined
+To: =?UTF-8?Q?Cl=C3=A9ment_Perrochaud?=
+	<clement.perrochaud@effinnov.com>
+Cc: sameo@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, Paul Bolle <pebolle@tiscali.nl>,
+	Andreas Ruprecht <rupran@einserver.de>,
+	hengelein Stefan <stefan.hengelein@fau.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Clément,
 
-On Mon, Apr 13, 2015 at 10:39 AM, J.H. Schmidt <sophiedoc@embarqmail.com> wrote:
-> My IBM(Lenovo) laptop running XP crashed a year ago and I changed to Lupuplus which
-> runs on RAM.No problems with older Sprint modem and D link router running Wi Fi.Enter
-> a nearby lightning strike which killed the router.Century link gave us a new modem router
-> combo which works fine with with 2 computes r running 7 and 2 IMacs.I can't get the
-> Linux machine to work with the new Century Link combo modem router-Any ideas?
+thanks for your answer.
 
-I'm not sure I understand your problem.
+On Tue, Apr 28, 2015 at 10:23 AM, Clément Perrochaud
+<clement.perrochaud@effinnov.com> wrote:
+> On Mon, Apr 27, 2015 at 9:03 AM, Valentin Rothberg wrote:
+>> Hi Clément,
+>>
+>> your commit dece45855a8b ("NFC: nxp-nci: Add support for NXP NCI
+>> chips") adds the Makefile drivers/nfc/nxp-nci/Makefile with the
+>> following line:
+>>
+>> +ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
+>>
+>> The Kconfig option NFC_DEBUG is not defined so the line turns out to
+>> be a nop.  There is another reference in drivers/nfc/Makefile.  Is
+>> there a patch queued somewhere to add the option?
+>>
+>> I found this issue with ./scripts/checkkconfigsymbols.py by diffing
+>> v4.0 and v4.1-rc1.
+>
+> Hi Valentin,
+>
+> I only included this line because it was present in the upper-level
+> Makefile drivers/nfc/Makefile . As far as I know, there is no plan to
+> add this option to the configuration.
+>
+> What would the most sensible solution to this issue be ? Add the NFC
+> Debug feature to the configuration ? Remove it altogether ?
 
-1. You're running some RAM based Linux distro on your Thinkpad
-2. It has an Intel 2200bg card
-3. You've gotten a new router
-4. Now it doesn't connect
+DEBUG is not used in any of the files in drivers/nfc/ so I think we
+can safely remove the two lines from the Makefiles.  Do you want me to
+prepare a patch?
 
-If you were connecting to the old router using WiFi, your card is
-already working.
+Kind regards,
+ Valentin
 
-I'm guessing your new router is much newer than the old one. Is it an
-"n" router? (I.e. supports 802.11n, WiFi speeds above 54Mbit/s) Some
-of them default to "n" only operation and need a setting turned on to
-allow "b" or "g" devices to connect.
-
-I'd investigate the settings of the router and ensure that
-compatibility for older ("g") devices is turned on.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+> Regards,
+>
+> --
+> Clément Perrochaud
+>
+> Eff'Innov Technologies
+> Caen, Aix-En-Provence, Grenoble
+>
+> Eff'Innov Technologies
+> Campus EffiScience
+> 2, Esplanade Anton Philips
+> 14460 Colombelles, FRANCE
+>
+> http://www.effinnov.com
