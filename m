@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56847 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753764AbbDNPEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 11:04:07 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC/RFT 03/11] mac80211: extend fast-xmit to driver fragmentation
-Date: Tue, 14 Apr 2015 17:03:41 +0200
-Message-Id: <1429023829-3991-4-git-send-email-johannes@sipsolutions.net> (sfid-20150414_170438_926962_4E3E29D6)
-In-Reply-To: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
-References: <1429023829-3991-1-git-send-email-johannes@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42076 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965549AbbD1MzP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2015 08:55:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jes.Sorensen@redhat.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
+References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
+	<87383kps0o.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 28 Apr 2015 15:55:08 +0300
+In-Reply-To: <87383kps0o.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Tue, 28 Apr 2015 11:37:59 +0300")
+Message-ID: <87oam876qb.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_145522_701046_93396FE5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-If the driver handles fragmentation then it wouldn't
-be done in software so we can still use the fast-xmit
-path in that case.
+> And I pushed this to wireless-drivers-next.git pending branch so that
+> kbuild will run it's tests with this driver.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+There was one warning from kbuild, but I didn't check if it's just a
+false warning or what:
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d5bfa6c4afd0..86d64bd11c01 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2439,7 +2439,8 @@ void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
- 		return;
- 
- 	/* fast-xmit doesn't handle fragmentation at all */
--	if (local->hw.wiphy->frag_threshold != (u32)-1)
-+	if (local->hw.wiphy->frag_threshold != (u32)-1 &&
-+	    !local->ops->set_frag_threshold)
- 		return;
- 
- 	rcu_read_lock();
+drivers/net/wireless/rtl8xxxu.c: In function 'rtl8723a_phy_lc_calibrate':
+drivers/net/wireless/rtl8xxxu.c:2457: warning: 'rf_amode' may be used uninitialized in this function
+
 -- 
-2.1.4
-
+Kalle Valo
