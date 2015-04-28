@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:33343 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933475AbbDJNao (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54872 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030247AbbD1QVS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 09:30:44 -0400
-Received: by lbbzk7 with SMTP id zk7so13756911lbb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 06:30:42 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/4] ath10k: don't use reassoc flag
-Date: Fri, 10 Apr 2015 13:23:20 +0000
-Message-Id: <1428672203-8604-2-git-send-email-michal.kazior@tieto.com> (sfid-20150410_153053_190729_662BB9C7)
-In-Reply-To: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
-References: <1428672203-8604-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 28 Apr 2015 12:21:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Taehee Yoo <ap420073@gmail.com>, Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix some beacon issue
+References: <1424443813-13634-1-git-send-email-ap420073@gmail.com>
+Date: Tue, 28 Apr 2015 19:21:11 +0300
+In-Reply-To: <1424443813-13634-1-git-send-email-ap420073@gmail.com> (Taehee
+	Yoo's message of "Fri, 20 Feb 2015 23:50:13 +0900")
+Message-ID: <87383k5img.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_182122_668192_CB1215C1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware actually re-creates peer entry when
-reassoc flag is set. This is undesired and could
-cause trouble with IBSS crypto-wise. This is also
-important for upcomming bitrate mask improvement.
+Taehee Yoo <ap420073@gmail.com> writes:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 1 -
- 1 file changed, 1 deletion(-)
+> Sometimes rtl8192cu is not sending beacon frame.
+> This patch fix this issue.
+>
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a7a84f52b8b4..6664bcc9ba88 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2593,7 +2593,6 @@ static int ath10k_station_assoc(struct ath10k *ar,
- 		return ret;
- 	}
- 
--	peer_arg.peer_reassoc = reassoc;
- 	ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
+Larry, what do you think? Should I apply this?
+
+https://patchwork.kernel.org/patch/5856761/
+
 -- 
-2.1.4
-
+Kalle Valo
