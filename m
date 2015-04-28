@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43624 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751685AbbDWJPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2015 05:15:03 -0400
-Date: Thu, 23 Apr 2015 11:15:00 +0200 (CEST)
-From: Jiri Kosina <jkosina@suse.cz>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
-In-Reply-To: <1429780366.11859.1.camel@intel.com>
-Message-ID: <alpine.LNX.2.00.1504231114290.3695@pobox.suse.cz> (sfid-20150423_111523_870637_6D4201DA)
-References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz>  <1429764440.4084.5.camel@intel.com>  <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz> <1429780366.11859.1.camel@intel.com>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:34991 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030253AbbD1Qki (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2015 12:40:38 -0400
+Received: by wgyo15 with SMTP id o15so472670wgy.2
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2015 09:40:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <87383k5img.fsf@kamboji.qca.qualcomm.com>
+References: <1424443813-13634-1-git-send-email-ap420073@gmail.com>
+	<87383k5img.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 29 Apr 2015 01:40:36 +0900
+Message-ID: <CAMArcTUuAK3cTf4L-Kp__Kmn3np2xRkfXKsOnY37M+00zzXPpg@mail.gmail.com> (sfid-20150428_184844_872589_339E7688)
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix some beacon issue
+From: Taehee Yoo <ap420073@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 23 Apr 2015, Grumbach, Emmanuel wrote:
+2015-04-29 1:21 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
+> Taehee Yoo <ap420073@gmail.com> writes:
+>
+>> Sometimes rtl8192cu is not sending beacon frame.
+>> This patch fix this issue.
+>>
+>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+>
+> Larry, what do you think? Should I apply this?
+>
+> https://patchwork.kernel.org/patch/5856761/
+>
+> --
+> Kalle Valo
 
-> > I will try it, but I expect the result to be bogus because of this, 
-> > unfortunately.
-> 
-> I can understand. A few users reported that this bug occurred more
-> reliably when moving their system, although it seems very weird to me.
 
-My "feeling" was that it sometimes was related to start of audio playback, 
-but not 100% relieble either.
 
-> > > First question is: Are you sure that 4.0-rc6 was good?
-> > 
-> > Pretty much, yes. I've been running it for quite some time on this 
-> > machine without any issues. But after updating to current HEAD two days 
-> > ago, the issue triggered like 6 or 7 times already.
-> 
-> Ok - I will try to look at the PCI commits there although I am not sure 
-> I'll be able to make much sense of them...
+i think that it is incomplete patch.
+because it can not solve Mike's problem.
 
-Thanks,
-
--- 
-Jiri Kosina
-SUSE Labs
+Apologize about incomplete patch.
