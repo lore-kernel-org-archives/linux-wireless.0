@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:61087 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965417AbbD1MmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 08:42:12 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-04-28
-Date: Tue, 28 Apr 2015 12:41:47 +0000
-Message-ID: <1430224907.4748.3.camel@intel.com> (sfid-20150428_144216_622394_41077122)
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:33988 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933012AbbD1K4A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2015 06:56:00 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Subject: Re: [for,4.1] rtlwifi: rtl8192cu: Fix kernel deadlock
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1429891417-1224-1-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	Bernhard Wiedemann <bwiedemann@suse.com>,
+	Takashi Iwai <tiwai@suse.com>
+Message-Id: <20150428105559.12144141A32@smtp.codeaurora.org> (sfid-20150428_125609_860951_500A0CBA)
+Date: Tue, 28 Apr 2015 10:55:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCkhlcmUgaXMgdGhlIGZpcnN0IHJvdW5kIG9mIGZpeGVzIGZvciA0LjEuDQpB
-cyB1c3VhbCwgdGhpcyBmaXJzdCByb3VuZCBpcyBzbGlnaHRseSBiaWcuIEkgaG9wZSB0aGluZ3Mg
-d2lsbCBzZXR0bGUgZG93biBsYXRlci4NCg0KUGxlYXNlIHB1bGwuIFRoYW5rcyENCg0KVGhlIGZv
-bGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA2YzM3M2NhODkzOTljNWEzZjdlZjIxMGFkOGY2
-M2RjMzQzN2RhMzQ1Og0KDQogIE1lcmdlIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGlu
-dXgva2VybmVsL2dpdC9kYXZlbS9uZXQtbmV4dCAoMjAxNS0wNC0xNSAwOTowMDo0NyAtMDcwMCkN
-Cg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0cHM6Ly9n
-aXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZpLWZp
-eGVzLmdpdCB0YWdzL2l3bHdpZmktZm9yLWthbGxlLTIwMTUtMDQtMjgNCg0KZm9yIHlvdSB0byBm
-ZXRjaCBjaGFuZ2VzIHVwIHRvIGU3YWZlODlmZDY3ZDQwYTdmNWZmZjgxMzBjNWY5MjVkOTlhOTRi
-MWY6DQoNCiAgaXdsd2lmaTogbXZtOiBmb3JjZSBxdW90YSB1cGRhdGUgdXBkYXRlIGFmdGVyIEZX
-IHJlc3RhcnQgKDIwMTUtMDQtMjggMTU6MDI6MjUgKzAzMDApDQoNCi0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCiogZml4IGZp
-cm13YXJlIEFQSSBmb3IgLTEzLnVjb2RlDQoqIGZpeCBSU1NJIGhhbmRsaW5nIHRoYXQgYXZvaWQg
-YmFkIHJvYW1pbmcgZGVjaXNpb24NCiogZml4IGZpcm13YXJlIGRlYnVnDQoqIGZpeCBNRlVBUlQg
-b3BlcmF0aW9uDQoqIGZpeCBBU1NFUlQgd2hpbGUgcmVzdGFydCB0aGUgaGFyZHdhcmUgKGJlY2F1
-c2Ugb2YgYW5vdGhlciBBU1NFUlQgZS5nKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpBbGV4YW5kZXIgQm9uZGFyICgx
-KToNCiAgICAgIGl3bHdpZmk6IG12bTogQXZvaWQgc2lnbmFsIGJhc2VkIGRlY2lzaW9ucyBpZiBh
-dmUgYmVhY29uIFJTU0kgaXMgMA0KDQpBdnJhaGFtIFN0ZXJuICgxKToNCiAgICAgIGl3bHdpZmk6
-IG12bTogZml4IHNjYW4gaXRlcmF0aW9uIGNvbXBsZXRlIG5vdGlmaWNhdGlvbiBoYW5kbGluZw0K
-DQpBdnJpIEFsdG1hbiAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IGZpeCBUeCBQb3dlciBmaXJt
-d2FyZSBBUEkNCg0KRW1tYW51ZWwgR3J1bWJhY2ggKDIpOg0KICAgICAgaXdsd2lmaTogbXZtOiBk
-b24ndCBzdG9wIHRoZSBGVyBtb25pdG9yIHRvbyBlYXJseQ0KICAgICAgaXdsd2lmaTogbXZtOiBm
-aXggdHlwbyBpbiBDT05GSUcgb3B0aW9uDQoNCkVyYW4gSGFyYXJ5ICgxKToNCiAgICAgIGl3bHdp
-Zmk6IG12bTogZG9uJ3QgcG93ZXIgb2ZmIHRoZSBkZXZpY2UgYmV0d2VlbiBJTklUIGFuZCBPUEVS
-IGZpcm13YXJlcw0KDQpKb2hhbm5lcyBCZXJnICgxKToNCiAgICAgIGl3bHdpZmk6IG12bTogZm9y
-Y2UgcXVvdGEgdXBkYXRlIHVwZGF0ZSBhZnRlciBGVyByZXN0YXJ0DQoNCkxpYWQgS2F1Zm1hbiAo
-MSk6DQogICAgICBpd2x3aWZpOiBwY2llOiBwcmV2ZW50IHVzaW5nIHVubWFwcGVkIG1lbW9yeSBp
-biBmdyBtb25pdG9yDQoNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1mdy1maWxl
-LmggICAgICB8ICAyICsrDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMu
-aCAgICAgICAgfCA0MSArKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLQ0K
-IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL2QzLmMgICAgICAgICAgIHwgIDIgKy0N
-CiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9mdy1hcGktcG93ZXIuaCB8IDM0ICsr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL212bS9mdy1hcGktc2Nhbi5oICB8IDQ0ICsrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vZnct
-YXBpLmggICAgICAgfCAxMyAtLS0tLS0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9tdm0vZncuYyAgICAgICAgICAgfCA1NCArKysrKysrKysrKysrKysrKysrKystLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
-L212bS9tYWM4MDIxMS5jICAgICB8IDI2ICsrKysrKysrKysrKysrKysrKysrKysrLS0tDQogZHJp
-dmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbXZtLmggICAgICAgICAgfCAgMSAtDQogZHJp
-dmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vb3BzLmMgICAgICAgICAgfCAxMCArKysrKysr
-KysrDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vcnguYyAgICAgICAgICAgfCAg
-NSArKysrKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3NjYW4uYyAgICAgICAg
-IHwgIDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvdHJhbnMuYyAgICAg
-ICB8IDE3ICsrKysrKysrKy0tLS0tLS0tDQogMTMgZmlsZXMgY2hhbmdlZCwgMTM1IGluc2VydGlv
-bnMoKyksIDExNiBkZWxldGlvbnMoLSkNCg0K
+
+> The USB mini-driver in rtlwifi, which is used by rtl8192cu, issues a call to
+> usb_control_msg() with a timeout value of 0. In some instances where the
+> interface is shutting down, this infinite wait results in a CPU deadlock. A
+> one second timeout fixes this problem without affecting any normal operations.
+> 
+> This bug is reported at https://bugzilla.novell.com/show_bug.cgi?id=927786.
+> 
+> Reported-by: Bernhard Wiedemann <bwiedemann@suse.com>
+> Tested-by: Bernhard Wiedemann <bwiedemann@suse.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
+> Cc: Bernhard Wiedemann <bwiedemann@suse.com>
+> Cc: Takashi Iwai<tiwai@suse.com>
+
+Thanks, applied to wireless-drivers.git.
+
+Kalle Valo
