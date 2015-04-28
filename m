@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:47230 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753688AbbDTIam (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:34699 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965701AbbD1PXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 04:30:42 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/4] brcm: firmware for brcmfmac driver
-Date: Mon, 20 Apr 2015 10:30:22 +0200
-Message-ID: <1429518626-15321-1-git-send-email-arend@broadcom.com> (sfid-20150420_103046_205373_A7E6F218)
+	Tue, 28 Apr 2015 11:23:31 -0400
+Message-ID: <553FA5F0.1070402@lwfinger.net> (sfid-20150428_172341_338055_FC196ADE)
+Date: Tue, 28 Apr 2015 10:23:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Stable <stable@vger.kernel.org>
+CC: Marek Vasut <marex@denx.de>, Anders Larsen <al@alarsen.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: Stable request 9374e7d2 "rtlwifi: rtl8192cu: Add new device ID"
+References: <1430230954.6036.4@alarsen-lx> <201504281633.17160.marex@denx.de>
+In-Reply-To: <201504281633.17160.marex@denx.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Couple of new firmware files for devices added to brcmfmac and
-replacing a firmware file that turned out to be not working on
-the intended device.
+Please note that there are two commits just added to the mainline repo that 
+should be propagated to all stable kernels. Both are addition of new USB IDs for 
+an old driver, thus they will cause to side effects. Unfortunately, the Cc to 
+stable was missed in the first of these, thus the need for this message. The 
+second was Cc for stable, but I include it here for completeness.
 
-This patch applies to the master branch of the linux-firmware
-repository on top of commit ec89525b2ab6 ("firmware: WHENCE: note
-nvidia xusb.bin firmware versions").
+The two commits in question are
 
-Arend van Spriel (4):
-  brcm: add firmware for BCM43569 USB device
-  brcm: add firmware for BCM43570 PCIe device
-  brcm: replace non-working firmware for BCM4339
-  brcm: add firmware for BCM4324(1) B5 chipset
+commit 9374e7d2fdcad3c36dafc8d3effd554bc702c4b6
+Author: Marek Vasut <marex@denx.de>
+Date:   Thu Mar 26 02:16:06 2015 +0100
 
- WHENCE                        |   2 ++
- brcm/brcmfmac43241b5-sdio.bin | Bin 0 -> 408682 bytes
- brcm/brcmfmac4339-sdio.bin    | Bin 569291 -> 493599 bytes
- brcm/brcmfmac43569.bin        | Bin 0 -> 557056 bytes
- brcm/brcmfmac43570-pcie.bin   | Bin 0 -> 550333 bytes
- 5 files changed, 2 insertions(+)
- create mode 100644 brcm/brcmfmac43241b5-sdio.bin
- rewrite brcm/brcmfmac4339-sdio.bin (91%)
- create mode 100644 brcm/brcmfmac43569.bin
- create mode 100644 brcm/brcmfmac43570-pcie.bin
+     rtlwifi: rtl8192cu: Add new device ID
 
--- 
-1.9.1
+     Add new ID for ASUS N10 WiFi dongle.
+
+commit 2f92b314f4daff2117847ac5343c54d3d041bf78
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Mon Mar 23 18:14:10 2015 -0500
+
+     rtlwifi: rtl8192cu: Add new USB ID
+
+     USB ID 2001:330d is used for a D-Link DWA-131.
+
+
+Thanks,
+
+Larry
 
