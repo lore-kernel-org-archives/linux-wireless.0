@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:36409 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753555AbbDJA6H (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53139 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965801AbbD1Pwy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2015 20:58:07 -0400
+	Tue, 28 Apr 2015 11:52:54 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org
+Subject: Re: [PATCH] ath9k: fix per-packet tx power configuration
+References: <1428519117-15833-1-git-send-email-lorenzo.bianconi83@gmail.com>
+Date: Tue, 28 Apr 2015 18:52:47 +0300
+In-Reply-To: <1428519117-15833-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	(Lorenzo Bianconi's message of "Wed, 8 Apr 2015 20:51:57 +0200")
+Message-ID: <87r3r45jxs.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_175257_990531_BD44A699)
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 9 Apr 2015 17:57:44 -0700
-Message-ID: <CAB=NE6W4Q2ngB6CF8pG=OV6=q+9CTcwA6UGhdgS+OCT++N2GJA@mail.gmail.com> (sfid-20150410_025833_920195_9BCB4A1A)
-Subject: Looking for extensible kernel database format
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Kees Cook <kees@outflux.net>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	netfilter-devel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey folks,
+Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> writes:
 
-next week I'd like to address replacing the need for CRDA [0] as a
-udev helper with in-kernel functionality  There's a few motivations
-for this but a good one is that the kernel already has now
-cryptographic support to verify the integrity of the regulatory
-database, just as it has support for verifying the integrity of
-modules / firmware. We'd use something like:
+> Do not use ieee80211_vif pointer in ath_get_rate_txpower() since it has been
+> overwritten by setup_frame_info() and it will result in a corrupted tx power
+> configuration. Set per-packet tx power in setup_frame_info() according to
+> current vif tx power.
+>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 
-request_file(file_reqs)
+I'm planning to send this fix to 4.1, is that ok?
 
-Where the file_reqs provides the requirements, including cryptographic
-requirements, and I suspect we'd use LSM to vet for the cryptographic
-needs of the file.
-
-Now other than this step CRDA currently *reads* a database and today
-we have our own format. If we want to extend this though we will have
-to issue a new regdb format and old kernels might not be compatible
-with the new format. This is a typical database problem and I'm hoping
-we are not the first to deal with this. What *extensible* kernel
-database format are there already, are they generic already? I'd
-prefer something already using netlink.
-
-Any recommendations?
-
-[0] https://wireless.wiki.kernel.org/en/developers/regulatory/crda
-
-  Luis
+-- 
+Kalle Valo
