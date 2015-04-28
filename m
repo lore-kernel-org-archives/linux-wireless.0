@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:35227 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289AbbDOOdC convert rfc822-to-8bit (ORCPT
+Received: from 13.mo5.mail-out.ovh.net ([87.98.182.191]:46774 "EHLO
+	13.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964975AbbD1LGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2015 10:33:02 -0400
-Received: by ykec202 with SMTP id c202so1282118yke.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2015 07:33:01 -0700 (PDT)
+	Tue, 28 Apr 2015 07:06:05 -0400
+Received: from mail624.ha.ovh.net (b9.ovh.net [213.186.33.59])
+	by mo5.mail-out.ovh.net (Postfix) with SMTP id 201A4FF9C98
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2015 10:38:51 +0200 (CEST)
+Message-ID: <553F4716.6040707@effinnov.com> (sfid-20150428_130626_335731_2D041963)
+Date: Tue, 28 Apr 2015 10:38:46 +0200
+From: =?UTF-8?B?Q2zDqW1lbnQgUGVycm9jaGF1ZA==?=
+	<clement.perrochaud@effinnov.com>
 MIME-Version: 1.0
-In-Reply-To: <1429103273-89272-1-git-send-email-nbd@openwrt.org>
-References: <1429103273-89272-1-git-send-email-nbd@openwrt.org>
-Date: Wed, 15 Apr 2015 16:33:01 +0200
-Message-ID: <CACna6ryFjs+YHKUx2WTe5j5xctzD1Aru2qwP=F63TRpMd+FbZQ@mail.gmail.com> (sfid-20150415_163307_283628_0FB8D89E)
-Subject: Re: [PATCH 1/2] bcma: use absolute base for SoC GPIO pins
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+To: Valentin Rothberg <valentinrothberg@gmail.com>
+CC: sameo@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, Paul Bolle <pebolle@tiscali.nl>,
+	Andreas Ruprecht <rupran@einserver.de>,
+	hengelein Stefan <stefan.hengelein@fau.de>
+Subject: Re: NFC: CONFIG_NFC_DEBUG not defined
+References: <CAD3Xx4+vRhswKAbpHnrYQMRNKOppOQzgFOgoJw_1iAfK4baCtQ@mail.gmail.com> <CAD3Xx4+eZOrgm_ae9UeUWB+EfUdi5B1jqs1R-CxYzYZ5AvHyfQ@mail.gmail.com> <553F4382.2070402@effinnov.com> <CAD3Xx4LYkvACWZwy5TZUK6eOTLFv78pBCtZFv3y6Tfsm7vuy=w@mail.gmail.com>
+In-Reply-To: <CAD3Xx4LYkvACWZwy5TZUK6eOTLFv78pBCtZFv3y6Tfsm7vuy=w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 April 2015 at 15:07, Felix Fietkau <nbd@openwrt.org> wrote:
-> @@ -235,16 +235,17 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
->         }
->
->         /*
-> -        * On MIPS we register GPIO devices (LEDs, buttons) using absolute GPIO
-> -        * pin numbers. We don't have Device Tree there and we can't really use
-> -        * relative (per chip) numbers.
-> -        * So let's use predictable base for BCM47XX and "random" for all other.
-> +        * Register SoC GPIO devices with absolute GPIO pin base.
-> +        * On MIPS, we don't have Device Tree and we can't use relative (per chip)
-> +        * GPIO numbers.
-> +        * On some ARM devices, user space may want to access some system GPIO
-> +        * pins directly, which is easier to do with a predictable GPIO base.
->          */
-> -#if IS_BUILTIN(CONFIG_BCM47XX)
-> -       chip->base              = bus->num * BCMA_GPIO_MAX_PINS;
-> -#else
-> -       chip->base              = -1;
-> -#endif
-> +       if (IS_BUILTIN(CONFIG_BCM47XX) ||
-> +           cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
-> +               chip->base              = bus->num * BCMA_GPIO_MAX_PINS;
-> +       else
-> +               chip->base              = -1;
+On 04/28/2015 10:35 AM, Valentin Rothberg wrote:
+> DEBUG is not used in any of the files in drivers/nfc/ so I think we
+> can safely remove the two lines from the Makefiles.  Do you want me to
+> prepare a patch?
 
-Is there any chance you will need predictable GPIO numbers of extra
-bcma buses on ARM? Like accessing GPIO of PCIe card from user space?
-Then you could prefer IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
-
-Anyway, I'm OK with this patch.
+That would be great, thanks.
 
 -- 
-Rafał
+Clément Perrochaud
+
+Eff'Innov Technologies
+Caen, Aix-En-Provence, Grenoble
+
+Eff'Innov Technologies
+Campus EffiScience
+2, Esplanade Anton Philips
+14460 Colombelles, FRANCE
+
+http://www.effinnov.com
