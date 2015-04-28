@@ -1,83 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:34523 "EHLO
-	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848AbbDLQ0O (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53481 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965902AbbD1P6W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 12:26:14 -0400
-Message-ID: <552A9CA2.8080704@lwfinger.net> (sfid-20150412_182635_228824_F597A642)
-Date: Sun, 12 Apr 2015 11:26:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 28 Apr 2015 11:58:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andreas Fenkart <afenkart@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: [PATCH 1/2] mwifiex: sdio: create global list of adapters
+References: <1428916704-9635-1-git-send-email-afenkart@gmail.com>
+Date: Tue, 28 Apr 2015 18:58:15 +0300
+In-Reply-To: <1428916704-9635-1-git-send-email-afenkart@gmail.com> (Andreas
+	Fenkart's message of "Mon, 13 Apr 2015 11:18:23 +0200")
+Message-ID: <87mw1s5joo.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_175825_861454_85AA7C51)
 MIME-Version: 1.0
-To: Cheolhyun Park <pch851130@gmail.com>, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linville@tuxdriver.com, Julia.Lawall@lip6.fr
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: misspelled code and comments corrected.
-References: <1428854665-5958-1-git-send-email-pch851130@gmail.com>
-In-Reply-To: <1428854665-5958-1-git-send-email-pch851130@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2015 11:04 AM, Cheolhyun Park wrote:
-> Signed-off-by: Cheolhyun Park <pch851130@gmail.com>
+Andreas Fenkart <afenkart@gmail.com> writes:
 
-When you send a corrected patch, it is common to indicate that this is a 
-corrected patch by putting the version number inside the [] in the subject, and 
-to indicate the changes inside the patch, but after the --- line. Neither of 
-these annotations will be included in the commit message, but they help the 
-maintainer keep track of the patch, and whether you have satisfied the 
-reviewer's comments. Thus this patch should have had the subject "[PATCH V2] 
-rtlwifi: ..." and you should have had the lines below after the ---:
+> we need to verify that a an adapter pointer, still points to a
+> valid adapter. this is not possible through other global structures,
+> such as net_namespace_list. the problem with the net_namespace_list
+> is that an adapter can have multiple interfaces, hence we had to
+> de-reference the maybe invalid pointer to get the interface struct.
+>
+> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 > ---
+>  drivers/net/wireless/mwifiex/sdio.c | 14 ++++++++++++++
+>  drivers/net/wireless/mwifiex/sdio.h |  1 +
+>  2 files changed, 15 insertions(+)
+>
+> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+> index 91e36cd..a70e114 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/mwifiex/sdio.c
+> @@ -69,6 +69,12 @@ static struct memory_type_mapping mem_type_mapping_tbl[] = {
+>  };
+>  
+>  /*
+> + * list of active cards
+> + */
+> +static LIST_HEAD(cards);
+> +static DEFINE_MUTEX(cards_mutex);
+> +
+> +/*
+>   * SDIO probe.
+>   *
+>   * This function probes an mwifiex device and registers it. It allocates
+> @@ -130,6 +136,10 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+>  		ret = -1;
+>  	}
+>  
+> +	mutex_lock(&cards_mutex);
+> +	list_add(&card->next, &cards);
+> +	mutex_unlock(&cards_mutex);
+> +
+>  	return ret;
+>  }
+>  
+> @@ -196,6 +206,10 @@ mwifiex_sdio_remove(struct sdio_func *func)
+>  	if (!card)
+>  		return;
+>  
+> +	mutex_lock(&cards_mutex);
+> +	list_del(&card->next);
+> +	mutex_unlock(&cards_mutex);
 
-V2 - Fixed the typo introduced in V1 as noted by Julia Lawall.
----
+This is extremely ugly and the commit log doesn't even tell anything
+about the issue you trying to fix so it's difficult to even suggest
+anything else. For starters can you provide more information, please?
+There has to be a better way to solve it.
 
-
->   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 2 +-
->   3 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> index f5ee67c..1273997 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> @@ -312,7 +312,7 @@ static void rtl92c_dm_ctrl_initgain_by_rssi(struct ieee80211_hw *hw)
->   	struct dig_t *digtable = &rtlpriv->dm_digtable;
->   	u32 isbt;
->
-> -	/* modify DIG lower bound, deal with abnorally large false alarm */
-> +	/* modify DIG lower bound, deal with abnormally large false alarm */
->   	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
->   		digtable->large_fa_hit++;
->   		if (digtable->forbidden_igi < digtable->cur_igvalue) {
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> index a1be5a6..f209cda 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> @@ -420,7 +420,7 @@ static void rtl92d_dm_dig(struct ieee80211_hw *hw)
->   		 "dm_DIG() Before: Recover_cnt=%d, rx_gain_min=%x\n",
->   		 de_digtable->recover_cnt, de_digtable->rx_gain_min);
->
-> -	/* deal with abnorally large false alarm */
-> +	/* deal with abnormally large false alarm */
->   	if (falsealm_cnt->cnt_all > 10000) {
->   		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
->   			 "dm_DIG(): Abnormally false alarm case\n");
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-> index 0b2082d..342678d 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-> @@ -873,7 +873,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
->
->   	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
->   		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
-> -			 "Abnornally false alarm case.\n");
-> +			 "Abnormally false alarm case.\n");
->
->   		if (dm_digtable->large_fa_hit != 3)
->   			dm_digtable->large_fa_hit++;
->
-
+-- 
+Kalle Valo
