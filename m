@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:46351 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751030AbbDAG2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 02:28:50 -0400
-Message-ID: <1427869720.10642.6.camel@coelho.fi> (sfid-20150401_082854_371310_B0453F00)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend@broadcom.com>, Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 01 Apr 2015 09:28:40 +0300
-In-Reply-To: <1427811715.2057.24.camel@sipsolutions.net>
-References: <55105DA7.3040703@broadcom.com>
-	 <1427811715.2057.24.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: broadcast ssid in scheduled scan
+Received: from smtp.codeaurora.org ([198.145.29.96]:54483 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030298AbbD1QOb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2015 12:14:31 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 07/10] brcmfmac: fix sdio suspend and resume
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+	<1429035033-14076-8-git-send-email-arend@broadcom.com>
+	<CAPDyKFqGb81m9ExECL1ZCea8OuhekH+aWiXC=8zafnLN2T02Vw@mail.gmail.com>
+Date: Tue, 28 Apr 2015 19:14:25 +0300
+In-Reply-To: <CAPDyKFqGb81m9ExECL1ZCea8OuhekH+aWiXC=8zafnLN2T02Vw@mail.gmail.com>
+	(Ulf Hansson's message of "Wed, 22 Apr 2015 09:32:32 +0200")
+Message-ID: <87egn45ixq.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_181434_360488_F5D56B4E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-03-31 at 16:21 +0200, Johannes Berg wrote:
-> On Mon, 2015-03-23 at 19:38 +0100, Arend van Spriel wrote:
-> > Johannes, Jouni,
-> > 
-> > I have noticed that under some circumstances wpa_supplicant initiates a 
-> > scheduled scan with broadcast ssid. This is something our firmware can 
-> > not do so could this be avoided? Maybe by adding a feature flag for it. 
-> 
-> I guess this would be difficult to do since you'd basically have to
-> "remove" support for normal scheduled scan (that assumes this ability)
-> and add support for another scheduled scan (that doesn't assume it) in
-> nl80211 ... just to be compatible with older implementations of
-> wpa_supplicant etc.
-> 
-> I do wonder why the firmware cannot do this though - there's no
-> fundamental reason the 0-length SSID is all that different from a 1-byte
-> one?
+Ulf Hansson <ulf.hansson@linaro.org> writes:
 
-Is the problem in having a 0-length SSID in the probe_reqs or is it in
-having it in the matches (i.e. it doesn't support "pass all")? The
-latter makes a bit more sense, since filtering on a 0-length SSID, if
-not treated specially, would return nothing (since it would never match,
-unless an AP does send an SSID IE with 0-length).
+> On 14 April 2015 at 20:10, Arend van Spriel <arend@broadcom.com> wrote:
+>> commit 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
+>> changed the behaviour by removing the MMC_PM_KEEP_POWER flag for
+>> non-wowl scenario, which needs to be restored. Another necessary
+>> change is to mark the card as being non-removable. With this in place
+>> the suspend resume test passes successfully doing:
+>>
+>>  # echo devices > /sys/power/pm_test
+>>  # echo mem > /sys/power/state
+>>
+>> Note that power may still be switched off when system is going
+>> in S3 state.
+>>
+>> Reported-by: Fu, Zhonghui <<zhonghui.fu@linux.intel.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> ---
+>>  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 18 +++++++++++++-----
+>>  1 file changed, 13 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index 9b508bd..8a69544 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -1011,6 +1011,14 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+>>         return 0;
+>>  }
+>>
+>> +static void brcmf_sdiod_host_fixup(struct mmc_host *host)
+>> +{
+>> +       /* runtime-pm powers off the device */
+>> +       pm_runtime_forbid(host->parent);
+>
+> That you need this, clearly shows that something is broken in the mmc
+> core/host layer.
+>
+> Could you elaborate a bit on what configuration you are using. Like
+> what mmc host, which SDIO bus speed mode.
+>
+> And have you tested different configurations? Like what happens if you
+> use a different SDIO bus speed mode?
 
-It doesn't make much sense to have a "match all" scheduled scan though,
-unless wpa_s needs to find more SSIDs than what the driver supports.
-Even in that case, it wouldn't make much difference than using a normal
-scan periodically...
+So what should I do with this patch? Good to commit still?
 
---
-Luca.
-
+-- 
+Kalle Valo
