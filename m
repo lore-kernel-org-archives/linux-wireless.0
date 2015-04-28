@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40007 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:28156 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752381AbbDBGm1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2015 02:42:27 -0400
+	id S965506AbbD1MnU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2015 08:43:20 -0400
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 24/31] iwlwifi: mvm: Fix wrongfully flushing frames in the roc/off channel queue
-Date: Thu,  2 Apr 2015 09:41:12 +0300
-Message-Id: <1427956879-11725-24-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090417_835193_54DE07ED)
-In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
-References: <1427956656.8122.2.camel@egrumbacBox>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/8] iwlwifi: mvm: don't stop the FW monitor too early
+Date: Tue, 28 Apr 2015 15:43:06 +0300
+Message-Id: <1430224992-20327-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150428_144324_311702_35BDBB62)
+In-Reply-To: <1430224907.4748.3.camel@intel.com>
+References: <1430224907.4748.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+When the delay paramatere is provided, we need to stop
+the collection only after the delay has elapsed.
 
-Sending multiple action frames off channel, one after the other can create
-a race that will result in a timeout:
-
-1. Start sending action frame off channel.
-2. Once the frame is sent or the time event is over, the flow will
-eventually call ieee80211_start_next_roc to start the next roc frame &
-iwl_mvm_roc_finished schedules to schedule a work to flush the queue.
-3. Start sending new roc frame and write it to the queue before the
-flush work has started.
-4. The work is called and it flushes the new packet that was placed on the
-on the queue so the packet is lost.
-
-This causes the frame to be removed & not sent, that causes a timeout in
-userspace.
-
-Flush the work queue that flushes the roc/off channel queue before starting
-to send a new frame off channel, in order to avoid a race between the new
-frame that is transmitted off channel & the flushing of the queue.
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/fw.c  |  9 ---------
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 10 ++++++++++
+ 2 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 0dd999c..0bd3373 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3080,6 +3080,8 @@ static int iwl_mvm_roc(struct ieee80211_hw *hw,
- 	IWL_DEBUG_MAC80211(mvm, "enter (%d, %d, %d)\n", channel->hw_value,
- 			   duration, type);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index bc5eac4..9c28fe7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -494,15 +494,6 @@ int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
  
-+	flush_work(&mvm->roc_done_wk);
-+
+ 	mvm->fw_dump_desc = desc;
+ 
+-	/* stop recording */
+-	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
+-		iwl_set_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
+-	} else {
+-		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 0);
+-		/* wait before we collect the data till the DBGC stop */
+-		udelay(100);
+-	}
+-
+ 	queue_delayed_work(system_wq, &mvm->fw_dump_wk, delay);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index a08b03d..1c66297 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -865,6 +865,16 @@ static void iwl_mvm_fw_error_dump_wk(struct work_struct *work)
+ 		return;
+ 
  	mutex_lock(&mvm->mutex);
++
++	/* stop recording */
++	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		iwl_set_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
++	} else {
++		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 0);
++		/* wait before we collect the data till the DBGC stop */
++		udelay(100);
++	}
++
+ 	iwl_mvm_fw_error_dump(mvm);
  
- 	switch (vif->type) {
+ 	/* start recording again if the firmware is not crashed */
 -- 
-1.9.1
+2.1.0
 
