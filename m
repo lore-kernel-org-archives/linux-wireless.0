@@ -1,66 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:50368 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754534AbbDNSKl (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.9]:43852 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030647AbbD1OdU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 14:10:41 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 05/10] brcmfmac: add support for BCM4324 rev B5 chipset
-Date: Tue, 14 Apr 2015 20:10:28 +0200
-Message-ID: <1429035033-14076-6-git-send-email-arend@broadcom.com> (sfid-20150414_201056_253961_4131589E)
-In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
+	Tue, 28 Apr 2015 10:33:20 -0400
+From: Marek Vasut <marex@denx.de>
+To: Anders Larsen <al@alarsen.net>
+Subject: Re: Stable request 9374e7d2 "rtlwifi: rtl8192cu: Add new device ID"
+Date: Tue, 28 Apr 2015 16:33:17 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <1430230954.6036.4@alarsen-lx>
+In-Reply-To: <1430230954.6036.4@alarsen-lx>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201504281633.17160.marex@denx.de> (sfid-20150428_163333_279356_FC2A23F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for the BCM4324 B5 revision. This device
-is similar to BCM43241 from driver and firmware perspective. It
-is known to be used in Lenovo Thinkpad Tablet devices.
+On Tuesday, April 28, 2015 at 04:22:34 PM, Anders Larsen wrote:
+> On 2015-04-28 16:10, Marek Vasut wrote:
+> > did you check [1] please? I might be wrong, but these are
+> > the official -stable submission guidelines to my knowledge.
+> > 
+> > [1] https://www.kernel.org/doc/Documentation/stable_kernel_rules.txt
+> 
+> sure I did - networking has its own stable submission guidelines in
+> Documentation/networking/netdev-FAQ.txt
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+I apologize, thank you for pointing this out, I will educate myself.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index ab0c898..cbdda54 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -601,6 +601,8 @@ static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
- #define BCM43241B0_NVRAM_NAME		"brcm/brcmfmac43241b0-sdio.txt"
- #define BCM43241B4_FIRMWARE_NAME	"brcm/brcmfmac43241b4-sdio.bin"
- #define BCM43241B4_NVRAM_NAME		"brcm/brcmfmac43241b4-sdio.txt"
-+#define BCM43241B5_FIRMWARE_NAME	"brcm/brcmfmac43241b5-sdio.bin"
-+#define BCM43241B5_NVRAM_NAME		"brcm/brcmfmac43241b5-sdio.txt"
- #define BCM4329_FIRMWARE_NAME		"brcm/brcmfmac4329-sdio.bin"
- #define BCM4329_NVRAM_NAME		"brcm/brcmfmac4329-sdio.txt"
- #define BCM4330_FIRMWARE_NAME		"brcm/brcmfmac4330-sdio.bin"
-@@ -628,6 +630,8 @@ MODULE_FIRMWARE(BCM43241B0_FIRMWARE_NAME);
- MODULE_FIRMWARE(BCM43241B0_NVRAM_NAME);
- MODULE_FIRMWARE(BCM43241B4_FIRMWARE_NAME);
- MODULE_FIRMWARE(BCM43241B4_NVRAM_NAME);
-+MODULE_FIRMWARE(BCM43241B5_FIRMWARE_NAME);
-+MODULE_FIRMWARE(BCM43241B5_NVRAM_NAME);
- MODULE_FIRMWARE(BCM4329_FIRMWARE_NAME);
- MODULE_FIRMWARE(BCM4329_NVRAM_NAME);
- MODULE_FIRMWARE(BCM4330_FIRMWARE_NAME);
-@@ -667,7 +671,8 @@ enum brcmf_firmware_type {
- static const struct brcmf_firmware_names brcmf_fwname_data[] = {
- 	{ BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM43143) },
- 	{ BRCM_CC_43241_CHIP_ID, 0x0000001F, BRCMF_FIRMWARE_NVRAM(BCM43241B0) },
--	{ BRCM_CC_43241_CHIP_ID, 0xFFFFFFE0, BRCMF_FIRMWARE_NVRAM(BCM43241B4) },
-+	{ BRCM_CC_43241_CHIP_ID, 0x00000020, BRCMF_FIRMWARE_NVRAM(BCM43241B4) },
-+	{ BRCM_CC_43241_CHIP_ID, 0xFFFFFFC0, BRCMF_FIRMWARE_NVRAM(BCM43241B5) },
- 	{ BRCM_CC_4329_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4329) },
- 	{ BRCM_CC_4330_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4330) },
- 	{ BRCM_CC_4334_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4334) },
--- 
-1.9.1
-
+Best regards,
+Marek Vasut
