@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:35565 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753171AbbDBJiF (ORCPT
+Received: from jesper.alarsen.net ([144.76.18.233]:41825 "EHLO
+	mail.alarsen.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965832AbbD1OFZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2015 05:38:05 -0400
-Date: Thu, 2 Apr 2015 11:37:48 +0200
-From: Piotr Witoslawski <pwitos@gmail.com>
+	Tue, 28 Apr 2015 10:05:25 -0400
+Date: Tue, 28 Apr 2015 15:56:04 +0200
+From: Anders Larsen <al@alarsen.net>
+Reply-To: Anders Larsen <al@alarsen.net>
+Subject: Stable request 9374e7d2 "rtlwifi: rtl8192cu: Add new device ID"
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yannis Damigos <giannis.damigos@gmail.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers: staging: rtl8723au: fix "warning: cast to
- restricted __le16"
-Message-ID: <20150402093748.GA24455@pwitoslawski.warsaw.osa> (sfid-20150402_113826_262654_D3EC2DB1)
+Cc: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <201504271819.57895.marex@denx.de>
+Message-Id: <1430229364.6036.1@alarsen-lx> (sfid-20150428_160528_854846_BE61656A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Piotr Witoslawski <pwitos@gmail.com>
----
- drivers/staging/rtl8723au/hal/rtl8723au_xmit.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Hi,
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c b/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c
-index 1759487..256958e 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c
-@@ -51,7 +51,8 @@ static void rtl8192cu_cal_txdesc_chksum(struct tx_desc	*ptxdesc)
- 		ptxdesc->txdw7 &= cpu_to_le32(0xffff0000);
- 
- 		for (index = 0 ; index < count ; index++)
--			checksum = checksum ^ le16_to_cpu(*(usPtr + index));
-+			checksum = checksum ^ le16_to_cpu(
-+				*(__le16 *)(usPtr + index));
- 
- 		ptxdesc->txdw7 |= cpu_to_le32(0x0000ffff&checksum);
- }
--- 
-2.0.5
+commit 9374e7d2fdcad3c36dafc8d3effd554bc702c4b6
+Author: Marek Vasut <marex@denx.de>
+Date:   2015-03-26 02:16:06 +0100
 
+     rtlwifi: rtl8192cu: Add new device ID
+
+     Add new ID for ASUS N10 WiFi dongle.
+
+in Linus' tree has been tested on 3.16.7 and 3.10.5x
+and applies cleanly all the way back to 3.2.68
+
+Please consider this patch for the stable trees.
+
+Thanks,
+Anders
