@@ -1,139 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:33916 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636AbbDJHu1 (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:64364 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030578AbbD1QuI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 03:50:27 -0400
-Received: by pdbqa5 with SMTP id qa5so14805855pdb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2015 00:50:26 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net, ap420073@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192cu: Remove pci check routine in rtl92c_enable_interrupt.
-Date: Fri, 10 Apr 2015 16:49:59 +0900
-Message-Id: <1428652199-28713-1-git-send-email-ap420073@gmail.com> (sfid-20150410_095031_611314_15906AA9)
+	Tue, 28 Apr 2015 12:50:08 -0400
+Message-ID: <553FBA3B.5010507@broadcom.com> (sfid-20150428_185021_581495_AD37E274)
+Date: Tue, 28 Apr 2015 18:50:03 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Ulf Hansson <ulf.hansson@linaro.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 07/10] brcmfmac: fix sdio suspend and resume
+References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-8-git-send-email-arend@broadcom.com>	<CAPDyKFqGb81m9ExECL1ZCea8OuhekH+aWiXC=8zafnLN2T02Vw@mail.gmail.com> <87egn45ixq.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87egn45ixq.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I change three things about below.
+On 04/28/15 18:14, Kalle Valo wrote:
+> Ulf Hansson<ulf.hansson@linaro.org>  writes:
+>
+>> On 14 April 2015 at 20:10, Arend van Spriel<arend@broadcom.com>  wrote:
+>>> commit 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
+>>> changed the behaviour by removing the MMC_PM_KEEP_POWER flag for
+>>> non-wowl scenario, which needs to be restored. Another necessary
+>>> change is to mark the card as being non-removable. With this in place
+>>> the suspend resume test passes successfully doing:
+>>>
+>>>   # echo devices>  /sys/power/pm_test
+>>>   # echo mem>  /sys/power/state
+>>>
+>>> Note that power may still be switched off when system is going
+>>> in S3 state.
+>>>
+>>> Reported-by: Fu, Zhonghui<<zhonghui.fu@linux.intel.com>
+>>> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
+>>> Reviewed-by: Franky (Zhenhui) Lin<frankyl@broadcom.com>
+>>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+>>> ---
+>>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 18 +++++++++++++-----
+>>>   1 file changed, 13 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> index 9b508bd..8a69544 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> @@ -1011,6 +1011,14 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+>>>          return 0;
+>>>   }
+>>>
+>>> +static void brcmf_sdiod_host_fixup(struct mmc_host *host)
+>>> +{
+>>> +       /* runtime-pm powers off the device */
+>>> +       pm_runtime_forbid(host->parent);
+>>
+>> That you need this, clearly shows that something is broken in the mmc
+>> core/host layer.
+>>
+>> Could you elaborate a bit on what configuration you are using. Like
+>> what mmc host, which SDIO bus speed mode.
+>>
+>> And have you tested different configurations? Like what happens if you
+>> use a different SDIO bus speed mode?
+>
+> So what should I do with this patch? Good to commit still?
 
-1. remove pci interface check routine in rtl92c_enable_interrupt
-because rtl8192cu chipset is always usb interface.
+I think so, but I am biased ;-) Seriously, this enables people that have 
+brcmfmac devices hooked up through runtime-pm capable host controllers 
+to use wifi. So while we need to work to proper runtime-pm support for 
+SDIO function drivers with proper interaction with the MMC stack this 
+patch provides a short term solution/workaround at the cost of being a 
+bit less power efficient.
 
-2. rename rtl92c_xxx_interrupt to rtl92cu_xxx_interrupt.
-rtl92c_xxx_interrupt functions can only be handled rtl8192cu chipset.
-
-3. remove rtl92c_init_interrupt wrapper function
-because rtl92cu_enable_interrupt does not need to have the wrapper function anymore.
-
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  |  2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 27 +++++++--------------------
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.h |  5 ++---
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c  |  4 ++--
- 4 files changed, 12 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index d310d55..54516aa 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -877,7 +877,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- 				     queue_sel);
- 	/* Get Rx PHY status in order to report RSSI and others. */
- 	rtl92c_init_driver_info_size(hw, RTL92C_DRIVER_INFO_SIZE);
--	rtl92c_init_interrupt(hw);
-+	rtl92cu_enable_interrupt(hw);
- 	rtl92c_init_network_type(hw);
- 	_rtl92cu_init_wmac_setting(hw);
- 	rtl92c_init_adaptive_ctrl(hw);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-index adb8107..6d7c8b0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-@@ -369,37 +369,24 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
- 	return rtl_read_dword(rtlpriv, REG_TXDMA_STATUS);
- }
- 
--void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
-+void rtl92cu_enable_interrupt(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 
--	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
--		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
--				0xFFFFFFFF);
--		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
--				0xFFFFFFFF);
--	} else {
--		rtl_write_dword(rtlpriv, REG_HIMR, rtlusb->irq_mask[0] &
--				0xFFFFFFFF);
--		rtl_write_dword(rtlpriv, REG_HIMRE, rtlusb->irq_mask[1] &
--				0xFFFFFFFF);
--	}
--}
--
--void rtl92c_init_interrupt(struct ieee80211_hw *hw)
--{
--	 rtl92c_enable_interrupt(hw);
-+	rtl_write_dword(rtlpriv, REG_HIMR, rtlusb->irq_mask[0] & 0xFFFFFFFF);
-+	rtl_write_dword(rtlpriv, REG_HIMRE, rtlusb->irq_mask[1] & 0xFFFFFFFF);
-+	rtlusb->irq_enabled = true;
- }
- 
--void rtl92c_disable_interrupt(struct ieee80211_hw *hw)
-+void rtl92cu_disable_interrupt(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 
- 	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
- 	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
-+	rtlusb->irq_enabled = false;
- }
- 
- void rtl92c_set_qos(struct ieee80211_hw *hw, int aci)
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
-index bf53652..165f468 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
-@@ -40,8 +40,8 @@ bool rtl92c_init_llt_table(struct ieee80211_hw *hw, u32 boundary);
- void rtl92c_set_key(struct ieee80211_hw *hw, u32 key_index,
- 		     u8 *p_macaddr, bool is_group, u8 enc_algo,
- 		     bool is_wepkey, bool clear_all);
--void rtl92c_enable_interrupt(struct ieee80211_hw *hw);
--void rtl92c_disable_interrupt(struct ieee80211_hw *hw);
-+void rtl92cu_enable_interrupt(struct ieee80211_hw *hw);
-+void rtl92cu_disable_interrupt(struct ieee80211_hw *hw);
- void rtl92c_set_qos(struct ieee80211_hw *hw, int aci);
- 
- 
-@@ -49,7 +49,6 @@ void rtl92c_set_qos(struct ieee80211_hw *hw, int aci);
-  *	Hardware init functions
-  *---------------------------------------------------------------*/
- void rtl92c_set_mac_addr(struct ieee80211_hw *hw, const u8 *addr);
--void rtl92c_init_interrupt(struct ieee80211_hw *hw);
- void rtl92c_init_driver_info_size(struct ieee80211_hw *hw, u8 size);
- 
- int rtl92c_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 23806c2..899a40f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -112,8 +112,8 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
- 	.deinit_sw_vars = rtl92cu_deinit_sw_vars,
- 	.read_chip_version = rtl92c_read_chip_version,
- 	.read_eeprom_info = rtl92cu_read_eeprom_info,
--	.enable_interrupt = rtl92c_enable_interrupt,
--	.disable_interrupt = rtl92c_disable_interrupt,
-+	.enable_interrupt = rtl92cu_enable_interrupt,
-+	.disable_interrupt = rtl92cu_disable_interrupt,
- 	.hw_init = rtl92cu_hw_init,
- 	.hw_disable = rtl92cu_card_disable,
- 	.set_network_type = rtl92cu_set_network_type,
--- 
-1.9.1
-
+Regards,
+Arend
