@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:37268 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092AbbDEQjg (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27880 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422860AbbD2Lpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Apr 2015 12:39:36 -0400
-Received: by wiaa2 with SMTP id a2so14545718wia.0
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Apr 2015 09:39:35 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] ssb: add delay after PCI reset to fix SoC reboots
-Date: Sun,  5 Apr 2015 18:39:27 +0200
-Message-Id: <1428251967-18066-1-git-send-email-zajec5@gmail.com> (sfid-20150405_183939_954171_75C0899B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 29 Apr 2015 07:45:45 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 1/7] wil6210: increase timeout for the "echo" command
+Date: Wed, 29 Apr 2015 14:45:00 +0300
+Message-Id: <1430307906-28393-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150429_134607_389495_BCEFE5E0)
+In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-Kalle: this bug is there since ever, I guess this patch can be queued for next.
----
- drivers/ssb/driver_pcicore.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Sometimes it takes for the firmware more than 20ms to
+react on "echo" command after reset. Increase timeout
+from 20 to 50ms
 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index d75b72b..15a7ee3 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -357,6 +357,15 @@ static void ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
- 	pcicore_write32(pc, SSB_PCICORE_SBTOPCI2,
- 			SSB_PCICORE_SBTOPCI_MEM | SSB_PCI_DMA);
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 9fe2085..04fad5f 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -844,7 +844,7 @@ int wmi_echo(struct wil6210_priv *wil)
+ 	};
  
-+	/*
-+	 * Accessing PCI config without a proper delay after devices reset (not
-+	 * GPIO reset) was causing reboots on WRT300N v1.0.
-+	 * Tested delay 850 us lowered reboot chance to 50-80%, 1000 us fixed it
-+	 * completely. Flushing all writes was also tested but with no luck.
-+	 */
-+	if (pc->dev->bus->chip_id == 0x4704)
-+		usleep_range(1000, 2000);
-+
- 	/* Enable PCI bridge BAR0 prefetch and burst */
- 	val = PCI_COMMAND_MASTER | PCI_COMMAND_MEMORY;
- 	ssb_extpci_write_config(pc, 0, 0, 0, PCI_COMMAND, &val, 2);
+ 	return wmi_call(wil, WMI_ECHO_CMDID, &cmd, sizeof(cmd),
+-			 WMI_ECHO_RSP_EVENTID, NULL, 0, 20);
++			WMI_ECHO_RSP_EVENTID, NULL, 0, 50);
+ }
+ 
+ int wmi_set_mac_address(struct wil6210_priv *wil, void *addr)
 -- 
-1.8.4.5
+2.1.0
 
