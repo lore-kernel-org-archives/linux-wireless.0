@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40126 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932218AbbDXPfJ (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:35348 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbbD2XwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2015 11:35:09 -0400
-Message-ID: <553A630B.9060306@candelatech.com> (sfid-20150424_173513_931859_FC6CC55F)
-Date: Fri, 24 Apr 2015 08:36:43 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
-References: <5523273F.4060803@candelatech.com>	<CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com>	<CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>	<552406E4.50600@candelatech.com>	<55241567.3010703@candelatech.com>	<21796.40851.132919.363957@gargle.gargle.HOWL>	<55304F9D.1060301@candelatech.com> <21818.22087.358832.866965@gargle.gargle.HOWL>
-In-Reply-To: <21818.22087.358832.866965@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Wed, 29 Apr 2015 19:52:23 -0400
+Received: by igbyr2 with SMTP id yr2so133969153igb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 16:52:22 -0700 (PDT)
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	adrian.chadd@gmail.com, Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 11/11] ath9k: Enable short repeat by default on ath9k_htc
+Date: Wed, 29 Apr 2015 23:51:22 +0000
+Message-Id: <1430351482-59418-12-git-send-email-mickflemm@gmail.com> (sfid-20150430_020417_822050_1F48AFAC)
+In-Reply-To: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
+References: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2015 07:42 AM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->>> TSF would jump around since the HW would sync with the
->>> received beacons and this will happen in both IBSS and station
->>> mode. Hence the limitation, but I think OpenWrt has a one-liner
->>> to remove this restriction...
->>
->> It seems I can only do a single VAP on ath9k as well?
->>
->> Is that per design?
->
-> I was referring to ath9k, but it probably applies to ath10k too.
-> But yes, IBSS is restricted to a single interface by design.
->
-> Sujith
->
+Normal FFT reports generate a LOT of data, to save resources
+enable short repeat by default also on ath9k_htc (it's already
+enabled by default on ath9k). This can always be changed from
+userspace if needed.
 
-My VAP issues were due to regulatory domain issues it seems,
-after fixing that I could bring up 8 VAPs on ath9k.
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I also added that patch to allow IBSS + other combinations, but
-I haven't actually done any real testing with that config.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index d7beefe..7468562 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -594,7 +594,7 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
+ 
+ 	priv->spec_priv.ah = priv->ah;
+ 	priv->spec_priv.spec_config.enabled = 0;
+-	priv->spec_priv.spec_config.short_repeat = false;
++	priv->spec_priv.spec_config.short_repeat = true;
+ 	priv->spec_priv.spec_config.count = 8;
+ 	priv->spec_priv.spec_config.endless = false;
+ 	priv->spec_priv.spec_config.period = 0x12;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.3.5
 
