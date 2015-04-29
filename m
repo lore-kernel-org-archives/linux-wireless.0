@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:22835 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965660AbbD1Mn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 08:43:28 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 7/8] iwlwifi: mvm: fix typo in CONFIG option
-Date: Tue, 28 Apr 2015 15:43:11 +0300
-Message-Id: <1430224992-20327-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150428_144333_580351_ECB91BD5)
-In-Reply-To: <1430224907.4748.3.camel@intel.com>
-References: <1430224907.4748.3.camel@intel.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:36051 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031166AbbD2Axw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Apr 2015 20:53:52 -0400
+Received: by obbeb7 with SMTP id eb7so9383833obb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2015 17:53:51 -0700 (PDT)
+Message-ID: <55402B9C.5020607@lwfinger.net> (sfid-20150429_025716_972688_558E4843)
+Date: Tue, 28 Apr 2015 19:53:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Taehee Yoo <ap420073@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix some beacon issue
+References: <1424443813-13634-1-git-send-email-ap420073@gmail.com>	<87383k5img.fsf@kamboji.qca.qualcomm.com> <CAMArcTUuAK3cTf4L-Kp__Kmn3np2xRkfXKsOnY37M+00zzXPpg@mail.gmail.com>
+In-Reply-To: <CAMArcTUuAK3cTf4L-Kp__Kmn3np2xRkfXKsOnY37M+00zzXPpg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I forgot to rename the CPTCFG_ prefix...
+On 04/28/2015 11:40 AM, Taehee Yoo wrote:
+> 2015-04-29 1:21 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
+>> Taehee Yoo <ap420073@gmail.com> writes:
+>>
+>>> Sometimes rtl8192cu is not sending beacon frame.
+>>> This patch fix this issue.
+>>>
+>>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+>>
+>> Larry, what do you think? Should I apply this?
+>>
+>> https://patchwork.kernel.org/patch/5856761/
+>>
+>> --
+>> Kalle Valo
+>
+>
+>
+> i think that it is incomplete patch.
+> because it can not solve Mike's problem.
+>
+> Apologize about incomplete patch.
 
-Fixes: 484b3d13b4ac ("iwlwifi: mvm: add debugfs entry with the number of net-detect scans")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Kalle,
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index a6c48c7..1b1b2bf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1726,7 +1726,7 @@ iwl_mvm_netdetect_query_results(struct iwl_mvm *mvm,
- 	results->matched_profiles = le32_to_cpu(query->matched_profiles);
- 	memcpy(results->matches, query->matches, sizeof(results->matches));
- 
--#ifdef CPTCFG_IWLWIFI_DEBUGFS
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
- 	mvm->last_netdetect_scans = le32_to_cpu(query->n_scans_done);
- #endif
- 
--- 
-2.1.0
+I have not been able to reproduce the problem, thus I could not comment as to 
+whether the patch actually fixed anything.
+
+Clearly, the patch should be dropped.
+
+Thanks,
+
+Larry
+
 
