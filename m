@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54428 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755050AbbDMUfu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:38172 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422855AbbD2Mue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 16:35:50 -0400
-Date: Mon, 13 Apr 2015 16:35:47 -0400 (EDT)
-Message-Id: <20150413.163547.977591531353530005.davem@davemloft.net> (sfid-20150413_223637_686662_61E94A05)
-To: richard@nod.at
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org
-Subject: Re: [PATCH 4/5 v4] netfilter: Fix format string of nfnetlink_queue
- proc file
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1428879159-19237-4-git-send-email-richard@nod.at>
-References: <1428879159-19237-1-git-send-email-richard@nod.at>
-	<1428879159-19237-4-git-send-email-richard@nod.at>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 29 Apr 2015 08:50:34 -0400
+From: Johnny Kim <johnny.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
+CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
+	<tony.cho@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>
+Subject: [PATCH v2 2/2] staging: MAINTAINERS: add maintainer for wilc1000 device
+Date: Wed, 29 Apr 2015 21:50:04 +0900
+Message-ID: <0c403fce8ae243edb21419cc2840195a94f829ee.1430301575.git.johnny.kim@atmel.com> (sfid-20150429_145037_372554_48E481FC)
+In-Reply-To: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com>
+References: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Richard Weinberger <richard@nod.at>
-Date: Mon, 13 Apr 2015 00:52:38 +0200
+Add myself as maintainer for atmel wilc1000
 
-> The printed values are all of type unsigned integer, therefore use
-> %u instead of %d. Otherwise an user can face negative values.
-> 
-> Fixes:
-> $ cat /proc/net/netfilter/nfnetlink_queue
->     0  29508   278 2 65531     0 2004213241 -2129885586  1
->     1 -27747     0 2 65531     0     0        0  1
->     2 -27748     0 2 65531     0     0        0  1
-> 
-> Signed-off-by: Richard Weinberger <richard@nod.at>
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
+Signed-off-by: Dean Lee <dean.lee@atmel.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+---
+Changes in v2:
+- fix the permissions
+- fix the folder tree
+---
+ MAINTAINERS | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Applied.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1b8263c..2ddf38c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9473,6 +9473,16 @@ M:	Forest Bond <forest@alittletooquiet.net>
+ S:	Odd Fixes
+ F:	drivers/staging/vt665?/
+ 
++STAGING - WILC1000 WIFI DRIVER
++M:	Johnny Kim <johnny.kim@atmel.com>
++M:	Rachel Kim <rachel.kim@atmel.com>
++M:	Dean Lee <dean.lee@atmel.com>
++M:	Chris Park <chris.park@atmel.com>
++L:	devel@driverdev.osuosl.org
++L:	linux-wireless@vger.kernel.org
++S:	Supported
++F:	drivers/staging/wilc1000/
++
+ STAGING - XGI Z7,Z9,Z11 PCI DISPLAY DRIVER
+ M:	Arnaud Patard <arnaud.patard@rtp-net.org>
+ S:	Odd Fixes
+-- 
+1.9.1
+
