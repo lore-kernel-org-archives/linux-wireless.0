@@ -1,41 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43642 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbbDQALK (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27880 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422899AbbD2Lpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Apr 2015 20:11:10 -0400
-Message-ID: <55304F9D.1060301@candelatech.com> (sfid-20150417_021114_321572_DF990F7F)
-Date: Thu, 16 Apr 2015 17:11:09 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
-References: <5523273F.4060803@candelatech.com> <CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com> <CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com> <552406E4.50600@candelatech.com> <55241567.3010703@candelatech.com> <21796.40851.132919.363957@gargle.gargle.HOWL>
-In-Reply-To: <21796.40851.132919.363957@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 29 Apr 2015 07:45:46 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 4/7] wil6210: fix for probe_resp IE's
+Date: Wed, 29 Apr 2015 14:45:03 +0300
+Message-Id: <1430307906-28393-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150429_134553_111317_85C796CD)
+In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/2015 08:25 PM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> For the third set, why limit to a single interface.  Can't we run IBSS + AP
->> (and plus stations, for that matter), all at the same time with ath9k?
-> 
-> TSF would jump around since the HW would sync with the
-> received beacons and this will happen in both IBSS and station
-> mode. Hence the limitation, but I think OpenWrt has a one-liner
-> to remove this restriction...
+Parameters for the start_ap and change_bcon contains
+probe response template and probe response IE's.
 
-It seems I can only do a single VAP on ath9k as well?
+supplicant puts in the proberesp_ies only WPS related IE's,
+while firmware need all IE's, most notable is RSN that is not
+included in the proberesp_ies.
 
-Is that per design?
+Always use IE's provided by the bcon->probe_resp
 
-Thanks,
-Ben
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 31 +++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index ea331e4..f53a190 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -669,11 +669,6 @@ static int wil_fix_bcon(struct wil6210_priv *wil,
+ 	if (bcon->probe_resp_len <= hlen)
+ 		return 0;
+ 
+-	if (!bcon->proberesp_ies) {
+-		bcon->proberesp_ies = f->u.probe_resp.variable;
+-		bcon->proberesp_ies_len = bcon->probe_resp_len - hlen;
+-		rc = 1;
+-	}
+ 	if (!bcon->assocresp_ies) {
+ 		bcon->assocresp_ies = f->u.probe_resp.variable;
+ 		bcon->assocresp_ies_len = bcon->probe_resp_len - hlen;
+@@ -688,9 +683,19 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 				      struct cfg80211_beacon_data *bcon)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
++	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
++	const u8 *pr_ies = NULL;
++	size_t pr_ies_len = 0;
+ 	int rc;
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
++	wil_print_bcon_data(bcon);
++
++	if (bcon->probe_resp_len > hlen) {
++		pr_ies = f->u.probe_resp.variable;
++		pr_ies_len = bcon->probe_resp_len - hlen;
++	}
+ 
+ 	if (wil_fix_bcon(wil, bcon)) {
+ 		wil_dbg_misc(wil, "Fixed bcon\n");
+@@ -703,9 +708,7 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+ 	 * bcon->beacon_ies);
+ 	 */
+-	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP,
+-			bcon->proberesp_ies_len,
+-			bcon->proberesp_ies);
++	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
+ 	if (rc) {
+ 		wil_err(wil, "set_ie(PROBE_RESP) failed\n");
+ 		return rc;
+@@ -733,6 +736,10 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	struct cfg80211_beacon_data *bcon = &info->beacon;
+ 	struct cfg80211_crypto_settings *crypto = &info->crypto;
+ 	u8 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
++	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
++	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
++	const u8 *pr_ies = NULL;
++	size_t pr_ies_len = 0;
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 
+@@ -752,6 +759,11 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wil_print_bcon_data(bcon);
+ 	wil_print_crypto(wil, crypto);
+ 
++	if (bcon->probe_resp_len > hlen) {
++		pr_ies = f->u.probe_resp.variable;
++		pr_ies_len = bcon->probe_resp_len - hlen;
++	}
++
+ 	if (wil_fix_bcon(wil, bcon)) {
+ 		wil_dbg_misc(wil, "Fixed bcon\n");
+ 		wil_print_bcon_data(bcon);
+@@ -779,8 +791,7 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+ 	 * bcon->beacon_ies);
+ 	 */
+-	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
+-		   bcon->proberesp_ies);
++	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
+ 	wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
+ 		   bcon->assocresp_ies);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.0
 
