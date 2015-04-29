@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33411 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754134AbbDOJd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2015 05:33:26 -0400
-Message-ID: <1429090400.1784.2.camel@sipsolutions.net> (sfid-20150415_113330_085328_B36F79CA)
-Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Apr 2015 11:33:20 +0200
-In-Reply-To: <552D386E.40306@candelatech.com>
-References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>
-			  	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>
-			  	 <54EB66CC.1030800@candelatech.com>
-			   <1424772714.2192.16.camel@sipsolutions.net>
-			   <54EC8C5D.5090400@candelatech.com>
-			  <1424788834.2192.34.camel@sipsolutions.net>
-			  <5500AE12.6040103@candelatech.com>
-			 <1427812067.2057.27.camel@sipsolutions.net>
-			 <551AC3B6.1040001@candelatech.com>
-		 <1428999215.3019.6.camel@sipsolutions.net>
-		 <552D2A90.1070307@candelatech.com>
-	 <1429023990.3019.15.camel@sipsolutions.net>
-	 <552D386E.40306@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16870 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422673AbbD2Lpo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Apr 2015 07:45:44 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 2/7] wil6210: update Rx descriptor fields
+Date: Wed, 29 Apr 2015 14:45:01 +0300
+Message-Id: <1430307906-28393-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150429_134556_527994_3DD934DA)
+In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-04-14 at 08:55 -0700, Ben Greear wrote:
+Rx descriptor fields accordingly to the updated
+hardware documentation
 
-> > True, although I'd like to see the multi-channel issue addressed better.
-> 
-> I need a hint or two on what exactly you want changed in my patch to
-> address your request, or maybe you or someone else can just address
-> the issue in follow-on patches?
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c |  2 +-
+ drivers/net/wireless/ath/wil6210/txrx.h | 24 ++++++++++++++++--------
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-So right now you're basically saying to userspace "switch to channel X".
-But that's not really how the more generic system works, that's more
-"start using channel X (ctx=1)" / "stop using channel X (ctx=1)" /
-"change channel to X (ctx=1)" and similar.
-
-It seems to me that such an API should probably be the only API to
-userspace. The non-chanctx case in hwsim could simply fake it by
-starting with "start using channel X (ctx=0)" and then changing that
-channel all the time.
-
-The issue is that with your patch in this can't be addressed in
-follow-on patches as it fixes the userspace API.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index e8bd512..1fd34e5 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -236,7 +236,7 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
+ 		return -ENOMEM;
+ 	}
+ 
+-	d->dma.d0 = BIT(9) | RX_DMA_D0_CMD_DMA_IT;
++	d->dma.d0 = RX_DMA_D0_CMD_DMA_RT | RX_DMA_D0_CMD_DMA_IT;
+ 	wil_desc_addr_set(&d->dma.addr, pa);
+ 	/* ip_length don't care */
+ 	/* b11 don't care */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index d90c8aa..0c46384 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -384,19 +384,27 @@ struct vring_rx_mac {
+  *  [word 7] length
+  */
+ 
+-#define RX_DMA_D0_CMD_DMA_IT     BIT(10)
+-
+-/* Error field, offload bits */
+-#define RX_DMA_ERROR_L3_ERR   BIT(4)
+-#define RX_DMA_ERROR_L4_ERR   BIT(5)
++#define RX_DMA_D0_CMD_DMA_EOP	BIT(8)
++#define RX_DMA_D0_CMD_DMA_RT	BIT(9)  /* always 1 */
++#define RX_DMA_D0_CMD_DMA_IT	BIT(10) /* interrupt */
++
++/* Error field */
++#define RX_DMA_ERROR_FCS	BIT(0)
++#define RX_DMA_ERROR_MIC	BIT(1)
++#define RX_DMA_ERROR_KEY	BIT(2) /* Key missing */
++#define RX_DMA_ERROR_REPLAY	BIT(3)
++#define RX_DMA_ERROR_L3_ERR	BIT(4)
++#define RX_DMA_ERROR_L4_ERR	BIT(5)
+ 
+ /* Status field */
+-#define RX_DMA_STATUS_DU         BIT(0)
+-#define RX_DMA_STATUS_ERROR      BIT(2)
+-
++#define RX_DMA_STATUS_DU	BIT(0)
++#define RX_DMA_STATUS_EOP	BIT(1)
++#define RX_DMA_STATUS_ERROR	BIT(2)
++#define RX_DMA_STATUS_MI	BIT(3) /* MAC Interrupt is asserted */
+ #define RX_DMA_STATUS_L3I	BIT(4)
+ #define RX_DMA_STATUS_L4I	BIT(5)
+ #define RX_DMA_STATUS_PHY_INFO	BIT(6)
++#define RX_DMA_STATUS_FFM	BIT(7) /* EtherType Flex Filter Match */
+ 
+ struct vring_rx_dma {
+ 	u32 d0;
+-- 
+2.1.0
 
