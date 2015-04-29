@@ -1,63 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:49674 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753697AbbDKUlm (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:36625 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773AbbD2XwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Apr 2015 16:41:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net/wireless: CFG80211_WEXT_EXPORT requires wireless extensions
-Date: Sat, 11 Apr 2015 22:41:37 +0200
-Message-ID: <4904912.VjuX4Pm71s@wuerfel> (sfid-20150411_224219_811759_AB2D1B36)
-In-Reply-To: <1428733011.2139.1.camel@sipsolutions.net>
-References: <2303996.H1mYPouv05@wuerfel> <1428733011.2139.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 29 Apr 2015 19:52:09 -0400
+Received: by iebrs15 with SMTP id rs15so55326771ieb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 16:52:08 -0700 (PDT)
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	adrian.chadd@gmail.com, Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 06/11] ath9k: Skip malformed frames on normal FFT report
+Date: Wed, 29 Apr 2015 23:51:17 +0000
+Message-Id: <1430351482-59418-7-git-send-email-mickflemm@gmail.com> (sfid-20150430_015213_484749_730178FE)
+In-Reply-To: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
+References: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 11 April 2015 08:16:51 Johannes Berg wrote:
-> On Sat, 2015-04-11 at 00:29 +0200, Arnd Bergmann wrote:
-> > The CFG80211_WEXT_EXPORT symbol is selected by two drivers that
-> > make direct use of compat handlers for the wireless ioctls.
-> > However, this has no effect when the wireless extensions themselves
-> > are disabled, and results in a link error:
-> > 
-> > ERROR: "cfg80211_wext_giwrts" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-> > ERROR: "cfg80211_wext_siwfrag" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
-> > ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
-> > 
-> > This changes the Kconfig logic so that CFG80211_WEXT can not
-> > be disabled when CFG80211_WEXT_EXPORT is set.
-> 
-> > +++ b/net/wireless/Kconfig
-> > @@ -178,7 +178,6 @@ config CFG80211_WEXT
-> >       bool "cfg80211 wireless extensions compatibility"
-> 
-> (I added "if !CFG80211_WEXT_EXPORT" to this line)
+Since we have lots of frames on a normal FFT report don't bother
+processing the malformed ones. Only try to fix malformed frames
+in case of a short FFT report (only a single frame on the report).
 
-Right, that works just as well, thanks!
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 94 ++++++++++++++++--------
+ 1 file changed, 62 insertions(+), 32 deletions(-)
 
-> >       depends on CFG80211
-> >       select WEXT_CORE
-> > -     default y if CFG80211_WEXT_EXPORT
-> >       help
-> >         Enable this option if you need old userspace for wireless
-> >         extensions with cfg80211-based drivers.
-> > @@ -186,6 +185,7 @@ config CFG80211_WEXT
-> >  config CFG80211_WEXT_EXPORT
-> >       bool
-> >       depends on CFG80211
-> > +     select CFG80211_WEXT
-> 
-> This doesn't work afaict because select won't go through if this is
-> selected. I've already sent a fix for this in my latest pull request
-> that has the above.
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index 51ab396..0c9bc9e 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -437,6 +437,42 @@ ath_cmn_process_ht20_40_fft(struct ath_rx_status *rs,
+ 	return 0;
+ }
+ 
++static inline void
++ath_cmn_copy_fft_frame(u8 *in, u8 *out, int sample_len, int sample_bytes)
++{
++	switch (sample_bytes - sample_len) {
++	case -1:
++		/* First byte missing */
++		memcpy(&out[1], in,
++		       sample_len - 1);
++		break;
++	case 0:
++		/* Length correct, nothing to do. */
++		memcpy(out, in, sample_len);
++		break;
++	case 1:
++		/* MAC added 2 extra bytes AND first byte
++		 * is missing.
++		 */
++		memcpy(&out[1], in, 30);
++		out[31] = in[31];
++		memcpy(&out[32], &in[33],
++		       sample_len - 32);
++		break;
++	case 2:
++		/* MAC added 2 extra bytes at bin 30 and 32,
++		 * remove them.
++		 */
++		memcpy(out, in, 30);
++		out[30] = in[31];
++		memcpy(&out[31], &in[33],
++		       sample_len - 31);
++		break;
++	default:
++		break;
++	}
++}
++
+ /* returns 1 if this was a spectral frame, even if not handled. */
+ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_hdr *hdr,
+ 		    struct ath_rx_status *rs, u64 tsf)
+@@ -570,46 +606,40 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
+ 		if (got_slen) {
+ 			ath_dbg(common, SPECTRAL_SCAN, "FFT frame len: %i\n",
+ 				sample_bytes);
+-			switch (sample_bytes - sample_len) {
+-			case -1:
+-				/* First byte missing */
+-				memcpy(&sample_buf[1], sample_start,
+-				       sample_len - 1);
+-				break;
+-			case 0:
+-				/* Length correct, nothing to do. */
++
++			/* Only try to fix a frame if it's the only one
++			 * on the report, else just skip it.
++			 */
++			if (sample_bytes != sample_len && len <= fft_len + 2) {
++				ath_cmn_copy_fft_frame(sample_start,
++						       sample_buf, sample_len,
++						       sample_bytes);
++
++				fft_handler(rs, spec_priv, sample_buf,
++					    tsf, freq, chan_type);
++			}
++
++			/* Process a normal frame */
++			if (sample_bytes == sample_len) {
+ 				memcpy(sample_buf, sample_start, sample_len);
+-				break;
+-			case 1:
+-				/* MAC added 2 extra bytes AND first byte
+-				 * is missing.
+-				 */
+-				memcpy(&sample_buf[1], sample_start, 30);
+-				sample_buf[31] = sample_start[31];
+-				memcpy(&sample_buf[32], &sample_start[33],
+-				       sample_len - 32);
+-				break;
+-			case 2:
+-				/* MAC added 2 extra bytes at bin 30 and 32,
+-				 * remove them.
+-				 */
+-				memcpy(sample_buf, sample_start, 30);
+-				sample_buf[30] = sample_start[31];
+-				memcpy(&sample_buf[31], &sample_start[33],
+-				       sample_len - 31);
+-				break;
+-			default:
+-				break;
++				ret = fft_handler(rs, spec_priv, sample_buf,
++						  tsf, freq, chan_type);
+ 			}
+ 
+-			ret = fft_handler(rs, spec_priv, sample_buf, tsf,
+-							freq, chan_type);
++			/* Short report processed, break out of the
++			 * loop.
++			 */
++			if (len <= fft_len + 2)
++				break;
++
+ 			memset(sample_buf, 0, SPECTRAL_SAMPLE_MAX_LEN);
+ 			sample_start = &vdata[i + 1];
++
+ 			/* -1 to grab sample_len -1, -2 since
+ 			 * they 'll get increased by one. In case
+ 			 * of failure try to recover by going byte
+-			 * by byte instead. */
++			 * by byte instead.
++			 */
+ 			if (ret == 0) {
+ 				i += num_bins - 2;
+ 				sample_bytes = num_bins - 2;
+-- 
+2.3.5
 
-As Paul commented, it does work, and I have of course checked that my
-patch fixes the problem without introducing other build failures.
-
-	Arnd
