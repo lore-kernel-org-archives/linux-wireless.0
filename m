@@ -1,76 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59291 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932989AbbDJNKo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Apr 2015 09:10:44 -0400
-Message-ID: <1428671435.1890.22.camel@sipsolutions.net> (sfid-20150410_151052_669974_8B248F97)
-Subject: Re: [PATCH 1/4] ipv4: add option to drop unicast encapsulated in L2
- multicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julian Anastasov <ja@ssi.bg>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	matti.gottlieb@intel.com
-Date: Fri, 10 Apr 2015 15:10:35 +0200
-In-Reply-To: <alpine.LFD.2.11.1504101445330.1538@ja.home.ssi.bg>
-References: <1428652454-1224-1-git-send-email-johannes@sipsolutions.net>
-	 <alpine.LFD.2.11.1504101445330.1538@ja.home.ssi.bg>
+Received: from lb2-smtp-cloud6.xs4all.net ([194.109.24.28]:48345 "EHLO
+	lb2-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1031401AbbD2I1e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Apr 2015 04:27:34 -0400
+Message-ID: <1430296046.2411.100.camel@x220> (sfid-20150429_102754_080654_7A1ED5E4)
+Subject: Re: [PATCH] drivers/nfc: remove obsolete setting of DEBUG
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Valentin Rothberg <valentinrothberg@gmail.com>
+Cc: Joe Perches <joe@perches.com>, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	clement.perrochaud@effinnov.com, charles.gorand@effinnov.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rupran@einserver.de, stefan.hengelein@fau.de
+Date: Wed, 29 Apr 2015 10:27:26 +0200
+In-Reply-To: <1430212127-5841-1-git-send-email-valentinrothberg@gmail.com>
+References: <1430212127-5841-1-git-send-email-valentinrothberg@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+[Added Joe.]
+
+On Tue, 2015-04-28 at 11:08 +0200, Valentin Rothberg wrote:
+> The CPP identifier 'DEBUG' is not used in the source code of nfc at all,
+> so we can safely remove setting it in both Makefiles.
 > 
-> > +	if (IN_DEV_CONF_GET(in_dev, DROP_UNICAST_IN_L2_MULTICAST) &&
+> Signed-off-by: Valentin Rothberg <valentinrothberg@gmail.com>
+> ---
+> I detected this issue with ./scripts/checkkconfigsymbols.py since
+> CONFIG_NFC_DEBUG is not defined in Kconfig.
+
+The patch should be fine, as there is no NFC_DEBUG Kconfig symbol, but
+I'm not sure whether the commit explanation is correct.
+
+As it turns out I submitted a very similar patch two years ago (see
+https://lkml.kernel.org/r/1365179481.1830.69.camel@x61.thuisdomein ).
+And it was pointed out to me that the DEBUG macro is used by the
+pr_debug() macro and friends. I already forgot the details but, in
+short, DEBUG is a bit of  a gotcha: you can't say whether or not it's
+used by just grepping for it. 
+
+> ---
+>  drivers/nfc/Makefile         | 2 --
+>  drivers/nfc/nxp-nci/Makefile | 2 --
+>  2 files changed, 4 deletions(-)
 > 
-> 	For this flag IN_DEV_ORCONF can be used, by this way
-> all/drop_unicast_in_l2_multicast=1 can enable it for all
-> interfaces.
-
-Good point. I need to look into that for the other patches in this
-series as well.
-
-> 	So, this is the same patch as the 2014-Aug version
-> but this time with flag? But how the previous problems were
-> addressed? May be something is changed in kernel afterwards?
-> 
-> 	So, if your are back at step 1 can you check again
-> the problems with this implementation?:
-
-I think I am, sorry about that. I had focused on the CLUSTERIP problem
-in your email, and decided that was solved by simply having the admin
-for CLUSTERIP networks never set this flag.
-
-> - no way to select correct skb->pkt_type in inet_rtm_getroute
-> before ip_route_input, this is a chiken-egg problem, of course,
-> skb->pkt_type = PACKET_HOST can work for now
-
-This is interesting. Why does that even build an skb and route it, if it
-really just cares about the struct rtable? Anyway, you're right, using
-PACKET_HOST would work. I'm not really sure I see the chicken-and-egg
-problem though, it's not like the result of this is used to route the
-skb again or something, afaict?
-
-> - ip_route_input is called also for ARP, so incoming ARP
-> broadcasts are not replied anymore
-
-Hm. I didn't see this in my testing so far, but I only enable this
-temporarily, so perhaps by that time it was already done.
-
-This looks like another case of using this function to not really route
-anything but to just look up the route, similar to the
-inet_rtm_getroute() function you pointed out. Perhaps that would warrant
-splitting out somewhat.
-
-On the other hand, there's not all that much reason not to put this into
-ip_rcv_finish(), we already touch the rt->rt_type there for MIB
-counters. I'll look into that.
-
-> - CLUSTERIP
-
-See above.
+> diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
+> index a4292d790f9b..13b648baf175 100644
+> --- a/drivers/nfc/Makefile
+> +++ b/drivers/nfc/Makefile
+> @@ -14,5 +14,3 @@ obj-$(CONFIG_NFC_TRF7970A)	+= trf7970a.o
+>  obj-$(CONFIG_NFC_ST21NFCA)  	+= st21nfca/
+>  obj-$(CONFIG_NFC_ST21NFCB)	+= st21nfcb/
+>  obj-$(CONFIG_NFC_NXP_NCI)	+= nxp-nci/
+> -
+> -ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
+> diff --git a/drivers/nfc/nxp-nci/Makefile b/drivers/nfc/nxp-nci/Makefile
+> index c008be30bb18..c9ec7869dbd2 100644
+> --- a/drivers/nfc/nxp-nci/Makefile
+> +++ b/drivers/nfc/nxp-nci/Makefile
+> @@ -7,5 +7,3 @@ nxp-nci_i2c-objs = i2c.o
+>  
+>  obj-$(CONFIG_NFC_NXP_NCI) += nxp-nci.o
+>  obj-$(CONFIG_NFC_NXP_NCI_I2C) += nxp-nci_i2c.o
+> -
+> -ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
 
 Thanks,
-johannes
 
+
+Paul Bolle
 
