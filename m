@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53873 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965701AbbD1QE6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16870 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422897AbbD2Lpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 12:04:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Andreas Fenkart <afenkart@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Subject: Re: [PATCH 2/2] mwifiex: sdio: bug: dead-lock in card reset
-References: <1428916704-9635-1-git-send-email-afenkart@gmail.com>
-	<1428916704-9635-2-git-send-email-afenkart@gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951B16DFB8F9@SC-VEXCH1.marvell.com>
-Date: Tue, 28 Apr 2015 19:04:52 +0300
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951B16DFB8F9@SC-VEXCH1.marvell.com>
-	(Amitkumar Karwar's message of "Mon, 13 Apr 2015 03:27:25 -0700")
-Message-ID: <87iocg5jdn.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_180502_750511_39FD7444)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 29 Apr 2015 07:45:45 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 3/7] wil6210: fix boot loader "ready" indication
+Date: Wed, 29 Apr 2015 14:45:02 +0300
+Message-Id: <1430307906-28393-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150429_134559_034205_D038BE48)
+In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
+Boot loader "ready" indication has changed from "bit0 set"
+to "only bit0 set". This is to address hardware glitches.
+Due to glitches, sometimes right after reset register reads
+0xffffffff, or (rarely) other garbage.
 
-> Hi Andreas,
->
-> Thanks for the patch series.
->
->> 
->> Card reset is implemented by removing/re-adding the adapter instance.
->> This is implemented by removing the mmc host, which will then trigger a
->> cascade of removal callbacks including mwifiex_sdio_remove.
->> The dead-lock results in the latter function, trying to cancel the work
->> item executing the mmc host removal. This patch adds a driver level, not
->> adapter level, work struct to break the dead-lock
->> 
->> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
->> ---
->>  drivers/net/wireless/mwifiex/main.h |  1 -
->> drivers/net/wireless/mwifiex/sdio.c | 63 +++++++++++++++++++++++++++++--
->> ------
->>  2 files changed, 50 insertions(+), 14 deletions(-)
->> 
->
-> We had recently submitted a patch to address this issue. So these two
-> patches won't be needed now.
-> http://www.spinics.net/lists/linux-wireless/msg135146.html
->
-> Could you please check and let us know if you have any suggestions for
-> improvement?
+Reflect this in the driver
 
-Ok, so we are talking about this commit which apparently fell through
-the cracks:
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=2f5872b60146
-
-Like I said as a reply to patch 1, using static variables for this is
-ugly. Isn't there really any better way to handle the problem?
-
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 0623d8c..146fd80 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -551,7 +551,7 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
+ static int wil_target_reset(struct wil6210_priv *wil)
+ {
+ 	int delay = 0;
+-	u32 x;
++	u32 x, x1 = 0;
+ 
+ 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
+ 
+@@ -606,12 +606,16 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 	do {
+ 		msleep(RST_DELAY);
+ 		x = R(RGF_USER_BL + offsetof(struct RGF_BL, ready));
++		if (x1 != x) {
++			wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n", x1, x);
++			x1 = x;
++		}
+ 		if (delay++ > RST_COUNT) {
+ 			wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
+ 				x);
+ 			return -ETIME;
+ 		}
+-	} while (!(x & BIT_BL_READY));
++	} while (x != BIT_BL_READY);
+ 
+ 	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 
 -- 
-Kalle Valo
+2.1.0
+
