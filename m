@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0078.hostedemail.com ([216.40.44.78]:33695 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753114AbbDGNFd (ORCPT
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:38599 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773AbbD2XwL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 09:05:33 -0400
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-	by smtpgrave01.hostedemail.com (Postfix) with ESMTP id 6D43A59770
-	for <linux-wireless@vger.kernel.org>; Tue,  7 Apr 2015 12:55:53 +0000 (UTC)
-Date: Tue, 7 Apr 2015 08:55:50 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Move message tracepoints to their own header
-Message-ID: <20150407085550.7dc6aaed@gandalf.local.home> (sfid-20150407_150856_186540_0FEAC185)
-In-Reply-To: <1428389938.1841.1.camel@sipsolutions.net>
-References: <20150406231357.2b8e452d@grimm.local.home>
-	<1428389938.1841.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 29 Apr 2015 19:52:11 -0400
+Received: by igbhj9 with SMTP id hj9so63879971igb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 16:52:10 -0700 (PDT)
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	adrian.chadd@gmail.com, Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 07/11] ath9k: No need for that extra memcpy
+Date: Wed, 29 Apr 2015 23:51:18 +0000
+Message-Id: <1430351482-59418-8-git-send-email-mickflemm@gmail.com> (sfid-20150430_015217_081668_0AF366CA)
+In-Reply-To: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
+References: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 07 Apr 2015 08:58:58 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+No need to copy the frame to the temporary buffer when its length
+is ok.
 
-> On Mon, 2015-04-06 at 23:13 -0400, Steven Rostedt wrote:
-> > Every tracing file must have its own TRACE_SYSTEM defined.
-> 
-> Oh, that requirement is new to me. I also have the same in iwlwifi, with
-> even more TRACE_SYSTEMs.
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Well, it's new now :-)   I never expected people to use more than one
-TRACE_SYSTEM in a single file, so I never documented that it shouldn't
-be done.
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index 0c9bc9e..b8682bc 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -620,11 +620,9 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
+ 			}
+ 
+ 			/* Process a normal frame */
+-			if (sample_bytes == sample_len) {
+-				memcpy(sample_buf, sample_start, sample_len);
+-				ret = fft_handler(rs, spec_priv, sample_buf,
++			if (sample_bytes == sample_len)
++				ret = fft_handler(rs, spec_priv, sample_start,
+ 						  tsf, freq, chan_type);
+-			}
+ 
+ 			/* Short report processed, break out of the
+ 			 * loop.
+-- 
+2.3.5
 
-I'm more worried about people using the same TRACE_SYSTEM in different
-files, which will probably break now too.
-
-I should update the comments about that.
-
-Hmm, I must have missed the iwlwifi part, as that should have not built
-with an allmodconfig :-/
-
-> 
-> > The mac80211 tracepoint header broke this and add in the middle
-> > of the file had:
-> > 
-> >  #undef TRACE_SYSTEM
-> >  #define TRACE_SYSTEM mac80211_msg
-> > 
-> > Unfortunately, this broke new code in the ftrace infrastructure.
-> > Moving the mac80211_msg into its own trace file with its own
-> > TRACE_SYSTEM defined fixes the issue.
-> 
-> 
-> 
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
-> 
-> Looks fine to me.
-> 
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-
-Thanks!
-
-> 
-> I could merge through my tree but I guess you'll want to put it through
-> a different one to be able to change the code that depends on this move.
-> 
-
-Right, I'll need to pull this in my tree, as I have a set of patches
-dependent on this.
-
--- Steve
