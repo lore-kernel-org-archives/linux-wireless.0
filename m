@@ -1,97 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:34850 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbbDQHaw convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53432 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262AbbD3Cr5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 03:30:52 -0400
-Received: by widdi4 with SMTP id di4so11476730wid.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2015 00:30:51 -0700 (PDT)
+	Wed, 29 Apr 2015 22:47:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 0/7] wil6210 patches
+References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Thu, 30 Apr 2015 05:47:49 +0300
+In-Reply-To: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Wed, 29 Apr 2015 14:44:59 +0300")
+Message-ID: <87y4la1gdm.fsf@kamboji.qca.qualcomm.com> (sfid-20150430_044813_568922_21BF169F)
 MIME-Version: 1.0
-In-Reply-To: <87618v44jv.fsf@kamboji.qca.qualcomm.com>
-References: <1428672772-9275-1-git-send-email-michal.kazior@tieto.com>
-	<87618v44jv.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 17 Apr 2015 09:30:51 +0200
-Message-ID: <CA+BoTQnNNKF7riAgcVj1LupABAGodm751jxOUuZgam8u=wthUA@mail.gmail.com> (sfid-20150417_093056_243142_8FAE7084)
-Subject: Re: [PATCH] ath10k: implement more versatile set_bitrate_mask
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 April 2015 at 09:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+
+> - introduced debug trace facility (PMC) that extracts events
+>   reported by the hardware
+> - introduced real broadcast for secure link
+> - other are small fixes here and there
 >
->> Until now only a single fixed tx rate or nss was
->> allowed to be set.
->>
->> The patch attempts to improve this by allowing
->> most bitrate masks. The limitation is VHT MCS
->> rates cannot be expressed separately using
->> existing firmware interfaces and only the
->> following VHT MCS ranges are supported: none, 0-7,
->> 0-8, and 0-9.
->>
->> This keeps the old behaviour when requesting
->> single tx rate or single nss. The new bitrate mask
->> logic is only applied to other cases that would
->> return -EINVAL until now.
->>
->> Depending on firmware revisions some combinations
->> may crash firmware so use with care, please.
->>
->> This depends on "ath10k: don't use reassoc flag".
->> Without it key cache would effectively be
->> invalidated upon bitrate change leading to
->> communication being no longer possible.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> To reduce support questions from the users it would be nice to give few
-> good examples how to use this with iw. And also it makes it easier to
-> test the patch. If you could send something I can add it to the commit
-> log.
+> Vladimir Kondratiev (7):
+>   wil6210: increase timeout for the "echo" command
+>   wil6210: update Rx descriptor fields
+>   wil6210: fix boot loader "ready" indication
+>   wil6210: fix for probe_resp IE's
+>   wil6210: Add pmc debug mechanism memory management
+>   wil6210: broadcast for secure link
+>   wil6210: support WSC for STA mode
 
-Should work:
+I see some warnings and errors:
 
-  iw wlan0 set bitrates legacy 1 6 12 ht-mcs 1 2 3
-  iw wlan0 set bitrates legacy-5 mcs-5 7 8 9
-  iw wlan0 set bitrates legacy-5 24 ht-mcs-5 vht-mcs-5 1:0-9
-
-Won't work:
-
-  iw wlan0 set bitrates legacy-5 ht-mcs-5 vht-mcs-5 1:0-5
-  iw wlan0 set bitrates vht-mcs-5 2:7-9
-
-(note the invalid VHT MCS ranges)
-
-Generally the patch removes a lot of limitations from 'set bitrates'
-ath10k had. Before it was possible to do only things as described in
-51ab1a0a09a8 ("ath10k: add set_bitrate_mask callback").
-
+drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 6 has type 'unsigned int' [-Wformat]
+drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 8 has type 'unsigned int' [-Wformat]
+drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Wformat]
+drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 7 has type 'unsigned int' [-Wformat]
 
 [...]
->> +             default:
->> +                     /* see ath10k_mac_can_set_bitrate_mask() */
->> +                     WARN_ON(1);
->> +                     /* fall through */
->> +             case -1:
->> +                     mcs = IEEE80211_VHT_MCS_NOT_SUPPORTED; break;
->> +             case 7:
->> +                     mcs = IEEE80211_VHT_MCS_SUPPORT_0_7; break;
->> +             case 8:
->> +                     mcs = IEEE80211_VHT_MCS_SUPPORT_0_8; break;
->> +             case 9:
->> +                     mcs = IEEE80211_VHT_MCS_SUPPORT_0_9; break;
->> +             }
->
-> I moved the breaks into their own lines, I think that just easier to
-> read. This is the diff:
-[snip]
 
-I'm okay with this.
+Kernel: arch/x86/boot/bzImage is ready  (#923)
+  Building modules, stage 2.
+  MODPOST 45 modules
+ERROR: "__divdi3" [drivers/net/wireless/ath/wil6210/wil6210.ko] undefined!
 
-
-Michał
+-- 
+Kalle Valo
