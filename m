@@ -1,29 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33331 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902AbbDGROi (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31539 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807AbbD3NZT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 13:14:38 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: wl1251: Fix typo in MODULE_DESCRIPTION in wl1251/main.c
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1427722067-8706-1-git-send-email-standby24x7@gmail.com>
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, linville@tuxdriver.com,
-	Masanari Iida <standby24x7@gmail.com>
-Message-Id: <20150407171437.468AD140D67@smtp.codeaurora.org> (sfid-20150407_191441_610463_FC77EF1A)
-Date: Tue,  7 Apr 2015 17:14:37 +0000 (UTC)
+	Thu, 30 Apr 2015 09:25:19 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 0/7] wil6210 patches
+Date: Thu, 30 Apr 2015 16:25:04 +0300
+Message-Id: <1430400311-3861-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150430_152523_641385_D1638141)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+- introduced debug trace facility (PMC) that extracts events
+  reported by the hardware
+- introduced real broadcast for secure link
+- other are small fixes here and there
 
-> This patch fix a spelling typo in MODULE_DESCRIPTION in
-> wl1251/main.c
-> 
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+v2:
 
-Thanks, applied to wireless-drivers-next.git.
+fix patch "wil6210: Add pmc debug mechanism memory management"
+for 32-bit platforms
 
-Kalle Valo
+Vladimir Kondratiev (7):
+  wil6210: increase timeout for the "echo" command
+  wil6210: update Rx descriptor fields
+  wil6210: fix boot loader "ready" indication
+  wil6210: fix for probe_resp IE's
+  wil6210: Add pmc debug mechanism memory management
+  wil6210: broadcast for secure link
+  wil6210: support WSC for STA mode
+
+ drivers/net/wireless/ath/wil6210/Makefile   |   1 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 117 ++++++---
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 107 +++++++-
+ drivers/net/wireless/ath/wil6210/main.c     |  14 +-
+ drivers/net/wireless/ath/wil6210/pmc.c      | 375 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/pmc.h      |  27 ++
+ drivers/net/wireless/ath/wil6210/txrx.c     |  48 ++--
+ drivers/net/wireless/ath/wil6210/txrx.h     |  24 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  21 +-
+ drivers/net/wireless/ath/wil6210/wmi.c      |  70 ++----
+ drivers/net/wireless/ath/wil6210/wmi.h      |  40 ++-
+ 11 files changed, 706 insertions(+), 138 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/pmc.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/pmc.h
+
+-- 
+2.1.0
+
