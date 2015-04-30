@@ -1,96 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:36869 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711AbbDTL0D convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:37889 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbbD3GBZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 07:26:03 -0400
-Received: by igblo3 with SMTP id lo3so57168169igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2015 04:26:02 -0700 (PDT)
+	Thu, 30 Apr 2015 02:01:25 -0400
+Received: by wiun10 with SMTP id n10so5201133wiu.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 23:01:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5530C940.6010407@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-	<1429035033-14076-11-git-send-email-arend@broadcom.com>
-	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>
-	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com>
-	<CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>
-	<5530C940.6010407@broadcom.com>
-Date: Mon, 20 Apr 2015 13:26:02 +0200
-Message-ID: <CACna6ryZYvVN_svcv3W+4F6yiJf2QYHxYD-VXhGcUUTAHZDYSg@mail.gmail.com> (sfid-20150420_132608_687229_EAF92708)
-Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices in nvram.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	mailinglist <openwrt-devel@lists.openwrt.org>,
-	Florian Fainelli <fainelli@broadcom.com>
+In-Reply-To: <CAKLmikOSs-1x5dbDtRtgim-_nsFfX-6xd=WZArYfwnOS1ULP3A@mail.gmail.com>
+References: <CAKLmikOSs-1x5dbDtRtgim-_nsFfX-6xd=WZArYfwnOS1ULP3A@mail.gmail.com>
+Date: Thu, 30 Apr 2015 08:01:24 +0200
+Message-ID: <CA+BoTQmkqM5SpOxudSzuXL=oMp39Uu3TgUc17aXFs8aFqJM+aw@mail.gmail.com> (sfid-20150430_080129_298201_84C00C39)
+Subject: Re: Regression with iw set bitrates
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Mitar <mmitar@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 April 2015 at 10:50, Arend van Spriel <arend@broadcom.com> wrote:
-> On 04/17/15 09:45, Rafał Miłecki wrote:
->>
->> Huh, why dropping linux-wireless (and top posting btw)? Please let
->> everyone follow the discussion :)
->>
->> On 15 April 2015 at 21:20, Hante Meuleman<meuleman@broadcom.com>  wrote:
->>>
->>> As I wrote to you in a mail and on the openwrt forum, this patch is
->>> indeed an attempt to support more complex nvram files. I also wrote, that in
->>> order to be able to use it, the nvram contents of the device (r8000) needs
->>> to be put a specific file. Now for your concerns, we can perhaps add
->>> something which will read the nvram contents directly from an nvram store.
->>> But that is irrelevant to this patch. The parsing is still needed, and all
->>> we would need to add is something which is reading the nvram contents from
->>> some other place
->>
->>
->> So it makes me wonder if we need this patch in its current form. I
->> think getting NVRAM directly from the platform is much user friendly.
->> It doesn't require user to install some extra tools for dumping NVRAM
->> and putting it in a specific file. One extra layer less.
->> With that said I think it's hard to review your code for parsing
->> NVRAM. We don't know how it's going to be fetched in the first place.
+On 27 April 2015 at 11:43, Mitar <mmitar@gmail.com> wrote:
+> Hi!
 >
-> You already made that point and we agreed to look for a solution.
-
-OK, it wasn't supposed to be rude or anything :) Thanks.
-
-
->>> though it would have to be put under some kernel config flag as this
->>> would not be supported in non-router systems. The contents of the nvram
->>> would however still need to be parsed in exactly the same way as the nvram
->>> files we read from disk.
->>
->>
->> Again, it's hard to say for me. Are you going to use
->> bcm47xx_nvram_getenv? Are you going to use MTD subsystem? Are you
->> going to develop different solution? When using e.g.
->> bcm47xx_nvram_getenv you won't want all this parsing stuff at all.
+> On OpenWrt, between these versions:
 >
+> https://dev.openwrt.org/log/branches/barrier_breaker?action=stop_on_copy&mode=stop_on_copy&rev=44952&stop_rev=42475&limit=200&mail_addr=&mail_addr_confirm=
 >
-> Please look at the usage scenario here. The brcmfmac driver is not needing a
-> few key,value pairs. It needs a portion of NVRAM to download to the device.
-> The patch provides the functionality to do just that. Get the appropriate
-> portion, strip comments and whitespace, and send it to the device. Using
-> bcm47xx_nvram_getenv is not a useful api as it would mean we need brcmfmac
-> to know which key ids to ask for, reassemble it to key=value string and send
-> it to the fullmac device.
+> there was a regression in how iw set bitrates operate. Because I
+> suspect it is an upstream issue, I am reporting it here.
 >
-> In bcm47xx_nvram_getenv() it does have the whole nvram content available in
-> nvram_buf which is filled by nvram_init(). So if something similar is made
-> available on r8000 (or ARM routers in general) build target all we need is
-> an api to get the nvram_buf.
+> With previous version of our firmware image, I was using the
+> /etc/hotplug.d/iface/30-bitrates script you can see in this file:
 >
-> Another option is to add the parsing stuff in that nvram code and have an
-> api to get the appropriate portion based on pcie domain and bus number as
-> used in brcmf_fw_get_firmwares_pcie(). However, I would prefer to have this
-> in the driver and not in arch specific code as there may be other platforms
-> like our set-top boxes needing this.
+> https://github.com/cloyne/network/blob/349297c8bfd115aa68e3b8c47bb3a7197f1e777f/unifi/README.md
+>
+> The goal was to limit on all 2.4 GHz interfaces bitrates to G standard
+> and higher, removing all legacy stuff.
+>
+> It seems it worked. But with an upgrade to the new firmware image,
+> this script started misbehaving and high-end WiFi devices were able to
+> connect only with MSC 0. I determined that the issue is in the
+> following command:
+>
+> iw wlan0 set bitrates legacy-2.4 6 9 12 18 24 36 48 54 ht-mcs-2.4 lgi-2.4
+>
+> With this command in effect, my client has in station dump the
+> following bitrates:
+>
+> tx bitrate:    6.5 MBit/s MCS 0
+> rx bitrate:    216.7 MBit/s MCS 23 short GI
 
-This is some plan for the future I was lacking from the beginning. It
-makes things more clear now, thanks.
+With the above command you basically disable HT rates since you say
+"ht-mcs-2.4" but specify no MCS indexes to use.
 
--- 
-Rafał
+
+> If I change the command to:
+>
+> iw wlan0 set bitrates legacy-2.4 6 9 12 18 24 36 48 54
+>
+> tx bitrate:    195.0 MBit/s MCS 23
+> rx bitrate:    216.7 MBit/s MCS 23 short GI
+
+In this you effectively disable CCK (11b) rates and leave OFDM (11g),
+and you leave HT rates untouched (i.e. allow HT to be used).
+
+
+>
+> Which is the expected bitrate.
+>
+> If I run only:
+>
+> iw wlan0 set bitrates ht-mcs-2.4
+>
+> tx bitrate:    11.0 MBit/s
+> rx bitrate:    117.0 MBit/s MCS 20
+>
+> This goes against the documentation which is saying that this should
+> reset bitrates masks to normal:
+>
+> https://wireless.wiki.kernel.org/en/users/documentation/iw#modifying_tx_ht_mcs_bitrates
+
+It seems the docs err on this.
+
+To reset bitrates to normal you need to issue:
+
+  iw wlanX set bitrates
+
+(no arguments follow)
+
+
+> Maybe I am not using the command correctly. In general it is unclear
+> what should be correct behavior here. I also opened a SuperUser
+> question:
+>
+> http://superuser.com/questions/881025/limiting-low-bitrates-with-iw-on-ath9k
+>
+> So maybe clearer documentation would make it easier to know what is
+> the correct command? So, what is current (and hopefully future proof)
+> command to not allow legacy bitrates, but to allow any other (which
+> would work also on future devices without having to modify the list of
+> allowed MCS when they are added)?
+
+I don't recall bitrates command ever changed behaviour. Apparently the
+docs were always incorrect I guess?
+
+
+Michał
