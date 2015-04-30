@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55645 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855AbbDGQao (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 12:30:44 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 4/5] wil6210: stop_ap to leave interface closed
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1427705156.26117.12.camel@sipsolutions.net>
-	<3799169.j0UvFx0Mjg@lx-wigig-72>
-Date: Tue, 07 Apr 2015 19:30:35 +0300
-In-Reply-To: <3799169.j0UvFx0Mjg@lx-wigig-72> (Vladimir Kondratiev's message
-	of "Mon, 30 Mar 2015 16:56:55 +0300")
-Message-ID: <87k2xnx5n8.fsf@kamboji.qca.qualcomm.com> (sfid-20150407_183047_343988_041769CF)
+Received: from mga01.intel.com ([192.55.52.88]:28754 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750803AbbD3F6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2015 01:58:04 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: Source of Reason 7 disconnects
+Date: Thu, 30 Apr 2015 05:57:59 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B6FB273@hasmsx107.ger.corp.intel.com> (sfid-20150430_075809_479435_B37196AC)
+References: <55417E0C.2010206@lwfinger.net>
+In-Reply-To: <55417E0C.2010206@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
-
-> On Monday, March 30, 2015 10:45:56 AM Johannes Berg wrote:
->> On Mon, 2015-03-30 at 11:28 +0300, Vladimir Kondratiev wrote:
->> > cfg80211_ops.stop_ap supposed to have interface closed
->> > as post condition. Fulfill this requirement.
->> 
->> "closed" is rather misleading, since you most certainly should *not* do
->> dev_close() [and don't, but how should I know reading the commit log?]
->> 
->> johannes
->> 
->
-> Yes, I see.
-> I meant that actually stop_ap leaves device in state similar to ndo_stop,
-> where it is non operational.
->
-> Would you suggest better wording? "Inactive", "down", "non operational"
-> or something else?
-
-Isn't "down" good enough here? So can I change it to:
-
-  cfg80211_ops.stop_ap supposed to have interface down as post
-  condition. Fulfill this requirement.
-
--- 
-Kalle Valo
+PiBFbW1hbnVlbCBhbmQgSm9oYW5uZXMsDQo+IA0KPiBJIGFtIHRyeWluZyB0byBmaXggIlJlYXNv
+bjogNz1DTEFTUzNfRlJBTUVfRlJPTV9OT05BU1NPQ19TVEEiDQo+IGRpc2Nvbm5lY3Rpb25zIGZv
+ciB0aGUgUmVhbHRlayBkcml2ZXJzLiBXaGVuIEkgZGlkIGEgc2VhcmNoIGZvciBzaW1pbGFyDQo+
+IGV4YW1wbGVzIGZyb20gb3RoZXIgZHJpdmVycywgSSBmb3VuZCBzb21lIGZvcnVtIGVudHJpZXMg
+Zm9yIHRoZSBzYW1lDQo+IGRpc2Nvbm5lY3RzIGhhcHBlbmluZyBvbiBJbnRlbA0KPiA3MjYwIGhh
+cmR3YXJlLiBJdCBhcHBlYXJzIHRoYXQgdGhlIHByb2JsZW0gd2FzIGZpeGVkIGluIHRoZSAzLjE2
+IHRpbWVmcmFtZS4NCj4gSSBsb29rZWQgdGhyb3VnaCB0aGUgaXdsd2lmaSBjb21taXRzIGZyb20g
+dGhhdCB0aW1lLCBidXQgSSBmYWlsZWQgdG8gc2VlIGFueQ0KPiBwYXRjaGVzIHRoYXQgYXBwZWFy
+ZWQgdG8gYmUgYXBwcm9wcmlhdGUuDQo+IA0KPiBEbyBlaXRoZXIgb2YgeW91IGhhcHBlbiB0byBy
+ZW1lbWJlciB3aGF0IHdhcyBuZWVkZWQgdG8gZml4IHRoZSBwcm9ibGVtPw0KPiBTbyBmYXIsIEkg
+aGF2ZSBkZXRlcm1pbmVkIHRoYXQgZGlzYWJsaW5nIHBvd2VyIHNhdmUgaGVscHMsIGJ1dCBpdCBp
+cyBub3QgdGhlDQo+IGNvbXBsZXRlIHNvbHV0aW9uLg0KPiANCg0KT2ggeWVhaCAtIHRoaXMgb25l
+IGlzIGFubm95aW5nLiBUaGluZyBpcyBJIGRvbid0IHJlbWVtYmVyIGFueXRoaW5nIHNwZWNpZmlj
+Lg0KV2UgaGFkIHF1aXRlIGEgZmV3IGlzc3VlcyB3aXRoIG91ciBmaXJtd2FyZSB0aGF0IHdhcyBn
+b2luZyBkZWFmIGZvciBhIHdoaWxlLg0KVGhhdCBtYWRlIHRoZSBBUCBkZWF1dGggdXMsIGJ1dCB3
+ZSBjb3VsZG4ndCBldmVuIGhlYXIgdGhhdC4gU28gd2hlbiB3b3VsZA0KdHJhbnNtaXQgYW5kIGFz
+c3VtaW5nIHRoZSByZWNlaXZlIHBhdGggd2FzIHdvcmtpbmcgYWdhaW4sIHRoZSBBUCB3YXMga2lj
+a2luZw0KdXMgb3V0IGJlY2F1c2UgZnJvbSBpdHMgUE9WLCB3ZSB3ZXJlbid0IGFzc29jaWF0ZWQg
+YW55bW9yZS4NCkkgYW0gc29ycnkgSSBjYW4ndCBwb2ludCB0byBhbnkgY29tbWl0LCBidXQgdGhl
+IHByb2JsZW0gd2FzIHRoYXQgd2UgYWN0dWFsbHkgd2VyZQ0KZGlzY29ubmVjdGVkLCBidXQgZGlk
+bid0IGtub3cgYWJvdXQgdGhhdC4NCg==
