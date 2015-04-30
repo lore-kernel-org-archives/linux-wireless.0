@@ -1,93 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:36274 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbbDMIRT (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:36595 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086AbbD3QL6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 04:17:19 -0400
+	Thu, 30 Apr 2015 12:11:58 -0400
+Received: by obbeb7 with SMTP id eb7so47947695obb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2015 09:11:57 -0700 (PDT)
+Message-ID: <5542544A.40102@lwfinger.net> (sfid-20150430_181223_773705_F8088013)
+Date: Thu, 30 Apr 2015 11:11:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P17eRZxGmi-RrYZPO1Acyfk_dvSbOh=XAsCe=7-Cs_Wsw@mail.gmail.com>
-References: <20150406231357.2b8e452d@grimm.local.home>
-	<1428389938.1841.1.camel@sipsolutions.net>
-	<20150407102146.216cf90b@gandalf.local.home>
-	<20150407121319.72d69ec5@gandalf.local.home>
-	<1428479094.2809.3.camel@sipsolutions.net>
-	<CANUX_P36HE+efTSvVYV5tYC01vNzoQKcLVECsH7QJXHPGirYdw@mail.gmail.com>
-	<CANUX_P17eRZxGmi-RrYZPO1Acyfk_dvSbOh=XAsCe=7-Cs_Wsw@mail.gmail.com>
-Date: Mon, 13 Apr 2015 11:17:17 +0300
-Message-ID: <CANUX_P2EOwg_e8T7jJTQu5zH+Le+T5-y=DHom1LUmvMN47n42g@mail.gmail.com> (sfid-20150413_101731_395646_D02DCC3A)
-Subject: Re: [PATCH] iwlwifi: Move each system tracepoints to their own header
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Source of Reason 7 disconnects
+References: <55417E0C.2010206@lwfinger.net> <0BA3FCBA62E2DC44AF3030971E174FB31B6FB273@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B6FB273@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-it's me again.
-
-On Mon, Apr 13, 2015 at 9:22 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Sun, Apr 12, 2015 at 8:37 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> On Wed, Apr 8, 2015 at 10:44 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Tue, 2015-04-07 at 12:13 -0400, Steven Rostedt wrote:
->>>> Every tracing file must have its own TRACE_SYSTEM defined.
->>>> The iwlwifi tracepoint header broke this and added in the middle
->>>> of the file:
->>> [...]
->>>> Unfortunately, this broke new code in the ftrace infrastructure.
->>>> Moving each of these TRACE_SYSTEMs into their own trace file with
->>>> just one TRACE_SYSTEM per file fixes the issue.
->>>>
->>>> Cc: Johannes Berg <johannes@sipsolutions.net>
->>>> Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
->>>
->>>
->>>>  drivers/net/wireless/iwlwifi/iwl-devtrace-data.h   |  79 ++++
->>>>  drivers/net/wireless/iwlwifi/iwl-devtrace-io.h     | 155 ++++++++
->>>>  .../net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h    | 200 ++++++++++
->>>>  drivers/net/wireless/iwlwifi/iwl-devtrace-msg.h    |  97 +++++
->>>>  drivers/net/wireless/iwlwifi/iwl-devtrace-ucode.h  |  81 ++++
->>>>  drivers/net/wireless/iwlwifi/iwl-devtrace.h        | 438 +--------------------
->>>>  6 files changed, 618 insertions(+), 432 deletions(-)
->>>>  create mode 100644 drivers/net/wireless/iwlwifi/iwl-devtrace-data.h
->>>>  create mode 100644 drivers/net/wireless/iwlwifi/iwl-devtrace-io.h
->>>>  create mode 100644 drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
->>>>  create mode 100644 drivers/net/wireless/iwlwifi/iwl-devtrace-msg.h
->>>>  create mode 100644 drivers/net/wireless/iwlwifi/iwl-devtrace-ucode.h
->>>
->>> Looks good to me.
->>>
->>> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
->>>
+On 04/30/2015 12:57 AM, Grumbach, Emmanuel wrote:
+>> Emmanuel and Johannes,
 >>
->> I had to make quite a few modifications since this patch was not based
->> on iwlwifi-next, but I picked it up in our internal tree.
+>> I am trying to fix "Reason: 7=CLASS3_FRAME_FROM_NONASSOC_STA"
+>> disconnections for the Realtek drivers. When I did a search for similar
+>> examples from other drivers, I found some forum entries for the same
+>> disconnects happening on Intel
+>> 7260 hardware. It appears that the problem was fixed in the 3.16 timeframe.
+>> I looked through the iwlwifi commits from that time, but I failed to see any
+>> patches that appeared to be appropriate.
+>>
+>> Do either of you happen to remember what was needed to fix the problem?
+>> So far, I have determined that disabling power save helps, but it is not the
+>> complete solution.
+>>
 >
-> Wait - you seemed to want to apply that on your tree because of
-> dependencies (which I can understand). So how do you suggest to
-> proceed?
-> You can apply your original version of the patch on your tree, but
-> then it'll collapse when it'll meet iwlwifi-next.git.
-> I can try to have the modified version of the patch into 4.1 but I
-> doubt I'll make it. If I do make it, it'd allow you to work on top of
-> 4.1 whenever that'll be ready? What is your timeline?
->
+> Oh yeah - this one is annoying. Thing is I don't remember anything specific.
+> We had quite a few issues with our firmware that was going deaf for a while.
+> That made the AP deauth us, but we couldn't even hear that. So when would
+> transmit and assuming the receive path was working again, the AP was kicking
+> us out because from its POV, we weren't associated anymore.
+> I am sorry I can't point to any commit, but the problem was that we actually were
+> disconnected, but didn't know about that.
 
-I overthought it. Stephen fixed the conflict correctly.
+Thanks for the reply. As far as I can tell, we don't get disconnected without 
+knowing about it, but only when the solution is found will we know for sure. 
+Thus far, I do not have any over-the-air captures to investigate.
 
-> Or maybe you can pull iwlwifi-next (which would be odd I have to say)?
-> What do you suggest?
-> FWIW - I am talking about:
->
-> commit 7e1223b50089ab5901215d2fd8c61b42c7cfe034
-> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Date:   Tue Feb 3 20:11:48 2015 +0200
->
->     iwlwifi: mvm: new Alive / error table API
->
->     The new API slightly changes the layout of the version of
->     the firmware - prepare for that.
->
->     Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Thanks again,
+
+Larry
+
+
