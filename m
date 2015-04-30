@@ -1,143 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:38382 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751597AbbDTTvy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 15:51:54 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: fix ignored HT/VHT override configs
-Date: Mon, 20 Apr 2015 22:51:46 +0300
-Message-Id: <1429559506-22853-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150420_215157_667203_28E8503B)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12278 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751148AbbD3NZa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2015 09:25:30 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 7/7] wil6210: support WSC for STA mode
+Date: Thu, 30 Apr 2015 16:25:11 +0300
+Message-Id: <1430400311-3861-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150430_152535_720957_94DB7172)
+In-Reply-To: <1430400311-3861-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430400311-3861-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+WSC connection is secure (privacy bit set in various frames)
+but authentication suite, keys etc. are absent.
 
-HT and VHT override configurations were ignored during association and
-applied only when first beacon recived, or not applied at all.
+Support this mode in the connect WMI command. Detect WSC by
+having 'sme->privacy' and no RSN IE. Inform firmware about WSC
+session by setting dot11_auth_mode to WMI_AUTH11_WSC.
 
-Fix the code to apply HT/VHT overrides during association. This is a bit
-tricky since the channel was already configured during authentication
-and we don't want to reconfigure it unless there's really a change.
-
-Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- net/mac80211/mlme.c | 57 +++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 36 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 26053bf..3294666 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4307,15 +4307,15 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- }
- 
- static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
--				     struct cfg80211_bss *cbss, bool assoc)
-+				     struct cfg80211_bss *cbss, bool assoc,
-+				     bool override)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_bss *bss = (void *)cbss->priv;
- 	struct sta_info *new_sta = NULL;
- 	struct ieee80211_supported_band *sband;
--	struct ieee80211_sta_ht_cap sta_ht_cap;
--	bool have_sta = false, is_override = false;
-+	bool have_sta = false;
- 	int err;
- 
- 	sband = local->hw.wiphy->bands[cbss->channel->band];
-@@ -4335,14 +4335,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 			return -ENOMEM;
- 	}
- 
--	memcpy(&sta_ht_cap, &sband->ht_cap, sizeof(sta_ht_cap));
--	ieee80211_apply_htcap_overrides(sdata, &sta_ht_cap);
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 1b02b73..dbfcdd1 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -402,11 +402,8 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 	rsn_eid = sme->ie ?
+ 			cfg80211_find_ie(WLAN_EID_RSN, sme->ie, sme->ie_len) :
+ 			NULL;
 -
--	is_override = (sta_ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) !=
--		      (sband->ht_cap.cap &
--		       IEEE80211_HT_CAP_SUP_WIDTH_20_40);
--
--	if (new_sta || is_override) {
-+	if (new_sta || override) {
- 		err = ieee80211_prep_channel(sdata, cbss);
- 		if (err) {
- 			if (new_sta)
-@@ -4552,7 +4545,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata_info(sdata, "authenticate with %pM\n", req->bss->bssid);
- 
--	err = ieee80211_prep_connection(sdata, req->bss, false);
-+	err = ieee80211_prep_connection(sdata, req->bss, false, false);
- 	if (err)
- 		goto err_clear;
- 
-@@ -4624,6 +4617,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_supported_band *sband;
- 	const u8 *ssidie, *ht_ie, *vht_ie;
- 	int i, err;
-+	bool override = false;
- 
- 	assoc_data = kzalloc(sizeof(*assoc_data) + req->ie_len, GFP_KERNEL);
- 	if (!assoc_data)
-@@ -4728,14 +4722,6 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	if (req->flags & ASSOC_REQ_DISABLE_HT) {
--		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
--		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+-	if (sme->privacy && !rsn_eid) {
+-		wil_err(wil, "Missing RSN IE for secure connection\n");
+-		return -EINVAL;
 -	}
--
--	if (req->flags & ASSOC_REQ_DISABLE_VHT)
--		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
--
- 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
- 	sband = local->hw.wiphy->bands[req->bss->channel->band];
- 	if (!sband->ht_cap.ht_supported ||
-@@ -4847,7 +4833,36 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	ifmgd->dtim_period = 0;
- 	ifmgd->have_beacon = false;
++	if (sme->privacy && !rsn_eid)
++		wil_info(wil, "WSC connection\n");
  
--	err = ieee80211_prep_connection(sdata, req->bss, true);
-+	/* override HT/VHT configuration only if the AP and we support it */
-+	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
-+		struct ieee80211_sta_ht_cap sta_ht_cap;
-+
-+		if (req->flags & ASSOC_REQ_DISABLE_HT)
-+			override = true;
-+
-+		memcpy(&sta_ht_cap, &sband->ht_cap, sizeof(sta_ht_cap));
-+		ieee80211_apply_htcap_overrides(sdata, &sta_ht_cap);
-+
-+		/* check for 40 MHz disable override */
-+		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_40MHZ) &&
-+		    sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 &&
-+		    !(sta_ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40))
-+			override = true;
-+
-+		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT) &&
-+		    req->flags & ASSOC_REQ_DISABLE_VHT)
-+			override = true;
-+	}
-+
-+	if (req->flags & ASSOC_REQ_DISABLE_HT) {
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
-+	}
-+
-+	if (req->flags & ASSOC_REQ_DISABLE_VHT)
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
-+
-+	err = ieee80211_prep_connection(sdata, req->bss, true, override);
- 	if (err)
- 		goto err_clear;
- 
+ 	bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
+ 			       sme->ssid, sme->ssid_len,
+@@ -465,13 +462,18 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 		goto out;
+ 	}
+ 	if (wil->privacy) {
+-		conn.dot11_auth_mode = WMI_AUTH11_SHARED;
+-		conn.auth_mode = WMI_AUTH_WPA2_PSK;
+-		conn.pairwise_crypto_type = WMI_CRYPT_AES_GCMP;
+-		conn.pairwise_crypto_len = 16;
+-		conn.group_crypto_type = WMI_CRYPT_AES_GCMP;
+-		conn.group_crypto_len = 16;
+-	} else {
++		if (rsn_eid) { /* regular secure connection */
++			conn.dot11_auth_mode = WMI_AUTH11_SHARED;
++			conn.auth_mode = WMI_AUTH_WPA2_PSK;
++			conn.pairwise_crypto_type = WMI_CRYPT_AES_GCMP;
++			conn.pairwise_crypto_len = 16;
++			conn.group_crypto_type = WMI_CRYPT_AES_GCMP;
++			conn.group_crypto_len = 16;
++		} else { /* WSC */
++			conn.dot11_auth_mode = WMI_AUTH11_WSC;
++			conn.auth_mode = WMI_AUTH_NONE;
++		}
++	} else { /* insecure connection */
+ 		conn.dot11_auth_mode = WMI_AUTH11_OPEN;
+ 		conn.auth_mode = WMI_AUTH_NONE;
+ 	}
 -- 
 2.1.0
 
