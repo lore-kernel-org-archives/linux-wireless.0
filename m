@@ -1,168 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39500 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030227AbbDXJVV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2015 05:21:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] mac80211: clean up station debugfs
-Date: Fri, 24 Apr 2015 11:21:13 +0200
-Message-Id: <1429867273-18271-4-git-send-email-johannes@sipsolutions.net> (sfid-20150424_112128_696972_C6887FFC)
-In-Reply-To: <1429867273-18271-1-git-send-email-johannes@sipsolutions.net>
-References: <1429867273-18271-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:34503 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbbD3Hfe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Apr 2015 03:35:34 -0400
+Received: by iedfl3 with SMTP id fl3so68422908ied.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2015 00:35:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQmkqM5SpOxudSzuXL=oMp39Uu3TgUc17aXFs8aFqJM+aw@mail.gmail.com>
+References: <CAKLmikOSs-1x5dbDtRtgim-_nsFfX-6xd=WZArYfwnOS1ULP3A@mail.gmail.com>
+	<CA+BoTQmkqM5SpOxudSzuXL=oMp39Uu3TgUc17aXFs8aFqJM+aw@mail.gmail.com>
+Date: Thu, 30 Apr 2015 00:35:33 -0700
+Message-ID: <CAKLmikO2NtsdVDcK8Qv9pnkAOKtQY76zvUZpTv0zMu4B562JdQ@mail.gmail.com> (sfid-20150430_093537_558723_927A473E)
+Subject: Re: Regression with iw set bitrates
+From: Mitar <mmitar@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi!
 
-Remove items that can be retrieved through nl80211. This also
-removes two items (tx_packets and tx_bytes) where only the VO
-counter was exposed since they are split up per AC but in the
-debugfs file only the first AC was shown.
+Thanks for the explanation. This makes much more sense now.
 
-Also remove the useless "dev" file - the stations have long
-been in a sub-directory of the netdev so there's no need for
-that any more.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/debugfs_sta.c | 84 ----------------------------------------------
- 1 file changed, 84 deletions(-)
+Mitar
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 7ca601414000..06d52935036d 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -29,8 +29,6 @@ static ssize_t sta_ ##name## _read(struct file *file,			\
- 				      format_string, sta->field);	\
- }
- #define STA_READ_D(name, field) STA_READ(name, field, "%d\n")
--#define STA_READ_U(name, field) STA_READ(name, field, "%u\n")
--#define STA_READ_S(name, field) STA_READ(name, field, "%s\n")
- 
- #define STA_OPS(name)							\
- static const struct file_operations sta_ ##name## _ops = {		\
-@@ -52,10 +50,7 @@ static const struct file_operations sta_ ##name## _ops = {		\
- 		STA_OPS(name)
- 
- STA_FILE(aid, sta.aid, D);
--STA_FILE(dev, sdata->name, S);
--STA_FILE(last_signal, last_signal, D);
- STA_FILE(last_ack_signal, last_ack_signal, D);
--STA_FILE(beacon_loss_count, beacon_loss_count, D);
- 
- static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
- 			      size_t count, loff_t *ppos)
-@@ -101,40 +96,6 @@ static ssize_t sta_num_ps_buf_frames_read(struct file *file,
- }
- STA_OPS(num_ps_buf_frames);
- 
--static ssize_t sta_inactive_ms_read(struct file *file, char __user *userbuf,
--				    size_t count, loff_t *ppos)
--{
--	struct sta_info *sta = file->private_data;
--	return mac80211_format_buffer(userbuf, count, ppos, "%d\n",
--				      jiffies_to_msecs(jiffies - sta->last_rx));
--}
--STA_OPS(inactive_ms);
--
--
--static ssize_t sta_connected_time_read(struct file *file, char __user *userbuf,
--					size_t count, loff_t *ppos)
--{
--	struct sta_info *sta = file->private_data;
--	struct timespec uptime;
--	struct tm result;
--	long connected_time_secs;
--	char buf[100];
--	int res;
--	ktime_get_ts(&uptime);
--	connected_time_secs = uptime.tv_sec - sta->last_connected;
--	time_to_tm(connected_time_secs, 0, &result);
--	result.tm_year -= 70;
--	result.tm_mday -= 1;
--	res = scnprintf(buf, sizeof(buf),
--		"years  - %ld\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
--			result.tm_year, result.tm_mon, result.tm_mday,
--			result.tm_hour, result.tm_min, result.tm_sec);
--	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
--}
--STA_OPS(connected_time);
--
--
--
- static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
- 				      size_t count, loff_t *ppos)
- {
-@@ -359,37 +320,6 @@ static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
- }
- STA_OPS(vht_capa);
- 
--static ssize_t sta_current_tx_rate_read(struct file *file, char __user *userbuf,
--					size_t count, loff_t *ppos)
--{
--	struct sta_info *sta = file->private_data;
--	struct rate_info rinfo;
--	u16 rate;
--	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
--	rate = cfg80211_calculate_bitrate(&rinfo);
--
--	return mac80211_format_buffer(userbuf, count, ppos,
--				      "%d.%d MBit/s\n",
--				      rate/10, rate%10);
--}
--STA_OPS(current_tx_rate);
--
--static ssize_t sta_last_rx_rate_read(struct file *file, char __user *userbuf,
--				     size_t count, loff_t *ppos)
--{
--	struct sta_info *sta = file->private_data;
--	struct rate_info rinfo;
--	u16 rate;
--
--	sta_set_rate_info_rx(sta, &rinfo);
--
--	rate = cfg80211_calculate_bitrate(&rinfo);
--
--	return mac80211_format_buffer(userbuf, count, ppos,
--				      "%d.%d MBit/s\n",
--				      rate/10, rate%10);
--}
--STA_OPS(last_rx_rate);
- 
- #define DEBUGFS_ADD(name) \
- 	debugfs_create_file(#name, 0400, \
-@@ -432,29 +362,15 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 
- 	DEBUGFS_ADD(flags);
- 	DEBUGFS_ADD(num_ps_buf_frames);
--	DEBUGFS_ADD(inactive_ms);
--	DEBUGFS_ADD(connected_time);
- 	DEBUGFS_ADD(last_seq_ctrl);
- 	DEBUGFS_ADD(agg_status);
--	DEBUGFS_ADD(dev);
--	DEBUGFS_ADD(last_signal);
--	DEBUGFS_ADD(beacon_loss_count);
- 	DEBUGFS_ADD(ht_capa);
- 	DEBUGFS_ADD(vht_capa);
- 	DEBUGFS_ADD(last_ack_signal);
--	DEBUGFS_ADD(current_tx_rate);
--	DEBUGFS_ADD(last_rx_rate);
- 
--	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
--	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
--	DEBUGFS_ADD_COUNTER(rx_bytes, rx_bytes);
--	DEBUGFS_ADD_COUNTER(tx_bytes, tx_bytes);
- 	DEBUGFS_ADD_COUNTER(rx_duplicates, num_duplicates);
- 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_fragments);
--	DEBUGFS_ADD_COUNTER(rx_dropped, rx_dropped);
- 	DEBUGFS_ADD_COUNTER(tx_filtered, tx_filtered_count);
--	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
--	DEBUGFS_ADD_COUNTER(tx_retry_count, tx_retry_count);
- 
- 	if (sizeof(sta->driver_buffered_tids) == sizeof(u32))
- 		debugfs_create_x32("driver_buffered_tids", 0400,
+On Wed, Apr 29, 2015 at 11:01 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 27 April 2015 at 11:43, Mitar <mmitar@gmail.com> wrote:
+>> Hi!
+>>
+>> On OpenWrt, between these versions:
+>>
+>> https://dev.openwrt.org/log/branches/barrier_breaker?action=stop_on_copy&mode=stop_on_copy&rev=44952&stop_rev=42475&limit=200&mail_addr=&mail_addr_confirm=
+>>
+>> there was a regression in how iw set bitrates operate. Because I
+>> suspect it is an upstream issue, I am reporting it here.
+>>
+>> With previous version of our firmware image, I was using the
+>> /etc/hotplug.d/iface/30-bitrates script you can see in this file:
+>>
+>> https://github.com/cloyne/network/blob/349297c8bfd115aa68e3b8c47bb3a7197f1e777f/unifi/README.md
+>>
+>> The goal was to limit on all 2.4 GHz interfaces bitrates to G standard
+>> and higher, removing all legacy stuff.
+>>
+>> It seems it worked. But with an upgrade to the new firmware image,
+>> this script started misbehaving and high-end WiFi devices were able to
+>> connect only with MSC 0. I determined that the issue is in the
+>> following command:
+>>
+>> iw wlan0 set bitrates legacy-2.4 6 9 12 18 24 36 48 54 ht-mcs-2.4 lgi-2.4
+>>
+>> With this command in effect, my client has in station dump the
+>> following bitrates:
+>>
+>> tx bitrate:    6.5 MBit/s MCS 0
+>> rx bitrate:    216.7 MBit/s MCS 23 short GI
+>
+> With the above command you basically disable HT rates since you say
+> "ht-mcs-2.4" but specify no MCS indexes to use.
+>
+>
+>> If I change the command to:
+>>
+>> iw wlan0 set bitrates legacy-2.4 6 9 12 18 24 36 48 54
+>>
+>> tx bitrate:    195.0 MBit/s MCS 23
+>> rx bitrate:    216.7 MBit/s MCS 23 short GI
+>
+> In this you effectively disable CCK (11b) rates and leave OFDM (11g),
+> and you leave HT rates untouched (i.e. allow HT to be used).
+>
+>
+>>
+>> Which is the expected bitrate.
+>>
+>> If I run only:
+>>
+>> iw wlan0 set bitrates ht-mcs-2.4
+>>
+>> tx bitrate:    11.0 MBit/s
+>> rx bitrate:    117.0 MBit/s MCS 20
+>>
+>> This goes against the documentation which is saying that this should
+>> reset bitrates masks to normal:
+>>
+>> https://wireless.wiki.kernel.org/en/users/documentation/iw#modifying_tx_ht_mcs_bitrates
+>
+> It seems the docs err on this.
+>
+> To reset bitrates to normal you need to issue:
+>
+>   iw wlanX set bitrates
+>
+> (no arguments follow)
+>
+>
+>> Maybe I am not using the command correctly. In general it is unclear
+>> what should be correct behavior here. I also opened a SuperUser
+>> question:
+>>
+>> http://superuser.com/questions/881025/limiting-low-bitrates-with-iw-on-ath9k
+>>
+>> So maybe clearer documentation would make it easier to know what is
+>> the correct command? So, what is current (and hopefully future proof)
+>> command to not allow legacy bitrates, but to allow any other (which
+>> would work also on future devices without having to modify the list of
+>> allowed MCS when they are added)?
+>
+> I don't recall bitrates command ever changed behaviour. Apparently the
+> docs were always incorrect I guess?
+>
+>
+> Michał
+
+
+
 -- 
-2.1.4
-
+http://mitar.tnode.com/
+https://twitter.com/mitar_m
