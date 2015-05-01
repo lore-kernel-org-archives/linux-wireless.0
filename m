@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54634 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755656AbbE2J1o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 05:27:44 -0400
-From: Avinash Patil <patila@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, "Xinming Hu" <huxm@marvell.com>
-Subject: Re: [PATCH 01/17] mwifiex: verbose logging for association failure
- messages
-Date: Fri, 29 May 2015 09:27:38 +0000
-Message-ID: <1432911458.11339.24.camel@pe-lt950> (sfid-20150529_112759_516011_032BDE03)
-References: <1432817889-26250-1-git-send-email-patila@marvell.com>
-	 <1432817889-26250-2-git-send-email-patila@marvell.com>
-	 <1432837654.1556.2.camel@perches.com>
-In-Reply-To: <1432837654.1556.2.camel@perches.com>
-Reply-To: Avinash Patil <patila@marvell.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga03.intel.com ([134.134.136.65]:57678 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751347AbbEAG0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 May 2015 02:26:36 -0400
+Message-ID: <55431C98.9030203@linux.intel.com> (sfid-20150501_082658_216663_DA20547B)
+Date: Fri, 01 May 2015 14:26:32 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "brudley@broadcom.com" <brudley@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman@broadcom.com" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] brcmfmac: keep WiFi chip's power during system suspension
+References: <553DC3E3.5050802@linux.intel.com> <553DF923.5070300@broadcom.com>
+In-Reply-To: <553DF923.5070300@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE1LTA1LTI4IGF0IDExOjI3IC0wNzAwLCBKb2UgUGVyY2hlcyB3cm90ZToNCj4g
-T24gVGh1LCAyMDE1LTA1LTI4IGF0IDE4OjI3ICswNTMwLCBBdmluYXNoIFBhdGlsIHdyb3RlOg0K
-PiA+IFRoaXMgcGF0Y2ggYWRkcyBtb3JlIGxvZ2dpbmcgc3VwcG9ydCBmb3IgYXNzb2NpYXRpb24g
-ZmFpbHVyZSAtDQo+ID4gcmVhc29uIGFuZCBzdGF0ZXMuDQo+IFtdDQo+ID4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvZncuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L213aWZpZXgvZncuaA0KPiBbXQ0KPiA+IEBAIC00MTksOCArNDE5LDEyIEBAIGVudW0gUDJQX01P
-REVTIHsNCj4gPiAgI2RlZmluZSBIU19DRkdfQ09ORF9NQUNfRVZFTlQJCTB4MDAwMDAwMDQNCj4g
-PiAgI2RlZmluZSBIU19DRkdfQ09ORF9NVUxUSUNBU1RfREFUQQkweDAwMDAwMDA4DQo+ID4gIA0K
-PiA+IC0jZGVmaW5lIE1XSUZJRVhfVElNRU9VVF9GT1JfQVBfUkVTUAkJMHhmZmZjDQo+ID4gLSNk
-ZWZpbmUgTVdJRklFWF9TVEFUVVNfQ09ERV9BVVRIX1RJTUVPVVQJMg0KPiA+ICsjZGVmaW5lIEFT
-U09DX0VSUl9BVVRIX0VSUl9TVEFfRkFJTFVSRQkJMHhGRkZCDQo+ID4gKyNkZWZpbmUgQVNTT0Nf
-RVJSX0FTU09DX0VSUl9USU1FT1VUCQkweEZGRkMNCj4gPiArI2RlZmluZSBBU1NPQ19FUlJfQVNT
-T0NfRVJSX0FVVEhfUkVGVVNFRAkweEZGRkQNCj4gDQo+IElzIHRoZXJlIHJlYWxseSB2YWx1ZSBp
-biBkdXBsaWNhdGluZyBBU1NPQ19FUlJfDQo+IAlBU1NPQ19FUlJfQVNTT0NfRVJSXzxmb28+DQo+
-IA0KPiANCkhtbS4uVHJ1ZS4NCkFjdHVhbGx5IGZpcnN0IHBhcnQgb2YgbWVzc2FnZSBpcyBmb3Ig
-Y29ubmVjdGlvbiBmYWlsdXJlLg0KSSB0aGluayBiZXR0ZXIgZm9ybWF0IHdvdWxkIGJlIENPTk5F
-Q1RfRVJSX3tBVVRIL0FTU09DfV9FUlIuDQpJIHdpbGwgbW9kaWZ5IHBhdGNoIGFjY29yZGluZ2x5
-IGFuZCByZXNlbmQgdjMuDQoNCi1BdmluYXNoDQoNCg0K
+
+
+On 2015/4/27 16:53, Arend van Spriel wrote:
+> On 04/27/15 07:06, Fu, Zhonghui wrote:
+>> Need to keep the power supply for WiFi chip during system suspension.
+>> Otherwise, the context of WiFi chip will be lost.
+>
+> I already submitted a patch doing exactly the same thing [1]
+
+OK, please ignore this patch.
+
+What's the target kernel version of your patch?
+
+Thanks,
+Zhonghui
+>
+> Regards,
+> Arend
+>
+> [1] https://patchwork.kernel.org/patch/6217391/
+>
+>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   10 ++++++----
+>>   1 files changed, 6 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index fdf8feb..03d3671 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -1251,15 +1251,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>       brcmf_sdiod_freezer_on(sdiodev);
+>>       brcmf_sdio_wd_timer(sdiodev->bus, 0);
+>>
+>> +    sdio_flags = MMC_PM_KEEP_POWER;
+>>       if (sdiodev->wowl_enabled) {
+>> -        sdio_flags = MMC_PM_KEEP_POWER;
+>>           if (sdiodev->pdata->oob_irq_supported)
+>>               enable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>>           else
+>> -            sdio_flags = MMC_PM_WAKE_SDIO_IRQ;
+>> -        if (sdio_set_host_pm_flags(sdiodev->func[1], sdio_flags))
+>> -            brcmf_err("Failed to set pm_flags %x\n", sdio_flags);
+>> +            sdio_flags |= MMC_PM_WAKE_SDIO_IRQ;
+>>       }
+>> +
+>> +    if (sdio_set_host_pm_flags(sdiodev->func[1], sdio_flags))
+>> +        brcmf_err("Failed to set pm_flags %x\n", sdio_flags);
+>> +
+>>       return 0;
+>>   }
+>>
+>> -- 1.7.1
+>>
+>
+
