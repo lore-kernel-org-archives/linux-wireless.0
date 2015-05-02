@@ -1,134 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:35607 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbbETAl7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 20:41:59 -0400
-Received: by labbd9 with SMTP id bd9so50615707lab.2
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 17:41:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150520003917.GV23057@wotan.suse.de>
-References: <20150519200232.GM23057@wotan.suse.de> <555BA438.2070802@kernel.org>
- <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com>
- <CALCETrX1YrdwfPJxVbzE0MQK=HChK8sDztt6MZcJiCvTEDCn7Q@mail.gmail.com> <20150520003917.GV23057@wotan.suse.de>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Tue, 19 May 2015 17:41:37 -0700
-Message-ID: <CALCETrVpwvpeGD=3iDw_2cTPfnvLsasMT2OV4jcE1bRs5cgDuA@mail.gmail.com> (sfid-20150520_024220_153330_4B7C7FC8)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Andy Lutomirski <luto@kernel.org>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	James Morris <james.l.morris@oracle.com>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Michal Marek <mmarek@suse.cz>,
-	Abelardo Ricart III <aricart@memnix.com>,
-	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
-	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:50424 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751182AbbEBQkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 May 2015 12:40:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1YoaSR-0006iP-Go
+	for linux-wireless@vger.kernel.org; Sat, 02 May 2015 18:40:03 +0200
+Received: from md-188-69-194-165.omni.lt ([188.69.194.165])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2015 18:40:03 +0200
+Received: from nerijus by md-188-69-194-165.omni.lt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2015 18:40:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
+Subject: b43 AP does not work
+Date: Sat, 2 May 2015 16:32:09 +0000 (UTC)
+Message-ID: <loom.20150502T183011-57@post.gmane.org> (sfid-20150502_184010_475480_8E80B250)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 5:39 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Tue, May 19, 2015 at 04:42:05PM -0700, Andy Lutomirski wrote:
->> On Tue, May 19, 2015 at 4:30 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> > Hi All,
->> >
->> > On Wed, May 20, 2015 at 6:59 AM, Andy Lutomirski <luto@kernel.org> wrote:
->> >> [added cc's from the other thread]
->> >>
->> >> On 05/19/2015 01:02 PM, Luis R. Rodriguez wrote:
->> >>>
->> >>> David Howells has posted v4 of his series of supporting PKCS#7 for module
->> >>> signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and
->> >>> after
->> >>> some review and patch shuffling I think this is ready for patch form.  My
->> >>> own
->> >>> series however depend on quite a bit of other pending changes, one series
->> >>> which
->> >>> will go through Rusty's tree, another series of fixes on firmware_class
->> >>> which
->> >>> should go through Greg's tree. I'll wait until all this and David's own
->> >>> patches
->> >>> get merged before posting firmware PKCS#7 support. Before all this though
->> >>> in
->> >>> preparation for fw signing one thing we should start to talk about more
->> >>> broadly
->> >>> however is how linux-firmware binary file signing would work in practice
->> >>> and
->> >>> what we need, and make sure folks are OK with all this.
->> >>>
->> >>> First, firmware signing will be completely optional as with module
->> >>> signing.
->> >>>
->> >>
->> >> ...
->> >>
->> >>> Other than this last nitpick, any other concerns or recommendations ?
->> >>
->> >>
->> >> A couple.  Some of these are general concerns with the existing
->> >> infrastructure, but #1 is a specific problem that gets much worse if we add
->> >> firmware signing.  Feel free to ignore 2-4.
->> >>
->> >> 1. We should get the signature semantics right.  I think that, for modules,
->> >> we currently sign literally the module payload.  For modules, in my
->> >> semi-amateurish crypto universe [1], this is fine *as long as the key in
->> >> question is used for no other purpose*.  For firmware, it's dangerous, since
->> >> it would be vulnerable to substitution attacks in which the adversary
->> >> convinces us to interpret one firmware file as firmware for another device
->> >> or purpose entirely.
->> >>
->> >> We should be signing something that's semantically equivalent to "This is a
->> >> valid module: xyz", "This is a valid 'regulatory.bin': xyz", or "This is a
->> >> valid kexec image: xyz".
->> >
->> > Something that occurred to me (as a complete bystander) was: would it
->> > make sense to have keys able to be restricted to particular "types" of
->> > signable data? I.e. the key that can sign a valid regulatory.bin file
->> > cannot be used to sign a module or a kexec image. - This could remove
->> > the need to have multiple keyrings. (Also, UEFI keys unless otherwise
->> > tagged could be restricted to only signing bootloaders or kernels)
->>
->> Seems sensible to me.
->
-> As for having keys for fw signing be specific to fw data without a keyring,
-> if that is desirable I think we can devise a way to do that. For instance
-> if we wanted to we can have FW_SIG by default trust first keys on
-> system_trusted_keyring just as module signature works -- or if we wanted to
-> just trust, say a Kyle key. Not sure if the later is possible yet, but htat
-> would require some changes. Then as an evolution if we wanted to enable a
-> specific request fw to be mapped to a specific fw file the new APIs I was
-> looking to add could easily enable this provided that we first decide we
-> do want to trust say one key perhaps not on system_trusted_keyring for fw
-> signing. That'd need to be decided first.
->
-> As for the UEFI stuff -- from what I gather its too late there. We could
-> certainly go with something else for fw signing though, just lemme hear it
-> hard and clear.
->
->> FWIW, I'm starting to think that UEFI-based validation of kexec images
->> should be totally separate.  It uses a nasty PE format with a hideous
->> PKCS #7 formatted signature.  Maybe that should be a completely
->> separate piece of code.
->
-> LSM'ify it I guess? Again, if that's reasonable then I think we'll need
-> stacking and that's still not merged.
+Hello,
 
-Isn't stacking backwards for this, though?  The semantics we'd want is
-accept if any verifiers accept, not accept if all verifiers accept,
-right?
+lspci:
+02:00.0 Network controller [0280]: Broadcom Corporation BCM4311 802.11a/b/g
+[14e4:4312] (rev 02)
 
---Andy
+AP worked on F21. On F22 kernels 4.0.0 and 4.0.1 it does not.
+
+# hostapd -dB /etc/hostapd/hostapd.conf
+random: Trying to read entropy from /dev/random
+Configuration file: /etc/hostapd/hostapd.conf
+ctrl_interface_group=10 (from group name 'wheel')
+rfkill: initial event: idx=0 type=2 op=0 soft=1 hard=0
+rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
+nl80211: Supported cipher 00-0f-ac:1
+nl80211: Supported cipher 00-0f-ac:5
+nl80211: Supported cipher 00-0f-ac:2
+nl80211: Supported cipher 00-0f-ac:4
+nl80211: Supported cipher 00-0f-ac:10
+nl80211: Supported cipher 00-0f-ac:8
+nl80211: Supported cipher 00-0f-ac:9
+nl80211: Using driver-based off-channel TX
+nl80211: interface wlan0 in phy phy0
+nl80211: Set mode ifindex 3 iftype 3 (AP)
+nl80211: Failed to set interface 3 to mode 3: -16 (Device or resource busy)
+nl80211: Try mode change after setting interface down
+nl80211: Set mode ifindex 3 iftype 3 (AP)
+nl80211: Mode change succeeded while interface is down
+nl80211: Setup AP(wlan0) - device_ap_sme=0 use_monitor=0
+nl80211: Subscribe to mgmt frames with AP handle 0x86c16f0
+nl80211: Register frame type=0xb0 (WLAN_FC_STYPE_AUTH) nl_handle=0x86c16f0
+match=
+nl80211: Register frame type=0x0 (WLAN_FC_STYPE_ASSOC_REQ)
+nl_handle=0x86c16f0 match=
+nl80211: Register frame type=0x20 (WLAN_FC_STYPE_REASSOC_REQ)
+nl_handle=0x86c16f0 match=
+nl80211: Register frame type=0xa0 (WLAN_FC_STYPE_DISASSOC)
+nl_handle=0x86c16f0 match=
+nl80211: Register frame type=0xc0 (WLAN_FC_STYPE_DEAUTH) nl_handle=0x86c16f0
+match=
+nl80211: Register frame type=0xd0 (WLAN_FC_STYPE_ACTION) nl_handle=0x86c16f0
+match=
+nl80211: Register frame command failed (type=208): ret=-114 (Operation
+already in progress)
+nl80211: Register frame match - hexdump(len=0): [NULL]
+nl80211: Could not configure driver mode
+nl80211: Remove monitor interface: refcount=0
+nl80211: Remove beacon (ifindex=3)
+netlink: Operstate: ifindex=3 linkmode=0 (kernel-control), operstate=6
+(IF_OPER_UP)
+nl80211: Set mode ifindex 3 iftype 2 (STATION)
+nl80211: Failed to set interface 3 to mode 2: -16 (Device or resource busy)
+nl80211: Try mode change after setting interface down
+nl80211: Set mode ifindex 3 iftype 2 (STATION)
+nl80211: Mode change succeeded while interface is down
+nl80211: Teardown AP(wlan0) - device_ap_sme=0 use_monitor=0
+nl80211 driver initialization failed.
+hostapd_interface_deinit_free(0x86bf2a0)
+hostapd_interface_deinit_free: num_bss=1 conf->num_bss=1
+hostapd_interface_deinit(0x86bf2a0)
+hostapd_bss_deinit: deinit bss wlan0
+hostapd_cleanup(hapd=0x86c0cd0 (wlan0))
+hostapd_free_hapd_data: Interface wlan0 wasn't started
+hostapd_interface_deinit_free: driver=(nil) drv_priv=(nil) -> hapd_deinit
+hostapd_interface_free(0x86bf2a0)
+hostapd_interface_free: free hapd 0x86c0cd0
+hostapd_cleanup_iface(0x86bf2a0)
+hostapd_cleanup_iface_partial(0x86bf2a0)
+hostapd_cleanup_iface: free iface=0x86bf2a0
+
+Regards,
+Nerijus
+
