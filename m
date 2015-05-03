@@ -1,139 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752078AbbEZTS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:18:58 -0400
+	id S1751918AbbECTdC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 15:33:02 -0400
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Luciano Coelho <luciano.coelho@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 31/39] iwlwifi: mvm: combine UMAC and LMAC scan_stop functions
-Date: Tue, 26 May 2015 22:17:44 +0300
-Message-Id: <1432667872-18092-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211905_296261_212238B9)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+Subject: [PATCH 30/42] iwlwifi: mvm: combine LMAC scans into one
+Date: Sun,  3 May 2015 22:31:41 +0300
+Message-Id: <1430681513-7838-30-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213321_785296_0A885AC4)
+In-Reply-To: <1430681438.3240.3.camel@intel.com>
+References: <1430681438.3240.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Luciano Coelho <luciano.coelho@intel.com>
 
-The UMAC and LMAC scan_stop functions are now nearly identical, so
-they can be combined into a single function instead.
+The last remaining difference between the regular scan and scheduled
+scan flows for LMAC is the FW capabilities check for EBS scans.
+
+Merge these checks into a new function and then combine the LMAC scan
+functions into a single one.
 
 Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/scan.c | 57 ++++++++-------------------------
- 1 file changed, 13 insertions(+), 44 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 100 ++++++--------------------------
+ 1 file changed, 17 insertions(+), 83 deletions(-)
 
 diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 4199c60..49bcf7d 100644
+index 5576152..f4d38f5 100644
 --- a/drivers/net/wireless/iwlwifi/mvm/scan.c
 +++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -557,7 +557,7 @@ static bool iwl_mvm_scan_pass_all(struct iwl_mvm *mvm,
- 	return true;
+@@ -816,94 +816,31 @@ static inline bool iwl_mvm_scan_fits(struct iwl_mvm *mvm, int n_ssids,
+ 		 iwl_mvm_max_scan_ie_fw_cmd_room(mvm)));
  }
  
--static int iwl_mvm_send_lmac_scan_abort(struct iwl_mvm *mvm)
-+static int iwl_mvm_lmac_scan_abort(struct iwl_mvm *mvm)
+-static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-			     struct iwl_mvm_scan_params *params)
++static inline bool iwl_mvm_scan_use_ebs(struct iwl_mvm *mvm, int n_iterations)
  {
- 	int ret;
- 	struct iwl_host_cmd cmd = {
-@@ -584,36 +584,6 @@ static int iwl_mvm_send_lmac_scan_abort(struct iwl_mvm *mvm)
- 	return ret;
- }
- 
--static int iwl_mvm_lmac_scan_stop(struct iwl_mvm *mvm, int type)
--{
--	int ret;
--	struct iwl_notification_wait wait_scan_done;
--	static const u8 scan_done_notif[] = { SCAN_OFFLOAD_COMPLETE, };
--	bool sched = type & IWL_MVM_SCAN_SCHED;
+-	struct iwl_scan_req_lmac *cmd = mvm->scan_cmd;
+-	struct iwl_scan_probe_req *preq =
+-		(void *)(cmd->data + sizeof(struct iwl_scan_channel_cfg_lmac) *
+-			 mvm->fw->ucode_capa.n_scan_channels);
+-	u32 flags = 0, ssid_bitmap = 0;
 -
 -	lockdep_assert_held(&mvm->mutex);
 -
--	iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
--				   scan_done_notif,
--				   ARRAY_SIZE(scan_done_notif),
--				   NULL, NULL);
+-	iwl_mvm_build_generic_scan_cmd(mvm, cmd, params);
++	const struct iwl_ucode_capabilities *capa = &mvm->fw->ucode_capa;
+ 
+-	cmd->n_channels = (u8)params->n_channels;
 -
--	ret = iwl_mvm_send_lmac_scan_abort(mvm);
--	if (ret) {
--		IWL_DEBUG_SCAN(mvm, "Send stop %sscan failed %d\n",
--			       sched ? "offloaded " : "", ret);
--		iwl_remove_notification(&mvm->notif_wait, &wait_scan_done);
--		goto out;
+-	cmd->delay = cpu_to_le32(params->delay);
+-
+-	if (params->pass_all)
+-		flags |= IWL_MVM_LMAC_SCAN_FLAG_PASS_ALL;
+-	else
+-		flags |= IWL_MVM_LMAC_SCAN_FLAG_MATCH;
+-
+-	if (params->n_ssids == 1 && params->ssids[0].ssid_len != 0)
+-		flags |= IWL_MVM_LMAC_SCAN_FLAG_PRE_CONNECTION;
+-
+-	if (params->passive_fragmented)
+-		flags |= IWL_MVM_LMAC_SCAN_FLAG_FRAGMENTED;
+-
+-	if (params->n_ssids == 0)
+-		flags |= IWL_MVM_LMAC_SCAN_FLAG_PASSIVE;
+-
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-	/* TODO: Check if it's okay to have this in regular scans */
+-	if (mvm->scan_iter_notif_enabled)
+-		flags |= IWL_MVM_LMAC_SCAN_FLAG_ITER_COMPLETE;
+-#endif
+-
+-	cmd->scan_flags |= cpu_to_le32(flags);
+-
+-	cmd->flags = iwl_mvm_scan_rxon_flags(params->channels[0]->band);
+-	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
+-					MAC_FILTER_IN_BEACON);
+-	iwl_mvm_scan_fill_tx_cmd(mvm, cmd->tx_cmd, params->no_cck);
+-	iwl_scan_build_ssids(params, cmd->direct_scan, &ssid_bitmap);
+-
+-	/* this API uses bits 1-20 instead of 0-19 */
+-	ssid_bitmap <<= 1;
+-
+-	cmd->schedule[0].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[0].iterations = params->schedule[0].iterations;
+-	cmd->schedule[0].full_scan_mul = params->schedule[0].full_scan_mul;
+-	cmd->schedule[1].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[1].iterations = params->schedule[1].iterations;
+-	cmd->schedule[1].full_scan_mul = params->schedule[1].iterations;
+-
+-	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_SINGLE_SCAN_EBS &&
+-	    mvm->last_ebs_successful) {
+-		cmd->channel_opt[0].flags =
+-			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
+-				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+-				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
+-		cmd->channel_opt[0].non_ebs_ratio =
+-			cpu_to_le16(IWL_DENSE_EBS_SCAN_RATIO);
+-		cmd->channel_opt[1].flags =
+-			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
+-				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+-				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
+-		cmd->channel_opt[1].non_ebs_ratio =
+-			cpu_to_le16(IWL_SPARSE_EBS_SCAN_RATIO);
 -	}
 -
--	IWL_DEBUG_SCAN(mvm, "Successfully sent stop %sscan\n",
--		       sched ? "scheduled " : "");
+-	iwl_mvm_lmac_scan_cfg_channels(mvm, params->channels,
+-				       params->n_channels, ssid_bitmap, cmd);
 -
--	ret = iwl_wait_notification(&mvm->notif_wait, &wait_scan_done, 1 * HZ);
--out:
--	return ret;
--}
+-	*preq = params->preq;
 -
- static void iwl_mvm_scan_fill_tx_cmd(struct iwl_mvm *mvm,
- 				     struct iwl_scan_req_tx_cmd *tx_cmd,
- 				     bool no_cck)
-@@ -1465,12 +1435,15 @@ static int iwl_mvm_umac_scan_abort(struct iwl_mvm *mvm, int type)
- 	return ret;
+-	return 0;
++	/* We can only use EBS if:
++	 *	1. the feature is supported;
++	 *	2. the last EBS was successful;
++	 *	3. if only single scan, the single scan EBS API is supported.
++	 */
++	return ((capa->flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT) &&
++		mvm->last_ebs_successful &&
++		(n_iterations > 1 ||
++		 (capa->api[0] & IWL_UCODE_TLV_API_SINGLE_SCAN_EBS)));
  }
  
--static int iwl_mvm_umac_scan_stop(struct iwl_mvm *mvm, int type)
-+static int iwl_mvm_scan_stop_wait(struct iwl_mvm *mvm, int type)
+-static int
+-iwl_mvm_sched_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-				   struct iwl_mvm_scan_params *params)
++static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			     struct iwl_mvm_scan_params *params)
  {
- 	struct iwl_notification_wait wait_scan_done;
--	static const u8 scan_done_notif[] = { SCAN_COMPLETE_UMAC, };
-+	static const u8 scan_done_notif[] = { SCAN_COMPLETE_UMAC,
-+					      SCAN_OFFLOAD_COMPLETE, };
- 	int ret;
+ 	struct iwl_scan_req_lmac *cmd = mvm->scan_cmd;
+ 	struct iwl_scan_probe_req *preq =
+ 		(void *)(cmd->data + sizeof(struct iwl_scan_channel_cfg_lmac) *
+ 			 mvm->fw->ucode_capa.n_scan_channels);
+ 	u32 flags = 0, ssid_bitmap = 0;
++	int n_iterations = params->schedule[0].iterations +
++		params->schedule[1].iterations;
  
-+	lockdep_assert_held(&mvm->mutex);
-+
- 	iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_done,
- 				   scan_done_notif,
- 				   ARRAY_SIZE(scan_done_notif),
-@@ -1478,7 +1451,11 @@ static int iwl_mvm_umac_scan_stop(struct iwl_mvm *mvm, int type)
+ 	lockdep_assert_held(&mvm->mutex);
  
- 	IWL_DEBUG_SCAN(mvm, "Preparing to stop scan, type %x\n", type);
+@@ -938,7 +875,6 @@ iwl_mvm_sched_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
+ 					MAC_FILTER_IN_BEACON);
+ 	iwl_mvm_scan_fill_tx_cmd(mvm, cmd->tx_cmd, params->no_cck);
+-
+ 	iwl_scan_build_ssids(params, cmd->direct_scan, &ssid_bitmap);
  
--	ret = iwl_mvm_umac_scan_abort(mvm, type);
-+	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
-+		ret = iwl_mvm_umac_scan_abort(mvm, type);
-+	else
-+		ret = iwl_mvm_lmac_scan_abort(mvm);
-+
- 	if (ret) {
- 		IWL_DEBUG_SCAN(mvm, "couldn't stop scan type %d\n", type);
- 		iwl_remove_notification(&mvm->notif_wait, &wait_scan_done);
-@@ -1559,11 +1536,7 @@ int iwl_mvm_reg_scan_stop(struct iwl_mvm *mvm)
- 		goto out;
+ 	/* this API uses bits 1-20 instead of 0-19 */
+@@ -951,8 +887,7 @@ iwl_mvm_sched_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	cmd->schedule[1].iterations = params->schedule[1].iterations;
+ 	cmd->schedule[1].full_scan_mul = params->schedule[1].iterations;
+ 
+-	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT &&
+-	    mvm->last_ebs_successful) {
++	if (iwl_mvm_scan_use_ebs(mvm, n_iterations)) {
+ 		cmd->channel_opt[0].flags =
+ 			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
+ 				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+@@ -975,7 +910,6 @@ iwl_mvm_sched_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	return 0;
+ }
+ 
+-
+ int iwl_mvm_cancel_scan(struct iwl_mvm *mvm)
+ {
+ 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
+@@ -1560,7 +1494,7 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 		ret = iwl_mvm_sched_scan_umac(mvm, vif, &params);
+ 	} else {
+ 		hcmd.id = SCAN_OFFLOAD_REQUEST_CMD;
+-		ret = iwl_mvm_sched_scan_lmac(mvm, vif, &params);
++		ret = iwl_mvm_scan_lmac(mvm, vif, &params);
  	}
  
--	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
--		ret = iwl_mvm_umac_scan_stop(mvm, IWL_MVM_SCAN_REGULAR);
--	else
--		ret = iwl_mvm_lmac_scan_stop(mvm, IWL_MVM_SCAN_REGULAR);
--
-+	ret = iwl_mvm_scan_stop_wait(mvm, IWL_MVM_SCAN_REGULAR);
- 	if (!ret)
- 		mvm->scan_status |= IWL_MVM_SCAN_STOPPING_REGULAR;
- out:
-@@ -1593,11 +1566,7 @@ int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify)
- 		goto out;
- 	}
- 
--	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
--		ret = iwl_mvm_umac_scan_stop(mvm, IWL_MVM_SCAN_SCHED);
--	else
--		ret = iwl_mvm_lmac_scan_stop(mvm, IWL_MVM_SCAN_SCHED);
--
-+	ret = iwl_mvm_scan_stop_wait(mvm, IWL_MVM_SCAN_SCHED);
- 	if (!ret)
- 		mvm->scan_status |= IWL_MVM_SCAN_STOPPING_SCHED;
- out:
+ 	if (ret)
 -- 
-2.1.4
+2.1.0
 
