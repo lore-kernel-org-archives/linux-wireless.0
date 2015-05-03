@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:34240 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257AbbEXTDE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40116 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751714AbbECU4d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2015 15:03:04 -0400
+	Sun, 3 May 2015 16:56:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2015-04-28
+References: <1430224907.4748.3.camel@intel.com>
+Date: Sun, 03 May 2015 23:56:28 +0300
+In-Reply-To: <1430224907.4748.3.camel@intel.com> (Emmanuel Grumbach's message
+	of "Tue, 28 Apr 2015 12:41:47 +0000")
+Message-ID: <87y4l5wfb7.fsf@kamboji.qca.qualcomm.com> (sfid-20150503_225636_244770_FDC7F03E)
 MIME-Version: 1.0
-In-Reply-To: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Sun, 24 May 2015 22:03:02 +0300
-Message-ID: <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com> (sfid-20150524_210314_480133_DA4381B7)
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of del_timer_sync()
-From: Haggai Eran <haggai.eran@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: gregkh@linuxfoundation.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Stable <stable@vger.kernel.org>,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	Arek Rusniak <arek.rusi@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 May 2015 at 00:16, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> The driver is reporting a warning at kernel/time/timer.c:1096 due to calling
-> del_timer_sync() while in interrupt mode. Such warnings are fixed by calling
-> del_timer() instead.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+
+> Here is the first round of fixes for 4.1.
+> As usual, this first round is slightly big. I hope things will settle down later.
 >
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
-> Cc: Haggi Eran <haggai.eran@gmail.com>
+> Please pull. Thanks!
+>
+> The following changes since commit 6c373ca89399c5a3f7ef210ad8f63dc3437da345:
+>
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2015-04-15 09:00:47 -0700)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-04-28
+>
+> for you to fetch changes up to e7afe89fd67d40a7f5fff8130c5f925d99a94b1f:
+>
+>   iwlwifi: mvm: force quota update update after FW restart (2015-04-28 15:02:25 +0300)
+>
+> ----------------------------------------------------------------
+> * fix firmware API for -13.ucode
+> * fix RSSI handling that avoid bad roaming decision
+> * fix firmware debug
+> * fix MFUART operation
+> * fix ASSERT while restart the hardware (because of another ASSERT e.g)
+>
+> ----------------------------------------------------------------
 
-Hi,
+Thanks, pulled.
 
-I haven't been using kernel v4.1 so I haven't seen this warning, but looking
-at the code it seems to originate from the two recent patches to remove
-_cancel_timer and _cancel_timer_ex. I see that there's another patch in lkml [1]
-that changes del_timer_sync back to del_timer in more places. Perhaps it
-could prevent other warnings like this in the future.
-
-Regards,
-Haggai
-
-[1] https://lkml.org/lkml/2015/5/15/226
+-- 
+Kalle Valo
