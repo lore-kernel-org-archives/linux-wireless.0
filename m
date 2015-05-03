@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44109 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbbETMJz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 08:09:55 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/6] brcmfmac: PCIe changes and NVRAM support
-Date: Wed, 20 May 2015 14:09:46 +0200
-Message-ID: <1432123792-4155-1-git-send-email-arend@broadcom.com> (sfid-20150520_140959_829641_3A0F1101)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751983AbbECTd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 15:33:26 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 41/42] iwlwifi: mvm: remove some unused stuff from scan.c
+Date: Sun,  3 May 2015 22:31:52 +0300
+Message-Id: <1430681513-7838-41-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213356_015512_918E1D81)
+In-Reply-To: <1430681438.3240.3.camel@intel.com>
+References: <1430681438.3240.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series for the brcmfmac driver provides:
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-* cleanup and new feature support in PCIe code.
-* alternative nvram loading for router support.
+Some more tidbits left over from the legacy scan removal.
 
-The series is intended for v4.2 kernel and apply to the master
-branch of the wireless-drivers-next repository.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-Arend van Spriel (1):
-  brcmfmac: allow device tree node without 'interrupts' property
-
-Franky Lin (3):
-  brcmfmac: remove pci shared structure rev4 support
-  brcmfmac: remove dummy cache flush/invalidate function
-  brcmfmac: add support for dma indices feature
-
-Hante Meuleman (2):
-  brcmfmac: Improve throughput by scheduling msbug flow worker.
-  brcmfmac: Add support for host platform NVRAM loading.
-
- .../net/wireless/brcm80211/brcmfmac/commonring.c   |  18 ---
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 107 +++++++++-----
- drivers/net/wireless/brcm80211/brcmfmac/flowring.c |   5 +-
- drivers/net/wireless/brcm80211/brcmfmac/flowring.h |   4 +-
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   |  20 +--
- drivers/net/wireless/brcm80211/brcmfmac/of.c       |  11 +-
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c     | 157 ++++++++++++++++-----
- 7 files changed, 209 insertions(+), 113 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 8646887..3c33d61 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -67,11 +67,8 @@
+ #include <net/mac80211.h>
+ 
+ #include "mvm.h"
+-#include "iwl-eeprom-parse.h"
+ #include "fw-api-scan.h"
+ 
+-#define IWL_PLCP_QUIET_THRESH 1
+-#define IWL_ACTIVE_QUIET_TIME 10
+ #define IWL_DENSE_EBS_SCAN_RATIO 5
+ #define IWL_SPARSE_EBS_SCAN_RATIO 1
+ 
+@@ -107,8 +104,6 @@ struct iwl_mvm_scan_params {
+ enum iwl_umac_scan_uid_type {
+ 	IWL_UMAC_SCAN_UID_REG_SCAN	= BIT(0),
+ 	IWL_UMAC_SCAN_UID_SCHED_SCAN	= BIT(1),
+-	IWL_UMAC_SCAN_UID_ALL		= IWL_UMAC_SCAN_UID_REG_SCAN |
+-					  IWL_UMAC_SCAN_UID_SCHED_SCAN,
+ };
+ 
+ static int iwl_umac_scan_stop(struct iwl_mvm *mvm,
 -- 
-1.9.1
+2.1.0
 
