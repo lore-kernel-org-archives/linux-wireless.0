@@ -1,172 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:34230 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933114AbbELSoG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 14:44:06 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: ming.lei@canonical.com, rusty@rustcorp.com.au
-Cc: dhowells@redhat.com, seth.forshee@canonical.com,
-	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Subject: [PATCH v2 5/5] firmware: use const for remaining firmware names
-Date: Tue, 12 May 2015 11:30:57 -0700
-Message-Id: <1431455457-25322-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_204411_067392_6713AF8B)
-In-Reply-To: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751930AbbECTdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 15:33:07 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 32/42] iwlwifi: mvm: combine UMAC scans into one
+Date: Sun,  3 May 2015 22:31:43 +0300
+Message-Id: <1430681513-7838-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213327_375305_A216B23A)
+In-Reply-To: <1430681438.3240.3.camel@intel.com>
+References: <1430681438.3240.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-We currently use flexible arrays with a char at the
-end for the remaining internal firmware name uses.
-There are two limitations with the way we use this.
-Since we're using a flexible array for a string on the
-struct if we wanted to use two strings it means we'd
-have a disjoint means of handling the strings, one
-using the flexible array, and another a char * pointer.
-We're also currently not using 'const' for the string.
+With just a few differences left in the UMAC scan functions now, we
+can merge them into one, taking care of the small difference according
+to the total number of iterations required.
 
-We wish to later extend some firmware data structures
-with other string/char pointers, but we also want to be
-very pedantic about const usage. Since we're going to
-change things to use 'const' we might as well also address
-unified way to use multiple strings on the structs.
-
-Replace the flexible array practice for strings with
-kstrdup_const() and kfree_const(), this will avoid
-allocations when the vmlinux .rodata is used, and just
-allocate a new proper string for us when needed. This
-also means we can simplify the struct allocations by
-removing the string length from the allocation size
-computation, which would otherwise get even more
-complicated when supporting multiple strings.
-
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/base/firmware_class.c | 40 ++++++++++++++++++++++++++++------------
- 1 file changed, 28 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 86 +++++++--------------------------
+ 1 file changed, 17 insertions(+), 69 deletions(-)
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index ae1ed56..cf1d94e 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -164,17 +164,17 @@ struct firmware_buf {
- 	int page_array_size;
- 	struct list_head pending_list;
- #endif
--	char fw_id[];
-+	const char *fw_id;
- };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 1abbc66..cecc5a3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1173,6 +1173,8 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			mvm->fw->ucode_capa.n_scan_channels;
+ 	u32 uid, flags;
+ 	u32 ssid_bitmap = 0;
++	int n_iterations = params->schedule[0].iterations +
++		params->schedule[1].iterations;
+ 	int uid_idx;
  
- struct fw_cache_entry {
- 	struct list_head list;
--	char name[];
-+	const char *name;
- };
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -1183,77 +1185,22 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  
- struct fw_name_devm {
- 	unsigned long magic;
--	char name[];
-+	const char *name;
- };
+ 	iwl_mvm_build_generic_umac_scan_cmd(mvm, cmd, params);
  
- #define to_fwbuf(d) container_of(d, struct firmware_buf, ref)
-@@ -195,13 +195,17 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
- {
- 	struct firmware_buf *buf;
- 
--	buf = kzalloc(sizeof(*buf) + strlen(fw_name) + 1, GFP_ATOMIC);
+-	uid = iwl_generate_scan_uid(mvm, IWL_UMAC_SCAN_UID_REG_SCAN);
+-	mvm->scan_uid[uid_idx] = uid;
+-	cmd->uid = cpu_to_le32(uid);
 -
-+	buf = kzalloc(sizeof(*buf), GFP_ATOMIC);
- 	if (!buf)
--		return buf;
-+		return NULL;
-+
-+	buf->fw_id = kstrdup_const(fw_name, GFP_ATOMIC);
-+	if (!buf->fw_id) {
-+		kfree(buf);
-+		return NULL;
+-	cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
+-
+ 	flags = iwl_mvm_scan_umac_common_flags(mvm, params->n_ssids,
+ 					       params->ssids,
+ 					       params->passive_fragmented);
+ 
+-	if (params->pass_all)
+-		flags |= IWL_UMAC_SCAN_GEN_FLAGS_PASS_ALL;
+-	else
+-		flags |= IWL_UMAC_SCAN_GEN_FLAGS_MATCH;
+-
+-	cmd->general_flags = cpu_to_le32(flags);
+-
+-	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_SINGLE_SCAN_EBS &&
+-	    mvm->last_ebs_successful)
+-		cmd->channel_flags = IWL_SCAN_CHANNEL_FLAG_EBS |
+-				     IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+-				     IWL_SCAN_CHANNEL_FLAG_CACHE_ADD;
+-
+-	cmd->n_channels = params->n_channels;
+-
+-	iwl_scan_build_ssids(params, sec_part->direct_scan, &ssid_bitmap);
+-
+-	iwl_mvm_umac_scan_cfg_channels(mvm, params->channels,
+-				       params->n_channels, ssid_bitmap, cmd);
+-
+-	sec_part->schedule[0].iter_count = params->schedule[0].iterations;
+-	sec_part->delay = cpu_to_le16(params->delay);
+-	sec_part->preq = params->preq;
+-
+-	return 0;
+-}
+-
+-static int iwl_mvm_sched_scan_umac(struct iwl_mvm *mvm,
+-				   struct ieee80211_vif *vif,
+-				   struct iwl_mvm_scan_params *params)
+-{
+-	struct iwl_scan_req_umac *cmd = mvm->scan_cmd;
+-	struct iwl_scan_req_umac_tail *sec_part = (void *)&cmd->data +
+-		sizeof(struct iwl_scan_channel_cfg_umac) *
+-			mvm->fw->ucode_capa.n_scan_channels;
+-	u32 uid, flags;
+-	u32 ssid_bitmap = 0;
+-	int uid_idx;
+-
+-	lockdep_assert_held(&mvm->mutex);
+-
+-	uid_idx = iwl_mvm_find_free_scan_uid(mvm);
+-	if (uid_idx >= mvm->max_scans)
+-		return -EBUSY;
+-
+-	iwl_mvm_build_generic_umac_scan_cmd(mvm, cmd, params);
+-
+-	cmd->flags = cpu_to_le32(IWL_UMAC_SCAN_FLAG_PREEMPTIVE);
++	if (n_iterations == 1) {
++		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
++		uid = iwl_generate_scan_uid(mvm, IWL_UMAC_SCAN_UID_REG_SCAN);
++	} else {
++		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_LOW);
++		uid = iwl_generate_scan_uid(mvm, IWL_UMAC_SCAN_UID_SCHED_SCAN);
++		flags |= IWL_UMAC_SCAN_GEN_FLAGS_PERIODIC;
 +	}
  
- 	kref_init(&buf->ref);
--	strcpy(buf->fw_id, fw_name);
- 	buf->fwc = fwc;
- 	init_completion(&buf->completion);
- #ifdef CONFIG_FW_LOADER_USER_HELPER
-@@ -271,6 +275,7 @@ static void __fw_free_buf(struct kref *ref)
- 	} else
- #endif
- 		vfree(buf->data);
-+	kfree_const(buf->fw_id);
- 	kfree(buf);
- }
+-	uid = iwl_generate_scan_uid(mvm, IWL_UMAC_SCAN_UID_SCHED_SCAN);
+ 	mvm->scan_uid[uid_idx] = uid;
+ 	cmd->uid = cpu_to_le32(uid);
  
-@@ -415,6 +420,7 @@ static void fw_name_devm_release(struct device *dev, void *res)
- 	if (fwn->magic == (unsigned long)&fw_cache)
- 		pr_debug("%s: fw_name-%s devm-%p released\n",
- 				__func__, fwn->name, res);
-+	kfree_const(fwn->name);
- }
+-	cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_LOW);
+-
+-	flags = iwl_mvm_scan_umac_common_flags(mvm, params->n_ssids,
+-					       params->ssids,
+-					       params->passive_fragmented);
+-
+-	flags |= IWL_UMAC_SCAN_GEN_FLAGS_PERIODIC;
+-
+ 	if (params->pass_all)
+ 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_PASS_ALL;
+ 	else
+@@ -1261,8 +1208,7 @@ static int iwl_mvm_sched_scan_umac(struct iwl_mvm *mvm,
  
- static int fw_devm_match(struct device *dev, void *res,
-@@ -445,13 +451,17 @@ static int fw_add_devm_name(struct device *dev, const char *name)
- 	if (fwn)
- 		return 1;
+ 	cmd->general_flags = cpu_to_le32(flags);
  
--	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm) +
--			   strlen(name) + 1, GFP_KERNEL);
-+	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm),
-+			   GFP_KERNEL);
- 	if (!fwn)
- 		return -ENOMEM;
-+	fwn->name = kstrdup_const(name, GFP_KERNEL);
-+	if (!fwn->name) {
-+		kfree(fwn);
-+		return -ENOMEM;
-+	}
+-	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT &&
+-	    mvm->last_ebs_successful)
++	if (iwl_mvm_scan_use_ebs(mvm, n_iterations))
+ 		cmd->channel_flags = IWL_SCAN_CHANNEL_FLAG_EBS |
+ 				     IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+ 				     IWL_SCAN_CHANNEL_FLAG_CACHE_ADD;
+@@ -1274,11 +1220,13 @@ static int iwl_mvm_sched_scan_umac(struct iwl_mvm *mvm,
+ 	iwl_mvm_umac_scan_cfg_channels(mvm, params->channels,
+ 				       params->n_channels, ssid_bitmap, cmd);
  
- 	fwn->magic = (unsigned long)&fw_cache;
--	strcpy(fwn->name, name);
- 	devres_add(dev, fwn);
++	/* With UMAC we can have only one schedule, so use the sum of
++	 * the iterations (with a a maximum of 255).
++	 */
++	sec_part->schedule[0].iter_count =
++		(n_iterations > 255) ? 255 : n_iterations;
+ 	sec_part->schedule[0].interval = cpu_to_le16(params->interval);
  
- 	return 0;
-@@ -1421,11 +1431,16 @@ static struct fw_cache_entry *alloc_fw_cache_entry(const char *name)
- {
- 	struct fw_cache_entry *fce;
+-	/* With UMAC we use only one schedule, so take the final one only */
+-	sec_part->schedule[0].iter_count = params->schedule[1].iterations;
+-
+ 	sec_part->delay = cpu_to_le16(params->delay);
+ 	sec_part->preq = params->preq;
  
--	fce = kzalloc(sizeof(*fce) + strlen(name) + 1, GFP_ATOMIC);
-+	fce = kzalloc(sizeof(*fce), GFP_ATOMIC);
- 	if (!fce)
- 		goto exit;
+@@ -1496,7 +1444,7 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
  
--	strcpy(fce->name, name);
-+	fce->name = kstrdup_const(name, GFP_ATOMIC);
-+	if (!fce->name) {
-+		kfree(fce);
-+		fce = NULL;
-+		goto exit;
-+	}
- exit:
- 	return fce;
- }
-@@ -1465,6 +1480,7 @@ found:
- 
- static void free_fw_cache_entry(struct fw_cache_entry *fce)
- {
-+	kfree_const(fce->name);
- 	kfree(fce);
- }
- 
+ 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
+ 		hcmd.id = SCAN_REQ_UMAC;
+-		ret = iwl_mvm_sched_scan_umac(mvm, vif, &params);
++		ret = iwl_mvm_scan_umac(mvm, vif, &params);
+ 	} else {
+ 		hcmd.id = SCAN_OFFLOAD_REQUEST_CMD;
+ 		ret = iwl_mvm_scan_lmac(mvm, vif, &params);
 -- 
-2.3.2.209.gd67f9d5.dirty
+2.1.0
 
