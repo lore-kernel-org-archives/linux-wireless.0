@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43860 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756945AbbEVIAd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 04:00:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2015-05-21
-References: <1432237819.26813.4.camel@intel.com>
-Date: Fri, 22 May 2015 11:00:25 +0300
-In-Reply-To: <1432237819.26813.4.camel@intel.com> (Emmanuel Grumbach's message
-	of "Thu, 21 May 2015 19:50:19 +0000")
-Message-ID: <87y4kh59eu.fsf@kamboji.qca.qualcomm.com> (sfid-20150522_100041_575748_FA9E947D)
+Received: from mga11.intel.com ([192.55.52.93]:57786 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750815AbbECPbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 11:31:01 -0400
+Message-ID: <55463F2F.2050505@linux.intel.com> (sfid-20150503_173106_484045_B239A0C4)
+Date: Sun, 03 May 2015 23:30:55 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Arend van Spriel <arend@broadcom.com>
+CC: "brudley@broadcom.com" <brudley@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman@broadcom.com" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Adrian Hunter <adrian.hunter@intel.com>
+Subject: Re: [PATCH 1/2] brcmfmac: prohibit ACPI power management for brcmfmac
+ driver
+References: <553DC280.6080503@linux.intel.com> <553DFA5A.3090802@broadcom.com>
+In-Reply-To: <553DFA5A.3090802@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-> I am aware that this pull request is quite large for 4.1, but I really
-> think that all these patches are really justified. A few of them fix
-> 3165 and 8260 which will be supported starting from 4.1. Other patches
-> fix random bugs that were discovered just now.
 
-There are few problematic ones which I want to comment just for the
-future:
-
-iwlwifi: nvm: force mac from otp in case nvm mac is reserved
-iwlwifi: mvm: BT Coex - duplicate the command if sent ASYNC
-
-The commit log for these two above don't really describe the bug they
-are fixing and leave me guessing. I would feel much safer to pull if
-there's a clear description of the user visible bug.
-
-iwlwifi: pcie: don't disable the busmaster DMA clock for family 8000
-
-I feel that this is a bit borderline at this stage (we are in practise
-rc5/rc6 phase which is very late), it's not really fixing any crashers
-or other major functionality problems. But as it's a small patch I guess
-it's ok.
-
-> Note that my availability is limited in the next week, but I'll try to
-> handle any issues you may have ASAP.
+On 2015/4/27 16:59, Arend van Spriel wrote:
+> On 04/27/15 07:00, Fu, Zhonghui wrote:
+>> ACPI will manage WiFi chip's power state during suspend/resume
+>> process on some tablet platforms(such as ASUS T100TA). This is
+>> not supported by brcmfmac driver now, and the context of WiFi
+>> chip will be damaged after resume. This patch disconnects the
+>> relationship between WiFi chip and it's ACPI companion, and
+>> prohibit ACPI PM for it.
 >
-> The following changes since commit e7afe89fd67d40a7f5fff8130c5f925d99a94b1f:
->
->   iwlwifi: mvm: force quota update update after FW restart (2015-04-28 15:02:25 +0300)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-05-21
+> Nice. However, ACPI may contain configuration data that brcmfmac needs on some platforms and Adrian Hunter is looking into this. So it is probably better to do this operation at the end of the probe before returning successful.
+Your comment is right. I introduced another implementation in new patch - "[PATCH v2] brcmfmac: prohibit ACPI power management for brcmfmac driver".
 
-Thanks, pulled.
 
--- 
-Kalle Valo
+Thanks,
+Zhonghui
+>
+> Regards,
+> Arend
+>
+>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    5 +++++
+>>   1 files changed, 5 insertions(+), 0 deletions(-)
+>>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
