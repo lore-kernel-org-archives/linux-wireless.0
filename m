@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:57916 "EHLO bear.ext.ti.com"
+Received: from mga03.intel.com ([134.134.136.65]:27220 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751655AbbEKOYZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 10:24:25 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Kyle McMartin <kyle@infradead.org>
-CC: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wl18xx : firmware pull request [V2] (updated WHENCE)
-Date: Mon, 11 May 2015 14:23:56 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101265F90EC@DFRE01.ent.ti.com> (sfid-20150511_162429_644045_E8AD9D03)
-References: <AE1C82FB3D0EC64DB1F752C81CBD1101265F6B46@DFRE01.ent.ti.com>
- <20150511134844.GN27807@merlin.infradead.org>
-In-Reply-To: <20150511134844.GN27807@merlin.infradead.org>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+	id S1751570AbbECTch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 15:32:37 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/42] iwlwifi: rs: remove unneeded check of average tpt in window
+Date: Sun,  3 May 2015 22:31:25 +0300
+Message-Id: <1430681513-7838-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213417_886717_026F8AF0)
+In-Reply-To: <1430681438.3240.3.camel@intel.com>
+References: <1430681438.3240.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-> -----Original Message-----
-> From: Kyle McMartin [mailto:kyle@infradead.org]
-> Sent: Monday, May 11, 2015 4:49 PM
-> To: Machani, Yaniv
-> Cc: linux-firmware@kernel.org; linux-wireless@vger.kernel.org
-> Subject: Re: wl18xx : firmware pull request [V2] (updated WHENCE)
-> 
-> On Sun, May 10, 2015 at 05:46:38AM +0000, Machani, Yaniv wrote:
-> > - Firmware file was updated (8.9.0.0.39), includes bug fixes and
-> improvements.
-> > - Configuration binary removed, it is no longer fits all releases.
-> >   Moreover it should be configured per HW platform.
-> >   More information can found in here :
-> >
-> > http://processors.wiki.ti.com/index.php/Open_Source_Wireless_Connectiv
-> > ity_wlconf
-> >
-> 
-> I assume this is an embedded part, and not something for general use?
-> In general, we'd like linux-firmware to be decoupled from kernel upgrades, so
-> that distributions can upgrade them asynchronously, and removing wlconf.bin
-> could break existing users.
+Previously there was a check that compared window->average_tpt
+to some value, and if it was different - it set it to that
+value. However, this value was already calculated and set in
+_rs_collect_tx_data(), so the entire check is unneeded.
 
-Yes, this is an embedded part, 
-removing the wlconf.bin is actually allowing better backward/forward compatibility, 
-as the existing file does not support all flavors/HW removing it will allow the device to load using defaults instead of not loading at all.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-> 
-> >   git@git.ti.com:wilink8-wlan/linux-firmware.git for-upstream
-> >
-> 
-> FWIW, you need to specify the public git:// url here instead of SSH.
-> 
-> > for you to fetch changes up to
-> > dbe3f134bb69b62edd29be89452d016def8f6d7f
-> > Yaniv Machani (1):
-> >       wl18xx: update firmware file, remove conf file
-> >
-> 
-> Pulled.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 316c6e0..0440142 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -2183,13 +2183,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 
+ 		return;
+ 	}
+-	/* Else we have enough samples; calculate estimate of
+-	 * actual average throughput */
+-	if (window->average_tpt != ((window->success_ratio *
+-			tbl->expected_tpt[index] + 64) / 128)) {
+-		window->average_tpt = ((window->success_ratio *
+-					tbl->expected_tpt[index] + 64) / 128);
+-	}
+ 
+ 	/* If we are searching for better modulation mode, check success. */
+ 	if (lq_sta->search_better_tbl) {
+-- 
+2.1.0
 
-Thanks.
-> 
-> >  WHENCE                          |    4 +---
-> >  ti-connectivity/wl18xx-conf.bin |  Bin 1221 -> 0 bytes
-> > ti-connectivity/wl18xx-fw-4.bin |  Bin 681704 -> 724716 bytes
-> >  3 files changed, 1 insertions(+), 3 deletions(-)  delete mode 100644
-> > ti-connectivity/wl18xx-conf.bin
-> >
-> 
-> regards, Kyle
