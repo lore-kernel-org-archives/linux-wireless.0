@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33178 "EHLO mx2.suse.de"
+Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753640AbbESQpg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 12:45:36 -0400
-Date: Tue, 19 May 2015 18:45:33 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: ming.lei@canonical.com, gregkh@linuxfoundation.org, tiwai@suse.de
-Cc: rusty@rustcorp.com.au, torvalds@linux-foundation.org,
-	dhowells@redhat.com, seth.forshee@canonical.com,
-	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
-	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-	jlee@suse.com, tiwai@suse.de,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [PATCH v3 0/4] firmware: few fixes for name uses
-Message-ID: <20150519164533.GF23057@wotan.suse.de> (sfid-20150519_184551_892094_D481F62A)
-References: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
+	id S1751497AbbECTcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 15:32:39 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/42] iwlwifi: mvm: iterate all interfaces during HW recovery cleanup
+Date: Sun,  3 May 2015 22:31:30 +0300
+Message-Id: <1430681513-7838-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213424_955961_77A751ED)
+In-Reply-To: <1430681438.3240.3.camel@intel.com>
+References: <1430681438.3240.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2015 at 02:49:39PM -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> This v3 changes patch 1 to just return -ENOMEM and remove the
-> unlikely() optimization. It also drops the early truncation
-> checks.
-> 
-> Luis R. Rodriguez (4):
->   firmware: fix __getname() missing failure check
->   firmware: check for file truncation on direct firmware loading
->   firmware: fix possible use after free on name on asynchronous request
->   firmware: use const for remaining firmware names
-> 
->  drivers/base/firmware_class.c | 61 +++++++++++++++++++++++++++++++------------
->  1 file changed, 45 insertions(+), 16 deletions(-)
+From: Arik Nemtsov <arik@wizery.com>
 
-Ming, a review would be much appreciated. I also have a few other changes coming
-later, so should these go through Greg or Takashi first ? If its of any help
-I'm happy to take on co-maintenance on this module given that I am lookng
-to do quite a bit of surgery on the APIs later.
+Usually during HW recovery the state of all active interfaces is cleaned
+up during drv_start(). There's a special case where a HW restart is
+requested when an interface is going down. In this case the iface-iterator
+won't see this interface and we won't clean it. This has bad consequences
+once the interface is legitimately brought up again.
 
- Luis
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 8d9e5da..eca1666 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1239,9 +1239,11 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	/* just in case one was running */
+ 	ieee80211_remain_on_channel_expired(mvm->hw);
+ 
+-	ieee80211_iterate_active_interfaces_atomic(
+-		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
+-		iwl_mvm_cleanup_iterator, mvm);
++	/*
++	 * cleanup all interfaces, even inactive ones, as some might have
++	 * gone down during the HW restart
++	 */
++	ieee80211_iterate_interfaces(mvm->hw, 0, iwl_mvm_cleanup_iterator, mvm);
+ 
+ 	mvm->p2p_device_vif = NULL;
+ 	mvm->d0i3_ap_sta_id = IWL_MVM_STATION_COUNT;
+-- 
+2.1.0
+
