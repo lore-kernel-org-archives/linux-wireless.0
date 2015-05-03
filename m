@@ -1,116 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:35330 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbbEQTtR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2015 15:49:17 -0400
-Received: by labbd9 with SMTP id bd9so191237416lab.2
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 12:49:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1431890756.2129.13.camel@sipsolutions.net>
-References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
-	<1431674716.2426.2.camel@sipsolutions.net>
-	<CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>
-	<1431714949.2117.0.camel@sipsolutions.net>
-	<CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com>
-	<1431806229.2120.6.camel@sipsolutions.net>
-	<20150517160513.GA13175@w1.fi>
-	<CANUX_P0byd4Q+1gjiBmoGqd_hESUH_YVCD6iPx0_d6aw_r3JSw@mail.gmail.com>
-	<1431890756.2129.13.camel@sipsolutions.net>
-Date: Sun, 17 May 2015 22:49:15 +0300
-Message-ID: <CANUX_P3ODruGc2rvV2gLNLU15kEmaJMXeU_ovtaBeOQGnYotoA@mail.gmail.com> (sfid-20150517_214920_019734_C33369F0)
-Subject: Re: mac80211 drops packet with old IV after rekeying
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751900AbbECTdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 15:33:00 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 29/42] iwlwifi: mvm: add number of scan iterations and multiplier to params
+Date: Sun,  3 May 2015 22:31:40 +0300
+Message-Id: <1430681513-7838-29-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213316_580077_161DC19D)
+In-Reply-To: <1430681438.3240.3.camel@intel.com>
+References: <1430681438.3240.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 17, 2015 at 10:25 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2015-05-17 at 21:23 +0300, Emmanuel Grumbach wrote:
->
->> One thing that I still haven't understood here is how can we get to a
->> situation in which we already parsed the EAPOL of the GTK re-keying,
->> but not a data frame that must have been sent before the EAPOL?
->> The Rx path is serialized after all. I'd expect maybe to loose frames
->> because we are still using the old key while the new key has been sent
->> and not to get to the situation where:
->>
->> data: old Key PN = 997
->> data: old Key PN = 998
->> data: old Key PN = 999
->> set new key PN = 0
->> data: old Key PN = 1000
->> (new key's PN gets set to 1000 ** BUG **)
->> data: new Key PN = 1 <DROPPED>
->
-> Yeah, this is the situation. How it happens is like this:
-> (* - data, # - control)
->
->
->  * data RX in HW, decrypt w/ old key, PN=998
->  * data RX in mac80211 - PN <= 998 [old key]
->  # set key pointer to new key
->  * data RX in HW, decrypt w/ old key, PN=999
->  * data RX in mac80211 - PN <= 999 [new key!! - PROBLEM FOR NEXT FRAME]
->  # delete old key from HW crypto
->  # add new key to HW crypto
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Yeah - ok. But how come we *already* set the pointer to the new key
-while the HW is still successfully decrypting with the old key. This
-is the point I can' figure out. I'd expect the transmitting side to
-stop using the old key prior to sending the EAPOL (which #triggers the
-set key pointer line). So those 2 lines don't make sense to me:
+As another step towards combining the scan and sched scan functions,
+add parameters that tell the scan function how many iterations we want
+(i.e. 1 for normal scan, more for scheduled scan) and that set the
+full scan multiplier (only meaningful for LMAC).
 
->  # set key pointer to new key
->  * data RX in HW, decrypt w/ old key, PN=999
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 42 ++++++++++++++++++++++-----------
+ 1 file changed, 28 insertions(+), 14 deletions(-)
 
-After all, the Rx path is serialized all the way through from the air
-to mac80211. The only thing I can think about is that the sending side
-is still using the old key *after* it already sent its EAPOL frames.
-Then, by pure change, we can still decrypt them in HW because the HW
-hasn't been updated yet (these frames are successfully decrypted
-because of race basically) and then, these frames come up to mac80211
-*after* the EAPOL but with the old key.
-This is what the submitter says:
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index acff2e7..5576152 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -98,6 +98,10 @@ struct iwl_mvm_scan_params {
+ 		u16 active;
+ 		u16 fragmented;
+ 	} dwell[IEEE80211_NUM_BANDS];
++	struct {
++		u8 iterations;
++		u8 full_scan_mul; /* not used for UMAC */
++	} schedule[2];
+ };
+ 
+ enum iwl_umac_scan_uid_type {
+@@ -861,11 +865,11 @@ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	ssid_bitmap <<= 1;
+ 
+ 	cmd->schedule[0].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[0].iterations = 1;
+-	cmd->schedule[0].full_scan_mul = 0;
++	cmd->schedule[0].iterations = params->schedule[0].iterations;
++	cmd->schedule[0].full_scan_mul = params->schedule[0].full_scan_mul;
+ 	cmd->schedule[1].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[1].iterations = 0;
+-	cmd->schedule[1].full_scan_mul = 0;
++	cmd->schedule[1].iterations = params->schedule[1].iterations;
++	cmd->schedule[1].full_scan_mul = params->schedule[1].iterations;
+ 
+ 	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_SINGLE_SCAN_EBS &&
+ 	    mvm->last_ebs_successful) {
+@@ -941,12 +945,11 @@ iwl_mvm_sched_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	ssid_bitmap <<= 1;
+ 
+ 	cmd->schedule[0].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[0].iterations = IWL_FAST_SCHED_SCAN_ITERATIONS;
+-	cmd->schedule[0].full_scan_mul = 1;
+-
++	cmd->schedule[0].iterations = params->schedule[0].iterations;
++	cmd->schedule[0].full_scan_mul = params->schedule[0].full_scan_mul;
+ 	cmd->schedule[1].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[1].iterations = 0xff;
+-	cmd->schedule[1].full_scan_mul = IWL_FULL_SCAN_MULTIPLIER;
++	cmd->schedule[1].iterations = params->schedule[1].iterations;
++	cmd->schedule[1].full_scan_mul = params->schedule[1].iterations;
+ 
+ 	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT &&
+ 	    mvm->last_ebs_successful) {
+@@ -1276,8 +1279,8 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	iwl_mvm_umac_scan_cfg_channels(mvm, params->channels,
+ 				       params->n_channels, ssid_bitmap, cmd);
+ 
+-	sec_part->schedule[0].iter_count = 1;
+-	sec_part->delay = 0;
++	sec_part->schedule[0].iter_count = params->schedule[0].iterations;
++	sec_part->delay = cpu_to_le16(params->delay);
+ 	sec_part->preq = params->preq;
+ 
+ 	return 0;
+@@ -1337,9 +1340,10 @@ static int iwl_mvm_sched_scan_umac(struct iwl_mvm *mvm,
+ 	iwl_mvm_umac_scan_cfg_channels(mvm, params->channels,
+ 				       params->n_channels, ssid_bitmap, cmd);
+ 
+-	sec_part->schedule[0].interval =
+-				cpu_to_le16(params->interval / MSEC_PER_SEC);
+-	sec_part->schedule[0].iter_count = 0xff;
++	sec_part->schedule[0].interval = cpu_to_le16(params->interval);
++
++	/* With UMAC we use only one schedule, so take the final one only */
++	sec_part->schedule[0].iter_count = params->schedule[1].iterations;
+ 
+ 	if (params->delay > U16_MAX) {
+ 		IWL_DEBUG_SCAN(mvm,
+@@ -1447,6 +1451,11 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	params.n_match_sets = 0;
+ 	params.match_sets = NULL;
+ 
++	params.schedule[0].iterations = 1;
++	params.schedule[0].full_scan_mul = 0;
++	params.schedule[1].iterations = 0;
++	params.schedule[1].full_scan_mul = 0;
++
+ 	iwl_mvm_scan_calc_dwell(mvm, vif, &params);
+ 
+ 	iwl_mvm_build_scan_probe(mvm, vif, ies, &params);
+@@ -1525,6 +1534,11 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 	params.n_match_sets = req->n_match_sets;
+ 	params.match_sets = req->match_sets;
+ 
++	params.schedule[0].iterations = IWL_FAST_SCHED_SCAN_ITERATIONS;
++	params.schedule[0].full_scan_mul = 1;
++	params.schedule[1].iterations = 0xff;
++	params.schedule[1].full_scan_mul = IWL_FULL_SCAN_MULTIPLIER;
++
+ 	if (req->interval > U16_MAX) {
+ 		IWL_DEBUG_SCAN(mvm,
+ 			       "interval value is > 16-bits, set to max possible\n");
+-- 
+2.1.0
 
-"
-The encryption key indeed changes immediately after the last packet of
-the handshake, but the Initialization Vector is still counting up
-against the old value.
-"
-
-So maybe that's the real issue?
-
->
-> Perhaps then the easier way to solve it would be to simply delete HW
-> crypto *before* changing the key pointer. Somewhat similar, but perhaps
-> simpler, than my previous patch. This would end up with the scenario
-> like this:
->
->  * data RX in HW, decrypt w/ old key, PN=998
->  * data RX in mac80211 - PN <= 998 [old key]
->  # delete old key from HW crypto
->  # set key pointer to new key
->  * data RX in HW, decryption possible
->  * data RX in mac80211, decrypt fails [old key was used, new key is
-> valid]
->  # add new key to HW crypto
->
-> The problem with that approach is how to handle drivers that *must* use
-> HW crypto, like ath10k, and cannot fall back to software crypto. For
-> those, having a state where a key is valid in software but not uploaded
-> to hardware is basically an invalid state.
->
-> Then again, we can probably accept that for the transition period, as
-> the result really would only be to indicate to mac80211 that unencrypted
-> frames must not be accepted (key pointer exists.)
->
-> That'd look something like this:
-> http://p.sipsolutions.net/941c1a69a9c54a73.txt
->
-> johannes
->
