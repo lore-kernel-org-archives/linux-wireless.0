@@ -1,69 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44603 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753920AbbE2L1p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:27:45 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBP2Sf008119
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:45 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5un9k-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:45 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv3 04/16] mwifiex: enable 11d after bss reset
-Date: Fri, 29 May 2015 22:26:25 +0530
-Message-ID: <1432918598-27769-5-git-send-email-patila@marvell.com> (sfid-20150529_132748_272893_CC398BBB)
-In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
-References: <1432918598-27769-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751902AbbECTc4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 May 2015 15:32:56 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/42] iwlwifi: mvm: rename scan_calc_params to scan_calc_dwell
+Date: Sun,  3 May 2015 22:31:38 +0300
+Message-Id: <1430681513-7838-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213312_063661_52F43364)
+In-Reply-To: <1430681438.3240.3.camel@intel.com>
+References: <1430681438.3240.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BSS reset would reset all state information in FW.
-Issue 11d config command after reset to enabled 11d in FW.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+To make things clearer, rename the iwl_mvm_scan_calc_params() function
+to iwl_mvm_calc_dwell() and make it calculate and fill in only
+dwell-related parameters.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/uap_cmd.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 0a3297e..56a4768 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -806,6 +806,8 @@ void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
- int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 			     struct mwifiex_uap_bss_param *bss_cfg)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 36254c5..e8ec6e2 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -194,10 +194,9 @@ static void iwl_mvm_scan_condition_iterator(void *data, u8 *mac,
+ 		*global_cnt += 1;
+ }
+ 
+-static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
+-				     struct ieee80211_vif *vif,
+-				     int n_ssids, u32 flags,
+-				     struct iwl_mvm_scan_params *params)
++static void iwl_mvm_scan_calc_dwell(struct iwl_mvm *mvm,
++				    struct ieee80211_vif *vif,
++				    struct iwl_mvm_scan_params *params)
  {
-+	enum state_11d_t state_11d;
-+
- 	if (mwifiex_del_mgmt_ies(priv))
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "Failed to delete mgmt IEs!\n");
-@@ -830,6 +832,16 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 		return -1;
+ 	int global_cnt = 0;
+ 	enum ieee80211_band band;
+@@ -207,9 +206,6 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
+ 					    IEEE80211_IFACE_ITER_NORMAL,
+ 					    iwl_mvm_scan_condition_iterator,
+ 					    &global_cnt);
+-	params->n_ssids = n_ssids;
+-	params->flags = flags;
+-
+ 	if (!global_cnt)
+ 		goto not_bound;
+ 
+@@ -250,7 +246,7 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
+ 		}
  	}
  
-+	/* Send cmd to FW to enable 11D function */
-+	state_11d = ENABLE_11D;
-+	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
-+			     HostCmd_ACT_GEN_SET, DOT11D_I,
-+			     &state_11d, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "11D: failed to enable 11D\n");
-+		return -1;
-+	}
+-	if ((flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++	if ((params->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
+ 	    (params->max_out_time > 200))
+ 		params->max_out_time = 200;
+ 
+@@ -262,8 +258,8 @@ not_bound:
+ 
+ 		params->dwell[band].passive = iwl_mvm_get_passive_dwell(mvm,
+ 									band);
+-		params->dwell[band].active = iwl_mvm_get_active_dwell(mvm, band,
+-								      n_ssids);
++		params->dwell[band].active =
++			iwl_mvm_get_active_dwell(mvm, band, params->n_ssids);
+ 	}
+ 
+ 	IWL_DEBUG_SCAN(mvm,
+@@ -1452,8 +1448,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (!iwl_mvm_scan_fits(mvm, req->n_ssids, ies, req->n_channels))
+ 		return -ENOBUFS;
+ 
+-	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, req->flags, &params);
+-
++	params.n_ssids = req->n_ssids;
++	params.flags = req->flags;
+ 	params.n_channels = req->n_channels;
+ 	params.delay = 0;
+ 	params.interval = 0;
+@@ -1466,6 +1462,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	params.n_match_sets = 0;
+ 	params.match_sets = NULL;
+ 
++	iwl_mvm_scan_calc_dwell(mvm, vif, &params);
 +
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
+ 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
+ 		hcmd.id = SCAN_REQ_UMAC;
+ 		ret = iwl_mvm_scan_umac(mvm, vif, ies, &params);
+@@ -1527,8 +1525,8 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 	if (!iwl_mvm_scan_fits(mvm, req->n_ssids, ies, req->n_channels))
+ 		return -ENOBUFS;
+ 
+-	iwl_mvm_scan_calc_params(mvm, vif, req->n_ssids, req->flags, &params);
+-
++	params.n_ssids = req->n_ssids;
++	params.flags = req->flags;
+ 	params.n_channels = req->n_channels;
+ 	params.delay = req->delay;
+ 	params.ssids = req->ssids;
+@@ -1548,6 +1546,8 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 		params.interval = req->interval / MSEC_PER_SEC;
+ 	}
+ 
++	iwl_mvm_scan_calc_dwell(mvm, vif, &params);
++
+ 	ret = iwl_mvm_config_sched_scan_profiles(mvm, req);
+ 	if (ret)
+ 		return ret;
 -- 
-1.8.1.4
+2.1.0
 
