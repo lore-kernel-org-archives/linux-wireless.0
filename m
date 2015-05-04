@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46248 "EHLO mx1.redhat.com"
+Received: from plane.gmane.org ([80.91.229.3]:55503 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752059AbbE0VCo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 17:02:44 -0400
-Message-ID: <1432760563.15971.37.camel@redhat.com> (sfid-20150527_230247_885849_B19C6138)
-Subject: Re: packet loss, disconnects and possible bug in iwlwifi
-From: Dan Williams <dcbw@redhat.com>
-To: Nick Dimov <dimovnike@gmail.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 27 May 2015 16:02:43 -0500
-In-Reply-To: <55661EFC.30606@gmail.com>
-References: <55605637.1080503@gmail.com>
-		<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>
-		<55650565.6020303@gmail.com>	<1432742132.15971.29.camel@redhat.com>
-	 <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
-	 <55661EFC.30606@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	id S1750990AbbEDTAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 15:00:16 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1YpLbA-0000YK-Ax
+	for linux-wireless@vger.kernel.org; Mon, 04 May 2015 21:00:12 +0200
+Received: from data-214-110.cgates.lt ([data-214-110.cgates.lt])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 21:00:12 +0200
+Received: from nerijus by data-214-110.cgates.lt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 21:00:12 +0200
+To: linux-wireless@vger.kernel.org
+From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
+Subject: Re: b43 AP does not work
+Date: Mon, 4 May 2015 19:00:07 +0000 (UTC)
+Message-ID: <loom.20150504T205530-427@post.gmane.org> (sfid-20150504_210019_212672_2B59BC80)
+References: <loom.20150502T183011-57@post.gmane.org>   <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>   <loom.20150502T191744-147@post.gmane.org>  <1430752777.17017.2.camel@redhat.com>  <loom.20150504T173700-271@post.gmane.org> <1430760100.10844.6.camel@redhat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-05-27 at 22:46 +0300, Nick Dimov wrote:
-> Hello everyone.
-> I updated the regulatory database from here
-> https://www.kernel.org/pub/software/network/wireless-regdb/ (just copied
-> the regulatory.bin and the public key) and the problem is gone! Thank to
-> all of you and especially to Emmanuel Grumbach for suggesting this.
-> 
-> Now another question - how to make it connect at 866mbps or at least
-> something close to it? Any ideas?
+Dan Williams <dcbw@...> writes:
 
-iwlwifi does dynamic rate scaling, so you'll almost never see 866mbps.
-When traffic is idle it drops back to 1mbit rates and then when traffic
-starts, scales up from there.  Also, I'm pretty sure you'll never get
-866mbps in the 2.4GHz band due to lack of bandwidth there, you'll have
-to go 5GHz for that.
+> NM actually does allow you to do that by editing the hotspot connection
+> files directly.
 
-Use "iw dev <ifname> link" to see the current rate.
+> If you take a look into /etc/NetworkManager/system-connections/ you
+> should see the config file, where you can edit stuff like 'channel',
+> 'ssid', 'band', 'pairwise', 'group', 'proto', etc, stuff that's familiar
+> to wpa_supplicant config too.  See 'man nm-settings' for more details on
+> all these key/value pairs.
 
-Dan
-
-> Thanks you,
-> Nick.
-> 
-> On 27.05.2015 21:34, Emmanuel Grumbach wrote:
-> > On Wed, May 27, 2015 at 6:55 PM, Dan Williams <dcbw@redhat.com> wrote:
-> >> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
-> >>> Hello,
-> >>> thank you for your response. I attach the full syslog since the last
-> >>> boot which contains some disconnects. I enabled debug mode for
-> >>> wpa_supplicant with -dd option (let me know if you need anything else).
-> >>>
-> >>> I also tried connecting directly, i.e. without NetworkManager but
-> >>> manually with wpa_supplicant and I still get disconnects, howvever
-> >>> wpa_supplicant gives different logs with different drivers. Please, see
-> >>> the file wifi.log (you can see there the driver i used in
-> >>> wpa_supplicant, that log doesn't have the debug activated but let me
-> >>> know if you need that too)
-> >> So if NM isn't involved in your later runs (and it's not, looking at the
-> >> logs), then I'm not sure what the issue could be except something in the
-> >> driver.
-> >>
-> >> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Event message
-> >> available
-> >> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Drv Event 20
-> >> (NL80211_CMD_DEL_STATION) received for wlan5
-> >> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Delete station
-> >> d8:50:e6:da:1d:b4
-> >> mai 27 02:31:54 nick-G55VW kernel: wlan5: deauthenticating from
-> >> d8:50:e6:da:1d:b4 by local choice (Reason: 3=DEAUTH_LEAVING)
-> >>
-> >> I don't see anything interesting around those lines, so I guess its up
-> >> to Emmanuel now...  the tracing he requests would be good to get.
-> >>
-> > I suspect a regulatory problem. This is why I asked what was the
-> > channel used on 2.4GHz. On 5.2GHz we have seen bugs happening because
-> > of the regulatory database being ancient on Ubuntu. 2.4GHz should rule
-> > these problems out, unless we are talking about channel 12 and up or
-> > something like that.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+I edited /etc/NetworkManager/system-connections/Hotspot, ran systemctl
+restart NetworkManager and ssid and password were changed. Then I added
+channel=10 to the file, restarted NM, but when I enable hotspot in Gnome,
+ssid is localhost.localdomain and password is random again. I was not able
+to have my edited ssid and password values back.
 
