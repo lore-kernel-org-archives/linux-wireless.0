@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38097 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754019AbbEZOA2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 10:00:28 -0400
-Received: by wichy4 with SMTP id hy4so83047098wic.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 07:00:27 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: add missing firmware declarations
-Date: Tue, 26 May 2015 13:09:22 +0200
-Message-Id: <1432638562-12954-1-git-send-email-michal.kazior@tieto.com> (sfid-20150526_160032_256741_C2406398)
+Received: from mx1.redhat.com ([209.132.183.28]:36723 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751513AbbEDT2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 15:28:21 -0400
+Message-ID: <1430767700.10844.24.camel@redhat.com> (sfid-20150504_212824_992300_D8E3F2C8)
+Subject: Re: b43 AP does not work
+From: Dan Williams <dcbw@redhat.com>
+To: Nerijus =?UTF-8?Q?Bali=C5=ABnas?= <nerijus@users.sourceforge.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 May 2015 14:28:20 -0500
+In-Reply-To: <loom.20150504T205530-427@post.gmane.org>
+References: <loom.20150502T183011-57@post.gmane.org>
+	   <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>
+	   <loom.20150502T191744-147@post.gmane.org>
+	  <1430752777.17017.2.camel@redhat.com>
+	  <loom.20150504T173700-271@post.gmane.org>
+	 <1430760100.10844.6.camel@redhat.com>
+	 <loom.20150504T205530-427@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This could lead userspace initram images getting
-built without necessary firmware files included
-leading to probing failures of ath10k on boot with
-QCA61X4.
+On Mon, 2015-05-04 at 19:00 +0000, Nerijus Baliūnas wrote:
+> Dan Williams <dcbw@...> writes:
+> 
+> > NM actually does allow you to do that by editing the hotspot connection
+> > files directly.
+> 
+> > If you take a look into /etc/NetworkManager/system-connections/ you
+> > should see the config file, where you can edit stuff like 'channel',
+> > 'ssid', 'band', 'pairwise', 'group', 'proto', etc, stuff that's familiar
+> > to wpa_supplicant config too.  See 'man nm-settings' for more details on
+> > all these key/value pairs.
+> 
+> I edited /etc/NetworkManager/system-connections/Hotspot, ran systemctl
+> restart NetworkManager and ssid and password were changed. Then I added
+> channel=10 to the file, restarted NM, but when I enable hotspot in Gnome,
+> ssid is localhost.localdomain and password is random again. I was not able
+> to have my edited ssid and password values back.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+You don't actually need to restart NM, you can simply run "nmcli con
+reload" to get NM to notice the changes.  I don't recall how GNOME Shell
+handles the Hotspot button in its UI, but you should be able to test
+independently of GNOME Shell by doing:
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 969a1231800e..d88be9f8c2d3 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2790,8 +2790,10 @@ MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_BOARD_DATA_FILE);
- 
- /* QCA6174 2.1 firmware files */
- MODULE_FIRMWARE(QCA6174_HW_2_1_FW_DIR "/" ATH10K_FW_API4_FILE);
-+MODULE_FIRMWARE(QCA6174_HW_2_1_FW_DIR "/" ATH10K_FW_API5_FILE);
- MODULE_FIRMWARE(QCA6174_HW_2_1_FW_DIR "/" QCA6174_HW_2_1_BOARD_DATA_FILE);
- 
- /* QCA6174 3.1 firmware files */
- MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_FW_API4_FILE);
-+MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_FW_API5_FILE);
- MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" QCA6174_HW_3_0_BOARD_DATA_FILE);
--- 
-2.1.4
+nmcli con up <name of hotspot connection>
+
+Dan
 
