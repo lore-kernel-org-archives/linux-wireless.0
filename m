@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37268 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751818AbbETNMJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 09:12:09 -0400
-Message-ID: <1432127524.19214.11.camel@sipsolutions.net> (sfid-20150520_151214_191216_2A957C95)
-Subject: Re: [PATCH v2 1/2] mac80211: fix AP_VLAN crypto tailroom calculation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 20 May 2015 15:12:04 +0200
-In-Reply-To: <1431508609-9841-1-git-send-email-michal.kazior@tieto.com> (sfid-20150513_111659_239981_BA392FBA)
-References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
-	 <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150513_111659_239981_BA392FBA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32321 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950AbbEDWMB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 18:12:01 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 1/7] wil6210: increase timeout for the "echo" command
+Date: Tue,  5 May 2015 01:11:50 +0300
+Message-Id: <1430777516-439-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150505_001236_423521_1D009F9E)
+In-Reply-To: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-05-13 at 09:16 +0000, Michal Kazior wrote:
-> Some splats I was seeing:
-> 
->  (a) WARNING: CPU: 1 PID: 0 at /devel/src/linux/net/mac80211/wep.c:102 ieee80211_wep_add_iv
->  (b) WARNING: CPU: 1 PID: 0 at /devel/src/linux/net/mac80211/wpa.c:73 ieee80211_tx_h_michael_mic_add
->  (c) WARNING: CPU: 3 PID: 0 at /devel/src/linux/net/mac80211/wpa.c:433 ieee80211_crypto_ccmp_encrypt
-> 
-> I've seen (a) and (b) with ath9k hw crypto and (c)
-> with ath9k sw crypto. All of them were related to
-> insufficient skb tailroom and I was able to
-> trigger these with ping6 program.
-> 
-> AP_VLANs may inherit crypto keys from parent AP.
-> This wasn't considered and yielded problems in
-> some setups resulting in inability to transmit
-> data because mac80211 wouldn't resize skbs when
-> necessary and subsequently drop some packets due
-> to insufficient tailroom.
-> 
-> For efficiency purposes don't inspect both AP_VLAN
-> and AP sdata looking for tailroom counter. Instead
-> update AP_VLAN tailroom counters whenever their
-> master AP tailroom counter changes.
+Sometimes it takes for the firmware more than 20ms to
+react on "echo" command after reset. Increase timeout
+from 20 to 50ms
 
-Applied.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 9fe2085..04fad5f 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -844,7 +844,7 @@ int wmi_echo(struct wil6210_priv *wil)
+ 	};
+ 
+ 	return wmi_call(wil, WMI_ECHO_CMDID, &cmd, sizeof(cmd),
+-			 WMI_ECHO_RSP_EVENTID, NULL, 0, 20);
++			WMI_ECHO_RSP_EVENTID, NULL, 0, 50);
+ }
+ 
+ int wmi_set_mac_address(struct wil6210_priv *wil, void *addr)
+-- 
+2.1.0
 
