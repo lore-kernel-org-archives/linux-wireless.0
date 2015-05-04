@@ -1,40 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:34572 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754360AbbEOGsN (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:54550 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbbEDJTi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 02:48:13 -0400
-Received: by laat2 with SMTP id t2so104759546laa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2015 23:48:11 -0700 (PDT)
+	Mon, 4 May 2015 05:19:38 -0400
+Date: Mon, 4 May 2015 10:19:35 +0100
+From: Luis Henriques <luis.henriques@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>, Marek Vasut <marex@denx.de>,
+	Anders Larsen <al@alarsen.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: Stable request 9374e7d2 "rtlwifi: rtl8192cu: Add new device ID"
+Message-ID: <20150504091935.GD1792@ares.olymp> (sfid-20150504_111942_911539_CE0814E1)
+References: <1430230954.6036.4@alarsen-lx>
+ <201504281633.17160.marex@denx.de>
+ <553FA5F0.1070402@lwfinger.net>
 MIME-Version: 1.0
-Date: Fri, 15 May 2015 09:48:11 +0300
-Message-ID: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com> (sfid-20150515_084819_998708_F401717F)
-Subject: mac80211 drops packet with old IV after rekeying
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <553FA5F0.1070402@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Someone opened a bug [1] about Intel devices. He reports that we drop
-packets after rekeying. I am not an expert about all the security
-stuff, but the submitter says that the bug occurs on any mac80211
-device. The AP is running openWRT.
+On Tue, Apr 28, 2015 at 10:23:28AM -0500, Larry Finger wrote:
+> Please note that there are two commits just added to the mainline repo that
+> should be propagated to all stable kernels. Both are addition of new USB IDs
+> for an old driver, thus they will cause to side effects. Unfortunately, the
+> Cc to stable was missed in the first of these, thus the need for this
+> message. The second was Cc for stable, but I include it here for
+> completeness.
+> 
+> The two commits in question are
+> 
+> commit 9374e7d2fdcad3c36dafc8d3effd554bc702c4b6
+> Author: Marek Vasut <marex@denx.de>
+> Date:   Thu Mar 26 02:16:06 2015 +0100
+> 
+>     rtlwifi: rtl8192cu: Add new device ID
+> 
+>     Add new ID for ASUS N10 WiFi dongle.
+> 
+> commit 2f92b314f4daff2117847ac5343c54d3d041bf78
+> Author: Larry Finger <Larry.Finger@lwfinger.net>
+> Date:   Mon Mar 23 18:14:10 2015 -0500
+> 
+>     rtlwifi: rtl8192cu: Add new USB ID
+> 
+>     USB ID 2001:330d is used for a D-Link DWA-131.
+> 
+>
 
-I don't really have the time to learn all the security stuff, so I
-thought I'd let everybody know about this bug since after all, it is
-affecting all mac80211 devices. Not sure at all the bug is in
-mac80211, it might very well be in the AP.
+Thank you, Larry.  Queuing both patches for the 3.16 kernel.
 
-The submitter invested lots of time in root causing the bug including
-patching wireshark to have it decrypt packets after rekeying.
+Cheers,
+--
+Luís
 
-I'd be glad if someone could take a look. If not, I'll have someone
-from our team to look at it, but I don't know how long it will take...
+> Thanks,
+> 
+> Larry
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe stable" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks.
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=92451
-
-Emmanuel Grumbach
-egrumbach@gmail.com
