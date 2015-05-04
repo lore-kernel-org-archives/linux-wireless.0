@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58559 "EHLO sipsolutions.net"
+Received: from mx3.wp.pl ([212.77.101.9]:28231 "EHLO mx3.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932345AbbEOH0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 03:26:08 -0400
-Message-ID: <1431674762.2426.3.camel@sipsolutions.net> (sfid-20150515_092612_503210_66711B60)
-Subject: Re: [PATCH] staging: rtl8192u: ieee80211: Silence sparse warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Gaston Gonzalez <gascoar@gmail.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org, arnd@arndb.de,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	joe@perches.com, navyasri.tech@gmail.com, julian.calaby@gmail.com
-Date: Fri, 15 May 2015 09:26:02 +0200
-In-Reply-To: <55551BC7.10702@gmail.com> (sfid-20150515_000453_619487_AB572AE6)
-References: <1429476231-6197-1-git-send-email-gascoar@gmail.com>
-		 <20150420082441.GU10964@mwanda> <553C18B6.807@gmail.com>
-		 <20150427101242.GR14154@mwanda> <554AD76E.7060605@gmail.com>
-		 <20150508110328.GT14154@mwanda> <55527D6E.7090207@gmail.com>
-		 <20150513083615.GS14154@mwanda> <5553F48E.3050008@gmail.com>
-		 (sfid-20150514_030522_036209_6D0AE5EB) <1431632112.2237.5.camel@sipsolutions.net>
-	 <55551BC7.10702@gmail.com> (sfid-20150515_000453_619487_AB572AE6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751891AbbEDKEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 06:04:07 -0400
+Date: Mon, 4 May 2015 12:04:01 +0200
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: Re: [PATCH 1/2] add mt7601u driver
+Message-ID: <20150504120401.30835e07@north> (sfid-20150504_120411_821410_206AEBCD)
+In-Reply-To: <1430732248.2013.16.camel@sipsolutions.net>
+References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+	<1430571690-9054-2-git-send-email-moorray3@wp.pl>
+	<1430732248.2013.16.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-05-14 at 19:03 -0300, Gaston Gonzalez wrote:
+On Mon, 04 May 2015 11:37:28 +0200, Johannes Berg wrote:
+> On Sat, 2015-05-02 at 15:01 +0200, moorray3@wp.pl wrote:
+> 
+> > +int mt7601u_wait_asic_ready(struct mt7601u_dev *dev)
+> > +{
+> > +	int i = 100;
+> > +	u32 val;
+> > +
+> > +	do {
+> > +		val = mt7601u_rr(dev, MT_MAC_CSR0);
+> > +		if (val && ~val)
+> > +			return 0;
+> 
+> No delays here? Seems odd. You do have one in the next function where
+> you also call the _rr() function.
 
-> If Dan is a newbie to this, I would be a pre-under-newbie or something
-> below that. That being said, understood your explication, I'll look for
-> another way to deal with this warning.
+I have not seen this check fail ever, but placing a delay won't hurt.
 
-I don't even see your original patch, so I have no idea what you're
-trying to do :)
+> > +	skb = alloc_skb(seg_len, GFP_ATOMIC);
+> > +	if (!skb)
+> > +		return NULL;
+> > +
+> > +	memset(skb->cb, 0, sizeof(skb->cb));
+> 
+> Pretty sure that's pointless.
 
-johannes
+Shamefully pointless, thanks for spotting it.
 
+> > +	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD)) {
+> > +		int hdr_len = ieee80211_get_hdrlen_from_buf(data, seg_len);
+> > +
+> > +		memcpy(skb_put(skb, hdr_len), data, hdr_len);
+> > +		data += hdr_len + 2;
+> > +		seg_len -= hdr_len;
+> > +	}
+> > +
+> > +	memcpy(skb_put(skb, seg_len), data, seg_len);
+> > +
+> > +	return skb;
+> 
+> Don't know how your buffers are set up, but if the DMA engine consumes
+> pages you could consider using paged RX instead of the memcpy().
+
+DMA engine can concatenate multiple frames into a single USB bulk
+transfer to a large continuous buffer.  There is no way to request 
+any alignment of the frames within that large buffer so I think paged 
+RX is not an option.
