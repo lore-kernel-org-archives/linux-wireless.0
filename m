@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:38226 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756570AbbEVMiH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 08:38:07 -0400
-Received: by wichy4 with SMTP id hy4so45882245wic.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 05:38:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87r3q84x1j.fsf@kamboji.qca.qualcomm.com>
-References: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmukTiNFrsLA5rdiQe=Ga45JNuFzSmqQ4h-VJMW97f=_w@mail.gmail.com>
-	<87r3q84x1j.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 22 May 2015 14:38:05 +0200
-Message-ID: <CA+BoTQneUoKq_Gh=A=-=RLn7TUrfdAm8UwQkUvJGgBDDwaqKpA@mail.gmail.com> (sfid-20150522_143814_374293_0118A1AF)
-Subject: Re: pull-request: wireless-drivers-next 2015-05-21
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: David Miller <davem@davemloft.net>,
+Received: from s3.sipsolutions.net ([5.9.151.49]:44980 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751160AbbEDJhd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 05:37:33 -0400
+Message-ID: <1430732248.2013.16.camel@sipsolutions.net> (sfid-20150504_113737_289306_0BDA3B6A)
+Subject: Re: [PATCH 1/2] add mt7601u driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: moorray3@wp.pl
+Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@openwrt.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Jakub Kicinski <kubakici@wp.pl>
+Date: Mon, 04 May 2015 11:37:28 +0200
+In-Reply-To: <1430571690-9054-2-git-send-email-moorray3@wp.pl> (sfid-20150502_150258_155524_72DB255C)
+References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+	 <1430571690-9054-2-git-send-email-moorray3@wp.pl>
+	 (sfid-20150502_150258_155524_72DB255C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 May 2015 at 14:27, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->> On 21 May 2015 at 15:39, Kalle Valo <kvalo@codeaurora.org> wrote:
-[...]
->>> + static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
->>> +                                    const struct cfg80211_chan_def *chandef,
->>> +                                    bool restart)
->>>   {
->>>         struct ath10k *ar = arvif->ar;
->>> -       struct cfg80211_chan_def *chandef = &ar->chandef;
->>>         struct wmi_vdev_start_request_arg arg = {};
->>>  -      int ret = 0, ret2;
->>>  +      int ret = 0;
->>>
->>>         lockdep_assert_held(&ar->conf_mutex);
->>>
->>
->> Kalle, I'm not seeing this when I merge your pull tag on top of
->> net-next/master. Am I missing something?
->
-> You lost me, you are not seeing what?
+On Sat, 2015-05-02 at 15:01 +0200, moorray3@wp.pl wrote:
 
-Your merge resolution diff seems to include stuff regarding
-ath10k_vdev_stop(). I didn't see it when I tried the merge and had
-only 2 conflicts: the promisc code and at feature flags (XMIT_FAST).
+> +int mt7601u_wait_asic_ready(struct mt7601u_dev *dev)
+> +{
+> +	int i = 100;
+> +	u32 val;
+> +
+> +	do {
+> +		val = mt7601u_rr(dev, MT_MAC_CSR0);
+> +		if (val && ~val)
+> +			return 0;
 
+No delays here? Seems odd. You do have one in the next function where
+you also call the _rr() function.
 
-> I think we have a misunderstanding
+> +	skb = alloc_skb(seg_len, GFP_ATOMIC);
+> +	if (!skb)
+> +		return NULL;
+> +
+> +	memset(skb->cb, 0, sizeof(skb->cb));
 
-That's possible.
+Pretty sure that's pointless.
 
+> +	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD)) {
+> +		int hdr_len = ieee80211_get_hdrlen_from_buf(data, seg_len);
+> +
+> +		memcpy(skb_put(skb, hdr_len), data, hdr_len);
+> +		data += hdr_len + 2;
+> +		seg_len -= hdr_len;
+> +	}
+> +
+> +	memcpy(skb_put(skb, seg_len), data, seg_len);
+> +
+> +	return skb;
 
-> here, let me explain how I created that diff:
->
-> git clone --reference ~/linux-2.6/ git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
-> cd net-next/
-> git pull git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2015-05-21
-> emacs drivers/net/wireless/ath/ath10k/mac.c
-> git diff > resolution.txt
+Don't know how your buffers are set up, but if the DMA engine consumes
+pages you could consider using paged RX instead of the memcpy().
 
-For what it's worth I did:
- git checkout net-next/master
- git merge wireless-drivers-next-for-davem-2015-05-21
- # fix conflicts
- git commit -a
- git show
+johannes
 
-Merge should essentially yield the same result as your pull.
-
-
-Michał
