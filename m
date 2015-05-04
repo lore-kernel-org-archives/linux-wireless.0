@@ -1,83 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34352 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754465AbbE1Pry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 11:47:54 -0400
-Subject: [PATCH 11/20] modsign: Allow signing key to be PKCS#11 [ver #5]
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Thu, 28 May 2015 16:47:47 +0100
-Message-ID: <20150528154747.1259.81028.stgit@warthog.procyon.org.uk> (sfid-20150528_175143_303442_546365B2)
-In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
-References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:38735 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168AbbEDUBh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 16:01:37 -0400
+Date: Mon, 04 May 2015 16:01:35 -0400 (EDT)
+Message-Id: <20150504.160135.1697200280125921048.davem@davemloft.net> (sfid-20150504_220145_703508_E53BCCC2)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2015-05-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1430737329.2013.21.camel@sipsolutions.net>
+References: <1430737329.2013.21.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <David.Woodhouse@intel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 04 May 2015 13:02:09 +0200
 
-This is only the key; the corresponding *cert* still needs to be in
-$(topdir)/signing_key.x509. And there's no way to actually use this
-from the build system yet.
+> As I was sick last week this dragged out for a bit, but given we have
+> -rc2 out I figured I'd send you something sooner rather than later.
+> 
+> Let me know if there are any issues.
 
-Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
-Signed-off-by: David Howells <dhowells@redhat.com>
----
+Pulled, thanks Johannes.
 
- scripts/sign-file.c |   29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
-
-diff --git a/scripts/sign-file.c b/scripts/sign-file.c
-index 720b9bc933ae..ad0aa21bd3ac 100755
---- a/scripts/sign-file.c
-+++ b/scripts/sign-file.c
-@@ -22,6 +22,7 @@
- #include <openssl/pem.h>
- #include <openssl/pkcs7.h>
- #include <openssl/err.h>
-+#include <openssl/engine.h>
- 
- struct module_signature {
- 	uint8_t		algo;		/* Public-key crypto algorithm [0] */
-@@ -154,11 +155,29 @@ int main(int argc, char **argv)
- 	/* Read the private key and the X.509 cert the PKCS#7 message
- 	 * will point to.
- 	 */
--	b = BIO_new_file(private_key_name, "rb");
--	ERR(!b, "%s", private_key_name);
--	private_key = PEM_read_bio_PrivateKey(b, NULL, pem_pw_cb, NULL);
--	ERR(!private_key, "%s", private_key_name);
--	BIO_free(b);
-+	if (!strncmp(private_key_name, "pkcs11:", 7)) {
-+		ENGINE *e;
-+
-+		ENGINE_load_builtin_engines();
-+		drain_openssl_errors();
-+		e = ENGINE_by_id("pkcs11");
-+		ERR(!e, "Load PKCS#11 ENGINE");
-+		if (ENGINE_init(e))
-+			drain_openssl_errors();
-+		else
-+			ERR(1, "ENGINE_init");
-+		if (key_pass)
-+			ERR(!ENGINE_ctrl_cmd_string(e, "PIN", key_pass, 0), "Set PKCS#11 PIN");
-+		private_key = ENGINE_load_private_key(e, private_key_name, NULL,
-+						      NULL);
-+		ERR(!private_key, "%s", private_key_name);
-+	} else {
-+		b = BIO_new_file(private_key_name, "rb");
-+		ERR(!b, "%s", private_key_name);
-+		private_key = PEM_read_bio_PrivateKey(b, NULL, pem_pw_cb, NULL);
-+		ERR(!private_key, "%s", private_key_name);
-+		BIO_free(b);
-+	}
- 
- 	b = BIO_new_file(x509_name, "rb");
- 	ERR(!b, "%s", x509_name);
-
+Feel better soon.
