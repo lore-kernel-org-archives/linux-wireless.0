@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:38056 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900AbbEGTIK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 15:08:10 -0400
-Received: by wiun10 with SMTP id n10so2857693wiu.1
-        for <linux-wireless@vger.kernel.org>; Thu, 07 May 2015 12:08:09 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] brcmfmac: fix debugging info for received hw messages with errors
-Date: Thu,  7 May 2015 21:07:41 +0200
-Message-Id: <1431025661-8879-2-git-send-email-zajec5@gmail.com> (sfid-20150507_210813_671968_FCE8FB31)
-In-Reply-To: <1431025661-8879-1-git-send-email-zajec5@gmail.com>
-References: <1431025661-8879-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:33047 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752354AbbEDUez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 16:34:55 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1YpN4n-0005S3-ON
+	for linux-wireless@vger.kernel.org; Mon, 04 May 2015 22:34:53 +0200
+Received: from data-214-110.cgates.lt ([data-214-110.cgates.lt])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 22:34:53 +0200
+Received: from nerijus by data-214-110.cgates.lt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 22:34:53 +0200
+To: linux-wireless@vger.kernel.org
+From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
+Subject: Re: b43 AP does not work
+Date: Mon, 4 May 2015 20:34:47 +0000 (UTC)
+Message-ID: <loom.20150504T222913-980@post.gmane.org> (sfid-20150504_223458_662133_00B4DE5D)
+References: <loom.20150502T183011-57@post.gmane.org>     <5544FFE5.5090706@lwfinger.net>  <loom.20150502T190504-905@post.gmane.org>     <loom.20150502T191744-147@post.gmane.org>    <1430752777.17017.2.camel@redhat.com>    <loom.20150504T173700-271@post.gmane.org>   <1430760100.10844.6.camel@redhat.com>   <loom.20150504T205530-427@post.gmane.org>  <1430767700.10844.24.camel@redhat.com>  <loom.20150504T222029-729@post.gmane.org> <1430771240.10844.25.camel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code in function setting/querying device was treating every error as
-Broadcom protocol specific one. It wasn't right thing to do as most of
-subcalls return "normal" errors (errno-base.h). This resulted in e.g.:
-brcmf_usb_rx_ctlpkt: rxctl wait timed out
-brcmfmac: brcmf_fil_cmd_data Failed: BCME_NOTDOWN (-5)
-which was misleading because of interpreting -EIO as BCME_NOTDOWN.
+Dan Williams <dcbw@...> writes:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.c | 5 ++++-
- drivers/net/wireless/brcm80211/brcmfmac/fwil.c | 3 +--
- 2 files changed, 5 insertions(+), 3 deletions(-)
+> > I did
+> > nmcli con reload
+> > nmcli con up Hotspot
+> > 
+> > but it still used localhost.localdomain as ssid, although I have
+> > ssid=something in /etc/NetworkManager/system-connections/Hotspot
+> 
+> If you run "nmcli con", is there more than one connection called
+> "Hotspot"?  If not, then run "nmcli con Hotspot" and lets see what it
+> prints out.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-index 8e0e91c..47941ab 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-@@ -203,8 +203,11 @@ retry:
- 	}
- 
- 	/* Check the ERROR flag */
--	if (flags & BCDC_DCMD_ERROR)
-+	if (flags & BCDC_DCMD_ERROR) {
- 		ret = le32_to_cpu(msg->status);
-+		brcmf_dbg(BCDC, "received message with error %s (%d)\n",
-+			  brcmf_get_errstr((u32)(-ret)), ret);
-+	}
- 
- done:
- 	return ret;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-index bdbdc9e..c86a522 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-@@ -53,8 +53,7 @@ brcmf_fil_cmd_data(struct brcmf_if *ifp, u32 cmd, void *data, u32 len, bool set)
- 	if (err >= 0)
- 		return 0;
- 
--	brcmf_dbg(FIL, "Failed: %s (%d)\n",
--		  brcmf_get_errstr((u32)(-err)), err);
-+	brcmf_dbg(FIL, "Failed: %d\n", err);
- 	return -EBADE;
- }
- 
--- 
-1.8.4.5
+Yes, there are 2 Hotspots. After I deleted one with nm-connection-editor
+the ssid is OK.
 
