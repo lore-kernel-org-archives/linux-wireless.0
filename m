@@ -1,119 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58814 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756709AbbEVM1n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 08:27:43 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: David Miller <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: pull-request: wireless-drivers-next 2015-05-21
-References: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmukTiNFrsLA5rdiQe=Ga45JNuFzSmqQ4h-VJMW97f=_w@mail.gmail.com>
-Date: Fri, 22 May 2015 15:27:36 +0300
-In-Reply-To: <CA+BoTQmukTiNFrsLA5rdiQe=Ga45JNuFzSmqQ4h-VJMW97f=_w@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 22 May 2015 12:16:17 +0200")
-Message-ID: <87r3q84x1j.fsf@kamboji.qca.qualcomm.com> (sfid-20150522_142748_489898_4121E868)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:58443 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751403AbbEDRVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 13:21:49 -0400
+Message-ID: <1430760100.10844.6.camel@redhat.com> (sfid-20150504_192152_371851_C576C97C)
+Subject: Re: b43 AP does not work
+From: Dan Williams <dcbw@redhat.com>
+To: Nerijus =?UTF-8?Q?Bali=C5=ABnas?= <nerijus@users.sourceforge.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 May 2015 12:21:40 -0500
+In-Reply-To: <loom.20150504T173700-271@post.gmane.org>
+References: <loom.20150502T183011-57@post.gmane.org>
+	  <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>
+	  <loom.20150502T191744-147@post.gmane.org>
+	 <1430752777.17017.2.camel@redhat.com>
+	 <loom.20150504T173700-271@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, 2015-05-04 at 15:41 +0000, Nerijus Baliūnas wrote:
+> Dan Williams <dcbw@...> writes:
+> 
+> > > Just FYI - "access point" mode of the NM applet works (in Gnome). But it
+> > > would still be nice to have hostapd working.
+> > 
+> > If you want to use hostapd on the card and the system is running
+> > NetworkManager, you can tell NM to ignore the device through the
+> > "unmanaged-devices" option in NetworkManager.conf.  manpages have more
+> > details.
+> 
+> But I don't want NM to ignore the device - I use the wifi card with NM
+> as a client. But sometimes I'd like to use hostapd directly (as NM
+> does not allow me to configure AP parameters - channel, wpa number,
+> AP name and password). It was possible before, but not any more.
 
-> On 21 May 2015 at 15:39, Kalle Valo <kvalo@codeaurora.org> wrote:
->
->> Secondly there's a non-trivial conflict in
->> drivers/net/wireless/ath/ath10k/mac.c which is due to removal of
->> FIF_PROMISC_IN_BSS in commit df1404650c. You need to remove more code
->> than just the obvious conflicts shown by git. In the end of this mail I
->> added a git diff output after I fixed the conflict, hopefully that helps
->> you to fix it. The main points are that you remove
->> ath10k_mac_should_disable_promisc() and the last ath10k_monitor_recalc()
->> call from ath10k_vdev_start_restart() along with the obvious conflict
->> fixes git points out.
->>
->> There's also a patch from Michal which will also help to fix the
->> resolution. Michal, please double check the resolution proposal below so
->> that I didn't miss anything.
->>
->> https://patchwork.kernel.org/patch/6387631/
+NM actually does allow you to do that by editing the hotspot connection
+files directly.  The various UIs (nm-applet, GNOME Shell, etc) may or
+may not expose specific knobs like these.  We intend to add AP mode
+support to nm-connection-editor, but there are some complications around
+valid options in AP mode that need to be addressed in the editor UI
+first.
 
-[...]
+If you take a look into /etc/NetworkManager/system-connections/ you
+should see the config file, where you can edit stuff like 'channel',
+'ssid', 'band', 'pairwise', 'group', 'proto', etc, stuff that's familiar
+to wpa_supplicant config too.  See 'man nm-settings' for more details on
+all these key/value pairs.
 
-> Looks good to me.
+Dan
 
-Thanks for checking.
 
-> There's still some code left which is unnecessary (see 2 last hunks on
-> patchwork) because due to FIF_PROMISC_IN_BSS removal entire commit
-> 548462133d98 becomes obsolete. Since these 2 hunk leftovers don't
-> break anything functionally I guess this can be cleaned up in a follow
-> up patch after the merge. Just my 2cc.
-
-Just to avoid any confusion, these are the hunks you mean (copypaste
-from patchwork, whitespace damage likely):
-
-@@ -1267,7 +1250,7 @@  static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
- {
- 	struct ath10k *ar = arvif->ar;
- 	struct wmi_vdev_start_request_arg arg = {};
--	int ret = 0, ret2;
-+	int ret = 0;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -1326,16 +1309,6 @@  static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
- 	ar->num_started_vdevs++;
- 	ath10k_recalc_radar_detection(ar);
- 
--	ret = ath10k_monitor_recalc(ar);
--	if (ret) {
--		ath10k_warn(ar, "mac failed to recalc monitor for vdev %i restart %d: %d\n",
--			    arg.vdev_id, restart, ret);
--		ret2 = ath10k_vdev_stop(arvif);
--		if (ret2)
--			ath10k_warn(ar, "mac failed to stop vdev %i restart %d: %d\n",
--				    arg.vdev_id, restart, ret2);
--	}
--
- 	return ret;
- }
-
-Yeah, these needs to be removed. For some reason 'git diff' doesn't show
-these hunks after the conflicts are fixed.
-
->> + static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
->> +                                    const struct cfg80211_chan_def *chandef,
->> +                                    bool restart)
->>   {
->>         struct ath10k *ar = arvif->ar;
->> -       struct cfg80211_chan_def *chandef = &ar->chandef;
->>         struct wmi_vdev_start_request_arg arg = {};
->>  -      int ret = 0, ret2;
->>  +      int ret = 0;
->>
->>         lockdep_assert_held(&ar->conf_mutex);
->>
->
-> Kalle, I'm not seeing this when I merge your pull tag on top of
-> net-next/master. Am I missing something?
-
-You lost me, you are not seeing what? I think we have a misunderstanding
-here, let me explain how I created that diff:
-
-git clone --reference ~/linux-2.6/ git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
-cd net-next/
-git pull git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2015-05-21
-emacs drivers/net/wireless/ath/ath10k/mac.c
-git diff > resolution.txt
-
-> Anyway FYI ath10k_vdev_stop() was moved up in the code to avoid
-> forward declaration in 822b7e0b633b.
-
-Didn't understand this either.
-
--- 
-Kalle Valo
