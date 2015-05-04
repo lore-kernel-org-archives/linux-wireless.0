@@ -1,68 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:35798 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211AbbESMhQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32321 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970AbbEDWMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 08:37:16 -0400
-Received: by wgfl8 with SMTP id l8so16204468wgf.2
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 05:37:14 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] cfg80211: ignore netif running state when changing iftype
-Date: Tue, 19 May 2015 14:37:00 +0200
-Message-Id: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com> (sfid-20150519_143720_740293_0B16DAD3)
+	Mon, 4 May 2015 18:12:06 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 4/7] wil6210: fix for probe_resp IE's
+Date: Tue,  5 May 2015 01:11:53 +0300
+Message-Id: <1430777516-439-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150505_001214_338605_94A68142)
+In-Reply-To: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This isn't a revert of f8cdddb8d61d ("cfg80211:
-check iface combinations only when iface is
-running") as far as functionality is considred
-because b6a550156bc ("cfg80211/mac80211: move more
-combination checks to mac80211") moved the logic
-somewhere else.
+Parameters for the start_ap and change_bcon contains
+probe response template and probe response IE's.
 
-It was possible for mac80211 to be coerced into an
-unexpected flow causing sdata union to become
-corrupted. Station pointer was put into
-sdata->u.vlan.sta memory location while it was
-really master AP's sdata->u.ap.next_beacon. This
-led to station entry being later freed as CSA
-beacon before __sta_info_flush() in
-ieee80211_stop_ap() and a subsequent invalid
-pointer dereference crash.
+supplicant puts in the proberesp_ies only WPS related IE's,
+while firmware need all IE's, most notable is RSN that is not
+included in the proberesp_ies.
 
-The problem was observed with the following test
-steps:
+Always use IE's provided by the bcon->probe_resp
 
- 1. prepare 2 devices
- 2. start hostapd AP with wds_sta=1
- 3. connect client with 4addr
- 4. disconnect
- 5. swap roles & connect
- 6. disconnect
-    [ During AP (which was a client first)
-      teardown kernel would crash. ]
-
-Fixes: f8cdddb8d61d ("cfg80211: check iface combinations only when iface is running")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- net/wireless/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 31 +++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 70051ab52f4f..7e4e3fffe7ce 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -944,7 +944,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	     ntype == NL80211_IFTYPE_P2P_CLIENT))
- 		return -EBUSY;
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index ea331e4..f53a190 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -669,11 +669,6 @@ static int wil_fix_bcon(struct wil6210_priv *wil,
+ 	if (bcon->probe_resp_len <= hlen)
+ 		return 0;
  
--	if (ntype != otype && netif_running(dev)) {
-+	if (ntype != otype) {
- 		dev->ieee80211_ptr->use_4addr = false;
- 		dev->ieee80211_ptr->mesh_id_up_len = 0;
- 		wdev_lock(dev->ieee80211_ptr);
+-	if (!bcon->proberesp_ies) {
+-		bcon->proberesp_ies = f->u.probe_resp.variable;
+-		bcon->proberesp_ies_len = bcon->probe_resp_len - hlen;
+-		rc = 1;
+-	}
+ 	if (!bcon->assocresp_ies) {
+ 		bcon->assocresp_ies = f->u.probe_resp.variable;
+ 		bcon->assocresp_ies_len = bcon->probe_resp_len - hlen;
+@@ -688,9 +683,19 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 				      struct cfg80211_beacon_data *bcon)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
++	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
++	const u8 *pr_ies = NULL;
++	size_t pr_ies_len = 0;
+ 	int rc;
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
++	wil_print_bcon_data(bcon);
++
++	if (bcon->probe_resp_len > hlen) {
++		pr_ies = f->u.probe_resp.variable;
++		pr_ies_len = bcon->probe_resp_len - hlen;
++	}
+ 
+ 	if (wil_fix_bcon(wil, bcon)) {
+ 		wil_dbg_misc(wil, "Fixed bcon\n");
+@@ -703,9 +708,7 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+ 	 * bcon->beacon_ies);
+ 	 */
+-	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP,
+-			bcon->proberesp_ies_len,
+-			bcon->proberesp_ies);
++	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
+ 	if (rc) {
+ 		wil_err(wil, "set_ie(PROBE_RESP) failed\n");
+ 		return rc;
+@@ -733,6 +736,10 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	struct cfg80211_beacon_data *bcon = &info->beacon;
+ 	struct cfg80211_crypto_settings *crypto = &info->crypto;
+ 	u8 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
++	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
++	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
++	const u8 *pr_ies = NULL;
++	size_t pr_ies_len = 0;
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 
+@@ -752,6 +759,11 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wil_print_bcon_data(bcon);
+ 	wil_print_crypto(wil, crypto);
+ 
++	if (bcon->probe_resp_len > hlen) {
++		pr_ies = f->u.probe_resp.variable;
++		pr_ies_len = bcon->probe_resp_len - hlen;
++	}
++
+ 	if (wil_fix_bcon(wil, bcon)) {
+ 		wil_dbg_misc(wil, "Fixed bcon\n");
+ 		wil_print_bcon_data(bcon);
+@@ -779,8 +791,7 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+ 	 * bcon->beacon_ies);
+ 	 */
+-	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
+-		   bcon->proberesp_ies);
++	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
+ 	wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
+ 		   bcon->assocresp_ies);
+ 
 -- 
-2.1.4
+2.1.0
 
