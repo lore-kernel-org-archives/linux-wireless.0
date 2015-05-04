@@ -1,95 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53835 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757114AbbEVPCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 11:02:20 -0400
-Message-ID: <1432306931.24980.8.camel@redhat.com> (sfid-20150522_170223_503567_B760DB62)
-Subject: Re: [PATCH] cfg80211: properly send NL80211_ATTR_DISCONNECTED_BY_AP
- in disconnect
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Matthieu Mauger <matthieux.mauger@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Fri, 22 May 2015 10:02:11 -0500
-In-Reply-To: <1432304759-31767-1-git-send-email-johannes@sipsolutions.net>
-References: <1432304759-31767-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32320 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751265AbbEDWMA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 18:12:00 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 2/7] wil6210: update Rx descriptor fields
+Date: Tue,  5 May 2015 01:11:51 +0300
+Message-Id: <1430777516-439-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150505_001228_992542_E899F828)
+In-Reply-To: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-05-22 at 16:25 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When we disconnect from the AP, drivers call cfg80211_disconnect().
-> This doesn't know whether the disconnection was initiated locally
-> or by the AP though, which can cause problems with the supplicant,
-> for example with WPS. This issue obviously doesn't show up with any
-> mac80211 based driver since mac80211 doesn't call this function.
-> 
-> Fix this by requiring drivers to indicate whether the disconnect is
-> locally generated or not. I've tried to update the drivers, but may
-> not have gotten the values correct, and some drivers may currently
-> not be able to report correct values. In case of doubt I left it at
-> false, which is the current behaviour.
-> 
-> Reported-by: Matthieu Mauger <matthieux.mauger@intel.com>
-> Tested-by: Matthieu Mauger <matthieux.mauger@intel.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/cfg80211.c         | 4 ++--
->  drivers/net/wireless/ath/wil6210/main.c            | 2 +-
->  drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 4 ++--
->  drivers/net/wireless/libertas/cfg.c                | 4 ++--
->  drivers/net/wireless/mwifiex/join.c                | 2 +-
->  drivers/net/wireless/mwifiex/sta_event.c           | 2 +-
->  drivers/net/wireless/rndis_wlan.c                  | 2 +-
->  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c  | 2 +-
->  drivers/staging/wlan-ng/cfg80211.c                 | 2 +-
->  include/net/cfg80211.h                             | 4 +++-
->  net/wireless/core.h                                | 1 +
->  net/wireless/sme.c                                 | 4 +++-
->  net/wireless/util.c                                | 3 ++-
->  13 files changed, 21 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-> index 1a4d558022d8..9e3e3176670b 100644
-> --- a/drivers/net/wireless/libertas/cfg.c
-> +++ b/drivers/net/wireless/libertas/cfg.c
-> @@ -841,7 +841,7 @@ void lbs_send_disconnect_notification(struct lbs_private *priv)
->  
->  	cfg80211_disconnected(priv->dev,
->  		0,
-> -		NULL, 0,
-> +		NULL, 0, false,
->  		GFP_KERNEL);
+Rx descriptor fields accordingly to the updated
+hardware documentation
 
-lbs_send_disconnect_notification() could use a 'bool locally_generated'
-parameter that gets passed directly to cfg80211_disconnected(), which in
-turn gets passed through from a new 'bool locally_generated' parameter
-for lbs_mac_event_disconnected() (which is the only caller of
-lbs_send_disconnect_notification).
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c |  2 +-
+ drivers/net/wireless/ath/wil6210/txrx.h | 24 ++++++++++++++++--------
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-The calls to lbs_mac_event_disconnected() would pass these values:
-
-lbs_leave_ibss(): true
-lbs_process_event(): MACREG_INT_CODE_DEAUTHENTICATED: false
-lbs_process_event(): MACREG_INT_CODE_DISASSOCIATED: false
-lbs_process_event(): MACREG_INT_CODE_LINK_LOST_NO_SCAN: true
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index e8bd512..1fd34e5 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -236,7 +236,7 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
+ 		return -ENOMEM;
+ 	}
  
->  	lbs_deb_leave(LBS_DEB_CFG80211);
-> @@ -1458,7 +1458,7 @@ int lbs_disconnect(struct lbs_private *priv, u16 reason)
->  
->  	cfg80211_disconnected(priv->dev,
->  			reason,
-> -			NULL, 0,
-> +			NULL, 0, true,
->  			GFP_KERNEL);
->  	priv->connect_status = LBS_DISCONNECTED;
-
-This one is correct.
-
-Dan
-
+-	d->dma.d0 = BIT(9) | RX_DMA_D0_CMD_DMA_IT;
++	d->dma.d0 = RX_DMA_D0_CMD_DMA_RT | RX_DMA_D0_CMD_DMA_IT;
+ 	wil_desc_addr_set(&d->dma.addr, pa);
+ 	/* ip_length don't care */
+ 	/* b11 don't care */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index d90c8aa..0c46384 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -384,19 +384,27 @@ struct vring_rx_mac {
+  *  [word 7] length
+  */
+ 
+-#define RX_DMA_D0_CMD_DMA_IT     BIT(10)
+-
+-/* Error field, offload bits */
+-#define RX_DMA_ERROR_L3_ERR   BIT(4)
+-#define RX_DMA_ERROR_L4_ERR   BIT(5)
++#define RX_DMA_D0_CMD_DMA_EOP	BIT(8)
++#define RX_DMA_D0_CMD_DMA_RT	BIT(9)  /* always 1 */
++#define RX_DMA_D0_CMD_DMA_IT	BIT(10) /* interrupt */
++
++/* Error field */
++#define RX_DMA_ERROR_FCS	BIT(0)
++#define RX_DMA_ERROR_MIC	BIT(1)
++#define RX_DMA_ERROR_KEY	BIT(2) /* Key missing */
++#define RX_DMA_ERROR_REPLAY	BIT(3)
++#define RX_DMA_ERROR_L3_ERR	BIT(4)
++#define RX_DMA_ERROR_L4_ERR	BIT(5)
+ 
+ /* Status field */
+-#define RX_DMA_STATUS_DU         BIT(0)
+-#define RX_DMA_STATUS_ERROR      BIT(2)
+-
++#define RX_DMA_STATUS_DU	BIT(0)
++#define RX_DMA_STATUS_EOP	BIT(1)
++#define RX_DMA_STATUS_ERROR	BIT(2)
++#define RX_DMA_STATUS_MI	BIT(3) /* MAC Interrupt is asserted */
+ #define RX_DMA_STATUS_L3I	BIT(4)
+ #define RX_DMA_STATUS_L4I	BIT(5)
+ #define RX_DMA_STATUS_PHY_INFO	BIT(6)
++#define RX_DMA_STATUS_FFM	BIT(7) /* EtherType Flex Filter Match */
+ 
+ struct vring_rx_dma {
+ 	u32 d0;
+-- 
+2.1.0
 
