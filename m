@@ -1,88 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:36075 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965617AbbEEHRr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 03:17:47 -0400
-Date: Tue, 5 May 2015 08:17:41 +0100
-From: Okash Khawaja <okash.khawaja@gmail.com>
-To: joe@perchescom
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] adm8211: fix checkpatch error for trailing statements on
- next line
-Message-ID: <20150505071741.GA2678@bytefire-computer> (sfid-20150505_091842_132542_77CFC42F)
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:42607 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158AbbEDPlW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 11:41:22 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1YpIUc-0003kd-WB
+	for linux-wireless@vger.kernel.org; Mon, 04 May 2015 17:41:15 +0200
+Received: from data-214-110.cgates.lt ([data-214-110.cgates.lt])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 17:41:14 +0200
+Received: from nerijus by data-214-110.cgates.lt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 17:41:14 +0200
+To: linux-wireless@vger.kernel.org
+From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
+Subject: Re: b43 AP does not work
+Date: Mon, 4 May 2015 15:41:03 +0000 (UTC)
+Message-ID: <loom.20150504T173700-271@post.gmane.org> (sfid-20150504_174127_015934_63CBF369)
+References: <loom.20150502T183011-57@post.gmane.org>  <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>  <loom.20150502T191744-147@post.gmane.org> <1430752777.17017.2.camel@redhat.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes these checkpatch.pl errors:
+Dan Williams <dcbw@...> writes:
 
-ERROR: trailing statements should be on next line
-ERROR: switch and case should be at the same indent
+> > Just FYI - "access point" mode of the NM applet works (in Gnome). But it
+> > would still be nice to have hostapd working.
+> 
+> If you want to use hostapd on the card and the system is running
+> NetworkManager, you can tell NM to ignore the device through the
+> "unmanaged-devices" option in NetworkManager.conf.  manpages have more
+> details.
 
-More specifically, the fix has been applied to the five occurances of the errors listed below.
+But I don't want NM to ignore the device - I use the wifi card with NM
+as a client. But sometimes I'd like to use hostapd directly (as NM
+does not allow me to configure AP parameters - channel, wpa number,
+AP name and password). It was possible before, but not any more.
 
-ERROR: trailing statements should be on next line
-#1101: FILE: drivers/net/wireless/adm8211.c:1101:
-+		case  0x8: reg |= (0x1 << 14);
-
-ERROR: trailing statements should be on next line
-#1103: FILE: drivers/net/wireless/adm8211.c:1103:
-+		case 0x16: reg |= (0x2 << 14);
-
-ERROR: trailing statements should be on next line
-#1105: FILE: drivers/net/wireless/adm8211.c:1105:
-+		case 0x32: reg |= (0x3 << 14);
-
-ERROR: trailing statements should be on next line
-#1107: FILE: drivers/net/wireless/adm8211.c:1107:
-+		default: reg |= (0x0 << 14);
-
-ERROR: switch and case should be at the same indent
-#1100: FILE: adm8211.c:1100:
-+		switch (cline) {
-[...]
-+		  default:
-
-
-Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
----
- drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index f07a618..79e4e5f 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
- 		pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
- 
- 		switch (cline) {
--		case  0x8: reg |= (0x1 << 14);
--			   break;
--		case 0x16: reg |= (0x2 << 14);
--			   break;
--		case 0x32: reg |= (0x3 << 14);
--			   break;
--		  default: reg |= (0x0 << 14);
--			   break;
-+		case  0x8:
-+			reg |= (0x1 << 14);
-+			break;
-+		case 0x16:
-+			reg |= (0x2 << 14);
-+			break;
-+		case 0x32:
-+			reg |= (0x3 << 14);
-+			break;
-+		default:
-+			reg |= (0x0 << 14);
-+			break;
- 		}
- 	}
- 
--- 
-1.9.1
+Thanks,
+Nerijus
 
