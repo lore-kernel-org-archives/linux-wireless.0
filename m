@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41689 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753473AbbEKR4X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 13:56:23 -0400
-Message-ID: <5550ED39.1040204@openwrt.org> (sfid-20150511_195721_869573_BCC1E8B9)
-Date: Mon, 11 May 2015 19:56:09 +0200
-From: Jonas Gorski <jogo@openwrt.org>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:38727 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbbEDJPV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 May 2015 05:15:21 -0400
+Message-ID: <55473869.8010904@atmel.com> (sfid-20150504_111523_905021_021A400C)
+Date: Mon, 4 May 2015 11:14:17 +0200
+From: Nicolas Ferre <nicolas.ferre@atmel.com>
 MIME-Version: 1.0
-To: Okash Khawaja <okash.khawaja@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	"joe@perches.com" <joe@perches.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside
- switch-case
-References: <20150505224020.GA3805@bytefire-computer> <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com> <20150506063241.GA3042@bytefire-computer> <87k2wflj7p.fsf@kamboji.qca.qualcomm.com> <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com> <CAOiHx=kzSsFenqPSNeAX6P5wJK8Hr-q+s+rJoQQMPbSGmE50xw@mail.gmail.com> <4C95B6D2-3A68-4360-BE3C-5264DD0ED8DF@gmail.com>
-In-Reply-To: <4C95B6D2-3A68-4360-BE3C-5264DD0ED8DF@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+To: Johnny Kim <johnny.kim@atmel.com>, <gregkh@linuxfoundation.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
+	<tony.cho@atmel.com>
+Subject: Re: [PATCH v2 2/2] staging: MAINTAINERS: add maintainer for wilc1000
+ device
+References: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com> <0c403fce8ae243edb21419cc2840195a94f829ee.1430301575.git.johnny.kim@atmel.com>
+In-Reply-To: <0c403fce8ae243edb21419cc2840195a94f829ee.1430301575.git.johnny.kim@atmel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11.05.2015 19:48, Okash Khawaja wrote:
->> On 11 May 2015, at 14:24, Jonas Gorski <jogo@openwrt.org> wrote:
->>
->> Hi,
->>
->>> On Mon, May 11, 2015 at 12:38 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Okash Khawaja <okash.khawaja@gmail.com> writes:
->>>
->>>> Sure, I'll create v2 of the patch with updated commit log.
->>>>
->>>> Since it's part of a patch set, do you want me to send both the
->>>> patches in the patch set together as v2 or just this patch?
->>>
->>> Please resend the whole patchset as v2, less problems that way.
->>
->> If you are sending a v2 anyway, I'd suggest using decimal values for
->> the cases, as cache line sizes are usually given in decimal anyway. So
->> just drop the "0x" instead of converting the values ;-)
->>
->>
->> Jonas
+Le 29/04/2015 14:50, Johnny Kim a écrit :
+> Add myself as maintainer for atmel wilc1000
 > 
-> Jonas, I had already sent the updated patch by the time I received your email. Is there a convention around this?
+> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+> Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
+> Signed-off-by: Dean Lee <dean.lee@atmel.com>
+> Signed-off-by: Chris Park <chris.park@atmel.com>
 
-You did everything right, just gmail decided "helpfully" they were spam,
-so I didn't see that you already sent the v2.
+Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
 
-So ingore my comment unless you need to send a v3. It's only a minor
-nitpick but nothing respin-worthy IMHO.
+Thanks!
+
+> ---
+> Changes in v2:
+> - fix the permissions
+> - fix the folder tree
+> ---
+>  MAINTAINERS | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 1b8263c..2ddf38c 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9473,6 +9473,16 @@ M:	Forest Bond <forest@alittletooquiet.net>
+>  S:	Odd Fixes
+>  F:	drivers/staging/vt665?/
+>  
+> +STAGING - WILC1000 WIFI DRIVER
+> +M:	Johnny Kim <johnny.kim@atmel.com>
+> +M:	Rachel Kim <rachel.kim@atmel.com>
+> +M:	Dean Lee <dean.lee@atmel.com>
+> +M:	Chris Park <chris.park@atmel.com>
+> +L:	devel@driverdev.osuosl.org
+> +L:	linux-wireless@vger.kernel.org
+> +S:	Supported
+> +F:	drivers/staging/wilc1000/
+> +
+>  STAGING - XGI Z7,Z9,Z11 PCI DISPLAY DRIVER
+>  M:	Arnaud Patard <arnaud.patard@rtp-net.org>
+>  S:	Odd Fixes
+> 
 
 
-Jonas
+-- 
+Nicolas Ferre
