@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39642 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754741AbbEaDEI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51998 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbbEDRz3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2015 23:04:08 -0400
-Date: Sun, 31 May 2015 11:54:50 +0900
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Haggi Eran <haggai.eran@gmail.com>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150531025450.GA10754@kroah.com> (sfid-20150531_050414_901797_339767EE)
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
- <55634793.4050002@lwfinger.net>
- <20150531025347.GA8074@kroah.com>
+	Mon, 4 May 2015 13:55:29 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add ATH10K_FW_FEATURE_IGNORE_OTP_RESULT
+References: <20150427142438.25600.26537.stgit@potku.adurom.net>
+Date: Mon, 4 May 2015 20:55:01 +0300
+In-Reply-To: <20150427142438.25600.26537.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Mon, 27 Apr 2015 17:24:38 +0300")
+Message-ID: <874mnsw7m2.fsf@kamboji.qca.qualcomm.com> (sfid-20150504_195533_330633_074B74BB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150531025347.GA8074@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 31, 2015 at 11:53:47AM +0900, Greg KH wrote:
-> On Mon, May 25, 2015 at 11:02:27AM -0500, Larry Finger wrote:
-> > On 05/23/2015 04:16 PM, Larry Finger wrote:
-> > >The driver is reporting a warning at kernel/time/timer.c:1096 due to calling
-> > >del_timer_sync() while in interrupt mode. Such warnings are fixed by calling
-> > >del_timer() instead.
-> > >
-> > >Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > >Cc: Stable <stable@vger.kernel.org>
-> > >Cc: Haggi Eran <haggai.eran@gmail.com>
-> > >---
-> > 
-> > Greg,
-> > 
-> > Please drop this patch. The same fixes were submitted as
-> > https://lkml.org/lkml/2015/5/15/226.
-> 
-> That's not working for me at the moment, what was the subject: name?  I
-> think I already applied it to the testing tree...
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Nevermind, found it...
+> qca6174 otp binary seems to always return an error to the host, even if the
+> calibration succeeded. Add a firmware feature flag to detect if the firmware
+> image which have this problem and workaround the issue in ath10k by ignoring
+> the error code.
+>
+> I was also considering making this hw specific flag but as this is strictly a
+> firmware issue it's best to handle this via a firmware feature flag so that it
+> will be easy to disable the workaround.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+Applied.
+
+-- 
+Kalle Valo
