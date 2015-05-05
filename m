@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17334 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755387AbbE2PAn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48905 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753568AbbEEFa6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 11:00:43 -0400
-Date: Fri, 29 May 2015 18:00:25 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: liuzy@marvell.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: mwifiex: add dump data debug support
-Message-ID: <20150529150025.GB10313@mwanda> (sfid-20150529_170054_423103_E264E3DD)
+	Tue, 5 May 2015 01:30:58 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Okash Khawaja <okash.khawaja@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] adm8211: fix checkpatch error for trailing statements on next line
+References: <20150503104231.GA3607@bytefire-computer>
+	<87lhh4wm3n.fsf@kamboji.qca.qualcomm.com>
+	<20150505051827.GA2463@bytefire-computer>
+Date: Tue, 05 May 2015 08:30:51 +0300
+In-Reply-To: <20150505051827.GA2463@bytefire-computer> (Okash Khawaja's
+	message of "Tue, 5 May 2015 06:19:38 +0100")
+Message-ID: <87k2wnvbec.fsf@kamboji.qca.qualcomm.com> (sfid-20150505_073127_963829_E1E5DAC2)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Zhaoyang Liu,
+Okash Khawaja <okash.khawaja@gmail.com> writes:
 
-This is a semi-automatic email about new static checker warnings.
+> On Mon, May 04, 2015 at 03:42:04PM +0300, Kalle Valo wrote:
+>> Okash Khawaja <okash.khawaja@gmail.com> writes:
+>> 
+>> > This patch fixes the checkpatch.pl error:
+>> >
+>> > ERROR: trailing statements should be on next line
+>> >
+>> > More specifically, the fix has been applied to the four occurances of the error listed below.
+>> >
+>> > ERROR: trailing statements should be on next line
+>> > #1101: FILE: drivers/net/wireless/adm8211.c:1101:
+>> > +               case  0x8: reg |= (0x1 << 14);
+>> >
+>> > ERROR: trailing statements should be on next line
+>> > #1103: FILE: drivers/net/wireless/adm8211.c:1103:
+>> > +               case 0x16: reg |= (0x2 << 14);
+>> >
+>> > ERROR: trailing statements should be on next line
+>> > #1105: FILE: drivers/net/wireless/adm8211.c:1105:
+>> > +               case 0x32: reg |= (0x3 << 14);
+>> >
+>> > ERROR: trailing statements should be on next line
+>> > #1107: FILE: drivers/net/wireless/adm8211.c:1107:
+>> > +                 default: reg |= (0x0 << 14);
+>> >
+>> > Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+>> > ---
+>> >  drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+>> >  1 file changed, 12 insertions(+), 8 deletions(-)
+>> 
+>> The patch has incorrectly "staging:" prefix in the title, please fix
+>> that. "adm8211:" is enough, you don't need anything for drivers in
+>> drivers/net/wireless.
+>> 
+>> -- 
+>> Kalle Valo
+>
+> Thanks Kalle for clarifying. I have removed "staging:" prefix and pasted the patch below.
+>
+> Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
 
-The patch 868093a9df75: "mwifiex: add dump data debug support" from 
-May 12, 2015, leads to the following Smatch complaint:
+I cannot apply the mail directly as you added the old discussion to the
+commit log. Please just resend the whole patch with clean commit log.
 
-drivers/net/wireless/mwifiex/cmdevt.c:475 mwifiex_process_event()
-	 error: we previously assumed 'skb' could be null (see line 467)
-
-drivers/net/wireless/mwifiex/cmdevt.c
-   466	
-   467		if (skb) {
-                    ^^^
-Old check for NULL.
-
-   468			rx_info = MWIFIEX_SKB_RXCB(skb);
-   469			memset(rx_info, 0, sizeof(*rx_info));
-   470			rx_info->bss_num = priv->bss_num;
-   471			rx_info->bss_type = priv->bss_type;
-   472		}
-   473	
-   474		mwifiex_dbg(adapter, EVENT, "EVENT: cause: %#x\n", eventcause);
-   475		mwifiex_dbg_dump(adapter, EVT_D, "Event Buf:", skb->data, skb->len);
-                                                               ^^^^^
-Patch introduces unchecked dereference.
-
-   476	
-   477		if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
-
-regards,
-dan carpenter
+-- 
+Kalle Valo
