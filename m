@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58682 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755254AbbEZN5v (ORCPT
+Received: from smtprelay0238.hostedemail.com ([216.40.44.238]:42993 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751592AbbEEWB4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:57:51 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: ath9k_htc: memory corruption calling set_bit()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20150514083448.GC1665@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
-Message-Id: <20150526105444.2FAC81416CE@smtp.codeaurora.org> (sfid-20150526_155801_623265_37698A2B)
-Date: Tue, 26 May 2015 10:54:44 +0000 (UTC)
+	Tue, 5 May 2015 18:01:56 -0400
+Message-ID: <1430863313.9365.49.camel@perches.com> (sfid-20150506_000218_385731_DB7AB026)
+Subject: Re: [PATCH] adm8211: fix the possible pci cache line sizes inside
+ switch-case
+From: Joe Perches <joe@perches.com>
+To: Okash Khawaja <okash.khawaja@gmail.com>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 05 May 2015 15:01:53 -0700
+In-Reply-To: <20150505214851.GA3013@bytefire-computer>
+References: <20150505214851.GA3013@bytefire-computer>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2015-05-05 at 22:48 +0100, Okash Khawaja wrote:
+> The PCI cache line size value, stored in cline variable, was being
+> compared against decimal values written as hex literals. This patch
+> changes those literals to correct hex values. 
 
-> In d8a2c51cdcae ('ath9k_htc: Use atomic operations for op_flags') we
-> changed things like this:
-> 
-> -	if (priv->op_flags & OP_TSF_RESET) {
-> +	if (test_bit(OP_TSF_RESET, &priv->op_flags)) {
-> 
-> The problem is that test_bit() takes a bit number and not a mask.  It
-> means that when we do:
-> 
-> 	set_bit(OP_TSF_RESET, &priv->op_flags);
-> 
-> Then it sets the (1 << 6) bit instead of the 6 bit so we are setting a
-> bit which is past the end of the unsigned long.
-> 
-> Fixes: d8a2c51cdcae ('ath9k_htc: Use atomic operations for op_flags')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+This is fine.
 
-Thanks, applied to wireless-drivers-next.git.
+The grammar might be better as something like:
 
-Kalle Valo
+The PCI cache line size value was being compared against
+decimal values prefixed with 0x.
+
+Fix the literals to use the correct hex values. 
+
+> Please note that this patch is on top of
+> another code cleanup patch '[PATCH] adm8211: fix checkpatch errors for
+> indentation and new line around switch-case'.
+
+But this information doesn't belong here as
+it would also be in a git log when someone
+uses git am to apply it to a tree.
+
+It'd be better to send a patch series using
+"git format-email --cover-letter -2 -o <dir>"
+and use git send-email for the series.
+
+
