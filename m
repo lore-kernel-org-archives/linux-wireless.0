@@ -1,134 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:1907 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbbECTc1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:32:27 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/42] iwlwifi: mvm: don't wait for scan stopped work when cancelling scans
-Date: Sun,  3 May 2015 22:31:18 +0300
-Message-Id: <1430681513-7838-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213229_955165_D31EC736)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+Received: from mail-am1on0147.outbound.protection.outlook.com ([157.56.112.147]:61204
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757321AbbEEJxY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 05:53:24 -0400
+From: "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Julia.Lawall@lip6.fr" <Julia.Lawall@lip6.fr>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Babu, Viswanathan (V.)" <vbabu3@visteon.com>,
+	"wlanfae@realtek.com" <wlanfae@realtek.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2] staging: rtl8192e: fix wrong assignment
+Date: Tue, 5 May 2015 09:38:50 +0000
+Message-ID: <20150505093330.GA3654@IND12F0122> (sfid-20150505_115328_610116_8C8F6791)
+References: <20150504092347.GA6742@IND12F0122> <5547D3C5.50902@gmail.com>
+ <20150505091957.GM16501@mwanda>
+In-Reply-To: <20150505091957.GM16501@mwanda>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, May 05, 2015 at 12:19:57PM +0300, Dan Carpenter wrote:
+> On Mon, May 04, 2015 at 10:17:09PM +0200, Mateusz Kulikowski wrote:
+> > As far as I know (radio) noise is rarely above 0 dBm - if it is, you're doing something wrong.
+> > This means we can just change rtllib_rx_stats::noise to s8.
+> 
+> I think it's hard to do that because these definitions are part of the
+> user space API.
+> 
+> include/uapi/linux/wireless.h
+> 
+> linux-wireless is not on the CC list so we will never know for sure.
+> 
+> There are still a bunch of these warnings.
+> 
+> drivers/staging/rtl8192u/r8192U_wx.c:271 rtl8180_wx_get_range() warn: assigning (-78) to unsigned variable 'range->avg_qual.level'
+> drivers/staging/rtl8712/rtl871x_ioctl_linux.c:914 r8711_wx_get_range() warn: assigning (-78) to unsigned variable 'range->avg_qual.level'
+> drivers/net/wireless/ipw2x00/ipw2100.c:6817 ipw2100_wx_get_range() warn: assigning (-78) to unsigned variable 'range->avg_qual.level'
+> drivers/net/wireless/hostap/hostap_ioctl.c:1023 prism2_ioctl_giwrange() warn: assigning (-60) to unsigned variable 'range->avg_qual.level'
+> drivers/net/wireless/prism54/isl_ioctl.c:451 prism54_get_range() warn: assigning (-80) to unsigned variable 'range->avg_qual.level'
+> 
+> drivers/staging/rtl8192u/r8192U_core.c:4493 rtl8192_rx_nomal() warn: assigning (-98) to unsigned variable 'stats.noise'
+> drivers/staging/rtl8192u/r8192U_core.c:4605 rtl8192_rx_cmd() warn: assigning (-98) to unsigned variable 'stats.noise'
+> drivers/staging/rtl8192u/r8192U_wx.c:266 rtl8180_wx_get_range() warn: assigning (-98) to unsigned variable 'range->max_qual.noise'
+> drivers/staging/rtl8192e/rtl8192e/rtl_wx.c:1323 r8192_get_wireless_stats() warn: assigning (-100) to unsigned variable 'wstats->qual.noise'
+> drivers/staging/rtl8192e/rtl8192e/rtl_core.c:2322 rtl8192_rx_normal() warn: assigning (-98) to unsigned variable 'stats.noise'
+> drivers/net/wireless/hostap/hostap_ioctl.c:1024 prism2_ioctl_giwrange() warn: assigning (-95) to unsigned variable 'range->avg_qual.noise'
+> 
+> regards,
+> dan carpenter
+> 
 
-Now that we have separate flags for stopping scans, we don't need to
-wait for the scan stopped work to complete before starting the new
-scan.  Previously we needed it because we had no way of distinguishing
-the scan that was being stopped from the scan that was currently
-running.  With the new flags there won't be any confusions and we are
-able to handle the stop for the correct type of scan.
-
-Thus we can remove the iwl_mvm_cancel_scan_wait_notif() function.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 65 ++++++-----------------------
- 1 file changed, 12 insertions(+), 53 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index aff7de7..15dc4a4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2373,49 +2373,6 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
- 	iwl_mvm_unref(mvm, IWL_MVM_REF_BSS_CHANGED);
- }
- 
--static int iwl_mvm_cancel_scan_wait_notif(struct iwl_mvm *mvm,
--					  unsigned int scan_type)
--{
--	int ret;
--	bool wait_for_handlers = false;
--
--	mutex_lock(&mvm->mutex);
--
--	if (!(mvm->scan_status & scan_type)) {
--		ret = 0;
--		/* make sure there are no pending notifications */
--		wait_for_handlers = true;
--		goto out;
--	}
--
--	/* It's okay to switch on bitmask values here, because we can
--	 * only stop one scan type at a time.
--	 */
--	switch (scan_type) {
--	case IWL_MVM_SCAN_SCHED:
--		ret = iwl_mvm_scan_offload_stop(mvm, true);
--		break;
--	case IWL_MVM_SCAN_REGULAR:
--		ret = iwl_mvm_cancel_scan(mvm);
--		break;
--	default:
--		WARN_ON_ONCE(1);
--		ret = -EINVAL;
--		break;
--	}
--	if (ret)
--		goto out;
--
--	wait_for_handlers = true;
--out:
--	mutex_unlock(&mvm->mutex);
--
--	/* make sure we consume the completion notification */
--	if (wait_for_handlers)
--		iwl_mvm_wait_for_async_handlers(mvm);
--
--	return ret;
--}
- static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       struct ieee80211_scan_request *hw_req)
-@@ -2428,14 +2385,15 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 	    req->n_channels > mvm->fw->ucode_capa.n_scan_channels)
- 		return -EINVAL;
- 
--	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
--		ret = iwl_mvm_cancel_scan_wait_notif(mvm, IWL_MVM_SCAN_SCHED);
-+	mutex_lock(&mvm->mutex);
-+
-+	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) &&
-+	    (mvm->scan_status & IWL_MVM_SCAN_SCHED)) {
-+		ret = iwl_mvm_scan_offload_stop(mvm, true);
- 		if (ret)
--			return ret;
-+			goto out;
- 	}
- 
--	mutex_lock(&mvm->mutex);
--
- 	if (iwl_mvm_is_lar_supported(mvm) && !mvm->lar_regdom_set) {
- 		IWL_ERR(mvm, "scan while LAR regdomain is not set\n");
- 		ret = -EBUSY;
-@@ -2798,14 +2756,15 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	int ret;
- 
--	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
--		ret = iwl_mvm_cancel_scan_wait_notif(mvm, IWL_MVM_SCAN_REGULAR);
-+	mutex_lock(&mvm->mutex);
-+
-+	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) &&
-+	    (mvm->scan_status & IWL_MVM_SCAN_REGULAR)) {
-+		ret = iwl_mvm_cancel_scan(mvm);
- 		if (ret)
--			return ret;
-+			goto out;
- 	}
- 
--	mutex_lock(&mvm->mutex);
--
- 	if (iwl_mvm_is_lar_supported(mvm) && !mvm->lar_regdom_set) {
- 		IWL_ERR(mvm, "sched-scan while LAR regdomain is not set\n");
- 		ret = -EBUSY;
--- 
-2.1.0
-
+Added the linux-wireless guys in the CC list so that they can comment on
+this.
