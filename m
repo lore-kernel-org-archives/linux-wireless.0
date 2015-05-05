@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37737 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbbEKMMs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48771 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932981AbbEEF1E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 08:12:48 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Liu CF/TW <cfliu.tw@gmail.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param for raw tx injection, sw crypto support.
-References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com>
-	<873837qo6l.fsf@kamboji.qca.qualcomm.com>
-	<554CE438.5000208@candelatech.com>
-	<CAG5N3qFB=yZJYSokUqF2=eNcS5SoCOntOyan6_OuahtFF5r=Bw@mail.gmail.com>
-Date: Mon, 11 May 2015 15:12:37 +0300
-In-Reply-To: <CAG5N3qFB=yZJYSokUqF2=eNcS5SoCOntOyan6_OuahtFF5r=Bw@mail.gmail.com>
-	(Liu CF's message of "Fri, 8 May 2015 10:35:19 -0700")
-Message-ID: <871tinjosq.fsf@kamboji.qca.qualcomm.com> (sfid-20150511_141251_433941_9E32F908)
+	Tue, 5 May 2015 01:27:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>
+Subject: Re: [PATCH v2 5/7] wil6210: Add pmc debug mechanism memory management
+References: <1430400311-3861-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1430400311-3861-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Tue, 05 May 2015 08:26:56 +0300
+In-Reply-To: <1430400311-3861-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Thu, 30 Apr 2015 16:25:09 +0300")
+Message-ID: <87oalzvbkv.fsf@kamboji.qca.qualcomm.com> (sfid-20150505_072805_863155_F7DA4760)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Liu CF/TW" <cfliu.tw@gmail.com> writes:
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
->>> I wonder does it make any sense to have nohwcrypt parameter? Especially
->>> if ath10k doesn't support case rawtxrx=0 and nohwcrypt=1. One
->>> possibility I came up is to have multiple values for rawtxrx, for
->>> example is rawtxrx=1 means HW crypt enabled and rawtxrx=2 HW crypt
->>> disabled. Ideas welcome.
+> Pmc is a hardware debug mechanism which allows capturing phy data,
+> packets, and internally generated events and messages synchronized
+> and time stamped by the hardware. It requires memory buffers
+> allocated by the driver in order to be used by hardware dma to
+> upstream real time debug data to host memory.
+> Driver will handle memory allocation and release, and fetching
+> the data from the memory to application layer via debug file
+> system. The configuration of pmc is handled entirely by the
+> application layer.
 >
-> Indeed. I picked nohwcrypt because it seems to be the convention in
-> previous Atheros drivers for this feature.
+> Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Yeah, but I don't think we need to follow that in ath10k. Especially not
-until we get SW encryption working in all cases.
+kbuild found warnings, can you please send a followup patch to fix
+these:
 
-> In this case, I will drop nohwcrypt and do as you suggested.
->
-> rawmode = 0: Raw mode disabled. Use the default native WiFi mode. In
-> this mode, only HW crypto is supported.
-> rawmode = 1: Use Raw rx decap + raw tx encap mode. Supports both SW
-> and HW crypto.
-> rawmode = 2: Same as 1, but with HW crypto engine globally disabled.
-
-I would guess that HW crypto globally disabled (value 2 above) will be
-more popular, right? So would it make sense to reverse the values and
-use value 1 for that?
-
-> When rawmode = 1, I want a further per BSS control to make some BSS
-> use HW crypto and some BSS bypass HW crypto.
-> For those BSS that have HW crypto bypassed, their data frames may come
-> from either the normal wlan interfaces (therefore mac80211 sw crypto
-> used), or from monitor interfaces (therefore Tx injected frames
-> already encrypted + Rx frames still encrypted)
-
-Ok, we need to think how to configure this. Maybe a debugfs interface?
+   In file included from include/linux/printk.h:275:0,
+                    from include/linux/kernel.h:13,
+                    from include/linux/list.h:8,
+                    from include/linux/wait.h:6,
+                    from include/linux/fs.h:6,
+                    from drivers/net/wireless/ath/wil6210/pmc.c:19:
+   drivers/net/wireless/ath/wil6210/pmc.c: In function 'wil_pmc_alloc':
+>> drivers/net/wireless/ath/wil6210/pmc.c:97:8: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+           (void *)pmc->pring_pa,
+           ^
+   include/linux/dynamic_debug.h:95:12: note: in definition of macro 'dynamic_netdev_dbg'
+             ##__VA_ARGS__);  \
+               ^
+>> drivers/net/wireless/ath/wil6210/wil6210.h:647:2: note: in expansion of macro 'netdev_dbg'
+     netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
+     ^
+>> drivers/net/wireless/ath/wil6210/wil6210.h:654:40: note: in expansion of macro 'wil_dbg'
+    #define wil_dbg_misc(wil, fmt, arg...) wil_dbg(wil, "DBG[MISC]" fmt, ##arg)
+                                           ^
+>> drivers/net/wireless/ath/wil6210/pmc.c:94:2: note: in expansion of macro 'wil_dbg_misc'
+     wil_dbg_misc(wil,
+     ^
+   In file included from drivers/net/wireless/ath/wil6210/pmc.c:21:0:
+>> drivers/net/wireless/ath/wil6210/pmc.c:97:8: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+           (void *)pmc->pring_pa,
+           ^
+   drivers/net/wireless/ath/wil6210/wil6210.h:648:28: note: in definition of macro 'wil_dbg'
+     wil_dbg_trace(wil, fmt, ##arg); \
+                               ^
+>> drivers/net/wireless/ath/wil6210/pmc.c:94:2: note: in expansion of macro 'wil_dbg_misc'
+     wil_dbg_misc(wil,
+     ^
 
 -- 
 Kalle Valo
