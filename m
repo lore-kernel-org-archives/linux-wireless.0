@@ -1,41 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41711 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbbEZHQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 03:16:40 -0400
-Message-ID: <1432624593.2141.1.camel@sipsolutions.net> (sfid-20150526_091643_108979_49B0B9FC)
-Subject: Re: [PATCHv2 0/2] add mt7601u driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jakub =?UTF-8?Q?Kici=C5=84ski?= <moorray3@wp.pl>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Date: Tue, 26 May 2015 09:16:33 +0200
-In-Reply-To: <20150525113527.5b8b31c0@north>
-References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
-	 <1430857363-30844-1-git-send-email-moorray3@wp.pl>
-	 <87fv6l3wib.fsf@kamboji.qca.qualcomm.com> <20150525113527.5b8b31c0@north>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:35457 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755495AbbEEFTn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 01:19:43 -0400
+Date: Tue, 5 May 2015 06:19:38 +0100
+From: Okash Khawaja <okash.khawaja@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] adm8211: fix checkpatch error for trailing statements
+ on next line
+Message-ID: <20150505051827.GA2463@bytefire-computer> (sfid-20150505_072007_819692_1CF75791)
+References: <20150503104231.GA3607@bytefire-computer>
+ <87lhh4wm3n.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87lhh4wm3n.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-05-25 at 11:35 +0200, Jakub Kiciński wrote:
+On Mon, May 04, 2015 at 03:42:04PM +0300, Kalle Valo wrote:
+> Okash Khawaja <okash.khawaja@gmail.com> writes:
+> 
+> > This patch fixes the checkpatch.pl error:
+> >
+> > ERROR: trailing statements should be on next line
+> >
+> > More specifically, the fix has been applied to the four occurances of the error listed below.
+> >
+> > ERROR: trailing statements should be on next line
+> > #1101: FILE: drivers/net/wireless/adm8211.c:1101:
+> > +               case  0x8: reg |= (0x1 << 14);
+> >
+> > ERROR: trailing statements should be on next line
+> > #1103: FILE: drivers/net/wireless/adm8211.c:1103:
+> > +               case 0x16: reg |= (0x2 << 14);
+> >
+> > ERROR: trailing statements should be on next line
+> > #1105: FILE: drivers/net/wireless/adm8211.c:1105:
+> > +               case 0x32: reg |= (0x3 << 14);
+> >
+> > ERROR: trailing statements should be on next line
+> > #1107: FILE: drivers/net/wireless/adm8211.c:1107:
+> > +                 default: reg |= (0x0 << 14);
+> >
+> > Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+> > ---
+> >  drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+> >  1 file changed, 12 insertions(+), 8 deletions(-)
+> 
+> The patch has incorrectly "staging:" prefix in the title, please fix
+> that. "adm8211:" is enough, you don't need anything for drivers in
+> drivers/net/wireless.
+> 
+> -- 
+> Kalle Valo
 
-> I just dropped the line configuring HW promisc for now like Johannes
-> did in his removal patch.  However, the right fix is to configure it
-> based on IEEE80211_CONF_MONITOR, correct?
+Thanks Kalle for clarifying. I have removed "staging:" prefix and pasted the patch below.
 
-The two aren't equivalent, so no.
+Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+---
+ drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-FIF_PROMISC_IN_BSS was meant to receive frames promiscuously *within*
-the BSS, i.e. everything with the right BSSID. This functionality
-clearly cannot work with encryption etc. nor with a lot of HW etc. so I
-decided to remove it. It seems unlikely that anyone could have used it
-successfully.
-
-Monitor mode, on the other hand, supposedly receives *everything* that
-decodes correctly on the receiver.
-
-johannes
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index f07a618..79e4e5f 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+                pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
+ 
+                switch (cline) {
+-               case  0x8: reg |= (0x1 << 14);
+-                          break;
+-               case 0x16: reg |= (0x2 << 14);
+-                          break;
+-               case 0x32: reg |= (0x3 << 14);
+-                          break;
+-                 default: reg |= (0x0 << 14);
+-                          break;
++               case  0x8:
++                       reg |= (0x1 << 14);
++                       break;
++               case 0x16:
++                       reg |= (0x2 << 14);
++                       break;
++               case 0x32:
++                       reg |= (0x3 << 14);
++                       break;
++                 default:
++                       reg |= (0x0 << 14);
++                       break;
+                }
+        }
+ 
+-- 
+1.9.1
 
