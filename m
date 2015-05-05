@@ -1,68 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:34121 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757967AbbEaG6u (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3234 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754699AbbEERBB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 02:58:50 -0400
-Received: by wgv5 with SMTP id 5so91103070wgv.1
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2015 23:58:48 -0700 (PDT)
-Message-ID: <556AB128.3050909@gmail.com> (sfid-20150531_085854_538022_FD189F46)
-Date: Sun, 31 May 2015 08:58:48 +0200
-From: Arend van Spriel <aspriel@gmail.com>
+	Tue, 5 May 2015 13:01:01 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: David Miller <davem@davemloft.net>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: wireless-drivers 2015-05-05
+Date: Tue, 5 May 2015 20:00:42 +0300
+Message-ID: <871tivt0w5.fsf@kamboji.qca.qualcomm.com> (sfid-20150505_190140_213855_803834CF)
 MIME-Version: 1.0
-To: Chaitanya T K <chaitanya.mgit@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL messages.
-References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
-In-Reply-To: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31-05-15 01:28, Chaitanya T K wrote:
-> cfg80211 reuses the skb before asking for a fresh on from genl framework, 
-> this works efficiently for smaller messages but NLM_F_DUMP is normally 
-> used to transport larger data normally > PAGE_SIZE, so if the message 
-> occupies more than GOODSIZE its better to ask for a new, saves couple
-> of hanshakes with the driver.
-> 
-> This improves the time to get the DUMP response across to user space.
-> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
-> ---
-> V2: no new line, so commit log was cut off. Updated now.
-> ---
->  net/wireless/nl80211.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index c264eff..152bd0c 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -7636,6 +7636,10 @@ static int nl80211_testmode_dump(struct sk_buff *skb,
->  		}
->  
->  		genlmsg_end(skb, hdr);
-> +
-> +		/* Don't re-use skb, when we know nla_put fails*/
+Hi Dave,
 
-After reading the commit message this comment is not clear to me. Maybe
-it is just me ;-)
+here are few fixes for 4.1. Please let me know if there are problems.
 
-> +		if (skb->len > NLMSG_GOODSIZE / 2)
+Kalle
 
-This definitely does not match the description in the commit message:
-'message occupies more than GOODSIZE' != (skb->len > NLMSG_GOODSIZE / 2)
+The following changes since commit 39376ccb1968ba9f83e2a880a8bf02ad5dea44e1:
 
-Regards,
-Arend
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/pablo/nf (2015-04-27 23:12:34 -0400)
 
-> +			break;
->  	}
->  
->  	err = skb->len;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-05-05
+
+for you to fetch changes up to f673821864899153142365aca888435815ac93f0:
+
+  ath9k: fix per-packet tx power configuration (2015-05-03 23:54:38 +0300)
+
+----------------------------------------------------------------
+iwlwifi:
+
+* fix firmware API for -13.ucode
+* fix RSSI handling that avoid bad roaming decision
+* fix firmware debug
+* fix MFUART operation
+* fix ASSERT while restart the hardware (because of another ASSERT e.g)
+
+ath9k:
+
+* fix per-packet tx power configuration
+
+rtlwifi:
+
+* rtl8192cu: Fix kernel deadlock
+
+----------------------------------------------------------------
+Alexander Bondar (1):
+      iwlwifi: mvm: Avoid signal based decisions if ave beacon RSSI is 0
+
+Avraham Stern (1):
+      iwlwifi: mvm: fix scan iteration complete notification handling
+
+Avri Altman (1):
+      iwlwifi: mvm: fix Tx Power firmware API
+
+Emmanuel Grumbach (2):
+      iwlwifi: mvm: don't stop the FW monitor too early
+      iwlwifi: mvm: fix typo in CONFIG option
+
+Eran Harary (1):
+      iwlwifi: mvm: don't power off the device between INIT and OPER firmwares
+
+Johannes Berg (1):
+      iwlwifi: mvm: force quota update update after FW restart
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2015-04-28' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      rtlwifi: rtl8192cu: Fix kernel deadlock
+
+Liad Kaufman (1):
+      iwlwifi: pcie: prevent using unmapped memory in fw monitor
+
+Lorenzo Bianconi (1):
+      ath9k: fix per-packet tx power configuration
+
+ drivers/net/wireless/ath/ath9k/xmit.c           |   52 +++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-trans.h        |   41 +++++++++++------
+ drivers/net/wireless/iwlwifi/mvm/d3.c           |    2 +-
+ drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |   34 ++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h  |   44 +-----------------
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h       |   13 ------
+ drivers/net/wireless/iwlwifi/mvm/fw.c           |   54 +++++++++--------------
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c     |   26 +++++++++--
+ drivers/net/wireless/iwlwifi/mvm/mvm.h          |    1 -
+ drivers/net/wireless/iwlwifi/mvm/ops.c          |   10 +++++
+ drivers/net/wireless/iwlwifi/mvm/rx.c           |    5 +++
+ drivers/net/wireless/iwlwifi/mvm/scan.c         |    2 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c       |   17 +++----
+ drivers/net/wireless/rtlwifi/usb.c              |    2 +-
+ 15 files changed, 161 insertions(+), 144 deletions(-)
+
+-- 
+Kalle Valo
