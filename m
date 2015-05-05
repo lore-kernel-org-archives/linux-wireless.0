@@ -1,81 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:32776 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbbESRXY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 13:23:24 -0400
-Received: by lagr1 with SMTP id r1so34901291lag.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 10:23:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <555B5C18.5000906@lwfinger.net>
-References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com>
-	<555B5C18.5000906@lwfinger.net>
-Date: Tue, 19 May 2015 20:23:22 +0300
-Message-ID: <CAJ=9Czaqc5tVB50QBBhTG8xCQ4g93EspqvwnoMFjt3Wszvg+0g@mail.gmail.com> (sfid-20150519_192328_031150_93043EE2)
-Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
-From: Haggai Eran <haggai.eran@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:52228 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2993214AbbEEOlB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 10:41:01 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: extend get_key() to return PN for all ciphers
+Date: Tue,  5 May 2015 16:40:57 +0200
+Message-Id: <1430836857-4393-2-git-send-email-johannes@sipsolutions.net> (sfid-20150505_194356_959938_EFBA72B1)
+In-Reply-To: <1430836857-4393-1-git-send-email-johannes@sipsolutions.net>
+References: <1430836857-4393-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 May 2015 at 18:51, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/19/2015 12:47 AM, Haggai Eran wrote:
->>
->> With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
->> packet are set, but the packet length is too large. Truncate the packet
->> to prevent memory corruption.
->>
->> Signed-off-by: Haggai Eran <haggai.eran@gmail.com>
->> ---
->>
->> Hi,
->>
->> I think this solves the issue for me. I'll test it more thoroughly later.
->> I
->> still don't know why a fragmented packet has such a large pkt_len value
->> though.
->>
->> Thanks,
->> Haggai
->>
->>   drivers/staging/rtl8712/rtl8712_recv.c | 6 +++++-
->>   1 file changed, 5 insertions(+), 1 deletion(-)
->
->
-> I added a printout to your patch to log the values for tmp_len and alloc_sz
-> when tmp_len > alloc_sz. In about 15 minutes of running, that print has not
-> triggered. The condition only seems to happen on your system.
->
-> Please replace your patch with my modified version and report the printed
-> values.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think you attached the original version, and not the one with the
-prints. In any case, here are some example values I've seen:
+For ciphers not supported by mac80211, the function currently
+doesn't return any PN data. Fix this by extending the driver's
+get_key_seq() a little more to allow moving arbitrary PN data.
 
-[41727.150644] truncating packet: tmp_len = 3478, alloc_sz = 1658,
-pkt_len = 3454, drvinfo_sz = 0
-[41732.746346] truncating packet: tmp_len = 13484, alloc_sz = 1658,
-pkt_len = 13460, drvinfo_sz = 0
-[42044.508326] truncating packet: tmp_len = 9998, alloc_sz = 1658,
-pkt_len = 9974, drvinfo_sz = 0
-[42044.600013] truncating packet: tmp_len = 1982, alloc_sz = 1658,
-pkt_len = 1958, drvinfo_sz = 0
-[42044.677548] truncating packet: tmp_len = 11920, alloc_sz = 1658,
-pkt_len = 11896, drvinfo_sz = 0
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 7 +++++++
+ net/mac80211/cfg.c     | 9 +++++++++
+ net/mac80211/key.c     | 4 ++--
+ net/mac80211/key.h     | 3 +--
+ 4 files changed, 19 insertions(+), 4 deletions(-)
 
-I think this issue may have started when I changed my home router /
-access point from a LevelOne WDR-6001 to a TP-Link TL-WR1043ND. Could
-these packets be trigerred somehow by a different interaction between
-the access point and the wifi adapter?
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d719812759fc..c49840fe980f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1501,6 +1501,8 @@ struct ieee80211_key_conf {
+ 	u8 key[0];
+ };
+ 
++#define IEEE80211_MAX_PN_LEN	16
++
+ /**
+  * struct ieee80211_key_seq - key sequence counter
+  *
+@@ -1513,6 +1515,7 @@ struct ieee80211_key_conf {
+  *	reverse order than in packet)
+  * @gcmp: PN data, most significant byte first (big endian,
+  *	reverse order than in packet)
++ * @hw: data for HW-only (e.g. cipher scheme) keys
+  */
+ struct ieee80211_key_seq {
+ 	union {
+@@ -1532,6 +1535,10 @@ struct ieee80211_key_seq {
+ 		struct {
+ 			u8 pn[6];
+ 		} gcmp;
++		struct {
++			u8 seq[IEEE80211_MAX_PN_LEN];
++			u8 seq_len;
++		} hw;
+ 	};
+ };
+ 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd7014b09396..3469bbdc891c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -431,6 +431,15 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+ 		params.seq = seq;
+ 		params.seq_len = 6;
+ 		break;
++	default:
++		if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
++			break;
++		if (WARN_ON(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV))
++			break;
++		drv_get_key_seq(sdata->local, key, &kseq);
++		params.seq = kseq.hw.seq;
++		params.seq_len = kseq.hw.seq_len;
++		break;
+ 	}
+ 
+ 	params.key = key->conf.key;
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 3e0b814f4db3..0a5d5c5ad30f 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -485,8 +485,8 @@ ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+ 		break;
+ 	default:
+ 		if (cs) {
+-			size_t len = (seq_len > MAX_PN_LEN) ?
+-						MAX_PN_LEN : seq_len;
++			size_t len = (seq_len > IEEE80211_MAX_PN_LEN) ?
++						IEEE80211_MAX_PN_LEN : seq_len;
+ 
+ 			key->conf.iv_len = cs->hdr_len;
+ 			key->conf.icv_len = cs->mic_len;
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index c5a31835be0e..df430a618764 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -18,7 +18,6 @@
+ 
+ #define NUM_DEFAULT_KEYS 4
+ #define NUM_DEFAULT_MGMT_KEYS 2
+-#define MAX_PN_LEN 16
+ 
+ struct ieee80211_local;
+ struct ieee80211_sub_if_data;
+@@ -116,7 +115,7 @@ struct ieee80211_key {
+ 		} gcmp;
+ 		struct {
+ 			/* generic cipher scheme */
+-			u8 rx_pn[IEEE80211_NUM_TIDS + 1][MAX_PN_LEN];
++			u8 rx_pn[IEEE80211_NUM_TIDS + 1][IEEE80211_MAX_PN_LEN];
+ 		} gen;
+ 	} u;
+ 
+-- 
+2.1.4
 
-In addition to these fragmented packets, by the way, I'm still seeing
-by the way many packets that are dropped for other reasons, such as:
- - invalid ver field
- - seq_ctrl doesn't match in recv_decache
- - sta2sta_data_frame failing for some reason
- - packets with frame type 12.
-
-Thanks,
-Haggai
