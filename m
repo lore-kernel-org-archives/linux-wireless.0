@@ -1,111 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:8015 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751284AbbE1NBX (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:36075 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965617AbbEEHRr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:01:23 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCwkwE014687
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:22 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqht-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:22 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 16/17] mwifiex: using right tid for addressing ra_list
-Date: Thu, 28 May 2015 23:59:06 +0530
-Message-ID: <1432837747-2075-17-git-send-email-patila@marvell.com> (sfid-20150528_150132_108017_3CC72503)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+	Tue, 5 May 2015 03:17:47 -0400
+Date: Tue, 5 May 2015 08:17:41 +0100
+From: Okash Khawaja <okash.khawaja@gmail.com>
+To: joe@perchescom
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] adm8211: fix checkpatch error for trailing statements on
+ next line
+Message-ID: <20150505071741.GA2678@bytefire-computer> (sfid-20150505_091842_132542_77CFC42F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+This patch fixes these checkpatch.pl errors:
 
-This patch fixes issue with the accessing correct ra_list by
-downgrading corresponding tid number.
+ERROR: trailing statements should be on next line
+ERROR: switch and case should be at the same indent
 
-Alternatively, ra lists are created in mwifiex_wmm_add_buf_txqueue
-using downgraded tid number.
+More specifically, the fix has been applied to the five occurances of the errors listed below.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+ERROR: trailing statements should be on next line
+#1101: FILE: drivers/net/wireless/adm8211.c:1101:
++		case  0x8: reg |= (0x1 << 14);
+
+ERROR: trailing statements should be on next line
+#1103: FILE: drivers/net/wireless/adm8211.c:1103:
++		case 0x16: reg |= (0x2 << 14);
+
+ERROR: trailing statements should be on next line
+#1105: FILE: drivers/net/wireless/adm8211.c:1105:
++		case 0x32: reg |= (0x3 << 14);
+
+ERROR: trailing statements should be on next line
+#1107: FILE: drivers/net/wireless/adm8211.c:1107:
++		default: reg |= (0x0 << 14);
+
+ERROR: switch and case should be at the same indent
+#1100: FILE: adm8211.c:1100:
++		switch (cline) {
+[...]
++		  default:
+
+
+Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
 ---
- drivers/net/wireless/mwifiex/11n.c           | 11 ++++++++---
- drivers/net/wireless/mwifiex/11n_rxreorder.c |  5 ++++-
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 8422986..4d8ef49 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -156,7 +156,7 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
- int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 			      struct host_cmd_ds_command *resp)
- {
--	int tid;
-+	int tid, tid_down;
- 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
- 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
- 	struct mwifiex_ra_list_tbl *ra_list;
-@@ -167,7 +167,9 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index f07a618..79e4e5f 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+ 		pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
  
- 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
- 	       >> BLOCKACKPARAM_TID_POS;
--	ra_list = mwifiex_wmm_get_ralist_node(priv, tid, add_ba_rsp->
-+
-+	tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+	ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, add_ba_rsp->
- 		peer_mac_addr);
- 	if (le16_to_cpu(add_ba_rsp->status_code) != BA_RESULT_SUCCESS) {
- 		if (ra_list) {
-@@ -530,13 +532,16 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
- 	struct mwifiex_tx_ba_stream_tbl *new_node;
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
- 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
- 				   GFP_ATOMIC);
- 		if (!new_node)
- 			return;
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, ra);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, ra);
- 		if (ra_list) {
- 			ra_list->ba_status = ba_status;
- 			ra_list->amsdu_in_ampdu = false;
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 39d7a95..64401a7 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -663,6 +663,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	u8 cleanup_rx_reorder_tbl;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (type == TYPE_DELBA_RECEIVE)
- 		cleanup_rx_reorder_tbl = (initiator) ? true : false;
-@@ -688,7 +689,9 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 				    "event: TID, RA not found in table\n");
- 			return;
+ 		switch (cline) {
+-		case  0x8: reg |= (0x1 << 14);
+-			   break;
+-		case 0x16: reg |= (0x2 << 14);
+-			   break;
+-		case 0x32: reg |= (0x3 << 14);
+-			   break;
+-		  default: reg |= (0x0 << 14);
+-			   break;
++		case  0x8:
++			reg |= (0x1 << 14);
++			break;
++		case 0x16:
++			reg |= (0x2 << 14);
++			break;
++		case 0x32:
++			reg |= (0x3 << 14);
++			break;
++		default:
++			reg |= (0x0 << 14);
++			break;
  		}
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, peer_mac);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, peer_mac);
- 		if (ra_list) {
- 			ra_list->amsdu_in_ampdu = false;
- 			ra_list->ba_status = BA_SETUP_NONE;
+ 	}
+ 
 -- 
-1.8.1.4
+1.9.1
 
