@@ -1,68 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:33089 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbbESRlj (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37543 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752153AbbEEGBz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 13:41:39 -0400
-Received: by lagr1 with SMTP id r1so35681490lag.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 10:41:37 -0700 (PDT)
+	Tue, 5 May 2015 02:01:55 -0400
+Date: Tue, 5 May 2015 07:01:51 +0100
+From: Okash Khawaja <okash.khawaja@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3] adm8211: fix checkpatch error for trailing statements on
+ next line
+Message-ID: <20150505060150.GA2548@bytefire-computer> (sfid-20150505_080219_599003_9666F6F2)
 MIME-Version: 1.0
-In-Reply-To: <CALWn1pt-neiJhrQcEES4cktcfyL0+c2B=GUAh8+Xo0L06VmsfA@mail.gmail.com>
-References: <CALWn1pu8U1o=J=j8Uunf7-hLNZV2Pv2mxJx11O_psZArij-qNw@mail.gmail.com>
-	<CANUX_P3XPLvLhYy7pb9_LXjEynfNjgzhbW3zFYfxVCjcjGNczw@mail.gmail.com>
-	<CALWn1pt-neiJhrQcEES4cktcfyL0+c2B=GUAh8+Xo0L06VmsfA@mail.gmail.com>
-Date: Tue, 19 May 2015 20:41:37 +0300
-Message-ID: <CANUX_P0rRqbks5LDiUjekTEjXV5nQoc1iSr4PhWd0cek7AnWQQ@mail.gmail.com> (sfid-20150519_194142_742602_EE154606)
-Subject: Re: Failed to capture data packets using Monitor mode with Intel 7260
- card. (Under Ubuntu 14.04)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: darklight wu <darklightwu@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 7:44 PM, darklight wu <darklightwu@gmail.com> wrote:
-> On Mon, May 18, 2015 at 3:26 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> On Mon, May 18, 2015 at 10:01 AM, darklight wu <darklightwu@gmail.com> wrote:
->>> Hi, All:
->>>
->>> I configured the Wifi Monitor mode with Intel 7260 card under
->>> Ubuntu14.04 and then used Wireshark to capture packets from air. But I
->>> could only get management/control packets but no data packets. I tried
->>> different channels and also with HT20 or HT40+/-.
->>>
->>> The commands I used were:
->>>
->>> iw dev wlan0 interface add mon0 type monitor
->>> iw dev wlan0 del  //I googled and was told I needed to delete the
->>> wlan0 first. Or else I got device busy (-16) error
->>> ifconfig mon0 up
->>> iw dev mon0 set channel 1
->>>
->>> I also tried to use other ways like "airmon-ng start wlan0". All the
->>> observations were same, no data packets. It's weird! Anyone has a
->>> clue?
->>>
->>
->> This is weird. But I recommend to add power_scheme=1 as a module
->> parameter to iwlmvm. Since iwlmvm is loaded automatically, you'll need
->> to add that to /etc/modprobe.d/iwlwifi.conf.
->> 14.04 ships 3.13 and I remember we had issues with monitor mode at
->> that time. You may want to try a newer kernel.
->
-> I tried again today with "power_scheme=1" and also booted with Ubuntu
-> 15.04. Both still failed to work in monitor mode. And with Ubuntu
-> 15.04, I event could not configure the nic to work on monitor mode.
-> The same commands at least can set the monitor mode under 14.04.
-> Meanwhile, I just want to clarify, the nic could capture data packets
-> to/from itself but could not capture others that were not belongs to
-> it. My co-worker tried on another machine with Ubuntu 14.04, he was
-> also failed.
->
-> Any tricks here?
+This patch fixes the checkpatch.pl error:
 
-You must not have any interface besides the monitor interface. I bet
-you still have the wpa_supplicant running and this is why you only
-have a virtual monitor interface that catches the packet from your
-managed interface only.
+ERROR: trailing statements should be on next line
+
+More specifically, the fix has been applied to the four occurances of the error listed below.
+
+ERROR: trailing statements should be on next line
+#1101: FILE: drivers/net/wireless/adm8211.c:1101:
++               case  0x8: reg |= (0x1 << 14);
+
+ERROR: trailing statements should be on next line
+#1103: FILE: drivers/net/wireless/adm8211.c:1103:
++               case 0x16: reg |= (0x2 << 14);
+
+ERROR: trailing statements should be on next line
+#1105: FILE: drivers/net/wireless/adm8211.c:1105:
++               case 0x32: reg |= (0x3 << 14);
+
+ERROR: trailing statements should be on next line
+#1107: FILE: drivers/net/wireless/adm8211.c:1107:
++                 default: reg |= (0x0 << 14);
+
+Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+---
+ drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index f07a618..79e4e5f 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+                pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
+ 
+                switch (cline) {
+-               case  0x8: reg |= (0x1 << 14);
+-                          break;
+-               case 0x16: reg |= (0x2 << 14);
+-                          break;
+-               case 0x32: reg |= (0x3 << 14);
+-                          break;
+-                 default: reg |= (0x0 << 14);
+-                          break;
++               case  0x8:
++                       reg |= (0x1 << 14);
++                       break;
++               case 0x16:
++                       reg |= (0x2 << 14);
++                       break;
++               case 0x32:
++                       reg |= (0x3 << 14);
++                       break;
++                 default:
++                       reg |= (0x0 << 14);
++                       break;
+                }
+        }
+ 
+-- 
+1.9.1
+
