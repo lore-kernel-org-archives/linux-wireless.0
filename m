@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42098 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751428AbbEPT5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2015 15:57:12 -0400
-Message-ID: <1431806229.2120.6.camel@sipsolutions.net> (sfid-20150516_215716_331653_5302EBE1)
-Subject: Re: mac80211 drops packet with old IV after rekeying
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sat, 16 May 2015 21:57:09 +0200
-In-Reply-To: <CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com> (sfid-20150516_201855_046994_2FA7ED12)
-References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
-	 <1431674716.2426.2.camel@sipsolutions.net>
-	 <CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>
-	 <1431714949.2117.0.camel@sipsolutions.net>
-	 <CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com>
-	 (sfid-20150516_201855_046994_2FA7ED12)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26529 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031049AbbEEMbK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 08:31:10 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix survey information reporting
+Date: Tue, 5 May 2015 18:00:48 +0530
+Message-ID: <1430829048-22549-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150505_143115_472270_DDA3ABBE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-05-16 at 21:18 +0300, Emmanuel Grumbach wrote:
+Rx clear count reported in wmi_chan_info_event is actually channel_busy_count
+not rx_frame_count. Send rx_clear_count through time_busy of survey_info
+and set SURVEY_INFO_TIME_BUSY in filled.
 
-> I don't get it. I might have misunderstood your previous mail, but I
-> thought that you were saying the key index was meant to solve this:
-> the peer could know what key was used based on the key index written
-> in the frame (I guess it is there somehow) so that the Rx handling
-> code can know that the jump in the PN is due to a rekeying and not use
-> any heuristic. I though you meant that the Txing side had a poor
-> implementation because it reused the same key index before and after
-> the rekeying which can obviously lead to problems.
-> Now you seem to say that changing the key index upon rekeying is not
-> allowed by spec?
-> What is it good for then?
+iw wlan0 survey dump
 
-The key index is used for GTK rekeying. The spec makes no provision for
-seamless PTK rekeying, it's simply not supported.
+urvey data from wlan0
+        frequency:                      5180 MHz [in use]
+        noise:                          -103 dBm
+        channel active time:            150 ms
+        channel busy time:              22 ms
+Survey data from wlan0
+        frequency:                      5200 MHz
+        noise:                          -102 dBm
+        channel active time:            146 ms
+        channel busy time:              0 ms
 
-There was/is work in progress to actually change that, but I haven't
-seen anything definitive. Jouni might know more.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Again - I am just trying to close this bug, not to learn this subject.
-> I can learn by reading spec / reading code and less by wasting your
-> time :)
-
-As I said, I believe at this point the only way to fix this bug is to
-try to drop *old* key packets immediately, but it's difficult to ensure
-this. Effectively, it would require synchronising RX vs. key
-installation.
-
-Using SW crypto will avoid this problem, because as I described in my
-first email, the only reason (I can think of anyway) is that there's a
-race between HW decrypt and SW key install. In the case of SW crypto,
-there's a definitive link between the actual key and the PN because the
-frame would fail to decrypt (and thus be dropped) if the wrong key was
-used. The problem only happens in HW crypto with software PN because the
-two are linked by the key index only.
-
-This (entirely untested) patch might also help:
-http://p.sipsolutions.net/3f082fae8a023bbc.txt
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index ebaa096..0fabe68 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1645,10 +1645,10 @@ void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 		survey = &ar->survey[idx];
+ 		survey->time = WMI_CHAN_INFO_MSEC(cycle_count);
+-		survey->time_rx = WMI_CHAN_INFO_MSEC(rx_clear_count);
++		survey->time_busy = WMI_CHAN_INFO_MSEC(rx_clear_count);
+ 		survey->noise = noise_floor;
+ 		survey->filled = SURVEY_INFO_TIME |
+-				 SURVEY_INFO_TIME_RX |
++				 SURVEY_INFO_TIME_BUSY |
+ 				 SURVEY_INFO_NOISE_DBM;
+ 	}
+ 
+-- 
+1.9.1
 
