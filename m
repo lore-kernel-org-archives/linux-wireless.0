@@ -1,149 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:35295 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754506AbbETRGJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 13:06:09 -0400
-Received: by wgfl8 with SMTP id l8so59652764wgf.2
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 10:06:08 -0700 (PDT)
-Message-ID: <555CBEFC.50902@gmail.com> (sfid-20150520_190614_651489_F46716B2)
-Date: Wed, 20 May 2015 19:06:04 +0200
-From: poma <pomidorabelisima@gmail.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?SmFrdWIgS2ljacWEc2tp?= <moorray3@wp.pl>
-CC: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Etna <etna@openmailbox.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-References: <544DB5A8.7090405@openmailbox.org>	<20141027152026.GB19976@tuxdriver.com>	<544E8CB4.3000607@rempel-privat.de>	<20141028134608.GA26283@tuxdriver.com>	<544FA303.5060303@broadcom.com>	<544FA627.3000004@rempel-privat.de>	<5450BEB2.60208@openwrt.org>	<5461F937.9060004@rempel-privat.de>	<5463CB6C.3030204@openwrt.org>	<5463D28F.9080106@lwfinger.net>	<20150206182915.7467bac7@north>	<54EF261E.4040109@gmail.com> <20150226154028.380b96f2@north> <55592C54.6010204@gmail.com>
-In-Reply-To: <55592C54.6010204@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:50334 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752258AbbEEGps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 02:45:48 -0400
+Message-ID: <1430808342.1950.6.camel@sipsolutions.net> (sfid-20150505_084551_551989_10A30E95)
+Subject: Re: [PATCH 1/2] add mt7601u driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jakub =?UTF-8?Q?Kici=C5=84ski?= <moorray3@wp.pl>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Date: Tue, 05 May 2015 08:45:42 +0200
+In-Reply-To: <20150505024949.0a672dd1@north>
+References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+	 <1430571690-9054-2-git-send-email-moorray3@wp.pl>
+	 <1430732248.2013.16.camel@sipsolutions.net> <20150504120401.30835e07@north>
+	 <1430734511.2013.18.camel@sipsolutions.net> <20150505024949.0a672dd1@north>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18.05.2015 02:03, poma wrote:
+On Tue, 2015-05-05 at 02:49 +0200, Jakub Kiciński wrote:
+> On Mon, 04 May 2015 12:15:11 +0200, Johannes Berg wrote:
+> > On Mon, 2015-05-04 at 12:04 +0200, Jakub Kiciński wrote:
+> > 
+> > > > Don't know how your buffers are set up, but if the DMA engine consumes
+> > > > pages you could consider using paged RX instead of the memcpy().
+> > > 
+> > > DMA engine can concatenate multiple frames into a single USB bulk
+> > > transfer to a large continuous buffer.  There is no way to request 
+> > > any alignment of the frames within that large buffer so I think paged 
+> > > RX is not an option.
+> > 
+> > You could probably still do it because the networking stack only
+> > requires the *headers* to be aligned. But if they headers aren't in the
+> > skb->data (skb->head) then they'll be pulled into that by the network
+> > stack, where they'll be aligned.
 > 
-> Preliminary test results
-> 
-> - lsusb -d 148f:7601:
-> Bus 001 Device 007: ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
-> 
-> 
-> - https://github.com/kuba-moo/mt7601u
-> - git log -1:
-> commit ad5474ecd9fd6efd4a7f03f4a8c71ea4bb57ca73
-> Author: Jakub Kicinski <kubakici@wp.pl>
-> Date:   Wed May 6 20:44:18 2015 +0200
-> 
->     make sure .disconnect() doesn't cleanup the device if .resume() failed
->     
->     Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-> 
-> 
-> - modinfo mt7601u:
-> filename:       /lib/modules/4.0.3-202.fc21.x86_64/updates/mt7601u.ko
-> license:        GPL
-> firmware:       mt7601u.bin
-> alias:          usb:v7392p7710d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v2A5Fp1000d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v2955p1001d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v2955p0001d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v2717p4106d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v2001p3D04d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v148Fp760Dd*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v148Fp760Cd*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v148Fp760Bd*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v148Fp760Ad*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v148Fp7601d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v13D3p3434d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v13D3p3431d*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v0E8Dp760Bd*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v0E8Dp760Ad*dc*dsc*dp*ic*isc*ip*in*
-> alias:          usb:v0B05p17D3d*dc*dsc*dp*ic*isc*ip*in*
-> depends:        cfg80211,mac80211
-> vermagic:       4.0.3-202.fc21.x86_64 SMP mod_unload 
-> signer:         Fedora kernel signing key
-> sig_key:        95:7D:C8:E5:9F:5D:E6:03:71:49:1A:D0:9A:C6:8F:85:16:6C:B3:94
-> sig_hashalgo:   sha256
-> 
-> 
-> - md5sum /lib/firmware/mt7601u.bin:
-> 696cedb8e76ecc0cda9f9b0d3972c64d  /lib/firmware/mt7601u.bin
-> 
-> 
-> - NetworkManager --version:
-> 1.0.2-2.fc21
-> 
-> 
-> plug in device:
-> - dmesg:
-> usb 1-4: new high-speed USB device number 6 using ehci-pci
-> usb 1-4: New USB device found, idVendor=148f, idProduct=7601
-> usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> usb 1-4: Product: 802.11 n WLAN
-> usb 1-4: Manufacturer: MediaTek
-> usb 1-4: SerialNumber: 1.0
-> cfg80211: ...
-> ...
-> usb 1-4: reset high-speed USB device number 6 using ehci-pci
-> mt7601u 1-4:1.0: ASIC revision: 76010001 MAC revision: 76010500
-> mt7601u 1-4:1.0: Firmware Version: 0.1.00 Build: 7640 Build time: 201302052146____
-> mt7601u 1-4:1.0: Warning: unsupported EEPROM version 0d
-> mt7601u 1-4:1.0: EEPROM ver:0d fae:00
-> ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-> usbcore: registered new interface driver mt7601u
-> mt7601u 1-4:1.0 wlp0s2f1u4: renamed from wlan0
-> ...
-> cfg80211: ...
-> ...
-> wlp0s2f1u4: authenticate with <BSSID>
-> wlp0s2f1u4: send auth to <BSSID> (try 1/3)
-> wlp0s2f1u4: authenticated
-> wlp0s2f1u4: associate with <BSSID> (try 1/3)
-> wlp0s2f1u4: RX AssocResp from <BSSID> (capab=0x411 status=0 aid=1)
-> wlp0s2f1u4: associated
-> 
-> 
-> - iwconfig wlp0s2f1u4:
-> wlp0s2f1u4  IEEE 802.11bgn  ESSID:"AP"  
->           Mode:Managed  Frequency:2.422 GHz  Access Point: <BSSID>   
->           Bit Rate=135 Mb/s   Tx-Power=20 dBm   
->           Retry short limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:off
->           Link Quality=67/70  Signal level=-43 dBm  
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:873   Missed beacon:0
-> 
-> 
-...
+> I *think* I got it.  Would you care to take a look?  I basically
+> allocate a compound page with dev_alloc_pages() and run get_page() for
+> every fragment.
 
-Can be tested with the test compilation I share with you bona fide:
-http://goo.gl/Gm4ffO
-ISO/Fedora-Live-Xfce-WiFi.iso
+I think it looks fine - except the compound part. I'm pretty sure you
+need to do references always with the pointer to the first page (and
+consequently don't need to split on the page boundary, and use the same
+page pointer just with a bigger offset)
 
-Runs on baremetal & QEMU/KVM/Libvirt/Virtual Machine Manager
-http://www.linux-kvm.org/page/USB_Host_Device_Assigned_to_Guest
+> +static void mt7601u_rx_add_frags(struct mt7601u_dev *dev, struct sk_buff *skb,
+> +				 void *data, u32 true_len, u32 truesize,
+> +				 struct page *p)
+> +{
+> +	unsigned long addr = (unsigned long) data;
+> +	u32 overpage = 0;
+> +	u32 p_off = (data - page_address(p)) >> PAGE_SHIFT;
 
+i.e. you shouldn't need p_off
 
-With the script 'mt7601u-fw-install' can be initiated the download and installation of the required firmware,
-though it would be optimal to resolve it in the following manner:
+> +	if ((addr & ~PAGE_MASK) + true_len > PAGE_SIZE)
+> +		overpage = (addr & ~PAGE_MASK) + true_len - PAGE_SIZE;
 
-In OpenWrt repo - mt76 - mac80211 driver for MediaTek MT76x2 802.11ac chips
-https://github.com/openwrt/mt76
+nor overpage
 
-there is a license file together with firmwares:
-https://github.com/openwrt/mt76/blob/master/firmware
+> +	skb_add_rx_frag(skb, skb_shinfo(skb)->nr_frags, p + p_off,
+> +			addr & ~PAGE_MASK, true_len - overpage, truesize);
+> +	get_page(p + p_off);
 
+Here just use
 
-Whether the same can be done with:
-mt7601u -  Linux mac80211-based driver for Mediatek MT7601U USB bgn WiFi dongle
-https://github.com/kuba-moo/mt7601u
-?
+	skb_fill_page_desc(skb, i, p, data - page_address(p),
+			 true_len, truesize);
+	get_page(p);
 
+I believe.
+
+> +	/* Do we really need to split the buffer if it crosses a page boundary?
+> +	 * Does networking code care?
+> +	 */
+> +	if (overpage) {
+> +		skb_add_rx_frag(skb, skb_shinfo(skb)->nr_frags, p + p_off + 1,
+> +				0, overpage, 0);
+> +		get_page(p + p_off + 1);
+> +	}
+> +}
+
+and this goes away
+
+> +static void mt7601u_rx_process_seg_paged(struct mt7601u_dev *dev, u8 *data,
+> +					 u32 seg_len, struct page *p)
+
+[...]
+
+> +	skb = __netdev_alloc_skb(NULL, 256, GFP_ATOMIC);
+> +	if (!skb)
+> +		return;
+
+We have a comment on this code (from Eric) saying
+
+        /* Dont use dev_alloc_skb(), we'll have enough headroom once   
+         * ieee80211_hdr pulled.
+
+which probably applies here as well. We also just use 128 instead of 256
+and haven't seen a need for more.
+
+We also pull the entire frame only if it fits into those 128 bytes, and
+we preload the 802.11 header + 8 bytes for snap and possibly crypto
+headroom so we can do it all at once instead of later in multiple
+places. You can check out iwl_mvm_pass_packet_to_mac80211() to see the
+details.
+
+johannes
 
