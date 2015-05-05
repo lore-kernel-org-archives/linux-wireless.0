@@ -1,26 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64904 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753859AbbE0TBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 15:01:39 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "zajec5@gmail.com" <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/39] iwlwifi: dump API to 14
-Date: Wed, 27 May 2015 19:01:35 +0000
-Message-ID: <1432753294.29988.2.camel@intel.com> (sfid-20150527_211344_832437_D51FBEBB)
-References: <1432667798.26624.3.camel@intel.com>
-	 <1432667872-18092-7-git-send-email-emmanuel.grumbach@intel.com>
-	 <CACna6rwjBLs0aEL-8cpUE_HnSC2pGooapqGK_PKtKbGiYSwp_A@mail.gmail.com>
-In-Reply-To: <CACna6rwjBLs0aEL-8cpUE_HnSC2pGooapqGK_PKtKbGiYSwp_A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:38025 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771AbbEEWju (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 18:39:50 -0400
+Date: Tue, 5 May 2015 23:39:40 +0100
+From: Okash Khawaja <okash.khawaja@gmail.com>
+To: joe@perches.com
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] adm8211 patches
+Message-ID: <20150505223940.GA3546@bytefire-computer> (sfid-20150506_004011_268385_354B7B17)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE1LTA1LTI2IGF0IDIxOjM5ICswMjAwLCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6
-DQo+IE9uIDI2IE1heSAyMDE1IGF0IDIxOjE3LCBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwu
-Z3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPiBUaGUgaXdsbXZtIGRyaXZlciBpcyBub3cg
-YWJsZSB0byBoYW5kbGUgLTE0LnVjb2RlLg0KPiANCj4gRHVtcD8gQnVtcD8gOykNCg0KSGEhIFNv
-bWVvbmUgYWN0dWFsbHkgbG9va2luZyBhdCB0aGUgcGF0Y2hlcy4gR29vZCB0aGluZy4gTm8sIGl0
-IHdhcyBub3QNCm9uIHB1cnBvc2UgOykNCg==
+These patches include two changes:
+
+1. Code cleanup around a switch-case statement
+2. Bug fix for the possible PCI cache line sizes
+
+Okash Khawaja (2):
+  adm8211: fix checkpatch errors for indentation and new line
+  adm8211: fix the possible pci cache line sizes inside switch-case
+
+ drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+-- 
+1.9.1
+
