@@ -1,34 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 220-135-115-6.HINET-IP.hinet.net ([220.135.115.6]:54467 "EHLO
-	ns.kevlo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751277AbbESCTX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 22:19:23 -0400
-Date: Tue, 19 May 2015 10:18:34 +0800
-From: Kevin Lo <kevlo@kevlo.org>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] rtlwifi: fix typos in Kconfig
-Message-ID: <20150519021834.GA9546@ns.kevlo.org> (sfid-20150519_041927_157838_1EDAA6F6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:34528 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993131AbbEEOPd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 10:15:33 -0400
+Content-Type: text/plain;
+	charset=us-ascii
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH] adm8211: fix checkpatch errors for indentation and new line around switch-case
+From: Okash Khawaja <okash.khawaja@gmail.com>
+In-Reply-To: <1430833852.7191.7.camel@perches.com>
+Date: Tue, 5 May 2015 15:15:16 +0100
+Cc: Peter Rosin <peda@lysator.liu.se>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-Id: <8BB992B7-F9AE-4D3E-92DC-E9154785C92F@gmail.com> (sfid-20150505_194434_869304_27889B4D)
+References: <5548B192.8020808@lysator.liu.se> <1430833852.7191.7.camel@perches.com>
+To: Joe Perches <joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes typos in drivers/net/wirless/rtlwifi/Kconfig.
+> On 5 May 2015, at 14:50, Joe Perches <joe@perches.com> wrote:
+> 
+> On Tue, 2015-05-05 at 14:03 +0200, Peter Rosin wrote:
+>>> diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+> []
+>>> @@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+>>>        pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
+>>> 
+>>>        switch (cline) {
+> []
+>>> +        case  0x8:
+>>> +            reg |= (0x1 << 14);
+>>> +            break;
+>>> +        case 0x16:
+>>> +            reg |= (0x2 << 14);
+>>> +            break;
+>>> +        case 0x32:
+>>> +            reg |= (0x3 << 14);
+>>> +            break;
+>>> +        default:
+>>> +            reg |= (0x0 << 14);
+>>> +            break;
+>>>        }
+>>>    }
+>> 
+>> Those 0x16/0x32 hexadecimal case-selectors looking suspiciously like
+>> decimal bits need a comment if they are in fact correct, which I doubt.
+> 
+> Good spot.
+> 
+> As it's testing PCI_CACHE_LINE_SIZE,
+> they seem very much broken.
+> 
+> 
 
-Signed-off-by: Kevin Lo <kevlo@kevlo.org>
----
-
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-index 5cf509d..73067ca 100644
---- a/drivers/net/wireless/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -100,7 +100,7 @@ config RTL8821AE
- 	select RTLWIFI_PCI
- 	select RTLBTCOEXIST
- 	---help---
--	This is the driver for Realtek RTL8i821AE/RTL8812AE 802.11av PCIe
-+	This is the driver for Realtek RTL8821AE/RTL8812AE 802.11ac PCIe
- 	wireless network adapters.
- 
- 	If you choose to build it as a module, it will be called rtl8821ae
+Interesting. I'll be happy to fix that bit if someone could guide me on it. Looks like these values should be 0x10, 0x20 instead of 0x16, 0x32 respectively. But I am unable to understand their meaning in this code. 
+Thanks
