@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:34510 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbbEHJxy convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0165.hostedemail.com ([216.40.44.165]:57235 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752363AbbEEGpB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 05:53:54 -0400
-Received: by iget9 with SMTP id t9so27882616ige.1
-        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 02:53:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <554C81D2.8080602@broadcom.com>
-References: <1431030535-11083-1-git-send-email-zajec5@gmail.com>
-	<554C81D2.8080602@broadcom.com>
-Date: Fri, 8 May 2015 11:53:53 +0200
-Message-ID: <CACna6rxV_sR1WhrHRwtM8cjengsCbm_iUWzy0n_+fLYmxypmMw@mail.gmail.com> (sfid-20150508_115357_700641_6F1FA6C4)
-Subject: Re: [PATCH RFC:rxctl wait timed out] brcmfmac: add BCM43526 USB support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 May 2015 02:45:01 -0400
+Message-ID: <1430808298.7191.1.camel@perches.com> (sfid-20150505_084529_758029_564CAF7E)
+Subject: Re: [PATCH v3] adm8211: fix checkpatch error for trailing
+ statements on next line
+From: Joe Perches <joe@perches.com>
+To: Okash Khawaja <okash.khawaja@gmail.com>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 04 May 2015 23:44:58 -0700
+In-Reply-To: <20150505060150.GA2548@bytefire-computer>
+References: <20150505060150.GA2548@bytefire-computer>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 May 2015 at 11:28, Arend van Spriel <arend@broadcom.com> wrote:
-> On 05/07/15 22:28, Rafał Miłecki wrote:
->> I'm trying to add BCM43526 support. This chipset can be found in:
->> 1) Some USB dongles, e.g. Tenda W900U uses revision 2
->> 2) Some routers, e.g. Asus RT-AC53U uses revision 3+
->>
->> Unfortunately attached patch doesn't seem to be enough, brcmfmac doesn't
->> work with my Tenda W900U. I keep getting following error:
->>>
->>> brcmfmac: brcmf_usb_recv_ctl Enter
->>> brcmf_usb_rx_ctlpkt: rxctl wait timed out
->>> brcmfmac: brcmf_fil_cmd_data Failed: -5
->>
->>
->> It seems that:
->> 1) driver sends TX URB and gets completion callback called
->> 2) driver sents RX URB but it never gets completed
->
-> Unfortunately this device is a BMAC device. You can tell by the 'high' word
-> in the windows driver name. So there is no chance whatsoever to get this
-> device going with brcmfmac.
+On Tue, 2015-05-05 at 07:01 +0100, Okash Khawaja wrote:
+> This patch fixes the checkpatch.pl error:
 
-Oh damn, I was sure Broadcom dropped this design back in BCM43236
-times, I didn't even suspect newer chipsets may be still using it :(
-Shit.
+Please fix the space/tab use too.
 
-Do you have any idea about BCM43526 rev 3+? The chipsets using 43526b
-instead of 43526a. Any chance BCM43526 rev 3+ is normal FullMAC device
-just like BCM43236 rev 3+?
+Your email client seems to have converted all the tabs
+to spaces.
+
+default should use the same indent as the case statements
+
+
+> diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+[]
+> @@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+>                 pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
+>  
+>                 switch (cline) {
+> -               case  0x8: reg |= (0x1 << 14);
+> -                          break;
+> -               case 0x16: reg |= (0x2 << 14);
+> -                          break;
+> -               case 0x32: reg |= (0x3 << 14);
+> -                          break;
+> -                 default: reg |= (0x0 << 14);
+> -                          break;
+> +               case  0x8:
+> +                       reg |= (0x1 << 14);
+> +                       break;
+> +               case 0x16:
+> +                       reg |= (0x2 << 14);
+> +                       break;
+> +               case 0x32:
+> +                       reg |= (0x3 << 14);
+> +                       break;
+> +                 default:
+> +                       reg |= (0x0 << 14);
+> +                       break;
+>                 }
+>         }
+>  
+
