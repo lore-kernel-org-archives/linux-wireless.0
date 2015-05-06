@@ -1,80 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:36926 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426AbbEaLRu (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:37390 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbbEFI37 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 07:17:50 -0400
-Received: by wifw1 with SMTP id w1so72553840wif.0
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 04:17:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1433068947.2370.5.camel@sipsolutions.net>
-References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
- <1433061092.2370.1.camel@sipsolutions.net> <CABPxzYK-8TtYdiFeFrX7AVcsXQFaa3oxHREq+jgohHh1tCg5GQ@mail.gmail.com>
- <1433068947.2370.5.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 31 May 2015 16:47:28 +0530
-Message-ID: <CABPxzY+9FwDPwRcZ4QT4QcfhMqmaQsrs=LT5E8tDKQG2t+wFRA@mail.gmail.com> (sfid-20150531_131936_316646_50E06058)
-Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL messages.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 May 2015 04:29:59 -0400
+Received: by widdi4 with SMTP id di4so13227669wid.0
+        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2015 01:29:58 -0700 (PDT)
+Received: from localhost.localdomain ([93.172.48.98])
+        by mx.google.com with ESMTPSA id l3sm1022092wik.16.2015.05.06.01.29.57
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 06 May 2015 01:29:57 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl18xx: fallback to default conf in case of invalid conf file
+Date: Wed,  6 May 2015 11:29:54 +0300
+Message-Id: <1430900994-20509-1-git-send-email-eliad@wizery.com> (sfid-20150506_103008_217299_C5FE411E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 31, 2015 at 4:12 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2015-05-31 at 15:31 +0530, Krishna Chaitanya wrote:
->
->> In our case the data size is 411KB, and each message carries around 3072
->> bytes, so total messages would be 138. The first message we get, we
->> retrieve the data, and for subsequent messages we just fill the skb,
->> we are not interacting with the hardware.
->>
->> Without this patch, heres the sequence:
->> genl->cfg80211->retrieve the dump from HW, skb_put: 3072
->>          cfg80211->skb_put, fail
->> genl->cfg80211->skb_put: 3072.
->>
->> With this patch:
->>
->> genl->cfg80211->retrive the dump from HW, skb_put: 3072
->> genl->cfg80211->skb_put: 3072.
->
-> You've failed to explain why this is so much of a problem that you're
-> trying to "fix" it. I suspect the "fail" part inside your driver is
-> needlessly expensive, I don't think the function call can be expensive
-> enough to worry anyone.
+If the wl18xx-conf.bin file is missing or invalid (e.g. due
+to recent driver change), fallback to default configuration
+instead of failing driver load.
 
-"Fail" is a simple nla_put, its not at all expensive. We don't interact with
-the hardware at that time. We in our tests we saw that this improved
-the time to transport the dump (collection not included) to user space.
+Reported-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c | 45 +++++++++++++++++++----------------
+ 1 file changed, 25 insertions(+), 20 deletions(-)
 
-> Note # of "messages" as you say is actually irrelevant - you should look
-
-Well with 138 messages the function and each message 3072 bytes
-calls b/w cfg80211 and driver
-       without the patch: would be 276 calls
-       with this patch: would be 138 calls
-Thats a lot of function calls, don't you think?
-
-> at how often the kernel/user boundary is crossed, that's really far more
-> interesting, and your patch makes that MUCH worse when the put size is
-> small (say 100 bytes) because then you're practically doing that twice
-> as often.
-
-My patch doesn't deteriorate the situation, and not change the kernel to
-user boundary. With/Without the patch 3072 bytes are transported in a
-single message from kernel to user.
-
-My patch only affects cfg80211 <--> Driver interaction as explained above.
-
-> Anyway - I stand by your patch being a terrible idea. End of story.
-
-
-
-
-
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 717c4f5..3d38f54 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1351,9 +1351,10 @@ out:
+ }
+ 
+ #define WL18XX_CONF_FILE_NAME "ti-connectivity/wl18xx-conf.bin"
+-static int wl18xx_conf_init(struct wl1271 *wl, struct device *dev)
++
++static int wl18xx_load_conf_file(struct device *dev, struct wlcore_conf *conf,
++				 struct wl18xx_priv_conf *priv_conf)
+ {
+-	struct wl18xx_priv *priv = wl->priv;
+ 	struct wlcore_conf_file *conf_file;
+ 	const struct firmware *fw;
+ 	int ret;
+@@ -1362,14 +1363,14 @@ static int wl18xx_conf_init(struct wl1271 *wl, struct device *dev)
+ 	if (ret < 0) {
+ 		wl1271_error("could not get configuration binary %s: %d",
+ 			     WL18XX_CONF_FILE_NAME, ret);
+-		goto out_fallback;
++		return ret;
+ 	}
+ 
+ 	if (fw->size != WL18XX_CONF_SIZE) {
+ 		wl1271_error("configuration binary file size is wrong, expected %zu got %zu",
+ 			     WL18XX_CONF_SIZE, fw->size);
+ 		ret = -EINVAL;
+-		goto out;
++		goto out_release;
+ 	}
+ 
+ 	conf_file = (struct wlcore_conf_file *) fw->data;
+@@ -1379,7 +1380,7 @@ static int wl18xx_conf_init(struct wl1271 *wl, struct device *dev)
+ 			     "expected 0x%0x got 0x%0x", WL18XX_CONF_MAGIC,
+ 			     conf_file->header.magic);
+ 		ret = -EINVAL;
+-		goto out;
++		goto out_release;
+ 	}
+ 
+ 	if (conf_file->header.version != cpu_to_le32(WL18XX_CONF_VERSION)) {
+@@ -1387,28 +1388,32 @@ static int wl18xx_conf_init(struct wl1271 *wl, struct device *dev)
+ 			     "expected 0x%08x got 0x%08x",
+ 			     WL18XX_CONF_VERSION, conf_file->header.version);
+ 		ret = -EINVAL;
+-		goto out;
++		goto out_release;
+ 	}
+ 
+-	memcpy(&wl->conf, &conf_file->core, sizeof(wl18xx_conf));
+-	memcpy(&priv->conf, &conf_file->priv, sizeof(priv->conf));
++	memcpy(conf, &conf_file->core, sizeof(*conf));
++	memcpy(priv_conf, &conf_file->priv, sizeof(*priv_conf));
+ 
+-	goto out;
++out_release:
++	release_firmware(fw);
++	return ret;
++}
+ 
+-out_fallback:
+-	wl1271_warning("falling back to default config");
++static int wl18xx_conf_init(struct wl1271 *wl, struct device *dev)
++{
++	struct wl18xx_priv *priv = wl->priv;
+ 
+-	/* apply driver default configuration */
+-	memcpy(&wl->conf, &wl18xx_conf, sizeof(wl18xx_conf));
+-	/* apply default private configuration */
+-	memcpy(&priv->conf, &wl18xx_default_priv_conf, sizeof(priv->conf));
++	if (wl18xx_load_conf_file(dev, &wl->conf, &priv->conf) < 0) {
++		wl1271_warning("falling back to default config");
+ 
+-	/* For now we just fallback */
+-	return 0;
++		/* apply driver default configuration */
++		memcpy(&wl->conf, &wl18xx_conf, sizeof(wl->conf));
++		/* apply default private configuration */
++		memcpy(&priv->conf, &wl18xx_default_priv_conf,
++		       sizeof(priv->conf));
++	}
+ 
+-out:
+-	release_firmware(fw);
+-	return ret;
++	return 0;
+ }
+ 
+ static int wl18xx_plt_init(struct wl1271 *wl)
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
+1.8.5.2.229.g4448466.dirty
+
