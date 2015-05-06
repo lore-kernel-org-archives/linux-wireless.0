@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34317 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34437 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754195AbbETPJG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 11:09:06 -0400
+	id S1753164AbbEFQ6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 May 2015 12:58:08 -0400
 From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20150520140426.GB126473@ubuntu-hedt>
-References: <20150520140426.GB126473@ubuntu-hedt> <20150519200232.GM23057@wotan.suse.de>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: dhowells@redhat.com, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+In-Reply-To: <1430873070-7290-6-git-send-email-mcgrof@do-not-panic.com>
+References: <1430873070-7290-6-git-send-email-mcgrof@do-not-panic.com> <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: dhowells@redhat.com, rusty@rustcorp.com.au, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org,
+	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [RFC v1 05/12] firmware: add firmware signature checking support
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Date: Wed, 20 May 2015 16:08:58 +0100
-Message-ID: <6731.1432134538@warthog.procyon.org.uk> (sfid-20150520_170948_440924_6C2714FD)
+Date: Wed, 06 May 2015 17:57:59 +0100
+Message-ID: <17829.1430931479@warthog.procyon.org.uk> (sfid-20150506_185831_578501_66F3E3F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seth Forshee <seth.forshee@canonical.com> wrote:
+Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
 
-> > This begs the question on how we'd manage keys for firmware signing on
-> > linux-firmare. Since the keys are x509 keys we need a CA. Based on some
-> > initial discussions it would seem we'd need the Linux Foundation to create
-> > a key, this would be embedded in the kernel and that key would be used to
-> > sign Kyle's key.  Kyle would in turn use his key for signing
-> > linux-firmware files. David, Kyle, did I summarize this correctly ?
+> As with module signing, we do a very simple search for a
+> particular string appended to the firmware. There's both a
+> config option and a boot parameter which control whether we
+> accept or fail with unsigned firmware and firmware that are
+> signed with an unknown key.
 > 
-> I raised the question of key revocation when we discussed this on irc,
-> but it wasn't answered to my satisfaction. If a key signed by the
-> kernel-embedded key is compromised, how can that key be revoked so that
-> it is no longer trusted?
-> 
-> Someone mentioned UEFI blacklists, which I don't know much about, but
-> not all systems have UEFI. The only reliable option that comes to mind
-> for me is an in-kernel blacklist of keys which should no longer be
-> trusted.
+> If firmware signing is enabled, the kernel will be tainted
+> if a firmware is loaded that is unsigned or has a signature
+> for which we don't have the key.
 
-Key revocation is generally an unpleasant problem.  How do you inform a system
-that a key of any sort is revoked?  With PGP, for instance, you might be able
-to connect to the net and consult a server.
+I think you need to be careful storing the firmware blobs on disk with
+signatures attached for two reasons:
 
-UEFI has a blacklist that can theoretically be used to prevent both usage of a
-key and usage of a particular object.  As I understand it, the blacklist in
-UEFI is just a table of SHA256 hashes.
+ (1) There may be licensing/copyright issues on these blobs if you alter them.
 
-Relying on UEFI presents three problems, though: (1) the system admin has to
-manually, as far as I'm aware, inform the BIOS; (2) the UEFI storage is
-limited; and (3) not all systems have UEFI.
+ (2) Someone might try loading the modified blob without the signature being
+     stripped - say someone runs an old kernel or copies the blob to a
+     non-Linux system and tries to load it there.
 
-What you do on a non-UEFI system, I'm not sure.  If the kernel isn't verified
-by the loader or the system firmware then you don't have a 'fully' secure
-system anyway and the blacklist may be of questionable value.
+Adding the signature to the blob upon loading might be less problematic, but
+it still potentially suffers from (2) above.
+
+If you switch to PKCS#7, you can also embed the blob inside the PKCS#7
+message, so essentially the blob is unmodified and can be verified or
+extracted by any suitable PKCS#7 tool.  This is more likely to get the
+firmware rejected if the kernel isn't expecting it to be signed, I think.
+
+I'm not sure how userspace actually passes the firmware blob to the kernel,
+but I do think that if you can, you should pass the signature separately to
+the blob.
+
+With kernel modules this doesn't matter since modules are typically tied to a
+single kernel version anyway.
 
 David
