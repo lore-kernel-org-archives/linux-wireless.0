@@ -1,70 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:34971 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbbE0TqJ (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:38654 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbbEFIcy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 15:46:09 -0400
-Received: by wgme6 with SMTP id e6so18645827wgm.2
-        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 12:46:07 -0700 (PDT)
-Message-ID: <55661EFC.30606@gmail.com> (sfid-20150527_214613_756378_974CEA89)
-Date: Wed, 27 May 2015 22:46:04 +0300
-From: Nick Dimov <dimovnike@gmail.com>
+	Wed, 6 May 2015 04:32:54 -0400
+Received: by igbhj9 with SMTP id hj9so9857718igb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2015 01:32:53 -0700 (PDT)
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: packet loss, disconnects and possible bug in iwlwifi
-References: <55605637.1080503@gmail.com>	<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>	<55650565.6020303@gmail.com>	<1432742132.15971.29.camel@redhat.com> <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
-In-Reply-To: <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGm1_kvrBShO4CNefJfyrRc9FRr4hvV2QL=QZvoS=_9JFV8jMA@mail.gmail.com>
+References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
+	<1419834253-18331-6-git-send-email-eliad@wizery.com>
+	<5512A9BC.5010902@pengutronix.de>
+	<CAB3XZEfw5EurqA2jZypAj4LkQwwAiVeKd5wKKsxpOAh-RrCq0w@mail.gmail.com>
+	<5512B6F2.8090407@pengutronix.de>
+	<CAB3XZEdyq6FJUTwXm40EUYemmLvuHfZ8JsUvHyCvS3twFhw=Dw@mail.gmail.com>
+	<CAGm1_kvrBShO4CNefJfyrRc9FRr4hvV2QL=QZvoS=_9JFV8jMA@mail.gmail.com>
+Date: Wed, 6 May 2015 11:32:53 +0300
+Message-ID: <CAB3XZEcPm-bkgCh6Wkzr716RpRqd8Pc81754oCvSKXtWWAqOEA@mail.gmail.com> (sfid-20150506_103300_330422_C6FD911C)
+Subject: Re: [PATCH 06/13] wlcore: enable sleep during AP mode operation
+From: Eliad Peller <eliad@wizery.com>
+To: Yegor Yefremov <yegorslists@googlemail.com>
+Cc: Marc Kleine-Budde <mkl@pengutronix.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kobi Leibovitch <kobi.lev100@gmail.com>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"Machani, Yaniv" <yanivma@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone.
-I updated the regulatory database from here
-https://www.kernel.org/pub/software/network/wireless-regdb/ (just copied
-the regulatory.bin and the public key) and the problem is gone! Thank to
-all of you and especially to Emmanuel Grumbach for suggesting this.
+hi Yegor,
 
-Now another question - how to make it connect at 866mbps or at least
-something close to it? Any ideas?
-
-Thanks you,
-Nick.
-
-On 27.05.2015 21:34, Emmanuel Grumbach wrote:
-> On Wed, May 27, 2015 at 6:55 PM, Dan Williams <dcbw@redhat.com> wrote:
->> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
->>> Hello,
->>> thank you for your response. I attach the full syslog since the last
->>> boot which contains some disconnects. I enabled debug mode for
->>> wpa_supplicant with -dd option (let me know if you need anything else).
+On Mon, May 4, 2015 at 12:16 PM, Yegor Yefremov
+<yegorslists@googlemail.com> wrote:
+> On Wed, Mar 25, 2015 at 2:45 PM, Eliad Peller <eliad@wizery.com> wrote:
+>> On Wed, Mar 25, 2015 at 3:24 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
+>>> On 03/25/2015 01:58 PM, Eliad Peller wrote:
+>>>> hi Marc,
+>>>>
+>>>> On Wed, Mar 25, 2015 at 2:27 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
+>>>>> On 12/29/2014 07:24 AM, Eliad Peller wrote:
+>>>>>> From: Kobi L <kobi.lev100@gmail.com>
+>>>>>>
+>>>>>> Enable ELP authorization in AP mode and enable the use
+>>>>>> of the wakeup bit in the ELP register.
+>>>>>>
+>>>>>> Introduce AP role sleep configuration which is disabled
+>>>>>> by default. When configured, it allows the AP to sleep
+>>>>>> when ELP is authorized for it.
+>>>>>>
+>>>>>> Signed-off-by: Kobi Leibovitch <kobi.lev100@gmail.com>
+>>>>>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>>>>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>>>>>
+>>>>> [...]
+>>>>>
+>>>>>
+>>>>> This patch requires a new firmware, loading of "wl18xx-conf.bin" from
+>>>>> [1] fails with:
+>>>>>
+>>>>>> wlcore: ERROR configuration binary file size is wrong, expected 1226 got 1221
+>>>>>
+>>>> thanks. seems you're right.
+>>>>
+>>>> anyway, note that this file is not actual fw, but only the default
+>>>> configuration params.
+>>>> you can just delete it, and the driver will load just fine.
+>>>> you can then recreate it with something like:
+>>>> cat /sys/kernel/debug/ieee80211/phy0/wlcore/wl18xx/conf >
+>>>> /lib/firmware/ti-connectivity/wl18xx-conf.bin
+>>>>
+>>>> actually, i don't think it makes much sense to have this file in the
+>>>> linux-firmware git at all.
+>>>> i'll try handling it.
 >>>
->>> I also tried connecting directly, i.e. without NetworkManager but
->>> manually with wpa_supplicant and I still get disconnects, howvever
->>> wpa_supplicant gives different logs with different drivers. Please, see
->>> the file wifi.log (you can see there the driver i used in
->>> wpa_supplicant, that log doesn't have the debug activated but let me
->>> know if you need that too)
->> So if NM isn't involved in your later runs (and it's not, looking at the
->> logs), then I'm not sure what the issue could be except something in the
->> driver.
+>>> Thanks, there are more file with size of ~1k, are they optional, too?
+>>> What's the "error" message if these optional files are not present?
+>>>
+>> AFAIK, the other nvs files are basically required for proper operation.
 >>
->> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Event message
->> available
->> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Drv Event 20
->> (NL80211_CMD_DEL_STATION) received for wlan5
->> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Delete station
->> d8:50:e6:da:1d:b4
->> mai 27 02:31:54 nick-G55VW kernel: wlan5: deauthenticating from
->> d8:50:e6:da:1d:b4 by local choice (Reason: 3=DEAUTH_LEAVING)
->>
->> I don't see anything interesting around those lines, so I guess its up
->> to Emmanuel now...  the tracing he requests would be good to get.
->>
-> I suspect a regulatory problem. This is why I asked what was the
-> channel used on 2.4GHz. On 5.2GHz we have seen bugs happening because
-> of the regulatory database being ancient on Ubuntu. 2.4GHz should rule
-> these problems out, unless we are talking about channel 12 and up or
-> something like that.
+>>> From working with $CUSTOMERS I gained the impression, messages like
+>>> "error failed to load...." for optional file don't shine the best light
+>>> on Linux, a neutral "using default values" is far better.
+>> i agree :)
+>
+> Added Yaniv Machani in CC.
+>
+> Any update on the wl18xx-conf.bin issue? This file is still in
+> linux-firmware repo.
+>
+thanks for the reminder :)
 
+just sent a patch to fallback to default conf in case of invalid/outdated conf.
+
+Eliad.
