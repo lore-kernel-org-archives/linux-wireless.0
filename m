@@ -1,66 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:10119 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030276AbbEONgf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 09:36:35 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Rafa?? Mi??ecki <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 15 May 2015 06:36:20 -0700
-Subject: RE: ACS support (survey) in few various drives: carl9170, mwifiex,
- mwl8k, p54, rt2800*
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B171DA596@SC-VEXCH1.marvell.com> (sfid-20150515_153640_190535_A3B27E07)
-References: <CACna6rw47fBcRczzSjeE1xXdqVPKuwn7yGvbXv2wL8zg8O8pFA@mail.gmail.com>
- <20150515115440.GA20013@redhat.com>
-In-Reply-To: <20150515115440.GA20013@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:35192 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965460AbbEFAz0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 20:55:26 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org
+Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>, stable@vger.kernel.org,
+	cocci@systeme.lip6.fr
+Subject: [PATCH v1 04/12] firmware: fix possible use after free on name on asynchronous request
+Date: Tue,  5 May 2015 17:44:22 -0700
+Message-Id: <1430873070-7290-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_025617_852865_BF3B7CD4)
+In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
+Asynchronous firmware loading copies the pointer to the
+name passed as an argument only to be scheduled later and
+used. This behaviour works well for synchronous calling
+but in asynchronous mode there's a chance the caller could
+immediately free the passed string after making the
+asynchronous call. This could trigger a use after free
+having the kernel look on disk for arbitrary file names.
 
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Stanislaw Gruszka
-> Sent: Friday, May 15, 2015 5:25 PM
-> To: Rafa?? Mi??ecki
-> Cc: linux-wireless@vger.kernel.org; Michal Kazior
-> Subject: Re: ACS support (survey) in few various drives: carl9170,
-> mwifiex, mwl8k, p54, rt2800*
-> 
-> On Fri, May 15, 2015 at 12:59:31PM +0200, Rafa?? Mi??ecki wrote:
-> > Hi,
-> >
-> > I'm trying to follow ACS implementation in hostapd & kernel. I think I
-> > managed to document what driver needs to implement to allow hostapd
-> > use it with acs_survey option:
-> > https://wireless.wiki.kernel.org/en/users/documentation/acs?&#driver_i
-> > mplementation_details
-> >
-> > All sources say about only 3 drivers supporting ACS: ath5k, ath9k,
-> ath10k.
-> >
-> > However it seems there are more drivers with support for various
-> > SURVEY_INFO_* stuff. From what I see ACS should work with following
-> > ones just fine:
-> > carl9170, mwifiex, mwl8k, p54, rt2800*
-> >
-> > Am I missing something? Is there any reason ACS won't work with above
-> drivers?
-> 
-> On rt2800 get_survey() is not implemented correctly
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2
-> 014-December/006751.html
-> 
-> Stanislaw
+In order to force-test the issue you can use a test-driver
+designed to illustrate this issue on github [0], use the
+next-20150505-fix-use-after-free branch.
 
-Mwifiex driver support ACS feature. I think documentation is not updated to reflect this support.
+With this patch applied you get:
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-
-> wireless" in the body of a message to majordomo@vger.kernel.org More
-> majordomo info at  http://vger.kernel.org/majordomo-info.html
+[  283.512445] firmware name: test_module_stuff.bin
+[  287.514020] firmware name: test_module_stuff.bin
+[  287.532489] firmware found
+
+Without this patch applied you can end up with something such as:
+
+[  135.624216] firmware name: \xffffff80BJ
+[  135.624249] platform fake-dev.0: Direct firmware load for \xffffff80Bi failed with error -2
+[  135.624252] No firmware found
+[  135.624252] firmware found
+
+Unfortunatley in the worst and most common case however you
+can typically crash your system with a page fault by trying to
+free something which you cannot, and/or a NULL pointer
+dereference [1].
+
+The fix and issue using schedule_work() for asynchronous
+runs is generalized in the following SmPL grammar patch,
+when applied to next-20150505 only the firmware_class
+code is affected. This grammar patch can and should further
+be generalized to vet for for other kernel asynchronous
+mechanisms.
+
+@ calls_schedule_work @
+type T;
+T *priv_work;
+identifier func, work_func;
+identifier work;
+identifier priv_name, name;
+statement S;
+expression gfp;
+@@
+
+ func(..., const char *name, ...)
+ {
+ 	...
+ 	priv_work = kzalloc(sizeof(T), gfp);
+ 	...
+-	priv_work->priv_name = name;
++	priv_work->priv_name = kstrdup_const(name, gfp);
+	...
+(... when any
+ 	if (...)
+ 	{
+ 		...
++ 		kfree_const(priv_work->priv_name);
+ 		kfree(priv_work);
+		...
+ 	}
+) ... when any
+ 	INIT_WORK(&priv_work->work, work_func);
+ 	...
+ 	schedule_work(&priv_work->work);
+ 	...
+ }
+
+@ the_work_func depends on calls_schedule_work @
+type calls_schedule_work.T;
+T *priv_work;
+identifier calls_schedule_work.work_func;
+identifier calls_schedule_work.priv_name;
+identifier calls_schedule_work.work;
+identifier some_work;
+@@
+
+ work_func(...)
+ {
+ 	...
+ 	priv_work = container_of(some_work, T, work);
+ 	...
++	kfree_const(priv_work->priv_name);
+ 	kfree(priv_work);
+ 	...
+ }
+
+[0] https://github.com/mcgrof/fake-firmware-test.git
+[1] The following kernel ring buffer splat:
+
+firmware name: test_module_stuff.bin
+firmware name:
+firmware found
+general protection fault: 0000 [#1] SMP
+Modules linked in: test(O) <...etc-it-does-not-matter>
+ drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
+CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G           O    4.0.0-00010-g22b5bb0-dirty #176
+Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
+Workqueue: events request_firmware_work_func
+task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
+RIP: 0010:[<ffffffff814a586c>]  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
+RSP: 0000:ffff8800c7f97d78  EFLAGS: 00010286
+RAX: ffffffff81ae3700 RBX: ffffffff816d1181 RCX: 0000000000000006
+RDX: 0001ee850ff68500 RSI: 0000000000000246 RDI: c35d5f415e415d41
+RBP: ffff8800c7f97d88 R08: 000000000000000a R09: 0000000000000000
+R10: 0000000000000358 R11: ffff8800c7f97a7e R12: ffff8800c7ec1e80
+R13: ffff88021e2d4cc0 R14: ffff88021e2dff00 R15: 00000000000000c0
+FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000034b8cd8 CR3: 000000021073c000 CR4: 00000000001407e0
+Stack:
+ ffffffff816d1181 ffff8800c7ec1e80 ffff8800c7f97da8 ffffffff814a58f8
+ 000000000000000a ffffffff816d1181 ffff8800c7f97dc8 ffffffffa047002c
+ ffff88021e2dff00 ffff8802116ac1c0 ffff8800c7f97df8 ffffffff814a65fe
+Call Trace:
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff814a58f8>] release_firmware+0x58/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
+ [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
+ [<ffffffff8108d911>] worker_thread+0x121/0x460
+ [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
+ [<ffffffff810928f9>] kthread+0xc9/0xe0
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+ [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+Code: c7 c6 dd ad a3 81 48 c7 c7 20 97 ce 81 31 c0 e8 0b b2 ed ff e9 78 ff ff ff 66 0f 1f 44 00 00 0f 1f 44 00 00 55 48 89 e5 41 54 53 <4c> 8b 67 38 48 89 fb 4c 89 e7 e8 85 f7 22 00 f0 83 2b 01 74 0f
+RIP  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
+ RSP <ffff8800c7f97d78>
+---[ end trace 4e62c56a58d0eac1 ]---
+BUG: unable to handle kernel paging request at ffffffffffffffd8
+IP: [<ffffffff81093ee0>] kthread_data+0x10/0x20
+PGD 1c13067 PUD 1c15067 PMD 0
+Oops: 0000 [#2] SMP
+Modules linked in: test(O) <...etc-it-does-not-matter>
+ drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
+CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G      D    O    4.0.0-00010-g22b5bb0-dirty #176
+Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
+task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
+RIP: 0010:[<ffffffff81092ee0>]  [<ffffffff81092ee0>] kthread_data+0x10/0x20
+RSP: 0018:ffff8800c7f97b18  EFLAGS: 00010096
+RAX: 0000000000000000 RBX: 0000000000000003 RCX: 000000000000000d
+RDX: 0000000000000003 RSI: 0000000000000003 RDI: ffff8800c7f8e290
+RBP: ffff8800c7f97b18 R08: 000000000000bc00 R09: 0000000000007e76
+R10: 0000000000000001 R11: 000000000000002f R12: ffff8800c7f8e290
+R13: 00000000000154c0 R14: 0000000000000003 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000028 CR3: 0000000210675000 CR4: 00000000001407e0
+Stack:
+ ffff8800c7f97b38 ffffffff8108dcd5 ffff8800c7f97b38 ffff88021e2d54c0
+ ffff8800c7f97b88 ffffffff816d1500 ffff880213d42368 ffff8800c7f8e290
+ ffff8800c7f97b88 ffff8800c7f97fd8 ffff8800c7f8e710 0000000000000246
+Call Trace:
+ [<ffffffff8108dcd5>] wq_worker_sleeping+0x15/0xa0
+ [<ffffffff816d1500>] __schedule+0x6e0/0x940
+ [<ffffffff816d1797>] schedule+0x37/0x90
+ [<ffffffff810779bc>] do_exit+0x6bc/0xb40
+ [<ffffffff8101898f>] oops_end+0x9f/0xe0
+ [<ffffffff81018efb>] die+0x4b/0x70
+ [<ffffffff81015622>] do_general_protection+0xe2/0x170
+ [<ffffffff816d74e8>] general_protection+0x28/0x30
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff814a586c>] ? fw_free_buf+0xc/0x40
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff814a58f8>] release_firmware+0x58/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
+ [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
+ [<ffffffff8108d911>] worker_thread+0x121/0x460
+ [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
+ [<ffffffff810928f9>] kthread+0xc9/0xe0
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+ [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+Code: 00 48 89 e5 5d 48 8b 40 c8 48 c1 e8 02 83 e0 01 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 8b 87 30 05 00 00 55 48 89 e5 <48> 8b 40 d8 5d c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
+RIP  [<ffffffff81092ee0>] kthread_data+0x10/0x20
+ RSP <ffff8800c7f97b18>
+CR2: ffffffffffffffd8
+---[ end trace 4e62c56a58d0eac2 ]---
+Fixing recursive fault but reboot is needed!
+
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Cc: stable@vger.kernel.org
+Cc: cocci@systeme.lip6.fr
+Generated-by: Coccinelle SmPL
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/base/firmware_class.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 6c5c9ed..2e85860 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -1242,6 +1242,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ 	put_device(fw_work->device); /* taken in request_firmware_nowait() */
+ 
+ 	module_put(fw_work->module);
++	kfree_const(fw_work->name);
+ 	kfree(fw_work);
+ }
+ 
+@@ -1281,7 +1282,7 @@ request_firmware_nowait(
+ 		return -ENOMEM;
+ 
+ 	fw_work->module = module;
+-	fw_work->name = name;
++	fw_work->name = kstrdup_const(name, gfp);
+ 	fw_work->device = device;
+ 	fw_work->context = context;
+ 	fw_work->cont = cont;
+@@ -1289,6 +1290,7 @@ request_firmware_nowait(
+ 		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+ 
+ 	if (!try_module_get(module)) {
++		kfree_const(fw_work->name);
+ 		kfree(fw_work);
+ 		return -EFAULT;
+ 	}
+-- 
+2.3.2.209.gd67f9d5.dirty
+
