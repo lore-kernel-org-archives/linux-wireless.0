@@ -1,188 +1,334 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752018AbbEZTS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:18:27 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 15/39] iwlwifi: mvm: remove the UMAC specific scan types
-Date: Tue, 26 May 2015 22:17:28 +0300
-Message-Id: <1432667872-18092-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211832_140921_EAADF060)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:34903 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755268AbbEFAvE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 May 2015 20:51:04 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org
+Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v1 02/12] kernel: generalize module signing as system data signing
+Date: Tue,  5 May 2015 17:44:20 -0700
+Message-Id: <1430873070-7290-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_025127_024025_9F16BB17)
+In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-There is no need to have separate definitions for the UMAC scan types,
-since they are the same as the LMAC types.  Remove UMAC scan types and
-use the generic ones instead.
+This generalizes the module signing code as helpers, we do
+this as we'll later re-use this same code for firmware and
+other system data signing.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/scan.c | 47 ++++++++++++---------------------
- 1 file changed, 17 insertions(+), 30 deletions(-)
+ init/Kconfig                                     | 22 ++++---
+ kernel/Makefile                                  |  2 +-
+ kernel/module.c                                  |  4 +-
+ kernel/{module-internal.h => sysdata-internal.h} |  4 +-
+ kernel/{module_signing.c => sysdata_signing.c}   | 76 ++++++++++++------------
+ kernel/system_keyring.c                          |  2 +-
+ 6 files changed, 57 insertions(+), 53 deletions(-)
+ rename kernel/{module-internal.h => sysdata-internal.h} (79%)
+ rename kernel/{module_signing.c => sysdata_signing.c} (76%)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index e54432a..7777d56 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -101,13 +101,7 @@ struct iwl_mvm_scan_params {
- 	} schedule[2];
+diff --git a/init/Kconfig b/init/Kconfig
+index f5dbc6d..862d5ad7 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1769,6 +1769,18 @@ config BASE_SMALL
+ 	default 0 if BASE_FULL
+ 	default 1 if !BASE_FULL
+ 
++config SYSDATA_SIG
++	def_bool y
++	select SYSTEM_TRUSTED_KEYRING
++	select KEYS
++	select CRYPTO
++	select ASYMMETRIC_KEY_TYPE
++	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
++	select PUBLIC_KEY_ALGO_RSA
++	select ASN1
++	select OID_REGISTRY
++	select X509_CERTIFICATE_PARSER
++
+ menuconfig MODULES
+ 	bool "Enable loadable module support"
+ 	option modules
+@@ -1842,15 +1854,7 @@ config MODULE_SRCVERSION_ALL
+ config MODULE_SIG
+ 	bool "Module signature verification"
+ 	depends on MODULES
+-	select SYSTEM_TRUSTED_KEYRING
+-	select KEYS
+-	select CRYPTO
+-	select ASYMMETRIC_KEY_TYPE
+-	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
+-	select PUBLIC_KEY_ALGO_RSA
+-	select ASN1
+-	select OID_REGISTRY
+-	select X509_CERTIFICATE_PARSER
++	select SYSDATA_SIG
+ 	help
+ 	  Check modules for valid signatures upon load: the signature
+ 	  is simply appended to the module. For more information see
+diff --git a/kernel/Makefile b/kernel/Makefile
+index 1408b33..e24c9d6 100644
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -45,7 +45,7 @@ endif
+ obj-$(CONFIG_UID16) += uid16.o
+ obj-$(CONFIG_SYSTEM_TRUSTED_KEYRING) += system_keyring.o system_certificates.o
+ obj-$(CONFIG_MODULES) += module.o
+-obj-$(CONFIG_MODULE_SIG) += module_signing.o
++obj-$(CONFIG_SYSDATA_SIG) += sysdata_signing.o
+ obj-$(CONFIG_KALLSYMS) += kallsyms.o
+ obj-$(CONFIG_BSD_PROCESS_ACCT) += acct.o
+ obj-$(CONFIG_KEXEC) += kexec.o
+diff --git a/kernel/module.c b/kernel/module.c
+index 23b2b65..eb61c10 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -60,7 +60,7 @@
+ #include <linux/pfn.h>
+ #include <linux/bsearch.h>
+ #include <uapi/linux/module.h>
+-#include "module-internal.h"
++#include "sysdata-internal.h"
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/module.h>
+@@ -2404,7 +2404,7 @@ static int module_sig_check(struct load_info *info)
+ 	    memcmp(mod + info->len - markerlen, MODULE_SIG_STRING, markerlen) == 0) {
+ 		/* We truncate the module to discard the signature */
+ 		info->len -= markerlen;
+-		err = mod_verify_sig(mod, &info->len);
++		err = sysdata_verify_sig(mod, &info->len);
+ 	}
+ 
+ 	if (!err) {
+diff --git a/kernel/module-internal.h b/kernel/sysdata-internal.h
+similarity index 79%
+rename from kernel/module-internal.h
+rename to kernel/sysdata-internal.h
+index 915e123..0aa573e 100644
+--- a/kernel/module-internal.h
++++ b/kernel/sysdata-internal.h
+@@ -1,4 +1,4 @@
+-/* Module internals
++/* System Data internals
+  *
+  * Copyright (C) 2012 Red Hat, Inc. All Rights Reserved.
+  * Written by David Howells (dhowells@redhat.com)
+@@ -9,4 +9,4 @@
+  * 2 of the Licence, or (at your option) any later version.
+  */
+ 
+-extern int mod_verify_sig(const void *mod, unsigned long *_modlen);
++extern int sysdata_verify_sig(const void *data, unsigned long *_len);
+diff --git a/kernel/module_signing.c b/kernel/sysdata_signing.c
+similarity index 76%
+rename from kernel/module_signing.c
+rename to kernel/sysdata_signing.c
+index be5b8fa..8ba09aa 100644
+--- a/kernel/module_signing.c
++++ b/kernel/sysdata_signing.c
+@@ -1,4 +1,4 @@
+-/* Module signature checker
++/* System Data signature checker
+  *
+  * Copyright (C) 2012 Red Hat, Inc. All Rights Reserved.
+  * Written by David Howells (dhowells@redhat.com)
+@@ -15,10 +15,10 @@
+ #include <crypto/hash.h>
+ #include <keys/asymmetric-type.h>
+ #include <keys/system_keyring.h>
+-#include "module-internal.h"
++#include "sysdata-internal.h"
+ 
+ /*
+- * Module signature information block.
++ * System Data signature information block.
+  *
+  * The constituents of the signature section are, in order:
+  *
+@@ -27,7 +27,7 @@
+  *	- Signature data
+  *	- Information block
+  */
+-struct module_signature {
++struct sysdata_signature {
+ 	u8	algo;		/* Public-key crypto algorithm [enum pkey_algo] */
+ 	u8	hash;		/* Digest algorithm [enum hash_algo] */
+ 	u8	id_type;	/* Key identifier type [enum pkey_id_type] */
+@@ -38,11 +38,11 @@ struct module_signature {
  };
  
--enum iwl_umac_scan_uid_type {
--	IWL_UMAC_SCAN_UID_REG_SCAN	= BIT(0),
--	IWL_UMAC_SCAN_UID_SCHED_SCAN	= BIT(1),
--};
--
--static int iwl_umac_scan_stop(struct iwl_mvm *mvm,
--			      enum iwl_umac_scan_uid_type type, bool notify);
-+static int iwl_umac_scan_stop(struct iwl_mvm *mvm, int type, bool notify);
- 
- static u8 iwl_mvm_scan_rx_ant(struct iwl_mvm *mvm)
+ /*
+- * Digest the module contents.
++ * Digest the system data contents.
+  */
+-static struct public_key_signature *mod_make_digest(enum hash_algo hash,
+-						    const void *mod,
+-						    unsigned long modlen)
++static struct public_key_signature *data_make_digest(enum hash_algo hash,
++						    const void *data,
++						    unsigned long len)
  {
-@@ -588,8 +582,7 @@ int iwl_mvm_scan_offload_stop(struct iwl_mvm *mvm, bool notify)
- 	lockdep_assert_held(&mvm->mutex);
+ 	struct public_key_signature *pks;
+ 	struct crypto_shash *tfm;
+@@ -51,7 +51,7 @@ static struct public_key_signature *mod_make_digest(enum hash_algo hash,
+ 	int ret;
  
- 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
--		return iwl_umac_scan_stop(mvm, IWL_UMAC_SCAN_UID_SCHED_SCAN,
--					  notify);
-+		return iwl_umac_scan_stop(mvm, IWL_MVM_SCAN_SCHED, notify);
+ 	pr_devel("==>%s()\n", __func__);
+-	
++
+ 	/* Allocate the hashing algorithm we're going to need and find out how
+ 	 * big the hash operational data will be.
+ 	 */
+@@ -82,7 +82,7 @@ static struct public_key_signature *mod_make_digest(enum hash_algo hash,
+ 	if (ret < 0)
+ 		goto error;
  
- 	/* FIXME: For now we only check if no scan is set here, since
- 	 * we only support LMAC in this flow and it doesn't support
-@@ -917,8 +910,7 @@ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- int iwl_mvm_cancel_scan(struct iwl_mvm *mvm)
+-	ret = crypto_shash_finup(desc, mod, modlen, pks->digest);
++	ret = crypto_shash_finup(desc, data, len, pks->digest);
+ 	if (ret < 0)
+ 		goto error;
+ 
+@@ -105,8 +105,8 @@ error_no_pks:
+  *
+  * RSA signatures only have one MPI, so currently we only read one.
+  */
+-static int mod_extract_mpi_array(struct public_key_signature *pks,
+-				 const void *data, size_t len)
++static int data_extract_mpi_array(struct public_key_signature *pks,
++				  const void *data, size_t len)
  {
- 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
--		return iwl_umac_scan_stop(mvm, IWL_UMAC_SCAN_UID_REG_SCAN,
--					  true);
-+		return iwl_umac_scan_stop(mvm, IWL_MVM_SCAN_REGULAR, true);
+ 	size_t nbytes;
+ 	MPI mpi;
+@@ -161,7 +161,7 @@ static struct key *request_asymmetric_key(const char *signer, size_t signer_len,
+ 	key = keyring_search(make_key_ref(system_trusted_keyring, 1),
+ 			     &key_type_asymmetric, id);
+ 	if (IS_ERR(key))
+-		pr_warn("Request for unknown module key '%s' err %ld\n",
++		pr_warn("Request for unknown system data key '%s' err %ld\n",
+ 			id, PTR_ERR(key));
+ 	kfree(id);
  
- 	if (!(mvm->scan_status & IWL_MVM_SCAN_REGULAR))
- 		return 0;
-@@ -937,7 +929,7 @@ int iwl_mvm_cancel_scan(struct iwl_mvm *mvm)
- 
- struct iwl_umac_scan_done {
- 	struct iwl_mvm *mvm;
--	enum iwl_umac_scan_uid_type type;
-+	int type;
- };
- 
- static int rate_to_scan_rate_flag(unsigned int rate)
-@@ -1064,8 +1056,7 @@ static int iwl_mvm_find_free_scan_uid(struct iwl_mvm *mvm)
- 	return iwl_mvm_find_scan_uid(mvm, 0);
+@@ -182,58 +182,58 @@ static struct key *request_asymmetric_key(const char *signer, size_t signer_len,
  }
  
--static bool iwl_mvm_find_scan_type(struct iwl_mvm *mvm,
--				   enum iwl_umac_scan_uid_type type)
-+static bool iwl_mvm_find_scan_type(struct iwl_mvm *mvm, int type)
+ /*
+- * Verify the signature on a module.
++ * Verify the signature on system data.
+  */
+-int mod_verify_sig(const void *mod, unsigned long *_modlen)
++int sysdata_verify_sig(const void *data, unsigned long *_len)
  {
- 	int i;
+ 	struct public_key_signature *pks;
+-	struct module_signature ms;
++	struct sysdata_signature ds;
+ 	struct key *key;
+ 	const void *sig;
+-	size_t modlen = *_modlen, sig_len;
++	size_t len = *_len, sig_len;
+ 	int ret;
  
-@@ -1076,8 +1067,7 @@ static bool iwl_mvm_find_scan_type(struct iwl_mvm *mvm,
- 	return false;
+-	pr_devel("==>%s(,%zu)\n", __func__, modlen);
++	pr_devel("==>%s(,%zu)\n", __func__, len);
+ 
+-	if (modlen <= sizeof(ms))
++	if (len <= sizeof(ds))
+ 		return -EBADMSG;
+ 
+-	memcpy(&ms, mod + (modlen - sizeof(ms)), sizeof(ms));
+-	modlen -= sizeof(ms);
++	memcpy(&ds, data + (len - sizeof(ds)), sizeof(ds));
++	len -= sizeof(ds);
+ 
+-	sig_len = be32_to_cpu(ms.sig_len);
+-	if (sig_len >= modlen)
++	sig_len = be32_to_cpu(ds.sig_len);
++	if (sig_len >= len)
+ 		return -EBADMSG;
+-	modlen -= sig_len;
+-	if ((size_t)ms.signer_len + ms.key_id_len >= modlen)
++	len -= sig_len;
++	if ((size_t)ds.signer_len + ds.key_id_len >= len)
+ 		return -EBADMSG;
+-	modlen -= (size_t)ms.signer_len + ms.key_id_len;
++	len -= (size_t)ds.signer_len + ds.key_id_len;
+ 
+-	*_modlen = modlen;
+-	sig = mod + modlen;
++	*_len = len;
++	sig = data + len;
+ 
+ 	/* For the moment, only support RSA and X.509 identifiers */
+-	if (ms.algo != PKEY_ALGO_RSA ||
+-	    ms.id_type != PKEY_ID_X509)
++	if (ds.algo != PKEY_ALGO_RSA ||
++	    ds.id_type != PKEY_ID_X509)
+ 		return -ENOPKG;
+ 
+-	if (ms.hash >= PKEY_HASH__LAST ||
+-	    !hash_algo_name[ms.hash])
++	if (ds.hash >= PKEY_HASH__LAST ||
++	    !hash_algo_name[ds.hash])
+ 		return -ENOPKG;
+ 
+-	key = request_asymmetric_key(sig, ms.signer_len,
+-				     sig + ms.signer_len, ms.key_id_len);
++	key = request_asymmetric_key(sig, ds.signer_len,
++				     sig + ds.signer_len, ds.key_id_len);
+ 	if (IS_ERR(key))
+ 		return PTR_ERR(key);
+ 
+-	pks = mod_make_digest(ms.hash, mod, modlen);
++	pks = data_make_digest(ds.hash, data, len);
+ 	if (IS_ERR(pks)) {
+ 		ret = PTR_ERR(pks);
+ 		goto error_put_key;
+ 	}
+ 
+-	ret = mod_extract_mpi_array(pks, sig + ms.signer_len + ms.key_id_len,
+-				    sig_len);
++	ret = data_extract_mpi_array(pks, sig + ds.signer_len + ds.key_id_len,
++				     sig_len);
+ 	if (ret < 0)
+ 		goto error_free_pks;
+ 
+@@ -246,5 +246,5 @@ error_free_pks:
+ error_put_key:
+ 	key_put(key);
+ 	pr_devel("<==%s() = %d\n", __func__, ret);
+-	return ret;	
++	return ret;
  }
+diff --git a/kernel/system_keyring.c b/kernel/system_keyring.c
+index 875f64e..1eb0c86 100644
+--- a/kernel/system_keyring.c
++++ b/kernel/system_keyring.c
+@@ -16,7 +16,7 @@
+ #include <linux/err.h>
+ #include <keys/asymmetric-type.h>
+ #include <keys/system_keyring.h>
+-#include "module-internal.h"
++#include "sysdata-internal.h"
  
--static int iwl_mvm_find_first_scan(struct iwl_mvm *mvm,
--				   enum iwl_umac_scan_uid_type type)
-+static int iwl_mvm_find_first_scan(struct iwl_mvm *mvm, int type)
- {
- 	int i;
- 
-@@ -1088,8 +1078,7 @@ static int iwl_mvm_find_first_scan(struct iwl_mvm *mvm,
- 	return i;
- }
- 
--static u32 iwl_generate_scan_uid(struct iwl_mvm *mvm,
--				 enum iwl_umac_scan_uid_type type)
-+static u32 iwl_generate_scan_uid(struct iwl_mvm *mvm, int type)
- {
- 	u32 uid;
- 
-@@ -1201,9 +1190,9 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	iwl_mvm_scan_umac_dwell(mvm, cmd, params);
- 
- 	if (n_iterations == 1)
--		uid = iwl_generate_scan_uid(mvm, IWL_UMAC_SCAN_UID_REG_SCAN);
-+		uid = iwl_generate_scan_uid(mvm, IWL_MVM_SCAN_REGULAR);
- 	else
--		uid = iwl_generate_scan_uid(mvm, IWL_UMAC_SCAN_UID_SCHED_SCAN);
-+		uid = iwl_generate_scan_uid(mvm, IWL_MVM_SCAN_SCHED);
- 
- 	mvm->scan_uid[uid_idx] = uid;
- 	cmd->uid = cpu_to_le32(uid);
-@@ -1478,7 +1467,7 @@ int iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_umac_scan_complete *notif = (void *)pkt->data;
- 	u32 uid = __le32_to_cpu(notif->uid);
--	bool sched = !!(uid & IWL_UMAC_SCAN_UID_SCHED_SCAN);
-+	bool sched = !!(uid & IWL_MVM_SCAN_SCHED);
- 	int uid_idx = iwl_mvm_find_scan_uid(mvm, uid);
- 
- 	/*
-@@ -1505,7 +1494,7 @@ int iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- 					 notif->status ==
- 						IWL_SCAN_OFFLOAD_ABORTED);
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
--	} else if (!iwl_mvm_find_scan_type(mvm, IWL_UMAC_SCAN_UID_SCHED_SCAN)) {
-+	} else if (!iwl_mvm_find_scan_type(mvm, IWL_MVM_SCAN_SCHED)) {
- 		ieee80211_sched_scan_stopped(mvm->hw);
- 	} else {
- 		IWL_DEBUG_SCAN(mvm, "Another sched scan is running\n");
-@@ -1556,8 +1545,7 @@ static int iwl_umac_scan_abort_one(struct iwl_mvm *mvm, u32 uid)
- 	return iwl_mvm_send_cmd_pdu(mvm, SCAN_ABORT_UMAC, 0, sizeof(cmd), &cmd);
- }
- 
--static int iwl_umac_scan_stop(struct iwl_mvm *mvm,
--			      enum iwl_umac_scan_uid_type type, bool notify)
-+static int iwl_umac_scan_stop(struct iwl_mvm *mvm, int type, bool notify)
- {
- 	struct iwl_notification_wait wait_scan_done;
- 	static const u8 scan_done_notif[] = { SCAN_COMPLETE_UMAC, };
-@@ -1579,7 +1567,7 @@ static int iwl_umac_scan_stop(struct iwl_mvm *mvm,
- 			int err;
- 
- 			if (iwl_mvm_is_radio_killed(mvm) &&
--			    (type & IWL_UMAC_SCAN_UID_REG_SCAN)) {
-+			    (type & IWL_MVM_SCAN_REGULAR)) {
- 				ieee80211_scan_completed(mvm->hw, true);
- 				iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- 				break;
-@@ -1602,9 +1590,9 @@ static int iwl_umac_scan_stop(struct iwl_mvm *mvm,
- 		return ret;
- 
- 	if (notify) {
--		if (type & IWL_UMAC_SCAN_UID_SCHED_SCAN)
-+		if (type & IWL_MVM_SCAN_SCHED)
- 			ieee80211_sched_scan_stopped(mvm->hw);
--		if (type & IWL_UMAC_SCAN_UID_REG_SCAN) {
-+		if (type & IWL_MVM_SCAN_REGULAR) {
- 			ieee80211_scan_completed(mvm->hw, true);
- 			iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- 		}
-@@ -1636,13 +1624,12 @@ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
- 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
- 		u32 uid, i;
- 
--		uid = iwl_mvm_find_first_scan(mvm, IWL_UMAC_SCAN_UID_REG_SCAN);
-+		uid = iwl_mvm_find_first_scan(mvm, IWL_MVM_SCAN_REGULAR);
- 		if (uid < mvm->max_scans) {
- 			ieee80211_scan_completed(mvm->hw, true);
- 			mvm->scan_uid[uid] = 0;
- 		}
--		uid = iwl_mvm_find_first_scan(mvm,
--					      IWL_UMAC_SCAN_UID_SCHED_SCAN);
-+		uid = iwl_mvm_find_first_scan(mvm, IWL_MVM_SCAN_SCHED);
- 		if (uid < mvm->max_scans && !mvm->restart_fw) {
- 			ieee80211_sched_scan_stopped(mvm->hw);
- 			mvm->scan_uid[uid] = 0;
+ struct key *system_trusted_keyring;
+ EXPORT_SYMBOL_GPL(system_trusted_keyring);
 -- 
-2.1.4
+2.3.2.209.gd67f9d5.dirty
 
