@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:35280 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439AbbE2LeK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:34:10 -0400
-Received: by wicmx19 with SMTP id mx19so14652085wic.0
-        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:34:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1432897812.2104.7.camel@sipsolutions.net>
-References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
-	<1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
-	<1432285043-8878-2-git-send-email-michal.kazior@tieto.com>
-	<1432897812.2104.7.camel@sipsolutions.net>
-Date: Fri, 29 May 2015 13:34:07 +0200
-Message-ID: <CA+BoTQmkg8KBhFGqSsdt6Sks6JGUDGnM2oSzMSEWtCEz-abwzA@mail.gmail.com> (sfid-20150529_133414_453174_0F64E8F7)
-Subject: Re: [PATCH v2 2/2] mac80211: guard against invalid ptr deref
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:57673 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750995AbbEFNPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 May 2015 09:15:54 -0400
+Message-ID: <1430918151.1954.6.camel@sipsolutions.net> (sfid-20150506_151557_511192_AD6C1CA3)
+Subject: Re: [PATCH] mac80211: handle hw roc cancel vs. expiration race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 06 May 2015 15:15:51 +0200
+In-Reply-To: <CAB3XZEe71wE+zPR-knwvrFMjecvddJhVsMWJ9YcHkGa9xW-XZQ@mail.gmail.com> (sfid-20150309_145944_668962_31D825FD)
+References: <1425902001-3163-1-git-send-email-eliad@wizery.com>
+	 <1425905568.1928.7.camel@sipsolutions.net>
+	 <CAB3XZEe71wE+zPR-knwvrFMjecvddJhVsMWJ9YcHkGa9xW-XZQ@mail.gmail.com>
+	 (sfid-20150309_145944_668962_31D825FD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 May 2015 at 13:10, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2015-05-22 at 10:57 +0200, Michal Kazior wrote:
->> It was possible for mac80211 to be coerced into an
->> unexpected flow causing sdata union to become
->> corrupted. Station pointer was put into
->> sdata->u.vlan.sta memory location while it was
->> really master AP's sdata->u.ap.next_beacon. This
->> led to station entry being later freed as
->> next_beacon before __sta_info_flush() in
->> ieee80211_stop_ap() and a subsequent invalid
->> pointer dereference crash.
->>
->> The problem was that ieee80211_ptr->use_4addr
->> wasn't cleared on interface type changes.
-[...]
->> Even though this can and should be fixed in
->> cfg80211 it still makes sense to add a sanity
->> check to mac80211 to prevent future problems.
->
-> I'm a bit undecided about this. Is this really the only place that
-> assumes use_4addr implies that it's a VLAN, in a context like this?
+To revive an old thread - sorry...
 
-Hmm.. I guess TDLS could also have use_4addr and still be a
-IFTYPE_STATION, right? In which case parent condition should be
-modified instead:
+> >> Fix it by cancelling hw_roc_done on roc cancel.
+> >> Since hw_roc_done takes local->mtx, temporarily
+> >> release it (before re-acquiring it and starting
+> >> the next roc if needed).
+> >
+> > I can't say I like this, and I'm not even sure it doesn't leave a race?
+> > After all, the work will not take the RTNL.
+> >
+> the other way (cancel while hw_roc_done) is protected, since
+> ieee80211_cancel_roc() looks for a specific roc cookie.
 
- if (vlansdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-     params->vlan->ieee80211_ptr->use_4addr) { ...
+But you're saying that we rely on RTNL to not modify the list, and the
+hw_roc_done work doesn't use the RTNL? Hmm. Are you saying now that it
+also checks that it was started? But then why do we even have this
+issue?
 
+Or I can see why we have this issue, but perhaps we could fix it by
+flushing the work *after* we cancel, so in case the driver was
+cancelling at the same time we'd not yet have started the next one?
 
-Michał
+> > I think the only way to really fix that is to make the driver return the
+> > roc pointer or so and then we can either queue a work struct per roc
+> > struct, or at least mark the roc struct as driver-destroyed and
+> > double-check that in the work function?
+> >
+> that was my initial implementation. but then i thought it will be
+> nicer to implement it in mac80211 and avoid changing all the drivers
+> (with the need to save the cookie, etc.)
+> do you prefer adding such cookie/pointer param?
+
+How difficult was it for the driver(s)? It seems it would make the code
+far easier to reason about, which can only be a good thing. We'd save
+the whole race discussion above :)
+
+johannes
+
