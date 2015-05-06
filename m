@@ -1,118 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:33021 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbbERJid (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34040 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754935AbbEFAsy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 05:38:33 -0400
-Received: by wgjc11 with SMTP id c11so19497479wgj.0
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 02:38:32 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/3] ath10k: enable ASPM
-Date: Mon, 18 May 2015 09:38:16 +0000
-Message-Id: <1431941898-13591-2-git-send-email-michal.kazior@tieto.com> (sfid-20150518_113839_331352_56DD07D2)
-In-Reply-To: <1431941898-13591-1-git-send-email-michal.kazior@tieto.com>
-References: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
- <1431941898-13591-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 5 May 2015 20:48:54 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org
+Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v1 01/12] kernel/params.c: export param_ops_bool_enable_only
+Date: Tue,  5 May 2015 17:44:19 -0700
+Message-Id: <1430873070-7290-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_024930_334084_5E06ED59)
+In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-It is actually safe to enable ASPM after the
-device is booted up.
+This will grant access to this helper to code built as modules.
 
-This reduces power drain of QCA61X4 when driver is
-simply loaded (no interface is up) from 31mA to
-14mA. QCA988X wasn't measured but doesn't seem to
-regress in any other way.
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 15 ++++++++++-----
- drivers/net/wireless/ath/ath10k/pci.h |  6 ++++++
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ kernel/params.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 969a1231800e..8be07c653b2d 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1227,11 +1227,15 @@ static void ath10k_pci_irq_enable(struct ath10k *ar)
- 
- static int ath10k_pci_hif_start(struct ath10k *ar)
- {
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");
- 
- 	ath10k_pci_irq_enable(ar);
- 	ath10k_pci_rx_post(ar);
- 
-+	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
-+				   ar_pci->link_ctl);
-+
- 	return 0;
- }
- 
-@@ -1981,6 +1985,7 @@ static int ath10k_pci_chip_reset(struct ath10k *ar)
- 
- static int ath10k_pci_hif_power_up(struct ath10k *ar)
- {
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
-@@ -1991,6 +1996,11 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	pcie_capability_read_word(ar_pci->pdev, PCI_EXP_LNKCTL,
-+				  &ar_pci->link_ctl);
-+	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
-+				   ar_pci->link_ctl & ~PCI_EXP_LNKCTL_ASPMC);
-+
- 	/*
- 	 * Bring the target up cleanly.
- 	 *
-@@ -2502,7 +2512,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct pci_dev *pdev = ar_pci->pdev;
--	u32 lcr_val;
- 	int ret;
- 
- 	pci_set_drvdata(pdev, ar);
-@@ -2536,10 +2545,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
- 
- 	pci_set_master(pdev);
- 
--	/* Workaround: Disable ASPM */
--	pci_read_config_dword(pdev, 0x80, &lcr_val);
--	pci_write_config_dword(pdev, 0x80, (lcr_val & 0xffffff00));
--
- 	/* Arrange for access to Target SoC registers. */
- 	ar_pci->mem = pci_iomap(pdev, BAR_NUM, 0);
- 	if (!ar_pci->mem) {
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index bddf54320160..ee2173d61257 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -185,6 +185,12 @@ struct ath10k_pci {
- 	/* Map CE id to ce_state */
- 	struct ath10k_ce_pipe ce_states[CE_COUNT_MAX];
- 	struct timer_list rx_post_retry;
-+
-+	/* Due to HW quirks it is recommended to disable ASPM during device
-+	 * bootup. To do that the original PCI-E Link Control is stored before
-+	 * device bootup is executed and re-programmed later.
-+	 */
-+	u16 link_ctl;
+diff --git a/kernel/params.c b/kernel/params.c
+index a62dbf8..807f3d4 100644
+--- a/kernel/params.c
++++ b/kernel/params.c
+@@ -364,6 +364,7 @@ const struct kernel_param_ops param_ops_bool_enable_only = {
+ 	.set = param_set_bool_enable_only,
+ 	.get = param_get_bool,
  };
++EXPORT_SYMBOL_GPL(param_ops_bool_enable_only);
  
- static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
+ /* This one must be bool. */
+ int param_set_invbool(const char *val, const struct kernel_param *kp)
 -- 
-2.1.4
+2.3.2.209.gd67f9d5.dirty
 
