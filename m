@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:35492 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757754AbbEVJwG (ORCPT
+Received: from smtp05.msg.oleane.net ([62.161.4.5]:35627 "EHLO
+	smtp05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbbEFNUY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 05:52:06 -0400
-Received: by wicmx19 with SMTP id mx19so41754052wic.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 02:52:05 -0700 (PDT)
+	Wed, 6 May 2015 09:20:24 -0400
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp05.msg.oleane.net (MTA) with ESMTP id t46DKLh8012682
+	for <linux-wireless@vger.kernel.org>; Wed, 6 May 2015 15:20:21 +0200
+Subject: [RFC] ath9k: allow up to 8 access point vifs on DFS channels
+Date: Wed, 6 May 2015 15:20:19 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901A7192A@sbs2003.acksys.local> (sfid-20150506_152027_603160_A26EE140)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYKz9MK95nqzZk0=yP=UX3JvEy_JFsY5yZ3FEcOOGstBVQ@mail.gmail.com>
-References: <CABPxzYKz9MK95nqzZk0=yP=UX3JvEy_JFsY5yZ3FEcOOGstBVQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 22 May 2015 15:21:44 +0530
-Message-ID: <CABPxzY+jxZq=irAiCzSw_xVDcp3jbWQOmj3qsTzZs9r8OCMjDA@mail.gmail.com> (sfid-20150522_115212_153434_2F78935B)
-Subject: Re: Not able to set u-apsd for P2P client
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Jean-Pierre TOSONI" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 8, 2015 at 8:16 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
->
-> Hi,
->
-> We are having trouble making the uapsd working in p2p client case. Is
-> this broken? or is there a way to configure the uapsd for p2p client
-> case?
->
->
-> case a) p2p client with p2p_no_group_iface=1
->
-> When trying to change the mode from MANAGED to P2P_CLIENT the sdata is
-> being cleared so the previous change of uapsd_queue=0xF is being
-> cleared and default value is taken.
->
-> case b) with p2p_no_group_iface=0
->
-> As the interface is dynamically created, we cannot use the mac80211
-> debugfs to set the uapsd_queues.
-> I have tried "wpa_cli p2p_set client_apsd 1,1,1,1" but it is not taking effect.
->
-May be this is more of a mac80211 issue, currently while preparing
-association request frame mac80211 uses imgd->uapsd_queues, so
-need fetch that information from usespace up on interface addition viz.
-a nl command? curently only NL command which has this info is ADD_STA
-which is used in TDLS case.
+Allow the combination of 8 (AP + mesh) interfaces on radar channels
 
-Any ideas are appreciated.
+Tested with hostapd, 2 and 8 BSSIDs, 1 or 2 DFS channels, BW 20 MHz
+TODO: test AP+mesh combination
+TODO: test 40 MHz BW
+---
+This patch was done with quilt on Openwrt against compat-wireless
+2014-11-04
+
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -723,6 +723,14 @@ static const struct ieee80211_iface_limi
+ 				 BIT(NL80211_IFTYPE_ADHOC) },
+ };
+ 
++static const struct ieee80211_iface_limit if_dfs_limits_mvap[] = {
++	{ .max = 8,	.types =
++#ifdef CPTCFG_MAC80211_MESH
++				 BIT(NL80211_IFTYPE_MESH_POINT) |
++#endif
++				 BIT(NL80211_IFTYPE_AP) },
++};
++
+ static const struct ieee80211_iface_combination if_comb[] = {
+ 	{
+ 		.limits = if_limits,
+@@ -746,6 +754,16 @@ static const struct ieee80211_iface_comb
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
+ 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
+|
++					BIT(NL80211_CHAN_WIDTH_20) |
++					BIT(NL80211_CHAN_WIDTH_40),
++	},
++	{
++		.limits = if_dfs_limits_mvap,
++		.n_limits = ARRAY_SIZE(if_dfs_limits_mvap),
++		.max_interfaces = 8,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
+|
+ 					BIT(NL80211_CHAN_WIDTH_20) |
+ 					BIT(NL80211_CHAN_WIDTH_40),
+ 	}
+-- 
+quilt
+
+
