@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:33241 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbbETTUE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49860 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbbEFE7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 15:20:04 -0400
-Received: by lbbzk7 with SMTP id zk7so2005406lbb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 12:20:02 -0700 (PDT)
+	Wed, 6 May 2015 00:59:13 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Okash Khawaja <okash.khawaja@gmail.com>
+Cc: joe@perches.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
+References: <20150505224020.GA3805@bytefire-computer>
+Date: Wed, 06 May 2015 07:59:04 +0300
+In-Reply-To: <20150505224020.GA3805@bytefire-computer> (Okash Khawaja's
+	message of "Tue, 5 May 2015 23:40:20 +0100")
+Message-ID: <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com> (sfid-20150506_065920_254444_1C832708)
 MIME-Version: 1.0
-In-Reply-To: <555CB8C1.1040007@lwfinger.net>
-References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com>
-	<CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>
-	<555CB8C1.1040007@lwfinger.net>
-Date: Wed, 20 May 2015 22:20:02 +0300
-Message-ID: <CAJ=9CzYr2rFxZprM0Ap+x+Vu3LDXJUtxqtHqH-YER-ABscRb0w@mail.gmail.com> (sfid-20150520_212009_515676_93DFCE74)
-Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
-From: Haggai Eran <haggai.eran@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 May 2015 at 19:39, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/20/2015 01:17 AM, Haggai Eran wrote:
->>
->> On May 19, 2015 08:47, "Haggai Eran" <haggai.eran@gmail.com
->> <mailto:haggai.eran@gmail.com>> wrote:
->>  >
->>  > With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
->>  > packet are set, but the packet length is too large. Truncate the packet
->>  > to prevent memory corruption.
->>  >
->>  > Signed-off-by: Haggai Eran <haggai.eran@gmail.com
->> <mailto:haggai.eran@gmail.com>>
->>  > ---
->>  >
->>  > Hi,
->>  >
->>  > I think this solves the issue for me. I'll test it more thoroughly
->> later. I
->>  > still don't know why a fragmented packet has such a large pkt_len value
->> though.
->>  >
->>  > Thanks,
->>  > Haggai
->>  >
->>
->> I guess I was too quick with this patch. It prevents the kernel page
->> faults, but
->> with it I still see sometimes the connectivity disappear for a minute or
->> two.
+Okash Khawaja <okash.khawaja@gmail.com> writes:
+
+> The PCI cache line size value was being compared against decimal values prefixed with 0x.
+>
+> Fixed the literals to use the correct hex values.
 >
 >
-> Is anything logged when that happens?
-No. I get once in a while the other corrupted entries I told you
-about, but nothing special to these freezes
+> Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
 
-> I'm still trying to see where that magic number of 1658 comes from, and how
-> that affects the RX buffer size.
+[...]
 
-I tried to look at the new driver (rtl8192su), but it doesn't seem to
-handle this more-fragment bit at all.
+> @@ -1101,10 +1101,10 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+>  		case  0x8:
+>  			reg |= (0x1 << 14);
+>  			break;
+> -		case 0x16:
+> +		case 0x10:
+>  			reg |= (0x2 << 14);
+>  			break;
+> -		case 0x32:
+> +		case 0x20:
+>  			reg |= (0x3 << 14);
+>  			break;
+>  		default:
 
-> When I unconditionally set alloc_sz to tmp_len as in the attached patch (I
-> remembered to refresh it this time), nothing bad has happened here yet. What
-> happens on your box?
+Did you test this? How certain can we be that this doesn't break
+anything?
 
-The same freezes still occur.
-
-Thanks,
-Haggai
+-- 
+Kalle Valo
