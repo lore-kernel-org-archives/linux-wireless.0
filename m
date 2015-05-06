@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:33179 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbbEYH7K convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:35228 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932478AbbEFA7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 03:59:10 -0400
-Received: by iebgx4 with SMTP id gx4so67977935ieb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2015 00:59:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <255092351.26861432539449201.JavaMail.weblogic@epmlwas02a>
-References: <255092351.26861432539449201.JavaMail.weblogic@epmlwas02a>
-Date: Mon, 25 May 2015 09:59:09 +0200
-Message-ID: <CACna6ryChb36jRXDFMXj-O9Xkr3VHrE=nzSwFjs427xmgArpgw@mail.gmail.com> (sfid-20150525_095915_575131_500D38AE)
-Subject: Re: [PATCH] Reordering for better readability and consistency [EDT]
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: rahul.jain@samsung.com
-Cc: "johannes.berg@intel.com" <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 May 2015 20:59:47 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org
+Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [RFC v1 06/12] firmware: generalize "firmware" as "system data" helpers
+Date: Tue,  5 May 2015 17:44:24 -0700
+Message-Id: <1430873070-7290-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_030031_573252_DDD779C0)
+In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 May 2015 at 09:37, Rahul Jain <rahul.jain@samsung.com> wrote:
-> hello Wireless Community,
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Hi :)
+Historically firmware_class code was added to help
+get device driver firmware binaries but these days
+request_firmware*() helpers are being repurposed for
+general system data needed by the kernel.
 
+Annotate this before we extend firmare_class more,
+as this is expected. We want to generalize the code
+as much as possible.
 
-> Please find patch for review.
->
-> From 328fb9d1b772788fc51e7f9bb21e57a1d91b0188 Mon Sep 17 00:00:00 2001
-> From: Rahul Jain <rahul.jain@samsung.com>
-> Date: Mon, 25 May 2015 12:02:12 +0530
-> Subject: [PATCH] Reordering for better readability and consistency
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/base/firmware_class.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-You should prefix your patch subject. It's usually the easiest to
-check git history to see what kind of prefix is usually used for the
-code you edit, like:
-git log net/wireless/util.c
-
-
-> @@ -1340,10 +1340,7 @@ bool ieee80211_operating_class_to_band(u8 operating_class,
->         case 128 ... 130:
->                 *band = IEEE80211_BAND_5GHZ;
->                 return true;
-> -       case 81:
-> -       case 82:
-> -       case 83:
-> -       case 84:
-> +       case 81 ... 84:
->                 *band = IEEE80211_BAND_2GHZ;
->                 return true;
->         case 180:
-
-I guess there could be some better word than "Reordering" for this
-change. I don't think you really reordered anything ;)
-
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 65fcf2d..55091b4 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -346,7 +346,7 @@ static int fw_get_filesystem_firmware(struct device *device,
+ 		rc = fw_read_file_contents(file, buf);
+ 		fput(file);
+ 		if (rc)
+-			dev_warn(device, "firmware, attempted to load %s, but failed with error %d\n",
++			dev_warn(device, "system data, attempted to load %s, but failed with error %d\n",
+ 				path, rc);
+ 		else
+ 			break;
+@@ -354,7 +354,7 @@ static int fw_get_filesystem_firmware(struct device *device,
+ 	__putname(path);
+ 
+ 	if (!rc) {
+-		dev_dbg(device, "firmware: direct-loading firmware %s\n",
++		dev_dbg(device, "system data: direct-loading firmware %s\n",
+ 			buf->fw_id);
+ 		mutex_lock(&fw_lock);
+ 		set_bit(FW_STATUS_DONE, &buf->status);
+@@ -1063,7 +1063,7 @@ _request_firmware_prepare(struct firmware **firmware_p, const char *name,
+ 	}
+ 
+ 	if (fw_get_builtin_firmware(firmware, name)) {
+-		dev_dbg(device, "firmware: using built-in firmware %s\n", name);
++		dev_dbg(device, "system data: using built-in system data%s\n", name);
+ 		return 0; /* assigned */
+ 	}
+ 
 -- 
-Rafał
+2.3.2.209.gd67f9d5.dirty
+
