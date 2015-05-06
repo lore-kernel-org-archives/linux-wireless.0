@@ -1,121 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:12438 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751836AbbE1NBK (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:37954 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565AbbEFDeb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:01:10 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxMiV015076
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:09 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqhd-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:09 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 15/17] mwifiex: update AP WMM settings from BSS_START event
-Date: Thu, 28 May 2015 23:59:05 +0530
-Message-ID: <1432837747-2075-16-git-send-email-patila@marvell.com> (sfid-20150528_150350_310211_E9E28A6F)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+	Tue, 5 May 2015 23:34:31 -0400
+Date: Wed, 6 May 2015 11:33:30 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org,
+	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>
+Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency when
+ fw signing is enabled
+Message-ID: <20150506033330.GA16470@gondor.apana.org.au> (sfid-20150506_053446_618586_894CD27B)
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+ <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was missing and would cause issue in WMM handling.
+On Tue, May 05, 2015 at 05:44:21PM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> 
+> We're going to add firmware module signing support, but when we do
+> this we end up with the following recursive dependency. Fix this by
+> just depending on FW_LOADER, which is typically always enabled
+> anyway.
+> 
+> mcgrof@ergon ~/linux-next (git::master)$ make allnoconfig
+> scripts/kconfig/conf  --allnoconfig Kconfig
+> crypto/Kconfig:15:error: recursive dependency detected!
+> crypto/Kconfig:15:      symbol CRYPTO is selected by SYSDATA_SIG
+> init/Kconfig:1880:      symbol SYSDATA_SIG is selected by FIRMWARE_SIG
+> drivers/base/Kconfig:88:        symbol FIRMWARE_SIG depends on FW_LOADER
+> drivers/base/Kconfig:80:        symbol FW_LOADER is selected by CRYPTO_DEV_QAT
+> drivers/crypto/qat/Kconfig:1:   symbol CRYPTO_DEV_QAT is selected by CRYPTO_DEV_QAT_DH895xCC
+> drivers/crypto/qat/Kconfig:13:  symbol CRYPTO_DEV_QAT_DH895xCC depends on CRYPTO
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/uap_event.c | 63 ++++++++++++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
+This doesn't look like a real cycle to me so perhaps we can fix
+kbuild to understand this?
 
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 06ce3fe..fee05f5 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -21,8 +21,70 @@
- #include "main.h"
- #include "11n.h"
- 
-+#define MWIFIEX_BSS_START_EVT_FIX_SIZE    12
- 
-+static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
-+					 struct sk_buff *event)
-+{
-+	int evt_len;
-+	u8 *curr;
-+	u16 tlv_len;
-+	struct mwifiex_ie_types_data *tlv_hdr;
-+	struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
-+	int mask = IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK;
-+
-+	priv->wmm_enabled = false;
-+	skb_pull(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
-+	evt_len = event->len;
-+	curr = event->data;
-+
-+	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
-+			 event->data, event->len);
-+
-+	while ((evt_len >= sizeof(tlv_hdr->header))) {
-+		tlv_hdr = (struct mwifiex_ie_types_data *)curr;
-+		tlv_len = le16_to_cpu(tlv_hdr->header.len);
-+
-+		if (evt_len < tlv_len + sizeof(tlv_hdr->header))
-+			break;
-+
-+		switch (le16_to_cpu(tlv_hdr->header.type)) {
-+		case WLAN_EID_HT_CAPABILITY:
-+			priv->ap_11n_enabled = true;
-+			break;
-+
-+		case WLAN_EID_VHT_CAPABILITY:
-+			priv->ap_11ac_enabled = true;
-+			break;
- 
-+		case WLAN_EID_VENDOR_SPECIFIC:
-+			/* Point the regular IEEE IE 2 bytes into the Marvell IE
-+			 * and setup the IEEE IE type and length byte fields
-+			 */
-+			wmm_param_ie = (void *)(curr + 2);
-+			wmm_param_ie->vend_hdr.len = (u8)tlv_len;
-+			wmm_param_ie->vend_hdr.element_id =
-+						WLAN_EID_VENDOR_SPECIFIC;
-+			mwifiex_dbg(priv->adapter, EVENT,
-+				    "info: check uap capabilities:\t"
-+				    "wmm parameter set count: %d\n",
-+				    wmm_param_ie->qos_info_bitmap & mask);
-+
-+			mwifiex_wmm_setup_ac_downgrade(priv);
-+			priv->wmm_enabled = true;
-+			mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
-+			break;
-+
-+		default:
-+			break;
-+		}
-+
-+		curr += (tlv_len + sizeof(tlv_hdr->header));
-+		evt_len -= (tlv_len + sizeof(tlv_hdr->header));
-+	}
-+
-+	return 0;
-+}
- 
- /*
-  * This function handles AP interface specific events generated by firmware.
-@@ -134,6 +196,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 		       ETH_ALEN);
- 		if (priv->hist_data)
- 			mwifiex_hist_data_reset(priv);
-+		mwifiex_check_uap_capabilties(priv, adapter->event_skb);
- 		break;
- 	case EVENT_UAP_MIC_COUNTERMEASURES:
- 		/* For future development */
+Cheers,
 -- 
-1.8.1.4
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
