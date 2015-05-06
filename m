@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:35472 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752726AbbEHOrC (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36732 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755805AbbEFAxP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 10:47:02 -0400
-Received: by wgyo15 with SMTP id o15so74794091wgy.2
-        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 07:47:01 -0700 (PDT)
-MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 8 May 2015 20:16:40 +0530
-Message-ID: <CABPxzYKz9MK95nqzZk0=yP=UX3JvEy_JFsY5yZ3FEcOOGstBVQ@mail.gmail.com> (sfid-20150508_164706_844513_487FE58E)
-Subject: Not able to set u-apsd for P2P client
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 May 2015 20:53:15 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org
+Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>
+Subject: [PATCH v1 03/12] crypto: qat - address recursive dependency when fw signing is enabled
+Date: Tue,  5 May 2015 17:44:21 -0700
+Message-Id: <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_025348_940103_D577363E)
+In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-We are having trouble making the uapsd working in p2p client case. Is
-this broken? or is there a way to configure the uapsd for p2p client
-case?
+We're going to add firmware module signing support, but when we do
+this we end up with the following recursive dependency. Fix this by
+just depending on FW_LOADER, which is typically always enabled
+anyway.
 
+mcgrof@ergon ~/linux-next (git::master)$ make allnoconfig
+scripts/kconfig/conf  --allnoconfig Kconfig
+crypto/Kconfig:15:error: recursive dependency detected!
+crypto/Kconfig:15:      symbol CRYPTO is selected by SYSDATA_SIG
+init/Kconfig:1880:      symbol SYSDATA_SIG is selected by FIRMWARE_SIG
+drivers/base/Kconfig:88:        symbol FIRMWARE_SIG depends on FW_LOADER
+drivers/base/Kconfig:80:        symbol FW_LOADER is selected by CRYPTO_DEV_QAT
+drivers/crypto/qat/Kconfig:1:   symbol CRYPTO_DEV_QAT is selected by CRYPTO_DEV_QAT_DH895xCC
+drivers/crypto/qat/Kconfig:13:  symbol CRYPTO_DEV_QAT_DH895xCC depends on CRYPTO
 
-case a) p2p client with p2p_no_group_iface=1
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Cc: Bruce Allan <bruce.w.allan@intel.com>
+Cc: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: John Griffin <john.griffin@intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/crypto/qat/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-When trying to change the mode from MANAGED to P2P_CLIENT the sdata is
-being cleared so the previous change of uapsd_queue=0xF is being
-cleared and default value is taken.
-
-case b) with p2p_no_group_iface=0
-
-As the interface is dynamically created, we cannot use the mac80211
-debugfs to set the uapsd_queues.
-I have tried "wpa_cli p2p_set client_apsd 1,1,1,1" but it is not taking effect.
-
+diff --git a/drivers/crypto/qat/Kconfig b/drivers/crypto/qat/Kconfig
+index 49bede2..9bea338 100644
+--- a/drivers/crypto/qat/Kconfig
++++ b/drivers/crypto/qat/Kconfig
+@@ -8,7 +8,7 @@ config CRYPTO_DEV_QAT
+ 	select CRYPTO_SHA1
+ 	select CRYPTO_SHA256
+ 	select CRYPTO_SHA512
+-	select FW_LOADER
++	depends on FW_LOADER
+ 
+ config CRYPTO_DEV_QAT_DH895xCC
+ 	tristate "Support for Intel(R) DH895xCC"
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
+2.3.2.209.gd67f9d5.dirty
+
