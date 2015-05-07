@@ -1,111 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36117 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932099AbbE1O2z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:28:55 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEP5mp010385
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:28:54 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s4pu-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:28:54 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 16/17] mwifiex: using right tid for addressing ra_list
-Date: Fri, 29 May 2015 01:24:57 +0530
-Message-ID: <1432842898-3219-17-git-send-email-patila@marvell.com> (sfid-20150528_162859_968364_FE1E43AA)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
+Received: from cantor2.suse.de ([195.135.220.15]:49708 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751178AbbEGIyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2015 04:54:54 -0400
+Date: Thu, 7 May 2015 10:54:52 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+cc: "piotr.karbowski@gmail.com" <piotr.karbowski@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
+In-Reply-To: <1430722924.26162.4.camel@intel.com>
+Message-ID: <alpine.LNX.2.00.1505071052290.8186@pobox.suse.cz> (sfid-20150507_105459_554483_E3647A90)
+References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz>    <1429764440.4084.5.camel@intel.com>    <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>    <1429780366.11859.1.camel@intel.com>    <alpine.LNX.2.00.1504231114290.3695@pobox.suse.cz>   
+ <CA+uBNfxXoLj9Nfss+j1G3PY9A2t=N6KRiYUAdoxiUOZvigwyAw@mail.gmail.com>   <1429812611.23202.4.camel@intel.com>   <alpine.LNX.2.00.1505032340090.17496@pobox.suse.cz>  <1430713926.3388.1.camel@intel.com>  <alpine.LNX.2.00.1505040853590.17496@pobox.suse.cz>
+ <1430722924.26162.4.camel@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Mon, 4 May 2015, Grumbach, Emmanuel wrote:
 
-This patch fixes issue with the accessing correct ra_list by
-downgrading corresponding tid number.
+> Sorry, my bad. I lost context here... So I really don't know what to 
+> say. I can't see any iwlwifi commit that could be causing this, OTOH, 
+> bisection didn't bring any results. You can try to unregister the device 
+> from PCI and then to rescan. It worked for some people. Other than that, 
+> I can't do much. Did you update your BIOS before you started to see this 
+> failure?
 
-Alternatively, ra lists are created in mwifiex_wmm_add_buf_txqueue
-using downgraded tid number.
+Well, this kept getting worse and worse. Newer kernels were much "better" 
+provoking the HW crashes, but a few days ago I started seeing it even with 
+very old kernels, which used to be rock stable.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.c           | 11 ++++++++---
- drivers/net/wireless/mwifiex/11n_rxreorder.c |  5 ++++-
- 2 files changed, 12 insertions(+), 4 deletions(-)
+I first ruled out a firmware update to be the cause.
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 8422986..4d8ef49 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -156,7 +156,7 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
- int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 			      struct host_cmd_ds_command *resp)
- {
--	int tid;
-+	int tid, tid_down;
- 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
- 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
- 	struct mwifiex_ra_list_tbl *ra_list;
-@@ -167,7 +167,9 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 
- 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
- 	       >> BLOCKACKPARAM_TID_POS;
--	ra_list = mwifiex_wmm_get_ralist_node(priv, tid, add_ba_rsp->
-+
-+	tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+	ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, add_ba_rsp->
- 		peer_mac_addr);
- 	if (le16_to_cpu(add_ba_rsp->status_code) != BA_RESULT_SUCCESS) {
- 		if (ra_list) {
-@@ -530,13 +532,16 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
- 	struct mwifiex_tx_ba_stream_tbl *new_node;
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
- 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
- 				   GFP_ATOMIC);
- 		if (!new_node)
- 			return;
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, ra);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, ra);
- 		if (ra_list) {
- 			ra_list->ba_status = ba_status;
- 			ra_list->amsdu_in_ampdu = false;
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 39d7a95..64401a7 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -663,6 +663,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	u8 cleanup_rx_reorder_tbl;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (type == TYPE_DELBA_RECEIVE)
- 		cleanup_rx_reorder_tbl = (initiator) ? true : false;
-@@ -688,7 +689,9 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 				    "event: TID, RA not found in table\n");
- 			return;
- 		}
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, peer_mac);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, peer_mac);
- 		if (ra_list) {
- 			ra_list->amsdu_in_ampdu = false;
- 			ra_list->ba_status = BA_SETUP_NONE;
+So I dismanlted the notebook and replaced the wifi chip with another one 
+(also driven by iwlwifi), and no failure after 2 days so far.
+
+So it might turn out that this particular one was a red herring. If it 
+happens again even with the replaced chip, I'll report back. Sorry for the 
+noise.
+
 -- 
-1.8.1.4
-
+Jiri Kosina
+SUSE Labs
