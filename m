@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:45795 "EHLO arroyo.ext.ti.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35791 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752046AbbEJFqp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 May 2015 01:46:45 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wl18xx : firmware pull request [V2] (updated WHENCE)
-Date: Sun, 10 May 2015 05:46:38 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101265F6B46@DFRE01.ent.ti.com> (sfid-20150510_081512_894294_15830578)
-Content-Type: text/plain; charset="windows-1255"
-MIME-Version: 1.0
+	id S1750806AbbEGMrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2015 08:47:40 -0400
+Message-ID: <1431002853.11214.3.camel@sipsolutions.net> (sfid-20150507_144745_545468_C3D90983)
+Subject: Re: [patch] iwlwifi: mvm: remove some dead code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Arik Nemtsov <arik@wizery.com>,
+	Luciano Coelho <luciano.coelho@intel.com>,
+	Liad Kaufman <liad.kaufman@intel.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Thu, 07 May 2015 14:47:33 +0200
+In-Reply-To: <20150507124224.GX16501@mwanda>
+References: <20150507095844.GA17996@mwanda>
+	 <1431001635.11214.2.camel@sipsolutions.net> <20150507124224.GX16501@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-Please see below pull request,
+On Thu, 2015-05-07 at 15:42 +0300, Dan Carpenter wrote:
 
-- Firmware file was updated (8.9.0.0.39), includes bug fixes and improvements.
-- Configuration binary removed, it is no longer fits all releases.
-  Moreover it should be configured per HW platform.
-  More information can found in here :
-  http://processors.wiki.ti.com/index.php/Open_Source_Wireless_Connectivity_wlconf
+> > >  		_iwl_trans_stop_device(mvm->trans, false);
+> > >  		_iwl_trans_start_hw(mvm->trans, false);
+> > > -		if (ret)
+> > > -			return ret;
+> > 
+> > It looks like "ret = _iwl_trans_start_hw(...)" was intended though?
+> > 
+> 
+> Hm...  You may be right.  Should it also be "goto error;" instead of a
+> direct return?  I'm not positive.
 
-Regards,
-Yaniv
+Yes, looks like.
 
-The following changes since commit 8e181320b11de501046cf75c8c30915cd09a1e39:
-  Daniel Drake (1):
-        linux-firmware: Add Realtek Bluetooth HCD firmware
+> Eran can you fix this and give me a Reported-by tag?
 
-are available in the git repository at:
+I think Eran is on sabbatical, I'll get this on the way internally with
+your reported-by.
 
-  git@git.ti.com:wilink8-wlan/linux-firmware.git for-upstream
-
-for you to fetch changes up to dbe3f134bb69b62edd29be89452d016def8f6d7f
-Yaniv Machani (1):
-      wl18xx: update firmware file, remove conf file
-
- WHENCE                          |    4 +---
- ti-connectivity/wl18xx-conf.bin |  Bin 1221 -> 0 bytes
- ti-connectivity/wl18xx-fw-4.bin |  Bin 681704 -> 724716 bytes
- 3 files changed, 1 insertions(+), 3 deletions(-)
- delete mode 100644 ti-connectivity/wl18xx-conf.bin
-
-
+johannes
 
