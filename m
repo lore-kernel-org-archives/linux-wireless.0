@@ -1,69 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49466 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753601AbbE1M7l (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:34247 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbbEGMaq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 08:59:41 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCwn2v014693
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:40 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqdb-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:40 -0700
-From: Avinash Patil <patila@marvell.com>
+	Thu, 7 May 2015 08:30:46 -0400
+Received: by wicmx19 with SMTP id mx19so12698091wic.1
+        for <linux-wireless@vger.kernel.org>; Thu, 07 May 2015 05:30:45 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 02/17] mwifiex: correct bss_type assignment
-Date: Thu, 28 May 2015 23:58:52 +0530
-Message-ID: <1432837747-2075-3-git-send-email-patila@marvell.com> (sfid-20150528_145943_870241_2EF87A97)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: TDLS: use the BSS chandef for HT/VHT operation IEs
+Date: Thu,  7 May 2015 15:30:41 +0300
+Message-Id: <1431001841-1876-1-git-send-email-arik@wizery.com> (sfid-20150507_143050_290151_90BEE24E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct bss_type assignment in add_virtual_interface.
-This would ensure correct operation in multiple station scenarios.
+The chandef of the current channel context might be wider (though
+compatible). The TDLS link cares only about the channel of the BSS.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+In addition make sure to specify the VHT operation IE when VHT is supported
+on a non-2.4GHz band, as required by IEEE802.11ac-2013. This is not the
+same as HT-operation, to be specified only if the BSS doesn't support HT.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/tdls.c | 27 ++++++++-------------------
+ 1 file changed, 8 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 4eeceda..3a14d3a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2518,7 +2518,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.sta_intf;
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index fff0d86..8a92a92 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -527,30 +527,19 @@ ieee80211_tdls_add_setup_cfm_ies(struct ieee80211_sub_if_data *sdata,
  
- 		break;
- 	case NL80211_IFTYPE_AP:
-@@ -2544,7 +2544,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.uap_intf;
- 		priv->bss_mode = type;
+ 	/* if HT support is only added in TDLS, we need an HT-operation IE */
+ 	if (!ap_sta->sta.ht_cap.ht_supported && sta->sta.ht_cap.ht_supported) {
+-		struct ieee80211_chanctx_conf *chanctx_conf =
+-				rcu_dereference(sdata->vif.chanctx_conf);
+-		if (!WARN_ON(!chanctx_conf)) {
+-			pos = skb_put(skb, 2 +
+-				      sizeof(struct ieee80211_ht_operation));
+-			/* send an empty HT operation IE */
+-			ieee80211_ie_build_ht_oper(pos, &sta->sta.ht_cap,
+-						   &chanctx_conf->def, 0);
+-		}
++		pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_operation));
++		/* send an empty HT operation IE */
++		ieee80211_ie_build_ht_oper(pos, &sta->sta.ht_cap,
++					   &sdata->vif.bss_conf.chandef, 0);
+ 	}
  
- 		break;
-@@ -2580,7 +2580,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
+ 	ieee80211_tdls_add_link_ie(sdata, skb, peer, initiator);
  
- 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
- 			memset(&priv->wdev, 0, sizeof(priv->wdev));
+ 	/* only include VHT-operation if not on the 2.4GHz band */
+-	if (band != IEEE80211_BAND_2GHZ && !ap_sta->sta.vht_cap.vht_supported &&
+-	    sta->sta.vht_cap.vht_supported) {
+-		struct ieee80211_chanctx_conf *chanctx_conf =
+-				rcu_dereference(sdata->vif.chanctx_conf);
+-		if (!WARN_ON(!chanctx_conf)) {
+-			pos = skb_put(skb, 2 +
+-				      sizeof(struct ieee80211_vht_operation));
+-			ieee80211_ie_build_vht_oper(pos, &sta->sta.vht_cap,
+-						    &chanctx_conf->def);
+-		}
++	if (band != IEEE80211_BAND_2GHZ && sta->sta.vht_cap.vht_supported) {
++		pos = skb_put(skb, 2 + sizeof(struct ieee80211_vht_operation));
++		ieee80211_ie_build_vht_oper(pos, &sta->sta.vht_cap,
++					    &sdata->vif.bss_conf.chandef);
+ 	}
+ 
+ 	rcu_read_unlock();
 -- 
-1.8.1.4
+2.1.0
 
