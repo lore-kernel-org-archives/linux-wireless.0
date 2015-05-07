@@ -1,49 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:35439 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030244AbbEOHwz (ORCPT
+Received: from lb1-smtp-cloud3.xs4all.net ([194.109.24.22]:52516 "EHLO
+	lb1-smtp-cloud3.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751686AbbEGSGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 03:52:55 -0400
-Received: by labbd9 with SMTP id bd9so107285510lab.2
-        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2015 00:52:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1431674716.2426.2.camel@sipsolutions.net>
-References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
-	<1431674716.2426.2.camel@sipsolutions.net>
-Date: Fri, 15 May 2015 10:52:53 +0300
-Message-ID: <CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com> (sfid-20150515_095801_047749_BEB748D0)
-Subject: Re: mac80211 drops packet with old IV after rekeying
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 May 2015 14:06:38 -0400
+Message-ID: <1431021995.8171.97.camel@x220> (sfid-20150507_200656_058475_A349263D)
+Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency
+ when fw signing is enabled
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org,
+	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>
+Date: Thu, 07 May 2015 20:06:35 +0200
+In-Reply-To: <1430988137.8171.58.camel@x220>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
+	 <20150506033330.GA16470@gondor.apana.org.au>
+	 <1430988137.8171.58.camel@x220>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I'd be glad if someone could take a look. If not, I'll have someone
->> from our team to look at it, but I don't know how long it will take...
->
-> Without looking too much - it seems to me that this is a fundamental
-> problem with PTK rekeying, in that it re-uses the key index that is
-> intended to avoid this.
+On Thu, 2015-05-07 at 10:42 +0200, Paul Bolle wrote:
+> On Wed, 2015-05-06 at 11:33 +0800, Herbert Xu wrote:
+> > On Tue, May 05, 2015 at 05:44:21PM -0700, Luis R. Rodriguez wrote:
+> > > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> > > 
+> > > We're going to add firmware module signing support, but when we do
+> > > this we end up with the following recursive dependency. Fix this by
+> > > just depending on FW_LOADER, which is typically always enabled
+> > > anyway.
+> > > 
+> > > mcgrof@ergon ~/linux-next (git::master)$ make allnoconfig
+> > > scripts/kconfig/conf  --allnoconfig Kconfig
+> > > crypto/Kconfig:15:error: recursive dependency detected!
+> > > crypto/Kconfig:15:      symbol CRYPTO is selected by SYSDATA_SIG
+> > > init/Kconfig:1880:      symbol SYSDATA_SIG is selected by FIRMWARE_SIG
+> > > drivers/base/Kconfig:88:        symbol FIRMWARE_SIG depends on FW_LOADER
+> > > drivers/base/Kconfig:80:        symbol FW_LOADER is selected by CRYPTO_DEV_QAT
+> > > drivers/crypto/qat/Kconfig:1:   symbol CRYPTO_DEV_QAT is selected by CRYPTO_DEV_QAT_DH895xCC
+> > > drivers/crypto/qat/Kconfig:13:  symbol CRYPTO_DEV_QAT_DH895xCC depends on CRYPTO
+> > 
+> > This doesn't look like a real cycle to me so perhaps we can fix
+> > kbuild to understand this?
+> 
+> (Dependency circles involving selects still hurt my brain.)
+> 
+> Perhaps Luis should have another look at 02/12. See that patch adds this
+> Kconfig entry to init/Kconfig:
+>     config SYSDATA_SIG
+> 	def_bool y
+> 	select SYSTEM_TRUSTED_KEYRING
+> 	select KEYS
+> 	select CRYPTO
+> 	select ASYMMETRIC_KEY_TYPE
+> 	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
+> 	select PUBLIC_KEY_ALGO_RSA
+> 	select ASN1
+> 	select OID_REGISTRY
+> 	select X509_CERTIFICATE_PARSER
+> 
+> As far as I can see this is not enclosed in anything that adds any
+> dependencies. So that basically means that SYSDATA_SIG will always be
+> set, for all architectures (because I think all arches source
+> init/Kconfig). That should make it a pretty pointless symbol (except for
+> the fact that it does trigger all those selects).
+> 
+> The same patch also adds
+> 	select SYSDATA_SIG
+> 
+> to the entry for MODULE_SIG. But to me that looks like a nop, because
+> SYSDATA_SIG will be set anyhow. So, but this is just I guess, the
+> problem might go away if
+> 	def_bool y
+> 
+> is changed to just
+> 	bool
 
-In this case, the AP is openWRT. I guess the Key idx is chosen in
-software, so maybe the proper fix would be to have openWRT increment
-the key index when it rekeys?
+No, it doesn't. But the change I propose still makes sense, anyway.
 
->
-> The issue at hand here is likely a hardware decryption vs. key replacing
-> race, in that hardware decryption happens while the key replacing also
-> happens, and then the PN checking after key replace hits the wrong key
-> (due to the above-mentioned issue with not being able to change the key
-> index in PTK rekeying.)
->
-> I don't see how we can fix this, except perhaps heuristically by
-> dropping packets that were encrypted with the *old* key and therefore
-> not updating the replay counter for them. However, detecting that they
-> were encrypted with the old key would only be possible by detecting a
-> large jump in PN, which could theoretically also happen in real
-> usage ...
->
-> johannes
->
+> (Note that I haven't actually tested anything here, and it wouldn't be
+> the first time my reasoning about Kconfig patches is completely off.)
+
+Hear, hear!
+
+> And, whatever the value of my analysis, adding a Kconfig problem in
+> 02/12 just to fix it in 03/12 is a bit silly. I think the patches should
+> be squashed if the problem can't be solved any other way.
+
+It seems the circular dependency warning is triggered by 5/12.
+
+And, having now fiddled a bit with this series, I think the approach
+taken in this patch might actually be preferable treewide.
+
+See, FW_LOADER is 'y' unless EXPERT is set and one goes to the trouble
+of setting FW_LOADER to 'n'. So in the 100+ places where FW_LOADER is
+selected, that is done for, almost always, no immediate benefit.
+Changing those places to use
+    depends on FW_LOADER
+
+should have no effect, I think. Except for the EXPERT people not wanting
+FW_LOADER. But that would be putting the burden where it belongs, I'd
+say.
+
+Am I missing something here?
+
+
+Paul Bolle
+
