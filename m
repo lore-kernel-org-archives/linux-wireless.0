@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51616 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46426 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755374AbbEaLVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 07:21:47 -0400
-Message-ID: <1433071305.2370.14.camel@sipsolutions.net> (sfid-20150531_132151_256785_24DACF35)
-Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL
- messages.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 31 May 2015 13:21:45 +0200
-In-Reply-To: <CABPxzY+9FwDPwRcZ4QT4QcfhMqmaQsrs=LT5E8tDKQG2t+wFRA@mail.gmail.com> (sfid-20150531_131751_864869_998A17F8)
-References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
-	 <1433061092.2370.1.camel@sipsolutions.net>
-	 <CABPxzYK-8TtYdiFeFrX7AVcsXQFaa3oxHREq+jgohHh1tCg5GQ@mail.gmail.com>
-	 <1433068947.2370.5.camel@sipsolutions.net>
-	 <CABPxzY+9FwDPwRcZ4QT4QcfhMqmaQsrs=LT5E8tDKQG2t+wFRA@mail.gmail.com>
-	 (sfid-20150531_131751_864869_998A17F8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751314AbbEGOKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2015 10:10:11 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "Gujulan Elango\, Hari Prasath \(H.\)" <hgujulan@visteon.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Babu\, Viswanathan \(V.\)" <vbabu3@visteon.com>
+Subject: Re: [PATCH] staging: rtl8723au : remove goto & return error directly
+References: <20150507111652.GA10574@IND12F0122>
+	<wrfjk2wkoarp.fsf@ultrasam.lan.trained-monkey.org>
+	<20150507121934.GH14154@mwanda> <20150507134344.GA11599@IND12F0122>
+Date: Thu, 07 May 2015 10:09:59 -0400
+In-Reply-To: <20150507134344.GA11599@IND12F0122> (Gujulan Elango's message of
+	"Thu, 7 May 2015 13:49:07 +0000")
+Message-ID: <wrfj3838o4w8.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150507_161027_363298_38D1727B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-05-31 at 16:47 +0530, Krishna Chaitanya wrote:
+"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
+> On Thu, May 07, 2015 at 03:19:34PM +0300, Dan Carpenter wrote:
+>> On Thu, May 07, 2015 at 08:03:06AM -0400, Jes Sorensen wrote:
+>> > "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
+>> > > Remove the goto and return error directly thereby removing a variable
+>> > >
+>> > > Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
+>> > > ---
+>> > >  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 7 ++-----
+>> > >  1 file changed, 2 insertions(+), 5 deletions(-)
+>> > 
+>> > NACK!
+>> 
+>> SHOUTING!
+>> 
+>> > 
+>> > The goto is cleaner and more consistent, rather than hiding a return in
+>> > the middle of the code.
+>> 
+>> More consistent with what?  There are already returns earlier in the
+>> function.  Do-nothing gotos are pointless and annoying.
+>> 
+>> regards,
+>> dan carpenter
+>> 
+>
+> I sent this patch  because goto & return was mixed up in this function.
+> There was a return as well as goto used. And i guess goto is not 
+> encouraged anywhere. In this case especially,I couldn't see any 
+> significant cleanup being done in the goto label.
 
-> > Note # of "messages" as you say is actually irrelevant - you should look
-> 
-> Well with 138 messages the function and each message 3072 bytes
-> calls b/w cfg80211 and driver
->        without the patch: would be 276 calls
->        with this patch: would be 138 calls
-> Thats a lot of function calls, don't you think?
+I will accept a patch to remove the returns in the middle of the
+function, if you wish to submit that.
 
-No, I don't think so. That really should be within the noise, it's all
-in the icache already after the first round.
+A return at the very beginning of a function is OK, but in the middle of
+a larger function they make it harder to catch when code exists.
 
-> > at how often the kernel/user boundary is crossed, that's really far more
-> > interesting, and your patch makes that MUCH worse when the put size is
-> > small (say 100 bytes) because then you're practically doing that twice
-> > as often.
-> 
-> My patch doesn't deteriorate the situation, and not change the kernel to
-> user boundary. With/Without the patch 3072 bytes are transported in a
-> single message from kernel to user.
-
-*in your case*
-
-In the case that somebody is creating smaller messages it makes things
-MUCH worse by allowing only half the data to be carried across the
-kernel/userspace boundary each time any data crosses it, so it will
-result in many more syscalls in that case. If you're worried about the
-overhead of a simple function (pointer) call in the kernel, then surely
-you should be far more worried about this.
-
-johannes
-
+Jes
