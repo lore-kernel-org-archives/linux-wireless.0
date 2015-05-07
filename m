@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752078AbbEZTTC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:19:02 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 33/39] iwlwifi: pcie: Remove redundant check for family type
-Date: Tue, 26 May 2015 22:17:46 +0300
-Message-Id: <1432667872-18092-33-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211925_775876_730D03E5)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37416 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726AbbEGMmr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2015 08:42:47 -0400
+Date: Thu, 7 May 2015 15:42:25 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Arik Nemtsov <arik@wizery.com>,
+	Luciano Coelho <luciano.coelho@intel.com>,
+	Liad Kaufman <liad.kaufman@intel.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] iwlwifi: mvm: remove some dead code
+Message-ID: <20150507124224.GX16501@mwanda> (sfid-20150507_144252_099113_ED4AD886)
+References: <20150507095844.GA17996@mwanda>
+ <1431001635.11214.2.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431001635.11214.2.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+On Thu, May 07, 2015 at 02:27:15PM +0200, Johannes Berg wrote:
+> On Thu, 2015-05-07 at 12:58 +0300, Dan Carpenter wrote:
+> > "ret" is zero here so we can remove this stray check.
+> > 
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+> > index df86963..41f4763 100644
+> > --- a/drivers/net/wireless/iwlwifi/mvm/fw.c
+> > +++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+> > @@ -663,8 +663,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+> >  		 */
+> >  		_iwl_trans_stop_device(mvm->trans, false);
+> >  		_iwl_trans_start_hw(mvm->trans, false);
+> > -		if (ret)
+> > -			return ret;
+> 
+> It looks like "ret = _iwl_trans_start_hw(...)" was intended though?
+> 
 
-This check for family type is redundant as the if clause above
-checks a family-dependent Boolean (which is not set for family 8000 anyway).
+Hm...  You may be right.  Should it also be "goto error;" instead of a
+direct return?  I'm not positive.  Eran can you fix this and give me a
+Reported-by tag?
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/tx.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 5ef8044..2b86c21 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -1049,8 +1049,6 @@ static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans,
- 	    !trans_pcie->cmd_hold_nic_awake) {
- 		__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
- 					 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
--			udelay(2);
- 
- 		ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
- 				   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
--- 
-2.1.4
+regards,
+dan carpenter
 
