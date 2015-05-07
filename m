@@ -1,55 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45665 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753247AbbEUGOy (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:54806 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbbEGIao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 02:14:54 -0400
-Date: Wed, 20 May 2015 23:14:53 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150521061453.GC30864@kroah.com> (sfid-20150521_081516_719711_EEB7659D)
-References: <20150519200232.GM23057@wotan.suse.de>
- <20150520140426.GB126473@ubuntu-hedt>
- <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
- <20150520164613.GD10473@localhost>
- <20150521044104.GH22632@kroah.com>
- <20150521054101.GA15037@localhost>
+	Thu, 7 May 2015 04:30:44 -0400
+Message-ID: <554B22B0.6080708@broadcom.com> (sfid-20150507_103103_117017_A83BC80B)
+Date: Thu, 7 May 2015 10:30:40 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150521054101.GA15037@localhost>
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+CC: "brudley@broadcom.com" <brudley@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman@broadcom.com" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] brcmfmac: prohibit ACPI power management for brcmfmac
+ driver
+References: <55463E19.7070709@linux.intel.com> <554AC8EB.9040403@linux.intel.com>
+In-Reply-To: <554AC8EB.9040403@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2015 at 08:41:02AM +0300, Petko Manolov wrote:
-> > I too don't understand this need to sign something that you don't really know 
-> > what it is from some other company, just to send it to a separate device that 
-> > is going to do whatever it wants with it if it is signed or not.
-> 
-> This is not the point.  What you need to know is _where_ the firmware came from, 
-> not _what_ it does once it reach your system.  If you don't care about such 
-> things, just ignore the signature. :)
+On 05/07/15 04:07, Fu, Zhonghui wrote:
+>
+> Hi,
+>
+> Any comments are welcome.
 
-Ok, but how do we know "where"?  Who is going to start signing and
-attesting to the validity of all of the firmware images in the
-linux-firmware tree suddenly?  Why is it the kernel's job to attest this
-"where"?  Shouldn't your distro/manufacturer be doing that as part of
-their "put this file on this disk" responsibilities (i.e. the package
-manager?)
+Having some time to spare while spending my vacation so here it is.
 
-What is verifying a firmware image signature in the kernel attesting
-that isn't already known in userspace?
+> Thanks,
+> Zhonghui
+>
+> On 2015/5/3 23:26, Fu, Zhonghui wrote:
+>> ACPI will manage WiFi chip's power state during suspend/resume
+>> process on some tablet platforms(such as ASUS T100TA). This is
+>> not supported by brcmfmac driver now, and the context of WiFi
+>> chip will be damaged after resume. This patch informs ACPI not
+>> to manage WiFi chip's power state.
+>>
+>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> ---
+>> Changes in v2:
+>> - Another implementation.
+>>
+>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    8 ++++++++
+>>   1 files changed, 8 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index 9b508bd..6c519e3 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -33,6 +33,7 @@
+>>   #include<linux/suspend.h>
+>>   #include<linux/errno.h>
+>>   #include<linux/module.h>
+>> +#include<linux/acpi.h>
+>>   #include<net/cfg80211.h>
+>>
+>>   #include<defs.h>
+>> @@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>>   	int err;
+>>   	struct brcmf_sdio_dev *sdiodev;
+>>   	struct brcmf_bus *bus_if;
+>> +	struct device *dev;
+>> +	struct acpi_device *adev;
+>>
+>>   	brcmf_dbg(SDIO, "Enter\n");
+>>   	brcmf_dbg(SDIO, "Class=%x\n", func->class);
+>> @@ -1121,6 +1124,11 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>>   	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
+>>   	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+>>
+>> +	/* prohibit ACPI power management for this device */
+>> +	dev =&func->dev;
+>> +	if (adev = ACPI_COMPANION(dev))
 
-thanks,
+While I understand what you are doing here it makes someone reading the 
+code wonder whether a mistake has been made. So I would prefer to have 
+the assignment separate for the if statement.
 
-greg k-h
+For the update patch you may add:
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+
+Regards,
+Arend
+>> +		adev->flags.power_manageable = 0;
+>> +
+>>   	/* Consume func num 1 but dont do anything with it. */
+>>   	if (func->num == 1)
+>>   		return 0;
+>> -- 1.7.1
+>>
+>
+
