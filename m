@@ -1,61 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57917 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400AbbEZNwu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:52:50 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [v2,
- 1/2] adm8211: fix checkpatch errors for indentation and new line
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20150511115325.GA5092@bytefire-computer>
-To: Okash Khawaja <okash.khawaja@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20150526104802.E5F631416A0@smtp.codeaurora.org> (sfid-20150526_155350_298531_128289EA)
-Date: Tue, 26 May 2015 10:48:02 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:35697 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177AbbEGMZr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2015 08:25:47 -0400
+Message-ID: <1431001545.11214.1.camel@sipsolutions.net> (sfid-20150507_142550_449626_DF4A8206)
+Subject: Re: [PATCH v3 5/7] mac80211: Adjust reserved chan_ctx when assigned
+ to vif
+From: Johannes Berg <johannes@sipsolutions.net>
+To: andrei.otc@gmail.com
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Thu, 07 May 2015 14:25:45 +0200
+In-Reply-To: <1430926250-14732-1-git-send-email-andrei.otcheretianski@intel.com> (sfid-20150506_173126_872821_BEEE38B8)
+References: <1430916630.1954.2.camel@sipsolutions.net>
+	 <1430926250-14732-1-git-send-email-andrei.otcheretianski@intel.com>
+	 (sfid-20150506_173126_872821_BEEE38B8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2015-05-06 at 18:30 +0300, andrei.otc@gmail.com wrote:
+> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+> 
+> When a vif starts using a reserved channel context (during CSA, for example)
+> the required chandef was recalculated, however it was never applied.
+> This could result in using chanctx with narrower width than actually
+> required. Fix this by calling ieee80211_change_chanctx with the recalculated
+> chandef. This both changes the chanctx's width and recalcs min_def.
 
-> This patch fixes these checkpatch.pl errors around a single switch-case
-> block:
-> 
-> ERROR: switch and case should be at the same indent
-> ERROR: trailing statements should be on next line
-> 
-> More specifically, the fix has been applied to the five occurances of
-> the errors listed below.
-> 
-> ERROR: switch and case should be at the same indent
-> #1100: FILE: adm8211.c:1100:
-> +               switch (cline) {
-> [...]
-> +                 default: reg |= (0x0 << 14);
-> 
-> ERROR: trailing statements should be on next line
-> #1101: FILE: adm8211.c:1101:
-> +               case  0x8: reg |= (0x1 << 14);
-> 
-> ERROR: trailing statements should be on next line
-> #1103: FILE: adm8211.c:1103:
-> +               case 0x16: reg |= (0x2 << 14);
-> 
-> ERROR: trailing statements should be on next line
-> #1105: FILE: adm8211.c:1105:
-> +               case 0x32: reg |= (0x3 << 14);
-> 
-> ERROR: trailing statements should be on next line
-> #1107: FILE: adm8211.c:1107:
-> +                 default: reg |= (0x0 << 14);
-> 
-> 
-> Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+Applied.
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+johannes
 
-f5c65f38912e adm8211: fix checkpatch errors for indentation and new line
-fe0a483ecf44 adm8211: fixed the possible pci cache line sizes inside switch-case
-
-Kalle Valo
