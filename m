@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:37881 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946072AbbEOSi0 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:23061 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258AbbEGJ7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 14:38:26 -0400
-Received: by wibt6 with SMTP id t6so69039901wib.0
-        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2015 11:38:25 -0700 (PDT)
-Message-ID: <55563D20.9030702@gmail.com> (sfid-20150515_203833_814519_1C1DF67C)
-Date: Fri, 15 May 2015 20:38:24 +0200
-From: Arend van Spriel <aspriel@gmail.com>
+	Thu, 7 May 2015 05:59:05 -0400
+Date: Thu, 7 May 2015 12:58:44 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Eran Harary <eran.harary@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Arik Nemtsov <arik@wizery.com>,
+	Luciano Coelho <luciano.coelho@intel.com>,
+	Liad Kaufman <liad.kaufman@intel.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] iwlwifi: mvm: remove some dead code
+Message-ID: <20150507095844.GA17996@mwanda> (sfid-20150507_115917_046200_420B91D7)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, Luciano Coelho <luca@coelho.fi>
-Subject: new release of py80211 - v1.0-alpha
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently got triggered by Luca and with some free time to spare extended 
-the functionality in py80211. It is still mostly about retrieving 
-information although it also supports scanning now dealing with 
-notifications from the scan multicast group. It has been a fun week 
-puzzling on some hurdles. Hopefully I can keep spending more time on 
-this personal project and keep momentum.
+"ret" is zero here so we can remove this stray check.
 
-The project can be found on github and the release notes are here [1].
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Regards,
-Arend
-
-[1] https://github.com/arend/py80211/releases/tag/py80211-v1.0-alpha
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index df86963..41f4763 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -663,8 +663,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 		 */
+ 		_iwl_trans_stop_device(mvm->trans, false);
+ 		_iwl_trans_start_hw(mvm->trans, false);
+-		if (ret)
+-			return ret;
+ 	}
+ 
+ 	if (iwlmvm_mod_params.init_dbg)
