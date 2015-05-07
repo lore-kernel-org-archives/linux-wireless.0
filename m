@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lan.nucleusys.com ([92.247.61.126]:42914 "EHLO
-	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753388AbbETQq1 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:35578 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbbEGMN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 12:46:27 -0400
-Date: Wed, 20 May 2015 19:46:13 +0300
-From: Petko Manolov <petkan@mip-labs.com>
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150520164613.GD10473@localhost> (sfid-20150520_184636_133144_2A2A1DCE)
-References: <20150519200232.GM23057@wotan.suse.de>
- <20150520140426.GB126473@ubuntu-hedt>
- <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+	Thu, 7 May 2015 08:13:26 -0400
+Received: by widdi4 with SMTP id di4so239663938wid.0
+        for <linux-wireless@vger.kernel.org>; Thu, 07 May 2015 05:13:25 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: check result of USB firmware request
+Date: Thu,  7 May 2015 14:13:03 +0200
+Message-Id: <1431000783-17411-1-git-send-email-zajec5@gmail.com> (sfid-20150507_141330_375518_A40A6829)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-05-20 17:24:46, One Thousand Gnomes wrote:
-> 
-> More to the point why do you want to sign firmware files ? Leaving aside the 
-> fact that someone will produce a device with GPLv3 firmware just to p*ss you 
-> off there's the rather more relevant fact that firmware for devices on a so 
-> called "trusted" platform already have signed firmware.
+This prevents silence failures with driver waiting (infinitely) for a
+callback.
 
-For "trusted" systems one would like to make sure everything that goes in has 
-known provenance.  Maybe this was the idea?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+I don't really have any opinion if this should go for next or as a fix.
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-> For external devices I don't normally have access to read system memory 
-> anyway, and signing firmware would achieve nothing unless you start doing 
-> crazy DRM style key exchanges to prove the endpoint is trusted. Any NSA trojan 
-> wifi stick is simply going to nod as the correct firmware is uploaded, and 
-> then ignore it. And if I'm just out to be a pain I can already just plug in a 
-> fake device claiming to be a usb disk with 256 bytes per sector (boom... exit 
-> machine stage right), or for that matter wire a USB stick with 5v connected to 
-> the mains at the nearest wall socket.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 5df6aa7..daba86d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -1270,8 +1270,13 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 	bus->chiprev = bus_pub->chiprev;
+ 
+ 	/* request firmware here */
+-	brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo), NULL,
+-			       brcmf_usb_probe_phase2);
++	ret = brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo),
++				     NULL, brcmf_usb_probe_phase2);
++	if (ret) {
++		brcmf_err("firmware request failed: %d\n", ret);
++		goto fail;
++	}
++
+ 	return 0;
+ 
+ fail:
+-- 
+1.8.4.5
 
-Yep, gaining physical access to the system is a game over.  It is arguable how 
-"trusted" a networked machine could be and i guess the answer is "not much"...
-
-
-		Petko
