@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55521 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964860AbbENTev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 15:34:51 -0400
-Date: Thu, 14 May 2015 21:34:45 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	ming.lei@canonical.com, rusty@rustcorp.com.au,
-	torvalds@linux-foundation.org, dhowells@redhat.com,
-	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
-	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
-	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
-	casey@schaufler-ca.com, keescook@chromium.org, mjg59@srcf.ucam.org,
-	akpm@linux-foundation.org, Kyle McMartin <kyle@kernel.org>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	John Griffin <john.griffin@intel.com>
-Subject: Re: [RFC v2 3/6] crypto: qat - address recursive dependency when fw
- signing is enabled
-Message-ID: <20150514193445.GW23057@wotan.suse.de> (sfid-20150514_213517_021750_12B21BC7)
-References: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
- <1431541436-17007-4-git-send-email-mcgrof@do-not-panic.com>
- <20150514030415.GD3853@gondor.apana.org.au>
+Received: from mail-am1on0132.outbound.protection.outlook.com ([157.56.112.132]:49504
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751757AbbEGLW3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 May 2015 07:22:29 -0400
+From: "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>
+To: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] staging: rtl8723au : remove goto & return error directly
+Date: Thu, 7 May 2015 11:22:25 +0000
+Message-ID: <20150507111652.GA10574@IND12F0122> (sfid-20150507_132233_426266_E0664AB4)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150514030415.GD3853@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2015 at 11:04:15AM +0800, Herbert Xu wrote:
-> On Wed, May 13, 2015 at 11:23:53AM -0700, Luis R. Rodriguez wrote:
-> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> > 
-> > We're going to add firmware module signing support, but when we do
-> > this we end up with the following recursive dependency. Fix this by
-> > just depending on FW_LOADER, which is typically always enabled
-> > anyway. We do this as a compromise for now as FW_LOADER is only
-> > selectable when EXPERT is enabled and the recursive dependency issue
-> > below is actually real and valid, its proper fix however requires
-> > a bit of work.
-> > 
-> > This technically means this change is likely welcomed for other
-> > parts of the kernel but this is really only needed for now here.
-> 
-> Nack.  Either fix kbuild or make every user of FW_LOADER use
-> a dependency.  Singling out a single crypto device makes zero
-> sense.
+Remove the goto and return error directly thereby removing a variable
 
-I think that's fair... Paul, did you get to look into the
-recursive issue some more by any chance? Any preference for
-what path to take here?
+Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
+---
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-  Luis
+diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+index b139ed4..a979048 100644
+--- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+@@ -1209,7 +1209,6 @@ static int cfg80211_rtw_change_iface(struct wiphy *wiphy,
+ 	struct rtw_adapter *padapter = wiphy_to_adapter(wiphy);
+ 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+ 	struct wireless_dev *rtw_wdev = wiphy_to_wdev(wiphy);
+-	int ret = 0;
+ 
+ 	DBG_8723A("%s(%s): call netdev_open23a\n", __func__, ndev->name);
+ 
+@@ -1238,14 +1237,12 @@ static int cfg80211_rtw_change_iface(struct wiphy *wiphy,
+ 
+ 	if (cfg80211_infrastructure_mode(padapter, type) != _SUCCESS) {
+ 		rtw_wdev->iftype = old_type;
+-		ret = -EPERM;
+-		goto exit;
++		return -EPERM;
+ 	}
+ 
+ 	rtw_setopmode_cmd23a(padapter, type);
+ 
+-exit:
+-	return ret;
++	return 0;
+ }
+ 
+ void rtw_cfg80211_indicate_scan_done(struct rtw_wdev_priv *pwdev_priv,
+-- 
+1.9.1
