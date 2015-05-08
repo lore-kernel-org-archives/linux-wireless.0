@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:33377 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbbEYSGL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47339 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbbEHNMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 14:06:11 -0400
-Message-ID: <5563648F.106@lwfinger.net> (sfid-20150525_200622_857165_86A77AC2)
-Date: Mon, 25 May 2015 13:06:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 8 May 2015 09:12:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Eliad Peller <eliad@wizery.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl18xx: fallback to default conf in case of invalid conf file
+References: <1430900994-20509-1-git-send-email-eliad@wizery.com>
+Date: Fri, 08 May 2015 16:12:09 +0300
+In-Reply-To: <1430900994-20509-1-git-send-email-eliad@wizery.com> (Eliad
+	Peller's message of "Wed, 6 May 2015 11:29:54 +0300")
+Message-ID: <87ioc3p61i.fsf@kamboji.qca.qualcomm.com> (sfid-20150508_151224_270591_90229B3B)
 MIME-Version: 1.0
-To: Shailendra Verma <shailendra.capricorn@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net:wireless - Change 1 to true for bool type variable.
-References: <1432576544-3639-1-git-send-email-shailendra.capricorn@gmail.com>
-In-Reply-To: <1432576544-3639-1-git-send-email-shailendra.capricorn@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2015 12:55 PM, Shailendra Verma wrote:
-> The variable translate is bool type.So assigning true instead of 1.
->
-> Signed-off-by: Shailendra Verma <shailendra.capricorn@gmail.com>
+Eliad Peller <eliad@wizery.com> writes:
 
-When you submit a patch for a particular driver in the drivers/net/wireless/ 
-tree, it is preferred that the subject start with the driver name, not with 
-net:wireless. Accordingly, your subject should be "ray_cs: Change 1 to true for 
-bool type variable". In fact, you can probably choose a better wording for the 
-rest of the title, but I do not insist.
+> If the wl18xx-conf.bin file is missing or invalid (e.g. due
+> to recent driver change), fallback to default configuration
+> instead of failing driver load.
+>
+> Reported-by: Marc Kleine-Budde <mkl@pengutronix.de>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
 
-Among other advantages, this choice of subject allows easy searches for patches 
-for a given driver using 'git log'.
+This tells me that wl18xx is doing something wrong. The driver should
+still work normally even if user space is old (and vice versa). Should
+this configuration file (whatever that even is) have a version number in
+file name to handle incompatible changes in a backwards compatible
+manner?
 
-Larry
+But I'm still planning to apply, just wanted to point out this.
 
-> ---
->   drivers/net/wireless/ray_cs.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-> index 477f863..0881ba8 100644
-> --- a/drivers/net/wireless/ray_cs.c
-> +++ b/drivers/net/wireless/ray_cs.c
-> @@ -143,7 +143,7 @@ static int psm;
->   static char *essid;
->
->   /* Default to encapsulation unless translation requested */
-> -static bool translate = 1;
-> +static bool translate = true;
->
->   static int country = USA;
->
->
-
+-- 
+Kalle Valo
