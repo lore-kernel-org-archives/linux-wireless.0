@@ -1,59 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:53079 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752531AbbETMr3 (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:33119 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbbEHJRD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 08:47:29 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NON00IBOFJ47U50@mailout1.samsung.com> for
- linux-wireless@vger.kernel.org; Wed, 20 May 2015 21:47:28 +0900 (KST)
-Date: Wed, 20 May 2015 12:47:28 +0000 (GMT)
-From: Rahul Jain <rahul.jain@samsung.com>
-Subject: Re: Re: Re: Re: [PATCH] Added 2 new Control Frames ( Beamforming
- Report Poll & VHT NDP Announcement) defined in 802.11ac [EDT]
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Reply-to: rahul.jain@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0
-Message-id: <2059080247.477441432126047556.JavaMail.weblogic@ep2mlwas05b> (sfid-20150520_144736_399429_15B609EC)
+	Fri, 8 May 2015 05:17:03 -0400
+Received: by lbbzk7 with SMTP id zk7so49019641lbb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 02:17:00 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: enable ASPM
+Date: Fri,  8 May 2015 09:13:06 +0000
+Message-Id: <1431076388-24800-2-git-send-email-michal.kazior@tieto.com> (sfid-20150508_111709_617868_DA8CF85A)
+In-Reply-To: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
+References: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RGVhciBKb2hhbm5lcywNCg0KU2luY2UgZ2l0IHNlbmQtZW1haWwgaXMgYmxvY2tlZCwgSSBhbSBw
-dXR0aW5nIHRoZSBjb250ZW50cyBvZiBteSBwYXRjaCBiZWxvdy4NCkFzIHJlcXVlc3RlZCwgSSBh
-bSByZW1vdmluZyB1bm5lY2Vzc2FyeSBjb250ZW50cy4gVGhhbmtzIGZvciBoZWxwaW5nIG1lLg0K
-DQpGcm9tIDY5MzQwZDYzZTBjNjNjMWFlNzVjZGI2MmJmNGJkMDRhOWM5NjFhMWYgTW9uIFNlcCAx
-NyAwMDowMDowMCAyMDAxDQpGcm9tOiByYWh1bCA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4NCkRh
-dGU6IFRodSwgMTQgTWF5IDIwMTUgMTA6MjE6NDggKzA1MzANClN1YmplY3Q6IFtQQVRDSF0gQWRk
-ZWQgMiBuZXcgQ29udHJvbCBGcmFtZXMgKCBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCAmIFZIVA0K
-IE5EUCBBbm5vdW5jZW1lbnQpIGRlZmluZWQgaW4gODAyLjExYWMuDQoNCkJlYW1mb3JtaW5nIFJl
-cG9ydCBQb2xsIGZyYW1lIC0gVGhpcyBmcmFtZSBpcyB1c2VkIHRvIHJldHJpZXZlIGFkZGl0aW9u
-YWwNCmZlZWRiYWNrIGZyb20gdGhlIHNlY29uZCBhbmQgc3Vic2VxdWVudCBiZWFtZm9ybWVlcy4g
-VGhlIGJlYW1mb3JtZXIgbXVzdCB1c2UNCnRoZSBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCBmcmFt
-ZS4gSW4gQmVhbWZvcm1pbmcgUmVwb3J0IFBvbGwsIHRoZSBGZWVkYmFjaw0KU2VnbWVudCBSZXRy
-YW5zbWlzc2lvbiBCaXRtYXAgZmllbGQgaW5kaWNhdGVzIHRoZSByZXF1ZXN0ZWQgZmVlZGJhY2sg
-c2VnbWVudHMNCm9mIGEgVkhUIENvbXByZXNzZWQgQmVhbWZvcm1pbmcgcmVwb3J0Lg0KDQpWSFQg
-TnVsbCBEYXRhIFBhY2tldCAoTkRQKSBBbm5vdW5jZW1lbnQgLSBUaGlzIGZyYW1lIGlzIHVzZWQg
-YnkgQmVhbWZvcm1lcnMgdG8NCmdhaW4gY29udHJvbCBvZiB0aGUgY2hhbm5lbCBhbmQgaWRlbnRp
-eSBiZWZvcm1lZXMuIEJlYW1mb3JtZWVzIHdpbGwgcmVzcG9uZCB0bw0KdGhlIE5EUCBBbm5vdW5j
-ZW1lbnQsIHdoaWxlIGFsbCBvdGhlciBzdGF0aW9ucyB3aWxsIHNpbXBseSBkZWZlciBjaGFubmVs
-IGFjY2Vzcw0KdW50aWwgdGhlIHNvdW5kaW5nIHNlcXVlbmNlIGlzIGNvbXBsZXRlDQoNClNpZ25l
-ZC1vZmYtYnk6IFJhaHVsIEphaW4gPHJhaHVsLmphaW5Ac2Ftc3VuZy5jb20+DQotLS0NCiBpbmNs
-dWRlL2xpbnV4L2llZWU4MDIxMS5oIHwgICAgMiArKw0KIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2Vy
-dGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvaWVlZTgwMjExLmggYi9pbmNs
-dWRlL2xpbnV4L2llZWU4MDIxMS5oDQppbmRleCBiOWM3ODk3Li5jYTM4NjE2IDEwMDY0NA0KLS0t
-IGEvaW5jbHVkZS9saW51eC9pZWVlODAyMTEuaA0KKysrIGIvaW5jbHVkZS9saW51eC9pZWVlODAy
-MTEuaA0KQEAgLTc1LDYgKzc1LDggQEANCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9BQ1RJT04J
-CTB4MDBEMA0KIA0KIC8qIGNvbnRyb2wgKi8NCisjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9CRUFN
-Rk9STV9QT0xMCTB4MDA0MA0KKyNkZWZpbmUgSUVFRTgwMjExX1NUWVBFX1ZIVF9ORFBfQU5OT1VD
-RQkweDAwNTANCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9DVExfRVhUCQkweDAwNjANCiAjZGVm
-aW5lIElFRUU4MDIxMV9TVFlQRV9CQUNLX1JFUQkweDAwODANCiAjZGVmaW5lIElFRUU4MDIxMV9T
-VFlQRV9CQUNLCQkweDAwOTANCi0tIA0KMS43LjkuNQ0KDQpUaGFua3MNCi1SYWh1bCBKYWluDQpF
-UC1GRURDNzcxREY0RkY0OEE5ODI5Q0I4NTI1NEUyOUZEMyANCg0K
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
+It is actually safe to enable ASPM after the
+device is booted up.
+
+This reduces power drain of QCA61X4 when driver is
+simply loaded (no interface is up) from 31mA to
+14mA. QCA988X wasn't measured but doesn't seem to
+regress in any other way.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 15 ++++++++++-----
+ drivers/net/wireless/ath/ath10k/pci.h |  6 ++++++
+ 2 files changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 969a1231800e..8be07c653b2d 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1227,11 +1227,15 @@ static void ath10k_pci_irq_enable(struct ath10k *ar)
+ 
+ static int ath10k_pci_hif_start(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");
+ 
+ 	ath10k_pci_irq_enable(ar);
+ 	ath10k_pci_rx_post(ar);
+ 
++	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
++				   ar_pci->link_ctl);
++
+ 	return 0;
+ }
+ 
+@@ -1981,6 +1985,7 @@ static int ath10k_pci_chip_reset(struct ath10k *ar)
+ 
+ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
+@@ -1991,6 +1996,11 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
++	pcie_capability_read_word(ar_pci->pdev, PCI_EXP_LNKCTL,
++				  &ar_pci->link_ctl);
++	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
++				   ar_pci->link_ctl & ~PCI_EXP_LNKCTL_ASPMC);
++
+ 	/*
+ 	 * Bring the target up cleanly.
+ 	 *
+@@ -2502,7 +2512,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct pci_dev *pdev = ar_pci->pdev;
+-	u32 lcr_val;
+ 	int ret;
+ 
+ 	pci_set_drvdata(pdev, ar);
+@@ -2536,10 +2545,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
+ 
+ 	pci_set_master(pdev);
+ 
+-	/* Workaround: Disable ASPM */
+-	pci_read_config_dword(pdev, 0x80, &lcr_val);
+-	pci_write_config_dword(pdev, 0x80, (lcr_val & 0xffffff00));
+-
+ 	/* Arrange for access to Target SoC registers. */
+ 	ar_pci->mem = pci_iomap(pdev, BAR_NUM, 0);
+ 	if (!ar_pci->mem) {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index bddf54320160..ee2173d61257 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -185,6 +185,12 @@ struct ath10k_pci {
+ 	/* Map CE id to ce_state */
+ 	struct ath10k_ce_pipe ce_states[CE_COUNT_MAX];
+ 	struct timer_list rx_post_retry;
++
++	/* Due to HW quirks it is recommended to disable ASPM during device
++	 * bootup. To do that the original PCI-E Link Control is stored before
++	 * device bootup is executed and re-programmed later.
++	 */
++	u16 link_ctl;
+ };
+ 
+ static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
+-- 
+2.1.4
 
