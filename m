@@ -1,32 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-am1on0092.outbound.protection.outlook.com ([157.56.112.92]:17376
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753279AbbESQxI convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:35381 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907AbbEHJRB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 12:53:08 -0400
-From: Vladimir DIACONESCU <vladimir.diaconescu@cti.pub.ro>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: mac80211: How to properly issue a channel switch
-Date: Tue, 19 May 2015 16:18:39 +0000
-Message-ID: <1432052318710.51361@cti.pub.ro> (sfid-20150519_185314_631439_426D3974)
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+	Fri, 8 May 2015 05:17:01 -0400
+Received: by lbbuc2 with SMTP id uc2so48906498lbb.2
+        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 02:16:59 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/3] ath10k: improve power efficiency
+Date: Fri,  8 May 2015 09:13:05 +0000
+Message-Id: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com> (sfid-20150508_111708_029709_21BEC8A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Some measurements for QCA61X4:
 
-(using kernel version 3.14 - mptcp-0.89, to be more accurate)
+            Loaded    Started   Associated
+Unpatched    31mA      88mA       43mA
+Patched      14mA      15mA       23mA
 
-I am looking for a proper/correct way to request a channel switch from the mac80211 level.
+Loaded = module loaded, driver bound, no interface
+         is running
 
->From what I managed to gather:
-- a struct cfg80211_chan_def needs to be filled in
-- then passed to struct ieee80211_local, specific to our device (ath9k, in my case)
-- then call ieee80211_hw_config (local, IEEE80211_CONF_CHANGE_CHANNEL), which will actually configure the device and switch the channel
+Started = Loaded, but one client interface is
+          running, not associated
 
-However, after setting the channel parameters (via local->_oper_chandef, which is discouraged, as I have noted) I get a warning from nl80211 (nl80211_send_chandef) regarding chandef validity (the values center_freq1, control_freq and width depend one on another, as seen in cfg80211_chandef_valid, and the standard, of course).
+Associated = Started, but associated to an AP as
+             client
 
-Thank you for your time,
-Vladimir
+Note: Unpatched was consuming more power when
+Started than when Associated. This is no mistake.
+
+I didn't have a way to measure QCA988X.
+
+
+Janusz Dziedzic (2):
+  ath10k: enable ASPM
+  ath10k: fix idle power consumption
+
+Michal Kazior (1):
+  ath10k: enable pci soc powersaving
+
+ drivers/net/wireless/ath/ath10k/debug.h  |   1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c    |   9 +-
+ drivers/net/wireless/ath/ath10k/pci.c    | 317 ++++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/pci.h    |  97 +++++-----
+ 5 files changed, 285 insertions(+), 140 deletions(-)
+
+-- 
+2.1.4
+
