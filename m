@@ -1,60 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:34662 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757058AbbEVVNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 17:13:22 -0400
-Date: Fri, 22 May 2015 23:13:00 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Fix EFUSE_ANA8M map value
-Message-ID: <20150522231300.200a2e00@wiggum> (sfid-20150522_231325_882706_53FCB308)
-In-Reply-To: <555F8FDC.3040609@lwfinger.net>
-References: <20150521214421.15983b0a@milhouse>
-	<555E5433.7000904@lwfinger.net>
-	<20150522070035.711c6195@wiggum>
-	<555F8FDC.3040609@lwfinger.net>
+Received: from mail2.candelatech.com ([208.74.158.173]:57566 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932300AbbEHQ2l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2015 12:28:41 -0400
+Message-ID: <554CE438.5000208@candelatech.com> (sfid-20150508_182850_267267_6D81490F)
+Date: Fri, 08 May 2015 09:28:40 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/NFmjtWFj4ZH+MMCGYSD2Lw0"; protocol="application/pgp-signature"
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Liu CF/TW <cfliu.tw@gmail.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param
+ for raw tx injection, sw crypto support.
+References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com> <873837qo6l.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <873837qo6l.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/NFmjtWFj4ZH+MMCGYSD2Lw0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 05/08/2015 04:54 AM, Kalle Valo wrote:
+> Hi David,
+> 
+> "Liu CF/TW" <cfliu.tw@gmail.com> writes:
+> 
+>>  - ath10k:   add rawtxrx param for 10.2+ firmware to support sw, hw crypto
+>>              engine and raw Tx injection.
+>>  - mac80211: Add IEEE80211_KEY_FLAG_RESERVE_TAILROOM support for TKIP and
+>>              CCMP required by ath10k and add per BSS(vif) based sw_crypto
+>>              control.
+> 
+> This patch has few major problems. First of all, ath10k and mac80211
+> changes should be in separate patches. Secondly the patch is whitespace
+> damaged, I recommend using git-send-email to avoid that.
+> 
+> And there's just too much feature changes in one patch, it's usually
+> better to split the features into separate patches. For example, you
+> could first add a simple raw mode support to ath10k (ie. the bare
+> minimum needed to get the feature) and then adding more advanced
+> features per patch.
+> 
+>> This change enables the raw Tx/Rx feature in ath10k 10.2+ firmware with a
+>> module parameter 'rawtxrx'. With rawtxrx=1, the ath10k hardware crypto
+>> engine could be optionally skipped to support use cases such as enabling
+>> mac80211 sw crypto engine, user level crypto engine, raw Tx frame
+>> injection.
+> 
+> Lots of people, especially in Qualcomm, seem to call this feature as
+> "raw mode". Would it be more descriptive to name the module paramer as
+> 'rawmode'?
+> 
+>> Testing: used QCA988x hw 2.0 with 10.2 firmware.
+>>
+>> ath10k    ath10k     nl80211
+>> rawtxrx   nohwcrypt  SW_CRYPTO
+>> param     param      attribute    Testing Status
+>> -------   ---------  ---------    ---------------------------------
+>>    0          0           -         HW CCMP/TKIP tested ok.
+>>    0          1           -         Not supported by ath10k hw.
+>>    1          0           -         HW CCMP/TKIP tested ok.
+>>    1          0           0         BSS 1 tested HW CCMP/TKIP ok.
+>>    1          0           1         BSS 2 can bypass HW engine.
+>>                                     - mac80211 SW crypto tested ok.
+>>                                     - raw Tx frame injection tested ok.
+>>    1          1           -         HW crypto globally disabled.
+>>                                     - mac80211 SW crypto tested ok.
+>>                                     - raw Tx frame injection tested ok.
+> 
+> I wonder does it make any sense to have nohwcrypt parameter? Especially
+> if ath10k doesn't support case rawtxrx=0 and nohwcrypt=1. One
+> possibility I came up is to have multiple values for rawtxrx, for
+> example is rawtxrx=1 means HW crypt enabled and rawtxrx=2 HW crypt
+> disabled. Ideas welcome.
 
-On Fri, 22 May 2015 15:21:48 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> What does lsusb say about your device?
-> 7392:7811, which is an Edimax EW-7811Un
 
-It is exactly this device.
-Does yours also fail with vanilla kernel?
+In my CT firmware, I end up using native tx and raw rx to enable rx-sw-crypt.
 
---=20
-Michael
+(I could not figure out how to do raw-tx with encrypted frames, though since
+ 10.2 FW can do it, I guess it must be possible...)
 
---Sig_/NFmjtWFj4ZH+MMCGYSD2Lw0
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Maybe we could have a way to specify both rx and rx mode independently of
+each other to support that use case as well?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Maybe:
 
-iQIcBAEBCAAGBQJVX5vfAAoJEPUyvh2QjYsOC9cP/1o3Sk6LyF0VE/+loSDavCkb
-XuLoGs2SWQ5zbfwDNBgpL34Ga2oKUAIs7faUbksXqOt6rLyH8iWKaooX79pAaBbS
-9yqj16V0nccOb1KFyZsB8+BlcLamELaLybOvAgqQ96WQ4Wj0dPVBP9910G5sLe3/
-aLCRZRTQLbJZfQ3ebJAvBNdBtE3OKTW0cBulEnyi/AiYqkhUeyfgb/8ry0FDopLQ
-3ifIN9qEEHR69VNNxljmyvYHQCnz1lWxNC6v1o6rvj8LdjL2zf4yO8R2D7sxMQaP
-etzA+SoP4VGZ+JmErWaSYqKyoOZAfEmy2sRM4av6UcKwQ3fuitxPi3CQ1xYlAhmf
-e9pRrWmk1T6t2/bxb+C+JAUr66FRXaysJze+CXyV/SyWWXCMMMpKyxBYtGYjzS2B
-utIbmmeqM92AN1EHpQgzicnQWJw8rYt1u58vnr4WlxMUiCoRPk1DEvlTIqr5tolB
-GLX7n7BN/+1EFvw+7VC1XsVb8cKZeMU58yujvwxnZUGU9QWMBjYuOev3yLIdVJsz
-t0va5eEK11UTfIDVicxc0FQTUYYYaT7BDNgmqhbUbMAjW/5tiRBKYfB1oOjiPeDt
-i0cmklAfg1zTQPPpn4gL+7F+jbs0BAHnGa/VB9B6jU7hX39vA1Qds+qXe+7Ttn35
-DQ+NTMZpMvs2sggT9/II
-=RLAG
------END PGP SIGNATURE-----
 
---Sig_/NFmjtWFj4ZH+MMCGYSD2Lw0--
+txmode=x;  // 0 == native, 1 == raw (and maybe support other tx modes in the future as desired)
+rxmode=x;  // 0 == native, 1 == raw
+nohwcrypt=x; // 0 == standard hw crypt, 0x1 == rx-sw-crypt, 0x2 == tx-sw-crypt, 0x3 == tx/rx-sw-crypt
+
+If any limits are placed, please do use feature flags instead of firmware version comparisons
+..that way I might can support at least some of this in CT firmware.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
