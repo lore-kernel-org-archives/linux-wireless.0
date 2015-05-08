@@ -1,54 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:35846 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100AbbEYALo (ORCPT
+Received: from lb3-smtp-cloud6.xs4all.net ([194.109.24.31]:40031 "EHLO
+	lb3-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751480AbbEHVxO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2015 20:11:44 -0400
-Message-ID: <556268BC.5050807@lwfinger.net> (sfid-20150525_021154_383145_56F0A28E)
-Date: Sun, 24 May 2015 19:11:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Haggai Eran <haggai.eran@gmail.com>
-CC: gregkh@linuxfoundation.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Stable <stable@vger.kernel.org>,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	Arek Rusniak <arek.rusi@gmail.com>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
- of del_timer_sync()
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net> <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
-In-Reply-To: <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Fri, 8 May 2015 17:53:14 -0400
+Message-ID: <1431121983.2398.54.camel@x220> (sfid-20150508_235331_140105_846E952A)
+Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency
+ when fw signing is enabled
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org,
+	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>
+Date: Fri, 08 May 2015 23:53:03 +0200
+In-Reply-To: <1431029675.8171.109.camel@x220>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
+	 <20150506033330.GA16470@gondor.apana.org.au>
+	 <1430988137.8171.58.camel@x220> <1431021995.8171.97.camel@x220>
+	 <20150507182838.GA20018@wotan.suse.de> <1431029675.8171.109.camel@x220>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/24/2015 02:03 PM, Haggai Eran wrote:
-> On 24 May 2015 at 00:16, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> The driver is reporting a warning at kernel/time/timer.c:1096 due to calling
->> del_timer_sync() while in interrupt mode. Such warnings are fixed by calling
->> del_timer() instead.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org>
->> Cc: Haggi Eran <haggai.eran@gmail.com>
->
-> Hi,
->
-> I haven't been using kernel v4.1 so I haven't seen this warning, but looking
-> at the code it seems to originate from the two recent patches to remove
-> _cancel_timer and _cancel_timer_ex. I see that there's another patch in lkml [1]
-> that changes del_timer_sync back to del_timer in more places. Perhaps it
-> could prevent other warnings like this in the future.
->
-> Regards,
-> Haggai
->
-> [1] https://lkml.org/lkml/2015/5/15/226
+On Thu, 2015-05-07 at 22:14 +0200, Paul Bolle wrote:
+> Tomorrow, after a (western European) night of sleep, I hope to explain
+> why the error in dad's file makes sense. I'm not much of a teacher so I
+> need a clear head to do that.
 
-Yes, the script kiddies make changes they do not understand and screw everything 
-up. Unfortunately, I did not catch these in review. I think I will submit V2 and 
-blast the contributor.
+Let's start with mom's Kconfig file. It triggers
+	error: recursive dependency detected!
+	symbol GYM depends on ROCK_CLIMBING
+	symbol ROCK_CLIMBING depends on LOCKER
+	symbol LOCKER depends on GYM
 
-Larry
+Now you should realize that the kconfig tools have to answers questions
+like these, for each (tristate) symbol:
+	- must it be 'n'; or
+	- can it be 'm'; or
+	- can it be 'y'.
 
+Take, for example: can GYM be 'y'? Since GYM depends on ROCK_CLIMBING,
+it can only be 'y' if ROCK_CLIMBING is 'y' (both being tristate). And
+ROCK_CLIMBING depends on LOCKER, so ROCK_CLIMBING can only be 'y' if
+LOCKER is 'y' (ditto). And LOCKER, in its turn, depends on GYM, so it
+can only be 'y', if GYM is 'y'.
+
+But we can't say whether GYM is 'y' yet, as it can still be 'n', 'm', or
+'y' for all we know. So we can't answer that question. Hence the
+recursive dependency error. (There must be a term for this obvious
+problem in formal logic, but I'm not trained in formal logic.)
+
+On to dad's Kconfig file (which is your example, but simplified). That
+triggers:
+	error: recursive dependency detected!
+	symbol GYM is selected by ROCK_CLIMBING
+	symbol ROCK_CLIMBING depends on LOCKER
+	symbol LOCKER depends on GYM
+
+Let's try to determine whether GYM should be 'n'. Well, GYM is selected
+by ROCK_CLIMBING so it cannot be 'n' if ROCK_CLIMBING is 'm' or 'y'. (If
+ROCK_CLIMBING is 'm' it can be 'm' or 'y', but not 'n', and if
+ROCK_CLIMBING is 'y' it must be 'y'.) Do we know whether ROCK_CLIMBING
+should be 'n'? It should be 'n' only if LOCKER is 'n'. And LOCKER should
+in its turn be 'n' if GYM is 'n'. But we don't know yet what GYM will
+be. So, again, we can't answer this question. Recursive dependency
+error!
+
+The complicated error you ran into was
+	error: recursive dependency detected!
+	symbol CRYPTO is selected by SYSDATA_SIG
+	symbol SYSDATA_SIG is selected by FIRMWARE_SIG
+	symbol FIRMWARE_SIG depends on FW_LOADER
+	symbol FW_LOADER is selected by CRYPTO_DEV_QAT
+	symbol CRYPTO_DEV_QAT is selected by CRYPTO_DEV_QAT_DH895xCC
+	symbol CRYPTO_DEV_QAT_DH895xCC depends on CRYPTO
+
+I'm lazy, so I haven't gone through this error step by step. But I'm
+sure it's just a complicated version of what I tried to explain in the
+above two examples. But if you're unconvinced I'll try to go through
+this error too.
+
+Now I'm sure the point I'm trying to make can be made more convincingly
+and more elegantly. But the thing is, I think, that given how "select"
+works and how "depends on" works, some setups will trigger these errors.
+One might wish that "select" or "depends on" behaved differently, but
+with the thousands of Kconfig symbols now in use, that really looks
+unfeasible.
+
+(Now let's see how all the, mostly German, people trained in formal
+logic that appear to care about the kconfig tools shoot holes in my
+reasoning.)
+
+Hope this helps,
+
+
+Paul Bolle
 
