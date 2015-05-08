@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:52433 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750791AbbEBRTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2015 13:19:17 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Yob4K-0002Cp-K8
-	for linux-wireless@vger.kernel.org; Sat, 02 May 2015 19:19:12 +0200
-Received: from md-188-69-194-165.omni.lt ([188.69.194.165])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2015 19:19:12 +0200
-Received: from nerijus by md-188-69-194-165.omni.lt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2015 19:19:12 +0200
-To: linux-wireless@vger.kernel.org
-From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
-Subject: Re: b43 AP does not work
-Date: Sat, 2 May 2015 17:18:51 +0000 (UTC)
-Message-ID: <loom.20150502T191744-147@post.gmane.org> (sfid-20150502_191922_654073_B6944F07)
-References: <loom.20150502T183011-57@post.gmane.org> <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:35472 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752726AbbEHOrC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2015 10:47:02 -0400
+Received: by wgyo15 with SMTP id o15so74794091wgy.2
+        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 07:47:01 -0700 (PDT)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 8 May 2015 20:16:40 +0530
+Message-ID: <CABPxzYKz9MK95nqzZk0=yP=UX3JvEy_JFsY5yZ3FEcOOGstBVQ@mail.gmail.com> (sfid-20150508_164706_844513_487FE58E)
+Subject: Not able to set u-apsd for P2P client
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TmVyaWp1cyBCYWxpxatuYXMgPG5lcmlqdXNALi4uPiB3cml0ZXM6Cgo+IElJUkMgSSB1c2VkICJhY2Nlc3MgcG9pbnQiIG1vZGUgb2YgdGhlIE5NIGFwcGxldCBhbmQgaXQgd29ya2VkLCBidXQgbm93IEkKPiBjYW5ub3QgZmluZCBzdWNoIG9wdGlvbiAoYXQgbGVhc3QgaW4gTUFURSkuIElzIGl0IHNvbWVob3cgcG9zc2libGUgdG8gc3RpbGwKPiB1c2UgaG9zdGFwZCBtYW51YWxseT8KCkp1c3QgRllJIC0gImFjY2VzcyBwb2ludCIgbW9kZSBvZiB0aGUgTk0gYXBwbGV0IHdvcmtzIChpbiBHbm9tZSkuIEJ1dCBpdAp3b3VsZCBzdGlsbCBiZSBuaWNlIHRvIGhhdmUgaG9zdGFwZCB3b3JraW5nLg==
+Hi,
 
+We are having trouble making the uapsd working in p2p client case. Is
+this broken? or is there a way to configure the uapsd for p2p client
+case?
+
+
+case a) p2p client with p2p_no_group_iface=1
+
+When trying to change the mode from MANAGED to P2P_CLIENT the sdata is
+being cleared so the previous change of uapsd_queue=0xF is being
+cleared and default value is taken.
+
+case b) with p2p_no_group_iface=0
+
+As the interface is dynamically created, we cannot use the mac80211
+debugfs to set the uapsd_queues.
+I have tried "wpa_cli p2p_set client_apsd 1,1,1,1" but it is not taking effect.
+
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
