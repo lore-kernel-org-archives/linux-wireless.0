@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:35893 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932724AbbERUjs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48754 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719AbbEHN2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 16:39:48 -0400
-Received: by lagv1 with SMTP id v1so237388971lag.3
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 13:39:46 -0700 (PDT)
-Message-ID: <555a4e12.e323700a.26a6.ffff9e65@mx.google.com> (sfid-20150518_223955_315748_38E6840F)
-From: andrey.konovalov@linaro.org
-To: johannes@sipsolutions.net, emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Andrey Konovalov <andrey.konovalov@linaro.org>
-Subject: [PATCH] mac80211: fix kernel-doc comments in mac80211.h
-Date: Mon, 18 May 2015 23:39:28 +0300
+	Fri, 8 May 2015 09:28:31 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brent Taylor <motobud@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath6kl@lists.infradead.org
+Subject: Re: [PATCH 1/1] ath6kl: Fix multiple clients associating in AP mode
+References: <CAP+RiCDFH-=MqRZLtrjUEyShgw5V2KV-6FnMWe2crB1QqJyh2Q@mail.gmail.com>
+Date: Fri, 08 May 2015 16:28:23 +0300
+In-Reply-To: <CAP+RiCDFH-=MqRZLtrjUEyShgw5V2KV-6FnMWe2crB1QqJyh2Q@mail.gmail.com>
+	(Brent Taylor's message of "Tue, 5 May 2015 18:49:24 -0500")
+Message-ID: <87egmrp5ag.fsf@kamboji.qca.qualcomm.com> (sfid-20150508_152845_792119_6AEBE7C4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commits a818292 "mac80211: convert rssi_callback() to event_callback()"
-and a940909 "mac80211: notify the driver about authentication status"
-added two errors and one warning when building docs for the mac80211
-driver. Fix the kernel-doc comments so that the documentation targets
-could be built successfully again.
+Brent Taylor <motobud@gmail.com> writes:
 
-Signed-off-by: Andrey Konovalov <andrey.konovalov@linaro.org>
----
- include/net/mac80211.h |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> When one client is associated and connected to an ar6003 hw version
+> 2.0 with firmware 3.1.1.149, and another client tries to connect, the
+> first client's MAC address is lost in the station list because the
+> "aid" is always "1".  The structure "wmi_connect_event" has the "aid"
+> as the second byte in the message, but it should be the first byte.
+>
+> This patch has been tested with linux-3.10.40, and should apply
+> cleanly to linux-4.1-rc1
+>
+> Signed-off-by: Brent Taylor <motobud@gmail.com>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b4bef11..dbb5f33 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -354,7 +354,7 @@ enum ieee80211_rssi_event_data {
- };
- 
- /**
-- * enum ieee80211_rssi_event - data attached to an %RSSI_EVENT
-+ * struct ieee80211_rssi_event - data attached to an %RSSI_EVENT
-  * @data: See &enum ieee80211_rssi_event_data
-  */
- struct ieee80211_rssi_event {
-@@ -388,7 +388,7 @@ enum ieee80211_mlme_event_status {
- };
- 
- /**
-- * enum ieee80211_mlme_event - data attached to an %MLME_EVENT
-+ * struct ieee80211_mlme_event - data attached to an %MLME_EVENT
-  * @data: See &enum ieee80211_mlme_event_data
-  * @status: See &enum ieee80211_mlme_event_status
-  * @reason: the reason code if applicable
-@@ -401,7 +401,7 @@ struct ieee80211_mlme_event {
- 
- /**
-  * struct ieee80211_event - event to be sent to the driver
-- * @type The event itself. See &enum ieee80211_event_type.
-+ * @type: The event itself. See &enum ieee80211_event_type.
-  * @rssi: relevant if &type is %RSSI_EVENT
-  * @mlme: relevant if &type is %AUTH_EVENT
-  */
+Odd, I don't see your patch in patchwork:
+
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+> --- a/drivers/net/wireless/ath/ath6kl/wmi.h     2015-05-05
+> 18:30:14.767029624 -0500
+> +++ b/drivers/net/wireless/ath/ath6kl/wmi.h     2015-05-05
+> 18:30:21.359031473 -0500
+
+Ok, this looks broken and most likely the reason why it's not in
+patchwork. Can you please resend and make sure that patchwork sees the
+patch? It's best to use git-send-email to submit patches.
+
 -- 
-1.7.9.5
-
+Kalle Valo
