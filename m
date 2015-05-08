@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:34178 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003AbbEPOeX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2015 10:34:23 -0400
-Received: by obfe9 with SMTP id e9so96675153obf.1
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 07:34:22 -0700 (PDT)
-Message-ID: <5557556C.2080107@lwfinger.net> (sfid-20150516_163443_494312_185B609B)
-Date: Sat, 16 May 2015 09:34:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from ozlabs.org ([103.22.144.67]:37588 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751536AbbEIAMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 May 2015 20:12:37 -0400
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, dhowells@redhat.com,
+	ming.lei@canonical.com, seth.forshee@canonical.com, kyle@kernel.org
+Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v1 01/12] kernel/params.c: export param_ops_bool_enable_only
+In-Reply-To: <1430873070-7290-2-git-send-email-mcgrof@do-not-panic.com>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com> <1430873070-7290-2-git-send-email-mcgrof@do-not-panic.com>
+Date: Sat, 09 May 2015 03:26:11 +0930
+Message-ID: <876183lzr8.fsf@rustcorp.com.au> (sfid-20150509_021302_285925_92D5E0DD)
 MIME-Version: 1.0
-To: Schmirr Wurst <schmirrwurst@gmail.com>, b43-dev@lists.infradead.org
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: lspci not working
-References: <CA+0W_As0c=eAijuvWfSBLMY4vj2P1-zoMsjz1mmNm0_vfepPCA@mail.gmail.com>
-In-Reply-To: <CA+0W_As0c=eAijuvWfSBLMY4vj2P1-zoMsjz1mmNm0_vfepPCA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/16/2015 04:12 AM, Schmirr Wurst wrote:
-> I've already posted the message once, but as it was my first, I'm not
-> sure, if it worked...
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
 >
-> Actually I'm trying to get read of a t100af from asus, that has a nice
-> broadcom wifi chipset, but I'm wondering that I don't see anything
-> with lspci, do that mean, that the chipset is broken ?
-> (I though lspci is one level deeper than driver, and I should see
-> something, even if I have driver problems) ?
+> This will grant access to this helper to code built as modules.
 >
-> Could just somebody tell me if I'm right or wrong ?
+> Cc: Rusty Russell <rusty@rustcorp.com.au>
+> Cc: David Howells <dhowells@redhat.com>
+> Cc: Ming Lei <ming.lei@canonical.com>
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Cc: Kyle McMartin <kyle@kernel.org>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 
-On Intel Bay Trail tablets, the wifi device is frequently attached using an SDIO 
-bus, not a PCI connection. Accordingly, lspci will probably not show the device.
-
-I am not familiar with any Broadcom devices that use SDIO, but I have Cc'd the 
-linux-wireless mailing list. Perhaps someone there will be able to help.
-
-I am currently working with a Winbook TW100, which is another Bay Trail device. 
-It uses a Realtek RTL8723BS, which also has an SDIO interface.
-
-Larry
-
+Applied,
+Rusty.
