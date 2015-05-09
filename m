@@ -1,75 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48771 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932981AbbEEF1E (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:35012 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473AbbEIJLr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 01:27:04 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>
-Subject: Re: [PATCH v2 5/7] wil6210: Add pmc debug mechanism memory management
-References: <1430400311-3861-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1430400311-3861-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Tue, 05 May 2015 08:26:56 +0300
-In-Reply-To: <1430400311-3861-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Thu, 30 Apr 2015 16:25:09 +0300")
-Message-ID: <87oalzvbkv.fsf@kamboji.qca.qualcomm.com> (sfid-20150505_072805_863155_F7DA4760)
+	Sat, 9 May 2015 05:11:47 -0400
+Received: by widdi4 with SMTP id di4so54387531wid.0
+        for <linux-wireless@vger.kernel.org>; Sat, 09 May 2015 02:11:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87pp6bp6jy.fsf@kamboji.qca.qualcomm.com>
+References: <1430841518-3932-1-git-send-email-ap420073@gmail.com>
+	<87pp6bp6jy.fsf@kamboji.qca.qualcomm.com>
+Date: Sat, 9 May 2015 18:11:45 +0900
+Message-ID: <CAMArcTW2qRiM4dVJQDDXJSuLEn6-GGJD4PJBTfhDDDOs+MxRrQ@mail.gmail.com> (sfid-20150509_111150_519483_794ADBA5)
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Modify REG_BCN_MAX_ERR related code.
+From: Taehee Yoo <ap420073@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
-
-> Pmc is a hardware debug mechanism which allows capturing phy data,
-> packets, and internally generated events and messages synchronized
-> and time stamped by the hardware. It requires memory buffers
-> allocated by the driver in order to be used by hardware dma to
-> upstream real time debug data to host memory.
-> Driver will handle memory allocation and release, and fetching
-> the data from the memory to application layer via debug file
-> system. The configuration of pmc is handled entirely by the
-> application layer.
+2015-05-08 22:01 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
+> Taehee Yoo <ap420073@gmail.com> writes:
 >
-> Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+>> 1. Remove setting REG_BCN_MAX_ERR code in _rtl92cu_set_media_status().
+>> Initialization routine set REG_BCN_MAX_ERR to 0xFF.
+>> also _rtl92cu_set_media_status set REG_BCN_MAX_ERR to same value.
+>> so i remove this code.
+>>
+>> 2. Remove rtl92c_init_beacon_max_error's parameter.
+>> because parameter "infra_mode" is not used.
+>>
+>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+>
+> Please split the patches into two. Having a numbered list of changes in
+> the commit log is a strong indication that the patch should be split
+> into smaller patches.
+>
+> --
+> Kalle Valo
 
-kbuild found warnings, can you please send a followup patch to fix
-these:
-
-   In file included from include/linux/printk.h:275:0,
-                    from include/linux/kernel.h:13,
-                    from include/linux/list.h:8,
-                    from include/linux/wait.h:6,
-                    from include/linux/fs.h:6,
-                    from drivers/net/wireless/ath/wil6210/pmc.c:19:
-   drivers/net/wireless/ath/wil6210/pmc.c: In function 'wil_pmc_alloc':
->> drivers/net/wireless/ath/wil6210/pmc.c:97:8: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
-           (void *)pmc->pring_pa,
-           ^
-   include/linux/dynamic_debug.h:95:12: note: in definition of macro 'dynamic_netdev_dbg'
-             ##__VA_ARGS__);  \
-               ^
->> drivers/net/wireless/ath/wil6210/wil6210.h:647:2: note: in expansion of macro 'netdev_dbg'
-     netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
-     ^
->> drivers/net/wireless/ath/wil6210/wil6210.h:654:40: note: in expansion of macro 'wil_dbg'
-    #define wil_dbg_misc(wil, fmt, arg...) wil_dbg(wil, "DBG[MISC]" fmt, ##arg)
-                                           ^
->> drivers/net/wireless/ath/wil6210/pmc.c:94:2: note: in expansion of macro 'wil_dbg_misc'
-     wil_dbg_misc(wil,
-     ^
-   In file included from drivers/net/wireless/ath/wil6210/pmc.c:21:0:
->> drivers/net/wireless/ath/wil6210/pmc.c:97:8: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
-           (void *)pmc->pring_pa,
-           ^
-   drivers/net/wireless/ath/wil6210/wil6210.h:648:28: note: in definition of macro 'wil_dbg'
-     wil_dbg_trace(wil, fmt, ##arg); \
-                               ^
->> drivers/net/wireless/ath/wil6210/pmc.c:94:2: note: in expansion of macro 'wil_dbg_misc'
-     wil_dbg_misc(wil,
-     ^
-
--- 
-Kalle Valo
+Thank you for your review!
+I'll resend two patchs.
