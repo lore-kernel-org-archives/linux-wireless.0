@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:32954 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611AbbEEWkY (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:33740 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbbEIJRe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 18:40:24 -0400
-Date: Tue, 5 May 2015 23:40:20 +0100
-From: Okash Khawaja <okash.khawaja@gmail.com>
-To: joe@perches.com
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside
- switch-case
-Message-ID: <20150505224020.GA3805@bytefire-computer> (sfid-20150506_004052_237796_13C67A74)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 9 May 2015 05:17:34 -0400
+Received: by pdbnk13 with SMTP id nk13so107167564pdb.0
+        for <linux-wireless@vger.kernel.org>; Sat, 09 May 2015 02:17:34 -0700 (PDT)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org
+Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] rtlwifi: rtl8192cu: Remove rtl92c_init_beacon_max_error's parameter
+Date: Sat,  9 May 2015 18:16:51 +0900
+Message-Id: <1431163011-5212-1-git-send-email-ap420073@gmail.com> (sfid-20150509_111737_203037_879FD563)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCI cache line size value was being compared against decimal values prefixed with 0x.
+parameter "infra_mode" of rtl92c_init_beacon_max_error() is not used.
+so i remove this.
 
-Fixed the literals to use the correct hex values.
-
-
-Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- drivers/net/wireless/adm8211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 058fb4b..76c908f 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1101,10 +1101,10 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
- 		case  0x8:
- 			reg |= (0x1 << 14);
- 			break;
--		case 0x16:
-+		case 0x10:
- 			reg |= (0x2 << 14);
- 			break;
--		case 0x32:
-+		case 0x20:
- 			reg |= (0x3 << 14);
- 			break;
- 		default:
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 3c1639b..1898596 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -889,7 +889,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+ 	rtl92c_set_min_space(hw, IS_92C_SERIAL(rtlhal->version));
+ 	rtl92c_init_beacon_parameters(hw, rtlhal->version);
+ 	rtl92c_init_ampdu_aggregation(hw);
+-	rtl92c_init_beacon_max_error(hw, true);
++	rtl92c_init_beacon_max_error(hw);
+ 	return err;
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+index adb8107..f3db6bc 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+@@ -613,7 +613,7 @@ void rtl92c_init_ampdu_aggregation(struct ieee80211_hw *hw)
+ 	rtl_write_word(rtlpriv, 0x4CA, 0x0708);
+ }
+ 
+-void rtl92c_init_beacon_max_error(struct ieee80211_hw *hw, bool infra_mode)
++void rtl92c_init_beacon_max_error(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
+index bf53652..58548e8 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
+@@ -66,7 +66,7 @@ void rtl92c_init_edca_param(struct ieee80211_hw *hw,
+ 
+ void rtl92c_init_edca(struct ieee80211_hw *hw);
+ void rtl92c_init_ampdu_aggregation(struct ieee80211_hw *hw);
+-void rtl92c_init_beacon_max_error(struct ieee80211_hw *hw, bool infra_mode);
++void rtl92c_init_beacon_max_error(struct ieee80211_hw *hw);
+ void rtl92c_init_rdg_setting(struct ieee80211_hw *hw);
+ void rtl92c_init_retry_function(struct ieee80211_hw *hw);
+ 
 -- 
-1.9.1
+2.1.0
 
