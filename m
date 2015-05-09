@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:35422 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934194AbbEOVdR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52253 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003AbbEINfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 17:33:17 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Shao Fu <shaofu@realtek.com>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 3/5] rtlwifi: rtl8192ee: Apply the regulatory changes to driver
-Date: Fri, 15 May 2015 16:33:01 -0500
-Message-Id: <1431725583-7324-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150515_233329_123099_7292A0E1)
-In-Reply-To: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sat, 9 May 2015 09:35:11 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Florian Achleitner <flo@fopen.at>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>
+Subject: Re: [PATCH] mwifiex: Trigger a card reset on "DNLD_CMD: host to card failed".
+References: <3169170.GKjfvNuGRf@r90b40zn> <2350188.9S0zOEq5AR@r90b40zn>
+Date: Sat, 09 May 2015 16:35:03 +0300
+In-Reply-To: <2350188.9S0zOEq5AR@r90b40zn> (Florian Achleitner's message of
+	"Thu, 16 Apr 2015 11:14:48 +0200")
+Message-ID: <87egmpnabc.fsf@kamboji.qca.qualcomm.com> (sfid-20150509_153515_861924_04D39E07)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shao Fu <shaofu@realtek.com>
+Florian Achleitner <flo@fopen.at> writes:
 
-The driver was setting a channel plan for the world. Now it reads it fromi
-EEPROM.
+> Whenever this problem occurs, the driver can not continue. Thus,
+> trigger a card reset to restart the module firmware. Other firmware
+> communication issues are resolved by this last resort.
+> Also dump registers, to eventually allow some diagnostics.
+>
+> Signed-off-by: Florian Achleitner <flo@fopen.at>
 
-In addition, a typo was fixed.
+Doesn't apply to wireless-drivers-next.git. Can you rebase, please?
 
-Signed-off-by: Shao Fu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ee/hw.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-index da0a612..0705e7e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-@@ -2194,8 +2194,8 @@ static void _rtl92ee_read_adapter_info(struct ieee80211_hw *hw)
- 		 "dev_addr: %pM\n", rtlefuse->dev_addr);
- 	/*channel plan */
- 	rtlefuse->eeprom_channelplan = *(u8 *)&hwinfo[EEPROM_CHANNELPLAN];
--	/* set channel paln to world wide 13 */
--	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
-+	/* set channel plan from efuse */
-+	rtlefuse->channel_plan = rtlefuse->eeprom_channelplan;
- 	/*tx power*/
- 	_rtl92ee_read_txpower_info_from_hwpg(hw, rtlefuse->autoload_failflag,
- 					     hwinfo);
 -- 
-2.1.4
-
+Kalle Valo
