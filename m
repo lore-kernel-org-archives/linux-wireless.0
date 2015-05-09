@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34865 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbbE0A4M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 20:56:12 -0400
-From: Shailendra Verma <shailendra.capricorn@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Shailendra Verma <shailendra.capricorn@gmail.com>
-Subject: [PATCH] ray_cs: Change 1 to true for bool type variable.
-Date: Wed, 27 May 2015 06:25:57 +0530
-Message-Id: <1432688157-2678-1-git-send-email-shailendra.capricorn@gmail.com> (sfid-20150527_025623_639776_9F07A442)
+Received: from fopen.at ([151.236.7.194]:52138 "EHLO fopen.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750909AbbEIQSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 May 2015 12:18:05 -0400
+From: Florian Achleitner <flo@fopen.at>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>
+Subject: Re: [PATCH] mwifiex: Trigger a card reset on "DNLD_CMD: host to card failed".
+Date: Sat, 09 May 2015 18:18:02 +0200
+Message-ID: <5773845.ktey5e8Qlm@flobuntu> (sfid-20150509_181812_713279_621F96E5)
+In-Reply-To: <87egmpnabc.fsf@kamboji.qca.qualcomm.com>
+References: <3169170.GKjfvNuGRf@r90b40zn> <2350188.9S0zOEq5AR@r90b40zn> <87egmpnabc.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable translate is bool type.So assigning true instead of 1.
+On Saturday 09 May 2015 16:35:03 Kalle Valo wrote:
+> Florian Achleitner <flo@fopen.at> writes:
+> > Whenever this problem occurs, the driver can not continue. Thus,
+> > trigger a card reset to restart the module firmware. Other firmware
+> > communication issues are resolved by this last resort.
+> > Also dump registers, to eventually allow some diagnostics.
+> > 
+> > Signed-off-by: Florian Achleitner <flo@fopen.at>
+> 
+> Doesn't apply to wireless-drivers-next.git. Can you rebase, please?
 
-Signed-off-by: Shailendra Verma <shailendra.capricorn@gmail.com>
----
- drivers/net/wireless/ray_cs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Please drop my patch! We agreed that it likely tries to fix a problem actually 
+caused in MMC system.
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 477f863..0881ba8 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -143,7 +143,7 @@ static int psm;
- static char *essid;
- 
- /* Default to encapsulation unless translation requested */
--static bool translate = 1;
-+static bool translate = true;
- 
- static int country = USA;
- 
--- 
-1.7.9.5
-
+Florian
