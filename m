@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:33413 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932222AbbELJbf convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52005 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbbEINYg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 05:31:35 -0400
-Received: by oica37 with SMTP id a37so1074140oic.0
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2015 02:31:35 -0700 (PDT)
+	Sat, 9 May 2015 09:24:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-05-03
+References: <1430681438.3240.3.camel@intel.com>
+Date: Sat, 09 May 2015 16:24:28 +0300
+In-Reply-To: <1430681438.3240.3.camel@intel.com> (Emmanuel Grumbach's message
+	of "Sun, 3 May 2015 19:30:38 +0000")
+Message-ID: <87lhgxnasz.fsf@kamboji.qca.qualcomm.com> (sfid-20150509_153159_712851_6546DB99)
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com>
-References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com>
-	<CA+BoTQkFSQe0di1vqqB5cAPKaizRkBT5cu4fA8dQ_uR_a2HdJw@mail.gmail.com>
-	<CAJa-X96spUg7+EZqH-Mv3s7OzbHzmXmcZ7uOw1KvPShexW6D_w@mail.gmail.com>
-	<CA+BoTQ=Qpws=928TZe22Ds-UO_qQJ2Om+=DW=VUNUS59o1BQAA@mail.gmail.com>
-	<CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com>
-	<CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com>
-Date: Tue, 12 May 2015 05:31:35 -0400
-Message-ID: <CAJa-X945Xvn0jHQVcKn-pyYQVNpxXnqjOH_VHJv8pVwR4kFXcw@mail.gmail.com> (sfid-20150512_113147_159029_82DE91F5)
-Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
-From: s prasad <sprasad.kandregula@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	kvalo@qca.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-May I know, is this firmware or driver constraint?
-If somebody have patch for this, am ready to test it.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Thanks and Regards,
-S Prasad
+> Hi Kalle,
+>
+> Here is my first pull request for 4.2. As usual, details in the tag.
+> Please pull - thanks!
+>
+> The following changes since commit 6c373ca89399c5a3f7ef210ad8f63dc3437da345:
+>
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2015-04-15 09:00:47 -0700)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2015-05-03
+>
+> for you to fetch changes up to 05c3274d56ee783cb291a779ec2b369e9d172450:
+>
+>   iwlwifi: mvm: include wildcard SSID in scans (2015-05-03 22:18:33 +0300)
+>
+> ----------------------------------------------------------------
+> * major rework of the scan code (Luca)
+> * some work on the thermal code (Chaya Rachel)
+> * some work on the firwmare debugging infrastructure
+>
+> ----------------------------------------------------------------
 
-On Tue, May 12, 2015 at 1:03 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 11 May 2015 at 23:27, s prasad <sprasad.kandregula@gmail.com> wrote:
->> Tested as you suggested, however didn't help. Please find attached log
->> files for each firmware type.
->>
->> While executing following commands in sequence, captured dmesg. I hope
->> those logs will help. If not please let me know.
->
-> Thanks!
->
-> Apparently I've missed from your original email the fact that you're
-> trying to inject packets. This isn't supported in ath10k.
->
->
-> Michał
-
-
+Thanks, pulled.
 
 -- 
-S Prasad Kandregula
+Kalle Valo
