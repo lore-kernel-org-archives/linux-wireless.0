@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42024 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754516AbbE2Ba2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 21:30:28 -0400
-Message-ID: <5567C131.8050005@kernel.org> (sfid-20150529_033052_752841_41E4385E)
-Date: Thu, 28 May 2015 18:30:25 -0700
-From: Andy Lutomirski <luto@kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50777 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbbEIMKi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 May 2015 08:10:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH] wil6210: fix format specifier for dma_addr_t
+References: <87fv7bvb9f.fsf@kamboji.qca.qualcomm.com>
+	<1430840528-14998-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Sat, 09 May 2015 15:10:31 +0300
+In-Reply-To: <1430840528-14998-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Tue, 5 May 2015 18:42:08 +0300")
+Message-ID: <87a8xene88.fsf@kamboji.qca.qualcomm.com> (sfid-20150509_141403_706560_486B2B6E)
 MIME-Version: 1.0
-To: David Howells <dhowells@redhat.com>,
-	Luis Rodriguez <mcgrof@suse.com>
-CC: Matthew Garrett <mjg59@srcf.ucam.org>, keyrings@linux-nfs.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kyle McMartin <kyle@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	Mimi Zohar <zohar@us.ibm.com>,
-	David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH 16/20] PKCS#7: Add an optional authenticated attribute
- to hold firmware name [ver #5]
-References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk> <20150528154834.1259.22434.stgit@warthog.procyon.org.uk>
-In-Reply-To: <20150528154834.1259.22434.stgit@warthog.procyon.org.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resending with further gmane screwups fixed]
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-On 05/28/2015 08:48 AM, David Howells wrote:
-> Modify the sign-file program to take a "-F <firmware name>" parameter.  The
-> name is a utf8 string that, if given, is inserted in a PKCS#7 authenticated
-> attribute from where it can be extracted by the kernel.  Authenticated
-> attributes are added to the signature digest.
+> Fix format specifier used for dma_addr_t, namely use %pad
+> Debug print virtual address for the same buffer as well.
 >
-> If the attribute is present, the signature would be assumed to be for
-> firmware and would not be permitted with module signing or kexec.  The name
-> associated with the attribute would be compared to the name passed to
-> request_firmware() and the load request would be denied if they didn't
-> match.
+> It can be applied as:
+> fixup! wil6210: Add pmc debug mechanism memory management
+>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-This is insecure because PKCS#7 authenticated attributes are broken (see 
-RFC2315 section 9.4 note 4).  You need to either require that everything 
-have authenticated attributes or require that nothing have authenticated 
-attributes.   Maybe this insecurity doesn't matter in practice, but I 
-don't wouldn't want to bet on it.
+The right format for specifying the commit which this patch fixes is:
 
-On top of that, this is a ton of code to support something trivial.  And 
-it requires an OID to be registered (ick).
+Fixes: dc16427bbe65 ("wil6210: Add pmc debug mechanism memory management")
 
-Earlier you suggested just appending the signature purpose to the thing 
-being signed.  What's wrong with that?  It's probably much less code, it 
-doesn't require reviewing details of the godawful PKCS#7 spec, and it 
-will continue working if and when someone adds a more sensible signature 
-format.  And you could tear out PKCS#7 authenticated attribute support 
-on top of it.
+See Documentatin/SubmittingPatches for more info.
 
-P.S.  Or you could stop using PKCS#7 if possible.  Holy crap, maybe it's 
-a standard, but it's a standard that we don't actually have to follow 
-and it *has trivial collisions by construction*.
+But I see new warnings with this patch:
 
-For Pete's sake, there are already 1262 lines of code just implementing 
-PKCS#7.  In contrast, the *entire* tweetnacl library, which uses better 
-crypto and is actually correct (no built-in collisions) fits a complete 
-signature implementation and the underlying crypto in barely half that 
-many lines.  This is actually unfair to tweetnacl, as tweetnacl also 
-includes an AEAD, which could be removed to shorten it by a decent amount.
+drivers/net/wireless/ath/wil6210/pmc.c:94:243: warning: format '%p' expects argument of type 'void *', but argument 6 has type 'dma_addr_t' [-Wformat]
+drivers/net/wireless/ath/wil6210/pmc.c:94:478: warning: format '%p' expects argument of type 'void *', but argument 5 has type 'dma_addr_t' [-Wformat]
 
---Andy
+-- 
+Kalle Valo
