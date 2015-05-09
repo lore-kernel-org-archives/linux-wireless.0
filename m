@@ -1,122 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40863 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753857AbbE1N4R (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:35281 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbbEISM2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:56:17 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDoMp6018675
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:16 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s24y-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:16 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 01/17] mwifiex: verbose logging for association failure messages
-Date: Thu, 28 May 2015 18:27:53 +0530
-Message-ID: <1432817889-26250-2-git-send-email-patila@marvell.com> (sfid-20150528_155625_287473_6787BC92)
-In-Reply-To: <1432817889-26250-1-git-send-email-patila@marvell.com>
-References: <1432817889-26250-1-git-send-email-patila@marvell.com>
+	Sat, 9 May 2015 14:12:28 -0400
+Received: by widdi4 with SMTP id di4so63276725wid.0
+        for <linux-wireless@vger.kernel.org>; Sat, 09 May 2015 11:12:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87h9rmnem1.fsf@kamboji.qca.qualcomm.com>
+References: <1430841518-3932-1-git-send-email-ap420073@gmail.com>
+	<87pp6bp6jy.fsf@kamboji.qca.qualcomm.com>
+	<CAMArcTW2qRiM4dVJQDDXJSuLEn6-GGJD4PJBTfhDDDOs+MxRrQ@mail.gmail.com>
+	<87h9rmnem1.fsf@kamboji.qca.qualcomm.com>
+Date: Sun, 10 May 2015 03:12:26 +0900
+Message-ID: <CAMArcTWw2UBr+_jAOFFi2OFBtbw2RHHEnrzL=7y10ZpO8Pk40w@mail.gmail.com> (sfid-20150509_202132_097589_85ADB185)
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Modify REG_BCN_MAX_ERR related code.
+From: Taehee Yoo <ap420073@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds more logging support for association failure -
-reason and states.
+2015-05-09 21:02 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
+> Taehee Yoo <ap420073@gmail.com> writes:
+>
+>> 2015-05-08 22:01 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
+>>> Taehee Yoo <ap420073@gmail.com> writes:
+>>>
+>>>> 1. Remove setting REG_BCN_MAX_ERR code in _rtl92cu_set_media_status().
+>>>> Initialization routine set REG_BCN_MAX_ERR to 0xFF.
+>>>> also _rtl92cu_set_media_status set REG_BCN_MAX_ERR to same value.
+>>>> so i remove this code.
+>>>>
+>>>> 2. Remove rtl92c_init_beacon_max_error's parameter.
+>>>> because parameter "infra_mode" is not used.
+>>>>
+>>>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+>>>
+>>> Please split the patches into two. Having a numbered list of changes in
+>>> the commit log is a strong indication that the patch should be split
+>>> into smaller patches.
+>>>
+>>> --
+>>> Kalle Valo
+>>
+>> Thank you for your review!
+>> I'll resend two patchs.
+>
+> Thanks. But when you send new versions please mark them as v2, v3 and so
+> on as that makes it easy for me to see what is the latest version.
+>
+> --
+> Kalle Valo
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
- drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
- 2 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index c404390..6a062dd 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -419,8 +419,12 @@ enum P2P_MODES {
- #define HS_CFG_COND_MAC_EVENT		0x00000004
- #define HS_CFG_COND_MULTICAST_DATA	0x00000008
- 
--#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
--#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
-+#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
-+#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
-+#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
-+#define ASSOC_ERR_AUTH_MSG_UNHANDLED		0xFFFE
-+#define ASSOC_ERR_STA_FAILURE			0xFFFF
-+
- 
- #define CMD_F_HOSTCMD           (1 << 0)
- #define CMD_F_CANCELED          (1 << 1)
-@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
- 	DOT11H_I = 10,
- };
- 
-+enum mwifiex_assocmd_failurepoint {
-+	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
-+	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
-+	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
-+	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
-+};
-+
- #define MAX_SNMP_BUF_SIZE   128
- 
- struct host_cmd_ds_802_11_snmp_mib {
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 6208ef1..69a44bb 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
- 	return 0;
- }
- 
-+static const char *assoc_failure_reason_to_str(u16 cap_info)
-+{
-+	switch (cap_info) {
-+	case ASSOC_ERR_AUTH_ERR_STA_FAILURE:
-+		return "ASSOC_ERR_AUTH_ERR_STA_FAILURE";
-+	case ASSOC_ERR_AUTH_MSG_UNHANDLED:
-+		return "ASSOC_ERR_AUTH_MSG_UNHANDLED";
-+	case ASSOC_ERR_ASSOC_ERR_TIMEOUT:
-+		return "ASSOC_ERR_ASSOC_ERR_TIMEOUT";
-+	case ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED:
-+		return "ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED";
-+	case ASSOC_ERR_STA_FAILURE:
-+		return "ASSOC_ERR_STA_FAILURE";
-+	}
-+
-+	return "Unknown failure";
-+}
- /*
-  * Association firmware command response handler
-  *
-@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 			    status_code, cap_info,
- 			    le16_to_cpu(assoc_rsp->a_id));
- 
--		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
--			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
-+		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
-+			    assoc_failure_reason_to_str(cap_info));
-+		if (cap_info == ASSOC_ERR_ASSOC_ERR_TIMEOUT) {
-+			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
- 				ret = WLAN_STATUS_AUTH_TIMEOUT;
--			else
-+				mwifiex_dbg(priv->adapter, ERROR,
-+					    "ASSOC_RESP: AUTH timeout\n");
-+			} else {
- 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
-+				mwifiex_dbg(priv->adapter, ERROR,
-+					    "ASSOC_RESP: UNSPECIFIED failure\n");
-+			}
- 		} else {
- 			ret = status_code;
- 		}
--- 
-1.8.1.4
+I already sent two patchs as "rtlwifi: rtl8192cu: Remove setting
+REG_BCN_MAX_ERR code in _rtl92cu_set_media_status()." and "rtlwifi:
+rtl8192cu: Remove rtl92c_init_beacon_max_error's parameter"
 
+is it right? or would I resend as V2?
