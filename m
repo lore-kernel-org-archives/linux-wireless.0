@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26681 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340AbbEZPsv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50711 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbbEIMCV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 11:48:51 -0400
-Date: Tue, 26 May 2015 18:48:26 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Joe Perches <joe@perches.com>,
-	Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	devel@driverdev.osuosl.org,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150526154826.GJ11588@mwanda> (sfid-20150526_175305_679687_52F4DA6E)
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
- <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
- <556268BC.5050807@lwfinger.net>
- <20150525091737.GQ4150@mwanda>
- <1432575448.2846.63.camel@perches.com>
- <20150526044611.GA3465@sudip-PC>
- <1432616108.2846.83.camel@perches.com>
- <20150526050212.GC3465@sudip-PC>
- <1432616879.2846.86.camel@perches.com>
- <20150526141401.GC21573@kroah.com>
+	Sat, 9 May 2015 08:02:21 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Taehee Yoo <ap420073@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Modify REG_BCN_MAX_ERR related code.
+References: <1430841518-3932-1-git-send-email-ap420073@gmail.com>
+	<87pp6bp6jy.fsf@kamboji.qca.qualcomm.com>
+	<CAMArcTW2qRiM4dVJQDDXJSuLEn6-GGJD4PJBTfhDDDOs+MxRrQ@mail.gmail.com>
+Date: Sat, 09 May 2015 15:02:14 +0300
+In-Reply-To: <CAMArcTW2qRiM4dVJQDDXJSuLEn6-GGJD4PJBTfhDDDOs+MxRrQ@mail.gmail.com>
+	(Taehee Yoo's message of "Sat, 9 May 2015 18:11:45 +0900")
+Message-ID: <87h9rmnem1.fsf@kamboji.qca.qualcomm.com> (sfid-20150509_140225_648796_EBBEFD3F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150526141401.GC21573@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 26, 2015 at 07:14:01AM -0700, Greg KH wrote:
-> I take the blame for any problems with Outreachy patches.  Given the
-> huge volume of them, one bug out of 900 isn't that bad of a percentage.
+Taehee Yoo <ap420073@gmail.com> writes:
 
-We don't get many bugs through outreachy, but this isn't the first one.
-For example, in March and April people complained about:
+> 2015-05-08 22:01 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
+>> Taehee Yoo <ap420073@gmail.com> writes:
+>>
+>>> 1. Remove setting REG_BCN_MAX_ERR code in _rtl92cu_set_media_status().
+>>> Initialization routine set REG_BCN_MAX_ERR to 0xFF.
+>>> also _rtl92cu_set_media_status set REG_BCN_MAX_ERR to same value.
+>>> so i remove this code.
+>>>
+>>> 2. Remove rtl92c_init_beacon_max_error's parameter.
+>>> because parameter "infra_mode" is not used.
+>>>
+>>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+>>
+>> Please split the patches into two. Having a numbered list of changes in
+>> the commit log is a strong indication that the patch should be split
+>> into smaller patches.
+>>
+>> --
+>> Kalle Valo
+>
+> Thank you for your review!
+> I'll resend two patchs.
 
-95745e9b1de2 ('staging: lustre: Use kasprintf.')
-45de432775d6 ('Staging: rtl8712: Use memdup_user() instead of copy_from_user()')
+Thanks. But when you send new versions please mark them as v2, v3 and so
+on as that makes it easy for me to see what is the latest version.
 
-There have been others but I have a short memory.  We have this
-discussion every time.  How come no one caught this bug in review??  Oh,
-it never went through the list.
-
-I'm fine with 5 bugs per 900 patches or whatever.  I wish that the
-patches came to the list, but I get that that would double your review
-workload to review 900 patches on the outreachy list and again on the
-normal dev list.
-
-regards,
-dan carpenter
+-- 
+Kalle Valo
