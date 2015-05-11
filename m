@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:34254 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbbEYQQC (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:25629 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbbEKFcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 12:16:02 -0400
-Received: by ieczm2 with SMTP id zm2so75256971iec.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2015 09:16:02 -0700 (PDT)
-Date: Mon, 25 May 2015 12:15:42 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Alexis Green <agreen@cococorp.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jesse Jones <jjones@cococorp.com>
-Subject: Re: [PATCH] mac80211: fix a NULL dereference in ath9k (and likely
- other drivers) when fixed mesh paths are used
-Message-ID: <20150525161542.GA14318@localhost> (sfid-20150525_181607_881541_7801FE28)
-References: <CAAnMG+OgtSzFXqLOoZ-JbOr7xnexC3P0+M0fFLWTBtWru=4SKg@mail.gmail.com>
+	Mon, 11 May 2015 01:32:13 -0400
+From: Johnny Kim <johnny.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
+	<dean.lee@atmel.com>, <tony.cho@atmel.com>,
+	<Nicolas.FERRE@atmel.com>, Johnny Kim <johnny.kim@atmel.com>
+Subject: [PATCH v3 2/2] staging: MAINTAINERS: add maintainer for wilc1000 device
+Date: Mon, 11 May 2015 14:30:57 +0900
+Message-ID: <9625b49f6744c9343b21b5c81f5f98f53e59de11.1431320004.git.johnny.kim@atmel.com> (sfid-20150511_073218_288352_EDADA873)
+In-Reply-To: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com>
+References: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAAnMG+OgtSzFXqLOoZ-JbOr7xnexC3P0+M0fFLWTBtWru=4SKg@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2015 at 06:05:13PM -0700, Alexis Green wrote:
-> This patch fixes a NULL dereference in ath9k (and likely other drivers) when
-> fixed mesh paths are used. The problem is that when a station comes up
-> sta_info_alloc allocates ath_node implicitly via hw->sta_data_size. When it
-> does that the ath_node is zeroed out. The ath_node isn’t actually initialized
-> until the station becomes associated and ath9k_sta_state is called.
+Add myself as maintainer for atmel wilc1000
 
-Good catch.
-
-I wonder if we should instead remove the mesh special case in
-ieee80211_tx_h_check_assoc() -- given that we require an assoc station in
-peering before we send data frames to that RA, and userspace should also be
-setting assoc flag after MPM completes, I can't think of a reason offhand why
-we'd need to bail out there.
-
-Does this also fix the problem for you?  It passed the wpa_supplicant test
-cases at least (but we aren't fixing mpaths in any of those...)
-
->From 246febaa51d555fda437cc8064798db06c5f4d6e Mon Sep 17 00:00:00 2001
-From: Bob Copeland <me@bobcopeland.com>
-Date: Mon, 25 May 2015 12:01:52 -0400
-Subject: [PATCH] mac80211: enable assoc check for mesh interfaces
-
-We already set a station to be associated when peering completes,
-both in user space and in the kernel.  Thus we should always have
-an associated sta before sending data frames to that station.
-
-Failure to do this can cause crashes in the lower-level driver due
-to transmitting unicast data frames before driver sta structures
-(e.g. ampdu state in ath9k) are initialized.  This could have
-happened if fixing mpaths, which could then allow TX to stations
-with whom we haven't yet completed peering.
-
-Reported-by: Alexis Green <agreen@cococorp.com>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
+Signed-off-by: Dean Lee <dean.lee@atmel.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
 ---
- net/mac80211/tx.c | 3 ---
- 1 file changed, 3 deletions(-)
+Changes in v3:
+- fix the permissions.
+- fix the folder tree.
+- forget to add the mailing-list during the previous sending.
+- remove driverdev.osuosl.org mailing
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 667111ee6a20..5787f15a3a12 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -301,9 +301,6 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 	if (tx->sdata->vif.type == NL80211_IFTYPE_WDS)
- 		return TX_CONTINUE;
+ MAINTAINERS | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1b8263c..e5cef88 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9473,6 +9473,15 @@ M:	Forest Bond <forest@alittletooquiet.net>
+ S:	Odd Fixes
+ F:	drivers/staging/vt665?/
  
--	if (tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
--		return TX_CONTINUE;
--
- 	if (tx->flags & IEEE80211_TX_PS_BUFFERED)
- 		return TX_CONTINUE;
- 
++STAGING - WILC1000 WIFI DRIVER
++M:	Johnny Kim <johnny.kim@atmel.com>
++M:	Rachel Kim <rachel.kim@atmel.com>
++M:	Dean Lee <dean.lee@atmel.com>
++M:	Chris Park <chris.park@atmel.com>
++L:	linux-wireless@vger.kernel.org
++S:	Supported
++F:	drivers/staging/wilc1000/
++
+ STAGING - XGI Z7,Z9,Z11 PCI DISPLAY DRIVER
+ M:	Arnaud Patard <arnaud.patard@rtp-net.org>
+ S:	Odd Fixes
 -- 
-2.1.4
+1.9.1
 
-
-
--- 
-Bob Copeland %% http://bobcopeland.com/
