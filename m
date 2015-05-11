@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:34797 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbbE3XYq (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:35353 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013AbbEKRsR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2015 19:24:46 -0400
-Received: by pdbki1 with SMTP id ki1so79895382pdb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2015 16:24:46 -0700 (PDT)
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [PATCH] cfg80211: Don't re-use the skb for larger NL messages.
-Date: Sun, 31 May 2015 04:54:35 +0530
-Message-Id: <1433028275-9576-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150531_012832_771928_8471DF71)
+	Mon, 11 May 2015 13:48:17 -0400
+Content-Type: text/plain;
+	charset=us-ascii
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
+From: Okash Khawaja <okash.khawaja@gmail.com>
+In-Reply-To: <CAOiHx=kzSsFenqPSNeAX6P5wJK8Hr-q+s+rJoQQMPbSGmE50xw@mail.gmail.com>
+Date: Mon, 11 May 2015 18:48:11 +0100
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	"joe@perches.com" <joe@perches.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-Id: <4C95B6D2-3A68-4360-BE3C-5264DD0ED8DF@gmail.com> (sfid-20150511_194838_607288_88796C0D)
+References: <20150505224020.GA3805@bytefire-computer> <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com> <20150506063241.GA3042@bytefire-computer> <87k2wflj7p.fsf@kamboji.qca.qualcomm.com> <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com> <CAOiHx=kzSsFenqPSNeAX6P5wJK8Hr-q+s+rJoQQMPbSGmE50xw@mail.gmail.com>
+To: Jonas Gorski <jogo@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This improves the time to get the DUMP response across to user space.
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
----
- net/wireless/nl80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> On 11 May 2015, at 14:24, Jonas Gorski <jogo@openwrt.org> wrote:
+> 
+> Hi,
+> 
+>> On Mon, May 11, 2015 at 12:38 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Okash Khawaja <okash.khawaja@gmail.com> writes:
+>> 
+>>> Sure, I'll create v2 of the patch with updated commit log.
+>>> 
+>>> Since it's part of a patch set, do you want me to send both the
+>>> patches in the patch set together as v2 or just this patch?
+>> 
+>> Please resend the whole patchset as v2, less problems that way.
+> 
+> If you are sending a v2 anyway, I'd suggest using decimal values for
+> the cases, as cache line sizes are usually given in decimal anyway. So
+> just drop the "0x" instead of converting the values ;-)
+> 
+> 
+> Jonas
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c264eff..152bd0c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7636,6 +7636,10 @@ static int nl80211_testmode_dump(struct sk_buff *skb,
- 		}
- 
- 		genlmsg_end(skb, hdr);
-+
-+		/* Don't re-use skb, when we know nla_put fails*/
-+		if (skb->len > NLMSG_GOODSIZE / 2)
-+			break;
- 	}
- 
- 	err = skb->len;
+Jonas, I had already sent the updated patch by the time I received your email. Is there a convention around this?
+Thanks
