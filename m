@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:16940 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145AbbE1SbI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52112 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753663AbbEKMZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 14:31:08 -0400
-Message-ID: <55675EE6.4020505@broadcom.com> (sfid-20150528_203112_692849_A535E632)
-Date: Thu, 28 May 2015 20:31:02 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 11 May 2015 08:25:05 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Liu CF/TW <cfliu.tw@gmail.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param for raw tx injection, sw crypto support.
+References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com>
+	<873837qo6l.fsf@kamboji.qca.qualcomm.com>
+	<554CE438.5000208@candelatech.com>
+Date: Mon, 11 May 2015 15:24:52 +0300
+In-Reply-To: <554CE438.5000208@candelatech.com> (Ben Greear's message of "Fri,
+	8 May 2015 09:28:40 -0700")
+Message-ID: <87wq0fi9nv.fsf@kamboji.qca.qualcomm.com> (sfid-20150511_142510_658632_02FD8F44)
 MIME-Version: 1.0
-To: Jason Andryuk <jandryuk@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-Subject: Re: [PATCH] brcmfmac: fix invalid access to struct acpi_device fields
-References: <1432747901-8472-1-git-send-email-arend@broadcom.com> <CAKf6xpuhDdRyQoYMxCQOkSvVzESkbWe=i4OvKm7C6hVRth6foA@mail.gmail.com>
-In-Reply-To: <CAKf6xpuhDdRyQoYMxCQOkSvVzESkbWe=i4OvKm7C6hVRth6foA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/28/15 18:48, Jason Andryuk wrote:
-> On Wed, May 27, 2015 at 1:31 PM, Arend van Spriel<arend@broadcom.com>  wrote:
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> index b0d0ff5..71779b9 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> @@ -1117,6 +1117,18 @@ MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
->>   static struct brcmfmac_sdio_platform_data *brcmfmac_sdio_pdata;
->>
->>
->> +static void brcmf_sdiod_acpi_set_power_manageable(struct device *dev,
->> +                                                 int val)
->> +{
->> +#if IS_ENABLED(CONFIG_ACPI)
->> +       struct acpi_device *adev;
->> +
->> +       adev = ACPI_COMPANION(dev);
->> +       if (adev)
->> +               adev->flags.power_manageable = 0;
+Ben Greear <greearb@candelatech.com> writes:
+
+> Maybe we could have a way to specify both rx and rx mode independently of
+> each other to support that use case as well?
 >
-> Shouldn't this be " = val"?
-
-Definitely. The only place where it is called uses 0 for val parameter 
-so there is no big issue, but I will fix it.
-
-Thanks for spotting that bit.
-
-Regards,
-Arend
-
-> -Jason
+> Maybe:
 >
->> +#endif
->> +}
->> +
->>   static int brcmf_ops_sdio_probe(struct sdio_func *func,
->>                                  const struct sdio_device_id *id)
->>   {
+> txmode=x;  // 0 == native, 1 == raw (and maybe support other tx modes in the future as desired)
+> rxmode=x;  // 0 == native, 1 == raw
+> nohwcrypt=x; // 0 == standard hw crypt, 0x1 == rx-sw-crypt, 0x2 == tx-sw-crypt, 0x3 == tx/rx-sw-crypt
 
+This looks overly complicated and hard to maintain for a very special
+use case, not really excited about this.
+
+-- 
+Kalle Valo
