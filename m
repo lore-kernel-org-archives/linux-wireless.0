@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:36396 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752043AbbEJHUt (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:33211 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751317AbbEKL6g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 May 2015 03:20:49 -0400
-Received: by iecmd7 with SMTP id md7so11647383iec.3
-        for <linux-wireless@vger.kernel.org>; Sun, 10 May 2015 00:20:48 -0700 (PDT)
+	Mon, 11 May 2015 07:58:36 -0400
+Date: Mon, 11 May 2015 12:58:31 +0100
+From: Okash Khawaja <okash.khawaja@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/2] adm8211: fixed the possible pci cache line sizes
+ inside switch-case
+Message-ID: <20150511115831.GA5153@bytefire-computer> (sfid-20150511_135856_438721_D3B800A0)
 MIME-Version: 1.0
-In-Reply-To: <87ioc3p61i.fsf@kamboji.qca.qualcomm.com>
-References: <1430900994-20509-1-git-send-email-eliad@wizery.com>
-	<87ioc3p61i.fsf@kamboji.qca.qualcomm.com>
-Date: Sun, 10 May 2015 10:20:48 +0300
-Message-ID: <CAB3XZEdb3kNjquZp4J2qxZFLW9kPjeZVMH=OQfBGapVEZ76c2w@mail.gmail.com> (sfid-20150510_092310_886299_F97E5FE9)
-Subject: Re: [PATCH] wl18xx: fallback to default conf in case of invalid conf file
-From: Eliad Peller <eliad@wizery.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150511114104.GA4985@bytefire-computer>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 8, 2015 at 4:12 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->
-> Eliad Peller <eliad@wizery.com> writes:
->
-> > If the wl18xx-conf.bin file is missing or invalid (e.g. due
-> > to recent driver change), fallback to default configuration
-> > instead of failing driver load.
-> >
-> > Reported-by: Marc Kleine-Budde <mkl@pengutronix.de>
-> > Signed-off-by: Eliad Peller <eliad@wizery.com>
->
-> This tells me that wl18xx is doing something wrong. The driver should
-> still work normally even if user space is old (and vice versa). Should
-> this configuration file (whatever that even is) have a version number in
-> file name to handle incompatible changes in a backwards compatible
-> manner?
->
-the configuration file has a version number only in the header.
-it is not backward compatible.
+The PCI cache line size value was being compared against decimal values
+prefixed with 0x.
 
-this is certainly not the optimal way to go, but since the driver will
-now fallback to the default configuration, i guess it should be good
-enough, and won't (completely) break current users.
-(most users will use the default configuration anyway, so the conf
-file is not that important)
+Fixed the literals to use the correct hex values.
 
-Eliad.
+This has not been tested due to lack of hardware. However, the value in 
+`cline` is PCI cache line size, which is the CPU's cache line size. 
+It is less likely for cache line sizes to be 22 or 50, and more likely for 
+them to be 16 or 32. Also, as far as I understand, cache line size is used for
+things like aligning DMA requests with CPU cache line, which improve
+performance but wouldn't break anything if the value doesn't match. In
+this case, we will fall through to the default case which leaves `reg`
+unchanged.
+
+
+Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+---
+ drivers/net/wireless/adm8211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 058fb4b..76c908f 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1101,10 +1101,10 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+ 		case  0x8:
+ 			reg |= (0x1 << 14);
+ 			break;
+-		case 0x16:
++		case 0x10:
+ 			reg |= (0x2 << 14);
+ 			break;
+-		case 0x32:
++		case 0x20:
+ 			reg |= (0x3 << 14);
+ 			break;
+ 		default:
+-- 
+2.4.0
+
