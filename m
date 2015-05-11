@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:65401 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964813AbbEVKqp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 06:46:45 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add new 4addr related fw_feature
-References: <1432037374-26339-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 22 May 2015 13:46:33 +0300
-In-Reply-To: <1432037374-26339-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 19 May 2015 14:09:34 +0200")
-Message-ID: <874mn46gae.fsf@kamboji.qca.qualcomm.com> (sfid-20150522_124651_861751_CC68022B)
+Received: from arrakis.dune.hu ([78.24.191.176]:36564 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751701AbbEKNYt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2015 09:24:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com>
+References: <20150505224020.GA3805@bytefire-computer> <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com>
+ <20150506063241.GA3042@bytefire-computer> <87k2wflj7p.fsf@kamboji.qca.qualcomm.com>
+ <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Mon, 11 May 2015 15:24:18 +0200
+Message-ID: <CAOiHx=kzSsFenqPSNeAX6P5wJK8Hr-q+s+rJoQQMPbSGmE50xw@mail.gmail.com> (sfid-20150511_152511_791459_3472972E)
+Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Okash Khawaja <okash.khawaja@gmail.com>,
+	"joe@perches.com" <joe@perches.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi,
 
-> Some firmware revisions pad 4th hw address in
-> Native Wifi Rx decap. This is the case with 10.x
-> and it was assumed that this is true for all
-> firmware images.
+On Mon, May 11, 2015 at 12:38 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Okash Khawaja <okash.khawaja@gmail.com> writes:
 >
-> However QCA988X with 999.999.0.636 and QCA61X4
-> with WLAN.RM.2.0-00088 don't have the padding.
-> Hence add a feature flag indicating that the
-> padding isn't present so firmware images can
-> advertise it appropriately. This way driver will
-> behave as it was before with old firmware blobs
-> and doesn't cause any regressions from user
-> perspective.
+>> Sure, I'll create v2 of the patch with updated commit log.
+>>
+>> Since it's part of a patch set, do you want me to send both the
+>> patches in the patch set together as v2 or just this patch?
 >
-> Effectively this patch enables QCA988X with
-> 999.999.0.636 and QCA61X4 with WLAN.RM.2.0-00088
-> to set up client bridging provided user has an
-> updated firmware blob.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Please resend the whole patchset as v2, less problems that way.
 
-Thanks, applied.
+If you are sending a v2 anyway, I'd suggest using decimal values for
+the cases, as cache line sizes are usually given in decimal anyway. So
+just drop the "0x" instead of converting the values ;-)
 
--- 
-Kalle Valo
+
+Jonas
