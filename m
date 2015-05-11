@@ -1,72 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lan.nucleusys.com ([92.247.61.126]:42830 "EHLO
-	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754095AbbETQJH (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:33353 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753162AbbEKLxb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 12:09:07 -0400
-Date: Wed, 20 May 2015 19:08:40 +0300
-From: Petko Manolov <petkan@mip-labs.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Andy Lutomirski <luto@kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	James Morris <james.l.morris@oracle.com>, serge@hallyn.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150520160840.GB10473@localhost> (sfid-20150520_180957_691923_9EEEE4CF)
-References: <20150519200232.GM23057@wotan.suse.de>
- <1432072117.4510.180.camel@linux.vnet.ibm.com>
- <20150519221902.GQ23057@wotan.suse.de>
- <1432078625.4510.207.camel@linux.vnet.ibm.com>
- <CAB=NE6WZ8YW=C7a=MWgMS4T6Nmgs1NcKKsUY6XPtPC9B4JZu=Q@mail.gmail.com>
+	Mon, 11 May 2015 07:53:31 -0400
+Date: Mon, 11 May 2015 12:53:25 +0100
+From: Okash Khawaja <okash.khawaja@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/2] adm8211: fix checkpatch errors for indentation and
+ new line
+Message-ID: <20150511115325.GA5092@bytefire-computer> (sfid-20150511_135451_715527_5B33E8F1)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6WZ8YW=C7a=MWgMS4T6Nmgs1NcKKsUY6XPtPC9B4JZu=Q@mail.gmail.com>
+In-Reply-To: <20150511114104.GA4985@bytefire-computer>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-05-19 17:22:59, Luis R. Rodriguez wrote:
->
-> I have a series of reasons find IMA unsuitable for the current goals at hand:
-> 
->   1) IMA is a pretty big kitchen sink, we want this to work well for
-> even embedded systems, or architectures that do not have or require
-> TPMs
+This patch fixes these checkpatch.pl errors around a single switch-case
+block:
 
-No, it isn't.  I've profiled it and performance hit is negligible.  All hash 
-algorithms used have been optimized for most cpu architectures.
+ERROR: switch and case should be at the same indent
+ERROR: trailing statements should be on next line
 
->   2) The appraisal is also done for to account for a specific state of
-> affairs, you appraise to the user of the integrity of the system at a
-> specific point in time, firmware signing can provide integrity /
-> authorship vetting of files directly from the authors. In the case of
-> regulatory.bin that was the whole point of it, and firmware signing as
-> is being provided is intended to generalize that but by sharing code
-> in-kernel with module signing infrastructure
+More specifically, the fix has been applied to the five occurances of
+the errors listed below.
 
-This is weird English to me, but since i am no native speaker either i'll blame 
-myself. :)  Could you please rephrase?
+ERROR: switch and case should be at the same indent
+#1100: FILE: adm8211.c:1100:
++               switch (cline) {
+[...]
++                 default: reg |= (0x0 << 14);
 
-> If we go with IMA, I however do not think this would be appropriate and 
-> overkill at this point in time.
+ERROR: trailing statements should be on next line
+#1101: FILE: adm8211.c:1101:
++               case  0x8: reg |= (0x1 << 14);
 
-Depends on what your needs are.  If you need authenticity then IMA-appraise is 
-definitely your way to go.  For anything less secure you may go with LSM of 
-choice to apply whatever policy you may have in mind.
+ERROR: trailing statements should be on next line
+#1103: FILE: adm8211.c:1103:
++               case 0x16: reg |= (0x2 << 14);
 
-Again, security and convenience do not play well together.
+ERROR: trailing statements should be on next line
+#1105: FILE: adm8211.c:1105:
++               case 0x32: reg |= (0x3 << 14);
+
+ERROR: trailing statements should be on next line
+#1107: FILE: adm8211.c:1107:
++                 default: reg |= (0x0 << 14);
 
 
-		Petko
+Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+---
+ drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index f07a618..058fb4b 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
+ 		pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
+ 
+ 		switch (cline) {
+-		case  0x8: reg |= (0x1 << 14);
+-			   break;
+-		case 0x16: reg |= (0x2 << 14);
+-			   break;
+-		case 0x32: reg |= (0x3 << 14);
+-			   break;
+-		  default: reg |= (0x0 << 14);
+-			   break;
++		case  0x8:
++			reg |= (0x1 << 14);
++			break;
++		case 0x16:
++			reg |= (0x2 << 14);
++			break;
++		case 0x32:
++			reg |= (0x3 << 14);
++			break;
++		default:
++			reg |= (0x0 << 14);
++			break;
+ 		}
+ 	}
+ 
+-- 
+2.4.0
+
