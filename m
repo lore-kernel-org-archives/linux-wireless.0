@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:59736 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60410 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469AbbECTcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:32:00 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/42] iwlwifi: rs: remove code duplication when filling lq cmd
-Date: Sun,  3 May 2015 22:31:13 +0300
-Message-Id: <1430681513-7838-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213204_809856_665FB95C)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+	id S1750774AbbEKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2015 05:53:30 -0400
+Message-ID: <1431338007.1964.16.camel@sipsolutions.net> (sfid-20150511_115333_602398_1F8020F0)
+Subject: Re: [PATCH] mac80211: IBSS, clear fast_sta when update rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 May 2015 11:53:27 +0200
+In-Reply-To: <1431337921.1964.15.camel@sipsolutions.net> (sfid-20150511_115210_912154_EBE83A3A)
+References: <1431337193-17472-1-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150511_113957_922464_EF6D0870) <1431337921.1964.15.camel@sipsolutions.net>
+	 (sfid-20150511_115210_912154_EBE83A3A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Mon, 2015-05-11 at 11:52 +0200, Johannes Berg wrote:
+> On Mon, 2015-05-11 at 11:39 +0200, Janusz Dziedzic wrote:
+> > This is required to handle sta.wme correctly
+> > after update rates (eg. when using HT/VHT) when
+> > driver using IEEE80211_HW_SUPPORT_FAST_XMIT.
+> 
+> Wouldn't you want to check, so it can be re-assigned?
 
-Same code appear a few lines later while the position has
-no effect on the actual flow.
+i.e. something like
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index f9928f2..a9ad644 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -3223,9 +3223,6 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
- 	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_LQ_SS_PARAMS)
- 		rs_set_lq_ss_params(mvm, sta, lq_sta, initial_rate);
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index bfef1b215050..7e62183525aa 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1031,8 +1031,11 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
  
--	if (num_of_ant(initial_rate->ant) == 1)
--		lq_cmd->single_stream_ant_msk = initial_rate->ant;
--
- 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
+-	if (sta && elems->wmm_info && local->hw.queues >= IEEE80211_NUM_ACS)
++	if (sta && !sta->sta.wme && elems->wmm_info &&
++	    local->hw.queues >= IEEE80211_NUM_ACS) {
+ 		sta->sta.wme = true;
++		ieee80211_check_fast_xmit(sta);
++	}
  
--- 
-2.1.0
+ 	if (sta && elems->ht_operation && elems->ht_cap_elem &&
+ 	    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
+
+
+johannes
 
