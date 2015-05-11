@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37927 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752065AbbE2LjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:39:18 -0400
-Message-ID: <1432899554.2104.17.camel@sipsolutions.net> (sfid-20150529_133922_141233_62F6F486)
-Subject: Re: [PATCH v2 2/2] mac80211: guard against invalid ptr deref
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 29 May 2015 13:39:14 +0200
-In-Reply-To: <CA+BoTQmkg8KBhFGqSsdt6Sks6JGUDGnM2oSzMSEWtCEz-abwzA@mail.gmail.com> (sfid-20150529_133408_532814_43B8B10C)
-References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
-	 <1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
-	 <1432285043-8878-2-git-send-email-michal.kazior@tieto.com>
-	 <1432897812.2104.7.camel@sipsolutions.net>
-	 <CA+BoTQmkg8KBhFGqSsdt6Sks6JGUDGnM2oSzMSEWtCEz-abwzA@mail.gmail.com>
-	 (sfid-20150529_133408_532814_43B8B10C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:42131 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156AbbEKGaZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2015 02:30:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Okash Khawaja <okash.khawaja@gmail.com>
+Cc: joe@perches.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
+References: <20150505224020.GA3805@bytefire-computer>
+	<87wq0ms3mv.fsf@kamboji.qca.qualcomm.com>
+	<20150506063241.GA3042@bytefire-computer>
+Date: Mon, 11 May 2015 09:30:18 +0300
+In-Reply-To: <20150506063241.GA3042@bytefire-computer> (Okash Khawaja's
+	message of "Wed, 6 May 2015 07:32:42 +0100")
+Message-ID: <87k2wflj7p.fsf@kamboji.qca.qualcomm.com> (sfid-20150511_083031_414410_E22EBDE5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-05-29 at 13:34 +0200, Michal Kazior wrote:
+Okash Khawaja <okash.khawaja@gmail.com> writes:
 
-> > I'm a bit undecided about this. Is this really the only place that
-> > assumes use_4addr implies that it's a VLAN, in a context like this?
-> 
-> Hmm.. I guess TDLS could also have use_4addr and still be a
-> IFTYPE_STATION, right? 
+> On Wed, May 06, 2015 at 07:59:04AM +0300, Kalle Valo wrote:
+>> Okash Khawaja <okash.khawaja@gmail.com> writes:
+>> 
+>> > The PCI cache line size value was being compared against decimal
+>> > values prefixed with 0x.
+>> > Fixed the literals to use the correct hex values.
+>> >
+>> > Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+>>  [...]
+>> 
+>> > @@ -1101,10 +1101,10 @@ static void adm8211_hw_init(struct
+>> > ieee80211_hw *dev) case 0x8: reg |= (0x1 << 14); break; - case
+>> > 0x16: + case 0x10: reg |= (0x2 << 14); break; - case 0x32: + case
+>> > 0x20: reg |= (0x3 << 14); break; default:
+>>  Did you test this? How certain can we be that this doesn't break
+>> anything?
+>> 
+>
+> I didn't test it as that would require the hardware that I don't have
+> at the moment. However, the value in `cline` is PCI cache line size,
+> which is the CPU's cache line size. It is less likely for cache line
+> sizes to be 22 or 50, and more likely for them to be 16 or 32. Also,
+> as far as I understand (and I might be wrong here), cache line size is
+> used for things like aligning DMA requests with CPU cache line, which
+> improve performance but wouldn't break anything if the value doesn't
+> match. In this case, we will fall through to the default case which
+> leaves `reg` unchanged.
+>
+> If there is a way to test it with a mock set up or if you still think
+> we need to test this on real board, I'll be happy to try get the
+> hardware. But I will need some guidance around that. Thanks.
 
-No, TDLS can neither get here (VLAN assignment) nor does it actually set
-use_4addr. The only other thing that can set use_4addr is the station
-interface itself, but then we also can't get here.
+I don't have any ideas how to test this as I think the hardware is
+pretty rare nowadays but I think this is safe to commit, thanks for
+clearing this up. BTW, what you wrote about would have been perferct in
+the commit log itself.
 
-That wasn't really my point though - I was thinking more along the lines
-of code in rx.c, tx.c that just checks use_4addr? Not really sure.
-
-johannes
-
-
+-- 
+Kalle Valo
