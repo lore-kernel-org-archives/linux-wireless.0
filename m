@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:32963 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751181AbbEZFDt (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58286 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbbEKPCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 01:03:49 -0400
-Date: Tue, 26 May 2015 10:32:12 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	Stable <stable@vger.kernel.org>, netdev@vger.kernel.org,
-	Haggai Eran <haggai.eran@gmail.com>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150526050212.GC3465@sudip-PC> (sfid-20150526_070410_622866_0FFA9BA3)
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
- <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
- <556268BC.5050807@lwfinger.net>
- <20150525091737.GQ4150@mwanda>
- <1432575448.2846.63.camel@perches.com>
- <20150526044611.GA3465@sudip-PC>
- <1432616108.2846.83.camel@perches.com>
+	Mon, 11 May 2015 11:02:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <poh@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: increase relay buffer size of spectral scan
+References: <1430763684-1630-1-git-send-email-poh@qca.qualcomm.com>
+Date: Mon, 11 May 2015 18:02:09 +0300
+In-Reply-To: <1430763684-1630-1-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Mon, 4 May 2015 11:21:24 -0700")
+Message-ID: <878ucvi2dq.fsf@kamboji.qca.qualcomm.com> (sfid-20150511_170233_843031_95C24F8C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432616108.2846.83.camel@perches.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2015 at 09:55:08PM -0700, Joe Perches wrote:
-> On Tue, 2015-05-26 at 10:16 +0530, Sudip Mukherjee wrote:
-> > On Mon, May 25, 2015 at 10:37:28AM -0700, Joe Perches wrote:
-> > > It'd be better if the approved patches from the intern list
-> > > (no idea what that is) were sent to lkml/devel@driverdev lists
-> > > for review before actually being applied.
-> > Its the outreachy program. And http://kernelnewbies.org/OutreachyApply
-> > mentions specifically: "email your first patch to the outreachy-kernel
-> > mailing list. Do not send patches to the tmain Linux mailing lists"
-> 
-> The same thing happens with the eudyptula patches.
-But for eudyptula, patches have to properly submitted to lkml and
-maintainers. And today I am here just because of eudyptula. My patches
-and contributions here, everything started with it. :)
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-regards
-sudip
-> 
-> 
-> 
+> Spectral scan supported by ath10k has capability to monitor and report
+> through whole bands and channels, but current buffer size is too small
+> to save reported spectral scan data.
+> This results in dropping 5G channel reports at all when dual band card
+> is used, so that users are not able to analyze spectral environments.
+> Hence increase the buffer size to fix the problem.
+>
+> A spectral data size is vary based on the number of bins, so the unit
+> buffer size, 1140, is chose to minimize relay buffer fragmentation.
+>
+> The total buffer size is also chose in tradeoff with spectral scan
+> support vs. kernel memory consumption.
+> Since theoretical maximum buffer size, 9.5MB, can be consumed with
+> 512 bins in dual bands, we target to cover up to 128 bins for all
+> channels in dual bands and due to the buffer size limitation,
+> spectral scan with bin number bigger than 128 needs to be run on
+> single band each.
+>
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+
+Thanks, applied.
+
+-- 
+Kalle Valo
