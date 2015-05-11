@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34097 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbbEHODG (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:33061 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058AbbEKLlJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 10:03:06 -0400
-From: <c_mpubbi@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Pubbisetty Manikanta <c_mpubbi@qti.qualcomm.com>
-Subject: [PATCH] ath10k-fwencoder: add ATH10k_FW_FEATURE_HAS_ADAPTIVE_CCA
-Date: Fri, 8 May 2015 19:32:48 +0530
-Message-ID: <1431093768-15248-1-git-send-email-c_mpubbi@qti.qualcomm.com> (sfid-20150508_160310_604292_9BCA21BC)
+	Mon, 11 May 2015 07:41:09 -0400
+Date: Mon, 11 May 2015 12:41:04 +0100
+From: Okash Khawaja <okash.khawaja@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/2] adm8211 patches
+Message-ID: <20150511114104.GA4985@bytefire-computer> (sfid-20150511_134114_880225_54E06382)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pubbisetty Manikanta <c_mpubbi@qti.qualcomm.com>
+These patches include two changes:
 
-add new firmware feature to advertise firmware support for
-adaptive CCA.
+1. Code cleanup around a switch-case statement
+2. Bug fix for the possible PCI cache line sizes
 
-Signed-off-by: Pubbisetty Manikanta <c_mpubbi@qti.qualcomm.com>
----
- ath10k-fwencoder/ath10k-fwencoder | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Okash Khawaja (2):
+  adm8211: fix checkpatch errors for indentation and new line.
+  adm8211: fixed the possible pci cache line sizes inside switch-case
 
-diff --git a/ath10k-fwencoder/ath10k-fwencoder b/ath10k-fwencoder/ath10k-fwencoder
-index 0b71c62..27566a2 100755
---- a/ath10k-fwencoder/ath10k-fwencoder
-+++ b/ath10k-fwencoder/ath10k-fwencoder
-@@ -38,7 +38,8 @@ ATH10K_FW_FEATURE_WMI_10_2 = 4
- ATH10K_FW_FEATURE_MULTI_VIF_PS_SUPPORT = 5
- ATH10K_FW_FEATURE_WOWLAN_SUPPORT = 6
- ATH10K_FW_FEATURE_IGNORE_OTP_RESULT = 7
--ATH10K_FW_FEATURE_MAX = 8
-+ATH10k_FW_FEATURE_HAS_ADAPTIVE_CCA = 8
-+ATH10K_FW_FEATURE_MAX = 9
- 
- feature_map = {
-     'ext-wmi-mgmt-rx': ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX,
-@@ -49,6 +50,7 @@ feature_map = {
-     'multi-vif-ps': ATH10K_FW_FEATURE_MULTI_VIF_PS_SUPPORT,
-     'wowlan': ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
-     'ignore-otp-result': ATH10K_FW_FEATURE_IGNORE_OTP_RESULT,
-+    'adaptive-cca': ATH10k_FW_FEATURE_HAS_ADAPTIVE_CCA,
-     }
- 
- # from enum ath10k_fw_wmi_op_version in ath10k/hw.h
+ drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
 -- 
-1.9.1
+2.4.0
 
