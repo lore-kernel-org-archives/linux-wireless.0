@@ -1,100 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:36789 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873AbbE2FUR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 01:20:17 -0400
-Received: by iepj10 with SMTP id j10so54538319iep.3
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 22:20:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55678789.60802@broadcom.com>
-References: <1432813063-30922-1-git-send-email-zajec5@gmail.com>
-	<556701E9.8090807@broadcom.com>
-	<CACna6rwm5L1tSd7S=9PNKnju-sxHxhYPbA0EcdJ5K=MwJzJvUA@mail.gmail.com>
-	<55678789.60802@broadcom.com>
-Date: Fri, 29 May 2015 07:20:17 +0200
-Message-ID: <CACna6rz=jrkFDkePMvPNRk_X4UwxdwGecGxtdynXgpJCkN-0FA@mail.gmail.com> (sfid-20150529_072024_516368_CB364E68)
-Subject: Re: [PATCH] brcmfmac: use direct data pointer in NVRAM parser struct
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:32850 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751592AbbEKMBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2015 08:01:11 -0400
+Message-ID: <1431345668.1964.24.camel@sipsolutions.net> (sfid-20150511_140114_564652_1F0D8BF6)
+Subject: Re: [PATCH] mac80211: IBSS, clear fast_sta when update rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 May 2015 14:01:08 +0200
+In-Reply-To: <CALhHN=rYWtBycQiXmi5_zp0rHxxQR6TW0hrK05RLNvZ-sYucfw@mail.gmail.com> (sfid-20150511_135201_594976_CE9ED66D)
+References: <1431337193-17472-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1431337921.1964.15.camel@sipsolutions.net>
+	 <1431338007.1964.16.camel@sipsolutions.net>
+	 <CALhHN=rYWtBycQiXmi5_zp0rHxxQR6TW0hrK05RLNvZ-sYucfw@mail.gmail.com>
+	 (sfid-20150511_135201_594976_CE9ED66D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 May 2015 at 23:24, Arend van Spriel <arend@broadcom.com> wrote:
-> On 05/28/15 14:34, Rafał Miłecki wrote:
->>
->> On 28 May 2015 at 13:54, Arend van Spriel<arend@broadcom.com>  wrote:
->>>
->>> On 05/28/15 13:37, Rafał Miłecki wrote:
->>>>
->>>>
->>>> As we plan to add support for platform NVRAM we should store direct
->>>> data pointer without the extra struct firmware layer. This will allow
->>>> us to support other sources with the only requirement being u8 buffer.
->>>>
->>>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->>>> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
->>>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->>>> ---
->>>> Tested on router with BCM43602-s using
->>>> /lib/firmware/brcm/brcmfmac43602-pcie.txt
->>>>
->>>> I've written this patch from scratch, it's inspired by the dropped:
->>>> [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
->>>
->>>
->>>
->>> Hi Rafał,
->>>
->>> So what is your goal here. The inspirational patch was dropped so it can
->>> be
->>> resubmitted when the mips change it relies on has made its way upstream.
->>> So
->>> I have to rebase the patch over here and your patch will just give me
->>> conflicts during that rebase. So can we please wait or do you need this
->>> change right now.
->>
->>
->> The dropped patch will require rebasing/rewriting anyway. There were
->> few changes to firmware.c already, I've few more planned, you'll have
->> to drop some code form your patch (parts that will go into MIPS tree)
->> and probably apply few changes as requested in comments.
->
->
-> I already did that and submitted the mips part to Ralf. I am sorry to say
-> this but what annoys me is that since then you started submitting patches
-> that seem to be taken from the dropped patch. So I have a problem seeing the
-> bright side. If Ralf takes the mips part it ends up in linux-next and we can
-> submit the brcmfmac part.
+On Mon, 2015-05-11 at 13:52 +0200, Janusz Dziedzic wrote:
+> On 11 May 2015 at 11:53, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Mon, 2015-05-11 at 11:52 +0200, Johannes Berg wrote:
+> >> On Mon, 2015-05-11 at 11:39 +0200, Janusz Dziedzic wrote:
+> >> > This is required to handle sta.wme correctly
+> >> > after update rates (eg. when using HT/VHT) when
+> >> > driver using IEEE80211_HW_SUPPORT_FAST_XMIT.
+> >>
+> >> Wouldn't you want to check, so it can be re-assigned?
+> >
+> > i.e. something like
+> >
+> > diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> > index bfef1b215050..7e62183525aa 100644
+> > --- a/net/mac80211/ibss.c
+> > +++ b/net/mac80211/ibss.c
+> > @@ -1031,8 +1031,11 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
+> >                 }
+> >         }
+> >
+> > -       if (sta && elems->wmm_info && local->hw.queues >= IEEE80211_NUM_ACS)
+> > +       if (sta && !sta->sta.wme && elems->wmm_info &&
+> > +           local->hw.queues >= IEEE80211_NUM_ACS) {
+> >                 sta->sta.wme = true;
+> > +               ieee80211_check_fast_xmit(sta);
+> > +       }
+> >
+> >         if (sta && elems->ht_operation && elems->ht_cap_elem &&
+> >             sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
+> >
+> Your version also works fine.
+> Should I send new patch or you already have this in your tree?
 
-This is truly the first patch based on your dropped one. All other 5
-patches were addressing problems I noticed by myself. One of them
-fixed the same issue you /silently/ did in the dropped one, but I
-wasn't even aware of that until I started rebasing your patch. We
-simply noticed the same problem and fixed it on our owns.
+I didn't put it in, but can do that.
 
-So I think this patch is the only one that could annoy you, but
-*honestly* my intention was exactly the opposite. As already said, I
-just wanted to do possible cleanup early and let you maintain 50% of
-your original patch instead the whole one.
+johannes
 
-I really don't want to have you annoyed because the need of rebasing
-your patch. What you said about Ralf's tree and linux-next isn't
-exactly true. I do believe Kalle won't merge linux-next into
-wireless-driver-next, so we have to wait for 4.2-rc1, then for Dave
-merging Linus's tree, then Kalle merging Dave's tree. We really
-shouldn't stop development for weeks because of having some patch
-prepared for later submitting.
-I think the only think you can do to make your life easier is to
-submit cleanup part of your prepared patch. This is exactly what I
-tried to do for you.
-
--- 
-Rafał
