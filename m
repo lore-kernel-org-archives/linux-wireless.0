@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35110 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932808AbbELVyG (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:34833 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753671AbbEKTAq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 17:54:06 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: ming.lei@canonical.com, rusty@rustcorp.com.au
-Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
-	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
-	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
-	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Subject: [PATCH v3 1/4] firmware: fix __getname() missing failure check
-Date: Tue, 12 May 2015 14:49:40 -0700
-Message-Id: <1431467383-28540-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_235427_026662_35290FB4)
-In-Reply-To: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 11 May 2015 15:00:46 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org, netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Shao Fu <shaofu@realtek.com>
+Subject: [PATCH NEXT] rtlwifi: btcoexist: Fix interference between rtl8723be and Bluetooth
+Date: Mon, 11 May 2015 14:00:27 -0500
+Message-Id: <1431370827-13324-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150511_210107_535629_6AA7D469)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+From: Daniel Drake <drake@endlessm.com>
 
-The request_firmware*() APIs uses __getname() to iterate
-over the list of paths possible for firmware to be found,
-the code however never checked for failure on __getname().
-Although *very unlikely*, this can still happen. Add the
-missing check.
+During usage of the new Bluetooth driver for Realtek devices, it was found
+that BT scans were inhibited for the RTL8723BE when wireless was active. The
+exact cause of this interference is not known yet, but a satisfactory work
+around has been found that does not seem to have any visible side effects.
 
-There is still no checks on the concatenation of the path
-and filename passed, that requires a bit more work and
-subsequent patches address this. The commit that introduced
-this is abb139e7 ("firmware: teach the kernel to load
-firmware files directly from the filesystem").
-
-mcgrof@ergon ~/linux (git::firmware-fixes) $ git describe --contains abb139e7
-v3.7-rc1~120
-
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Daniel Drake <drake@endlessm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Shao Fu <shaofu@realtek.com>
 ---
- drivers/base/firmware_class.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 171841a..49139a1 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -322,7 +322,11 @@ static int fw_get_filesystem_firmware(struct device *device,
- {
- 	int i;
- 	int rc = -ENOENT;
--	char *path = __getname();
-+	char *path;
-+
-+	path = __getname();
-+	if (!path)
-+		return -ENOMEM;
- 
- 	for (i = 0; i < ARRAY_SIZE(fw_path); i++) {
- 		struct file *file;
+diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.c
+index cefe269..f2b9d11 100644
+--- a/drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1286,8 +1286,11 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 						    0x12, 0xe1, 0x90);
+ 			break;
+ 		case 3:
+-			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1c,
+-						    0x3, 0xf1, 0x90);
++			/* This call breaks BT when wireless is active -
++			 * comment it out for now until a better fix is found:
++			 * btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x1c,
++			 *			    0x3, 0xf1, 0x90);
++			 */
+ 			break;
+ 		case 4:
+ 			btc8723b2ant_set_fw_ps_tdma(btcoexist, 0xe3, 0x10,
 -- 
-2.3.2.209.gd67f9d5.dirty
+2.1.4
 
