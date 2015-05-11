@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:23970 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbbE1VYa (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37428 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870AbbEKIs5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 17:24:30 -0400
-Message-ID: <55678789.60802@broadcom.com> (sfid-20150528_232433_451515_E931CCF5)
-Date: Thu, 28 May 2015 23:24:25 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
+	Mon, 11 May 2015 04:48:57 -0400
+Content-Type: text/plain;
+	charset=us-ascii
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
+From: Okash Khawaja <okash.khawaja@gmail.com>
+In-Reply-To: <87k2wflj7p.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 11 May 2015 09:48:54 +0100
+Cc: "joe@perches.com" <joe@perches.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: use direct data pointer in NVRAM parser struct
-References: <1432813063-30922-1-git-send-email-zajec5@gmail.com>	<556701E9.8090807@broadcom.com> <CACna6rwm5L1tSd7S=9PNKnju-sxHxhYPbA0EcdJ5K=MwJzJvUA@mail.gmail.com>
-In-Reply-To: <CACna6rwm5L1tSd7S=9PNKnju-sxHxhYPbA0EcdJ5K=MwJzJvUA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-Id: <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> (sfid-20150511_104922_704654_0B30C61E)
+References: <20150505224020.GA3805@bytefire-computer> <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com> <20150506063241.GA3042@bytefire-computer> <87k2wflj7p.fsf@kamboji.qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/28/15 14:34, Rafał Miłecki wrote:
-> On 28 May 2015 at 13:54, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 05/28/15 13:37, Rafał Miłecki wrote:
->>>
->>> As we plan to add support for platform NVRAM we should store direct
->>> data pointer without the extra struct firmware layer. This will allow
->>> us to support other sources with the only requirement being u8 buffer.
->>>
->>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->>> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
->>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->>> ---
->>> Tested on router with BCM43602-s using
->>> /lib/firmware/brcm/brcmfmac43602-pcie.txt
->>>
->>> I've written this patch from scratch, it's inspired by the dropped:
->>> [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
->>
->>
->> Hi Rafał,
->>
->> So what is your goal here. The inspirational patch was dropped so it can be
->> resubmitted when the mips change it relies on has made its way upstream. So
->> I have to rebase the patch over here and your patch will just give me
->> conflicts during that rebase. So can we please wait or do you need this
->> change right now.
->
-> The dropped patch will require rebasing/rewriting anyway. There were
-> few changes to firmware.c already, I've few more planned, you'll have
-> to drop some code form your patch (parts that will go into MIPS tree)
-> and probably apply few changes as requested in comments.
 
-I already did that and submitted the mips part to Ralf. I am sorry to 
-say this but what annoys me is that since then you started submitting 
-patches that seem to be taken from the dropped patch. So I have a 
-problem seeing the bright side. If Ralf takes the mips part it ends up 
-in linux-next and we can submit the brcmfmac part.
+> On 11 May 2015, at 07:30, Kalle Valo <kvalo@codeaurora.org> wrote:
+> 
+> Okash Khawaja <okash.khawaja@gmail.com> writes:
+> 
+>>> On Wed, May 06, 2015 at 07:59:04AM +0300, Kalle Valo wrote:
+>>> Okash Khawaja <okash.khawaja@gmail.com> writes:
+>>> 
+>>>> The PCI cache line size value was being compared against decimal
+>>>> values prefixed with 0x.
+>>>> Fixed the literals to use the correct hex values.
+>>>> 
+>>>> Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+>>> [...]
+>>> 
+>>>> @@ -1101,10 +1101,10 @@ static void adm8211_hw_init(struct
+>>>> ieee80211_hw *dev) case 0x8: reg |= (0x1 << 14); break; - case
+>>>> 0x16: + case 0x10: reg |= (0x2 << 14); break; - case 0x32: + case
+>>>> 0x20: reg |= (0x3 << 14); break; default:
+>>> Did you test this? How certain can we be that this doesn't break
+>>> anything?
+>> 
+>> I didn't test it as that would require the hardware that I don't have
+>> at the moment. However, the value in `cline` is PCI cache line size,
+>> which is the CPU's cache line size. It is less likely for cache line
+>> sizes to be 22 or 50, and more likely for them to be 16 or 32. Also,
+>> as far as I understand (and I might be wrong here), cache line size is
+>> used for things like aligning DMA requests with CPU cache line, which
+>> improve performance but wouldn't break anything if the value doesn't
+>> match. In this case, we will fall through to the default case which
+>> leaves `reg` unchanged.
+>> 
+>> If there is a way to test it with a mock set up or if you still think
+>> we need to test this on real board, I'll be happy to try get the
+>> hardware. But I will need some guidance around that. Thanks.
+> 
+> I don't have any ideas how to test this as I think the hardware is
+> pretty rare nowadays but I think this is safe to commit, thanks for
+> clearing this up. BTW, what you wrote about would have been perferct in
+> the commit log itself.
+> 
+> -- 
+> Kalle Valo
 
-Regards,
-Arend
+Sure, I'll create v2 of the patch with updated commit log. 
 
-> I also don't think it makes much sense to pause any development
-> because of having some out-of-tree patch queued for later submitting.
->
-> And after all, hey, look at the bright side! :) With this patch you'll
-> have to maintain smaller amount of out-of-tree(-for-now) code :)
->
-> So my goals are:
-> 1) Have all required cleanups pushed mainline early.
-> 2) Make it easier to main out-of-tree changes.
-> The personal reason behind that is to add OpenWrt support for BCM43602
-> as early as possible. Having clean backports + tiny NVRAM patch make
-> it much easier to do now, maintain and update in the future.
+Since it's part of a patch set, do you want me to send both the patches in the patch set together as v2 or just this patch? 
 
+Thanks
