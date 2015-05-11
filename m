@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51932 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752469AbbE0KZb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 06:25:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] amth10k: fix promisc handling
-References: <1431434736-7077-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQ=dzJS447Gx+XAXPT6gZDDKZ__6scbxe0QC-iMA47bZmQ@mail.gmail.com>
-	<874mn68jl7.fsf@kamboji.qca.qualcomm.com>
-	<87oal83kv4.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 27 May 2015 13:25:21 +0300
-In-Reply-To: <87oal83kv4.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 25 May 2015 15:25:03 +0300")
-Message-ID: <87egm21fn2.fsf@kamboji.qca.qualcomm.com> (sfid-20150527_122538_982815_9FDB0799)
+Received: from mga14.intel.com ([192.55.52.115]:50364 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751561AbbEKCll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 May 2015 22:41:41 -0400
+Message-ID: <555016DC.804@linux.intel.com> (sfid-20150511_044201_561929_913D99D3)
+Date: Mon, 11 May 2015 10:41:32 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "brudley@broadcom.com" <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman@broadcom.com" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3] brcmfmac: prohibit ACPI power management for brcmfmac
+ driver
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+ACPI will manage WiFi chip's power state during suspend/resume
+process on some tablet platforms(such as ASUS T100TA). This is
+not supported by brcmfmac driver now, and the context of WiFi
+chip will be damaged after resume. This patch informs ACPI not
+to manage WiFi chip's power state.
 
->>>> Fixes: c17c997d5613 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next")
->>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>>
->>> Apparently this also fixes some weird issues with qca6174 hw2.1 notably:
->>>  - ath10k causing disconnecting of other devices in a BSS
->>>  - random Fw crashes
->>>
->>> Both problems started to happen because c17c997d5613 enabled monitor
->>> vdev by default on STA interfaces. It seems that qca6174 hw2.1
->>> firmware has issues similar to those of qca988x 999.999.0.636
->>> regarding monitor vdev opration.
->>>
->>> Also, I've made a typo in the subject.
->>>
->>> I'll post v2 with subject fixed and extended commit log later.
->>
->> Keep in mind that c17c997d5613 is actually from wireless-testing.git
->> which means that it will never go to wireless-drivers-next.git nor to
->> net-next.git. So the merge conflict bug is purely in
->> wireless-testing.git and in master branch of ath.git (but not in
->> ath-next branch!).
->>
->> I think John should apply your v2 patch once you send it. But if you
->> have something which should be fixed in ath-next remember to send that
->> in a separate patch so that I can apply that directly to ath-next.
->
-> Actually now that Dave pulled my pull request the issue is fixed in
-> wireless-drivers-next already. So once John pulls from
-> wireless-drivers-next and makes sure that ath10k is 100% identical in
-> both trees the issue should be sorted out and no need for extra patches.
+Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+---
+Changes in v3:
+- Have the assignment separate for the if statement.
 
-John now fixed this in wireless-testing, thanks John. And I now updated
-ath.git master branch so it should be ok as well. Please let me know if
-there are still problems.
--- 
-Kalle Valo
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 9b508bd..c960a12 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -33,6 +33,7 @@
+ #include <linux/suspend.h>
+ #include <linux/errno.h>
+ #include <linux/module.h>
++#include <linux/acpi.h>
+ #include <net/cfg80211.h>
+ 
+ #include <defs.h>
+@@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	int err;
+ 	struct brcmf_sdio_dev *sdiodev;
+ 	struct brcmf_bus *bus_if;
++	struct device *dev;
++	struct acpi_device *adev;
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 	brcmf_dbg(SDIO, "Class=%x\n", func->class);
+@@ -1121,6 +1124,12 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
+ 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+ 
++	/* prohibit ACPI power management for this device */
++	dev = &func->dev;
++	adev = ACPI_COMPANION(dev);
++	if (adev)
++		adev->flags.power_manageable = 0;
++
+ 	/* Consume func num 1 but dont do anything with it. */
+ 	if (func->num == 1)
+ 		return 0;
+-- 1.7.1
+
