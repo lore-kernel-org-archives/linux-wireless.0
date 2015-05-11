@@ -1,199 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18091 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753530AbbE1O1H (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38605 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754407AbbEKNsx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:27:07 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEP5ml010385
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:06 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s4k4-1
+	Mon, 11 May 2015 09:48:53 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4BDmmlc004690
+	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2015 06:48:48 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1u9729wwwg-1
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:06 -0700
+	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2015 06:48:48 -0700
 From: Avinash Patil <patila@marvell.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 07/17] mwifiex: add cfg80211 get_channel handler
-Date: Fri, 29 May 2015 01:24:48 +0530
-Message-ID: <1432842898-3219-8-git-send-email-patila@marvell.com> (sfid-20150528_162711_561930_E9CD6E15)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	<crlo@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/4] mwifiex: add dump data debug support
+Date: Tue, 12 May 2015 00:48:19 +0530
+Message-ID: <1431371900-7260-3-git-send-email-patila@marvell.com> (sfid-20150511_154905_221770_5F0D4510)
+In-Reply-To: <1431371900-7260-1-git-send-email-patila@marvell.com>
+References: <1431371900-7260-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-This patch add cfg80211 get_channel handler for mwifiex.
-The handler will be used to report current channel to upper
-layer utility.
+This patch is to add support for data hexdump debug feature.
+It is controlled by level debug_mask in adapter structure.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
 Signed-off-by: Cathy Luo <cluo@marvell.com>
 Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/mwifiex/11h.c      |  2 +-
- drivers/net/wireless/mwifiex/cfg80211.c | 58 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/mwifiex/main.h     |  5 ++-
- drivers/net/wireless/mwifiex/uap_cmd.c  |  5 ++-
- 4 files changed, 66 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/cmdevt.c | 11 +++++++++--
+ drivers/net/wireless/mwifiex/main.h   |  9 +++++++++
+ drivers/net/wireless/mwifiex/pcie.c   |  2 +-
+ drivers/net/wireless/mwifiex/scan.c   |  3 +++
+ drivers/net/wireless/mwifiex/txrx.c   |  5 +++++
+ 5 files changed, 27 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
-index bb2ffd9..71a1b58 100644
---- a/drivers/net/wireless/mwifiex/11h.c
-+++ b/drivers/net/wireless/mwifiex/11h.c
-@@ -305,7 +305,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
- 		return;
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index c5a14ff..5b19786 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -201,6 +201,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 		"cmd: DNLD_CMD: %#x, act %#x, len %d, seqno %#x\n", cmd_code,
+ 		le16_to_cpu(*(__le16 *) ((u8 *) host_cmd + S_DS_GEN)), cmd_size,
+ 		le16_to_cpu(host_cmd->seq_num));
++	mwifiex_dbg_dump(adapter, CMD_D, "cmd buffer:", host_cmd, cmd_size);
+ 
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		tmp = cpu_to_le32(MWIFIEX_USB_TYPE_CMD);
+@@ -286,6 +287,8 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+ 		le16_to_cpu(sleep_cfm_buf->action),
+ 		le16_to_cpu(sleep_cfm_buf->size),
+ 		le16_to_cpu(sleep_cfm_buf->seq_num));
++	mwifiex_dbg_dump(adapter, CMD_D, "SLEEP_CFM buffer: ", sleep_cfm_buf,
++			 le16_to_cpu(sleep_cfm_buf->size));
+ 
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+ 		sleep_cfm_tmp =
+@@ -362,8 +365,9 @@ int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter)
+ 	for (i = 0; i < MWIFIEX_NUM_OF_CMD_BUFFER; i++) {
+ 		cmd_array[i].skb = dev_alloc_skb(MWIFIEX_SIZE_OF_CMD_BUFFER);
+ 		if (!cmd_array[i].skb) {
+-			dev_err(adapter->dev, "ALLOC_CMD_BUF: out of memory\n");
+-			return -1;
++			dev_err(adapter->dev,
++				"unable to allocate command buffer\n");
++			return -ENOMEM;
+ 		}
  	}
  
--	mwifiex_uap_set_channel(bss_cfg, priv->dfs_chandef);
-+	mwifiex_uap_set_channel(priv, bss_cfg, priv->dfs_chandef);
- 
- 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index fb93e13..ddeb919 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -67,6 +67,22 @@ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type)
- 	}
- }
- 
-+/* This function maps IEEE HT secondary channel type to NL80211 channel type
-+ */
-+u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset)
-+{
-+	switch (second_chan_offset) {
-+	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
-+		return NL80211_CHAN_HT20;
-+	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+		return NL80211_CHAN_HT40PLUS;
-+	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+		return NL80211_CHAN_HT40MINUS;
-+	default:
-+		return NL80211_CHAN_HT20;
-+	}
-+}
-+
- /*
-  * This function checks whether WEP is set.
-  */
-@@ -1785,7 +1801,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -EINVAL;
+@@ -460,6 +464,7 @@ int mwifiex_process_event(struct mwifiex_adapter *adapter)
  	}
  
--	mwifiex_uap_set_channel(bss_cfg, params->chandef);
-+	mwifiex_uap_set_channel(priv, bss_cfg, params->chandef);
- 	mwifiex_set_uap_rates(bss_cfg, params);
+ 	dev_dbg(adapter->dev, "EVENT: cause: %#x\n", eventcause);
++	mwifiex_dbg_dump(adapter, EVT_D, "Event Buf:", skb->data, skb->len);
  
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
-@@ -3373,6 +3389,45 @@ mwifiex_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
+ 	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
+ 		ret = mwifiex_process_uap_event(priv);
+@@ -826,6 +831,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 		"cmd: CMD_RESP: 0x%x, result %d, len %d, seqno 0x%x\n",
+ 		orig_cmdresp_no, cmdresp_result,
+ 		le16_to_cpu(resp->size), le16_to_cpu(resp->seq_num));
++	mwifiex_dbg_dump(adapter, CMD_D, "CMD_RESP buffer:", resp,
++			 le16_to_cpu(resp->size));
  
-+static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
-+					struct wireless_dev *wdev,
-+					struct cfg80211_chan_def *chandef)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
-+	struct mwifiex_bssdescriptor *curr_bss;
-+	struct ieee80211_channel *chan;
-+	u8 second_chan_offset;
-+	enum nl80211_channel_type chan_type;
-+	enum ieee80211_band band;
-+	int freq;
-+	int ret = -ENODATA;
-+
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP &&
-+	    cfg80211_chandef_valid(&priv->bss_chandef)) {
-+		*chandef = priv->bss_chandef;
-+		ret = 0;
-+	} else if (priv->media_connected) {
-+		curr_bss = &priv->curr_bss_params.bss_descriptor;
-+		band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
-+		freq = ieee80211_channel_to_frequency(curr_bss->channel, band);
-+		chan = ieee80211_get_channel(wiphy, freq);
-+
-+		if (curr_bss->bcn_ht_oper) {
-+			second_chan_offset = curr_bss->bcn_ht_oper->ht_param &
-+					IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
-+			chan_type = mwifiex_sec_chan_offset_to_chan_type
-+							(second_chan_offset);
-+			cfg80211_chandef_create(chandef, chan, chan_type);
-+		} else {
-+			cfg80211_chandef_create(chandef, chan,
-+						NL80211_CHAN_NO_HT);
-+		}
-+		ret = 0;
-+	}
-+
-+	return ret;
-+}
-+
- static int
- mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
- 				       struct net_device *dev,
-@@ -3478,6 +3533,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.tdls_oper = mwifiex_cfg80211_tdls_oper,
- 	.add_station = mwifiex_cfg80211_add_station,
- 	.change_station = mwifiex_cfg80211_change_station,
-+	.get_channel = mwifiex_cfg80211_get_channel,
- 	.start_radar_detection = mwifiex_cfg80211_start_radar_detection,
- 	.channel_switch = mwifiex_cfg80211_channel_switch,
- };
+ 	if (!(orig_cmdresp_no & HostCmd_RET_BIT)) {
+ 		dev_err(adapter->dev, "CMD_RESP: invalid cmd resp\n");
 diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 3ac18c6..88d3779 100644
+index 6cbbc50..2f55161 100644
 --- a/drivers/net/wireless/mwifiex/main.h
 +++ b/drivers/net/wireless/mwifiex/main.h
-@@ -642,6 +642,7 @@ struct mwifiex_private {
- 	u8 del_list_idx;
- 	bool hs2_enabled;
- 	struct mwifiex_uap_bss_param bss_cfg;
-+	struct cfg80211_chan_def bss_chandef;
- 	struct station_parameters *sta_params;
- 	struct sk_buff_head tdls_txq;
- 	u8 check_tdls_tx;
-@@ -1382,6 +1383,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- 					struct mwifiex_bssdescriptor *bss_desc);
+@@ -186,6 +186,15 @@ do {								\
+ 			dev_info((adapter)->dev, fmt, ## args);	\
+ } while (0)
  
- u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type);
-+u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset);
- 
- struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 					      const char *name,
-@@ -1399,7 +1401,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 			 struct cfg80211_beacon_data *data);
- int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
- u8 *mwifiex_11d_code_2_region(u8 code);
--void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+void mwifiex_uap_set_channel(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg,
- 			     struct cfg80211_chan_def chandef);
- int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 			     struct mwifiex_uap_bss_param *bss_cfg);
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 56a4768..68fbdf6 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -776,11 +776,14 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 	return 0;
- }
- 
--void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+void mwifiex_uap_set_channel(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg,
- 			     struct cfg80211_chan_def chandef)
- {
- 	u8 config_bands = 0;
- 
-+	priv->bss_chandef = chandef;
++#define DEBUG_DUMP_DATA_MAX_LEN		128
++#define mwifiex_dbg_dump(adapter, dbg_mask, str, buf, len)	\
++do {								\
++	if ((adapter)->debug_mask & MWIFIEX_DBG_##dbg_mask)	\
++		print_hex_dump(KERN_DEBUG, str,			\
++			       DUMP_PREFIX_OFFSET, 16, 1,	\
++			       buf, len, false);		\
++} while (0)
 +
- 	bss_cfg->channel = ieee80211_frequency_to_channel(
- 						     chandef.chan->center_freq);
+ struct mwifiex_dbg {
+ 	u32 num_cmd_host_to_card_failure;
+ 	u32 num_cmd_sleep_cfm_host_to_card_failure;
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index bcc7751..88bda3f 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1721,7 +1721,7 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
+ 		   len is 2 bytes followed by type which is 2 bytes */
+ 		memcpy(&data_len, skb_cmd->data, sizeof(__le16));
+ 		evt_len = le16_to_cpu(data_len);
+-
++		skb_trim(skb_cmd, evt_len);
+ 		skb_pull(skb_cmd, INTF_HEADER_LEN);
+ 		dev_dbg(adapter->dev, "info: Event length: %d\n", evt_len);
  
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 0ffdb7c..84843d1 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -2125,6 +2125,9 @@ int mwifiex_handle_event_ext_scan_report(struct mwifiex_private *priv,
+ 	dev_dbg(adapter->dev,
+ 		"EXT_SCAN: size %d, returned %d APs...",
+ 		scan_resp_size, num_of_set);
++	mwifiex_dbg_dump(adapter, CMD_D, "EXT_SCAN buffer:", buf,
++			 scan_resp_size +
++			 sizeof(struct mwifiex_event_scan_result));
+ 
+ 	tlv = (struct mwifiex_ie_types_data *)scan_resp;
+ 
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index a245f44..73082b5 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -55,6 +55,9 @@ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
+ 		return -1;
+ 	}
+ 
++	mwifiex_dbg_dump(adapter, DAT_D, "rx pkt:", skb->data,
++			 min_t(size_t, skb->len, DEBUG_DUMP_DATA_MAX_LEN));
++
+ 	memset(rx_info, 0, sizeof(*rx_info));
+ 	rx_info->bss_num = priv->bss_num;
+ 	rx_info->bss_type = priv->bss_type;
+@@ -112,6 +115,8 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 							   skb, tx_param);
+ 		}
+ 	}
++	mwifiex_dbg_dump(adapter, DAT_D, "tx pkt:", skb->data,
++			 min_t(size_t, skb->len, DEBUG_DUMP_DATA_MAX_LEN));
+ 
+ 	switch (ret) {
+ 	case -ENOSR:
 -- 
 1.8.1.4
 
