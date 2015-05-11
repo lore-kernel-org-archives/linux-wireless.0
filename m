@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:35008 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031623AbbEELpW (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:51155 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754359AbbEKNsr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 07:45:22 -0400
-Date: Tue, 5 May 2015 12:45:17 +0100
-From: Okash Khawaja <okash.khawaja@gmail.com>
-To: joe@perches.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] adm8211: fix checkpatch error for trailing statements
- on next line
-Message-ID: <20150505114517.GA2934@bytefire-computer> (sfid-20150505_134543_890772_F370405A)
-References: <20150505060150.GA2548@bytefire-computer>
- <1430808298.7191.1.camel@perches.com>
+	Mon, 11 May 2015 09:48:47 -0400
+Date: Mon, 11 May 2015 09:48:45 -0400
+From: Kyle McMartin <kyle@infradead.org>
+To: "Machani, Yaniv" <yanivma@ti.com>
+Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wl18xx : firmware pull request [V2] (updated WHENCE)
+Message-ID: <20150511134844.GN27807@merlin.infradead.org> (sfid-20150511_154930_990330_2BCCBF3C)
+References: <AE1C82FB3D0EC64DB1F752C81CBD1101265F6B46@DFRE01.ent.ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430808298.7191.1.camel@perches.com>
+In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101265F6B46@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 04, 2015 at 11:44:58PM -0700, Joe Perches wrote:
-> On Tue, 2015-05-05 at 07:01 +0100, Okash Khawaja wrote:
-> > This patch fixes the checkpatch.pl error:
+On Sun, May 10, 2015 at 05:46:38AM +0000, Machani, Yaniv wrote:
+> - Firmware file was updated (8.9.0.0.39), includes bug fixes and improvements.
+> - Configuration binary removed, it is no longer fits all releases.
+>   Moreover it should be configured per HW platform.
+>   More information can found in here :
+>   http://processors.wiki.ti.com/index.php/Open_Source_Wireless_Connectivity_wlconf
 > 
-> Please fix the space/tab use too.
-> 
-> Your email client seems to have converted all the tabs
-> to spaces.
-> 
-> default should use the same indent as the case statements
->
 
-Joe and Kalle,
+I assume this is an embedded part, and not something for general use?
+In general, we'd like linux-firmware to be decoupled from kernel
+upgrades, so that distributions can upgrade them asynchronously, and
+removing wlconf.bin could break existing users.
 
-I have adjusted the patch. Since indentation of default adds more to the
-patch I have resent it under the subject '[PATCH] adm8211: fix
-checkpatch errors for indentation and new line around switch-case'.
-Thanks for the prompt feedback. I appreciate your patience.
+>   git@git.ti.com:wilink8-wlan/linux-firmware.git for-upstream
+> 
 
+FWIW, you need to specify the public git:// url here instead of SSH.
+
+> for you to fetch changes up to dbe3f134bb69b62edd29be89452d016def8f6d7f
+> Yaniv Machani (1):
+>       wl18xx: update firmware file, remove conf file
 > 
-> > diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-> []
-> > @@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
-> >                 pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
-> >  
-> >                 switch (cline) {
-> > -               case  0x8: reg |= (0x1 << 14);
-> > -                          break;
-> > -               case 0x16: reg |= (0x2 << 14);
-> > -                          break;
-> > -               case 0x32: reg |= (0x3 << 14);
-> > -                          break;
-> > -                 default: reg |= (0x0 << 14);
-> > -                          break;
-> > +               case  0x8:
-> > +                       reg |= (0x1 << 14);
-> > +                       break;
-> > +               case 0x16:
-> > +                       reg |= (0x2 << 14);
-> > +                       break;
-> > +               case 0x32:
-> > +                       reg |= (0x3 << 14);
-> > +                       break;
-> > +                 default:
-> > +                       reg |= (0x0 << 14);
-> > +                       break;
-> >                 }
-> >         }
-> >  
+
+Pulled.
+
+>  WHENCE                          |    4 +---
+>  ti-connectivity/wl18xx-conf.bin |  Bin 1221 -> 0 bytes
+>  ti-connectivity/wl18xx-fw-4.bin |  Bin 681704 -> 724716 bytes
+>  3 files changed, 1 insertions(+), 3 deletions(-)
+>  delete mode 100644 ti-connectivity/wl18xx-conf.bin
 > 
+
+regards, Kyle
