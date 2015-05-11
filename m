@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35578 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751917AbbEGMN0 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:34507 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208AbbEKOlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 08:13:26 -0400
-Received: by widdi4 with SMTP id di4so239663938wid.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 May 2015 05:13:25 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] brcmfmac: check result of USB firmware request
-Date: Thu,  7 May 2015 14:13:03 +0200
-Message-Id: <1431000783-17411-1-git-send-email-zajec5@gmail.com> (sfid-20150507_141330_375518_A40A6829)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 11 May 2015 10:41:07 -0400
+Date: Mon, 11 May 2015 10:41:02 -0400 (EDT)
+Message-Id: <20150511.104102.520345911968274714.davem@davemloft.net> (sfid-20150511_164114_618108_2B96D0E7)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2015-05-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1431333103.1964.4.camel@sipsolutions.net>
+References: <20150509.172803.2129151083625591640.davem@davemloft.net>
+	<20150509.173446.1826713590855601099.davem@davemloft.net>
+	<1431333103.1964.4.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prevents silence failures with driver waiting (infinitely) for a
-callback.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 11 May 2015 10:31:43 +0200
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-I don't really have any opinion if this should go for next or as a fix.
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+> On Sat, 2015-05-09 at 17:34 -0400, David Miller wrote:
+> 
+>> Johhannes, the hash table size Kconfig entry absolutely not appropriate.
+>> 
+>> If anything, it should be hidden behind the strongest possible "DEBUG
+>> ONLY" type dependencies, so that the user is never prompted for this
+>> confusing option.
+> 
+> Hmm. It's hidden behind "MAC80211_DEBUG_MENU", which already should be
+> discouragement, there's nothing in there that the user should ever
+> select unless they're developing/debugging on this.
+> 
+> I can word the help text more strongly, perhaps? Or make the debug menu
+> also depend on CONFIG_EXPERT (but most people seem to set that
+> anyway ...)?
+> 
+> I'm happy to change this, but am not entirely sure how to discourage its
+> use any further than we already do. Any suggestions?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 5df6aa7..daba86d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1270,8 +1270,13 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- 	bus->chiprev = bus_pub->chiprev;
- 
- 	/* request firmware here */
--	brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo), NULL,
--			       brcmf_usb_probe_phase2);
-+	ret = brcmf_fw_get_firmwares(dev, 0, brcmf_usb_get_fwname(devinfo),
-+				     NULL, brcmf_usb_probe_phase2);
-+	if (ret) {
-+		brcmf_err("firmware request failed: %d\n", ret);
-+		goto fail;
-+	}
-+
- 	return 0;
- 
- fail:
--- 
-1.8.4.5
+Ok, this is actually my bad.
 
+I keep forgetting that by doing allmodconfig builds all the time, I get
+the debug options too. :-)
