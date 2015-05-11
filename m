@@ -1,45 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:33194 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbbEPO6E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2015 10:58:04 -0400
-Received: by iebgx4 with SMTP id gx4so142631548ieb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 07:58:04 -0700 (PDT)
+Received: from mga02.intel.com ([134.134.136.20]:5478 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751058AbbEKCox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 May 2015 22:44:53 -0400
+Message-ID: <555017A0.7020207@linux.intel.com> (sfid-20150511_044516_886138_99D87D26)
+Date: Mon, 11 May 2015 10:44:48 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <5557556C.2080107@lwfinger.net>
-References: <CA+0W_As0c=eAijuvWfSBLMY4vj2P1-zoMsjz1mmNm0_vfepPCA@mail.gmail.com>
-	<5557556C.2080107@lwfinger.net>
-Date: Sat, 16 May 2015 16:58:04 +0200
-Message-ID: <CACna6rwCapwThrMGt2HV_YyPQtZ+xRPJdBcapRqs2mkvGPdmSQ@mail.gmail.com> (sfid-20150516_165808_216098_78C45BE8)
-Subject: Re: lspci not working
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Schmirr Wurst <schmirrwurst@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: "brudley@broadcom.com" <brudley@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman@broadcom.com" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] brcmfmac: prohibit ACPI power management for brcmfmac
+ driver
+References: <55463E19.7070709@linux.intel.com> <554AC8EB.9040403@linux.intel.com> <554B22B0.6080708@broadcom.com>
+In-Reply-To: <554B22B0.6080708@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 May 2015 at 16:34, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/16/2015 04:12 AM, Schmirr Wurst wrote:
->>
->> I've already posted the message once, but as it was my first, I'm not
->> sure, if it worked...
->>
->> Actually I'm trying to get read of a t100af from asus, that has a nice
->> broadcom wifi chipset, but I'm wondering that I don't see anything
->> with lspci, do that mean, that the chipset is broken ?
->> (I though lspci is one level deeper than driver, and I should see
->> something, even if I have driver problems) ?
->>
->> Could just somebody tell me if I'm right or wrong ?
->
->
-> On Intel Bay Trail tablets, the wifi device is frequently attached using an
-> SDIO bus, not a PCI connection. Accordingly, lspci will probably not show
-> the device.
 
-But you should be able to browse  /sys/bus/sdio/devices/ I guess
-(assuming bus host driver is working).
+
+On 2015/5/7 16:30, Arend van Spriel wrote:
+> On 05/07/15 04:07, Fu, Zhonghui wrote:
+>>
+>> Hi,
+>>
+>> Any comments are welcome.
+>
+> Having some time to spare while spending my vacation so here it is.
+>
+>> Thanks,
+>> Zhonghui
+>>
+>> On 2015/5/3 23:26, Fu, Zhonghui wrote:
+>>> ACPI will manage WiFi chip's power state during suspend/resume
+>>> process on some tablet platforms(such as ASUS T100TA). This is
+>>> not supported by brcmfmac driver now, and the context of WiFi
+>>> chip will be damaged after resume. This patch informs ACPI not
+>>> to manage WiFi chip's power state.
+>>>
+>>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>> ---
+>>> Changes in v2:
+>>> - Another implementation.
+>>>
+>>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    8 ++++++++
+>>>   1 files changed, 8 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> index 9b508bd..6c519e3 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> @@ -33,6 +33,7 @@
+>>>   #include<linux/suspend.h>
+>>>   #include<linux/errno.h>
+>>>   #include<linux/module.h>
+>>> +#include<linux/acpi.h>
+>>>   #include<net/cfg80211.h>
+>>>
+>>>   #include<defs.h>
+>>> @@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>>>       int err;
+>>>       struct brcmf_sdio_dev *sdiodev;
+>>>       struct brcmf_bus *bus_if;
+>>> +    struct device *dev;
+>>> +    struct acpi_device *adev;
+>>>
+>>>       brcmf_dbg(SDIO, "Enter\n");
+>>>       brcmf_dbg(SDIO, "Class=%x\n", func->class);
+>>> @@ -1121,6 +1124,11 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>>>       brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
+>>>       brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+>>>
+>>> +    /* prohibit ACPI power management for this device */
+>>> +    dev =&func->dev;
+>>> +    if (adev = ACPI_COMPANION(dev))
+>
+> While I understand what you are doing here it makes someone reading the code wonder whether a mistake has been made. So I would prefer to have the assignment separate for the if statement.
+>
+> For the update patch you may add:
+>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
+Many thanks for your comments. I have sent out the v3 patch.
+
+
+Thanks,
+Zhonghui
+>
+> Regards,
+> Arend
+>>> +        adev->flags.power_manageable = 0;
+>>> +
+>>>       /* Consume func num 1 but dont do anything with it. */
+>>>       if (func->num == 1)
+>>>           return 0;
+>>> -- 1.7.1
+>>>
+>>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
