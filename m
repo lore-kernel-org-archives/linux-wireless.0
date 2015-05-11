@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58440 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932355AbbENBfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2015 21:35:17 -0400
-Date: Thu, 14 May 2015 03:35:12 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	ming.lei@canonical.com, Rusty Russell <rusty@rustcorp.com.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	dhowells@redhat.com, Seth Forshee <seth.forshee@canonical.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	pebolle@tiscali.nl,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>, jlee@suse.com,
-	Takashi Iwai <tiwai@suse.de>, casey@schaufler-ca.com,
-	Kees Cook <keescook@chromium.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kyle McMartin <kyle@kernel.org>
-Subject: Re: [RFC v2 6/6] firmware: add firmware signature checking support
-Message-ID: <20150514013512.GS23057@wotan.suse.de> (sfid-20150514_033538_476800_A2C34C35)
-References: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
- <1431541436-17007-7-git-send-email-mcgrof@do-not-panic.com>
- <CAGRGNgW3+SgOqt-env6SBp+j7S4wQcXTK0HpuiM_BYbLzpfohA@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36987 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753004AbbEKKjH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2015 06:39:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Okash Khawaja <okash.khawaja@gmail.com>
+Cc: "joe\@perches.com" <joe@perches.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
+References: <20150505224020.GA3805@bytefire-computer>
+	<87wq0ms3mv.fsf@kamboji.qca.qualcomm.com>
+	<20150506063241.GA3042@bytefire-computer>
+	<87k2wflj7p.fsf@kamboji.qca.qualcomm.com>
+	<2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com>
+Date: Mon, 11 May 2015 13:38:58 +0300
+In-Reply-To: <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> (Okash Khawaja's
+	message of "Mon, 11 May 2015 09:48:54 +0100")
+Message-ID: <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com> (sfid-20150511_123915_418626_EB2EB597)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGRGNgW3+SgOqt-env6SBp+j7S4wQcXTK0HpuiM_BYbLzpfohA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2015 at 10:31:52AM +1000, Julian Calaby wrote:
-> On Thu, May 14, 2015 at 4:23 AM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
-> > +"Require all firmware to be validly signed", under the same menu.
-> 
-> You reference the relevant Kconfig symbols above, do you want to add
-> it here too?
+Okash Khawaja <okash.khawaja@gmail.com> writes:
 
-Sure, amended, thanks.
+> Sure, I'll create v2 of the patch with updated commit log. 
+>
+> Since it's part of a patch set, do you want me to send both the
+> patches in the patch set together as v2 or just this patch?
 
- Luis
+Please resend the whole patchset as v2, less problems that way.
+
+-- 
+Kalle Valo
