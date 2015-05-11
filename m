@@ -1,99 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:50424 "EHLO plane.gmane.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:32997 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182AbbEBQkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2015 12:40:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1YoaSR-0006iP-Go
-	for linux-wireless@vger.kernel.org; Sat, 02 May 2015 18:40:03 +0200
-Received: from md-188-69-194-165.omni.lt ([188.69.194.165])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2015 18:40:03 +0200
-Received: from nerijus by md-188-69-194-165.omni.lt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2015 18:40:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
-Subject: b43 AP does not work
-Date: Sat, 2 May 2015 16:32:09 +0000 (UTC)
-Message-ID: <loom.20150502T183011-57@post.gmane.org> (sfid-20150502_184010_475480_8E80B250)
+	id S1753954AbbEKMqV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 May 2015 08:46:21 -0400
+Message-ID: <1431348378.1964.27.camel@sipsolutions.net> (sfid-20150511_144629_999105_092EE8DC)
+Subject: Re: [PATCH] mac80211: WEP, move tailroom size check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 11 May 2015 14:46:18 +0200
+In-Reply-To: <CA+BoTQ=3VBsBWVy+e-hOJZD7ZUmoemsU0g8XoFLm7SE_iypQBw@mail.gmail.com> (sfid-20150511_144339_329141_C9F021FF)
+References: <1431336675-15944-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1431346122.1964.26.camel@sipsolutions.net>
+	 <CA+BoTQ=3VBsBWVy+e-hOJZD7ZUmoemsU0g8XoFLm7SE_iypQBw@mail.gmail.com>
+	 (sfid-20150511_144339_329141_C9F021FF)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, 2015-05-11 at 14:43 +0200, Michal Kazior wrote:
+> On 11 May 2015 at 14:08, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Mon, 2015-05-11 at 11:31 +0200, Janusz Dziedzic wrote:
+> >> Remove checking tailroom when adding IV, while
+> >> this goes to headroom. Move this check to the function
+> >> that will generate/put ICV for WEP.
+> >>
+> >> In other case I hit such warning and datapath don't work,
+> >> when testing:
+> >> - IBSS + WEP
+> >> - ath9k with hw crypt enabled
+> >> - IPv6 data (ping6)
+> >
+> > Is this new, perhaps due to fast-xmit, because we previously added
+> > tailroom for WEP always? I've certainly never seen this before.
+> >
+> > (just asking so I know where it needs to be applied)
+> 
+> I think this was hidden for quite some time now, possibly since
+> _PUT_IV_SPACE and _GENERATE_IV were split into _GENERATE_MMIC and
+> _RESERVE_TAILROOM counterparts. I know that `ping` didn't trigger this
+> problem, instead `ping6` did which leads me to think that maybe
+> sk_buff allocation was getting lucky most of the time.
 
-lspci:
-02:00.0 Network controller [0280]: Broadcom Corporation BCM4311 802.11a/b/g
-[14e4:4312] (rev 02)
+Ok, let's mark it for stable then, it's clearly fixing a bug :)
 
-AP worked on F21. On F22 kernels 4.0.0 and 4.0.1 it does not.
-
-# hostapd -dB /etc/hostapd/hostapd.conf
-random: Trying to read entropy from /dev/random
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=10 (from group name 'wheel')
-rfkill: initial event: idx=0 type=2 op=0 soft=1 hard=0
-rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
-nl80211: Supported cipher 00-0f-ac:1
-nl80211: Supported cipher 00-0f-ac:5
-nl80211: Supported cipher 00-0f-ac:2
-nl80211: Supported cipher 00-0f-ac:4
-nl80211: Supported cipher 00-0f-ac:10
-nl80211: Supported cipher 00-0f-ac:8
-nl80211: Supported cipher 00-0f-ac:9
-nl80211: Using driver-based off-channel TX
-nl80211: interface wlan0 in phy phy0
-nl80211: Set mode ifindex 3 iftype 3 (AP)
-nl80211: Failed to set interface 3 to mode 3: -16 (Device or resource busy)
-nl80211: Try mode change after setting interface down
-nl80211: Set mode ifindex 3 iftype 3 (AP)
-nl80211: Mode change succeeded while interface is down
-nl80211: Setup AP(wlan0) - device_ap_sme=0 use_monitor=0
-nl80211: Subscribe to mgmt frames with AP handle 0x86c16f0
-nl80211: Register frame type=0xb0 (WLAN_FC_STYPE_AUTH) nl_handle=0x86c16f0
-match=
-nl80211: Register frame type=0x0 (WLAN_FC_STYPE_ASSOC_REQ)
-nl_handle=0x86c16f0 match=
-nl80211: Register frame type=0x20 (WLAN_FC_STYPE_REASSOC_REQ)
-nl_handle=0x86c16f0 match=
-nl80211: Register frame type=0xa0 (WLAN_FC_STYPE_DISASSOC)
-nl_handle=0x86c16f0 match=
-nl80211: Register frame type=0xc0 (WLAN_FC_STYPE_DEAUTH) nl_handle=0x86c16f0
-match=
-nl80211: Register frame type=0xd0 (WLAN_FC_STYPE_ACTION) nl_handle=0x86c16f0
-match=
-nl80211: Register frame command failed (type=208): ret=-114 (Operation
-already in progress)
-nl80211: Register frame match - hexdump(len=0): [NULL]
-nl80211: Could not configure driver mode
-nl80211: Remove monitor interface: refcount=0
-nl80211: Remove beacon (ifindex=3)
-netlink: Operstate: ifindex=3 linkmode=0 (kernel-control), operstate=6
-(IF_OPER_UP)
-nl80211: Set mode ifindex 3 iftype 2 (STATION)
-nl80211: Failed to set interface 3 to mode 2: -16 (Device or resource busy)
-nl80211: Try mode change after setting interface down
-nl80211: Set mode ifindex 3 iftype 2 (STATION)
-nl80211: Mode change succeeded while interface is down
-nl80211: Teardown AP(wlan0) - device_ap_sme=0 use_monitor=0
-nl80211 driver initialization failed.
-hostapd_interface_deinit_free(0x86bf2a0)
-hostapd_interface_deinit_free: num_bss=1 conf->num_bss=1
-hostapd_interface_deinit(0x86bf2a0)
-hostapd_bss_deinit: deinit bss wlan0
-hostapd_cleanup(hapd=0x86c0cd0 (wlan0))
-hostapd_free_hapd_data: Interface wlan0 wasn't started
-hostapd_interface_deinit_free: driver=(nil) drv_priv=(nil) -> hapd_deinit
-hostapd_interface_free(0x86bf2a0)
-hostapd_interface_free: free hapd 0x86c0cd0
-hostapd_cleanup_iface(0x86bf2a0)
-hostapd_cleanup_iface_partial(0x86bf2a0)
-hostapd_cleanup_iface: free iface=0x86bf2a0
-
-Regards,
-Nerijus
+johannes
 
