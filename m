@@ -1,145 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:36357 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754858AbbEaG3Y (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56358 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754391AbbEKNsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 02:29:24 -0400
-Received: by lagv1 with SMTP id v1so81391489lag.3
-        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2015 23:29:22 -0700 (PDT)
+	Mon, 11 May 2015 09:48:51 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4BDmoWY004693
+	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2015 06:48:50 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1u9729wwwd-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2015 06:48:50 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	<crlo@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/4] mwifiex: add support for FW memory read/write operations
+Date: Tue, 12 May 2015 00:48:17 +0530
+Message-ID: <1431371900-7260-1-git-send-email-patila@marvell.com> (sfid-20150511_154920_450304_4B609E5F)
 MIME-Version: 1.0
-In-Reply-To: <20150529200405.GA27272@light.dominikbrodowski.net>
-References: <20150525181043.GA10755@light.dominikbrodowski.net>
-	<CANUX_P0+oGdKvY360xSekCmZjZFpe7PMS+shC9==-G-A-1O3sw@mail.gmail.com>
-	<20150525184047.GA12142@light.dominikbrodowski.net>
-	<20150529200405.GA27272@light.dominikbrodowski.net>
-Date: Sun, 31 May 2015 09:29:22 +0300
-Message-ID: <CANUX_P0M1shWOhjJLqN+2vj3iTYXvSY678QGa=203x+60raRAg@mail.gmail.com> (sfid-20150531_082928_235248_AA814183)
-Subject: Re: iwlwifi: Queue 16 stuck for 10000 ms - Microcode SW error detected.
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> No joy. Firmware 25.27.13.0 also is not happy at times:
+From: Chin-ran Lo <crlo@marvell.com>
 
-Are you using 40Mhz or 20Mhz?
+This patch adds support for FW memory read/write operations via debugfs.
+This is useful during debugging FW issues.
 
->
-> iwlwifi 0000:02:00.0: invalid BA notification: Q 16, tid 0, flow 65535
-> iwlwifi 0000:02:00.0: invalid BA notification: Q 16, tid 0, flow 65535
-> iwlwifi 0000:02:00.0: invalid BA notification: Q 16, tid 0, flow 65535
-> iwlwifi 0000:02:00.0: Queue 2 stuck for 10000 ms.
-> iwlwifi 0000:02:00.0: Current SW read_ptr 36 write_ptr 67
-> iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> iwlwifi 0000:02:00.0: FH TRBs(0) = 0x00000000
-> iwlwifi 0000:02:00.0: FH TRBs(1) = 0xc01100b8
-> iwlwifi 0000:02:00.0: FH TRBs(2) = 0x00000000
-> iwlwifi 0000:02:00.0: FH TRBs(3) = 0x80300008
-> iwlwifi 0000:02:00.0: FH TRBs(4) = 0x00000000
-> iwlwifi 0000:02:00.0: FH TRBs(5) = 0x00000000
-> iwlwifi 0000:02:00.0: FH TRBs(6) = 0x00000000
-> iwlwifi 0000:02:00.0: FH TRBs(7) = 0x0070904c
-> iwlwifi 0000:02:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [9,9]
-> iwlwifi 0000:02:00.0: Q 1 is active and mapped to fifo 2 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 2 is active and mapped to fifo 1 ra_tid 0x0000 [36,67]
-> iwlwifi 0000:02:00.0: Q 3 is active and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 4 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 5 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 6 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 7 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 8 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 9 is active and mapped to fifo 7 ra_tid 0x0000 [77,77]
-> iwlwifi 0000:02:00.0: Q 10 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 11 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 12 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 13 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 14 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 15 is active and mapped to fifo 5 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 16 is active and mapped to fifo 1 ra_tid 0x0000 [169,230]
-> iwlwifi 0000:02:00.0: Q 17 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 18 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Q 19 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
-> iwlwifi 0000:02:00.0: Microcode SW error detected.  Restarting 0x2000000.
-> iwlwifi 0000:02:00.0: CSR values:
-> iwlwifi 0000:02:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
-> iwlwifi 0000:02:00.0:        CSR_HW_IF_CONFIG_REG: 0X40489204
-> iwlwifi 0000:02:00.0:          CSR_INT_COALESCING: 0X80000040
-> iwlwifi 0000:02:00.0:                     CSR_INT: 0X00000000
-> iwlwifi 0000:02:00.0:                CSR_INT_MASK: 0X00000000
-> iwlwifi 0000:02:00.0:           CSR_FH_INT_STATUS: 0X00000000
-> iwlwifi 0000:02:00.0:                 CSR_GPIO_IN: 0X00000000
-> iwlwifi 0000:02:00.0:                   CSR_RESET: 0X00000000
-> iwlwifi 0000:02:00.0:                CSR_GP_CNTRL: 0X080403c5
-> iwlwifi 0000:02:00.0:                  CSR_HW_REV: 0X00000144
-> iwlwifi 0000:02:00.0:              CSR_EEPROM_REG: 0X00000000
-> iwlwifi 0000:02:00.0:               CSR_EEPROM_GP: 0X80000000
-> iwlwifi 0000:02:00.0:              CSR_OTP_GP_REG: 0X803a0000
-> iwlwifi 0000:02:00.0:                 CSR_GIO_REG: 0X00080040
-> iwlwifi 0000:02:00.0:            CSR_GP_UCODE_REG: 0X00000000
-> iwlwifi 0000:02:00.0:           CSR_GP_DRIVER_REG: 0X00000000
-> iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-> iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-> iwlwifi 0000:02:00.0:                 CSR_LED_REG: 0X00000060
-> iwlwifi 0000:02:00.0:        CSR_DRAM_INT_TBL_REG: 0X8821408c
-> iwlwifi 0000:02:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-> iwlwifi 0000:02:00.0:             CSR_ANA_PLL_CFG: 0Xd55555d5
-> iwlwifi 0000:02:00.0:      CSR_MONITOR_STATUS_REG: 0X3c08019d
-> iwlwifi 0000:02:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-> iwlwifi 0000:02:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0010
-> iwlwifi 0000:02:00.0: FH register values:
-> iwlwifi 0000:02:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X0d9f3000
-> iwlwifi 0000:02:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X00d9f2f0
-> iwlwifi 0000:02:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000e0
-> iwlwifi 0000:02:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X00801114
-> iwlwifi 0000:02:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
-> iwlwifi 0000:02:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X03030000
-> iwlwifi 0000:02:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
-> iwlwifi 0000:02:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
-> iwlwifi 0000:02:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
-> iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-> iwlwifi 0000:02:00.0: Status: 0x00000000, count: 6
-> iwlwifi 0000:02:00.0: Loaded firmware version: 25.27.13.0
-> iwlwifi 0000:02:00.0: 0x00000084 | NMI_INTERRUPT_UNKNOWN
-> iwlwifi 0000:02:00.0: 0x00A002F0 | uPc
-> iwlwifi 0000:02:00.0: 0x00000000 | branchlink1
-> iwlwifi 0000:02:00.0: 0x00000B2E | branchlink2
-> iwlwifi 0000:02:00.0: 0x00016218 | interruptlink1
-> iwlwifi 0000:02:00.0: 0x00016218 | interruptlink2
-> iwlwifi 0000:02:00.0: 0x00000000 | data1
-> iwlwifi 0000:02:00.0: 0x00000080 | data2
-> iwlwifi 0000:02:00.0: 0x07030000 | data3
-> iwlwifi 0000:02:00.0: 0xC600F06D | beacon time
-> iwlwifi 0000:02:00.0: 0x95A5CF83 | tsf low
-> iwlwifi 0000:02:00.0: 0x00000003 | tsf hi
-> iwlwifi 0000:02:00.0: 0x00000000 | time gp1
-> iwlwifi 0000:02:00.0: 0x164C8D06 | time gp2
-> iwlwifi 0000:02:00.0: 0x00000000 | time gp3
-> iwlwifi 0000:02:00.0: 0x0004191B | uCode version
-> iwlwifi 0000:02:00.0: 0x00000144 | hw version
-> iwlwifi 0000:02:00.0: 0x40489204 | board version
-> iwlwifi 0000:02:00.0: 0x10A9001C | hcmd
-> iwlwifi 0000:02:00.0: 0x00022002 | isr0
-> iwlwifi 0000:02:00.0: 0x01800000 | isr1
-> iwlwifi 0000:02:00.0: 0x0000000A | isr2
-> iwlwifi 0000:02:00.0: 0x004174C0 | isr3
-> iwlwifi 0000:02:00.0: 0x00000000 | isr4
-> iwlwifi 0000:02:00.0: 0x00000110 | isr_pref
-> iwlwifi 0000:02:00.0: 0x00000000 | wait_event
-> iwlwifi 0000:02:00.0: 0x0000024D | l2p_control
-> iwlwifi 0000:02:00.0: 0x00000020 | l2p_duration
-> iwlwifi 0000:02:00.0: 0x00000003 | l2p_mhvalid
-> iwlwifi 0000:02:00.0: 0x000000EE | l2p_addr_match
-> iwlwifi 0000:02:00.0: 0x00000005 | lmpm_pmg_sel
-> iwlwifi 0000:02:00.0: 0x21051936 | timestamp
-> iwlwifi 0000:02:00.0: 0x0034E0E8 | flow_handler
-> ieee80211 phy0: Hardware restart was requested
-> iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
-> iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
-> iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
-> iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
->
-> Best,
->         Dominik
+Examples:
+
+For reading FW memory location:
+echo r 0x01ac > /sys/kernel/debug/mwifiex/mlan0/memrw
+cat /sys/kernel/debug/mwifiex/mlan0/memrw
+
+For writing FW memory location:
+echo w 0x01ac 0x55aa > /sys/kernel/debug/mwifiex/mlan0/memrw
+
+Signed-off-by: Chin-ran Lo <crlo@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/debugfs.c     | 79 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/fw.h          |  9 ++++
+ drivers/net/wireless/mwifiex/ioctl.h       |  5 ++
+ drivers/net/wireless/mwifiex/main.h        |  1 +
+ drivers/net/wireless/mwifiex/sta_cmd.c     | 23 +++++++++
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 16 ++++++
+ 6 files changed, 133 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 1fb329d..414ee2d 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -535,6 +535,83 @@ done:
+ 	return ret;
+ }
+ 
++/* Proc memrw file write handler.
++ * This function is called when the 'memrw' file is opened for writing
++ * This function can be used to write to a memory location.
++ */
++static ssize_t
++mwifiex_memrw_write(struct file *file, const char __user *ubuf, size_t count,
++		    loff_t *ppos)
++{
++	int ret;
++	char cmd;
++	struct mwifiex_ds_mem_rw mem_rw;
++	u16 cmd_action;
++	struct mwifiex_private *priv = (void *)file->private_data;
++	unsigned long addr = get_zeroed_page(GFP_KERNEL);
++	char *buf = (void *)addr;
++	size_t buf_size = min(count, (size_t)(PAGE_SIZE - 1));
++
++	if (!buf)
++		return -ENOMEM;
++
++	if (copy_from_user(buf, ubuf, buf_size)) {
++		ret = -EFAULT;
++		goto done;
++	}
++
++	ret = sscanf(buf, "%c %x %x", &cmd, &mem_rw.addr, &mem_rw.value);
++	if (ret != 3) {
++		ret = -EINVAL;
++		goto done;
++	}
++
++	if ((cmd == 'r') || (cmd == 'R')) {
++		cmd_action = HostCmd_ACT_GEN_GET;
++		mem_rw.value = 0;
++	} else if ((cmd == 'w') || (cmd == 'W')) {
++		cmd_action = HostCmd_ACT_GEN_SET;
++	} else {
++		ret = -EINVAL;
++		goto done;
++	}
++
++	memcpy(&priv->mem_rw, &mem_rw, sizeof(mem_rw));
++	if (mwifiex_send_cmd(priv, HostCmd_CMD_MEM_ACCESS, cmd_action, 0,
++			     &mem_rw, true))
++		ret = -1;
++	else
++		ret = count;
++
++done:
++	free_page(addr);
++	return ret;
++}
++
++/* Proc memrw file read handler.
++ * This function is called when the 'memrw' file is opened for reading
++ * This function can be used to read from a memory location.
++ */
++static ssize_t
++mwifiex_memrw_read(struct file *file, char __user *ubuf,
++		   size_t count, loff_t *ppos)
++{
++	struct mwifiex_private *priv = (void *)file->private_data;
++	unsigned long addr = get_zeroed_page(GFP_KERNEL);
++	char *buf = (char *)addr;
++	int ret, pos = 0;
++
++	if (!buf)
++		return -ENOMEM;
++
++	pos += snprintf(buf, PAGE_SIZE, "0x%x 0x%x\n", priv->mem_rw.addr,
++			priv->mem_rw.value);
++	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
++
++	free_page(addr);
++	return ret;
++}
++
+ static u32 saved_offset = -1, saved_bytes = -1;
+ 
+ /*
+@@ -749,6 +826,7 @@ MWIFIEX_DFS_FILE_READ_OPS(getlog);
+ MWIFIEX_DFS_FILE_READ_OPS(fw_dump);
+ MWIFIEX_DFS_FILE_OPS(regrdwr);
+ MWIFIEX_DFS_FILE_OPS(rdeeprom);
++MWIFIEX_DFS_FILE_OPS(memrw);
+ MWIFIEX_DFS_FILE_OPS(hscfg);
+ MWIFIEX_DFS_FILE_OPS(histogram);
+ 
+@@ -773,6 +851,7 @@ mwifiex_dev_debugfs_init(struct mwifiex_private *priv)
+ 	MWIFIEX_DFS_ADD_FILE(regrdwr);
+ 	MWIFIEX_DFS_ADD_FILE(rdeeprom);
+ 	MWIFIEX_DFS_ADD_FILE(fw_dump);
++	MWIFIEX_DFS_ADD_FILE(memrw);
+ 	MWIFIEX_DFS_ADD_FILE(hscfg);
+ 	MWIFIEX_DFS_ADD_FILE(histogram);
+ }
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 59d8964..c404390 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -323,6 +323,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_802_11_SUBSCRIBE_EVENT            0x0075
+ #define HostCmd_CMD_802_11_TX_RATE_QUERY              0x007f
+ #define HostCmd_CMD_802_11_IBSS_COALESCING_STATUS     0x0083
++#define HostCmd_CMD_MEM_ACCESS                        0x0086
+ #define HostCmd_CMD_CFG_DATA                          0x008f
+ #define HostCmd_CMD_VERSION_EXT                       0x0097
+ #define HostCmd_CMD_MEF_CFG                           0x009a
+@@ -1576,6 +1577,13 @@ struct mwifiex_ie_types_extcap {
+ 	u8 ext_capab[0];
+ } __packed;
+ 
++struct host_cmd_ds_mem_access {
++	__le16 action;
++	__le16 reserved;
++	__le32 addr;
++	__le32 value;
++};
++
+ struct mwifiex_ie_types_qos_info {
+ 	struct mwifiex_ie_types_header header;
+ 	u8 qos_info;
+@@ -1958,6 +1966,7 @@ struct host_cmd_ds_command {
+ 		struct host_cmd_ds_p2p_mode_cfg mode_cfg;
+ 		struct host_cmd_ds_802_11_ibss_status ibss_coalescing;
+ 		struct host_cmd_ds_mef_cfg mef_cfg;
++		struct host_cmd_ds_mem_access mem;
+ 		struct host_cmd_ds_mac_reg_access mac_reg;
+ 		struct host_cmd_ds_bbp_reg_access bbp_reg;
+ 		struct host_cmd_ds_rf_reg_access rf_reg;
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index d2b05c3..224c993 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -342,6 +342,11 @@ struct mwifiex_ds_read_eeprom {
+ 	u8 value[MAX_EEPROM_DATA];
+ };
+ 
++struct mwifiex_ds_mem_rw {
++	u32 addr;
++	u32 value;
++};
++
+ #define IEEE_MAX_IE_SIZE		256
+ 
+ #define MWIFIEX_IE_HDR_SIZE	(sizeof(struct mwifiex_ie) - IEEE_MAX_IE_SIZE)
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index fe12560..b387d5a 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -611,6 +611,7 @@ struct mwifiex_private {
+ 	struct delayed_work dfs_chan_sw_work;
+ 	struct cfg80211_beacon_data beacon_after;
+ 	struct mwifiex_11h_intf_state state_11h;
++	struct mwifiex_ds_mem_rw mem_rw;
+ };
+ 
+ 
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 49422f2..a76d6a4 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1071,6 +1071,26 @@ static int mwifiex_cmd_ibss_coalescing_status(struct host_cmd_ds_command *cmd,
+ 	return 0;
+ }
+ 
++/* This function prepares command buffer to get/set memory location value.
++ */
++static int
++mwifiex_cmd_mem_access(struct host_cmd_ds_command *cmd, u16 cmd_action,
++		       void *pdata_buf)
++{
++	struct mwifiex_ds_mem_rw *mem_rw = (void *)pdata_buf;
++	struct host_cmd_ds_mem_access *mem_access = (void *)&cmd->params.mem;
++
++	cmd->command = cpu_to_le16(HostCmd_CMD_MEM_ACCESS);
++	cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_mem_access) +
++				S_DS_GEN);
++
++	mem_access->action = cpu_to_le16(cmd_action);
++	mem_access->addr = cpu_to_le32(mem_rw->addr);
++	mem_access->value = cpu_to_le32(mem_rw->value);
++
++	return 0;
++}
++
+ /*
+  * This function prepares command to set/get register value.
+  *
+@@ -1885,6 +1905,9 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 	case HostCmd_CMD_802_11_SCAN_EXT:
+ 		ret = mwifiex_cmd_802_11_scan_ext(priv, cmd_ptr, data_buf);
+ 		break;
++	case HostCmd_CMD_MEM_ACCESS:
++		ret = mwifiex_cmd_mem_access(cmd_ptr, cmd_action, data_buf);
++		break;
+ 	case HostCmd_CMD_MAC_REG_ACCESS:
+ 	case HostCmd_CMD_BBP_REG_ACCESS:
+ 	case HostCmd_CMD_RF_REG_ACCESS:
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 88dc6b6..efe31a2 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -741,6 +741,19 @@ mwifiex_ret_p2p_mode_cfg(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++/* This function handles the command response of mem_access command
++ */
++static int
++mwifiex_ret_mem_access(struct mwifiex_private *priv,
++		       struct host_cmd_ds_command *resp, void *pioctl_buf)
++{
++	struct host_cmd_ds_mem_access *mem = (void *)&resp->params.mem;
++
++	priv->mem_rw.addr = le32_to_cpu(mem->addr);
++	priv->mem_rw.value = le32_to_cpu(mem->value);
++
++	return 0;
++}
+ /*
+  * This function handles the command response of register access.
+  *
+@@ -1103,6 +1116,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 	case HostCmd_CMD_802_11_IBSS_COALESCING_STATUS:
+ 		ret = mwifiex_ret_ibss_coalescing_status(priv, resp);
+ 		break;
++	case HostCmd_CMD_MEM_ACCESS:
++		ret = mwifiex_ret_mem_access(priv, resp, data_buf);
++		break;
+ 	case HostCmd_CMD_MAC_REG_ACCESS:
+ 	case HostCmd_CMD_BBP_REG_ACCESS:
+ 	case HostCmd_CMD_RF_REG_ACCESS:
+-- 
+1.8.1.4
+
