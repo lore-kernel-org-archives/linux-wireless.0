@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32852 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751509AbbEKMCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 08:02:45 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: check fast-xmit if IBSS STA QoS changed
-Date: Mon, 11 May 2015 14:02:42 +0200
-Message-Id: <1431345762-15075-1-git-send-email-johannes@sipsolutions.net> (sfid-20150511_140248_107540_BB373C9C)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35110 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932808AbbELVyG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2015 17:54:06 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
+	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>
+Subject: [PATCH v3 1/4] firmware: fix __getname() missing failure check
+Date: Tue, 12 May 2015 14:49:40 -0700
+Message-Id: <1431467383-28540-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_235427_026662_35290FB4)
+In-Reply-To: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-When an IBSS station gets QoS enabled after having been added,
-check fast-xmit to make sure the QoS header gets added to the
-cache properly and frames can go out with QoS and higher rates.
+The request_firmware*() APIs uses __getname() to iterate
+over the list of paths possible for firmware to be found,
+the code however never checked for failure on __getname().
+Although *very unlikely*, this can still happen. Add the
+missing check.
 
-Reported-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+There is still no checks on the concatenation of the path
+and filename passed, that requires a bit more work and
+subsequent patches address this. The commit that introduced
+this is abb139e7 ("firmware: teach the kernel to load
+firmware files directly from the filesystem").
+
+mcgrof@ergon ~/linux (git::firmware-fixes) $ git describe --contains abb139e7
+v3.7-rc1~120
+
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- net/mac80211/ibss.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/base/firmware_class.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index bfef1b215050..21716af8bec3 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1031,8 +1031,11 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 171841a..49139a1 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -322,7 +322,11 @@ static int fw_get_filesystem_firmware(struct device *device,
+ {
+ 	int i;
+ 	int rc = -ENOENT;
+-	char *path = __getname();
++	char *path;
++
++	path = __getname();
++	if (!path)
++		return -ENOMEM;
  
--	if (sta && elems->wmm_info && local->hw.queues >= IEEE80211_NUM_ACS)
-+	if (sta && !sta->sta.wme &&
-+	    elems->wmm_info && local->hw.queues >= IEEE80211_NUM_ACS) {
- 		sta->sta.wme = true;
-+		ieee80211_check_fast_xmit(sta);
-+	}
- 
- 	if (sta && elems->ht_operation && elems->ht_cap_elem &&
- 	    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
+ 	for (i = 0; i < ARRAY_SIZE(fw_path); i++) {
+ 		struct file *file;
 -- 
-2.1.4
+2.3.2.209.gd67f9d5.dirty
 
