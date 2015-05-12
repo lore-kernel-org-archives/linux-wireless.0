@@ -1,76 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:37623 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756841AbbEVL4T convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:33254 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932924AbbELSdV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 07:56:19 -0400
-Received: by wibt6 with SMTP id t6so44690602wib.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 04:56:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87zj4w4zdz.fsf@kamboji.qca.qualcomm.com>
-References: <CA+BoTQ=V1psOoaL1WG7vSUjSLhPnQqBUODjeB3NyWt-pMtmNFA@mail.gmail.com>
-	<1432282693-4553-1-git-send-email-michal.kazior@tieto.com>
-	<87zj4w4zdz.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 22 May 2015 13:56:18 +0200
-Message-ID: <CA+BoTQkNO3oD36GFWVvG3TuAu1nKqTrW_54Z-V9de0Lt7jE8hA@mail.gmail.com> (sfid-20150522_135625_580807_6439DAC5)
-Subject: Re: [PATCH v3 1/2] ath10k: handle cycle counter wraparound
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 12 May 2015 14:33:21 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: dhowells@redhat.com, seth.forshee@canonical.com,
+	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v2 0/5] firmware: few fixes for name uses
+Date: Tue, 12 May 2015 11:30:52 -0700
+Message-Id: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_203325_100772_92A7844A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 May 2015 at 13:36, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> When QCA988X cycle counter HW register wraps
->> around it resets to 0x7fffffff instead of 0. All
->> other cycle counter related registers are divided
->> by 2 so they never wraparound themselves. QCA61X4
->> has a uniform CC and it wraparounds in a regular
->> fashion though.
->>
->> Worst case wraparound time is approx 24 seconds
->> (2**31 / 88MHz). Since scan channel visit times
->> are max 5 seconds (offchannel case) it is
->> guaranteed there's been at most 1 wraparound and
->> it is possible to compute survey data.
->>
->> This fixes some occasional incorrect survey data
->> on QCA988X as some channels (depending on how/when
->> scan/offchannel requests were requested) would
->> have approx 24 sec active time which wasn't
->> actually the case.
->>
->> This should help make hostapd ACS more reliable.
->>
->> Reported-by: Srinivasa Duvvuri <sduvvuri@chromium.org>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> [...]
->
->> +void ath10k_core_get_cc_delta(struct ath10k *ar,
->> +                           u32 *cc_delta, u32 *rcc_delta,
->> +                           u32 cc, u32 rcc,
->> +                           u32 cc_prev, u32 rcc_prev)
->> +{
->> +     if (ar->hw_params.has_shifted_cc_wraparound && cc < cc_prev) {
->> +             cc_prev -= 0x7fffffff;
->> +             rcc *= 2;
->> +     }
->> +
->> +     *cc_delta = cc - cc_prev;
->> +     *rcc_delta = rcc - rcc_prev;
->> +}
->
-> Why do you have this function in core.c? Why not in wmi.c?
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-I don't consider this a part of WMI protocol per se. It's a logic
-which happens to be used with values delivered via WMI but is chip
-specific otherwise. For what it's worth we could be reading CC
-registers, e.g. directly via MMIO.
+This is a follow up to my original series that added kernel firmware
+signature check support. That series was split into 3 parts, one which
+had fixes, a second set which added firmware signature support, and
+a last set which provided system data firmware support as a spring
+cleaning effort on the firmware_class driver API. During review I've
+spotted even more fixes required on firmware_class, because of this
+and in order to help make the review easier I'm splitting the series
+out completely. This series only addresses fixes and enhancements for
+firmware_class. When reviewing these please keep in mind that one of
+the end goals here is to eventually add address firmware signature support,
+this means we want to be pretty pedantic and careful about how we handle
+names and files.
 
+I've removed Cc: stable notations because although they are fixes they
+don't really fix any reported issues even though I can trigger at least
+one panic on demand, I'll let Greg and others decide what patches should
+be merged in and trickled down to stable. Its not an easy judgement call,
+and because of this I've tried to split out fixes out as atomically as
+possible. If its of any help I think the Patch 1-2, 4, should all go
+in to stable while Patch 3, 5 can be considered optimizations which are
+not really stable fixes.
 
-Michał
+Luis R. Rodriguez (5):
+  firmware: fix __getname() missing failure check
+  firmware: check for file truncation on direct firmware loading
+  firmware: check for possible file truncation early
+  firmware: fix possible use after free on name on asynchronous request
+  firmware: use const for remaining firmware names
+
+ drivers/base/firmware_class.c | 110 ++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 91 insertions(+), 19 deletions(-)
+
+-- 
+2.3.2.209.gd67f9d5.dirty
+
