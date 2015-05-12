@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38061 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752878AbbEFPb1 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:53771 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932808AbbELVzC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 11:31:27 -0400
-Received: by wiun10 with SMTP id n10so27018023wiu.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2015 08:31:26 -0700 (PDT)
-From: andrei.otc@gmail.com
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [PATCH v3 5/7] mac80211: Adjust reserved chan_ctx when assigned to vif
-Date: Wed,  6 May 2015 18:30:50 +0300
-Message-Id: <1430926250-14732-1-git-send-email-andrei.otcheretianski@intel.com> (sfid-20150506_173147_108944_E93E6250)
-In-Reply-To: <1430916630.1954.2.camel@sipsolutions.net>
-References: <1430916630.1954.2.camel@sipsolutions.net>
+	Tue, 12 May 2015 17:55:02 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Arend Van Spriel <arend@broadcom.com>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Brett Rudley <brudley@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org
+Subject: [PATCH] brcmfmac: avoid gcc-5.1 warning
+Date: Tue, 12 May 2015 23:54:25 +0200
+Message-ID: <2201884.BixNBcLJhn@wuerfel> (sfid-20150512_235511_719637_BF90E75E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+gcc-5.0 gained a new warning in the fwsignal portion of the brcmfmac
+driver:
 
-When a vif starts using a reserved channel context (during CSA, for example)
-the required chandef was recalculated, however it was never applied.
-This could result in using chanctx with narrower width than actually
-required. Fix this by calling ieee80211_change_chanctx with the recalculated
-chandef. This both changes the chanctx's width and recalcs min_def.
+drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c: In function 'brcmf_fws_txs_process':
+drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c:1478:8: warning: 'skb' may be used uninitialized in this function [-Wmaybe-uninitialized]
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
+This is a false positive, and marking the brcmf_fws_hanger_poppkt function
+as 'static inline' makes the warning go away. I have checked the object
+file output and while a little code gets moved around, the size of
+the binary remains identical.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- net/mac80211/chan.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Found while building the ARM imx_v6_v7_defconfig configuration with gcc-5.
+We try to get all ARM defconfigs to build without warnings normally.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 5bcd4e5..0fd9274 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -1008,6 +1008,8 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
- 	if (WARN_ON(!chandef))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index f0dda0ecd23b..5017eaa4af45 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -635,7 +635,7 @@ static int brcmf_fws_hanger_pushpkt(struct brcmf_fws_hanger *h,
+ 	return 0;
+ }
  
-+	ieee80211_change_chanctx(local, new_ctx, chandef);
-+
- 	vif_chsw[0].vif = &sdata->vif;
- 	vif_chsw[0].old_ctx = &old_ctx->conf;
- 	vif_chsw[0].new_ctx = &new_ctx->conf;
-@@ -1079,6 +1081,8 @@ ieee80211_vif_use_reserved_assign(struct ieee80211_sub_if_data *sdata)
- 	if (WARN_ON(!chandef))
- 		return -EINVAL;
- 
-+	ieee80211_change_chanctx(local, new_ctx, chandef);
-+
- 	list_del(&sdata->reserved_chanctx_list);
- 	sdata->reserved_chanctx = NULL;
- 
--- 
-1.8.3
+-static int brcmf_fws_hanger_poppkt(struct brcmf_fws_hanger *h,
++static inline int brcmf_fws_hanger_poppkt(struct brcmf_fws_hanger *h,
+ 					  u32 slot_id, struct sk_buff **pktout,
+ 					  bool remove_item)
+ {
 
