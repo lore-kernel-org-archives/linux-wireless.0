@@ -1,88 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:36776 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611AbbEEWkL (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:36761 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932209AbbELIAe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 18:40:11 -0400
-Date: Tue, 5 May 2015 23:40:07 +0100
-From: Okash Khawaja <okash.khawaja@gmail.com>
-To: joe@perches.com
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] adm8211: fix checkpatch errors for indentation and new
- line
-Message-ID: <20150505224007.GA3655@bytefire-computer> (sfid-20150506_004054_662007_266802E6)
+	Tue, 12 May 2015 04:00:34 -0400
+Received: by pabsx10 with SMTP id sx10so138323328pab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2015 01:00:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB3XZEd6GbsQfs7EZxvrea7hxJjbqnVuHO5pQc3gZCmG-0V8sw@mail.gmail.com>
+References: <CAGm1_ktjoyQp_sebmPrG__4kgmW-EnR16tv6rd2sPECD8uFrtQ@mail.gmail.com>
+ <CAB3XZEd6GbsQfs7EZxvrea7hxJjbqnVuHO5pQc3gZCmG-0V8sw@mail.gmail.com>
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Tue, 12 May 2015 10:00:13 +0200
+Message-ID: <CAGm1_ktaxy1yLxwv55oNzRhfWh3mdBfDHJOCcGZYbVn5Tox=pA@mail.gmail.com> (sfid-20150512_100037_642967_D7DBAF1F)
+Subject: Re: wlcore: mac-address property support
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes these checkpatch.pl errors around a single switch-case block:
+On Tue, May 12, 2015 at 9:53 AM, Eliad Peller <eliad@wizery.com> wrote:
+> hi,
+>
+> On Tue, May 12, 2015 at 9:37 AM, Yegor Yefremov
+> <yegorslists@googlemail.com> wrote:
+>> Does wlcore support "mac-address" property, so that MAC address could
+>> be set via Device Tree?
+>>
+> it's currently not supported.
+> (by default the address is read from the fuse ROM, and it can be
+> overridden by the nvs file)
 
-ERROR: switch and case should be at the same indent
-ERROR: trailing statements should be on next line
+It's not very practical for us as our chips don't have internal EEPROM
+and nvs file is also bad, as it is SD card bound. We have all our
+production data in usual EEPROM, so that I can fetch MACs from there
+and put them into loaded DTB. This way Linux has all the needed data
+and I don't need special files/scripts in order to assign MACs.
 
-More specifically, the fix has been applied to the five occurances of the errors listed below.
-
-ERROR: switch and case should be at the same indent
-#1100: FILE: adm8211.c:1100:
-+		switch (cline) {
-[...]
-+		  default: reg |= (0x0 << 14);
-
-ERROR: trailing statements should be on next line
-#1101: FILE: adm8211.c:1101:
-+		case  0x8: reg |= (0x1 << 14);
-
-ERROR: trailing statements should be on next line
-#1103: FILE: adm8211.c:1103:
-+		case 0x16: reg |= (0x2 << 14);
-
-ERROR: trailing statements should be on next line
-#1105: FILE: adm8211.c:1105:
-+		case 0x32: reg |= (0x3 << 14);
-
-ERROR: trailing statements should be on next line
-#1107: FILE: adm8211.c:1107:
-+		  default: reg |= (0x0 << 14);
-
-
-Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
----
- drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index f07a618..058fb4b 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
- 		pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
- 
- 		switch (cline) {
--		case  0x8: reg |= (0x1 << 14);
--			   break;
--		case 0x16: reg |= (0x2 << 14);
--			   break;
--		case 0x32: reg |= (0x3 << 14);
--			   break;
--		  default: reg |= (0x0 << 14);
--			   break;
-+		case  0x8:
-+			reg |= (0x1 << 14);
-+			break;
-+		case 0x16:
-+			reg |= (0x2 << 14);
-+			break;
-+		case 0x32:
-+			reg |= (0x3 << 14);
-+			break;
-+		default:
-+			reg |= (0x0 << 14);
-+			break;
- 		}
- 	}
- 
--- 
-1.9.1
-
+Yegor
