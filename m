@@ -1,53 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:34448 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932318AbbENLtk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 07:49:40 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] wil6210: match wait_for_completion_timeout return type
-Date: Thu, 14 May 2015 13:41:26 +0200
-Message-Id: <1431603686-24029-1-git-send-email-hofrat@osadl.org> (sfid-20150514_134945_210200_6FFF5D2E)
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36370 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753877AbbELV62 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2015 17:58:28 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
+	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>
+Subject: [PATCH v3 3/4] firmware: fix possible use after free on name on asynchronous request
+Date: Tue, 12 May 2015 14:49:42 -0700
+Message-Id: <1431467383-28540-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_235846_577364_CBB735A2)
+In-Reply-To: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-As remain is exclusively used for wait_for_completion_timeout here its
-type is simply changed to unsigned long.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
+Asynchronous firmware loading copies the pointer to the
+name passed as an argument only to be scheduled later and
+used. This behaviour works well for synchronous calling
+but in asynchronous mode there's a chance the caller could
+immediately free the passed string after making the
+asynchronous call. This could trigger a use after free
+having the kernel look on disk for arbitrary file names.
 
-API conformance testing for completions with coccinelle spatches are being
-used to locate API usage inconsistencies:
-./drivers/net/wireless/ath/wil6210/wmi.c:827 
-	int return assigned to unsigned long
+In order to force-test the issue you can use a test-driver
+designed to illustrate this issue on github [0], use the
+next-20150505-fix-use-after-free branch.
 
-Patch was compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_WIL6210=m
+With this patch applied you get:
 
-Patch is against 4.1-rc3 (localversion-next is -next-20150514)
+[  283.512445] firmware name: test_module_stuff.bin
+[  287.514020] firmware name: test_module_stuff.bin
+[  287.532489] firmware found
 
+Without this patch applied you can end up with something such as:
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
- drivers/net/wireless/ath/wil6210/wmi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[  135.624216] firmware name: \xffffff80BJ
+[  135.624249] platform fake-dev.0: Direct firmware load for \xffffff80Bi failed with error -2
+[  135.624252] No firmware found
+[  135.624252] firmware found
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 9fe2085..e8d5335 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -805,7 +805,7 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
- 	     u16 reply_id, void *reply, u8 reply_size, int to_msec)
+Unfortunatley in the worst and most common case however you
+can typically crash your system with a page fault by trying to
+free something which you cannot, and/or a NULL pointer
+dereference [1].
+
+The fix and issue using schedule_work() for asynchronous
+runs is generalized in the following SmPL grammar patch,
+when applied to next-20150505 only the firmware_class
+code is affected. This grammar patch can and should further
+be generalized to vet for for other kernel asynchronous
+mechanisms.
+
+@ calls_schedule_work @
+type T;
+T *priv_work;
+identifier func, work_func;
+identifier work;
+identifier priv_name, name;
+expression gfp;
+@@
+
+ func(..., const char *name, ...)
  {
- 	int rc;
--	int remain;
-+	unsigned long remain;
+ 	...
+ 	priv_work = kzalloc(sizeof(T), gfp);
+ 	...
+-	priv_work->priv_name = name;
++	priv_work->priv_name = kstrdup_const(name, gfp);
+	...
+(... when any
+ 	if (...)
+ 	{
+ 		...
++ 		kfree_const(priv_work->priv_name);
+ 		kfree(priv_work);
+		...
+ 	}
+) ... when any
+ 	INIT_WORK(&priv_work->work, work_func);
+ 	...
+ 	schedule_work(&priv_work->work);
+ 	...
+ }
+
+@ the_work_func depends on calls_schedule_work @
+type calls_schedule_work.T;
+T *priv_work;
+identifier calls_schedule_work.work_func;
+identifier calls_schedule_work.priv_name;
+identifier calls_schedule_work.work;
+identifier some_work;
+@@
+
+ work_func(...)
+ {
+ 	...
+ 	priv_work = container_of(some_work, T, work);
+ 	...
++	kfree_const(priv_work->priv_name);
+ 	kfree(priv_work);
+ 	...
+ }
+
+[0] https://github.com/mcgrof/fake-firmware-test.git
+[1] The following kernel ring buffer splat:
+
+firmware name: test_module_stuff.bin
+firmware name:
+firmware found
+general protection fault: 0000 [#1] SMP
+Modules linked in: test(O) <...etc-it-does-not-matter>
+ drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
+CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G           O    4.0.0-00010-g22b5bb0-dirty #176
+Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
+Workqueue: events request_firmware_work_func
+task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
+RIP: 0010:[<ffffffff814a586c>]  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
+RSP: 0000:ffff8800c7f97d78  EFLAGS: 00010286
+RAX: ffffffff81ae3700 RBX: ffffffff816d1181 RCX: 0000000000000006
+RDX: 0001ee850ff68500 RSI: 0000000000000246 RDI: c35d5f415e415d41
+RBP: ffff8800c7f97d88 R08: 000000000000000a R09: 0000000000000000
+R10: 0000000000000358 R11: ffff8800c7f97a7e R12: ffff8800c7ec1e80
+R13: ffff88021e2d4cc0 R14: ffff88021e2dff00 R15: 00000000000000c0
+FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000034b8cd8 CR3: 000000021073c000 CR4: 00000000001407e0
+Stack:
+ ffffffff816d1181 ffff8800c7ec1e80 ffff8800c7f97da8 ffffffff814a58f8
+ 000000000000000a ffffffff816d1181 ffff8800c7f97dc8 ffffffffa047002c
+ ffff88021e2dff00 ffff8802116ac1c0 ffff8800c7f97df8 ffffffff814a65fe
+Call Trace:
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff814a58f8>] release_firmware+0x58/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
+ [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
+ [<ffffffff8108d911>] worker_thread+0x121/0x460
+ [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
+ [<ffffffff810928f9>] kthread+0xc9/0xe0
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+ [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+Code: c7 c6 dd ad a3 81 48 c7 c7 20 97 ce 81 31 c0 e8 0b b2 ed ff e9 78 ff ff ff 66 0f 1f 44 00 00 0f 1f 44 00 00 55 48 89 e5 41 54 53 <4c> 8b 67 38 48 89 fb 4c 89 e7 e8 85 f7 22 00 f0 83 2b 01 74 0f
+RIP  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
+ RSP <ffff8800c7f97d78>
+---[ end trace 4e62c56a58d0eac1 ]---
+BUG: unable to handle kernel paging request at ffffffffffffffd8
+IP: [<ffffffff81093ee0>] kthread_data+0x10/0x20
+PGD 1c13067 PUD 1c15067 PMD 0
+Oops: 0000 [#2] SMP
+Modules linked in: test(O) <...etc-it-does-not-matter>
+ drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
+CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G      D    O    4.0.0-00010-g22b5bb0-dirty #176
+Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
+task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
+RIP: 0010:[<ffffffff81092ee0>]  [<ffffffff81092ee0>] kthread_data+0x10/0x20
+RSP: 0018:ffff8800c7f97b18  EFLAGS: 00010096
+RAX: 0000000000000000 RBX: 0000000000000003 RCX: 000000000000000d
+RDX: 0000000000000003 RSI: 0000000000000003 RDI: ffff8800c7f8e290
+RBP: ffff8800c7f97b18 R08: 000000000000bc00 R09: 0000000000007e76
+R10: 0000000000000001 R11: 000000000000002f R12: ffff8800c7f8e290
+R13: 00000000000154c0 R14: 0000000000000003 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000028 CR3: 0000000210675000 CR4: 00000000001407e0
+Stack:
+ ffff8800c7f97b38 ffffffff8108dcd5 ffff8800c7f97b38 ffff88021e2d54c0
+ ffff8800c7f97b88 ffffffff816d1500 ffff880213d42368 ffff8800c7f8e290
+ ffff8800c7f97b88 ffff8800c7f97fd8 ffff8800c7f8e710 0000000000000246
+Call Trace:
+ [<ffffffff8108dcd5>] wq_worker_sleeping+0x15/0xa0
+ [<ffffffff816d1500>] __schedule+0x6e0/0x940
+ [<ffffffff816d1797>] schedule+0x37/0x90
+ [<ffffffff810779bc>] do_exit+0x6bc/0xb40
+ [<ffffffff8101898f>] oops_end+0x9f/0xe0
+ [<ffffffff81018efb>] die+0x4b/0x70
+ [<ffffffff81015622>] do_general_protection+0xe2/0x170
+ [<ffffffff816d74e8>] general_protection+0x28/0x30
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff814a586c>] ? fw_free_buf+0xc/0x40
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff814a58f8>] release_firmware+0x58/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
+ [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
+ [<ffffffff816d1181>] ? __schedule+0x361/0x940
+ [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
+ [<ffffffff8108d911>] worker_thread+0x121/0x460
+ [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
+ [<ffffffff810928f9>] kthread+0xc9/0xe0
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+ [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
+ [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
+Code: 00 48 89 e5 5d 48 8b 40 c8 48 c1 e8 02 83 e0 01 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 8b 87 30 05 00 00 55 48 89 e5 <48> 8b 40 d8 5d c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
+RIP  [<ffffffff81092ee0>] kthread_data+0x10/0x20
+ RSP <ffff8800c7f97b18>
+CR2: ffffffffffffffd8
+---[ end trace 4e62c56a58d0eac2 ]---
+Fixing recursive fault but reboot is needed!
+
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Generated-by: Coccinelle SmPL
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/base/firmware_class.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 9ffa707..62e4611 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -1256,6 +1256,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ 	put_device(fw_work->device); /* taken in request_firmware_nowait() */
  
- 	mutex_lock(&wil->wmi_mutex);
+ 	module_put(fw_work->module);
++	kfree_const(fw_work->name);
+ 	kfree(fw_work);
+ }
  
+@@ -1295,7 +1296,9 @@ request_firmware_nowait(
+ 		return -ENOMEM;
+ 
+ 	fw_work->module = module;
+-	fw_work->name = name;
++	fw_work->name = kstrdup_const(name, gfp);
++	if (!fw_work->name)
++		return -ENOMEM;
+ 	fw_work->device = device;
+ 	fw_work->context = context;
+ 	fw_work->cont = cont;
+@@ -1303,6 +1306,7 @@ request_firmware_nowait(
+ 		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+ 
+ 	if (!try_module_get(module)) {
++		kfree_const(fw_work->name);
+ 		kfree(fw_work);
+ 		return -EFAULT;
+ 	}
 -- 
-1.7.10.4
+2.3.2.209.gd67f9d5.dirty
 
