@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:33372 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490AbbEPTwv (ORCPT
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:35188 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932924AbbELSfY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2015 15:52:51 -0400
-Received: by lagr1 with SMTP id r1so86164122lag.0
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 12:52:49 -0700 (PDT)
-Received: from [192.168.0.103] ([213.21.44.132])
-        by mx.google.com with ESMTPSA id ml10sm1356982lbc.29.2015.05.16.12.52.48
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 16 May 2015 12:52:48 -0700 (PDT)
-Message-ID: <5557A00E.1090104@users.sourceforge.net> (sfid-20150516_215449_156821_6CD399F8)
-Date: Sat, 16 May 2015 22:52:46 +0300
-From: Alberto Mardegan <mardy@users.sourceforge.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: tp-link tl-wn8200nd and rtlwifi_new drivers
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Tue, 12 May 2015 14:35:24 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: dhowells@redhat.com, seth.forshee@canonical.com,
+	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>
+Subject: [PATCH v2 1/5] firmware: fix __getname() missing failure check
+Date: Tue, 12 May 2015 11:30:53 -0700
+Message-Id: <1431455457-25322-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_203528_623948_32C45BD2)
+In-Reply-To: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all!
-   I unfortunately purchased a Tp-Link TL-WN8200ND USB wireless adapter, 
-which is not working in Linux (there are several reports of this in this 
-ML already, so I won't bother you with another one).
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-I wanted to test the new rtlwifi_new drivers from
-   https://github.com/lwfinger/rtlwifi_new
-to see if by any chance they could help having this device running. I 
-built then and installed them (in Ubuntu 14.04), but I don't know how to 
-make sure that the kernel is using the new drivers and not the old ones.
-Is there some hint in the syslog which could tell me whether I'm now 
-using the new or the old drivers (for the record, it still doesn't work)?
+The request_firmware*() APIs uses __getname() to iterate
+over the list of paths possible for firmware to be found,
+the code however never checked for failure on __getname().
+Although *very unlikely*, this can still happen. Add the
+missing check.
 
-Ciao,
-   Alberto
+There is still no checks on the concatenation of the path
+and filename passed, that requires a bit more work and
+subsequent patches address this. The commit that introduced
+this is abb139e7 ("firmware: teach the kernel to load
+firmware files directly from the filesystem").
+
+mcgrof@ergon ~/linux (git::firmware-fixes) $ git describe --contains abb139e7
+v3.7-rc1~120
+
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/base/firmware_class.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 171841a..bc6c8e6 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -322,7 +322,11 @@ static int fw_get_filesystem_firmware(struct device *device,
+ {
+ 	int i;
+ 	int rc = -ENOENT;
+-	char *path = __getname();
++	char *path;
++
++	path = __getname();
++	if (unlikely(!path))
++		return PTR_ERR(path);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(fw_path); i++) {
+ 		struct file *file;
+-- 
+2.3.2.209.gd67f9d5.dirty
+
