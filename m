@@ -1,136 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:52456 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852AbbEZNeG (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48010 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932804AbbELOlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:34:06 -0400
-Message-ID: <5564573F.3080802@broadcom.com> (sfid-20150526_153415_396535_7734098F)
-Date: Tue, 26 May 2015 13:21:35 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 12 May 2015 10:41:07 -0400
+Message-ID: <55521102.9020306@candelatech.com> (sfid-20150512_164112_683379_21CBDC00)
+Date: Tue, 12 May 2015 07:41:06 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
+To: Michal Kazior <michal.kazior@tieto.com>,
+	s prasad <sprasad.kandregula@gmail.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH for-4.1] brcmfmac: avoid null pointer access when brcmf_msgbuf_get_pktid()
- fails
-References: <1432639186-18824-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1432639186-18824-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
+References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com>	<CA+BoTQkFSQe0di1vqqB5cAPKaizRkBT5cu4fA8dQ_uR_a2HdJw@mail.gmail.com>	<CAJa-X96spUg7+EZqH-Mv3s7OzbHzmXmcZ7uOw1KvPShexW6D_w@mail.gmail.com>	<CA+BoTQ=Qpws=928TZe22Ds-UO_qQJ2Om+=DW=VUNUS59o1BQAA@mail.gmail.com>	<CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com>	<CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com>	<CAJa-X945Xvn0jHQVcKn-pyYQVNpxXnqjOH_VHJv8pVwR4kFXcw@mail.gmail.com> <CA+BoTQmLFGAn2z=E3J1C2qfNP34v57B7-rtALUQhNXrHqJeA6Q@mail.gmail.com>
+In-Reply-To: <CA+BoTQmLFGAn2z=E3J1C2qfNP34v57B7-rtALUQhNXrHqJeA6Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/15 13:19, Arend van Spriel wrote:
-> The function brcmf_msgbuf_get_pktid() may return a NULL pointer so
-> the callers should check the return pointer before accessing it to
-> avoid the crash below (see [1]):
->
-> brcmfmac: brcmf_msgbuf_get_pktid: Invalid packet id 273 (not in use)
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000080
-> IP: [<ffffffff8145b225>] skb_pull+0x5/0x50
-> PGD 0
-> Oops: 0000 [#1] PREEMPT SMP
-> Modules linked in: pci_stub vboxpci(O) vboxnetflt(O) vboxnetadp(O) vboxdrv(O)
->   snd_hda_codec_hdmi bnep mousedev hid_generic ushwmon msr ext4 crc16 mbcache
->   jbd2 sd_mod uas usb_storage ahci libahci libata scsi_mod xhci_pci xhci_hcd
->   usbcore usb_common
-> CPU: 0 PID: 1661 Comm: irq/61-brcmf_pc Tainted: G O    4.0.1-MacbookPro-ARCH #1
-> Hardware name: Apple Inc. MacBookPro12,1/Mac-E43C1C25D4880AD6,
->   BIOS MBP121.88Z.0167.B02.1503241251 03/24/2015
-> task: ffff880264203cc0 ti: ffff88025ffe4000 task.ti: ffff88025ffe4000
-> RIP: 0010:[<ffffffff8145b225>]  [<ffffffff8145b225>] skb_pull+0x5/0x50
-> RSP: 0018:ffff88025ffe7d40  EFLAGS: 00010202
-> RAX: 0000000000000000 RBX: ffff88008a33c000 RCX: 0000000000000044
-> RDX: 0000000000000000 RSI: 000000000000004a RDI: 0000000000000000
-> RBP: ffff88025ffe7da8 R08: 0000000000000096 R09: 000000000000004a
-> R10: 0000000000000000 R11: 000000000000048e R12: ffff88025ff14f00
-> R13: 0000000000000000 R14: ffff880263b48200 R15: ffff88008a33c000
-> FS:  0000000000000000(0000) GS:ffff88026ec00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000000000080 CR3: 000000000180b000 CR4: 00000000003407f0
-> Stack:
->   ffffffffa06aed74 ffff88025ffe7dc8 ffff880263b48270 ffff880263b48278
->   05ea88020000004a 0002ffff81014635 000000001720b2f6 ffff88026ec116c0
->   ffff880263b48200 0000000000010000 ffff880263b4ae00 ffff880264203cc0
-> Call Trace:
->   [<ffffffffa06aed74>] ? brcmf_msgbuf_process_rx+0x404/0x480 [brcmfmac]
->   [<ffffffff810cea60>] ? irq_finalize_oneshot.part.30+0xf0/0xf0
->   [<ffffffffa06afb55>] brcmf_proto_msgbuf_rx_trigger+0x35/0xf0 [brcmfmac]
->   [<ffffffffa06baf2a>] brcmf_pcie_isr_thread_v2+0x8a/0x130 [brcmfmac]
->   [<ffffffff810cea80>] irq_thread_fn+0x20/0x50
->   [<ffffffff810ceddf>] irq_thread+0x13f/0x170
->   [<ffffffff810cebf0>] ? wake_threads_waitq+0x30/0x30
->   [<ffffffff810ceca0>] ? irq_thread_dtor+0xb0/0xb0
->   [<ffffffff81092a08>] kthread+0xd8/0xf0
->   [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
->   [<ffffffff8156d898>] ret_from_fork+0x58/0x90
->   [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
-> Code: 01 83 e2 f7 88 50 01 48 83 c4 08 5b 5d f3 c3 0f 1f 80 00 00 00 00 83 e2
->   f7 88 50 01 c3 66 0f 1f 84 00 00 00 00 00 0f 1f
-> RIP  [<ffffffff8145b225>] skb_pull+0x5/0x50
->   RSP<ffff88025ffe7d40>
-> CR2: 0000000000000080
-> ---[ end trace b074c0f90e7c997d ]---
->
-> [1] http://mid.gmane.org/20150430193259.GA5630@googlemail.com
->
-> Cc:<stable@vger.kernel.org>  # v3.18, v3.19, v4.0, v4.1
-> Reported-by: Michael Hornung<mhornung.linux@gmail.com>
-> Reviewed-by: Hante Meuleman<meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel<arend@broadcom.com>
 
-> Change-Id: Ia82879e6acc3c768133e80de391a6a5cf9799b17
-> Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/3281
 
-Sorry, Kalle
-
-These should not have been here. Oh well.
-
-Regards,
-Arend
-
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 12 +++++-------
->   1 file changed, 5 insertions(+), 7 deletions(-)
+On 05/12/2015 03:14 AM, Michal Kazior wrote:
+> On 12 May 2015 at 11:31, s prasad <sprasad.kandregula@gmail.com> wrote:
+>> May I know, is this firmware or driver constraint?
+>> If somebody have patch for this, am ready to test it.
 >
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-> index 4ec9811..65efb14 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-> @@ -511,11 +511,9 @@ static int brcmf_msgbuf_query_dcmd(struct brcmf_pub *drvr, int ifidx,
->   				     msgbuf->rx_pktids,
->   				     msgbuf->ioctl_resp_pktid);
->   	if (msgbuf->ioctl_resp_ret_len != 0) {
-> -		if (!skb) {
-> -			brcmf_err("Invalid packet id idx recv'd %d\n",
-> -				  msgbuf->ioctl_resp_pktid);
-> +		if (!skb)
->   			return -EBADF;
-> -		}
-> +
->   		memcpy(buf, skb->data, (len<  msgbuf->ioctl_resp_ret_len) ?
->   				       len : msgbuf->ioctl_resp_ret_len);
->   	}
-> @@ -874,10 +872,8 @@ brcmf_msgbuf_process_txstatus(struct brcmf_msgbuf *msgbuf, void *buf)
->   	flowid -= BRCMF_NROF_H2D_COMMON_MSGRINGS;
->   	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
->   				     msgbuf->tx_pktids, idx);
-> -	if (!skb) {
-> -		brcmf_err("Invalid packet id idx recv'd %d\n", idx);
-> +	if (!skb)
->   		return;
-> -	}
+> Short answer: There's nothing, yet.
 >
->   	set_bit(flowid, msgbuf->txstatus_done_map);
->   	commonring = msgbuf->flowrings[flowid];
-> @@ -1156,6 +1152,8 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+> Long answer:
 >
->   	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
->   				     msgbuf->rx_pktids, idx);
-> +	if (!skb)
-> +		return;
+>  From what I know official firmware doesn't support injecting packets
+> via monitor vdev. This is a firmware limitation.
 >
->   	if (data_offset)
->   		skb_pull(skb, data_offset);
+> A way around this may be creating and using an additional vdev, e.g.
+> AP. This will be rather ugly but may work. There's no patch for it.
+>
+> An alternative would be to ask Ben to modify his CT-firmware branch.
 
+I gave this a decent try a month or two ago, and had no luck.  The hardware
+(from what I can tell), just will not send a frame to an unknown peer.
+
+I noticed the other day that ANQP will not work on ath10k, and I suspect
+similar issues..so I will be in that code again.  Maybe I'll learn
+how to trick it into sending arbitrary frames.
+
+All that said, there is no way to specify rate-ctrl info on a per-pkt
+basis when injecting frames, so I don't know what good injecting frames
+on a mgt device will accomplish.
+
+Thanks,
+Ben
+
+> Also there's a problem with submitting raw 802.11 frames to firmware.
+> There's some work ongoing [1].
+>
+> [1]: http://lists.infradead.org/pipermail/ath10k/2015-May/005144.html
+>
+>
+> Michał
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
