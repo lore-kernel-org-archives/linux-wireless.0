@@ -1,187 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:37332 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbbEYMH3 (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33954 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933812AbbELWAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 08:07:29 -0400
-Received: by wibt6 with SMTP id t6so47139728wib.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2015 05:07:28 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 2/3] ath10k: handle cycle counter wraparound
-Date: Mon, 25 May 2015 14:06:18 +0200
-Message-Id: <1432555579-18347-2-git-send-email-michal.kazior@tieto.com> (sfid-20150525_140733_810149_D615F02F)
-In-Reply-To: <1432555579-18347-1-git-send-email-michal.kazior@tieto.com>
-References: <1432282693-4553-1-git-send-email-michal.kazior@tieto.com>
- <1432555579-18347-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 12 May 2015 18:00:39 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
+	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>
+Subject: [PATCH v3 4/4] firmware: use const for remaining firmware names
+Date: Tue, 12 May 2015 14:49:43 -0700
+Message-Id: <1431467383-28540-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20150513_000043_550938_B1434D61)
+In-Reply-To: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When QCA988X cycle counter HW register wraps
-around it resets to 0x7fffffff instead of 0. All
-other cycle counter related registers are divided
-by 2 so they never wraparound themselves. QCA61X4
-has a uniform CC and it wraparounds in a regular
-fashion though.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Worst case wraparound time is approx 24 seconds
-(2**31 / 88MHz). Since scan channel visit times
-are max 5 seconds (offchannel case) it is
-guaranteed there's been at most 1 wraparound and
-it is possible to compute survey active time
-value. It is, however, impossible to determine the
-point at which Rx Clear Count has been divided by
-two so it is not reported upon wraparound.
+We currently use flexible arrays with a char at the
+end for the remaining internal firmware name uses.
+There are two limitations with the way we use this.
+Since we're using a flexible array for a string on the
+struct if we wanted to use two strings it means we'd
+have a disjoint means of handling the strings, one
+using the flexible array, and another a char * pointer.
+We're also currently not using 'const' for the string.
 
-This fixes some occasional incorrect survey data
-on QCA988X as some channels (depending on how/when
-scan/offchannel requests were requested) would
-have approx 24 sec active time which wasn't
-actually the case.
+We wish to later extend some firmware data structures
+with other string/char pointers, but we also want to be
+very pedantic about const usage. Since we're going to
+change things to use 'const' we might as well also address
+unified way to use multiple strings on the structs.
 
-This should improve hostapd ACS a little bit.
+Replace the flexible array practice for strings with
+kstrdup_const() and kfree_const(), this will avoid
+allocations when the vmlinux .rodata is used, and just
+allocate a new proper string for us when needed. This
+also means we can simplify the struct allocations by
+removing the string length from the allocation size
+computation, which would otherwise get even more
+complicated when supporting multiple strings.
 
-Reported-by: Srinivasa Duvvuri <sduvvuri@chromium.org>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
+ drivers/base/firmware_class.c | 40 ++++++++++++++++++++++++++++------------
+ 1 file changed, 28 insertions(+), 12 deletions(-)
 
-Notes:
-    v4:
-     * use hw.c for cc computation logic [Kalle]
-     * drop rx_clear_count upon wraparound [Srinivasa]
-    
-    v3:
-     * split into 2 separate patches
-     * don't ignore all wraparound data: scans can be computed
-     * apply the shifted wraparound fix only for QCA988X
-     * improve commit log
-
- drivers/net/wireless/ath/ath10k/core.c |  1 +
- drivers/net/wireless/ath/ath10k/core.h |  7 +++++++
- drivers/net/wireless/ath/ath10k/hw.c   | 21 +++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
- drivers/net/wireless/ath/ath10k/wmi.c  | 17 +++++++++--------
- 5 files changed, 41 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index bcccae19325d..684d460d79b7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -48,6 +48,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.name = "qca988x hw2.0",
- 		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
- 		.uart_pin = 7,
-+		.has_shifted_cc_wraparound = true,
- 		.fw = {
- 			.dir = QCA988X_HW_2_0_FW_DIR,
- 			.fw = QCA988X_HW_2_0_FW_FILE,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 827b3d79ed0c..729b366e2a18 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -572,6 +572,13 @@ struct ath10k {
- 		u32 patch_load_addr;
- 		int uart_pin;
- 
-+		/* This is true if given HW chip has a quirky Cycle Counter
-+		 * wraparound which resets to 0x7fffffff instead of 0. All
-+		 * other CC related counters (e.g. Rx Clear Count) are divided
-+		 * by 2 so they never wraparound themselves.
-+		 */
-+		bool has_shifted_cc_wraparound;
-+
- 		struct ath10k_hw_params_fw {
- 			const char *dir;
- 			const char *fw;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index 839a8791fb9e..5997f00afe3b 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include <linux/types.h>
-+#include "core.h"
- #include "hw.h"
- 
- const struct ath10k_hw_regs qca988x_regs = {
-@@ -56,3 +57,23 @@ const struct ath10k_hw_regs qca6174_regs = {
- 	.soc_chip_id_address			= 0x000f0,
- 	.scratch_3_address			= 0x0028,
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 62e4611..8c3aa3c 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -150,17 +150,17 @@ struct firmware_buf {
+ 	int page_array_size;
+ 	struct list_head pending_list;
+ #endif
+-	char fw_id[];
++	const char *fw_id;
  };
-+
-+void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
-+				u32 cc, u32 rcc, u32 cc_prev, u32 rcc_prev)
-+{
-+	u32 cc_fix = 0;
-+
-+	survey->filled |= SURVEY_INFO_TIME |
-+			  SURVEY_INFO_TIME_BUSY;
-+
-+	if (ar->hw_params.has_shifted_cc_wraparound && cc < cc_prev) {
-+		cc_fix = 0x7fffffff;
-+		survey->filled &= ~SURVEY_INFO_TIME_BUSY;
-+	}
-+
-+	cc -= cc_prev - cc_fix;
-+	rcc -= rcc_prev;
-+
-+	survey->time = CCNT_TO_MSEC(cc);
-+	survey->time_busy = CCNT_TO_MSEC(rcc);
-+}
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 372f0b8c96f5..85cca29375fe 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -169,6 +169,9 @@ struct ath10k_hw_regs {
- extern const struct ath10k_hw_regs qca988x_regs;
- extern const struct ath10k_hw_regs qca6174_regs;
  
-+void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
-+				u32 cc, u32 rcc, u32 cc_prev, u32 rcc_prev);
-+
- #define QCA_REV_988X(ar) ((ar)->hw_rev == ATH10K_HW_QCA988X)
- #define QCA_REV_6174(ar) ((ar)->hw_rev == ATH10K_HW_QCA6174)
+ struct fw_cache_entry {
+ 	struct list_head list;
+-	char name[];
++	const char *name;
+ };
  
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 43caabf5b025..70e6efa2c071 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -27,6 +27,7 @@
- #include "testmode.h"
- #include "wmi-ops.h"
- #include "p2p.h"
-+#include "hw.h"
+ struct fw_name_devm {
+ 	unsigned long magic;
+-	char name[];
++	const char *name;
+ };
  
- /* MAIN WMI cmd track */
- static struct wmi_cmd_map wmi_cmd_map = {
-@@ -1640,16 +1641,16 @@ void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
- 		 * visited channel. The reported cycle count is global
- 		 * and per-channel cycle count must be calculated */
+ #define to_fwbuf(d) container_of(d, struct firmware_buf, ref)
+@@ -181,13 +181,17 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
+ {
+ 	struct firmware_buf *buf;
  
--		cycle_count -= ar->survey_last_cycle_count;
--		rx_clear_count -= ar->survey_last_rx_clear_count;
+-	buf = kzalloc(sizeof(*buf) + strlen(fw_name) + 1, GFP_ATOMIC);
 -
- 		survey = &ar->survey[idx];
--		survey->time = CCNT_TO_MSEC(cycle_count);
--		survey->time_busy = CCNT_TO_MSEC(rx_clear_count);
- 		survey->noise = noise_floor;
--		survey->filled = SURVEY_INFO_TIME |
--				 SURVEY_INFO_TIME_BUSY |
--				 SURVEY_INFO_NOISE_DBM;
-+		survey->filled = SURVEY_INFO_NOISE_DBM;
++	buf = kzalloc(sizeof(*buf), GFP_ATOMIC);
+ 	if (!buf)
+-		return buf;
++		return NULL;
 +
-+		ath10k_hw_fill_survey_time(ar,
-+					   survey,
-+					   cycle_count,
-+					   rx_clear_count,
-+					   ar->survey_last_cycle_count,
-+					   ar->survey_last_rx_clear_count);
- 	}
++	buf->fw_id = kstrdup_const(fw_name, GFP_ATOMIC);
++	if (!buf->fw_id) {
++		kfree(buf);
++		return NULL;
++	}
  
- 	ar->survey_last_rx_clear_count = rx_clear_count;
+ 	kref_init(&buf->ref);
+-	strcpy(buf->fw_id, fw_name);
+ 	buf->fwc = fwc;
+ 	init_completion(&buf->completion);
+ #ifdef CONFIG_FW_LOADER_USER_HELPER
+@@ -257,6 +261,7 @@ static void __fw_free_buf(struct kref *ref)
+ 	} else
+ #endif
+ 		vfree(buf->data);
++	kfree_const(buf->fw_id);
+ 	kfree(buf);
+ }
+ 
+@@ -401,6 +406,7 @@ static void fw_name_devm_release(struct device *dev, void *res)
+ 	if (fwn->magic == (unsigned long)&fw_cache)
+ 		pr_debug("%s: fw_name-%s devm-%p released\n",
+ 				__func__, fwn->name, res);
++	kfree_const(fwn->name);
+ }
+ 
+ static int fw_devm_match(struct device *dev, void *res,
+@@ -431,13 +437,17 @@ static int fw_add_devm_name(struct device *dev, const char *name)
+ 	if (fwn)
+ 		return 1;
+ 
+-	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm) +
+-			   strlen(name) + 1, GFP_KERNEL);
++	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm),
++			   GFP_KERNEL);
+ 	if (!fwn)
+ 		return -ENOMEM;
++	fwn->name = kstrdup_const(name, GFP_KERNEL);
++	if (!fwn->name) {
++		kfree(fwn);
++		return -ENOMEM;
++	}
+ 
+ 	fwn->magic = (unsigned long)&fw_cache;
+-	strcpy(fwn->name, name);
+ 	devres_add(dev, fwn);
+ 
+ 	return 0;
+@@ -1397,11 +1407,16 @@ static struct fw_cache_entry *alloc_fw_cache_entry(const char *name)
+ {
+ 	struct fw_cache_entry *fce;
+ 
+-	fce = kzalloc(sizeof(*fce) + strlen(name) + 1, GFP_ATOMIC);
++	fce = kzalloc(sizeof(*fce), GFP_ATOMIC);
+ 	if (!fce)
+ 		goto exit;
+ 
+-	strcpy(fce->name, name);
++	fce->name = kstrdup_const(name, GFP_ATOMIC);
++	if (!fce->name) {
++		kfree(fce);
++		fce = NULL;
++		goto exit;
++	}
+ exit:
+ 	return fce;
+ }
+@@ -1441,6 +1456,7 @@ found:
+ 
+ static void free_fw_cache_entry(struct fw_cache_entry *fce)
+ {
++	kfree_const(fce->name);
+ 	kfree(fce);
+ }
+ 
 -- 
-2.1.4
+2.3.2.209.gd67f9d5.dirty
 
