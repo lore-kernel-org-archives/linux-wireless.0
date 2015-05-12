@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34381 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:40618 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750851AbbEGMEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 08:04:13 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: "Gujulan Elango\, Hari Prasath \(H.\)" <hgujulan@visteon.com>
-Cc: "devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] staging: rtl8723au : remove goto & return error directly
-References: <20150507111652.GA10574@IND12F0122>
-Date: Thu, 07 May 2015 08:03:06 -0400
-In-Reply-To: <20150507111652.GA10574@IND12F0122> (Gujulan Elango's message of
-	"Thu, 7 May 2015 11:22:25 +0000")
-Message-ID: <wrfjk2wkoarp.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150507_140416_473150_D6772855)
+	id S933858AbbELVXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2015 17:23:40 -0400
+Date: Tue, 12 May 2015 23:23:37 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Greg KH <greg@kroah.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	ming.lei@canonical.com, rusty@rustcorp.com.au, dhowells@redhat.com,
+	seth.forshee@canonical.com, torvalds@linux-foundation.org,
+	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
+	linux-wireless@vger.kernel.org, Kyle McMartin <kyle@kernel.org>
+Subject: Re: [PATCH v2 1/5] firmware: fix __getname() missing failure check
+Message-ID: <20150512212337.GQ23057@wotan.suse.de> (sfid-20150512_232359_931287_0800A8A6)
+References: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
+ <1431455457-25322-2-git-send-email-mcgrof@do-not-panic.com>
+ <20150512212111.GB10402@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150512212111.GB10402@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
-> Remove the goto and return error directly thereby removing a variable
->
-> Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
-> ---
->  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
+On Tue, May 12, 2015 at 02:21:11PM -0700, Greg KH wrote:
+> On Tue, May 12, 2015 at 11:30:53AM -0700, Luis R. Rodriguez wrote:
+> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> > 
+> > The request_firmware*() APIs uses __getname() to iterate
+> > over the list of paths possible for firmware to be found,
+> > the code however never checked for failure on __getname().
+> > Although *very unlikely*, this can still happen. Add the
+> > missing check.
+> > 
+> > There is still no checks on the concatenation of the path
+> > and filename passed, that requires a bit more work and
+> > subsequent patches address this. The commit that introduced
+> > this is abb139e7 ("firmware: teach the kernel to load
+> > firmware files directly from the filesystem").
+> > 
+> > mcgrof@ergon ~/linux (git::firmware-fixes) $ git describe --contains abb139e7
+> > v3.7-rc1~120
+> > 
+> > Cc: Linus Torvalds <torvalds@linux-foundation.org>
+> > Cc: Ming Lei <ming.lei@canonical.com>
+> > Cc: Rusty Russell <rusty@rustcorp.com.au>
+> > Cc: David Howells <dhowells@redhat.com>
+> > Cc: Kyle McMartin <kyle@kernel.org>
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+> > ---
+> >  drivers/base/firmware_class.c | 6 +++++-
+> >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+> > index 171841a..bc6c8e6 100644
+> > --- a/drivers/base/firmware_class.c
+> > +++ b/drivers/base/firmware_class.c
+> > @@ -322,7 +322,11 @@ static int fw_get_filesystem_firmware(struct device *device,
+> >  {
+> >  	int i;
+> >  	int rc = -ENOENT;
+> > -	char *path = __getname();
+> > +	char *path;
+> > +
+> > +	path = __getname();
+> > +	if (unlikely(!path))
+> 
+> Please only use likely/unlikely on code paths that actually care about
+> it (i.e. you can measure the difference).  Otherwise it is pretty
+> useless, and people have determined that sometimes it is slower as
+> humans get this wrong a lot of time...
 
-NACK!
+Will do , thanks.
 
-The goto is cleaner and more consistent, rather than hiding a return in
-the middle of the code.
-
-Jes
-
->
-> diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-> index b139ed4..a979048 100644
-> --- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-> +++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-> @@ -1209,7 +1209,6 @@ static int cfg80211_rtw_change_iface(struct wiphy *wiphy,
->  	struct rtw_adapter *padapter = wiphy_to_adapter(wiphy);
->  	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
->  	struct wireless_dev *rtw_wdev = wiphy_to_wdev(wiphy);
-> -	int ret = 0;
->  
->  	DBG_8723A("%s(%s): call netdev_open23a\n", __func__, ndev->name);
->  
-> @@ -1238,14 +1237,12 @@ static int cfg80211_rtw_change_iface(struct wiphy *wiphy,
->  
->  	if (cfg80211_infrastructure_mode(padapter, type) != _SUCCESS) {
->  		rtw_wdev->iftype = old_type;
-> -		ret = -EPERM;
-> -		goto exit;
-> +		return -EPERM;
->  	}
->  
->  	rtw_setopmode_cmd23a(padapter, type);
->  
-> -exit:
-> -	return ret;
-> +	return 0;
->  }
->  
->  void rtw_cfg80211_indicate_scan_done(struct rtw_wdev_priv *pwdev_priv,
+ Luis
