@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:56003 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263AbbE0UCX (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:34260 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbbELFDn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 16:02:23 -0400
-From: Guenter Roeck <linux@roeck-us.net>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: Rachel Kim <rachel.kim@atmel.com>, Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH -next] staging: wilc1000: Include linux/gpio.h instead of asm/gpio.h
-Date: Wed, 27 May 2015 13:02:16 -0700
-Message-Id: <1432756936-6188-1-git-send-email-linux@roeck-us.net> (sfid-20150527_220227_541033_03B70A72)
+	Tue, 12 May 2015 01:03:43 -0400
+Received: by wicmc15 with SMTP id mc15so44027756wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2015 22:03:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com>
+References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com>
+	<CA+BoTQkFSQe0di1vqqB5cAPKaizRkBT5cu4fA8dQ_uR_a2HdJw@mail.gmail.com>
+	<CAJa-X96spUg7+EZqH-Mv3s7OzbHzmXmcZ7uOw1KvPShexW6D_w@mail.gmail.com>
+	<CA+BoTQ=Qpws=928TZe22Ds-UO_qQJ2Om+=DW=VUNUS59o1BQAA@mail.gmail.com>
+	<CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com>
+Date: Tue, 12 May 2015 07:03:42 +0200
+Message-ID: <CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com> (sfid-20150512_070346_841392_402BF345)
+Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: s prasad <sprasad.kandregula@gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix:
+On 11 May 2015 at 23:27, s prasad <sprasad.kandregula@gmail.com> wrote:
+> Tested as you suggested, however didn't help. Please find attached log
+> files for each firmware type.
+>
+> While executing following commands in sequence, captured dmesg. I hope
+> those logs will help. If not please let me know.
 
-drivers/staging/wilc1000/linux_wlan.c:18:22: fatal error:
-	asm/gpio.h: No such file or directory
+Thanks!
 
-Not every architecture has asm/gpio.h. Include linux/gpio.h instead.
+Apparently I've missed from your original email the fact that you're
+trying to inject packets. This isn't supported in ath10k.
 
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
----
- drivers/staging/wilc1000/linux_wlan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 49b238a05a88..18f1bd00201a 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -15,7 +15,7 @@
- #include <linux/workqueue.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
--#include <asm/gpio.h>
-+#include <linux/gpio.h>
- 
- #include <linux/kthread.h>
- #include <linux/firmware.h>
--- 
-2.1.0
-
+Michał
