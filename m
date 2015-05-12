@@ -1,113 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64001 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752656AbbE1NAq (ORCPT
+Received: from mail-db3on0143.outbound.protection.outlook.com ([157.55.234.143]:53178
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752561AbbELKht convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:00:46 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxMiS015076
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:46 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqgk-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:46 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 13/17] mwifiex: drop block-ack action frames
-Date: Thu, 28 May 2015 23:59:03 +0530
-Message-ID: <1432837747-2075-14-git-send-email-patila@marvell.com> (sfid-20150528_150052_011331_6574CF3D)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+	Tue, 12 May 2015 06:37:49 -0400
+From: "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+CC: Dan Carpenter <dan.carpenter@oracle.com>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Babu, Viswanathan (V.)" <vbabu3@visteon.com>
+Subject: Re: [PATCH] staging: rtl8723au : remove goto & return error directly
+Date: Tue, 12 May 2015 10:37:45 +0000
+Message-ID: <20150512103213.GA5519@IND12F0122> (sfid-20150512_123754_323393_F3236C72)
+References: <20150507111652.GA10574@IND12F0122>
+ <wrfjk2wkoarp.fsf@ultrasam.lan.trained-monkey.org>
+ <20150507121934.GH14154@mwanda> <20150507134344.GA11599@IND12F0122>
+ <wrfj3838o4w8.fsf@ultrasam.lan.trained-monkey.org>
+In-Reply-To: <wrfj3838o4w8.fsf@ultrasam.lan.trained-monkey.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We often see ADDBA request packets coming to driver because driver
-has registered for action frame subtype. We dont process BA action
-frames in host. Drop such frames.
+On Thu, May 07, 2015 at 10:09:59AM -0400, Jes Sorensen wrote:
+> "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
+> > On Thu, May 07, 2015 at 03:19:34PM +0300, Dan Carpenter wrote:
+> >> On Thu, May 07, 2015 at 08:03:06AM -0400, Jes Sorensen wrote:
+> >> > "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
+> >> > > Remove the goto and return error directly thereby removing a variable
+> >> > >
+> >> > > Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
+> >> > > ---
+> >> > >  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 7 ++-----
+> >> > >  1 file changed, 2 insertions(+), 5 deletions(-)
+> >> > 
+> >> > NACK!
+> >> 
+> >> SHOUTING!
+> >> 
+> >> > 
+> >> > The goto is cleaner and more consistent, rather than hiding a return in
+> >> > the middle of the code.
+> >> 
+> >> More consistent with what?  There are already returns earlier in the
+> >> function.  Do-nothing gotos are pointless and annoying.
+> >> 
+> >> regards,
+> >> dan carpenter
+> >> 
+> >
+> > I sent this patch  because goto & return was mixed up in this function.
+> > There was a return as well as goto used. And i guess goto is not 
+> > encouraged anywhere. In this case especially,I couldn't see any 
+> > significant cleanup being done in the goto label.
+> 
+> I will accept a patch to remove the returns in the middle of the
+> function, if you wish to submit that.
+> 
+> A return at the very beginning of a function is OK, but in the middle of
+> a larger function they make it harder to catch when code exists.
+> 
+> Jes
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Xinmin Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/util.c | 43 +++++++++++++++++++++++++------------
- 1 file changed, 29 insertions(+), 14 deletions(-)
+Is this accepted as it is or should I send v2 with the goto retained but
+the return in the middle of the function also converted to goto for
+consistency.I agree that goto's are used at many places in the kernel
+but this is really a small function where it doesn't seem to help
+much.Also there is no signficant cleanup being done in the definition of
+the label.
 
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 2e3dc07..790e619 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -329,7 +329,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 			  struct rxpd *rx_pd)
- {
- 	u16 stype;
--	u8 category, action_code;
-+	u8 category, action_code, *addr2;
- 	struct ieee80211_hdr *ieee_hdr = (void *)payload;
- 
- 	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
-@@ -337,21 +337,35 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 	switch (stype) {
- 	case IEEE80211_STYPE_ACTION:
- 		category = *(payload + sizeof(struct ieee80211_hdr));
--		action_code = *(payload + sizeof(struct ieee80211_hdr) + 1);
--		if (category == WLAN_CATEGORY_PUBLIC &&
--		    action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
-+		switch (category) {
-+		case WLAN_CATEGORY_PUBLIC:
-+			action_code = *(payload + sizeof(struct ieee80211_hdr)
-+					+ 1);
-+			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
-+				addr2 = ieee_hdr->addr2;
-+				mwifiex_dbg(priv->adapter, INFO,
-+					    "TDLS discovery response %pM nf=%d, snr=%d\n",
-+					    addr2, rx_pd->nf, rx_pd->snr);
-+				mwifiex_auto_tdls_update_peer_signal(priv,
-+								     addr2,
-+								     rx_pd->snr,
-+								     rx_pd->nf);
-+			}
-+			break;
-+		case WLAN_CATEGORY_BACK:
-+			/*we dont indicate BACK action frames to cfg80211*/
-+			mwifiex_dbg(priv->adapter, INFO,
-+				    "drop BACK action frames");
-+			return -1;
-+		default:
- 			mwifiex_dbg(priv->adapter, INFO,
--				    "TDLS discovery response %pM nf=%d, snr=%d\n",
--				    ieee_hdr->addr2, rx_pd->nf, rx_pd->snr);
--			mwifiex_auto_tdls_update_peer_signal(priv,
--							     ieee_hdr->addr2,
--							     rx_pd->snr,
--							     rx_pd->nf);
-+				    "unknown public action frame category %d\n",
-+				    category);
- 		}
--		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, INFO,
--			    "unknown mgmt frame subtype %#x\n", stype);
-+		    "unknown mgmt frame subtype %#x\n", stype);
-+		return 0;
- 	}
- 
- 	return 0;
-@@ -387,8 +401,9 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 
- 	ieee_hdr = (void *)skb->data;
- 	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
--		mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
--					  pkt_len, rx_pd);
-+		if (mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
-+					      pkt_len, rx_pd))
-+			return -1;
- 	}
- 	/* Remove address4 */
- 	memmove(skb->data + sizeof(struct ieee80211_hdr_3addr),
--- 
-1.8.1.4
-
+regards
+Hari
