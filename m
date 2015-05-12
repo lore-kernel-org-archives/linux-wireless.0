@@ -1,30 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38735 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbbEDUBh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 16:01:37 -0400
-Date: Mon, 04 May 2015 16:01:35 -0400 (EDT)
-Message-Id: <20150504.160135.1697200280125921048.davem@davemloft.net> (sfid-20150504_220145_703508_E53BCCC2)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2015-05-04
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1430737329.2013.21.camel@sipsolutions.net>
-References: <1430737329.2013.21.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:49794 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932307AbbELLH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 May 2015 07:07:57 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "Gujulan Elango\, Hari Prasath \(H.\)" <hgujulan@visteon.com>
+Cc: "devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"joe\@perches.com" <joe@perches.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Babu\, Viswanathan \(V.\)" <vbabu3@visteon.com>
+Subject: Re: [PATCH] staging: rtl8723au: remove redundant initialization
+References: <20150512095535.GA5332@IND12F0122>
+Date: Tue, 12 May 2015 07:07:54 -0400
+In-Reply-To: <20150512095535.GA5332@IND12F0122> (Gujulan Elango's message of
+	"Tue, 12 May 2015 10:01:18 +0000")
+Message-ID: <wrfjtwvi3vg5.fsf@redhat.com> (sfid-20150512_130802_250654_C9D252A6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 04 May 2015 13:02:09 +0200
+"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
+> The variable pHalData is initialized twice in this same function with
+> same value.So removing one of them.
+>
+> Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-> As I was sick last week this dragged out for a bit, but given we have
-> -rc2 out I figured I'd send you something sooner rather than later.
-> 
-> Let me know if there are any issues.
+Looks fine to me
 
-Pulled, thanks Johannes.
-
-Feel better soon.
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
