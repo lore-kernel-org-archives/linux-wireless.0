@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47683 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932188AbbE1O02 (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:34831 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909AbbEMFhQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:26:28 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEOZBo007178
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:28 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqydk-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:27 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 04/17] mwifiex: enable 11d after bss reset
-Date: Fri, 29 May 2015 01:24:45 +0530
-Message-ID: <1432842898-3219-5-git-send-email-patila@marvell.com> (sfid-20150528_162634_989266_9FC31A12)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
+	Wed, 13 May 2015 01:37:16 -0400
+Received: by widdi4 with SMTP id di4so182588058wid.0
+        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2015 22:37:15 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH FIX] ssb: extend fix for PCI related silent reboots to all chipsets
+Date: Wed, 13 May 2015 07:36:38 +0200
+Message-Id: <1431495398-15238-1-git-send-email-zajec5@gmail.com> (sfid-20150513_073721_044011_CD118037)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BSS reset would reset all state information in FW.
-Issue 11d config command after reset to enabled 11d in FW.
+Recent fix for BCM4704 reboots has to be extended as the same problem
+affects Linksys WRT350N v1 (BCM4705).
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Reported-by: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
 ---
- drivers/net/wireless/mwifiex/uap_cmd.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Kalle: it's quite trivial, you may consider taking it for 4.1.
+---
+ drivers/ssb/driver_pcicore.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 0a3297e..56a4768 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -806,6 +806,8 @@ void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
- int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 			     struct mwifiex_uap_bss_param *bss_cfg)
- {
-+	enum state_11d_t state_11d;
-+
- 	if (mwifiex_del_mgmt_ies(priv))
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "Failed to delete mgmt IEs!\n");
-@@ -830,6 +832,16 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 		return -1;
- 	}
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 15a7ee3..5fe1c22 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -359,12 +359,13 @@ static void ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
  
-+	/* Send cmd to FW to enable 11D function */
-+	state_11d = ENABLE_11D;
-+	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
-+			     HostCmd_ACT_GEN_SET, DOT11D_I,
-+			     &state_11d, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "11D: failed to enable 11D\n");
-+		return -1;
-+	}
-+
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
+ 	/*
+ 	 * Accessing PCI config without a proper delay after devices reset (not
+-	 * GPIO reset) was causing reboots on WRT300N v1.0.
++	 * GPIO reset) was causing reboots on WRT300N v1.0 (BCM4704).
+ 	 * Tested delay 850 us lowered reboot chance to 50-80%, 1000 us fixed it
+ 	 * completely. Flushing all writes was also tested but with no luck.
++	 * The same problem was reported for WRT350N v1 (BCM4705), so we just
++	 * sleep here unconditionally.
+ 	 */
+-	if (pc->dev->bus->chip_id == 0x4704)
+-		usleep_range(1000, 2000);
++	usleep_range(1000, 2000);
+ 
+ 	/* Enable PCI bridge BAR0 prefetch and burst */
+ 	val = PCI_COMMAND_MASTER | PCI_COMMAND_MEMORY;
 -- 
-1.8.1.4
+1.8.4.5
 
