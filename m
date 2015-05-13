@@ -1,217 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752171AbbEZTTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:19:08 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 35/39] iwlwifi: mvm: combine regular and sched scan stop functions
-Date: Tue, 26 May 2015 22:17:48 +0300
-Message-Id: <1432667872-18092-35-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211913_997744_09E57A3A)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:36119 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752183AbbEMS2U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2015 14:28:20 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
+	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
+	casey@schaufler-ca.com, keescook@chromium.org, mjg59@srcf.ucam.org,
+	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>
+Subject: [RFC v2 1/6] firmware: generalize reading file contents as a helper
+Date: Wed, 13 May 2015 11:23:51 -0700
+Message-Id: <1431541436-17007-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20150513_202838_170089_034DEE3B)
+In-Reply-To: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-The regular and scheduled scan functions are very similar, so they can
-be combined into one.
+We'll want to reuse this same code later in order to
+read two separate types of file contents. Although we
+can simplify fw_read_file_contents() to do a direct
+return we leave a bit of boilerplate code to make the
+next changes easier to review. In this case we'll
+later extend the firmware specific read to also go
+and fetch the signature file when required.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This commit introduces no functional changes.
+
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/d3.c       |  2 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  7 ++--
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  9 +++---
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 50 ++++++++++-------------------
- 4 files changed, 27 insertions(+), 41 deletions(-)
+ drivers/base/firmware_class.c | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index ceffc78..423c519 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -761,7 +761,7 @@ void iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 8c3aa3c..134dd77 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -291,7 +291,8 @@ static const char * const fw_path[] = {
+ module_param_string(path, fw_path_para, sizeof(fw_path_para), 0644);
+ MODULE_PARM_DESC(path, "customized firmware image search path with a higher priority than default path");
  
- static int iwl_mvm_switch_to_d3(struct iwl_mvm *mvm)
+-static int fw_read_file_contents(struct file *file, struct firmware_buf *fw_buf)
++static int __read_file_contents(struct file *file,
++				void **dest_buf, size_t *dest_size)
  {
--	iwl_mvm_reg_scan_stop(mvm);
-+	iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_REGULAR, true);
- 
- 	iwl_trans_stop_device(mvm->trans);
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index cea236b..d3af88b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -510,6 +510,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 
- 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
- 
-+	BUILD_BUG_ON(IWL_MVM_SCAN_STOPPING_MASK & IWL_MVM_SCAN_MASK);
- 	BUILD_BUG_ON(IWL_MVM_MAX_UMAC_SCANS > HWEIGHT32(IWL_MVM_SCAN_MASK) ||
- 		     IWL_MVM_MAX_LMAC_SCANS > HWEIGHT32(IWL_MVM_SCAN_MASK));
- 
-@@ -2361,7 +2362,7 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
- 	mutex_lock(&mvm->mutex);
- 
- 	if (changes & BSS_CHANGED_IDLE && !bss_conf->idle)
--		iwl_mvm_sched_scan_stop(mvm, true);
-+		iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_SCHED, true);
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
-@@ -2417,7 +2418,7 @@ static void iwl_mvm_mac_cancel_hw_scan(struct ieee80211_hw *hw,
- 	 */
- 	if ((mvm->scan_status & IWL_MVM_SCAN_REGULAR) ||
- 	    (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN))
--		iwl_mvm_reg_scan_stop(mvm);
-+		iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_REGULAR, true);
- 
- 	mutex_unlock(&mvm->mutex);
- }
-@@ -2775,7 +2776,7 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
- 		return 0;
- 	}
- 
--	ret = iwl_mvm_sched_scan_stop(mvm, false);
-+	ret = iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_SCHED, false);
- 	mutex_unlock(&mvm->mutex);
- 	iwl_mvm_wait_for_async_handlers(mvm);
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index f22d309..0173ad1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -447,6 +447,8 @@ iwl_mvm_vif_from_mac80211(struct ieee80211_vif *vif)
- 
- extern const u8 tid_to_mac80211_ac[];
- 
-+#define IWL_MVM_SCAN_STOPPING_SHIFT	8
+ 	int size;
+ 	char *buf;
+@@ -314,14 +315,30 @@ static int fw_read_file_contents(struct file *file, struct firmware_buf *fw_buf)
+ 	rc = security_kernel_fw_from_file(file, buf, size);
+ 	if (rc)
+ 		goto fail;
+-	fw_buf->data = buf;
+-	fw_buf->size = size;
 +
- enum iwl_scan_status {
- 	IWL_MVM_SCAN_REGULAR		= BIT(0),
- 	IWL_MVM_SCAN_SCHED		= BIT(1),
-@@ -463,8 +465,8 @@ enum iwl_scan_status {
- 	IWL_MVM_SCAN_NETDETECT_MASK	= IWL_MVM_SCAN_NETDETECT |
- 					  IWL_MVM_SCAN_STOPPING_NETDETECT,
- 
--	IWL_MVM_SCAN_STOPPING_MASK	= 0xff00,
--	IWL_MVM_SCAN_MASK		= 0x00ff,
-+	IWL_MVM_SCAN_STOPPING_MASK	= 0xff << IWL_MVM_SCAN_STOPPING_SHIFT,
-+	IWL_MVM_SCAN_MASK		= 0xff,
- };
- 
- /**
-@@ -1121,7 +1123,7 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			   struct cfg80211_scan_request *req,
- 			   struct ieee80211_scan_ies *ies);
- int iwl_mvm_scan_size(struct iwl_mvm *mvm);
--int iwl_mvm_reg_scan_stop(struct iwl_mvm *mvm);
-+int iwl_mvm_scan_stop(struct iwl_mvm *mvm, int type, bool notify);
- int iwl_mvm_max_scan_ie_len(struct iwl_mvm *mvm);
- void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm);
- 
-@@ -1137,7 +1139,6 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 			     struct cfg80211_sched_scan_request *req,
- 			     struct ieee80211_scan_ies *ies,
- 			     int type);
--int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify);
- int iwl_mvm_rx_scan_match_found(struct iwl_mvm *mvm,
- 				struct iwl_rx_cmd_buffer *rxb,
- 				struct iwl_device_cmd *cmd);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 49bcf7d..d8de906 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -1139,11 +1139,11 @@ static int iwl_mvm_check_running_scans(struct iwl_mvm *mvm, int type)
- 	case IWL_MVM_SCAN_REGULAR:
- 		if (mvm->scan_status & IWL_MVM_SCAN_REGULAR_MASK)
- 			return -EBUSY;
--		return iwl_mvm_sched_scan_stop(mvm, true);
-+		return iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_SCHED, true);
- 	case IWL_MVM_SCAN_SCHED:
- 		if (mvm->scan_status & IWL_MVM_SCAN_SCHED_MASK)
- 			return -EBUSY;
--		return iwl_mvm_reg_scan_stop(mvm);
-+		iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_REGULAR, true);
- 	case IWL_MVM_SCAN_NETDETECT:
- 		/* No need to stop anything for net-detect since the
- 		 * firmware is restarted anyway.  This way, any sched
-@@ -1524,11 +1524,11 @@ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
- 	}
++	*dest_buf = buf;
++	*dest_size = size;
++
+ 	return 0;
+ fail:
+ 	vfree(buf);
+ 	return rc;
  }
  
--int iwl_mvm_reg_scan_stop(struct iwl_mvm *mvm)
-+int iwl_mvm_scan_stop(struct iwl_mvm *mvm, int type, bool notify)
++static int fw_read_file_contents(struct file *file,
++				 struct firmware_buf *fw_buf)
++{
++	int rc;
++
++	rc = __read_file_contents(file,
++				  &fw_buf->data,
++				  &fw_buf->size);
++	if (rc)
++		return rc;
++
++	return 0;
++}
++
+ static int fw_get_filesystem_firmware(struct device *device,
+ 				       struct firmware_buf *buf)
  {
- 	int ret;
- 
--	if (!(mvm->scan_status & IWL_MVM_SCAN_REGULAR))
-+	if (!(mvm->scan_status & type))
- 		return 0;
- 
- 	if (iwl_mvm_is_radio_killed(mvm)) {
-@@ -1536,43 +1536,27 @@ int iwl_mvm_reg_scan_stop(struct iwl_mvm *mvm)
- 		goto out;
- 	}
- 
--	ret = iwl_mvm_scan_stop_wait(mvm, IWL_MVM_SCAN_REGULAR);
-+	ret = iwl_mvm_scan_stop_wait(mvm, type);
- 	if (!ret)
--		mvm->scan_status |= IWL_MVM_SCAN_STOPPING_REGULAR;
-+		mvm->scan_status |= type << IWL_MVM_SCAN_STOPPING_SHIFT;
- out:
- 	/* Clear the scan status so the next scan requests will
- 	 * succeed and mark the scan as stopping, so that the Rx
- 	 * handler doesn't do anything, as the scan was stopped from
--	 * above. Since the rx handler won't do anything now, we have
--	 * to release the scan reference here.
-+	 * above.
- 	 */
--	iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
-+	mvm->scan_status &= ~type;
- 
--	mvm->scan_status &= ~IWL_MVM_SCAN_REGULAR;
--	ieee80211_scan_completed(mvm->hw, true);
--
--	return ret;
--}
--
--int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify)
--{
--	int ret;
--
--	if (!(mvm->scan_status & IWL_MVM_SCAN_SCHED))
--		return 0;
--
--	if (iwl_mvm_is_radio_killed(mvm)) {
--		ret = 0;
--		goto out;
--	}
--
--	ret = iwl_mvm_scan_stop_wait(mvm, IWL_MVM_SCAN_SCHED);
--	if (!ret)
--		mvm->scan_status |= IWL_MVM_SCAN_STOPPING_SCHED;
--out:
--	mvm->scan_status &= ~IWL_MVM_SCAN_SCHED;
--	if (notify)
-+	if (type == IWL_MVM_SCAN_REGULAR) {
-+		/* Since the rx handler won't do anything now, we have
-+		 * to release the scan reference here.
-+		 */
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
-+		if (notify)
-+			ieee80211_scan_completed(mvm->hw, true);
-+	} else if (notify) {
- 		ieee80211_sched_scan_stopped(mvm->hw);
-+	}
- 
- 	return ret;
- }
 -- 
-2.1.4
+2.3.2.209.gd67f9d5.dirty
 
