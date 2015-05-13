@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56106 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752300AbbEFHDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 03:03:42 -0400
-Message-ID: <1430895798.2495.0.camel@sipsolutions.net> (sfid-20150506_090359_505525_D71D0A6D)
-Subject: Re: [RFC v1 11/12] iwlwifi: use sysdata_file_request() and
- sysdata_file_request_async()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Wed, 06 May 2015 09:03:18 +0200
-In-Reply-To: <1430873070-7290-12-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_031058_035930_55D8ED68)
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1430873070-7290-12-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20150506_031058_035930_55D8ED68)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:37508 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933001AbbEMIgi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2015 04:36:38 -0400
+Date: Wed, 13 May 2015 11:36:15 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Gaston Gonzalez <gascoar@gmail.com>
+Cc: devel@driverdev.osuosl.org, arnd@arndb.de,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	joe@perches.com, navyasri.tech@gmail.com
+Subject: Re: [PATCH] staging: rtl8192u: ieee80211: Silence sparse warning
+Message-ID: <20150513083615.GS14154@mwanda> (sfid-20150513_103642_648431_87A9D95F)
+References: <1429476231-6197-1-git-send-email-gascoar@gmail.com>
+ <20150420082441.GU10964@mwanda>
+ <553C18B6.807@gmail.com>
+ <20150427101242.GR14154@mwanda>
+ <554AD76E.7060605@gmail.com>
+ <20150508110328.GT14154@mwanda>
+ <55527D6E.7090207@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55527D6E.7090207@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What's the point in these conversions? You're clearly not converting
-*all* users so you could get rid of request_firmware(), so this is
-pretty much pointless.
+What?  No, that patch can't work at all.  It will just oops directly
+when you do:
 
-johannes
+> +    memcpy(&tx->p1k, &tkey->tx_ttak, p1k_len);
+
+How come you didn't use my patch as a base to work from, you shouldn't
+be passing tkip_ctx at all.
+
+regards,
+dan carpenter
 
