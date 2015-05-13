@@ -1,237 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from trubo.inescn.pt ([192.35.246.20]:55644 "EHLO trubo.inescn.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753116AbbEKJAg convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:35668 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022AbbEMJRA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 05:00:36 -0400
-Message-ID: <20150511105204.112340biso205wvo@webmail.inescporto.pt> (sfid-20150511_110042_483942_7840818B)
-Date: Mon, 11 May 2015 10:52:04 +0200
-From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inesctec.pt>
-To: s prasad <sprasad.kandregula@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
-References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com>
-In-Reply-To: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+	Wed, 13 May 2015 05:17:00 -0400
+Received: by labbd9 with SMTP id bd9so24704327lab.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2015 02:16:59 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/2] mac80211: prevent possible crypto tx tailroom corruption
+Date: Wed, 13 May 2015 09:16:49 +0000
+Message-Id: <1431508609-9841-2-git-send-email-michal.kazior@tieto.com> (sfid-20150513_111710_890097_51B4594F)
+In-Reply-To: <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
+References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
+ <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all.
+There was a possible race between
+ieee80211_reconfig() and
+ieee80211_delayed_tailroom_dec(). This could
+result in inability to transmit data if driver
+crashed during roaming or rekeying and subsequent
+skbs with insufficient tailroom appeared.
 
-I have the same issue on OpenWRT, when using horst for sniffer mode,  
-but different behaviour, reported here:  
-https://dev.openwrt.org/ticket/15738
+This race was probably never seen in the wild
+because a device driver would have to crash AND
+recover within 0.5s which is very unlikely.
 
+I was able to prove this race exists after
+changing the delay to 10s locally and crashing
+ath10k via debugfs immediately after GTK
+rekeying. In case of ath10k the counter went below
+0. This was harmless but other drivers which
+actually require tailroom (e.g. for WEP ICV or
+MMIC) could end up with the counter at 0 instead
+of >0 and introduce insufficient skb tailroom
+failures because mac80211 would not resize skbs
+appropriately anymore.
 
-BR,
-Mário Lopes.
+Fixes: 8d1f7ecd2af5 ("mac80211: defer tailroom counter manipulation when roaming")
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
+Notes:
+    While doing PATCH v2 [1/2] I've noticed a subtle bug in the
+    delayed tailroom counter logic. Since this touches the
+    codepaths [1/2] does I'm posting this as a pair.
 
+ net/mac80211/key.c  | 5 ++++-
+ net/mac80211/main.c | 3 +++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-Quoting s prasad <sprasad.kandregula@gmail.com>:
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 577a11a13cdf..4c6f8c97d11a 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -695,10 +695,13 @@ void ieee80211_reset_crypto_tx_tailroom(struct ieee80211_sub_if_data *sdata)
+ 	mutex_lock(&sdata->local->key_mtx);
+ 
+ 	sdata->crypto_tx_tailroom_needed_cnt = 0;
++	sdata->crypto_tx_tailroom_pending_dec = 0;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+-		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
+ 			vlan->crypto_tx_tailroom_needed_cnt = 0;
++			vlan->crypto_tx_tailroom_pending_dec = 0;
++		}
+ 	}
+ 
+ 	mutex_unlock(&sdata->local->key_mtx);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 3c956c5f99b2..d8e1cbdcbc43 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -246,6 +246,7 @@ static void ieee80211_restart_work(struct work_struct *work)
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, restart_work);
++	struct ieee80211_sub_if_data *sdata;
+ 
+ 	/* wait for scan work complete */
+ 	flush_workqueue(local->workqueue);
+@@ -254,6 +255,8 @@ static void ieee80211_restart_work(struct work_struct *work)
+ 	     "%s called with hardware scan in progress\n", __func__);
+ 
+ 	rtnl_lock();
++	list_for_each_entry(sdata, &local->interfaces, list)
++		cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
+ 	ieee80211_scan_cancel(local);
+ 	ieee80211_reconfig(local);
+ 	rtnl_unlock();
+-- 
+2.1.4
 
-> Hi,
->
-> When we are trying to send De-authentication  packets using
-> aireplay-ng(aircrack tools) firmware getting crashed in sniffer mode.
->
-> Kernel: "3.18.1"
-> Drivers: "compat-wireless-2015-03-09"
->
-> Please find given below logs:
->
-> [791495.150000] ath10k_pci: Unknown symbol ath10k_warn (err 0)
-> [791495.160000] ath10k_pci: Unknown symbol ath10k_err (err 0)
-> [791495.170000] ath10k_pci: Unknown symbol ath10k_print_driver_info (err 0)
-> [791495.170000] ath10k_pci: Unknown symbol
-> ath10k_debug_get_new_fw_crash_data (err 0)
-> [791495.180000] ath10k_pci: Unknown symbol ath10k_core_create (err 0)
-> [791495.190000] ath10k_pci: Unknown symbol ath10k_core_destroy (err 0)
-> [791495.190000] ath10k_pci: Unknown symbol ath10k_core_register (err 0)
-> [791495.200000] ath10k_pci: Unknown symbol ath10k_info (err 0)
-> [791495.210000] ath10k_pci: Unknown symbol ath10k_core_unregister (err 0)
-> [791504.600000] ath10k_pci 0000:01:00.0: pci irq legacy interrupts 0
-> irq_mode 0 reset_mode 0
-> [791504.820000] ath10k_pci 0000:01:00.0: Direct firmware load for
-> ath10k/cal-pci-0000:01:00.0.bin failed with error -2
-> [791504.830000] ath10k_pci 0000:01:00.0: Falling back to user helper
-> [791504.900000] firmware ath10k!cal-pci-0000:01:00.0.bin:
-> firmware_loading_store: map pages failed
-> [791505.060000] ath10k_pci 0000:01:00.0: otp stream is empty, using
-> board.bin contents
-> [791505.910000] ath10k_pci 0000:01:00.0: qca988x hw2.0 (0x4100016c,
-> 0x043202ff) fw 10.1.467.2-1 api 4 htt 2.1 wmi 2 cal otp max_sta 128
-> [791505.920000] ath10k_pci 0000:01:00.0: debug 0 debugfs 1 tracing 0
-> dfs 1 testmode 1
-> [791506.030000] ath: EEPROM regdomain: 0x0
-> [791506.030000] ath: EEPROM indicates default country code should be used
-> [791506.030000] ath: doing EEPROM country->regdmn map search
-> [791506.030000] ath: country maps to regdmn code: 0x3a
-> [791506.030000] ath: Country alpha2 being used: US
-> [791506.030000] ath: Regpair used: 0x3a
-> [791551.530000] ath10k_pci 0000:01:00.0: otp stream is empty, using
-> board.bin contents
-> [791718.130000] device wlan1 entered promiscuous mode
-> [791718.340000] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> b4593209-111f-446c-a134-120ce3b2e37d)
-> [791718.350000] ath10k_pci 0000:01:00.0: qca988x hw2.0 (0x4100016c,
-> 0x043202ff) fw 10.1.467.2-1 api 4 htt 2.1 wmi 2 cal otp max_sta 128
-> [791718.360000] ath10k_pci 0000:01:00.0: debug 0 debugfs 1 tracing 0
-> dfs 1 testmode 1
-> [791718.370000] ath10k_pci 0000:01:00.0: firmware register dump:
-> [791718.380000] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> 0x0099A132 0x00955B31
-> [791718.380000] ath10k_pci 0000:01:00.0: [04]: 0x0099A132 0x00060730
-> 0x0000001E 0x00000005
-> [791718.390000] ath10k_pci 0000:01:00.0: [08]: 0x0043DD84 0x00000000
-> 0x004159AC 0x00002D00
-> [791718.400000] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000004
-> 0x00958018 0x00958027
-> [791718.410000] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
-> 0x00000000 0x00000000
-> [791718.420000] ath10k_pci 0000:01:00.0: [20]: 0x4099A132 0x0040AD14
-> 0x00400000 0x4987F39C
-> [791718.420000] ath10k_pci 0000:01:00.0: [24]: 0x8099A22E 0x0040AD74
-> 0x00000001 0xC099A132
-> [791718.430000] ath10k_pci 0000:01:00.0: [28]: 0x809AB96B 0x0040AD94
-> 0x0043DD84 0x00000002
-> [791718.440000] ath10k_pci 0000:01:00.0: [32]: 0x809A80FA 0x0040ADD4
-> 0x00400000 0x004159AC
-> [791718.450000] ath10k_pci 0000:01:00.0: [36]: 0x809A7885 0x0040AE24
-> 0x0040AE48 0x0041116C
-> [791718.460000] ath10k_pci 0000:01:00.0: [40]: 0x809486FA 0x0040AE44
-> 0x00000001 0x00000000
-> [791718.470000] ath10k_pci 0000:01:00.0: [44]: 0x80948E2C 0x0040AEA4
-> 0x0041D728 0x00411778
-> [791718.470000] ath10k_pci 0000:01:00.0: [48]: 0x80942EB3 0x0040AEC4
-> 0x0041D728 0x00000001
-> [791718.480000] ath10k_pci 0000:01:00.0: [52]: 0x80940F18 0x0040AF14
-> 0x00000010 0x00403AC0
-> [791718.490000] ath10k_pci 0000:01:00.0: [56]: 0x80940EEA 0x0040AF44
-> 0x00400000 0x00000000
-> [791718.600000] ieee80211 phy3: Hardware restart was requested
-> [791718.600000] ath10k_pci 0000:01:00.0: failed to to request monitor
-> vdev 0 stop: -143
-> [791718.610000] ath10k_pci 0000:01:00.0: failed to synchronize monitor
-> vdev 0 stop: -143
-> [791718.620000] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
-> [791718.970000] ath10k_pci 0000:01:00.0: otp stream is empty, using
-> board.bin contents
-> [791719.820000] ath10k_pci 0000:01:00.0: device successfully recovered
-> [791719.900000] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> 7c004867-7f8c-411f-83a8-b4aa69da1ee8)
-> [791719.910000] ath10k_pci 0000:01:00.0: qca988x hw2.0 (0x4100016c,
-> 0x043202ff) fw 10.1.467.2-1 api 4 htt 2.1 wmi 2 cal otp max_sta 128
-> [791719.920000] ath10k_pci 0000:01:00.0: debug 0 debugfs 1 tracing 0
-> dfs 1 testmode 1
-> [791719.930000] ath10k_pci 0000:01:00.0: firmware register dump:
-> [791719.930000] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> 0x0099A132 0x00955B31
-> [791719.940000] ath10k_pci 0000:01:00.0: [04]: 0x0099A132 0x00060730
-> 0x0000001E 0x00000005
-> [791719.950000] ath10k_pci 0000:01:00.0: [08]: 0x0043DD84 0x00000000
-> 0x004159AC 0x00002D00
-> [791719.960000] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000004
-> 0x00958018 0x00958027
-> [791719.970000] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
-> 0x00000000 0x00000000
-> [791719.970000] ath10k_pci 0000:01:00.0: [20]: 0x4099A132 0x0040AD14
-> 0x00400000 0xDF7BC310
-> [791719.980000] ath10k_pci 0000:01:00.0: [24]: 0x8099A22E 0x0040AD74
-> 0x00000001 0xC099A132
-> [791719.990000] ath10k_pci 0000:01:00.0: [28]: 0x809AB96B 0x0040AD94
-> 0x0043DD84 0x00000002
-> [791720.000000] ath10k_pci 0000:01:00.0: [32]: 0x809A80FA 0x0040ADD4
-> 0x00400000 0x004159AC
-> [791720.010000] ath10k_pci 0000:01:00.0: [36]: 0x809A7885 0x0040AE24
-> 0x0040AE48 0x0041116C
-> [791720.010000] ath10k_pci 0000:01:00.0: [40]: 0x809486FA 0x0040AE44
-> 0x00000001 0x00000000
-> [791720.020000] ath10k_pci 0000:01:00.0: [44]: 0x80948E2C 0x0040AEA4
-> 0x0041D728 0x00411778
-> [791720.030000] ath10k_pci 0000:01:00.0: [48]: 0x80942EB3 0x0040AEC4
-> 0x0041D728 0x00000001
-> [791720.040000] ath10k_pci 0000:01:00.0: [52]: 0x80940F18 0x0040AF14
-> 0x00000010 0x00403AC0
-> [791720.050000] ath10k_pci 0000:01:00.0: [56]: 0x80940EEA 0x0040AF44
-> 0x00400000 0x00000000
-> [791723.140000] ath10k_pci 0000:01:00.0: failed to transmit management
-> frame via WMI: -143
-> [791723.240000] ieee80211 phy3: Hardware restart was requested
-> [791723.240000] ath10k_pci 0000:01:00.0: failed to put down monitor  
-> vdev 0: -143
-> [791723.250000] ath10k_pci 0000:01:00.0: failed to to request monitor
-> vdev 0 stop: -143
-> [791723.260000] ath10k_pci 0000:01:00.0: failed to synchronize monitor
-> vdev 0 stop: -143
-> [791723.260000] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
-> [791723.620000] ath10k_pci 0000:01:00.0: otp stream is empty, using
-> board.bin contents
-> [791724.470000] ath10k_pci 0000:01:00.0: device successfully recovered
-> [791724.580000] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> 521f6876-093d-4741-a3c4-33bc85470260)
-> [791724.590000] ath10k_pci 0000:01:00.0: qca988x hw2.0 (0x4100016c,
-> 0x043202ff) fw 10.1.467.2-1 api 4 htt 2.1 wmi 2 cal otp max_sta 128
-> [791724.600000] ath10k_pci 0000:01:00.0: debug 0 debugfs 1 tracing 0
-> dfs 1 testmode 1
-> [791724.610000] ath10k_pci 0000:01:00.0: firmware register dump:
-> [791724.620000] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> 0x0099A132 0x00955B31
-> [791724.630000] ath10k_pci 0000:01:00.0: [04]: 0x0099A132 0x00060730
-> 0x0000001E 0x00000005
-> [791724.640000] ath10k_pci 0000:01:00.0: [08]: 0x0043DD84 0x00000000
-> 0x004159AC 0x00002D00
-> [791724.640000] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000004
-> 0x00958018 0x00958027
-> [791724.650000] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
-> 0x00000000 0x00000000
-> [791724.660000] ath10k_pci 0000:01:00.0: [20]: 0x4099A132 0x0040AD14
-> 0x00400000 0x4987F39C
-> [791724.670000] ath10k_pci 0000:01:00.0: [24]: 0x8099A22E 0x0040AD74
-> 0x00000001 0xC099A132
-> [791724.680000] ath10k_pci 0000:01:00.0: [28]: 0x809AB96B 0x0040AD94
-> 0x0043DD84 0x00000002
-> [791724.680000] ath10k_pci 0000:01:00.0: [32]: 0x809A80FA 0x0040ADD4
-> 0x00400000 0x004159AC
-> [791724.690000] ath10k_pci 0000:01:00.0: [36]: 0x809A7885 0x0040AE24
-> 0x0040AE48 0x0041116C
-> [791724.700000] ath10k_pci 0000:01:00.0: [40]: 0x809486FA 0x0040AE44
-> 0x00000001 0x00000000
-> [791724.710000] ath10k_pci 0000:01:00.0: [44]: 0x80948E2C 0x0040AEA4
-> 0x0041D728 0x00411778
-> [791724.720000] ath10k_pci 0000:01:00.0: [48]: 0x80942EB3 0x0040AEC4
-> 0x0041D728 0x00000001
-> [791724.720000] ath10k_pci 0000:01:00.0: [52]: 0x80940F18 0x0040AF14
-> 0x00000010 0x00403AC0
-> [791724.730000] ath10k_pci 0000:01:00.0: [56]: 0x80940EEA 0x0040AF44
-> 0x00400000 0x00000000
-> [791732.500000] ath10k_pci 0000:01:00.0: failed to transmit management
-> frame via WMI: -143
-> [791732.600000] ieee80211 phy3: Hardware restart was requested
-> [791732.600000] ath10k_pci 0000:01:00.0: failed to put down monitor  
-> vdev 0: -143
-> [791732.610000] ath10k_pci 0000:01:00.0: failed to to request monitor
-> vdev 0 stop: -143
-> [791733.020000] ath10k_warn: 2 callbacks suppressed
-> [791733.020000] ath10k_pci 0000:01:00.0: otp stream is empty, using
-> board.bin contents
-> [791733.880000] ath10k_pci 0000:01:00.0: device successfully recovered
->
->
->
-> Please let me know if any further information required.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
