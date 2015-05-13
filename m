@@ -1,83 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32320 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751265AbbEDWMA (ORCPT
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:34699 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480AbbEMScl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 18:12:00 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 2/7] wil6210: update Rx descriptor fields
-Date: Tue,  5 May 2015 01:11:51 +0300
-Message-Id: <1430777516-439-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150505_001228_992542_E899F828)
-In-Reply-To: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 13 May 2015 14:32:41 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
+	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
+	casey@schaufler-ca.com, keescook@chromium.org, mjg59@srcf.ucam.org,
+	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>
+Subject: [RFC v2 3/6] crypto: qat - address recursive dependency when fw signing is enabled
+Date: Wed, 13 May 2015 11:23:53 -0700
+Message-Id: <1431541436-17007-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20150513_203347_824029_CA6854B3)
+In-Reply-To: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rx descriptor fields accordingly to the updated
-hardware documentation
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+We're going to add firmware module signing support, but when we do
+this we end up with the following recursive dependency. Fix this by
+just depending on FW_LOADER, which is typically always enabled
+anyway. We do this as a compromise for now as FW_LOADER is only
+selectable when EXPERT is enabled and the recursive dependency issue
+below is actually real and valid, its proper fix however requires
+a bit of work.
+
+This technically means this change is likely welcomed for other
+parts of the kernel but this is really only needed for now here.
+
+mcgrof@ergon ~/linux-next (git::master)$ make allnoconfig
+scripts/kconfig/conf  --allnoconfig Kconfig
+crypto/Kconfig:15:error: recursive dependency detected!
+crypto/Kconfig:15:      symbol CRYPTO is selected by SYSDATA_SIG
+init/Kconfig:1880:      symbol SYSDATA_SIG is selected by FIRMWARE_SIG
+drivers/base/Kconfig:88:        symbol FIRMWARE_SIG depends on FW_LOADER
+drivers/base/Kconfig:80:        symbol FW_LOADER is selected by CRYPTO_DEV_QAT
+drivers/crypto/qat/Kconfig:1:   symbol CRYPTO_DEV_QAT is selected by CRYPTO_DEV_QAT_DH895xCC
+drivers/crypto/qat/Kconfig:13:  symbol CRYPTO_DEV_QAT_DH895xCC depends on CRYPTO
+
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Cc: Bruce Allan <bruce.w.allan@intel.com>
+Cc: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: John Griffin <john.griffin@intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c |  2 +-
- drivers/net/wireless/ath/wil6210/txrx.h | 24 ++++++++++++++++--------
- 2 files changed, 17 insertions(+), 9 deletions(-)
+ drivers/crypto/qat/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index e8bd512..1fd34e5 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -236,7 +236,7 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
- 		return -ENOMEM;
- 	}
+diff --git a/drivers/crypto/qat/Kconfig b/drivers/crypto/qat/Kconfig
+index 49bede2..9bea338 100644
+--- a/drivers/crypto/qat/Kconfig
++++ b/drivers/crypto/qat/Kconfig
+@@ -8,7 +8,7 @@ config CRYPTO_DEV_QAT
+ 	select CRYPTO_SHA1
+ 	select CRYPTO_SHA256
+ 	select CRYPTO_SHA512
+-	select FW_LOADER
++	depends on FW_LOADER
  
--	d->dma.d0 = BIT(9) | RX_DMA_D0_CMD_DMA_IT;
-+	d->dma.d0 = RX_DMA_D0_CMD_DMA_RT | RX_DMA_D0_CMD_DMA_IT;
- 	wil_desc_addr_set(&d->dma.addr, pa);
- 	/* ip_length don't care */
- 	/* b11 don't care */
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
-index d90c8aa..0c46384 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.h
-+++ b/drivers/net/wireless/ath/wil6210/txrx.h
-@@ -384,19 +384,27 @@ struct vring_rx_mac {
-  *  [word 7] length
-  */
- 
--#define RX_DMA_D0_CMD_DMA_IT     BIT(10)
--
--/* Error field, offload bits */
--#define RX_DMA_ERROR_L3_ERR   BIT(4)
--#define RX_DMA_ERROR_L4_ERR   BIT(5)
-+#define RX_DMA_D0_CMD_DMA_EOP	BIT(8)
-+#define RX_DMA_D0_CMD_DMA_RT	BIT(9)  /* always 1 */
-+#define RX_DMA_D0_CMD_DMA_IT	BIT(10) /* interrupt */
-+
-+/* Error field */
-+#define RX_DMA_ERROR_FCS	BIT(0)
-+#define RX_DMA_ERROR_MIC	BIT(1)
-+#define RX_DMA_ERROR_KEY	BIT(2) /* Key missing */
-+#define RX_DMA_ERROR_REPLAY	BIT(3)
-+#define RX_DMA_ERROR_L3_ERR	BIT(4)
-+#define RX_DMA_ERROR_L4_ERR	BIT(5)
- 
- /* Status field */
--#define RX_DMA_STATUS_DU         BIT(0)
--#define RX_DMA_STATUS_ERROR      BIT(2)
--
-+#define RX_DMA_STATUS_DU	BIT(0)
-+#define RX_DMA_STATUS_EOP	BIT(1)
-+#define RX_DMA_STATUS_ERROR	BIT(2)
-+#define RX_DMA_STATUS_MI	BIT(3) /* MAC Interrupt is asserted */
- #define RX_DMA_STATUS_L3I	BIT(4)
- #define RX_DMA_STATUS_L4I	BIT(5)
- #define RX_DMA_STATUS_PHY_INFO	BIT(6)
-+#define RX_DMA_STATUS_FFM	BIT(7) /* EtherType Flex Filter Match */
- 
- struct vring_rx_dma {
- 	u32 d0;
+ config CRYPTO_DEV_QAT_DH895xCC
+ 	tristate "Support for Intel(R) DH895xCC"
 -- 
-2.1.0
+2.3.2.209.gd67f9d5.dirty
 
