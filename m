@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0156.hostedemail.com ([216.40.44.156]:46694 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752314AbbEPFgX (ORCPT
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:35420 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754613AbbEMShD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2015 01:36:23 -0400
-Message-ID: <1431754580.15709.55.camel@perches.com> (sfid-20150516_073627_268611_0ABC4B1C)
-Subject: Re: [PATCH] ath9k: add phy.c
-From: Joe Perches <joe@perches.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Date: Fri, 15 May 2015 22:36:20 -0700
-In-Reply-To: <5556D546.6010703@rempel-privat.de>
-References: <1431693340-8861-1-git-send-email-linux@rempel-privat.de>
-	 <1431714904.15709.24.camel@perches.com> <5556D546.6010703@rempel-privat.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 13 May 2015 14:37:03 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
+	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
+	casey@schaufler-ca.com, keescook@chromium.org, mjg59@srcf.ucam.org,
+	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>
+Subject: [RFC v2 5/6] kernel/sysdata_signing: export data_verify_pkcs7()
+Date: Wed, 13 May 2015 11:23:55 -0700
+Message-Id: <1431541436-17007-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20150513_203721_223607_7CDDF769)
+In-Reply-To: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-05-16 at 07:27 +0200, Oleksij Rempel wrote:
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-> Am 15.05.2015 um 20:35 schrieb Joe Perches:
-> > On Fri, 2015-05-15 at 14:35 +0200, Oleksij Rempel wrote:
-> >> ... and move dup code from ar5008_phy.c and ar9002_phy.c to phy.c
-> > []
-> >> diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
-> > 
-> >> +void phy_hw_spur_mitigate(struct ath_hw *ah,
-> >> +			  struct ath9k_channel *chan, int bin)
-> >> +{
-[]
-> >> +	static int inc[4] = { 0, 100, 0, 0 };
-> > 
-> > static const
+This will be used for firmware signature check support.
 
-> This is cleanup patch, no fixes optimisations
-> or regressions should be introduced.
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ kernel/sysdata-internal.h | 2 ++
+ kernel/sysdata_signing.c  | 5 +++--
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-Hello Oleksij.
-
-One of the old compilation units (ar9002_phy.c) had const on
-all those arrays, the other did not.
-
-const should be used here.
-
-> If you see some problems in this
-> code, you are welcome to provide a patch on top of this one :)
-
-I think you should take comments on the patches you submit.
-
+diff --git a/kernel/sysdata-internal.h b/kernel/sysdata-internal.h
+index 0aa573e..52a5c42 100644
+--- a/kernel/sysdata-internal.h
++++ b/kernel/sysdata-internal.h
+@@ -10,3 +10,5 @@
+  */
+ 
+ extern int sysdata_verify_sig(const void *data, unsigned long *_len);
++int data_verify_pkcs7(const void *data, unsigned long len,
++		      const void *raw_pkcs7, size_t pkcs7_len);
+diff --git a/kernel/sysdata_signing.c b/kernel/sysdata_signing.c
+index adc44d4..6759c54 100644
+--- a/kernel/sysdata_signing.c
++++ b/kernel/sysdata_signing.c
+@@ -39,8 +39,8 @@ struct sysdata_signature {
+ /*
+  * Verify a PKCS#7-based signature on system data.
+  */
+-static int data_verify_pkcs7(const void *data, unsigned long len,
+-			     const void *raw_pkcs7, size_t pkcs7_len)
++int data_verify_pkcs7(const void *data, unsigned long len,
++		      const void *raw_pkcs7, size_t pkcs7_len)
+ {
+ 	struct pkcs7_message *pkcs7;
+ 	bool trusted;
+@@ -75,6 +75,7 @@ error:
+ 	pr_devel("<==%s() = %d\n", __func__, ret);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(data_verify_pkcs7);
+ 
+ /*
+  * Verify the signature on system data.
+-- 
+2.3.2.209.gd67f9d5.dirty
 
