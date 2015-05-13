@@ -1,196 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:37581 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758159AbbEaJgH (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:36036 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbbEMS0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 05:36:07 -0400
-Received: by wifw1 with SMTP id w1so70933571wif.0
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 02:36:06 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/9] staging: vt6655: vnt_interrupt_process remove camel case.
-Date: Sun, 31 May 2015 10:35:26 +0100
-Message-Id: <1433064928-2139-7-git-send-email-tvboxspy@gmail.com> (sfid-20150531_113615_095108_70F4C909)
-In-Reply-To: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
-References: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 13 May 2015 14:26:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: ming.lei@canonical.com, rusty@rustcorp.com.au
+Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
+	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
+	casey@schaufler-ca.com, keescook@chromium.org, mjg59@srcf.ucam.org,
+	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [RFC v2 0/6] firmware: add PKCS#7 firmware signature support
+Date: Wed, 13 May 2015 11:23:50 -0700
+Message-Id: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20150513_202615_107206_33FA62FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pDevice -> priv
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 103 ++++++++++++++++++-----------------
- 1 file changed, 52 insertions(+), 51 deletions(-)
+Upon review of the v1 series David Howells requested I re-work
+the code on top of his PKCS#7 branch [1] which moves module signing
+to support and use PKCS#7. This v2 series is based on top of that
+branch. Other than David's own changes this series depends on some
+other changes Rusty has taken in already but not yet visible on
+linux-next:
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 2262a61..575ba87 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1051,29 +1051,29 @@ static void vnt_check_bb_vga(struct vnt_private *priv)
- 	}
- }
- 
--static void vnt_interrupt_process(struct vnt_private *pDevice)
-+static void vnt_interrupt_process(struct vnt_private *priv)
- {
--	struct ieee80211_low_level_stats *low_stats = &pDevice->low_stats;
-+	struct ieee80211_low_level_stats *low_stats = &priv->low_stats;
- 	int             max_count = 0;
- 	u32 mib_counter;
- 	unsigned long flags;
- 
--	MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
-+	MACvReadISR(priv->PortOffset, &priv->dwIsr);
- 
--	if (pDevice->dwIsr == 0)
-+	if (priv->dwIsr == 0)
- 		return;
- 
--	if (pDevice->dwIsr == 0xffffffff) {
-+	if (priv->dwIsr == 0xffffffff) {
- 		pr_debug("dwIsr = 0xffff\n");
- 		return;
- 	}
- 
--	MACvIntDisable(pDevice->PortOffset);
-+	MACvIntDisable(priv->PortOffset);
- 
--	spin_lock_irqsave(&pDevice->lock, flags);
-+	spin_lock_irqsave(&priv->lock, flags);
- 
- 	/* Read low level stats */
--	MACvReadMIBCounter(pDevice->PortOffset, &mib_counter);
-+	MACvReadMIBCounter(priv->PortOffset, &mib_counter);
- 
- 	low_stats->dot11RTSSuccessCount += mib_counter & 0xff;
- 	low_stats->dot11RTSFailureCount += (mib_counter >> 8) & 0xff;
-@@ -1086,79 +1086,80 @@ static void vnt_interrupt_process(struct vnt_private *pDevice)
- 	 * than RD/TD write back
- 	 * update ISR counter
- 	 */
--	while (pDevice->dwIsr && pDevice->vif) {
--		MACvWriteISR(pDevice->PortOffset, pDevice->dwIsr);
-+	while (priv->dwIsr && priv->vif) {
-+		MACvWriteISR(priv->PortOffset, priv->dwIsr);
- 
--		if (pDevice->dwIsr & ISR_FETALERR) {
-+		if (priv->dwIsr & ISR_FETALERR) {
- 			pr_debug(" ISR_FETALERR\n");
--			VNSvOutPortB(pDevice->PortOffset + MAC_REG_SOFTPWRCTL, 0);
--			VNSvOutPortW(pDevice->PortOffset + MAC_REG_SOFTPWRCTL, SOFTPWRCTL_SWPECTI);
--			device_error(pDevice, pDevice->dwIsr);
-+			VNSvOutPortB(priv->PortOffset + MAC_REG_SOFTPWRCTL, 0);
-+			VNSvOutPortW(priv->PortOffset +
-+				     MAC_REG_SOFTPWRCTL, SOFTPWRCTL_SWPECTI);
-+			device_error(priv, priv->dwIsr);
- 		}
- 
--		if (pDevice->dwIsr & ISR_TBTT) {
--			if (pDevice->op_mode != NL80211_IFTYPE_ADHOC)
--				vnt_check_bb_vga(pDevice);
-+		if (priv->dwIsr & ISR_TBTT) {
-+			if (priv->op_mode != NL80211_IFTYPE_ADHOC)
-+				vnt_check_bb_vga(priv);
- 
--			pDevice->bBeaconSent = false;
--			if (pDevice->bEnablePSMode)
--				PSbIsNextTBTTWakeUp((void *)pDevice);
-+			priv->bBeaconSent = false;
-+			if (priv->bEnablePSMode)
-+				PSbIsNextTBTTWakeUp((void *)priv);
- 
--			if ((pDevice->op_mode == NL80211_IFTYPE_AP ||
--			    pDevice->op_mode == NL80211_IFTYPE_ADHOC) &&
--			    pDevice->vif->bss_conf.enable_beacon) {
--				MACvOneShotTimer1MicroSec(pDevice->PortOffset,
--							  (pDevice->vif->bss_conf.beacon_int - MAKE_BEACON_RESERVED) << 10);
-+			if ((priv->op_mode == NL80211_IFTYPE_AP ||
-+			    priv->op_mode == NL80211_IFTYPE_ADHOC) &&
-+			    priv->vif->bss_conf.enable_beacon) {
-+				MACvOneShotTimer1MicroSec(priv->PortOffset,
-+							  (priv->vif->bss_conf.beacon_int - MAKE_BEACON_RESERVED) << 10);
- 			}
- 
- 			/* TODO: adhoc PS mode */
- 
- 		}
- 
--		if (pDevice->dwIsr & ISR_BNTX) {
--			if (pDevice->op_mode == NL80211_IFTYPE_ADHOC) {
--				pDevice->bIsBeaconBufReadySet = false;
--				pDevice->cbBeaconBufReadySetCnt = 0;
-+		if (priv->dwIsr & ISR_BNTX) {
-+			if (priv->op_mode == NL80211_IFTYPE_ADHOC) {
-+				priv->bIsBeaconBufReadySet = false;
-+				priv->cbBeaconBufReadySetCnt = 0;
- 			}
- 
--			pDevice->bBeaconSent = true;
-+			priv->bBeaconSent = true;
- 		}
- 
--		if (pDevice->dwIsr & ISR_RXDMA0)
--			max_count += device_rx_srv(pDevice, TYPE_RXDMA0);
-+		if (priv->dwIsr & ISR_RXDMA0)
-+			max_count += device_rx_srv(priv, TYPE_RXDMA0);
- 
--		if (pDevice->dwIsr & ISR_RXDMA1)
--			max_count += device_rx_srv(pDevice, TYPE_RXDMA1);
-+		if (priv->dwIsr & ISR_RXDMA1)
-+			max_count += device_rx_srv(priv, TYPE_RXDMA1);
- 
--		if (pDevice->dwIsr & ISR_TXDMA0)
--			max_count += device_tx_srv(pDevice, TYPE_TXDMA0);
-+		if (priv->dwIsr & ISR_TXDMA0)
-+			max_count += device_tx_srv(priv, TYPE_TXDMA0);
- 
--		if (pDevice->dwIsr & ISR_AC0DMA)
--			max_count += device_tx_srv(pDevice, TYPE_AC0DMA);
-+		if (priv->dwIsr & ISR_AC0DMA)
-+			max_count += device_tx_srv(priv, TYPE_AC0DMA);
- 
--		if (pDevice->dwIsr & ISR_SOFTTIMER1) {
--			if (pDevice->vif->bss_conf.enable_beacon)
--				vnt_beacon_make(pDevice, pDevice->vif);
-+		if (priv->dwIsr & ISR_SOFTTIMER1) {
-+			if (priv->vif->bss_conf.enable_beacon)
-+				vnt_beacon_make(priv, priv->vif);
- 		}
- 
- 		/* If both buffers available wake the queue */
--		if (AVAIL_TD(pDevice, TYPE_TXDMA0) &&
--		    AVAIL_TD(pDevice, TYPE_AC0DMA) &&
--		    ieee80211_queue_stopped(pDevice->hw, 0))
--			ieee80211_wake_queues(pDevice->hw);
-+		if (AVAIL_TD(priv, TYPE_TXDMA0) &&
-+		    AVAIL_TD(priv, TYPE_AC0DMA) &&
-+		    ieee80211_queue_stopped(priv->hw, 0))
-+			ieee80211_wake_queues(priv->hw);
- 
--		MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
-+		MACvReadISR(priv->PortOffset, &priv->dwIsr);
- 
--		MACvReceive0(pDevice->PortOffset);
--		MACvReceive1(pDevice->PortOffset);
-+		MACvReceive0(priv->PortOffset);
-+		MACvReceive1(priv->PortOffset);
- 
--		if (max_count > pDevice->sOpts.int_works)
-+		if (max_count > priv->sOpts.int_works)
- 			break;
- 	}
- 
--	spin_unlock_irqrestore(&pDevice->lock, flags);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
-+	MACvIntEnable(priv->PortOffset, IMR_MASK_VALUE);
- }
- 
- static void vnt_interrupt_work(struct work_struct *work)
+kernel/params: constify struct kernel_param_ops uses
+kernel/module.c: use generic module param operaters for sig_enforce
+kernel/params.c: generalize bool_enable_only
+moduleparam.h: add module_param_config_*() helpers
+kernel/workqueue.c: remove ifdefs over wq_power_efficient
+kernel/workqueue.c: use module_param_config_on_off() for power_efficient
+kernel/module.c: avoid ifdefs for sig_enforce declaration
+kernel/params.c: export param_ops_bool_enable_only
+
+This series also depends on the fixes recently posted for the firmware_class
+driver:
+
+firmware: fix __getname() missing failure check
+firmware: check for file truncation on direct firmware loading
+firmware: fix possible use after free on name on asynchronous request
+firmware: use const for remaining firmware names
+
+Since that is quite a bit of delta, if folks want to help test / review
+this on a tree, you can use this tree with the fw-signing-v2-20150513
+branch:
+
+https://git.kernel.org/cgit/linux/kernel/git/mcgrof/linux.git/
+
+This v2 modifies the way we do firmware signature checking from the v1 RFCs by
+using separate detached files for the signatures of the firmware files, as
+suggested by David. If you have foo.bin, you'll need foo.bin.pkcs7 present
+when firmware signature checks are enabled.
+
+Since it is based on David's modsign-pkcs7 branch and since these
+are not yet upstream I think its best if David took what he can as part of his
+series and squashed commits when and where possible. For instance the
+sign-file.c changes can likely be squashed. Patch 2, which generalizes module
+signing as system data signing is based on David's own series, in my previous
+series I addressed code in place upstream which lacked PKCS#7 support, I'll
+leave it up to David to decide if / when to merge this into his series but
+I think that if this is reasonable it can go in prior to addition of
+PKCS#7 support, in which case my v1 patch can be used. Otherwise this v2
+will need to be used. Also, patch 2 in this v2 series changes the config
+SYSDATA_SIG to def_bool n as noted by Paul Bolle.
+
+Patch 3 simply has the commit log massaged to account for the discussions
+on the recursive issue it tries to fix. Based on discussions the recursive
+issue reported by the code is real [2], however since FW_LOADER is an EXPERT
+option it is reasonable to make this change anyway. A change for now seems
+reasonable.
+
+Lastly, we'll need to export data_verify_pkcs7() as we are dealing with
+a split between that data and signature. The last patch adds firmware
+signature support. I like to think it works as expected, with a simple
+requirement to have you sign-file -s the binaries. As with module signing
+there are 3 modes of operation with firmware signature support:
+
+  a) signature disabled
+  b) signature enabled - but permissive - we'll let things slide if not signed
+  c) signature enforced - firmware not signed will not be allowed
+
+In the permissive case though the only difference from the module
+signing code / logic is that we *do not* taint the kernel. The reason
+for this is technical. First of all add_taint_module() is not exported,
+are we OK to export it? If not what users do we wish to grant access to
+it? If we wish to provide a mechanism by which we can have a say in that
+the old module namespace work by Andi Kleen comes to mind as useful for
+that [3]. If we're OK with wide access to add_taint_kernel() as an exported
+symbol there are yet other technical questions to address, add_taint_kernel()
+requires a module passed and only *one* of the 3 request_firmware*() APIs peg
+the correct module caller of the API onto firmware_class, the others use the
+firmware_class struct module.
+
+We have a few options then:
+
+  1) Extend the firmware_class driver API to require the correct module to
+     always be set. Doing this IMHO is worthy, but its not just worthy for
+     firmware signing tainting, it may come in handy in the future. There's
+     an issue with extending the firmware_class APIs though which make me
+     nervous about just doing this change even if we wanted this alone for
+     firmware signature checks -- the firmware_class APIs keep being extended
+     requiring collateral evolutions which IMHO can be avoided if we sat and
+     thought about a decent API which can be grown for our requirements.
+
+  2) Use add_taint_module() with the firmware_class module for the two
+     synchrounous APIs, while using the right module for the async call.
+
+  3) Use the firmware_class module for all 3 API calls when using
+     add_taint_module()
+
+  4) Skip tainting the kernel for unsigned firmware files
+
+The approach I've decided to take here is a combination of 4) and 1). I've
+decided that extending the firmware_class API even more is not a good idea
+anymore. Part of this is because I have some other uses cases for
+firmware_class's use and having the right module is not the only thing I'd
+want to extend firmware_class with support for. I address a spring cleaning
+of the firmware_class API in my next series, while also enabling passing
+the right module always, and enabling use of tainting. I think its best to
+leave the old APIs as-is then, and only if folks really require a shift to
+taint they can then consider the new APIs. If we *really* want to taint the
+kernel even for the old APIs I recommend just dealing with using the
+firmware_class (THIS_MODULE) for now -- I don't think making the taint
+specific to a module for firmware is worth the collateral evolutions required
+using and extending the old APIs.
+
+The new extensible firmware_class APIs go in my next series, that enables
+tainting the specific caller module, among other things, as you'll see.
+
+[0] https://lkml.org/lkml/2015/5/5/1345
+[1] http://git.kernel.org/cgit/linux/kernel/git/dhowells/linux-fs.git/log/?h=modsign-pkcs7
+[2] https://lkml.org/lkml/2015/5/5/1353
+[3] https://backports.wiki.kernel.org/index.php/Documentation/backports/hacking/todo#Module_namespaces
+
+Luis R. Rodriguez (6):
+  firmware: generalize reading file contents as a helper
+  kernel: generalize module signing as system data signing
+  crypto: qat - address recursive dependency when fw signing is enabled
+  scripts/sign-file.c: add support to only create signature file
+  kernel/sysdata_signing: export data_verify_pkcs7()
+  firmware: add firmware signature checking support
+
+ Documentation/firmware_class/signing.txt           |  88 ++++++++
+ drivers/base/Kconfig                               |  18 ++
+ drivers/base/firmware_class.c                      | 237 ++++++++++++++++++++-
+ drivers/crypto/qat/Kconfig                         |   2 +-
+ .../module-internal.h => include/linux/sysdata.h   |   6 +-
+ init/Kconfig                                       |  24 ++-
+ kernel/Makefile                                    |   2 +-
+ kernel/module.c                                    |   4 +-
+ kernel/{module_signing.c => sysdata_signing.c}     |  60 +++---
+ kernel/system_keyring.c                            |   2 +-
+ scripts/sign-file.c                                |  17 +-
+ 11 files changed, 399 insertions(+), 61 deletions(-)
+ create mode 100644 Documentation/firmware_class/signing.txt
+ rename kernel/module-internal.h => include/linux/sysdata.h (64%)
+ rename kernel/{module_signing.c => sysdata_signing.c} (63%)
+
 -- 
-2.1.4
+2.3.2.209.gd67f9d5.dirty
 
