@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60856 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbbEKQRq (ORCPT
+Received: from mail-qg0-f41.google.com ([209.85.192.41]:36815 "EHLO
+	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422686AbbENWEw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 12:17:46 -0400
-Message-ID: <5550D629.2090501@candelatech.com> (sfid-20150511_181749_924304_96B58075)
-Date: Mon, 11 May 2015 09:17:45 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 14 May 2015 18:04:52 -0400
+Received: by qgg76 with SMTP id 76so18559074qgg.3
+        for <linux-wireless@vger.kernel.org>; Thu, 14 May 2015 15:04:52 -0700 (PDT)
+Message-ID: <55551BC7.10702@gmail.com> (sfid-20150515_000456_020727_3E790E47)
+Date: Thu, 14 May 2015 19:03:51 -0300
+From: Gaston Gonzalez <gascoar@gmail.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Liu CF/TW <cfliu.tw@gmail.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param
- for raw tx injection, sw crypto support.
-References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com> <873837qo6l.fsf@kamboji.qca.qualcomm.com> <554CE438.5000208@candelatech.com> <CAG5N3qFB=yZJYSokUqF2=eNcS5SoCOntOyan6_OuahtFF5r=Bw@mail.gmail.com> <871tinjosq.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <871tinjosq.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org, arnd@arndb.de,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	joe@perches.com, navyasri.tech@gmail.com, julian.calaby@gmail.com
+Subject: Re: [PATCH] staging: rtl8192u: ieee80211: Silence sparse warning
+References: <1429476231-6197-1-git-send-email-gascoar@gmail.com>	 <20150420082441.GU10964@mwanda> <553C18B6.807@gmail.com>	 <20150427101242.GR14154@mwanda> <554AD76E.7060605@gmail.com>	 <20150508110328.GT14154@mwanda> <55527D6E.7090207@gmail.com>	 <20150513083615.GS14154@mwanda> <5553F48E.3050008@gmail.com>	 (sfid-20150514_030522_036209_6D0AE5EB) <1431632112.2237.5.camel@sipsolutions.net>
+In-Reply-To: <1431632112.2237.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2015 05:12 AM, Kalle Valo wrote:
-> "Liu CF/TW" <cfliu.tw@gmail.com> writes:
-> 
->>>> I wonder does it make any sense to have nohwcrypt parameter? Especially
->>>> if ath10k doesn't support case rawtxrx=0 and nohwcrypt=1. One
->>>> possibility I came up is to have multiple values for rawtxrx, for
->>>> example is rawtxrx=1 means HW crypt enabled and rawtxrx=2 HW crypt
->>>> disabled. Ideas welcome.
->>
->> Indeed. I picked nohwcrypt because it seems to be the convention in
->> previous Atheros drivers for this feature.
-> 
-> Yeah, but I don't think we need to follow that in ath10k. Especially not
-> until we get SW encryption working in all cases.
+On 14/05/15 16:35, Johannes Berg wrote:
+> On Wed, 2015-05-13 at 22:04 -0300, Gaston Gonzalez wrote:
+>
+>>  .../rtl8192u/ieee80211/ieee80211_crypt_tkip.c      | 53
+>> ++--------------------
+>>  include/net/mac80211.h                             |  3 ++
+>>  net/mac80211/tkip.c                                |  9 ++--
+>>  3 files changed, 10 insertions(+), 55 deletions(-)
+> That doesn't seem right to me. Clearly, that's a staging driver that
+> ships its own 802.11 subsystem, and bears no existing relation to
+> mac80211. Exporting a mac80211 internal function to make such a driver
+> happy makes me very suspicious. That function might not be very mac80211
+> specific, but exporting it from mac80211 doesn't seem right, that
+> introduces a massive and mostly artificial dependency into the driver.
+>
+> Now arguably that driver is in staging and that doesn't matter, but then
+> why even bother cleaning this up? It seems likely that a well-written
+> driver for this would use mac80211, and not have to bother with this at
+> all since it could then use ieee80211_get_tkip_rx_p1k() or
+> ieee80211_get_tkip_p2k() or the update_tkip_key() method.
+>
+> So I'm not fond of this patch and without a *very very* good reason and
+> explanation I'm not going to merge the mac80211 part. It certainly
+> bothers me much less that a crappy staging driver has a few lines of
+> duplicated code than it would to export mac80211 internals that real
+> mac80211 drivers don't need.
+>
+> johannes
+>
+Johannes,
 
-What do you mean 'all cases'?  Many upstream firmware builds will just
-crash if you try raw tx, regardless of any encryption options.
+If Dan is a newbie to this, I would be a pre-under-newbie or something
+below that. That being said, understood your explication, I'll look for
+another way to deal with this warning.
+Thanks, and sorry for the noise.
 
+Regards,
 
->> In this case, I will drop nohwcrypt and do as you suggested.
->>
->> rawmode = 0: Raw mode disabled. Use the default native WiFi mode. In
->> this mode, only HW crypto is supported.
->> rawmode = 1: Use Raw rx decap + raw tx encap mode. Supports both SW
->> and HW crypto.
->> rawmode = 2: Same as 1, but with HW crypto engine globally disabled.
-> 
-> I would guess that HW crypto globally disabled (value 2 above) will be
-> more popular, right? So would it make sense to reverse the values and
-> use value 1 for that?
-
-You are combining multiple different (but related) things into a single
-enum.  Maybe make it a bitfield instead so that new combinations can be
-added later w/out making such a mess in the code?
-
-
->> When rawmode = 1, I want a further per BSS control to make some BSS
->> use HW crypto and some BSS bypass HW crypto.
->> For those BSS that have HW crypto bypassed, their data frames may come
->> from either the normal wlan interfaces (therefore mac80211 sw crypto
->> used), or from monitor interfaces (therefore Tx injected frames
->> already encrypted + Rx frames still encrypted)
-> 
-> Ok, we need to think how to configure this. Maybe a debugfs interface?
-
-I'm curious the order of operations...seems like you will have to create
-and start using the BSS before you get access to it in debugfs?  Or are you
-going to create a table of mac-addresses or something like that?
-
-Thanks,
-Ben
+Gaston
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
