@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29428 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753446AbbE1JZK convert rfc822-to-8bit (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:47982 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932466AbbENMd3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 05:25:10 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: pull request: iwlwifi-next 2015-05-26
-Date: Thu, 28 May 2015 09:25:05 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com> (sfid-20150528_112516_070185_B8F06834)
-References: <1432667798.26624.3.camel@intel.com>
- <87lhg9xe0c.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87lhg9xe0c.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 14 May 2015 08:33:29 -0400
+Date: Thu, 14 May 2015 22:33:05 +1000
+From: James Cameron <quozl@laptop.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+	cluo@marvell.com, liuzy@marvell.com
+Subject: Re: [PATCH] mwifiex: reduce severity of debug messages for mgmt rx
+Message-ID: <20150514123305.GA9984@us.netrek.org> (sfid-20150514_143332_643922_6032B2A1)
+References: <1431613651-9049-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431613651-9049-1-git-send-email-patila@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
-> 
-> > this is a pull request for 4.2. Nothing really stands out besides what
-> > I wrote in the tag. Even the diffstat hints what is the biggest part
-> > of this pull request :)
-> 
-> I see there was a minor comment to one of the patches. Can I still pull this or
-> what are you planning to do?
+On Thu, May 14, 2015 at 07:57:31PM +0530, Avinash Patil wrote:
+> This would ensure dmesg logs are not spammed with "unknown mgmt frame
+> subtype" messages.
 
-I wasn't planning to fix that typo but...
+"subtype"
 
 > 
-> > Note that there are fixes here that didn't make it to my previous pull
-> > request for 4.1. I tagged them for stable since the wording of your
-> > last pull request for 4.1 to Dave hinted me that you won't send any
-> > pull request for 4.1 to him anymore.
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/util.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Yeah, I said that hopefully it's the last pull request. I got one important fix
-> from Arend so I will try to send one more, but let's see how it goes.
-> 
-... if that's the case, do you want me to split the patches differently and add the ones I CCed to stable to iwlwifi-fixes?
-If I re-spin iwlwifi-next anyway, I'll fix the typo above.
+> diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+> index 3c0b3c1..fd8ef3c 100644
+> --- a/drivers/net/wireless/mwifiex/util.c
+> +++ b/drivers/net/wireless/mwifiex/util.c
+> @@ -350,7 +350,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
+>  		}
+>  		break;
+>  	default:
+> -		mwifiex_dbg(priv->adapter, ERROR,
+> +		mwifiex_dbg(priv->adapter, INFO,
+>  			    "unknown mgmt frame subytpe %#x\n", stype);
+
+"subytpe" != "subtype"
+
+An opportunity there.  ;-)
+
+-- 
+James Cameron
+http://quozl.linux.org.au/
