@@ -1,49 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:36769 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754413AbbETUf6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:56123 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932746AbbENKtD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 16:35:58 -0400
-Received: by igbpi8 with SMTP id pi8so112596011igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 13:35:54 -0700 (PDT)
-From: Kyle McMartin <jkkm@jkkm.org>
-Date: Wed, 20 May 2015 16:35:51 -0400
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150520203551.GA13557@foundry.jkkm.org> (sfid-20150520_223605_965928_5BF37011)
-References: <20150519200232.GM23057@wotan.suse.de>
- <20150520140426.GB126473@ubuntu-hedt>
+	Thu, 14 May 2015 06:49:03 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/2] mac80211: store low ack threshold in bss config
+Date: Thu, 14 May 2015 16:17:36 +0530
+Message-ID: <1431600456-10697-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150514_124917_748426_511497C8)
+In-Reply-To: <1431600456-10697-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1431600456-10697-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150520140426.GB126473@ubuntu-hedt>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2015 at 09:04:26AM -0500, Seth Forshee wrote:
-> I raised the question of key revocation when we discussed this on irc,
-> but it wasn't answered to my satisfaction. If a key signed by the
-> kernel-embedded key is compromised, how can that key be revoked so that
-> it is no longer trusted?
-> 
-> Someone mentioned UEFI blacklists, which I don't know much about, but
-> not all systems have UEFI. The only reliable option that comes to mind
-> for me is an in-kernel blacklist of keys which should no longer be
-> trusted.
-> 
+Store the low ack threshold configured by user in BSS config.
+This will be used by driver for triggering low ack event whenever
+the station is not ACKing the number of frames mentioned in
+threshold.
 
-I think the solution here is two-fold... first, we'll probably try some
-to use a HSM for signing, so there's extremely low risk of compromise.
-Secondly, if we annotate the key such that it can only be used for
-firmware, a compromise of my key won't allow you to kexec or load kernel
-modules.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ include/net/mac80211.h | 3 +++
+ net/mac80211/cfg.c     | 1 +
+ net/mac80211/status.c  | 4 ++--
+ 3 files changed, 6 insertions(+), 2 deletions(-)
 
-regards, --Kyle
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 8e3668b..76cb0e4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -488,6 +488,8 @@ struct ieee80211_event {
+  *	userspace), whereas TPC is disabled if %txpower_type is set to
+  *	NL80211_TX_POWER_FIXED (use value configured from userspace)
+  * @p2p_noa_attr: P2P NoA attribute for P2P powersave
++ * @low_ack_threshold: Number of consecutive packet loss to trigger low ack
++ *	event by driver.
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -524,6 +526,7 @@ struct ieee80211_bss_conf {
+ 	int txpower;
+ 	enum nl80211_tx_power_setting txpower_type;
+ 	struct ieee80211_p2p_noa_attr p2p_noa_attr;
++	u16 low_ack_threshold;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 265e427..b207e46 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -773,6 +773,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 	sdata->vif.bss_conf.dtim_period = params->dtim_period;
+ 	sdata->vif.bss_conf.enable_beacon = true;
++	sdata->vif.bss_conf.low_ack_threshold = params->low_ack_threshold;
+ 
+ 	sdata->vif.bss_conf.ssid_len = params->ssid_len;
+ 	if (params->ssid_len)
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 005fdbe..2a8cdac 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -520,7 +520,6 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+  *  - on # of retransmissions
+  *  - current throughput (higher value for higher tpt)?
+  */
+-#define STA_LOST_PKT_THRESHOLD	50
+ #define STA_LOST_TDLS_PKT_THRESHOLD	10
+ #define STA_LOST_TDLS_PKT_TIME		(10*HZ) /* 10secs since last ACK */
+ 
+@@ -533,7 +532,8 @@ static void ieee80211_lost_packet(struct sta_info *sta,
+ 		return;
+ 
+ 	sta->lost_packets++;
+-	if (!sta->sta.tdls && sta->lost_packets < STA_LOST_PKT_THRESHOLD)
++	if (!sta->sta.tdls &&
++	    sta->lost_packets < sta->sdata->vif.bss_conf.low_ack_threshold)
+ 		return;
+ 
+ 	/*
+-- 
+2.4.0
+
