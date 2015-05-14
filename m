@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:45624 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752632AbbEIV2H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 17:28:07 -0400
-Date: Sat, 09 May 2015 17:28:03 -0400 (EDT)
-Message-Id: <20150509.172803.2129151083625591640.davem@davemloft.net> (sfid-20150509_232819_407885_1D9E355D)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2015-05-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1430920954.1954.11.camel@sipsolutions.net>
-References: <1430920780.1954.10.camel@sipsolutions.net>
-	<1430920954.1954.11.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:55753 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964860AbbENTfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2015 15:35:24 -0400
+Message-ID: <1431632112.2237.5.camel@sipsolutions.net> (sfid-20150514_213546_172893_B8801C49)
+Subject: Re: [PATCH] staging: rtl8192u: ieee80211: Silence sparse warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gaston Gonzalez <gascoar@gmail.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org, arnd@arndb.de,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	joe@perches.com, navyasri.tech@gmail.com, julian.calaby@gmail.com
+Date: Thu, 14 May 2015 21:35:12 +0200
+In-Reply-To: <5553F48E.3050008@gmail.com> (sfid-20150514_030522_036209_6D0AE5EB)
+References: <1429476231-6197-1-git-send-email-gascoar@gmail.com>
+	 <20150420082441.GU10964@mwanda> <553C18B6.807@gmail.com>
+	 <20150427101242.GR14154@mwanda> <554AD76E.7060605@gmail.com>
+	 <20150508110328.GT14154@mwanda> <55527D6E.7090207@gmail.com>
+	 <20150513083615.GS14154@mwanda> <5553F48E.3050008@gmail.com>
+	 (sfid-20150514_030522_036209_6D0AE5EB)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 06 May 2015 16:02:34 +0200
+On Wed, 2015-05-13 at 22:04 -0300, Gaston Gonzalez wrote:
 
-> On Wed, 2015-05-06 at 15:59 +0200, Johannes Berg wrote:
->> Hi Dave,
->> 
->> This is the first -next pull request for my mac80211-next tree. See
->> below for what's in it - there isn't that much.
->> 
->> Please let me know if there are any issues.
-> 
-> Oops, I found one - amended pull request just adds one patch to fix a
-> docbook problem.
+>  .../rtl8192u/ieee80211/ieee80211_crypt_tkip.c      | 53
+> ++--------------------
+>  include/net/mac80211.h                             |  3 ++
+>  net/mac80211/tkip.c                                |  9 ++--
+>  3 files changed, 10 insertions(+), 55 deletions(-)
 
-Pulled, thanks Johannes.
+That doesn't seem right to me. Clearly, that's a staging driver that
+ships its own 802.11 subsystem, and bears no existing relation to
+mac80211. Exporting a mac80211 internal function to make such a driver
+happy makes me very suspicious. That function might not be very mac80211
+specific, but exporting it from mac80211 doesn't seem right, that
+introduces a massive and mostly artificial dependency into the driver.
+
+Now arguably that driver is in staging and that doesn't matter, but then
+why even bother cleaning this up? It seems likely that a well-written
+driver for this would use mac80211, and not have to bother with this at
+all since it could then use ieee80211_get_tkip_rx_p1k() or
+ieee80211_get_tkip_p2k() or the update_tkip_key() method.
+
+So I'm not fond of this patch and without a *very very* good reason and
+explanation I'm not going to merge the mac80211 part. It certainly
+bothers me much less that a crappy staging driver has a few lines of
+duplicated code than it would to export mac80211 internals that real
+mac80211 drivers don't need.
+
+johannes
+
