@@ -1,334 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:34903 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755268AbbEFAvE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18268 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752884AbbENJPR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 20:51:04 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org
-Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH v1 02/12] kernel: generalize module signing as system data signing
-Date: Tue,  5 May 2015 17:44:20 -0700
-Message-Id: <1430873070-7290-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_025127_024025_9F16BB17)
-In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 14 May 2015 05:15:17 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Add debugfs support to configure beacon tx mode
+Date: Thu, 14 May 2015 14:44:45 +0530
+Message-ID: <1431594885-32346-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150514_111524_532983_40E4931D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Introduce debugfs entry to select beacon tx mode to
+staggered or bursted mode. In staggered mode, software beacon
+alert will be evenly distributed for each beaconing interfaces
+by (beacon intval / number of vif). In bursted mode, batch of
+beacons will be sent out as batch at beacon interval.
 
-This generalizes the module signing code as helpers, we do
-this as we'll later re-use this same code for firmware and
-other system data signing.
+By default, staggered mode is selected.
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+To select bursted mode
+
+echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/beacon_tx_mode
+
+For staggered mode,
+
+echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/beacon_tx_mode
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- init/Kconfig                                     | 22 ++++---
- kernel/Makefile                                  |  2 +-
- kernel/module.c                                  |  4 +-
- kernel/{module-internal.h => sysdata-internal.h} |  4 +-
- kernel/{module_signing.c => sysdata_signing.c}   | 76 ++++++++++++------------
- kernel/system_keyring.c                          |  2 +-
- 6 files changed, 57 insertions(+), 53 deletions(-)
- rename kernel/{module-internal.h => sysdata-internal.h} (79%)
- rename kernel/{module_signing.c => sysdata_signing.c} (76%)
+ drivers/net/wireless/ath/ath10k/core.h  |  1 +
+ drivers/net/wireless/ath/ath10k/debug.c | 60 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.c   |  9 ++---
+ drivers/net/wireless/ath/ath10k/mac.h   |  1 +
+ 4 files changed, 67 insertions(+), 4 deletions(-)
 
-diff --git a/init/Kconfig b/init/Kconfig
-index f5dbc6d..862d5ad7 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1769,6 +1769,18 @@ config BASE_SMALL
- 	default 0 if BASE_FULL
- 	default 1 if !BASE_FULL
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 827b3d7..be85b1f 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -394,6 +394,7 @@ struct ath10k_debug {
+ 	u8 htt_max_ampdu;
  
-+config SYSDATA_SIG
-+	def_bool y
-+	select SYSTEM_TRUSTED_KEYRING
-+	select KEYS
-+	select CRYPTO
-+	select ASYMMETRIC_KEY_TYPE
-+	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
-+	select PUBLIC_KEY_ALGO_RSA
-+	select ASN1
-+	select OID_REGISTRY
-+	select X509_CERTIFICATE_PARSER
-+
- menuconfig MODULES
- 	bool "Enable loadable module support"
- 	option modules
-@@ -1842,15 +1854,7 @@ config MODULE_SRCVERSION_ALL
- config MODULE_SIG
- 	bool "Module signature verification"
- 	depends on MODULES
--	select SYSTEM_TRUSTED_KEYRING
--	select KEYS
--	select CRYPTO
--	select ASYMMETRIC_KEY_TYPE
--	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
--	select PUBLIC_KEY_ALGO_RSA
--	select ASN1
--	select OID_REGISTRY
--	select X509_CERTIFICATE_PARSER
-+	select SYSDATA_SIG
- 	help
- 	  Check modules for valid signatures upon load: the signature
- 	  is simply appended to the module. For more information see
-diff --git a/kernel/Makefile b/kernel/Makefile
-index 1408b33..e24c9d6 100644
---- a/kernel/Makefile
-+++ b/kernel/Makefile
-@@ -45,7 +45,7 @@ endif
- obj-$(CONFIG_UID16) += uid16.o
- obj-$(CONFIG_SYSTEM_TRUSTED_KEYRING) += system_keyring.o system_certificates.o
- obj-$(CONFIG_MODULES) += module.o
--obj-$(CONFIG_MODULE_SIG) += module_signing.o
-+obj-$(CONFIG_SYSDATA_SIG) += sysdata_signing.o
- obj-$(CONFIG_KALLSYMS) += kallsyms.o
- obj-$(CONFIG_BSD_PROCESS_ACCT) += acct.o
- obj-$(CONFIG_KEXEC) += kexec.o
-diff --git a/kernel/module.c b/kernel/module.c
-index 23b2b65..eb61c10 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -60,7 +60,7 @@
- #include <linux/pfn.h>
- #include <linux/bsearch.h>
- #include <uapi/linux/module.h>
--#include "module-internal.h"
-+#include "sysdata-internal.h"
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/module.h>
-@@ -2404,7 +2404,7 @@ static int module_sig_check(struct load_info *info)
- 	    memcmp(mod + info->len - markerlen, MODULE_SIG_STRING, markerlen) == 0) {
- 		/* We truncate the module to discard the signature */
- 		info->len -= markerlen;
--		err = mod_verify_sig(mod, &info->len);
-+		err = sysdata_verify_sig(mod, &info->len);
- 	}
- 
- 	if (!err) {
-diff --git a/kernel/module-internal.h b/kernel/sysdata-internal.h
-similarity index 79%
-rename from kernel/module-internal.h
-rename to kernel/sysdata-internal.h
-index 915e123..0aa573e 100644
---- a/kernel/module-internal.h
-+++ b/kernel/sysdata-internal.h
-@@ -1,4 +1,4 @@
--/* Module internals
-+/* System Data internals
-  *
-  * Copyright (C) 2012 Red Hat, Inc. All Rights Reserved.
-  * Written by David Howells (dhowells@redhat.com)
-@@ -9,4 +9,4 @@
-  * 2 of the Licence, or (at your option) any later version.
-  */
- 
--extern int mod_verify_sig(const void *mod, unsigned long *_modlen);
-+extern int sysdata_verify_sig(const void *data, unsigned long *_len);
-diff --git a/kernel/module_signing.c b/kernel/sysdata_signing.c
-similarity index 76%
-rename from kernel/module_signing.c
-rename to kernel/sysdata_signing.c
-index be5b8fa..8ba09aa 100644
---- a/kernel/module_signing.c
-+++ b/kernel/sysdata_signing.c
-@@ -1,4 +1,4 @@
--/* Module signature checker
-+/* System Data signature checker
-  *
-  * Copyright (C) 2012 Red Hat, Inc. All Rights Reserved.
-  * Written by David Howells (dhowells@redhat.com)
-@@ -15,10 +15,10 @@
- #include <crypto/hash.h>
- #include <keys/asymmetric-type.h>
- #include <keys/system_keyring.h>
--#include "module-internal.h"
-+#include "sysdata-internal.h"
- 
- /*
-- * Module signature information block.
-+ * System Data signature information block.
-  *
-  * The constituents of the signature section are, in order:
-  *
-@@ -27,7 +27,7 @@
-  *	- Signature data
-  *	- Information block
-  */
--struct module_signature {
-+struct sysdata_signature {
- 	u8	algo;		/* Public-key crypto algorithm [enum pkey_algo] */
- 	u8	hash;		/* Digest algorithm [enum hash_algo] */
- 	u8	id_type;	/* Key identifier type [enum pkey_id_type] */
-@@ -38,11 +38,11 @@ struct module_signature {
+ 	struct ath10k_fw_crash_data *fw_crash_data;
++	enum wmi_beacon_gen_mode beacon_tx_mode;
  };
  
- /*
-- * Digest the module contents.
-+ * Digest the system data contents.
-  */
--static struct public_key_signature *mod_make_digest(enum hash_algo hash,
--						    const void *mod,
--						    unsigned long modlen)
-+static struct public_key_signature *data_make_digest(enum hash_algo hash,
-+						    const void *data,
-+						    unsigned long len)
- {
- 	struct public_key_signature *pks;
- 	struct crypto_shash *tfm;
-@@ -51,7 +51,7 @@ static struct public_key_signature *mod_make_digest(enum hash_algo hash,
- 	int ret;
+ enum ath10k_state {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 8fa606a..de63465 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -24,6 +24,7 @@
+ #include "debug.h"
+ #include "hif.h"
+ #include "wmi-ops.h"
++#include "mac.h"
  
- 	pr_devel("==>%s()\n", __func__);
--	
-+
- 	/* Allocate the hashing algorithm we're going to need and find out how
- 	 * big the hash operational data will be.
- 	 */
-@@ -82,7 +82,7 @@ static struct public_key_signature *mod_make_digest(enum hash_algo hash,
- 	if (ret < 0)
- 		goto error;
- 
--	ret = crypto_shash_finup(desc, mod, modlen, pks->digest);
-+	ret = crypto_shash_finup(desc, data, len, pks->digest);
- 	if (ret < 0)
- 		goto error;
- 
-@@ -105,8 +105,8 @@ error_no_pks:
-  *
-  * RSA signatures only have one MPI, so currently we only read one.
-  */
--static int mod_extract_mpi_array(struct public_key_signature *pks,
--				 const void *data, size_t len)
-+static int data_extract_mpi_array(struct public_key_signature *pks,
-+				  const void *data, size_t len)
- {
- 	size_t nbytes;
- 	MPI mpi;
-@@ -161,7 +161,7 @@ static struct key *request_asymmetric_key(const char *signer, size_t signer_len,
- 	key = keyring_search(make_key_ref(system_trusted_keyring, 1),
- 			     &key_type_asymmetric, id);
- 	if (IS_ERR(key))
--		pr_warn("Request for unknown module key '%s' err %ld\n",
-+		pr_warn("Request for unknown system data key '%s' err %ld\n",
- 			id, PTR_ERR(key));
- 	kfree(id);
- 
-@@ -182,58 +182,58 @@ static struct key *request_asymmetric_key(const char *signer, size_t signer_len,
- }
- 
- /*
-- * Verify the signature on a module.
-+ * Verify the signature on system data.
-  */
--int mod_verify_sig(const void *mod, unsigned long *_modlen)
-+int sysdata_verify_sig(const void *data, unsigned long *_len)
- {
- 	struct public_key_signature *pks;
--	struct module_signature ms;
-+	struct sysdata_signature ds;
- 	struct key *key;
- 	const void *sig;
--	size_t modlen = *_modlen, sig_len;
-+	size_t len = *_len, sig_len;
- 	int ret;
- 
--	pr_devel("==>%s(,%zu)\n", __func__, modlen);
-+	pr_devel("==>%s(,%zu)\n", __func__, len);
- 
--	if (modlen <= sizeof(ms))
-+	if (len <= sizeof(ds))
- 		return -EBADMSG;
- 
--	memcpy(&ms, mod + (modlen - sizeof(ms)), sizeof(ms));
--	modlen -= sizeof(ms);
-+	memcpy(&ds, data + (len - sizeof(ds)), sizeof(ds));
-+	len -= sizeof(ds);
- 
--	sig_len = be32_to_cpu(ms.sig_len);
--	if (sig_len >= modlen)
-+	sig_len = be32_to_cpu(ds.sig_len);
-+	if (sig_len >= len)
- 		return -EBADMSG;
--	modlen -= sig_len;
--	if ((size_t)ms.signer_len + ms.key_id_len >= modlen)
-+	len -= sig_len;
-+	if ((size_t)ds.signer_len + ds.key_id_len >= len)
- 		return -EBADMSG;
--	modlen -= (size_t)ms.signer_len + ms.key_id_len;
-+	len -= (size_t)ds.signer_len + ds.key_id_len;
- 
--	*_modlen = modlen;
--	sig = mod + modlen;
-+	*_len = len;
-+	sig = data + len;
- 
- 	/* For the moment, only support RSA and X.509 identifiers */
--	if (ms.algo != PKEY_ALGO_RSA ||
--	    ms.id_type != PKEY_ID_X509)
-+	if (ds.algo != PKEY_ALGO_RSA ||
-+	    ds.id_type != PKEY_ID_X509)
- 		return -ENOPKG;
- 
--	if (ms.hash >= PKEY_HASH__LAST ||
--	    !hash_algo_name[ms.hash])
-+	if (ds.hash >= PKEY_HASH__LAST ||
-+	    !hash_algo_name[ds.hash])
- 		return -ENOPKG;
- 
--	key = request_asymmetric_key(sig, ms.signer_len,
--				     sig + ms.signer_len, ms.key_id_len);
-+	key = request_asymmetric_key(sig, ds.signer_len,
-+				     sig + ds.signer_len, ds.key_id_len);
- 	if (IS_ERR(key))
- 		return PTR_ERR(key);
- 
--	pks = mod_make_digest(ms.hash, mod, modlen);
-+	pks = data_make_digest(ds.hash, data, len);
- 	if (IS_ERR(pks)) {
- 		ret = PTR_ERR(pks);
- 		goto error_put_key;
+ /* ms */
+ #define ATH10K_DEBUG_HTT_STATS_INTERVAL 1000
+@@ -1885,6 +1886,7 @@ int ath10k_debug_start(struct ath10k *ar)
+ 			ath10k_warn(ar, "cal period cfg failed from debug start: %d\n",
+ 				    ret);
  	}
++	ar->debug.beacon_tx_mode = WMI_BEACON_STAGGERED_MODE;
  
--	ret = mod_extract_mpi_array(pks, sig + ms.signer_len + ms.key_id_len,
--				    sig_len);
-+	ret = data_extract_mpi_array(pks, sig + ds.signer_len + ds.key_id_len,
-+				     sig_len);
- 	if (ret < 0)
- 		goto error_free_pks;
- 
-@@ -246,5 +246,5 @@ error_free_pks:
- error_put_key:
- 	key_put(key);
- 	pr_devel("<==%s() = %d\n", __func__, ret);
--	return ret;	
-+	return ret;
+ 	return ret;
  }
-diff --git a/kernel/system_keyring.c b/kernel/system_keyring.c
-index 875f64e..1eb0c86 100644
---- a/kernel/system_keyring.c
-+++ b/kernel/system_keyring.c
-@@ -16,7 +16,7 @@
- #include <linux/err.h>
- #include <keys/asymmetric-type.h>
- #include <keys/system_keyring.h>
--#include "module-internal.h"
-+#include "sysdata-internal.h"
+@@ -2092,6 +2094,61 @@ static const struct file_operations fops_quiet_period = {
+ 	.open = simple_open
+ };
  
- struct key *system_trusted_keyring;
- EXPORT_SYMBOL_GPL(system_trusted_keyring);
++static ssize_t ath10k_write_beacon_tx_mode(struct file *file,
++					   const char __user *ubuf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	u32 beacon_tx_mode;
++	int ret;
++
++	if (kstrtouint_from_user(ubuf, count, 0, &beacon_tx_mode))
++		return -EINVAL;
++
++	if (beacon_tx_mode > WMI_BEACON_BURST_MODE) {
++		ath10k_warn(ar, "Invalid beaconing mode configured: %d\n",
++			    beacon_tx_mode);
++		return -EINVAL;
++	}
++	mutex_lock(&ar->conf_mutex);
++	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->beacon_tx_mode,
++					beacon_tx_mode);
++	if (ret) {
++		ath10k_warn(ar, "failed to set beacon tx mode: %d\n", ret);
++		mutex_unlock(&ar->conf_mutex);
++		return ret;
++	}
++
++	ath10k_mac_chan_reconfigure(ar);
++	ar->debug.beacon_tx_mode = beacon_tx_mode;
++	mutex_unlock(&ar->conf_mutex);
++
++	return count;
++}
++
++static ssize_t ath10k_read_beacon_tx_mode(struct file *file, char __user *ubuf,
++					  size_t count, loff_t *ppos)
++{
++	char buf[100];
++	struct ath10k *ar = file->private_data;
++	int len = 0;
++
++	mutex_lock(&ar->conf_mutex);
++	len = scnprintf(buf + len, sizeof(buf) - len,
++			"available beaconing modes: 0 - staggered 1 - bursted\n");
++	len += scnprintf(buf + len, sizeof(buf) - len, "current mode: %s\n",
++			 (ar->debug.beacon_tx_mode) ? "bursted" : "staggered");
++	mutex_unlock(&ar->conf_mutex);
++
++	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_beacon_tx_mode = {
++	.read = ath10k_read_beacon_tx_mode,
++	.write = ath10k_write_beacon_tx_mode,
++	.open = simple_open
++};
++
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
+@@ -2195,6 +2252,9 @@ int ath10k_debug_register(struct ath10k *ar)
+ 	debugfs_create_file("quiet_period", S_IRUGO | S_IWUSR,
+ 			    ar->debug.debugfs_phy, ar, &fops_quiet_period);
+ 
++	debugfs_create_file("beacon_tx_mode", S_IRUGO | S_IWUSR,
++			    ar->debug.debugfs_phy, ar, &fops_beacon_tx_mode);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 425dbe2..898b821 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3969,7 +3969,7 @@ static int ath10k_config_ps(struct ath10k *ar)
+ 	return ret;
+ }
+ 
+-static void ath10k_mac_chan_reconfigure(struct ath10k *ar)
++void ath10k_mac_chan_reconfigure(struct ath10k *ar)
+ {
+ 	struct ath10k_vif *arvif;
+ 	struct cfg80211_chan_def def;
+@@ -4556,12 +4556,13 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if (changed & BSS_CHANGED_BEACON) {
+ 		ath10k_dbg(ar, ATH10K_DBG_MAC,
+-			   "vdev %d set beacon tx mode to staggered\n",
+-			   arvif->vdev_id);
++			   "vdev %d set beacon tx mode to %s\n",
++			   arvif->vdev_id,
++			   ar->debug.beacon_tx_mode ? "bursted" : "staggered");
+ 
+ 		pdev_param = ar->wmi.pdev_param->beacon_tx_mode;
+ 		ret = ath10k_wmi_pdev_set_param(ar, pdev_param,
+-						WMI_BEACON_STAGGERED_MODE);
++						ar->debug.beacon_tx_mode);
+ 		if (ret)
+ 			ath10k_warn(ar, "failed to set beacon mode for vdev %d: %i\n",
+ 				    arvif->vdev_id, ret);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index b291f06..a765ae8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -74,6 +74,7 @@ void ath10k_mac_tx_lock(struct ath10k *ar, int reason);
+ void ath10k_mac_tx_unlock(struct ath10k *ar, int reason);
+ void ath10k_mac_vif_tx_lock(struct ath10k_vif *arvif, int reason);
+ void ath10k_mac_vif_tx_unlock(struct ath10k_vif *arvif, int reason);
++void ath10k_mac_chan_reconfigure(struct ath10k *ar);
+ 
+ static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
+ {
 -- 
-2.3.2.209.gd67f9d5.dirty
+2.4.0
 
