@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49828 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751127AbbEFQoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 12:44:08 -0400
-Date: Wed, 6 May 2015 18:44:02 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC v1 11/12] iwlwifi: use sysdata_file_request() and
- sysdata_file_request_async()
-Message-ID: <20150506164402.GM5622@wotan.suse.de> (sfid-20150506_184430_016018_79B8299E)
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
- <1430873070-7290-12-git-send-email-mcgrof@do-not-panic.com>
- <1430895798.2495.0.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430895798.2495.0.camel@sipsolutions.net>
+Received: from mailout1.samsung.com ([203.254.224.24]:22342 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754254AbbENFCa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2015 01:02:30 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NOB00G85Q03T720@mailout1.samsung.com> for
+ linux-wireless@vger.kernel.org; Thu, 14 May 2015 14:02:27 +0900 (KST)
+Date: Thu, 14 May 2015 05:02:23 +0000 (GMT)
+From: Rahul Jain <rahul.jain@samsung.com>
+Subject: [PATCH] Added 2 new Control Frames ( Beamforming Report Poll & VHT
+ NDP Announcement) defined in 802.11ac
+To: linux-wireless@vger.kernel.org, johannes.berg@intel.com
+Reply-to: rahul.jain@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <2076339160.163631431579743152.JavaMail.weblogic@ep2mlwas05d> (sfid-20150514_070252_547798_4C831930)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 06, 2015 at 09:03:18AM +0200, Johannes Berg wrote:
-> What's the point in these conversions? You're clearly not converting
-> *all* users so you could get rid of request_firmware(), so this is
-> pretty much pointless.
+aGVsbG8gQWxsLAoKQmVsb3cgaXMgdGhlIHBhdGNoIGZvciAyIG5ldyBjb250cm9sIGZyYW1lcyBk
+ZWZpbmVkIGluIDgwMi4xMWFjLgpQbGVhc2UgcmV2aWV3IGFuZCBtZXJnZS4KCkZyb20gYjljYTMz
+NTA0MDU0N2U1NjU2ODRmNWJmNjBkMzdkYjg5NjMyMjY2MyBNb24gU2VwIDE3IDAwOjAwOjAwIDIw
+MDEgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIApG
+cm9tOiByYWh1bCA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4KRGF0ZTogVGh1LCAxNCBNYXkgMjAx
+NSAxMDoyMTo0OCArMDUzMApTdWJqZWN0OiBbUEFUQ0hdIEFkZGVkIDIgbmV3IENvbnRyb2wgRnJh
+bWVzICggQmVhbWZvcm1pbmcgUmVwb3J0IFBvbGwgJiBWSFQgCiBORFAgQW5ub3VuY2VtZW50KSBk
+ZWZpbmVkIGluIDgwMi4xMWFjCgoKU2lnbmVkLW9mZi1ieTogcmFodWwgPHJhaHVsLmphaW5Ac2Ft
+c3VuZy5jb20+Ci0tLQogaW5jbHVkZS9saW51eC9pZWVlODAyMTEuaCB8ICAgIDIgKysKIDEgZmls
+ZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2ll
+ZWU4MDIxMS5oIGIvaW5jbHVkZS9saW51eC9pZWVlODAyMTEuaAppbmRleCBiOWM3ODk3Li5jYTM4
+NjE2IDEwMDY0NAotLS0gYS9pbmNsdWRlL2xpbnV4L2llZWU4MDIxMS5oCisrKyBiL2luY2x1ZGUv
+bGludXgvaWVlZTgwMjExLmgKQEAgLTc1LDYgKzc1LDggQEAKICNkZWZpbmUgSUVFRTgwMjExX1NU
+WVBFX0FDVElPTiAgICAgICAgIDB4MDBEMAogCiAvKiBjb250cm9sICovCisjZGVmaW5lIElFRUU4
+MDIxMV9TVFlQRV9CRUFNRk9STV9QT0xMICAweDAwNDAKKyNkZWZpbmUgSUVFRTgwMjExX1NUWVBF
+X1ZIVF9ORFBfQU5OT1VDRSAgICAgICAgMHgwMDUwCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9D
+VExfRVhUICAgICAgICAgICAgICAgIDB4MDA2MAogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQkFD
+S19SRVEgICAgICAgMHgwMDgwCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9CQUNLICAgICAgICAg
+ICAweDAwOTAKLS0gCjEuNy45LjU=
 
-That is correct, as the cover letter stated these are just
-examples of how one can use the new proposed extensible
-API, the driver changes were just examples, it would
-certainly be pointless and stupid to convert drivers
-over.
 
-  Luis
