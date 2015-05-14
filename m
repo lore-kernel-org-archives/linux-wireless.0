@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:49854 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbbEUJ2M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 05:28:12 -0400
-Message-ID: <555DA529.6000901@broadcom.com> (sfid-20150521_112818_422321_E655DF9A)
-Date: Thu, 21 May 2015 11:28:09 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
+Received: from cantor2.suse.de ([195.135.220.15]:58440 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932355AbbENBfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 May 2015 21:35:17 -0400
+Date: Thu, 14 May 2015 03:35:12 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	ming.lei@canonical.com, Rusty Russell <rusty@rustcorp.com.au>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	dhowells@redhat.com, Seth Forshee <seth.forshee@canonical.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	pebolle@tiscali.nl,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
-References: <1432123792-4155-1-git-send-email-arend@broadcom.com>	<1432123792-4155-7-git-send-email-arend@broadcom.com>	<CACna6ryt5uNkBXAk8chFyMEQVJLdHELLdA_V5TrLcaAikrTZeg@mail.gmail.com> <CACna6ryCgOwkj_nt6Gd1+r826OJu-suPk50YAS1eRVW+kkR7fQ@mail.gmail.com>
-In-Reply-To: <CACna6ryCgOwkj_nt6Gd1+r826OJu-suPk50YAS1eRVW+kkR7fQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Greg KH <gregkh@linuxfoundation.org>, jlee@suse.com,
+	Takashi Iwai <tiwai@suse.de>, casey@schaufler-ca.com,
+	Kees Cook <keescook@chromium.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kyle McMartin <kyle@kernel.org>
+Subject: Re: [RFC v2 6/6] firmware: add firmware signature checking support
+Message-ID: <20150514013512.GS23057@wotan.suse.de> (sfid-20150514_033538_476800_A2C34C35)
+References: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
+ <1431541436-17007-7-git-send-email-mcgrof@do-not-panic.com>
+ <CAGRGNgW3+SgOqt-env6SBp+j7S4wQcXTK0HpuiM_BYbLzpfohA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgW3+SgOqt-env6SBp+j7S4wQcXTK0HpuiM_BYbLzpfohA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/21/15 10:28, Rafał Miłecki wrote:
-> On 20 May 2015 at 16:33, Rafał Miłecki<zajec5@gmail.com>  wrote:
->> I think the best way for achieving this is to rework your patch to
->> modify include/linux/bcm47xx_nvram.h. You could modify it the same way
->> you did in your patch for MIPS tree, except for
->> bcm47xx_nvram_get_contents. Don't implement this function for real (in
->> .c file), but instead make in dummy inline in a bcm47xx_nvram.h like:
->> static inline char *bcm47xx_nvram_get_contents(size_t *val_len)
->> {
->>          /* TODO: Implement in .c file */
->>          return NULL;
->> }
->
-> One more note.
-> This of course will lead to conflict at some point, but I believe
-> Linus will handle it.
+On Thu, May 14, 2015 at 10:31:52AM +1000, Julian Calaby wrote:
+> On Thu, May 14, 2015 at 4:23 AM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+> > +"Require all firmware to be validly signed", under the same menu.
+> 
+> You reference the relevant Kconfig symbols above, do you want to add
+> it here too?
 
-I prefer to avoid tricks so I will ask to drop this patch and wait for 
-it to land in the next kernel, ie. 4.2, and resubmit this patch for 4.3. 
-I am not in a hurry.
+Sure, amended, thanks.
 
-Regards,
-Arend
+ Luis
