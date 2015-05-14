@@ -1,74 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57562 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752244AbbEFMuc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 08:50:32 -0400
-Message-ID: <1430916630.1954.2.camel@sipsolutions.net> (sfid-20150506_145043_862367_3AAA1B67)
-Subject: Re: [PATCH v2 5/7] mac80211: Adjust chan_ctx when assigning
- reserved vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrei Otcheretianski <andrei.otc@gmail.com>
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Wed, 06 May 2015 14:50:30 +0200
-In-Reply-To: <CAKk+41n4qfmxVZrS03=1qas1FmEc4nmVjLEJ9LDuNCw+sVoffQ@mail.gmail.com> (sfid-20150426_101336_836315_A82B3342)
-References: <1426143210-25635-5-git-send-email-emmanuel.grumbach@intel.com>
-	 <1429606392-7776-1-git-send-email-andrei.otcheretianski@intel.com>
-	 <1429872119.1852.39.camel@sipsolutions.net>
-	 <CAKk+41n4qfmxVZrS03=1qas1FmEc4nmVjLEJ9LDuNCw+sVoffQ@mail.gmail.com>
-	 (sfid-20150426_101336_836315_A82B3342)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:53833 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933746AbbENS3w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 May 2015 14:29:52 -0400
+Message-ID: <5554E99A.5030302@broadcom.com> (sfid-20150514_203036_358505_27FE5502)
+Date: Thu, 14 May 2015 20:29:46 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: <kyle@kernel.org>, <linux-firmware@kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <gnomes@lxorguk.ukuu.org.uk>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH resend] README: clarify redistribution requirements covering
+ patents
+References: <1431626160-10885-1-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1431626160-10885-1-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-04-26 at 11:13 +0300, Andrei Otcheretianski wrote:
+On 05/14/15 19:56, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez"<mcgrof@suse.com>
+>
+> Firmware licenses on linux-firmware should include an implicit
+> or explicit patent grant to end users for full device operation
+> otherwise it would start making linux-firmware useless for many
+> Linux distributions which have positions against patent encumbered
+> software [0] [1] [2] and it would mean cherry picking firmware files
+> out. It can also mean making it problematic to redistribute linux-firmware
+> in some jurisdictions which could have different positions on
+> patents, or have already outlawed software patents.
+>
+> Licenses with implicit patent grants are allowed given that otherwise
+> we couldn't carry permissively licensed firmwares which would be silly,
+> but using permissively licensed firmware files which remove patent
+> grants explicitly are not allowed.
+>
+> A clarifications is needed as one attempt was already made to include
+> firmware encumbered by patents without a grant [3] and it was decided
+> we would not allow these. We clarify this to make this requirement
+> explicit and prevent these type of further attempts.
+>
+> [0] https://www.debian.org/legal/patent
+> [1] http://fedoraproject.org/wiki/Software_Patents#Red_Hat.27s_position_on_Software_Patents
+> [2] http://www.openinventionnetwork.com/about-us/
+> [3] https://lkml.org/lkml/2014/3/14/182
+>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Luis R. Rodriguez<mcgrof@suse.com>
+> ---
+>
+> This patch is unmodified, the discussion over it was brief [0] but I didn't
+> hear back from Alan on this. Sending again now that we have a new active
+> linux-firmware maintainer.
+>
+> [0] https://lkml.org/lkml/2014/6/27/448
+>
+>   README | 5 ++++-
+>   1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/README b/README
+> index f2ed92e..d2a56ec 100644
+> --- a/README
+> +++ b/README
+> @@ -18,7 +18,10 @@ and also cc: to related mailing lists.
+>
+>   Your commit should include an update to the WHENCE file clearly
+>   identifying the licence under which the firmware is available, and
+> -that it is redistributable. If the licence is long and involved, it's
+> +that it is redistributable. Being redistributable includes ensuring
+> +the firmware license provided includes an implicit or explicit
+> +patent grant to end users to ensure full functionality of device
+> +operation with the firmware. If the licence is long and involved, it's
 
-> sdata->reserved_chandef  is passed to
-> ieee80211_chanctx_non_reserved_chandef, so it takes the reservation
-> into account when the required chandef is recalculated.
-> This is what I tried to say here. I'll rephrase to make it more clear.
+Just nitpicking here, but there is 'license' and 'licence' being used 
+here. Better stick to one and preferably 'license'.
 
-Ok, thanks.
+Regards,
+Arend
 
-> > > Not doing so would result in using chanctx with narrower width than actually
-> > > required. Fix this by calling ieee80211_change_chanctx with the widest common
-> > > chandef. This both changes the chanctx's width and recalcs min_def.
-> >
-> > This seems possible, yeah.
-> >
-> >
-> > >         chandef = ieee80211_chanctx_non_reserved_chandef(local, new_ctx,
-> > >                                 &sdata->reserved_chandef);
-> >
-> > >       if (WARN_ON(!chandef))
-> > >               return -EINVAL;
-> > >
-> > > +     ieee80211_change_chanctx(local, new_ctx, chandef);
-> > > +
-> > >       vif_chsw[0].vif = &sdata->vif;
-> > >       vif_chsw[0].old_ctx = &old_ctx->conf;
-> > >       vif_chsw[0].new_ctx = &new_ctx->conf;
-> > [...]
-> > >       ieee80211_vif_update_chandef(sdata, &sdata->reserved_chandef);
-> >
-> > Hmm. (added more context)
-> >
-> > The code here seems to be wrong though. It shouldn't overwrite
-> > reserved_chandef, or it shouldn't call ieee80211_vif_update_chandef()
-> > with it, as the vif's bss_conf.chandef should represent what *this* vif
-> > wants/needs, while you're now putting there what the *combination*
-> > requires in the chandef.
-> >
-> > That's clearly wrong - please submit a new patch that fixes all the
-> > issues in these functions.
-> 
-> I don't see any issue here.  sdata->reserved_chandef isn't overwritten
-> and it is what sdata really needs.
-
-Yes, good point, sorry. I confused the pointer assignments with struct
-assignments.
-
-johannes
+>   permitted to include it in a separate file and refer to it from the
+>   WHENCE file.
+>   And if it were possible, a changelog of the firmware itself.
 
