@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36778 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993436AbbEEPmY (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58708 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964836AbbENVQS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 11:42:24 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] wil6210: fix format specifier for dma_addr_t
-Date: Tue,  5 May 2015 18:42:08 +0300
-Message-Id: <1430840528-14998-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150505_194345_229943_0A532205)
-In-Reply-To: <87fv7bvb9f.fsf@kamboji.qca.qualcomm.com>
-References: <87fv7bvb9f.fsf@kamboji.qca.qualcomm.com>
+	Thu, 14 May 2015 17:16:18 -0400
+Message-ID: <555510A1.2040607@candelatech.com> (sfid-20150514_231622_557579_DFBD7C9A)
+Date: Thu, 14 May 2015 14:16:17 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Liu CF/TW <cfliu.tw@gmail.com>, Kalle Valo <kvalo@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param
+ for raw tx injection, sw crypto support.
+References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com> <873837qo6l.fsf@kamboji.qca.qualcomm.com> <554CE438.5000208@candelatech.com> <CAG5N3qFB=yZJYSokUqF2=eNcS5SoCOntOyan6_OuahtFF5r=Bw@mail.gmail.com> <871tinjosq.fsf@kamboji.qca.qualcomm.com> <5550D629.2090501@candelatech.com> <CAG5N3qE6nA2oEhR5Zk8sS331-ycM+jZLBy2BeGPX0ueHqvJ6Kg@mail.gmail.com> <87oalnchwb.fsf@kamboji.qca.qualcomm.com> <CAG5N3qGJ9jREnNaLF6ik+Z6xOjQTnZ3dZXUW_ODV8iapMWE5mg@mail.gmail.com>
+In-Reply-To: <CAG5N3qGJ9jREnNaLF6ik+Z6xOjQTnZ3dZXUW_ODV8iapMWE5mg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix format specifier used for dma_addr_t, namely use %pad
-Debug print virtual address for the same buffer as well.
+On 05/14/2015 12:35 PM, Liu CF/TW wrote:
+> On Thu, May 14, 2015 at 8:12 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> "Liu CF/TW" <cfliu.tw@gmail.com> writes:
+>>
+>>> I am going to propose just one single module parameter control: enc_mode
+>>>
+>>> - enc_mode = 0: Use HW crypto (default),
+>>>
+>>>    Driver behavior:
+>>>       - ath10k driver uses native WiFi mode for both Tx/Rx.
+>>>       - ath10k driver configures key to HW.
+>>>       Given HW key descriptor is configured, mac80211 would offload Tx
+>>> encryption to HW and only do Rx decryption (by mac80211) if HW failed
+>>> to do it.
+>>
+>> But isn't the point here to use 802.11 frames ("raw mode")? Then why
+>> name the module paramater as enc_mode? I think that's confusing.
+>>
+>> And to me enc_mode doesn't tell much, my first thought was "encoding
+>> mode". Wouldn't cryptmode tell more to the user?
+>>
+>>
+>
+> Thanks for the suggestion. Yes, crypt_mode is better. I didn't mean
+> "enc({ap, oding})_mode" but "enc(ryption)_mode"
+>
+> IMO, the new use cases enabled by the change are sw crypto support and
+> raw Tx frame injection (to bypass hw crypto if already encrypted).
+> Therefore I suggest use "crypt_mode" as module param so it's clear one
+> only needs to set it if sw crypto is desired.
+>
+> "raw_mode" itself as a module param doesn't mean much to user, it
+> doesn't say what new use cases are supported. After all, both native
+> wifi and raw mode supports HW crypto.
+>
+> In Ben's use case, driver that loads CT firmware can continue to run
+> without setting anything (default crypt_mode=0 means use HW crypto)
+> and FW continues its magic to enable Rx SW crypto fallback.  At some
+> point when CT firmware implements the FW feature
+> TX_RAW_ENCAP_SUPPORTED, all the crypt_modes=0,1,2 also works there.
 
-It can be applied as:
-fixup! wil6210: Add pmc debug mechanism memory management
+This fine for me.  I'll just keep using my patch that enables nohwcrypt
+module option to enable my own rx-sw-crypt feature.  If I ever
+get raw-tx working for encrypted packets I'll set that flag in
+my firmware as you suggest.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/pmc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/ath/wil6210/pmc.c b/drivers/net/wireless/ath/wil6210/pmc.c
-index 3cb4f35..d34b084 100644
---- a/drivers/net/wireless/ath/wil6210/pmc.c
-+++ b/drivers/net/wireless/ath/wil6210/pmc.c
-@@ -92,9 +92,9 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
- 			GFP_KERNEL);
- 
- 	wil_dbg_misc(wil,
--		     "%s: allocated pring %p. %zd x %d = total %zd bytes\n",
-+		     "%s: allocated pring %p => %pad. %zd x %d = total %zd bytes\n",
- 		     __func__,
--		     (void *)pmc->pring_pa,
-+		     pmc->pring_va, pmc->pring_pa,
- 		     sizeof(struct vring_tx_desc),
- 		     num_descriptors,
- 		     sizeof(struct vring_tx_desc) * num_descriptors);
+
 -- 
-2.1.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
