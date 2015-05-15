@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23227 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752331AbbEUG2v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 02:28:51 -0400
-Date: Thu, 21 May 2015 11:58:34 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] nl80211: Add support to configure low ack threshold
-Message-ID: <20150521062828.GA4935@qca.qualcomm.com> (sfid-20150521_082854_422352_7567FC1E)
-References: <1431600456-10697-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1432020579.7437.4.camel@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:39582 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753638AbbEOMzQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2015 08:55:16 -0400
+Date: Fri, 15 May 2015 13:54:42 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Rafa?? Mi??ecki <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: ACS support (survey) in few various drives: carl9170, mwifiex,
+ mwl8k, p54, rt2800*
+Message-ID: <20150515115440.GA20013@redhat.com> (sfid-20150515_145522_824365_55111ADB)
+References: <CACna6rw47fBcRczzSjeE1xXdqVPKuwn7yGvbXv2wL8zg8O8pFA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1432020579.7437.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACna6rw47fBcRczzSjeE1xXdqVPKuwn7yGvbXv2wL8zg8O8pFA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 09:29:39AM +0200, Johannes Berg wrote:
-> On Thu, 2015-05-14 at 16:17 +0530, Rajkumar Manoharan wrote:
-> > Add a new nl80211 attribute to configure low ack threshold (number of
-> > consecutive frames) not being acked by station. This threshold is used
-> > to kickout station by driver through low ack event. This allows user to
-> > tune the parameter to improve robustness under noisy environment.
+On Fri, May 15, 2015 at 12:59:31PM +0200, Rafa?? Mi??ecki wrote:
+> Hi,
 > 
-> If we're making this configurable, why not allow it to be done per
-> station?
->
-Though per-STA config looks granular, does it look good to have
-different threshold for each station within the same BSS? On what basis
-threshold will be defined for each station?
+> I'm trying to follow ACS implementation in hostapd & kernel. I think I
+> managed to document what driver needs to implement to allow hostapd
+> use it with acs_survey option:
+> https://wireless.wiki.kernel.org/en/users/documentation/acs?&#driver_implementation_details
+> 
+> All sources say about only 3 drivers supporting ACS: ath5k, ath9k, ath10k.
+> 
+> However it seems there are more drivers with support for various
+> SURVEY_INFO_* stuff. From what I see ACS should work with following
+> ones just fine:
+> carl9170, mwifiex, mwl8k, p54, rt2800*
+> 
+> Am I missing something? Is there any reason ACS won't work with above drivers?
 
-Please share your comments.
+On rt2800 get_survey() is not implemented correctly
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2014-December/006751.html
 
--Rajkumar
+Stanislaw
+
