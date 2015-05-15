@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:9458 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677AbbEUJaI (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:35439 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030244AbbEOHwz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 05:30:08 -0400
-Message-ID: <555DA59E.6080305@broadcom.com> (sfid-20150521_113014_451902_AE09A1D5)
-Date: Thu, 21 May 2015 11:30:06 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 15 May 2015 03:52:55 -0400
+Received: by labbd9 with SMTP id bd9so107285510lab.2
+        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2015 00:52:53 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
-References: <1432123792-4155-1-git-send-email-arend@broadcom.com>	<1432123792-4155-7-git-send-email-arend@broadcom.com>	<CACna6ryt5uNkBXAk8chFyMEQVJLdHELLdA_V5TrLcaAikrTZeg@mail.gmail.com> <CACna6ryCgOwkj_nt6Gd1+r826OJu-suPk50YAS1eRVW+kkR7fQ@mail.gmail.com> <555DA529.6000901@broadcom.com>
-In-Reply-To: <555DA529.6000901@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1431674716.2426.2.camel@sipsolutions.net>
+References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
+	<1431674716.2426.2.camel@sipsolutions.net>
+Date: Fri, 15 May 2015 10:52:53 +0300
+Message-ID: <CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com> (sfid-20150515_095801_047749_BEB748D0)
+Subject: Re: mac80211 drops packet with old IV after rekeying
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/21/15 11:28, Arend van Spriel wrote:
-> On 05/21/15 10:28, Rafał Miłecki wrote:
->> On 20 May 2015 at 16:33, Rafał Miłecki<zajec5@gmail.com> wrote:
->>> I think the best way for achieving this is to rework your patch to
->>> modify include/linux/bcm47xx_nvram.h. You could modify it the same way
->>> you did in your patch for MIPS tree, except for
->>> bcm47xx_nvram_get_contents. Don't implement this function for real (in
->>> .c file), but instead make in dummy inline in a bcm47xx_nvram.h like:
->>> static inline char *bcm47xx_nvram_get_contents(size_t *val_len)
->>> {
->>> /* TODO: Implement in .c file */
->>> return NULL;
->>> }
->>
->> One more note.
->> This of course will lead to conflict at some point, but I believe
->> Linus will handle it.
+>> I'd be glad if someone could take a look. If not, I'll have someone
+>> from our team to look at it, but I don't know how long it will take...
 >
-> I prefer to avoid tricks so I will ask to drop this patch and wait for
-> it to land in the next kernel, ie. 4.2, and resubmit this patch for 4.3.
-> I am not in a hurry.
+> Without looking too much - it seems to me that this is a fundamental
+> problem with PTK rekeying, in that it re-uses the key index that is
+> intended to avoid this.
 
-The 'it' in 'wait for it to land' being the mips patch providing the new 
-api function. I will submit a v2 for that one.
+In this case, the AP is openWRT. I guess the Key idx is chosen in
+software, so maybe the proper fix would be to have openWRT increment
+the key index when it rekeys?
 
-Regards,
-Arend
-
-> Regards,
-> Arend
-
+>
+> The issue at hand here is likely a hardware decryption vs. key replacing
+> race, in that hardware decryption happens while the key replacing also
+> happens, and then the PN checking after key replace hits the wrong key
+> (due to the above-mentioned issue with not being able to change the key
+> index in PTK rekeying.)
+>
+> I don't see how we can fix this, except perhaps heuristically by
+> dropping packets that were encrypted with the *old* key and therefore
+> not updating the replay counter for them. However, detecting that they
+> were encrypted with the old key would only be possible by detecting a
+> large jump in PN, which could theoretically also happen in real
+> usage ...
+>
+> johannes
+>
