@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:36564 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751701AbbEKNYt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 09:24:49 -0400
+Received: from mail-la0-f45.google.com ([209.85.215.45]:34123 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754068AbbEOSQA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2015 14:16:00 -0400
+Received: by laat2 with SMTP id t2so132210344laa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2015 11:15:58 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com>
-References: <20150505224020.GA3805@bytefire-computer> <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com>
- <20150506063241.GA3042@bytefire-computer> <87k2wflj7p.fsf@kamboji.qca.qualcomm.com>
- <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Mon, 11 May 2015 15:24:18 +0200
-Message-ID: <CAOiHx=kzSsFenqPSNeAX6P5wJK8Hr-q+s+rJoQQMPbSGmE50xw@mail.gmail.com> (sfid-20150511_152511_791459_3472972E)
-Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Okash Khawaja <okash.khawaja@gmail.com>,
-	"joe@perches.com" <joe@perches.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <CAAnMG+PjoNO5opNHHnVFRZg9s2yWoK6p6vQqPO1N9PR-5TcjpQ@mail.gmail.com>
+References: <CAAnMG+PjoNO5opNHHnVFRZg9s2yWoK6p6vQqPO1N9PR-5TcjpQ@mail.gmail.com>
+Date: Fri, 15 May 2015 11:15:58 -0700
+Message-ID: <CAAnMG+P4fP5dgbo+b_aL54rfaD7CKbXnVXEJyszWq8Gj92MdYQ@mail.gmail.com> (sfid-20150515_201605_589830_5510CDDC)
+Subject: Re: ath9k: chance of failing to install unicast encryption key under
+ heavy load
+From: Alexis Green <agreen@cococorp.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Good <time of day>,
 
-On Mon, May 11, 2015 at 12:38 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Okash Khawaja <okash.khawaja@gmail.com> writes:
->
->> Sure, I'll create v2 of the patch with updated commit log.
->>
->> Since it's part of a patch set, do you want me to send both the
->> patches in the patch set together as v2 or just this patch?
->
-> Please resend the whole patchset as v2, less problems that way.
+When testing encrypted mesh functionality under heavy load (maxing out
+the channel), there is a strong possibility that unicast key does not
+get installed properly into hardware.
 
-If you are sending a v2 anyway, I'd suggest using decimal values for
-the cases, as cache line sizes are usually given in decimal anyway. So
-just drop the "0x" instead of converting the values ;-)
+This test has been done using OpenWRT trunk @ svn revision r45676
+Repros on TP-Link WDR-4300 hardware, specifically 5Ghz phy ( Atheros
+AR9340 Rev:2 ). It also reproduces on another piece of hardware
+running earlier version of OpenWRT ( Atheros AR9280 Rev:2 )
 
+To reproduce, set authsae "lifetime" to a small number of seconds
+(I've used 30 seconds) then initiate TCP iperf test across the mesh
+link. With iperf in the background, initiate ICMP ping between the two
+nodes. Observe pings stop at the rekeying and coming back on the next
+rekey. Loading ath9k with "nohwcrypt=1" resolves the issue at cost of
+greatly reduced throughput.
 
-Jonas
+Instrumented code to print out key being installed at authsae,
+mac80211, and ath9k levels show that correct key is passed all the way
+down to hardware. Performing REG_READ on the installed key immediately
+after REGWRITE_BUFFER_FLUSH in ath_hw_set_keycache_entry() indicates
+that correct key is in the key register. Making authsae daemon instal
+same key again after waiting for one second reduces the occurrence of
+the problem, but does not eliminate it.
+
+I can provide my openwrt build .config, image, and node configuration
+if that helps.
+
+P.S. Possibly manifestation of the same problem -
+http://lists.shmoo.com/pipermail/hostap/2014-November/031377.html
+
+Also, this email has been cross-posted to ath9k-devel mailing list
+
+Thank you all,
+Alexis Green
