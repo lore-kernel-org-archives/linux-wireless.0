@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:33791 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbbEKJj7 (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:37917 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753710AbbEOOoi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 05:39:59 -0400
-Received: by layy10 with SMTP id y10so89166247lay.0
-        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2015 02:39:57 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] mac80211: IBSS, clear fast_sta when update rates
-Date: Mon, 11 May 2015 11:39:53 +0200
-Message-Id: <1431337193-17472-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150511_114013_502593_D223B089)
+	Fri, 15 May 2015 10:44:38 -0400
+Received: by wicnf17 with SMTP id nf17so139869692wic.1
+        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2015 07:44:37 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CAGRGNgWbmWCmKUN8gGEJ4eQSMd8QW8M9ij0_kK8jv3HpS1df0Q@mail.gmail.com>
+References: <1431693340-8861-1-git-send-email-linux@rempel-privat.de>
+	<CAGRGNgWbmWCmKUN8gGEJ4eQSMd8QW8M9ij0_kK8jv3HpS1df0Q@mail.gmail.com>
+Date: Fri, 15 May 2015 16:44:37 +0200
+Message-ID: <CA+icZUXYEqzjkC=u1njYqRreDr3SKDokgE=D1SGOr+rcj-B4Ug@mail.gmail.com> (sfid-20150515_164451_653377_863CE9D9)
+Subject: Re: [PATCH] ath9k: add phy.c
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is required to handle sta.wme correctly
-after update rates (eg. when using HT/VHT) when
-driver using IEEE80211_HW_SUPPORT_FAST_XMIT.
+On Fri, May 15, 2015 at 4:38 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Oleksij,
+>
+> On Fri, May 15, 2015 at 10:35 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>> ... and move dup code from ar5008_phy.c and ar9002_phy.c to phy.c
+>
+> A better subject might be:
+>
+> ath9k: consolidate common phy functions
+>
+> "phy.c" doesn't really mean anything to people outside the developers
+> of this particular driver.
+>
 
-In other case fast tx path will not add QOS data and
-in case of ath10k driver (rate control in the HW) only
-legacy rates will be used.
+Jupp.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/mac80211/ibss.c | 1 +
- 1 file changed, 1 insertion(+)
+Is a consolidation also possible/wise/doable also for phy.h?
+( I see this snippet in your new phy.c file... )
+...
++#include "phy.h"
++#include "ar9002_phy.h"
+...
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index bfef1b2..f76414e 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1087,6 +1087,7 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
- 		if (sta->sta.rx_nss != rx_nss)
- 			changed |= IEEE80211_RC_NSS_CHANGED;
- 
-+		ieee80211_clear_fast_xmit(sta);
- 		drv_sta_rc_update(local, sdata, &sta->sta, changed);
- 	}
- 
--- 
-1.9.1
+IOW, can ar9002_phy.h move into phy.h?
 
+- sed@ -
