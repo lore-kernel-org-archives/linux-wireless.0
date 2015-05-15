@@ -1,79 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752018AbbEZTSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:18:24 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/39] iwlwifi: mvm: Configure agg. queue before assigning it to STA
-Date: Tue, 26 May 2015 22:17:27 +0300
-Message-Id: <1432667872-18092-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211828_390501_E06E18C6)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:35082 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753507AbbEOVdV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2015 17:33:21 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Shao Fu <shaofu@realtek.com>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 4/5] rtlwifi: rtl8723be: Update driver for regulatory changes
+Date: Fri, 15 May 2015 16:33:02 -0500
+Message-Id: <1431725583-7324-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150515_233331_455465_6C9306E5)
+In-Reply-To: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Shao Fu <shaofu@realtek.com>
 
-In order to imeplement the extended VI session feature for Miracast, the FW
-requires to detect the VI queue. The detection of the VI queue is done when
-it is assigned to a STA with ADD_STA command, so by this time the FW expects
-the queue to be already configured (mapped to VI AC and aggregation enabled).
-Previously, the queue configuration was done after STA modificaton which
-broke the extended VI session feature and resulted in higher latencies.
-Fix this by calling iwl_mvm_enable_agg_txq before station modification.
+The driver is converted to use the channel plan in the EEPROM.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Shao Fu <shaofu@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/mvm/sta.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 1845b79..d68dc69 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -5,8 +5,8 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -31,8 +31,8 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -1000,13 +1000,13 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+index b681af3..e0f679b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+@@ -2139,8 +2139,8 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
  
- 	fifo = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
+-	/* set channel plan to world wide 13 */
+-	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
++	/* set channel plan from efuse */
++	rtlefuse->channel_plan = rtlefuse->eeprom_channelplan;
  
-+	iwl_mvm_enable_agg_txq(mvm, queue, fifo, mvmsta->sta_id, tid,
-+			       buf_size, ssn, wdg_timeout);
-+
- 	ret = iwl_mvm_sta_tx_agg(mvm, sta, tid, queue, true);
- 	if (ret)
- 		return -EIO;
- 
--	iwl_mvm_enable_agg_txq(mvm, queue, fifo, mvmsta->sta_id, tid,
--			       buf_size, ssn, wdg_timeout);
--
- 	/*
- 	 * Even though in theory the peer could have different
- 	 * aggregation reorder buffer sizes for different sessions,
+ 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
+ 		/* Does this one have a Toshiba SMID from group 1? */
 -- 
 2.1.4
 
