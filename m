@@ -1,68 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37817 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755020AbbE2LKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:10:14 -0400
-Message-ID: <1432897812.2104.7.camel@sipsolutions.net> (sfid-20150529_131020_038811_62DFC2E4)
-Subject: Re: [PATCH v2 2/2] mac80211: guard against invalid ptr deref
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 29 May 2015 13:10:12 +0200
-In-Reply-To: <1432285043-8878-2-git-send-email-michal.kazior@tieto.com> (sfid-20150522_105743_928307_E51BD04A)
-References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
-	 <1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
-	 <1432285043-8878-2-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150522_105743_928307_E51BD04A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33532 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964796AbbEOVdO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2015 17:33:14 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Shao Fu <shaofu@realtek.com>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/5] rtlwifi: Update regulatory database
+Date: Fri, 15 May 2015 16:32:59 -0500
+Message-Id: <1431725583-7324-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150515_233326_674594_5CFCF740)
+In-Reply-To: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-05-22 at 10:57 +0200, Michal Kazior wrote:
-> It was possible for mac80211 to be coerced into an
-> unexpected flow causing sdata union to become
-> corrupted. Station pointer was put into
-> sdata->u.vlan.sta memory location while it was
-> really master AP's sdata->u.ap.next_beacon. This
-> led to station entry being later freed as
-> next_beacon before __sta_info_flush() in
-> ieee80211_stop_ap() and a subsequent invalid
-> pointer dereference crash.
-> 
-> The problem was that ieee80211_ptr->use_4addr
-> wasn't cleared on interface type changes.
-> 
-> This could be reproduced with the following steps:
-> 
->  # host A and host B have just booted; no
->  # wpa_s/hostapd running; all vifs are down
->  host A> iw wlan0 set type station
->  host A> iw wlan0 set 4addr on
->  host A> printf 'interface=wlan0\nssid=4addrcrash\nchannel=1\nwds_sta=1' > /tmp/hconf
->  host A> hostapd -B /tmp/conf
->  host B> iw wlan0 set 4addr on
->  host B> ifconfig wlan0 up
->  host B> iw wlan0 connect -w hostAssid
->  host A> pkill hostapd
->  # host A crashed:
-> 
->  [  127.928192] BUG: unable to handle kernel NULL pointer dereference at 00000000000006c8
->  [  127.929014] IP: [<ffffffff816f4f32>] __sta_info_flush+0xac/0x158
->  ...
->  [  127.934578]  [<ffffffff8170789e>] ieee80211_stop_ap+0x139/0x26c
->  [  127.934578]  [<ffffffff8100498f>] ? dump_trace+0x279/0x28a
->  [  127.934578]  [<ffffffff816dc661>] __cfg80211_stop_ap+0x84/0x191
->  [  127.934578]  [<ffffffff816dc7ad>] cfg80211_stop_ap+0x3f/0x58
->  [  127.934578]  [<ffffffff816c5ad6>] nl80211_stop_ap+0x1b/0x1d
->  [  127.934578]  [<ffffffff815e53f8>] genl_family_rcv_msg+0x259/0x2b5
-> 
-> Even though this can and should be fixed in
-> cfg80211 it still makes sense to add a sanity
-> check to mac80211 to prevent future problems.
+From: Shao Fu <shaofu@realtek.com>
 
-I'm a bit undecided about this. Is this really the only place that
-assumes use_4addr implies that it's a VLAN, in a context like this?
+Driver rtlwifi maintains its own regulatory information, The Chrome Autotest
+(https://www.chromium.org/chromium-os/testing/autotest-user-doc)
+showed some errors. This patch adds the necessary information for rtlwifi.
 
-johannes
+Signed-off-by: Shao Fu <shaofu@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/regd.c | 42 +++++++++++++++++++++++++++++++++----
+ drivers/net/wireless/rtlwifi/regd.h |  1 +
+ 2 files changed, 39 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/regd.c b/drivers/net/wireless/rtlwifi/regd.c
+index 1893d01..a62bf0a 100644
+--- a/drivers/net/wireless/rtlwifi/regd.c
++++ b/drivers/net/wireless/rtlwifi/regd.c
+@@ -40,6 +40,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{COUNTRY_CODE_GLOBAL_DOMAIN, "JP"},
+ 	{COUNTRY_CODE_WORLD_WIDE_13, "EC"},
+ 	{COUNTRY_CODE_TELEC_NETGEAR, "EC"},
++	{COUNTRY_CODE_WORLD_WIDE_13_5G_ALL, "US"},
+ };
+ 
+ /*
+@@ -124,6 +125,17 @@ static const struct ieee80211_regdomain rtl_regdom_14_60_64 = {
+ 		      }
+ };
+ 
++static const struct ieee80211_regdomain rtl_regdom_12_13_5g_all = {
++	.n_reg_rules = 4,
++	.alpha2 = "99",
++	.reg_rules = {
++			RTL819x_2GHZ_CH01_11,
++			RTL819x_2GHZ_CH12_13,
++			RTL819x_5GHZ_5150_5350,
++			RTL819x_5GHZ_5470_5850,
++		}
++};
++
+ static const struct ieee80211_regdomain rtl_regdom_14 = {
+ 	.n_reg_rules = 3,
+ 	.alpha2 = "99",
+@@ -348,6 +360,8 @@ static const struct ieee80211_regdomain *_rtl_regdomain_select(
+ 		return &rtl_regdom_14_60_64;
+ 	case COUNTRY_CODE_GLOBAL_DOMAIN:
+ 		return &rtl_regdom_14;
++	case COUNTRY_CODE_WORLD_WIDE_13_5G_ALL:
++		return &rtl_regdom_12_13_5g_all;
+ 	default:
+ 		return &rtl_regdom_no_midband;
+ 	}
+@@ -384,6 +398,25 @@ static struct country_code_to_enum_rd *_rtl_regd_find_country(u16 countrycode)
+ 	return NULL;
+ }
+ 
++static u8 channel_plan_to_country_code(u8 channelplan)
++{
++	switch (channelplan) {
++	case 0x20:
++	case 0x21:
++		return COUNTRY_CODE_WORLD_WIDE_13;
++	case 0x22:
++		return COUNTRY_CODE_IC;
++	case 0x32:
++		return COUNTRY_CODE_TELEC_NETGEAR;
++	case 0x41:
++		return COUNTRY_CODE_GLOBAL_DOMAIN;
++	case 0x7f:
++		return COUNTRY_CODE_WORLD_WIDE_13_5G_ALL;
++	default:
++		return COUNTRY_CODE_MAX; /*Error*/
++	}
++}
++
+ int rtl_regd_init(struct ieee80211_hw *hw,
+ 		  void (*reg_notifier)(struct wiphy *wiphy,
+ 				       struct regulatory_request *request))
+@@ -396,11 +429,12 @@ int rtl_regd_init(struct ieee80211_hw *hw,
+ 		return -EINVAL;
+ 
+ 	/* init country_code from efuse channel plan */
+-	rtlpriv->regd.country_code = rtlpriv->efuse.channel_plan;
++	rtlpriv->regd.country_code =
++		channel_plan_to_country_code(rtlpriv->efuse.channel_plan);
+ 
+-	RT_TRACE(rtlpriv, COMP_REGD, DBG_TRACE,
+-		 "rtl: EEPROM regdomain: 0x%0x\n",
+-		  rtlpriv->regd.country_code);
++	RT_TRACE(rtlpriv, COMP_REGD, DBG_DMESG,
++		 "rtl: EEPROM regdomain: 0x%0x conuntry code: %d\n",
++		 rtlpriv->efuse.channel_plan, rtlpriv->regd.country_code);
+ 
+ 	if (rtlpriv->regd.country_code >= COUNTRY_CODE_MAX) {
+ 		RT_TRACE(rtlpriv, COMP_REGD, DBG_DMESG,
+diff --git a/drivers/net/wireless/rtlwifi/regd.h b/drivers/net/wireless/rtlwifi/regd.h
+index 3bbbaaa..f7f15bc 100644
+--- a/drivers/net/wireless/rtlwifi/regd.h
++++ b/drivers/net/wireless/rtlwifi/regd.h
+@@ -49,6 +49,7 @@ enum country_code_type_t {
+ 	COUNTRY_CODE_GLOBAL_DOMAIN = 10,
+ 	COUNTRY_CODE_WORLD_WIDE_13 = 11,
+ 	COUNTRY_CODE_TELEC_NETGEAR = 12,
++	COUNTRY_CODE_WORLD_WIDE_13_5G_ALL = 13,
+ 
+ 	/*add new channel plan above this line */
+ 	COUNTRY_CODE_MAX
+-- 
+2.1.4
 
