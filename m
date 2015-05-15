@@ -1,122 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40512 "EHLO
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:10119 "EHLO
 	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752213AbbE1OZy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:25:54 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEOZBm007178
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:53 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyca-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:53 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 01/17] mwifiex: verbose logging for association failure messages
-Date: Fri, 29 May 2015 01:24:42 +0530
-Message-ID: <1432842898-3219-2-git-send-email-patila@marvell.com> (sfid-20150528_162556_714577_9B2F117C)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
+	by vger.kernel.org with ESMTP id S1030276AbbEONgf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 May 2015 09:36:35 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Rafa?? Mi??ecki <zajec5@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 15 May 2015 06:36:20 -0700
+Subject: RE: ACS support (survey) in few various drives: carl9170, mwifiex,
+ mwl8k, p54, rt2800*
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B171DA596@SC-VEXCH1.marvell.com> (sfid-20150515_153640_190535_A3B27E07)
+References: <CACna6rw47fBcRczzSjeE1xXdqVPKuwn7yGvbXv2wL8zg8O8pFA@mail.gmail.com>
+ <20150515115440.GA20013@redhat.com>
+In-Reply-To: <20150515115440.GA20013@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds more logging support for association failure -
-reason and states.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
- drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
- 2 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index c404390..6a062dd 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -419,8 +419,12 @@ enum P2P_MODES {
- #define HS_CFG_COND_MAC_EVENT		0x00000004
- #define HS_CFG_COND_MULTICAST_DATA	0x00000008
- 
--#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
--#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
-+#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
-+#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
-+#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
-+#define ASSOC_ERR_AUTH_MSG_UNHANDLED		0xFFFE
-+#define ASSOC_ERR_STA_FAILURE			0xFFFF
-+
- 
- #define CMD_F_HOSTCMD           (1 << 0)
- #define CMD_F_CANCELED          (1 << 1)
-@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
- 	DOT11H_I = 10,
- };
- 
-+enum mwifiex_assocmd_failurepoint {
-+	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
-+	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
-+	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
-+	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
-+};
-+
- #define MAX_SNMP_BUF_SIZE   128
- 
- struct host_cmd_ds_802_11_snmp_mib {
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 6208ef1..69a44bb 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
- 	return 0;
- }
- 
-+static const char *assoc_failure_reason_to_str(u16 cap_info)
-+{
-+	switch (cap_info) {
-+	case ASSOC_ERR_AUTH_ERR_STA_FAILURE:
-+		return "ASSOC_ERR_AUTH_ERR_STA_FAILURE";
-+	case ASSOC_ERR_AUTH_MSG_UNHANDLED:
-+		return "ASSOC_ERR_AUTH_MSG_UNHANDLED";
-+	case ASSOC_ERR_ASSOC_ERR_TIMEOUT:
-+		return "ASSOC_ERR_ASSOC_ERR_TIMEOUT";
-+	case ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED:
-+		return "ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED";
-+	case ASSOC_ERR_STA_FAILURE:
-+		return "ASSOC_ERR_STA_FAILURE";
-+	}
-+
-+	return "Unknown failure";
-+}
- /*
-  * Association firmware command response handler
-  *
-@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 			    status_code, cap_info,
- 			    le16_to_cpu(assoc_rsp->a_id));
- 
--		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
--			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
-+		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
-+			    assoc_failure_reason_to_str(cap_info));
-+		if (cap_info == ASSOC_ERR_ASSOC_ERR_TIMEOUT) {
-+			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
- 				ret = WLAN_STATUS_AUTH_TIMEOUT;
--			else
-+				mwifiex_dbg(priv->adapter, ERROR,
-+					    "ASSOC_RESP: AUTH timeout\n");
-+			} else {
- 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
-+				mwifiex_dbg(priv->adapter, ERROR,
-+					    "ASSOC_RESP: UNSPECIFIED failure\n");
-+			}
- 		} else {
- 			ret = status_code;
- 		}
--- 
-1.8.1.4
+> -----Original Message-----
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] On Behalf Of Stanislaw Gruszka
+> Sent: Friday, May 15, 2015 5:25 PM
+> To: Rafa?? Mi??ecki
+> Cc: linux-wireless@vger.kernel.org; Michal Kazior
+> Subject: Re: ACS support (survey) in few various drives: carl9170,
+> mwifiex, mwl8k, p54, rt2800*
+> 
+> On Fri, May 15, 2015 at 12:59:31PM +0200, Rafa?? Mi??ecki wrote:
+> > Hi,
+> >
+> > I'm trying to follow ACS implementation in hostapd & kernel. I think I
+> > managed to document what driver needs to implement to allow hostapd
+> > use it with acs_survey option:
+> > https://wireless.wiki.kernel.org/en/users/documentation/acs?&#driver_i
+> > mplementation_details
+> >
+> > All sources say about only 3 drivers supporting ACS: ath5k, ath9k,
+> ath10k.
+> >
+> > However it seems there are more drivers with support for various
+> > SURVEY_INFO_* stuff. From what I see ACS should work with following
+> > ones just fine:
+> > carl9170, mwifiex, mwl8k, p54, rt2800*
+> >
+> > Am I missing something? Is there any reason ACS won't work with above
+> drivers?
+> 
+> On rt2800 get_survey() is not implemented correctly
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2
+> 014-December/006751.html
+> 
+> Stanislaw
 
+Mwifiex driver support ACS feature. I think documentation is not updated to reflect this support.
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-
+> wireless" in the body of a message to majordomo@vger.kernel.org More
+> majordomo info at  http://vger.kernel.org/majordomo-info.html
