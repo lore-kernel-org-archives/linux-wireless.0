@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41730 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751011AbbEZHZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 03:25:06 -0400
-Message-ID: <1432625103.2141.5.camel@sipsolutions.net> (sfid-20150526_092514_788614_72D9CF99)
-Subject: pull-request: mac80211 2015-05-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 26 May 2015 09:25:03 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35929 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876AbbEPRyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 May 2015 13:54:22 -0400
+Received: by oift201 with SMTP id t201so103832278oif.3
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 10:54:22 -0700 (PDT)
+Message-ID: <5557844B.4040108@lwfinger.net> (sfid-20150516_195430_917946_FD9C85E2)
+Date: Sat, 16 May 2015 12:54:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Haggai Eran <haggai.eran@gmail.com>
+CC: Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: kernel page fault in r8712u
+References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>	<55575AC8.2060301@lwfinger.net> <CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>
+In-Reply-To: <CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 05/16/2015 12:16 PM, Haggai Eran wrote:
+> On 16 May 2015 at 17:57, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> The problem appears to be from r8712u. From the stack dump, the problem
+>> happens when r8712_free_recvframe() calls __dev_kfree_skb_any(). A
+>> complication is that my copy of the kernel source does not show such a call.
+>> :(
+>>
+>> Please use gdb to help with the debugging. From the main directory of your
+>> source, enter the command 'gdb drivers/staging/rtl8712/r8712u.ko'. Once it
+>> prompts you, enter 'l *r8712_free_recvframe+0x2c'. The first character is
+>> ell, not one. That will show the actual line of code. Please post that info.
 
-Unfortunately I neglected to send this to you last week before our long
-weekend.
-
-These changes look fairly big, but they're fairly contained to the
-remain-on- channel and AP_VLAN key handling code.
-
-However, if you think you don't want to pull them into net any more at
-this stage just let me know.
+Another location needed from gdb is "l *recv_func+0x8c".
 
 Thanks,
-johannes
 
-
-The following changes since commit 47b4e1fc4972cc43a19121bc2608a60aef3bf216:
-
-  mac80211: move WEP tailroom size check (2015-05-11 14:51:29 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-05-26
-
-for you to fetch changes up to f9dca80b98caac8b4bfb43a2edf1e9f877ccf322:
-
-  mac80211: fix AP_VLAN crypto tailroom calculation (2015-05-20 15:10:11 +0200)
-
-----------------------------------------------------------------
-We have three more fixes:
- * AP_VLAN tailroom calculation fix, the bug leads to warnings
-   along with dropped packets
- * NAPI context issue, calling napi_gro_receive() from a timer
-   (obviously) can lead to crashes
- * remain-on-channel combining leads to dropped requests and not
-   being able to finish certain operations, so remove it
-
-----------------------------------------------------------------
-Johannes Berg (2):
-      mac80211: don't use napi_gro_receive() outside NAPI context
-      mac80211: don't split remain-on-channel for coalescing
-
-Michal Kazior (1):
-      mac80211: fix AP_VLAN crypto tailroom calculation
-
- net/mac80211/cfg.c         | 59 +++++++--------------------------
- net/mac80211/ieee80211_i.h |  9 ++---
- net/mac80211/iface.c       |  6 ++++
- net/mac80211/key.c         | 82 +++++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/key.h         |  1 +
- net/mac80211/rx.c          |  5 +--
- net/mac80211/util.c        |  3 ++
- 7 files changed, 100 insertions(+), 65 deletions(-)
+Larry
 
 
