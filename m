@@ -1,85 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:33394 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422742AbbEVJFV convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:35413 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbbEPSSz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 05:05:21 -0400
-Received: by igbpi8 with SMTP id pi8so31270348igb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 02:05:20 -0700 (PDT)
+	Sat, 16 May 2015 14:18:55 -0400
+Received: by labbd9 with SMTP id bd9so166174086lab.2
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 11:18:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <555EE972.7040801@broadcom.com>
-References: <1432123792-4155-1-git-send-email-arend@broadcom.com>
-	<1432123792-4155-7-git-send-email-arend@broadcom.com>
-	<CACna6rx_bBogPXZoa24JTqLED4GsGhezjVLZL_De=2uTqevsPA@mail.gmail.com>
-	<555EE972.7040801@broadcom.com>
-Date: Fri, 22 May 2015 11:05:20 +0200
-Message-ID: <CACna6rx3PK9SH44BUDqKTWcWkvpVeGSfbL5Jm31Zj26O=8KK-Q@mail.gmail.com> (sfid-20150522_110533_101089_83F0FDB0)
-Subject: Re: [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+In-Reply-To: <1431714949.2117.0.camel@sipsolutions.net>
+References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
+	<1431674716.2426.2.camel@sipsolutions.net>
+	<CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>
+	<1431714949.2117.0.camel@sipsolutions.net>
+Date: Sat, 16 May 2015 21:18:53 +0300
+Message-ID: <CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com> (sfid-20150516_201906_439805_243190EE)
+Subject: Re: mac80211 drops packet with old IV after rekeying
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 May 2015 at 10:31, Arend van Spriel <arend@broadcom.com> wrote:
-> On 05/20/15 17:02, Rafał Miłecki wrote:
+On Fri, May 15, 2015 at 9:35 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2015-05-15 at 10:52 +0300, Emmanuel Grumbach wrote:
+>> >> I'd be glad if someone could take a look. If not, I'll have someone
+>> >> from our team to look at it, but I don't know how long it will take...
+>> >
+>> > Without looking too much - it seems to me that this is a fundamental
+>> > problem with PTK rekeying, in that it re-uses the key index that is
+>> > intended to avoid this.
 >>
->> On 20 May 2015 at 14:09, Arend van Spriel<arend@broadcom.com>  wrote:
->>>
->>> @@ -139,11 +165,11 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
->>>          char *ekv;
->>>          u32 cplen;
->>>
->>> -       c = nvp->fwnv->data[nvp->pos];
->>> -       if (!is_nvram_char(c)) {
->>> +       c = nvp->data[nvp->pos];
->>> +       if (!is_nvram_char(c)&&  (c != ' ')) {
->>
->>
->> Don't smuggle behavior changes in patches doing something else!
+>> In this case, the AP is openWRT. I guess the Key idx is chosen in
+>> software, so maybe the proper fix would be to have openWRT increment
+>> the key index when it rekeys?
 >
+> Neither the spec nor the code allow that.
 >
-> The subject is "Add support for host platform NVRAM loading" and guess what.
-> That type of NVRAM turned out to have spaces in the entries so in my opinion
-> it is related to this patch. I can split it up if you feel strongly about
-> this.
 
-I'd expect such patch to just implement *loading* from different
-source and nothing else. If there are additional changes needed, I
-think they should go in separated patch if possible.
+I don't get it. I might have misunderstood your previous mail, but I
+thought that you were saying the key index was meant to solve this:
+the peer could know what key was used based on the key index written
+in the frame (I guess it is there somehow) so that the Rx handling
+code can know that the jump in the PN is due to a rekeying and not use
+any heuristic. I though you meant that the Txing side had a poor
+implementation because it reused the same key index before and after
+the rekeying which can obviously lead to problems.
+Now you seem to say that changing the key index upon rekeying is not
+allowed by spec?
+What is it good for then?
 
-I noticed the same problem with parsing NVRAM values and sent
-[PATCH] brcmfmac: allow NVRAM values to contain space and '#' chars
-, so you should be able to drop this patch of your patch anyway.
-You may give me an Ack if you have a moment :)
-
-
->>> @@ -406,19 +434,34 @@ static void brcmf_fw_request_nvram_done(const
->>> struct firmware *fw, void *ctx)
->>>          struct brcmf_fw *fwctx = ctx;
->>>          u32 nvram_length = 0;
->>>          void *nvram = NULL;
->>> +       u8 *data = NULL;
->>> +       size_t data_len;
->>> +       bool raw_nvram;
->>>
->>>          brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
->>> -       if (!fw&&  !(fwctx->flags&  BRCMF_FW_REQ_NV_OPTIONAL))
->>> -               goto fail;
->>> +       if ((fw)&&  (fw->data)) {
->>
->>
->> if (fw&&  fw->data)
->> will work just fine, I'm surprised checkpatch doesn't complain.
->
-> I ran checkpatch.pl --strict and did not get complaint about this change.
-
-I know, it's weird. Maybe I'll report this an improvement idea to
-checkpatch maintainer.
-
--- 
-Rafał
+Again - I am just trying to close this bug, not to learn this subject.
+I can learn by reading spec / reading code and less by wasting your
+time :)
