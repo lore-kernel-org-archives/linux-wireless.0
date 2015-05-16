@@ -1,75 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40618 "EHLO mx2.suse.de"
+Received: from mout.gmx.net ([212.227.15.19]:54491 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933858AbbELVXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 17:23:40 -0400
-Date: Tue, 12 May 2015 23:23:37 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Greg KH <greg@kroah.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	ming.lei@canonical.com, rusty@rustcorp.com.au, dhowells@redhat.com,
-	seth.forshee@canonical.com, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
-	linux-wireless@vger.kernel.org, Kyle McMartin <kyle@kernel.org>
-Subject: Re: [PATCH v2 1/5] firmware: fix __getname() missing failure check
-Message-ID: <20150512212337.GQ23057@wotan.suse.de> (sfid-20150512_232359_931287_0800A8A6)
-References: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
- <1431455457-25322-2-git-send-email-mcgrof@do-not-panic.com>
- <20150512212111.GB10402@kroah.com>
+	id S1750757AbbEPFna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 May 2015 01:43:30 -0400
+Message-ID: <5556D8F4.5010509@rempel-privat.de> (sfid-20150516_074408_607250_39DCB500)
+Date: Sat, 16 May 2015 07:43:16 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150512212111.GB10402@kroah.com>
+To: Joe Perches <joe@perches.com>
+CC: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: add phy.c
+References: <1431693340-8861-1-git-send-email-linux@rempel-privat.de>	 <1431714904.15709.24.camel@perches.com> <5556D546.6010703@rempel-privat.de> <1431754580.15709.55.camel@perches.com>
+In-Reply-To: <1431754580.15709.55.camel@perches.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="T1k2Ueu7lVLkedIKOfJOJT4JvdasAVGJI"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2015 at 02:21:11PM -0700, Greg KH wrote:
-> On Tue, May 12, 2015 at 11:30:53AM -0700, Luis R. Rodriguez wrote:
-> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> > 
-> > The request_firmware*() APIs uses __getname() to iterate
-> > over the list of paths possible for firmware to be found,
-> > the code however never checked for failure on __getname().
-> > Although *very unlikely*, this can still happen. Add the
-> > missing check.
-> > 
-> > There is still no checks on the concatenation of the path
-> > and filename passed, that requires a bit more work and
-> > subsequent patches address this. The commit that introduced
-> > this is abb139e7 ("firmware: teach the kernel to load
-> > firmware files directly from the filesystem").
-> > 
-> > mcgrof@ergon ~/linux (git::firmware-fixes) $ git describe --contains abb139e7
-> > v3.7-rc1~120
-> > 
-> > Cc: Linus Torvalds <torvalds@linux-foundation.org>
-> > Cc: Ming Lei <ming.lei@canonical.com>
-> > Cc: Rusty Russell <rusty@rustcorp.com.au>
-> > Cc: David Howells <dhowells@redhat.com>
-> > Cc: Kyle McMartin <kyle@kernel.org>
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> > ---
-> >  drivers/base/firmware_class.c | 6 +++++-
-> >  1 file changed, 5 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-> > index 171841a..bc6c8e6 100644
-> > --- a/drivers/base/firmware_class.c
-> > +++ b/drivers/base/firmware_class.c
-> > @@ -322,7 +322,11 @@ static int fw_get_filesystem_firmware(struct device *device,
-> >  {
-> >  	int i;
-> >  	int rc = -ENOENT;
-> > -	char *path = __getname();
-> > +	char *path;
-> > +
-> > +	path = __getname();
-> > +	if (unlikely(!path))
-> 
-> Please only use likely/unlikely on code paths that actually care about
-> it (i.e. you can measure the difference).  Otherwise it is pretty
-> useless, and people have determined that sometimes it is slower as
-> humans get this wrong a lot of time...
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--T1k2Ueu7lVLkedIKOfJOJT4JvdasAVGJI
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Will do , thanks.
+Am 16.05.2015 um 07:36 schrieb Joe Perches:
+> On Sat, 2015-05-16 at 07:27 +0200, Oleksij Rempel wrote:
+>=20
+>> Am 15.05.2015 um 20:35 schrieb Joe Perches:
+>>> On Fri, 2015-05-15 at 14:35 +0200, Oleksij Rempel wrote:
+>>>> ... and move dup code from ar5008_phy.c and ar9002_phy.c to phy.c
+>>> []
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wire=
+less/ath/ath9k/phy.c
+>>>
+>>>> +void phy_hw_spur_mitigate(struct ath_hw *ah,
+>>>> +			  struct ath9k_channel *chan, int bin)
+>>>> +{
+> []
+>>>> +	static int inc[4] =3D { 0, 100, 0, 0 };
+>>>
+>>> static const
+>=20
+>> This is cleanup patch, no fixes optimisations
+>> or regressions should be introduced.
+>=20
+> Hello Oleksij.
+>=20
+> One of the old compilation units (ar9002_phy.c) had const on
+> all those arrays, the other did not.
 
- Luis
+ok, thanks. changed to const version.
+
+> const should be used here.
+>=20
+>> If you see some problems in this
+>> code, you are welcome to provide a patch on top of this one :)
+>=20
+> I think you should take comments on the patches you submit.
+
+What do you mean?
+
+--=20
+Regards,
+Oleksij
+
+
+--T1k2Ueu7lVLkedIKOfJOJT4JvdasAVGJI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iF4EAREIAAYFAlVW2PgACgkQHwImuRkmbWlo1AEAkCWUzIofvcU04AAKTPUcVRAA
+CfVwgd+qU8WwQNhewDYA/1VyfmyE7qdtE49D3oinUSayN4/gfdyOL5AZTrEdefok
+=WAHB
+-----END PGP SIGNATURE-----
+
+--T1k2Ueu7lVLkedIKOfJOJT4JvdasAVGJI--
