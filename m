@@ -1,147 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:35745 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbbE0NNN (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:34606 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992449AbbEPC3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 09:13:13 -0400
-Received: by wicmx19 with SMTP id mx19so110880275wic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 06:13:11 -0700 (PDT)
-Date: Wed, 27 May 2015 15:15:39 +0200
-From: Daniel Vetter <daniel@ffwll.ch>
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	kvm-ppc@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	sparclinux@vger.kernel.org, linux-metag@vger.kernel.org,
-	linux-media@vger.kernel.org
-Subject: Re: [PATCH] treewide: Fix typo compatability -> compatibility
-Message-ID: <20150527131539.GQ8341@phenom.ffwll.local> (sfid-20150527_151318_639821_6A87EA0F)
-References: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
+	Fri, 15 May 2015 22:29:34 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Vincent Fann <vincent_fann@realtek.com>,
+	Shao Fu <shaofu@realtek.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 4.1] rtlwifi: Remove the clear interrupt routine from all drivers
+Date: Fri, 15 May 2015 21:29:27 -0500
+Message-Id: <1431743367-10059-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150516_042946_349462_7C9D7F48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 27, 2015 at 03:05:42PM +0300, Laurent Pinchart wrote:
-> Even though 'compatability' has a dedicated entry in the Wiktionary,
-> it's listed as 'Mispelling of compatibility'. Fix it.
-> 
-> Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> ---
->  arch/metag/include/asm/elf.h             | 2 +-
->  arch/powerpc/kvm/book3s.c                | 2 +-
->  arch/sparc/include/uapi/asm/pstate.h     | 2 +-
->  drivers/gpu/drm/drm_atomic_helper.c      | 4 ++--
->  drivers/media/dvb-frontends/au8522_dig.c | 2 +-
->  drivers/net/wireless/ipw2x00/ipw2100.h   | 2 +-
->  6 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> I can split this into one patch per subsystem, but that seems a bit overkill.
-> Can someone take it ?
+From: Vincent Fann <vincent_fann@realtek.com>
 
-Acked-by: Daniel Vetter <daniel.vetter@ffwll.ch> for the atomic_helper.c
-part.
--Daniel
+Several of these drivers have there TX randomly blocked for 3~5 seconds while
+measuring tx throughput (iperf). The root couse happens in rtl_pci_flush().
+The function uses a while-loop to wait for TX queue length to decrease to 0.
+The TX queue length counts the number of packets that are queued in the driver.
+The driver relys on the TX OK interrupt to return skb and reduce TX queue length.
 
-> 
-> diff --git a/arch/metag/include/asm/elf.h b/arch/metag/include/asm/elf.h
-> index d2baf6961794..87b0cf1e0acb 100644
-> --- a/arch/metag/include/asm/elf.h
-> +++ b/arch/metag/include/asm/elf.h
-> @@ -11,7 +11,7 @@
->  #define R_METAG_RELBRANCH                4
->  #define R_METAG_GETSETOFF                5
->  
-> -/* Backward compatability */
-> +/* Backward compatibility */
->  #define R_METAG_REG32OP1                 6
->  #define R_METAG_REG32OP2                 7
->  #define R_METAG_REG32OP3                 8
-> diff --git a/arch/powerpc/kvm/book3s.c b/arch/powerpc/kvm/book3s.c
-> index 453a8a47a467..cb14dd78a2e7 100644
-> --- a/arch/powerpc/kvm/book3s.c
-> +++ b/arch/powerpc/kvm/book3s.c
-> @@ -901,7 +901,7 @@ int kvmppc_core_check_processor_compat(void)
->  {
->  	/*
->  	 * We always return 0 for book3s. We check
-> -	 * for compatability while loading the HV
-> +	 * for compatibility while loading the HV
->  	 * or PR module
->  	 */
->  	return 0;
-> diff --git a/arch/sparc/include/uapi/asm/pstate.h b/arch/sparc/include/uapi/asm/pstate.h
-> index 4b6b998afd99..cf832e14aa05 100644
-> --- a/arch/sparc/include/uapi/asm/pstate.h
-> +++ b/arch/sparc/include/uapi/asm/pstate.h
-> @@ -88,7 +88,7 @@
->  #define VERS_MAXTL	_AC(0x000000000000ff00,UL) /* Max Trap Level.	*/
->  #define VERS_MAXWIN	_AC(0x000000000000001f,UL) /* Max RegWindow Idx.*/
->  
-> -/* Compatability Feature Register (%asr26), SPARC-T4 and later  */
-> +/* Compatibility Feature Register (%asr26), SPARC-T4 and later  */
->  #define CFR_AES		_AC(0x0000000000000001,UL) /* Supports AES opcodes     */
->  #define CFR_DES		_AC(0x0000000000000002,UL) /* Supports DES opcodes     */
->  #define CFR_KASUMI	_AC(0x0000000000000004,UL) /* Supports KASUMI opcodes  */
-> diff --git a/drivers/gpu/drm/drm_atomic_helper.c b/drivers/gpu/drm/drm_atomic_helper.c
-> index b82ef6262469..12c5b79b0e8f 100644
-> --- a/drivers/gpu/drm/drm_atomic_helper.c
-> +++ b/drivers/gpu/drm/drm_atomic_helper.c
-> @@ -751,7 +751,7 @@ crtc_set_mode(struct drm_device *dev, struct drm_atomic_state *old_state)
->   * This function shuts down all the outputs that need to be shut down and
->   * prepares them (if required) with the new mode.
->   *
-> - * For compatability with legacy crtc helpers this should be called before
-> + * For compatibility with legacy crtc helpers this should be called before
->   * drm_atomic_helper_commit_planes(), which is what the default commit function
->   * does. But drivers with different needs can group the modeset commits together
->   * and do the plane commits at the end. This is useful for drivers doing runtime
-> @@ -776,7 +776,7 @@ EXPORT_SYMBOL(drm_atomic_helper_commit_modeset_disables);
->   * This function enables all the outputs with the new configuration which had to
->   * be turned off for the update.
->   *
-> - * For compatability with legacy crtc helpers this should be called after
-> + * For compatibility with legacy crtc helpers this should be called after
->   * drm_atomic_helper_commit_planes(), which is what the default commit function
->   * does. But drivers with different needs can group the modeset commits together
->   * and do the plane commits at the end. This is useful for drivers doing runtime
-> diff --git a/drivers/media/dvb-frontends/au8522_dig.c b/drivers/media/dvb-frontends/au8522_dig.c
-> index 5d06c99b0e97..edadcc7eea6c 100644
-> --- a/drivers/media/dvb-frontends/au8522_dig.c
-> +++ b/drivers/media/dvb-frontends/au8522_dig.c
-> @@ -922,7 +922,7 @@ module_param(debug, int, 0644);
->  MODULE_PARM_DESC(debug, "Enable verbose debug messages");
->  
->  module_param(zv_mode, int, 0644);
-> -MODULE_PARM_DESC(zv_mode, "Turn on/off ZeeVee modulator compatability mode (default:on).\n"
-> +MODULE_PARM_DESC(zv_mode, "Turn on/off ZeeVee modulator compatibility mode (default:on).\n"
->  	"\t\ton - modified AU8522 QAM256 initialization.\n"
->  	"\t\tProvides faster lock when using ZeeVee modulator based sources");
->  
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
-> index c6d78790cb0d..193947865efd 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2100.h
-> +++ b/drivers/net/wireless/ipw2x00/ipw2100.h
-> @@ -746,7 +746,7 @@ struct ipw2100_priv {
->  #define IPW_REG_GPIO			IPW_REG_DOMAIN_0_OFFSET + 0x0030
->  #define IPW_REG_FW_TYPE                 IPW_REG_DOMAIN_1_OFFSET + 0x0188
->  #define IPW_REG_FW_VERSION 		IPW_REG_DOMAIN_1_OFFSET + 0x018C
-> -#define IPW_REG_FW_COMPATABILITY_VERSION IPW_REG_DOMAIN_1_OFFSET + 0x0190
-> +#define IPW_REG_FW_COMPATIBILITY_VERSION IPW_REG_DOMAIN_1_OFFSET + 0x0190
->  
->  #define IPW_REG_INDIRECT_ADDR_MASK	0x00FFFFFC
->  
-> -- 
-> Regards,
-> 
-> Laurent Pinchart
-> 
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+The interrupt subroutine disables interupts, reads the interrupt registers, and
+then clears the registers in the beginning of _rtl_pci_interrupt(). After all
+interupts process are finished, the driver invokes enable_interrupt() to enable
+interupts. This behavior is normal for an interrupt subroutine.
 
+But enable_interrupt() invokes clear_interrupt() again. This unexpected interrupt
+clearing may cleari me fresh TX OK interrupts. These missing interrupts cause TX
+queue length to never reduce to 0i, which causes rtl_pci_flush() to be stuck in
+unterminated while-loop.
+
+This patch removes clear_interrupt() in enable_interrupt() to avoid this behavior.
+
+Signed-off-by: Vincent Fann <vincent_fann@realtek.com>
+Signed-off-by: Shao Fu <shaofu@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [3.18+]
+---
+
+Kalle,
+
+This patch is a little large for the current kernel and stable; however, it only
+deletes code that is clearly wrong. I hope it will be OK.
+
+Larry
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 16 ----------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/hw.c | 17 -----------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 13 -------------
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c | 17 -----------------
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 20 --------------------
+ 5 files changed, 83 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index 86ce5b1..e5d8108f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -1354,27 +1354,11 @@ void rtl88ee_set_qos(struct ieee80211_hw *hw, int aci)
+ 	}
+ }
+ 
+-static void rtl88ee_clear_interrupt(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 tmp;
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISR);
+-	rtl_write_dword(rtlpriv, REG_HISR, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
+-	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HSISR);
+-	rtl_write_dword(rtlpriv, REG_HSISR, tmp);
+-}
+-
+ void rtl88ee_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 
+-	rtl88ee_clear_interrupt(hw);/*clear it here first*/
+ 	rtl_write_dword(rtlpriv, REG_HIMR,
+ 			rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+index 2786ccf..0586ecb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+@@ -1584,28 +1584,11 @@ void rtl92ee_set_qos(struct ieee80211_hw *hw, int aci)
+ 	}
+ }
+ 
+-static void rtl92ee_clear_interrupt(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 tmp;
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISR);
+-	rtl_write_dword(rtlpriv, REG_HISR, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
+-	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HSISR);
+-	rtl_write_dword(rtlpriv, REG_HSISR, tmp);
+-}
+-
+ void rtl92ee_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 
+-	rtl92ee_clear_interrupt(hw);/*clear it here first*/
+-
+ 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+ 	rtlpci->irq_enabled = true;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+index 67bb47d..a4b7eac 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+@@ -1258,18 +1258,6 @@ void rtl8723e_set_qos(struct ieee80211_hw *hw, int aci)
+ 	}
+ }
+ 
+-static void rtl8723e_clear_interrupt(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 tmp;
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISR);
+-	rtl_write_dword(rtlpriv, REG_HISR, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
+-	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
+-}
+-
+ void rtl8723e_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -1284,7 +1272,6 @@ void rtl8723e_disable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	rtl8723e_clear_interrupt(hw);/*clear it here first*/
+ 	rtl_write_dword(rtlpriv, 0x3a8, IMR8190_DISABLED);
+ 	rtl_write_dword(rtlpriv, 0x3ac, IMR8190_DISABLED);
+ 	rtlpci->irq_enabled = false;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+index b681af3..b941726 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+@@ -1634,28 +1634,11 @@ void rtl8723be_set_qos(struct ieee80211_hw *hw, int aci)
+ 	}
+ }
+ 
+-static void rtl8723be_clear_interrupt(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 tmp;
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISR);
+-	rtl_write_dword(rtlpriv, REG_HISR, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
+-	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HSISR);
+-	rtl_write_dword(rtlpriv, REG_HSISR, tmp);
+-}
+-
+ void rtl8723be_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 
+-	rtl8723be_clear_interrupt(hw);/*clear it here first*/
+-
+ 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+ 	rtlpci->irq_enabled = true;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+index 8704eee..57966e3 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+@@ -2253,31 +2253,11 @@ void rtl8821ae_set_qos(struct ieee80211_hw *hw, int aci)
+ 	}
+ }
+ 
+-static void rtl8821ae_clear_interrupt(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 tmp;
+-	tmp = rtl_read_dword(rtlpriv, REG_HISR);
+-	/*printk("clear interrupt first:\n");
+-	printk("0x%x = 0x%08x\n",REG_HISR, tmp);*/
+-	rtl_write_dword(rtlpriv, REG_HISR, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HISRE);
+-	/*printk("0x%x = 0x%08x\n",REG_HISRE, tmp);*/
+-	rtl_write_dword(rtlpriv, REG_HISRE, tmp);
+-
+-	tmp = rtl_read_dword(rtlpriv, REG_HSISR);
+-	/*printk("0x%x = 0x%08x\n",REG_HSISR, tmp);*/
+-	rtl_write_dword(rtlpriv, REG_HSISR, tmp);
+-}
+-
+ void rtl8821ae_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 
+-	rtl8821ae_clear_interrupt(hw);/*clear it here first*/
+-
+ 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+ 	rtlpci->irq_enabled = true;
 -- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
+2.1.4
+
