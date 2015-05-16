@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30228 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932143AbbE1N4Y (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:17603 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065AbbEPLPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:56:24 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDtNXs021835
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:23 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqvu4-3
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:23 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 02/17] mwifiex: correct bss_type assignment
-Date: Thu, 28 May 2015 18:25:51 +0530
-Message-ID: <1432817766-26090-3-git-send-email-patila@marvell.com> (sfid-20150528_160350_303504_5AF1BDBB)
-In-Reply-To: <1432817766-26090-1-git-send-email-patila@marvell.com>
-References: <1432817766-26090-1-git-send-email-patila@marvell.com>
+	Sat, 16 May 2015 07:15:46 -0400
+Message-ID: <555726DF.6060505@broadcom.com> (sfid-20150516_131550_172146_BB7CF11D)
+Date: Sat, 16 May 2015 13:15:43 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Luca Coelho <luca@coelho.fi>
+CC: Arend van Spriel <aspriel@gmail.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: new release of py80211 - v1.0-alpha
+References: <55563D20.9030702@gmail.com> <1431717445.7716.4.camel@coelho.fi>
+In-Reply-To: <1431717445.7716.4.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct bss_type assignment in add_virtual_interface.
-This would ensure correct operation in multiple station scenarios.
+On 05/15/15 21:17, Luca Coelho wrote:
+> On Fri, 2015-05-15 at 20:38 +0200, Arend van Spriel wrote:
+>> Recently got triggered by Luca and with some free time to spare extended
+>> the functionality in py80211. It is still mostly about retrieving
+>> information although it also supports scanning now dealing with
+>> notifications from the scan multicast group. It has been a fun week
+>> puzzling on some hurdles. Hopefully I can keep spending more time on
+>> this personal project and keep momentum.
+>>
+>> The project can be found on github and the release notes are here [1].
+>
+> This is very cool! I was trying your updates for scanning today and it
+> works great! I already started converting my test modules to use it.
+>
+> I know the hurdles you were talking about, I had gone through a few of
+> them, but I was just hacking through, with much less class. ;)
+>
+> I hope I'll be able to start contributing to your project in the near
+> future.
+>
+> Big thanks for getting momentum from my quick query about the state of
+> the your project. :)
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks, Luca
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 4eeceda..3a14d3a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2518,7 +2518,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.sta_intf;
- 
- 		break;
- 	case NL80211_IFTYPE_AP:
-@@ -2544,7 +2544,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.uap_intf;
- 		priv->bss_mode = type;
- 
- 		break;
-@@ -2580,7 +2580,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
- 
- 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
- 			memset(&priv->wdev, 0, sizeof(priv->wdev));
--- 
-1.8.1.4
+I wrote a couple of wiki pages on github about adding stuff to py80211 
+package. I started this project with automated testing in mind so I can 
+ultimately replace our current testing stuff, which is focused on the 
+prorietary drivers using ioctl-based wl utility, with one using the 
+nl80211 api.
+
+Regards,
+Arend
+
+> --
+> Luca.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
