@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40925 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753221AbbE1M7t (ORCPT
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:33194 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035AbbEPO6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 08:59:49 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxVde015123
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:48 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqdg-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:48 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 04/17] mwifiex: enable 11d after bss reset
-Date: Thu, 28 May 2015 23:58:54 +0530
-Message-ID: <1432837747-2075-5-git-send-email-patila@marvell.com> (sfid-20150528_145951_641698_1D2D4E46)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+	Sat, 16 May 2015 10:58:04 -0400
+Received: by iebgx4 with SMTP id gx4so142631548ieb.0
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 07:58:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5557556C.2080107@lwfinger.net>
+References: <CA+0W_As0c=eAijuvWfSBLMY4vj2P1-zoMsjz1mmNm0_vfepPCA@mail.gmail.com>
+	<5557556C.2080107@lwfinger.net>
+Date: Sat, 16 May 2015 16:58:04 +0200
+Message-ID: <CACna6rwCapwThrMGt2HV_YyPQtZ+xRPJdBcapRqs2mkvGPdmSQ@mail.gmail.com> (sfid-20150516_165808_216098_78C45BE8)
+Subject: Re: lspci not working
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Schmirr Wurst <schmirrwurst@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BSS reset would reset all state information in FW.
-Issue 11d config command after reset to enabled 11d in FW.
+On 16 May 2015 at 16:34, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/16/2015 04:12 AM, Schmirr Wurst wrote:
+>>
+>> I've already posted the message once, but as it was my first, I'm not
+>> sure, if it worked...
+>>
+>> Actually I'm trying to get read of a t100af from asus, that has a nice
+>> broadcom wifi chipset, but I'm wondering that I don't see anything
+>> with lspci, do that mean, that the chipset is broken ?
+>> (I though lspci is one level deeper than driver, and I should see
+>> something, even if I have driver problems) ?
+>>
+>> Could just somebody tell me if I'm right or wrong ?
+>
+>
+> On Intel Bay Trail tablets, the wifi device is frequently attached using an
+> SDIO bus, not a PCI connection. Accordingly, lspci will probably not show
+> the device.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/uap_cmd.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 0a3297e..56a4768 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -806,6 +806,8 @@ void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
- int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 			     struct mwifiex_uap_bss_param *bss_cfg)
- {
-+	enum state_11d_t state_11d;
-+
- 	if (mwifiex_del_mgmt_ies(priv))
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "Failed to delete mgmt IEs!\n");
-@@ -830,6 +832,16 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 		return -1;
- 	}
- 
-+	/* Send cmd to FW to enable 11D function */
-+	state_11d = ENABLE_11D;
-+	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
-+			     HostCmd_ACT_GEN_SET, DOT11D_I,
-+			     &state_11d, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "11D: failed to enable 11D\n");
-+		return -1;
-+	}
-+
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
--- 
-1.8.1.4
-
+But you should be able to browse  /sys/bus/sdio/devices/ I guess
+(assuming bus host driver is working).
