@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36985 "EHLO sipsolutions.net"
+Received: from arrakis.dune.hu ([78.24.191.176]:54368 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752979AbbETMdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 08:33:40 -0400
-Message-ID: <1432125217.19214.6.camel@sipsolutions.net> (sfid-20150520_143343_482304_668DAE97)
-Subject: Re: Re: Re: [PATCH] Added 2 new Control Frames ( Beamforming Report
- Poll & VHT NDP Announcement) defined in 802.11ac [EDT]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: rahul.jain@samsung.com
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 May 2015 14:33:37 +0200
-In-Reply-To: <1295813965.477021432125016290.JavaMail.weblogic@ep2mlwas05b>
-References: <1295813965.477021432125016290.JavaMail.weblogic@ep2mlwas05b>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750962AbbEPFpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 May 2015 01:45:15 -0400
+Message-ID: <5556D95E.40706@openwrt.org> (sfid-20150516_074533_942639_9520B8AD)
+Date: Sat, 16 May 2015 07:45:02 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: add phy.c
+References: <1431693340-8861-1-git-send-email-linux@rempel-privat.de> <55564A50.2050004@openwrt.org> <5556D48B.3090708@rempel-privat.de>
+In-Reply-To: <5556D48B.3090708@rempel-privat.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-05-20 at 12:30 +0000, Rahul Jain wrote:
-> Dear Johannes,
+On 2015-05-16 07:24, Oleksij Rempel wrote:
+> Am 15.05.2015 um 21:34 schrieb Felix Fietkau:
+>> On 2015-05-15 14:35, Oleksij Rempel wrote:
+>>> ... and move dup code from ar5008_phy.c and ar9002_phy.c to phy.c
+>>>
+>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+>> We already have base functionality for AR5008-AR9002 provided in some
+>> ar5008_phy.c, and ar5008_hw_attach_phy_ops is called for those chipsets
+>> as well. Please keep the de-duplicated code there instead of adding a
+>> new phy.c, because AR9003+ uses a completely different codepath.
+>> 
+>> - Felix
+>> 
 > 
-> Thanks for pointing out. I incorporated your review comment in new patch below.
-> 
-> From 69340d63e0c63c1ae75cdb62bf4bd04a9c961a1f Mon Sep 17 00:00:00 2001
-> From: rahul <rahul.jain@samsung.com>
-> Date: Thu, 14 May 2015 10:21:48 +0530
-> Subject: [PATCH] Added 2 new Control Frames ( Beamforming Report Poll & VHT
->  NDP Announcement) defined in 802.11ac.
+> ok, thanks.
+> Currently i celled this function phy_hw_spur_mitigate(), is it ok or
+> there is some better name for this code?
+Just use the ar5008 prefix like in the other functions.
 
-Now send it properly instead of pasting the output of git-send-email and
-all this extra junk.
-
-And then you have a usable patch, which I'll apply when it contains
-useful contents.
-
-johannes
-
+- Felix
