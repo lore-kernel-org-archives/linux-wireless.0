@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:38176 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754014AbbE1RzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 13:55:03 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlmvm firmware -13.ucode
-Date: Thu, 28 May 2015 17:54:59 +0000
-Message-ID: <1432835699.2307.17.camel@intel.com> (sfid-20150528_195507_002566_75E9F8A6)
-References: <1432835585.2307.14.camel@intel.com>
-	 <1432835606.2307.15.camel@intel.com>
-In-Reply-To: <1432835606.2307.15.camel@intel.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-la0-f43.google.com ([209.85.215.43]:33372 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490AbbEPTwv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 May 2015 15:52:51 -0400
+Received: by lagr1 with SMTP id r1so86164122lag.0
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 12:52:49 -0700 (PDT)
+Received: from [192.168.0.103] ([213.21.44.132])
+        by mx.google.com with ESMTPSA id ml10sm1356982lbc.29.2015.05.16.12.52.48
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 16 May 2015 12:52:48 -0700 (PDT)
+Message-ID: <5557A00E.1090104@users.sourceforge.net> (sfid-20150516_215449_156821_6CD399F8)
+Date: Sat, 16 May 2015 22:52:46 +0300
+From: Alberto Mardegan <mardy@users.sourceforge.net>
 MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: tp-link tl-wn8200nd and rtlwifi_new drivers
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YW5kIG5vdyB3aXRoIGxpbnV4LXdpcmVsZXNzIDopDQoNCk9uIFRodSwgMjAxNS0wNS0yOCBhdCAy
-MDo1MyArMDMwMCwgRW1tYW51ZWwgR3J1bWJhY2ggd3JvdGU6DQo+IFNpZ25lZCB0aGlzIHRpbWUu
-DQo+IA0KPiANCj4gT24gVGh1LCAyMDE1LTA1LTI4IGF0IDIwOjUzICswMzAwLCBFbW1hbnVlbCBH
-cnVtYmFjaCB3cm90ZToNCj4gPiBIZWxsbywNCj4gPiANCj4gPiBUaGlzIGlzIGEgcHVsbCByZXF1
-ZXN0IHRvIGluY2x1ZGUgLTEzLnVjb2RlIGludG8gbWFpbmxpbmUuDQo+ID4gVGhpcyBmaXJtd2Fy
-ZSBjYW4gcnVuIG9uIDcyNjAsIDMxNjAsIDcyNjUsIDcyNjVEIGFuZCAzMTY1IHdoaWNoIGFyZSBh
-bGwNCj4gPiB0aGUgZGV2aWNlcyBkcml2ZW4gYnkgaXdsbXZtLg0KPiA+IFRoaXMgZmlybXdhcmUg
-aXMgc3VwcG9ydGVkIHN0YXJ0aW5nIGZyb20ga2VybmVsIDQuMQ0KPiA+IA0KPiA+IFRoYW5rcyB5
-b3UuDQo+ID4gDQo+ID4gVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA4ZTE4MTMy
-MGIxMWRlNTAxMDQ2Y2Y3NWM4YzMwOTE1Y2QwOWExZTM5Og0KPiA+IA0KPiA+ICAgbGludXgtZmly
-bXdhcmU6IEFkZCBSZWFsdGVrIEJsdWV0b290aCBIQ0QgZmlybXdhcmUgKDIwMTUtMDUtMDggMTM6
-MTI6MjMgLTA0MDApDQo+ID4gDQo+ID4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRv
-cnkgYXQ6DQo+ID4gDQo+ID4gICBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tl
-cm5lbC9naXQvaXdsd2lmaS9saW51eC1maXJtd2FyZS5naXQgDQo+ID4gDQo+ID4gZm9yIHlvdSB0
-byBmZXRjaCBjaGFuZ2VzIHVwIHRvIDg0MWIxNTFjZmQ0OWUwM2U2NTMxODkxZThjZWYwYTVmM2Rl
-ODNkNDA6DQo+ID4gDQo+ID4gICBpd2x3aWZpOiBhZGQgbmV3IC0xMyBmaXJtd2FyZSBmb3IgMzE2
-MCAvIDcyNjAgLyA3MjY1IC8gNzI2NUQgKDIwMTUtMDUtMjggMTk6NTQ6NDAgKzAzMDApDQo+ID4g
-DQo+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQ0KPiA+IEVtbWFudWVsIEdydW1iYWNoICgxKToNCj4gPiAgICAgICBpd2x3
-aWZpOiBhZGQgbmV3IC0xMyBmaXJtd2FyZSBmb3IgMzE2MCAvIDcyNjAgLyA3MjY1IC8gNzI2NUQN
-Cj4gPiANCj4gPiAgV0hFTkNFICAgICAgICAgICAgICAgICB8ICAxMiArKysrKysrKysrKysNCj4g
-PiAgaXdsd2lmaS0zMTYwLTEzLnVjb2RlICB8IEJpbiAwIC0+IDY4ODYxNiBieXRlcw0KPiA+ICBp
-d2x3aWZpLTcyNjAtMTMudWNvZGUgIHwgQmluIDAgLT4gNzg2OTIwIGJ5dGVzDQo+ID4gIGl3bHdp
-ZmktNzI2NS0xMy51Y29kZSAgfCBCaW4gMCAtPiA4ODUyMjQgYnl0ZXMNCj4gPiAgaXdsd2lmaS03
-MjY1RC0xMy51Y29kZSB8IEJpbiAwIC0+IDEwMDg2NjggYnl0ZXMNCj4gPiAgNSBmaWxlcyBjaGFu
-Z2VkLCAxMiBpbnNlcnRpb25zKCspDQo+ID4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBpd2x3aWZpLTMx
-NjAtMTMudWNvZGUNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktNzI2MC0xMy51Y29k
-ZQ0KPiA+ICBjcmVhdGUgbW9kZSAxMDA2NDQgaXdsd2lmaS03MjY1LTEzLnVjb2RlDQo+ID4gIGNy
-ZWF0ZSBtb2RlIDEwMDY0NCBpd2x3aWZpLTcyNjVELTEzLnVjb2RlDQo+ID4gDQo+ID4gZGlmZiAt
-LWdpdCBhL1dIRU5DRSBiL1dIRU5DRQ0KPiA+IGluZGV4IGU1NDQ5MTQuLjA2ZGEyMmEgMTAwNjQ0
-DQo+ID4gLS0tIGEvV0hFTkNFDQo+ID4gKysrIGIvV0hFTkNFDQo+ID4gQEAgLTgzNCw2ICs4MzQs
-OSBAQCBWZXJzaW9uOiAyMy4xNS4xMC4wDQo+ID4gIEZpbGU6IGl3bHdpZmktNzI2MC0xMi51Y29k
-ZQ0KPiA+ICBWZXJzaW9uOiAyNS4xNy4xMi4wDQo+ID4gIA0KPiA+ICtGaWxlOiBpd2x3aWZpLTcy
-NjAtMTMudWNvZGUNCj4gPiArVmVyc2lvbjogMjUuMjcuMTMuMA0KPiA+ICsNCj4gPiAgRmlsZTog
-aXdsd2lmaS0zMTYwLTcudWNvZGUNCj4gPiAgVmVyc2lvbjogMjIuMS43LjANCj4gPiAgDQo+ID4g
-QEAgLTg0OSw2ICs4NTIsOSBAQCBWZXJzaW9uOiAyMy4xNS4xMC4wDQo+ID4gIEZpbGU6IGl3bHdp
-ZmktMzE2MC0xMi51Y29kZQ0KPiA+ICBWZXJzaW9uOiAyNS4xNy4xMi4wDQo+ID4gIA0KPiA+ICtG
-aWxlOiBpd2x3aWZpLTMxNjAtMTMudWNvZGUNCj4gPiArVmVyc2lvbjogMjUuMjcuMTMuMA0KPiA+
-ICsNCj4gPiAgRmlsZTogaXdsd2lmaS03MjY1LTgudWNvZGUNCj4gPiAgVmVyc2lvbjogMjIuMjQu
-OC4wDQo+ID4gIA0KPiA+IEBAIC04NjEsMTIgKzg2NywxOCBAQCBWZXJzaW9uOiAyMy4xNS4xMC4w
-DQo+ID4gIEZpbGU6IGl3bHdpZmktNzI2NS0xMi51Y29kZQ0KPiA+ICBWZXJzaW9uOiAyNS4xNy4x
-Mi4wDQo+ID4gIA0KPiA+ICtGaWxlOiBpd2x3aWZpLTcyNjUtMTMudWNvZGUNCj4gPiArVmVyc2lv
-bjogMjUuMjcuMTMuMA0KPiA+ICsNCj4gPiAgRmlsZTogaXdsd2lmaS03MjY1RC0xMC51Y29kZQ0K
-PiA+ICBWZXJzaW9uOiAyMy4xNS4xMC4wDQo+ID4gIA0KPiA+ICBGaWxlOiBpd2x3aWZpLTcyNjVE
-LTEyLnVjb2RlDQo+ID4gIFZlcnNpb246IDI1LjE3LjEyLjANCj4gPiAgDQo+ID4gK0ZpbGU6IGl3
-bHdpZmktNzI2NUQtMTMudWNvZGUNCj4gPiArVmVyc2lvbjogMjUuMjcuMTMuMA0KPiA+ICsNCj4g
-PiAgTGljZW5jZTogUmVkaXN0cmlidXRhYmxlLiBTZWUgTElDRU5DRS5pd2x3aWZpX2Zpcm13YXJl
-IGZvciBkZXRhaWxzDQo+ID4gIA0KPiA+ICBBbHNvIGF2YWlsYWJsZSBmcm9tIGh0dHA6Ly93aXJl
-bGVzcy5rZXJuZWwub3JnL2VuL3VzZXJzL0RyaXZlcnMvaXdsd2lmaSNGaXJtd2FyZQ0KPiA+IGRp
-ZmYgLS1naXQgYS9pd2x3aWZpLTMxNjAtMTMudWNvZGUgYi9pd2x3aWZpLTMxNjAtMTMudWNvZGUN
-Cj4gPiBuZXcgZmlsZSBtb2RlIDEwMDY0NA0KPiA+IGluZGV4IDAwMDAwMDAuLmE1ZmI3YjcNCj4g
-PiBCaW5hcnkgZmlsZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmktMzE2MC0xMy51Y29kZSBkaWZm
-ZXINCj4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS03MjYwLTEzLnVjb2RlIGIvaXdsd2lmaS03MjYw
-LTEzLnVjb2RlDQo+ID4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gPiBpbmRleCAwMDAwMDAwLi5h
-MTJkZDUwDQo+ID4gQmluYXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQgYi9pd2x3aWZpLTcyNjAtMTMu
-dWNvZGUgZGlmZmVyDQo+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2NS0xMy51Y29kZSBiL2l3
-bHdpZmktNzI2NS0xMy51Y29kZQ0KPiA+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0DQo+ID4gaW5kZXgg
-MDAwMDAwMC4uNTNmNTEzNA0KPiA+IEJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5kIGIvaXdsd2lm
-aS03MjY1LTEzLnVjb2RlIGRpZmZlcg0KPiA+IGRpZmYgLS1naXQgYS9pd2x3aWZpLTcyNjVELTEz
-LnVjb2RlIGIvaXdsd2lmaS03MjY1RC0xMy51Y29kZQ0KPiA+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0
-DQo+ID4gaW5kZXggMDAwMDAwMC4uZGY0MzA3ZQ0KPiA+IEJpbmFyeSBmaWxlcyAvZGV2L251bGwg
-YW5kIGIvaXdsd2lmaS03MjY1RC0xMy51Y29kZSBkaWZmZXINCj4gDQoNCg==
+Hi all!
+   I unfortunately purchased a Tp-Link TL-WN8200ND USB wireless adapter, 
+which is not working in Linux (there are several reports of this in this 
+ML already, so I won't bother you with another one).
+
+I wanted to test the new rtlwifi_new drivers from
+   https://github.com/lwfinger/rtlwifi_new
+to see if by any chance they could help having this device running. I 
+built then and installed them (in Ubuntu 14.04), but I don't know how to 
+make sure that the kernel is using the new drivers and not the old ones.
+Is there some hint in the syslog which could tell me whether I'm now 
+using the new or the old drivers (for the record, it still doesn't work)?
+
+Ciao,
+   Alberto
