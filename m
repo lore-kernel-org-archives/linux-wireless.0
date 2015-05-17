@@ -1,40 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37222 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751818AbbETNIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 09:08:50 -0400
-Message-ID: <1432127328.19214.10.camel@sipsolutions.net> (sfid-20150520_150854_282156_78055015)
-Subject: Re: [PATCH] mac80211: check fast-xmit on station change
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 20 May 2015 15:08:48 +0200
-In-Reply-To: <1432037616-26520-1-git-send-email-michal.kazior@tieto.com> (sfid-20150519_141349_970329_7AE95667)
-References: <1432037616-26520-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150519_141349_970329_7AE95667)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f41.google.com ([209.85.215.41]:36171 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177AbbEQTWq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2015 15:22:46 -0400
+Received: by lagv1 with SMTP id v1so190579703lag.3
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 12:22:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJ=9CzbxScr7SJjhxnxAWt+xS-A8VR-_PQs0BbbdUp7xCaG2aw@mail.gmail.com>
+References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>
+	<55575AC8.2060301@lwfinger.net>
+	<CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>
+	<5557844B.4040108@lwfinger.net>
+	<CAJ=9CzamCxkwVtTtUzU9zatocUPz0W+3f0Kgm6N0tDMWbcP_LA@mail.gmail.com>
+	<55586D8D.7040407@gmail.com>
+	<CAJ=9CzbxScr7SJjhxnxAWt+xS-A8VR-_PQs0BbbdUp7xCaG2aw@mail.gmail.com>
+Date: Sun, 17 May 2015 22:22:45 +0300
+Message-ID: <CAJ=9CzaDK+oKJ8JJtb_OE6wrh85f8ffPf_oa9c0GRQFStUULjg@mail.gmail.com> (sfid-20150517_212249_719855_07368057)
+Subject: Re: kernel page fault in r8712u
+From: Haggai Eran <haggai.eran@gmail.com>
+To: Arend van Spriel <aspriel@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-05-19 at 14:13 +0200, Michal Kazior wrote:
-> Drivers with fast-xmit (e.g. ath10k) running in
-> AP_VLAN setups would fail to communicate with
-> connected 4addr stations.
-> 
-> The reason was when new station associates it
-> first goes into master AP interface. It is not
-> until later that a dedicated AP_VLAN is created
-> for it and the station itself is moved there.
-> After that Tx directed at the station should use
-> 4addr header. However fast-xmit wasn't
-> recalculated and 3addr header remained to be used.
-> This in turn caused the connected 4addr stations
-> to drop packets coming from the AP until some
-> other event would cause fast-xmit to recalculate
-> for that station (which could never come).
+I added some debugging prints, trying to see more details about the
+packet that fails the r8712_validate_recv_frame. I noticed I'm getting
+many packets where recv_decache returns _FAIL. However, the last two
+packets before the crash fail for different reasons. The first has the
+ver field set to 3 (instead of zero). The second (the one that get's
+freed and cause the crash apparently) has an unknown type (12). If I'm
+not mistaken, 12 = WIFI_CTRL_TYPE | WIFI_DATA_TYPE. Is that possible?
 
-Applied.
+It could be that the packet headers are garbled though.
 
-johannes
+Haggai
 
+On 17 May 2015 at 20:20, Haggai Eran <haggai.eran@gmail.com> wrote:
+> On 17 May 2015 at 13:29, Arend van Spriel <aspriel@gmail.com> wrote:
+>> On 17-05-15 06:25, Haggai Eran wrote:
+>>>
+>>> On 16 May 2015 at 20:54, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>>>
+>>>> Another location needed from gdb is "l *recv_func+0x8c".
+>>>
+>>>
+>>> Here it is:
+>>> (gdb) l *recv_func+0x8c
+>>> 0x17094 is in recv_func (drivers/staging/rtl8712/rtl8712_recv.c:1004).
+>>> 999                     r8712_free_recvframe(orig_prframe,
+>>> pfree_recv_queue);
+>>> 1000                    goto _exit_recv_func;
+>>> 1001            }
+>>> 1002    _exit_recv_func:
+>>> 1003            return retval;
+>>> 1004    }
+>>> 1005
+>>> 1006    static int recvbuf2recvframe(struct _adapter *padapter, struct
+>>> sk_buff *pskb)
+>>> 1007    {
+>>> 1008            u8 *pbuf, shift_sz = 0;
+>>>
+>>> I don't think this means the relevant call is the one at line 999. I
+>>> think it is an earlier call, after r8712_validate_recv_frame. Here's
+>>> the disassembly:
+>>
+>>
+>> can you provide the address of recv_func as well to determine the exact
+>> location in assembly.
+>
+> Yes, it is in offset 0x17008 in the module:
+>> 00017008 <recv_func>:
+>
+> Regards,
+> Haggai
+>
+>>
+>>>          /* check the frame crtl field and decache */
+>>>          retval = r8712_validate_recv_frame(padapter, prframe);
+>>>     17070:       e1a00004        mov     r0, r4
+>>>     17074:       e1a01005        mov     r1, r5
+>>>     17078:       ebfffffe        bl      17bc0 <r8712_validate_recv_frame>
+>>>          if (retval != _SUCCESS) {
+>>>     1707c:       e3500001        cmp     r0, #1
+>>>                          r8712_free_recvframe(orig_prframe,
+>>> pfree_recv_queue);
+>>>                          goto _exit_recv_func;
+>>>                  }
+>>>          }
+>>>          /* check the frame crtl field and decache */
+>>>          retval = r8712_validate_recv_frame(padapter, prframe);
+>>>     17080:       e1a06000        mov     r6, r0
+>>>          if (retval != _SUCCESS) {
+>>>     17084:       0a000005        beq     170a0 <recv_func+0x98>
+>>>                  /* free this recv_frame */
+>>>                  r8712_free_recvframe(orig_prframe, pfree_recv_queue);
+>>>     17088:       e1a00005        mov     r0, r5
+>>>     1708c:       e1a01007        mov     r1, r7
+>>>     17090:       ebfffffe        bl      166e8 <r8712_free_recvframe>
+>>>                  r8712_free_recvframe(orig_prframe, pfree_recv_queue);
+>>>                  goto _exit_recv_func;
+>>>          }
+>>> _exit_recv_func:
+>>>          return retval;
+>>> }
+>>>     17094:       e1a00006        mov     r0, r6
