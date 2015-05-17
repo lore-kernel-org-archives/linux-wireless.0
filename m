@@ -1,134 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:34844 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751847AbbEFAqm (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:30339 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183AbbEQSyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 20:46:42 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org
-Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [RFC v1 00/12] kernel/firmware/wireless: firmware digital signature checks
-Date: Tue,  5 May 2015 17:44:18 -0700
-Message-Id: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_024704_758776_44166AA8)
+	Sun, 17 May 2015 14:54:45 -0400
+Message-ID: <5558E3B8.3040008@atmel.com> (sfid-20150517_205448_794754_776DF2D8)
+Date: Sun, 17 May 2015 20:53:44 +0200
+From: Nicolas Ferre <nicolas.ferre@atmel.com>
+MIME-Version: 1.0
+To: Johnny Kim <johnny.kim@atmel.com>, <gregkh@linuxfoundation.org>,
+	<devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>
+CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
+	<dean.lee@atmel.com>, <tony.cho@atmel.com>,
+	Patrice VILCHEZ <patrice.vilchez@atmel.com>
+Subject: Re: [PATCH v3 1/2] staging: wilc1000: Add SDIO/SPI 802.11 driver
+References: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com>
+In-Reply-To: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Le 11/05/2015 07:30, Johnny Kim a écrit :
+> This driver is for the wilc1000 which is a single chip IEEE 802.11
+> b/g/n device.
+> The driver works together with cfg80211, which is the kernel side of
+> configuration management for wireless devices because the wilc1000
+> chipset is fullmac where the MLME is managed in hardware.
+> 
+> The driver worked from kernel version 2.6.38 and being now ported
+> to several others since then.
+> A TODO file is included as well in this commit.
+> 
+> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+> Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
+> Signed-off-by: Dean Lee <dean.lee@atmel.com>
+> Signed-off-by: Chris Park <chris.park@atmel.com>
+> Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
+> ---
+> Changes in v3:
+> - fix the permissions.
+> - fix the folder tree.
+> - forget to add the mailing-list during the previous sending.
 
-We've been discussing for a while now replacing the 802.11 Linux
-CRDA agent [0] by in-kernel functionality. This series address
-what is required to begin to take this serious. It is split by
-a few series of patches, I've linked them all as otherwise folks
-might get confused. I clarify what is what below and by a prefix
-on each patch.
+Hi Greg,
 
-  * first set: [1-4] few fixes and core changes in order to consider digital
-    firmware signature support. Please consider these for integration. Patch
-    2 generalizes module signing as system data signing and can very likely
-    just be ignored unles the second set seems more reasonable to start
-    considering. One of these goes as a stable fix.
+Do you have any comment on this v3 series (aka ping ;-)).
 
-  * second set: [5-6] kernel firmware signature support. These should be
-    considered for discussion. We need to figure out what if/how we want
-    to deal with this. Its obviously needed to replace userspace agents
-    with similar requirements, so its a requirement for the last set.
+Bye,
 
-  * third set: [7-12] firmware API simplication / extensibility rewrite,
-    more for discussion than anything as we keep extending it, then it
-    starts piggy backing alternative crypto requirements. Its intended to
-    provide as an example how subsystems might differ in their requirements
-    for files in userspace. The driver changes should be completely ignored
-    as real patches -- these are just example patches of *how* to use the
-    APIs. The cfg80211 change should be reviewed as its how we could
-    end up providing optional alternative cyrpto requirements and extensions,
-    should we go down that road.
+>  drivers/staging/Kconfig                           |    2 +
+>  drivers/staging/Makefile                          |    1 +
+>  drivers/staging/wilc1000/Kconfig                  |   55 +
+>  drivers/staging/wilc1000/Makefile                 |   41 +
+>  drivers/staging/wilc1000/TODO                     |    8 +
+>  drivers/staging/wilc1000/coreconfigsimulator.h    |   20 +
+>  drivers/staging/wilc1000/coreconfigurator.c       | 2201 ++++++
+>  drivers/staging/wilc1000/coreconfigurator.h       |  498 ++
+>  drivers/staging/wilc1000/fifo_buffer.c            |  142 +
+>  drivers/staging/wilc1000/fifo_buffer.h            |   23 +
+>  drivers/staging/wilc1000/host_interface.c         | 8074 +++++++++++++++++++++
+>  drivers/staging/wilc1000/host_interface.h         | 1344 ++++
+>  drivers/staging/wilc1000/itypes.h                 |   60 +
+>  drivers/staging/wilc1000/linux_mon.c              |  643 ++
+>  drivers/staging/wilc1000/linux_wlan.c             | 2953 ++++++++
+>  drivers/staging/wilc1000/linux_wlan_common.h      |  170 +
+>  drivers/staging/wilc1000/linux_wlan_sdio.c        |  249 +
+>  drivers/staging/wilc1000/linux_wlan_sdio.h        |   14 +
+>  drivers/staging/wilc1000/linux_wlan_spi.c         |  510 ++
+>  drivers/staging/wilc1000/linux_wlan_spi.h         |   14 +
+>  drivers/staging/wilc1000/wilc_debugfs.c           |  185 +
+>  drivers/staging/wilc1000/wilc_errorsupport.h      |   84 +
+>  drivers/staging/wilc1000/wilc_event.h             |  123 +
+>  drivers/staging/wilc1000/wilc_exported_buf.c      |   76 +
+>  drivers/staging/wilc1000/wilc_log.h               |   47 +
+>  drivers/staging/wilc1000/wilc_memory.c            |   63 +
+>  drivers/staging/wilc1000/wilc_memory.h            |  330 +
+>  drivers/staging/wilc1000/wilc_msgqueue.c          |  211 +
+>  drivers/staging/wilc1000/wilc_msgqueue.h          |  133 +
+>  drivers/staging/wilc1000/wilc_osconfig.h          |   55 +
+>  drivers/staging/wilc1000/wilc_oswrapper.h         |  133 +
+>  drivers/staging/wilc1000/wilc_platform.h          |  181 +
+>  drivers/staging/wilc1000/wilc_sdio.c              | 1298 ++++
+>  drivers/staging/wilc1000/wilc_semaphore.c         |   70 +
+>  drivers/staging/wilc1000/wilc_semaphore.h         |  115 +
+>  drivers/staging/wilc1000/wilc_sleep.c             |   36 +
+>  drivers/staging/wilc1000/wilc_sleep.h             |   45 +
+>  drivers/staging/wilc1000/wilc_spi.c               | 1475 ++++
+>  drivers/staging/wilc1000/wilc_strutils.c          |  431 ++
+>  drivers/staging/wilc1000/wilc_strutils.h          |  412 ++
+>  drivers/staging/wilc1000/wilc_thread.c            |   35 +
+>  drivers/staging/wilc1000/wilc_thread.h            |  153 +
+>  drivers/staging/wilc1000/wilc_time.c              |  163 +
+>  drivers/staging/wilc1000/wilc_time.h              |  205 +
+>  drivers/staging/wilc1000/wilc_timer.c             |   51 +
+>  drivers/staging/wilc1000/wilc_timer.h             |  153 +
+>  drivers/staging/wilc1000/wilc_type.h              |   34 +
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4592 ++++++++++++
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |  134 +
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.c     |  960 +++
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  277 +
+>  drivers/staging/wilc1000/wilc_wlan.c              | 2434 +++++++
+>  drivers/staging/wilc1000/wilc_wlan.h              |  321 +
+>  drivers/staging/wilc1000/wilc_wlan_cfg.c          |  643 ++
+>  drivers/staging/wilc1000/wilc_wlan_cfg.h          |   33 +
+>  drivers/staging/wilc1000/wilc_wlan_if.h           |  991 +++
+>  56 files changed, 33704 insertions(+)
+>  create mode 100644 drivers/staging/wilc1000/Kconfig
+>  create mode 100644 drivers/staging/wilc1000/Makefile
+>  create mode 100644 drivers/staging/wilc1000/TODO
+>  create mode 100644 drivers/staging/wilc1000/coreconfigsimulator.h
+>  create mode 100644 drivers/staging/wilc1000/coreconfigurator.c
+>  create mode 100644 drivers/staging/wilc1000/coreconfigurator.h
+>  create mode 100644 drivers/staging/wilc1000/fifo_buffer.c
+>  create mode 100644 drivers/staging/wilc1000/fifo_buffer.h
+>  create mode 100644 drivers/staging/wilc1000/host_interface.c
+>  create mode 100644 drivers/staging/wilc1000/host_interface.h
+>  create mode 100644 drivers/staging/wilc1000/itypes.h
+>  create mode 100644 drivers/staging/wilc1000/linux_mon.c
+>  create mode 100644 drivers/staging/wilc1000/linux_wlan.c
+>  create mode 100644 drivers/staging/wilc1000/linux_wlan_common.h
+>  create mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.c
+>  create mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
+>  create mode 100644 drivers/staging/wilc1000/linux_wlan_spi.c
+>  create mode 100644 drivers/staging/wilc1000/linux_wlan_spi.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_debugfs.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_errorsupport.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_event.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_exported_buf.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_log.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_memory.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_memory.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_msgqueue.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_msgqueue.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_osconfig.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_platform.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_sdio.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_semaphore.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_semaphore.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_sleep.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_sleep.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_spi.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_strutils.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_strutils.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_thread.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_thread.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_time.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_time.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_timer.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_timer.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_type.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_wfi_netdevice.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_wfi_netdevice.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_wlan.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_wlan.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_wlan_cfg.c
+>  create mode 100644 drivers/staging/wilc1000/wilc_wlan_cfg.h
+>  create mode 100644 drivers/staging/wilc1000/wilc_wlan_if.h
+> 
+> diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
+> index bfacf69..da35af6 100644
+> --- a/drivers/staging/Kconfig
+> +++ b/drivers/staging/Kconfig
+> @@ -112,4 +112,6 @@ source "drivers/staging/i2o/Kconfig"
+>  
+>  source "drivers/staging/fsl-mc/Kconfig"
+>  
+> +source "drivers/staging/wilc1000/Kconfig"
+> +
+>  endif # STAGING
+> diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
+> index 2bbd1bf..edbe5ff 100644
+> --- a/drivers/staging/Makefile
+> +++ b/drivers/staging/Makefile
+> @@ -48,3 +48,4 @@ obj-$(CONFIG_COMMON_CLK_XLNX_CLKWZRD)	+= clocking-wizard/
+>  obj-$(CONFIG_FB_TFT)		+= fbtft/
+>  obj-$(CONFIG_I2O)		+= i2o/
+>  obj-$(CONFIG_FSL_MC_BUS)	+= fsl-mc/
+> +obj-$(CONFIG_WILC1000)		+= wilc1000/
+> diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
+> new file mode 100644
+> index 0000000..101f908
+> --- /dev/null
+> +++ b/drivers/staging/wilc1000/Kconfig
+> @@ -0,0 +1,55 @@
+> +config WILC1000
+> +	tristate "WILC1000 support (WiFi only)"
+> +	---help---
+> +		This module only support IEEE 802.11n WiFi.
+> +
+> +choice
+> +        prompt "Memory Allocation"
+> +        depends on WILC1000
+> +        default WILC1000_PREALLOCATE_AT_LOADING_DRIVER
+> +
+> +        config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
+> +                bool "Preallocate memory at loading driver"
+> +                ---help---
+> +                        This choice supports static allocation of the memory
+> +                        for the receive buffer. The driver will allocate the RX buffer 
+> +                        during initial time. The driver will also free the buffer
+> +                        by calling network device stop.
+> +
+> +        config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
+> +                bool "Dynamically allocate memory in real time"
+> +                ---help---
+> +                        This choice supports dynamic allocation of the memory
+> +                        for the receive buffer. The driver will allocate the RX buffer
+> +                        when it is required.
+> +endchoice
+> +
+> +
+> +choice
+> +    prompt "Bus Type"
+> +    depends on WILC1000 
+> +    default WILC1000_SDIO
+> +    
+> +	config WILC1000_SDIO
+> +	    bool "SDIO support"
+> +	    depends on MMC
+> +		---help---
+> +			This module adds support for the SDIO interface of adapters using
+> +			WILC chipset. Select this if your platform is using the SDIO bus. 
+> +
+> +	config WILC1000_SPI
+> +	    bool "SPI support"
+> +		---help---
+> +			This module adds support for the SPI interface of adapters using
+> +			WILC chipset. Select this if your platform is using the SPI bus. 
+> +endchoice
+> +
+> +
+> +config WILC1000_HW_OOB_INTR
+> +    bool "Use out of band interrupt"
+> +    depends on WILC1000 && WILC1000_SDIO
+> +    default n
+> +    ---help---
+> +		If your platform don't recognize SDIO IRQ, connect chipset external IRQ pin
+> +		and check this option. Or, Use this to get all interrupts including SDIO interrupts.
+> +
+> diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+> new file mode 100644
+> index 0000000..84bd975
+> --- /dev/null
+> +++ b/drivers/staging/wilc1000/Makefile
+> @@ -0,0 +1,41 @@
+> +obj-$(CONFIG_WILC1000) += wilc1000.o
+> +obj-$(CONFIG_WILC1000_PREALLOCATE_DURING_SYSTEM_BOOT) += wilc_exported_buf.o
+> +
+> +
+> +ccflags-$(CONFIG_WILC1000_SDIO) += -DWILC_SDIO -DCOMPLEMENT_BOOT
+> +ccflags-$(CONFIG_WILC1000_HW_OOB_INTR) += -DWILC_SDIO_IRQ_GPIO
+> +ccflags-$(CONFIG_WILC1000_SPI) += -DWILC_SPI
+> +
+> +ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
+> +		-DAP_FIRMWARE=\"atmel/wilc1000_ap_fw.bin\" \
+> +		-DP2P_CONCURRENCY_FIRMWARE=\"atmel/wilc1000_p2p_fw.bin\"
+> +
+> +ccflags-y += -I$(src)/ -DEXPORT_SYMTAB  -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 \
+> +		-DPLL_WORKAROUND -DCONNECT_DIRECT  -DAGING_ALG \
+> +		-DWILC_PARSE_SCAN_IN_HOST -DDISABLE_PWRSAVE_AND_SCAN_DURING_IP \
+> +		-DWILC_PLATFORM=WILC_LINUXKERNEL -Wno-unused-function -DUSE_WIRELESS \
+> +		-DWILC_DEBUGFS
+> +#ccflags-y += -DTCP_ACK_FILTER
+> +
+> +ccflags-$(CONFIG_WILC1000_PREALLOCATE_DURING_SYSTEM_BOOT) += -DMEMORY_STATIC \
+> +								-DWILC_PREALLOC_AT_BOOT
+> +
+> +ccflags-$(CONFIG_WILC1000_PREALLOCATE_AT_LOADING_DRIVER) += -DMEMORY_STATIC \
+> +								-DWILC_PREALLOC_AT_INSMOD
+> +
+> +ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
+> +
+> +
+> +wilc1000-objs := wilc_wfi_netdevice.o wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+> +			wilc_memory.o wilc_msgqueue.o wilc_semaphore.o wilc_sleep.o wilc_strutils.o \
+> +			wilc_thread.o wilc_time.o wilc_timer.o coreconfigurator.o host_interface.o \
+> +			fifo_buffer.o wilc_sdio.o wilc_spi.o wilc_wlan_cfg.o wilc_debugfs.o
+> +
+> +wilc1000-$(CONFIG_WILC1000_SDIO) += linux_wlan_sdio.o
+> +wilc1000-$(CONFIG_WILC1000_SPI) += linux_wlan_spi.o
+> +
+> +WILC1000_SRC_VERSION = 10.0
+> +PATCHLEVEL = 2
+> +WILC1000_FW_VERSION = 0
+> +
+> +ccflags-y += -D__DRIVER_VERSION__=\"$(WILC1000_SRC_VERSION).$(PATCHLEVEL)\"
+> diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
+> new file mode 100644
+> index 0000000..5dfeb3e
+> --- /dev/null
+> +++ b/drivers/staging/wilc1000/TODO
+> @@ -0,0 +1,8 @@
+> +TODO:
+> +- remove the defined feature as kernel versions
+> +- remove OS wrapper functions
+> +- remove custom debug and tracing functions
+> +- rework comments and function headers(also coding style)
+> +- remove build warnings
+> +- support soft-ap and p2p mode
+> +- support resume/suspend function
+> diff --git a/drivers/staging/wilc1000/coreconfigsimulator.h b/drivers/staging/wilc1000/coreconfigsimulator.h
+> new file mode 100644
+> index 0000000..6c3f431
+> --- /dev/null
+> +++ b/drivers/staging/wilc1000/coreconfigsimulator.h
+> @@ -0,0 +1,20 @@
 
-I did consider LSM hooks -- but since we already have one for firmware
-and since this re-uses the firmware API, the same LSM hooks can be used
-for distributions that want that over digital signature verification
-of speficic firmware / system data files.
-
-My own preference and recommendations:
-
-This has served more as an excercise to review the firmware module code
-and to get us to more seriously consider whether or not we want
-digital firmware signature checks. I think we should seriously
-consider replacing the custom CRDA key option with kernel distribution 
-private / public keys used for module signing, and for further
-customization simply let folks use LSM hooks / LSM modules for
-customization as well as the Integrity Measurement Architecture (IMA) [1].
-
-We *should* seriously consider digital firmware signature support,
-how we want to phase usermode helper suppport and how we want to
-enable extensions of the firmware API as the current code isn't
-practical for extensions/growth. In so far a digital firmware
-signature support I think it might be a good idea to support different
-files for signatures and request those in addition to the actual
-firmware, any reason not to do it that way?
-
-Please note that the binary firmware format still needs to be
-addresed. I don't have time for that though so I hope that this
-will help suffice to at least address the requirements to replace
-CRDA in-kernel.
-
-[0] https://wireless.wiki.kernel.org/en/developers/regulatory/crda
-[1] http://sourceforge.net/p/linux-ima/wiki/Home/
-
-Luis R. Rodriguez (12):
-  1  - kernel/params.c: export param_ops_bool_enable_only
-  2  - kernel: generalize module signing as system data signing
-  3  - crypto: qat - address recursive dependency when fw signing is enabled
-  4  - firmware: fix possible use after free on name on asynchronous request
-
-  5  - firmware: add firmware signature checking support
-  6  - firmware: generalize "firmware" as "system data" helpers
-
-  7  - firmware: add generic system data helpers with signature support
-  8  - p54spi: use sysdata_file_request() for EEPROM optional system data
-  9  - p54: use sysdata_file_request() and sysdata_file_request_async()
-  10 - ath9k_htc: use sysdata_file_request() and sysdata_file_request_async()
-  11 - iwlwifi: use sysdata_file_request() and sysdata_file_request_async()
-  12 - cfg80211: request for regulatory system data file
-
- drivers/base/Kconfig                           |  16 ++
- drivers/base/firmware_class.c                  | 318 ++++++++++++++++++++++++-
- drivers/crypto/qat/Kconfig                     |   2 +-
- drivers/net/wireless/ath/ath9k/hif_usb.c       |  62 +++--
- drivers/net/wireless/iwlwifi/iwl-drv.c         |  24 +-
- drivers/net/wireless/p54/eeprom.c              |   1 -
- drivers/net/wireless/p54/fwio.c                |   4 +-
- drivers/net/wireless/p54/led.c                 |   1 -
- drivers/net/wireless/p54/main.c                |   1 -
- drivers/net/wireless/p54/p54.h                 |   4 +-
- drivers/net/wireless/p54/p54pci.c              |  19 +-
- drivers/net/wireless/p54/p54pci.h              |   2 +-
- drivers/net/wireless/p54/p54spi.c              |  68 +++---
- drivers/net/wireless/p54/p54spi.h              |   2 +-
- drivers/net/wireless/p54/p54usb.c              |  14 +-
- drivers/net/wireless/p54/p54usb.h              |   2 +-
- drivers/net/wireless/p54/txrx.c                |   1 -
- include/linux/firmware.h                       |   1 +
- include/linux/sysdata.h                        | 200 ++++++++++++++++
- init/Kconfig                                   |  22 +-
- kernel/Makefile                                |   2 +-
- kernel/module-internal.h                       |  12 -
- kernel/module.c                                |   4 +-
- kernel/params.c                                |   1 +
- kernel/{module_signing.c => sysdata_signing.c} |  77 +++---
- kernel/system_keyring.c                        |   2 +-
- net/wireless/Kconfig                           |  20 ++
- net/wireless/reg.c                             |  85 +++++--
- scripts/sign-file                              |  20 +-
- 29 files changed, 804 insertions(+), 183 deletions(-)
- create mode 100644 include/linux/sysdata.h
- delete mode 100644 kernel/module-internal.h
- rename kernel/{module_signing.c => sysdata_signing.c} (76%)
+[..]
 
 -- 
-2.3.2.209.gd67f9d5.dirty
-
+Nicolas Ferre
