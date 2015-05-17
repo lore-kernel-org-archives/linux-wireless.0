@@ -1,176 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:16075 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753656AbbE1NA3 (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:36597 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876AbbEQUNF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:00:29 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCx9d9014760
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:28 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqff-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:28 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 12/17] mwifiex: support downloading IEs from tail
-Date: Thu, 28 May 2015 23:59:02 +0530
-Message-ID: <1432837747-2075-13-git-send-email-patila@marvell.com> (sfid-20150528_150033_148143_6691DAB4)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+	Sun, 17 May 2015 16:13:05 -0400
+Received: by lagv1 with SMTP id v1so191429874lag.3
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 13:13:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1431893157.2129.18.camel@sipsolutions.net>
+References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
+	<1431674716.2426.2.camel@sipsolutions.net>
+	<CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>
+	<1431714949.2117.0.camel@sipsolutions.net>
+	<CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com>
+	<1431806229.2120.6.camel@sipsolutions.net>
+	<20150517160513.GA13175@w1.fi>
+	<CANUX_P0byd4Q+1gjiBmoGqd_hESUH_YVCD6iPx0_d6aw_r3JSw@mail.gmail.com>
+	<1431890756.2129.13.camel@sipsolutions.net>
+	<CANUX_P3ODruGc2rvV2gLNLU15kEmaJMXeU_ovtaBeOQGnYotoA@mail.gmail.com>
+	<1431893157.2129.18.camel@sipsolutions.net>
+Date: Sun, 17 May 2015 23:13:03 +0300
+Message-ID: <CANUX_P0cJc4Ww5AY7sNFL5z4EPit+ngHvX=4eFXF96K-E8p3MA@mail.gmail.com> (sfid-20150517_221717_167261_8A1B4296)
+Subject: Re: mac80211 drops packet with old IV after rekeying
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>, alexander.wetzel@web.de
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Earlier only RSN, WPA and channel switch IEs from tail buffer would
-be downloaded to FW.
-This patch adds support for downloading more IEs from tail buffer.
+On Sun, May 17, 2015 at 11:05 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2015-05-17 at 22:49 +0300, Emmanuel Grumbach wrote:
+>
+>> Yeah - ok. But how come we *already* set the pointer to the new key
+>> while the HW is still successfully decrypting with the old key. This
+>> is the point I can' figure out. I'd expect the transmitting side to
+>> stop using the old key prior to sending the EAPOL (which #triggers the
+>> set key pointer line). So those 2 lines don't make sense to me:
+>>
+>> >  # set key pointer to new key
+>> >  * data RX in HW, decrypt w/ old key, PN=999
+>>
+>> After all, the Rx path is serialized all the way through from the air
+>> to mac80211. The only thing I can think about is that the sending side
+>> is still using the old key *after* it already sent its EAPOL frames.
+>
+> Not sure, isn't the key only installed on EAPOL acknowledgement or so?
+> With PTK rekeying, I'm not really sure what the timing is, and there's
+> not really any way it can be correct (without extended key ID support.)
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/ie.c | 102 ++++++++++++++++++++++----------------
- 1 file changed, 60 insertions(+), 42 deletions(-)
+Whatever the timing is, since the Rx path is serialized, there
+shouldn't be any timing issues. Or at least, I can't figure out how
+these lines above could be in the order you put them.
 
-diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
-index f3b6ed2..0ba8945 100644
---- a/drivers/net/wireless/mwifiex/ie.c
-+++ b/drivers/net/wireless/mwifiex/ie.c
-@@ -320,63 +320,81 @@ done:
- /* This function parses  head and tail IEs, from cfg80211_beacon_data and sets
-  * these IE to FW.
-  */
--static int mwifiex_uap_set_head_tail_ies(struct mwifiex_private *priv,
--					 struct cfg80211_beacon_data *info)
-+static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
-+				      struct cfg80211_beacon_data *info)
- {
- 	struct mwifiex_ie *gen_ie;
--	struct ieee_types_header *rsn_ie = NULL, *wpa_ie = NULL;
--	struct ieee_types_header *chsw_ie = NULL;
-+	struct ieee_types_header *hdr;
-+	struct ieee80211_vendor_ie *vendorhdr;
- 	u16 gen_idx = MWIFIEX_AUTO_IDX_MASK, ie_len = 0;
--	const u8 *vendor_ie;
-+	int left_len, parsed_len = 0;
-+
-+	if (!info->tail || !info->tail_len)
-+		return 0;
- 
- 	gen_ie = kzalloc(sizeof(*gen_ie), GFP_KERNEL);
- 	if (!gen_ie)
- 		return -ENOMEM;
--	gen_ie->ie_index = cpu_to_le16(gen_idx);
--	gen_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_BEACON |
--						MGMT_MASK_PROBE_RESP |
--						MGMT_MASK_ASSOC_RESP);
- 
--	if (info->tail && info->tail_len) {
--		rsn_ie = (void *)cfg80211_find_ie(WLAN_EID_RSN,
--						  info->tail, info->tail_len);
--		if (rsn_ie) {
--			memcpy(gen_ie->ie_buffer, rsn_ie, rsn_ie->len + 2);
--			ie_len = rsn_ie->len + 2;
--			gen_ie->ie_length = cpu_to_le16(ie_len);
-+	left_len = info->tail_len;
-+
-+	/* Many IEs are generated in FW by parsing bss configuration.
-+	 * Let's not add them here; else we may end up duplicating these IEs
-+	 */
-+	while (left_len > sizeof(struct ieee_types_header)) {
-+		hdr = (void *)(info->tail + parsed_len);
-+		switch (hdr->element_id) {
-+		case WLAN_EID_SSID:
-+		case WLAN_EID_SUPP_RATES:
-+		case WLAN_EID_COUNTRY:
-+		case WLAN_EID_PWR_CONSTRAINT:
-+		case WLAN_EID_EXT_SUPP_RATES:
-+		case WLAN_EID_HT_CAPABILITY:
-+		case WLAN_EID_HT_OPERATION:
-+		case WLAN_EID_VHT_CAPABILITY:
-+		case WLAN_EID_VHT_OPERATION:
-+		case WLAN_EID_VENDOR_SPECIFIC:
-+			break;
-+		default:
-+			memcpy(gen_ie->ie_buffer + ie_len, hdr,
-+			       hdr->len + sizeof(struct ieee_types_header));
-+			ie_len += hdr->len + sizeof(struct ieee_types_header);
-+			break;
- 		}
-+		left_len -= hdr->len + sizeof(struct ieee_types_header);
-+		parsed_len += hdr->len + sizeof(struct ieee_types_header);
-+	}
- 
--		vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
-+	/* parse only WPA vendor IE from tail, WMM IE is configured by
-+	 * bss_config command
-+	 */
-+	vendorhdr = (void *)cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
- 						    WLAN_OUI_TYPE_MICROSOFT_WPA,
--						    info->tail,
--						    info->tail_len);
--		if (vendor_ie) {
--			wpa_ie = (struct ieee_types_header *)vendor_ie;
--			memcpy(gen_ie->ie_buffer + ie_len,
--			       wpa_ie, wpa_ie->len + 2);
--			ie_len += wpa_ie->len + 2;
--			gen_ie->ie_length = cpu_to_le16(ie_len);
--		}
-+						    info->tail, info->tail_len);
-+	if (vendorhdr) {
-+		memcpy(gen_ie->ie_buffer + ie_len, vendorhdr,
-+		       vendorhdr->len + sizeof(struct ieee_types_header));
-+		ie_len += vendorhdr->len + sizeof(struct ieee_types_header);
-+	}
- 
--		chsw_ie = (void *)cfg80211_find_ie(WLAN_EID_CHANNEL_SWITCH,
--						   info->tail, info->tail_len);
--		if (chsw_ie) {
--			memcpy(gen_ie->ie_buffer + ie_len,
--			       chsw_ie, chsw_ie->len + 2);
--			ie_len += chsw_ie->len + 2;
--			gen_ie->ie_length = cpu_to_le16(ie_len);
--		}
-+	if (!ie_len) {
-+		kfree(gen_ie);
-+		return 0;
- 	}
- 
--	if (rsn_ie || wpa_ie || chsw_ie) {
--		if (mwifiex_update_uap_custom_ie(priv, gen_ie, &gen_idx, NULL,
--						 NULL, NULL, NULL)) {
--			kfree(gen_ie);
--			return -1;
--		}
--		priv->gen_idx = gen_idx;
-+	gen_ie->ie_index = cpu_to_le16(gen_idx);
-+	gen_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_BEACON |
-+						MGMT_MASK_PROBE_RESP |
-+						MGMT_MASK_ASSOC_RESP);
-+	gen_ie->ie_length = cpu_to_le16(ie_len);
-+
-+	if (mwifiex_update_uap_custom_ie(priv, gen_ie, &gen_idx, NULL, NULL,
-+					 NULL, NULL)) {
-+		kfree(gen_ie);
-+		return -1;
- 	}
- 
-+	priv->gen_idx = gen_idx;
- 	kfree(gen_ie);
- 	return 0;
- }
-@@ -390,7 +408,7 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- {
- 	int ret;
- 
--	ret = mwifiex_uap_set_head_tail_ies(priv, info);
-+	ret = mwifiex_uap_parse_tail_ies(priv, info);
- 		return ret;
- 
- 	return mwifiex_set_mgmt_beacon_data_ies(priv, info);
--- 
-1.8.1.4
+>
+>> Then, by pure change, we can still decrypt them in HW because the HW
+>> hasn't been updated yet (these frames are successfully decrypted
+>> because of race basically) and then, these frames come up to mac80211
+>> *after* the EAPOL but with the old key.
+>> This is what the submitter says:
+>>
+>> "
+>> The encryption key indeed changes immediately after the last packet of
+>> the handshake, but the Initialization Vector is still counting up
+>> against the old value.
+>> "
+>>
+>> So maybe that's the real issue?
+>
+> You're thinking there's a transmitter issue instead? I can't see how
+> that could happen, especially that way around ...
+>
+> Actually, yes, this *could* happen, in exactly the same way as on the
+> receiver, with hardware crypto that does PN generation in software. Not
+> on iwlwifi, because we copy the key material into the TX command, but on
+> any hardware that uses hw_key_idx to identify the key, and could replace
+> the key:
+>
+>  * mac80211: encrypt TX frame - assign PN, ((tx_info
+> *)skb->cb)->hw_key_idx = 7
+>  * mac80211: replace key with new key
+>    * driver: remove old key from hw accel (hw_key_idx 7)
+>    * driver: insert new key to hw accel (reusing hw_key_idx 7)
+>
 
+This seems to be exactly what the submitter is mentioning: new key old PN.
+I don't really know how we can determine what key was used though.
+Maybe by just trying to decrypt in wireshark with the new key and
+check.
+
+> johannes
+>
