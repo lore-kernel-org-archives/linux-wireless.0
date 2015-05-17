@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:38727 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbbEDJPV (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:35043 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753AbbEQLRT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 05:15:21 -0400
-Message-ID: <55473869.8010904@atmel.com> (sfid-20150504_111523_905021_021A400C)
-Date: Mon, 4 May 2015 11:14:17 +0200
-From: Nicolas Ferre <nicolas.ferre@atmel.com>
+	Sun, 17 May 2015 07:17:19 -0400
+Received: by iesa3 with SMTP id a3so64477744ies.2
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 04:17:19 -0700 (PDT)
 MIME-Version: 1.0
-To: Johnny Kim <johnny.kim@atmel.com>, <gregkh@linuxfoundation.org>,
-	<linux-wireless@vger.kernel.org>
-CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
-	<tony.cho@atmel.com>
-Subject: Re: [PATCH v2 2/2] staging: MAINTAINERS: add maintainer for wilc1000
- device
-References: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com> <0c403fce8ae243edb21419cc2840195a94f829ee.1430301575.git.johnny.kim@atmel.com>
-In-Reply-To: <0c403fce8ae243edb21419cc2840195a94f829ee.1430301575.git.johnny.kim@atmel.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <55585F1B.5050008@gmail.com>
+References: <CA+0W_As0c=eAijuvWfSBLMY4vj2P1-zoMsjz1mmNm0_vfepPCA@mail.gmail.com>
+	<5557556C.2080107@lwfinger.net>
+	<CACna6rwCapwThrMGt2HV_YyPQtZ+xRPJdBcapRqs2mkvGPdmSQ@mail.gmail.com>
+	<5557B396.9080300@gmail.com>
+	<CA+0W_At43pB=FeBR4jJzKxO3ruaATAidU8rimBOE3bLM1wKGsA@mail.gmail.com>
+	<CACna6rzxZJg3MHsBV3vtaEtgUbh9umE6CS=2YkgkexT51J1oiw@mail.gmail.com>
+	<55585F1B.5050008@gmail.com>
+Date: Sun, 17 May 2015 13:17:19 +0200
+Message-ID: <CACna6rz-GKJ0AkYzR5GUVUWSrp1Sje7WbY-kZ-i4yhkEXaOEww@mail.gmail.com> (sfid-20150517_131724_506161_EED4AA7F)
+Subject: Re: lspci not working
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <aspriel@gmail.com>
+Cc: Schmirr Wurst <schmirrwurst@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 29/04/2015 14:50, Johnny Kim a �crit :
-> Add myself as maintainer for atmel wilc1000
-> 
-> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-> Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
-> Signed-off-by: Dean Lee <dean.lee@atmel.com>
-> Signed-off-by: Chris Park <chris.park@atmel.com>
+On 17 May 2015 at 11:27, Arend van Spriel <aspriel@gmail.com> wrote:
+> On 17-05-15 10:47, Rafał Miłecki wrote:
+>> On 17 May 2015 at 02:21, Schmirr Wurst <schmirrwurst@gmail.com> wrote:
+>>> In that directory, I see a directory mmc1:0001:2
+>>> under device I have 0xa94d
+>>>
+>>> I completly lost, maybe you understand that information, sorry..
+>>
+>>
+>> You provided only one single device id, without even vendor id. Give
+>> us at least a list of devices, e.g. by their modalias, like
+>> cat /sys/bus/sdio/devices/*/modalias
+>>
+>
+> Converting 0xa94d gives 43341, which does not look like a coincidence to me.
+> So this Asus device comes with a newer chip, but it is supported by brcmfmac
+> (provided vendor id is indeed 0x02d0!).
 
-Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
-
-Thanks!
-
-> ---
-> Changes in v2:
-> - fix the permissions
-> - fix the folder tree
-> ---
->  MAINTAINERS | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 1b8263c..2ddf38c 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9473,6 +9473,16 @@ M:	Forest Bond <forest@alittletooquiet.net>
->  S:	Odd Fixes
->  F:	drivers/staging/vt665?/
->  
-> +STAGING - WILC1000 WIFI DRIVER
-> +M:	Johnny Kim <johnny.kim@atmel.com>
-> +M:	Rachel Kim <rachel.kim@atmel.com>
-> +M:	Dean Lee <dean.lee@atmel.com>
-> +M:	Chris Park <chris.park@atmel.com>
-> +L:	devel@driverdev.osuosl.org
-> +L:	linux-wireless@vger.kernel.org
-> +S:	Supported
-> +F:	drivers/staging/wilc1000/
-> +
->  STAGING - XGI Z7,Z9,Z11 PCI DISPLAY DRIVER
->  M:	Arnaud Patard <arnaud.patard@rtp-net.org>
->  S:	Odd Fixes
-> 
-
+I had no idea its supported, it would be nice if you could keep wiki
+page up to date. I've just added entries for BCM4334[01]:
+https://wireless.wiki.kernel.org/en/users/drivers/brcm80211#brcmfmac
 
 -- 
-Nicolas Ferre
+Rafał
