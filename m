@@ -1,164 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:32898 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161AbbETQjd (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:35761 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750857AbbEQEZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 12:39:33 -0400
-Received: by obblk2 with SMTP id lk2so41097656obb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 09:39:32 -0700 (PDT)
-Message-ID: <555CB8C1.1040007@lwfinger.net> (sfid-20150520_183937_021311_D85D90C2)
-Date: Wed, 20 May 2015 11:39:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 17 May 2015 00:25:52 -0400
+Received: by labbd9 with SMTP id bd9so175474046lab.2
+        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 21:25:51 -0700 (PDT)
 MIME-Version: 1.0
-To: Haggai Eran <haggai.eran@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
-References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com> <CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>
-In-Reply-To: <CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------060504010608090804040404"
+In-Reply-To: <5557844B.4040108@lwfinger.net>
+References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>
+	<55575AC8.2060301@lwfinger.net>
+	<CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>
+	<5557844B.4040108@lwfinger.net>
+Date: Sun, 17 May 2015 07:25:51 +0300
+Message-ID: <CAJ=9CzamCxkwVtTtUzU9zatocUPz0W+3f0Kgm6N0tDMWbcP_LA@mail.gmail.com> (sfid-20150517_062556_381717_E4A93B1D)
+Subject: Re: kernel page fault in r8712u
+From: Haggai Eran <haggai.eran@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060504010608090804040404
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On 16 May 2015 at 20:54, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Another location needed from gdb is "l *recv_func+0x8c".
 
-On 05/20/2015 01:17 AM, Haggai Eran wrote:
-> On May 19, 2015 08:47, "Haggai Eran" <haggai.eran@gmail.com
-> <mailto:haggai.eran@gmail.com>> wrote:
->  >
->  > With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
->  > packet are set, but the packet length is too large. Truncate the packet
->  > to prevent memory corruption.
->  >
->  > Signed-off-by: Haggai Eran <haggai.eran@gmail.com <mailto:haggai.eran@gmail.com>>
->  > ---
->  >
->  > Hi,
->  >
->  > I think this solves the issue for me. I'll test it more thoroughly later. I
->  > still don't know why a fragmented packet has such a large pkt_len value though.
->  >
->  > Thanks,
->  > Haggai
->  >
->
-> I guess I was too quick with this patch. It prevents the kernel page faults, but
-> with it I still see sometimes the connectivity disappear for a minute or two.
+Here it is:
+(gdb) l *recv_func+0x8c
+0x17094 is in recv_func (drivers/staging/rtl8712/rtl8712_recv.c:1004).
+999                     r8712_free_recvframe(orig_prframe, pfree_recv_queue);
+1000                    goto _exit_recv_func;
+1001            }
+1002    _exit_recv_func:
+1003            return retval;
+1004    }
+1005
+1006    static int recvbuf2recvframe(struct _adapter *padapter, struct
+sk_buff *pskb)
+1007    {
+1008            u8 *pbuf, shift_sz = 0;
 
-Is anything logged when that happens?
+I don't think this means the relevant call is the one at line 999. I
+think it is an earlier call, after r8712_validate_recv_frame. Here's
+the disassembly:
 
-I'm still trying to see where that magic number of 1658 comes from, and how that 
-affects the RX buffer size.
+        /* check the frame crtl field and decache */
+        retval = r8712_validate_recv_frame(padapter, prframe);
+   17070:       e1a00004        mov     r0, r4
+   17074:       e1a01005        mov     r1, r5
+   17078:       ebfffffe        bl      17bc0 <r8712_validate_recv_frame>
+        if (retval != _SUCCESS) {
+   1707c:       e3500001        cmp     r0, #1
+                        r8712_free_recvframe(orig_prframe, pfree_recv_queue);
+                        goto _exit_recv_func;
+                }
+        }
+        /* check the frame crtl field and decache */
+        retval = r8712_validate_recv_frame(padapter, prframe);
+   17080:       e1a06000        mov     r6, r0
+        if (retval != _SUCCESS) {
+   17084:       0a000005        beq     170a0 <recv_func+0x98>
+                /* free this recv_frame */
+                r8712_free_recvframe(orig_prframe, pfree_recv_queue);
+   17088:       e1a00005        mov     r0, r5
+   1708c:       e1a01007        mov     r1, r7
+   17090:       ebfffffe        bl      166e8 <r8712_free_recvframe>
+                r8712_free_recvframe(orig_prframe, pfree_recv_queue);
+                goto _exit_recv_func;
+        }
+_exit_recv_func:
+        return retval;
+}
+   17094:       e1a00006        mov     r0, r6
 
-When I unconditionally set alloc_sz to tmp_len as in the attached patch (I 
-remembered to refresh it this time), nothing bad has happened here yet. What 
-happens on your box?
-
-Larry
-
-
-
---------------060504010608090804040404
-Content-Type: text/plain; charset=UTF-8;
- name="rtl8712_prevent_buffer_overrun"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="rtl8712_prevent_buffer_overrun"
-
-WC1BY2NvdW50LUtleTogYWNjb3VudDExDQpYLVVJREw6IEdtYWlsSWQxNGQ2YWI2NWUyNDk1
-N2QzDQpYLU1vemlsbGEtU3RhdHVzOiAwMDAxDQpYLU1vemlsbGEtU3RhdHVzMjogMDAwMDAw
-MDANClgtTW96aWxsYS1LZXlzOiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KRGVsaXZl
-cmVkLVRvOiBsYXJyeS5maW5nZXJAZ21haWwuY29tDQpSZWNlaXZlZDogYnkgMTAuMjcuMjEw
-LjE5NCB3aXRoIFNNVFAgaWQgajE4NWNzcDE2NDA1MndsZzsNCiAgICAgICAgTW9uLCAxOCBN
-YXkgMjAxNSAyMjo0NzoyNiAtMDcwMCAoUERUKQ0KWC1SZWNlaXZlZDogYnkgMTAuNTUuMjAu
-ODcgd2l0aCBTTVRQIGlkIGU4NG1yNTUwNTE1NzRxa2guNDMuMTQzMjAxNDQ0NjE1NTsNCiAg
-ICAgICAgTW9uLCAxOCBNYXkgMjAxNSAyMjo0NzoyNiAtMDcwMCAoUERUKQ0KUmV0dXJuLVBh
-dGg6IDxoYWdnYWkuZXJhbkBnbWFpbC5jb20+DQpSZWNlaXZlZDogZnJvbSBhdGw0bWhvYjE4
-Lm15cmVnaXN0ZXJlZHNpdGUuY29tIChhdGw0bWhvYjE4Lm15cmVnaXN0ZXJlZHNpdGUuY29t
-LiBbMjA5LjE3LjExNS4xMTFdKQ0KICAgICAgICBieSBteC5nb29nbGUuY29tIHdpdGggRVNN
-VFAgaWQgNHNpMTA0MDk3NDNxa3UuNzEuMjAxNS4wNS4xOC4yMi40Ny4yNQ0KICAgICAgICBm
-b3IgPGxhcnJ5LmZpbmdlckBnbWFpbC5jb20+Ow0KICAgICAgICBNb24sIDE4IE1heSAyMDE1
-IDIyOjQ3OjI2IC0wNzAwIChQRFQpDQpSZWNlaXZlZC1TUEY6IHNvZnRmYWlsIChnb29nbGUu
-Y29tOiBkb21haW4gb2YgdHJhbnNpdGlvbmluZyBoYWdnYWkuZXJhbkBnbWFpbC5jb20gZG9l
-cyBub3QgZGVzaWduYXRlIDIwOS4xNy4xMTUuMTExIGFzIHBlcm1pdHRlZCBzZW5kZXIpIGNs
-aWVudC1pcD0yMDkuMTcuMTE1LjExMTsNCkF1dGhlbnRpY2F0aW9uLVJlc3VsdHM6IG14Lmdv
-b2dsZS5jb207DQogICAgICAgc3BmPXNvZnRmYWlsIChnb29nbGUuY29tOiBkb21haW4gb2Yg
-dHJhbnNpdGlvbmluZyBoYWdnYWkuZXJhbkBnbWFpbC5jb20gZG9lcyBub3QgZGVzaWduYXRl
-IDIwOS4xNy4xMTUuMTExIGFzIHBlcm1pdHRlZCBzZW5kZXIpIHNtdHAubWFpbD1oYWdnYWku
-ZXJhbkBnbWFpbC5jb207DQogICAgICAgZGtpbT1wYXNzIGhlYWRlci5pPUBnbWFpbC5jb207
-DQogICAgICAgZG1hcmM9cGFzcyAocD1OT05FIGRpcz1OT05FKSBoZWFkZXIuZnJvbT1nbWFp
-bC5jb20NClJlY2VpdmVkOiBmcm9tIG1haWwuaG9zdGluZ3BsYXRmb3JtLmNvbSAoWzEwLjMw
-LjcxLjQ2XSkNCglieSBhdGw0bWhvYjE4Lm15cmVnaXN0ZXJlZHNpdGUuY29tICg4LjE0LjQv
-OC4xNC40KSB3aXRoIEVTTVRQIGlkIHQ0SjVsTVFnMDE5Nzk1DQoJZm9yIDxsYXJyeS5maW5n
-ZXJAZ21haWwuY29tPjsgVHVlLCAxOSBNYXkgMjAxNSAwMTo0NzoyMiAtMDQwMA0KUmVjZWl2
-ZWQ6IChxbWFpbCAxNTY3IGludm9rZWQgYnkgdWlkIDc4KTsgMTkgTWF5IDIwMTUgMDU6NDc6
-MjIgLTAwMDANCkRlbGl2ZXJlZC1UbzogbHdmaW5nZXIubmV0LUxhcnJ5LkZpbmdlckBsd2Zp
-bmdlci5uZXQNClJlY2VpdmVkOiAocW1haWwgMTU2MSBpbnZva2VkIGJ5IHVpZCAwKTsgMTkg
-TWF5IDIwMTUgMDU6NDc6MjIgLTAwMDANClJlY2VpdmVkOiBmcm9tIHVua25vd24gKEhFTE8g
-YXRsNG1oaWIyMC5teXJlZ2lzdGVyZWRzaXRlLmNvbSkgKDIwOS4xNy4xMTUuMTU1KQ0KICBi
-eSAwIHdpdGggU01UUDsgMTkgTWF5IDIwMTUgMDU6NDc6MjIgLTAwMDANClJlY2VpdmVkOiBm
-cm9tIG1haWwtd2cwLWY0Ny5nb29nbGUuY29tIChtYWlsLXdnMC1mNDcuZ29vZ2xlLmNvbSBb
-NzQuMTI1LjgyLjQ3XSkNCglieSBhdGw0bWhpYjIwLm15cmVnaXN0ZXJlZHNpdGUuY29tICg4
-LjE0LjQvOC4xNC40KSB3aXRoIEVTTVRQIGlkIHQ0SjVsS2YzMDAyMjU2DQoJKHZlcnNpb249
-VExTdjEvU1NMdjMgY2lwaGVyPUFFUzEyOC1HQ00tU0hBMjU2IGJpdHM9MTI4IHZlcmlmeT1P
-SykNCglmb3IgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+OyBUdWUsIDE5IE1heSAyMDE1
-IDAxOjQ3OjIxIC0wNDAwDQpSZWNlaXZlZDogYnkgd2diZ3E2IHdpdGggU01UUCBpZCBncTZz
-bzQ1OTMzMzR3Z2IuMw0KICAgICAgICBmb3IgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+
-OyBNb24sIDE4IE1heSAyMDE1IDIyOjQ3OjE5IC0wNzAwIChQRFQpDQpES0lNLVNpZ25hdHVy
-ZTogdj0xOyBhPXJzYS1zaGEyNTY7IGM9cmVsYXhlZC9yZWxheGVkOw0KICAgICAgICBkPWdt
-YWlsLmNvbTsgcz0yMDEyMDExMzsNCiAgICAgICAgaD1mcm9tOnRvOmNjOnN1YmplY3Q6ZGF0
-ZTptZXNzYWdlLWlkOw0KICAgICAgICBiaD1vV0JzZ3ZSb0xCcHdRYVpuR1k1SWU0SlZnSEd3
-akFHZTJ1NVlIYndzcXdJPTsNCiAgICAgICAgYj1tMlZEaytkazE4L21hNloyRVZvblVjdmJj
-Q0RCTnJhSmRpaURnMWhmY0pmR0FqaDBjNEJmLytLckVUa2doWjZNQU8NCiAgICAgICAgIFdO
-RDlvQlVxbnBGQ0ZZZFNMdE9RRjJNc09YVGtuVTFVYXlCRmNEQlR5Z2M3Mm44Q3oxeFlRYUZS
-OWt3WCs1OWlnNU02DQogICAgICAgICBML1JTeTYrS2E4aHFPN0k3Qnc5aGEwb09SdDEyMW93
-Qy9RSXZMUUNONEorYWVJZlNRTWo3SWdhUllGcTZVTlkxc2c3ag0KICAgICAgICAgQWxHR3N3
-d0cwQkE2VDRrTmIzZXU5bjFWK0VObjRsYzJxcm1QUmx1Y0pYWnlLNytXYkIvVkxtVGMweXpq
-cmIwcTRDdy8NCiAgICAgICAgIDRkYkN6ZWdTVllZT3dERzFGQk1neWdmOTRmeUh4L1ZROFlu
-NkdDc1EzQnlKdEx1SnpYRHdnakJKRUFkVnFRVklISTdZDQogICAgICAgICA1TVhnPT0NClgt
-UmVjZWl2ZWQ6IGJ5IDEwLjE4MC4yMzAuMTk5IHdpdGggU01UUCBpZCB0YTdtcjE0NzQ4MzIx
-d2ljLjEuMTQzMjAxNDQzOTU5OTsNCiAgICAgICAgTW9uLCAxOCBNYXkgMjAxNSAyMjo0Nzox
-OSAtMDcwMCAoUERUKQ0KUmVjZWl2ZWQ6IGZyb20gbG9jYWxob3N0LmxvY2FsZG9tYWluIChb
-NDYuMTIxLjgyLjE5NV0pDQogICAgICAgIGJ5IG14Lmdvb2dsZS5jb20gd2l0aCBFU01UUFNB
-IGlkIDlzbTIwMDE4MDM0d2pyLjExLjIwMTUuMDUuMTguMjIuNDcuMTUNCiAgICAgICAgKHZl
-cnNpb249VExTdjEuMiBjaXBoZXI9RUNESEUtUlNBLUFFUzEyOC1TSEEgYml0cz0xMjgvMTI4
-KTsNCiAgICAgICAgTW9uLCAxOCBNYXkgMjAxNSAyMjo0NzoxOCAtMDcwMCAoUERUKQ0KRnJv
-bTogSGFnZ2FpIEVyYW4gPGhhZ2dhaS5lcmFuQGdtYWlsLmNvbT4NClRvOiBMYXJyeSBGaW5n
-ZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQpDYzogbGludXgtd2lyZWxlc3NAdmdl
-ci5rZXJuZWwub3JnLCBIYWdnYWkgRXJhbiA8aGFnZ2FpLmVyYW5AZ21haWwuY29tPg0KU3Vi
-amVjdDogW1BBVENIXSBzdGFnaW5nOiBydGw4NzEyOiBwcmV2ZW50IGJ1ZmZlciBvdmVycnVu
-IGluIHJlY3ZidWYycmVjdmZyYW1lDQpEYXRlOiBUdWUsIDE5IE1heSAyMDE1IDA4OjQ3OjI0
-ICswMzAwDQpNZXNzYWdlLUlkOiA8MTQzMjAxNDQ0NC0yOTAzOS0xLWdpdC1zZW5kLWVtYWls
-LWhhZ2dhaS5lcmFuQGdtYWlsLmNvbT4NClgtTWFpbGVyOiBnaXQtc2VuZC1lbWFpbCAxLjku
-MQ0KWC1TcGFtU2NvcmU6IC0wLjENClgtTWFpbEh1Yi1BcHBhcmVudGx5LVRvOiBMYXJyeS5G
-aW5nZXJAbHdmaW5nZXIubmV0DQoNCldpdGggYW4gUlRMODE5MVNVIFVTQiBhZGFwdG9yLCBz
-b21ldGltZXMgdGhlIGhpbnRzIGZvciBhIGZyYWdtZW50ZWQNCnBhY2tldCBhcmUgc2V0LCBi
-dXQgdGhlIHBhY2tldCBsZW5ndGggaXMgdG9vIGxhcmdlLiBUcnVuY2F0ZSB0aGUgcGFja2V0
-DQp0byBwcmV2ZW50IG1lbW9yeSBjb3JydXB0aW9uLg0KDQpTaWduZWQtb2ZmLWJ5OiBIYWdn
-YWkgRXJhbiA8aGFnZ2FpLmVyYW5AZ21haWwuY29tPg0KLS0tDQoNCkhpLA0KDQpJIHRoaW5r
-IHRoaXMgc29sdmVzIHRoZSBpc3N1ZSBmb3IgbWUuIEknbGwgdGVzdCBpdCBtb3JlIHRob3Jv
-dWdobHkgbGF0ZXIuIEkNCnN0aWxsIGRvbid0IGtub3cgd2h5IGEgZnJhZ21lbnRlZCBwYWNr
-ZXQgaGFzIHN1Y2ggYSBsYXJnZSBwa3RfbGVuIHZhbHVlIHRob3VnaC4gDQoNClRoYW5rcywN
-CkhhZ2dhaQ0KDQogZHJpdmVycy9zdGFnaW5nL3J0bDg3MTIvcnRsODcxMl9yZWN2LmMgfCA2
-ICsrKysrLQ0KIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
-LSkNCg0KSW5kZXg6IHdpcmVsZXNzLWRyaXZlcnMtbmV4dC9kcml2ZXJzL3N0YWdpbmcvcnRs
-ODcxMi9ydGw4NzEyX3JlY3YuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSB3aXJlbGVzcy1kcml2ZXJz
-LW5leHQub3JpZy9kcml2ZXJzL3N0YWdpbmcvcnRsODcxMi9ydGw4NzEyX3JlY3YuYworKysg
-d2lyZWxlc3MtZHJpdmVycy1uZXh0L2RyaXZlcnMvc3RhZ2luZy9ydGw4NzEyL3J0bDg3MTJf
-cmVjdi5jCkBAIC0xMDUzLDEyICsxMDUzLDcgQEAgc3RhdGljIGludCByZWN2YnVmMnJlY3Zm
-cmFtZShzdHJ1Y3QgX2FkYQogCQlwcmVjdmZyYW1lLT51Lmhkci5sZW4gPSAwOwogCQl0bXBf
-bGVuID0gcGt0X2xlbiArIGRydmluZm9fc3ogKyBSWERFU0NfU0laRTsKIAkJcGt0X29mZnNl
-dCA9ICh1MTYpcm91bmRfdXAodG1wX2xlbiwgMTI4KTsKLQkJLyogZm9yIGZpcnN0IGZyYWdt
-ZW50IHBhY2tldCwgZHJpdmVyIG5lZWQgYWxsb2NhdGUgMTUzNiArCi0JCSAqIGRydmluZm9f
-c3ogKyBSWERFU0NfU0laRSB0byBkZWZyYWcgcGFja2V0LiAqLwotCQlpZiAoKG1mID09IDEp
-ICYmIChmcmFnID09IDApKQotCQkJYWxsb2Nfc3ogPSAxNjU4Oy8qMTY1OCs2PTE2NjQsIDE2
-NjQgaXMgMTI4IGFsaWdubWVudC4qLwotCQllbHNlCi0JCQlhbGxvY19zeiA9IHRtcF9sZW47
-CisJCWFsbG9jX3N6ID0gdG1wX2xlbjsKIAkJLyogMiBpcyBmb3IgSVAgaGVhZGVyIDQgYnl0
-ZXMgYWxpZ25tZW50IGluIFFvUyBwYWNrZXQgY2FzZS4KIAkJICogNCBpcyBmb3Igc2tiLT5k
-YXRhIDQgYnl0ZXMgYWxpZ25tZW50LiAqLwogCQlhbGxvY19zeiArPSA2Owo=
---------------060504010608090804040404--
+Haggai
