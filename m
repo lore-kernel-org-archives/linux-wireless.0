@@ -1,109 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:33214 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752357AbbEUIQ6 convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:36823 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711AbbEQSXf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 04:16:58 -0400
-Received: by wgjc11 with SMTP id c11so77411389wgj.0
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2015 01:16:56 -0700 (PDT)
+	Sun, 17 May 2015 14:23:35 -0400
+Received: by lagv1 with SMTP id v1so189412046lag.3
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 11:23:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1432127653.19214.12.camel@sipsolutions.net>
-References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
-	<1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
-	<1431508609-9841-2-git-send-email-michal.kazior@tieto.com>
-	<1432127653.19214.12.camel@sipsolutions.net>
-Date: Thu, 21 May 2015 10:16:56 +0200
-Message-ID: <CA+BoTQkpjDodKNdSvj2ZdKemXU_2E39MVGZPob8+jkjBGESEfg@mail.gmail.com> (sfid-20150521_101705_105916_99CC23CF)
-Subject: Re: [PATCH v2 2/2] mac80211: prevent possible crypto tx tailroom corruption
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20150517160513.GA13175@w1.fi>
+References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
+	<1431674716.2426.2.camel@sipsolutions.net>
+	<CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>
+	<1431714949.2117.0.camel@sipsolutions.net>
+	<CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com>
+	<1431806229.2120.6.camel@sipsolutions.net>
+	<20150517160513.GA13175@w1.fi>
+Date: Sun, 17 May 2015 21:23:33 +0300
+Message-ID: <CANUX_P0byd4Q+1gjiBmoGqd_hESUH_YVCD6iPx0_d6aw_r3JSw@mail.gmail.com> (sfid-20150517_202600_797977_F07D3194)
+Subject: Re: mac80211 drops packet with old IV after rekeying
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 May 2015 at 15:14, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-05-13 at 09:16 +0000, Michal Kazior wrote:
->> There was a possible race between
->> ieee80211_reconfig() and
->> ieee80211_delayed_tailroom_dec(). This could
->> result in inability to transmit data if driver
->> crashed during roaming or rekeying and subsequent
->> skbs with insufficient tailroom appeared.
+On Sun, May 17, 2015 at 7:05 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Sat, May 16, 2015 at 09:57:09PM +0200, Johannes Berg wrote:
+>> The key index is used for GTK rekeying. The spec makes no provision for
+>> seamless PTK rekeying, it's simply not supported.
 >>
->> This race was probably never seen in the wild
->> because a device driver would have to crash AND
->> recover within 0.5s which is very unlikely.
->>
->> I was able to prove this race exists after
->> changing the delay to 10s locally and crashing
->> ath10k via debugfs immediately after GTK
->> rekeying. In case of ath10k the counter went below
->> 0. This was harmless but other drivers which
->> actually require tailroom (e.g. for WEP ICV or
->> MMIC) could end up with the counter at 0 instead
->> of >0 and introduce insufficient skb tailroom
->> failures because mac80211 would not resize skbs
->> appropriately anymore.
->>
->> Fixes: 8d1f7ecd2af5 ("mac80211: defer tailroom counter manipulation when roaming")
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> ---
->>
->> Notes:
->>     While doing PATCH v2 [1/2] I've noticed a subtle bug in the
->>     delayed tailroom counter logic. Since this touches the
->>     codepaths [1/2] does I'm posting this as a pair.
->>
->>  net/mac80211/key.c  | 5 ++++-
->>  net/mac80211/main.c | 3 +++
->>  2 files changed, 7 insertions(+), 1 deletion(-)
->>
->> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
->> index 577a11a13cdf..4c6f8c97d11a 100644
->> --- a/net/mac80211/key.c
->> +++ b/net/mac80211/key.c
->> @@ -695,10 +695,13 @@ void ieee80211_reset_crypto_tx_tailroom(struct ieee80211_sub_if_data *sdata)
->>       mutex_lock(&sdata->local->key_mtx);
->>
->>       sdata->crypto_tx_tailroom_needed_cnt = 0;
->> +     sdata->crypto_tx_tailroom_pending_dec = 0;
->>
->>       if (sdata->vif.type == NL80211_IFTYPE_AP) {
->> -             list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
->> +             list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
->>                       vlan->crypto_tx_tailroom_needed_cnt = 0;
->> +                     vlan->crypto_tx_tailroom_pending_dec = 0;
->> +             }
->>       }
->>
->>       mutex_unlock(&sdata->local->key_mtx);
->> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
->> index 3c956c5f99b2..d8e1cbdcbc43 100644
->> --- a/net/mac80211/main.c
->> +++ b/net/mac80211/main.c
->> @@ -246,6 +246,7 @@ static void ieee80211_restart_work(struct work_struct *work)
->>  {
->>       struct ieee80211_local *local =
->>               container_of(work, struct ieee80211_local, restart_work);
->> +     struct ieee80211_sub_if_data *sdata;
->>
->>       /* wait for scan work complete */
->>       flush_workqueue(local->workqueue);
->> @@ -254,6 +255,8 @@ static void ieee80211_restart_work(struct work_struct *work)
->>            "%s called with hardware scan in progress\n", __func__);
->>
->>       rtnl_lock();
->> +     list_for_each_entry(sdata, &local->interfaces, list)
->> +             cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
+>> There was/is work in progress to actually change that, but I haven't
+>> seen anything definitive. Jouni might know more.
 >
-> Would it make sense to just flush the work here? That way we don't have
-> to do all the other things.
+> It was added in IEEE Std 802.11-2012. Search for Extended Key ID for
+> Individually Addressed Frames subfield of the RSN Capabilities field (a
+> field within RSN element).
+>
+> I'm not sure whether anyone has implemented this, but anyway, we could
+> relatively easily add support for this with mac80211 + hostapd +
+> wpa_supplicant combination. Though, probably that would end up depending
+> on a new driver capability flag, so only with some drivers.
+>
+>> As I said, I believe at this point the only way to fix this bug is to
+>> try to drop *old* key packets immediately, but it's difficult to ensure
+>> this. Effectively, it would require synchronising RX vs. key
+>> installation.
+>
+> I did not look at the details of the reported issue. Was this an issue
+> in a received frame with old key being processed by mac80211 after key
+> change and while doing that, ending up configuring incorrect (way too
+> large) RX PN for the new key?
 
-Hmm.. dec_tailroom_needed_wk is queued on system workqueue now so
-there's no feasible way of flushing it (restart_work is on a system
-workqueue as well). It'd need to be moved to local->workqueue. I guess
-that would work too.
+Yes this is what Johannes is saying (I think). The user seems to say
+that he sees a frame encrypted with the new key and that has an old IV
+which is odd. Note that I started this thread by the big disclaimer of
+"I don't know much about security and key handling". So I might talk
+nonsense.
 
+One thing that I still haven't understood here is how can we get to a
+situation in which we already parsed the EAPOL of the GTK re-keying,
+but not a data frame that must have been sent before the EAPOL?
+The Rx path is serialized after all. I'd expect maybe to loose frames
+because we are still using the old key while the new key has been sent
+and not to get to the situation where:
 
-Michał
+data: old Key PN = 997
+data: old Key PN = 998
+data: old Key PN = 999
+set new key PN = 0
+data: old Key PN = 1000
+(new key's PN gets set to 1000 ** BUG **)
+data: new Key PN = 1 <DROPPED>
+
+>
+> Dropping the frames with the old key would be one option, but not really
+> ideal. A somewhat nicer option would be to add a concept of generation
+> to the key (i.e., the 1st, 2nd, ... key using key index N) and with the
+> help of drivers (that can do this), indicate which generation of the key
+> was used for RX decryption. This would allow proper replay protection
+> for both keys if we were to store copies of the RX counters for both the
+> previous and current key in mac80211.
+>
+Ah ok - but if the driver were ever to try to decrypt with the wrong
+key, it'd get garbage and would drop the frame anyway, which would not
+update the PN anyway. I know I am wrong, I just don't know where :)
