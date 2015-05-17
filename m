@@ -1,73 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36732 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755805AbbEFAxP (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:35019 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159AbbEQRhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 20:53:15 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org
-Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	John Griffin <john.griffin@intel.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>
-Subject: [PATCH v1 03/12] crypto: qat - address recursive dependency when fw signing is enabled
-Date: Tue,  5 May 2015 17:44:21 -0700
-Message-Id: <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_025348_940103_D577363E)
-In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 17 May 2015 13:37:48 -0400
+Received: by wicmx19 with SMTP id mx19so52027992wic.0
+        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 10:37:46 -0700 (PDT)
+Message-ID: <5558D1EA.8040905@gmail.com> (sfid-20150517_193751_734141_4FB50A79)
+Date: Sun, 17 May 2015 19:37:46 +0200
+From: Arend van Spriel <aspriel@gmail.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Schmirr Wurst <schmirrwurst@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Fwd: Fwd: lspci not working
+References: <CA+0W_As0c=eAijuvWfSBLMY4vj2P1-zoMsjz1mmNm0_vfepPCA@mail.gmail.com>	<5557556C.2080107@lwfinger.net>	<CACna6rwCapwThrMGt2HV_YyPQtZ+xRPJdBcapRqs2mkvGPdmSQ@mail.gmail.com>	<5557B396.9080300@gmail.com>	<CA+0W_At43pB=FeBR4jJzKxO3ruaATAidU8rimBOE3bLM1wKGsA@mail.gmail.com>	<CA+0W_AuXCgFoH2fm0kr5V9nkcNB9bCp8M4KF=J2=c5QCBrbL8A@mail.gmail.com>	<CA+0W_Asj3f10VJ=NVu_WGRO3iLyLZY3AhHnD3pkb7-r45j-yYA@mail.gmail.com>	<CA+0W_At6_zecdghFj1MS8XxiqvrELTd=TTPVZ84hEM=gqL-brw@mail.gmail.com>	<555894E7.3080600@hauke-m.de>	<CA+0W_AsY3sz9+t=guZYi9v-_X1-MMc5=11FPm=4QKkMxNd=uFQ@mail.gmail.com>	<CA+0W_Au9-xCi4mb1+1UTqQJ+ymHTqzbiORO6yiZD6CBAjZN1yQ@mail.gmail.com>	<5558A6F1.6010303@gmail.com>	<CA+0W_Au6N1cSELTBOQG2yPkiT5Pe9-sg3s_5YtNc9zFZ6T13sw@mail.gmail.com> <CA+0W_AsDSA_Pg2f2HtgLkm2Nnn8C-FdxbrXe2F9p-d+y4ACbvg@mail.gmail.com> <5558C6B2.7060105@gmail.com> <5558C82D.5020404@hauke-m.de>
+In-Reply-To: <5558C82D.5020404@hauke-m.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On 17-05-15 18:56, Hauke Mehrtens wrote:
+> On 05/17/2015 06:49 PM, Arend van Spriel wrote:
+>>
+>>
+>> On 17-05-15 16:48, Schmirr Wurst wrote:
+>>> ---------- Forwarded message ----------
+>>> From: Schmirr Wurst <schmirrwurst@gmail.com>
+>>> Date: 2015-05-17 16:47 GMT+02:00
+>>> Subject: Re: Fwd: lspci not working
+>>> To: Arend van Spriel <aspriel@gmail.com>
+>>>
+>>>
+>>> 2015-05-17 16:34 GMT+02:00 Arend van Spriel <aspriel@gmail.com>:
+>>>> On 17-05-15 16:08, Schmirr Wurst wrote:
+>>>>>
+>>>>> ---------- Forwarded message ----------
+>>>>> From: Schmirr Wurst <schmirrwurst@gmail.com>
+>>>>> Date: 2015-05-17 16:07 GMT+02:00
+>>>>> Subject: Re: lspci not working
+>>>>> To: Hauke Mehrtens <hauke@hauke-m.de>
+>>>>>
+>>>>>
+>>>>> 2015-05-17 15:17 GMT+02:00 Hauke Mehrtens <hauke@hauke-m.de>:
+>>>>>>
+>>>>>> On 05/17/2015 03:00 PM, Schmirr Wurst wrote:
+>>>>>>>
+>>>>>>> 2015-05-17 14:57 GMT+02:00 Schmirr Wurst <schmirrwurst@gmail.com>:
+>>>>>>>>
+>>>>>>>> I'm not familiar with inline answers and mailing list, tried to put
+>>>>>>>> some order in my answer + log file
+>>>>>>>>
+>>>>>>>> 2015-05-17 13:18 GMT+02:00 Rafał Miłecki <zajec5@gmail.com>:
+>>>>>>>>>
+>>>>>>>>> On 17 May 2015 at 12:23, Arend van Spriel <arend@broadcom.com>
+>>>>>>>>> wrote:
+>>>>>>>>>>
+>>>>>>>>>> On 05/17/15 02:21, Schmirr Wurst wrote:
+>>>>>>>>>>>
+>>>>>>>>>>> I tried as suggested to had a look at
+>>>>>>>>>>> /sys/bus/sdio/devices, but the only devices around there a 3
+>>>>>>>>>>> mmc1:0001:1 to :3, I guess it is something else...
+>>>>>>>>>>>
+>>>>>>>>>>> I already try to install brcmfmac_sdio , with some tutorial
+>>>>>>>>>>> from the
+>>>>>>>>>>> internet, but it didn't work...
+>>>>>>>>>>> actually, I see under /sys/bus/sdio/drivers brcmfmac_sdio ...
+>>>>>>>>>>>
+>>>>>>>>>>> In that directory, I see a directory mmc1:0001:2
+>>>>>>>>>>> under device I have 0xa94d
+>>>>>>>>>>>
+>>>>>>>>>>> I completly lost, maybe you understand that information, sorry..
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> I do. The fact that you see a subdirectory mmc1:0001:2 in
+>>>>>>>>>> /sys/bus/sdio/drivers/brcmfmac_sdio means that the driver was
+>>>>>>>>>> probed
+>>>>>>>>>> for
+>>>>>>>>>> this device. Now would be a good time to share your (friends')
+>>>>>>>>>> kernel
+>>>>>>>>>> log,
+>>>>>>>>>> but my guess is you are either missing firmware or nvram data
+>>>>>>>>>> or both
+>>>>>>>>>> for
+>>>>>>>>>> this device.
+>>>>>>>>
+>>>>>>>> I ve attatched the kernel.log here
+>>>>>>>> https://drive.google.com/file/d/0B8gm4mLCCQAgMmNlVVFSYmNjOGs/view?usp=sharing
+>>>>>>>>
+>>>>>>>> In dmsg I see following linked with the brc driver :
+>>>>>>>> dmesg | grep brc
+>>>>>>>> [    7.987661] brcmf_sdio_drivestrengthinit: No SDIO Drive strength
+>>>>>>>> init done for chip 43340 rev 2 pmurev 20
+>>>>>>>> [    7.993487] usbcore: registered new interface driver brcmfmac
+>>>>>>>> [    7.996318] brcmfmac_sdio mmc1:0001:1: Direct firmware load for
+>>>>>>>> brcm/brcmfmac43340-sdio.bin failed with error -2
+>>>>>>>> [    9.011572] brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl
+>>>>>>>> 0x50
+>>>>>>>> [   10.037365] brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl
+>>>>>>>> 0x50
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> It could also mean driver was loaded manually. So please also make
+>>>>>>>>> sure the friend uses kernel 4.0 or newer.
+>>>>>>>>
+>>>>>>>> Kernel : 4.0.0 #3 SMP PREEMPT Wed Apr 22 17:52:53 MSK 2015
+>>>>>>>> Distro:
+>>>>>>>> Distributor ID:    T100 Ubuntu 15.04
+>>>>>>>> Description:    Ubuntu 15.04
+>>>>>>>> Release:    15.04
+>>>>>>>> Codename:    vivid
+>>>>>>>> I ve installed it from the magic stick here
+>>>>>>>> https://plus.google.com/communities/117853703024346186936
+>>>>>>
+>>>>>>
+>>>>>> The driver complains about missing firmware and Ubuntu 15.04 does not
+>>>>>> contain it.
+>>>>>>
+>>>>>> Please place this file
+>>>>>>
+>>>>>> https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/plain/brcm/brcmfmac43340-sdio.bin
+>>>>>>
+>>>>>>
+>>>>>> to /lib/firmware/brcm/brcmfmac43340-sdio.bin
+>>>>>>
+>>>>>> Hauke
+>>>>>
+>>>>>     Before that, the system was complaining about
+>>>>> brcm/brcmfmac43340-sdio.bin, and now about brcm/brcmfmac43340-sdio.txt
+>>>>> but errors are similar...
+>>>>
+>>>>
+>>>> I guess your system in jinxed because of the hostname you setup :-p
+>>>>
+>>>> Ok, more seriously now. This is the nvram data I mentioned earlier. This
+>>>> system may have that info stored in efi variable. You should be able
+>>>> to find
+>>>> it in /sys/firmware/efi/efivars/nvram-*.
+>>>>
+>>>> It may be necessary to run the following commands:
+>>>>
+>>>> # modprobe efivarfs
+>>>> # mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+>>>>
+>>>> Regards,
+>>>> Arend
+>>>>
+>>> I cant be kind with manufacturer like broadcom and nvidia and those
+>>> that are builting in such hardware ;)
+>>
+>> You are talking to a broadcom employee (in disguise ;-) ).
+>>
+>>> cat /sys/firmware/efi/efivars/nvram-74b00bd9-805a-4d61-b51f-43268123d113
+>>> What am I supposed to do with this ?
+>>
+>> You are kidding? I'll chew it for you:
+>>
+>> $ cp /sys/firmware/efi/efivars/nvram-74b00bd9*
+>> /lib/firmware/brcm/brcmfmac43340-sdio.txt
+>
+> Why can't the driver directly access this efi var? I haven't checked if
+> this is already done somewhere, but letting a user do this manually does
+> not seam nice.
 
-We're going to add firmware module signing support, but when we do
-this we end up with the following recursive dependency. Fix this by
-just depending on FW_LOADER, which is typically always enabled
-anyway.
+Hi Hauke,
 
-mcgrof@ergon ~/linux-next (git::master)$ make allnoconfig
-scripts/kconfig/conf  --allnoconfig Kconfig
-crypto/Kconfig:15:error: recursive dependency detected!
-crypto/Kconfig:15:      symbol CRYPTO is selected by SYSDATA_SIG
-init/Kconfig:1880:      symbol SYSDATA_SIG is selected by FIRMWARE_SIG
-drivers/base/Kconfig:88:        symbol FIRMWARE_SIG depends on FW_LOADER
-drivers/base/Kconfig:80:        symbol FW_LOADER is selected by CRYPTO_DEV_QAT
-drivers/crypto/qat/Kconfig:1:   symbol CRYPTO_DEV_QAT is selected by CRYPTO_DEV_QAT_DH895xCC
-drivers/crypto/qat/Kconfig:13:  symbol CRYPTO_DEV_QAT_DH895xCC depends on CRYPTO
+Well, we have been relying on firmware files and nvram being available 
+under /lib/firmware. Not that we can not change that, but the manual 
+copy is is a one time thing and only applicable for systems that ran 
+Win8.1. I suppose there would be a way to get the efivar directly or 
+have request_firmware api do it if it is considered firmware. Given that 
+it is placed under /sys/firmware seems to imply that.
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Cc: Bruce Allan <bruce.w.allan@intel.com>
-Cc: Tadeusz Struk <tadeusz.struk@intel.com>
-Cc: John Griffin <john.griffin@intel.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- drivers/crypto/qat/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Regards,
+Arend
 
-diff --git a/drivers/crypto/qat/Kconfig b/drivers/crypto/qat/Kconfig
-index 49bede2..9bea338 100644
---- a/drivers/crypto/qat/Kconfig
-+++ b/drivers/crypto/qat/Kconfig
-@@ -8,7 +8,7 @@ config CRYPTO_DEV_QAT
- 	select CRYPTO_SHA1
- 	select CRYPTO_SHA256
- 	select CRYPTO_SHA512
--	select FW_LOADER
-+	depends on FW_LOADER
- 
- config CRYPTO_DEV_QAT_DH895xCC
- 	tristate "Support for Intel(R) DH895xCC"
--- 
-2.3.2.209.gd67f9d5.dirty
-
+>>
+>> Regards,
+>> Arend
+>>
+>
