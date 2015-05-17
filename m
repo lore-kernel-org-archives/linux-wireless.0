@@ -1,199 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49819 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754106AbbE1M76 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 08:59:58 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCwn2x014693
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:57 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqdu-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:56 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 07/17] mwifiex: add cfg80211 get_channel handler
-Date: Thu, 28 May 2015 23:58:57 +0530
-Message-ID: <1432837747-2075-8-git-send-email-patila@marvell.com> (sfid-20150528_150004_014901_0B0CCF8F)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:49183 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125AbbEQUWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 May 2015 16:22:24 -0400
+Message-ID: <1431894140.2129.20.camel@sipsolutions.net> (sfid-20150517_222229_452527_494DD3B1)
+Subject: Re: mac80211 drops packet with old IV after rekeying
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: alexander.wetzel@web.de, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 17 May 2015 22:22:20 +0200
+In-Reply-To: <CANUX_P0cJc4Ww5AY7sNFL5z4EPit+ngHvX=4eFXF96K-E8p3MA@mail.gmail.com> (sfid-20150517_221304_420222_D8022C07)
+References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
+	 <1431674716.2426.2.camel@sipsolutions.net>
+	 <CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>
+	 <1431714949.2117.0.camel@sipsolutions.net>
+	 <CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com>
+	 <1431806229.2120.6.camel@sipsolutions.net> <20150517160513.GA13175@w1.fi>
+	 <CANUX_P0byd4Q+1gjiBmoGqd_hESUH_YVCD6iPx0_d6aw_r3JSw@mail.gmail.com>
+	 <1431890756.2129.13.camel@sipsolutions.net>
+	 <CANUX_P3ODruGc2rvV2gLNLU15kEmaJMXeU_ovtaBeOQGnYotoA@mail.gmail.com>
+	 <1431893157.2129.18.camel@sipsolutions.net>
+	 <CANUX_P0cJc4Ww5AY7sNFL5z4EPit+ngHvX=4eFXF96K-E8p3MA@mail.gmail.com>
+	 (sfid-20150517_221304_420222_D8022C07)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Sun, 2015-05-17 at 23:13 +0300, Emmanuel Grumbach wrote:
 
-This patch add cfg80211 get_channel handler for mwifiex.
-The handler will be used to report current channel to upper
-layer utility.
+> >> Yeah - ok. But how come we *already* set the pointer to the new key
+> >> while the HW is still successfully decrypting with the old key. This
+> >> is the point I can' figure out. I'd expect the transmitting side to
+> >> stop using the old key prior to sending the EAPOL (which #triggers the
+> >> set key pointer line). So those 2 lines don't make sense to me:
+> >>
+> >> >  # set key pointer to new key
+> >> >  * data RX in HW, decrypt w/ old key, PN=999
+> >>
+> >> After all, the Rx path is serialized all the way through from the air
+> >> to mac80211. The only thing I can think about is that the sending side
+> >> is still using the old key *after* it already sent its EAPOL frames.
+> >
+> > Not sure, isn't the key only installed on EAPOL acknowledgement or so?
+> > With PTK rekeying, I'm not really sure what the timing is, and there's
+> > not really any way it can be correct (without extended key ID support.)
+> 
+> Whatever the timing is, since the Rx path is serialized, there
+> shouldn't be any timing issues. Or at least, I can't figure out how
+> these lines above could be in the order you put them.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11h.c      |  2 +-
- drivers/net/wireless/mwifiex/cfg80211.c | 58 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/mwifiex/main.h     |  5 ++-
- drivers/net/wireless/mwifiex/uap_cmd.c  |  5 ++-
- 4 files changed, 66 insertions(+), 4 deletions(-)
+I agree that it'll depend on how the key is installed on the sender,
+however, I have no idea how that's done and how much potential delay
+there is between sending the EAPOL frame and installing the key there.
+If you're looking at RX path synchronisation only then you're assuming a
+perfect sender, but that clearly cannot be the case.
 
-diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
-index bb2ffd9..71a1b58 100644
---- a/drivers/net/wireless/mwifiex/11h.c
-+++ b/drivers/net/wireless/mwifiex/11h.c
-@@ -305,7 +305,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
- 		return;
- 	}
- 
--	mwifiex_uap_set_channel(bss_cfg, priv->dfs_chandef);
-+	mwifiex_uap_set_channel(priv, bss_cfg, priv->dfs_chandef);
- 
- 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index fb93e13..ddeb919 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -67,6 +67,22 @@ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type)
- 	}
- }
- 
-+/* This function maps IEEE HT secondary channel type to NL80211 channel type
-+ */
-+u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset)
-+{
-+	switch (second_chan_offset) {
-+	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
-+		return NL80211_CHAN_HT20;
-+	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+		return NL80211_CHAN_HT40PLUS;
-+	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+		return NL80211_CHAN_HT40MINUS;
-+	default:
-+		return NL80211_CHAN_HT20;
-+	}
-+}
-+
- /*
-  * This function checks whether WEP is set.
-  */
-@@ -1785,7 +1801,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
--	mwifiex_uap_set_channel(bss_cfg, params->chandef);
-+	mwifiex_uap_set_channel(priv, bss_cfg, params->chandef);
- 	mwifiex_set_uap_rates(bss_cfg, params);
- 
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
-@@ -3373,6 +3389,45 @@ mwifiex_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
-+					struct wireless_dev *wdev,
-+					struct cfg80211_chan_def *chandef)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
-+	struct mwifiex_bssdescriptor *curr_bss;
-+	struct ieee80211_channel *chan;
-+	u8 second_chan_offset;
-+	enum nl80211_channel_type chan_type;
-+	enum ieee80211_band band;
-+	int freq;
-+	int ret = -ENODATA;
-+
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP &&
-+	    cfg80211_chandef_valid(&priv->bss_chandef)) {
-+		*chandef = priv->bss_chandef;
-+		ret = 0;
-+	} else if (priv->media_connected) {
-+		curr_bss = &priv->curr_bss_params.bss_descriptor;
-+		band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
-+		freq = ieee80211_channel_to_frequency(curr_bss->channel, band);
-+		chan = ieee80211_get_channel(wiphy, freq);
-+
-+		if (curr_bss->bcn_ht_oper) {
-+			second_chan_offset = curr_bss->bcn_ht_oper->ht_param &
-+					IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
-+			chan_type = mwifiex_sec_chan_offset_to_chan_type
-+							(second_chan_offset);
-+			cfg80211_chandef_create(chandef, chan, chan_type);
-+		} else {
-+			cfg80211_chandef_create(chandef, chan,
-+						NL80211_CHAN_NO_HT);
-+		}
-+		ret = 0;
-+	}
-+
-+	return ret;
-+}
-+
- static int
- mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
- 				       struct net_device *dev,
-@@ -3478,6 +3533,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.tdls_oper = mwifiex_cfg80211_tdls_oper,
- 	.add_station = mwifiex_cfg80211_add_station,
- 	.change_station = mwifiex_cfg80211_change_station,
-+	.get_channel = mwifiex_cfg80211_get_channel,
- 	.start_radar_detection = mwifiex_cfg80211_start_radar_detection,
- 	.channel_switch = mwifiex_cfg80211_channel_switch,
- };
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 3ac18c6..88d3779 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -642,6 +642,7 @@ struct mwifiex_private {
- 	u8 del_list_idx;
- 	bool hs2_enabled;
- 	struct mwifiex_uap_bss_param bss_cfg;
-+	struct cfg80211_chan_def bss_chandef;
- 	struct station_parameters *sta_params;
- 	struct sk_buff_head tdls_txq;
- 	u8 check_tdls_tx;
-@@ -1382,6 +1383,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- 					struct mwifiex_bssdescriptor *bss_desc);
- 
- u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type);
-+u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset);
- 
- struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 					      const char *name,
-@@ -1399,7 +1401,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 			 struct cfg80211_beacon_data *data);
- int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
- u8 *mwifiex_11d_code_2_region(u8 code);
--void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+void mwifiex_uap_set_channel(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg,
- 			     struct cfg80211_chan_def chandef);
- int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 			     struct mwifiex_uap_bss_param *bss_cfg);
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 56a4768..68fbdf6 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -776,11 +776,14 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 	return 0;
- }
- 
--void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+void mwifiex_uap_set_channel(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg,
- 			     struct cfg80211_chan_def chandef)
- {
- 	u8 config_bands = 0;
- 
-+	priv->bss_chandef = chandef;
-+
- 	bss_cfg->channel = ieee80211_frequency_to_channel(
- 						     chandef.chan->center_freq);
- 
--- 
-1.8.1.4
+> > Actually, yes, this *could* happen, in exactly the same way as on the
+> > receiver, with hardware crypto that does PN generation in software. Not
+> > on iwlwifi, because we copy the key material into the TX command, but on
+> > any hardware that uses hw_key_idx to identify the key, and could replace
+> > the key:
+> >
+> >  * mac80211: encrypt TX frame - assign PN, ((tx_info
+> > *)skb->cb)->hw_key_idx = 7
+> >  * mac80211: replace key with new key
+> >    * driver: remove old key from hw accel (hw_key_idx 7)
+> >    * driver: insert new key to hw accel (reusing hw_key_idx 7)
+> >
+> 
+> This seems to be exactly what the submitter is mentioning: new key old PN.
+> I don't really know how we can determine what key was used though.
+> Maybe by just trying to decrypt in wireshark with the new key and
+> check.
+
+Then it'd actually be more of a sender problem, not sure how to solve it
+there.
+
+johannes
 
