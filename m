@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37757 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbbETNx4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 09:53:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Vincent Fann <vincent_fann@realtek.com>,
-	Shao Fu <shaofu@realtek.com>, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH 4.1] rtlwifi: Remove the clear interrupt routine from all drivers
-References: <1431743367-10059-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Wed, 20 May 2015 16:53:51 +0300
-In-Reply-To: <1431743367-10059-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Fri, 15 May 2015 21:29:27 -0500")
-Message-ID: <877fs39wy8.fsf@kamboji.qca.qualcomm.com> (sfid-20150520_155400_827418_A764CA92)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:51839 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753648AbbERJYU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2015 05:24:20 -0400
+Message-ID: <1431941058.2719.1.camel@sipsolutions.net> (sfid-20150518_112435_669850_9D57925D)
+Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused
+ by race between suspend and Tx packet.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 18 May 2015 11:24:18 +0200
+In-Reply-To: <CABPxzYJ-3ctYOdek4RGkt95EKU7Z7qO5qB=8Pb=v+1QN0MCy5A@mail.gmail.com> (sfid-20150518_112020_971507_8CA1F646)
+References: <chaitanya.mgit@gmail.com>
+	 <1431939609-7261-1-git-send-email-chaitanya.mgit@gmail.com>
+	 <1431939927.2719.0.camel@sipsolutions.net>
+	 <CABPxzYJ-3ctYOdek4RGkt95EKU7Z7qO5qB=8Pb=v+1QN0MCy5A@mail.gmail.com>
+	 (sfid-20150518_112020_971507_8CA1F646)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Mon, 2015-05-18 at 14:49 +0530, Krishna Chaitanya wrote:
 
-> From: Vincent Fann <vincent_fann@realtek.com>
->
-> Several of these drivers have there TX randomly blocked for 3~5 seconds while
-> measuring tx throughput (iperf). The root couse happens in rtl_pci_flush().
-> The function uses a while-loop to wait for TX queue length to decrease to 0.
-> The TX queue length counts the number of packets that are queued in the driver.
-> The driver relys on the TX OK interrupt to return skb and reduce TX queue length.
->
-> The interrupt subroutine disables interupts, reads the interrupt registers, and
-> then clears the registers in the beginning of _rtl_pci_interrupt(). After all
-> interupts process are finished, the driver invokes enable_interrupt() to enable
-> interupts. This behavior is normal for an interrupt subroutine.
->
-> But enable_interrupt() invokes clear_interrupt() again. This unexpected interrupt
-> clearing may cleari me fresh TX OK interrupts. These missing interrupts cause TX
-> queue length to never reduce to 0i, which causes rtl_pci_flush() to be stuck in
-> unterminated while-loop.
->
-> This patch removes clear_interrupt() in enable_interrupt() to avoid this behavior.
->
-> Signed-off-by: Vincent Fann <vincent_fann@realtek.com>
-> Signed-off-by: Shao Fu <shaofu@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [3.18+]
-> ---
->
-> Kalle,
->
-> This patch is a little large for the current kernel and stable; however, it only
-> deletes code that is clearly wrong. I hope it will be OK.
+> My sendmail shows status as bounced so i was trying with different
+> options. I did not realize that it has already made it to the list.
 
-This isn't a recent regression nor a crasher (or similar) so I can't
-really justify to send this to 4.1 this late. The way I see it this
-could easily wait for 4.2, right?
+It looks like it didn't actually make it to the list *today*, but I
+believe there were versions that did. I got 4 of them today though ...
 
--- 
-Kalle Valo
+You can always check
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+johannes
+
