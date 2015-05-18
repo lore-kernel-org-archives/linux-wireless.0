@@ -1,109 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57535 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbbE0S4K (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:32799 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515AbbERRiW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 14:56:10 -0400
-Message-ID: <55661349.50605@candelatech.com> (sfid-20150527_205626_234945_72A41CF9)
-Date: Wed, 27 May 2015 11:56:09 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 18 May 2015 13:38:22 -0400
+Received: by lagr1 with SMTP id r1so149004412lag.0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 10:38:21 -0700 (PDT)
 MIME-Version: 1.0
-To: ferran <ranker72@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: modify mac address with multiple interfaces on a device
-References: <loom.20150527T185540-223@post.gmane.org>
-In-Reply-To: <loom.20150527T185540-223@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <555A05DC.8080704@lwfinger.net>
+References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>
+	<55575AC8.2060301@lwfinger.net>
+	<CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>
+	<5557844B.4040108@lwfinger.net>
+	<CAJ=9CzamCxkwVtTtUzU9zatocUPz0W+3f0Kgm6N0tDMWbcP_LA@mail.gmail.com>
+	<55586D8D.7040407@gmail.com>
+	<CAJ=9CzbxScr7SJjhxnxAWt+xS-A8VR-_PQs0BbbdUp7xCaG2aw@mail.gmail.com>
+	<CAJ=9CzaDK+oKJ8JJtb_OE6wrh85f8ffPf_oa9c0GRQFStUULjg@mail.gmail.com>
+	<555A05DC.8080704@lwfinger.net>
+Date: Mon, 18 May 2015 20:38:20 +0300
+Message-ID: <CAJ=9CzbrwmG5x6i9wOH0g9hwNq27J_maVe7kS8Nco9y4BJEOpg@mail.gmail.com> (sfid-20150518_193826_439571_302C753D)
+Subject: Re: kernel page fault in r8712u
+From: Haggai Eran <haggai.eran@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arend van Spriel <aspriel@gmail.com>,
+	Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/27/2015 11:44 AM, ferran wrote:
-> Hi there,
-> 
-> I have noticed that having more than one interface pointing to the same
-> physical device, modifying the address of any of these interfaces gets
-> limited to the last 3 bits of the address, thus giving only 8 possible values.
-> 
-> Moreover, the mac address is set after the previous interface's one. Let's
-> put it in a example (output copied by hand)
+On 18 May 2015 at 18:31, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/17/2015 02:22 PM, Haggai Eran wrote:
+>>
+>> I added some debugging prints, trying to see more details about the
+>> packet that fails the r8712_validate_recv_frame. I noticed I'm getting
+>> many packets where recv_decache returns _FAIL. However, the last two
+>> packets before the crash fail for different reasons. The first has the
+>> ver field set to 3 (instead of zero). The second (the one that get's
+>> freed and cause the crash apparently) has an unknown type (12). If I'm
+>> not mistaken, 12 = WIFI_CTRL_TYPE | WIFI_DATA_TYPE. Is that possible?
+>>
+>> It could be that the packet headers are garbled though.
+>
+>
+> I think the headers are garbled. Did you log the address of the skb at
+> precvframe->u.hdr.pkt in r8712_free_recvframe() or orig_prframe->u.hdr.pct
+> in recv_func().
+I haven't. I'll print that.
 
-This does depend on the driver.  ath9k, for instance, has no limitations.
+>
+> I am still dubious of the cast "prframe = (union recv_frame *)pcontext;" in
+> recv_func().
 
-There are some subtitles relating to the ath9k BSSID mask that mean you often only
-want to change only bytes 1 and 2 (leaving 0, 3, 4, 5 alone), but it is not
-a hard requirement.
+Why? As far as I can see, recv_func is called only at one place
+(r8712_recv_entry), where it is passed a union recv_frame * as the
+pcontext parameter.
 
-Thanks,
-Ben
-
-> 
-> ---
-> 
-> $ iw dev
-> phy#0
->      Interface wlan0
->             ifindex 7
->             type managed
-> $ sudo ip link set wlan0 down
-> $ sudo ip link set wlan0 address 00:11:22:33:44:55
-> [ mac is changed ]
-> $ sudo iw phy phy0 interface add mywlan type managed
-> $ iw dev
-> phy#0
->      Interface mywlan
->             ifindex 9
->             type managed
->      Interface wlan0
->             ifindex 7
->             type managed
-> $ ip link
-> [ ... ]
-> 7: wlan0: [...]
->     link/ether 00:11:22:33:44:55 [...]
-> 7: mywlan: [...]
->     link/ether 00:11:22:33:44:56 [...]
-> 
-> $ sudo ip link set wlan0 down
-> $ sudo ip link set wlan0 address aa:bb:cc:dd:ee:ff
-> RTNETLINK answers: Invalid argument
-> 
-> $ sudo ip link set wlan0 address 00:11:22:33:44:5f
-> RTNETLINK answers: Invalid argument
-> 
-> $ sudo ip link set wlan0 address 00:11:22:33:44:57
-> [ mac is changed ]
-> 
-> $ sudo iw mywlan del
-> $ sudo ip link set wlan0 address aa:bb:cc:dd:ee:ff
-> 
-> $ ip link
-> [ ... ]
-> 7: wlan0: [...]
->     link/ether aa:bb:cc:dd:ee:ff [...]
-> 
-> ---
-> 
-> However, in another machine, using an iwlwifi card, I can change mac
-> addresses disregarding other interfaces on same physical device. Another
-> fact, when adding a new interface to a phy, the assigned mac address is
-> derived from the factory immutable one, instead of from the other interface's.
-> 
-> ---
-> 
-> Where can I confirm this behaviour, is it docummented? Am I right saying
-> that this depends on the actual driver? And how much difference is between
-> one and another?
-> 
-> Thank you very much
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Haggai
