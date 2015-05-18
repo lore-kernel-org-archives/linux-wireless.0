@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30021 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932099AbbE1O3F (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:35760 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171AbbERJid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:29:05 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SESrtp010015
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:29:05 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqymn-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:29:04 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 17/17] mwifiex: do not decrease tx_pending for AMSDU packet once more
-Date: Fri, 29 May 2015 01:24:58 +0530
-Message-ID: <1432842898-3219-18-git-send-email-patila@marvell.com> (sfid-20150528_162910_425536_24B2DB50)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 18 May 2015 05:38:33 -0400
+Received: by wicmx19 with SMTP id mx19so71427850wic.0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 02:38:31 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/3] ath10k: improve power efficiency
+Date: Mon, 18 May 2015 09:38:15 +0000
+Message-Id: <1431941898-13591-1-git-send-email-michal.kazior@tieto.com> (sfid-20150518_113836_869642_9278569D)
+In-Reply-To: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
+References: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Some measurements for QCA61X4:
 
-Negative adapter->tx_pending is observed while running data traffic,
-because tx_pending is decreased once more for AMSDU packet.
+            Loaded    Started   Associated
+Unpatched    31mA      88mA       43mA
+Patched      14mA      15mA       23mA
 
-since tx_pending have been decreased for all the source MSDU packets,
-we don't need to update once more for AMSDU packet.
+Loaded = module loaded, driver bound, no interface
+         is running
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/txrx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Started = Loaded, but one client interface is
+          running, not associated
 
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index c4c7d8d..5ed9b79 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -319,11 +319,11 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
- 		priv->stats.tx_errors++;
- 	}
- 
--	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT) {
-+	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
- 		atomic_dec_return(&adapter->pending_bridged_pkts);
--		if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
--			goto done;
--	}
-+
-+	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
-+		goto done;
- 
- 	if (aggr)
- 		/* For skb_aggr, do not wake up tx queue */
+Associated = Started, but associated to an AP as
+             client
+
+Note: Unpatched was consuming more power when
+Started than when Associated. This is no mistake.
+
+I didn't have a way to measure QCA988X.
+
+
+Janusz Dziedzic (2):
+  ath10k: enable ASPM
+  ath10k: fix idle power consumption
+
+Michal Kazior (1):
+  ath10k: enable pci soc powersaving
+
+ drivers/net/wireless/ath/ath10k/debug.h |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c   |   9 +-
+ drivers/net/wireless/ath/ath10k/pci.c   | 317 +++++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/pci.h   |  97 +++++-----
+ 4 files changed, 284 insertions(+), 140 deletions(-)
+
 -- 
-1.8.1.4
+2.1.4
 
