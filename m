@@ -1,111 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39195 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755036AbbE2L3d (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:38010 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895AbbERIWm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:29:33 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBTWsu011069
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:29:32 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5undh-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:29:32 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv3 16/16] mwifiex: using right tid for addressing ra_list
-Date: Fri, 29 May 2015 22:26:37 +0530
-Message-ID: <1432918598-27769-17-git-send-email-patila@marvell.com> (sfid-20150529_132938_645521_46218D50)
-In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
-References: <1432918598-27769-1-git-send-email-patila@marvell.com>
+	Mon, 18 May 2015 04:22:42 -0400
+Message-ID: <5559A119.20902@atmel.com> (sfid-20150518_102247_226461_67839BA7)
+Date: Mon, 18 May 2015 10:21:45 +0200
+From: Nicolas Ferre <nicolas.ferre@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Johnny Kim <johnny.kim@atmel.com>, <gregkh@linuxfoundation.org>,
+	<devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<rachel.kim@atmel.com>, <dean.lee@atmel.com>, <tony.cho@atmel.com>,
+	<chris.park@atmel.com>, Patrice VILCHEZ <patrice.vilchez@atmel.com>
+Subject: Re: [PATCH v3 1/2] staging: wilc1000: Add SDIO/SPI 802.11 driver
+References: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com> <5558E3B8.3040008@atmel.com> <20150518080420.GG14154@mwanda>
+In-Reply-To: <20150518080420.GG14154@mwanda>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Le 18/05/2015 10:04, Dan Carpenter a écrit :
+> Was the patch sent to the list?  Maybe it was rejected for being too
+> large?
 
-This patch fixes issue with the accessing correct ra_list by
-downgrading corresponding tid number.
+Yep is seems: it appears on driverdev-devel:
+http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2015-May/069148.html
 
-Alternatively, ra lists are created in mwifiex_wmm_add_buf_txqueue
-using downgraded tid number.
+But it seems not on linux-wireless.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.c           | 11 ++++++++---
- drivers/net/wireless/mwifiex/11n_rxreorder.c |  5 ++++-
- 2 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 8422986..4d8ef49 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -156,7 +156,7 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
- int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 			      struct host_cmd_ds_command *resp)
- {
--	int tid;
-+	int tid, tid_down;
- 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
- 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
- 	struct mwifiex_ra_list_tbl *ra_list;
-@@ -167,7 +167,9 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 
- 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
- 	       >> BLOCKACKPARAM_TID_POS;
--	ra_list = mwifiex_wmm_get_ralist_node(priv, tid, add_ba_rsp->
-+
-+	tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+	ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, add_ba_rsp->
- 		peer_mac_addr);
- 	if (le16_to_cpu(add_ba_rsp->status_code) != BA_RESULT_SUCCESS) {
- 		if (ra_list) {
-@@ -530,13 +532,16 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
- 	struct mwifiex_tx_ba_stream_tbl *new_node;
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
- 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
- 				   GFP_ATOMIC);
- 		if (!new_node)
- 			return;
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, ra);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, ra);
- 		if (ra_list) {
- 			ra_list->ba_status = ba_status;
- 			ra_list->amsdu_in_ampdu = false;
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 39d7a95..64401a7 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -663,6 +663,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	u8 cleanup_rx_reorder_tbl;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (type == TYPE_DELBA_RECEIVE)
- 		cleanup_rx_reorder_tbl = (initiator) ? true : false;
-@@ -688,7 +689,9 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 				    "event: TID, RA not found in table\n");
- 			return;
- 		}
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, peer_mac);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, peer_mac);
- 		if (ra_list) {
- 			ra_list->amsdu_in_ampdu = false;
- 			ra_list->ba_status = BA_SETUP_NONE;
+Bye,
 -- 
-1.8.1.4
-
+Nicolas Ferre
