@@ -1,97 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:34887 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbbE0Alb (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:35309 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844AbbERPbp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 20:41:31 -0400
-Received: by wicmx19 with SMTP id mx19so94218372wic.0
-        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 17:41:30 -0700 (PDT)
-Message-ID: <556512B7.50505@gmail.com> (sfid-20150527_024134_301736_3F40A5AF)
-Date: Wed, 27 May 2015 03:41:27 +0300
-From: Nick Dimov <dimovnike@gmail.com>
+	Mon, 18 May 2015 11:31:45 -0400
+Received: by obcus9 with SMTP id us9so128804286obc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 08:31:43 -0700 (PDT)
+Message-ID: <555A05DC.8080704@lwfinger.net> (sfid-20150518_173151_686783_3582258F)
+Date: Mon, 18 May 2015 10:31:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: packet loss, disconnects and possible bug in iwlwifi
-References: <55605637.1080503@gmail.com>	<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>	<55650565.6020303@gmail.com> <CANUX_P3xRgUdNx_1h-pisaYcTiFGiPZjyvkdhnFQj05oMHSQVA@mail.gmail.com>
-In-Reply-To: <CANUX_P3xRgUdNx_1h-pisaYcTiFGiPZjyvkdhnFQj05oMHSQVA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+To: Haggai Eran <haggai.eran@gmail.com>,
+	Arend van Spriel <aspriel@gmail.com>
+CC: Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: kernel page fault in r8712u
+References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>	<55575AC8.2060301@lwfinger.net>	<CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>	<5557844B.4040108@lwfinger.net>	<CAJ=9CzamCxkwVtTtUzU9zatocUPz0W+3f0Kgm6N0tDMWbcP_LA@mail.gmail.com>	<55586D8D.7040407@gmail.com>	<CAJ=9CzbxScr7SJjhxnxAWt+xS-A8VR-_PQs0BbbdUp7xCaG2aw@mail.gmail.com> <CAJ=9CzaDK+oKJ8JJtb_OE6wrh85f8ffPf_oa9c0GRQFStUULjg@mail.gmail.com>
+In-Reply-To: <CAJ=9CzaDK+oKJ8JJtb_OE6wrh85f8ffPf_oa9c0GRQFStUULjg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello,
-I will record a tracing but now my kernel doesn't have
-CONFIG_IWLWIFI_TRACING  (default ubuntu kernel) so I will have to
-activate the setting and recompile it. As for wpa_supplicant - I checked
-several times and there is indeed a single process running, also its PID
-doesn't change during disconnects. Btw, I also tested with 4.0 kernel
-from the next release of ubuntu and the result is the same. Also the
-laptop is next to the router and there are no other networks on 5Ghz
-here (however the problem happens on 2.4Ghz too)
-
-Thank you,
-Nick.
-
-On 27.05.2015 03:27, Emmanuel Grumbach wrote:
-> On Wed, May 27, 2015 at 2:44 AM, Nick Dimov <dimovnike@gmail.com> wrote:
->> Hello,
->> thank you for your response. I attach the full syslog since the last
->> boot which contains some disconnects. I enabled debug mode for
->> wpa_supplicant with -dd option (let me know if you need anything else).
->>
->> I also tried connecting directly, i.e. without NetworkManager but
->> manually with wpa_supplicant and I still get disconnects, howvever
->> wpa_supplicant gives different logs with different drivers. Please, see
->> the file wifi.log (you can see there the driver i used in
->> wpa_supplicant, that log doesn't have the debug activated but let me
->> know if you need that too)
-> Please record tracing
-> (https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging#tracing)
-> and the syslog from the *same run*. Someone is disconnecting you and I
-> can't see who and why. Are you sure you have only one instance of the
-> supplicant running?
+On 05/17/2015 02:22 PM, Haggai Eran wrote:
+> I added some debugging prints, trying to see more details about the
+> packet that fails the r8712_validate_recv_frame. I noticed I'm getting
+> many packets where recv_decache returns _FAIL. However, the last two
+> packets before the crash fail for different reasons. The first has the
+> ver field set to 3 (instead of zero). The second (the one that get's
+> freed and cause the crash apparently) has an unknown type (12). If I'm
+> not mistaken, 12 = WIFI_CTRL_TYPE | WIFI_DATA_TYPE. Is that possible?
 >
->> Thank you again,
->> Nick.
->>
->> On 25.05.2015 14:33, Emmanuel Grumbach wrote:
->>> On Sat, May 23, 2015 at 1:28 PM, Nick Dimov <dimovnike@gmail.com> wrote:
->>>> Hello,
->>>> I recently bought the Intel 7260 AC wifi card (below is the PCI info)
->>>> and the card works perfectly in windows with the latest intel driver but
->>>> in linux I get deauthenticating and disconnects (reason -3) every minute
->>>> or so. When these disconnects happen I get packet loss. In the attached
->>>> file iwlwifi_dmesg.txt you can see the log that is produced each time a
->>>> disconnect happens. I also tried connecting on 2.4Ghz but I get the same
->>>> packet loss. I also put the last firmware from
->>>> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
->>>> but it did not help.
->>> Please increase the debug level of the supplicant. And attach the full syslog.
->>>
->>>> There is also another problem: In windows i can see it connecting on
->>>> 860mbps, but on linux it never goes higher than 600mbps (i check this
->>>> with iwconfig) and it stays somewhere on 500mbps.
->>>>
->>>> Can you please help me solve this?
->>>> Thank you.
->>>>
->>>> uname -a
->>>> Linux nick-laptop 3.19.0-18-generic #18-Ubuntu SMP Tue May 19 18:31:35
->>>> UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
->>>>
->>>> lspci info:
->>>> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
->>>>         Subsystem: Intel Corporation Dual Band Wireless-AC 7260
->>>>         Flags: bus master, fast devsel, latency 0, IRQ 29
->>>>         Memory at f7200000 (64-bit, non-prefetchable) [size=8K]
->>>>         Capabilities: [c8] Power Management version 3
->>>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>>>         Capabilities: [40] Express Endpoint, MSI 00
->>>>         Capabilities: [100] Advanced Error Reporting
->>>>         Capabilities: [140] Device Serial Number d8-fc-93-ff-ff-e4-70-d7
->>>>         Capabilities: [14c] Latency Tolerance Reporting
->>>>         Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1
->>>> Len=014 <?>
->>>>         Kernel driver in use: iwlwifi
->>>>
+> It could be that the packet headers are garbled though.
+
+I think the headers are garbled. Did you log the address of the skb at 
+precvframe->u.hdr.pkt in r8712_free_recvframe() or orig_prframe->u.hdr.pct in 
+recv_func().
+
+I am still dubious of the cast "prframe = (union recv_frame *)pcontext;" in 
+recv_func().
+
+Larry
+
 
