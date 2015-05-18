@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:36610 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757984AbbEWRs3 (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:33799 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551AbbERJUV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 May 2015 13:48:29 -0400
-Received: by obbea2 with SMTP id ea2so32354335obb.3
-        for <linux-wireless@vger.kernel.org>; Sat, 23 May 2015 10:48:28 -0700 (PDT)
-Message-ID: <5560BD69.10409@lwfinger.net> (sfid-20150523_194832_758903_E1E00040)
-Date: Sat, 23 May 2015 12:48:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 18 May 2015 05:20:21 -0400
+Received: by wguv19 with SMTP id v19so119442188wgu.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 02:20:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Haggai Eran <haggai.eran@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
-References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com>	<CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>	<555CB8C1.1040007@lwfinger.net>	<CAJ=9CzYr2rFxZprM0Ap+x+Vu3LDXJUtxqtHqH-YER-ABscRb0w@mail.gmail.com> <CAJ=9CzbohiYSj1J4M17iK4Rqh0bopEF8zhN=Sqrh7GO6eBP-=w@mail.gmail.com>
-In-Reply-To: <CAJ=9CzbohiYSj1J4M17iK4Rqh0bopEF8zhN=Sqrh7GO6eBP-=w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1431939927.2719.0.camel@sipsolutions.net>
+References: <chaitanya.mgit@gmail.com> <1431939609-7261-1-git-send-email-chaitanya.mgit@gmail.com>
+ <1431939927.2719.0.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 18 May 2015 14:49:59 +0530
+Message-ID: <CABPxzYJ-3ctYOdek4RGkt95EKU7Z7qO5qB=8Pb=v+1QN0MCy5A@mail.gmail.com> (sfid-20150518_112032_768178_48A47724)
+Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused by
+ race between suspend and Tx packet.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2015 12:24 PM, Haggai Eran wrote:
-> On 20 May 2015 at 22:20, Haggai Eran <haggai.eran@gmail.com> wrote:
->> On 20 May 2015 at 19:39, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>> On 05/20/2015 01:17 AM, Haggai Eran wrote:
->>>>
->>>> On May 19, 2015 08:47, "Haggai Eran" <haggai.eran@gmail.com
->>>> <mailto:haggai.eran@gmail.com>> wrote:
->>>>   >
->>>>   > With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
->>>>   > packet are set, but the packet length is too large. Truncate the packet
->>>>   > to prevent memory corruption.
->>>>   >
->>>>   > Signed-off-by: Haggai Eran <haggai.eran@gmail.com
->>>> <mailto:haggai.eran@gmail.com>>
->>>>   > ---
->>>>   >
->>>>   > Hi,
->>>>   >
->>>>   > I think this solves the issue for me. I'll test it more thoroughly
->>>> later. I
->>>>   > still don't know why a fragmented packet has such a large pkt_len value
->>>> though.
->>>>   >
->>>>   > Thanks,
->>>>   > Haggai
->>>>   >
->>>>
->>>> I guess I was too quick with this patch. It prevents the kernel page
->>>> faults, but
->>>> with it I still see sometimes the connectivity disappear for a minute or
->>>> two.
->>>
->>>
->>> Is anything logged when that happens?
->> No. I get once in a while the other corrupted entries I told you
->> about, but nothing special to these freezes
->>
->>> I'm still trying to see where that magic number of 1658 comes from, and how
->>> that affects the RX buffer size.
->>
->> I tried to look at the new driver (rtl8192su), but it doesn't seem to
->> handle this more-fragment bit at all.
->>
->>> When I unconditionally set alloc_sz to tmp_len as in the attached patch (I
->>> remembered to refresh it this time), nothing bad has happened here yet. What
->>> happens on your box?
->>
->> The same freezes still occur.
+On Mon, May 18, 2015 at 2:35 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> I think the freezes I saw weren't related to the same issue. I was
-> running a debugging kernel, and I saw the same freezes also with a
-> different wifi adaptor. After switching to a non-debugging kernel, and
-> using your patch, the freezes stopped.
+> On Mon, 2015-05-18 at 14:30 +0530, chaitanya.mgit@gmail.com wrote:
+> > From: Chaitanya T K <chaitanya.tata@imgtec.com>
+> >
+> > If we receive suspend after TX path has executed
+> > dynamic ps disable work, the driver will be in
+> > ACTIVE state during suspend and even after it
+> > resumes.
+> >
+> > As before suspend all data packets are flushed
+> > it is safe to put the driver in to sleep for
+> > optimal power during suspend or up on resume.
+>
+> Please stop resending this patch a few times a day without indicating
+> any changes.
+>
+> I'm going to ignore it for a few days now until this settles down.
 
-That is good news. Perhaps the debugging kernel is overflowing the stack. Did 
-your debugging kernel have "Check for stack overflows" set in the "Memory 
-Debugging" section of the configuration? I did not have that turned on until 
-today, but it seems like a good idea.
+My sendmail shows status as bounced so i was trying with different
+options. I did not realize that it has already made it to the list.
 
-Do you want to prepare the final version of the patch, or should I?
-
-Larry
-
+Apologies for the trouble Johannes,
