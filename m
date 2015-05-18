@@ -1,289 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751990AbbEZTSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:18:08 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/39] iwlwifi: refactor common transport alloc/init code
-Date: Tue, 26 May 2015 22:17:19 +0300
-Message-Id: <1432667872-18092-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211820_718803_5ACFDBEA)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+Received: from mo4-p05-ob.smtp.rzone.de ([81.169.146.182]:31714 "EHLO
+	mo4-p05-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148AbbERTwV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2015 15:52:21 -0400
+Message-ID: <555A41EA.4090905@web.de> (sfid-20150518_215226_895565_38707560)
+Date: Mon, 18 May 2015 21:47:54 +0200
+From: Alexander Wetzel <alexander.wetzel@web.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Peer, Ilan" <ilan.peer@intel.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 drops packet with old IV after rekeying
+References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>	 <1431674716.2426.2.camel@sipsolutions.net>	 <CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>	 <1431714949.2117.0.camel@sipsolutions.net>	 <CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com>	 <1431806229.2120.6.camel@sipsolutions.net> <20150517160513.GA13175@w1.fi>	 <CANUX_P0byd4Q+1gjiBmoGqd_hESUH_YVCD6iPx0_d6aw_r3JSw@mail.gmail.com>	 <1431890756.2129.13.camel@sipsolutions.net>	 <CANUX_P3ODruGc2rvV2gLNLU15kEmaJMXeU_ovtaBeOQGnYotoA@mail.gmail.com>	 <1431893157.2129.18.camel@sipsolutions.net>	 <CANUX_P0cJc4Ww5AY7sNFL5z4EPit+ngHvX=4eFXF96K-E8p3MA@mail.gmail.com>	 (sfid-20150517_221304_420222_D8022C07) <1431894140.2129.20.camel@sipsolutions.net>	 <CB3B3D4774441E42AA3EA0E1BA8230A04DA98D91@HASMSX110.ger.corp.intel.com> <1431961331.10489.1.camel@sipsolutions.net>
+In-Reply-To: <1431961331.10489.1.camel@sipsolutions.net>
+Content-Type: multipart/mixed;
+ boundary="------------060803090403070506010301"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is a multi-part message in MIME format.
+--------------060803090403070506010301
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-The transport modules all need to allocate memory and set up
-certain values. Refactor that code into a new common function
-to share it and to simplify the error handling.
+Hello,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/Makefile     |   1 +
- drivers/net/wireless/iwlwifi/iwl-trans.c  | 113 ++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.h  |  20 +++---
- drivers/net/wireless/iwlwifi/pcie/trans.c |  40 ++---------
- 4 files changed, 131 insertions(+), 43 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans.c
+I'm the one banging my head against this issue for quite some time, so
+if I can do anything to help here contact me. I'll check the mailing
+list from time to time but if you have something I should reply please
+add/keep me on CC.
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 3d32f41..dbfc5b1 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -9,6 +9,7 @@ iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
- iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
- iwlwifi-$(CONFIG_IWLDVM) += iwl-1000.o iwl-2000.o iwl-5000.o iwl-6000.o
- iwlwifi-$(CONFIG_IWLMVM) += iwl-7000.o iwl-8000.o
-+iwlwifi-objs		+= iwl-trans.o
- 
- iwlwifi-objs += $(iwlwifi-m)
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-new file mode 100644
-index 0000000..9f8bcef
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -0,0 +1,113 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2015 Intel Mobile Communications GmbH
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2015 Intel Mobile Communications GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#include <linux/kernel.h>
-+#include "iwl-trans.h"
+I can now reproduce the issue reliable within minutes on demand and can
+also patch the kernels at both ends. (Just started looking at openwrt
+and got my first openwrt kernel patch crashing the wlan driver:-)
+
+But now to the topic:
+
+> Right. I think the "new key with old PN" part is probably not really
+> happening, although it seems possible. I'd think we should look at the
+> receiver first and only then move on to the transmitter if issues
+> persist. Having a sniffer capture of the problem with known keys (!)
+> would be useful though.
+
+For my understanding that has already be done. And at least for me it
+looks like we have hard evidence for that fact.
+
+In the linux bug report you can find an capture extract to verify that -
+taken with a remote monitor station - and the PSK's needed to decrypt
+the traffic:
+https://bugzilla.kernel.org/show_bug.cgi?id=92451
+You are probably interested in comment 14.
+
+Maybe a short warning here:
+The wireshark patch needed to make sense of these captures was written
+by me and on my still sketchy understanding how this all works. But I
+see no way how it could mix up keys and all it all only a minor
+modification was needed. (It's taking a short cut to decide if it will
+add the PSK to the packet by only looking at the key index and not at
+the appropriate flags, but hardly relevant here.)
+
+The Key information used to decrypt the packets is added in the same
+section as the key index, if you have problems finding it.
+
+This is an older capture and I'll verify that with a new one soon.
+I have quite many retransmissions in it and the monitoring station also
+missed quite some frames for some incomprehensible reason.
+
+If you wanted the full capture and not the sipped down one from the
+kernel bugzilla you can download it here:
+https://cal.a.wdyn.eu:65443/index.php/s/UdMpcULG16Lz1Ah
+
+I'll hope I can provide a better one at the weekend.
+
+I have also still some output of my poking around with printk's in the
+kernel and attached you an sample from them, see debug-out.txt.gz.
+I have not preserved the exact kernel patch for those printk messages,
+but attached a version close of it.
+(The additional MIC check was a failed experiment of many to get it
+working without removing the replay detection mechanism.)
+
+The XXX debug lines are not in the patch, these are just some printk's
+at the start of the function with the name printed out to see when the
+key was installed.
+
+
+--------------060803090403070506010301
+Content-Type: text/x-patch;
+ name="wpa-debug.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename="wpa-debug.patch"
+
+--- ../wpa.c	2015-04-13 00:12:50.000000000 +0200
++++ net/mac80211/wpa.c	2015-05-14 21:01:44.030860184 +0200
+@@ -1,5 +1,4 @@
+ /*
+- * Copyright 2002-2004, Instant802 Networks, Inc.
+  * Copyright 2008, Jouni Malinen <j@w1.fi>
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -502,29 +501,48 @@
+=20
+ 	if (!ieee80211_is_data(hdr->frame_control) &&
+ 	    !ieee80211_is_robust_mgmt_frame(skb))
++	        {printk(KERN_DEBUG "DDD - 1");
+ 		return RX_CONTINUE;
++		}
+=20
+ 	data_len =3D skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
+ 	if (!rx->sta || data_len < 0)
++		{printk(KERN_DEBUG "DDD - 2");
+ 		return RX_DROP_UNUSABLE;
++		}
+=20
+ 	if (status->flag & RX_FLAG_DECRYPTED) {
+ 		if (!pskb_may_pull(rx->skb, hdrlen + IEEE80211_CCMP_HDR_LEN))
++			{printk(KERN_DEBUG "DDD - 3");
+ 			return RX_DROP_UNUSABLE;
++			}
+ 	} else {
+ 		if (skb_linearize(rx->skb))
++			{printk(KERN_DEBUG "DDD - 4");
+ 			return RX_DROP_UNUSABLE;
++			}
+ 	}
+=20
+ 	ccmp_hdr2pn(pn, skb->data + hdrlen);
+=20
+ 	queue =3D rx->security_idx;
++/*
++	temp =3D ieee80211_rx_h_michael_mic_verify(rx);
++	printk(KERN_DEBUG "DDD - 5 queue:%i Mutex=3D%i MIC=3D%i",queue, rx->loc=
+al->key_mtx.count, temp);
 +
-+struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
-+				  struct device *dev,
-+				  const struct iwl_cfg *cfg,
-+				  const struct iwl_trans_ops *ops,
-+				  size_t dev_cmd_headroom)
-+{
-+	struct iwl_trans *trans;
-+#ifdef CONFIG_LOCKDEP
-+	static struct lock_class_key __key;
-+#endif
-+
-+	trans = kzalloc(sizeof(*trans) + priv_size, GFP_KERNEL);
-+	if (!trans)
-+		return NULL;
-+
-+#ifdef CONFIG_LOCKDEP
-+	lockdep_init_map(&trans->sync_cmd_lockdep_map, "sync_cmd_lockdep_map",
-+			 &__key, 0);
-+#endif
-+
-+	trans->dev = dev;
-+	trans->cfg = cfg;
-+	trans->ops = ops;
-+	trans->dev_cmd_headroom = dev_cmd_headroom;
-+
-+	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
-+		 "iwl_cmd_pool:%s", dev_name(trans->dev));
-+	trans->dev_cmd_pool =
-+		kmem_cache_create(trans->dev_cmd_pool_name,
-+				  sizeof(struct iwl_device_cmd)
-+				  + trans->dev_cmd_headroom,
-+				  sizeof(void *),
-+				  SLAB_HWCACHE_ALIGN,
-+				  NULL);
-+	if (!trans->dev_cmd_pool)
-+		goto free;
-+
-+	return trans;
-+ free:
-+	kfree(trans);
-+	return NULL;
-+}
-+
-+void iwl_trans_free(struct iwl_trans *trans)
-+{
-+	kmem_cache_destroy(trans->dev_cmd_pool);
-+	kfree(trans);
-+}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 56254a8..eb34b94 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -1011,19 +1011,19 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
++	if(temp =3D=3D RX_DROP_UNUSABLE) {
++		printk(KERN_DEBUG "DDD - MIC verify failed");
++		return RX_DROP_UNUSABLE;
++	}
+=20
++	print_hex_dump_debug("cnt: ", DUMP_PREFIX_OFFSET, IEEE80211_CCMP_PN_LEN=
+, 1, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN, false);
++	print_hex_dump_debug("pn : ", DUMP_PREFIX_OFFSET, IEEE80211_CCMP_PN_LEN=
+, 1, pn, IEEE80211_CCMP_PN_LEN, false);
+ 	if (memcmp(pn, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN) <=3D 0)=
+ {
+ 		key->u.ccmp.replays++;
++		//print_hex_dump_debug("skb->data: ", DUMP_PREFIX_OFFSET, 16, 1, skb->=
+data, skb->len, true);
+ 		return RX_DROP_UNUSABLE;
+ 	}
+-
++*/
+ 	if (!(status->flag & RX_FLAG_DECRYPTED)) {
+ 		u8 aad[2 * AES_BLOCK_SIZE];
+ 		u8 b_0[AES_BLOCK_SIZE];
+@@ -536,17 +554,21 @@
+ 			    skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
+ 			    data_len,
+ 			    skb->data + skb->len - mic_len, mic_len))
++			{printk(KERN_DEBUG "DDD - 6");
+ 			return RX_DROP_UNUSABLE;
++			}
+ 	}
+=20
+ 	memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
+=20
+ 	/* Remove CCMP header and MIC */
+ 	if (pskb_trim(skb, skb->len - mic_len))
++		{printk(KERN_DEBUG "DDD - 7");
+ 		return RX_DROP_UNUSABLE;
++		}
+ 	memmove(skb->data + IEEE80211_CCMP_HDR_LEN, skb->data, hdrlen);
+ 	skb_pull(skb, IEEE80211_CCMP_HDR_LEN);
+-
++	printk(KERN_DEBUG "DDD - 8");
+ 	return RX_CONTINUE;
  }
- 
- /*****************************************************
-+ * transport helper functions
-+ *****************************************************/
-+struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
-+				  struct device *dev,
-+				  const struct iwl_cfg *cfg,
-+				  const struct iwl_trans_ops *ops,
-+				  size_t dev_cmd_headroom);
-+void iwl_trans_free(struct iwl_trans *trans);
-+
-+/*****************************************************
- * driver (transport) register/unregister functions
- ******************************************************/
- int __must_check iwl_pci_register_driver(void);
- void iwl_pci_unregister_driver(void);
- 
--static inline void trans_lockdep_init(struct iwl_trans *trans)
--{
--#ifdef CONFIG_LOCKDEP
--	static struct lock_class_key __key;
--
--	lockdep_init_map(&trans->sync_cmd_lockdep_map, "sync_cmd_lockdep_map",
--			 &__key, 0);
--#endif
--}
--
- #endif /* __iwl_trans_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 1cb1204..dd1f828 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1366,14 +1366,13 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 	iounmap(trans_pcie->hw_base);
- 	pci_release_regions(trans_pcie->pci_dev);
- 	pci_disable_device(trans_pcie->pci_dev);
--	kmem_cache_destroy(trans->dev_cmd_pool);
- 
- 	if (trans_pcie->napi.poll)
- 		netif_napi_del(&trans_pcie->napi);
- 
- 	iwl_pcie_free_fw_monitor(trans);
- 
--	kfree(trans);
-+	iwl_trans_free(trans);
- }
- 
- static void iwl_trans_pcie_set_pmi(struct iwl_trans *trans, bool state)
-@@ -2466,18 +2465,13 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	u16 pci_cmd;
- 	int err;
- 
--	trans = kzalloc(sizeof(struct iwl_trans) +
--			sizeof(struct iwl_trans_pcie), GFP_KERNEL);
--	if (!trans) {
--		err = -ENOMEM;
--		goto out;
--	}
-+	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
-+				&pdev->dev, cfg, &trans_ops_pcie, 0);
-+	if (!trans)
-+		return ERR_PTR(-ENOMEM);
- 
- 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
--	trans->ops = &trans_ops_pcie;
--	trans->cfg = cfg;
--	trans_lockdep_init(trans);
- 	trans_pcie->trans = trans;
- 	spin_lock_init(&trans_pcie->irq_lock);
- 	spin_lock_init(&trans_pcie->reg_lock);
-@@ -2601,25 +2595,8 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	/* Initialize the wait queue for commands */
- 	init_waitqueue_head(&trans_pcie->wait_command_queue);
- 
--	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
--		 "iwl_cmd_pool:%s", dev_name(trans->dev));
--
--	trans->dev_cmd_headroom = 0;
--	trans->dev_cmd_pool =
--		kmem_cache_create(trans->dev_cmd_pool_name,
--				  sizeof(struct iwl_device_cmd)
--				  + trans->dev_cmd_headroom,
--				  sizeof(void *),
--				  SLAB_HWCACHE_ALIGN,
--				  NULL);
--
--	if (!trans->dev_cmd_pool) {
--		err = -ENOMEM;
--		goto out_pci_disable_msi;
--	}
--
- 	if (iwl_pcie_alloc_ict(trans))
--		goto out_free_cmd_pool;
-+		goto out_pci_disable_msi;
- 
- 	err = request_threaded_irq(pdev->irq, iwl_pcie_isr,
- 				   iwl_pcie_irq_handler,
-@@ -2636,8 +2613,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 
- out_free_ict:
- 	iwl_pcie_free_ict(trans);
--out_free_cmd_pool:
--	kmem_cache_destroy(trans->dev_cmd_pool);
- out_pci_disable_msi:
- 	pci_disable_msi(pdev);
- out_pci_release_regions:
-@@ -2645,7 +2620,6 @@ out_pci_release_regions:
- out_pci_disable_device:
- 	pci_disable_device(pdev);
- out_no_pci:
--	kfree(trans);
--out:
-+	iwl_trans_free(trans);
- 	return ERR_PTR(err);
- }
--- 
-2.1.4
+=20
 
+--------------060803090403070506010301
+Content-Type: application/gzip;
+ name="debug-out.txt.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="debug-out.txt.gz"
+
+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
+CZQ//BdM0DoFyXYAAA==
+--------------060803090403070506010301--
