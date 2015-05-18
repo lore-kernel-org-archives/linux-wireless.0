@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55322 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422635AbbEUQYW convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:35893 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932724AbbERUjs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 12:24:22 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20150520154755.GE126473@ubuntu-hedt>
-References: <20150520154755.GE126473@ubuntu-hedt> <20150520140426.GB126473@ubuntu-hedt> <20150519200232.GM23057@wotan.suse.de> <6731.1432134538@warthog.procyon.org.uk>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: dhowells@redhat.com, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Thu, 21 May 2015 17:23:54 +0100
-Message-ID: <10137.1432225434@warthog.procyon.org.uk> (sfid-20150521_182441_954238_48EE14D5)
+	Mon, 18 May 2015 16:39:48 -0400
+Received: by lagv1 with SMTP id v1so237388971lag.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 13:39:46 -0700 (PDT)
+Message-ID: <555a4e12.e323700a.26a6.ffff9e65@mx.google.com> (sfid-20150518_223955_315748_38E6840F)
+From: andrey.konovalov@linaro.org
+To: johannes@sipsolutions.net, emmanuel.grumbach@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Andrey Konovalov <andrey.konovalov@linaro.org>
+Subject: [PATCH] mac80211: fix kernel-doc comments in mac80211.h
+Date: Mon, 18 May 2015 23:39:28 +0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seth Forshee <seth.forshee@canonical.com> wrote:
+Commits a818292 "mac80211: convert rssi_callback() to event_callback()"
+and a940909 "mac80211: notify the driver about authentication status"
+added two errors and one warning when building docs for the mac80211
+driver. Fix the kernel-doc comments so that the documentation targets
+could be built successfully again.
 
-> > Relying on UEFI presents three problems, though: (1) the system admin has to
-> > manually, as far as I'm aware, inform the BIOS; (2) the UEFI storage is
-> > limited; and (3) not all systems have UEFI.
-> 
-> Yeah, that doesn't really sound like a good solution. Not all users are
-> sys admins.
+Signed-off-by: Andrey Konovalov <andrey.konovalov@linaro.org>
+---
+ include/net/mac80211.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Yeah.  We don't really want to recommend they go meddling lest they brick
-their machine by triggering a bug in their BIOS.  Not that there *are* any
-buggy BIOSes of course;-)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b4bef11..dbb5f33 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -354,7 +354,7 @@ enum ieee80211_rssi_event_data {
+ };
+ 
+ /**
+- * enum ieee80211_rssi_event - data attached to an %RSSI_EVENT
++ * struct ieee80211_rssi_event - data attached to an %RSSI_EVENT
+  * @data: See &enum ieee80211_rssi_event_data
+  */
+ struct ieee80211_rssi_event {
+@@ -388,7 +388,7 @@ enum ieee80211_mlme_event_status {
+ };
+ 
+ /**
+- * enum ieee80211_mlme_event - data attached to an %MLME_EVENT
++ * struct ieee80211_mlme_event - data attached to an %MLME_EVENT
+  * @data: See &enum ieee80211_mlme_event_data
+  * @status: See &enum ieee80211_mlme_event_status
+  * @reason: the reason code if applicable
+@@ -401,7 +401,7 @@ struct ieee80211_mlme_event {
+ 
+ /**
+  * struct ieee80211_event - event to be sent to the driver
+- * @type The event itself. See &enum ieee80211_event_type.
++ * @type: The event itself. See &enum ieee80211_event_type.
+  * @rssi: relevant if &type is %RSSI_EVENT
+  * @mlme: relevant if &type is %AUTH_EVENT
+  */
+-- 
+1.7.9.5
 
-David
