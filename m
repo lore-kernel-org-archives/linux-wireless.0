@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0065.hostedemail.com ([216.40.44.65]:42811 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1946088AbbEENu4 (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36813 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbbERJ3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 09:50:56 -0400
-Message-ID: <1430833852.7191.7.camel@perches.com> (sfid-20150505_155122_051039_96FB8587)
-Subject: Re: [PATCH] adm8211: fix checkpatch errors for indentation and new
- line around switch-case
-From: Joe Perches <joe@perches.com>
-To: Peter Rosin <peda@lysator.liu.se>
-Cc: Okash Khawaja <okash.khawaja@gmail.com>, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 05 May 2015 06:50:52 -0700
-In-Reply-To: <5548B192.8020808@lysator.liu.se>
-References: <5548B192.8020808@lysator.liu.se>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 18 May 2015 05:29:16 -0400
+Received: by wizk4 with SMTP id k4so71122786wiz.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 02:29:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1431941058.2719.1.camel@sipsolutions.net>
+References: <chaitanya.mgit@gmail.com> <1431939609-7261-1-git-send-email-chaitanya.mgit@gmail.com>
+ <1431939927.2719.0.camel@sipsolutions.net> <CABPxzYJ-3ctYOdek4RGkt95EKU7Z7qO5qB=8Pb=v+1QN0MCy5A@mail.gmail.com>
+ <1431941058.2719.1.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 18 May 2015 14:58:54 +0530
+Message-ID: <CABPxzYJD7mHT3dL8DoCLHh5hC5uy4OzjAo0CzrESdg7AkV88HA@mail.gmail.com> (sfid-20150518_112919_578784_09B39DED)
+Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused by
+ race between suspend and Tx packet.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-05-05 at 14:03 +0200, Peter Rosin wrote:
-> > diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-[]
-> > @@ -1098,14 +1098,18 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
-> >  		pci_read_config_byte(priv->pdev, PCI_CACHE_LINE_SIZE, &cline);
-> >  
-> >  		switch (cline) {
-[]
-> > +		case  0x8:
-> > +			reg |= (0x1 << 14);
-> > +			break;
-> > +		case 0x16:
-> > +			reg |= (0x2 << 14);
-> > +			break;
-> > +		case 0x32:
-> > +			reg |= (0x3 << 14);
-> > +			break;
-> > +		default:
-> > +			reg |= (0x0 << 14);
-> > +			break;
-> >  		}
-> >  	}
-> >  
-> 
-> Those 0x16/0x32 hexadecimal case-selectors looking suspiciously like
-> decimal bits need a comment if they are in fact correct, which I doubt.
+On Mon, May 18, 2015 at 2:54 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2015-05-18 at 14:49 +0530, Krishna Chaitanya wrote:
+>
+>> My sendmail shows status as bounced so i was trying with different
+>> options. I did not realize that it has already made it to the list.
+>
+> It looks like it didn't actually make it to the list *today*, but I
+> believe there were versions that did.
+Yes, my git send-email still shows it as bounced due to some wrong
+from address.
 
-Good spot.
+> I got 4 of them today though ...
+Sorry.
 
-As it's testing PCI_CACHE_LINE_SIZE,
-they seem very much broken.
+> You can always check
+> https://patchwork.kernel.org/project/linux-wireless/list/
 
-
+Thanks, will use that.
