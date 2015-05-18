@@ -1,104 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:35224 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015AbbESXam (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48873 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932635AbbERV1V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 19:30:42 -0400
+	Mon, 18 May 2015 17:27:21 -0400
+Message-ID: <555A5938.9080706@candelatech.com> (sfid-20150518_232724_693729_506C7027)
+Date: Mon, 18 May 2015 14:27:20 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <555BA438.2070802@kernel.org>
-References: <20150519200232.GM23057@wotan.suse.de> <555BA438.2070802@kernel.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 20 May 2015 09:30:21 +1000
-Message-ID: <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com> (sfid-20150520_013047_581013_93E03B32)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-To: Andy Lutomirski <luto@kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org,
-	Michal Marek <mmarek@suse.cz>,
-	Abelardo Ricart III <aricart@memnix.com>,
-	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
-	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: Poor TCP performance with ath10k in 4.0 kernel, again.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Disclosure: I am working with a patched 4.0 kernel, patched ath10k driver, and
+patched (CT) ath10k firmware.  Traffic generator is of our own making.
 
-On Wed, May 20, 2015 at 6:59 AM, Andy Lutomirski <luto@kernel.org> wrote:
-> [added cc's from the other thread]
->
-> On 05/19/2015 01:02 PM, Luis R. Rodriguez wrote:
->>
->> David Howells has posted v4 of his series of supporting PKCS#7 for module
->> signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and
->> after
->> some review and patch shuffling I think this is ready for patch form.  My
->> own
->> series however depend on quite a bit of other pending changes, one series
->> which
->> will go through Rusty's tree, another series of fixes on firmware_class
->> which
->> should go through Greg's tree. I'll wait until all this and David's own
->> patches
->> get merged before posting firmware PKCS#7 support. Before all this though
->> in
->> preparation for fw signing one thing we should start to talk about more
->> broadly
->> however is how linux-firmware binary file signing would work in practice
->> and
->> what we need, and make sure folks are OK with all this.
->>
->> First, firmware signing will be completely optional as with module
->> signing.
->>
->
-> ...
->
->> Other than this last nitpick, any other concerns or recommendations ?
->
->
-> A couple.  Some of these are general concerns with the existing
-> infrastructure, but #1 is a specific problem that gets much worse if we add
-> firmware signing.  Feel free to ignore 2-4.
->
-> 1. We should get the signature semantics right.  I think that, for modules,
-> we currently sign literally the module payload.  For modules, in my
-> semi-amateurish crypto universe [1], this is fine *as long as the key in
-> question is used for no other purpose*.  For firmware, it's dangerous, since
-> it would be vulnerable to substitution attacks in which the adversary
-> convinces us to interpret one firmware file as firmware for another device
-> or purpose entirely.
->
-> We should be signing something that's semantically equivalent to "This is a
-> valid module: xyz", "This is a valid 'regulatory.bin': xyz", or "This is a
-> valid kexec image: xyz".
+First, this general problem has been reported before, but the
+work-arounds previously suggested do not fully resolve my problems.
 
-Something that occurred to me (as a complete bystander) was: would it
-make sense to have keys able to be restricted to particular "types" of
-signable data? I.e. the key that can sign a valid regulatory.bin file
-cannot be used to sign a module or a kexec image. - This could remove
-the need to have multiple keyrings. (Also, UEFI keys unless otherwise
-tagged could be restricted to only signing bootloaders or kernels)
+The basic issue is that when the sending socket is directly on top
+of a wifi interface (ath10k driver), then TCP throughput sucks.
 
-Also, are multiple signatures a sensible thing? E.g. regulatory.bin
-gets signed by Seth, then Kyle, then $DISTRO and any one key is enough
-to validate it.
+For instance, if AP interface sends to station, with 10 concurrent
+TCP streams, I see about 426Mbps.  With 100 streams, I see total throughput
+of 750Mbps.  These were maybe 10-30 second tests that I did.
+
+Interestingly, a single stream connection performs very poorly at first,
+but at least in one test, it eventually ran quite fast.  It is too
+complicated to describe in words, but the graph is here:
+
+http://www.candelatech.com/downloads/single-tcp-4.0.pdf
+
+The 10-stream test did not go above about 450Mbps even after running for more than
+1 minute, and it was fairly stable around the 450Mbps range after the first few seconds.
+
+100-stream test shows nice stable aggregate throughput:
+
+http://www.candelatech.com/downloads/100-tcp-4.0.pdf
+
+I have tweaked the kernel tcp_limit_output_bytes setting
+(tested at 1024k too, did not make any significant difference).
+
+# cat /proc/sys/net/ipv4/tcp_limit_output_bytes
+2048000
+
+I have tried forcing TCP send/rcv buffers to be 1MB and 2MB, but that
+did not make obvious difference except that it started at the maximum
+rate very quickly instead of taking a few seconds to train up to full speed.
+
+If I run a single-stream TCP test, sending on eth1 (Intel 1G NIC)
+through the AP machine, then single stream download is about 540 Mbps, and ramps up
+quickly.  So, the AP can definitely send the needed amount of TCP packets.
+
+UDP throughput in download direction, single stream, is about 770Mbps, regardless
+of whether I originate the socket on the AP or if I pass it through the AP.
+send/recv bufs are set to 1MB for UDP sockets.
+
+The 3.17 kernel shows similar behaviour, and the 3.14 kernel is a lot better
+for TCP traffic.
+
+Are there tweaks other than tcp_limit_output_bytes that might
+improve this behaviour?
+
+I will be happy to grab captures or provide any other debugging info
+that someone thinks will be helpful.
 
 Thanks,
+Ben
 
 -- 
-Julian Calaby
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
