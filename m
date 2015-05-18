@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:37234 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753610AbbELUb7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 16:31:59 -0400
+Received: from mga11.intel.com ([192.55.52.93]:19246 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177AbbERGOX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 May 2015 02:14:23 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: "alexander.wetzel@web.de" <alexander.wetzel@web.de>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: mac80211 drops packet with old IV after rekeying
+Date: Mon, 18 May 2015 06:14:17 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DA98D91@HASMSX110.ger.corp.intel.com> (sfid-20150518_081729_256053_C5CE27FA)
+References: <CANUX_P31bbOr8WhTY5D+M7QraVqJeCdw-qxME0GWmOQtLksb9A@mail.gmail.com>
+	 <1431674716.2426.2.camel@sipsolutions.net>
+	 <CANUX_P0HN5z-c6M_KcnJxT1LBPDP=OC9JnsaPPRf9RcDuw4hug@mail.gmail.com>
+	 <1431714949.2117.0.camel@sipsolutions.net>
+	 <CANUX_P2Xf9i9P3G5LgUm0bjCMSMpQwecJ1S4qH6RuurrkuSp-A@mail.gmail.com>
+	 <1431806229.2120.6.camel@sipsolutions.net> <20150517160513.GA13175@w1.fi>
+	 <CANUX_P0byd4Q+1gjiBmoGqd_hESUH_YVCD6iPx0_d6aw_r3JSw@mail.gmail.com>
+	 <1431890756.2129.13.camel@sipsolutions.net>
+	 <CANUX_P3ODruGc2rvV2gLNLU15kEmaJMXeU_ovtaBeOQGnYotoA@mail.gmail.com>
+	 <1431893157.2129.18.camel@sipsolutions.net>
+	 <CANUX_P0cJc4Ww5AY7sNFL5z4EPit+ngHvX=4eFXF96K-E8p3MA@mail.gmail.com>
+	 (sfid-20150517_221304_420222_D8022C07)
+ <1431894140.2129.20.camel@sipsolutions.net>
+In-Reply-To: <1431894140.2129.20.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1431455457-25322-2-git-send-email-mcgrof@do-not-panic.com>
-References: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
-	<1431455457-25322-2-git-send-email-mcgrof@do-not-panic.com>
-Date: Tue, 12 May 2015 13:31:58 -0700
-Message-ID: <CA+55aFwSQqkA_yzvePe7p-aJkbVJc9od=wLvXvs9B=NcckFfoA@mail.gmail.com> (sfid-20150512_223221_575761_7D03CCF2)
-Subject: Re: [PATCH v2 1/5] firmware: fix __getname() missing failure check
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	David Howells <dhowells@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2015 at 11:30 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> +
-> +       path = __getname();
-> +       if (unlikely(!path))
-> +               return PTR_ERR(path);
-
-This makes no sense.
-
-PTR_ERR() on NULL is an insane operation. It's a very non-intuitive
-and misleading way of writing "0".
-
-So not only is that "return 0;", that's not likely what you want _anyway_.
-
-If you intended to return an error, you should just have done so, eg
-
-        if (unlikely(!path))
-                return -ENOMEM;
-
-which actually does something sane, and is more readable.
-
-PTR_ERR() is for when you get an error pointer, so a sequence like
-
-        if (IS_ERR(ptr))
-                return PTR_ERR(ptr);
-
-is sensible (it checks whether the ptr has an error value in it, and
-then returns the integer error value of the pointer).
-
-But for a NULL pointer? No.
-
-                       Linus
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZn
+ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEpvaGFubmVzIEJlcmcNCj4gU2VudDogU3VuZGF5
+LCBNYXkgMTcsIDIwMTUgMjM6MjINCj4gVG86IEVtbWFudWVsIEdydW1iYWNoDQo+IENjOiBhbGV4
+YW5kZXIud2V0emVsQHdlYi5kZTsgSm91bmkgTWFsaW5lbjsgbGludXgtd2lyZWxlc3MNCj4gU3Vi
+amVjdDogUmU6IG1hYzgwMjExIGRyb3BzIHBhY2tldCB3aXRoIG9sZCBJViBhZnRlciByZWtleWlu
+Zw0KPiANCj4gT24gU3VuLCAyMDE1LTA1LTE3IGF0IDIzOjEzICswMzAwLCBFbW1hbnVlbCBHcnVt
+YmFjaCB3cm90ZToNCj4gDQo+ID4gPj4gWWVhaCAtIG9rLiBCdXQgaG93IGNvbWUgd2UgKmFscmVh
+ZHkqIHNldCB0aGUgcG9pbnRlciB0byB0aGUgbmV3IGtleQ0KPiA+ID4+IHdoaWxlIHRoZSBIVyBp
+cyBzdGlsbCBzdWNjZXNzZnVsbHkgZGVjcnlwdGluZyB3aXRoIHRoZSBvbGQga2V5Lg0KPiA+ID4+
+IFRoaXMgaXMgdGhlIHBvaW50IEkgY2FuJyBmaWd1cmUgb3V0LiBJJ2QgZXhwZWN0IHRoZSB0cmFu
+c21pdHRpbmcNCj4gPiA+PiBzaWRlIHRvIHN0b3AgdXNpbmcgdGhlIG9sZCBrZXkgcHJpb3IgdG8g
+c2VuZGluZyB0aGUgRUFQT0wgKHdoaWNoDQoNClRoZXJlIGlzIHByb2JhYmx5IG5vIHN5bmNocm9u
+aXphdGlvbiBiZXR3ZWVuIHRoZSA0d2F5IEhTIGFuZCBvdGhlciBkYXRhIHRyYWZmaWMgb24gdGhl
+IHRyYW5zbWl0dGVyIHNpZGUsIGFzIHRoZXNlIGFyZSBkaWZmZXJlbnQgcHJvY2Vzc2VzLiBTbyBp
+dCBpcyBwb3NzaWJsZSB0aGF0IGFmdGVyIHJlY2VpdmluZyBtZXNzYWdlIDMgYW5kIGJlZm9yZSBz
+ZXR0aW5nIHRoZSBrZXlzLCB0aGUgSFcgd291bGQgYmUgYWJsZSB0byBkZWNyeXB0IGFkZGl0aW9u
+YWwgZnJhbWVzIHdpdGggdGhlIG9sZCBrZXkuDQoNCj4gPiA+PiAjdHJpZ2dlcnMgdGhlIHNldCBr
+ZXkgcG9pbnRlciBsaW5lKS4gU28gdGhvc2UgMiBsaW5lcyBkb24ndCBtYWtlIHNlbnNlIHRvDQo+
+IG1lOg0KPiA+ID4+DQo+ID4gPj4gPiAgIyBzZXQga2V5IHBvaW50ZXIgdG8gbmV3IGtleQ0KPiA+
+ID4+ID4gICogZGF0YSBSWCBpbiBIVywgZGVjcnlwdCB3LyBvbGQga2V5LCBQTj05OTkNCj4gPiA+
+Pg0KPiA+ID4+IEFmdGVyIGFsbCwgdGhlIFJ4IHBhdGggaXMgc2VyaWFsaXplZCBhbGwgdGhlIHdh
+eSB0aHJvdWdoIGZyb20gdGhlDQo+ID4gPj4gYWlyIHRvIG1hYzgwMjExLiBUaGUgb25seSB0aGlu
+ZyBJIGNhbiB0aGluayBhYm91dCBpcyB0aGF0IHRoZQ0KPiA+ID4+IHNlbmRpbmcgc2lkZSBpcyBz
+dGlsbCB1c2luZyB0aGUgb2xkIGtleSAqYWZ0ZXIqIGl0IGFscmVhZHkgc2VudCBpdHMgRUFQT0wN
+Cj4gZnJhbWVzLg0KPiA+ID4NCj4gPiA+IE5vdCBzdXJlLCBpc24ndCB0aGUga2V5IG9ubHkgaW5z
+dGFsbGVkIG9uIEVBUE9MIGFja25vd2xlZGdlbWVudCBvciBzbz8NCj4gPiA+IFdpdGggUFRLIHJl
+a2V5aW5nLCBJJ20gbm90IHJlYWxseSBzdXJlIHdoYXQgdGhlIHRpbWluZyBpcywgYW5kDQo+ID4g
+PiB0aGVyZSdzIG5vdCByZWFsbHkgYW55IHdheSBpdCBjYW4gYmUgY29ycmVjdCAod2l0aG91dCBl
+eHRlbmRlZCBrZXkNCj4gPiA+IElEIHN1cHBvcnQuKQ0KPiA+DQo+ID4gV2hhdGV2ZXIgdGhlIHRp
+bWluZyBpcywgc2luY2UgdGhlIFJ4IHBhdGggaXMgc2VyaWFsaXplZCwgdGhlcmUNCj4gPiBzaG91
+bGRuJ3QgYmUgYW55IHRpbWluZyBpc3N1ZXMuIE9yIGF0IGxlYXN0LCBJIGNhbid0IGZpZ3VyZSBv
+dXQgaG93DQo+ID4gdGhlc2UgbGluZXMgYWJvdmUgY291bGQgYmUgaW4gdGhlIG9yZGVyIHlvdSBw
+dXQgdGhlbS4NCj4gDQo+IEkgYWdyZWUgdGhhdCBpdCdsbCBkZXBlbmQgb24gaG93IHRoZSBrZXkg
+aXMgaW5zdGFsbGVkIG9uIHRoZSBzZW5kZXIsIGhvd2V2ZXIsIEkNCj4gaGF2ZSBubyBpZGVhIGhv
+dyB0aGF0J3MgZG9uZSBhbmQgaG93IG11Y2ggcG90ZW50aWFsIGRlbGF5IHRoZXJlIGlzIGJldHdl
+ZW4NCj4gc2VuZGluZyB0aGUgRUFQT0wgZnJhbWUgYW5kIGluc3RhbGxpbmcgdGhlIGtleSB0aGVy
+ZS4NCj4gSWYgeW91J3JlIGxvb2tpbmcgYXQgUlggcGF0aCBzeW5jaHJvbmlzYXRpb24gb25seSB0
+aGVuIHlvdSdyZSBhc3N1bWluZyBhDQo+IHBlcmZlY3Qgc2VuZGVyLCBidXQgdGhhdCBjbGVhcmx5
+IGNhbm5vdCBiZSB0aGUgY2FzZS4NCj4gDQoNCkFGQUlLLCB0aGUgUFRLIGlzIGluc3RhbGxlZCBp
+bW1lZGlhdGVseSBhZnRlciB0aGUgNHRoIG1lc3NhZ2UgaXMgc2VudCB3aXRob3V0IHdhaXRpbmcg
+dG8gQUNLIG9yIGFueSBvdGhlciBkZWxheS4gQXMgdGhlIEFQIChzaG91bGQpIGluc3RhbGxzIHRo
+ZSBrZXlzIG9ubHkgYWZ0ZXIgcHJvY2Vzc2luZyB0aGUgNHRoIG1lc3NhZ2UsIHNvIGEgZGVsYXkg
+aXMgZXhwZWN0ZWQuDQoNClJlZ2FyZHMsDQoNCklsYW4uDQo=
