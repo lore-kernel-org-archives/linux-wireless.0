@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21169 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226AbbENIac (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:34253 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752414AbbERJif (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 04:30:32 -0400
-Date: Thu, 14 May 2015 11:30:12 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Gaston Gonzalez <gascoar@gmail.com>
-Cc: devel@driverdev.osuosl.org, arnd@arndb.de,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	joe@perches.com, navyasri.tech@gmail.com, julian.calaby@gmail.com
-Subject: Re: [PATCH] staging: rtl8192u: ieee80211: Silence sparse warning
-Message-ID: <20150514083012.GG8431@mwanda> (sfid-20150514_103039_590241_9A8A1B2E)
-References: <1429476231-6197-1-git-send-email-gascoar@gmail.com>
- <20150420082441.GU10964@mwanda>
- <553C18B6.807@gmail.com>
- <20150427101242.GR14154@mwanda>
- <554AD76E.7060605@gmail.com>
- <20150508110328.GT14154@mwanda>
- <55527D6E.7090207@gmail.com>
- <20150513083615.GS14154@mwanda>
- <5553F48E.3050008@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5553F48E.3050008@gmail.com>
+	Mon, 18 May 2015 05:38:35 -0400
+Received: by wicmc15 with SMTP id mc15so84645246wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 02:38:34 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/3] ath10k: fix idle power consumption
+Date: Mon, 18 May 2015 09:38:17 +0000
+Message-Id: <1431941898-13591-3-git-send-email-michal.kazior@tieto.com> (sfid-20150518_113840_868119_E3717F39)
+In-Reply-To: <1431941898-13591-1-git-send-email-michal.kazior@tieto.com>
+References: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
+ <1431941898-13591-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 13, 2015 at 10:04:14PM -0300, Gaston Gonzalez wrote:
-> @@ -327,7 +280,7 @@ static int ieee80211_tkip_encrypt(struct sk_buff
-> *skb, int hdr_len, void *priv)
->                      tkey->tx_iv32);
->              tkey->tx_phase1_done = 1;
->          }
-> -        tkip_mixing_phase2(rc4key, tkey->key, tkey->tx_ttak,
-> tkey->tx_iv16);
-> +        tkip_mixing_phase2(tkey->key, tkey->tx_ttak, tkey->tx_iv16,
-> rc4key);
->      }
->      else
->      tkey->tx_phase1_done = 1;
-> @@ -447,4 +400,4 @@ static int ieee80211_tkip_decrypt(struct sk_buff
-> *skb, int hdr_len, void *priv)
->              tkip_mixing_phase1(tkey->rx_ttak, tkey->key, hdr->addr2, iv32);
->              tkey->rx_phase1_done = 1;
->          }
-> -        tkip_mixing_phase2(rc4key, tkey->key, tkey->rx_ttak, iv16);
-> +        tkip_mixing_phase2(tkey->key, tkey->rx_ttak, iv16, rc4key);
-> 
->         plen = skb->len - hdr_len - 12;
-> 
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-This patch got corrupted over email, so I can't review it inline, but it
-looks much more reasonable.
+mac80211 can update vif powersave state while
+disconnected. Firmware doesn't behave nicely and
+consumes more power than necessary if PS is
+disabled on a non-started vdev. Hence
+force-enable PS for non-running vdevs.
 
-regards,
-dan carpenter
+This reduces power drain on QCA61X4 from 88mA to
+36mA when interface is up and not associated.
+QCA988X wasn't measured.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 425dbe271495..9f576ca99f86 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1735,7 +1735,14 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+ 		enable_ps = false;
+ 	}
+ 
+-	if (enable_ps) {
++	if (!arvif->is_started) {
++		/* mac80211 can update vif powersave state while disconnected.
++		 * Firmware doesn't behave nicely and consumes more power than
++		 * necessary if PS is disabled on a non-started vdev. Hence
++		 * force-enable PS for non-running vdevs.
++		 */
++		psmode = WMI_STA_PS_MODE_ENABLED;
++	} else if (enable_ps) {
+ 		psmode = WMI_STA_PS_MODE_ENABLED;
+ 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
+ 
+-- 
+2.1.4
 
