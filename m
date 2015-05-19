@@ -1,98 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:34983 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755800AbbEUQ4F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 12:56:05 -0400
-Received: by labbd9 with SMTP id bd9so107997606lab.2
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2015 09:56:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150521165101.GI18164@localhost>
-References: <20150519200232.GM23057@wotan.suse.de> <555BA438.2070802@kernel.org>
- <20150519221128.GP23057@wotan.suse.de> <9567.1432223509@warthog.procyon.org.uk>
- <CALCETrX3krCsqCLvLYx1QdnjFK=R8FF7ta=vozDcGYSTUHvSrA@mail.gmail.com> <20150521165101.GI18164@localhost>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Thu, 21 May 2015 09:55:42 -0700
-Message-ID: <CALCETrU3biPZEY4hxPfUavNUP1EmBeT2H2tSfiCXw+NJmxoYqg@mail.gmail.com> (sfid-20150521_185625_802966_B4780479)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-To: Andy Lutomirski <luto@amacapital.net>,
-	David Howells <dhowells@redhat.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>, Joey Lee <jlee@suse.de>,
-	Rusty Russell <rusty@rustcorp.com.au>,
+Received: from mx1.redhat.com ([209.132.183.28]:48303 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755391AbbESKCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 06:02:54 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
+References: <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com> <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: dhowells@redhat.com, ming.lei@canonical.com, rusty@rustcorp.com.au,
+	torvalds@linux-foundation.org, seth.forshee@canonical.com,
+	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
+	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+	jlee@suse.com, tiwai@suse.de, casey@schaufler-ca.com,
+	keescook@chromium.org, mjg59@srcf.ucam.org,
+	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
 	Kyle McMartin <kyle@kernel.org>,
-	Sedat Dilek <sedat.dilek@gmail.com>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Michal Marek <mmarek@suse.cz>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	keyrings@linux-nfs.org, Abelardo Ricart III <aricart@memnix.com>,
-	"Serge E. Hallyn" <serge@hallyn.com>
-Content-Type: text/plain; charset=UTF-8
+	David Woodhouse <David.Woodhouse@intel.com>
+Subject: Re: [RFC v3 2/2] firmware: add firmware signature checking support
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Date: Tue, 19 May 2015 11:02:44 +0100
+Message-ID: <9412.1432029764@warthog.procyon.org.uk> (sfid-20150519_120258_702596_B982981E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2015 at 9:51 AM, Petko Manolov <petkan@mip-labs.com> wrote:
-> On 15-05-21 09:39:50, Andy Lutomirski wrote:
->>
->> It's also a performance cost because the average user of this signature stuff
->> doesn't actually want IMA, and IMA is checking the wrong think anyway.
->> IMA/EVM tells us "this file validly belongs in /lib/modules/whatever according
->> to whomever we trust for the filesystem".  We want to check "is this data,
->> regardless of where it was read from, a trusted module".
->
-> IMA-appraise does not care where the file comes from (although it may be
-> persuaded to) and verifies file's data and meta-data against a signature.  I
-> guess you should actually read the code. :)
->
+Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
 
-I read plenty of the code.  I said "data" not "file" for a reason.
-I'll quote some code:
+> +The kernel firmware signing facility enables to cryptographically sign
+> +firmware files on a system using the same keys used for module signing.
+> +Firmware files's signatures consist of PKCS#7 messages of the respective
+> +firmware file. A firmware file named foo.bin, would have its respective
+> +signature on the filesystem as foo.bin.p7s. When firmware signature
+> +checking is enabled (FIRMWARE_SIG) and when one of the above APIs is used
+> +against foo.bin, the file foo.bin.p7s will also be looked for. If
+> +FIRMWARE_SIG_FORCE is enabled the foo.bin file will only be allowed to
+> +be returned to callers of the above APIs if and only if the foo.bin.p7s
+> +file is confirmed to be a valid signature of the foo.bin file. If
+> +FIRMWARE_SIG_FORCE is not enabled and only FIRMWARE_SIG is enabled the
+> +kernel will be permissive and enabled unsigned firmware files, or firmware
+> +files with incorrect signatures. If FIRMWARE_SIG is not enabled the
+> +signature file is ignored completely.
 
-int ima_appraise_measurement(int func, struct integrity_iint_cache *iint,
-                             struct file *file, const unsigned char *filename,
-                             struct evm_ima_xattr_data *xattr_value,
-                             int xattr_len, int opened)
+I'd rework this paragraph somewhat.  How about:
 
-There is no struct file in init_module.
+  The kernel firmware signing facility enables firmware files on a system to
+  have associated cryptographic signatures that can be used to validate them.
+  This uses the same mechanism as is used for module signing.
 
-{
-        static const char op[] = "appraise_data";
-        char *cause = "unknown";
-        struct dentry *dentry = file->f_path.dentry;
-        struct inode *inode = dentry->d_inode;
-        enum integrity_status status = INTEGRITY_UNKNOWN;
-        int rc = xattr_len, hash_start = 0;
+  Firmware signatures are kept in separate files from the actual firmware data
+  to avoid accidental corruption of the firmware and to avoid licensing issues
+  from changes.
 
-        if (!inode->i_op->getxattr)
-                return INTEGRITY_UNKNOWN;
+  A firmware signature file consists of a PKCS#7 message containing one or
+  more cryptographic signatures for the respective firmware file.  The
+  signature file is named for the firmware file to which it corresponds and
+  must be kept in the same directory.  For instance, for the signature file
+  for a firmware file named foo.bin would be named foo.bin.p7s.
 
-Even for finit_module, which does have a struct file, there is
-absolutely no reason to require that the file's inode has a getxattr
-operation.
+  When firmware signature checking is enabled (CONFIG_FIRMWARE_SIG) and when
+  one of the above APIs is used against foo.bin, the file foo.bin.p7s will
+  also be looked for.
 
-I maintain my claim that IMA is not appropriate for module signing in
-general.  It might make sense for the kind of thing that Chromium does
-(approving of modules using finit_module based on their source instead
-of their payload and verifying the payload indirectly using IMA or
-dm-verity), but that's not the problem that David and Luis are trying
-to solve.
+  If a signature file is found, the kernel's system keyring will be searched
+  for public keys that can be used to verify the signatures held therein.  For
+  any signature for which a matching key is found, the kernel will attempt to
+  verify the signature with the key.  If verification fails on any signature,
+  the firmware load will be rejected (with EKEYREJECTED) - even if other
+  signatures match.
 
-Also, especially for firmware on regular distros, IMA is ridiculous.
-IIRC there is no general support for xattrs in initramfs, and there is
-no reason to start requiring such support just to allow firmware to
-live in initramfs.
+  If CONFIG_FIRMWARE_SIG_FORCE is also enabled, then the firmware load will be
+  rejected (with ENOKEY) if there is no signature file or none of the
+  signatures match any of the keys in the kernel system keyring.  But if at
+  least one signature matches, then the load will be allowed to proceed.
 
-I think that using IMA for this has a similar problem to using PKCS#7:
-it's a big hammer that is much more complex than necessary to solve
-the problem at hand.
+  If CONFIG_FIRMWARE_SIG is not enabled the signature file is ignored
+  completely.
 
---Andy
+David
