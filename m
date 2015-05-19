@@ -1,117 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:33119 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113AbbEHJRD (ORCPT
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:34283 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783AbbESQpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 05:17:03 -0400
-Received: by lbbzk7 with SMTP id zk7so49019641lbb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 02:17:00 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: enable ASPM
-Date: Fri,  8 May 2015 09:13:06 +0000
-Message-Id: <1431076388-24800-2-git-send-email-michal.kazior@tieto.com> (sfid-20150508_111709_617868_DA8CF85A)
-In-Reply-To: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
-References: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 19 May 2015 12:45:12 -0400
+Received: by qctt3 with SMTP id t3so10181622qct.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 09:45:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P3XPLvLhYy7pb9_LXjEynfNjgzhbW3zFYfxVCjcjGNczw@mail.gmail.com>
+References: <CALWn1pu8U1o=J=j8Uunf7-hLNZV2Pv2mxJx11O_psZArij-qNw@mail.gmail.com>
+ <CANUX_P3XPLvLhYy7pb9_LXjEynfNjgzhbW3zFYfxVCjcjGNczw@mail.gmail.com>
+From: darklight wu <darklightwu@gmail.com>
+Date: Wed, 20 May 2015 00:44:51 +0800
+Message-ID: <CALWn1pt-neiJhrQcEES4cktcfyL0+c2B=GUAh8+Xo0L06VmsfA@mail.gmail.com> (sfid-20150519_184518_431520_369ABA36)
+Subject: Re: Failed to capture data packets using Monitor mode with Intel 7260
+ card. (Under Ubuntu 14.04)
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+On Mon, May 18, 2015 at 3:26 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Mon, May 18, 2015 at 10:01 AM, darklight wu <darklightwu@gmail.com> wrote:
+>> Hi, All:
+>>
+>> I configured the Wifi Monitor mode with Intel 7260 card under
+>> Ubuntu14.04 and then used Wireshark to capture packets from air. But I
+>> could only get management/control packets but no data packets. I tried
+>> different channels and also with HT20 or HT40+/-.
+>>
+>> The commands I used were:
+>>
+>> iw dev wlan0 interface add mon0 type monitor
+>> iw dev wlan0 del  //I googled and was told I needed to delete the
+>> wlan0 first. Or else I got device busy (-16) error
+>> ifconfig mon0 up
+>> iw dev mon0 set channel 1
+>>
+>> I also tried to use other ways like "airmon-ng start wlan0". All the
+>> observations were same, no data packets. It's weird! Anyone has a
+>> clue?
+>>
+>
+> This is weird. But I recommend to add power_scheme=1 as a module
+> parameter to iwlmvm. Since iwlmvm is loaded automatically, you'll need
+> to add that to /etc/modprobe.d/iwlwifi.conf.
+> 14.04 ships 3.13 and I remember we had issues with monitor mode at
+> that time. You may want to try a newer kernel.
 
-It is actually safe to enable ASPM after the
-device is booted up.
+I tried again today with "power_scheme=1" and also booted with Ubuntu
+15.04. Both still failed to work in monitor mode. And with Ubuntu
+15.04, I event could not configure the nic to work on monitor mode.
+The same commands at least can set the monitor mode under 14.04.
+Meanwhile, I just want to clarify, the nic could capture data packets
+to/from itself but could not capture others that were not belongs to
+it. My co-worker tried on another machine with Ubuntu 14.04, he was
+also failed.
 
-This reduces power drain of QCA61X4 when driver is
-simply loaded (no interface is up) from 31mA to
-14mA. QCA988X wasn't measured but doesn't seem to
-regress in any other way.
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 15 ++++++++++-----
- drivers/net/wireless/ath/ath10k/pci.h |  6 ++++++
- 2 files changed, 16 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 969a1231800e..8be07c653b2d 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1227,11 +1227,15 @@ static void ath10k_pci_irq_enable(struct ath10k *ar)
- 
- static int ath10k_pci_hif_start(struct ath10k *ar)
- {
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif start\n");
- 
- 	ath10k_pci_irq_enable(ar);
- 	ath10k_pci_rx_post(ar);
- 
-+	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
-+				   ar_pci->link_ctl);
-+
- 	return 0;
- }
- 
-@@ -1981,6 +1985,7 @@ static int ath10k_pci_chip_reset(struct ath10k *ar)
- 
- static int ath10k_pci_hif_power_up(struct ath10k *ar)
- {
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
-@@ -1991,6 +1996,11 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	pcie_capability_read_word(ar_pci->pdev, PCI_EXP_LNKCTL,
-+				  &ar_pci->link_ctl);
-+	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
-+				   ar_pci->link_ctl & ~PCI_EXP_LNKCTL_ASPMC);
-+
- 	/*
- 	 * Bring the target up cleanly.
- 	 *
-@@ -2502,7 +2512,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct pci_dev *pdev = ar_pci->pdev;
--	u32 lcr_val;
- 	int ret;
- 
- 	pci_set_drvdata(pdev, ar);
-@@ -2536,10 +2545,6 @@ static int ath10k_pci_claim(struct ath10k *ar)
- 
- 	pci_set_master(pdev);
- 
--	/* Workaround: Disable ASPM */
--	pci_read_config_dword(pdev, 0x80, &lcr_val);
--	pci_write_config_dword(pdev, 0x80, (lcr_val & 0xffffff00));
--
- 	/* Arrange for access to Target SoC registers. */
- 	ar_pci->mem = pci_iomap(pdev, BAR_NUM, 0);
- 	if (!ar_pci->mem) {
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index bddf54320160..ee2173d61257 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -185,6 +185,12 @@ struct ath10k_pci {
- 	/* Map CE id to ce_state */
- 	struct ath10k_ce_pipe ce_states[CE_COUNT_MAX];
- 	struct timer_list rx_post_retry;
-+
-+	/* Due to HW quirks it is recommended to disable ASPM during device
-+	 * bootup. To do that the original PCI-E Link Control is stored before
-+	 * device bootup is executed and re-programmed later.
-+	 */
-+	u16 link_ctl;
- };
- 
- static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
--- 
-2.1.4
-
+Any tricks here?
