@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33645 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422791AbbEUTxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 15:53:35 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/10] iwlwifi: mvm: BT Coex - duplicate the command if sent ASYNC
-Date: Thu, 21 May 2015 22:53:07 +0300
-Message-Id: <1432237990-5890-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150521_215348_009791_A06CE2ED)
-In-Reply-To: <1432237819.26813.4.camel@intel.com>
-References: <1432237819.26813.4.camel@intel.com>
+Received: from smtp03.msg.oleane.net ([62.161.4.3]:39591 "EHLO
+	smtp03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932544AbbESJr3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 05:47:29 -0400
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp03.msg.oleane.net (MTA) with ESMTP id t4J9lRfA010493
+	for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 11:47:27 +0200
+Subject: [RFC v2] ath9k: allow up to 8 access point vifs on DFS channels
+Date: Tue, 19 May 2015 11:47:26 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901A71B59@sbs2003.acksys.local> (sfid-20150519_114740_140509_AE3E30C9)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Jean-Pierre TOSONI" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are buses that can't handle ASYNC command without
-copying them. Duplicate the host command instead.
+Allow the combination of 8 (AP + mesh) interfaces on radar channels
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Tested with hostapd, 2 and 8 BSSIDs, 1 or 2 DFS channels, BW 20 MHz
+TODO: test AP+mesh combination
+TODO: test 40 MHz BW
 ---
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch was done with quilt on Openwrt against compat-wireless
+2014-11-04
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index d954591..6ac6de2 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -776,7 +776,7 @@ static int iwl_mvm_bt_coex_reduced_txp(struct iwl_mvm *mvm, u8 sta_id,
- 	struct iwl_host_cmd cmd = {
- 		.id = BT_CONFIG,
- 		.len = { sizeof(*bt_cmd), },
--		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
-+		.dataflags = { IWL_HCMD_DFL_DUP, },
- 		.flags = CMD_ASYNC,
- 	};
- 	struct iwl_mvm_sta *mvmsta;
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -723,6 +723,14 @@ static const struct ieee80211_iface_limi
+ 				 BIT(NL80211_IFTYPE_ADHOC) },
+ };
+ 
++static const struct ieee80211_iface_limit if_dfs_limits_mvap[] = {
++	{ .max = 8,	.types =
++#ifdef CONFIG_MAC80211_MESH
++				 BIT(NL80211_IFTYPE_MESH_POINT) |
++#endif
++				 BIT(NL80211_IFTYPE_AP) },
++};
++
+ static const struct ieee80211_iface_combination if_comb[] = {
+ 	{
+ 		.limits = if_limits,
+@@ -746,6 +754,16 @@ static const struct ieee80211_iface_comb
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
+ 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
+|
++					BIT(NL80211_CHAN_WIDTH_20) |
++					BIT(NL80211_CHAN_WIDTH_40),
++	},
++	{
++		.limits = if_dfs_limits_mvap,
++		.n_limits = ARRAY_SIZE(if_dfs_limits_mvap),
++		.max_interfaces = 8,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
+|
+ 					BIT(NL80211_CHAN_WIDTH_20) |
+ 					BIT(NL80211_CHAN_WIDTH_40),
+ 	}
 -- 
-2.1.4
+quilt
 
