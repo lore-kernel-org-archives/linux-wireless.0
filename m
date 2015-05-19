@@ -1,35 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:53530 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755613AbbE2MGI convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:35380 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbbESUYq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 08:06:08 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <huxm@marvell.com>
-Subject: Re: [PATCHv3 09/16] mwifiex: add sta_list firmware command
-References: <1432918598-27769-1-git-send-email-patila@marvell.com>
-	<1432918598-27769-10-git-send-email-patila@marvell.com>
-Date: Fri, 29 May 2015 14:05:56 +0200
-In-Reply-To: <1432918598-27769-10-git-send-email-patila@marvell.com> (Avinash
-	Patil's message of "Fri, 29 May 2015 22:26:30 +0530")
-Message-ID: <87382fh9ln.fsf@nemi.mork.no> (sfid-20150529_140613_043311_8C55877B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 19 May 2015 16:24:46 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: kyle@kernel.org, linux-firmware@kernel.org
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gnomes@lxorguk.ukuu.org.uk,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v2] README: clarify redistribution requirements covering patents
+Date: Tue, 19 May 2015 13:22:31 -0700
+Message-Id: <1432066951-27346-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20150519_222508_360834_FCE3C099)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avinash Patil <patila@marvell.com> writes:
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
->  		case HostCmd_CMD_UAP_BSS_STOP:
->  		case HostCmd_CMD_UAP_STA_DEAUTH:
->  		case HOST_CMD_APCMD_SYS_RESET:
-> +		case HOSTCMD_CMD_UAP_STA_LIST:
+Firmware licenses on linux-firmware should include an implicit
+or explicit patent grant to end users for full device operation
+otherwise it would start making linux-firmware useless for many
+Linux distributions which have positions against patent encumbered
+software [0] [1] [2] and it would mean cherry picking firmware files
+out. It can also mean making it problematic to redistribute linux-firmware
+in some jurisdictions which could have different positions on
+patents, or have already outlawed software patents.
 
+Licenses with implicit patent grants are allowed given that otherwise
+we couldn't carry permissively licensed firmwares which would be silly,
+but using permissively licensed firmware files which remove patent
+grants explicitly are not allowed.
 
-Just wondering, not really objecting.... But wouldn't it be nice with
-some consistency here?
+A clarifications is needed as one attempt was already made to include
+firmware encumbered by patents without a grant [3] and it was decided
+we would not allow these. We clarify this to make this requirement
+explicit and prevent these type of further attempts.
 
+[0] https://www.debian.org/legal/patent
+[1] http://fedoraproject.org/wiki/Software_Patents#Red_Hat.27s_position_on_Software_Patents
+[2] http://www.openinventionnetwork.com/about-us/
+[3] https://lkml.org/lkml/2014/3/14/182
 
-Bjørn
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+
+This v2 just changes "licence" to "license" as requested by Arend.
+
+ README | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/README b/README
+index f2ed92e..cdaecf0 100644
+--- a/README
++++ b/README
+@@ -17,8 +17,11 @@ diff or preferably a git pull request to:
+ and also cc: to related mailing lists.
+ 
+ Your commit should include an update to the WHENCE file clearly
+-identifying the licence under which the firmware is available, and
+-that it is redistributable. If the licence is long and involved, it's
++identifying the license under which the firmware is available, and
++that it is redistributable. Being redistributable includes ensuring
++the firmware license provided includes an implicit or explicit
++patent grant to end users to ensure full functionality of device
++operation with the firmware. If the license is long and involved, it's
+ permitted to include it in a separate file and refer to it from the
+ WHENCE file.
+ And if it were possible, a changelog of the firmware itself.
+-- 
+2.3.2.209.gd67f9d5.dirty
+
