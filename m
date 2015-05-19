@@ -1,120 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:56123 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932742AbbENKtE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 06:49:04 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/2] nl80211: Add support to configure low ack threshold
-Date: Thu, 14 May 2015 16:17:35 +0530
-Message-ID: <1431600456-10697-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150514_124919_127289_906D16E2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:13215 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752664AbbESLgz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 07:36:55 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: disconnect TDLS stations on STA CSA
+Date: Tue, 19 May 2015 14:36:48 +0300
+Message-Id: <1432035408-8460-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150519_133658_698990_C9D99D85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new nl80211 attribute to configure low ack threshold (number of
-consecutive frames) not being acked by station. This threshold is used
-to kickout station by driver through low ack event. This allows user to
-tune the parameter to improve robustness under noisy environment.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+When a station does a channel switch, it's not well defined what its TDLS
+peers would do. Avoid a situation when the local side marks a potentially
+disconnected peer as a TDLS peer.
+Keeping peers connected through CSA is doubly problematic with the upcoming
+TDLS WIDER-BW feature which allows peers to widen the BSS channel. The
+new channel transitioned-to might not be compatible and would require
+a re-negotiation anyway.
+
+Make sure to disallow new TDLS link during CSA.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 11 ++++++++++-
- net/wireless/nl80211.c       |  7 +++++++
- 3 files changed, 20 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 26 ++++++++++++++++++++++++++
+ net/mac80211/tdls.c |  6 ++++++
+ 2 files changed, 32 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f8d6813..ae55d20 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -711,6 +711,8 @@ struct cfg80211_acl_data {
-  * @p2p_opp_ps: P2P opportunistic PS
-  * @acl: ACL configuration used by the drivers which has support for
-  *	MAC address based access control
-+ * @low_ack_threshold: number of consecutive frames not being ACKed by
-+ *	station, used to trigger low_ack event.
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -729,6 +731,7 @@ struct cfg80211_ap_settings {
- 	u8 p2p_ctwindow;
- 	bool p2p_opp_ps;
- 	const struct cfg80211_acl_data *acl;
-+	u16 low_ack_threshold;
- };
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 3294666..387fe70 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1098,6 +1098,24 @@ static void ieee80211_chswitch_timer(unsigned long data)
+ 	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
+ }
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 241220c..0986a98 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -232,7 +232,8 @@
-  *	%NL80211_ATTR_CIPHER_GROUP, %NL80211_ATTR_WPA_VERSIONS,
-  *	%NL80211_ATTR_AKM_SUITES, %NL80211_ATTR_PRIVACY,
-  *	%NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_INACTIVITY_TIMEOUT,
-- *	%NL80211_ATTR_ACL_POLICY and %NL80211_ATTR_MAC_ADDRS.
-+ *	%NL80211_ATTR_ACL_POLICY and %NL80211_ATTR_MAC_ADDRS
-+ *	%NL80211_ATTR_LOW_ACK_THRESH.
-  *	The channel to use can be set on the interface or be given using the
-  *	%NL80211_ATTR_WIPHY_FREQ and the attributes determining channel width.
-  * @NL80211_CMD_NEW_BEACON: old alias for %NL80211_CMD_START_AP
-@@ -1761,6 +1762,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_REG_INDOOR: flag attribute, if set indicates that the device
-  *      is operating in an indoor environment.
-  *
-+ * @NL80211_ATTR_LOW_ACK_THRESH: number of consecutive frames that are not ACKed
-+ *	by station. This threshold is used to generate low ack event by driver.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2130,6 +2134,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_REG_INDOOR,
- 
-+	NL80211_ATTR_LOW_ACK_THRESH,
++static void ieee80211_teardown_tdls_peers(struct ieee80211_sub_if_data *sdata)
++{
++	struct sta_info *sta;
++	u16 reason = WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED;
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4585,4 +4591,7 @@ enum nl80211_tdls_peer_capability {
- 	NL80211_TDLS_PEER_WMM = 1<<2,
- };
- 
-+/* Default low ack threshold for station kickout event */
-+#define NL80211_DEFAULT_LOW_ACK_THRESH    50
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
++		if (!sta->sta.tdls || sta->sdata != sdata || !sta->uploaded ||
++		    !test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++			continue;
 +
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index dd78445..7e7f96f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -400,6 +400,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_NETNS_FD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
- 	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_LOW_ACK_THRESH] = { .type = NLA_U16 },
- };
- 
- /* policy for the key attributes */
-@@ -3436,6 +3437,12 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		params.smps_mode = NL80211_SMPS_OFF;
++		ieee80211_tdls_oper_request(&sdata->vif, sta->sta.addr,
++					    NL80211_TDLS_TEARDOWN, reason,
++					    GFP_ATOMIC);
++	}
++	rcu_read_unlock();
++}
++
+ static void
+ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 				 u64 timestamp, u32 device_timestamp,
+@@ -1161,6 +1179,14 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		return;
  	}
  
-+	if (info->attrs[NL80211_ATTR_LOW_ACK_THRESH])
-+		params.low_ack_threshold = nla_get_u16(
-+			info->attrs[NL80211_ATTR_LOW_ACK_THRESH]);
-+	else
-+		params.low_ack_threshold = NL80211_DEFAULT_LOW_ACK_THRESH;
++	/*
++	 * Drop all TDLS peers - either we disconnect or move to a different
++	 * channel from this point on. There's no telling what our peer will do.
++	 * The TDLS WIDER_BW scenario is also problematic, as peers might now
++	 * have an incompatible wider chandef.
++	 */
++	ieee80211_teardown_tdls_peers(sdata);
 +
- 	wdev_lock(wdev);
- 	err = rdev_start_ap(rdev, dev, &params);
- 	if (!err) {
+ 	mutex_lock(&local->mtx);
+ 	mutex_lock(&local->chanctx_mtx);
+ 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 8a92a92..75e8e3b 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1183,6 +1183,12 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	switch (oper) {
+ 	case NL80211_TDLS_ENABLE_LINK:
++		if (sdata->vif.csa_active) {
++			tdls_dbg(sdata, "TDLS: disallow link during CSA\n");
++			ret = -EBUSY;
++			break;
++		}
++
+ 		rcu_read_lock();
+ 		sta = sta_info_get(sdata, peer);
+ 		if (!sta) {
 -- 
-2.4.0
+2.1.4
 
