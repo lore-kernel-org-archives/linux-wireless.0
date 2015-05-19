@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+Received: from cantor2.suse.de ([195.135.220.15]:59004 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752157AbbEZTTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:19:05 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 34/39] iwlwifi: tracing: add rx cmd header fields
-Date: Tue, 26 May 2015 22:17:47 +0300
-Message-Id: <1432667872-18092-34-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211911_613514_B15EEF18)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+	id S1750749AbbESQbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 12:31:19 -0400
+Date: Tue, 19 May 2015 18:31:16 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: David Howells <dhowells@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	ming.lei@canonical.com, rusty@rustcorp.com.au,
+	torvalds@linux-foundation.org, seth.forshee@canonical.com,
+	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
+	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+	jlee@suse.com, tiwai@suse.de, casey@schaufler-ca.com,
+	keescook@chromium.org, mjg59@srcf.ucam.org,
+	akpm@linux-foundation.org, Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <David.Woodhouse@intel.com>
+Subject: Re: [RFC v3 2/2] firmware: add firmware signature checking support
+Message-ID: <20150519163116.GE23057@wotan.suse.de> (sfid-20150519_183135_430497_53C35145)
+References: <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
+ <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
+ <9412.1432029764@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9412.1432029764@warthog.procyon.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Tue, May 19, 2015 at 11:02:44AM +0100, David Howells wrote:
+> Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+> 
+> > +The kernel firmware signing facility enables to cryptographically sign
+> > +firmware files on a system using the same keys used for module signing.
+> > +Firmware files's signatures consist of PKCS#7 messages of the respective
+> > +firmware file. A firmware file named foo.bin, would have its respective
+> > +signature on the filesystem as foo.bin.p7s. When firmware signature
+> > +checking is enabled (FIRMWARE_SIG) and when one of the above APIs is used
+> > +against foo.bin, the file foo.bin.p7s will also be looked for. If
+> > +FIRMWARE_SIG_FORCE is enabled the foo.bin file will only be allowed to
+> > +be returned to callers of the above APIs if and only if the foo.bin.p7s
+> > +file is confirmed to be a valid signature of the foo.bin file. If
+> > +FIRMWARE_SIG_FORCE is not enabled and only FIRMWARE_SIG is enabled the
+> > +kernel will be permissive and enabled unsigned firmware files, or firmware
+> > +files with incorrect signatures. If FIRMWARE_SIG is not enabled the
+> > +signature file is ignored completely.
+> 
+> I'd rework this paragraph somewhat.  How about:
+> 
 
-Having explicit rx cmd header fields is useful, as it can
-be used for event filtering (e.g. saving only debug logs,
-rather than the whole data)
+<-- snip -->
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+Looks sexy, taken word for word, thanks!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h b/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
-index 223b875..948ce08 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
-@@ -1,6 +1,7 @@
- /******************************************************************************
-  *
-  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2015 Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -64,19 +65,21 @@ TRACE_EVENT(iwlwifi_dev_hcmd,
- 
- TRACE_EVENT(iwlwifi_dev_rx,
- 	TP_PROTO(const struct device *dev, const struct iwl_trans *trans,
--		 void *rxbuf, size_t len),
--	TP_ARGS(dev, trans, rxbuf, len),
-+		 struct iwl_rx_packet *pkt, size_t len),
-+	TP_ARGS(dev, trans, pkt, len),
- 	TP_STRUCT__entry(
- 		DEV_ENTRY
--		__dynamic_array(u8, rxbuf, iwl_rx_trace_len(trans, rxbuf, len))
-+		__field(u8, cmd)
-+		__dynamic_array(u8, rxbuf, iwl_rx_trace_len(trans, pkt, len))
- 	),
- 	TP_fast_assign(
- 		DEV_ASSIGN;
--		memcpy(__get_dynamic_array(rxbuf), rxbuf,
--		       iwl_rx_trace_len(trans, rxbuf, len));
-+		__entry->cmd = pkt->hdr.cmd;
-+		memcpy(__get_dynamic_array(rxbuf), pkt,
-+		       iwl_rx_trace_len(trans, pkt, len));
- 	),
- 	TP_printk("[%s] RX cmd %#.2x",
--		  __get_str(dev), ((u8 *)__get_dynamic_array(rxbuf))[4])
-+		  __get_str(dev), __entry->cmd)
- );
- 
- TRACE_EVENT(iwlwifi_dev_tx,
--- 
-2.1.4
-
+ Luis
