@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:47982 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932466AbbENMd3 (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:33079 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750835AbbESFQy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 08:33:29 -0400
-Date: Thu, 14 May 2015 22:33:05 +1000
-From: James Cameron <quozl@laptop.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, liuzy@marvell.com
-Subject: Re: [PATCH] mwifiex: reduce severity of debug messages for mgmt rx
-Message-ID: <20150514123305.GA9984@us.netrek.org> (sfid-20150514_143332_643922_6032B2A1)
-References: <1431613651-9049-1-git-send-email-patila@marvell.com>
+	Tue, 19 May 2015 01:16:54 -0400
+Received: by lagr1 with SMTP id r1so6041224lag.0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 22:16:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431613651-9049-1-git-send-email-patila@marvell.com>
+In-Reply-To: <555AC172.4040507@lwfinger.net>
+References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>
+	<55575AC8.2060301@lwfinger.net>
+	<CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>
+	<5557844B.4040108@lwfinger.net>
+	<CAJ=9CzamCxkwVtTtUzU9zatocUPz0W+3f0Kgm6N0tDMWbcP_LA@mail.gmail.com>
+	<55586D8D.7040407@gmail.com>
+	<CAJ=9CzbxScr7SJjhxnxAWt+xS-A8VR-_PQs0BbbdUp7xCaG2aw@mail.gmail.com>
+	<CAJ=9CzaDK+oKJ8JJtb_OE6wrh85f8ffPf_oa9c0GRQFStUULjg@mail.gmail.com>
+	<555A05DC.8080704@lwfinger.net>
+	<CAJ=9CzY3E0Y3++g6sWEmgBQ70YmJEJaUdunN9AS4obLT4-WaBQ@mail.gmail.com>
+	<555AC172.4040507@lwfinger.net>
+Date: Tue, 19 May 2015 08:16:52 +0300
+Message-ID: <CAJ=9CzZBp0FpZurhJouPU_u-oHQPUu08Fqa59iFdAwrdxbdiNA@mail.gmail.com> (sfid-20150519_071824_447031_D33EC00B)
+Subject: Re: kernel page fault in r8712u
+From: Haggai Eran <haggai.eran@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 14, 2015 at 07:57:31PM +0530, Avinash Patil wrote:
-> This would ensure dmesg logs are not spammed with "unknown mgmt frame
-> subtype" messages.
+On 19 May 2015 at 07:52, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> I checked the driver with Smatch and found a couple of array problems. These
+> likely won't be the problem, but try the attached patches anyway.
 
-"subtype"
+I tried the patches. The first one prevents the driver from working. I
+think the smatch warning may be a false positive, because HWXMIT_ENTRY
+is checked specifically for values 4 and 5 in an if statement.
 
-> 
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> ---
->  drivers/net/wireless/mwifiex/util.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-> index 3c0b3c1..fd8ef3c 100644
-> --- a/drivers/net/wireless/mwifiex/util.c
-> +++ b/drivers/net/wireless/mwifiex/util.c
-> @@ -350,7 +350,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
->  		}
->  		break;
->  	default:
-> -		mwifiex_dbg(priv->adapter, ERROR,
-> +		mwifiex_dbg(priv->adapter, INFO,
->  			    "unknown mgmt frame subytpe %#x\n", stype);
-
-"subytpe" != "subtype"
-
-An opportunity there.  ;-)
-
--- 
-James Cameron
-http://quozl.linux.org.au/
+The second patch doesn't hurt, but it didn't solve the issue.
