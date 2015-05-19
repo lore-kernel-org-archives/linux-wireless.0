@@ -1,91 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38391 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756387AbbEVI5o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 04:57:44 -0400
-Received: by wichy4 with SMTP id hy4so40040818wic.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 01:57:43 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/2] mac80211: guard against invalid ptr deref
-Date: Fri, 22 May 2015 10:57:23 +0200
-Message-Id: <1432285043-8878-2-git-send-email-michal.kazior@tieto.com> (sfid-20150522_105750_719653_542BE0F3)
-In-Reply-To: <1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
-References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
- <1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57810 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755286AbbESHUm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 03:20:42 -0400
+Message-ID: <1432020039.7437.0.camel@sipsolutions.net> (sfid-20150519_092057_170182_AABAFE12)
+Subject: pull-request: mac80211-next 2015-05-19
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 19 May 2015 09:20:39 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was possible for mac80211 to be coerced into an
-unexpected flow causing sdata union to become
-corrupted. Station pointer was put into
-sdata->u.vlan.sta memory location while it was
-really master AP's sdata->u.ap.next_beacon. This
-led to station entry being later freed as
-next_beacon before __sta_info_flush() in
-ieee80211_stop_ap() and a subsequent invalid
-pointer dereference crash.
+Hi Dave,
 
-The problem was that ieee80211_ptr->use_4addr
-wasn't cleared on interface type changes.
+My last pull request introduced two bugs, and we found two more that
+were present earlier, so I have four bug fixes now.
 
-This could be reproduced with the following steps:
+Please pull.
 
- # host A and host B have just booted; no
- # wpa_s/hostapd running; all vifs are down
- host A> iw wlan0 set type station
- host A> iw wlan0 set 4addr on
- host A> printf 'interface=wlan0\nssid=4addrcrash\nchannel=1\nwds_sta=1' > /tmp/hconf
- host A> hostapd -B /tmp/conf
- host B> iw wlan0 set 4addr on
- host B> ifconfig wlan0 up
- host B> iw wlan0 connect -w hostAssid
- host A> pkill hostapd
- # host A crashed:
+Thanks,
+Johannes
 
- [  127.928192] BUG: unable to handle kernel NULL pointer dereference at 00000000000006c8
- [  127.929014] IP: [<ffffffff816f4f32>] __sta_info_flush+0xac/0x158
- ...
- [  127.934578]  [<ffffffff8170789e>] ieee80211_stop_ap+0x139/0x26c
- [  127.934578]  [<ffffffff8100498f>] ? dump_trace+0x279/0x28a
- [  127.934578]  [<ffffffff816dc661>] __cfg80211_stop_ap+0x84/0x191
- [  127.934578]  [<ffffffff816dc7ad>] cfg80211_stop_ap+0x3f/0x58
- [  127.934578]  [<ffffffff816c5ad6>] nl80211_stop_ap+0x1b/0x1d
- [  127.934578]  [<ffffffff815e53f8>] genl_family_rcv_msg+0x259/0x2b5
 
-Even though this can and should be fixed in
-cfg80211 it still makes sense to add a sanity
-check to mac80211 to prevent future problems.
+The following changes since commit bbbe8c8c596b3784a2ed08772900e827f8ba72c5:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
+  mac80211: add missing documentation for rate_ctrl_lock (2015-05-06 16:00:32 +0200)
 
-Notes:
-    v2:
-     * improve commit log [Johannes]
+are available in the git repository at:
 
- net/mac80211/cfg.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-05-19
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index bb9f83640b46..d1f8d615701c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1395,6 +1395,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
- 
- 		if (params->vlan->ieee80211_ptr->use_4addr) {
-+			if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN) {
-+				WARN_ON(1);
-+				err = -EINVAL;
-+				goto out_err;
-+			}
-+
- 			if (vlansdata->u.vlan.sta) {
- 				err = -EBUSY;
- 				goto out_err;
--- 
-2.1.4
+for you to fetch changes up to 658358cec93a7130615cfc1d6843ab07e49625e6:
+
+  mac80211: fix throughput LED trigger (2015-05-11 19:16:04 +0200)
+
+----------------------------------------------------------------
+This just has a few fixes:
+ * LED throughput trigger was crashing
+ * fast-xmit wasn't treating QoS changes in IBSS correctly
+ * TDLS could use the wrong channel definition
+ * using a reserved channel context could use the wrong channel width
+
+----------------------------------------------------------------
+Andrei Otcheretianski (1):
+      mac80211: adjust reserved chan_ctx when assigned to vif
+
+Arik Nemtsov (1):
+      mac80211: TDLS: use the BSS chandef for HT/VHT operation IEs
+
+Johannes Berg (2):
+      mac80211: check fast-xmit if IBSS STA QoS changed
+      mac80211: fix throughput LED trigger
+
+ net/mac80211/chan.c        |  4 ++++
+ net/mac80211/ibss.c        |  5 ++++-
+ net/mac80211/ieee80211_i.h |  1 -
+ net/mac80211/led.c         | 12 ++++++------
+ net/mac80211/tdls.c        | 27 ++++++++-------------------
+ 5 files changed, 22 insertions(+), 27 deletions(-)
+
 
