@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:65037 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753936AbbE1OZr (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:35978 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755413AbbESMhR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:25:47 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEOZBl007178
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:46 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqybu-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:46 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 00/17] mwifiex patches 
-Date: Fri, 29 May 2015 01:24:41 +0530
-Message-ID: <1432842898-3219-1-git-send-email-patila@marvell.com> (sfid-20150528_162550_284612_480E6EA5)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 19 May 2015 08:37:17 -0400
+Received: by wizk4 with SMTP id k4so115742701wiz.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 05:37:16 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/2] mac80211: guard against invalid ptr deref
+Date: Tue, 19 May 2015 14:37:01 +0200
+Message-Id: <1432039021-29666-2-git-send-email-michal.kazior@tieto.com> (sfid-20150519_143722_532835_CFFBA0F8)
+In-Reply-To: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
+References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series mainly adds enhancements for mwifiex AP. 
-With this series, we support verbose information in station dump command
-also inforamation about AP link. Another important enhancement is related
-to parsing IEs from Tail of beacon_data.
-Few issues seen during DFS testing are also fixed in this series.
-Patch series also includes some other misc patches.
+Without "cfg80211: ignore netif running state when
+changing iftype" it was possible for mac80211 to
+crash the system due to an unexpected (and
+incorrect) flow.
 
-Avinash Patil (11):
-  mwifiex: verbose logging for association failure messages
-  mwifiex: correct bss_type assignment
-  mwifiex: support AP reset after bss_stop
-  mwifiex: enable 11d after bss reset
-  mwifiex: reset 11h active flag when chandef does not require dfs
-  mwifiex: disable CAC upon radar detection event
-  mwifiex: parse power constraint IE from Tail
-  mwifiex: support downloading IEs from tail
-  mwifiex: drop block-ack action frames
-  mwifiex: advertise PS ON by default support to cfg80211
-  mwifiex: update AP WMM settings from BSS_START event
+Even with cfg80211 being fixed it still makes
+sense to add a sanity check just in case.
 
-Xinming Hu (6):
-  mwifiex: add cfg80211 get_channel handler
-  mwifiex: maintain station statistic in uap mode
-  mwifiex: add sta_list firmware command
-  mwifiex: dump station support in uap mode
-  mwifiex: using right tid for addressing ra_list
-  mwifiex: do not decrease tx_pending for AMSDU packet once more
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
- drivers/net/wireless/mwifiex/11h.c           |  32 +++++--
- drivers/net/wireless/mwifiex/11n.c           |  11 ++-
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   5 +-
- drivers/net/wireless/mwifiex/cfg80211.c      | 130 ++++++++++++++++++++++++---
- drivers/net/wireless/mwifiex/cmdevt.c        |   2 +
- drivers/net/wireless/mwifiex/fw.h            |  43 ++++++++-
- drivers/net/wireless/mwifiex/ie.c            | 102 ++++++++++++---------
- drivers/net/wireless/mwifiex/ioctl.h         |   1 +
- drivers/net/wireless/mwifiex/join.c          |  30 ++++++-
- drivers/net/wireless/mwifiex/main.h          |  23 ++++-
- drivers/net/wireless/mwifiex/sta_cmdresp.c   |  26 ++++++
- drivers/net/wireless/mwifiex/txrx.c          |  21 +++--
- drivers/net/wireless/mwifiex/uap_cmd.c       |  55 +++++++++++-
- drivers/net/wireless/mwifiex/uap_event.c     |  63 +++++++++++++
- drivers/net/wireless/mwifiex/uap_txrx.c      |  18 +++-
- drivers/net/wireless/mwifiex/util.c          |  56 +++++++++---
- 16 files changed, 525 insertions(+), 93 deletions(-)
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3469bbdc891c..74cc789f9c8e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1395,6 +1395,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
++			if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN) {
++				WARN_ON(1);
++				err = -EINVAL;
++				goto out_err;
++			}
++
+ 			if (vlansdata->u.vlan.sta) {
+ 				err = -EBUSY;
+ 				goto out_err;
 -- 
-1.8.1.4
+2.1.4
 
