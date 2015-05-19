@@ -1,58 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32320 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751943AbbEDWMB (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:32776 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261AbbESRXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 18:12:01 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 0/7] wil6210 patches
-Date: Tue,  5 May 2015 01:11:49 +0300
-Message-Id: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150505_001239_782974_5746A1B2)
+	Tue, 19 May 2015 13:23:24 -0400
+Received: by lagr1 with SMTP id r1so34901291lag.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 10:23:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <555B5C18.5000906@lwfinger.net>
+References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com>
+	<555B5C18.5000906@lwfinger.net>
+Date: Tue, 19 May 2015 20:23:22 +0300
+Message-ID: <CAJ=9Czaqc5tVB50QBBhTG8xCQ4g93EspqvwnoMFjt3Wszvg+0g@mail.gmail.com> (sfid-20150519_192328_031150_93043EE2)
+Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
+From: Haggai Eran <haggai.eran@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- introduced debug trace facility (PMC) that extracts events
-  reported by the hardware
-- introduced real broadcast for secure link
-- other are small fixes here and there
+On 19 May 2015 at 18:51, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/19/2015 12:47 AM, Haggai Eran wrote:
+>>
+>> With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
+>> packet are set, but the packet length is too large. Truncate the packet
+>> to prevent memory corruption.
+>>
+>> Signed-off-by: Haggai Eran <haggai.eran@gmail.com>
+>> ---
+>>
+>> Hi,
+>>
+>> I think this solves the issue for me. I'll test it more thoroughly later.
+>> I
+>> still don't know why a fragmented packet has such a large pkt_len value
+>> though.
+>>
+>> Thanks,
+>> Haggai
+>>
+>>   drivers/staging/rtl8712/rtl8712_recv.c | 6 +++++-
+>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>
+>
+> I added a printout to your patch to log the values for tmp_len and alloc_sz
+> when tmp_len > alloc_sz. In about 15 minutes of running, that print has not
+> triggered. The condition only seems to happen on your system.
+>
+> Please replace your patch with my modified version and report the printed
+> values.
 
-v2:
+I think you attached the original version, and not the one with the
+prints. In any case, here are some example values I've seen:
 
-fix patch "wil6210: Add pmc debug mechanism memory management"
-for 32-bit platforms
+[41727.150644] truncating packet: tmp_len = 3478, alloc_sz = 1658,
+pkt_len = 3454, drvinfo_sz = 0
+[41732.746346] truncating packet: tmp_len = 13484, alloc_sz = 1658,
+pkt_len = 13460, drvinfo_sz = 0
+[42044.508326] truncating packet: tmp_len = 9998, alloc_sz = 1658,
+pkt_len = 9974, drvinfo_sz = 0
+[42044.600013] truncating packet: tmp_len = 1982, alloc_sz = 1658,
+pkt_len = 1958, drvinfo_sz = 0
+[42044.677548] truncating packet: tmp_len = 11920, alloc_sz = 1658,
+pkt_len = 11896, drvinfo_sz = 0
 
-v3:
+I think this issue may have started when I changed my home router /
+access point from a LevelOne WDR-6001 to a TP-Link TL-WR1043ND. Could
+these packets be trigerred somehow by a different interaction between
+the access point and the wifi adapter?
 
-fix patch "wil6210: Add pmc debug mechanism memory management"
-for pointers and dma_addr_t printing
+In addition to these fragmented packets, by the way, I'm still seeing
+by the way many packets that are dropped for other reasons, such as:
+ - invalid ver field
+ - seq_ctrl doesn't match in recv_decache
+ - sta2sta_data_frame failing for some reason
+ - packets with frame type 12.
 
-Vladimir Kondratiev (7):
-  wil6210: increase timeout for the "echo" command
-  wil6210: update Rx descriptor fields
-  wil6210: fix boot loader "ready" indication
-  wil6210: fix for probe_resp IE's
-  wil6210: Add pmc debug mechanism memory management
-  wil6210: broadcast for secure link
-  wil6210: support WSC for STA mode
-
- drivers/net/wireless/ath/wil6210/Makefile   |   1 +
- drivers/net/wireless/ath/wil6210/cfg80211.c | 117 ++++++---
- drivers/net/wireless/ath/wil6210/debugfs.c  | 107 +++++++-
- drivers/net/wireless/ath/wil6210/main.c     |  14 +-
- drivers/net/wireless/ath/wil6210/pmc.c      | 375 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/pmc.h      |  27 ++
- drivers/net/wireless/ath/wil6210/txrx.c     |  48 ++--
- drivers/net/wireless/ath/wil6210/txrx.h     |  24 +-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  21 +-
- drivers/net/wireless/ath/wil6210/wmi.c      |  70 ++----
- drivers/net/wireless/ath/wil6210/wmi.h      |  40 ++-
- 11 files changed, 706 insertions(+), 138 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/pmc.c
- create mode 100644 drivers/net/wireless/ath/wil6210/pmc.h
-
--- 
-2.1.0
-
+Thanks,
+Haggai
