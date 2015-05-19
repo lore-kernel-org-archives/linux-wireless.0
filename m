@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37307 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752560AbbETNR4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 09:17:56 -0400
-Message-ID: <1432127874.19214.13.camel@sipsolutions.net> (sfid-20150520_151808_644260_5B1376EA)
-Subject: Re: [PATCH 1/2] cfg80211: ignore netif running state when changing
- iftype
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 20 May 2015 15:17:54 +0200
-In-Reply-To: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com> (sfid-20150519_143715_930971_C928777B)
-References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150519_143715_930971_C928777B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:35690 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752933AbbESIYJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 04:24:09 -0400
+Received: by wicmx19 with SMTP id mx19so107445750wic.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 01:24:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1432020671.7437.5.camel@sipsolutions.net>
+References: <1431602181-17700-1-git-send-email-chaitanya.mgit@gmail.com> <1432020671.7437.5.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 19 May 2015 13:53:47 +0530
+Message-ID: <CABPxzY+7KDGRs3fO1wsy3FPt__YPBnzr5CcZ_HTEh2ePsdtUdQ@mail.gmail.com> (sfid-20150519_102414_401183_C3ACB0FC)
+Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused by
+ race between suspend and Tx packet.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-05-19 at 14:37 +0200, Michal Kazior wrote:
-> This isn't a revert of f8cdddb8d61d ("cfg80211:
-> check iface combinations only when iface is
-> running") as far as functionality is considred
-> because b6a550156bc ("cfg80211/mac80211: move more
-> combination checks to mac80211") moved the logic
-> somewhere else.
-> 
-> It was possible for mac80211 to be coerced into an
-> unexpected flow causing sdata union to become
-> corrupted. Station pointer was put into
-> sdata->u.vlan.sta memory location while it was
-> really master AP's sdata->u.ap.next_beacon. This
-> led to station entry being later freed as CSA
-> beacon before __sta_info_flush() in
-> ieee80211_stop_ap() and a subsequent invalid
-> pointer dereference crash.
-> 
-> The problem was observed with the following test
-> steps:
-> 
->  1. prepare 2 devices
->  2. start hostapd AP with wds_sta=1
->  3. connect client with 4addr
->  4. disconnect
->  5. swap roles & connect
->  6. disconnect
->     [ During AP (which was a client first)
->       teardown kernel would crash. ]
+On Tue, May 19, 2015 at 1:01 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> It looks like your patch never actually made it to the list - perhaps
+> test that before you add me to Cc :)
+Sure, i realized that after a few trails and then removed you from CC :-).
 
-That doesn't really explain how it crashes?
+>> If we receive suspend after TX path has executed
+>> dynamic ps disable work, the driver will be in
+>> ACTIVE state during suspend and even after it
+>> resumes.
+>>
+>> As before suspend all data packets are flushed
+>> it is safe to put the driver in to sleep for
+>> optimal power during suspend or up on resume.
+>
+> I'm not sure I get it - we always transmit a frame after resume.
+Let me explain the sequence of events:
 
-> +++ b/net/wireless/util.c
-> @@ -944,7 +944,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
->  	     ntype == NL80211_IFTYPE_P2P_CLIENT))
->  		return -EBUSY;
->  
-> -	if (ntype != otype && netif_running(dev)) {
-> +	if (ntype != otype) {
->  		dev->ieee80211_ptr->use_4addr = false;
->  		dev->ieee80211_ptr->mesh_id_up_len = 0;
->  		wdev_lock(dev->ieee80211_ptr);
+tx_frame:
+      dynamic_ps_disable_work.
+                 get the chip out of power save.
+suspend came:
+     dynamic ps timer is cancelled.
+    tx queues are flushed.
+chip stays out of power save unless there is one more
+tx frame which kicks the dynamic ps timer again.
 
-I don't think that makes much sense - the code within this block really
-only makes sense when the interface *is* running, like disconnecting
-etc. Doing that when it's *not* would be entirely unexpected to the
-drivers, no?
 
-johannes
 
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
