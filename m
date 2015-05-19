@@ -1,33 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52288 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751068AbbEINiB (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:35224 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752015AbbESXam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 09:38:01 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 19 May 2015 19:30:42 -0400
 MIME-Version: 1.0
-Subject: Re: mwifiex: reduce spinlock usage in main process
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1429269509-21310-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20150509133800.C2CC013FFE7@smtp.codeaurora.org> (sfid-20150509_153805_983389_C7578F69)
-Date: Sat,  9 May 2015 13:38:00 +0000 (UTC)
+In-Reply-To: <555BA438.2070802@kernel.org>
+References: <20150519200232.GM23057@wotan.suse.de> <555BA438.2070802@kernel.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 20 May 2015 09:30:21 +1000
+Message-ID: <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com> (sfid-20150520_013047_581013_93E03B32)
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+To: Andy Lutomirski <luto@kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
+	serge@hallyn.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
+	zohar@linux.vnet.ibm.com, mricon@kernel.org,
+	Michal Marek <mmarek@suse.cz>,
+	Abelardo Ricart III <aricart@memnix.com>,
+	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
+	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi All,
 
-> From: Cathy Luo <cluo@marvell.com>
-> 
-> We will reset more_task_flag at the end of main process
-> routine. This optimization will help to remove spinlock
-> operations at couple of places in the code.
-> 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, May 20, 2015 at 6:59 AM, Andy Lutomirski <luto@kernel.org> wrote:
+> [added cc's from the other thread]
+>
+> On 05/19/2015 01:02 PM, Luis R. Rodriguez wrote:
+>>
+>> David Howells has posted v4 of his series of supporting PKCS#7 for module
+>> signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and
+>> after
+>> some review and patch shuffling I think this is ready for patch form.  My
+>> own
+>> series however depend on quite a bit of other pending changes, one series
+>> which
+>> will go through Rusty's tree, another series of fixes on firmware_class
+>> which
+>> should go through Greg's tree. I'll wait until all this and David's own
+>> patches
+>> get merged before posting firmware PKCS#7 support. Before all this though
+>> in
+>> preparation for fw signing one thing we should start to talk about more
+>> broadly
+>> however is how linux-firmware binary file signing would work in practice
+>> and
+>> what we need, and make sure folks are OK with all this.
+>>
+>> First, firmware signing will be completely optional as with module
+>> signing.
+>>
+>
+> ...
+>
+>> Other than this last nitpick, any other concerns or recommendations ?
+>
+>
+> A couple.  Some of these are general concerns with the existing
+> infrastructure, but #1 is a specific problem that gets much worse if we add
+> firmware signing.  Feel free to ignore 2-4.
+>
+> 1. We should get the signature semantics right.  I think that, for modules,
+> we currently sign literally the module payload.  For modules, in my
+> semi-amateurish crypto universe [1], this is fine *as long as the key in
+> question is used for no other purpose*.  For firmware, it's dangerous, since
+> it would be vulnerable to substitution attacks in which the adversary
+> convinces us to interpret one firmware file as firmware for another device
+> or purpose entirely.
+>
+> We should be signing something that's semantically equivalent to "This is a
+> valid module: xyz", "This is a valid 'regulatory.bin': xyz", or "This is a
+> valid kexec image: xyz".
 
-Thanks, applied to wireless-drivers-next.git.
+Something that occurred to me (as a complete bystander) was: would it
+make sense to have keys able to be restricted to particular "types" of
+signable data? I.e. the key that can sign a valid regulatory.bin file
+cannot be used to sign a module or a kexec image. - This could remove
+the need to have multiple keyrings. (Also, UEFI keys unless otherwise
+tagged could be restricted to only signing bootloaders or kernels)
 
-Kalle Valo
+Also, are multiple signatures a sensible thing? E.g. regulatory.bin
+gets signed by Seth, then Kyle, then $DISTRO and any one key is enough
+to validate it.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
