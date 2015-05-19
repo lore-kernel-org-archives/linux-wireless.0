@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:32931 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbbEaKBs (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:34827 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbbESXAi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 06:01:48 -0400
-Received: by wicmx19 with SMTP id mx19so47407567wic.0
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 03:01:47 -0700 (PDT)
+	Tue, 19 May 2015 19:00:38 -0400
+Date: Wed, 20 May 2015 06:59:45 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org,
+	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>
+Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency when
+ fw signing is enabled
+Message-ID: <20150519225945.GB5718@gondor.apana.org.au> (sfid-20150520_010042_802513_BFEF4EB0)
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+ <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
+ <20150506033330.GA16470@gondor.apana.org.au>
+ <1430988137.8171.58.camel@x220>
+ <1431021995.8171.97.camel@x220>
+ <20150518200100.GY23057@wotan.suse.de>
+ <1431981930.9091.29.camel@x220>
+ <20150519000921.GA23057@wotan.suse.de>
+ <1432022535.9091.48.camel@x220>
+ <20150519154630.GB23057@wotan.suse.de>
 MIME-Version: 1.0
-In-Reply-To: <1433061092.2370.1.camel@sipsolutions.net>
-References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com> <1433061092.2370.1.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 31 May 2015 15:31:26 +0530
-Message-ID: <CABPxzYK-8TtYdiFeFrX7AVcsXQFaa3oxHREq+jgohHh1tCg5GQ@mail.gmail.com> (sfid-20150531_121707_076104_04318233)
-Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL messages.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150519154630.GB23057@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 31, 2015 at 2:01 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2015-05-31 at 04:58 +0530, Chaitanya T K wrote:
->> cfg80211 reuses the skb before asking for a fresh on from genl framework,
->> this works efficiently for smaller messages but NLM_F_DUMP is normally
->> used to transport larger data normally > PAGE_SIZE, so if the message
->> occupies more than GOODSIZE its better to ask for a new, saves couple
->> of hanshakes with the driver.
->>
->> This improves the time to get the DUMP response across to user space.
+On Tue, May 19, 2015 at 05:46:30PM +0200, Luis R. Rodriguez wrote:
 >
-> This doesn't make any sense. If the driver is slow to actually create
-> the data, it should implement this logic, but realistically the driver
-> should just check if there's enough space and only try to create data to
-> put into the skb if it's sufficient?
->
-> It sounds to me like you're actually interacting with the hardware at
-> this point (otherwise it wouldn't be slow!) which pretty much seems
-> wrong anyway.
+> Instead of depends on we should just drop it and and issues arise we
+> should fix them provided an allyesconfig and allmodconfig work when
+> FW_LOADER is disabled. That was the approach I wanted to take at
+> least. To make this easier to phase we can break it down by subsystem.
 
-In our case the data size is 411KB, and each message carries around 3072
-bytes, so total messages would be 138. The first message we get, we
-retrieve the data, and for subsequent messages we just fill the skb,
-we are not interacting with the hardware.
+Modules select FW_LOADER because they call request_firmware.
 
-Without this patch, heres the sequence:
-genl->cfg80211->retrieve the dump from HW, skb_put: 3072
-         cfg80211->skb_put, fail
-genl->cfg80211->skb_put: 3072.
+If you disable FW_LOADER then every case will result in a build
+failure.  So you must either have a select or a depends on.
 
-With this patch:
-
-genl->cfg80211->retrive the dump from HW, skb_put: 3072
-genl->cfg80211->skb_put: 3072.
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
