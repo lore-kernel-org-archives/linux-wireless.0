@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:65313 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57826 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422790AbbEUTxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 15:53:35 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/10] iwlwifi: nvm: force mac from otp in case nvm mac is reserved
-Date: Thu, 21 May 2015 22:53:06 +0300
-Message-Id: <1432237990-5890-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150521_215411_397492_80964C93)
-In-Reply-To: <1432237819.26813.4.camel@intel.com>
-References: <1432237819.26813.4.camel@intel.com>
+	id S1752920AbbESH2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 03:28:46 -0400
+Message-ID: <1432020524.7437.3.camel@sipsolutions.net> (sfid-20150519_092850_934967_DA77D2CE)
+Subject: Re: [PATCH] Added 2 new Control Frames ( Beamforming Report Poll &
+ VHT NDP Announcement) defined in 802.11ac
+From: Johannes Berg <johannes@sipsolutions.net>
+To: rahul.jain@samsung.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 19 May 2015 09:28:44 +0200
+In-Reply-To: <2076339160.163631431579743152.JavaMail.weblogic@ep2mlwas05d> (sfid-20150514_070252_547798_4C831930)
+References: <2076339160.163631431579743152.JavaMail.weblogic@ep2mlwas05d>
+	 (sfid-20150514_070252_547798_4C831930)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Thu, 2015-05-14 at 05:02 +0000, Rahul Jain wrote:
+> hello All,
+> 
+> Below is the patch for 2 new control frames defined in 802.11ac.
+> Please review and merge.
+> 
+> From b9ca335040547e565684f5bf60d37db896322663 Mon Sep 17 00:00:00 2001                                                                                                                                                                       
+> From: rahul <rahul.jain@samsung.com>
+> Date: Thu, 14 May 2015 10:21:48 +0530
+> Subject: [PATCH] Added 2 new Control Frames ( Beamforming Report Poll & VHT 
+>  NDP Announcement) defined in 802.11ac
 
-Take the MAC address from the OTP even if one is present in
-the NVM, if that MAC address happens to be a reserved one.
+As long as nobody is using these, I don't see much reason to merge this.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+Also, a much better commit log would be needed.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index cf86f3c..75e96db 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -533,6 +533,10 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 	const u8 *hw_addr;
- 
- 	if (mac_override) {
-+		static const u8 reserved_mac[] = {
-+			0x02, 0xcc, 0xaa, 0xff, 0xee, 0x00
-+		};
-+
- 		hw_addr = (const u8 *)(mac_override +
- 				 MAC_ADDRESS_OVERRIDE_FAMILY_8000);
- 
-@@ -544,7 +548,12 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 		data->hw_addr[4] = hw_addr[5];
- 		data->hw_addr[5] = hw_addr[4];
- 
--		if (is_valid_ether_addr(data->hw_addr))
-+		/*
-+		 * Force the use of the OTP MAC address in case of reserved MAC
-+		 * address in the NVM, or if address is given but invalid.
-+		 */
-+		if (is_valid_ether_addr(data->hw_addr) &&
-+		    memcmp(reserved_mac, hw_addr, ETH_ALEN) != 0)
- 			return;
- 
- 		IWL_ERR_DEV(dev,
--- 
-2.1.4
+johannes
 
