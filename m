@@ -1,147 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:34479 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbbETAXU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 20:23:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <1432078625.4510.207.camel@linux.vnet.ibm.com>
-References: <20150519200232.GM23057@wotan.suse.de> <1432072117.4510.180.camel@linux.vnet.ibm.com>
- <20150519221902.GQ23057@wotan.suse.de> <1432078625.4510.207.camel@linux.vnet.ibm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:50669 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751100AbbESPqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 11:46:35 -0400
+Date: Tue, 19 May 2015 17:46:30 +0200
 From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Tue, 19 May 2015 17:22:59 -0700
-Message-ID: <CAB=NE6WZ8YW=C7a=MWgMS4T6Nmgs1NcKKsUY6XPtPC9B4JZu=Q@mail.gmail.com> (sfid-20150520_022325_475631_CC412269)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Casey Schaufler <casey@schaufler-ca.com>
-Cc: Andy Lutomirski <luto@kernel.org>,
-	linux-security-module <linux-security-module@vger.kernel.org>,
-	James Morris <james.l.morris@oracle.com>, serge@hallyn.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset=UTF-8
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org,
+	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>
+Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency when
+ fw signing is enabled
+Message-ID: <20150519154630.GB23057@wotan.suse.de> (sfid-20150519_174707_883315_E907653B)
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+ <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
+ <20150506033330.GA16470@gondor.apana.org.au>
+ <1430988137.8171.58.camel@x220>
+ <1431021995.8171.97.camel@x220>
+ <20150518200100.GY23057@wotan.suse.de>
+ <1431981930.9091.29.camel@x220>
+ <20150519000921.GA23057@wotan.suse.de>
+ <1432022535.9091.48.camel@x220>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432022535.9091.48.camel@x220>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 4:37 PM, Mimi Zohar <zohar@linux.vnet.ibm.com> wrote:
-> On Wed, 2015-05-20 at 00:19 +0200, Luis R. Rodriguez wrote:
->> On Tue, May 19, 2015 at 05:48:37PM -0400, Mimi Zohar wrote:
->> > On Tue, 2015-05-19 at 22:02 +0200, Luis R. Rodriguez wrote:
->> > > David Howells has posted v4 of his series of supporting PKCS#7 for module
->> > > signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and after
->> > > some review and patch shuffling I think this is ready for patch form.  My own
->> > > series however depend on quite a bit of other pending changes, one series which
->> > > will go through Rusty's tree, another series of fixes on firmware_class which
->> > > should go through Greg's tree. I'll wait until all this and David's own patches
->> > > get merged before posting firmware PKCS#7 support. Before all this though in
->> > > preparation for fw signing one thing we should start to talk about more broadly
->> > > however is how linux-firmware binary file signing would work in practice and
->> > > what we need, and make sure folks are OK with all this.
->> >
->> > Commit 13752fe "security: introduce kernel_fw_from_file hook" introduced
->> > a new security hook.  (IMA is on this hook as well.)  Have you
->> > considered using this hook?
->>
->> Yes, the same hook is used here.
->>
->> > Are there other places that this hook would need to be called?
->>
->> Nope, it'd be called. Folks who do not want to use key signing stuff can use
->> their own preferred LSM hook just as module signing has the kernel module
->> signing infrastructure but also module LSM hooks. It'd be similar here for
->> firmware.
->
-> When the kernel module signing signature verification was upstreamed,
-> Rusty was not aware of IMA-appraisal -
-> https://lkml.org/lkml/2013/1/22/20
+On Tue, May 19, 2015 at 10:02:15AM +0200, Paul Bolle wrote:
+> On Tue, 2015-05-19 at 02:09 +0200, Luis R. Rodriguez wrote:
+> > On Mon, May 18, 2015 at 10:45:30PM +0200, Paul Bolle wrote:
+> > > [...] so, probably, almost
+> > > all .config files have FW_LOADER set. So I think, except for some corner
+> > > cases, either converting all "select FW_LOADER" to "depends on
+> > > FW_LOADER" or simply dropping  "select FW_LOADER" all together, should
+> > > be fine.
+> > 
+> > Well, that makes sense. I just dropped all "select FW_LOADER" entries
+> > on next-20150518, then I enabled everything with 'make allyesconfig'
+> > and then went into menuconfig to disable FW_LOADER. The build worked.
+> > 
+> > Going to try a few more build matrix combinations and send patches to
+> > do away with this.
+> > 
+> > > Those corner cases should then be handled on a case by case basis. 
+> 
+> Having slept on this, it occurred to me a randconfig could hit those
+> corner cases. (Make that will hit them, actually.) Of course, one might
+> argue that randconfig and EXPERT's advice, "Only use this if you really
+> know what you are doing.", are at odds. Which opens another can of
+> worms: how much do we care about .config files in which randconfig
+> visited the kernels darker corners? Just enough, I'm afraid.
+> 
+> So it seems I've wasted your time by suggesting to drop those selects.
 
-Rusty also just told David that PKCS#7 support changes do not need his
-Acked-by and do not need to go through his tree as they do not touch
-module.[ch]:
+IMHO not at all.
 
-https://lkml.org/lkml/2015/5/15/865
+> And now I wonder what trouble using "depends on" will generate here...
 
-So -- your quote does not mean that  module signature code moving to
-PKCS#7 will not go in to the kernel. If you'd like to chime in on that
-topic I suggest you express your concerns there on that ongoing
-thread.
+Instead of depends on we should just drop it and and issues arise we
+should fix them provided an allyesconfig and allmodconfig work when
+FW_LOADER is disabled. That was the approach I wanted to take at
+least. To make this easier to phase we can break it down by subsystem.
 
-> In this case, not only is there a
-> security hook, but the IMA hook exists as well.  To appraise firmware,
-> add a line to the IMA policy containing "appraise func=FIRMWARE_CHECK".
-> Similarly, to add a measurement to the measurement list, add a line to
-> the IMA policy containing "measure func=FIRMWAE_CHECK".
-
-I have a series of reasons find IMA unsuitable for the current goals at hand:
-
-  1) IMA is a pretty big kitchen sink, we want this to work well for
-even embedded systems, or architectures that do not have or require
-TPMs
-  2) The appraisal is also done for to account for a specific state of
-affairs, you appraise to the user of the integrity of the system at a
-specific point in time, firmware signing can provide integrity /
-authorship vetting of files directly from the authors. In the case of
-regulatory.bin that was the whole point of it, and firmware signing as
-is being provided is intended to generalize that but by sharing code
-in-kernel with module signing infrastructure
-
-I am in hopes some others might be able to chime in more on point 2) here.
-
-Don't get me wrong IMA is nice, but its a big chunky requirement to
-have, more than what module signing provides and what it requires
-today to replace subsystem file signing requirements.
-
-Now, LSM hooks -- that's more aligned with something we can start IMHO
-reasonably arguing we should shift module signing code to be punted
-into. But I've heard stories of LSM having issues with some virtual
-environments, and LSM stacking is also pretty new, and IMHO that'd be
-one way to compartmentalize all this module signing code. IMHO that
-*should happen* but can only be taken seriously once LSM stacking is
-merged in and baked. Its not, but I'm excited for it.
-
->> Now that we have LSM hooks stacked on the way perhaps this is more in line with
->> what Andy has envisioned for alternatives for module signature verification.
->> But then again since an LSM hook already exists for both modules and firmware
->> perhaps this is sufficient for what Andy envisions? That is if folks do not want
->> this signing thing just disable it and add use your preferred LSM module of choice?
->>
->> Now granted -- if we envision this module signing infrastructure as an LSM hook
->> in and of itself perhaps we should LSM'ify it. Its not right now.
->>
->> > > I think we need one change here, we'd need to ensure that such key could only
->> > > be used for vetting firmware files, not modules loaded.  The firmware_class
->> > > could for instance still use all the keys in system_trusted_keyring, which
->> > > would include the UEFI key db, but it does not seems reasonable to expect keys
->> > > used for fw signing to also go into system_trusted_keyring to also be used for
->> > > module signing.
->> >
->> > I agree totally!  For this reason, IMA defined a separate trusted
->> > keyring to be used for verifying file signatures.
->>
->> OK I'll add that to my TODO list here.
->
-> You'll probably want to create a new trusted firmware keyring.
-
-Sure
-
->  By trusted, only signed keys by a key on the system_keyring can be added to
-> the.ima keyring.
-
-If we go with IMA, I however do not think this would be appropriate
-and overkill at this point in time.
-
-> Using the "ca_keys" boot command line option a specific key on the system keyring can be specified.
-
-Likewise.
+Thoughts?
 
  Luis
