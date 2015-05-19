@@ -1,160 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42863 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755874AbbE2L2q (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:34491 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754122AbbESMKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:28:46 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBSUpg015510
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:45 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1upn7d87tw-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:45 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv3 11/16] mwifiex: parse power constraint IE from Tail
-Date: Fri, 29 May 2015 22:26:32 +0530
-Message-ID: <1432918598-27769-12-git-send-email-patila@marvell.com> (sfid-20150529_133350_704749_1288779C)
-In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
-References: <1432918598-27769-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 19 May 2015 08:10:09 -0400
+Received: by wicmc15 with SMTP id mc15so114392420wic.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 05:10:07 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: add new 4addr related fw_feature
+Date: Tue, 19 May 2015 14:09:34 +0200
+Message-Id: <1432037374-26339-1-git-send-email-michal.kazior@tieto.com> (sfid-20150519_141013_153680_5CF29987)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to parse power constraint IEs from
-Tail buffer. This power constraint is then set to FW during
-bss_config download.
+Some firmware revisions pad 4th hw address in
+Native Wifi Rx decap. This is the case with 10.x
+and it was assumed that this is true for all
+firmware images.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+However QCA988X with 999.999.0.636 and QCA61X4
+with WLAN.RM.2.0-00088 don't have the padding.
+Hence add a feature flag indicating that the
+padding isn't present so firmware images can
+advertise it appropriately. This way driver will
+behave as it was before with old firmware blobs
+and doesn't cause any regressions from user
+perspective.
+
+Effectively this patch enables QCA988X with
+999.999.0.636 and QCA61X4 with WLAN.RM.2.0-00088
+to set up client bridging provided user has an
+updated firmware blob.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |  3 +++
- drivers/net/wireless/mwifiex/fw.h       |  6 ++++++
- drivers/net/wireless/mwifiex/ioctl.h    |  1 +
- drivers/net/wireless/mwifiex/main.h     |  3 +++
- drivers/net/wireless/mwifiex/uap_cmd.c  | 27 +++++++++++++++++++++++++++
- 5 files changed, 40 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.h   |  5 +++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 14 ++++++++++----
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 16528c1..1226555 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1867,6 +1867,9 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 827b3d79ed0c..70fcdc9c2758 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -463,6 +463,11 @@ enum ath10k_fw_features {
+ 	/* Don't trust error code from otp.bin */
+ 	ATH10K_FW_FEATURE_IGNORE_OTP_RESULT,
  
- 	mwifiex_set_wmm_params(priv, bss_cfg, params);
- 
-+	if (mwifiex_is_11h_active(priv))
-+		mwifiex_set_tpc_params(priv, bss_cfg, params);
++	/* Some firmware revisions pad 4th hw address to 4 byte boundary making
++	 * it 8 bytes long in Native Wifi Rx decap.
++	 */
++	ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDING,
 +
- 	if (mwifiex_is_11h_active(priv) &&
- 	    !cfg80211_chandef_dfs_required(wiphy, &params->chandef,
- 					   priv->bss_mode)) {
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 734551c..703e5e9 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -128,6 +128,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- 
- #define TLV_TYPE_UAP_SSID			0x0000
- #define TLV_TYPE_UAP_RATES			0x0001
-+#define TLV_TYPE_PWR_CONSTRAINT			0x0020
- 
- #define PROPRIETARY_TLV_BASE_ID                 0x0100
- #define TLV_TYPE_KEY_MATERIAL       (PROPRIETARY_TLV_BASE_ID + 0)
-@@ -1780,6 +1781,11 @@ struct host_cmd_tlv_ageout_timer {
- 	__le32 sta_ao_timer;
- } __packed;
- 
-+struct host_cmd_tlv_power_constraint {
-+	struct mwifiex_ie_types_header header;
-+	u8 constraint;
-+} __packed;
-+
- struct host_cmd_ds_version_ext {
- 	u8 version_str_sel;
- 	char version_str[128];
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 6f11a25..4f0174c 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -113,6 +113,7 @@ struct mwifiex_uap_bss_param {
- 	u32 sta_ao_timer;
- 	u32 ps_sta_ao_timer;
- 	u8 qos_info;
-+	u8 power_constraint;
- 	struct mwifiex_types_wmm_info wmm_info;
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
  };
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 837e610..d92c527 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1149,6 +1149,9 @@ void mwifiex_set_ht_params(struct mwifiex_private *priv,
- void mwifiex_set_vht_params(struct mwifiex_private *priv,
- 			    struct mwifiex_uap_bss_param *bss_cfg,
- 			    struct cfg80211_ap_settings *params);
-+void mwifiex_set_tpc_params(struct mwifiex_private *priv,
-+			    struct mwifiex_uap_bss_param *bss_cfg,
-+			    struct cfg80211_ap_settings *params);
- void mwifiex_set_uap_rates(struct mwifiex_uap_bss_param *bss_cfg,
- 			   struct cfg80211_ap_settings *params);
- void mwifiex_set_vht_width(struct mwifiex_private *priv,
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 865b363..61e8bf3 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -222,6 +222,23 @@ void mwifiex_set_vht_params(struct mwifiex_private *priv,
- 	return;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index b26e32f42656..89eb16b30fc4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -965,10 +965,16 @@ static void ath10k_process_rx(struct ath10k *ar,
+ 	ieee80211_rx(ar->hw, skb);
  }
  
-+/* This function updates 11ac related parameters from IE
-+ * and sets them into bss_config structure.
-+ */
-+void mwifiex_set_tpc_params(struct mwifiex_private *priv,
-+			    struct mwifiex_uap_bss_param *bss_cfg,
-+			    struct cfg80211_ap_settings *params)
-+{
-+	const u8 *tpc_ie;
+-static int ath10k_htt_rx_nwifi_hdrlen(struct ieee80211_hdr *hdr)
++static int ath10k_htt_rx_nwifi_hdrlen(struct ath10k *ar,
++				      struct ieee80211_hdr *hdr)
+ {
+-	/* nwifi header is padded to 4 bytes. this fixes 4addr rx */
+-	return round_up(ieee80211_hdrlen(hdr->frame_control), 4);
++	int len = ieee80211_hdrlen(hdr->frame_control);
 +
-+	tpc_ie = cfg80211_find_ie(WLAN_EID_TPC_REQUEST, params->beacon.tail,
-+				  params->beacon.tail_len);
-+	if (tpc_ie)
-+		bss_cfg->power_constraint = *(tpc_ie + 2);
-+	else
-+		bss_cfg->power_constraint = 0;
-+}
++	if (!test_bit(ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDING,
++		      ar->fw_features))
++		len = round_up(len, 4);
 +
- /* Enable VHT only when cfg80211_ap_settings has VHT IE.
-  * Otherwise disable VHT.
-  */
-@@ -466,6 +483,7 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 	struct host_cmd_tlv_auth_type *auth_type;
- 	struct host_cmd_tlv_rates *tlv_rates;
- 	struct host_cmd_tlv_ageout_timer *ao_timer, *ps_ao_timer;
-+	struct host_cmd_tlv_power_constraint *pwr_ct;
- 	struct mwifiex_ie_types_htcap *htcap;
- 	struct mwifiex_ie_types_wmmcap *wmm_cap;
- 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
-@@ -644,6 +662,15 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 		tlv += sizeof(*ao_timer);
- 	}
++	return len;
+ }
  
-+	if (bss_cfg->power_constraint) {
-+		pwr_ct = (void *)tlv;
-+		pwr_ct->header.type = cpu_to_le16(TLV_TYPE_PWR_CONSTRAINT);
-+		pwr_ct->header.len = cpu_to_le16(sizeof(u8));
-+		pwr_ct->constraint = bss_cfg->power_constraint;
-+		cmd_size += sizeof(*pwr_ct);
-+		tlv += sizeof(*pwr_ct);
-+	}
-+
- 	if (bss_cfg->ps_sta_ao_timer) {
- 		ps_ao_timer = (struct host_cmd_tlv_ageout_timer *)tlv;
- 		ps_ao_timer->header.type =
+ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+@@ -1067,7 +1073,7 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+ 
+ 	/* pull decapped header and copy SA & DA */
+ 	hdr = (struct ieee80211_hdr *)msdu->data;
+-	hdr_len = ath10k_htt_rx_nwifi_hdrlen(hdr);
++	hdr_len = ath10k_htt_rx_nwifi_hdrlen(ar, hdr);
+ 	ether_addr_copy(da, ieee80211_get_DA(hdr));
+ 	ether_addr_copy(sa, ieee80211_get_SA(hdr));
+ 	skb_pull(msdu, hdr_len);
 -- 
-1.8.1.4
+2.1.4
 
