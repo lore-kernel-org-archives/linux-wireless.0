@@ -1,93 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49393 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbbEYMB3 convert rfc822-to-8bit (ORCPT
+Received: from lb3-smtp-cloud2.xs4all.net ([194.109.24.29]:33278 "EHLO
+	lb3-smtp-cloud2.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753323AbbESICU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 08:01:29 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-05-25
-Date: Mon, 25 May 2015 15:01:19 +0300
-Message-ID: <87siak3lyo.fsf@kamboji.qca.qualcomm.com> (sfid-20150525_140156_432768_2BCB9225)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 19 May 2015 04:02:20 -0400
+Message-ID: <1432022535.9091.48.camel@x220> (sfid-20150519_100226_362219_68E4E540)
+Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency
+ when fw signing is enabled
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
+	seth.forshee@canonical.com, kyle@kernel.org,
+	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
+	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, jlee@suse.com,
+	linux-kernel@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>
+Date: Tue, 19 May 2015 10:02:15 +0200
+In-Reply-To: <20150519000921.GA23057@wotan.suse.de>
+References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
+	 <20150506033330.GA16470@gondor.apana.org.au>
+	 <1430988137.8171.58.camel@x220> <1431021995.8171.97.camel@x220>
+	 <20150518200100.GY23057@wotan.suse.de> <1431981930.9091.29.camel@x220>
+	 <20150519000921.GA23057@wotan.suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Tue, 2015-05-19 at 02:09 +0200, Luis R. Rodriguez wrote:
+> On Mon, May 18, 2015 at 10:45:30PM +0200, Paul Bolle wrote:
+> > [...] so, probably, almost
+> > all .config files have FW_LOADER set. So I think, except for some corner
+> > cases, either converting all "select FW_LOADER" to "depends on
+> > FW_LOADER" or simply dropping  "select FW_LOADER" all together, should
+> > be fine.
+> 
+> Well, that makes sense. I just dropped all "select FW_LOADER" entries
+> on next-20150518, then I enabled everything with 'make allyesconfig'
+> and then went into menuconfig to disable FW_LOADER. The build worked.
+> 
+> Going to try a few more build matrix combinations and send patches to
+> do away with this.
+> 
+> > Those corner cases should then be handled on a case by case basis. 
 
-here's hopefully the last wireless-drivers pull request for 4.1. Mostly
-iwlwifi fixes this time. Please let me know if there are any problems.
+Having slept on this, it occurred to me a randconfig could hit those
+corner cases. (Make that will hit them, actually.) Of course, one might
+argue that randconfig and EXPERT's advice, "Only use this if you really
+know what you are doing.", are at odds. Which opens another can of
+worms: how much do we care about .config files in which randconfig
+visited the kernels darker corners? Just enough, I'm afraid.
 
-Kalle
+So it seems I've wasted your time by suggesting to drop those selects.
+And now I wonder what trouble using "depends on" will generate here...
 
-The following changes since commit f673821864899153142365aca888435815ac93f0:
 
-  ath9k: fix per-packet tx power configuration (2015-05-03 23:54:38 +0300)
+Paul Bolle
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-05-25
-
-for you to fetch changes up to aefa441b150279dd8d25658e018898a3fe9a6769:
-
-  Merge tag 'iwlwifi-for-kalle-2015-05-21' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-05-22 10:47:02 +0300)
-
-----------------------------------------------------------------
-
-iwlwifi:
-
-* fix firmware name and other things to enable 3165
-* fix bad APMG configuration for 8000 (no AMPG on these devices)
-* fix MAC address assignment for 8000
-* fix firmware debugging triggers (MLME)
-* fix several bugs in low power states code (net-detect, d0i3)
-
-ssb:
-
-* fix reboot after device reset for WRT350N v1
-
-----------------------------------------------------------------
-Avri Altman (1):
-      iwlwifi: pcie: don't disable the busmaster DMA clock for family 8000
-
-Eliad Peller (1):
-      iwlwifi: mvm: avoid use-after-free on iwl_mvm_d0i3_enable_tx()
-
-Emmanuel Grumbach (4):
-      iwlwifi: mvm: forbid MIMO on devices that don't support it
-      iwlwifi: 7000: modify the firmware name for 3165
-      iwlwifi: mvm: fix MLME trigger
-      iwlwifi: mvm: BT Coex - duplicate the command if sent ASYNC
-
-Haim Dreyfuss (1):
-      iwlwifi: mvm: Free fw_status after use to avoid memory leak
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2015-05-21' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Liad Kaufman (1):
-      iwlwifi: nvm: force mac from otp in case nvm mac is reserved
-
-Luciano Coelho (2):
-      iwlwifi: mvm: take the UCODE_DOWN reference when resuming
-      iwlwifi: mvm: clean net-detect info if device was reset during suspend
-
-Rafał Miłecki (1):
-      ssb: extend fix for PCI related silent reboots to all chipsets
-
- drivers/net/wireless/iwlwifi/Kconfig            |    1 +
- drivers/net/wireless/iwlwifi/iwl-7000.c         |   16 ++++++------
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c |    5 ++++
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h |    3 +++
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c    |   30 +++++++++++++++++------
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c  |    2 +-
- drivers/net/wireless/iwlwifi/mvm/d3.c           |   22 ++++++++++++-----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c     |    3 ---
- drivers/net/wireless/iwlwifi/mvm/ops.c          |    6 +++--
- drivers/net/wireless/iwlwifi/mvm/rs.c           |    3 +++
- drivers/net/wireless/iwlwifi/pcie/trans.c       |    8 +++---
- drivers/ssb/driver_pcicore.c                    |    7 +++---
- 12 files changed, 73 insertions(+), 33 deletions(-)
