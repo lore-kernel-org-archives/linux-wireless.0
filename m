@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:60627 "EHLO plane.gmane.org"
+Received: from cantor2.suse.de ([195.135.220.15]:57979 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751015AbbEDUYF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 16:24:05 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1YpMuJ-0007W1-Hl
-	for linux-wireless@vger.kernel.org; Mon, 04 May 2015 22:24:03 +0200
-Received: from data-214-110.cgates.lt ([data-214-110.cgates.lt])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 22:24:03 +0200
-Received: from nerijus by data-214-110.cgates.lt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 22:24:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
-Subject: Re: b43 AP does not work
-Date: Mon, 4 May 2015 20:23:53 +0000 (UTC)
-Message-ID: <loom.20150504T222029-729@post.gmane.org> (sfid-20150504_222409_738000_07F7624C)
-References: <loom.20150502T183011-57@post.gmane.org>    <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>    <loom.20150502T191744-147@post.gmane.org>   <1430752777.17017.2.camel@redhat.com>   <loom.20150504T173700-271@post.gmane.org>  <1430760100.10844.6.camel@redhat.com>  <loom.20150504T205530-427@post.gmane.org> <1430767700.10844.24.camel@redhat.com>
-Mime-Version: 1.0
+	id S1755973AbbESQXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 12:23:40 -0400
+Date: Tue, 19 May 2015 18:23:35 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: David Howells <dhowells@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	ming.lei@canonical.com, rusty@rustcorp.com.au,
+	torvalds@linux-foundation.org, seth.forshee@canonical.com,
+	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
+	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+	jlee@suse.com, tiwai@suse.de, casey@schaufler-ca.com,
+	keescook@chromium.org, mjg59@srcf.ucam.org,
+	akpm@linux-foundation.org, Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <David.Woodhouse@intel.com>
+Subject: Re: [RFC v3 2/2] firmware: add firmware signature checking support
+Message-ID: <20150519162335.GD23057@wotan.suse.de> (sfid-20150519_182358_302943_DCD34645)
+References: <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
+ <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
+ <9026.1432028025@warthog.procyon.org.uk>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9026.1432028025@warthog.procyon.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@...> writes:
-
-> > I edited /etc/NetworkManager/system-connections/Hotspot, ran systemctl
-> > restart NetworkManager and ssid and password were changed. Then I added
-> > channel=10 to the file, restarted NM, but when I enable hotspot in Gnome,
-> > ssid is localhost.localdomain and password is random again. I was not able
-> > to have my edited ssid and password values back.
+On Tue, May 19, 2015 at 10:33:45AM +0100, David Howells wrote:
+> Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
 > 
-> You don't actually need to restart NM, you can simply run "nmcli con
-> reload" to get NM to notice the changes.  I don't recall how GNOME Shell
-> handles the Hotspot button in its UI, but you should be able to test
-> independently of GNOME Shell by doing:
+> > +		-nocerts -md $DIGEST_ALGORITHM -binary > \
+> > +		$(FIRMWARE_BLOB_NAME).p7s
 > 
-> nmcli con up <name of hotspot connection>
+> Rather than using '>' it might be worth using '-out' instead.
 
-I did
-nmcli con reload
-nmcli con up Hotspot
+Sure, will amend.
 
-but it still used localhost.localdomain as ssid, although I have
-ssid=something in /etc/NetworkManager/system-connections/Hotspot
-
+  Luis
