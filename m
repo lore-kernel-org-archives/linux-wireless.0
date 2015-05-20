@@ -1,38 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:35788 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769AbbE1JnR (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37606 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbbETJBS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 05:43:17 -0400
-Received: by igbyr2 with SMTP id yr2so107511716igb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 02:43:16 -0700 (PDT)
+	Wed, 20 May 2015 05:01:18 -0400
+Received: by wibt6 with SMTP id t6so52003076wib.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 02:01:17 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: simplify check finding NVRAM v1 device path
+Date: Wed, 20 May 2015 11:01:08 +0200
+Message-Id: <1432112468-24092-1-git-send-email-zajec5@gmail.com> (sfid-20150520_110125_572433_AC5EF5A4)
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
-References: <1432667798.26624.3.camel@intel.com>
-	<87lhg9xe0c.fsf@kamboji.qca.qualcomm.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
-Date: Thu, 28 May 2015 11:43:16 +0200
-Message-ID: <CACna6rzWDW3hQBDCZzsE4OjA_1dkJj_UMehChiVDUfuskvCKrQ@mail.gmail.com> (sfid-20150528_114320_854916_FA48070D)
-Subject: Re: pull request: iwlwifi-next 2015-05-26
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 May 2015 at 11:25, Grumbach, Emmanuel <emmanuel.grumbach@intel.com> wrote:
->>
->> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
->>
->> > this is a pull request for 4.2. Nothing really stands out besides what
->> > I wrote in the tag. Even the diffstat hints what is the biggest part
->> > of this pull request :)
->>
->> I see there was a minor comment to one of the patches. Can I still pull this or
->> what are you planning to do?
->
-> I wasn't planning to fix that typo but...
+With a simple use of snprintf and small buffer we can compare NVRAM
+entry value with a full string. This way we avoid checking random chars
+at magic offsets.
+Tested on BCM43602 with NVRAM hacked to use v1 format.
 
-I won't mind ;)
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 181a0e8..0d02e31 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -222,6 +222,10 @@ static int brcmf_init_nvram_parser(struct nvram_parser *nvp,
+ static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
+ 				    u16 bus_nr)
+ {
++	/* Device path with a leading '=' key-value separator */
++	char pcie_path[] = "=pcie/?/?";
++	size_t pcie_len;
++
+ 	u32 i, j;
+ 	bool found;
+ 	u8 *nvram;
+@@ -238,6 +242,9 @@ static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
+ 	/* First search for the devpathX and see if it is the configuration
+ 	 * for domain_nr/bus_nr. Search complete nvp
+ 	 */
++	snprintf(pcie_path, sizeof(pcie_path), "=pcie/%d/%d", domain_nr,
++		 bus_nr);
++	pcie_len = strlen(pcie_path);
+ 	found = false;
+ 	i = 0;
+ 	while (i < nvp->nvram_len - BRCMF_FW_NVRAM_DEVPATH_LEN) {
+@@ -245,13 +252,10 @@ static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
+ 		 * Y = domain_nr, Z = bus_nr, X = virtual ID
+ 		 */
+ 		if ((strncmp(&nvp->nvram[i], "devpath", 7) == 0) &&
+-		    (strncmp(&nvp->nvram[i + 8], "=pcie/", 6) == 0)) {
+-			if (((nvp->nvram[i + 14] - '0') == domain_nr) &&
+-			    ((nvp->nvram[i + 16] - '0') == bus_nr)) {
+-				id = nvp->nvram[i + 7] - '0';
+-				found = true;
+-				break;
+-			}
++		    (strncmp(&nvp->nvram[i + 8], pcie_path, pcie_len) == 0)) {
++			id = nvp->nvram[i + 7] - '0';
++			found = true;
++			break;
+ 		}
+ 		while (nvp->nvram[i] != 0)
+ 			i++;
+-- 
+1.8.4.5
+
