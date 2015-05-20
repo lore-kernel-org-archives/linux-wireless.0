@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33352 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673AbbE1KUK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 06:20:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2015-05-26
-References: <1432667798.26624.3.camel@intel.com>
-	<87lhg9xe0c.fsf@kamboji.qca.qualcomm.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
-Date: Thu, 28 May 2015 13:20:03 +0300
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Thu, 28 May 2015 09:25:05 +0000")
-Message-ID: <87egm1xauk.fsf@kamboji.qca.qualcomm.com> (sfid-20150528_122016_125438_59D5106A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:36880 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751555AbbETMOc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 08:14:32 -0400
+Message-ID: <1432124068.19214.1.camel@sipsolutions.net> (sfid-20150520_141435_210439_7B209B12)
+Subject: Re: Re: [PATCH] Added 2 new Control Frames ( Beamforming Report
+ Poll & VHT NDP Announcement) defined in 802.11ac [EDT]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: rahul.jain@samsung.com
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 20 May 2015 14:14:28 +0200
+In-Reply-To: <1007223984.476041432122688318.JavaMail.weblogic@ep2mlwas05b>
+References: <1007223984.476041432122688318.JavaMail.weblogic@ep2mlwas05b>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On Wed, 2015-05-20 at 11:51 +0000, Rahul Jain wrote:
+> EP-FEDC771DF4FF48A9829CB85254E29FD3
+> 
+> Dear Johannes,
+> 
+> As per your request, I have updated the commit message.
+> This patch is first step towards further changes to be done related to 802.11ac new frames.
 
->> > Note that there are fixes here that didn't make it to my previous pull
->> > request for 4.1. I tagged them for stable since the wording of your
->> > last pull request for 4.1 to Dave hinted me that you won't send any
->> > pull request for 4.1 to him anymore.
->> 
->> Yeah, I said that hopefully it's the last pull request. I got one important fix
->> from Arend so I will try to send one more, but let's see how it goes.
->> 
-> ... if that's the case, do you want me to split the patches
-> differently and add the ones I CCed to stable to iwlwifi-fixes?
+Perhaps you should combine the two-liner with other patches then?
 
-Sure, go ahead if you want to do that. But please keep in mind that the
-bar is higher when we go closer to the actual release. I found two
-patches from the patchset with CC stable (I hope I didn't miss
-anything):
+Standalone, this isn't really worthwhile I think.
 
-[PATCH 03/39] iwlwifi: pcie: fix tracking of cmd_in_flight
-[PATCH 32/39] iwlwifi: nvm: fix otp parsing in 8000 hw family
+> VHT Null Data Packet (NDP) Announcement - This frame is used by Beamformers to  
+> gain control of the channel and identiy beformees. Beamformees will respond to  
+> the NDP Announcement, while all other stations will simply defer channel access 
+> until the sounding sequence is complete                                            
+> ---                                                                                
 
-In my opinion these two are ok.
+Anyway you forgot S-o-b now.
 
-> If I re-spin iwlwifi-next anyway, I'll fix the typo above.
+johannes
 
-Ok, I don't care about the typo in the commit log, we do those all the
-time :) I just wanted to check that I don't pull anything which I'm not
-supposed to pull.
-
-
--- 
-Kalle Valo
