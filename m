@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:34526 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472AbbE2LsD convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:33209 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753262AbbETN6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:48:03 -0400
-Received: by wicmc15 with SMTP id mc15so13730663wic.1
-        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:48:01 -0700 (PDT)
+	Wed, 20 May 2015 09:58:14 -0400
+Received: by wgjc11 with SMTP id c11so53937617wgj.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 06:58:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1432899554.2104.17.camel@sipsolutions.net>
-References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
-	<1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
-	<1432285043-8878-2-git-send-email-michal.kazior@tieto.com>
-	<1432897812.2104.7.camel@sipsolutions.net>
-	<CA+BoTQmkg8KBhFGqSsdt6Sks6JGUDGnM2oSzMSEWtCEz-abwzA@mail.gmail.com>
-	<1432899554.2104.17.camel@sipsolutions.net>
-Date: Fri, 29 May 2015 13:48:01 +0200
-Message-ID: <CA+BoTQ=6MBoXqhX2ALJG5S+EYbZbw+Zad2j9UfEqpyKUBFfyug@mail.gmail.com> (sfid-20150529_134807_095633_4C432DCD)
-Subject: Re: [PATCH v2 2/2] mac80211: guard against invalid ptr deref
-From: Michal Kazior <michal.kazior@tieto.com>
+In-Reply-To: <1432129299.19214.16.camel@sipsolutions.net>
+References: <1431602181-17700-1-git-send-email-chaitanya.mgit@gmail.com>
+ <1432020671.7437.5.camel@sipsolutions.net> <CABPxzY+7KDGRs3fO1wsy3FPt__YPBnzr5CcZ_HTEh2ePsdtUdQ@mail.gmail.com>
+ <1432129299.19214.16.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 20 May 2015 19:27:52 +0530
+Message-ID: <CABPxzY+v_7SbKJp5AkFzpdZiMkojrHWwjGiKqR7t25DPdtn7mQ@mail.gmail.com> (sfid-20150520_155817_235759_0DD6C5DE)
+Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused by
+ race between suspend and Tx packet.
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 May 2015 at 13:39, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2015-05-29 at 13:34 +0200, Michal Kazior wrote:
+On Wed, May 20, 2015 at 7:11 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2015-05-19 at 13:53 +0530, Krishna Chaitanya wrote:
 >
->> > I'm a bit undecided about this. Is this really the only place that
->> > assumes use_4addr implies that it's a VLAN, in a context like this?
+>> > I'm not sure I get it - we always transmit a frame after resume.
+>> Let me explain the sequence of events:
 >>
->> Hmm.. I guess TDLS could also have use_4addr and still be a
->> IFTYPE_STATION, right?
+>> tx_frame:
+>>       dynamic_ps_disable_work.
+>>                  get the chip out of power save.
+>> suspend came:
+>>      dynamic ps timer is cancelled.
+>>     tx queues are flushed.
+>> chip stays out of power save unless there is one more
+>> tx frame which kicks the dynamic ps timer again.
 >
-> No, TDLS can neither get here (VLAN assignment) nor does it actually set
-> use_4addr. The only other thing that can set use_4addr is the station
-> interface itself, but then we also can't get here.
+> So initially, for suspend, this shouldn't matter.
+Some chipsets are using power_save state from mac80211
+to stay in DOZE mode, so in that case we end up
+drawing more power. We can force the chipset fw to enter
+DOZE independent of the mac80211 power save state but
+when resuming the chip FW should again configure as per
+mac80211 power save state.
 
-Good point.
+> And after suspend we always transmit a frame. What gives?
 
+Yes, but we have seen that in idle case this delay is more like
+30secs-1min depending on the keepalive packet.
 
-> That wasn't really my point though - I was thinking more along the lines
-> of code in rx.c, tx.c that just checks use_4addr? Not really sure.
-
->From what I see wdev.use_4addr is always used after checking for
-IFTYPE_AP_VLAN. u.mgd.use_4addr on the other hand is used after
-checking for IFTYPE_STATION.
-
-
-Michał
+Till that time the chip is active and drawing more power.
