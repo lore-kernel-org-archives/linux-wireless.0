@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36987 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004AbbEKKjH (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:35234 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504AbbETMAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 06:39:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Okash Khawaja <okash.khawaja@gmail.com>
-Cc: "joe\@perches.com" <joe@perches.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
-References: <20150505224020.GA3805@bytefire-computer>
-	<87wq0ms3mv.fsf@kamboji.qca.qualcomm.com>
-	<20150506063241.GA3042@bytefire-computer>
-	<87k2wflj7p.fsf@kamboji.qca.qualcomm.com>
-	<2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com>
-Date: Mon, 11 May 2015 13:38:58 +0300
-In-Reply-To: <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> (Okash Khawaja's
-	message of "Mon, 11 May 2015 09:48:54 +0100")
-Message-ID: <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com> (sfid-20150511_123915_418626_EB2EB597)
+	Wed, 20 May 2015 08:00:10 -0400
+Received: by wgfl8 with SMTP id l8so50306941wgf.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 05:00:09 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: treat \0 as end of comment when parsing NVRAM
+Date: Wed, 20 May 2015 13:59:54 +0200
+Message-Id: <1432123194-12584-1-git-send-email-zajec5@gmail.com> (sfid-20150520_140013_937158_B903FD0B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Okash Khawaja <okash.khawaja@gmail.com> writes:
+This fixes brcmfmac dealing with NVRAM coming from platform e.g. from a
+flash MTD partition. In such cases entries are separated by \0 instead
+of \n which caused ignoring whole content after the first "comment".
+While platform NVRAM doesn't usually contain comments, we switch to
+COMMENT state after e.g. finding an unexpected char in key name.
 
-> Sure, I'll create v2 of the patch with updated commit log. 
->
-> Since it's part of a patch set, do you want me to send both the
-> patches in the patch set together as v2 or just this patch?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-Please resend the whole patchset as v2, less problems that way.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 0d02e31..45d7191 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -162,17 +162,20 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
+ static enum nvram_parser_state
+ brcmf_nvram_handle_comment(struct nvram_parser *nvp)
+ {
+-	char *eol, *sol;
++	char *eoc, *sol;
+ 
+ 	sol = (char *)&nvp->fwnv->data[nvp->pos];
+-	eol = strchr(sol, '\n');
+-	if (eol == NULL)
+-		return END;
++	eoc = strchr(sol, '\n');
++	if (!eoc) {
++		eoc = strchr(sol, '\0');
++		if (!eoc)
++			return END;
++	}
+ 
+ 	/* eat all moving to next line */
+ 	nvp->line++;
+ 	nvp->column = 1;
+-	nvp->pos += (eol - sol) + 1;
++	nvp->pos += (eoc - sol) + 1;
+ 	return IDLE;
+ }
+ 
 -- 
-Kalle Valo
+1.8.4.5
+
