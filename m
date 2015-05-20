@@ -1,115 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38699 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733AbbE0OSg (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:32898 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754161AbbETQjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 10:18:36 -0400
-Received: by wizo1 with SMTP id o1so24430836wiz.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 07:18:35 -0700 (PDT)
-Message-ID: <5565D238.4090409@gmail.com> (sfid-20150527_161854_202034_6CE8491C)
-Date: Wed, 27 May 2015 17:18:32 +0300
-From: Nick Dimov <dimovnike@gmail.com>
+	Wed, 20 May 2015 12:39:33 -0400
+Received: by obblk2 with SMTP id lk2so41097656obb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 09:39:32 -0700 (PDT)
+Message-ID: <555CB8C1.1040007@lwfinger.net> (sfid-20150520_183937_021311_D85D90C2)
+Date: Wed, 20 May 2015 11:39:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: packet loss, disconnects and possible bug in iwlwifi
-References: <55605637.1080503@gmail.com>	 <CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>	 <55650565.6020303@gmail.com> <1432734873.15971.2.camel@redhat.com> <1432735728.15971.3.camel@redhat.com>
-In-Reply-To: <1432735728.15971.3.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
+To: Haggai Eran <haggai.eran@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
+References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com> <CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>
+In-Reply-To: <CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------060504010608090804040404"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-these logs are produced with NetworkManager (i connected using network
-manager). The only log that was produced with wpa_supplicant only is
-wifi.log where u can see the wpa_supplicant command arguments. The
-NetworkManager was stopped with systemctl stop (however I did not use
-systemctl mask, but from what I've checked, there was no network manger
-shown in process list). I will try to redo the test with NM masked.
+This is a multi-part message in MIME format.
+--------------060504010608090804040404
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Btw, I tried a Fedora 22 livecd and there were no disconnects at all (it
-has new wpa_supplicant 2.3.3, here I have 2.1), however the max
-connection speed I saw there was 300mbps. Here on Ubuntu Vivid i see
-speeds up to 620mbps (and in Windows 7 I have  866mbps).
+On 05/20/2015 01:17 AM, Haggai Eran wrote:
+> On May 19, 2015 08:47, "Haggai Eran" <haggai.eran@gmail.com
+> <mailto:haggai.eran@gmail.com>> wrote:
+>  >
+>  > With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
+>  > packet are set, but the packet length is too large. Truncate the packet
+>  > to prevent memory corruption.
+>  >
+>  > Signed-off-by: Haggai Eran <haggai.eran@gmail.com <mailto:haggai.eran@gmail.com>>
+>  > ---
+>  >
+>  > Hi,
+>  >
+>  > I think this solves the issue for me. I'll test it more thoroughly later. I
+>  > still don't know why a fragmented packet has such a large pkt_len value though.
+>  >
+>  > Thanks,
+>  > Haggai
+>  >
+>
+> I guess I was too quick with this patch. It prevents the kernel page faults, but
+> with it I still see sometimes the connectivity disappear for a minute or two.
 
-On 27.05.2015 17:08, Dan Williams wrote:
-> On Wed, 2015-05-27 at 08:54 -0500, Dan Williams wrote:
->> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
->>> Hello,
->>> thank you for your response. I attach the full syslog since the last
->>> boot which contains some disconnects. I enabled debug mode for
->>> wpa_supplicant with -dd option (let me know if you need anything else).
->>>
->>> I also tried connecting directly, i.e. without NetworkManager but
->>> manually with wpa_supplicant and I still get disconnects, howvever
->>> wpa_supplicant gives different logs with different drivers. Please, see
->>> the file wifi.log (you can see there the driver i used in
->>> wpa_supplicant, that log doesn't have the debug activated but let me
->>> know if you need that too)
->> Also, make sure you stop NetworkManager when you're doing the manual
->> connection.  With systemd, you need to 'systemctl mask NetworkManager'
->> and then 'systemctl stop NetworkManager' to prevent it from being D-Bus
->> activated too.
-> Or, "nmcli net off" to put NM to sleep temporarily, without messing
-> around with systemd.
->
-> Dan
->
->> The reason I say this is because in your logs there are
->> locally-generated disconnections, and that happens when NetworkManager
->> is still running and hasn't been told to stop handling WiFi, and then
->> somebody runs another wpa_supplicant alongside.
->>
->> Dan
->>
->>> Thank you again,
->>> Nick.
->>>
->>> On 25.05.2015 14:33, Emmanuel Grumbach wrote:
->>>> On Sat, May 23, 2015 at 1:28 PM, Nick Dimov <dimovnike@gmail.com> wrote:
->>>>> Hello,
->>>>> I recently bought the Intel 7260 AC wifi card (below is the PCI info)
->>>>> and the card works perfectly in windows with the latest intel driver but
->>>>> in linux I get deauthenticating and disconnects (reason -3) every minute
->>>>> or so. When these disconnects happen I get packet loss. In the attached
->>>>> file iwlwifi_dmesg.txt you can see the log that is produced each time a
->>>>> disconnect happens. I also tried connecting on 2.4Ghz but I get the same
->>>>> packet loss. I also put the last firmware from
->>>>> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
->>>>> but it did not help.
->>>> Please increase the debug level of the supplicant. And attach the full syslog.
->>>>
->>>>> There is also another problem: In windows i can see it connecting on
->>>>> 860mbps, but on linux it never goes higher than 600mbps (i check this
->>>>> with iwconfig) and it stays somewhere on 500mbps.
->>>>>
->>>>> Can you please help me solve this?
->>>>> Thank you.
->>>>>
->>>>> uname -a
->>>>> Linux nick-laptop 3.19.0-18-generic #18-Ubuntu SMP Tue May 19 18:31:35
->>>>> UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
->>>>>
->>>>> lspci info:
->>>>> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
->>>>>         Subsystem: Intel Corporation Dual Band Wireless-AC 7260
->>>>>         Flags: bus master, fast devsel, latency 0, IRQ 29
->>>>>         Memory at f7200000 (64-bit, non-prefetchable) [size=8K]
->>>>>         Capabilities: [c8] Power Management version 3
->>>>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>>>>         Capabilities: [40] Express Endpoint, MSI 00
->>>>>         Capabilities: [100] Advanced Error Reporting
->>>>>         Capabilities: [140] Device Serial Number d8-fc-93-ff-ff-e4-70-d7
->>>>>         Capabilities: [14c] Latency Tolerance Reporting
->>>>>         Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1
->>>>> Len=014 <?>
->>>>>         Kernel driver in use: iwlwifi
->>>>>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Is anything logged when that happens?
 
+I'm still trying to see where that magic number of 1658 comes from, and how that 
+affects the RX buffer size.
+
+When I unconditionally set alloc_sz to tmp_len as in the attached patch (I 
+remembered to refresh it this time), nothing bad has happened here yet. What 
+happens on your box?
+
+Larry
+
+
+
+--------------060504010608090804040404
+Content-Type: text/plain; charset=UTF-8;
+ name="rtl8712_prevent_buffer_overrun"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="rtl8712_prevent_buffer_overrun"
+
+WC1BY2NvdW50LUtleTogYWNjb3VudDExDQpYLVVJREw6IEdtYWlsSWQxNGQ2YWI2NWUyNDk1
+N2QzDQpYLU1vemlsbGEtU3RhdHVzOiAwMDAxDQpYLU1vemlsbGEtU3RhdHVzMjogMDAwMDAw
+MDANClgtTW96aWxsYS1LZXlzOiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KRGVsaXZl
+cmVkLVRvOiBsYXJyeS5maW5nZXJAZ21haWwuY29tDQpSZWNlaXZlZDogYnkgMTAuMjcuMjEw
+LjE5NCB3aXRoIFNNVFAgaWQgajE4NWNzcDE2NDA1MndsZzsNCiAgICAgICAgTW9uLCAxOCBN
+YXkgMjAxNSAyMjo0NzoyNiAtMDcwMCAoUERUKQ0KWC1SZWNlaXZlZDogYnkgMTAuNTUuMjAu
+ODcgd2l0aCBTTVRQIGlkIGU4NG1yNTUwNTE1NzRxa2guNDMuMTQzMjAxNDQ0NjE1NTsNCiAg
+ICAgICAgTW9uLCAxOCBNYXkgMjAxNSAyMjo0NzoyNiAtMDcwMCAoUERUKQ0KUmV0dXJuLVBh
+dGg6IDxoYWdnYWkuZXJhbkBnbWFpbC5jb20+DQpSZWNlaXZlZDogZnJvbSBhdGw0bWhvYjE4
+Lm15cmVnaXN0ZXJlZHNpdGUuY29tIChhdGw0bWhvYjE4Lm15cmVnaXN0ZXJlZHNpdGUuY29t
+LiBbMjA5LjE3LjExNS4xMTFdKQ0KICAgICAgICBieSBteC5nb29nbGUuY29tIHdpdGggRVNN
+VFAgaWQgNHNpMTA0MDk3NDNxa3UuNzEuMjAxNS4wNS4xOC4yMi40Ny4yNQ0KICAgICAgICBm
+b3IgPGxhcnJ5LmZpbmdlckBnbWFpbC5jb20+Ow0KICAgICAgICBNb24sIDE4IE1heSAyMDE1
+IDIyOjQ3OjI2IC0wNzAwIChQRFQpDQpSZWNlaXZlZC1TUEY6IHNvZnRmYWlsIChnb29nbGUu
+Y29tOiBkb21haW4gb2YgdHJhbnNpdGlvbmluZyBoYWdnYWkuZXJhbkBnbWFpbC5jb20gZG9l
+cyBub3QgZGVzaWduYXRlIDIwOS4xNy4xMTUuMTExIGFzIHBlcm1pdHRlZCBzZW5kZXIpIGNs
+aWVudC1pcD0yMDkuMTcuMTE1LjExMTsNCkF1dGhlbnRpY2F0aW9uLVJlc3VsdHM6IG14Lmdv
+b2dsZS5jb207DQogICAgICAgc3BmPXNvZnRmYWlsIChnb29nbGUuY29tOiBkb21haW4gb2Yg
+dHJhbnNpdGlvbmluZyBoYWdnYWkuZXJhbkBnbWFpbC5jb20gZG9lcyBub3QgZGVzaWduYXRl
+IDIwOS4xNy4xMTUuMTExIGFzIHBlcm1pdHRlZCBzZW5kZXIpIHNtdHAubWFpbD1oYWdnYWku
+ZXJhbkBnbWFpbC5jb207DQogICAgICAgZGtpbT1wYXNzIGhlYWRlci5pPUBnbWFpbC5jb207
+DQogICAgICAgZG1hcmM9cGFzcyAocD1OT05FIGRpcz1OT05FKSBoZWFkZXIuZnJvbT1nbWFp
+bC5jb20NClJlY2VpdmVkOiBmcm9tIG1haWwuaG9zdGluZ3BsYXRmb3JtLmNvbSAoWzEwLjMw
+LjcxLjQ2XSkNCglieSBhdGw0bWhvYjE4Lm15cmVnaXN0ZXJlZHNpdGUuY29tICg4LjE0LjQv
+OC4xNC40KSB3aXRoIEVTTVRQIGlkIHQ0SjVsTVFnMDE5Nzk1DQoJZm9yIDxsYXJyeS5maW5n
+ZXJAZ21haWwuY29tPjsgVHVlLCAxOSBNYXkgMjAxNSAwMTo0NzoyMiAtMDQwMA0KUmVjZWl2
+ZWQ6IChxbWFpbCAxNTY3IGludm9rZWQgYnkgdWlkIDc4KTsgMTkgTWF5IDIwMTUgMDU6NDc6
+MjIgLTAwMDANCkRlbGl2ZXJlZC1UbzogbHdmaW5nZXIubmV0LUxhcnJ5LkZpbmdlckBsd2Zp
+bmdlci5uZXQNClJlY2VpdmVkOiAocW1haWwgMTU2MSBpbnZva2VkIGJ5IHVpZCAwKTsgMTkg
+TWF5IDIwMTUgMDU6NDc6MjIgLTAwMDANClJlY2VpdmVkOiBmcm9tIHVua25vd24gKEhFTE8g
+YXRsNG1oaWIyMC5teXJlZ2lzdGVyZWRzaXRlLmNvbSkgKDIwOS4xNy4xMTUuMTU1KQ0KICBi
+eSAwIHdpdGggU01UUDsgMTkgTWF5IDIwMTUgMDU6NDc6MjIgLTAwMDANClJlY2VpdmVkOiBm
+cm9tIG1haWwtd2cwLWY0Ny5nb29nbGUuY29tIChtYWlsLXdnMC1mNDcuZ29vZ2xlLmNvbSBb
+NzQuMTI1LjgyLjQ3XSkNCglieSBhdGw0bWhpYjIwLm15cmVnaXN0ZXJlZHNpdGUuY29tICg4
+LjE0LjQvOC4xNC40KSB3aXRoIEVTTVRQIGlkIHQ0SjVsS2YzMDAyMjU2DQoJKHZlcnNpb249
+VExTdjEvU1NMdjMgY2lwaGVyPUFFUzEyOC1HQ00tU0hBMjU2IGJpdHM9MTI4IHZlcmlmeT1P
+SykNCglmb3IgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+OyBUdWUsIDE5IE1heSAyMDE1
+IDAxOjQ3OjIxIC0wNDAwDQpSZWNlaXZlZDogYnkgd2diZ3E2IHdpdGggU01UUCBpZCBncTZz
+bzQ1OTMzMzR3Z2IuMw0KICAgICAgICBmb3IgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+
+OyBNb24sIDE4IE1heSAyMDE1IDIyOjQ3OjE5IC0wNzAwIChQRFQpDQpES0lNLVNpZ25hdHVy
+ZTogdj0xOyBhPXJzYS1zaGEyNTY7IGM9cmVsYXhlZC9yZWxheGVkOw0KICAgICAgICBkPWdt
+YWlsLmNvbTsgcz0yMDEyMDExMzsNCiAgICAgICAgaD1mcm9tOnRvOmNjOnN1YmplY3Q6ZGF0
+ZTptZXNzYWdlLWlkOw0KICAgICAgICBiaD1vV0JzZ3ZSb0xCcHdRYVpuR1k1SWU0SlZnSEd3
+akFHZTJ1NVlIYndzcXdJPTsNCiAgICAgICAgYj1tMlZEaytkazE4L21hNloyRVZvblVjdmJj
+Q0RCTnJhSmRpaURnMWhmY0pmR0FqaDBjNEJmLytLckVUa2doWjZNQU8NCiAgICAgICAgIFdO
+RDlvQlVxbnBGQ0ZZZFNMdE9RRjJNc09YVGtuVTFVYXlCRmNEQlR5Z2M3Mm44Q3oxeFlRYUZS
+OWt3WCs1OWlnNU02DQogICAgICAgICBML1JTeTYrS2E4aHFPN0k3Qnc5aGEwb09SdDEyMW93
+Qy9RSXZMUUNONEorYWVJZlNRTWo3SWdhUllGcTZVTlkxc2c3ag0KICAgICAgICAgQWxHR3N3
+d0cwQkE2VDRrTmIzZXU5bjFWK0VObjRsYzJxcm1QUmx1Y0pYWnlLNytXYkIvVkxtVGMweXpq
+cmIwcTRDdy8NCiAgICAgICAgIDRkYkN6ZWdTVllZT3dERzFGQk1neWdmOTRmeUh4L1ZROFlu
+NkdDc1EzQnlKdEx1SnpYRHdnakJKRUFkVnFRVklISTdZDQogICAgICAgICA1TVhnPT0NClgt
+UmVjZWl2ZWQ6IGJ5IDEwLjE4MC4yMzAuMTk5IHdpdGggU01UUCBpZCB0YTdtcjE0NzQ4MzIx
+d2ljLjEuMTQzMjAxNDQzOTU5OTsNCiAgICAgICAgTW9uLCAxOCBNYXkgMjAxNSAyMjo0Nzox
+OSAtMDcwMCAoUERUKQ0KUmVjZWl2ZWQ6IGZyb20gbG9jYWxob3N0LmxvY2FsZG9tYWluIChb
+NDYuMTIxLjgyLjE5NV0pDQogICAgICAgIGJ5IG14Lmdvb2dsZS5jb20gd2l0aCBFU01UUFNB
+IGlkIDlzbTIwMDE4MDM0d2pyLjExLjIwMTUuMDUuMTguMjIuNDcuMTUNCiAgICAgICAgKHZl
+cnNpb249VExTdjEuMiBjaXBoZXI9RUNESEUtUlNBLUFFUzEyOC1TSEEgYml0cz0xMjgvMTI4
+KTsNCiAgICAgICAgTW9uLCAxOCBNYXkgMjAxNSAyMjo0NzoxOCAtMDcwMCAoUERUKQ0KRnJv
+bTogSGFnZ2FpIEVyYW4gPGhhZ2dhaS5lcmFuQGdtYWlsLmNvbT4NClRvOiBMYXJyeSBGaW5n
+ZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQpDYzogbGludXgtd2lyZWxlc3NAdmdl
+ci5rZXJuZWwub3JnLCBIYWdnYWkgRXJhbiA8aGFnZ2FpLmVyYW5AZ21haWwuY29tPg0KU3Vi
+amVjdDogW1BBVENIXSBzdGFnaW5nOiBydGw4NzEyOiBwcmV2ZW50IGJ1ZmZlciBvdmVycnVu
+IGluIHJlY3ZidWYycmVjdmZyYW1lDQpEYXRlOiBUdWUsIDE5IE1heSAyMDE1IDA4OjQ3OjI0
+ICswMzAwDQpNZXNzYWdlLUlkOiA8MTQzMjAxNDQ0NC0yOTAzOS0xLWdpdC1zZW5kLWVtYWls
+LWhhZ2dhaS5lcmFuQGdtYWlsLmNvbT4NClgtTWFpbGVyOiBnaXQtc2VuZC1lbWFpbCAxLjku
+MQ0KWC1TcGFtU2NvcmU6IC0wLjENClgtTWFpbEh1Yi1BcHBhcmVudGx5LVRvOiBMYXJyeS5G
+aW5nZXJAbHdmaW5nZXIubmV0DQoNCldpdGggYW4gUlRMODE5MVNVIFVTQiBhZGFwdG9yLCBz
+b21ldGltZXMgdGhlIGhpbnRzIGZvciBhIGZyYWdtZW50ZWQNCnBhY2tldCBhcmUgc2V0LCBi
+dXQgdGhlIHBhY2tldCBsZW5ndGggaXMgdG9vIGxhcmdlLiBUcnVuY2F0ZSB0aGUgcGFja2V0
+DQp0byBwcmV2ZW50IG1lbW9yeSBjb3JydXB0aW9uLg0KDQpTaWduZWQtb2ZmLWJ5OiBIYWdn
+YWkgRXJhbiA8aGFnZ2FpLmVyYW5AZ21haWwuY29tPg0KLS0tDQoNCkhpLA0KDQpJIHRoaW5r
+IHRoaXMgc29sdmVzIHRoZSBpc3N1ZSBmb3IgbWUuIEknbGwgdGVzdCBpdCBtb3JlIHRob3Jv
+dWdobHkgbGF0ZXIuIEkNCnN0aWxsIGRvbid0IGtub3cgd2h5IGEgZnJhZ21lbnRlZCBwYWNr
+ZXQgaGFzIHN1Y2ggYSBsYXJnZSBwa3RfbGVuIHZhbHVlIHRob3VnaC4gDQoNClRoYW5rcywN
+CkhhZ2dhaQ0KDQogZHJpdmVycy9zdGFnaW5nL3J0bDg3MTIvcnRsODcxMl9yZWN2LmMgfCA2
+ICsrKysrLQ0KIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
+LSkNCg0KSW5kZXg6IHdpcmVsZXNzLWRyaXZlcnMtbmV4dC9kcml2ZXJzL3N0YWdpbmcvcnRs
+ODcxMi9ydGw4NzEyX3JlY3YuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSB3aXJlbGVzcy1kcml2ZXJz
+LW5leHQub3JpZy9kcml2ZXJzL3N0YWdpbmcvcnRsODcxMi9ydGw4NzEyX3JlY3YuYworKysg
+d2lyZWxlc3MtZHJpdmVycy1uZXh0L2RyaXZlcnMvc3RhZ2luZy9ydGw4NzEyL3J0bDg3MTJf
+cmVjdi5jCkBAIC0xMDUzLDEyICsxMDUzLDcgQEAgc3RhdGljIGludCByZWN2YnVmMnJlY3Zm
+cmFtZShzdHJ1Y3QgX2FkYQogCQlwcmVjdmZyYW1lLT51Lmhkci5sZW4gPSAwOwogCQl0bXBf
+bGVuID0gcGt0X2xlbiArIGRydmluZm9fc3ogKyBSWERFU0NfU0laRTsKIAkJcGt0X29mZnNl
+dCA9ICh1MTYpcm91bmRfdXAodG1wX2xlbiwgMTI4KTsKLQkJLyogZm9yIGZpcnN0IGZyYWdt
+ZW50IHBhY2tldCwgZHJpdmVyIG5lZWQgYWxsb2NhdGUgMTUzNiArCi0JCSAqIGRydmluZm9f
+c3ogKyBSWERFU0NfU0laRSB0byBkZWZyYWcgcGFja2V0LiAqLwotCQlpZiAoKG1mID09IDEp
+ICYmIChmcmFnID09IDApKQotCQkJYWxsb2Nfc3ogPSAxNjU4Oy8qMTY1OCs2PTE2NjQsIDE2
+NjQgaXMgMTI4IGFsaWdubWVudC4qLwotCQllbHNlCi0JCQlhbGxvY19zeiA9IHRtcF9sZW47
+CisJCWFsbG9jX3N6ID0gdG1wX2xlbjsKIAkJLyogMiBpcyBmb3IgSVAgaGVhZGVyIDQgYnl0
+ZXMgYWxpZ25tZW50IGluIFFvUyBwYWNrZXQgY2FzZS4KIAkJICogNCBpcyBmb3Igc2tiLT5k
+YXRhIDQgYnl0ZXMgYWxpZ25tZW50LiAqLwogCQlhbGxvY19zeiArPSA2Owo=
+--------------060504010608090804040404--
