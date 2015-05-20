@@ -1,46 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49682 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751106AbbEFMJs convert rfc822-to-8bit (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:27359 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752540AbbETMaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 08:09:48 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <1430873070-7290-3-git-send-email-mcgrof@do-not-panic.com>
-References: <1430873070-7290-3-git-send-email-mcgrof@do-not-panic.com> <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: dhowells@redhat.com, rusty@rustcorp.com.au, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v1 02/12] kernel: generalize module signing as system data signing
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Wed, 06 May 2015 13:08:49 +0100
-Message-ID: <14325.1430914129@warthog.procyon.org.uk> (sfid-20150506_141005_444556_A1C4F374)
+	Wed, 20 May 2015 08:30:19 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NON004Y5EQHLK60@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 20 May 2015 21:30:17 +0900 (KST)
+Date: Wed, 20 May 2015 12:30:16 +0000 (GMT)
+From: Rahul Jain <rahul.jain@samsung.com>
+Subject: Re: Re: Re: [PATCH] Added 2 new Control Frames ( Beamforming Report
+ Poll & VHT NDP Announcement) defined in 802.11ac [EDT]
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Reply-to: rahul.jain@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <1295813965.477021432125016290.JavaMail.weblogic@ep2mlwas05b> (sfid-20150520_143024_389808_B2E3D8AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
+RGVhciBKb2hhbm5lcywNCg0KVGhhbmtzIGZvciBwb2ludGluZyBvdXQuIEkgaW5jb3Jwb3JhdGVk
+IHlvdXIgcmV2aWV3IGNvbW1lbnQgaW4gbmV3IHBhdGNoIGJlbG93Lg0KDQpGcm9tIDY5MzQwZDYz
+ZTBjNjNjMWFlNzVjZGI2MmJmNGJkMDRhOWM5NjFhMWYgTW9uIFNlcCAxNyAwMDowMDowMCAyMDAx
+DQpGcm9tOiByYWh1bCA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4NCkRhdGU6IFRodSwgMTQgTWF5
+IDIwMTUgMTA6MjE6NDggKzA1MzANClN1YmplY3Q6IFtQQVRDSF0gQWRkZWQgMiBuZXcgQ29udHJv
+bCBGcmFtZXMgKCBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCAmIFZIVA0KIE5EUCBBbm5vdW5jZW1l
+bnQpIGRlZmluZWQgaW4gODAyLjExYWMuDQoNCkJlYW1mb3JtaW5nIFJlcG9ydCBQb2xsIGZyYW1l
+IC0gVGhpcyBmcmFtZSBpcyB1c2VkIHRvIHJldHJpZXZlIGFkZGl0aW9uYWwNCmZlZWRiYWNrIGZy
+b20gdGhlIHNlY29uZCBhbmQgc3Vic2VxdWVudCBiZWFtZm9ybWVlcy4gVGhlIGJlYW1mb3JtZXIg
+bXVzdCB1c2UNCnRoZSBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCBmcmFtZS4gSW4gQmVhbWZvcm1p
+bmcgUmVwb3J0IFBvbGwsIHRoZSBGZWVkYmFjaw0KU2VnbWVudCBSZXRyYW5zbWlzc2lvbiBCaXRt
+YXAgZmllbGQgaW5kaWNhdGVzIHRoZSByZXF1ZXN0ZWQgZmVlZGJhY2sgc2VnbWVudHMNCm9mIGEg
+VkhUIENvbXByZXNzZWQgQmVhbWZvcm1pbmcgcmVwb3J0Lg0KDQpWSFQgTnVsbCBEYXRhIFBhY2tl
+dCAoTkRQKSBBbm5vdW5jZW1lbnQgLSBUaGlzIGZyYW1lIGlzIHVzZWQgYnkgQmVhbWZvcm1lcnMg
+dG8NCmdhaW4gY29udHJvbCBvZiB0aGUgY2hhbm5lbCBhbmQgaWRlbnRpeSBiZWZvcm1lZXMuIEJl
+YW1mb3JtZWVzIHdpbGwgcmVzcG9uZCB0bw0KdGhlIE5EUCBBbm5vdW5jZW1lbnQsIHdoaWxlIGFs
+bCBvdGhlciBzdGF0aW9ucyB3aWxsIHNpbXBseSBkZWZlciBjaGFubmVsIGFjY2Vzcw0KdW50aWwg
+dGhlIHNvdW5kaW5nIHNlcXVlbmNlIGlzIGNvbXBsZXRlDQoNClNpZ25lZC1vZmYtYnk6IHJhaHVs
+IDxyYWh1bC5qYWluQHNhbXN1bmcuY29tPg0KLS0tDQogaW5jbHVkZS9saW51eC9pZWVlODAyMTEu
+aCB8ICAgIDIgKysNCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1n
+aXQgYS9pbmNsdWRlL2xpbnV4L2llZWU4MDIxMS5oIGIvaW5jbHVkZS9saW51eC9pZWVlODAyMTEu
+aA0KaW5kZXggYjljNzg5Ny4uY2EzODYxNiAxMDA2NDQNCi0tLSBhL2luY2x1ZGUvbGludXgvaWVl
+ZTgwMjExLmgNCisrKyBiL2luY2x1ZGUvbGludXgvaWVlZTgwMjExLmgNCkBAIC03NSw2ICs3NSw4
+IEBADQogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQUNUSU9OCQkweDAwRDANCiANCiAvKiBjb250
+cm9sICovDQorI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQkVBTUZPUk1fUE9MTAkweDAwNDANCisj
+ZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9WSFRfTkRQX0FOTk9VQ0UJMHgwMDUwDQogI2RlZmluZSBJ
+RUVFODAyMTFfU1RZUEVfQ1RMX0VYVAkJMHgwMDYwDQogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVf
+QkFDS19SRVEJMHgwMDgwDQogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQkFDSwkJMHgwMDkwDQot
+LSANCjEuNy45LjUNCg0KDQoNCg0KVGhhbmtzDQotUmFodWwgSmFpbiANCg0KDQoNCi0tLS0tLS0g
+T3JpZ2luYWwgTWVzc2FnZSAtLS0tLS0tDQpTZW5kZXIgOiBKb2hhbm5lcyBCZXJnPGpvaGFubmVz
+QHNpcHNvbHV0aW9ucy5uZXQ+DQpEYXRlIDogTWF5IDIwLCAyMDE1IDE3OjQ0IChHTVQrMDU6MzAp
+DQpUaXRsZSA6IFJlOiBSZTogW1BBVENIXSBBZGRlZCAyIG5ldyBDb250cm9sIEZyYW1lcyAoIEJl
+YW1mb3JtaW5nIFJlcG9ydCBQb2xsICYgVkhUIE5EUCBBbm5vdW5jZW1lbnQpIGRlZmluZWQgaW4g
+ODAyLjExYWMgW0VEVF0NCg0KT24gV2VkLCAyMDE1LTA1LTIwIGF0IDExOjUxICswMDAwLCBSYWh1
+bCBKYWluIHdyb3RlOg0KPiBFUC1GRURDNzcxREY0RkY0OEE5ODI5Q0I4NTI1NEUyOUZEMw0KPiAN
+Cj4gRGVhciBKb2hhbm5lcywNCj4gDQo+IEFzIHBlciB5b3VyIHJlcXVlc3QsIEkgaGF2ZSB1cGRh
+dGVkIHRoZSBjb21taXQgbWVzc2FnZS4NCj4gVGhpcyBwYXRjaCBpcyBmaXJzdCBzdGVwIHRvd2Fy
+ZHMgZnVydGhlciBjaGFuZ2VzIHRvIGJlIGRvbmUgcmVsYXRlZCB0byA4MDIuMTFhYyBuZXcgZnJh
+bWVzLg0KDQpQZXJoYXBzIHlvdSBzaG91bGQgY29tYmluZSB0aGUgdHdvLWxpbmVyIHdpdGggb3Ro
+ZXIgcGF0Y2hlcyB0aGVuPw0KDQpTdGFuZGFsb25lLCB0aGlzIGlzbid0IHJlYWxseSB3b3J0aHdo
+aWxlIEkgdGhpbmsuDQoNCj4gVkhUIE51bGwgRGF0YSBQYWNrZXQgKE5EUCkgQW5ub3VuY2VtZW50
+IC0gVGhpcyBmcmFtZSBpcyB1c2VkIGJ5IEJlYW1mb3JtZXJzIHRvICANCj4gZ2FpbiBjb250cm9s
+IG9mIHRoZSBjaGFubmVsIGFuZCBpZGVudGl5IGJlZm9ybWVlcy4gQmVhbWZvcm1lZXMgd2lsbCBy
+ZXNwb25kIHRvICANCj4gdGhlIE5EUCBBbm5vdW5jZW1lbnQsIHdoaWxlIGFsbCBvdGhlciBzdGF0
+aW9ucyB3aWxsIHNpbXBseSBkZWZlciBjaGFubmVsIGFjY2VzcyANCj4gdW50aWwgdGhlIHNvdW5k
+aW5nIHNlcXVlbmNlIGlzIGNvbXBsZXRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICANCj4gLS0tICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCg0KQW55d2F5IHlvdSBm
+b3Jnb3QgUy1vLWIgbm93Lg0KDQpqb2hhbm5lcw==
 
-> This generalizes the module signing code as helpers, we do
-> this as we'll later re-use this same code for firmware and
-> other system data signing.
 
-I'm trying to move us to the use of PKCS#7 certificates as module signatures.
-See here:
-
-	http://git.kernel.org/cgit/linux/kernel/git/dhowells/linux-fs.git/log/?h=modsign-pkcs7
-
-I would suggest you use this as a base.
-
-Also, I would suggest, if you can manage it, either:
-
- (1) Keep the signature and the firmware blobs separate on disk for copyright
-     and/or licensing purposes.
-
- (2) Put the firmware blob inside the PKCS#7 message as the embedded data.
-
-David
