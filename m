@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48934 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932106AbbEHTXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 15:23:08 -0400
-Date: Fri, 8 May 2015 21:23:04 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: ming.lei@canonical.com, gregkh@linuxfoundation.org
-Cc: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, keescook@chromium.org,
-	casey@schaufler-ca.com, tiwai@suse.de, mjg59@srcf.ucam.org,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	jlee@suse.com,
-	"linux-kernel@vger.kernel.org Luis R. Rodriguez"
-	<mcgrof@do-not-panic.com>
-Subject: Re: [PATCH v1 04/12] firmware: fix possible use after free on name
- on asynchronous request
-Message-ID: <20150508192304.GD20018@wotan.suse.de> (sfid-20150508_212313_178233_C6259469)
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
- <1430873070-7290-5-git-send-email-mcgrof@do-not-panic.com>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:34701 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbbETDnu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 May 2015 23:43:50 -0400
+Received: by qctt3 with SMTP id t3so17762880qct.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 20:43:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430873070-7290-5-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <CANUX_P0rRqbks5LDiUjekTEjXV5nQoc1iSr4PhWd0cek7AnWQQ@mail.gmail.com>
+References: <CALWn1pu8U1o=J=j8Uunf7-hLNZV2Pv2mxJx11O_psZArij-qNw@mail.gmail.com>
+	<CANUX_P3XPLvLhYy7pb9_LXjEynfNjgzhbW3zFYfxVCjcjGNczw@mail.gmail.com>
+	<CALWn1pt-neiJhrQcEES4cktcfyL0+c2B=GUAh8+Xo0L06VmsfA@mail.gmail.com>
+	<CANUX_P0rRqbks5LDiUjekTEjXV5nQoc1iSr4PhWd0cek7AnWQQ@mail.gmail.com>
+Date: Wed, 20 May 2015 11:43:49 +0800
+Message-ID: <CALx5=V891GJAH499qLV+RiJPg3vftt5yrp_rdKyOyn+1aidtpw@mail.gmail.com> (sfid-20150520_054353_851168_DE7405F6)
+Subject: Re: Failed to capture data packets using Monitor mode with Intel 7260
+ card. (Under Ubuntu 14.04)
+From: Matt Chen <mattsled@gmail.com>
+To: darklight wu <darklightwu@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 05, 2015 at 05:44:22PM -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> Asynchronous firmware loading copies the pointer to the
-> name passed as an argument only to be scheduled later and
-> used. This behaviour works well for synchronous calling
-> but in asynchronous mode there's a chance the caller could
-> immediately free the passed string after making the
-> asynchronous call. This could trigger a use after free
-> having the kernel look on disk for arbitrary file names.
+probably you need to disable your NetworkManager and wpa_supplicant.
+Then switch/change your mode to monitor. Make sure the command "iw
+[interface_name] info" shows you the type is monitor.
 
-<-- snip -->
-
-> Unfortunatley in the worst and most common case however you
-> can typically crash your system with a page fault by trying to
-> free something which you cannot, and/or a NULL pointer
-> dereference [1].
-
-I've found a few more bugs in this code that should be
-stable fixes. Since the fixes are all related there is
-an alternative approach to the problem here which would
-require us to just deal with PATH_MAX a few times in code
-for firmware requests. Although that does increase the
-allocation required by a few KB I think the simplicity
-is worth it. So if this patch has not yet been applied
-I will send out a new series of fixes addressing name
-issues through an alternative approach and implementation
-preferences so please yield applying this yet, if it has
-already been applied / submitted upstream let me know.
-
-  Luis
+2015-05-20 1:41 GMT+08:00 Emmanuel Grumbach <egrumbach@gmail.com>:
+> On Tue, May 19, 2015 at 7:44 PM, darklight wu <darklightwu@gmail.com> wrote:
+>> On Mon, May 18, 2015 at 3:26 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> On Mon, May 18, 2015 at 10:01 AM, darklight wu <darklightwu@gmail.com> wrote:
+>>>> Hi, All:
+>>>>
+>>>> I configured the Wifi Monitor mode with Intel 7260 card under
+>>>> Ubuntu14.04 and then used Wireshark to capture packets from air. But I
+>>>> could only get management/control packets but no data packets. I tried
+>>>> different channels and also with HT20 or HT40+/-.
+>>>>
+>>>> The commands I used were:
+>>>>
+>>>> iw dev wlan0 interface add mon0 type monitor
+>>>> iw dev wlan0 del  //I googled and was told I needed to delete the
+>>>> wlan0 first. Or else I got device busy (-16) error
+>>>> ifconfig mon0 up
+>>>> iw dev mon0 set channel 1
+>>>>
+>>>> I also tried to use other ways like "airmon-ng start wlan0". All the
+>>>> observations were same, no data packets. It's weird! Anyone has a
+>>>> clue?
+>>>>
+>>>
+>>> This is weird. But I recommend to add power_scheme=1 as a module
+>>> parameter to iwlmvm. Since iwlmvm is loaded automatically, you'll need
+>>> to add that to /etc/modprobe.d/iwlwifi.conf.
+>>> 14.04 ships 3.13 and I remember we had issues with monitor mode at
+>>> that time. You may want to try a newer kernel.
+>>
+>> I tried again today with "power_scheme=1" and also booted with Ubuntu
+>> 15.04. Both still failed to work in monitor mode. And with Ubuntu
+>> 15.04, I event could not configure the nic to work on monitor mode.
+>> The same commands at least can set the monitor mode under 14.04.
+>> Meanwhile, I just want to clarify, the nic could capture data packets
+>> to/from itself but could not capture others that were not belongs to
+>> it. My co-worker tried on another machine with Ubuntu 14.04, he was
+>> also failed.
+>>
+>> Any tricks here?
+>
+> You must not have any interface besides the monitor interface. I bet
+> you still have the wpa_supplicant running and this is why you only
+> have a virtual monitor interface that catches the packet from your
+> managed interface only.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
