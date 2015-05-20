@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59004 "EHLO mx2.suse.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37393 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750749AbbESQbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 12:31:19 -0400
-Date: Tue, 19 May 2015 18:31:16 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: David Howells <dhowells@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	ming.lei@canonical.com, rusty@rustcorp.com.au,
-	torvalds@linux-foundation.org, seth.forshee@canonical.com,
-	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
-	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-	jlee@suse.com, tiwai@suse.de, casey@schaufler-ca.com,
-	keescook@chromium.org, mjg59@srcf.ucam.org,
-	akpm@linux-foundation.org, Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <David.Woodhouse@intel.com>
-Subject: Re: [RFC v3 2/2] firmware: add firmware signature checking support
-Message-ID: <20150519163116.GE23057@wotan.suse.de> (sfid-20150519_183135_430497_53C35145)
-References: <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
- <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
- <9412.1432029764@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9412.1432029764@warthog.procyon.org.uk>
+	id S1751801AbbETNlm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 09:41:42 -0400
+Message-ID: <1432129299.19214.16.camel@sipsolutions.net> (sfid-20150520_154145_587633_367989D3)
+Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused
+ by race between suspend and Tx packet.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 20 May 2015 15:41:39 +0200
+In-Reply-To: <CABPxzY+7KDGRs3fO1wsy3FPt__YPBnzr5CcZ_HTEh2ePsdtUdQ@mail.gmail.com> (sfid-20150519_102409_031094_7235378B)
+References: <1431602181-17700-1-git-send-email-chaitanya.mgit@gmail.com>
+	 <1432020671.7437.5.camel@sipsolutions.net>
+	 <CABPxzY+7KDGRs3fO1wsy3FPt__YPBnzr5CcZ_HTEh2ePsdtUdQ@mail.gmail.com>
+	 (sfid-20150519_102409_031094_7235378B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 11:02:44AM +0100, David Howells wrote:
-> Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
-> 
-> > +The kernel firmware signing facility enables to cryptographically sign
-> > +firmware files on a system using the same keys used for module signing.
-> > +Firmware files's signatures consist of PKCS#7 messages of the respective
-> > +firmware file. A firmware file named foo.bin, would have its respective
-> > +signature on the filesystem as foo.bin.p7s. When firmware signature
-> > +checking is enabled (FIRMWARE_SIG) and when one of the above APIs is used
-> > +against foo.bin, the file foo.bin.p7s will also be looked for. If
-> > +FIRMWARE_SIG_FORCE is enabled the foo.bin file will only be allowed to
-> > +be returned to callers of the above APIs if and only if the foo.bin.p7s
-> > +file is confirmed to be a valid signature of the foo.bin file. If
-> > +FIRMWARE_SIG_FORCE is not enabled and only FIRMWARE_SIG is enabled the
-> > +kernel will be permissive and enabled unsigned firmware files, or firmware
-> > +files with incorrect signatures. If FIRMWARE_SIG is not enabled the
-> > +signature file is ignored completely.
-> 
-> I'd rework this paragraph somewhat.  How about:
-> 
+On Tue, 2015-05-19 at 13:53 +0530, Krishna Chaitanya wrote:
 
-<-- snip -->
+> > I'm not sure I get it - we always transmit a frame after resume.
+> Let me explain the sequence of events:
+> 
+> tx_frame:
+>       dynamic_ps_disable_work.
+>                  get the chip out of power save.
+> suspend came:
+>      dynamic ps timer is cancelled.
+>     tx queues are flushed.
+> chip stays out of power save unless there is one more
+> tx frame which kicks the dynamic ps timer again.
 
-Looks sexy, taken word for word, thanks!
+So initially, for suspend, this shouldn't matter.
 
- Luis
+And after suspend we always transmit a frame. What gives?
+
+johannes
+
