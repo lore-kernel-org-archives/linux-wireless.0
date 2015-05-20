@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:34827 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbbESXAi (ORCPT
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:34975 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752932AbbETPCH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 19:00:38 -0400
-Date: Wed, 20 May 2015 06:59:45 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	John Griffin <john.griffin@intel.com>
-Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency when
- fw signing is enabled
-Message-ID: <20150519225945.GB5718@gondor.apana.org.au> (sfid-20150520_010042_802513_BFEF4EB0)
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
- <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
- <20150506033330.GA16470@gondor.apana.org.au>
- <1430988137.8171.58.camel@x220>
- <1431021995.8171.97.camel@x220>
- <20150518200100.GY23057@wotan.suse.de>
- <1431981930.9091.29.camel@x220>
- <20150519000921.GA23057@wotan.suse.de>
- <1432022535.9091.48.camel@x220>
- <20150519154630.GB23057@wotan.suse.de>
+	Wed, 20 May 2015 11:02:07 -0400
+Received: by iesa3 with SMTP id a3so41298235ies.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 08:02:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150519154630.GB23057@wotan.suse.de>
+In-Reply-To: <1432123792-4155-7-git-send-email-arend@broadcom.com>
+References: <1432123792-4155-1-git-send-email-arend@broadcom.com>
+	<1432123792-4155-7-git-send-email-arend@broadcom.com>
+Date: Wed, 20 May 2015 17:02:05 +0200
+Message-ID: <CACna6rx_bBogPXZoa24JTqLED4GsGhezjVLZL_De=2uTqevsPA@mail.gmail.com> (sfid-20150520_170213_098371_35AB55AD)
+Subject: Re: [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 05:46:30PM +0200, Luis R. Rodriguez wrote:
+On 20 May 2015 at 14:09, Arend van Spriel <arend@broadcom.com> wrote:
+> @@ -139,11 +165,11 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
+>         char *ekv;
+>         u32 cplen;
 >
-> Instead of depends on we should just drop it and and issues arise we
-> should fix them provided an allyesconfig and allmodconfig work when
-> FW_LOADER is disabled. That was the approach I wanted to take at
-> least. To make this easier to phase we can break it down by subsystem.
+> -       c = nvp->fwnv->data[nvp->pos];
+> -       if (!is_nvram_char(c)) {
+> +       c = nvp->data[nvp->pos];
+> +       if (!is_nvram_char(c) && (c != ' ')) {
 
-Modules select FW_LOADER because they call request_firmware.
+Don't smuggle behavior changes in patches doing something else!
 
-If you disable FW_LOADER then every case will result in a build
-failure.  So you must either have a select or a depends on.
 
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> @@ -406,19 +434,34 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+>         struct brcmf_fw *fwctx = ctx;
+>         u32 nvram_length = 0;
+>         void *nvram = NULL;
+> +       u8 *data = NULL;
+> +       size_t data_len;
+> +       bool raw_nvram;
+>
+>         brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
+> -       if (!fw && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+> -               goto fail;
+> +       if ((fw) && (fw->data)) {
+
+if (fw && fw->data)
+will work just fine, I'm surprised checkpatch doesn't complain.
