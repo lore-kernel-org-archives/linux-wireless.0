@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45838 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750755AbbEGOJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 10:09:03 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "Gujulan Elango\, Hari Prasath \(H.\)" <hgujulan@visteon.com>,
-	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: rtl8723au : remove goto & return error directly
-References: <20150507111652.GA10574@IND12F0122>
-	<wrfjk2wkoarp.fsf@ultrasam.lan.trained-monkey.org>
-	<20150507121934.GH14154@mwanda>
-Date: Thu, 07 May 2015 10:08:51 -0400
-In-Reply-To: <20150507121934.GH14154@mwanda> (Dan Carpenter's message of "Thu,
-	7 May 2015 15:19:34 +0300")
-Message-ID: <wrfj7fsko4y4.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150507_160907_493989_9EC6FB96)
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:34373 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752811AbbETNsW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 09:48:22 -0400
+Received: by ieczm2 with SMTP id zm2so39421710iec.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 06:48:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <555C83FC.7010701@broadcom.com>
+References: <1432122655-3224-1-git-send-email-arend@broadcom.com>
+	<CACna6rxeU0FUiTRNXFgK-xxSDY8WA82h7MLmcPc=7eM5sqMdBw@mail.gmail.com>
+	<555C83FC.7010701@broadcom.com>
+Date: Wed, 20 May 2015 15:48:21 +0200
+Message-ID: <CACna6rw3ZgJSLrR=kNKDNgcLHz7-bZjaObv2zuTgmWWeUtLSUw@mail.gmail.com> (sfid-20150520_154826_501663_A3A40536)
+Subject: Re: [PATCH RESEND] mips: bcm47xx: allow retrieval of complete nvram contents
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-> On Thu, May 07, 2015 at 08:03:06AM -0400, Jes Sorensen wrote:
->> "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
->> > Remove the goto and return error directly thereby removing a variable
->> >
->> > Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
->> > ---
->> >  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 7 ++-----
->> >  1 file changed, 2 insertions(+), 5 deletions(-)
->> 
->> NACK!
+On 20 May 2015 at 14:54, Arend van Spriel <arend@broadcom.com> wrote:
+> On 05/20/15 14:31, Rafał Miłecki wrote:
+>>
+>> On 20 May 2015 at 13:50, Arend van Spriel<arend@broadcom.com>  wrote:
+>>>
+>>> From: Hante Meuleman<meuleman@broadcom.com>
+>>>
+>>> Host platforms such as routers supported by OpenWRT can
+>>> support NVRAM reading directly from internal NVRAM store.
+>>> The brcmfmac for one requires the complete nvram contents
+>>> to select what needs to be sent to wireless device.
+>>
+>>
+>> First of all, I have to ask you to rebase this patch on top of
+>> upstream-sfr. Mostly because of
+>> MIPS: BCM47XX: Make sure NVRAM buffer ends with \0
 >
-> SHOUTING!
-
-It's normal to write NACK in upper case
 >
->> 
->> The goto is cleaner and more consistent, rather than hiding a return in
->> the middle of the code.
+> No idea what upstream-sfr is. I applied the patch on top of the master
+> branch of linux-mips repo [1]. What am I missing here?
 >
-> More consistent with what?  There are already returns earlier in the
-> function.  Do-nothing gotos are pointless and annoying.
+> [1] http://git.linux-mips.org/cgit/ralf/linux.git
 
-That is *your* preference!
+Just go a dir higher and you'll find it :)
+http://git.linux-mips.org/cgit/
 
-Having returns scattered randomly throughout the code is annoying and
-hard to catch when reading the code!
-
-This case is *not* a bug, so it comes down to personal preference of the
-maintainer. For code you maintain, feel free to do as you like, I will
-*not* never bother you for this kind of preference issues, I will tell
-you if I spot an actual bug.
-
-This is one of the problems with checkpatch style tools, they have
-become harassment tools, for some people to impose their personal
-preferences onto others.
-
-It would be so much more valuable if they just focused on real bugs!
-
-Jes
+Its a repo with mips-for-linux-next branch you're looking for.
