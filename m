@@ -1,46 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:58286 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbbEKPCY (ORCPT
+Received: from lan.nucleusys.com ([92.247.61.126]:42830 "EHLO
+	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754095AbbETQJH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 11:02:24 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: increase relay buffer size of spectral scan
-References: <1430763684-1630-1-git-send-email-poh@qca.qualcomm.com>
-Date: Mon, 11 May 2015 18:02:09 +0300
-In-Reply-To: <1430763684-1630-1-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Mon, 4 May 2015 11:21:24 -0700")
-Message-ID: <878ucvi2dq.fsf@kamboji.qca.qualcomm.com> (sfid-20150511_170233_843031_95C24F8C)
+	Wed, 20 May 2015 12:09:07 -0400
+Date: Wed, 20 May 2015 19:08:40 +0300
+From: Petko Manolov <petkan@mip-labs.com>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	James Morris <james.l.morris@oracle.com>, serge@hallyn.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joey Lee <jlee@suse.de>,
+	Konstantin Ryabitsev <mricon@kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150520160840.GB10473@localhost> (sfid-20150520_180957_691923_9EEEE4CF)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <1432072117.4510.180.camel@linux.vnet.ibm.com>
+ <20150519221902.GQ23057@wotan.suse.de>
+ <1432078625.4510.207.camel@linux.vnet.ibm.com>
+ <CAB=NE6WZ8YW=C7a=MWgMS4T6Nmgs1NcKKsUY6XPtPC9B4JZu=Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6WZ8YW=C7a=MWgMS4T6Nmgs1NcKKsUY6XPtPC9B4JZu=Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
-
-> Spectral scan supported by ath10k has capability to monitor and report
-> through whole bands and channels, but current buffer size is too small
-> to save reported spectral scan data.
-> This results in dropping 5G channel reports at all when dual band card
-> is used, so that users are not able to analyze spectral environments.
-> Hence increase the buffer size to fix the problem.
+On 15-05-19 17:22:59, Luis R. Rodriguez wrote:
 >
-> A spectral data size is vary based on the number of bins, so the unit
-> buffer size, 1140, is chose to minimize relay buffer fragmentation.
->
-> The total buffer size is also chose in tradeoff with spectral scan
-> support vs. kernel memory consumption.
-> Since theoretical maximum buffer size, 9.5MB, can be consumed with
-> 512 bins in dual bands, we target to cover up to 128 bins for all
-> channels in dual bands and due to the buffer size limitation,
-> spectral scan with bin number bigger than 128 needs to be run on
-> single band each.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+> I have a series of reasons find IMA unsuitable for the current goals at hand:
+> 
+>   1) IMA is a pretty big kitchen sink, we want this to work well for
+> even embedded systems, or architectures that do not have or require
+> TPMs
 
-Thanks, applied.
+No, it isn't.  I've profiled it and performance hit is negligible.  All hash 
+algorithms used have been optimized for most cpu architectures.
 
--- 
-Kalle Valo
+>   2) The appraisal is also done for to account for a specific state of
+> affairs, you appraise to the user of the integrity of the system at a
+> specific point in time, firmware signing can provide integrity /
+> authorship vetting of files directly from the authors. In the case of
+> regulatory.bin that was the whole point of it, and firmware signing as
+> is being provided is intended to generalize that but by sharing code
+> in-kernel with module signing infrastructure
+
+This is weird English to me, but since i am no native speaker either i'll blame 
+myself. :)  Could you please rephrase?
+
+> If we go with IMA, I however do not think this would be appropriate and 
+> overkill at this point in time.
+
+Depends on what your needs are.  If you need authenticity then IMA-appraise is 
+definitely your way to go.  For anything less secure you may go with LSM of 
+choice to apply whatever policy you may have in mind.
+
+Again, security and convenience do not play well together.
+
+
+		Petko
