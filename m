@@ -1,64 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752078AbbEZTTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:19:11 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 37/39] iwlwifi: mvm: treat scan races also on UMAC scans
-Date: Tue, 26 May 2015 22:17:50 +0300
-Message-Id: <1432667872-18092-37-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211923_987765_1FC8CA79)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:33241 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbbETTUE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 15:20:04 -0400
+Received: by lbbzk7 with SMTP id zk7so2005406lbb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 12:20:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <555CB8C1.1040007@lwfinger.net>
+References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com>
+	<CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>
+	<555CB8C1.1040007@lwfinger.net>
+Date: Wed, 20 May 2015 22:20:02 +0300
+Message-ID: <CAJ=9CzYr2rFxZprM0Ap+x+Vu3LDXJUtxqtHqH-YER-ABscRb0w@mail.gmail.com> (sfid-20150520_212009_515676_93DFCE74)
+Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
+From: Haggai Eran <haggai.eran@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 20 May 2015 at 19:39, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/20/2015 01:17 AM, Haggai Eran wrote:
+>>
+>> On May 19, 2015 08:47, "Haggai Eran" <haggai.eran@gmail.com
+>> <mailto:haggai.eran@gmail.com>> wrote:
+>>  >
+>>  > With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
+>>  > packet are set, but the packet length is too large. Truncate the packet
+>>  > to prevent memory corruption.
+>>  >
+>>  > Signed-off-by: Haggai Eran <haggai.eran@gmail.com
+>> <mailto:haggai.eran@gmail.com>>
+>>  > ---
+>>  >
+>>  > Hi,
+>>  >
+>>  > I think this solves the issue for me. I'll test it more thoroughly
+>> later. I
+>>  > still don't know why a fragmented packet has such a large pkt_len value
+>> though.
+>>  >
+>>  > Thanks,
+>>  > Haggai
+>>  >
+>>
+>> I guess I was too quick with this patch. It prevents the kernel page
+>> faults, but
+>> with it I still see sometimes the connectivity disappear for a minute or
+>> two.
+>
+>
+> Is anything logged when that happens?
+No. I get once in a while the other corrupted entries I told you
+about, but nothing special to these freezes
 
-For UMAC, we were not treating a race condition that happens in the
-scan flows, because it was not using the same state flags.  Now that
-UMAC and LMAC scans use the same state flags, we can also handle the
-race conditions for UMAC.
+> I'm still trying to see where that magic number of 1658 comes from, and how
+> that affects the RX buffer size.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+I tried to look at the new driver (rtl8192su), but it doesn't seem to
+handle this more-fragment bit at all.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index d3af88b..cea2366 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2413,11 +2413,7 @@ static void iwl_mvm_mac_cancel_hw_scan(struct ieee80211_hw *hw,
- 	 * cancel scan scan before ieee80211_scan_work() could run.
- 	 * To handle that, simply return if the scan is not running.
- 	*/
--	/* FIXME: for now, we ignore this race for UMAC scans, since
--	 * they don't set the scan_status.
--	 */
--	if ((mvm->scan_status & IWL_MVM_SCAN_REGULAR) ||
--	    (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN))
-+	if (mvm->scan_status & IWL_MVM_SCAN_REGULAR)
- 		iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_REGULAR, true);
- 
- 	mutex_unlock(&mvm->mutex);
-@@ -2767,11 +2763,7 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
- 	 * could run.  To handle this, simply return if the scan is
- 	 * not running.
- 	*/
--	/* FIXME: for now, we ignore this race for UMAC scans, since
--	 * they don't set the scan_status.
--	 */
--	if (!(mvm->scan_status & IWL_MVM_SCAN_SCHED) &&
--	    !(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
-+	if (!(mvm->scan_status & IWL_MVM_SCAN_SCHED)) {
- 		mutex_unlock(&mvm->mutex);
- 		return 0;
- 	}
--- 
-2.1.4
+> When I unconditionally set alloc_sz to tmp_len as in the attached patch (I
+> remembered to refresh it this time), nothing bad has happened here yet. What
+> happens on your box?
 
+The same freezes still occur.
+
+Thanks,
+Haggai
