@@ -1,98 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb1-smtp-cloud2.xs4all.net ([194.109.24.21]:53655 "EHLO
-	lb1-smtp-cloud2.xs4all.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932534AbbERUpj (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:33592 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750832AbbETB3o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 16:45:39 -0400
-Message-ID: <1431981930.9091.29.camel@x220> (sfid-20150518_224608_120984_7918DE9C)
-Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency
- when fw signing is enabled
-From: Paul Bolle <pebolle@tiscali.nl>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	John Griffin <john.griffin@intel.com>
-Date: Mon, 18 May 2015 22:45:30 +0200
-In-Reply-To: <20150518200100.GY23057@wotan.suse.de>
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
-	 <20150506033330.GA16470@gondor.apana.org.au>
-	 <1430988137.8171.58.camel@x220> <1431021995.8171.97.camel@x220>
-	 <20150518200100.GY23057@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 May 2015 21:29:44 -0400
+Received: by lagr1 with SMTP id r1so51025101lag.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 18:29:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1432084019.4510.242.camel@linux.vnet.ibm.com>
+References: <20150519200232.GM23057@wotan.suse.de> <1432072117.4510.180.camel@linux.vnet.ibm.com>
+ <20150519221902.GQ23057@wotan.suse.de> <1432078625.4510.207.camel@linux.vnet.ibm.com>
+ <CAB=NE6WZ8YW=C7a=MWgMS4T6Nmgs1NcKKsUY6XPtPC9B4JZu=Q@mail.gmail.com> <1432084019.4510.242.camel@linux.vnet.ibm.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Tue, 19 May 2015 18:29:22 -0700
+Message-ID: <CALCETrU_Jw0diMneXo8+OQTwp4=Ta3NbU2jYapkipimxMCWgjw@mail.gmail.com> (sfid-20150520_033000_879195_E68469AF)
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	linux-security-module <linux-security-module@vger.kernel.org>,
+	James Morris <james.l.morris@oracle.com>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joey Lee <jlee@suse.de>,
+	Konstantin Ryabitsev <mricon@kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Tue, May 19, 2015 at 6:06 PM, Mimi Zohar <zohar@linux.vnet.ibm.com> wrote:
+> On Tue, 2015-05-19 at 17:22 -0700, Luis R. Rodriguez wrote:
+>> On Tue, May 19, 2015 at 4:37 PM, Mimi Zohar <zohar@linux.vnet.ibm.com> wrote:
+>> > On Wed, 2015-05-20 at 00:19 +0200, Luis R. Rodriguez wrote:
+>> >> On Tue, May 19, 2015 at 05:48:37PM -0400, Mimi Zohar wrote:
+>> >> > On Tue, 2015-05-19 at 22:02 +0200, Luis R. Rodriguez wrote:
+>
+>> > In this case, not only is there a
+>> > security hook, but the IMA hook exists as well.  To appraise firmware,
+>> > add a line to the IMA policy containing "appraise func=FIRMWARE_CHECK".
+>> > Similarly, to add a measurement to the measurement list, add a line to
+>> > the IMA policy containing "measure func=FIRMWAE_CHECK".
+>>
+>> I have a series of reasons find IMA unsuitable for the current goals at hand:
+>>
+>>   1) IMA is a pretty big kitchen sink, we want this to work well for
+>> even embedded systems, or architectures that do not have or require
+>> TPMs
+>
+> There are different aspects to IMA.  One aspect is collecting file
+> measurements and extending the TPM with those measurements.  The other
+> aspect is appraising file integrity.  For that aspect, IMA-appraisal
+> does not use a TPM.
+>
+>>   2) The appraisal is also done for to account for a specific state of
+>> affairs, you appraise to the user of the integrity of the system at a
+>> specific point in time,
+>
+> True, IMA can be used to attest to the integrity of a system.
+>
+>>  firmware signing can provide integrity /
+>> authorship vetting of files directly from the authors.
+>
+> It can also be used to appraise the integrity of a file, be it an
+> executable, a kernel module, configuration file or firmware in a
+> consistent manor, based on a file hash or signature.
+>
+>> In the case of
+>> regulatory.bin that was the whole point of it, and firmware signing as
+>> is being provided is intended to generalize that but by sharing code
+>> in-kernel with module signing infrastructure
+>
+> The underlying code used to verify the file signatures is the same.
+> The difference being where/how the file signatures are stored and which
+> keys to trust.
+>
+>> I am in hopes some others might be able to chime in more on point 2) here.
+>>
+>> Don't get me wrong IMA is nice, but its a big chunky requirement to
+>> have, more than what module signing provides and what it requires
+>> today to replace subsystem file signing requirements.
+>
+>> Now, LSM hooks -- that's more aligned with something we can start IMHO
+>> reasonably arguing we should shift module signing code to be punted
+>> into. But I've heard stories of LSM having issues with some virtual
+>> environments, and LSM stacking is also pretty new, and IMHO that'd be
+>> one way to compartmentalize all this module signing code. IMHO that
+>> *should happen* but can only be taken seriously once LSM stacking is
+>> merged in and baked. Its not, but I'm excited for it.
+>
+> Have you even looked at IMA-appraisal?
 
-On Mon, 2015-05-18 at 22:01 +0200, Luis R. Rodriguez wrote:
-> On Thu, May 07, 2015 at 08:06:35PM +0200, Paul Bolle wrote:
-> > See, FW_LOADER is 'y' unless EXPERT is set and one goes to the trouble
-> > of setting FW_LOADER to 'n'. So in the 100+ places where FW_LOADER is
-> > selected, that is done for, almost always, no immediate benefit.
-> > Changing those places to use
-> >     depends on FW_LOADER
-> > 
-> > should have no effect, I think. Except for the EXPERT people not wanting
-> > FW_LOADER. But that would be putting the burden where it belongs, I'd
-> > say.
-> 
-> Paul, how would you recommend we proceed with this? Should we go ahead and
-> change all 'select FW_LOADER' to 'depends on' ?
+I just looked extremely briefly.  It seems to be much simpler than the
+PKCS#7 thing.  OTOH, it seems to hardcode some rather scary
+assumptions that it's using RSA in digsig_asymmetric.c, specifically:
 
-I've kept you waiting. That was impolite.
+        pks.rsa.s = mpi_read_raw_data(hdr->sig, siglen);
 
-Two things I've discovered in the last few days. One is, sort of,
-interesting and the other is specific to your issue.
+This bit in ima_appraise_measurement ignores trailing junk.  Why?
 
-1) Since v2.6.36 the recursive error reported by kconfig became more
-informative. See commit d595cea62403 ("kconfig: print more info when we
-see a recursive dependency").
+                if (xattr_len - sizeof(xattr_value->type) - hash_start >=
+                                iint->ima_hash->length)
+                        /* xattr length may be longer. md5 hash in previous
+                           version occupied 20 bytes in xattr, instead of 16
+                         */
+                        rc = memcmp(&xattr_value->digest[hash_start],
+                                    iint->ima_hash->digest,
+                                    iint->ima_hash->length);
 
-There have been 20 commits that bothered to include "recursive
-dependency detected" in the commit explanation since v2.6.36. All of
-those were about dependencies that involved at least one "select"
-statement. The most common solution was to convert one "select" to a
-"depends on".
+I got confused around here:
 
-So a, highly unscientific, guideline for recursive dependency issues
-would be: convert a "select" to a "depends on".
+                        /* Replace RSA with HMAC if not mounted readonly and
+                         * not immutable
+                         */
+                        if (!IS_RDONLY(dentry->d_inode) &&
+                            !IS_IMMUTABLE(dentry->d_inode))
+                                evm_update_evmxattr(dentry, xattr_name,
+                                                    xattr_value,
+                                                    xattr_value_len);
 
-2) I stumbled on commit d9b19199e489 ("always enable FW_LOADER unless
-EMBEDDED=y"). In the commit explanation I spotted:
-    As a bonus, we can then get rid of all "select FW_LOADER" [...].
+Huh?
 
-It seems the plan to get rid of those never materialized.
+Anyway, AFAICT IMA is about tracking the integrity of an FS that's
+being actively modified, not about distributing signed things.  Also,
+I couldn't spot what part of IMA detects an attacker replacing one
+signed file with a different one from the same filesystem but a
+different name.
 
-So what's the TL;DR?
-
-It's hard to generate a .config with "# CONFIG_FW_LOADER is not set".
-One has to set EXPERT, disable FW_LOADER manually, and never set one of
-the over 100 symbols that select FW_LOADER. So, probably, almost
-all .config files have FW_LOADER set. So I think, except for some corner
-cases, either converting all "select FW_LOADER" to "depends on
-FW_LOADER" or simply dropping  "select FW_LOADER" all together, should
-be fine.
-
-Those corner cases should then be handled on a case by case basis. 
-
-> If not does this need to be fixed on kconfig?
-
-There's no reason to think the logic of the kconfig tools, as it is
-currently implemented, is flawed. Feel free to convince me of the
-opposite.
-
-Thanks,
-
-Paul Bolle
-
+--Andy
