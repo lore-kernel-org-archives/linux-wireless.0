@@ -1,71 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48905 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568AbbEEFa6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 01:30:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Okash Khawaja <okash.khawaja@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] adm8211: fix checkpatch error for trailing statements on next line
-References: <20150503104231.GA3607@bytefire-computer>
-	<87lhh4wm3n.fsf@kamboji.qca.qualcomm.com>
-	<20150505051827.GA2463@bytefire-computer>
-Date: Tue, 05 May 2015 08:30:51 +0300
-In-Reply-To: <20150505051827.GA2463@bytefire-computer> (Okash Khawaja's
-	message of "Tue, 5 May 2015 06:19:38 +0100")
-Message-ID: <87k2wnvbec.fsf@kamboji.qca.qualcomm.com> (sfid-20150505_073127_963829_E1E5DAC2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:37296 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752494AbbETNOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 09:14:15 -0400
+Message-ID: <1432127653.19214.12.camel@sipsolutions.net> (sfid-20150520_151418_994257_A13577C1)
+Subject: Re: [PATCH v2 2/2] mac80211: prevent possible crypto tx tailroom
+ corruption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 May 2015 15:14:13 +0200
+In-Reply-To: <1431508609-9841-2-git-send-email-michal.kazior@tieto.com> (sfid-20150513_111700_157976_B8D42F37)
+References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
+	 <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
+	 <1431508609-9841-2-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150513_111700_157976_B8D42F37)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Okash Khawaja <okash.khawaja@gmail.com> writes:
+On Wed, 2015-05-13 at 09:16 +0000, Michal Kazior wrote:
+> There was a possible race between
+> ieee80211_reconfig() and
+> ieee80211_delayed_tailroom_dec(). This could
+> result in inability to transmit data if driver
+> crashed during roaming or rekeying and subsequent
+> skbs with insufficient tailroom appeared.
+> 
+> This race was probably never seen in the wild
+> because a device driver would have to crash AND
+> recover within 0.5s which is very unlikely.
+> 
+> I was able to prove this race exists after
+> changing the delay to 10s locally and crashing
+> ath10k via debugfs immediately after GTK
+> rekeying. In case of ath10k the counter went below
+> 0. This was harmless but other drivers which
+> actually require tailroom (e.g. for WEP ICV or
+> MMIC) could end up with the counter at 0 instead
+> of >0 and introduce insufficient skb tailroom
+> failures because mac80211 would not resize skbs
+> appropriately anymore.
+> 
+> Fixes: 8d1f7ecd2af5 ("mac80211: defer tailroom counter manipulation when roaming")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+> 
+> Notes:
+>     While doing PATCH v2 [1/2] I've noticed a subtle bug in the
+>     delayed tailroom counter logic. Since this touches the
+>     codepaths [1/2] does I'm posting this as a pair.
+> 
+>  net/mac80211/key.c  | 5 ++++-
+>  net/mac80211/main.c | 3 +++
+>  2 files changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+> index 577a11a13cdf..4c6f8c97d11a 100644
+> --- a/net/mac80211/key.c
+> +++ b/net/mac80211/key.c
+> @@ -695,10 +695,13 @@ void ieee80211_reset_crypto_tx_tailroom(struct ieee80211_sub_if_data *sdata)
+>  	mutex_lock(&sdata->local->key_mtx);
+>  
+>  	sdata->crypto_tx_tailroom_needed_cnt = 0;
+> +	sdata->crypto_tx_tailroom_pending_dec = 0;
+>  
+>  	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+> -		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+> +		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
+>  			vlan->crypto_tx_tailroom_needed_cnt = 0;
+> +			vlan->crypto_tx_tailroom_pending_dec = 0;
+> +		}
+>  	}
+>  
+>  	mutex_unlock(&sdata->local->key_mtx);
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 3c956c5f99b2..d8e1cbdcbc43 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -246,6 +246,7 @@ static void ieee80211_restart_work(struct work_struct *work)
+>  {
+>  	struct ieee80211_local *local =
+>  		container_of(work, struct ieee80211_local, restart_work);
+> +	struct ieee80211_sub_if_data *sdata;
+>  
+>  	/* wait for scan work complete */
+>  	flush_workqueue(local->workqueue);
+> @@ -254,6 +255,8 @@ static void ieee80211_restart_work(struct work_struct *work)
+>  	     "%s called with hardware scan in progress\n", __func__);
+>  
+>  	rtnl_lock();
+> +	list_for_each_entry(sdata, &local->interfaces, list)
+> +		cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
 
-> On Mon, May 04, 2015 at 03:42:04PM +0300, Kalle Valo wrote:
->> Okash Khawaja <okash.khawaja@gmail.com> writes:
->> 
->> > This patch fixes the checkpatch.pl error:
->> >
->> > ERROR: trailing statements should be on next line
->> >
->> > More specifically, the fix has been applied to the four occurances of the error listed below.
->> >
->> > ERROR: trailing statements should be on next line
->> > #1101: FILE: drivers/net/wireless/adm8211.c:1101:
->> > +               case  0x8: reg |= (0x1 << 14);
->> >
->> > ERROR: trailing statements should be on next line
->> > #1103: FILE: drivers/net/wireless/adm8211.c:1103:
->> > +               case 0x16: reg |= (0x2 << 14);
->> >
->> > ERROR: trailing statements should be on next line
->> > #1105: FILE: drivers/net/wireless/adm8211.c:1105:
->> > +               case 0x32: reg |= (0x3 << 14);
->> >
->> > ERROR: trailing statements should be on next line
->> > #1107: FILE: drivers/net/wireless/adm8211.c:1107:
->> > +                 default: reg |= (0x0 << 14);
->> >
->> > Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
->> > ---
->> >  drivers/net/wireless/adm8211.c | 20 ++++++++++++--------
->> >  1 file changed, 12 insertions(+), 8 deletions(-)
->> 
->> The patch has incorrectly "staging:" prefix in the title, please fix
->> that. "adm8211:" is enough, you don't need anything for drivers in
->> drivers/net/wireless.
->> 
->> -- 
->> Kalle Valo
->
-> Thanks Kalle for clarifying. I have removed "staging:" prefix and pasted the patch below.
->
-> Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
+Would it make sense to just flush the work here? That way we don't have
+to do all the other things.
 
-I cannot apply the mail directly as you added the old discussion to the
-commit log. Please just resend the whole patch with clean commit log.
+johannes
 
--- 
-Kalle Valo
