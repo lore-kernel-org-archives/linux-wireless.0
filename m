@@ -1,147 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:35564 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753182AbbENAcN (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:35295 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754506AbbETRGJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2015 20:32:13 -0400
+	Wed, 20 May 2015 13:06:09 -0400
+Received: by wgfl8 with SMTP id l8so59652764wgf.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 10:06:08 -0700 (PDT)
+Message-ID: <555CBEFC.50902@gmail.com> (sfid-20150520_190614_651489_F46716B2)
+Date: Wed, 20 May 2015 19:06:04 +0200
+From: poma <pomidorabelisima@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1431541436-17007-7-git-send-email-mcgrof@do-not-panic.com>
-References: <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com> <1431541436-17007-7-git-send-email-mcgrof@do-not-panic.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 14 May 2015 10:31:52 +1000
-Message-ID: <CAGRGNgW3+SgOqt-env6SBp+j7S4wQcXTK0HpuiM_BYbLzpfohA@mail.gmail.com> (sfid-20150514_023248_445216_3B8C0AA4)
-Subject: Re: [RFC v2 6/6] firmware: add firmware signature checking support
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: ming.lei@canonical.com, Rusty Russell <rusty@rustcorp.com.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	dhowells@redhat.com, Seth Forshee <seth.forshee@canonical.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	pebolle@tiscali.nl,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>, jlee@suse.com,
-	Takashi Iwai <tiwai@suse.de>, casey@schaufler-ca.com,
-	Kees Cook <keescook@chromium.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?SmFrdWIgS2ljacWEc2tp?= <moorray3@wp.pl>
+CC: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Etna <etna@openmailbox.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+References: <544DB5A8.7090405@openmailbox.org>	<20141027152026.GB19976@tuxdriver.com>	<544E8CB4.3000607@rempel-privat.de>	<20141028134608.GA26283@tuxdriver.com>	<544FA303.5060303@broadcom.com>	<544FA627.3000004@rempel-privat.de>	<5450BEB2.60208@openwrt.org>	<5461F937.9060004@rempel-privat.de>	<5463CB6C.3030204@openwrt.org>	<5463D28F.9080106@lwfinger.net>	<20150206182915.7467bac7@north>	<54EF261E.4040109@gmail.com> <20150226154028.380b96f2@north> <55592C54.6010204@gmail.com>
+In-Reply-To: <55592C54.6010204@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On 18.05.2015 02:03, poma wrote:
+> 
+> Preliminary test results
+> 
+> - lsusb -d 148f:7601:
+> Bus 001 Device 007: ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
+> 
+> 
+> - https://github.com/kuba-moo/mt7601u
+> - git log -1:
+> commit ad5474ecd9fd6efd4a7f03f4a8c71ea4bb57ca73
+> Author: Jakub Kicinski <kubakici@wp.pl>
+> Date:   Wed May 6 20:44:18 2015 +0200
+> 
+>     make sure .disconnect() doesn't cleanup the device if .resume() failed
+>     
+>     Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+> 
+> 
+> - modinfo mt7601u:
+> filename:       /lib/modules/4.0.3-202.fc21.x86_64/updates/mt7601u.ko
+> license:        GPL
+> firmware:       mt7601u.bin
+> alias:          usb:v7392p7710d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v2A5Fp1000d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v2955p1001d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v2955p0001d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v2717p4106d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v2001p3D04d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v148Fp760Dd*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v148Fp760Cd*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v148Fp760Bd*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v148Fp760Ad*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v148Fp7601d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v13D3p3434d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v13D3p3431d*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v0E8Dp760Bd*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v0E8Dp760Ad*dc*dsc*dp*ic*isc*ip*in*
+> alias:          usb:v0B05p17D3d*dc*dsc*dp*ic*isc*ip*in*
+> depends:        cfg80211,mac80211
+> vermagic:       4.0.3-202.fc21.x86_64 SMP mod_unload 
+> signer:         Fedora kernel signing key
+> sig_key:        95:7D:C8:E5:9F:5D:E6:03:71:49:1A:D0:9A:C6:8F:85:16:6C:B3:94
+> sig_hashalgo:   sha256
+> 
+> 
+> - md5sum /lib/firmware/mt7601u.bin:
+> 696cedb8e76ecc0cda9f9b0d3972c64d  /lib/firmware/mt7601u.bin
+> 
+> 
+> - NetworkManager --version:
+> 1.0.2-2.fc21
+> 
+> 
+> plug in device:
+> - dmesg:
+> usb 1-4: new high-speed USB device number 6 using ehci-pci
+> usb 1-4: New USB device found, idVendor=148f, idProduct=7601
+> usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> usb 1-4: Product: 802.11 n WLAN
+> usb 1-4: Manufacturer: MediaTek
+> usb 1-4: SerialNumber: 1.0
+> cfg80211: ...
+> ...
+> usb 1-4: reset high-speed USB device number 6 using ehci-pci
+> mt7601u 1-4:1.0: ASIC revision: 76010001 MAC revision: 76010500
+> mt7601u 1-4:1.0: Firmware Version: 0.1.00 Build: 7640 Build time: 201302052146____
+> mt7601u 1-4:1.0: Warning: unsupported EEPROM version 0d
+> mt7601u 1-4:1.0: EEPROM ver:0d fae:00
+> ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+> usbcore: registered new interface driver mt7601u
+> mt7601u 1-4:1.0 wlp0s2f1u4: renamed from wlan0
+> ...
+> cfg80211: ...
+> ...
+> wlp0s2f1u4: authenticate with <BSSID>
+> wlp0s2f1u4: send auth to <BSSID> (try 1/3)
+> wlp0s2f1u4: authenticated
+> wlp0s2f1u4: associate with <BSSID> (try 1/3)
+> wlp0s2f1u4: RX AssocResp from <BSSID> (capab=0x411 status=0 aid=1)
+> wlp0s2f1u4: associated
+> 
+> 
+> - iwconfig wlp0s2f1u4:
+> wlp0s2f1u4  IEEE 802.11bgn  ESSID:"AP"  
+>           Mode:Managed  Frequency:2.422 GHz  Access Point: <BSSID>   
+>           Bit Rate=135 Mb/s   Tx-Power=20 dBm   
+>           Retry short limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
+>           Link Quality=67/70  Signal level=-43 dBm  
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:873   Missed beacon:0
+> 
+> 
+...
 
-On Thu, May 14, 2015 at 4:23 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
->
-> Systems that have module signing currently enabled may
-> wish to extend vetting of firmware passed to the kernel
-> as well. We can re-use most of the code for module signing
-> for firmware signature verification and signing. This will
-> also later enable re-use of this same code for subsystems
-> that wish to provide their own cryptographic verification
-> mechanisms on userspace data needed.
->
-> As with module signing, we do a very simple search for a
-> particular string appended to the firmware. There's both a
-> config option and a boot parameter which control whether we
-> accept or fail with unsigned firmware and firmware that are
-> signed with an unknown key.
->
-> If firmware signing is enabled, the kernel will be tainted
-> if a firmware is loaded that is unsigned or has a signature
-> for which we don't have the key.
->
-> Cc: Rusty Russell <rusty@rustcorp.com.au>
-> Cc: David Howells <dhowells@redhat.com>
-> Cc: Ming Lei <ming.lei@canonical.com>
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Cc: Kyle McMartin <kyle@kernel.org>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> ---
->  Documentation/firmware_class/signing.txt           |  88 +++++++++
->  drivers/base/Kconfig                               |  18 ++
->  drivers/base/firmware_class.c                      | 214 ++++++++++++++++++++-
->  .../sysdata-internal.h => include/linux/sysdata.h  |   0
->  kernel/module.c                                    |   2 +-
->  kernel/sysdata_signing.c                           |   3 +-
->  kernel/system_keyring.c                            |   2 +-
->  7 files changed, 317 insertions(+), 10 deletions(-)
->  create mode 100644 Documentation/firmware_class/signing.txt
->  rename kernel/sysdata-internal.h => include/linux/sysdata.h (100%)
->
-> diff --git a/Documentation/firmware_class/signing.txt b/Documentation/firmware_class/signing.txt
-> new file mode 100644
-> index 0000000..6e1ce3c
-> --- /dev/null
-> +++ b/Documentation/firmware_class/signing.txt
-> @@ -0,0 +1,88 @@
-> +                       ================================
-> +                       KERNEL FIRMWARE SIGNING FACILITY
-> +                       ================================
-> +
-> +CONTENTS
-> +
-> + - Overview.
-> + - Configuring firmware signing.
-> + - Using signing keys.
-> + - Signing firmware files.
-> +
-> +
-> +========
-> +OVERVIEW
-> +========
-> +
-> +Device drivers which require a firmware to be uploaded onto a device as its own
-> +device's microcode use any of the following APIs:
-> +
-> +  * request_firmware()
-> +  * request_firmware_direct()
-> +  * request_firmware_nowait()
-> +
-> +The kernel firmware signing facility enables to cryptographically sign
-> +firmware files on a system using the same keys used for module signing.
-> +Firmware files's signatures consist of PKCS#7 messages of the respective
-> +firmware file. A firmware file named foo.bin, would have its respective
-> +signature on the filesystem as foo.bin.pkcs7. When firmware signature
-> +checking is enabled (FIRMWARE_SIG) when one of the above APIs is used
-> +against foo.bin, the file foo.bin.pkcs7 will also be looked for. If
-> +FIRMWARE_SIG_FORCE is enabled the foo.bin file will only be allowed to
-> +be returned to callers of the above APIs if and only if the foo.bin.pkcs7
-> +file is confirmed to be a valid signature of the foo.bin file. If
-> +FIRMWARE_SIG_FORCE is not enabled and only FIRMWARE_SIG is enabled the
-> +kernel will be permissive and enabled unsiged firmware files, or firmware
-> +files with incorrect signatures. If FIRMWARE_SIG is not enabled the
-> +signature file is ignored completely.
-> +
-> +Firmware signing increases security by making it harder to load a malicious
-> +firmware into the kernel.  The firmware signature checking is done by the
-> +kernel so that it is not necessary to have trusted userspace bits.
-> +
-> +============================
-> +CONFIGURING FIRMWARE SIGNING
-> +============================
-> +
-> +The firmware signing facility is enabled by going to the section:
-> +
-> +-> Device Drivers
-> +  -> Generic Driver Options
-> +    -> Userspace firmware loading support (FW_LOADER [=y])
-> +      -> Firmware signature verification (FIRMWARE_SIG [=y])
-> +
-> +If you want to not allow unsigned firmware to be loaded you should
-> +enable:
-> +
-> +"Require all firmware to be validly signed", under the same menu.
+Can be tested with the test compilation I share with you bona fide:
+http://goo.gl/Gm4ffO
+ISO/Fedora-Live-Xfce-WiFi.iso
 
-You reference the relevant Kconfig symbols above, do you want to add
-it here too?
+Runs on baremetal & QEMU/KVM/Libvirt/Virtual Machine Manager
+http://www.linux-kvm.org/page/USB_Host_Device_Assigned_to_Guest
 
-Thanks,
 
--- 
-Julian Calaby
+With the script 'mt7601u-fw-install' can be initiated the download and installation of the required firmware,
+though it would be optimal to resolve it in the following manner:
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+In OpenWrt repo - mt76 - mac80211 driver for MediaTek MT76x2 802.11ac chips
+https://github.com/openwrt/mt76
+
+there is a license file together with firmwares:
+https://github.com/openwrt/mt76/blob/master/firmware
+
+
+Whether the same can be done with:
+mt7601u -  Linux mac80211-based driver for Mediatek MT7601U USB bgn WiFi dongle
+https://github.com/kuba-moo/mt7601u
+?
+
+
