@@ -1,56 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50797 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752058AbbEYLG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 07:06:26 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t4PB6QGL019318
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Mon, 25 May 2015 07:06:26 -0400
-Received: from localhost (dhcp-27-129.brq.redhat.com [10.34.27.129])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id t4PB6PsA018631
-	for <linux-wireless@vger.kernel.org>; Mon, 25 May 2015 07:06:26 -0400
-Date: Mon, 25 May 2015 13:05:37 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: docs: fix cannot parse enum error
-Message-ID: <20150525110536.GA27765@redhat.com> (sfid-20150525_130630_793606_E0893D86)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mailout2.samsung.com ([203.254.224.25]:60594 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324AbbETLvb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 07:51:31 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NON007JQCXUOM10@mailout2.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 20 May 2015 20:51:30 +0900 (KST)
+Date: Wed, 20 May 2015 11:51:28 +0000 (GMT)
+From: Rahul Jain <rahul.jain@samsung.com>
+Subject: Re: Re: [PATCH] Added 2 new Control Frames ( Beamforming Report Poll &
+ VHT NDP Announcement) defined in 802.11ac [EDT]
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Reply-to: rahul.jain@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <1007223984.476041432122688318.JavaMail.weblogic@ep2mlwas05b> (sfid-20150520_135134_943590_EA0BD92F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch fixes documentation generation error:
+RVAtRkVEQzc3MURGNEZGNDhBOTgyOUNCODUyNTRFMjlGRDMNCg0KRGVhciBKb2hhbm5lcywNCg0K
+QXMgcGVyIHlvdXIgcmVxdWVzdCwgSSBoYXZlIHVwZGF0ZWQgdGhlIGNvbW1pdCBtZXNzYWdlLg0K
+VGhpcyBwYXRjaCBpcyBmaXJzdCBzdGVwIHRvd2FyZHMgZnVydGhlciBjaGFuZ2VzIHRvIGJlIGRv
+bmUgcmVsYXRlZCB0byA4MDIuMTFhYyBuZXcgZnJhbWVzLg0KDQpGcm9tIDY5MzQwZDYzZTBjNjNj
+MWFlNzVjZGI2MmJmNGJkMDRhOWM5NjFhMWYgTW9uIFNlcCAxNyAwMDowMDowMCAyMDAxICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCkZyb206IHJh
+aHVsICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQpEYXRl
+OiBUaHUsIDE0IE1heSAyMDE1IDEwOjIxOjQ4ICswNTMwICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIA0KU3ViamVjdDogW1BBVENIXSBBZGRlZCAyIG5ldyBDb250
+cm9sIEZyYW1lcyAoIEJlYW1mb3JtaW5nIFJlcG9ydCBQb2xsICYgVkhUICAgICAgICANCk5EUCBB
+bm5vdW5jZW1lbnQpIGRlZmluZWQgaW4gODAyLjExYWMuICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQpCZWFtZm9y
+bWluZyBSZXBvcnQgUG9sbCBmcmFtZSAtIFRoaXMgZnJhbWUgaXMgdXNlZCB0byByZXRyaWV2ZSBh
+ZGRpdGlvbmFsICAgICAgICAgIA0KZmVlZGJhY2sgZnJvbSB0aGUgc2Vjb25kIGFuZCBzdWJzZXF1
+ZW50IGJlYW1mb3JtZWVzLiBUaGUgYmVhbWZvcm1lciBtdXN0IHVzZSAgICAgICANCnRoZSBCZWFt
+Zm9ybWluZyBSZXBvcnQgUG9sbCBmcmFtZS4gSW4gQmVhbWZvcm1pbmcgUmVwb3J0IFBvbGwsIHRo
+ZSBGZWVkYmFjayAgICAgICAgDQpTZWdtZW50IFJldHJhbnNtaXNzaW9uIEJpdG1hcCBmaWVsZCBp
+bmRpY2F0ZXMgdGhlIHJlcXVlc3RlZCBmZWVkYmFjayBzZWdtZW50cyAgIA0Kb2YgYSBWSFQgQ29t
+cHJlc3NlZCBCZWFtZm9ybWluZyByZXBvcnQuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQpWSFQgTnVsbCBEYXRh
+IFBhY2tldCAoTkRQKSBBbm5vdW5jZW1lbnQgLSBUaGlzIGZyYW1lIGlzIHVzZWQgYnkgQmVhbWZv
+cm1lcnMgdG8gIA0KZ2FpbiBjb250cm9sIG9mIHRoZSBjaGFubmVsIGFuZCBpZGVudGl5IGJlZm9y
+bWVlcy4gQmVhbWZvcm1lZXMgd2lsbCByZXNwb25kIHRvICANCnRoZSBORFAgQW5ub3VuY2VtZW50
+LCB3aGlsZSBhbGwgb3RoZXIgc3RhdGlvbnMgd2lsbCBzaW1wbHkgZGVmZXIgY2hhbm5lbCBhY2Nl
+c3MgDQp1bnRpbCB0aGUgc291bmRpbmcgc2VxdWVuY2UgaXMgY29tcGxldGUgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KLS0tICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICANCmluY2x1ZGUvbGludXgvaWVlZTgwMjExLmggfCAgICAyICsrICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCjEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlv
+bnMoKykgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAN
+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgDQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9p
+ZWVlODAyMTEuaCBiL2luY2x1ZGUvbGludXgvaWVlZTgwMjExLmggICAgICAgICAgICAgICAgIA0K
+aW5kZXggYjljNzg5Ny4uY2EzODYxNiAxMDA2NDQgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICANCi0tLSBhL2luY2x1ZGUvbGludXgvaWVlZTgwMjEx
+LmggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQor
+KysgYi9pbmNsdWRlL2xpbnV4L2llZWU4MDIxMS5oICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIA0KQEAgLTc1LDYgKzc1LDggQEAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCiNk
+ZWZpbmUgSUVFRTgwMjExX1NUWVBFX0FDVElPTiAgICAgICAgIDB4MDBEMCAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQovKiBj
+b250cm9sICovICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgDQorI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQkVBTUZPUk1f
+UE9MTCAgMHgwMDQwICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KKyNkZWZp
+bmUgSUVFRTgwMjExX1NUWVBFX1ZIVF9ORFBfQU5OT1VDRSAgICAgICAgMHgwMDUwICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICANCiNkZWZpbmUgSUVFRTgwMjExX1NUWVBFX0NUTF9FWFQgICAg
+ICAgICAgICAgICAgMHgwMDYwICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCiNkZWZpbmUg
+SUVFRTgwMjExX1NUWVBFX0JBQ0tfUkVRICAgICAgIDB4MDA4MCAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICANCiNkZWZpbmUgSUVFRTgwMjExX1NUWVBFX0JBQ0sgICAgICAgICAg
+IDB4MDA5MCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCi0tICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgDQoxLjcuOS41ICAgDQoNCg0KVGhhbmtzDQotUmFodWwgSmFpbiANCg0K
+DQoNCi0tLS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLS0tDQpTZW5kZXIgOiBKb2hhbm5lcyBC
+ZXJnDQpEYXRlIDogTWF5IDE5LCAyMDE1IDEyOjU4IChHTVQrMDU6MzApDQpUaXRsZSA6IFJlOiBb
+UEFUQ0hdIEFkZGVkIDIgbmV3IENvbnRyb2wgRnJhbWVzICggQmVhbWZvcm1pbmcgUmVwb3J0IFBv
+bGwgJiBWSFQgTkRQIEFubm91bmNlbWVudCkgZGVmaW5lZCBpbiA4MDIuMTFhYw0KDQpPbiBUaHUs
+IDIwMTUtMDUtMTQgYXQgMDU6MDIgKzAwMDAsIFJhaHVsIEphaW4gd3JvdGU6DQo+IGhlbGxvIEFs
+bCwNCj4gDQo+IEJlbG93IGlzIHRoZSBwYXRjaCBmb3IgMiBuZXcgY29udHJvbCBmcmFtZXMgZGVm
+aW5lZCBpbiA4MDIuMTFhYy4NCj4gUGxlYXNlIHJldmlldyBhbmQgbWVyZ2UuDQo+IA0KPiBGcm9t
+IGI5Y2EzMzUwNDA1NDdlNTY1Njg0ZjViZjYwZDM3ZGI4OTYzMjI2NjMgTW9uIFNlcCAxNyAwMDow
+MDowMCAyMDAxICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICANCj4gRnJvbTogcmFodWwgDQo+IERhdGU6IFRodSwgMTQgTWF5IDIwMTUgMTA6MjE6NDgg
+KzA1MzANCj4gU3ViamVjdDogW1BBVENIXSBBZGRlZCAyIG5ldyBDb250cm9sIEZyYW1lcyAoIEJl
+YW1mb3JtaW5nIFJlcG9ydCBQb2xsICYgVkhUIA0KPiAgTkRQIEFubm91bmNlbWVudCkgZGVmaW5l
+ZCBpbiA4MDIuMTFhYw0KDQpBcyBsb25nIGFzIG5vYm9keSBpcyB1c2luZyB0aGVzZSwgSSBkb24n
+dCBzZWUgbXVjaCByZWFzb24gdG8gbWVyZ2UgdGhpcy4NCg0KQWxzbywgYSBtdWNoIGJldHRlciBj
+b21taXQgbG9nIHdvdWxkIGJlIG5lZWRlZC4NCg0Kam9oYW5uZXMg
 
-Error(./include/net/mac80211.h:331): Cannot parse enum!
-Error(./include/net/mac80211.h:369): Cannot parse enum!
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/net/mac80211.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 8e3668b..1b8328c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -354,7 +354,7 @@ enum ieee80211_rssi_event_data {
- };
- 
- /**
-- * enum ieee80211_rssi_event - data attached to an %RSSI_EVENT
-+ * struct ieee80211_rssi_event - data attached to an %RSSI_EVENT
-  * @data: See &enum ieee80211_rssi_event_data
-  */
- struct ieee80211_rssi_event {
-@@ -388,7 +388,7 @@ enum ieee80211_mlme_event_status {
- };
- 
- /**
-- * enum ieee80211_mlme_event - data attached to an %MLME_EVENT
-+ * struct ieee80211_mlme_event - data attached to an %MLME_EVENT
-  * @data: See &enum ieee80211_mlme_event_data
-  * @status: See &enum ieee80211_mlme_event_status
-  * @reason: the reason code if applicable
--- 
-1.7.1
