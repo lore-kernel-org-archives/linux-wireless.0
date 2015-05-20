@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38822 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbbETHe2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 03:34:28 -0400
-Received: by wichy4 with SMTP id hy4so49436547wic.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 00:34:27 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] brcmfmac: simplify check stripping v2 NVRAM
-Date: Wed, 20 May 2015 09:34:21 +0200
-Message-Id: <1432107261-7350-1-git-send-email-zajec5@gmail.com> (sfid-20150520_093432_011277_ADD3D9EB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:37268 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751818AbbETNMJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 09:12:09 -0400
+Message-ID: <1432127524.19214.11.camel@sipsolutions.net> (sfid-20150520_151214_191216_2A957C95)
+Subject: Re: [PATCH v2 1/2] mac80211: fix AP_VLAN crypto tailroom calculation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 May 2015 15:12:04 +0200
+In-Reply-To: <1431508609-9841-1-git-send-email-michal.kazior@tieto.com> (sfid-20150513_111659_239981_BA392FBA)
+References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
+	 <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150513_111659_239981_BA392FBA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Comparing NVRAM entry with a full filtering string is simpler than
-comparing it with a short prefix and then checking random chars at magic
-offsets. The cost of snprintf relatively low, we execute it just once.
-Tested on BCM43602 with NVRAM hacked to use V2 format.
+On Wed, 2015-05-13 at 09:16 +0000, Michal Kazior wrote:
+> Some splats I was seeing:
+> 
+>  (a) WARNING: CPU: 1 PID: 0 at /devel/src/linux/net/mac80211/wep.c:102 ieee80211_wep_add_iv
+>  (b) WARNING: CPU: 1 PID: 0 at /devel/src/linux/net/mac80211/wpa.c:73 ieee80211_tx_h_michael_mic_add
+>  (c) WARNING: CPU: 3 PID: 0 at /devel/src/linux/net/mac80211/wpa.c:433 ieee80211_crypto_ccmp_encrypt
+> 
+> I've seen (a) and (b) with ath9k hw crypto and (c)
+> with ath9k sw crypto. All of them were related to
+> insufficient skb tailroom and I was able to
+> trigger these with ping6 program.
+> 
+> AP_VLANs may inherit crypto keys from parent AP.
+> This wasn't considered and yielded problems in
+> some setups resulting in inability to transmit
+> data because mac80211 wouldn't resize skbs when
+> necessary and subsequently drop some packets due
+> to insufficient tailroom.
+> 
+> For efficiency purposes don't inspect both AP_VLAN
+> and AP sdata looking for tailroom counter. Instead
+> update AP_VLAN tailroom counters whenever their
+> master AP tailroom counter changes.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+Applied.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-index 8ff31ff..181a0e8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-@@ -25,7 +25,7 @@
- 
- #define BRCMF_FW_MAX_NVRAM_SIZE			64000
- #define BRCMF_FW_NVRAM_DEVPATH_LEN		19	/* devpath0=pcie/1/4/ */
--#define BRCMF_FW_NVRAM_PCIEDEV_LEN		9	/* pcie/1/4/ */
-+#define BRCMF_FW_NVRAM_PCIEDEV_LEN		10	/* pcie/1/4/ + \0 */
- 
- char brcmf_firmware_path[BRCMF_FW_PATH_LEN];
- module_param_string(firmware_path, brcmf_firmware_path,
-@@ -297,6 +297,8 @@ fail:
- static void brcmf_fw_strip_multi_v2(struct nvram_parser *nvp, u16 domain_nr,
- 				    u16 bus_nr)
- {
-+	char prefix[BRCMF_FW_NVRAM_PCIEDEV_LEN];
-+	size_t len;
- 	u32 i, j;
- 	u8 *nvram;
- 
-@@ -308,14 +310,13 @@ static void brcmf_fw_strip_multi_v2(struct nvram_parser *nvp, u16 domain_nr,
- 	 * Valid entries are of type pcie/X/Y/ where X = domain_nr and
- 	 * Y = bus_nr.
- 	 */
-+	snprintf(prefix, sizeof(prefix), "pcie/%d/%d/", domain_nr, bus_nr);
-+	len = strlen(prefix);
- 	i = 0;
- 	j = 0;
--	while (i < nvp->nvram_len - BRCMF_FW_NVRAM_PCIEDEV_LEN) {
--		if ((strncmp(&nvp->nvram[i], "pcie/", 5) == 0) &&
--		    (nvp->nvram[i + 6] == '/') && (nvp->nvram[i + 8] == '/') &&
--		    ((nvp->nvram[i + 5] - '0') == domain_nr) &&
--		    ((nvp->nvram[i + 7] - '0') == bus_nr)) {
--			i += BRCMF_FW_NVRAM_PCIEDEV_LEN;
-+	while (i < nvp->nvram_len - len) {
-+		if (strncmp(&nvp->nvram[i], prefix, len) == 0) {
-+			i += len;
- 			while (nvp->nvram[i] != 0) {
- 				nvram[j] = nvp->nvram[i];
- 				i++;
--- 
-1.8.4.5
+johannes
 
