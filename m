@@ -1,89 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56607 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753704AbbE1JDx (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:35626 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731AbbETSPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 05:03:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	<stable@vger.kernel.org>
-Subject: Re: [for-4.1] brcmfmac: avoid null pointer access whenbrcmf_msgbuf_get_pktid() fails
-References: <20150528084642.220B4140749@smtp.codeaurora.org>
-Date: Thu, 28 May 2015 12:03:45 +0300
-In-Reply-To: <20150528084642.220B4140749@smtp.codeaurora.org> (Kalle Valo's
-	message of "Thu, 28 May 2015 08:46:42 +0000 (UTC)")
-Message-ID: <87pp5lxedq.fsf@kamboji.qca.qualcomm.com> (sfid-20150528_110437_849869_4AE1A2F9)
+	Wed, 20 May 2015 14:15:07 -0400
+Received: by wicmx19 with SMTP id mx19so164273633wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 11:15:06 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] brcmfmac: allow NVRAM values to contain space and '#' chars
+Date: Wed, 20 May 2015 20:15:01 +0200
+Message-Id: <1432145701-15150-1-git-send-email-zajec5@gmail.com> (sfid-20150520_201511_983962_4405A1E8)
+In-Reply-To: <1432145442-14284-1-git-send-email-zajec5@gmail.com>
+References: <1432145442-14284-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Both chars often require special handling (and brcmf_nvram_handle_idle
+already takes care of them) but they should be allowed when parsing
+entry value. Some example entries from SR400ac device NVRAM:
+1:ccode=#a
+wl0_version=7.14.43.16 (r)
 
->> The function brcmf_msgbuf_get_pktid() may return a NULL pointer so
->> the callers should check the return pointer before accessing it to
->> avoid the crash below (see [1]):
->> 
->> brcmfmac: brcmf_msgbuf_get_pktid: Invalid packet id 273 (not in use)
->> BUG: unable to handle kernel NULL pointer dereference at 0000000000000080
->> IP: [<ffffffff8145b225>] skb_pull+0x5/0x50
->> PGD 0
->> Oops: 0000 [#1] PREEMPT SMP
->> Modules linked in: pci_stub vboxpci(O) vboxnetflt(O) vboxnetadp(O) vboxdrv(O)
->>  snd_hda_codec_hdmi bnep mousedev hid_generic ushwmon msr ext4 crc16 mbcache
->>  jbd2 sd_mod uas usb_storage ahci libahci libata scsi_mod xhci_pci xhci_hcd
->>  usbcore usb_common
->> CPU: 0 PID: 1661 Comm: irq/61-brcmf_pc Tainted: G O    4.0.1-MacbookPro-ARCH #1
->> Hardware name: Apple Inc. MacBookPro12,1/Mac-E43C1C25D4880AD6,
->>  BIOS MBP121.88Z.0167.B02.1503241251 03/24/2015
->> task: ffff880264203cc0 ti: ffff88025ffe4000 task.ti: ffff88025ffe4000
->> RIP: 0010:[<ffffffff8145b225>]  [<ffffffff8145b225>] skb_pull+0x5/0x50
->> RSP: 0018:ffff88025ffe7d40  EFLAGS: 00010202
->> RAX: 0000000000000000 RBX: ffff88008a33c000 RCX: 0000000000000044
->> RDX: 0000000000000000 RSI: 000000000000004a RDI: 0000000000000000
->> RBP: ffff88025ffe7da8 R08: 0000000000000096 R09: 000000000000004a
->> R10: 0000000000000000 R11: 000000000000048e R12: ffff88025ff14f00
->> R13: 0000000000000000 R14: ffff880263b48200 R15: ffff88008a33c000
->> FS:  0000000000000000(0000) GS:ffff88026ec00000(0000) knlGS:0000000000000000
->> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> CR2: 0000000000000080 CR3: 000000000180b000 CR4: 00000000003407f0
->> Stack:
->>  ffffffffa06aed74 ffff88025ffe7dc8 ffff880263b48270 ffff880263b48278
->>  05ea88020000004a 0002ffff81014635 000000001720b2f6 ffff88026ec116c0
->>  ffff880263b48200 0000000000010000 ffff880263b4ae00 ffff880264203cc0
->> Call Trace:
->>  [<ffffffffa06aed74>] ? brcmf_msgbuf_process_rx+0x404/0x480 [brcmfmac]
->>  [<ffffffff810cea60>] ? irq_finalize_oneshot.part.30+0xf0/0xf0
->>  [<ffffffffa06afb55>] brcmf_proto_msgbuf_rx_trigger+0x35/0xf0 [brcmfmac]
->>  [<ffffffffa06baf2a>] brcmf_pcie_isr_thread_v2+0x8a/0x130 [brcmfmac]
->>  [<ffffffff810cea80>] irq_thread_fn+0x20/0x50
->>  [<ffffffff810ceddf>] irq_thread+0x13f/0x170
->>  [<ffffffff810cebf0>] ? wake_threads_waitq+0x30/0x30
->>  [<ffffffff810ceca0>] ? irq_thread_dtor+0xb0/0xb0
->>  [<ffffffff81092a08>] kthread+0xd8/0xf0
->>  [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
->>  [<ffffffff8156d898>] ret_from_fork+0x58/0x90
->>  [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
->> Code: 01 83 e2 f7 88 50 01 48 83 c4 08 5b 5d f3 c3 0f 1f 80 00 00 00 00 83 e2
->>  f7 88 50 01 c3 66 0f 1f 84 00 00 00 00 00 0f 1f
->> RIP  [<ffffffff8145b225>] skb_pull+0x5/0x50
->>  RSP <ffff88025ffe7d40>
->> CR2: 0000000000000080
->> ---[ end trace b074c0f90e7c997d ]---
->> 
->> [1] http://mid.gmane.org/20150430193259.GA5630@googlemail.com
->> 
->> Cc: <stable@vger.kernel.org> # v3.18, v3.19, v4.0, v4.1
->> Reported-by: Michael Hornung <mhornung.linux@gmail.com>
->> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->
-> Thanks, applied to wireless-drivers.git.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: Minor change in commit message only. Provide an example of NVRAM entry
+    using space (not just a '#'). It's unprefixed (shouldn't be uploaded to
+    hardware anyway), but proves it's allowed in general.
+---
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-Oh, I forgot to mention that I'm not sure if this will make it into 4.1.
-But let's at least try.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 45d7191..64e2491 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -66,14 +66,15 @@ struct nvram_parser {
+ 	bool multi_dev_v2;
+ };
+ 
+-static bool is_nvram_char(char c)
++/**
++ * is_printable_char() - check if char is ASCII printable one
++ *
++ * Please note that '#' may require different handling depending on the context.
++ * It's used as comment beginning and it's not allowed in key name.
++ */
++static bool is_printable_char(char c)
+ {
+-	/* comment marker excluded */
+-	if (c == '#')
+-		return false;
+-
+-	/* key and value may have any other readable character */
+-	return (c > 0x20 && c < 0x7f);
++	return (c >= 0x20 && c < 0x7f);
+ }
+ 
+ static bool is_whitespace(char c)
+@@ -92,7 +93,7 @@ static enum nvram_parser_state brcmf_nvram_handle_idle(struct nvram_parser *nvp)
+ 		goto proceed;
+ 	if (c == '#')
+ 		return COMMENT;
+-	if (is_nvram_char(c)) {
++	if (is_printable_char(c)) {
+ 		nvp->entry = nvp->pos;
+ 		return KEY;
+ 	}
+@@ -120,7 +121,7 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
+ 			nvp->multi_dev_v1 = true;
+ 		if (strncmp(&nvp->fwnv->data[nvp->entry], "pcie/", 5) == 0)
+ 			nvp->multi_dev_v2 = true;
+-	} else if (!is_nvram_char(c)) {
++	} else if (!is_printable_char(c) || c == ' ' || c == '#') {
+ 		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
+ 			  nvp->line, nvp->column);
+ 		return COMMENT;
+@@ -140,7 +141,7 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
+ 	u32 cplen;
+ 
+ 	c = nvp->fwnv->data[nvp->pos];
+-	if (!is_nvram_char(c)) {
++	if (!is_printable_char(c)) {
+ 		/* key,value pair complete */
+ 		ekv = (u8 *)&nvp->fwnv->data[nvp->pos];
+ 		skv = (u8 *)&nvp->fwnv->data[nvp->entry];
 -- 
-Kalle Valo
+1.8.4.5
+
