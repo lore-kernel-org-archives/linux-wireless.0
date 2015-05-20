@@ -1,109 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:36553 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753744AbbETOdD convert rfc822-to-8bit (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:53079 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531AbbETMr3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 10:33:03 -0400
-Received: by igbpi8 with SMTP id pi8so103811451igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 07:33:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1432123792-4155-7-git-send-email-arend@broadcom.com>
-References: <1432123792-4155-1-git-send-email-arend@broadcom.com>
-	<1432123792-4155-7-git-send-email-arend@broadcom.com>
-Date: Wed, 20 May 2015 16:33:01 +0200
-Message-ID: <CACna6ryt5uNkBXAk8chFyMEQVJLdHELLdA_V5TrLcaAikrTZeg@mail.gmail.com> (sfid-20150520_163313_738262_AAE286A0)
-Subject: Re: [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 May 2015 08:47:29 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NON00IBOFJ47U50@mailout1.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 20 May 2015 21:47:28 +0900 (KST)
+Date: Wed, 20 May 2015 12:47:28 +0000 (GMT)
+From: Rahul Jain <rahul.jain@samsung.com>
+Subject: Re: Re: Re: Re: [PATCH] Added 2 new Control Frames ( Beamforming
+ Report Poll & VHT NDP Announcement) defined in 802.11ac [EDT]
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Reply-to: rahul.jain@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <2059080247.477441432126047556.JavaMail.weblogic@ep2mlwas05b> (sfid-20150520_144736_399429_15B609EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 May 2015 at 14:09, Arend van Spriel <arend@broadcom.com> wrote:
-> From: Hante Meuleman <meuleman@broadcom.com>
->
-> Host platforms such as routers supported by OpenWRT can
-> support NVRAM reading directly from internal NVRAM store.
-> With this patch the nvram load routines will fall back to
-> this method when there is no nvram file and support is
-> available in the kernel.
-
-FWIW it's OpenWrt :)
-
-
-> This patch relies on a change which has been submitted to the
-> linux-mips maintainer [1]. However, the brcmfmac code that relies on
-> it is under CONFIG_BCM47XX flag. Still need to know whether that
-> patch will be accepted or not before applying this one.
-
-Yeah, lets give this patch a few days at least, so we can be sure
-it'll be properly synced with MIPS work.
-I'm OK with brcmfmac internal changes (you may send them now as
-separated patch if you want to), but lets be careful with
-bcm47xx_nvram.h part.
-
-
-> @@ -19,6 +19,9 @@
->  #include <linux/device.h>
->  #include <linux/firmware.h>
->  #include <linux/module.h>
-> +#if IS_ENABLED(CONFIG_BCM47XX)
-> +#include <linux/bcm47xx_nvram.h>
-> +#endif
-
-This header is safe to include on any arch, as well as all functions
-are. Drop the #if please.
+RGVhciBKb2hhbm5lcywNCg0KU2luY2UgZ2l0IHNlbmQtZW1haWwgaXMgYmxvY2tlZCwgSSBhbSBw
+dXR0aW5nIHRoZSBjb250ZW50cyBvZiBteSBwYXRjaCBiZWxvdy4NCkFzIHJlcXVlc3RlZCwgSSBh
+bSByZW1vdmluZyB1bm5lY2Vzc2FyeSBjb250ZW50cy4gVGhhbmtzIGZvciBoZWxwaW5nIG1lLg0K
+DQpGcm9tIDY5MzQwZDYzZTBjNjNjMWFlNzVjZGI2MmJmNGJkMDRhOWM5NjFhMWYgTW9uIFNlcCAx
+NyAwMDowMDowMCAyMDAxDQpGcm9tOiByYWh1bCA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4NCkRh
+dGU6IFRodSwgMTQgTWF5IDIwMTUgMTA6MjE6NDggKzA1MzANClN1YmplY3Q6IFtQQVRDSF0gQWRk
+ZWQgMiBuZXcgQ29udHJvbCBGcmFtZXMgKCBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCAmIFZIVA0K
+IE5EUCBBbm5vdW5jZW1lbnQpIGRlZmluZWQgaW4gODAyLjExYWMuDQoNCkJlYW1mb3JtaW5nIFJl
+cG9ydCBQb2xsIGZyYW1lIC0gVGhpcyBmcmFtZSBpcyB1c2VkIHRvIHJldHJpZXZlIGFkZGl0aW9u
+YWwNCmZlZWRiYWNrIGZyb20gdGhlIHNlY29uZCBhbmQgc3Vic2VxdWVudCBiZWFtZm9ybWVlcy4g
+VGhlIGJlYW1mb3JtZXIgbXVzdCB1c2UNCnRoZSBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCBmcmFt
+ZS4gSW4gQmVhbWZvcm1pbmcgUmVwb3J0IFBvbGwsIHRoZSBGZWVkYmFjaw0KU2VnbWVudCBSZXRy
+YW5zbWlzc2lvbiBCaXRtYXAgZmllbGQgaW5kaWNhdGVzIHRoZSByZXF1ZXN0ZWQgZmVlZGJhY2sg
+c2VnbWVudHMNCm9mIGEgVkhUIENvbXByZXNzZWQgQmVhbWZvcm1pbmcgcmVwb3J0Lg0KDQpWSFQg
+TnVsbCBEYXRhIFBhY2tldCAoTkRQKSBBbm5vdW5jZW1lbnQgLSBUaGlzIGZyYW1lIGlzIHVzZWQg
+YnkgQmVhbWZvcm1lcnMgdG8NCmdhaW4gY29udHJvbCBvZiB0aGUgY2hhbm5lbCBhbmQgaWRlbnRp
+eSBiZWZvcm1lZXMuIEJlYW1mb3JtZWVzIHdpbGwgcmVzcG9uZCB0bw0KdGhlIE5EUCBBbm5vdW5j
+ZW1lbnQsIHdoaWxlIGFsbCBvdGhlciBzdGF0aW9ucyB3aWxsIHNpbXBseSBkZWZlciBjaGFubmVs
+IGFjY2Vzcw0KdW50aWwgdGhlIHNvdW5kaW5nIHNlcXVlbmNlIGlzIGNvbXBsZXRlDQoNClNpZ25l
+ZC1vZmYtYnk6IFJhaHVsIEphaW4gPHJhaHVsLmphaW5Ac2Ftc3VuZy5jb20+DQotLS0NCiBpbmNs
+dWRlL2xpbnV4L2llZWU4MDIxMS5oIHwgICAgMiArKw0KIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2Vy
+dGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvaWVlZTgwMjExLmggYi9pbmNs
+dWRlL2xpbnV4L2llZWU4MDIxMS5oDQppbmRleCBiOWM3ODk3Li5jYTM4NjE2IDEwMDY0NA0KLS0t
+IGEvaW5jbHVkZS9saW51eC9pZWVlODAyMTEuaA0KKysrIGIvaW5jbHVkZS9saW51eC9pZWVlODAy
+MTEuaA0KQEAgLTc1LDYgKzc1LDggQEANCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9BQ1RJT04J
+CTB4MDBEMA0KIA0KIC8qIGNvbnRyb2wgKi8NCisjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9CRUFN
+Rk9STV9QT0xMCTB4MDA0MA0KKyNkZWZpbmUgSUVFRTgwMjExX1NUWVBFX1ZIVF9ORFBfQU5OT1VD
+RQkweDAwNTANCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9DVExfRVhUCQkweDAwNjANCiAjZGVm
+aW5lIElFRUU4MDIxMV9TVFlQRV9CQUNLX1JFUQkweDAwODANCiAjZGVmaW5lIElFRUU4MDIxMV9T
+VFlQRV9CQUNLCQkweDAwOTANCi0tIA0KMS43LjkuNQ0KDQpUaGFua3MNCi1SYWh1bCBKYWluDQpF
+UC1GRURDNzcxREY0RkY0OEE5ODI5Q0I4NTI1NEUyOUZEMyANCg0K
 
 
-> @@ -66,6 +71,27 @@ struct nvram_parser {
->         bool multi_dev_v2;
->  };
->
-> +#if IS_ENABLED(CONFIG_BCM47XX)
-> +static char *brcmf_nvram_get_contents(size_t *nvram_size)
-> +{
-> +       return bcm47xx_nvram_get_contents(nvram_size);
-> +}
-> +
-> +static void brcmf_nvram_release_contents(char *nvram)
-> +{
-> +       bcm47xx_nvram_release_contents(nvram);
-> +}
-> +#else
-> +static char *brcmf_nvram_get_contents(size_t *nvram_size)
-> +{
-> +       return NULL;
-> +}
-> +
-> +static void brcmf_nvram_release_contents(char *nvram)
-> +{
-> +}
-> +#endif
-
-Everything you put in #else simply re-implements what you sent for
-MIPS tree. We don't want to duplicate that code.
-Also applying above code will break building wireless-drivers-next on
-MIPS, we can't push this patch.
-
-I can understand you are looking for a way to get this patch into
-current -next and to somehow sync work across trees. I'm against
-anything like merging MIPS tree to wireless-driver-next, but I may
-have some idea.
-I think the best way for achieving this is to rework your patch to
-modify include/linux/bcm47xx_nvram.h. You could modify it the same way
-you did in your patch for MIPS tree, except for
-bcm47xx_nvram_get_contents. Don't implement this function for real (in
-.c file), but instead make in dummy inline in a bcm47xx_nvram.h like:
-static inline char *bcm47xx_nvram_get_contents(size_t *val_len)
-{
-        /* TODO: Implement in .c file */
-        return NULL;
-}
-
--- 
-Rafał
