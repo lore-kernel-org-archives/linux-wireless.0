@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:27220 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751570AbbECTch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:32:37 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/42] iwlwifi: rs: remove unneeded check of average tpt in window
-Date: Sun,  3 May 2015 22:31:25 +0300
-Message-Id: <1430681513-7838-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213417_886717_026F8AF0)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24418 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbbETORv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 10:17:51 -0400
+Message-ID: <555C9789.9010709@broadcom.com> (sfid-20150520_161755_253022_0D2FDD60)
+Date: Wed, 20 May 2015 16:17:45 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Ralf Baechle <ralf@linux-mips.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH RESEND] mips: bcm47xx: allow retrieval of complete nvram
+ contents
+References: <1432122655-3224-1-git-send-email-arend@broadcom.com>	<CACna6rxeU0FUiTRNXFgK-xxSDY8WA82h7MLmcPc=7eM5sqMdBw@mail.gmail.com>	<555C83FC.7010701@broadcom.com> <CACna6rw3ZgJSLrR=kNKDNgcLHz7-bZjaObv2zuTgmWWeUtLSUw@mail.gmail.com>
+In-Reply-To: <CACna6rw3ZgJSLrR=kNKDNgcLHz7-bZjaObv2zuTgmWWeUtLSUw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On 05/20/15 15:48, Rafał Miłecki wrote:
+> On 20 May 2015 at 14:54, Arend van Spriel<arend@broadcom.com>  wrote:
+>> On 05/20/15 14:31, Rafał Miłecki wrote:
+>>>
+>>> On 20 May 2015 at 13:50, Arend van Spriel<arend@broadcom.com>   wrote:
+>>>>
+>>>> From: Hante Meuleman<meuleman@broadcom.com>
+>>>>
+>>>> Host platforms such as routers supported by OpenWRT can
+>>>> support NVRAM reading directly from internal NVRAM store.
+>>>> The brcmfmac for one requires the complete nvram contents
+>>>> to select what needs to be sent to wireless device.
+>>>
+>>>
+>>> First of all, I have to ask you to rebase this patch on top of
+>>> upstream-sfr. Mostly because of
+>>> MIPS: BCM47XX: Make sure NVRAM buffer ends with \0
+>>
+>>
+>> No idea what upstream-sfr is. I applied the patch on top of the master
+>> branch of linux-mips repo [1]. What am I missing here?
+>>
+>> [1] http://git.linux-mips.org/cgit/ralf/linux.git
+>
+> Just go a dir higher and you'll find it :)
+> http://git.linux-mips.org/cgit/
+>
+> Its a repo with mips-for-linux-next branch you're looking for.
 
-Previously there was a check that compared window->average_tpt
-to some value, and if it was different - it set it to that
-value. However, this value was already calculated and set in
-_rs_collect_tx_data(), so the entire check is unneeded.
+Thanks. Found it.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 7 -------
- 1 file changed, 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 316c6e0..0440142 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2183,13 +2183,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 
- 		return;
- 	}
--	/* Else we have enough samples; calculate estimate of
--	 * actual average throughput */
--	if (window->average_tpt != ((window->success_ratio *
--			tbl->expected_tpt[index] + 64) / 128)) {
--		window->average_tpt = ((window->success_ratio *
--					tbl->expected_tpt[index] + 64) / 128);
--	}
- 
- 	/* If we are searching for better modulation mode, check success. */
- 	if (lq_sta->search_better_tbl) {
--- 
-2.1.0
-
+Regards,
+Arend
