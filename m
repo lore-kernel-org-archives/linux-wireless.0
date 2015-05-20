@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:33504 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbbEYSKe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 14:10:34 -0400
-From: Shailendra Verma <shailendra.capricorn@gmail.com>
-To: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Shailendra Verma <shailendra.capricorn@gmail.com>
-Subject: [PATCH] net:wireless:rndis_wlan - Use bool function return value
-Date: Mon, 25 May 2015 23:40:22 +0530
-Message-Id: <1432577422-3917-1-git-send-email-shailendra.capricorn@gmail.com> (sfid-20150525_201039_304585_B0986015)
+Received: from s3.sipsolutions.net ([5.9.151.49]:37318 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752517AbbETNXS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 09:23:18 -0400
+Message-ID: <1432128196.19214.15.camel@sipsolutions.net> (sfid-20150520_152323_982495_29A0F407)
+Subject: Re: [PATCH 2/2] mac80211: guard against invalid ptr deref
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 May 2015 15:23:16 +0200
+In-Reply-To: <1432039021-29666-2-git-send-email-michal.kazior@tieto.com> (sfid-20150519_143716_324286_1AEAADD3)
+References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
+	 <1432039021-29666-2-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150519_143716_324286_1AEAADD3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function rndis_bss_info_update() has bool return type.
-So use bool value flase instead of NULL to return.
+On Tue, 2015-05-19 at 14:37 +0200, Michal Kazior wrote:
+> Without "cfg80211: ignore netif running state when
+> changing iftype" it was possible for mac80211 to
+> crash the system due to an unexpected (and
+> incorrect) flow.
+> 
+> Even with cfg80211 being fixed it still makes
+> sense to add a sanity check just in case.
 
-Signed-off-by: Shailendra Verma <shailendra.capricorn@gmail.com>
----
- drivers/net/wireless/rndis_wlan.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Since the description of this makes no sense standalone, I'm not
+applying this, and I'd like to ask you to change it even if we apply
+both to make more sense on its own.
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d72ff8e..b2bff5c 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2000,7 +2000,7 @@ static bool rndis_bss_info_update(struct usbnet *usbdev,
- 
- 	if (bssid_len < sizeof(struct ndis_80211_bssid_ex) +
- 			sizeof(struct ndis_80211_fixed_ies))
--		return NULL;
-+		return false;
- 
- 	fixed = (struct ndis_80211_fixed_ies *)bssid->ies;
- 
-@@ -2009,13 +2009,13 @@ static bool rndis_bss_info_update(struct usbnet *usbdev,
- 					(int)le32_to_cpu(bssid->ie_length));
- 	ie_len -= sizeof(struct ndis_80211_fixed_ies);
- 	if (ie_len < 0)
--		return NULL;
-+		return false;
- 
- 	/* extract data for cfg80211_inform_bss */
- 	channel = ieee80211_get_channel(priv->wdev.wiphy,
- 			KHZ_TO_MHZ(le32_to_cpu(bssid->config.ds_config)));
- 	if (!channel)
--		return NULL;
-+		return false;
- 
- 	signal = level_to_qual(le32_to_cpu(bssid->rssi));
- 	timestamp = le64_to_cpu(*(__le64 *)fixed->timestamp);
--- 
-1.7.9.5
+johannes
 
