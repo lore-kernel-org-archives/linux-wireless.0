@@ -1,73 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53848 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755042AbbEUQ5i (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:1141 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324AbbETLu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 12:57:38 -0400
-Date: Thu, 21 May 2015 09:57:37 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150521165737.GB12932@kroah.com> (sfid-20150521_185742_785618_5CC0D756)
-References: <20150519200232.GM23057@wotan.suse.de>
- <20150520140426.GB126473@ubuntu-hedt>
- <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
- <20150520164613.GD10473@localhost>
- <20150521044104.GH22632@kroah.com>
- <20150521054101.GA15037@localhost>
- <20150521061453.GC30864@kroah.com>
- <1432213521.4230.43.camel@linux.vnet.ibm.com>
- <20150521154508.GA11821@kroah.com>
- <20150521155319.GG18164@localhost>
+	Wed, 20 May 2015 07:50:59 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Ralf Baechle <ralf@linux-mips.org>
+CC: <linux-mips@linux-mips.org>, <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH RESEND] mips: bcm47xx: allow retrieval of complete nvram contents
+Date: Wed, 20 May 2015 13:50:55 +0200
+Message-ID: <1432122655-3224-1-git-send-email-arend@broadcom.com> (sfid-20150520_135102_495279_F5AA7815)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150521155319.GG18164@localhost>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 21, 2015 at 06:53:19PM +0300, Petko Manolov wrote:
-> On 15-05-21 08:45:08, Greg Kroah-Hartman wrote:
-> > On Thu, May 21, 2015 at 09:05:21AM -0400, Mimi Zohar wrote:
-> > > 
-> > > Signatures don't provide any guarantees as to code quality or
-> > > correctness.   They do provide file integrity and provenance.  In
-> > > addition to the license and a Signed-off-by line, having the firmware
-> > > provider include a signature of the firmware would be nice.
-> > 
-> > That would be "nice", but that's not going to be happening here, from what I 
-> > can tell.  The firmware provider should be putting the signature inside the 
-> > firmware image itself, and verifying it on the device, in order to properly 
-> > "know" that it should be running that firmware.  The kernel shouldn't be 
-> > involved here at all, as Alan pointed out.
-> 
-> It is device's job to verify firmware's correctness.  It is user's job to verify 
-> vendor's identity.  Two different things, not related to each other.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-The device can also verify "is this firmware from a trusted source", and
-it should if it is a "good" device.  "correctness" can just be a simple
-checksum, and I think most of the firmware blobs already have that in
-them :)
+Host platforms such as routers supported by OpenWRT can
+support NVRAM reading directly from internal NVRAM store.
+The brcmfmac for one requires the complete nvram contents
+to select what needs to be sent to wireless device.
 
-Are these patches "verifying the vendor"?  Right now it just looks like
-they are "verifying the packager" as none of the hundreds of firmware
-images we have actually have stand-alone signatures.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Made a typo so it did not go the the linux-mips mailing list. Sorry for
+the noise.
 
-Do we have firmware images that are going to be signed by the vendor?
-If so, are they also not signed in the firmware itself?  Why are we
-forcing the kernel to do this verification that the device should be
-doing instead?
+Regards,
+Arend
+---
+ arch/mips/bcm47xx/nvram.c     | 40 +++++++++++++++++++++++++++++++++-------
+ include/linux/bcm47xx_nvram.h | 15 +++++++++++++++
+ 2 files changed, 48 insertions(+), 7 deletions(-)
 
-thanks,
+diff --git a/arch/mips/bcm47xx/nvram.c b/arch/mips/bcm47xx/nvram.c
+index ba632ff..3bb7f41 100644
+--- a/arch/mips/bcm47xx/nvram.c
++++ b/arch/mips/bcm47xx/nvram.c
+@@ -138,6 +138,7 @@ static int nvram_init(void)
+ #ifdef CONFIG_MTD
+ 	struct mtd_info *mtd;
+ 	struct nvram_header header;
++	struct nvram_header *pheader;
+ 	size_t bytes_read;
+ 	int err;
+ 
+@@ -146,20 +147,21 @@ static int nvram_init(void)
+ 		return -ENODEV;
+ 
+ 	err = mtd_read(mtd, 0, sizeof(header), &bytes_read, (uint8_t *)&header);
+-	if (!err && header.magic == NVRAM_MAGIC) {
+-		u8 *dst = (uint8_t *)nvram_buf;
+-		size_t len = header.len;
+-
+-		if (header.len > NVRAM_SPACE) {
++	if (!err && header.magic == NVRAM_MAGIC &&
++	    header.len > sizeof(header)) {
++		if (header.len > NVRAM_SPACE - 2) {
+ 			pr_err("nvram on flash (%i bytes) is bigger than the reserved space in memory, will just copy the first %i bytes\n",
+ 				header.len, NVRAM_SPACE);
+-			len = NVRAM_SPACE;
++			header.len = NVRAM_SPACE - 2;
+ 		}
+ 
+-		err = mtd_read(mtd, 0, len, &bytes_read, dst);
++		err = mtd_read(mtd, 0, header.len, &bytes_read,
++			       (u8 *)nvram_buf);
+ 		if (err)
+ 			return err;
+ 
++		pheader = (struct nvram_header *)nvram_buf;
++		pheader->len = header.len;
+ 		return 0;
+ 	}
+ #endif
+@@ -221,3 +223,27 @@ int bcm47xx_nvram_gpio_pin(const char *name)
+ 	return -ENOENT;
+ }
+ EXPORT_SYMBOL(bcm47xx_nvram_gpio_pin);
++
++char *bcm47xx_nvram_get_contents(size_t *nvram_size)
++{
++	int err;
++	char *nvram;
++	struct nvram_header *header;
++
++	if (!nvram_buf[0]) {
++		err = nvram_init();
++		if (err)
++			return NULL;
++	}
++
++	header = (struct nvram_header *)nvram_buf;
++	*nvram_size = header->len - sizeof(struct nvram_header);
++	nvram = vmalloc(*nvram_size);
++	if (!nvram)
++		return NULL;
++	memcpy(nvram, &nvram_buf[sizeof(struct nvram_header)], *nvram_size);
++
++	return nvram;
++}
++EXPORT_SYMBOL(bcm47xx_nvram_get_contents);
++
+diff --git a/include/linux/bcm47xx_nvram.h b/include/linux/bcm47xx_nvram.h
+index b12b07e..c73927c 100644
+--- a/include/linux/bcm47xx_nvram.h
++++ b/include/linux/bcm47xx_nvram.h
+@@ -10,11 +10,17 @@
+ 
+ #include <linux/types.h>
+ #include <linux/kernel.h>
++#include <linux/vmalloc.h>
+ 
+ #ifdef CONFIG_BCM47XX
+ int bcm47xx_nvram_init_from_mem(u32 base, u32 lim);
+ int bcm47xx_nvram_getenv(const char *name, char *val, size_t val_len);
+ int bcm47xx_nvram_gpio_pin(const char *name);
++char *bcm47xx_nvram_get_contents(size_t *val_len);
++static inline void bcm47xx_nvram_release_contents(char *nvram)
++{
++	vfree(nvram);
++};
+ #else
+ static inline int bcm47xx_nvram_init_from_mem(u32 base, u32 lim)
+ {
+@@ -29,6 +35,15 @@ static inline int bcm47xx_nvram_gpio_pin(const char *name)
+ {
+ 	return -ENOTSUPP;
+ };
++
++static inline char *bcm47xx_nvram_get_contents(size_t *val_len)
++{
++	return NULL;
++};
++
++static inline void bcm47xx_nvram_release_contents(char *nvram)
++{
++};
+ #endif
+ 
+ #endif /* __BCM47XX_NVRAM_H */
+-- 
+1.9.1
 
-greg k-h
