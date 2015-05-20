@@ -1,107 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:22475 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712AbbE2IDc (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:35607 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbETAl7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 04:03:32 -0400
-Message-ID: <55681D51.1070503@broadcom.com> (sfid-20150529_100340_962063_0D36952B)
-Date: Fri, 29 May 2015 10:03:29 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 19 May 2015 20:41:59 -0400
+Received: by labbd9 with SMTP id bd9so50615707lab.2
+        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 17:41:57 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"brcm80211 development" <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: use direct data pointer in NVRAM parser struct
-References: <1432813063-30922-1-git-send-email-zajec5@gmail.com>	<556701E9.8090807@broadcom.com>	<CACna6rwm5L1tSd7S=9PNKnju-sxHxhYPbA0EcdJ5K=MwJzJvUA@mail.gmail.com>	<55678789.60802@broadcom.com> <CACna6rz=jrkFDkePMvPNRk_X4UwxdwGecGxtdynXgpJCkN-0FA@mail.gmail.com>
-In-Reply-To: <CACna6rz=jrkFDkePMvPNRk_X4UwxdwGecGxtdynXgpJCkN-0FA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <20150520003917.GV23057@wotan.suse.de>
+References: <20150519200232.GM23057@wotan.suse.de> <555BA438.2070802@kernel.org>
+ <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com>
+ <CALCETrX1YrdwfPJxVbzE0MQK=HChK8sDztt6MZcJiCvTEDCn7Q@mail.gmail.com> <20150520003917.GV23057@wotan.suse.de>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Tue, 19 May 2015 17:41:37 -0700
+Message-ID: <CALCETrVpwvpeGD=3iDw_2cTPfnvLsasMT2OV4jcE1bRs5cgDuA@mail.gmail.com> (sfid-20150520_024220_153330_4B7C7FC8)
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	LSM List <linux-security-module@vger.kernel.org>,
+	James Morris <james.l.morris@oracle.com>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Konstantin Ryabitsev <mricon@kernel.org>,
+	Michal Marek <mmarek@suse.cz>,
+	Abelardo Ricart III <aricart@memnix.com>,
+	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
+	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/15 07:20, Rafał Miłecki wrote:
-> On 28 May 2015 at 23:24, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 05/28/15 14:34, Rafał Miłecki wrote:
->>>
->>> On 28 May 2015 at 13:54, Arend van Spriel<arend@broadcom.com>   wrote:
->>>>
->>>> On 05/28/15 13:37, Rafał Miłecki wrote:
->>>>>
->>>>>
->>>>> As we plan to add support for platform NVRAM we should store direct
->>>>> data pointer without the extra struct firmware layer. This will allow
->>>>> us to support other sources with the only requirement being u8 buffer.
->>>>>
->>>>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->>>>> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
->>>>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->>>>> ---
->>>>> Tested on router with BCM43602-s using
->>>>> /lib/firmware/brcm/brcmfmac43602-pcie.txt
->>>>>
->>>>> I've written this patch from scratch, it's inspired by the dropped:
->>>>> [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
->>>>
->>>>
->>>>
->>>> Hi Rafał,
->>>>
->>>> So what is your goal here. The inspirational patch was dropped so it can
->>>> be
->>>> resubmitted when the mips change it relies on has made its way upstream.
->>>> So
->>>> I have to rebase the patch over here and your patch will just give me
->>>> conflicts during that rebase. So can we please wait or do you need this
->>>> change right now.
->>>
->>>
->>> The dropped patch will require rebasing/rewriting anyway. There were
->>> few changes to firmware.c already, I've few more planned, you'll have
->>> to drop some code form your patch (parts that will go into MIPS tree)
->>> and probably apply few changes as requested in comments.
+On Tue, May 19, 2015 at 5:39 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Tue, May 19, 2015 at 04:42:05PM -0700, Andy Lutomirski wrote:
+>> On Tue, May 19, 2015 at 4:30 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>> > Hi All,
+>> >
+>> > On Wed, May 20, 2015 at 6:59 AM, Andy Lutomirski <luto@kernel.org> wrote:
+>> >> [added cc's from the other thread]
+>> >>
+>> >> On 05/19/2015 01:02 PM, Luis R. Rodriguez wrote:
+>> >>>
+>> >>> David Howells has posted v4 of his series of supporting PKCS#7 for module
+>> >>> signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and
+>> >>> after
+>> >>> some review and patch shuffling I think this is ready for patch form.  My
+>> >>> own
+>> >>> series however depend on quite a bit of other pending changes, one series
+>> >>> which
+>> >>> will go through Rusty's tree, another series of fixes on firmware_class
+>> >>> which
+>> >>> should go through Greg's tree. I'll wait until all this and David's own
+>> >>> patches
+>> >>> get merged before posting firmware PKCS#7 support. Before all this though
+>> >>> in
+>> >>> preparation for fw signing one thing we should start to talk about more
+>> >>> broadly
+>> >>> however is how linux-firmware binary file signing would work in practice
+>> >>> and
+>> >>> what we need, and make sure folks are OK with all this.
+>> >>>
+>> >>> First, firmware signing will be completely optional as with module
+>> >>> signing.
+>> >>>
+>> >>
+>> >> ...
+>> >>
+>> >>> Other than this last nitpick, any other concerns or recommendations ?
+>> >>
+>> >>
+>> >> A couple.  Some of these are general concerns with the existing
+>> >> infrastructure, but #1 is a specific problem that gets much worse if we add
+>> >> firmware signing.  Feel free to ignore 2-4.
+>> >>
+>> >> 1. We should get the signature semantics right.  I think that, for modules,
+>> >> we currently sign literally the module payload.  For modules, in my
+>> >> semi-amateurish crypto universe [1], this is fine *as long as the key in
+>> >> question is used for no other purpose*.  For firmware, it's dangerous, since
+>> >> it would be vulnerable to substitution attacks in which the adversary
+>> >> convinces us to interpret one firmware file as firmware for another device
+>> >> or purpose entirely.
+>> >>
+>> >> We should be signing something that's semantically equivalent to "This is a
+>> >> valid module: xyz", "This is a valid 'regulatory.bin': xyz", or "This is a
+>> >> valid kexec image: xyz".
+>> >
+>> > Something that occurred to me (as a complete bystander) was: would it
+>> > make sense to have keys able to be restricted to particular "types" of
+>> > signable data? I.e. the key that can sign a valid regulatory.bin file
+>> > cannot be used to sign a module or a kexec image. - This could remove
+>> > the need to have multiple keyrings. (Also, UEFI keys unless otherwise
+>> > tagged could be restricted to only signing bootloaders or kernels)
 >>
->>
->> I already did that and submitted the mips part to Ralf. I am sorry to say
->> this but what annoys me is that since then you started submitting patches
->> that seem to be taken from the dropped patch. So I have a problem seeing the
->> bright side. If Ralf takes the mips part it ends up in linux-next and we can
->> submit the brcmfmac part.
+>> Seems sensible to me.
 >
-> This is truly the first patch based on your dropped one. All other 5
-> patches were addressing problems I noticed by myself. One of them
-> fixed the same issue you /silently/ did in the dropped one, but I
-> wasn't even aware of that until I started rebasing your patch. We
-> simply noticed the same problem and fixed it on our owns.
+> As for having keys for fw signing be specific to fw data without a keyring,
+> if that is desirable I think we can devise a way to do that. For instance
+> if we wanted to we can have FW_SIG by default trust first keys on
+> system_trusted_keyring just as module signature works -- or if we wanted to
+> just trust, say a Kyle key. Not sure if the later is possible yet, but htat
+> would require some changes. Then as an evolution if we wanted to enable a
+> specific request fw to be mapped to a specific fw file the new APIs I was
+> looking to add could easily enable this provided that we first decide we
+> do want to trust say one key perhaps not on system_trusted_keyring for fw
+> signing. That'd need to be decided first.
 >
-> So I think this patch is the only one that could annoy you, but
-> *honestly* my intention was exactly the opposite. As already said, I
-> just wanted to do possible cleanup early and let you maintain 50% of
-> your original patch instead the whole one.
+> As for the UEFI stuff -- from what I gather its too late there. We could
+> certainly go with something else for fw signing though, just lemme hear it
+> hard and clear.
 >
-> I really don't want to have you annoyed because the need of rebasing
-> your patch. What you said about Ralf's tree and linux-next isn't
-> exactly true. I do believe Kalle won't merge linux-next into
-> wireless-driver-next, so we have to wait for 4.2-rc1, then for Dave
-> merging Linus's tree, then Kalle merging Dave's tree.
-
-Well, it is an integration issue. So yes, wireless-drivers-next (and 
-net-next) would not build for CONFIG_BCM47XX with the brcmfmac patch, 
-because of the missing mips patch. However, the linux-next tree will 
-have no build issue and consequently 4.2-rc1 will have no build issue. I 
-think this is acceptable although I would like to hear the opinion of 
-Kalle on this.
-
-Regards,
-Arend
-
-> We really
-> shouldn't stop development for weeks because of having some patch
-> prepared for later submitting.
-> I think the only think you can do to make your life easier is to
-> submit cleanup part of your prepared patch. This is exactly what I
-> tried to do for you.
+>> FWIW, I'm starting to think that UEFI-based validation of kexec images
+>> should be totally separate.  It uses a nasty PE format with a hideous
+>> PKCS #7 formatted signature.  Maybe that should be a completely
+>> separate piece of code.
 >
+> LSM'ify it I guess? Again, if that's reasonable then I think we'll need
+> stacking and that's still not merged.
 
+Isn't stacking backwards for this, though?  The semantics we'd want is
+accept if any verifiers accept, not accept if all verifiers accept,
+right?
+
+--Andy
