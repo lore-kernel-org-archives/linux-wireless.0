@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:36329 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861AbbESAri (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34684 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235AbbETPsO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 20:47:38 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: ming.lei@canonical.com
-Cc: rusty@rustcorp.com.au, torvalds@linux-foundation.org,
-	dhowells@redhat.com, seth.forshee@canonical.com,
-	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
-	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-	jlee@suse.com, tiwai@suse.de, casey@schaufler-ca.com,
-	keescook@chromium.org, mjg59@srcf.ucam.org,
-	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [RFC v3 0/2] firmware: add PKCS#7 firmware signature support
-Date: Mon, 18 May 2015 17:45:23 -0700
-Message-Id: <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20150519_024756_994698_211EC050)
+	Wed, 20 May 2015 11:48:14 -0400
+Received: by oiko83 with SMTP id o83so39284856oik.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 08:48:14 -0700 (PDT)
+Date: Wed, 20 May 2015 10:47:55 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: David Howells <dhowells@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
+	serge@hallyn.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
+	zohar@linux.vnet.ibm.com, mricon@kernel.org
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150520154755.GE126473@ubuntu-hedt> (sfid-20150520_174834_953012_28039897)
+References: <20150520140426.GB126473@ubuntu-hedt>
+ <20150519200232.GM23057@wotan.suse.de>
+ <6731.1432134538@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6731.1432134538@warthog.procyon.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Wed, May 20, 2015 at 04:08:58PM +0100, David Howells wrote:
+> Seth Forshee <seth.forshee@canonical.com> wrote:
+> 
+> > > This begs the question on how we'd manage keys for firmware signing on
+> > > linux-firmare. Since the keys are x509 keys we need a CA. Based on some
+> > > initial discussions it would seem we'd need the Linux Foundation to create
+> > > a key, this would be embedded in the kernel and that key would be used to
+> > > sign Kyle's key.  Kyle would in turn use his key for signing
+> > > linux-firmware files. David, Kyle, did I summarize this correctly ?
+> > 
+> > I raised the question of key revocation when we discussed this on irc,
+> > but it wasn't answered to my satisfaction. If a key signed by the
+> > kernel-embedded key is compromised, how can that key be revoked so that
+> > it is no longer trusted?
+> > 
+> > Someone mentioned UEFI blacklists, which I don't know much about, but
+> > not all systems have UEFI. The only reliable option that comes to mind
+> > for me is an in-kernel blacklist of keys which should no longer be
+> > trusted.
+> 
+> Key revocation is generally an unpleasant problem.  How do you inform a system
+> that a key of any sort is revoked?  With PGP, for instance, you might be able
+> to connect to the net and consult a server.
 
-This is the third iteration of RFCs for firmware signature suppport.
-Upon review through discussions on the threads and IRC it seems folks are
-generally OK with this now. This is rebased on top of David's latest pkcs7
-branch but also depends on a series of patches which Rusty has said he
-already applied but not yet visible on linux-next. It also has a series of
-fixes posted by not yet in any tree nor has anyone claimed. Since the delta
-is quite big in order to help folks review and test I've put up a branch
-with all pending patches and requirements merged, you should use the
-fw-signing-v3-20150518 branch on this tree:
+Distros could distribute updates to the blacklist via their usual update
+mechanisms. That could be a new kernel with an updated blacklist (after
+all we should expect blacklist updates to be very infrequent).
 
-https://git.kernel.org/cgit/linux/kernel/git/mcgrof/linux.git/
+I suppose a database in the initrd which was loaded prior to loading any
+firmware could work too, then perhaps new blacklists could be loaded
+into a running kernel without a reboot as well. But that database should
+probably be signed too, which creates a chicken-and-egg sort of problem.
 
-This is based on Linus' tree as base.
+> UEFI has a blacklist that can theoretically be used to prevent both usage of a
+> key and usage of a particular object.  As I understand it, the blacklist in
+> UEFI is just a table of SHA256 hashes.
+> 
+> Relying on UEFI presents three problems, though: (1) the system admin has to
+> manually, as far as I'm aware, inform the BIOS; (2) the UEFI storage is
+> limited; and (3) not all systems have UEFI.
 
-Changes on this v3 since the last v2 series:
+Yeah, that doesn't really sound like a good solution. Not all users are
+sys admins.
 
-  * Updated to David's latest pkcs7 branch
-  * Dropped patches based on the above re-work
-  * Avoid recommending use of scripts/sign-file to sign
-    firmware as openssl can be used directly
-  * Change expected file extension to be foo.bin.p7s, and
-    update documentation to reflect this and how folks
-    can let the kernel trust a key for fw signing.
-  * Drop crypto qat work arounds - no longer needed
+> What you do on a non-UEFI system, I'm not sure.  If the kernel isn't verified
+> by the loader or the system firmware then you don't have a 'fully' secure
+> system anyway and the blacklist may be of questionable value.
 
-Luis R. Rodriguez (2):
-  firmware: generalize reading file contents as a helper
-  firmware: add firmware signature checking support
+I think there's still value - compromised firmware could easily be a
+vector to compromise the kernel. Just because I can't verify my system
+security doesn't mean that I don't want measures in place to keep it
+from being compromised.
 
- Documentation/firmware_class/signing.txt |  90 ++++++++++++
- drivers/base/Kconfig                     |  18 +++
- drivers/base/firmware_class.c            | 236 +++++++++++++++++++++++++++++--
- 3 files changed, 334 insertions(+), 10 deletions(-)
- create mode 100644 Documentation/firmware_class/signing.txt
-
--- 
-2.3.2.209.gd67f9d5.dirty
-
+Seth
