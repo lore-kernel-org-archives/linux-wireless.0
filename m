@@ -1,81 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:35162 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757936AbbEaKYC (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53580 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752977AbbETMJ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 06:24:02 -0400
-Received: by wicmx19 with SMTP id mx19so51546410wic.0
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 03:24:01 -0700 (PDT)
+	Wed, 20 May 2015 08:09:57 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 5/6] brcmfmac: add support for dma indices feature
+Date: Wed, 20 May 2015 14:09:51 +0200
+Message-ID: <1432123792-4155-6-git-send-email-arend@broadcom.com> (sfid-20150520_141029_633722_87EFE1BE)
+In-Reply-To: <1432123792-4155-1-git-send-email-arend@broadcom.com>
+References: <1432123792-4155-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1433067731-20114-1-git-send-email-chaitanya.mgit@gmail.com>
-References: <1433067731-20114-1-git-send-email-chaitanya.mgit@gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 31 May 2015 15:53:40 +0530
-Message-ID: <CABPxzY+WrV3XAdHvbg_SzPENjxBHqxV45HKVd--aDT-N9NbkUg@mail.gmail.com> (sfid-20150531_122409_564167_65F03913)
-Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused by
- race between suspend and Tx packet.
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 31, 2015 at 3:52 PM, Chaitanya T K <chaitanya.mgit@gmail.com> wrote:
-> From: Chaitanya T K <chaitanya.mgit@gmail.com>
->
-> If we receive suspend after TX path has executed
-> dynamic ps disable work, the driver will be in
-> ACTIVE state during suspend and even after it
-> resumes.
->
-> As before suspend all data packets are flushed
-> it is safe to put the driver in to sleep for
-> optimal power during suspend or up on resume.
->
-> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
-> ---
->  net/mac80211/pm.c |   15 +++++++++++++++
->  1 file changed, 15 insertions(+)
->
-> diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-> index ac6ad62..c9d71c2 100644
-> --- a/net/mac80211/pm.c
-> +++ b/net/mac80211/pm.c
-> @@ -76,6 +76,21 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
->                         if (sdata->vif.type != NL80211_IFTYPE_STATION)
->                                 continue;
->                         ieee80211_mgd_quiesce(sdata);
-> +                       /* This is to handle a race where suspend
-> +                        * is invoked after dynamic ps work disables
-> +                        * power save due to TX. This causes the driver
-> +                        * to be stuck in ACTIVE during suspend and
-> +                        * after resume unless there is another TX,
-> +                        * after which the dynamic ps puts driver
-> +                        * back to DOZE.
-> +                        */
-> +                       if (sdata->u.mgd.associated &&
-> +                           sdata->u.mgd.powersave &&
-> +                            !(local->hw.conf.flags & IEEE80211_CONF_PS)) {
-> +                               local->hw.conf.flags |= IEEE80211_CONF_PS;
-> +                               ieee80211_hw_config(local,
-> +                                                   IEEE80211_CONF_CHANGE_PS);
-> +                       }
->                 }
->
->                 err = drv_suspend(local, wowlan);
+From: Franky Lin <frankyl@broadcom.com>
 
+PCIe full dongle firmware can support a dma indices feature with which
+firmware can update/fetch the read/write indices of message buffer
+rings on both host to dongle and dongle to host directions. The support is
+announced by firmware through shared flags.
 
-Johannes,
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 140 +++++++++++++++++++++----
+ 1 file changed, 119 insertions(+), 21 deletions(-)
 
-I was final able to fix my "from" problem in git send-email.
-Sorry for previous spamming. We can continue the discussion
-in this thread.
-
-Regards,
-Chaitanya T K>
-
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 2bc24a4..37a2624 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -115,6 +115,8 @@ enum brcmf_pcie_state {
+ #define BRCMF_PCIE_MIN_SHARED_VERSION		5
+ #define BRCMF_PCIE_MAX_SHARED_VERSION		5
+ #define BRCMF_PCIE_SHARED_VERSION_MASK		0x00FF
++#define BRCMF_PCIE_SHARED_DMA_INDEX		0x10000
++#define BRCMF_PCIE_SHARED_DMA_2B_IDX		0x100000
+ 
+ #define BRCMF_PCIE_FLAGS_HTOD_SPLIT		0x4000
+ #define BRCMF_PCIE_FLAGS_DTOH_SPLIT		0x8000
+@@ -146,6 +148,10 @@ enum brcmf_pcie_state {
+ #define BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET	8
+ #define BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET	12
+ #define BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET	16
++#define BRCMF_SHARED_RING_H2D_WP_HADDR_OFFSET	20
++#define BRCMF_SHARED_RING_H2D_RP_HADDR_OFFSET	28
++#define BRCMF_SHARED_RING_D2H_WP_HADDR_OFFSET	36
++#define BRCMF_SHARED_RING_D2H_RP_HADDR_OFFSET	44
+ #define BRCMF_SHARED_RING_TCM_MEMLOC_OFFSET	0
+ #define BRCMF_SHARED_RING_MAX_SUB_QUEUES	52
+ 
+@@ -247,6 +253,13 @@ struct brcmf_pciedev_info {
+ 	bool mbdata_completed;
+ 	bool irq_allocated;
+ 	bool wowl_enabled;
++	u8 dma_idx_sz;
++	void *idxbuf;
++	u32 idxbuf_sz;
++	dma_addr_t idxbuf_dmahandle;
++	u16 (*read_ptr)(struct brcmf_pciedev_info *devinfo, u32 mem_offset);
++	void (*write_ptr)(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
++			  u16 value);
+ };
+ 
+ struct brcmf_pcie_ringbuf {
+@@ -323,6 +336,25 @@ brcmf_pcie_write_tcm16(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
+ }
+ 
+ 
++static u16
++brcmf_pcie_read_idx(struct brcmf_pciedev_info *devinfo, u32 mem_offset)
++{
++	u16 *address = devinfo->idxbuf + mem_offset;
++
++	return (*(address));
++}
++
++
++static void
++brcmf_pcie_write_idx(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
++		     u16 value)
++{
++	u16 *address = devinfo->idxbuf + mem_offset;
++
++	*(address) = value;
++}
++
++
+ static u32
+ brcmf_pcie_read_tcm32(struct brcmf_pciedev_info *devinfo, u32 mem_offset)
+ {
+@@ -868,7 +900,7 @@ static int brcmf_pcie_ring_mb_write_rptr(void *ctx)
+ 	brcmf_dbg(PCIE, "W r_ptr %d (%d), ring %d\n", commonring->r_ptr,
+ 		  commonring->w_ptr, ring->id);
+ 
+-	brcmf_pcie_write_tcm16(devinfo, ring->r_idx_addr, commonring->r_ptr);
++	devinfo->write_ptr(devinfo, ring->r_idx_addr, commonring->r_ptr);
+ 
+ 	return 0;
+ }
+@@ -886,7 +918,7 @@ static int brcmf_pcie_ring_mb_write_wptr(void *ctx)
+ 	brcmf_dbg(PCIE, "W w_ptr %d (%d), ring %d\n", commonring->w_ptr,
+ 		  commonring->r_ptr, ring->id);
+ 
+-	brcmf_pcie_write_tcm16(devinfo, ring->w_idx_addr, commonring->w_ptr);
++	devinfo->write_ptr(devinfo, ring->w_idx_addr, commonring->w_ptr);
+ 
+ 	return 0;
+ }
+@@ -915,7 +947,7 @@ static int brcmf_pcie_ring_mb_update_rptr(void *ctx)
+ 	if (devinfo->state != BRCMFMAC_PCIE_STATE_UP)
+ 		return -EIO;
+ 
+-	commonring->r_ptr = brcmf_pcie_read_tcm16(devinfo, ring->r_idx_addr);
++	commonring->r_ptr = devinfo->read_ptr(devinfo, ring->r_idx_addr);
+ 
+ 	brcmf_dbg(PCIE, "R r_ptr %d (%d), ring %d\n", commonring->r_ptr,
+ 		  commonring->w_ptr, ring->id);
+@@ -933,7 +965,7 @@ static int brcmf_pcie_ring_mb_update_wptr(void *ctx)
+ 	if (devinfo->state != BRCMFMAC_PCIE_STATE_UP)
+ 		return -EIO;
+ 
+-	commonring->w_ptr = brcmf_pcie_read_tcm16(devinfo, ring->w_idx_addr);
++	commonring->w_ptr = devinfo->read_ptr(devinfo, ring->w_idx_addr);
+ 
+ 	brcmf_dbg(PCIE, "R w_ptr %d (%d), ring %d\n", commonring->w_ptr,
+ 		  commonring->r_ptr, ring->id);
+@@ -1038,6 +1070,13 @@ static void brcmf_pcie_release_ringbuffers(struct brcmf_pciedev_info *devinfo)
+ 	}
+ 	kfree(devinfo->shared.flowrings);
+ 	devinfo->shared.flowrings = NULL;
++	if (devinfo->idxbuf) {
++		dma_free_coherent(&devinfo->pdev->dev,
++				  devinfo->idxbuf_sz,
++				  devinfo->idxbuf,
++				  devinfo->idxbuf_dmahandle);
++		devinfo->idxbuf = NULL;
++	}
+ }
+ 
+ 
+@@ -1053,19 +1092,72 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
+ 	u32 addr;
+ 	u32 ring_mem_ptr;
+ 	u32 i;
++	u64 address;
++	u32 bufsz;
+ 	u16 max_sub_queues;
++	u8 idx_offset;
+ 
+ 	ring_addr = devinfo->shared.ring_info_addr;
+ 	brcmf_dbg(PCIE, "Base ring addr = 0x%08x\n", ring_addr);
++	addr = ring_addr + BRCMF_SHARED_RING_MAX_SUB_QUEUES;
++	max_sub_queues = brcmf_pcie_read_tcm16(devinfo, addr);
++
++	if (devinfo->dma_idx_sz != 0) {
++		bufsz = (BRCMF_NROF_D2H_COMMON_MSGRINGS + max_sub_queues) *
++			devinfo->dma_idx_sz * 2;
++		devinfo->idxbuf = dma_alloc_coherent(&devinfo->pdev->dev, bufsz,
++						     &devinfo->idxbuf_dmahandle,
++						     GFP_KERNEL);
++		if (!devinfo->idxbuf)
++			devinfo->dma_idx_sz = 0;
++	}
+ 
+-	addr = ring_addr + BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET;
+-	d2h_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
+-	addr = ring_addr + BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET;
+-	d2h_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
+-	addr = ring_addr + BRCMF_SHARED_RING_H2D_W_IDX_PTR_OFFSET;
+-	h2d_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
+-	addr = ring_addr + BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET;
+-	h2d_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
++	if (devinfo->dma_idx_sz == 0) {
++		addr = ring_addr + BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET;
++		d2h_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
++		addr = ring_addr + BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET;
++		d2h_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
++		addr = ring_addr + BRCMF_SHARED_RING_H2D_W_IDX_PTR_OFFSET;
++		h2d_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
++		addr = ring_addr + BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET;
++		h2d_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
++		idx_offset = sizeof(u32);
++		devinfo->write_ptr = brcmf_pcie_write_tcm16;
++		devinfo->read_ptr = brcmf_pcie_read_tcm16;
++		brcmf_dbg(PCIE, "Using TCM indices\n");
++	} else {
++		memset(devinfo->idxbuf, 0, bufsz);
++		devinfo->idxbuf_sz = bufsz;
++		idx_offset = devinfo->dma_idx_sz;
++		devinfo->write_ptr = brcmf_pcie_write_idx;
++		devinfo->read_ptr = brcmf_pcie_read_idx;
++
++		h2d_w_idx_ptr = 0;
++		addr = ring_addr + BRCMF_SHARED_RING_H2D_WP_HADDR_OFFSET;
++		address = (u64)devinfo->idxbuf_dmahandle;
++		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
++		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
++
++		h2d_r_idx_ptr = h2d_w_idx_ptr + max_sub_queues * idx_offset;
++		addr = ring_addr + BRCMF_SHARED_RING_H2D_RP_HADDR_OFFSET;
++		address += max_sub_queues * idx_offset;
++		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
++		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
++
++		d2h_w_idx_ptr = h2d_r_idx_ptr + max_sub_queues * idx_offset;
++		addr = ring_addr + BRCMF_SHARED_RING_D2H_WP_HADDR_OFFSET;
++		address += max_sub_queues * idx_offset;
++		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
++		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
++
++		d2h_r_idx_ptr = d2h_w_idx_ptr +
++				BRCMF_NROF_D2H_COMMON_MSGRINGS * idx_offset;
++		addr = ring_addr + BRCMF_SHARED_RING_D2H_RP_HADDR_OFFSET;
++		address += BRCMF_NROF_D2H_COMMON_MSGRINGS * idx_offset;
++		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
++		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
++		brcmf_dbg(PCIE, "Using host memory indices\n");
++	}
+ 
+ 	addr = ring_addr + BRCMF_SHARED_RING_TCM_MEMLOC_OFFSET;
+ 	ring_mem_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
+@@ -1079,8 +1171,8 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
+ 		ring->id = i;
+ 		devinfo->shared.commonrings[i] = ring;
+ 
+-		h2d_w_idx_ptr += sizeof(u32);
+-		h2d_r_idx_ptr += sizeof(u32);
++		h2d_w_idx_ptr += idx_offset;
++		h2d_r_idx_ptr += idx_offset;
+ 		ring_mem_ptr += BRCMF_RING_MEM_SZ;
+ 	}
+ 
+@@ -1094,13 +1186,11 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
+ 		ring->id = i;
+ 		devinfo->shared.commonrings[i] = ring;
+ 
+-		d2h_w_idx_ptr += sizeof(u32);
+-		d2h_r_idx_ptr += sizeof(u32);
++		d2h_w_idx_ptr += idx_offset;
++		d2h_r_idx_ptr += idx_offset;
+ 		ring_mem_ptr += BRCMF_RING_MEM_SZ;
+ 	}
+ 
+-	addr = ring_addr + BRCMF_SHARED_RING_MAX_SUB_QUEUES;
+-	max_sub_queues = brcmf_pcie_read_tcm16(devinfo, addr);
+ 	devinfo->shared.nrof_flowrings =
+ 			max_sub_queues - BRCMF_NROF_H2D_COMMON_MSGRINGS;
+ 	rings = kcalloc(devinfo->shared.nrof_flowrings, sizeof(*ring),
+@@ -1124,15 +1214,15 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
+ 					     ring);
+ 		ring->w_idx_addr = h2d_w_idx_ptr;
+ 		ring->r_idx_addr = h2d_r_idx_ptr;
+-		h2d_w_idx_ptr += sizeof(u32);
+-		h2d_r_idx_ptr += sizeof(u32);
++		h2d_w_idx_ptr += idx_offset;
++		h2d_r_idx_ptr += idx_offset;
+ 	}
+ 	devinfo->shared.flowrings = rings;
+ 
+ 	return 0;
+ 
+ fail:
+-	brcmf_err("Allocating commonring buffers failed\n");
++	brcmf_err("Allocating ring buffers failed\n");
+ 	brcmf_pcie_release_ringbuffers(devinfo);
+ 	return -ENOMEM;
+ }
+@@ -1269,6 +1359,14 @@ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
+ 		return -EINVAL;
+ 	}
+ 
++	/* check firmware support dma indicies */
++	if (shared->flags & BRCMF_PCIE_SHARED_DMA_INDEX) {
++		if (shared->flags & BRCMF_PCIE_SHARED_DMA_2B_IDX)
++			devinfo->dma_idx_sz = sizeof(u16);
++		else
++			devinfo->dma_idx_sz = sizeof(u32);
++	}
++
+ 	addr = sharedram_addr + BRCMF_SHARED_MAX_RXBUFPOST_OFFSET;
+ 	shared->max_rxbufpost = brcmf_pcie_read_tcm16(devinfo, addr);
+ 	if (shared->max_rxbufpost == 0)
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
+1.9.1
+
