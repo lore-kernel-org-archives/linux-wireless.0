@@ -1,75 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:6861 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750815AbbECP0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 11:26:22 -0400
-Message-ID: <55463E19.7070709@linux.intel.com> (sfid-20150503_172652_654148_2902CAE4)
-Date: Sun, 03 May 2015 23:26:17 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:35476 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752660AbbETMbj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 08:31:39 -0400
+Received: by iesa3 with SMTP id a3so37728561ies.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 05:31:38 -0700 (PDT)
 MIME-Version: 1.0
-To: "brudley@broadcom.com" <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	"meuleman@broadcom.com" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
-	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+In-Reply-To: <1432122655-3224-1-git-send-email-arend@broadcom.com>
+References: <1432122655-3224-1-git-send-email-arend@broadcom.com>
+Date: Wed, 20 May 2015 14:31:37 +0200
+Message-ID: <CACna6rxeU0FUiTRNXFgK-xxSDY8WA82h7MLmcPc=7eM5sqMdBw@mail.gmail.com> (sfid-20150520_143154_326033_37885270)
+Subject: Re: [PATCH RESEND] mips: bcm47xx: allow retrieval of complete nvram contents
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] brcmfmac: prohibit ACPI power management for brcmfmac
- driver
-Content-Type: text/plain; charset=utf-8
+	Hante Meuleman <meuleman@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ACPI will manage WiFi chip's power state during suspend/resume
-process on some tablet platforms(such as ASUS T100TA). This is
-not supported by brcmfmac driver now, and the context of WiFi
-chip will be damaged after resume. This patch informs ACPI not
-to manage WiFi chip's power state.
+On 20 May 2015 at 13:50, Arend van Spriel <arend@broadcom.com> wrote:
+> From: Hante Meuleman <meuleman@broadcom.com>
+>
+> Host platforms such as routers supported by OpenWRT can
+> support NVRAM reading directly from internal NVRAM store.
+> The brcmfmac for one requires the complete nvram contents
+> to select what needs to be sent to wireless device.
 
-Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
----
-Changes in v2:
-- Another implementation.
+First of all, I have to ask you to rebase this patch on top of
+upstream-sfr. Mostly because of
+MIPS: BCM47XX: Make sure NVRAM buffer ends with \0
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 9b508bd..6c519e3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -33,6 +33,7 @@
- #include <linux/suspend.h>
- #include <linux/errno.h>
- #include <linux/module.h>
-+#include <linux/acpi.h>
- #include <net/cfg80211.h>
- 
- #include <defs.h>
-@@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	int err;
- 	struct brcmf_sdio_dev *sdiodev;
- 	struct brcmf_bus *bus_if;
-+	struct device *dev;
-+	struct acpi_device *adev;
- 
- 	brcmf_dbg(SDIO, "Enter\n");
- 	brcmf_dbg(SDIO, "Class=%x\n", func->class);
-@@ -1121,6 +1124,11 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
- 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
- 
-+	/* prohibit ACPI power management for this device */
-+	dev = &func->dev;
-+	if (adev = ACPI_COMPANION(dev))
-+		adev->flags.power_manageable = 0;
-+
- 	/* Consume func num 1 but dont do anything with it. */
- 	if (func->num == 1)
- 		return 0;
--- 1.7.1
+> @@ -146,20 +147,21 @@ static int nvram_init(void)
+>                 return -ENODEV;
+>
+>         err = mtd_read(mtd, 0, sizeof(header), &bytes_read, (uint8_t *)&header);
+> -       if (!err && header.magic == NVRAM_MAGIC) {
+> -               u8 *dst = (uint8_t *)nvram_buf;
+> -               size_t len = header.len;
+> -
+> -               if (header.len > NVRAM_SPACE) {
+> +       if (!err && header.magic == NVRAM_MAGIC &&
+> +           header.len > sizeof(header)) {
+> +               if (header.len > NVRAM_SPACE - 2) {
+>                         pr_err("nvram on flash (%i bytes) is bigger than the reserved space in memory, will just copy the first %i bytes\n",
+>                                 header.len, NVRAM_SPACE);
+> -                       len = NVRAM_SPACE;
+> +                       header.len = NVRAM_SPACE - 2;
+>                 }
 
+I guess I preferred having "len" helper, but it's a minor thing.
+What's the trick with this NVRAM_SPACE - 2? Requiring string I to be
+ended with double \0 sounds like a wrong design in some driver. I
+don't think it's anything common/any standard to mark the buffer end
+with an extra \0. I'm pretty sure bcm47xx_nvram_getenv doesn't need it
+and bcm47xx_nvram_get_contents you implemented provides buffer length
+anyway.
+Moreover this trick isn't compatible with what nvram_find_and_copy does.
+
+
+> -               err = mtd_read(mtd, 0, len, &bytes_read, dst);
+> +               err = mtd_read(mtd, 0, header.len, &bytes_read,
+> +                              (u8 *)nvram_buf);
+>                 if (err)
+>                         return err;
+>
+> +               pheader = (struct nvram_header *)nvram_buf;
+> +               pheader->len = header.len;
+
+I preferred your OpenWrt patch version with just keeping a buffer
+content length in separated variable. It won't kill us to have one
+more static size_t and we'll at least keep a real header copy without
+hacking it for implementation needs.
+Again, what you did here doesn't match nvram_find_and_copy, so please
+make sure you'll e.g. set content length variable in
+nvram_find_and_copy as well.
+
+-- 
+Rafał
