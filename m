@@ -1,99 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33823 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769AbbEFJEB (ORCPT
+Received: from lb2-smtp-cloud6.xs4all.net ([194.109.24.28]:56105 "EHLO
+	lb2-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752009AbbETJBC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 05:04:01 -0400
-Received: by pacyx8 with SMTP id yx8so3778355pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2015 02:04:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB3XZEcPm-bkgCh6Wkzr716RpRqd8Pc81754oCvSKXtWWAqOEA@mail.gmail.com>
-References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
- <1419834253-18331-6-git-send-email-eliad@wizery.com> <5512A9BC.5010902@pengutronix.de>
- <CAB3XZEfw5EurqA2jZypAj4LkQwwAiVeKd5wKKsxpOAh-RrCq0w@mail.gmail.com>
- <5512B6F2.8090407@pengutronix.de> <CAB3XZEdyq6FJUTwXm40EUYemmLvuHfZ8JsUvHyCvS3twFhw=Dw@mail.gmail.com>
- <CAGm1_kvrBShO4CNefJfyrRc9FRr4hvV2QL=QZvoS=_9JFV8jMA@mail.gmail.com> <CAB3XZEcPm-bkgCh6Wkzr716RpRqd8Pc81754oCvSKXtWWAqOEA@mail.gmail.com>
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Wed, 6 May 2015 11:03:40 +0200
-Message-ID: <CAGm1_kswkuWtY5eWdH90g3p6N3GbubWr55KY2qR6Q+KskCzU3Q@mail.gmail.com> (sfid-20150506_110409_632952_35111687)
-Subject: Re: [PATCH 06/13] wlcore: enable sleep during AP mode operation
-To: Eliad Peller <eliad@wizery.com>
-Cc: Marc Kleine-Budde <mkl@pengutronix.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kobi Leibovitch <kobi.lev100@gmail.com>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"Machani, Yaniv" <yanivma@ti.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 May 2015 05:01:02 -0400
+Message-ID: <1432112455.21715.70.camel@x220> (sfid-20150520_110126_852204_4D0EAD31)
+Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency
+ when fw signing is enabled
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	David Howells <dhowells@redhat.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kees Cook <keescook@chromium.org>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>, jlee@suse.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Tadeusz Struk <tadeusz.struk@intel.com>,
+	John Griffin <john.griffin@intel.com>
+Date: Wed, 20 May 2015 11:00:55 +0200
+In-Reply-To: <20150520024925.GA7021@gondor.apana.org.au>
+References: <1430988137.8171.58.camel@x220> <1431021995.8171.97.camel@x220>
+	 <20150518200100.GY23057@wotan.suse.de> <1431981930.9091.29.camel@x220>
+	 <20150519000921.GA23057@wotan.suse.de> <1432022535.9091.48.camel@x220>
+	 <20150519154630.GB23057@wotan.suse.de>
+	 <20150519225945.GB5718@gondor.apana.org.au>
+	 <20150519230355.GA5853@gondor.apana.org.au>
+	 <CAB=NE6XizmKMc80rLV9YTZGtEJdZ022+0HNPxXvunp5v4BnCMw@mail.gmail.com>
+	 <20150520024925.GA7021@gondor.apana.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 6, 2015 at 10:32 AM, Eliad Peller <eliad@wizery.com> wrote:
-> hi Yegor,
->
-> On Mon, May 4, 2015 at 12:16 PM, Yegor Yefremov
-> <yegorslists@googlemail.com> wrote:
->> On Wed, Mar 25, 2015 at 2:45 PM, Eliad Peller <eliad@wizery.com> wrote:
->>> On Wed, Mar 25, 2015 at 3:24 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
->>>> On 03/25/2015 01:58 PM, Eliad Peller wrote:
->>>>> hi Marc,
->>>>>
->>>>> On Wed, Mar 25, 2015 at 2:27 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
->>>>>> On 12/29/2014 07:24 AM, Eliad Peller wrote:
->>>>>>> From: Kobi L <kobi.lev100@gmail.com>
->>>>>>>
->>>>>>> Enable ELP authorization in AP mode and enable the use
->>>>>>> of the wakeup bit in the ELP register.
->>>>>>>
->>>>>>> Introduce AP role sleep configuration which is disabled
->>>>>>> by default. When configured, it allows the AP to sleep
->>>>>>> when ELP is authorized for it.
->>>>>>>
->>>>>>> Signed-off-by: Kobi Leibovitch <kobi.lev100@gmail.com>
->>>>>>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->>>>>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
->>>>>>
->>>>>> [...]
->>>>>>
->>>>>>
->>>>>> This patch requires a new firmware, loading of "wl18xx-conf.bin" from
->>>>>> [1] fails with:
->>>>>>
->>>>>>> wlcore: ERROR configuration binary file size is wrong, expected 1226 got 1221
->>>>>>
->>>>> thanks. seems you're right.
->>>>>
->>>>> anyway, note that this file is not actual fw, but only the default
->>>>> configuration params.
->>>>> you can just delete it, and the driver will load just fine.
->>>>> you can then recreate it with something like:
->>>>> cat /sys/kernel/debug/ieee80211/phy0/wlcore/wl18xx/conf >
->>>>> /lib/firmware/ti-connectivity/wl18xx-conf.bin
->>>>>
->>>>> actually, i don't think it makes much sense to have this file in the
->>>>> linux-firmware git at all.
->>>>> i'll try handling it.
->>>>
->>>> Thanks, there are more file with size of ~1k, are they optional, too?
->>>> What's the "error" message if these optional files are not present?
->>>>
->>> AFAIK, the other nvs files are basically required for proper operation.
->>>
->>>> From working with $CUSTOMERS I gained the impression, messages like
->>>> "error failed to load...." for optional file don't shine the best light
->>>> on Linux, a neutral "using default values" is far better.
->>> i agree :)
->>
->> Added Yaniv Machani in CC.
->>
->> Any update on the wl18xx-conf.bin issue? This file is still in
->> linux-firmware repo.
->>
-> thanks for the reminder :)
->
-> just sent a patch to fallback to default conf in case of invalid/outdated conf.
+On Wed, 2015-05-20 at 10:49 +0800, Herbert Xu wrote:
+> On Tue, May 19, 2015 at 04:05:43PM -0700, Luis R. Rodriguez wrote: 
+> > Well that's be true if FW_LOADER was easy to disable, but its not. You
+> > really gotta try hard to disable it. Not only does it require EXPERT
+> > but also EMBEDDED.
 
-Great.
+How does that require EMBEDDED?
 
-@Yaniv: but how to create a new conf with 1226 bytes for existing ini file?
+>  I think its fair to say if you disable FW_LOADER
+> > you know what you are doing and its fair for us then to remove such
+> > selects or depends. Thoughts?
+> 
+> Sure.  I can live with killing all selects/depends on FW_LOADER.
 
-Yegor
+(Having reread my mail from the day before yesterday once more, I note
+that my suggestion to drop the selects is rather circular. Because it's
+the selects that also make it hard to disable FW_LOADER.)
+
+So the message is something like: "If you set EXPERT and disable
+FW_LOADER you're on your own. You have to figure out yourself whether
+the configuration you chose builds or actually runs correctly. Don't
+expect us to care about the issues you run into. And that goes for
+randconfig builds that happen to do that too."
+
+That might be an acceptable thing to say. The help for EXPERT is pretty
+clear. But I do wonder if this is a first or if this has been done
+before (ie, whether there's a precedent). Because, generally speaking,
+people try rather hard to prevent pointless configurations.
+
+
+Paul Bolle
+
