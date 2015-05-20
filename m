@@ -1,35 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52024 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbbEINZy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 09:25:54 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/2] revert "mwifiex: enable aggregation for TID 6 and 7 streams"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1428940945-4123-1-git-send-email-patila@marvell.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <liuzy@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Message-Id: <20150509132553.E910713FF51@smtp.codeaurora.org> (sfid-20150509_153200_347193_3EBF760B)
-Date: Sat,  9 May 2015 13:25:53 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:37166 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751655AbbETNAe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 May 2015 09:00:34 -0400
+Message-ID: <1432126831.19214.8.camel@sipsolutions.net> (sfid-20150520_150036_465824_0313F703)
+Subject: Re: [PATCH] cfg80211: Switch to PM ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lars-Peter Clausen <lars@metafoo.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 May 2015 15:00:31 +0200
+In-Reply-To: <1431779754-12106-1-git-send-email-lars@metafoo.de>
+References: <1431779754-12106-1-git-send-email-lars@metafoo.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2015-05-16 at 14:35 +0200, Lars-Peter Clausen wrote:
+> Use dev_pm_ops instead of the legacy suspend/resume callbacks for the wiphy
+> class suspend and resume operations.
 
-> This patch reverts 'commit c5534844cdee ("mwifiex:
-> enable aggregation for TID 6 and 7 streams")'.
-> TID6 & TID7 is voice traffic which is quite time sensitive.
-> Do not enable any type of aggregation on these TIDs.
-> 
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+Also applied.
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+johannes
 
-31a09a5d3478 revert "mwifiex: enable aggregation for TID 6 and 7 streams"
-9ab7b5b9b160 mwifiex: fix invalid HT IE configuration in FW
-
-Kalle Valo
