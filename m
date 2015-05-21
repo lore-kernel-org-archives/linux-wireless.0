@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43114 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753426AbbEZNQo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:16:44 -0400
-Message-ID: <1432646202.5169.5.camel@sipsolutions.net> (sfid-20150526_151720_794429_FD099CA7)
-Subject: Re: [PATCH wireless-next] mac80211: fix double flush workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Varka Bhadram <varkabhadram@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Varka Bhadram <varkab@cdac.in>
-Date: Tue, 26 May 2015 15:16:42 +0200
-In-Reply-To: <55629ECA.9050203@gmail.com> (sfid-20150525_060243_179517_FED893DC)
-References: <1431671210-6761-1-git-send-email-varkab@cdac.in>
-		 (sfid-20150515_082729_656523_7D208EC4) <1432020391.7437.2.camel@sipsolutions.net>
-	 <55629ECA.9050203@gmail.com> (sfid-20150525_060243_179517_FED893DC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:36737 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753041AbbEURLW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 13:11:22 -0400
+Received: by igbpi8 with SMTP id pi8so15346220igb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2015 10:11:21 -0700 (PDT)
+MIME-Version: 1.0
+From: Jason Scatena <jscatena88@gmail.com>
+Date: Thu, 21 May 2015 13:11:00 -0400
+Message-ID: <CANvVAoyhGCLL7ajGFH91xgNBMZd2kd5P-9v3_PaE+xdmEYYkpQ@mail.gmail.com> (sfid-20150521_191124_967747_B619CB8F)
+Subject: Issues with mesh networking path detection
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-05-25 at 09:32 +0530, Varka Bhadram wrote:
+Hello all,
 
-> Initially flushing of workqueue is done at [1], and also flushing of the same workqueue
-> has done with ieee80211_stop_device() at [2].
-> 
-> [1]:https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git/tree/net/mac80211/pm.c#n50
-> [2]:https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git/tree/net/mac80211/pm.c#n154
+I am attempting to set up a mesh network between 4 computers with
+Atheros 9271 based usb wifi dongles using the ath9k driver.
 
-I *know*, I wrote much of this code. But there are so many things
-between these two points that you'll have to try FAR harder to convince
-me that removing any one these calls is actually a good idea.
+I followed the guide at: https://github.com/o11s/open80211s/wiki/HOWTO
 
-johannes
+to set up the network.
 
+When I get all of the computers up and configured they all see each other.
+The command "iw dev mesh station dump" shows all the nodes in the
+area. However the path selection doesn't seem to work at all. For
+instance the command "iw dev mesh mpath dump" returns nothing. However
+if I manually add arp entries using the arp command they show up in
+the mpath dump.
+
+I am willing to do whatever to troubleshoot however there is very
+little documentation that I have been able to find on trouble shooting
+these issues. I would also be able to provide a pcap file of the nodes
+coming online.
+
+I'm new to the wireless world but have C coding experience and would
+be willing to put in the time to learn.
+
+Best,
+Jason Scatena
