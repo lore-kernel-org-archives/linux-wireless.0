@@ -1,96 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:35863 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbbEQRUF (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:33214 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752357AbbEUIQ6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2015 13:20:05 -0400
-Received: by lagv1 with SMTP id v1so188230055lag.3
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 10:20:03 -0700 (PDT)
+	Thu, 21 May 2015 04:16:58 -0400
+Received: by wgjc11 with SMTP id c11so77411389wgj.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2015 01:16:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <55586D8D.7040407@gmail.com>
-References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>
-	<55575AC8.2060301@lwfinger.net>
-	<CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com>
-	<5557844B.4040108@lwfinger.net>
-	<CAJ=9CzamCxkwVtTtUzU9zatocUPz0W+3f0Kgm6N0tDMWbcP_LA@mail.gmail.com>
-	<55586D8D.7040407@gmail.com>
-Date: Sun, 17 May 2015 20:20:03 +0300
-Message-ID: <CAJ=9CzbxScr7SJjhxnxAWt+xS-A8VR-_PQs0BbbdUp7xCaG2aw@mail.gmail.com> (sfid-20150517_192019_848791_66BEA72E)
-Subject: Re: kernel page fault in r8712u
-From: Haggai Eran <haggai.eran@gmail.com>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1432127653.19214.12.camel@sipsolutions.net>
+References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
+	<1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
+	<1431508609-9841-2-git-send-email-michal.kazior@tieto.com>
+	<1432127653.19214.12.camel@sipsolutions.net>
+Date: Thu, 21 May 2015 10:16:56 +0200
+Message-ID: <CA+BoTQkpjDodKNdSvj2ZdKemXU_2E39MVGZPob8+jkjBGESEfg@mail.gmail.com> (sfid-20150521_101705_105916_99CC23CF)
+Subject: Re: [PATCH v2 2/2] mac80211: prevent possible crypto tx tailroom corruption
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 May 2015 at 13:29, Arend van Spriel <aspriel@gmail.com> wrote:
-> On 17-05-15 06:25, Haggai Eran wrote:
+On 20 May 2015 at 15:14, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2015-05-13 at 09:16 +0000, Michal Kazior wrote:
+>> There was a possible race between
+>> ieee80211_reconfig() and
+>> ieee80211_delayed_tailroom_dec(). This could
+>> result in inability to transmit data if driver
+>> crashed during roaming or rekeying and subsequent
+>> skbs with insufficient tailroom appeared.
 >>
->> On 16 May 2015 at 20:54, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>>
->>> Another location needed from gdb is "l *recv_func+0x8c".
+>> This race was probably never seen in the wild
+>> because a device driver would have to crash AND
+>> recover within 0.5s which is very unlikely.
 >>
+>> I was able to prove this race exists after
+>> changing the delay to 10s locally and crashing
+>> ath10k via debugfs immediately after GTK
+>> rekeying. In case of ath10k the counter went below
+>> 0. This was harmless but other drivers which
+>> actually require tailroom (e.g. for WEP ICV or
+>> MMIC) could end up with the counter at 0 instead
+>> of >0 and introduce insufficient skb tailroom
+>> failures because mac80211 would not resize skbs
+>> appropriately anymore.
 >>
->> Here it is:
->> (gdb) l *recv_func+0x8c
->> 0x17094 is in recv_func (drivers/staging/rtl8712/rtl8712_recv.c:1004).
->> 999                     r8712_free_recvframe(orig_prframe,
->> pfree_recv_queue);
->> 1000                    goto _exit_recv_func;
->> 1001            }
->> 1002    _exit_recv_func:
->> 1003            return retval;
->> 1004    }
->> 1005
->> 1006    static int recvbuf2recvframe(struct _adapter *padapter, struct
->> sk_buff *pskb)
->> 1007    {
->> 1008            u8 *pbuf, shift_sz = 0;
+>> Fixes: 8d1f7ecd2af5 ("mac80211: defer tailroom counter manipulation when roaming")
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
 >>
->> I don't think this means the relevant call is the one at line 999. I
->> think it is an earlier call, after r8712_validate_recv_frame. Here's
->> the disassembly:
+>> Notes:
+>>     While doing PATCH v2 [1/2] I've noticed a subtle bug in the
+>>     delayed tailroom counter logic. Since this touches the
+>>     codepaths [1/2] does I'm posting this as a pair.
+>>
+>>  net/mac80211/key.c  | 5 ++++-
+>>  net/mac80211/main.c | 3 +++
+>>  2 files changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+>> index 577a11a13cdf..4c6f8c97d11a 100644
+>> --- a/net/mac80211/key.c
+>> +++ b/net/mac80211/key.c
+>> @@ -695,10 +695,13 @@ void ieee80211_reset_crypto_tx_tailroom(struct ieee80211_sub_if_data *sdata)
+>>       mutex_lock(&sdata->local->key_mtx);
+>>
+>>       sdata->crypto_tx_tailroom_needed_cnt = 0;
+>> +     sdata->crypto_tx_tailroom_pending_dec = 0;
+>>
+>>       if (sdata->vif.type == NL80211_IFTYPE_AP) {
+>> -             list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+>> +             list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
+>>                       vlan->crypto_tx_tailroom_needed_cnt = 0;
+>> +                     vlan->crypto_tx_tailroom_pending_dec = 0;
+>> +             }
+>>       }
+>>
+>>       mutex_unlock(&sdata->local->key_mtx);
+>> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+>> index 3c956c5f99b2..d8e1cbdcbc43 100644
+>> --- a/net/mac80211/main.c
+>> +++ b/net/mac80211/main.c
+>> @@ -246,6 +246,7 @@ static void ieee80211_restart_work(struct work_struct *work)
+>>  {
+>>       struct ieee80211_local *local =
+>>               container_of(work, struct ieee80211_local, restart_work);
+>> +     struct ieee80211_sub_if_data *sdata;
+>>
+>>       /* wait for scan work complete */
+>>       flush_workqueue(local->workqueue);
+>> @@ -254,6 +255,8 @@ static void ieee80211_restart_work(struct work_struct *work)
+>>            "%s called with hardware scan in progress\n", __func__);
+>>
+>>       rtnl_lock();
+>> +     list_for_each_entry(sdata, &local->interfaces, list)
+>> +             cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
 >
->
-> can you provide the address of recv_func as well to determine the exact
-> location in assembly.
+> Would it make sense to just flush the work here? That way we don't have
+> to do all the other things.
 
-Yes, it is in offset 0x17008 in the module:
-> 00017008 <recv_func>:
+Hmm.. dec_tailroom_needed_wk is queued on system workqueue now so
+there's no feasible way of flushing it (restart_work is on a system
+workqueue as well). It'd need to be moved to local->workqueue. I guess
+that would work too.
 
-Regards,
-Haggai
 
->
->>          /* check the frame crtl field and decache */
->>          retval = r8712_validate_recv_frame(padapter, prframe);
->>     17070:       e1a00004        mov     r0, r4
->>     17074:       e1a01005        mov     r1, r5
->>     17078:       ebfffffe        bl      17bc0 <r8712_validate_recv_frame>
->>          if (retval != _SUCCESS) {
->>     1707c:       e3500001        cmp     r0, #1
->>                          r8712_free_recvframe(orig_prframe,
->> pfree_recv_queue);
->>                          goto _exit_recv_func;
->>                  }
->>          }
->>          /* check the frame crtl field and decache */
->>          retval = r8712_validate_recv_frame(padapter, prframe);
->>     17080:       e1a06000        mov     r6, r0
->>          if (retval != _SUCCESS) {
->>     17084:       0a000005        beq     170a0 <recv_func+0x98>
->>                  /* free this recv_frame */
->>                  r8712_free_recvframe(orig_prframe, pfree_recv_queue);
->>     17088:       e1a00005        mov     r0, r5
->>     1708c:       e1a01007        mov     r1, r7
->>     17090:       ebfffffe        bl      166e8 <r8712_free_recvframe>
->>                  r8712_free_recvframe(orig_prframe, pfree_recv_queue);
->>                  goto _exit_recv_func;
->>          }
->> _exit_recv_func:
->>          return retval;
->> }
->>     17094:       e1a00006        mov     r0, r6
+Michał
