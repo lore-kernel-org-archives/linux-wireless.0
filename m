@@ -1,295 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53580 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752977AbbETMJ5 (ORCPT
+Received: from lan.nucleusys.com ([92.247.61.126]:44004 "EHLO
+	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752383AbbEURPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 08:09:57 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 5/6] brcmfmac: add support for dma indices feature
-Date: Wed, 20 May 2015 14:09:51 +0200
-Message-ID: <1432123792-4155-6-git-send-email-arend@broadcom.com> (sfid-20150520_141029_633722_87EFE1BE)
-In-Reply-To: <1432123792-4155-1-git-send-email-arend@broadcom.com>
-References: <1432123792-4155-1-git-send-email-arend@broadcom.com>
+	Thu, 21 May 2015 13:15:10 -0400
+Date: Thu, 21 May 2015 20:14:38 +0300
+From: Petko Manolov <petkan@mip-labs.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "Woodhouse, David" <david.woodhouse@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"seth.forshee@canonical.com" <seth.forshee@canonical.com>,
+	"zohar@linux.vnet.ibm.com" <zohar@linux.vnet.ibm.com>,
+	"mricon@kernel.org" <mricon@kernel.org>,
+	"dhowells@redhat.com" <dhowells@redhat.com>,
+	"rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"jlee@suse.de" <jlee@suse.de>, "kyle@kernel.org" <kyle@kernel.org>,
+	"gnomes@lxorguk.ukuu.org.uk" <gnomes@lxorguk.ukuu.org.uk>,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"mcgrof@suse.com" <mcgrof@suse.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521171438.GK18164@localhost> (sfid-20150521_191518_483116_3E0A23A2)
+References: <20150520140426.GB126473@ubuntu-hedt>
+ <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+ <20150520164613.GD10473@localhost>
+ <20150521044104.GH22632@kroah.com>
+ <20150521054101.GA15037@localhost>
+ <20150521061453.GC30864@kroah.com>
+ <1432213521.4230.43.camel@linux.vnet.ibm.com>
+ <20150521154508.GA11821@kroah.com>
+ <1432224181.8004.7.camel@intel.com>
+ <20150521170236.GC12932@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150521170236.GC12932@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On 15-05-21 10:02:36, gregkh@linuxfoundation.org wrote:
+> On Thu, May 21, 2015 at 04:03:02PM +0000, Woodhouse, David wrote:
+> > 
+> > In a lot of cases we have loadable firmware precisely to allow us to
+> > reduce the cost of the hardware. Adding cryptographic capability in the
+> > 'load firmware' state of the device isn't really compatible with that
+> > :)
+> 
+> We do?  What devices want this?  That's really a bad hardware design to trust 
+> the kernel to get all of this correct.
 
-PCIe full dongle firmware can support a dma indices feature with which
-firmware can update/fetch the read/write indices of message buffer
-rings on both host to dongle and dongle to host directions. The support is
-announced by firmware through shared flags.
+Which means nearly all hardware we use today is badly designed... :)
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 140 +++++++++++++++++++++----
- 1 file changed, 119 insertions(+), 21 deletions(-)
+> And I say this as someone who is currently working on a hardware design that 
+> does just this for a very tiny device.  It's only a few hundred bytes of 
+> firmware size to be able to do proper key verification that the firmware image 
+> is correct and can be "trusted".
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 2bc24a4..37a2624 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -115,6 +115,8 @@ enum brcmf_pcie_state {
- #define BRCMF_PCIE_MIN_SHARED_VERSION		5
- #define BRCMF_PCIE_MAX_SHARED_VERSION		5
- #define BRCMF_PCIE_SHARED_VERSION_MASK		0x00FF
-+#define BRCMF_PCIE_SHARED_DMA_INDEX		0x10000
-+#define BRCMF_PCIE_SHARED_DMA_2B_IDX		0x100000
- 
- #define BRCMF_PCIE_FLAGS_HTOD_SPLIT		0x4000
- #define BRCMF_PCIE_FLAGS_DTOH_SPLIT		0x8000
-@@ -146,6 +148,10 @@ enum brcmf_pcie_state {
- #define BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET	8
- #define BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET	12
- #define BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET	16
-+#define BRCMF_SHARED_RING_H2D_WP_HADDR_OFFSET	20
-+#define BRCMF_SHARED_RING_H2D_RP_HADDR_OFFSET	28
-+#define BRCMF_SHARED_RING_D2H_WP_HADDR_OFFSET	36
-+#define BRCMF_SHARED_RING_D2H_RP_HADDR_OFFSET	44
- #define BRCMF_SHARED_RING_TCM_MEMLOC_OFFSET	0
- #define BRCMF_SHARED_RING_MAX_SUB_QUEUES	52
- 
-@@ -247,6 +253,13 @@ struct brcmf_pciedev_info {
- 	bool mbdata_completed;
- 	bool irq_allocated;
- 	bool wowl_enabled;
-+	u8 dma_idx_sz;
-+	void *idxbuf;
-+	u32 idxbuf_sz;
-+	dma_addr_t idxbuf_dmahandle;
-+	u16 (*read_ptr)(struct brcmf_pciedev_info *devinfo, u32 mem_offset);
-+	void (*write_ptr)(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
-+			  u16 value);
- };
- 
- struct brcmf_pcie_ringbuf {
-@@ -323,6 +336,25 @@ brcmf_pcie_write_tcm16(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
- }
- 
- 
-+static u16
-+brcmf_pcie_read_idx(struct brcmf_pciedev_info *devinfo, u32 mem_offset)
-+{
-+	u16 *address = devinfo->idxbuf + mem_offset;
-+
-+	return (*(address));
-+}
-+
-+
-+static void
-+brcmf_pcie_write_idx(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
-+		     u16 value)
-+{
-+	u16 *address = devinfo->idxbuf + mem_offset;
-+
-+	*(address) = value;
-+}
-+
-+
- static u32
- brcmf_pcie_read_tcm32(struct brcmf_pciedev_info *devinfo, u32 mem_offset)
- {
-@@ -868,7 +900,7 @@ static int brcmf_pcie_ring_mb_write_rptr(void *ctx)
- 	brcmf_dbg(PCIE, "W r_ptr %d (%d), ring %d\n", commonring->r_ptr,
- 		  commonring->w_ptr, ring->id);
- 
--	brcmf_pcie_write_tcm16(devinfo, ring->r_idx_addr, commonring->r_ptr);
-+	devinfo->write_ptr(devinfo, ring->r_idx_addr, commonring->r_ptr);
- 
- 	return 0;
- }
-@@ -886,7 +918,7 @@ static int brcmf_pcie_ring_mb_write_wptr(void *ctx)
- 	brcmf_dbg(PCIE, "W w_ptr %d (%d), ring %d\n", commonring->w_ptr,
- 		  commonring->r_ptr, ring->id);
- 
--	brcmf_pcie_write_tcm16(devinfo, ring->w_idx_addr, commonring->w_ptr);
-+	devinfo->write_ptr(devinfo, ring->w_idx_addr, commonring->w_ptr);
- 
- 	return 0;
- }
-@@ -915,7 +947,7 @@ static int brcmf_pcie_ring_mb_update_rptr(void *ctx)
- 	if (devinfo->state != BRCMFMAC_PCIE_STATE_UP)
- 		return -EIO;
- 
--	commonring->r_ptr = brcmf_pcie_read_tcm16(devinfo, ring->r_idx_addr);
-+	commonring->r_ptr = devinfo->read_ptr(devinfo, ring->r_idx_addr);
- 
- 	brcmf_dbg(PCIE, "R r_ptr %d (%d), ring %d\n", commonring->r_ptr,
- 		  commonring->w_ptr, ring->id);
-@@ -933,7 +965,7 @@ static int brcmf_pcie_ring_mb_update_wptr(void *ctx)
- 	if (devinfo->state != BRCMFMAC_PCIE_STATE_UP)
- 		return -EIO;
- 
--	commonring->w_ptr = brcmf_pcie_read_tcm16(devinfo, ring->w_idx_addr);
-+	commonring->w_ptr = devinfo->read_ptr(devinfo, ring->w_idx_addr);
- 
- 	brcmf_dbg(PCIE, "R w_ptr %d (%d), ring %d\n", commonring->w_ptr,
- 		  commonring->r_ptr, ring->id);
-@@ -1038,6 +1070,13 @@ static void brcmf_pcie_release_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 	}
- 	kfree(devinfo->shared.flowrings);
- 	devinfo->shared.flowrings = NULL;
-+	if (devinfo->idxbuf) {
-+		dma_free_coherent(&devinfo->pdev->dev,
-+				  devinfo->idxbuf_sz,
-+				  devinfo->idxbuf,
-+				  devinfo->idxbuf_dmahandle);
-+		devinfo->idxbuf = NULL;
-+	}
- }
- 
- 
-@@ -1053,19 +1092,72 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 	u32 addr;
- 	u32 ring_mem_ptr;
- 	u32 i;
-+	u64 address;
-+	u32 bufsz;
- 	u16 max_sub_queues;
-+	u8 idx_offset;
- 
- 	ring_addr = devinfo->shared.ring_info_addr;
- 	brcmf_dbg(PCIE, "Base ring addr = 0x%08x\n", ring_addr);
-+	addr = ring_addr + BRCMF_SHARED_RING_MAX_SUB_QUEUES;
-+	max_sub_queues = brcmf_pcie_read_tcm16(devinfo, addr);
-+
-+	if (devinfo->dma_idx_sz != 0) {
-+		bufsz = (BRCMF_NROF_D2H_COMMON_MSGRINGS + max_sub_queues) *
-+			devinfo->dma_idx_sz * 2;
-+		devinfo->idxbuf = dma_alloc_coherent(&devinfo->pdev->dev, bufsz,
-+						     &devinfo->idxbuf_dmahandle,
-+						     GFP_KERNEL);
-+		if (!devinfo->idxbuf)
-+			devinfo->dma_idx_sz = 0;
-+	}
- 
--	addr = ring_addr + BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET;
--	d2h_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
--	addr = ring_addr + BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET;
--	d2h_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
--	addr = ring_addr + BRCMF_SHARED_RING_H2D_W_IDX_PTR_OFFSET;
--	h2d_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
--	addr = ring_addr + BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET;
--	h2d_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-+	if (devinfo->dma_idx_sz == 0) {
-+		addr = ring_addr + BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET;
-+		d2h_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-+		addr = ring_addr + BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET;
-+		d2h_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-+		addr = ring_addr + BRCMF_SHARED_RING_H2D_W_IDX_PTR_OFFSET;
-+		h2d_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-+		addr = ring_addr + BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET;
-+		h2d_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-+		idx_offset = sizeof(u32);
-+		devinfo->write_ptr = brcmf_pcie_write_tcm16;
-+		devinfo->read_ptr = brcmf_pcie_read_tcm16;
-+		brcmf_dbg(PCIE, "Using TCM indices\n");
-+	} else {
-+		memset(devinfo->idxbuf, 0, bufsz);
-+		devinfo->idxbuf_sz = bufsz;
-+		idx_offset = devinfo->dma_idx_sz;
-+		devinfo->write_ptr = brcmf_pcie_write_idx;
-+		devinfo->read_ptr = brcmf_pcie_read_idx;
-+
-+		h2d_w_idx_ptr = 0;
-+		addr = ring_addr + BRCMF_SHARED_RING_H2D_WP_HADDR_OFFSET;
-+		address = (u64)devinfo->idxbuf_dmahandle;
-+		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
-+		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
-+
-+		h2d_r_idx_ptr = h2d_w_idx_ptr + max_sub_queues * idx_offset;
-+		addr = ring_addr + BRCMF_SHARED_RING_H2D_RP_HADDR_OFFSET;
-+		address += max_sub_queues * idx_offset;
-+		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
-+		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
-+
-+		d2h_w_idx_ptr = h2d_r_idx_ptr + max_sub_queues * idx_offset;
-+		addr = ring_addr + BRCMF_SHARED_RING_D2H_WP_HADDR_OFFSET;
-+		address += max_sub_queues * idx_offset;
-+		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
-+		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
-+
-+		d2h_r_idx_ptr = d2h_w_idx_ptr +
-+				BRCMF_NROF_D2H_COMMON_MSGRINGS * idx_offset;
-+		addr = ring_addr + BRCMF_SHARED_RING_D2H_RP_HADDR_OFFSET;
-+		address += BRCMF_NROF_D2H_COMMON_MSGRINGS * idx_offset;
-+		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
-+		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
-+		brcmf_dbg(PCIE, "Using host memory indices\n");
-+	}
- 
- 	addr = ring_addr + BRCMF_SHARED_RING_TCM_MEMLOC_OFFSET;
- 	ring_mem_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-@@ -1079,8 +1171,8 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 		ring->id = i;
- 		devinfo->shared.commonrings[i] = ring;
- 
--		h2d_w_idx_ptr += sizeof(u32);
--		h2d_r_idx_ptr += sizeof(u32);
-+		h2d_w_idx_ptr += idx_offset;
-+		h2d_r_idx_ptr += idx_offset;
- 		ring_mem_ptr += BRCMF_RING_MEM_SZ;
- 	}
- 
-@@ -1094,13 +1186,11 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 		ring->id = i;
- 		devinfo->shared.commonrings[i] = ring;
- 
--		d2h_w_idx_ptr += sizeof(u32);
--		d2h_r_idx_ptr += sizeof(u32);
-+		d2h_w_idx_ptr += idx_offset;
-+		d2h_r_idx_ptr += idx_offset;
- 		ring_mem_ptr += BRCMF_RING_MEM_SZ;
- 	}
- 
--	addr = ring_addr + BRCMF_SHARED_RING_MAX_SUB_QUEUES;
--	max_sub_queues = brcmf_pcie_read_tcm16(devinfo, addr);
- 	devinfo->shared.nrof_flowrings =
- 			max_sub_queues - BRCMF_NROF_H2D_COMMON_MSGRINGS;
- 	rings = kcalloc(devinfo->shared.nrof_flowrings, sizeof(*ring),
-@@ -1124,15 +1214,15 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 					     ring);
- 		ring->w_idx_addr = h2d_w_idx_ptr;
- 		ring->r_idx_addr = h2d_r_idx_ptr;
--		h2d_w_idx_ptr += sizeof(u32);
--		h2d_r_idx_ptr += sizeof(u32);
-+		h2d_w_idx_ptr += idx_offset;
-+		h2d_r_idx_ptr += idx_offset;
- 	}
- 	devinfo->shared.flowrings = rings;
- 
- 	return 0;
- 
- fail:
--	brcmf_err("Allocating commonring buffers failed\n");
-+	brcmf_err("Allocating ring buffers failed\n");
- 	brcmf_pcie_release_ringbuffers(devinfo);
- 	return -ENOMEM;
- }
-@@ -1269,6 +1359,14 @@ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
- 		return -EINVAL;
- 	}
- 
-+	/* check firmware support dma indicies */
-+	if (shared->flags & BRCMF_PCIE_SHARED_DMA_INDEX) {
-+		if (shared->flags & BRCMF_PCIE_SHARED_DMA_2B_IDX)
-+			devinfo->dma_idx_sz = sizeof(u16);
-+		else
-+			devinfo->dma_idx_sz = sizeof(u32);
-+	}
-+
- 	addr = sharedram_addr + BRCMF_SHARED_MAX_RXBUFPOST_OFFSET;
- 	shared->max_rxbufpost = brcmf_pcie_read_tcm16(devinfo, addr);
- 	if (shared->max_rxbufpost == 0)
--- 
-1.9.1
+And a "few" more bytes for the hash algorithm along the one for asymmetric key 
+computation and management. :)
 
+> > In the case where kernel and modules are signed, it *is* useful for a kernel 
+> > device driver also to be able to validate that what it's about to load into 
+> > a device is authentic. Where 'authentic' will originally just mean that it's 
+> > come from the linux-firmware.git repository or the same entity that built 
+> > (and signed) the kernel, but actually I *do* expect vendors who are actively 
+> > maintaining the firmware images in linux-firmware.git to start providing 
+> > detached signatures of their own.
+> 
+> Again, why have a detached signature and not just part of the firmware blob?  
+> The device needs to be caring about this, not the kernel.
+
+In ideal world this is what should be done.  However, adding the simplest (read 
+slowest) MD5 implementation requires a few K's of ram on 32bit cpu.  MD5 is 
+dead.  So we need SHA-something, which isn't smaller in terms of code size.  Add 
+the asymmetric cryptography to the picture and we've already put away all 
+vendors.
+
+> As the kernel doesn't know/care about what the firmware blob really is, I 
+> don't see why it should be caring about firmware signing as that's a binary 
+> running on a separate "computer".  Do we want to take this the next logical 
+> step further and start requiring networked devices to attest their kernels are 
+> signed correctly before we can talk to them?
+
+I think it is enough for you to know that your iwlwifi's firmware comes from 
+Intel and not from a random Internet punk.  If you trust Intel with your wifi 
+adapter you probably trust them to write good firmware for it.
+
+
+		Petko
