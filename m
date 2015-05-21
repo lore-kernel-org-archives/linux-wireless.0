@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:38525 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758138AbbEaJgF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48065 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753776AbbEUOIb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 05:36:05 -0400
-Received: by wizo1 with SMTP id o1so70812118wiz.1
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 02:36:04 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/9] staging: vt6655: vnt_interrupt_process remove page 0 select
-Date: Sun, 31 May 2015 10:35:25 +0100
-Message-Id: <1433064928-2139-6-git-send-email-tvboxspy@gmail.com> (sfid-20150531_113613_165497_7F818744)
-In-Reply-To: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
-References: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 21 May 2015 10:08:31 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"linux-mips\@linux-mips.org" <linux-mips@linux-mips.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
+References: <1432123792-4155-1-git-send-email-arend@broadcom.com>
+	<1432123792-4155-7-git-send-email-arend@broadcom.com>
+	<CACna6ryt5uNkBXAk8chFyMEQVJLdHELLdA_V5TrLcaAikrTZeg@mail.gmail.com>
+	<CACna6ryCgOwkj_nt6Gd1+r826OJu-suPk50YAS1eRVW+kkR7fQ@mail.gmail.com>
+	<555DA529.6000901@broadcom.com>
+	<87vbfm6xsg.fsf@kamboji.qca.qualcomm.com>
+	<555DB3C0.7010000@broadcom.com>
+Date: Thu, 21 May 2015 17:08:23 +0300
+In-Reply-To: <555DB3C0.7010000@broadcom.com> (Arend van Spriel's message of
+	"Thu, 21 May 2015 12:30:24 +0200")
+Message-ID: <877fs26n1k.fsf@kamboji.qca.qualcomm.com> (sfid-20150521_160834_623459_41CAC8FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Page 1 is fully proctected by lock there is no need
-to check for it. Page 0 is selected at other times.
+Arend van Spriel <arend@broadcom.com> writes:
 
-Remove byOrgPageSel and its calls from function.
+>>> I prefer to avoid tricks so I will ask to drop this patch and wait for
+>>> it to land in the next kernel, ie. 4.2, and resubmit this patch for
+>>> 4.3. I am not in a hurry.
+>>
+>> Yes, please :) Let's try to avoid conflicts as much as possible.
+>
+> Ok. Let's make it official. Kalle, can you drop patch 6 from the
+> series (if not already done so ;-) ).
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 11 -----------
- 1 file changed, 11 deletions(-)
+Ok, dropped.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index d5f090f..2262a61 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1056,7 +1056,6 @@ static void vnt_interrupt_process(struct vnt_private *pDevice)
- 	struct ieee80211_low_level_stats *low_stats = &pDevice->low_stats;
- 	int             max_count = 0;
- 	u32 mib_counter;
--	unsigned char byOrgPageSel = 0;
- 	unsigned long flags;
- 
- 	MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
-@@ -1073,13 +1072,6 @@ static void vnt_interrupt_process(struct vnt_private *pDevice)
- 
- 	spin_lock_irqsave(&pDevice->lock, flags);
- 
--	/* Make sure current page is 0 */
--	VNSvInPortB(pDevice->PortOffset + MAC_REG_PAGE1SEL, &byOrgPageSel);
--	if (byOrgPageSel == 1)
--		MACvSelectPage0(pDevice->PortOffset);
--	else
--		byOrgPageSel = 0;
--
- 	/* Read low level stats */
- 	MACvReadMIBCounter(pDevice->PortOffset, &mib_counter);
- 
-@@ -1164,9 +1156,6 @@ static void vnt_interrupt_process(struct vnt_private *pDevice)
- 			break;
- 	}
- 
--	if (byOrgPageSel == 1)
--		MACvSelectPage1(pDevice->PortOffset);
--
- 	spin_unlock_irqrestore(&pDevice->lock, flags);
- 
- 	MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
 -- 
-2.1.4
-
+Kalle Valo
