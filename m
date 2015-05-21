@@ -1,173 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33954 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933812AbbELWAj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 18:00:39 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: ming.lei@canonical.com, rusty@rustcorp.com.au
-Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
-	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
-	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
-	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Subject: [PATCH v3 4/4] firmware: use const for remaining firmware names
-Date: Tue, 12 May 2015 14:49:43 -0700
-Message-Id: <1431467383-28540-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20150513_000043_550938_B1434D61)
-In-Reply-To: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga11.intel.com ([192.55.52.93]:5409 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422755AbbEUTxO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 15:53:14 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/10] iwlwifi: mvm: forbid MIMO on devices that don't support it
+Date: Thu, 21 May 2015 22:53:01 +0300
+Message-Id: <1432237990-5890-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150521_215323_508932_66F4A919)
+In-Reply-To: <1432237819.26813.4.camel@intel.com>
+References: <1432237819.26813.4.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+There are devices that forbid MIMO by the mean of the NVM.
+Detect thoses devices and forbid MIMO otherwise the firmware
+would crash. STBC is still allowed on these devices.
 
-We currently use flexible arrays with a char at the
-end for the remaining internal firmware name uses.
-There are two limitations with the way we use this.
-Since we're using a flexible array for a string on the
-struct if we wanted to use two strings it means we'd
-have a disjoint means of handling the strings, one
-using the flexible array, and another a char * pointer.
-We're also currently not using 'const' for the string.
-
-We wish to later extend some firmware data structures
-with other string/char pointers, but we also want to be
-very pedantic about const usage. Since we're going to
-change things to use 'const' we might as well also address
-unified way to use multiple strings on the structs.
-
-Replace the flexible array practice for strings with
-kstrdup_const() and kfree_const(), this will avoid
-allocations when the vmlinux .rodata is used, and just
-allocate a new proper string for us when needed. This
-also means we can simplify the struct allocations by
-removing the string length from the allocation size
-computation, which would otherwise get even more
-complicated when supporting multiple strings.
-
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/base/firmware_class.c | 40 ++++++++++++++++++++++++++++------------
- 1 file changed, 28 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c |  5 +++++
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h |  3 +++
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c    | 19 +++++++++++++------
+ drivers/net/wireless/iwlwifi/mvm/rs.c           |  3 +++
+ 4 files changed, 24 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 62e4611..8c3aa3c 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -150,17 +150,17 @@ struct firmware_buf {
- 	int page_array_size;
- 	struct list_head pending_list;
- #endif
--	char fw_id[];
-+	const char *fw_id;
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+index 41ff85d..21302b6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2015 Intel Mobile Communications GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,6 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2015 Intel Mobile Communications GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -748,6 +750,9 @@ void iwl_init_ht_hw_capab(const struct iwl_cfg *cfg,
+ 		return;
+ 	}
  
- struct fw_cache_entry {
- 	struct list_head list;
--	char name[];
-+	const char *name;
- };
- 
- struct fw_name_devm {
- 	unsigned long magic;
--	char name[];
-+	const char *name;
- };
- 
- #define to_fwbuf(d) container_of(d, struct firmware_buf, ref)
-@@ -181,13 +181,17 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
- {
- 	struct firmware_buf *buf;
- 
--	buf = kzalloc(sizeof(*buf) + strlen(fw_name) + 1, GFP_ATOMIC);
--
-+	buf = kzalloc(sizeof(*buf), GFP_ATOMIC);
- 	if (!buf)
--		return buf;
-+		return NULL;
++	if (data->sku_cap_mimo_disabled)
++		rx_chains = 1;
 +
-+	buf->fw_id = kstrdup_const(fw_name, GFP_ATOMIC);
-+	if (!buf->fw_id) {
-+		kfree(buf);
-+		return NULL;
+ 	ht_info->ht_supported = true;
+ 	ht_info->cap = IEEE80211_HT_CAP_DSSSCCK40;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h
+index 5234a0b..750c8c9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2015 Intel Mobile Communications GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,6 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2015 Intel Mobile Communications GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -84,6 +86,7 @@ struct iwl_nvm_data {
+ 	bool sku_cap_11ac_enable;
+ 	bool sku_cap_amt_enable;
+ 	bool sku_cap_ipan_enable;
++	bool sku_cap_mimo_disabled;
+ 
+ 	u16 radio_cfg_type;
+ 	u8 radio_cfg_step;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index 83903a5..cf86f3c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -6,7 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -32,7 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -116,10 +116,11 @@ enum family_8000_nvm_offsets {
+ 
+ /* SKU Capabilities (actual values from NVM definition) */
+ enum nvm_sku_bits {
+-	NVM_SKU_CAP_BAND_24GHZ	= BIT(0),
+-	NVM_SKU_CAP_BAND_52GHZ	= BIT(1),
+-	NVM_SKU_CAP_11N_ENABLE	= BIT(2),
+-	NVM_SKU_CAP_11AC_ENABLE	= BIT(3),
++	NVM_SKU_CAP_BAND_24GHZ		= BIT(0),
++	NVM_SKU_CAP_BAND_52GHZ		= BIT(1),
++	NVM_SKU_CAP_11N_ENABLE		= BIT(2),
++	NVM_SKU_CAP_11AC_ENABLE		= BIT(3),
++	NVM_SKU_CAP_MIMO_DISABLE	= BIT(5),
+ };
+ 
+ /*
+@@ -368,6 +369,11 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 	if (cfg->ht_params->ldpc)
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_RXLDPC;
+ 
++	if (data->sku_cap_mimo_disabled) {
++		num_rx_ants = 1;
++		num_tx_ants = 1;
 +	}
++
+ 	if (num_tx_ants > 1)
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_TXSTBC;
+ 	else
+@@ -610,6 +616,7 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
+ 		data->sku_cap_11n_enable = false;
+ 	data->sku_cap_11ac_enable = data->sku_cap_11n_enable &&
+ 				    (sku & NVM_SKU_CAP_11AC_ENABLE);
++	data->sku_cap_mimo_disabled = sku & NVM_SKU_CAP_MIMO_DISABLE;
  
- 	kref_init(&buf->ref);
--	strcpy(buf->fw_id, fw_name);
- 	buf->fwc = fwc;
- 	init_completion(&buf->completion);
- #ifdef CONFIG_FW_LOADER_USER_HELPER
-@@ -257,6 +261,7 @@ static void __fw_free_buf(struct kref *ref)
- 	} else
- #endif
- 		vfree(buf->data);
-+	kfree_const(buf->fw_id);
- 	kfree(buf);
- }
+ 	data->n_hw_addrs = iwl_get_n_hw_addrs(cfg, nvm_sw);
  
-@@ -401,6 +406,7 @@ static void fw_name_devm_release(struct device *dev, void *res)
- 	if (fwn->magic == (unsigned long)&fw_cache)
- 		pr_debug("%s: fw_name-%s devm-%p released\n",
- 				__func__, fwn->name, res);
-+	kfree_const(fwn->name);
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index f9928f2..33cd68a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -180,6 +180,9 @@ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	if (iwl_mvm_vif_low_latency(mvmvif) && mvmsta->vif->p2p)
+ 		return false;
  
- static int fw_devm_match(struct device *dev, void *res,
-@@ -431,13 +437,17 @@ static int fw_add_devm_name(struct device *dev, const char *name)
- 	if (fwn)
- 		return 1;
- 
--	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm) +
--			   strlen(name) + 1, GFP_KERNEL);
-+	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm),
-+			   GFP_KERNEL);
- 	if (!fwn)
- 		return -ENOMEM;
-+	fwn->name = kstrdup_const(name, GFP_KERNEL);
-+	if (!fwn->name) {
-+		kfree(fwn);
-+		return -ENOMEM;
-+	}
- 
- 	fwn->magic = (unsigned long)&fw_cache;
--	strcpy(fwn->name, name);
- 	devres_add(dev, fwn);
- 
- 	return 0;
-@@ -1397,11 +1407,16 @@ static struct fw_cache_entry *alloc_fw_cache_entry(const char *name)
- {
- 	struct fw_cache_entry *fce;
- 
--	fce = kzalloc(sizeof(*fce) + strlen(name) + 1, GFP_ATOMIC);
-+	fce = kzalloc(sizeof(*fce), GFP_ATOMIC);
- 	if (!fce)
- 		goto exit;
- 
--	strcpy(fce->name, name);
-+	fce->name = kstrdup_const(name, GFP_ATOMIC);
-+	if (!fce->name) {
-+		kfree(fce);
-+		fce = NULL;
-+		goto exit;
-+	}
- exit:
- 	return fce;
- }
-@@ -1441,6 +1456,7 @@ found:
- 
- static void free_fw_cache_entry(struct fw_cache_entry *fce)
- {
-+	kfree_const(fce->name);
- 	kfree(fce);
++	if (mvm->nvm_data->sku_cap_mimo_disabled)
++		return false;
++
+ 	return true;
  }
  
 -- 
-2.3.2.209.gd67f9d5.dirty
+2.1.4
 
