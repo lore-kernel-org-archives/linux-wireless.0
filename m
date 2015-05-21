@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw03.mail.saunalahti.fi ([195.197.172.111]:51164 "EHLO
-	gw03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbbEHTMX (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44758 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbbEUElF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 15:12:23 -0400
-From: =?UTF-8?q?Lauri=20Kentt=C3=A4?= <lauri.kentta@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, trivial@kernel.org,
-	=?UTF-8?q?Lauri=20Kentt=C3=A4?= <lauri.kentta@gmail.com>
-Subject: [PATCH] rtlwifi: rtl8188ee: Fix pwrseqcmd.h include path.
-Date: Fri,  8 May 2015 22:01:53 +0300
-Message-Id: <1431111713-32615-1-git-send-email-lauri.kentta@gmail.com> (sfid-20150508_211229_274586_346C91CE)
+	Thu, 21 May 2015 00:41:05 -0400
+Date: Wed, 20 May 2015 21:41:04 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
+	serge@hallyn.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
+	zohar@linux.vnet.ibm.com, mricon@kernel.org
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521044104.GH22632@kroah.com> (sfid-20150521_064122_206988_3BC109EA)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <20150520140426.GB126473@ubuntu-hedt>
+ <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+ <20150520164613.GD10473@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150520164613.GD10473@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lauri Kenttä <lauri.kentta@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On Wed, May 20, 2015 at 07:46:13PM +0300, Petko Manolov wrote:
+> On 15-05-20 17:24:46, One Thousand Gnomes wrote:
+> > 
+> > More to the point why do you want to sign firmware files ? Leaving aside the 
+> > fact that someone will produce a device with GPLv3 firmware just to p*ss you 
+> > off there's the rather more relevant fact that firmware for devices on a so 
+> > called "trusted" platform already have signed firmware.
+> 
+> For "trusted" systems one would like to make sure everything that goes in has 
+> known provenance.  Maybe this was the idea?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
-index ef28c8e..02013df 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
-@@ -23,7 +23,7 @@
-  *
-  *****************************************************************************/
- 
--#include "pwrseqcmd.h"
-+#include "../pwrseqcmd.h"
- #include "pwrseq.h"
- 
- /* drivers should parse below arrays and do the corresponding actions */
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
-index 7910334..f2d9c61 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
-@@ -26,7 +26,7 @@
- #ifndef __RTL8723E_PWRSEQ_H__
- #define __RTL8723E_PWRSEQ_H__
- 
--#include "pwrseqcmd.h"
-+#include "../pwrseqcmd.h"
- /* Check document WM-20110607-Paul-RTL8188EE_Power_Architecture-R02.vsd
-  *	There are 6 HW Power States:
-  *	0: POFF--Power Off
--- 
-2.4.0
+If so, then just do what people do today, verify their known valid disk
+image before mounting it and then they know they can trust the data on
+it to be use for whatever (including firmware.)  No kernel changes
+needed, distro support is already there for this.
 
+I too don't understand this need to sign something that you don't really
+know what it is from some other company, just to send it to a separate
+device that is going to do whatever it wants with it if it is signed or
+not.
+
+thanks,
+
+greg k-h
