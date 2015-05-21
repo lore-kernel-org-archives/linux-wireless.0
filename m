@@ -1,125 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18965 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752666AbbEHLzL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 07:55:11 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Liu CF/TW <cfliu.tw@gmail.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param for raw tx injection, sw crypto support.
-References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com>
-Date: Fri, 8 May 2015 14:54:58 +0300
-In-Reply-To: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com>
-	(Liu CF's message of "Tue, 5 May 2015 18:06:46 -0700")
-Message-ID: <873837qo6l.fsf@kamboji.qca.qualcomm.com> (sfid-20150508_135517_307858_DBD54D1C)
+Received: from cantor2.suse.de ([195.135.220.15]:40755 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756284AbbEURt3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 13:49:29 -0400
+Date: Thu, 21 May 2015 19:49:25 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: "Woodhouse, David" <david.woodhouse@intel.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"seth.forshee@canonical.com" <seth.forshee@canonical.com>,
+	"zohar@linux.vnet.ibm.com" <zohar@linux.vnet.ibm.com>,
+	"mricon@kernel.org" <mricon@kernel.org>,
+	"dhowells@redhat.com" <dhowells@redhat.com>,
+	"rusty@rustcorp.com.au" <rusty@rustcorp.com.au>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"jlee@suse.de" <jlee@suse.de>, "kyle@kernel.org" <kyle@kernel.org>,
+	"gnomes@lxorguk.ukuu.org.uk" <gnomes@lxorguk.ukuu.org.uk>,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521174925.GC23057@wotan.suse.de> (sfid-20150521_195004_366957_DF180BBF)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <20150520140426.GB126473@ubuntu-hedt>
+ <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+ <20150520164613.GD10473@localhost>
+ <20150521044104.GH22632@kroah.com>
+ <20150521054101.GA15037@localhost>
+ <20150521061453.GC30864@kroah.com>
+ <1432213521.4230.43.camel@linux.vnet.ibm.com>
+ <20150521154508.GA11821@kroah.com>
+ <1432224181.8004.7.camel@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432224181.8004.7.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+On Thu, May 21, 2015 at 04:03:02PM +0000, Woodhouse, David wrote:
+> On Thu, 2015-05-21 at 08:45 -0700, Greg Kroah-Hartman wrote:
+> > On Thu, May 21, 2015 at 09:05:21AM -0400, Mimi Zohar wrote:
+> > > Signatures don't provide any guarantees as to code quality or
+> > > correctness.   They do provide file integrity and provenance.  In
+> > > addition to the license and a Signed-off-by line, having the 
+> > > firmware provider include a signature of the firmware would be 
+> > > nice.
+> > 
+> > That would be "nice", but that's not going to be happening here, from
+> > what I can tell.  The firmware provider should be putting the signature
+> > inside the firmware image itself, and verifying it on the device, in
+> > order to properly "know" that it should be running that firmware.  The
+> > kernel shouldn't be involved here at all, as Alan pointed out.
+> 
+> In a lot of cases we have loadable firmware precisely to allow us to
+> reduce the cost of the hardware. Adding cryptographic capability in the
+> 'load firmware' state of the device isn't really compatible with that
+> :)
 
-"Liu CF/TW" <cfliu.tw@gmail.com> writes:
+Standards aside -- using crypto functionality on hardware or software are best
+practices quite a few folks are picking up. Now, let me remind us that it was
+crypto practices in software which in the end allowed us to gain huge corporate
+support on the uphill battle to find vendors to start becoming friendly on
+working with us upstream on the 802.11 front on Linux.  To be crystal clear,
+although providing signature check support for file integrity and provenance
+checks might seem like a "dog and pony show" [0] it nevertheless helped us
+hugely upstream. For those that wish to side on the "dog and pony show" side
+of the argument you have the freedom to do that, and should always have that.
+In the end, that flexibility and maintaining peoples freedom's completely
+(see CFG80211_CERTIFICATION_ONUS) are IMHO the best form of compromises we
+can make for both camps.
 
->  - ath10k:   add rawtxrx param for 10.2+ firmware to support sw, hw crypto
->              engine and raw Tx injection.
->  - mac80211: Add IEEE80211_KEY_FLAG_RESERVE_TAILROOM support for TKIP and
->              CCMP required by ath10k and add per BSS(vif) based sw_crypto
->              control.
+There's two sides to the topic at hand:
 
-This patch has few major problems. First of all, ath10k and mac80211
-changes should be in separate patches. Secondly the patch is whitespace
-damaged, I recommend using git-send-email to avoid that.
+1) Technical merit
+2) Political merit
 
-And there's just too much feature changes in one patch, it's usually
-better to split the features into separate patches. For example, you
-could first add a simple raw mode support to ath10k (ie. the bare
-minimum needed to get the feature) and then adding more advanced
-features per patch.
+We went down the road of using some aspects of 1) to win on 2), I can say with
+confidence that this was the case for 802.11 to the extend we even now have today
+GPLv2 open firmware on linux-firmware. That was a huge win considering we lacked
+most vendor support in the beginning. Not sure if something similar is applicable
+to modules, there must've been some good amount of 2) and 1) to get it upstream
+into Linux after all, I frankly don't care, but I suspect there must be some of it.
 
-> This change enables the raw Tx/Rx feature in ath10k 10.2+ firmware with a
-> module parameter 'rawtxrx'. With rawtxrx=1, the ath10k hardware crypto
-> engine could be optionally skipped to support use cases such as enabling
-> mac80211 sw crypto engine, user level crypto engine, raw Tx frame
-> injection.
+Since I can only speak on behalf of one side of the historical aspects of this
+from a practical point of view I think we should look at this problem as ensuring
+we do what we need to allow us developers to get the job done while folks working
+on the political front figure what the fuck is needed from 1) to win 2) -- so long
+as they keep our freedoms in mind. Although a few folks trimmed my original
+comments about original motivation for this signature checking effort its important
+to remind folks on the thread that the original motivation for all this was to
+simply come together on a unified solution for both *modules* and 802.11 regulatory
+for 2) and 1). On the 802.11 front CRDA has historically been very useful, but
+since the kernel got module signature check support we can simply do away with
+our own subsystem specific practices and file redistribution mechanism by unifying
+our efforts on firmware with file integrity / provenance.
 
-Lots of people, especially in Qualcomm, seem to call this feature as
-"raw mode". Would it be more descriptive to name the module paramer as
-'rawmode'?
+So the quest here is not to shove down folk's distribution's practices or beliefs
+but rather simplify things for 802.11 and upkeeping the same flexibility to let
+folks enable / disable things. So please keep in mind if you argue over signed
+firmware as a solution to replace CRDA upstream, I'd like to also hear an
+alternative to do away with it. I don't think expecting folks to use IMA is a
+good option yet, from what I had reviewed so far.
 
-> Testing: used QCA988x hw 2.0 with 10.2 firmware.
->
-> ath10k    ath10k     nl80211
-> rawtxrx   nohwcrypt  SW_CRYPTO
-> param     param      attribute    Testing Status
-> -------   ---------  ---------    ---------------------------------
->    0          0           -         HW CCMP/TKIP tested ok.
->    0          1           -         Not supported by ath10k hw.
->    1          0           -         HW CCMP/TKIP tested ok.
->    1          0           0         BSS 1 tested HW CCMP/TKIP ok.
->    1          0           1         BSS 2 can bypass HW engine.
->                                     - mac80211 SW crypto tested ok.
->                                     - raw Tx frame injection tested ok.
->    1          1           -         HW crypto globally disabled.
->                                     - mac80211 SW crypto tested ok.
->                                     - raw Tx frame injection tested ok.
+So we have 2) and 1) for modules. We have 2) and 1) for 802.11. The goal here
+was to simplify redistribution / code by sharing while keeping everyone's
+freedoms to ignore all this as well.
 
-I wonder does it make any sense to have nohwcrypt parameter? Especially
-if ath10k doesn't support case rawtxrx=0 and nohwcrypt=1. One
-possibility I came up is to have multiple values for rawtxrx, for
-example is rawtxrx=1 means HW crypt enabled and rawtxrx=2 HW crypt
-disabled. Ideas welcome.
+Since the focus is to use the technical solution on modules, I think folks are
+*seriously* confusing the issues on the technical front with the political. This
+is bad! Those folks should simply write their alternative solutions and APIs
+if we do not have them yet. What makes this problem harder is we now also have
+IMA and LSM and even LSM stacking come to our future Linux tree, this allows
+even more flexibility, and IMHO gets folks barking up the wrong trees [1].
 
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -31,16 +31,22 @@
->  #include "wmi-ops.h"
->
->  unsigned int ath10k_debug_mask;
-> +bool ath10k_modparam_nohwcrypt;
-> +bool ath10k_modparam_rawtxrx;
+What makes thing even more difficult is folks are arguing we now revisit
+the technical aspects for modules using IMA while we have other folks
+extending the old module technical solution. I think we can have a reasonable
+compromise on all fronts here, but this requires a bit more review. Without
+completing this review -- I'll prematurely say then that it would seem we could
+keep everyone happy by enabling the existing extensions to module signing
+to use PKCS#7 while folks who disagree with this figure out what path to
+make the decision of what technical solution to use here configurable. Without
+a final review on my part I'm inclined to believe we can accomplish this easily
+with LSM stacking, by having module signature checks be:
 
-Instead of making these public I would prefer to set a flag in struct
-ath10k, for example dev_flags.
+a) optional
+b) an LSM module can provide its own file integrity checks
+c) the above can provide APIs that can be used for both modules and firmware
 
-> ath10k_core_init_firmware_features(struct ath10k *ar)
->   return -EINVAL;
->   }
->
-> + if ((ath10k_modparam_rawtxrx || ath10k_modparam_nohwcrypt) &&
-> +    !test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features)) {
-> + ath10k_err(ar, "rawtxrx mode supported only in 10.2+ firmware");
-> + return -EINVAL;
-> + }
+We actually already have an LSM hook for modules and firmware so technically
+this should already be all possible, and folk who do not want PKCS#7 should
+simply disable that stuff. Long term it may make sense to just LSM'ify it.
 
-I think we should add a flag to enum ath10k_fw_features and check for
-that.
+I believe this would be the right approach because we already went down the
+module signing path and folks still working on that due to 1) or 2) are just
+extending and perfecting that. Meanwhile, on the 802.11 front we're just trying
+to simplify and unify things while keeping folk's beliefs on the dog and pony
+show in mind.
 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 241220c..cdfa8a8 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1761,6 +1761,9 @@ enum nl80211_commands {
->   * @NL80211_ATTR_REG_INDOOR: flag attribute, if set indicates that the device
->   *      is operating in an indoor environment.
->   *
-> + * @NL80211_ATTR_SW_CRYPTO: use software crypto instead of hardware crypto for
-> + * the BSS.
-> + *
->   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
-> @@ -2130,6 +2133,8 @@ enum nl80211_attrs {
->
->   NL80211_ATTR_REG_INDOOR,
->
-> + NL80211_ATTR_SW_CRYPTO,
+> In the case where kernel and modules are signed, it *is* useful for a
+> kernel device driver also to be able to validate that what it's about
+> to load into a device is authentic. Where 'authentic' will originally
+> just mean that it's come from the linux-firmware.git repository or the
+> same entity that built (and signed) the kernel, but actually I *do*
+> expect vendors who are actively maintaining the firmware images in
+> linux-firmware.git to start providing detached signatures of their own.
 
-Like I said above, nl80211/cfg80211/mac80211 changes need to be in
-separate patches. And I suspect that the changes of getting this
-accepted is low. Maybe a debugfs is a better choise?
+Although we originally did not discuss this as firmware signature check support
+was being fleshed out, I do believe this makes sense and as much dog and pony
+show folks want to call this I do believe it will also help us with vendor
+support. To this day I can say with a very straight face I believe Linux has
+the best regulatory solution on the planet, perhaps this is of little value to
+some folks, but I dealt with the politics first hand, I also *know* we have a
+great track record to this day on Linux, let's keep it that way and see what
+things we can do to make things easier for those technical folks trying to
+iron out the politics for us. Now if you want to argue about the political 
+aspects of any of this, you can do so, but this is perhaps not the best venue.
+We can avoid those issues ourselves by enabling those we trust to create
+flexibility to enable the differing leading technical solutions.
 
--- 
-Kalle Valo
+[0] https://en.wikipedia.org/wiki/Dog_and_pony_show
+[1] https://en.wikipedia.org/wiki/Barking_up_the_wrong_tree
+
+  Luis
