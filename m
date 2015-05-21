@@ -1,98 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:4016 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbbETJCh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 05:02:37 -0400
-Message-ID: <555C4DA9.8020600@broadcom.com> (sfid-20150520_110305_743901_F3770BBC)
-Date: Wed, 20 May 2015 11:02:33 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-CC: "brudley@broadcom.com" <brudley@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	"meuleman@broadcom.com" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
-	"hdegoede@redhat.com" <hdegoede@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmfmac: prohibit ACPI power management for brcmfmac
- driver
-References: <555016DC.804@linux.intel.com> <55598622.8060307@linux.intel.com>
-In-Reply-To: <55598622.8060307@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:5409 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422755AbbEUTxR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 15:53:17 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/10] iwlwifi: pcie: don't disable the busmaster DMA clock for family 8000
+Date: Thu, 21 May 2015 22:53:03 +0300
+Message-Id: <1432237990-5890-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150521_215330_400216_D8083EA9)
+In-Reply-To: <1432237819.26813.4.camel@intel.com>
+References: <1432237819.26813.4.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/15 08:26, Fu, Zhonghui wrote:
->
-> Hi guys,
->
-> Any comments about this patch?
+From: Avri Altman <avri.altman@intel.com>
 
-My acked is already there. I have not been able to test it, but I assume 
-you did.
+Disabling the clocks is a standard procedure while stopping the
+device. On family 8000 however, disabling the bus master DMA clock
+increases the NIC's power consumption.
 
-Regards,
-Arend
+To fix this, skip this call if the device family is
+IWL_DEVICE_FAMILY_8000.
 
-> Thanks,
-> Zhonghui
->
-> On 2015/5/11 10:41, Fu, Zhonghui wrote:
->> ACPI will manage WiFi chip's power state during suspend/resume
->> process on some tablet platforms(such as ASUS T100TA). This is
->> not supported by brcmfmac driver now, and the context of WiFi
->> chip will be damaged after resume. This patch informs ACPI not
->> to manage WiFi chip's power state.
->>
->> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
->> Acked-by: Arend van Spriel<arend@broadcom.com>
->> ---
->> Changes in v3:
->> - Have the assignment separate for the if statement.
->>
->>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    9 +++++++++
->>   1 files changed, 9 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> index 9b508bd..c960a12 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> @@ -33,6 +33,7 @@
->>   #include<linux/suspend.h>
->>   #include<linux/errno.h>
->>   #include<linux/module.h>
->> +#include<linux/acpi.h>
->>   #include<net/cfg80211.h>
->>
->>   #include<defs.h>
->> @@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->>   	int err;
->>   	struct brcmf_sdio_dev *sdiodev;
->>   	struct brcmf_bus *bus_if;
->> +	struct device *dev;
->> +	struct acpi_device *adev;
->>
->>   	brcmf_dbg(SDIO, "Enter\n");
->>   	brcmf_dbg(SDIO, "Class=%x\n", func->class);
->> @@ -1121,6 +1124,12 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->>   	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
->>   	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
->>
->> +	/* prohibit ACPI power management for this device */
->> +	dev =&func->dev;
->> +	adev = ACPI_COMPANION(dev);
->> +	if (adev)
->> +		adev->flags.power_manageable = 0;
->> +
->>   	/* Consume func num 1 but dont do anything with it. */
->>   	if (func->num == 1)
->>   		return 0;
->> -- 1.7.1
->>
->
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 47bbf57..d6f6515 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1049,9 +1049,11 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 		iwl_pcie_rx_stop(trans);
+ 
+ 		/* Power-down device's busmaster DMA clocks */
+-		iwl_write_prph(trans, APMG_CLK_DIS_REG,
+-			       APMG_CLK_VAL_DMA_CLK_RQT);
+-		udelay(5);
++		if (trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
++			iwl_write_prph(trans, APMG_CLK_DIS_REG,
++				       APMG_CLK_VAL_DMA_CLK_RQT);
++			udelay(5);
++		}
+ 	}
+ 
+ 	/* Make sure (redundant) we've released our request to stay awake */
+-- 
+2.1.4
 
