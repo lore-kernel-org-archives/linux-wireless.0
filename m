@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36017 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808AbbEGKbY (ORCPT
+Received: from lan.nucleusys.com ([92.247.61.126]:43694 "EHLO
+	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755791AbbEUOqL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 06:31:24 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v3] ath10k: Bypass PLL setting on target init for QCA9888
-Date: Thu, 7 May 2015 16:01:03 +0530
-Message-ID: <1430994663-30006-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150507_123132_298917_E0A757E1)
+	Thu, 21 May 2015 10:46:11 -0400
+Date: Thu, 21 May 2015 17:45:52 +0300
+From: Petko Manolov <petkan@mip-labs.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
+	serge@hallyn.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
+	zohar@linux.vnet.ibm.com, mricon@kernel.org
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521144552.GD18164@localhost> (sfid-20150521_164650_773598_C1E02536)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <20150520140426.GB126473@ubuntu-hedt>
+ <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+ <20150520164613.GD10473@localhost>
+ <20150521044104.GH22632@kroah.com>
+ <20150521054101.GA15037@localhost>
+ <20150521061453.GC30864@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150521061453.GC30864@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of of qca988x solutions are having global reset issue
-during target initialization. Bypassing PLL setting before
-downloading firmware and letting the SoC run on REF_CLK is fixing
-the problem. Corresponding firmware change is also needed to set
-the clock source once the target is initialized. Since 10.2.4
-firmware is having this ROM patch, applying skip_clock_init only
-for 10.2.4 firmware versions.
+On 15-05-20 23:14:53, Greg Kroah-Hartman wrote:
+> 
+> Ok, but how do we know "where"?  Who is going to start signing and attesting 
+> to the validity of all of the firmware images in the linux-firmware tree 
+> suddenly?  Why is it the kernel's job to attest this "where"?  Shouldn't your 
+> distro/manufacturer be doing that as part of their "put this file on this 
+> disk" responsibilities (i.e. the package manager?)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+I did not say the kernel should care about signatures.  This is entirely user's
+choice.  You care about authenticity, you require signature and verify it
+against "known good" certificate. s/you/distro/
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index bcccae1..cb34619 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1084,6 +1084,16 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 	if (status)
- 		goto err;
- 
-+	if ((ar->hw_rev == ATH10K_HW_QCA988X) &&
-+	    (ar->wmi.op_version == ATH10K_FW_WMI_OP_VERSION_10_2_4)) {
-+		status = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
-+		if (status) {
-+			ath10k_err(ar, "could not write skip_clock_init (%d)\n",
-+				   status);
-+			goto err;
-+		}
-+	}
-+
- 	status = ath10k_download_fw(ar, mode);
- 	if (status)
- 		goto err;
--- 
-2.3.7
+I'm just saying that it would be nice to have this feature in case somebody need 
+it.  Luckily IMA has this functionality, although you'll have to work hard to 
+get to use it. :)
 
+> What is verifying a firmware image signature in the kernel attesting that 
+> isn't already known in userspace?
+
+The kernel is a lot better place to keep certificates and keys safe, compared to 
+userland.
+
+
+		Petko
