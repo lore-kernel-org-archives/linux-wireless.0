@@ -1,136 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:1907 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbbECTce (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:32:34 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/42] iwlwifi: mvm: differentiate net-detect from sched scan
-Date: Sun,  3 May 2015 22:31:23 +0300
-Message-Id: <1430681513-7838-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213418_542230_29A110DB)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:16122 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbbEUKa1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 06:30:27 -0400
+Message-ID: <555DB3C0.7010000@broadcom.com> (sfid-20150521_123031_659842_AEFEB49E)
+Date: Thu, 21 May 2015 12:30:24 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
+References: <1432123792-4155-1-git-send-email-arend@broadcom.com>	<1432123792-4155-7-git-send-email-arend@broadcom.com>	<CACna6ryt5uNkBXAk8chFyMEQVJLdHELLdA_V5TrLcaAikrTZeg@mail.gmail.com>	<CACna6ryCgOwkj_nt6Gd1+r826OJu-suPk50YAS1eRVW+kkR7fQ@mail.gmail.com>	<555DA529.6000901@broadcom.com> <87vbfm6xsg.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87vbfm6xsg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 05/21/15 12:16, Kalle Valo wrote:
+> Arend van Spriel<arend@broadcom.com>  writes:
+>
+>> On 05/21/15 10:28, Rafał Miłecki wrote:
+>>> On 20 May 2015 at 16:33, Rafał Miłecki<zajec5@gmail.com>   wrote:
+>>>> I think the best way for achieving this is to rework your patch to
+>>>> modify include/linux/bcm47xx_nvram.h. You could modify it the same way
+>>>> you did in your patch for MIPS tree, except for
+>>>> bcm47xx_nvram_get_contents. Don't implement this function for real (in
+>>>> .c file), but instead make in dummy inline in a bcm47xx_nvram.h like:
+>>>> static inline char *bcm47xx_nvram_get_contents(size_t *val_len)
+>>>> {
+>>>>           /* TODO: Implement in .c file */
+>>>>           return NULL;
+>>>> }
+>>>
+>>> One more note.
+>>> This of course will lead to conflict at some point, but I believe
+>>> Linus will handle it.
+>>
+>> I prefer to avoid tricks so I will ask to drop this patch and wait for
+>> it to land in the next kernel, ie. 4.2, and resubmit this patch for
+>> 4.3. I am not in a hurry.
+>
+> Yes, please :) Let's try to avoid conflicts as much as possible.
 
-Net-detect scans were using the same type as sched scan, which was
-causing the driver to return -EBUSY and prevent the system from
-suspending if there was an ongoing scheduled scan.  To avoid this, add
-a new type for net-detect and don't stop anything when it is
-requested, so that the existing scheduled scan will be resumed when
-the system wakes up.
+Ok. Let's make it official. Kalle, can you drop patch 6 from the series 
+(if not already done so ;-) ).
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c       |  3 ++-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  7 ++++++-
- drivers/net/wireless/iwlwifi/mvm/scan.c     | 12 ++++++++++--
- 4 files changed, 19 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index e82a47b..36bf6a8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -981,7 +981,8 @@ iwl_mvm_netdetect_config(struct iwl_mvm *mvm,
- 	if (ret)
- 		return ret;
- 
--	ret = iwl_mvm_sched_scan_start(mvm, vif, nd_config, &mvm->nd_ies);
-+	ret = iwl_mvm_sched_scan_start(mvm, vif, nd_config, &mvm->nd_ies,
-+				       IWL_MVM_SCAN_NETDETECT);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index ff3273a..c136fe0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2743,7 +2743,7 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	ret = iwl_mvm_sched_scan_start(mvm, vif, req, ies);
-+	ret = iwl_mvm_sched_scan_start(mvm, vif, req, ies, IWL_MVM_SCAN_SCHED);
- 
- out:
- 	mutex_unlock(&mvm->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index bbe4d98..a8f51a8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -448,14 +448,18 @@ extern const u8 tid_to_mac80211_ac[];
- enum iwl_scan_status {
- 	IWL_MVM_SCAN_REGULAR		= BIT(0),
- 	IWL_MVM_SCAN_SCHED		= BIT(1),
-+	IWL_MVM_SCAN_NETDETECT		= BIT(2),
- 
- 	IWL_MVM_SCAN_STOPPING_REGULAR	= BIT(8),
- 	IWL_MVM_SCAN_STOPPING_SCHED	= BIT(9),
-+	IWL_MVM_SCAN_STOPPING_NETDETECT	= BIT(10),
- 
- 	IWL_MVM_SCAN_REGULAR_MASK	= IWL_MVM_SCAN_REGULAR |
- 					  IWL_MVM_SCAN_STOPPING_REGULAR,
- 	IWL_MVM_SCAN_SCHED_MASK		= IWL_MVM_SCAN_SCHED |
- 					  IWL_MVM_SCAN_STOPPING_SCHED,
-+	IWL_MVM_SCAN_NETDETECT_MASK	= IWL_MVM_SCAN_NETDETECT |
-+					  IWL_MVM_SCAN_STOPPING_NETDETECT,
- 
- 	IWL_MVM_SCAN_STOPPING_MASK	= 0xff00,
- 	IWL_MVM_SCAN_MASK		= 0x00ff,
-@@ -1179,7 +1183,8 @@ int iwl_mvm_config_sched_scan_profiles(struct iwl_mvm *mvm,
- int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 			     struct ieee80211_vif *vif,
- 			     struct cfg80211_sched_scan_request *req,
--			     struct ieee80211_scan_ies *ies);
-+			     struct ieee80211_scan_ies *ies,
-+			     int type);
- int iwl_mvm_scan_offload_stop(struct iwl_mvm *mvm, bool notify);
- int iwl_mvm_rx_scan_offload_results(struct iwl_mvm *mvm,
- 				    struct iwl_rx_cmd_buffer *rxb,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 3fe398e..e39f2d1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -1533,6 +1533,13 @@ static int iwl_mvm_check_running_scans(struct iwl_mvm *mvm, int type)
- 		if (mvm->scan_status & IWL_MVM_SCAN_SCHED_MASK)
- 			return -EBUSY;
- 		return iwl_mvm_cancel_scan(mvm);
-+	case IWL_MVM_SCAN_NETDETECT:
-+		/* No need to stop anything for net-detect since the
-+		 * firmware is restarted anyway.  This way, any sched
-+		 * scans that were running will be restarted when we
-+		 * resume.
-+		*/
-+		return 0;
- 	default:
- 		WARN_ON(1);
- 		break;
-@@ -1574,7 +1581,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 			     struct ieee80211_vif *vif,
- 			     struct cfg80211_sched_scan_request *req,
--			     struct ieee80211_scan_ies *ies)
-+			     struct ieee80211_scan_ies *ies,
-+			     int type)
- {
- 	int ret;
- 
-@@ -1585,7 +1593,7 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 		return -EBUSY;
- 	}
- 
--	ret = iwl_mvm_check_running_scans(mvm, IWL_MVM_SCAN_SCHED);
-+	ret = iwl_mvm_check_running_scans(mvm, type);
- 	if (ret)
- 		return ret;
- 
--- 
-2.1.0
-
+Regards,
+Arend
