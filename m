@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:35952 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbbEZFcI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 01:32:08 -0400
-Date: Tue, 26 May 2015 11:00:22 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	Stable <stable@vger.kernel.org>, netdev@vger.kernel.org,
-	Haggai Eran <haggai.eran@gmail.com>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150526053022.GA4585@sudip-PC> (sfid-20150526_073359_160646_7FD0AE99)
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
- <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
- <556268BC.5050807@lwfinger.net>
- <20150525091737.GQ4150@mwanda>
- <1432575448.2846.63.camel@perches.com>
- <20150526044611.GA3465@sudip-PC>
- <1432616108.2846.83.camel@perches.com>
- <20150526050212.GC3465@sudip-PC>
- <1432616879.2846.86.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432616879.2846.86.camel@perches.com>
+Received: from mga09.intel.com ([134.134.136.24]:65313 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422790AbbEUTxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 15:53:35 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/10] iwlwifi: nvm: force mac from otp in case nvm mac is reserved
+Date: Thu, 21 May 2015 22:53:06 +0300
+Message-Id: <1432237990-5890-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150521_215411_397492_80964C93)
+In-Reply-To: <1432237819.26813.4.camel@intel.com>
+References: <1432237819.26813.4.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2015 at 10:07:59PM -0700, Joe Perches wrote:
-> On Tue, 2015-05-26 at 10:32 +0530, Sudip Mukherjee wrote:
-> > On Mon, May 25, 2015 at 09:55:08PM -0700, Joe Perches wrote:
-> > > On Tue, 2015-05-26 at 10:16 +0530, Sudip Mukherjee wrote:
-> > > > On Mon, May 25, 2015 at 10:37:28AM -0700, Joe Perches wrote:
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-> > But for eudyptula, patches have to properly submitted to lkml and
-> > maintainers. And today I am here just because of eudyptula. My patches
-> > and contributions here, everything started with it. :)
-> 
-> As far as I understand, the Eudyptula Challenge list has
-> internal mechanisms to nominally review patches before some
-> patch is submitted to lkml.
-well, yes, sort of. Submitting patch is task 10, and all the previous
-tasks will train people on creating patch, sending etc.
-> 
-> The main point is that patches shouldn't be applied without
-> being submitted to a more widely read list.
-yes, and Eudyptula requires the participant to send patch to maintainer,
-lkml and relevant mailing list where outreachy specifies not to send to
-lkml. Next outreachy will start from September.
+Take the MAC address from the OTP even if one is present in
+the NVM, if that MAC address happens to be a reserved one.
 
-regards
-sudip
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index cf86f3c..75e96db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -533,6 +533,10 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
+ 	const u8 *hw_addr;
+ 
+ 	if (mac_override) {
++		static const u8 reserved_mac[] = {
++			0x02, 0xcc, 0xaa, 0xff, 0xee, 0x00
++		};
++
+ 		hw_addr = (const u8 *)(mac_override +
+ 				 MAC_ADDRESS_OVERRIDE_FAMILY_8000);
+ 
+@@ -544,7 +548,12 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
+ 		data->hw_addr[4] = hw_addr[5];
+ 		data->hw_addr[5] = hw_addr[4];
+ 
+-		if (is_valid_ether_addr(data->hw_addr))
++		/*
++		 * Force the use of the OTP MAC address in case of reserved MAC
++		 * address in the NVM, or if address is given but invalid.
++		 */
++		if (is_valid_ether_addr(data->hw_addr) &&
++		    memcmp(reserved_mac, hw_addr, ETH_ALEN) != 0)
+ 			return;
+ 
+ 		IWL_ERR_DEV(dev,
+-- 
+2.1.4
+
