@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:33047 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752354AbbEDUez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 16:34:55 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1YpN4n-0005S3-ON
-	for linux-wireless@vger.kernel.org; Mon, 04 May 2015 22:34:53 +0200
-Received: from data-214-110.cgates.lt ([data-214-110.cgates.lt])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 22:34:53 +0200
-Received: from nerijus by data-214-110.cgates.lt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 22:34:53 +0200
-To: linux-wireless@vger.kernel.org
-From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
-Subject: Re: b43 AP does not work
-Date: Mon, 4 May 2015 20:34:47 +0000 (UTC)
-Message-ID: <loom.20150504T222913-980@post.gmane.org> (sfid-20150504_223458_662133_00B4DE5D)
-References: <loom.20150502T183011-57@post.gmane.org>     <5544FFE5.5090706@lwfinger.net>  <loom.20150502T190504-905@post.gmane.org>     <loom.20150502T191744-147@post.gmane.org>    <1430752777.17017.2.camel@redhat.com>    <loom.20150504T173700-271@post.gmane.org>   <1430760100.10844.6.camel@redhat.com>   <loom.20150504T205530-427@post.gmane.org>  <1430767700.10844.24.camel@redhat.com>  <loom.20150504T222029-729@post.gmane.org> <1430771240.10844.25.camel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:35867 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181AbbEUFkk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 01:40:40 -0400
+Received: by wizk4 with SMTP id k4so1967546wiz.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 22:40:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1431434736-7077-1-git-send-email-michal.kazior@tieto.com>
+References: <1431434736-7077-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 21 May 2015 07:40:38 +0200
+Message-ID: <CA+BoTQ=dzJS447Gx+XAXPT6gZDDKZ__6scbxe0QC-iMA47bZmQ@mail.gmail.com> (sfid-20150521_074043_368200_1339F8D6)
+Subject: Re: [PATCH] amth10k: fix promisc handling
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@...> writes:
+On 12 May 2015 at 14:45, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Patch df1404650ccb ("mac80211: remove support for
+> IFF_PROMISC") removed promiscuous flag propagation
+> to drivers.
+>
+> However the patch was designed against ath10k
+> without 548462133d98 ("ath10k: fix interrupt
+> storm").
+>
+> After merge the code drifted into being no longer
+> correct and due to monitor vdev being
+> overzealously started caused IBSS to crash on
+> 999.999.0.636 for QCA988X (this firmware revision
+> is known to have issues with monitor vdev).
+>
+> This patch keeps expectations of commit
+> 548462133d98 (i.e. reduce irq storm by not
+> enabling monitor vdev for AP) and doesn't break
+> existing (known) setups that imply promiscuous
+> mode on network interfaces.
+>
+> Contrary to what it looks like 548462133d98
+> functionality is not reverted since the intention
+> was a subset of what df1404650ccb did.
+>
+> Fixes: c17c997d5613 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-> > I did
-> > nmcli con reload
-> > nmcli con up Hotspot
-> > 
-> > but it still used localhost.localdomain as ssid, although I have
-> > ssid=something in /etc/NetworkManager/system-connections/Hotspot
-> 
-> If you run "nmcli con", is there more than one connection called
-> "Hotspot"?  If not, then run "nmcli con Hotspot" and lets see what it
-> prints out.
+Apparently this also fixes some weird issues with qca6174 hw2.1 notably:
+ - ath10k causing disconnecting of other devices in a BSS
+ - random Fw crashes
 
-Yes, there are 2 Hotspots. After I deleted one with nm-connection-editor
-the ssid is OK.
+Both problems started to happen because c17c997d5613 enabled monitor
+vdev by default on STA interfaces. It seems that qca6174 hw2.1
+firmware has issues similar to those of qca988x 999.999.0.636
+regarding monitor vdev opration.
 
+Also, I've made a typo in the subject.
+
+I'll post v2 with subject fixed and extended commit log later.
+
+
+Michał
