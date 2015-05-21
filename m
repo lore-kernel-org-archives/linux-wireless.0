@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:34253 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752414AbbERJif (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 05:38:35 -0400
-Received: by wicmc15 with SMTP id mc15so84645246wic.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 02:38:34 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/3] ath10k: fix idle power consumption
-Date: Mon, 18 May 2015 09:38:17 +0000
-Message-Id: <1431941898-13591-3-git-send-email-michal.kazior@tieto.com> (sfid-20150518_113840_868119_E3717F39)
-In-Reply-To: <1431941898-13591-1-git-send-email-michal.kazior@tieto.com>
-References: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
- <1431941898-13591-1-git-send-email-michal.kazior@tieto.com>
+Received: from mga09.intel.com ([134.134.136.24]:36779 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422801AbbEUTxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 15:53:38 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/10] iwlwifi: mvm: avoid use-after-free on iwl_mvm_d0i3_enable_tx()
+Date: Thu, 21 May 2015 22:53:10 +0300
+Message-Id: <1432237990-5890-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150521_215353_351531_F3717D6D)
+In-Reply-To: <1432237819.26813.4.camel@intel.com>
+References: <1432237819.26813.4.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+From: Eliad Peller <eliad@wizery.com>
 
-mac80211 can update vif powersave state while
-disconnected. Firmware doesn't behave nicely and
-consumes more power than necessary if PS is
-disabled on a non-started vdev. Hence
-force-enable PS for non-running vdevs.
+qos_seq points (to a struct) inside the command response data.
 
-This reduces power drain on QCA61X4 from 88mA to
-36mA when interface is up and not associated.
-QCA988X wasn't measured.
+Make sure to free the response only after qos_seq is not
+needed anymore.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reported-by: Heng Luo <heng.luo@intel.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 425dbe271495..9f576ca99f86 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1735,7 +1735,14 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
- 		enable_ps = false;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 1c66297..2ea0123 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -1263,11 +1263,13 @@ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk)
+ 		ieee80211_iterate_active_interfaces(
+ 			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+ 			iwl_mvm_d0i3_disconnect_iter, mvm);
+-
+-	iwl_free_resp(&get_status_cmd);
+ out:
+ 	iwl_mvm_d0i3_enable_tx(mvm, qos_seq);
  
--	if (enable_ps) {
-+	if (!arvif->is_started) {
-+		/* mac80211 can update vif powersave state while disconnected.
-+		 * Firmware doesn't behave nicely and consumes more power than
-+		 * necessary if PS is disabled on a non-started vdev. Hence
-+		 * force-enable PS for non-running vdevs.
-+		 */
-+		psmode = WMI_STA_PS_MODE_ENABLED;
-+	} else if (enable_ps) {
- 		psmode = WMI_STA_PS_MODE_ENABLED;
- 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
++	/* qos_seq might point inside resp_pkt, so free it only now */
++	if (get_status_cmd.resp_pkt)
++		iwl_free_resp(&get_status_cmd);
++
+ 	/* the FW might have updated the regdomain */
+ 	iwl_mvm_update_changed_regdom(mvm);
  
 -- 
 2.1.4
