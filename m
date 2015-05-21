@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:13468 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965AbbEYHhh (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53848 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755042AbbEUQ5i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 03:37:37 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NOW008Z5AIM6QA0@mailout2.samsung.com> for
- linux-wireless@vger.kernel.org; Mon, 25 May 2015 16:37:34 +0900 (KST)
-Date: Mon, 25 May 2015 07:37:29 +0000 (GMT)
-From: Rahul Jain <rahul.jain@samsung.com>
-Subject: [PATCH] Reordering for better readability and consistency [EDT]
-To: "johannes.berg@intel.com" <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Reply-to: rahul.jain@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0
-Message-id: <255092351.26861432539449201.JavaMail.weblogic@epmlwas02a> (sfid-20150525_093740_578609_BAE3E935)
+	Thu, 21 May 2015 12:57:38 -0400
+Date: Thu, 21 May 2015 09:57:37 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
+	serge@hallyn.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
+	mricon@kernel.org
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521165737.GB12932@kroah.com> (sfid-20150521_185742_785618_5CC0D756)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <20150520140426.GB126473@ubuntu-hedt>
+ <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+ <20150520164613.GD10473@localhost>
+ <20150521044104.GH22632@kroah.com>
+ <20150521054101.GA15037@localhost>
+ <20150521061453.GC30864@kroah.com>
+ <1432213521.4230.43.camel@linux.vnet.ibm.com>
+ <20150521154508.GA11821@kroah.com>
+ <20150521155319.GG18164@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150521155319.GG18164@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RVAtRkVEQzc3MURGNEZGNDhBOTgyOUNCODUyNTRFMjlGRDMKCmhlbGxvIFdpcmVsZXNzIENvbW11
-bml0eSwKClBsZWFzZSBmaW5kIHBhdGNoIGZvciByZXZpZXcuCgpGcm9tIDMyOGZiOWQxYjc3Mjc4
-OGZjNTFlN2Y5YmIyMWU1N2ExZDkxYjAxODggTW9uIFNlcCAxNyAwMDowMDowMCAyMDAxCkZyb206
-IFJhaHVsIEphaW4gPHJhaHVsLmphaW5Ac2Ftc3VuZy5jb20+CkRhdGU6IE1vbiwgMjUgTWF5IDIw
-MTUgMTI6MDI6MTIgKzA1MzAKU3ViamVjdDogW1BBVENIXSBSZW9yZGVyaW5nIGZvciBiZXR0ZXIg
-cmVhZGFiaWxpdHkgYW5kIGNvbnNpc3RlbmN5CgoKU2lnbmVkLW9mZi1ieTogUmFodWwgSmFpbiA8
-cmFodWwuamFpbkBzYW1zdW5nLmNvbT4KLS0tCiBuZXQvd2lyZWxlc3MvdXRpbC5jIHwgICAgNSAr
-LS0tLQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCA0IGRlbGV0aW9ucygtKQoKZGlm
-ZiAtLWdpdCBhL25ldC93aXJlbGVzcy91dGlsLmMgYi9uZXQvd2lyZWxlc3MvdXRpbC5jCmluZGV4
-IDcwMDUxYWIuLmNmYzg3ZDQgMTAwNjQ0Ci0tLSBhL25ldC93aXJlbGVzcy91dGlsLmMKKysrIGIv
-bmV0L3dpcmVsZXNzL3V0aWwuYwpAQCAtMTM0MCwxMCArMTM0MCw3IEBAIGJvb2wgaWVlZTgwMjEx
-X29wZXJhdGluZ19jbGFzc190b19iYW5kKHU4IG9wZXJhdGluZ19jbGFzcywKIAljYXNlIDEyOCAu
-Li4gMTMwOgogCQkqYmFuZCA9IElFRUU4MDIxMV9CQU5EXzVHSFo7CiAJCXJldHVybiB0cnVlOwot
-CWNhc2UgODE6Ci0JY2FzZSA4MjoKLQljYXNlIDgzOgotCWNhc2UgODQ6CisJY2FzZSA4MSAuLi4g
-ODQ6CiAJCSpiYW5kID0gSUVFRTgwMjExX0JBTkRfMkdIWjsKIAkJcmV0dXJuIHRydWU7CiAJY2Fz
-ZSAxODA6Ci0tIAoxLjcuOS41CgoKCgpUaGFua3MKLVJhaHVsIEphaW4g
+On Thu, May 21, 2015 at 06:53:19PM +0300, Petko Manolov wrote:
+> On 15-05-21 08:45:08, Greg Kroah-Hartman wrote:
+> > On Thu, May 21, 2015 at 09:05:21AM -0400, Mimi Zohar wrote:
+> > > 
+> > > Signatures don't provide any guarantees as to code quality or
+> > > correctness.   They do provide file integrity and provenance.  In
+> > > addition to the license and a Signed-off-by line, having the firmware
+> > > provider include a signature of the firmware would be nice.
+> > 
+> > That would be "nice", but that's not going to be happening here, from what I 
+> > can tell.  The firmware provider should be putting the signature inside the 
+> > firmware image itself, and verifying it on the device, in order to properly 
+> > "know" that it should be running that firmware.  The kernel shouldn't be 
+> > involved here at all, as Alan pointed out.
+> 
+> It is device's job to verify firmware's correctness.  It is user's job to verify 
+> vendor's identity.  Two different things, not related to each other.
 
+The device can also verify "is this firmware from a trusted source", and
+it should if it is a "good" device.  "correctness" can just be a simple
+checksum, and I think most of the firmware blobs already have that in
+them :)
 
+Are these patches "verifying the vendor"?  Right now it just looks like
+they are "verifying the packager" as none of the hundreds of firmware
+images we have actually have stand-alone signatures.
+
+Do we have firmware images that are going to be signed by the vendor?
+If so, are they also not signed in the firmware itself?  Why are we
+forcing the kernel to do this verification that the device should be
+doing instead?
+
+thanks,
+
+greg k-h
