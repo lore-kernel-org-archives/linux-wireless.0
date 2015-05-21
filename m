@@ -1,45 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:42607 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbbEDPlW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 11:41:22 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1YpIUc-0003kd-WB
-	for linux-wireless@vger.kernel.org; Mon, 04 May 2015 17:41:15 +0200
-Received: from data-214-110.cgates.lt ([data-214-110.cgates.lt])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 17:41:14 +0200
-Received: from nerijus by data-214-110.cgates.lt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 04 May 2015 17:41:14 +0200
-To: linux-wireless@vger.kernel.org
-From: Nerijus =?utf-8?b?QmFsacWrbmFz?= <nerijus@users.sourceforge.net>
-Subject: Re: b43 AP does not work
-Date: Mon, 4 May 2015 15:41:03 +0000 (UTC)
-Message-ID: <loom.20150504T173700-271@post.gmane.org> (sfid-20150504_174127_015934_63CBF369)
-References: <loom.20150502T183011-57@post.gmane.org>  <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>  <loom.20150502T191744-147@post.gmane.org> <1430752777.17017.2.camel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25262 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751629AbbEUHkV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 03:40:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] amth10k: fix promisc handling
+References: <1431434736-7077-1-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQ=dzJS447Gx+XAXPT6gZDDKZ__6scbxe0QC-iMA47bZmQ@mail.gmail.com>
+Date: Thu, 21 May 2015 10:40:04 +0300
+In-Reply-To: <CA+BoTQ=dzJS447Gx+XAXPT6gZDDKZ__6scbxe0QC-iMA47bZmQ@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 21 May 2015 07:40:38 +0200")
+Message-ID: <874mn68jl7.fsf@kamboji.qca.qualcomm.com> (sfid-20150521_094025_534918_BCDAA34D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@...> writes:
+Adding John as this involved wireless-testing
 
-> > Just FYI - "access point" mode of the NM applet works (in Gnome). But it
-> > would still be nice to have hostapd working.
-> 
-> If you want to use hostapd on the card and the system is running
-> NetworkManager, you can tell NM to ignore the device through the
-> "unmanaged-devices" option in NetworkManager.conf.  manpages have more
-> details.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-But I don't want NM to ignore the device - I use the wifi card with NM
-as a client. But sometimes I'd like to use hostapd directly (as NM
-does not allow me to configure AP parameters - channel, wpa number,
-AP name and password). It was possible before, but not any more.
+> On 12 May 2015 at 14:45, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> Patch df1404650ccb ("mac80211: remove support for
+>> IFF_PROMISC") removed promiscuous flag propagation
+>> to drivers.
+>>
+>> However the patch was designed against ath10k
+>> without 548462133d98 ("ath10k: fix interrupt
+>> storm").
+>>
+>> After merge the code drifted into being no longer
+>> correct and due to monitor vdev being
+>> overzealously started caused IBSS to crash on
+>> 999.999.0.636 for QCA988X (this firmware revision
+>> is known to have issues with monitor vdev).
+>>
+>> This patch keeps expectations of commit
+>> 548462133d98 (i.e. reduce irq storm by not
+>> enabling monitor vdev for AP) and doesn't break
+>> existing (known) setups that imply promiscuous
+>> mode on network interfaces.
+>>
+>> Contrary to what it looks like 548462133d98
+>> functionality is not reverted since the intention
+>> was a subset of what df1404650ccb did.
+>>
+>> Fixes: c17c997d5613 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next")
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> Apparently this also fixes some weird issues with qca6174 hw2.1 notably:
+>  - ath10k causing disconnecting of other devices in a BSS
+>  - random Fw crashes
+>
+> Both problems started to happen because c17c997d5613 enabled monitor
+> vdev by default on STA interfaces. It seems that qca6174 hw2.1
+> firmware has issues similar to those of qca988x 999.999.0.636
+> regarding monitor vdev opration.
+>
+> Also, I've made a typo in the subject.
+>
+> I'll post v2 with subject fixed and extended commit log later.
 
-Thanks,
-Nerijus
+Keep in mind that c17c997d5613 is actually from wireless-testing.git
+which means that it will never go to wireless-drivers-next.git nor to
+net-next.git. So the merge conflict bug is purely in
+wireless-testing.git and in master branch of ath.git (but not in
+ath-next branch!).
 
+I think John should apply your v2 patch once you send it. But if you
+have something which should be fixed in ath-next remember to send that
+in a separate patch so that I can apply that directly to ath-next.
+
+-- 
+Kalle Valo
