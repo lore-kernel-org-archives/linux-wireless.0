@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44758 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbbEUElF (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:34499 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753638AbbEUQsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 00:41:05 -0400
-Date: Wed, 20 May 2015 21:41:04 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
-	Seth Forshee <seth.forshee@canonical.com>,
+	Thu, 21 May 2015 12:48:32 -0400
+Received: by laat2 with SMTP id t2so106963996laa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2015 09:48:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150521164313.GH18164@localhost>
+References: <20150519221128.GP23057@wotan.suse.de> <20150519200232.GM23057@wotan.suse.de>
+ <555BA438.2070802@kernel.org> <9567.1432223509@warthog.procyon.org.uk> <20150521164313.GH18164@localhost>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 21 May 2015 09:48:10 -0700
+Message-ID: <CALCETrX=8OpsRE2adMoX8P0xYA6hCjhPwCOJJ19gX=tMOSP0PQ@mail.gmail.com> (sfid-20150521_184836_385446_D0000B51)
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+To: David Howells <dhowells@redhat.com>,
 	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	LSM List <linux-security-module@vger.kernel.org>,
+	James Morris <james.l.morris@oracle.com>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
 	Kyle McMartin <kyle@kernel.org>,
 	David Woodhouse <david.woodhouse@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150521044104.GH22632@kroah.com> (sfid-20150521_064122_206988_3BC109EA)
-References: <20150519200232.GM23057@wotan.suse.de>
- <20150520140426.GB126473@ubuntu-hedt>
- <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
- <20150520164613.GD10473@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150520164613.GD10473@localhost>
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Konstantin Ryabitsev <mricon@kernel.org>,
+	Michal Marek <mmarek@suse.cz>,
+	Abelardo Ricart III <aricart@memnix.com>,
+	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
+	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2015 at 07:46:13PM +0300, Petko Manolov wrote:
-> On 15-05-20 17:24:46, One Thousand Gnomes wrote:
-> > 
-> > More to the point why do you want to sign firmware files ? Leaving aside the 
-> > fact that someone will produce a device with GPLv3 firmware just to p*ss you 
-> > off there's the rather more relevant fact that firmware for devices on a so 
-> > called "trusted" platform already have signed firmware.
-> 
-> For "trusted" systems one would like to make sure everything that goes in has 
-> known provenance.  Maybe this was the idea?
+On Thu, May 21, 2015 at 9:43 AM, Petko Manolov <petkan@mip-labs.com> wrote:
+> On 15-05-21 16:51:49, David Howells wrote:
+>>
+>> I do have patches to parse PGP key data and add the public keys found therein
+>> onto the kernel keyring, but that would mean adding an extra key data parser.
+>
+> PGP is widely used so i would gladly have one more parser in the kernel.
 
-If so, then just do what people do today, verify their known valid disk
-image before mounting it and then they know they can trust the data on
-it to be use for whatever (including firmware.)  No kernel changes
-needed, distro support is already there for this.
+<rant>
+PGP is also a crappy format:
 
-I too don't understand this need to sign something that you don't really
-know what it is from some other company, just to send it to a separate
-device that is going to do whatever it wants with it if it is signed or
-not.
+http://blog.cryptographyengineering.com/2014/08/whats-matter-with-pgp.html
 
-thanks,
+and using PGP means we're probably stuck with PKCS#1 v1.5, which
+should have been phased out worldwide many years ago.
 
-greg k-h
+In any event, I don't see why PGP compatibility requires any sort of
+OpenPGP parser in the kernel.  Just because GnuPG goes out of its way
+to be incompatible with anything other than the OpenPGP ecosystem
+doesn't mean that you can't relatively straightforwardly generate raw
+PKCS#1 signatures from an OpenPGP key.
+</rant>
