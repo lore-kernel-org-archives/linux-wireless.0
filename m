@@ -1,64 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46426 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751314AbbEGOKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 10:10:11 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: "Gujulan Elango\, Hari Prasath \(H.\)" <hgujulan@visteon.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"Babu\, Viswanathan \(V.\)" <vbabu3@visteon.com>
-Subject: Re: [PATCH] staging: rtl8723au : remove goto & return error directly
-References: <20150507111652.GA10574@IND12F0122>
-	<wrfjk2wkoarp.fsf@ultrasam.lan.trained-monkey.org>
-	<20150507121934.GH14154@mwanda> <20150507134344.GA11599@IND12F0122>
-Date: Thu, 07 May 2015 10:09:59 -0400
-In-Reply-To: <20150507134344.GA11599@IND12F0122> (Gujulan Elango's message of
-	"Thu, 7 May 2015 13:49:07 +0000")
-Message-ID: <wrfj3838o4w8.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150507_161027_363298_38D1727B)
+Received: from lan.nucleusys.com ([92.247.61.126]:44034 "EHLO
+	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751569AbbEURpR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 13:45:17 -0400
+Date: Thu, 21 May 2015 20:44:55 +0300
+From: Petko Manolov <petkan@mip-labs.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: David Howells <dhowells@redhat.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>, Joey Lee <jlee@suse.de>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Kyle McMartin <kyle@kernel.org>,
+	Sedat Dilek <sedat.dilek@gmail.com>,
+	LSM List <linux-security-module@vger.kernel.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Konstantin Ryabitsev <mricon@kernel.org>,
+	Michal Marek <mmarek@suse.cz>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	keyrings@linux-nfs.org, Abelardo Ricart III <aricart@memnix.com>,
+	"Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521174455.GL18164@localhost> (sfid-20150521_194539_664062_64466C8F)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <555BA438.2070802@kernel.org>
+ <20150519221128.GP23057@wotan.suse.de>
+ <9567.1432223509@warthog.procyon.org.uk>
+ <CALCETrX3krCsqCLvLYx1QdnjFK=R8FF7ta=vozDcGYSTUHvSrA@mail.gmail.com>
+ <20150521165101.GI18164@localhost>
+ <CALCETrU3biPZEY4hxPfUavNUP1EmBeT2H2tSfiCXw+NJmxoYqg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALCETrU3biPZEY4hxPfUavNUP1EmBeT2H2tSfiCXw+NJmxoYqg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
-> On Thu, May 07, 2015 at 03:19:34PM +0300, Dan Carpenter wrote:
->> On Thu, May 07, 2015 at 08:03:06AM -0400, Jes Sorensen wrote:
->> > "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com> writes:
->> > > Remove the goto and return error directly thereby removing a variable
->> > >
->> > > Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
->> > > ---
->> > >  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 7 ++-----
->> > >  1 file changed, 2 insertions(+), 5 deletions(-)
->> > 
->> > NACK!
->> 
->> SHOUTING!
->> 
->> > 
->> > The goto is cleaner and more consistent, rather than hiding a return in
->> > the middle of the code.
->> 
->> More consistent with what?  There are already returns earlier in the
->> function.  Do-nothing gotos are pointless and annoying.
->> 
->> regards,
->> dan carpenter
->> 
->
-> I sent this patch  because goto & return was mixed up in this function.
-> There was a return as well as goto used. And i guess goto is not 
-> encouraged anywhere. In this case especially,I couldn't see any 
-> significant cleanup being done in the goto label.
+On 15-05-21 09:55:42, Andy Lutomirski wrote:
+> 
+> I read plenty of the code.  I said "data" not "file" for a reason.
+> I'll quote some code:
+> 
+> int ima_appraise_measurement(int func, struct integrity_iint_cache *iint,
+>                              struct file *file, const unsigned char *filename,
+>                              struct evm_ima_xattr_data *xattr_value,
+>                              int xattr_len, int opened)
+> 
+> There is no struct file in init_module.
+> 
+> {
+>         static const char op[] = "appraise_data";
+>         char *cause = "unknown";
+>         struct dentry *dentry = file->f_path.dentry;
+>         struct inode *inode = dentry->d_inode;
+>         enum integrity_status status = INTEGRITY_UNKNOWN;
+>         int rc = xattr_len, hash_start = 0;
+> 
+>         if (!inode->i_op->getxattr)
+>                 return INTEGRITY_UNKNOWN;
 
-I will accept a patch to remove the returns in the middle of the
-function, if you wish to submit that.
+Yes, not all filesystems support extended attributes, but this is not 
+necessarily end of the game.  IMA code may be modified to use detached 
+signatures.  In fact i was considering this option not so long ago, but dropped 
+the idea as more elegant solution was presented.
 
-A return at the very beginning of a function is OK, but in the middle of
-a larger function they make it harder to catch when code exists.
+> I maintain my claim that IMA is not appropriate for module signing in general.  
+> It might make sense for the kind of thing that Chromium does (approving of 
+> modules using finit_module based on their source instead of their payload and 
+> verifying the payload indirectly using IMA or dm-verity), but that's not the 
+> problem that David and Luis are trying to solve.
 
-Jes
+I guess this is all backwards.  Module signing/verification must be autonomous 
+process/infrastructure.  The fact that IMA may do the same for you given a few 
+conditions are met does not make it a replacement.
+
+I do not use module signing for one particular project, because we're building 
+custom kernel and initramfs.  IMA is enabled early on so an attempt to read .ko 
+file results in verifying it's signature.  Yes, the filesystem does support 
+xattr. :)
+
+> Also, especially for firmware on regular distros, IMA is ridiculous. IIRC 
+> there is no general support for xattrs in initramfs, and there is no reason to 
+> start requiring such support just to allow firmware to live in initramfs.
+
+For regular distro, maybe.  If one needs better overall security - not so - i 
+actually quite like IMA. ;) Adding xattrs to initramfs is not bad idea at all, 
+IMA arguments aside.
+
+> I think that using IMA for this has a similar problem to using PKCS#7: it's a 
+> big hammer that is much more complex than necessary to solve the problem at 
+> hand.
+
+Absolutely.  Using IMA just for module signing is a bit of an overkill.
+
+
+		Petko
