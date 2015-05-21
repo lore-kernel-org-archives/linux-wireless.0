@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:36633 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857AbbETCuN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47633 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754751AbbEUN7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 22:50:13 -0400
-Date: Wed, 20 May 2015 10:49:25 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	David Howells <dhowells@redhat.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kees Cook <keescook@chromium.org>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>, jlee@suse.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	John Griffin <john.griffin@intel.com>
-Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency when
- fw signing is enabled
-Message-ID: <20150520024925.GA7021@gondor.apana.org.au> (sfid-20150520_045033_781215_4C310652)
-References: <1430988137.8171.58.camel@x220>
- <1431021995.8171.97.camel@x220>
- <20150518200100.GY23057@wotan.suse.de>
- <1431981930.9091.29.camel@x220>
- <20150519000921.GA23057@wotan.suse.de>
- <1432022535.9091.48.camel@x220>
- <20150519154630.GB23057@wotan.suse.de>
- <20150519225945.GB5718@gondor.apana.org.au>
- <20150519230355.GA5853@gondor.apana.org.au>
- <CAB=NE6XizmKMc80rLV9YTZGtEJdZ022+0HNPxXvunp5v4BnCMw@mail.gmail.com>
+	Thu, 21 May 2015 09:59:17 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Nicholas Mc Guire <der.herr@hofr.at>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: wmi: match wait_for_completion_timeout return type
+References: <1431621821-8173-1-git-send-email-hofrat@osadl.org>
+	<87fv6zccny.fsf@kamboji.qca.qualcomm.com>
+	<20150514174025.GA22524@opentech.at>
+Date: Thu, 21 May 2015 16:59:09 +0300
+In-Reply-To: <20150514174025.GA22524@opentech.at> (Nicholas Mc Guire's message
+	of "Thu, 14 May 2015 19:40:25 +0200")
+Message-ID: <87fv6q6ngy.fsf@kamboji.qca.qualcomm.com> (sfid-20150521_155940_191324_D674655A)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6XizmKMc80rLV9YTZGtEJdZ022+0HNPxXvunp5v4BnCMw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 04:05:43PM -0700, Luis R. Rodriguez wrote:
-> 
-> Well that's be true if FW_LOADER was easy to disable, but its not. You
-> really gotta try hard to disable it. Not only does it require EXPERT
-> but also EMBEDDED. I think its fair to say if you disable FW_LOADER
-> you know what you are doing and its fair for us then to remove such
-> selects or depends. Thoughts?
+Nicholas Mc Guire <der.herr@hofr.at> writes:
 
-Sure.  I can live with killing all selects/depends on FW_LOADER.
+> On Thu, 14 May 2015, Kalle Valo wrote:
+>
+>> Nicholas Mc Guire <hofrat@osadl.org> writes:
+>> 
+>> > Patch is against 4.1-rc3 (localversion-next is -next-20150514)
+>> 
+>> BTW, this info should be under "---" line so that it doesn't get stored
+>> to the actual commit log.
+>>
+> that is where I had been putting it until ask by Josh Triplett and 
+> Steven Rostedt to put it above the "---" line explicitly
+> see: http://lkml.org/lkml/2015/5/11/552 
+>
+> So now I'm a bit lost where to actually put this buildtest info ?
 
-Thanks,
+Different maintainers have different opinions, there is no one answer,
+but if Steven is okay to have this in the commit log so am I. So no need
+to change anything.
+
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Kalle Valo
