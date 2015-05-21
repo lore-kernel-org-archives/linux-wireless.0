@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:34808 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757991AbbEWRYT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 May 2015 13:24:19 -0400
-Received: by laat2 with SMTP id t2so29860462laa.1
-        for <linux-wireless@vger.kernel.org>; Sat, 23 May 2015 10:24:17 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:60610 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756470AbbEUWud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 18:50:33 -0400
+Date: Fri, 22 May 2015 00:50:30 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
+	serge@hallyn.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
+	zohar@linux.vnet.ibm.com, mricon@kernel.org
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521225030.GK23057@wotan.suse.de> (sfid-20150522_005050_803284_6CB85B03)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <20150520140426.GB126473@ubuntu-hedt>
+ <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <CAJ=9CzYr2rFxZprM0Ap+x+Vu3LDXJUtxqtHqH-YER-ABscRb0w@mail.gmail.com>
-References: <1432014444-29039-1-git-send-email-haggai.eran@gmail.com>
-	<CAJ=9Czay5pbi6p+n8SxXaJsWG4JR2p_vteKYbLxvoxLVtPQPaQ@mail.gmail.com>
-	<555CB8C1.1040007@lwfinger.net>
-	<CAJ=9CzYr2rFxZprM0Ap+x+Vu3LDXJUtxqtHqH-YER-ABscRb0w@mail.gmail.com>
-Date: Sat, 23 May 2015 20:24:17 +0300
-Message-ID: <CAJ=9CzbohiYSj1J4M17iK4Rqh0bopEF8zhN=Sqrh7GO6eBP-=w@mail.gmail.com> (sfid-20150523_192424_892569_064702B0)
-Subject: Re: [PATCH] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
-From: Haggai Eran <haggai.eran@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 May 2015 at 22:20, Haggai Eran <haggai.eran@gmail.com> wrote:
-> On 20 May 2015 at 19:39, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 05/20/2015 01:17 AM, Haggai Eran wrote:
->>>
->>> On May 19, 2015 08:47, "Haggai Eran" <haggai.eran@gmail.com
->>> <mailto:haggai.eran@gmail.com>> wrote:
->>>  >
->>>  > With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
->>>  > packet are set, but the packet length is too large. Truncate the packet
->>>  > to prevent memory corruption.
->>>  >
->>>  > Signed-off-by: Haggai Eran <haggai.eran@gmail.com
->>> <mailto:haggai.eran@gmail.com>>
->>>  > ---
->>>  >
->>>  > Hi,
->>>  >
->>>  > I think this solves the issue for me. I'll test it more thoroughly
->>> later. I
->>>  > still don't know why a fragmented packet has such a large pkt_len value
->>> though.
->>>  >
->>>  > Thanks,
->>>  > Haggai
->>>  >
->>>
->>> I guess I was too quick with this patch. It prevents the kernel page
->>> faults, but
->>> with it I still see sometimes the connectivity disappear for a minute or
->>> two.
->>
->>
->> Is anything logged when that happens?
-> No. I get once in a while the other corrupted entries I told you
-> about, but nothing special to these freezes
->
->> I'm still trying to see where that magic number of 1658 comes from, and how
->> that affects the RX buffer size.
->
-> I tried to look at the new driver (rtl8192su), but it doesn't seem to
-> handle this more-fragment bit at all.
->
->> When I unconditionally set alloc_sz to tmp_len as in the attached patch (I
->> remembered to refresh it this time), nothing bad has happened here yet. What
->> happens on your box?
->
-> The same freezes still occur.
+On Wed, May 20, 2015 at 05:24:46PM +0100, One Thousand Gnomes wrote:
+> On Wed, 20 May 2015 09:04:26 -0500
+> Seth Forshee <seth.forshee@canonical.com> wrote:
+> 
+> > On Tue, May 19, 2015 at 10:02:32PM +0200, Luis R. Rodriguez wrote:
+> > > This begs the question on how we'd manage keys for firmware signing on
+> > > linux-firmare. Since the keys are x509 keys we need a CA. Based on some initial
+> > > discussions it would seem we'd need the Linux Foundation to create a key, this
+> > > would be embedded in the kernel and that key would be used to sign Kyle's key.
+> > > Kyle would in turn use his key for signing linux-firmware files. David, Kyle,
+> > > did I summarize this correctly ?
+> > 
+> > I raised the question of key revocation when we discussed this on irc,
+> > but it wasn't answered to my satisfaction. If a key signed by the
+> > kernel-embedded key is compromised, how can that key be revoked so that
+> > it is no longer trusted?
+> > 
+> > Someone mentioned UEFI blacklists, which I don't know much about, but
+> > not all systems have UEFI. The only reliable option that comes to mind
+> > for me is an in-kernel blacklist of keys which should no longer be
+> > trusted.
+> 
+> More to the point why do you want to sign firmware files ?
 
-I think the freezes I saw weren't related to the same issue. I was
-running a debugging kernel, and I saw the same freezes also with a
-different wifi adaptor. After switching to a non-debugging kernel, and
-using your patch, the freezes stopped.
+This would add support to firmware loading the same dog and pony show as used
+by the module and kexec code, sharing as much dog and pony as is possible. This
+also allows us to phase 802.11's dog and pony show which is sitting on the side all
+on it own and implicates distros to do more work.
 
-Thanks,
-Haggai
+ Luis
