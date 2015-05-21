@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:35008 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbbEYLdv (ORCPT
+Received: from lan.nucleusys.com ([92.247.61.126]:43911 "EHLO
+	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756275AbbEUQvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 07:33:51 -0400
-Received: by labbd9 with SMTP id bd9so47789957lab.2
-        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2015 04:33:49 -0700 (PDT)
+	Thu, 21 May 2015 12:51:14 -0400
+Date: Thu, 21 May 2015 19:51:02 +0300
+From: Petko Manolov <petkan@mip-labs.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: David Howells <dhowells@redhat.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>, Joey Lee <jlee@suse.de>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Kyle McMartin <kyle@kernel.org>,
+	Sedat Dilek <sedat.dilek@gmail.com>,
+	LSM List <linux-security-module@vger.kernel.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Konstantin Ryabitsev <mricon@kernel.org>,
+	Michal Marek <mmarek@suse.cz>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	keyrings@linux-nfs.org, Abelardo Ricart III <aricart@memnix.com>,
+	"Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+Message-ID: <20150521165101.GI18164@localhost> (sfid-20150521_185126_291461_C58EFFE6)
+References: <20150519200232.GM23057@wotan.suse.de>
+ <555BA438.2070802@kernel.org>
+ <20150519221128.GP23057@wotan.suse.de>
+ <9567.1432223509@warthog.procyon.org.uk>
+ <CALCETrX3krCsqCLvLYx1QdnjFK=R8FF7ta=vozDcGYSTUHvSrA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <55605637.1080503@gmail.com>
-References: <55605637.1080503@gmail.com>
-Date: Mon, 25 May 2015 14:33:49 +0300
-Message-ID: <CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com> (sfid-20150525_133357_283770_169624DF)
-Subject: Re: packet loss, disconnects and possible bug in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Nick Dimov <dimovnike@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALCETrX3krCsqCLvLYx1QdnjFK=R8FF7ta=vozDcGYSTUHvSrA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 23, 2015 at 1:28 PM, Nick Dimov <dimovnike@gmail.com> wrote:
-> Hello,
-> I recently bought the Intel 7260 AC wifi card (below is the PCI info)
-> and the card works perfectly in windows with the latest intel driver but
-> in linux I get deauthenticating and disconnects (reason -3) every minute
-> or so. When these disconnects happen I get packet loss. In the attached
-> file iwlwifi_dmesg.txt you can see the log that is produced each time a
-> disconnect happens. I also tried connecting on 2.4Ghz but I get the same
-> packet loss. I also put the last firmware from
-> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
-> but it did not help.
+On 15-05-21 09:39:50, Andy Lutomirski wrote:
+> 
+> It's also a performance cost because the average user of this signature stuff 
+> doesn't actually want IMA, and IMA is checking the wrong think anyway.  
+> IMA/EVM tells us "this file validly belongs in /lib/modules/whatever according 
+> to whomever we trust for the filesystem".  We want to check "is this data, 
+> regardless of where it was read from, a trusted module".
 
-Please increase the debug level of the supplicant. And attach the full syslog.
+IMA-appraise does not care where the file comes from (although it may be 
+persuaded to) and verifies file's data and meta-data against a signature.  I 
+guess you should actually read the code. :)
 
->
-> There is also another problem: In windows i can see it connecting on
-> 860mbps, but on linux it never goes higher than 600mbps (i check this
-> with iwconfig) and it stays somewhere on 500mbps.
->
-> Can you please help me solve this?
-> Thank you.
->
-> uname -a
-> Linux nick-laptop 3.19.0-18-generic #18-Ubuntu SMP Tue May 19 18:31:35
-> UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
->
-> lspci info:
-> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
->         Subsystem: Intel Corporation Dual Band Wireless-AC 7260
->         Flags: bus master, fast devsel, latency 0, IRQ 29
->         Memory at f7200000 (64-bit, non-prefetchable) [size=8K]
->         Capabilities: [c8] Power Management version 3
->         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->         Capabilities: [40] Express Endpoint, MSI 00
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [140] Device Serial Number d8-fc-93-ff-ff-e4-70-d7
->         Capabilities: [14c] Latency Tolerance Reporting
->         Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1
-> Len=014 <?>
->         Kernel driver in use: iwlwifi
->
+
+		Petko
