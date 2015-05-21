@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50392 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755503AbbEVIeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 04:34:13 -0400
-Message-ID: <1432283651.3493.7.camel@sipsolutions.net> (sfid-20150522_103419_805508_6C99377C)
-Subject: Re: [PATCH 1/2] cfg80211: ignore netif running state when changing
- iftype
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 22 May 2015 10:34:11 +0200
-In-Reply-To: <CA+BoTQmyY35mY_CVVK7kDr=DTaLLyATo20nB34es7Q=dTSEDCQ@mail.gmail.com> (sfid-20150521_094410_172003_61254FCB)
-References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
-	 <1432127874.19214.13.camel@sipsolutions.net>
-	 <1432127990.19214.14.camel@sipsolutions.net>
-	 <CA+BoTQmyY35mY_CVVK7kDr=DTaLLyATo20nB34es7Q=dTSEDCQ@mail.gmail.com>
-	 (sfid-20150521_094410_172003_61254FCB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:32903 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754751AbbEUNiE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 09:38:04 -0400
+Received: by wicmx19 with SMTP id mx19so13295209wic.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2015 06:38:03 -0700 (PDT)
+Message-ID: <555DDFB7.9060705@gmail.com> (sfid-20150521_153809_660840_75B917E1)
+Date: Thu, 21 May 2015 15:37:59 +0200
+From: poma <pomidorabelisima@gmail.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?SmFrdWIgS2ljacWEc2tp?= <moorray3@wp.pl>
+CC: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Etna <etna@openmailbox.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+References: <544DB5A8.7090405@openmailbox.org>	<20141027152026.GB19976@tuxdriver.com>	<544E8CB4.3000607@rempel-privat.de>	<20141028134608.GA26283@tuxdriver.com>	<544FA303.5060303@broadcom.com>	<544FA627.3000004@rempel-privat.de>	<5450BEB2.60208@openwrt.org>	<5461F937.9060004@rempel-privat.de>	<5463CB6C.3030204@openwrt.org>	<5463D28F.9080106@lwfinger.net>	<20150206182915.7467bac7@north>	<54EF261E.4040109@gmail.com>	<20150226154028.380b96f2@north>	<55592C54.6010204@gmail.com>	<555CBEFC.50902@gmail.com> <20150520191428.42e9a3ec@north>
+In-Reply-To: <20150520191428.42e9a3ec@north>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-05-21 at 09:44 +0200, Michal Kazior wrote:
-> On 20 May 2015 at 15:19, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Wed, 2015-05-20 at 15:17 +0200, Johannes Berg wrote:
-> >
-> >> > -   if (ntype != otype && netif_running(dev)) {
-> >> > +   if (ntype != otype) {
-> >> >             dev->ieee80211_ptr->use_4addr = false;
-> >> >             dev->ieee80211_ptr->mesh_id_up_len = 0;
-> >> >             wdev_lock(dev->ieee80211_ptr);
-> >>
-> >> I don't think that makes much sense - the code within this block really
-> >> only makes sense when the interface *is* running, like disconnecting
-> >> etc. Doing that when it's *not* would be entirely unexpected to the
-> >> drivers, no?
+On 20.05.2015 19:14, Jakub Kiciński wrote:
+> On Wed, 20 May 2015 19:06:04 +0200, poma wrote:
+>> With the script 'mt7601u-fw-install' can be initiated the download and installation of the required firmware,
+>> though it would be optimal to resolve it in the following manner:
+>>
+>> In OpenWrt repo - mt76 - mac80211 driver for MediaTek MT76x2 802.11ac chips
+>> https://github.com/openwrt/mt76
+>>
+>> there is a license file together with firmwares:
+>> https://github.com/openwrt/mt76/blob/master/firmware
+>>
+>>
+>> Whether the same can be done with:
+>> mt7601u -  Linux mac80211-based driver for Mediatek MT7601U USB bgn WiFi dongle
+>> https://github.com/kuba-moo/mt7601u
+>> ?
 > 
-> The netif_running() was originally introduced in f8cdddb8d61d which
-> did in for entirely different purpose. Hence stripping netif_running()
-> shouldn't be a problem for drivers, can it? The patch was also made
-> kind of obsolete by b6a550156bc. Perhaps there are some other
-> behavioral changes that I'm unaware of in stuff that gets called upon
-> entering this condition down the stack..?
-
-Perhaps it doesn't matter actually, since all the functions that are
-called here will double-check things before calling the driver?
-
-> Maybe it's just safer to move use_4addr/mesh_id_up_len clearing into a
-> separate `oftype != ntype` condition. What do you think?
-
-Or maybe we should just look at the functions we call in more detail :)
-
-> > The real problem here might be the assignment to use_4addr *before*
-> > we've actually disconnected or anything, perhaps that should be moved?
-> >
-> > Similarly, the mesh_id_up_len should probably be moved into the mesh
-> > point switch case...
+> I will ask MediaTek to send firmware to linux-firmware.git once the
+> driver passes review and is accepted to mainline.
 > 
-> The problem isn't use_4addr clearing ordering per se. The problem is
-> it wasn't cleared at all on interface changes. 
 
-Ah.
+Yeah, the foundation is already there:
+linux-firmware: Add firmware files for mtk mt7630/mt7650 chipsets
+http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/?id=8267525
 
-> Do you want me to put the above into the commit log? Should I put a
-> copy into the mac80211 patch as well?
+Good luck.
 
-I think just noting (more explicitly) that it was *missing* a clearing
-in these cases would have been helpful.
-
-johannes
 
