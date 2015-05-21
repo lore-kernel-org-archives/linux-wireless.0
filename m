@@ -1,98 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:35668 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbbEMJRA (ORCPT
+Received: from smtp104.biz.mail.bf1.yahoo.com ([98.139.221.63]:35775 "EHLO
+	smtp104.biz.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750964AbbEUXWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 May 2015 05:17:00 -0400
-Received: by labbd9 with SMTP id bd9so24704327lab.2
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2015 02:16:59 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/2] mac80211: prevent possible crypto tx tailroom corruption
-Date: Wed, 13 May 2015 09:16:49 +0000
-Message-Id: <1431508609-9841-2-git-send-email-michal.kazior@tieto.com> (sfid-20150513_111710_890097_51B4594F)
-In-Reply-To: <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
-References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
- <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 21 May 2015 19:22:07 -0400
+Message-ID: <555E670C.6080901@schaufler-ca.com> (sfid-20150522_012235_143431_1964BE89)
+Date: Thu, 21 May 2015 16:15:24 -0700
+From: Casey Schaufler <casey@schaufler-ca.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Kees Cook <keescook@chromium.org>,
+	LSM List <linux-security-module@vger.kernel.org>
+CC: Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	James Morris <james.l.morris@oracle.com>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Konstantin Ryabitsev <mricon@kernel.org>,
+	Michal Marek <mmarek@suse.cz>,
+	Abelardo Ricart III <aricart@memnix.com>,
+	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
+	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Casey Schaufler <casey@schaufler-ca.com>
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
+References: <20150519200232.GM23057@wotan.suse.de> <555BA438.2070802@kernel.org> <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com> <CALCETrX1YrdwfPJxVbzE0MQK=HChK8sDztt6MZcJiCvTEDCn7Q@mail.gmail.com> <20150520003917.GV23057@wotan.suse.de> <CALCETrVpwvpeGD=3iDw_2cTPfnvLsasMT2OV4jcE1bRs5cgDuA@mail.gmail.com> <20150521222626.GI23057@wotan.suse.de>
+In-Reply-To: <20150521222626.GI23057@wotan.suse.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was a possible race between
-ieee80211_reconfig() and
-ieee80211_delayed_tailroom_dec(). This could
-result in inability to transmit data if driver
-crashed during roaming or rekeying and subsequent
-skbs with insufficient tailroom appeared.
+On 5/21/2015 3:26 PM, Luis R. Rodriguez wrote:
+> On Tue, May 19, 2015 at 05:41:37PM -0700, Andy Lutomirski wrote:
+>> On Tue, May 19, 2015 at 5:39 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>>> On Tue, May 19, 2015 at 04:42:05PM -0700, Andy Lutomirski wrote:
+>>>> On Tue, May 19, 2015 at 4:30 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>>>>> Hi All,
+>>>>>
+>>>>> On Wed, May 20, 2015 at 6:59 AM, Andy Lutomirski <luto@kernel.org> wrote:
+>>>>>> [added cc's from the other thread]
+>>>>>>
+>>>>>> On 05/19/2015 01:02 PM, Luis R. Rodriguez wrote:
+>>>>>>> David Howells has posted v4 of his series of supporting PKCS#7 for module
+>>>>>>> signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and
+>>>>>>> after
+>>>>>>> some review and patch shuffling I think this is ready for patch form.  My
+>>>>>>> own
+>>>>>>> series however depend on quite a bit of other pending changes, one series
+>>>>>>> which
+>>>>>>> will go through Rusty's tree, another series of fixes on firmware_class
+>>>>>>> which
+>>>>>>> should go through Greg's tree. I'll wait until all this and David's own
+>>>>>>> patches
+>>>>>>> get merged before posting firmware PKCS#7 support. Before all this though
+>>>>>>> in
+>>>>>>> preparation for fw signing one thing we should start to talk about more
+>>>>>>> broadly
+>>>>>>> however is how linux-firmware binary file signing would work in practice
+>>>>>>> and
+>>>>>>> what we need, and make sure folks are OK with all this.
+>>>>>>>
+>>>>>>> First, firmware signing will be completely optional as with module
+>>>>>>> signing.
+>>>>>>>
+>>>>>> ...
+>>>>>>
+>>>>>>> Other than this last nitpick, any other concerns or recommendations ?
+>>>>>>
+>>>>>> A couple.  Some of these are general concerns with the existing
+>>>>>> infrastructure, but #1 is a specific problem that gets much worse if we add
+>>>>>> firmware signing.  Feel free to ignore 2-4.
+>>>>>>
+>>>>>> 1. We should get the signature semantics right.  I think that, for modules,
+>>>>>> we currently sign literally the module payload.  For modules, in my
+>>>>>> semi-amateurish crypto universe [1], this is fine *as long as the key in
+>>>>>> question is used for no other purpose*.  For firmware, it's dangerous, since
+>>>>>> it would be vulnerable to substitution attacks in which the adversary
+>>>>>> convinces us to interpret one firmware file as firmware for another device
+>>>>>> or purpose entirely.
+>>>>>>
+>>>>>> We should be signing something that's semantically equivalent to "This is a
+>>>>>> valid module: xyz", "This is a valid 'regulatory.bin': xyz", or "This is a
+>>>>>> valid kexec image: xyz".
+>>>>> Something that occurred to me (as a complete bystander) was: would it
+>>>>> make sense to have keys able to be restricted to particular "types" of
+>>>>> signable data? I.e. the key that can sign a valid regulatory.bin file
+>>>>> cannot be used to sign a module or a kexec image. - This could remove
+>>>>> the need to have multiple keyrings. (Also, UEFI keys unless otherwise
+>>>>> tagged could be restricted to only signing bootloaders or kernels)
+>>>> Seems sensible to me.
+>>> As for having keys for fw signing be specific to fw data without a keyring,
+>>> if that is desirable I think we can devise a way to do that. For instance
+>>> if we wanted to we can have FW_SIG by default trust first keys on
+>>> system_trusted_keyring just as module signature works -- or if we wanted to
+>>> just trust, say a Kyle key. Not sure if the later is possible yet, but htat
+>>> would require some changes. Then as an evolution if we wanted to enable a
+>>> specific request fw to be mapped to a specific fw file the new APIs I was
+>>> looking to add could easily enable this provided that we first decide we
+>>> do want to trust say one key perhaps not on system_trusted_keyring for fw
+>>> signing. That'd need to be decided first.
+>>>
+>>> As for the UEFI stuff -- from what I gather its too late there. We could
+>>> certainly go with something else for fw signing though, just lemme hear it
+>>> hard and clear.
+>>>
+>>>> FWIW, I'm starting to think that UEFI-based validation of kexec images
+>>>> should be totally separate.  It uses a nasty PE format with a hideous
+>>>> PKCS #7 formatted signature.  Maybe that should be a completely
+>>>> separate piece of code.
+>>> LSM'ify it I guess? Again, if that's reasonable then I think we'll need
+>>> stacking and that's still not merged.
+>> Isn't stacking backwards for this, though?  The semantics we'd want is
+>> accept if any verifiers accept, not accept if all verifiers accept,
+>> right?
+> That can be added, and if stacking is not yet merged perhaps Casey can
+> consider it?
 
-This race was probably never seen in the wild
-because a device driver would have to crash AND
-recover within 0.5s which is very unlikely.
+So long as the net result coming out of an module is a yes/no answer,
+and so long as you're not using any of the security blobs there's no
+reason you can't stack exactly like Yama. Within your module you can
+enforce an aggressive grant policy if you like, returning -EACCES only
+if all your verifiers fail.
 
-I was able to prove this race exists after
-changing the delay to 10s locally and crashing
-ath10k via debugfs immediately after GTK
-rekeying. In case of ath10k the counter went below
-0. This was harmless but other drivers which
-actually require tailroom (e.g. for WEP ICV or
-MMIC) could end up with the counter at 0 instead
-of >0 and introduce insufficient skb tailroom
-failures because mac80211 would not resize skbs
-appropriately anymore.
 
-Fixes: 8d1f7ecd2af5 ("mac80211: defer tailroom counter manipulation when roaming")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-
-Notes:
-    While doing PATCH v2 [1/2] I've noticed a subtle bug in the
-    delayed tailroom counter logic. Since this touches the
-    codepaths [1/2] does I'm posting this as a pair.
-
- net/mac80211/key.c  | 5 ++++-
- net/mac80211/main.c | 3 +++
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 577a11a13cdf..4c6f8c97d11a 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -695,10 +695,13 @@ void ieee80211_reset_crypto_tx_tailroom(struct ieee80211_sub_if_data *sdata)
- 	mutex_lock(&sdata->local->key_mtx);
- 
- 	sdata->crypto_tx_tailroom_needed_cnt = 0;
-+	sdata->crypto_tx_tailroom_pending_dec = 0;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
--		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
- 			vlan->crypto_tx_tailroom_needed_cnt = 0;
-+			vlan->crypto_tx_tailroom_pending_dec = 0;
-+		}
- 	}
- 
- 	mutex_unlock(&sdata->local->key_mtx);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 3c956c5f99b2..d8e1cbdcbc43 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -246,6 +246,7 @@ static void ieee80211_restart_work(struct work_struct *work)
- {
- 	struct ieee80211_local *local =
- 		container_of(work, struct ieee80211_local, restart_work);
-+	struct ieee80211_sub_if_data *sdata;
- 
- 	/* wait for scan work complete */
- 	flush_workqueue(local->workqueue);
-@@ -254,6 +255,8 @@ static void ieee80211_restart_work(struct work_struct *work)
- 	     "%s called with hardware scan in progress\n", __func__);
- 
- 	rtnl_lock();
-+	list_for_each_entry(sdata, &local->interfaces, list)
-+		cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
- 	ieee80211_scan_cancel(local);
- 	ieee80211_reconfig(local);
- 	rtnl_unlock();
--- 
-2.1.4
+>
+>   Luis
+>
 
