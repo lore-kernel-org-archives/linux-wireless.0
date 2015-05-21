@@ -1,84 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:34684 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754235AbbETPsO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 11:48:14 -0400
-Received: by oiko83 with SMTP id o83so39284856oik.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 08:48:14 -0700 (PDT)
-Date: Wed, 20 May 2015 10:47:55 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: David Howells <dhowells@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150520154755.GE126473@ubuntu-hedt> (sfid-20150520_174834_953012_28039897)
-References: <20150520140426.GB126473@ubuntu-hedt>
- <20150519200232.GM23057@wotan.suse.de>
- <6731.1432134538@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6731.1432134538@warthog.procyon.org.uk>
+Received: from mga09.intel.com ([134.134.136.24]:65313 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422795AbbEUTxg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 May 2015 15:53:36 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/10] iwlwifi: mvm: take the UCODE_DOWN reference when resuming
+Date: Thu, 21 May 2015 22:53:08 +0300
+Message-Id: <1432237990-5890-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150521_215346_252109_E4DF7BC4)
+In-Reply-To: <1432237819.26813.4.camel@intel.com>
+References: <1432237819.26813.4.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2015 at 04:08:58PM +0100, David Howells wrote:
-> Seth Forshee <seth.forshee@canonical.com> wrote:
-> 
-> > > This begs the question on how we'd manage keys for firmware signing on
-> > > linux-firmare. Since the keys are x509 keys we need a CA. Based on some
-> > > initial discussions it would seem we'd need the Linux Foundation to create
-> > > a key, this would be embedded in the kernel and that key would be used to
-> > > sign Kyle's key.  Kyle would in turn use his key for signing
-> > > linux-firmware files. David, Kyle, did I summarize this correctly ?
-> > 
-> > I raised the question of key revocation when we discussed this on irc,
-> > but it wasn't answered to my satisfaction. If a key signed by the
-> > kernel-embedded key is compromised, how can that key be revoked so that
-> > it is no longer trusted?
-> > 
-> > Someone mentioned UEFI blacklists, which I don't know much about, but
-> > not all systems have UEFI. The only reliable option that comes to mind
-> > for me is an in-kernel blacklist of keys which should no longer be
-> > trusted.
-> 
-> Key revocation is generally an unpleasant problem.  How do you inform a system
-> that a key of any sort is revoked?  With PGP, for instance, you might be able
-> to connect to the net and consult a server.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Distros could distribute updates to the blacklist via their usual update
-mechanisms. That could be a new kernel with an updated blacklist (after
-all we should expect blacklist updates to be very infrequent).
+The __iwl_mvm_resume() function always returns 1, which causes
+mac80211 to do a reconfig with IEEE80211_RECONFIG_TYPE_RESTART.  This
+type of reconfig calls iwl_mvm_restart_complete(), where we unref the
+IWL_MVM_REF_UCODE_DOWN, so we should always take the reference in this
+case.
 
-I suppose a database in the initrd which was loaded prior to loading any
-firmware could work too, then perhaps new blacklists could be loaded
-into a running kernel without a reboot as well. But that database should
-probably be signed too, which creates a chicken-and-egg sort of problem.
+This prevents this kind of warning from happening:
 
-> UEFI has a blacklist that can theoretically be used to prevent both usage of a
-> key and usage of a particular object.  As I understand it, the blacklist in
-> UEFI is just a table of SHA256 hashes.
-> 
-> Relying on UEFI presents three problems, though: (1) the system admin has to
-> manually, as far as I'm aware, inform the BIOS; (2) the UEFI storage is
-> limited; and (3) not all systems have UEFI.
+[40026.103025] WARNING: at /root/iwlwifi/iwlwifi-stack-dev/drivers/net/wireless/iwlwifi/mvm/mac80211.c:236 iwl_mvm_unref+0xc9/0xd0 [iwlmvm]()
+[40026.105145] Modules linked in: iwlmvm(O) iwlwifi(O) mac80211(O) cfg80211(O) compat(O) ctr ccm arc4 autofs4 snd_hda_codec_hdmi snd_hda_codec_idt joydev coretemp kvm_intel kvm aesni_intel ablk_helper cryptd lrw aes_i586 snd_hda_intel xts snd_hda_codec gf128mul snd_hwdep snd_pcm snd_seq_midi dell_wmi snd_rawmidi sparse_keymap snd_seq_midi_event snd_seq uvcvideo dell_laptop videobuf2_core dcdbas microcode videodev psmouse snd_timer videobuf2_vmalloc videobuf2_memops serio_raw snd_seq_device btusb i915 snd bluetooth lpc_ich drm_kms_helper soundcore snd_page_alloc drm i2c_algo_bit wmi parport_pc ppdev video binfmt_misc rpcsec_gss_krb5 nfsd mac_hid nfs_acl nfsv4 auth_rpcgss nfs fscache lockd sunrpc msdos lp parport sdhci_pci sdhci ahci libahci e1000e mmc_core ptp pps_core [last unloaded: compat]
+[40026.117640] CPU: 2 PID: 3827 Comm: bash Tainted: G        W  O 3.10.29-dev #1
+[40026.120216] Hardware name: Dell Inc. Latitude E6430/0CPWYR, BIOS A09 12/13/2012
+[40026.122815]  f8effd18 f8effd18 e740fd18 c168aa62 e740fd40 c103a824 c1871238 f8effd18
+[40026.125527]  000000ec f8ec79c9 f8ec79c9 d5d29ba4 d5d2a20c 00000000 e740fd50 c103a862
+[40026.128209]  00000009 00000000 e740fd7c f8ec79c9 f1c591c4 00000400 00000000 f8efb490
+[40026.130886] Call Trace:
+[40026.133506]  [<c168aa62>] dump_stack+0x16/0x18
+[40026.136115]  [<c103a824>] warn_slowpath_common+0x64/0x80
+[40026.138727]  [<f8ec79c9>] ? iwl_mvm_unref+0xc9/0xd0 [iwlmvm]
+[40026.141319]  [<f8ec79c9>] ? iwl_mvm_unref+0xc9/0xd0 [iwlmvm]
+[40026.143881]  [<c103a862>] warn_slowpath_null+0x22/0x30
+[40026.146453]  [<f8ec79c9>] iwl_mvm_unref+0xc9/0xd0 [iwlmvm]
+[40026.149030]  [<f8ec7a4d>] iwl_mvm_mac_reconfig_complete+0x7d/0x210 [iwlmvm]
+[40026.151645]  [<f8b74b20>] ? ftrace_raw_event_drv_reconfig_complete+0xc0/0xe0 [mac80211]
+[40026.154291]  [<f8b6769e>] ieee80211_reconfig+0x28e/0x2620 [mac80211]
+[40026.156920]  [<c10ef0ea>] ? ring_buffer_unlock_commit+0xba/0x100
+[40026.159585]  [<f8b4a04d>] ieee80211_resume+0x6d/0x80 [mac80211]
+[40026.162206]  [<f8a79722>] wiphy_resume+0x72/0x260 [cfg80211]
+[40026.164799]  [<c141e2e7>] ? device_resume+0x57/0x150
+[40026.167425]  [<f8a796b0>] ? wiphy_suspend+0x710/0x710 [cfg80211]
+[40026.170075]  [<c141e26e>] dpm_run_callback+0x2e/0x50
+[40026.172695]  [<c141e321>] device_resume+0x91/0x150
+[40026.175334]  [<c141f636>] dpm_resume+0xf6/0x200
+[40026.177922]  [<c141f920>] dpm_resume_end+0x10/0x20
+[40026.180489]  [<c108d9f7>] suspend_devices_and_enter+0x177/0x480
+[40026.183037]  [<c168646a>] ? printk+0x4d/0x4f
+[40026.185559]  [<c108de76>] pm_suspend+0x176/0x210
+[40026.188065]  [<c108ca5d>] state_store+0x5d/0xb0
+[40026.190581]  [<c108ca00>] ? wakeup_count_show+0x50/0x50
+[40026.193052]  [<c13208db>] kobj_attr_store+0x1b/0x30
+[40026.195608]  [<c11e3a4b>] sysfs_write_file+0xab/0x100
+[40026.198055]  [<c11e39a0>] ? sysfs_poll+0xa0/0xa0
+[40026.200469]  [<c1179655>] vfs_write+0xa5/0x1c0
+[40026.202893]  [<c1179af7>] SyS_write+0x57/0xa0
+[40026.205245]  [<c1699ec1>] sysenter_do_call+0x12/0x32
+[40026.207619] ---[ end trace db1d5a72a0381b0a ]---
 
-Yeah, that doesn't really sound like a good solution. Not all users are
-sys admins.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: EliadX Peller <eliad@wizery.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/d3.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-> What you do on a non-UEFI system, I'm not sure.  If the kernel isn't verified
-> by the loader or the system firmware then you don't have a 'fully' secure
-> system anyway and the blacklist may be of questionable value.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 42dadaf..91ca8df 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1917,6 +1917,14 @@ out:
+ 	/* return 1 to reconfigure the device */
+ 	set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
+ 	set_bit(IWL_MVM_STATUS_D3_RECONFIG, &mvm->status);
++
++	/* We always return 1, which causes mac80211 to do a reconfig
++	 * with IEEE80211_RECONFIG_TYPE_RESTART.  This type of
++	 * reconfig calls iwl_mvm_restart_complete(), where we unref
++	 * the IWL_MVM_REF_UCODE_DOWN, so we need to take the
++	 * reference here.
++	 */
++	iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
+ 	return 1;
+ }
+ 
+@@ -2023,7 +2031,6 @@ static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
+ 	__iwl_mvm_resume(mvm, true);
+ 	rtnl_unlock();
+ 	iwl_abort_notification_waits(&mvm->notif_wait);
+-	iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
+ 	ieee80211_restart_hw(mvm->hw);
+ 
+ 	/* wait for restart and disconnect all interfaces */
+-- 
+2.1.4
 
-I think there's still value - compromised firmware could easily be a
-vector to compromise the kernel. Just because I can't verify my system
-security doesn't mean that I don't want measures in place to keep it
-from being compromised.
-
-Seth
