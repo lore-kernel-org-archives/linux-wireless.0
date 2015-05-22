@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:34395 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934661AbbEOVdW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43860 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756945AbbEVIAd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 17:33:22 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Shao Fu <shaofu@realtek.com>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 5/5] rtlwifi: rtl8821ae: Fix problem with regulatory information
-Date: Fri, 15 May 2015 16:33:03 -0500
-Message-Id: <1431725583-7324-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150515_233346_600271_879E267E)
-In-Reply-To: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1431725583-7324-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 22 May 2015 04:00:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2015-05-21
+References: <1432237819.26813.4.camel@intel.com>
+Date: Fri, 22 May 2015 11:00:25 +0300
+In-Reply-To: <1432237819.26813.4.camel@intel.com> (Emmanuel Grumbach's message
+	of "Thu, 21 May 2015 19:50:19 +0000")
+Message-ID: <87y4kh59eu.fsf@kamboji.qca.qualcomm.com> (sfid-20150522_100041_575748_FA9E947D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shao Fu <shaofu@realtek.com>
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-The driver was not setting a channel plan. Now it gets it from EEPROM.
+> I am aware that this pull request is quite large for 4.1, but I really
+> think that all these patches are really justified. A few of them fix
+> 3165 and 8260 which will be supported starting from 4.1. Other patches
+> fix random bugs that were discovered just now.
 
-Signed-off-by: Shao Fu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+There are few problematic ones which I want to comment just for the
+future:
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-index 8704eee..450bd4d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-@@ -3232,8 +3232,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
- 	if (rtlefuse->eeprom_channelplan == 0xff)
- 		rtlefuse->eeprom_channelplan = 0x7F;
- 
--	/* set channel paln to world wide 13 */
--	/* rtlefuse->channel_plan = (u8)rtlefuse->eeprom_channelplan; */
-+	/* set channel plan from efuse */
-+	rtlefuse->channel_plan = rtlefuse->eeprom_channelplan;
- 
- 	/*parse xtal*/
- 	rtlefuse->crystalcap = hwinfo[EEPROM_XTAL_8821AE];
+iwlwifi: nvm: force mac from otp in case nvm mac is reserved
+iwlwifi: mvm: BT Coex - duplicate the command if sent ASYNC
+
+The commit log for these two above don't really describe the bug they
+are fixing and leave me guessing. I would feel much safer to pull if
+there's a clear description of the user visible bug.
+
+iwlwifi: pcie: don't disable the busmaster DMA clock for family 8000
+
+I feel that this is a bit borderline at this stage (we are in practise
+rc5/rc6 phase which is very late), it's not really fixing any crashers
+or other major functionality problems. But as it's a small patch I guess
+it's ok.
+
+> Note that my availability is limited in the next week, but I'll try to
+> handle any issues you may have ASAP.
+>
+> The following changes since commit e7afe89fd67d40a7f5fff8130c5f925d99a94b1f:
+>
+>   iwlwifi: mvm: force quota update update after FW restart (2015-04-28 15:02:25 +0300)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-05-21
+
+Thanks, pulled.
+
 -- 
-2.1.4
-
+Kalle Valo
