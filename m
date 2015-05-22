@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:33905 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754003AbbE0TCS (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:44820 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038AbbEVMNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 15:02:18 -0400
-Received: by wicmc15 with SMTP id mc15so102979237wic.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 12:02:17 -0700 (PDT)
-Message-ID: <556614B6.7060303@gmail.com> (sfid-20150527_210357_663733_9E5755E0)
-Date: Wed, 27 May 2015 22:02:14 +0300
-From: Nick Dimov <dimovnike@gmail.com>
+	Fri, 22 May 2015 08:13:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 1/2] ath10k: handle cycle counter wraparound
+References: <CA+BoTQ=V1psOoaL1WG7vSUjSLhPnQqBUODjeB3NyWt-pMtmNFA@mail.gmail.com>
+	<1432282693-4553-1-git-send-email-michal.kazior@tieto.com>
+	<87zj4w4zdz.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQkNO3oD36GFWVvG3TuAu1nKqTrW_54Z-V9de0Lt7jE8hA@mail.gmail.com>
+	<CA+BoTQ=xNbcQv+FVZWUAki5f0zQ_F0hTW3V6FkTp-DzQOr-FFA@mail.gmail.com>
+Date: Fri, 22 May 2015 15:12:59 +0300
+In-Reply-To: <CA+BoTQ=xNbcQv+FVZWUAki5f0zQ_F0hTW3V6FkTp-DzQOr-FFA@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 22 May 2015 14:00:05 +0200")
+Message-ID: <87vbfk4xpw.fsf@kamboji.qca.qualcomm.com> (sfid-20150522_141312_904587_00A1C486)
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: packet loss, disconnects and possible bug in iwlwifi
-References: <55605637.1080503@gmail.com>	<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>	<55650565.6020303@gmail.com>	<1432742132.15971.29.camel@redhat.com> <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
-In-Reply-To: <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-the channel for 2.4Ghz is:
-Channel: 6
-Frequency:2.437 GHz (Channel 6)
-Quality=65/70  Signal level=-45 dBm 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Also I can't find how to activate CONFIG_IWLWIFI_TRACING in kernel (it's
-missing in my kernel's config). I'm using the 3.19 kernel. The trace-cmd
-seems to run, how can I check if it produces the trace you need?
-
-Please, let me know!
-Thanks.
-
-On 27.05.2015 21:34, Emmanuel Grumbach wrote:
-> On Wed, May 27, 2015 at 6:55 PM, Dan Williams <dcbw@redhat.com> wrote:
->> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
->>> Hello,
->>> thank you for your response. I attach the full syslog since the last
->>> boot which contains some disconnects. I enabled debug mode for
->>> wpa_supplicant with -dd option (let me know if you need anything else).
+> On 22 May 2015 at 13:56, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> On 22 May 2015 at 13:36, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Michal Kazior <michal.kazior@tieto.com> writes:
+> [...]
+>>>> +void ath10k_core_get_cc_delta(struct ath10k *ar,
+>>>> +                           u32 *cc_delta, u32 *rcc_delta,
+>>>> +                           u32 cc, u32 rcc,
+>>>> +                           u32 cc_prev, u32 rcc_prev)
+>>>> +{
+>>>> +     if (ar->hw_params.has_shifted_cc_wraparound && cc < cc_prev) {
+>>>> +             cc_prev -= 0x7fffffff;
+>>>> +             rcc *= 2;
+>>>> +     }
+>>>> +
+>>>> +     *cc_delta = cc - cc_prev;
+>>>> +     *rcc_delta = rcc - rcc_prev;
+>>>> +}
 >>>
->>> I also tried connecting directly, i.e. without NetworkManager but
->>> manually with wpa_supplicant and I still get disconnects, howvever
->>> wpa_supplicant gives different logs with different drivers. Please, see
->>> the file wifi.log (you can see there the driver i used in
->>> wpa_supplicant, that log doesn't have the debug activated but let me
->>> know if you need that too)
->> So if NM isn't involved in your later runs (and it's not, looking at the
->> logs), then I'm not sure what the issue could be except something in the
->> driver.
+>>> Why do you have this function in core.c? Why not in wmi.c?
 >>
->> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Event message
->> available
->> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Drv Event 20
->> (NL80211_CMD_DEL_STATION) received for wlan5
->> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Delete station
->> d8:50:e6:da:1d:b4
->> mai 27 02:31:54 nick-G55VW kernel: wlan5: deauthenticating from
->> d8:50:e6:da:1d:b4 by local choice (Reason: 3=DEAUTH_LEAVING)
->>
->> I don't see anything interesting around those lines, so I guess its up
->> to Emmanuel now...  the tracing he requests would be good to get.
->>
-> I suspect a regulatory problem. This is why I asked what was the
-> channel used on 2.4GHz. On 5.2GHz we have seen bugs happening because
-> of the regulatory database being ancient on Ubuntu. 2.4GHz should rule
-> these problems out, unless we are talking about channel 12 and up or
-> something like that.
+>> I don't consider this a part of WMI protocol per se. It's a logic
+>> which happens to be used with values delivered via WMI but is chip
+>> specific otherwise. For what it's worth we could be reading CC
+>> registers, e.g. directly via MMIO.
+>
+> Now that I think about it this would fit into hw.c as well.
 
+Yeah, hw.c would be much better. And we could start adding more similar
+hw adaptation code there in the future.
+
+-- 
+Kalle Valo
