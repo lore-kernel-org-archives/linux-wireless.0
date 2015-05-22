@@ -1,128 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:31489 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754106AbbE1NAM (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:35519 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755735AbbEVBFP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:00:12 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxbgS014874
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:11 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5rwvp-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:11 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 10/17] mwifiex: dump station support in uap mode
-Date: Thu, 28 May 2015 23:59:00 +0530
-Message-ID: <1432837747-2075-11-git-send-email-patila@marvell.com> (sfid-20150528_150016_850101_1CCF9A5D)
-In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
-References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+	Thu, 21 May 2015 21:05:15 -0400
+Received: by lbbuc2 with SMTP id uc2so2512625lbb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2015 18:05:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 21 May 2015 18:05:13 -0700
+Message-ID: <CAAnMG+OgtSzFXqLOoZ-JbOr7xnexC3P0+M0fFLWTBtWru=4SKg@mail.gmail.com> (sfid-20150522_030523_449617_91DF4471)
+Subject: [PATCH] mac80211: fix a NULL dereference in ath9k (and likely other
+ drivers) when fixed mesh paths are used
+From: Alexis Green <agreen@cococorp.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jesse Jones <jjones@cococorp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+This patch fixes a NULL dereference in ath9k (and likely other drivers) when
+fixed mesh paths are used. The problem is that when a station comes up
+sta_info_alloc allocates ath_node implicitly via hw->sta_data_size. When it
+does that the ath_node is zeroed out. The ath_node isn’t actually initialized
+until the station becomes associated and ath9k_sta_state is called.
 
-This patch extend cfg80211 dump_station handler, support for
-dump stations associated to mwifiex micro AP.
+Normally this is OK because paths won't be formed to a station that isn't
+authorized. But when the path is fixed the MAC thinks it knows how to
+ route the packet, sends it down to ath9k, and winds up inducing reboots
+in places like ath_tx_start when tid->ac is dereferenced.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Alexis Green <agreen@cococorp.com>
+CC: Jesse Jones <jjones@cococorp.com>
+
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 51 +++++++++++++++++++++++++++++----
- 1 file changed, 46 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index ddeb919..16528c1 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1229,6 +1229,7 @@ mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 tx_htinfo,
-  */
- static int
- mwifiex_dump_station_info(struct mwifiex_private *priv,
-+			  struct mwifiex_sta_node *node,
- 			  struct station_info *sinfo)
- {
- 	u32 rate;
-@@ -1238,6 +1239,30 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
- 			BIT(NL80211_STA_INFO_TX_BITRATE) |
- 			BIT(NL80211_STA_INFO_SIGNAL) | BIT(NL80211_STA_INFO_SIGNAL_AVG);
- 
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
-+		if (!node)
-+			return -ENOENT;
-+
-+		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
-+				BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->inactive_time =
-+			jiffies_to_msecs(jiffies - node->stats.last_rx);
-+
-+		sinfo->signal = node->stats.rssi;
-+		sinfo->signal_avg = node->stats.rssi;
-+		sinfo->rx_bytes = node->stats.rx_bytes;
-+		sinfo->tx_bytes = node->stats.tx_bytes;
-+		sinfo->rx_packets = node->stats.rx_packets;
-+		sinfo->tx_packets = node->stats.tx_packets;
-+		sinfo->tx_failed = node->stats.tx_failed;
-+
-+		mwifiex_parse_htinfo(priv, node->stats.last_tx_htinfo,
-+				     &sinfo->txrate);
-+		sinfo->txrate.legacy = node->stats.last_tx_rate * 5;
-+
-+		return 0;
-+	}
-+
- 	/* Get signal information from the firmware */
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_RSSI_INFO,
- 			     HostCmd_ACT_GEN_GET, 0, NULL, true)) {
-@@ -1304,7 +1329,7 @@ mwifiex_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (memcmp(mac, priv->cfg_bssid, ETH_ALEN))
- 		return -ENOENT;
- 
--	return mwifiex_dump_station_info(priv, sinfo);
-+	return mwifiex_dump_station_info(priv, NULL, sinfo);
- }
- 
- /*
-@@ -1315,13 +1340,29 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 			      int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	static struct mwifiex_sta_node *node;
- 
--	if (!priv->media_connected || idx)
--		return -ENOENT;
-+	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
-+	    priv->media_connected && idx == 0) {
-+		ether_addr_copy(mac, priv->cfg_bssid);
-+		return mwifiex_dump_station_info(priv, NULL, sinfo);
-+	} else if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
-+		mwifiex_send_cmd(priv, HOSTCMD_CMD_UAP_STA_LIST,
-+				 HostCmd_ACT_GEN_GET, 0, NULL, true);
-+
-+		if (node && (&node->list == &priv->sta_list)) {
-+			node = NULL;
-+			return -ENOENT;
-+		}
- 
--	memcpy(mac, priv->cfg_bssid, ETH_ALEN);
-+		node = list_prepare_entry(node, &priv->sta_list, list);
-+		list_for_each_entry_continue(node, &priv->sta_list, list) {
-+			ether_addr_copy(mac, node->mac_addr);
-+			return mwifiex_dump_station_info(priv, node, sinfo);
-+		}
-+	}
- 
--	return mwifiex_dump_station_info(priv, sinfo);
-+	return -ENOENT;
- }
- 
- static int
--- 
-1.8.1.4
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 214e63b..14e146e 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -1081,6 +1081,11 @@ int mesh_nexthop_resolve(struct
+ieee80211_sub_if_data *sdata,
+        if (!err)
+                goto endlookup;
 
++       if (err == -EPERM) {
++               mesh_path_discard_frame(sdata, skb);
++               goto endlookup;
++       }
++
+        /* no nexthop found, start resolving */
+        mpath = mesh_path_lookup(sdata, target_addr);
+        if (!mpath) {
+@@ -1145,6 +1150,12 @@ int mesh_nexthop_lookup(struct
+ieee80211_sub_if_data *sdata,
+
+        next_hop = rcu_dereference(mpath->next_hop);
+        if (next_hop) {
++               if (mpath->flags & MESH_PATH_FIXED) {
++                       if (next_hop->sta_state != IEEE80211_STA_AUTHORIZED) {
++                               err = -EPERM;
++                               goto endlookup;
++                       }
++               }
+                memcpy(hdr->addr1, next_hop->sta.addr, ETH_ALEN);
+                memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
+                ieee80211_mps_set_frame_flags(sdata, next_hop, hdr);
