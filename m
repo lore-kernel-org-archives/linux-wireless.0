@@ -1,88 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46363 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751387AbbE1Meo (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:36353 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756794AbbEVKQS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 08:34:44 -0400
-Message-ID: <1432816470.6319.41.camel@decadent.org.uk> (sfid-20150528_143448_285651_5A249155)
-Subject: Re: [PATCH] mac80211: fix kernel-doc comments in mac80211.h
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: andrey.konovalov@linaro.org, emmanuel.grumbach@intel.com,
-	linux-wireless@vger.kernel.org
-Date: Thu, 28 May 2015 13:34:30 +0100
-In-Reply-To: <1432796432.2459.0.camel@sipsolutions.net>
-References: <555a4e12.e323700a.26a6.ffff9e65@mx.google.com>
-	 (sfid-20150518_223947_537367_CC6BC263) <1432127031.19214.9.camel@sipsolutions.net>
-	 <1432769411.6319.36.camel@decadent.org.uk>
-	 <1432796432.2459.0.camel@sipsolutions.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-kndgpWM5AU8E4Dcn0ztY"
-Mime-Version: 1.0
+	Fri, 22 May 2015 06:16:18 -0400
+Received: by wizk4 with SMTP id k4so42459578wiz.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 03:16:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
+References: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 22 May 2015 12:16:17 +0200
+Message-ID: <CA+BoTQmukTiNFrsLA5rdiQe=Ga45JNuFzSmqQ4h-VJMW97f=_w@mail.gmail.com> (sfid-20150522_121630_539403_411EF584)
+Subject: Re: pull-request: wireless-drivers-next 2015-05-21
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: David Miller <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 21 May 2015 at 15:39, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Hi Dave,
+>
+> here's a wireless-drivers pull request for 4.2. This time please pay
+> extra attention to this pull as there are two problems:
+>
+> First of all as you can see the diffstat from git-pull-request in the
+> end is just weird. I was long and hard trying to check everything and to
+> my understanding all the merges look ok and I cannot explain the reason
+> for the diffstat, but of course I might be missing something. Maybe
+> git-request-pull is just buggy? At least with gitk everything looks to
+> be ok and the patch list below also looks valid.
+>
+> Secondly there's a non-trivial conflict in
+> drivers/net/wireless/ath/ath10k/mac.c which is due to removal of
+> FIF_PROMISC_IN_BSS in commit df1404650c. You need to remove more code
+> than just the obvious conflicts shown by git. In the end of this mail I
+> added a git diff output after I fixed the conflict, hopefully that helps
+> you to fix it. The main points are that you remove
+> ath10k_mac_should_disable_promisc() and the last ath10k_monitor_recalc()
+> call from ath10k_vdev_start_restart() along with the obvious conflict
+> fixes git points out.
+>
+> There's also a patch from Michal which will also help to fix the
+> resolution. Michal, please double check the resolution proposal below so
+> that I didn't miss anything.
+>
+> https://patchwork.kernel.org/patch/6387631/
 
---=-kndgpWM5AU8E4Dcn0ztY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+[...]
 
-On Thu, 2015-05-28 at 09:00 +0200, Johannes Berg wrote:
-> On Thu, 2015-05-28 at 00:30 +0100, Ben Hutchings wrote:
-> > On Wed, 2015-05-20 at 15:03 +0200, Johannes Berg wrote:
-> > > On Mon, 2015-05-18 at 23:39 +0300, andrey.konovalov@linaro.org wrote:
-> > > > Commits a818292 "mac80211: convert rssi_callback() to event_callbac=
-k()"
-> > > > and a940909 "mac80211: notify the driver about authentication statu=
-s"
-> > > > added two errors and one warning when building docs for the mac8021=
-1
-> > > > driver. Fix the kernel-doc comments so that the documentation targe=
-ts
-> > > > could be built successfully again.
-> > >=20
-> > > This was already fixed.
-> >=20
-> > It's been one week and this is still broken in Linus's tree.  There was
-> > a fix for some of the other warnings, but I don't see these errors fixe=
-d
-> > anywhere.
->=20
-> Yeah, somehow I put this into my -next pile... Given how late we are, I
-> don't think I want to change that now though.
+> diff --cc drivers/net/wireless/ath/ath10k/mac.c
+> index fcd08b2f8d26,eaa0182e001d..000000000000
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@@ -766,9 -1031,68 +1031,48 @@@ static int ath10k_monitor_stop(struct a
+>         return 0;
+>   }
+>
+>  -static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
+>  -{
+>  -      struct ath10k_vif *arvif;
+>  -
+>  -      if (!(ar->filter_flags & FIF_PROMISC_IN_BSS))
+>  -              return true;
+>  -
+>  -      if (!ar->num_started_vdevs)
+>  -              return false;
+>  -
+>  -      list_for_each_entry(arvif, &ar->arvifs, list)
+>  -              if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
+>  -                      return false;
+>  -
+>  -      ath10k_dbg(ar, ATH10K_DBG_MAC,
+>  -                 "mac disabling promiscuous mode because vdev is started\n");
+>  -      return true;
+>  -}
+>  -
+> + static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
+> + {
+> +       int num_ctx;
+> +
+> +       /* At least one chanctx is required to derive a channel to start
+> +        * monitor vdev on.
+> +        */
+> +       num_ctx = ath10k_mac_num_chanctxs(ar);
+> +       if (num_ctx == 0)
+> +               return false;
+> +
+> +       /* If there's already an existing special monitor interface then don't
+> +        * bother creating another monitor vdev.
+> +        */
+> +       if (ar->monitor_arvif)
+> +               return false;
+> +
+> +       return ar->monitor ||
+>  -             !ath10k_mac_should_disable_promisc(ar) ||
+> +              test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+> + }
+> +
+> + static bool ath10k_mac_monitor_vdev_is_allowed(struct ath10k *ar)
+> + {
+> +       int num_ctx;
+> +
+> +       num_ctx = ath10k_mac_num_chanctxs(ar);
+> +
+> +       /* FIXME: Current interface combinations and cfg80211/mac80211 code
+> +        * shouldn't allow this but make sure to prevent handling the following
+> +        * case anyway since multi-channel DFS hasn't been tested at all.
+> +        */
+> +       if (test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags) && num_ctx > 1)
+> +               return false;
+> +
+> +       return true;
+> + }
+> +
+>   static int ath10k_monitor_recalc(struct ath10k *ar)
+>   {
+> -       bool should_start;
+> +       bool needed;
+> +       bool allowed;
+> +       int ret;
+>
+>         lockdep_assert_held(&ar->conf_mutex);
+>
 
-It's a build failure so it should go upstream now.
+Looks good to me.
 
-I ran into this while packaging Linux 4.1 for Debian, and had to debug
-and fix it again, so that's now three people who have had to spend time
-on this.
+There's still some code left which is unnecessary (see 2 last hunks on
+patchwork) because due to FIF_PROMISC_IN_BSS removal entire commit
+548462133d98 becomes obsolete. Since these 2 hunk leftovers don't
+break anything functionally I guess this can be cleaned up in a follow
+up patch after the merge. Just my 2cc.
 
-Ben.
 
---=20
-Ben Hutchings
-It is a miracle that curiosity survives formal education. - Albert Einstein
+> @@@ -871,12 -1231,46 +1211,46 @@@ static void ath10k_recalc_radar_detecti
+>         }
+>   }
+>
+> - static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+> + static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+> + {
+> +       struct ath10k *ar = arvif->ar;
+> +       int ret;
+> +
+> +       lockdep_assert_held(&ar->conf_mutex);
+> +
+> +       reinit_completion(&ar->vdev_setup_done);
+> +
+> +       ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
+> +       if (ret) {
+> +               ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
+> +                           arvif->vdev_id, ret);
+> +               return ret;
+> +       }
+> +
+> +       ret = ath10k_vdev_setup_sync(ar);
+> +       if (ret) {
+> +               ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
+> +                           arvif->vdev_id, ret);
+> +               return ret;
+> +       }
+> +
+> +       WARN_ON(ar->num_started_vdevs == 0);
+> +
+> +       if (ar->num_started_vdevs != 0) {
+> +               ar->num_started_vdevs--;
+> +               ath10k_recalc_radar_detection(ar);
+> +       }
+> +
+> +       return ret;
+> + }
+> +
+> + static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
+> +                                    const struct cfg80211_chan_def *chandef,
+> +                                    bool restart)
+>   {
+>         struct ath10k *ar = arvif->ar;
+> -       struct cfg80211_chan_def *chandef = &ar->chandef;
+>         struct wmi_vdev_start_request_arg arg = {};
+>  -      int ret = 0, ret2;
+>  +      int ret = 0;
+>
+>         lockdep_assert_held(&ar->conf_mutex);
+>
 
---=-kndgpWM5AU8E4Dcn0ztY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Kalle, I'm not seeing this when I merge your pull tag on top of
+net-next/master. Am I missing something?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Anyway FYI ath10k_vdev_stop() was moved up in the code to avoid
+forward declaration in 822b7e0b633b.
 
-iQIVAwUAVWcLW+e/yOyVhhEJAQqDkg/7BVAr41O2apHeUJRMTKAudR2pYJ7rV9Eo
-8xzhaGSg1WjRxJii/dan69R+RcfGRUmDlfxESWlyuc1El4NzZJs5X7E9fFmr/rbT
-yg1diPyTk48iI3LhlAo8A3kZyi/eJVSE5yM0dGdw5VonD7+Ot4f/U3qxlkOrVzTc
-NztFBnWYdlXbwbghMZDB1h0mL7zZKmE3HDokGwKSOj+Xu9ze1qFviqOvqUhwiewT
-v2KBuM7g+TwiVAmoJRuTEW2RrKuNU3hW0QJ7lPoAk8J2gWlK4yzeP3+icsL5bRMg
-twxD48gLzUbz6a2/htT4JQF8+OgErw6m1w8RO+rgD1MmxRGAFjaTK6q72J0laATZ
-Q8Ef6FTpAN8uj5X4dX8QYhyIW+azMmXKK3Hiw3fq4ZXyVH6sN38L4Zxpe8DMa4Qg
-rIQ/WCaUBWcAvFENBPEE3ED4Nw/dluQTscVkgbSsLIr7mhDmHX75JG5wNGRj/hMx
-O79B9G6T1PcV+UfcNIW64Ss69r13MXFaCxg5Dc+pDNSjShnF8TiahTkRk9VmPK9u
-JJAjUL9XsUZINCTREzYLf1Gf2KYlxPFj/RgPmIfs9uJmRrggKGbEyIPD+DHozIAi
-5nitK9QTdRMmetZ2+5nBniU5hryepk964IjT0lGGnV4KkQa2gYliBmCzcXyrt/ZK
-034uXrMf0I0=
-=J/xf
------END PGP SIGNATURE-----
 
---=-kndgpWM5AU8E4Dcn0ztY--
+Michał
