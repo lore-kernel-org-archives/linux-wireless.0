@@ -1,66 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54550 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbbEDJTi (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36811 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756508AbbEVISW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 05:19:38 -0400
-Date: Mon, 4 May 2015 10:19:35 +0100
-From: Luis Henriques <luis.henriques@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>, Marek Vasut <marex@denx.de>,
-	Anders Larsen <al@alarsen.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: Stable request 9374e7d2 "rtlwifi: rtl8192cu: Add new device ID"
-Message-ID: <20150504091935.GD1792@ares.olymp> (sfid-20150504_111942_911539_CE0814E1)
-References: <1430230954.6036.4@alarsen-lx>
- <201504281633.17160.marex@denx.de>
- <553FA5F0.1070402@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <553FA5F0.1070402@lwfinger.net>
+	Fri, 22 May 2015 04:18:22 -0400
+Received: by wizk4 with SMTP id k4so39382218wiz.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 01:18:21 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 1/2] ath10k: handle cycle counter wraparound
+Date: Fri, 22 May 2015 10:18:12 +0200
+Message-Id: <1432282693-4553-1-git-send-email-michal.kazior@tieto.com> (sfid-20150522_101841_558812_5D2BF512)
+In-Reply-To: <CA+BoTQ=V1psOoaL1WG7vSUjSLhPnQqBUODjeB3NyWt-pMtmNFA@mail.gmail.com>
+References: <CA+BoTQ=V1psOoaL1WG7vSUjSLhPnQqBUODjeB3NyWt-pMtmNFA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 28, 2015 at 10:23:28AM -0500, Larry Finger wrote:
-> Please note that there are two commits just added to the mainline repo that
-> should be propagated to all stable kernels. Both are addition of new USB IDs
-> for an old driver, thus they will cause to side effects. Unfortunately, the
-> Cc to stable was missed in the first of these, thus the need for this
-> message. The second was Cc for stable, but I include it here for
-> completeness.
-> 
-> The two commits in question are
-> 
-> commit 9374e7d2fdcad3c36dafc8d3effd554bc702c4b6
-> Author: Marek Vasut <marex@denx.de>
-> Date:   Thu Mar 26 02:16:06 2015 +0100
-> 
->     rtlwifi: rtl8192cu: Add new device ID
-> 
->     Add new ID for ASUS N10 WiFi dongle.
-> 
-> commit 2f92b314f4daff2117847ac5343c54d3d041bf78
-> Author: Larry Finger <Larry.Finger@lwfinger.net>
-> Date:   Mon Mar 23 18:14:10 2015 -0500
-> 
->     rtlwifi: rtl8192cu: Add new USB ID
-> 
->     USB ID 2001:330d is used for a D-Link DWA-131.
-> 
->
+When QCA988X cycle counter HW register wraps
+around it resets to 0x7fffffff instead of 0. All
+other cycle counter related registers are divided
+by 2 so they never wraparound themselves. QCA61X4
+has a uniform CC and it wraparounds in a regular
+fashion though.
 
-Thank you, Larry.  Queuing both patches for the 3.16 kernel.
+Worst case wraparound time is approx 24 seconds
+(2**31 / 88MHz). Since scan channel visit times
+are max 5 seconds (offchannel case) it is
+guaranteed there's been at most 1 wraparound and
+it is possible to compute survey data.
 
-Cheers,
---
-Luís
+This fixes some occasional incorrect survey data
+on QCA988X as some channels (depending on how/when
+scan/offchannel requests were requested) would
+have approx 24 sec active time which wasn't
+actually the case.
 
-> Thanks,
-> 
-> Larry
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe stable" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This should help make hostapd ACS more reliable.
+
+Reported-by: Srinivasa Duvvuri <sduvvuri@chromium.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+
+Notes:
+    v3:
+     * split into 2 separate patches
+     * don't ignore all wraparound data: scans can be computed
+     * apply the shifted wraparound fix only for QCA988X
+     * improve commit log
+
+ drivers/net/wireless/ath/ath10k/core.c | 15 +++++++++++++++
+ drivers/net/wireless/ath/ath10k/core.h | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  | 14 ++++++++++++--
+ 3 files changed, 39 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index bcccae19325d..0cc2122d6921 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -48,6 +48,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.name = "qca988x hw2.0",
+ 		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
++		.has_shifted_cc_wraparound = true,
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+@@ -102,6 +103,20 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	},
+ };
+ 
++void ath10k_core_get_cc_delta(struct ath10k *ar,
++			      u32 *cc_delta, u32 *rcc_delta,
++			      u32 cc, u32 rcc,
++			      u32 cc_prev, u32 rcc_prev)
++{
++	if (ar->hw_params.has_shifted_cc_wraparound && cc < cc_prev) {
++		cc_prev -= 0x7fffffff;
++		rcc *= 2;
++	}
++
++	*cc_delta = cc - cc_prev;
++	*rcc_delta = rcc - rcc_prev;
++}
++
+ static void ath10k_send_suspend_complete(struct ath10k *ar)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot suspend complete\n");
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 827b3d79ed0c..fb403972b1c5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -572,6 +572,13 @@ struct ath10k {
+ 		u32 patch_load_addr;
+ 		int uart_pin;
+ 
++		/* This is true if given HW chip has a quirky Cycle Counter
++		 * wraparound which resets to 0x7fffffff instead of 0. All
++		 * other CC related counters (e.g. Rx Clear Count) are divided
++		 * by 2 so they never wraparound themselves.
++		 */
++		bool has_shifted_cc_wraparound;
++
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+ 			const char *fw;
+@@ -742,4 +749,9 @@ void ath10k_core_stop(struct ath10k *ar);
+ int ath10k_core_register(struct ath10k *ar, u32 chip_id);
+ void ath10k_core_unregister(struct ath10k *ar);
+ 
++void ath10k_core_get_cc_delta(struct ath10k *ar,
++			      u32 *cc_delta, u32 *rcc_delta,
++			      u32 cc, u32 rcc,
++			      u32 cc_prev, u32 rcc_prev);
++
+ #endif /* _CORE_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 0fabe689179c..52ed48b7e5f9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1640,8 +1640,18 @@ void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
+ 		 * visited channel. The reported cycle count is global
+ 		 * and per-channel cycle count must be calculated */
+ 
+-		cycle_count -= ar->survey_last_cycle_count;
+-		rx_clear_count -= ar->survey_last_rx_clear_count;
++		/* Worst case wraparound time is approx 24 seconds (2**31 /
++		 * 88MHz). Since scan channel visit times are max 5 seconds
++		 * (offchannel case) it is guaranteed there's been at most 1
++		 * wraparound and it is possible to compute survey data.
++		 */
++		ath10k_core_get_cc_delta(ar,
++					 &cycle_count,
++					 &rx_clear_count,
++					 cycle_count,
++					 rx_clear_count,
++					 ar->survey_last_cycle_count,
++					 ar->survey_last_rx_clear_count);
+ 
+ 		survey = &ar->survey[idx];
+ 		survey->time = WMI_CHAN_INFO_MSEC(cycle_count);
+-- 
+2.1.4
 
