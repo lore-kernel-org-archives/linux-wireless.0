@@ -1,41 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50038 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753051AbbENOwN convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:36298 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992477AbbEVVpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 10:52:13 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <23142.1431615049@warthog.procyon.org.uk>
-References: <23142.1431615049@warthog.procyon.org.uk> <1431541436-17007-5-git-send-email-mcgrof@do-not-panic.com> <1431541436-17007-1-git-send-email-mcgrof@do-not-panic.com>
-Cc: dhowells@redhat.com, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	ming.lei@canonical.com, rusty@rustcorp.com.au,
-	torvalds@linux-foundation.org, seth.forshee@canonical.com,
-	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
-	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-	jlee@suse.com, tiwai@suse.de, casey@schaufler-ca.com,
-	keescook@chromium.org, mjg59@srcf.ucam.org,
-	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [RFC v2 4/6] scripts/sign-file.c: add support to only create signature file
+	Fri, 22 May 2015 17:45:40 -0400
+Received: by wgbgq6 with SMTP id gq6so28857007wgb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 14:45:38 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V3] brcmfmac: allow NVRAM values to contain spaces
+Date: Fri, 22 May 2015 23:45:28 +0200
+Message-Id: <1432331128-24011-1-git-send-email-zajec5@gmail.com> (sfid-20150522_234543_654050_8575BA24)
+In-Reply-To: <1432145701-15150-1-git-send-email-zajec5@gmail.com>
+References: <1432145701-15150-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Thu, 14 May 2015 15:52:04 +0100
-Message-ID: <23172.1431615124@warthog.procyon.org.uk> (sfid-20150514_165217_025343_1CA9AECB)
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Howells <dhowells@redhat.com> wrote:
+Platform NVRAMs often contain values with spaces. Even if right now most
+firmware-supported entries are simple values, we shouldn't reject these
+with spaces. It was semi-confirmed by Broadocm in the early patch adding
+support for platform NVRAMs.
 
-> Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
-> 
-> > You can create a file.pkcs7 file with the -d option right now
-> > but that still modifies the file. If all you want is the signature
-> > file you can use -s now, that will leave the file passed as-is.
-> 
-> I would recommend you use something other than "-s" - that belongs to the code
-> that is temporarily removed from the old perl script that allowed an external
-> signature to be passed.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: Minor change in commit message only. Provide an example of NVRAM entry
+    using space (not just a '#'). It's unprefixed (shouldn't be uploaded to
+    hardware anyway), but proves it's allowed in general.
+V3: As commented by Arend, accept space only (not a '#').
+---
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Use "-d".  I added the flag but then never made it do anything.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 45d7191..baad939 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -66,6 +66,12 @@ struct nvram_parser {
+ 	bool multi_dev_v2;
+ };
+ 
++/**
++ * is_nvram_char() - check if char is a valid one for NVRAM entry
++ *
++ * It accepts all printable ASCII chars except for '#' which opens a comment.
++ * Please note that ' ' (space) while accepted is not a valid key name char.
++ */
+ static bool is_nvram_char(char c)
+ {
+ 	/* comment marker excluded */
+@@ -73,7 +79,7 @@ static bool is_nvram_char(char c)
+ 		return false;
+ 
+ 	/* key and value may have any other readable character */
+-	return (c > 0x20 && c < 0x7f);
++	return (c >= 0x20 && c < 0x7f);
+ }
+ 
+ static bool is_whitespace(char c)
+@@ -120,7 +126,7 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
+ 			nvp->multi_dev_v1 = true;
+ 		if (strncmp(&nvp->fwnv->data[nvp->entry], "pcie/", 5) == 0)
+ 			nvp->multi_dev_v2 = true;
+-	} else if (!is_nvram_char(c)) {
++	} else if (!is_nvram_char(c) || c == ' ') {
+ 		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
+ 			  nvp->line, nvp->column);
+ 		return COMMENT;
+-- 
+1.8.4.5
 
-David
