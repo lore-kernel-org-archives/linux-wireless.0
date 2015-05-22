@@ -1,80 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:46079 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751138AbbEXRIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2015 13:08:32 -0400
-Date: Sun, 24 May 2015 19:08:29 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Robert Dolca <robert.dolca@gmail.com>
-Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [linux-nfc] [PATCH 8/8] NFC: Add Intel FieldsPeak NFC solution
- driver
-Message-ID: <20150524170829.GD15886@ribalta.ccr.corp.intel.com> (sfid-20150524_190852_288314_6221A7D1)
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
- <1424772112-27399-9-git-send-email-robert.dolca@intel.com>
- <20150326003025.GE10954@ribalta.home>
- <CAFPB+Yf1jWX=tv+feZRonZEprjXwHdD8mMXAupdm5XrDaYvWMA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFPB+Yf1jWX=tv+feZRonZEprjXwHdD8mMXAupdm5XrDaYvWMA@mail.gmail.com>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:36173 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756462AbbEVI5n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 May 2015 04:57:43 -0400
+Received: by wizk4 with SMTP id k4so40383492wiz.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 01:57:42 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/2] cfg80211: ignore netif running state when changing iftype
+Date: Fri, 22 May 2015 10:57:22 +0200
+Message-Id: <1432285043-8878-1-git-send-email-michal.kazior@tieto.com> (sfid-20150522_105749_423278_057C0BA2)
+In-Reply-To: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
+References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robert,
+It was possible for mac80211 to be coerced into an
+unexpected flow causing sdata union to become
+corrupted. Station pointer was put into
+sdata->u.vlan.sta memory location while it was
+really master AP's sdata->u.ap.next_beacon. This
+led to station entry being later freed as
+next_beacon before __sta_info_flush() in
+ieee80211_stop_ap() and a subsequent invalid
+pointer dereference crash.
 
-On Wed, Apr 01, 2015 at 06:35:31PM +0300, Robert Dolca wrote:
-> On Thu, Mar 26, 2015 at 2:30 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
-> >> +     /* If a patch was applied the new version is checked */
-> >> +     if (patched) {
-> >> +             r = nci_init(ndev);
-> >> +             if (r)
-> >> +                     goto error;
-> >> +
-> >> +             r = fdp_nci_get_versions(ndev);
-> >> +             if (r)
-> >> +                     goto error;
-> >> +
-> >> +             if (info->otp_version != info->otp_patch_version ||
-> >> +                 info->ram_version != info->ram_patch_version) {
-> >> +                     pr_err("FRP firmware update failed");
-> >> +                     r = -EINVAL;
-> >> +             }
-> >> +     }
-> >> +
-> >> +     /* Check if the device has VSC */
-> >> +     if (fdp_post_fw_vsc_cfg[0]) {
-> >> +             /* Set the vendor specific configuration */
-> >> +             r = fdp_nci_set_production_data(ndev, fdp_post_fw_vsc_cfg[3],
-> >> +                                             &fdp_post_fw_vsc_cfg[4]);
-> >> +             if (r)
-> >> +                     goto error;
-> >> +     }
-> >> +
-> >> +     /* Set clock type and frequency */
-> >> +     r = fdp_nci_set_clock(ndev, 0, 26000);
-> >> +     if (r)
-> >> +             goto error;
-> > The version checking, production data setting and clock setting should
-> > be part of a post setup notification call. Please add an nci_dev
-> > notify() ops that could get called on certain events, for example when
-> > NCI is up. Bluetooth's HCI does something along those lines already.
-> > From this notification hook you could implement this post setup stage.
-> >
-> > The idea is for your setup routine to only do firmware update and
-> > nothing else. It will make it shorter, and thus easier to read as well.
-> If the RAM patch wasn't applied successfully the device can't be used
-> so the setup function should fail.
-> If the production data (specifically the clock frequency) is not set
-> the device can not be used. If the user space tries to start polling
-> before the notification is sent the polling will fail. Having it
-> called later would mean introducing a race condition.
-Sure. Then I'd rather have an additional NCI hook (e.g.
-ndev->ops->open()) called synchronously after the setup stage that
-could fail and make open fail as well. The idea here is to separate the
-2 parts of your logic and make the code more readable.
+The problem was that ieee80211_ptr->use_4addr
+wasn't cleared on interface type changes.
 
-Cheers,
-Samuel.
+This could be reproduced with the following steps:
+
+ # host A and host B have just booted; no
+ # wpa_s/hostapd running; all vifs are down
+ host A> iw wlan0 set type station
+ host A> iw wlan0 set 4addr on
+ host A> printf 'interface=wlan0\nssid=4addrcrash\nchannel=1\nwds_sta=1' > /tmp/hconf
+ host A> hostapd -B /tmp/conf
+ host B> iw wlan0 set 4addr on
+ host B> ifconfig wlan0 up
+ host B> iw wlan0 connect -w hostAssid
+ host A> pkill hostapd
+ # host A crashed:
+
+ [  127.928192] BUG: unable to handle kernel NULL pointer dereference at 00000000000006c8
+ [  127.929014] IP: [<ffffffff816f4f32>] __sta_info_flush+0xac/0x158
+ ...
+ [  127.934578]  [<ffffffff8170789e>] ieee80211_stop_ap+0x139/0x26c
+ [  127.934578]  [<ffffffff8100498f>] ? dump_trace+0x279/0x28a
+ [  127.934578]  [<ffffffff816dc661>] __cfg80211_stop_ap+0x84/0x191
+ [  127.934578]  [<ffffffff816dc7ad>] cfg80211_stop_ap+0x3f/0x58
+ [  127.934578]  [<ffffffff816c5ad6>] nl80211_stop_ap+0x1b/0x1d
+ [  127.934578]  [<ffffffff815e53f8>] genl_family_rcv_msg+0x259/0x2b5
+
+Note: This isn't a revert of f8cdddb8d61d
+("cfg80211: check iface combinations only when
+iface is running") as far as functionality is
+considered because b6a550156bc ("cfg80211/mac80211:
+move more combination checks to mac80211") moved
+the logic somewhere else already.
+
+Fixes: f8cdddb8d61d ("cfg80211: check iface combinations only when iface is running")
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+
+Notes:
+    v2:
+     * improve commit log [Johannes]
+
+ net/wireless/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 70051ab52f4f..7e4e3fffe7ce 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -944,7 +944,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	     ntype == NL80211_IFTYPE_P2P_CLIENT))
+ 		return -EBUSY;
+ 
+-	if (ntype != otype && netif_running(dev)) {
++	if (ntype != otype) {
+ 		dev->ieee80211_ptr->use_4addr = false;
+ 		dev->ieee80211_ptr->mesh_id_up_len = 0;
+ 		wdev_lock(dev->ieee80211_ptr);
+-- 
+2.1.4
+
