@@ -1,113 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:38488 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883AbbESHXG (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55578 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753299AbbEWGr7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 03:23:06 -0400
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
-	<u.kleine-koenig@pengutronix.de>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Robert Dolca <robert.dolca@intel.com>,
-	linux-wireless@vger.kernel.org, kernel@pengutronix.de,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>
-Subject: [PATCH] NFC: PN544: use flags argument of devm_gpiod_get to set direction
-Date: Tue, 19 May 2015 09:22:56 +0200
-Message-Id: <1432020176-17343-1-git-send-email-u.kleine-koenig@pengutronix.de> (sfid-20150519_092316_803005_F7E069D8)
+	Sat, 23 May 2015 02:47:59 -0400
+Message-ID: <5560229C.9040008@broadcom.com> (sfid-20150523_084802_179403_7581F392)
+Date: Sat, 23 May 2015 08:47:56 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	<linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	<brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH V3] brcmfmac: allow NVRAM values to contain spaces
+References: <1432145701-15150-1-git-send-email-zajec5@gmail.com> <1432331128-24011-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1432331128-24011-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since 39b2bbe3d715 (gpio: add flags argument to gpiod_get*() functions)
-which appeared in v3.17-rc1, the gpiod_get* functions take an additional
-parameter that allows to specify direction and initial value for output.
+On 05/22/15 23:45, Rafał Miłecki wrote:
+> Platform NVRAMs often contain values with spaces. Even if right now most
+> firmware-supported entries are simple values, we shouldn't reject these
+> with spaces. It was semi-confirmed by Broadocm in the early patch adding
+> support for platform NVRAMs.
 
-Use this to simplify the driver. Furthermore this is one caller less
-that stops us making the flags argument to gpiod_get*() mandatory.
+Well, here is my full confirmation ;-) and thanks.
 
-While touching this also do some minor coding style fixes.
-
-Fixes: 0a5942c8e148 ("NFC: Add ACPI support for NXP PN544")
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
----
- drivers/nfc/pn544/i2c.c | 43 +++++++++++--------------------------------
- 1 file changed, 11 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 6fd986f5ac3e..fa75c53f3fa5 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -895,56 +895,35 @@ static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
- 		return -ENODEV;
- 
- 	/* Get EN GPIO from ACPI */
--	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1);
-+	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1,
-+					GPIOD_OUT_LOW);
- 	if (IS_ERR(gpiod_en)) {
--		nfc_err(dev,
--			"Unable to get EN GPIO\n");
-+		nfc_err(dev, "Unable to get EN GPIO\n");
- 		return -ENODEV;
- 	}
- 
--	phy->gpio_en  = desc_to_gpio(gpiod_en);
--
--	/* Configuration EN GPIO */
--	ret = gpiod_direction_output(gpiod_en, 0);
--	if (ret) {
--		nfc_err(dev, "Fail EN pin direction\n");
--		return ret;
--	}
-+	phy->gpio_en = desc_to_gpio(gpiod_en);
- 
- 	/* Get FW GPIO from ACPI */
--	gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2);
-+	gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2,
-+					GPIOD_OUT_LOW);
- 	if (IS_ERR(gpiod_fw)) {
--		nfc_err(dev,
--			"Unable to get FW GPIO\n");
-+		nfc_err(dev, "Unable to get FW GPIO\n");
- 		return -ENODEV;
- 	}
- 
--	phy->gpio_fw  = desc_to_gpio(gpiod_fw);
--
--	/* Configuration FW GPIO */
--	ret = gpiod_direction_output(gpiod_fw, 0);
--	if (ret) {
--		nfc_err(dev, "Fail FW pin direction\n");
--		return ret;
--	}
-+	phy->gpio_fw = desc_to_gpio(gpiod_fw);
- 
- 	/* Get IRQ GPIO */
--	gpiod_irq = devm_gpiod_get_index(dev, PN544_GPIO_NAME_IRQ, 0);
-+	gpiod_irq = devm_gpiod_get_index(dev, PN544_GPIO_NAME_IRQ, 0,
-+					 GPIOD_IN);
- 	if (IS_ERR(gpiod_irq)) {
--		nfc_err(dev,
--			"Unable to get IRQ GPIO\n");
-+		nfc_err(dev, "Unable to get IRQ GPIO\n");
- 		return -ENODEV;
- 	}
- 
- 	phy->gpio_irq = desc_to_gpio(gpiod_irq);
- 
--	/* Configure IRQ GPIO */
--	ret = gpiod_direction_input(gpiod_irq);
--	if (ret) {
--		nfc_err(dev, "Fail IRQ pin direction\n");
--		return ret;
--	}
--
- 	/* Map the pin to an IRQ */
- 	ret = gpiod_to_irq(gpiod_irq);
- 	if (ret < 0) {
--- 
-2.1.4
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+> V2: Minor change in commit message only. Provide an example of NVRAM entry
+>      using space (not just a '#'). It's unprefixed (shouldn't be uploaded to
+>      hardware anyway), but proves it's allowed in general.
+> V3: As commented by Arend, accept space only (not a '#').
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 10 ++++++++--
+>   1 file changed, 8 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> index 45d7191..baad939 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> @@ -66,6 +66,12 @@ struct nvram_parser {
+>   	bool multi_dev_v2;
+>   };
+>
+> +/**
+> + * is_nvram_char() - check if char is a valid one for NVRAM entry
+> + *
+> + * It accepts all printable ASCII chars except for '#' which opens a comment.
+> + * Please note that ' ' (space) while accepted is not a valid key name char.
+> + */
+>   static bool is_nvram_char(char c)
+>   {
+>   	/* comment marker excluded */
+> @@ -73,7 +79,7 @@ static bool is_nvram_char(char c)
+>   		return false;
+>
+>   	/* key and value may have any other readable character */
+> -	return (c>  0x20&&  c<  0x7f);
+> +	return (c>= 0x20&&  c<  0x7f);
+>   }
+>
+>   static bool is_whitespace(char c)
+> @@ -120,7 +126,7 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
+>   			nvp->multi_dev_v1 = true;
+>   		if (strncmp(&nvp->fwnv->data[nvp->entry], "pcie/", 5) == 0)
+>   			nvp->multi_dev_v2 = true;
+> -	} else if (!is_nvram_char(c)) {
+> +	} else if (!is_nvram_char(c) || c == ' ') {
+>   		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
+>   			  nvp->line, nvp->column);
+>   		return COMMENT;
 
