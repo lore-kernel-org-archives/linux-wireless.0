@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56110 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751548AbbE1JDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 05:03:21 -0400
-Message-ID: <1432803793.2459.2.camel@sipsolutions.net> (sfid-20150528_110326_727746_87D71ECF)
-Subject: Re: kmalloc panic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: pavani <pavani.muthyala@redpinesignals.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Network Developers <netdev@vger.kernel.org>
-Date: Thu, 28 May 2015 11:03:13 +0200
-In-Reply-To: <CAM_iQpUGLW44vzkN-5TJ9ww3RSz=2sRMnm7GKP6V0N9WGszRZQ@mail.gmail.com> (sfid-20150528_071604_270429_6EC02675)
-References: <5565CAA1.9070409@redpinesignals.com>
-	 <CAM_iQpUGLW44vzkN-5TJ9ww3RSz=2sRMnm7GKP6V0N9WGszRZQ@mail.gmail.com>
-	 (sfid-20150528_071604_270429_6EC02675)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:36768 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932397AbbEWUOS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 May 2015 16:14:18 -0400
+From: Haggai Eran <haggai.eran@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Haggai Eran <haggai.eran@gmail.com>,
+	Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+	Greg Kroah-Hartman <greg@kroah.com>,
+	linux-wireless@vger.kernel.org, <stable@vger.kernel.org>
+Subject: [PATCH v1] staging: rtl8712: prevent buffer overrun in recvbuf2recvframe
+Date: Sat, 23 May 2015 23:13:51 +0300
+Message-Id: <1432412031-12871-1-git-send-email-haggai.eran@gmail.com> (sfid-20150523_221422_451141_263C519A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-05-27 at 22:15 -0700, Cong Wang wrote:
+With an RTL8191SU USB adaptor, sometimes the hints for a fragmented
+packet are set, but the packet length is too large. Allocate enough
+space to prevent memory corruption and a resulting kernel panic [1].
 
-> > rsi_client: module license 'Proprietary' taints kernel.
-> > Disabling lock debugging due to kernel taint
-> > RSI_Init called and registering the client driver
+[1] http://www.spinics.net/lists/linux-wireless/msg136546.html
 
-If this is what I think it is - the redpine signals wifi driver, then I
-have no interest in this bug report whatsoever.
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Haggai Eran <haggai.eran@gmail.com>
+---
+Hi Larry,
 
-Please tell us
- * the exact kernel version, best with local patches
- * the wifi driver used
+I've updated the patch to avoid truncating the packets. I'm keeping the minimal
+buffer of 1658 bytes in case some other device does rely on this
+defragmentation feature.
 
-> > INFO: Allocated in 0x10100100 age=2669517238 cpu=16842820 pid=335563024
+Regards,
+Haggai
 
-and what function this really was (0x10100100 isn't really useful).
+ drivers/staging/rtl8712/rtl8712_recv.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
+index cd8b444..5542243 100644
+--- a/drivers/staging/rtl8712/rtl8712_recv.c
++++ b/drivers/staging/rtl8712/rtl8712_recv.c
+@@ -1056,7 +1056,8 @@ static int recvbuf2recvframe(struct _adapter *padapter, struct sk_buff *pskb)
+ 		/* for first fragment packet, driver need allocate 1536 +
+ 		 * drvinfo_sz + RXDESC_SIZE to defrag packet. */
+ 		if ((mf == 1) && (frag == 0))
+-			alloc_sz = 1658;/*1658+6=1664, 1664 is 128 alignment.*/
++			/*1658+6=1664, 1664 is 128 alignment.*/
++			alloc_sz = max_t(u16, tmp_len, 1658);
+ 		else
+ 			alloc_sz = tmp_len;
+ 		/* 2 is for IP header 4 bytes alignment in QoS packet case.
+-- 
+1.9.1
 
