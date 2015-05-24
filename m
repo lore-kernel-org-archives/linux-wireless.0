@@ -1,77 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48873 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932635AbbERV1V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 17:27:21 -0400
-Message-ID: <555A5938.9080706@candelatech.com> (sfid-20150518_232724_693729_506C7027)
-Date: Mon, 18 May 2015 14:27:20 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mga03.intel.com ([134.134.136.65]:46079 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751138AbbEXRIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 May 2015 13:08:32 -0400
+Date: Sun, 24 May 2015 19:08:29 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Robert Dolca <robert.dolca@gmail.com>
+Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [linux-nfc] [PATCH 8/8] NFC: Add Intel FieldsPeak NFC solution
+ driver
+Message-ID: <20150524170829.GD15886@ribalta.ccr.corp.intel.com> (sfid-20150524_190852_288314_6221A7D1)
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+ <1424772112-27399-9-git-send-email-robert.dolca@intel.com>
+ <20150326003025.GE10954@ribalta.home>
+ <CAFPB+Yf1jWX=tv+feZRonZEprjXwHdD8mMXAupdm5XrDaYvWMA@mail.gmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Poor TCP performance with ath10k in 4.0 kernel, again.
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFPB+Yf1jWX=tv+feZRonZEprjXwHdD8mMXAupdm5XrDaYvWMA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disclosure: I am working with a patched 4.0 kernel, patched ath10k driver, and
-patched (CT) ath10k firmware.  Traffic generator is of our own making.
+Hi Robert,
 
-First, this general problem has been reported before, but the
-work-arounds previously suggested do not fully resolve my problems.
+On Wed, Apr 01, 2015 at 06:35:31PM +0300, Robert Dolca wrote:
+> On Thu, Mar 26, 2015 at 2:30 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+> >> +     /* If a patch was applied the new version is checked */
+> >> +     if (patched) {
+> >> +             r = nci_init(ndev);
+> >> +             if (r)
+> >> +                     goto error;
+> >> +
+> >> +             r = fdp_nci_get_versions(ndev);
+> >> +             if (r)
+> >> +                     goto error;
+> >> +
+> >> +             if (info->otp_version != info->otp_patch_version ||
+> >> +                 info->ram_version != info->ram_patch_version) {
+> >> +                     pr_err("FRP firmware update failed");
+> >> +                     r = -EINVAL;
+> >> +             }
+> >> +     }
+> >> +
+> >> +     /* Check if the device has VSC */
+> >> +     if (fdp_post_fw_vsc_cfg[0]) {
+> >> +             /* Set the vendor specific configuration */
+> >> +             r = fdp_nci_set_production_data(ndev, fdp_post_fw_vsc_cfg[3],
+> >> +                                             &fdp_post_fw_vsc_cfg[4]);
+> >> +             if (r)
+> >> +                     goto error;
+> >> +     }
+> >> +
+> >> +     /* Set clock type and frequency */
+> >> +     r = fdp_nci_set_clock(ndev, 0, 26000);
+> >> +     if (r)
+> >> +             goto error;
+> > The version checking, production data setting and clock setting should
+> > be part of a post setup notification call. Please add an nci_dev
+> > notify() ops that could get called on certain events, for example when
+> > NCI is up. Bluetooth's HCI does something along those lines already.
+> > From this notification hook you could implement this post setup stage.
+> >
+> > The idea is for your setup routine to only do firmware update and
+> > nothing else. It will make it shorter, and thus easier to read as well.
+> If the RAM patch wasn't applied successfully the device can't be used
+> so the setup function should fail.
+> If the production data (specifically the clock frequency) is not set
+> the device can not be used. If the user space tries to start polling
+> before the notification is sent the polling will fail. Having it
+> called later would mean introducing a race condition.
+Sure. Then I'd rather have an additional NCI hook (e.g.
+ndev->ops->open()) called synchronously after the setup stage that
+could fail and make open fail as well. The idea here is to separate the
+2 parts of your logic and make the code more readable.
 
-The basic issue is that when the sending socket is directly on top
-of a wifi interface (ath10k driver), then TCP throughput sucks.
-
-For instance, if AP interface sends to station, with 10 concurrent
-TCP streams, I see about 426Mbps.  With 100 streams, I see total throughput
-of 750Mbps.  These were maybe 10-30 second tests that I did.
-
-Interestingly, a single stream connection performs very poorly at first,
-but at least in one test, it eventually ran quite fast.  It is too
-complicated to describe in words, but the graph is here:
-
-http://www.candelatech.com/downloads/single-tcp-4.0.pdf
-
-The 10-stream test did not go above about 450Mbps even after running for more than
-1 minute, and it was fairly stable around the 450Mbps range after the first few seconds.
-
-100-stream test shows nice stable aggregate throughput:
-
-http://www.candelatech.com/downloads/100-tcp-4.0.pdf
-
-I have tweaked the kernel tcp_limit_output_bytes setting
-(tested at 1024k too, did not make any significant difference).
-
-# cat /proc/sys/net/ipv4/tcp_limit_output_bytes
-2048000
-
-I have tried forcing TCP send/rcv buffers to be 1MB and 2MB, but that
-did not make obvious difference except that it started at the maximum
-rate very quickly instead of taking a few seconds to train up to full speed.
-
-If I run a single-stream TCP test, sending on eth1 (Intel 1G NIC)
-through the AP machine, then single stream download is about 540 Mbps, and ramps up
-quickly.  So, the AP can definitely send the needed amount of TCP packets.
-
-UDP throughput in download direction, single stream, is about 770Mbps, regardless
-of whether I originate the socket on the AP or if I pass it through the AP.
-send/recv bufs are set to 1MB for UDP sockets.
-
-The 3.17 kernel shows similar behaviour, and the 3.14 kernel is a lot better
-for TCP traffic.
-
-Are there tweaks other than tcp_limit_output_bytes that might
-improve this behaviour?
-
-I will be happy to grab captures or provide any other debugging info
-that someone thinks will be helpful.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Cheers,
+Samuel.
