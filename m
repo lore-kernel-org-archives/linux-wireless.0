@@ -1,27 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56715 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbbEZNct (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:32:49 -0400
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:25545 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751257AbbEXRIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 May 2015 13:08:01 -0400
+Date: Sun, 24 May 2015 19:07:58 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Robert Dolca <robert.dolca@gmail.com>
+Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [linux-nfc] [PATCH 3/8] NFC: NCI: Adds NCI init and reset API
+ for drivers
+Message-ID: <20150524170758.GC15886@ribalta.ccr.corp.intel.com> (sfid-20150524_190826_306636_91554F64)
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+ <1424772112-27399-4-git-send-email-robert.dolca@intel.com>
+ <20150326002937.GB10954@ribalta.home>
+ <CAFPB+YcvZReLRsv5dYh=jTwASa1vo-0pK5T1AS-eGmzO=arDLQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: rtlwifi: fix typos in Kconfig
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20150519021834.GA9546@ns.kevlo.org>
-To: Kevin Lo <kevlo@kevlo.org>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20150526110522.511CA1417F4@smtp.codeaurora.org> (sfid-20150526_153307_247073_1B59BCFB)
-Date: Tue, 26 May 2015 11:05:22 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFPB+YcvZReLRsv5dYh=jTwASa1vo-0pK5T1AS-eGmzO=arDLQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Robert,
 
-> This patch fixes typos in drivers/net/wirless/rtlwifi/Kconfig.
+On Tue, Mar 31, 2015 at 05:05:53PM +0300, Robert Dolca wrote:
+> On Thu, Mar 26, 2015 at 2:29 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+> > Hi Robert,
+> >
+> > On Tue, Feb 24, 2015 at 12:01:47PM +0200, Robert Dolca wrote:
+> >> In order to communicate with the device during the setup
+> >> phase, the driver may need to initialize the device. After
+> >> the setup is done the driver should reset the device to leave
+> >> it in the same state that it was before the setup function
+> >> call.
+> > I would prefer not to export those symbols, but instead introduce a
+> > quirk bitmap to let the NCI core know that your device expects the core
+> > to be initialized before calling the setup ops.
+> > That would be done from nci_open_device().
 > 
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+> As part of the initialization / firmware upgrade procedure the driver
+> needs to reset and initialize the NCI connection multiple times.
+> Having the connection initialized before calling setup is not enough.
+Fair enough, I am ok with exporting those symbols.
 
-Thanks, applied to wireless-drivers-next.git.
+BTW after looking at your setup routine, I think this is wrong:
 
-Kalle Valo
++	/* Load firmware from disk */
++	r = fdp_nci_request_firmware(ndev);
++	if (r)
++		goto error;
+
+You should be able to boot your NFC chipset without a local
+patch. If there is one, then you can try patching your device, but
+otherwise we should continue with the exisiting one.
+
+Cheers,
+Samuel.
