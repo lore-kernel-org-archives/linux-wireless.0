@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbbECTcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:32:39 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/42] iwlwifi: mvm: iterate all interfaces during HW recovery cleanup
-Date: Sun,  3 May 2015 22:31:30 +0300
-Message-Id: <1430681513-7838-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213424_955961_77A751ED)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:41525 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750783AbbEYD35 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 May 2015 23:29:57 -0400
+Date: Sun, 24 May 2015 23:29:55 -0400 (EDT)
+Message-Id: <20150524.232955.425320477500361631.davem@davemloft.net> (sfid-20150525_053013_863197_086982AA)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	michal.kazior@tieto.com
+Subject: Re: pull-request: wireless-drivers-next 2015-05-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
+References: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 21 May 2015 16:39:04 +0300
 
-Usually during HW recovery the state of all active interfaces is cleaned
-up during drv_start(). There's a special case where a HW restart is
-requested when an interface is going down. In this case the iface-iterator
-won't see this interface and we won't clean it. This has bad consequences
-once the interface is legitimately brought up again.
+> here's a wireless-drivers pull request for 4.2. This time please pay
+> extra attention to this pull as there are two problems:
+> 
+> First of all as you can see the diffstat from git-pull-request in the
+> end is just weird. I was long and hard trying to check everything and to
+> my understanding all the merges look ok and I cannot explain the reason
+> for the diffstat, but of course I might be missing something. Maybe
+> git-request-pull is just buggy? At least with gitk everything looks to
+> be ok and the patch list below also looks valid.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+The diffstat doesn't look anything like that for me.  It contained only
+your wireless changes.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 8d9e5da..eca1666 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1239,9 +1239,11 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
- 	/* just in case one was running */
- 	ieee80211_remain_on_channel_expired(mvm->hw);
- 
--	ieee80211_iterate_active_interfaces_atomic(
--		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
--		iwl_mvm_cleanup_iterator, mvm);
-+	/*
-+	 * cleanup all interfaces, even inactive ones, as some might have
-+	 * gone down during the HW restart
-+	 */
-+	ieee80211_iterate_interfaces(mvm->hw, 0, iwl_mvm_cleanup_iterator, mvm);
- 
- 	mvm->p2p_device_vif = NULL;
- 	mvm->d0i3_ap_sta_id = IWL_MVM_STATION_COUNT;
--- 
-2.1.0
+It may have helped that I merged 'net' into 'net-next' right before I
+pulled this.
 
+> Secondly there's a non-trivial conflict in
+> drivers/net/wireless/ath/ath10k/mac.c which is due to removal of
+> FIF_PROMISC_IN_BSS in commit df1404650c. You need to remove more code
+> than just the obvious conflicts shown by git. In the end of this mail I
+> added a git diff output after I fixed the conflict, hopefully that helps
+> you to fix it. The main points are that you remove
+> ath10k_mac_should_disable_promisc() and the last ath10k_monitor_recalc()
+> call from ath10k_vdev_start_restart() along with the obvious conflict
+> fixes git points out.
+> 
+> There's also a patch from Michal which will also help to fix the
+> resolution. Michal, please double check the resolution proposal below so
+> that I didn't miss anything.
+> 
+> https://patchwork.kernel.org/patch/6387631/
+
+Thanks, I think I got the conflict resolution correct, please have a look.
