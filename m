@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:32860 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbbE1Ecs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38749 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbbEYINm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 00:32:48 -0400
-From: Guenter Roeck <linux@roeck-us.net>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: Rachel Kim <rachel.kim@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH] staging: wilc1000: Disable for S390
-Date: Wed, 27 May 2015 21:32:43 -0700
-Message-Id: <1432787563-25800-1-git-send-email-linux@roeck-us.net> (sfid-20150528_063311_198962_9B398678)
+	Mon, 25 May 2015 04:13:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jakub Kicinski <moorray3@wp.pl>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: Re: [PATCHv2 0/2] add mt7601u driver
+References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+	<1430857363-30844-1-git-send-email-moorray3@wp.pl>
+Date: Mon, 25 May 2015 11:13:32 +0300
+In-Reply-To: <1430857363-30844-1-git-send-email-moorray3@wp.pl> (Jakub
+	Kicinski's message of "Tue, 5 May 2015 22:22:41 +0200")
+Message-ID: <87fv6l3wib.fsf@kamboji.qca.qualcomm.com> (sfid-20150525_101347_180216_4827E69A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wilc1000 driver uses definitions such as DEBUG_LEVEL, DEBUG,
-and PRINT_INFO. This causes compile errors on S390 which has similar
-definitions in its core code. Disable the driver for S390 instead
-of giving the non-standard messaging code credit by trying to fix it.
+Jakub Kicinski <moorray3@wp.pl> writes:
 
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
----
- drivers/staging/wilc1000/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+> From: Jakub Kicinski <kubakici@wp.pl>
+>
+>> This miniseries adds support for the simplest of MediaTek Wi-Fi
+>> devices.  MT7601U is a single stream bgn chip with no bells or whistles.
+>> My driver is partially based on Felix's mt76 but IMHO it doesn't
+>> make sense to merge the two right now because MT7601U is a design
+>> somewhere between old Ralink devices and new Mediatek chips.  There
+>> wouldn't be all that much code sharing with the devices mt76 supports.
+>> Situation may obviously change when someone decides to extend m76 with
+>> support for the more recent USB dongles.
+>> 
+>> The driver supports only station mode.  I'm hoping to add AP support
+>> when time allows.
+>> 
+>> This driver sat on GitHub for quite a while and got some testing there.
+>> If anyone is interested in full git history and such here's a link:
+>> 
+>> http://github.com/kuba-moo/mt7601u
+>> 
+>> I split the submission into the build things and meta data (kconfig,
+>> Makefiles, MAINTAINERS update etc.) and the actual code to make the
+>> reviewing a little easier.
+>
+> v2:
+>  - don't zero parts of just allocated skb (Johannes)
+>  - add delay to polling of MAC state (Johannes)
+>  - use paged RX (Johannes)
+>  - add more device IDs (Jose)
+>  - reduce number of RX buffers
+>  - increase max length of USB dma aggregate
 
-diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
-index 101f908bc9ed..0b349d3c1475 100644
---- a/drivers/staging/wilc1000/Kconfig
-+++ b/drivers/staging/wilc1000/Kconfig
-@@ -1,5 +1,6 @@
- config WILC1000
- 	tristate "WILC1000 support (WiFi only)"
-+	depends on !S390
- 	---help---
- 		This module only support IEEE 802.11n WiFi.
- 
+It doens't compile anymore due to a mac80211 change. Can you rebase,
+please?
+
+drivers/net/wireless/mediatek/mt7601u/main.c: In function 'mt76_configure_filter':
+drivers/net/wireless/mediatek/mt7601u/main.c:122:31: error: 'FIF_PROMISC_IN_BSS' undeclared (first use in this function)
+drivers/net/wireless/mediatek/mt7601u/main.c:122:31: note: each undeclared identifier is reported only once for each function it appears in
+
 -- 
-2.1.0
-
+Kalle Valo
