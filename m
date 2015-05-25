@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:37588 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751536AbbEIAMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 20:12:37 -0400
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, dhowells@redhat.com,
-	ming.lei@canonical.com, seth.forshee@canonical.com, kyle@kernel.org
-Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v1 01/12] kernel/params.c: export param_ops_bool_enable_only
-In-Reply-To: <1430873070-7290-2-git-send-email-mcgrof@do-not-panic.com>
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com> <1430873070-7290-2-git-send-email-mcgrof@do-not-panic.com>
-Date: Sat, 09 May 2015 03:26:11 +0930
-Message-ID: <876183lzr8.fsf@rustcorp.com.au> (sfid-20150509_021302_285925_92D5E0DD)
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:35514 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbbEYP7q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 May 2015 11:59:46 -0400
+Message-ID: <556346EF.8000804@lwfinger.net> (sfid-20150525_175959_074848_7FA3309D)
+Date: Mon, 25 May 2015 10:59:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: 1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net,
+	haggai.eran@gmail.com
+CC: gregkh@linuxfoundation.org, netdev@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Stable <stable@vger.kernel.org>,
+	Arek Rusniak <arek.rusi@gmail.com>
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
+ of del_timer_sync()
+References: <20150525044250.GA3385@sudip-PC>
+In-Reply-To: <20150525044250.GA3385@sudip-PC>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On 05/24/2015 11:42 PM, Sudip Mukherjee wrote:
+>> I haven't been using kernel v4.1 so I haven't seen this warning, but looking
+>> at the code it seems to originate from the two recent patches to remove
+>> _cancel_timer and _cancel_timer_ex. I see that there's another patch in lkml [1]
+>> that changes del_timer_sync back to del_timer in more places. Perhaps it
+>> could prevent other warnings like this in the future.
 >
-> This will grant access to this helper to code built as modules.
->
-> Cc: Rusty Russell <rusty@rustcorp.com.au>
-> Cc: David Howells <dhowells@redhat.com>
-> Cc: Ming Lei <ming.lei@canonical.com>
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Cc: Kyle McMartin <kyle@kernel.org>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+> _cancel_timer and _cancel_timer_ex both were internally using del_timer,
+> and the issue was reported in bugzilla. I have given the reference of the
+> bugzilla in my patch in lkml.
+> I have changed the reference of del_timer_sync to del_timer in all places
+> which were in interrupt context, in some places it was not removed as
+> those were not in interrupt context.
 
-Applied,
-Rusty.
+Why did you not Cc the maintainers?? That is why file MAINTAINERS exists.
+
+Was your patch sent to Greg?
+
+Larry
+
+
