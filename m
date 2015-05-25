@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:38794 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbbESBDh (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:35846 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751100AbbEYALo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 21:03:37 -0400
-Received: by wichy4 with SMTP id hy4so3124456wic.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 May 2015 18:03:36 -0700 (PDT)
-Message-ID: <555A8BE5.5020102@gmail.com> (sfid-20150519_030448_255749_E83E87BC)
-Date: Tue, 19 May 2015 03:03:33 +0200
-From: poma <pomidorabelisima@gmail.com>
+	Sun, 24 May 2015 20:11:44 -0400
+Message-ID: <556268BC.5050807@lwfinger.net> (sfid-20150525_021154_383145_56F0A28E)
+Date: Sun, 24 May 2015 19:11:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?SmFrdWIgS2ljacWEc2tp?= <moorray3@wp.pl>
-CC: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Etna <etna@openmailbox.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-References: <544DB5A8.7090405@openmailbox.org>	<20141027152026.GB19976@tuxdriver.com>	<544E8CB4.3000607@rempel-privat.de>	<20141028134608.GA26283@tuxdriver.com>	<544FA303.5060303@broadcom.com>	<544FA627.3000004@rempel-privat.de>	<5450BEB2.60208@openwrt.org>	<5461F937.9060004@rempel-privat.de>	<5463CB6C.3030204@openwrt.org>	<5463D28F.9080106@lwfinger.net>	<20150206182915.7467bac7@north>	<54EF261E.4040109@gmail.com> <20150226154028.380b96f2@north> <55592C54.6010204@gmail.com>
-In-Reply-To: <55592C54.6010204@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Haggai Eran <haggai.eran@gmail.com>
+CC: gregkh@linuxfoundation.org, netdev@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Stable <stable@vger.kernel.org>,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	Arek Rusniak <arek.rusi@gmail.com>
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
+ of del_timer_sync()
+References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net> <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
+In-Reply-To: <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/24/2015 02:03 PM, Haggai Eran wrote:
+> On 24 May 2015 at 00:16, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> The driver is reporting a warning at kernel/time/timer.c:1096 due to calling
+>> del_timer_sync() while in interrupt mode. Such warnings are fixed by calling
+>> del_timer() instead.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable <stable@vger.kernel.org>
+>> Cc: Haggi Eran <haggai.eran@gmail.com>
+>
+> Hi,
+>
+> I haven't been using kernel v4.1 so I haven't seen this warning, but looking
+> at the code it seems to originate from the two recent patches to remove
+> _cancel_timer and _cancel_timer_ex. I see that there's another patch in lkml [1]
+> that changes del_timer_sync back to del_timer in more places. Perhaps it
+> could prevent other warnings like this in the future.
+>
+> Regards,
+> Haggai
+>
+> [1] https://lkml.org/lkml/2015/5/15/226
 
-kernel 4.0.4 - no more:
-WARNING: CPU: x PID: 0 at kernel/softirq.c:150 __local_bh_enable_ip+0x72/0xa0()
+Yes, the script kiddies make changes they do not understand and screw everything 
+up. Unfortunately, I did not catch these in review. I think I will submit V2 and 
+blast the contributor.
 
-One more detail - at least for this MT7601U device, USB extension cable must be high quality.
+Larry
 
 
