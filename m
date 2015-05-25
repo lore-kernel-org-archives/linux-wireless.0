@@ -1,88 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:4649 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751537AbbEGCHo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 22:07:44 -0400
-Message-ID: <554AC8EB.9040403@linux.intel.com> (sfid-20150507_040805_556801_A71E3A05)
-Date: Thu, 07 May 2015 10:07:39 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: "brudley@broadcom.com" <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	"meuleman@broadcom.com" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
-	"hdegoede@redhat.com" <hdegoede@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] brcmfmac: prohibit ACPI power management for brcmfmac
- driver
-References: <55463E19.7070709@linux.intel.com>
-In-Reply-To: <55463E19.7070709@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37332 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbbEYMH3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 May 2015 08:07:29 -0400
+Received: by wibt6 with SMTP id t6so47139728wib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2015 05:07:28 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 2/3] ath10k: handle cycle counter wraparound
+Date: Mon, 25 May 2015 14:06:18 +0200
+Message-Id: <1432555579-18347-2-git-send-email-michal.kazior@tieto.com> (sfid-20150525_140733_810149_D615F02F)
+In-Reply-To: <1432555579-18347-1-git-send-email-michal.kazior@tieto.com>
+References: <1432282693-4553-1-git-send-email-michal.kazior@tieto.com>
+ <1432555579-18347-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When QCA988X cycle counter HW register wraps
+around it resets to 0x7fffffff instead of 0. All
+other cycle counter related registers are divided
+by 2 so they never wraparound themselves. QCA61X4
+has a uniform CC and it wraparounds in a regular
+fashion though.
 
-Hi,
+Worst case wraparound time is approx 24 seconds
+(2**31 / 88MHz). Since scan channel visit times
+are max 5 seconds (offchannel case) it is
+guaranteed there's been at most 1 wraparound and
+it is possible to compute survey active time
+value. It is, however, impossible to determine the
+point at which Rx Clear Count has been divided by
+two so it is not reported upon wraparound.
 
-Any comments are welcome.
+This fixes some occasional incorrect survey data
+on QCA988X as some channels (depending on how/when
+scan/offchannel requests were requested) would
+have approx 24 sec active time which wasn't
+actually the case.
 
+This should improve hostapd ACS a little bit.
 
-Thanks,
-Zhonghui
+Reported-by: Srinivasa Duvvuri <sduvvuri@chromium.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
-On 2015/5/3 23:26, Fu, Zhonghui wrote:
-> ACPI will manage WiFi chip's power state during suspend/resume
-> process on some tablet platforms(such as ASUS T100TA). This is
-> not supported by brcmfmac driver now, and the context of WiFi
-> chip will be damaged after resume. This patch informs ACPI not
-> to manage WiFi chip's power state.
->
-> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-> ---
-> Changes in v2:
-> - Another implementation.
->
->  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 9b508bd..6c519e3 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -33,6 +33,7 @@
->  #include <linux/suspend.h>
->  #include <linux/errno.h>
->  #include <linux/module.h>
-> +#include <linux/acpi.h>
->  #include <net/cfg80211.h>
->  
->  #include <defs.h>
-> @@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->  	int err;
->  	struct brcmf_sdio_dev *sdiodev;
->  	struct brcmf_bus *bus_if;
-> +	struct device *dev;
-> +	struct acpi_device *adev;
->  
->  	brcmf_dbg(SDIO, "Enter\n");
->  	brcmf_dbg(SDIO, "Class=%x\n", func->class);
-> @@ -1121,6 +1124,11 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->  	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
->  	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
->  
-> +	/* prohibit ACPI power management for this device */
-> +	dev = &func->dev;
-> +	if (adev = ACPI_COMPANION(dev))
-> +		adev->flags.power_manageable = 0;
-> +
->  	/* Consume func num 1 but dont do anything with it. */
->  	if (func->num == 1)
->  		return 0;
-> -- 1.7.1
->
+Notes:
+    v4:
+     * use hw.c for cc computation logic [Kalle]
+     * drop rx_clear_count upon wraparound [Srinivasa]
+    
+    v3:
+     * split into 2 separate patches
+     * don't ignore all wraparound data: scans can be computed
+     * apply the shifted wraparound fix only for QCA988X
+     * improve commit log
+
+ drivers/net/wireless/ath/ath10k/core.c |  1 +
+ drivers/net/wireless/ath/ath10k/core.h |  7 +++++++
+ drivers/net/wireless/ath/ath10k/hw.c   | 21 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
+ drivers/net/wireless/ath/ath10k/wmi.c  | 17 +++++++++--------
+ 5 files changed, 41 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index bcccae19325d..684d460d79b7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -48,6 +48,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.name = "qca988x hw2.0",
+ 		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
++		.has_shifted_cc_wraparound = true,
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 827b3d79ed0c..729b366e2a18 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -572,6 +572,13 @@ struct ath10k {
+ 		u32 patch_load_addr;
+ 		int uart_pin;
+ 
++		/* This is true if given HW chip has a quirky Cycle Counter
++		 * wraparound which resets to 0x7fffffff instead of 0. All
++		 * other CC related counters (e.g. Rx Clear Count) are divided
++		 * by 2 so they never wraparound themselves.
++		 */
++		bool has_shifted_cc_wraparound;
++
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+ 			const char *fw;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index 839a8791fb9e..5997f00afe3b 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <linux/types.h>
++#include "core.h"
+ #include "hw.h"
+ 
+ const struct ath10k_hw_regs qca988x_regs = {
+@@ -56,3 +57,23 @@ const struct ath10k_hw_regs qca6174_regs = {
+ 	.soc_chip_id_address			= 0x000f0,
+ 	.scratch_3_address			= 0x0028,
+ };
++
++void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
++				u32 cc, u32 rcc, u32 cc_prev, u32 rcc_prev)
++{
++	u32 cc_fix = 0;
++
++	survey->filled |= SURVEY_INFO_TIME |
++			  SURVEY_INFO_TIME_BUSY;
++
++	if (ar->hw_params.has_shifted_cc_wraparound && cc < cc_prev) {
++		cc_fix = 0x7fffffff;
++		survey->filled &= ~SURVEY_INFO_TIME_BUSY;
++	}
++
++	cc -= cc_prev - cc_fix;
++	rcc -= rcc_prev;
++
++	survey->time = CCNT_TO_MSEC(cc);
++	survey->time_busy = CCNT_TO_MSEC(rcc);
++}
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 372f0b8c96f5..85cca29375fe 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -169,6 +169,9 @@ struct ath10k_hw_regs {
+ extern const struct ath10k_hw_regs qca988x_regs;
+ extern const struct ath10k_hw_regs qca6174_regs;
+ 
++void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
++				u32 cc, u32 rcc, u32 cc_prev, u32 rcc_prev);
++
+ #define QCA_REV_988X(ar) ((ar)->hw_rev == ATH10K_HW_QCA988X)
+ #define QCA_REV_6174(ar) ((ar)->hw_rev == ATH10K_HW_QCA6174)
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 43caabf5b025..70e6efa2c071 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -27,6 +27,7 @@
+ #include "testmode.h"
+ #include "wmi-ops.h"
+ #include "p2p.h"
++#include "hw.h"
+ 
+ /* MAIN WMI cmd track */
+ static struct wmi_cmd_map wmi_cmd_map = {
+@@ -1640,16 +1641,16 @@ void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
+ 		 * visited channel. The reported cycle count is global
+ 		 * and per-channel cycle count must be calculated */
+ 
+-		cycle_count -= ar->survey_last_cycle_count;
+-		rx_clear_count -= ar->survey_last_rx_clear_count;
+-
+ 		survey = &ar->survey[idx];
+-		survey->time = CCNT_TO_MSEC(cycle_count);
+-		survey->time_busy = CCNT_TO_MSEC(rx_clear_count);
+ 		survey->noise = noise_floor;
+-		survey->filled = SURVEY_INFO_TIME |
+-				 SURVEY_INFO_TIME_BUSY |
+-				 SURVEY_INFO_NOISE_DBM;
++		survey->filled = SURVEY_INFO_NOISE_DBM;
++
++		ath10k_hw_fill_survey_time(ar,
++					   survey,
++					   cycle_count,
++					   rx_clear_count,
++					   ar->survey_last_cycle_count,
++					   ar->survey_last_rx_clear_count);
+ 	}
+ 
+ 	ar->survey_last_rx_clear_count = rx_clear_count;
+-- 
+2.1.4
 
