@@ -1,61 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:11045 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977AbbEDSZq (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:35687 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbbEYPwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 14:25:46 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: increase relay buffer size of spectral scan
-Date: Mon, 4 May 2015 11:21:24 -0700
-Message-ID: <1430763684-1630-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150504_202549_601536_AA44521B)
+	Mon, 25 May 2015 11:52:47 -0400
+Message-ID: <5563454B.1080400@lwfinger.net> (sfid-20150525_175305_128719_5C760F50)
+Date: Mon, 25 May 2015 10:52:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Vaishali Thakkar <vthakkar1994@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+CC: Haggai Eran <haggai.eran@gmail.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	Arek Rusniak <arek.rusi@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Stable <stable@vger.kernel.org>, devel@driverdev.osuosl.org
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
+ of del_timer_sync()
+References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>	<CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>	<556268BC.5050807@lwfinger.net>	<20150525091737.GQ4150@mwanda> <CAK-LDb+1WscLTFw=NDY=_aUOGw72a4wRsqCU-1N+KJ11k15S5w@mail.gmail.com>
+In-Reply-To: <CAK-LDb+1WscLTFw=NDY=_aUOGw72a4wRsqCU-1N+KJ11k15S5w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Spectral scan supported by ath10k has capability to monitor and report
-through whole bands and channels, but current buffer size is too small
-to save reported spectral scan data.
-This results in dropping 5G channel reports at all when dual band card
-is used, so that users are not able to analyze spectral environments.
-Hence increase the buffer size to fix the problem.
+On 05/25/2015 04:37 AM, Vaishali Thakkar wrote:
+>
+> On 25 May 2015 14:49, "Dan Carpenter" <dan.carpenter@oracle.com
+> <mailto:dan.carpenter@oracle.com>> wrote:
+>  >
+>  > On Sun, May 24, 2015 at 07:11:40PM -0500, Larry Finger wrote:
+>  > > On 05/24/2015 02:03 PM, Haggai Eran wrote:
+>  > > >On 24 May 2015 at 00:16, Larry Finger <Larry.Finger@lwfinger.net
+> <mailto:Larry.Finger@lwfinger.net>> wrote:
+>  > > >>The driver is reporting a warning at kernel/time/timer.c:1096 due to calling
+>  > > >>del_timer_sync() while in interrupt mode. Such warnings are fixed by calling
+>  > > >>del_timer() instead.
+>  > > >>
+>  > > >>Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net
+> <mailto:Larry.Finger@lwfinger.net>>
+>  > > >>Cc: Stable <stable@vger.kernel.org <mailto:stable@vger.kernel.org>>
+>  > > >>Cc: Haggi Eran <haggai.eran@gmail.com <mailto:haggai.eran@gmail.com>>
+>  > > >
+>  > > >Hi,
+>  > > >
+>  > > >I haven't been using kernel v4.1 so I haven't seen this warning, but looking
+>  > > >at the code it seems to originate from the two recent patches to remove
+>  > > >_cancel_timer and _cancel_timer_ex. I see that there's another patch in
+> lkml [1]
+>  > > >that changes del_timer_sync back to del_timer in more places. Perhaps it
+>  > > >could prevent other warnings like this in the future.
+>  > > >
+>  > > >Regards,
+>  > > >Haggai
+>  > > >
+>  > > >[1] https://lkml.org/lkml/2015/5/15/226
+>  > >
+>  > > Yes, the script kiddies make changes they do not understand and
+>  > > screw everything up. Unfortunately, I did not catch these in review.
+>  > > I think I will submit V2 and blast the contributor.
+>  >
+>  > Don't blast the contributor...  These are special intern patches that
+>  > dont' go through the normal review process.  The intern process is over
+>  > this year.  The lack of normal review introduced a number of bugs this
+>  > year.  I always complain to Greg about it and he says that I should join
+>  > the intern mailing list if I care so much.
+>
+> I am sorry for those patches. It was me who introduced those bugs. Yes, it was
+> sent during Outreachy process. But it was my mistake as a newbie. May be I
+> should have taken care of interrupt mode thing.
+>
+> I would like to fix it if someone is not doing it. Sorry again. I will take care
+> of these things in my future patches.
 
-A spectral data size is vary based on the number of bins, so the unit
-buffer size, 1140, is chose to minimize relay buffer fragmentation.
+No, one of us will fix the problems with r8712u. The hardware is needed for 
+proper testing, and I doubt that you have it.
 
-The total buffer size is also chose in tradeoff with spectral scan
-support vs. kernel memory consumption.
-Since theoretical maximum buffer size, 9.5MB, can be consumed with
-512 bins in dual bands, we target to cover up to 128 bins for all
-channels in dual bands and due to the buffer size limitation,
-spectral scan with bin number bigger than 128 needs to be run on
-single band each.
-
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/spectral.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
-index d22addf..8dcd424 100644
---- a/drivers/net/wireless/ath/ath10k/spectral.c
-+++ b/drivers/net/wireless/ath/ath10k/spectral.c
-@@ -519,9 +519,12 @@ int ath10k_spectral_vif_stop(struct ath10k_vif *arvif)
- 
- int ath10k_spectral_create(struct ath10k *ar)
- {
-+	/* The buffer size covers whole channels in dual bands up to 128 bins.
-+	 * Scan with bigger than 128 bins needs to be run on single band each.
-+	 */
- 	ar->spectral.rfs_chan_spec_scan = relay_open("spectral_scan",
- 						     ar->debug.debugfs_phy,
--						     1024, 256,
-+						     1140, 2500,
- 						     &rfs_spec_scan_cb, NULL);
- 	debugfs_create_file("spectral_scan_ctl",
- 			    S_IRUSR | S_IWUSR,
--- 
-1.9.1
+Larry
 
