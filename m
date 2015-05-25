@@ -1,61 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53962 "EHLO mx2.suse.de"
+Received: from mx3.wp.pl ([212.77.101.9]:8459 "EHLO mx3.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbbESAJ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 20:09:26 -0400
-Date: Tue, 19 May 2015 02:09:21 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	John Griffin <john.griffin@intel.com>
-Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency when
- fw signing is enabled
-Message-ID: <20150519000921.GA23057@wotan.suse.de> (sfid-20150519_020942_820293_B8CEDF4D)
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
- <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
- <20150506033330.GA16470@gondor.apana.org.au>
- <1430988137.8171.58.camel@x220>
- <1431021995.8171.97.camel@x220>
- <20150518200100.GY23057@wotan.suse.de>
- <1431981930.9091.29.camel@x220>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431981930.9091.29.camel@x220>
+	id S1750852AbbEYJep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 May 2015 05:34:45 -0400
+From: Jakub Kicinski <moorray3@wp.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCHv3 0/2] add mt7601u driver
+Date: Mon, 25 May 2015 11:34:31 +0200
+Message-Id: <1432546473-18081-1-git-send-email-moorray3@wp.pl> (sfid-20150525_113450_588694_A5B31076)
+In-Reply-To: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 18, 2015 at 10:45:30PM +0200, Paul Bolle wrote:
-> [...] so, probably, almost
-> all .config files have FW_LOADER set. So I think, except for some corner
-> cases, either converting all "select FW_LOADER" to "depends on
-> FW_LOADER" or simply dropping  "select FW_LOADER" all together, should
-> be fine.
+From: Jakub Kicinski <kubakici@wp.pl>
 
-Well, that makes sense. I just dropped all "select FW_LOADER" entries
-on next-20150518, then I enabled everything with 'make allyesconfig'
-and then went into menuconfig to disable FW_LOADER. The build worked.
-
-Going to try a few more build matrix combinations and send patches to
-do away with this.
-
-> Those corner cases should then be handled on a case by case basis. 
+> This miniseries adds support for the simplest of MediaTek Wi-Fi
+> devices.  MT7601U is a single stream bgn chip with no bells or whistles.
+> My driver is partially based on Felix's mt76 but IMHO it doesn't
+> make sense to merge the two right now because MT7601U is a design
+> somewhere between old Ralink devices and new Mediatek chips.  There
+> wouldn't be all that much code sharing with the devices mt76 supports.
+> Situation may obviously change when someone decides to extend m76 with
+> support for the more recent USB dongles.
 > 
-> > If not does this need to be fixed on kconfig?
+> The driver supports only station mode.  I'm hoping to add AP support
+> when time allows.
 > 
-> There's no reason to think the logic of the kconfig tools, as it is
-> currently implemented, is flawed. Feel free to convince me of the
-> opposite.
+> This driver sat on GitHub for quite a while and got some testing there.
+> If anyone is interested in full git history and such here's a link:
+> 
+> http://github.com/kuba-moo/mt7601u
+> 
+> I split the submission into the build things and meta data (kconfig,
+> Makefiles, MAINTAINERS update etc.) and the actual code to make the
+> reviewing a little easier.
 
-Very well, thanks so much for your review and help.
+v2:
+ - don't zero parts of just allocated skb (Johannes)
+ - add delay to polling of MAC state (Johannes)
+ - use paged RX (Johannes)
+ - add more device IDs (Jose)
+ - reduce number of RX buffers
+ - increase max length of USB dma aggregate
 
-  Luis
+v3:
+ - rebase
+
+Jakub Kicinski (2):
+  add mt7601u driver
+  add mt7601u kbuild and others
+
+ MAINTAINERS                                        |    6 +
+ drivers/net/wireless/Kconfig                       |    1 +
+ drivers/net/wireless/Makefile                      |    2 +
+ drivers/net/wireless/mediatek/Kconfig              |   10 +
+ drivers/net/wireless/mediatek/Makefile             |    1 +
+ drivers/net/wireless/mediatek/mt7601u/Kconfig      |    6 +
+ drivers/net/wireless/mediatek/mt7601u/Makefile     |    9 +
+ drivers/net/wireless/mediatek/mt7601u/core.c       |   78 ++
+ drivers/net/wireless/mediatek/mt7601u/debugfs.c    |  172 +++
+ drivers/net/wireless/mediatek/mt7601u/dma.c        |  533 +++++++++
+ drivers/net/wireless/mediatek/mt7601u/dma.h        |  127 ++
+ drivers/net/wireless/mediatek/mt7601u/eeprom.c     |  414 +++++++
+ drivers/net/wireless/mediatek/mt7601u/eeprom.h     |  151 +++
+ drivers/net/wireless/mediatek/mt7601u/init.c       |  625 ++++++++++
+ drivers/net/wireless/mediatek/mt7601u/initvals.h   |  164 +++
+ .../net/wireless/mediatek/mt7601u/initvals_phy.h   |  291 +++++
+ drivers/net/wireless/mediatek/mt7601u/mac.c        |  569 +++++++++
+ drivers/net/wireless/mediatek/mt7601u/mac.h        |  178 +++
+ drivers/net/wireless/mediatek/mt7601u/main.c       |  412 +++++++
+ drivers/net/wireless/mediatek/mt7601u/mcu.c        |  534 +++++++++
+ drivers/net/wireless/mediatek/mt7601u/mcu.h        |   94 ++
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h    |  390 ++++++
+ drivers/net/wireless/mediatek/mt7601u/phy.c        | 1251 ++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt7601u/regs.h       |  636 ++++++++++
+ drivers/net/wireless/mediatek/mt7601u/trace.c      |   21 +
+ drivers/net/wireless/mediatek/mt7601u/trace.h      |  400 +++++++
+ drivers/net/wireless/mediatek/mt7601u/tx.c         |  319 +++++
+ drivers/net/wireless/mediatek/mt7601u/usb.c        |  360 ++++++
+ drivers/net/wireless/mediatek/mt7601u/usb.h        |   77 ++
+ drivers/net/wireless/mediatek/mt7601u/util.c       |   42 +
+ drivers/net/wireless/mediatek/mt7601u/util.h       |   77 ++
+ 31 files changed, 7950 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/Makefile
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/Makefile
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/core.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/debugfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/dma.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/dma.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/eeprom.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/init.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/initvals.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/initvals_phy.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/main.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/mcu.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/phy.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/trace.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/trace.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/usb.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/usb.h
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+
+-- 
+2.1.0
+
