@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38561 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161059AbbE2Qs5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 12:48:57 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Add debugfs support to configure beacon tx mode
-In-Reply-To: <1431594885-32346-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Thu, 14 May 2015 14:44:45 +0530")
-References: <1431594885-32346-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Fri, 29 May 2015 19:48:43 +0300
-Message-ID: <878uc7wcr8.fsf@kamboji.qca.qualcomm.com> (sfid-20150529_184907_752407_3504D26C)
+Received: from mx4.wp.pl ([212.77.101.11]:47795 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751537AbbEYJfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 May 2015 05:35:31 -0400
+Date: Mon, 25 May 2015 11:35:27 +0200
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: Re: [PATCHv2 0/2] add mt7601u driver
+Message-ID: <20150525113527.5b8b31c0@north> (sfid-20150525_113533_673030_10CE847F)
+In-Reply-To: <87fv6l3wib.fsf@kamboji.qca.qualcomm.com>
+References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+	<1430857363-30844-1-git-send-email-moorray3@wp.pl>
+	<87fv6l3wib.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+On Mon, 25 May 2015 11:13:32 +0300, Kalle Valo wrote:
+> Jakub Kicinski <moorray3@wp.pl> writes:
+> 
+> > From: Jakub Kicinski <kubakici@wp.pl>
+> >
+> >> This miniseries adds support for the simplest of MediaTek Wi-Fi
+> >> devices.  MT7601U is a single stream bgn chip with no bells or whistles.
+> >> My driver is partially based on Felix's mt76 but IMHO it doesn't
+> >> make sense to merge the two right now because MT7601U is a design
+> >> somewhere between old Ralink devices and new Mediatek chips.  There
+> >> wouldn't be all that much code sharing with the devices mt76 supports.
+> >> Situation may obviously change when someone decides to extend m76 with
+> >> support for the more recent USB dongles.
+> >> 
+> >> The driver supports only station mode.  I'm hoping to add AP support
+> >> when time allows.
+> >> 
+> >> This driver sat on GitHub for quite a while and got some testing there.
+> >> If anyone is interested in full git history and such here's a link:
+> >> 
+> >> http://github.com/kuba-moo/mt7601u
+> >> 
+> >> I split the submission into the build things and meta data (kconfig,
+> >> Makefiles, MAINTAINERS update etc.) and the actual code to make the
+> >> reviewing a little easier.
+> >
+> > v2:
+> >  - don't zero parts of just allocated skb (Johannes)
+> >  - add delay to polling of MAC state (Johannes)
+> >  - use paged RX (Johannes)
+> >  - add more device IDs (Jose)
+> >  - reduce number of RX buffers
+> >  - increase max length of USB dma aggregate
+> 
+> It doens't compile anymore due to a mac80211 change. Can you rebase,
+> please?
+> 
+> drivers/net/wireless/mediatek/mt7601u/main.c: In function 'mt76_configure_filter':
+> drivers/net/wireless/mediatek/mt7601u/main.c:122:31: error: 'FIF_PROMISC_IN_BSS' undeclared (first use in this function)
+> drivers/net/wireless/mediatek/mt7601u/main.c:122:31: note: each undeclared identifier is reported only once for each function it appears in
+> 
 
-> Introduce debugfs entry to select beacon tx mode to
-> staggered or bursted mode. In staggered mode, software beacon
-> alert will be evenly distributed for each beaconing interfaces
-> by (beacon intval / number of vif). In bursted mode, batch of
-> beacons will be sent out as batch at beacon interval.
->
-> By default, staggered mode is selected.
->
-> To select bursted mode
->
-> echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/beacon_tx_mode
->
-> For staggered mode,
->
-> echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/beacon_tx_mode
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-
-In my opinion this should be configured via nl80211, not from debugfs.
-
--- 
-Kalle Valo
+I just dropped the line configuring HW promisc for now like Johannes
+did in his removal patch.  However, the right fix is to configure it
+based on IEEE80211_CONF_MONITOR, correct?
