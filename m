@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49016 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44065 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965472AbbEEFdz (ORCPT
+	with ESMTP id S1752260AbbEYK5l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 01:33:55 -0400
+	Mon, 25 May 2015 06:57:41 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH v3 0/7] wil6210 patches
-References: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Tue, 05 May 2015 08:33:48 +0300
-In-Reply-To: <1430777516-439-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Tue, 5 May 2015 01:11:49 +0300")
-Message-ID: <87fv7bvb9f.fsf@kamboji.qca.qualcomm.com> (sfid-20150505_073437_284103_CD9931ED)
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	michal.kazior@tieto.com
+Subject: Re: pull-request: wireless-drivers-next 2015-05-21
+References: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
+	<20150524.232955.425320477500361631.davem@davemloft.net>
+Date: Mon, 25 May 2015 13:57:33 +0300
+In-Reply-To: <20150524.232955.425320477500361631.davem@davemloft.net> (David
+	Miller's message of "Sun, 24 May 2015 23:29:55 -0400 (EDT)")
+Message-ID: <87wpzw3owx.fsf@kamboji.qca.qualcomm.com> (sfid-20150525_125748_485459_64B9EC0E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+David Miller <davem@davemloft.net> writes:
 
-> - introduced debug trace facility (PMC) that extracts events
->   reported by the hardware
-> - introduced real broadcast for secure link
-> - other are small fixes here and there
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Thu, 21 May 2015 16:39:04 +0300
 >
-> v2:
+>> here's a wireless-drivers pull request for 4.2. This time please pay
+>> extra attention to this pull as there are two problems:
+>> 
+>> First of all as you can see the diffstat from git-pull-request in the
+>> end is just weird. I was long and hard trying to check everything and to
+>> my understanding all the merges look ok and I cannot explain the reason
+>> for the diffstat, but of course I might be missing something. Maybe
+>> git-request-pull is just buggy? At least with gitk everything looks to
+>> be ok and the patch list below also looks valid.
 >
-> fix patch "wil6210: Add pmc debug mechanism memory management"
-> for 32-bit platforms
+> The diffstat doesn't look anything like that for me.  It contained only
+> your wireless changes.
 >
-> v3:
->
-> fix patch "wil6210: Add pmc debug mechanism memory management"
-> for pointers and dma_addr_t printing
->
-> Vladimir Kondratiev (7):
->   wil6210: increase timeout for the "echo" command
->   wil6210: update Rx descriptor fields
->   wil6210: fix boot loader "ready" indication
->   wil6210: fix for probe_resp IE's
->   wil6210: Add pmc debug mechanism memory management
->   wil6210: broadcast for secure link
->   wil6210: support WSC for STA mode
+> It may have helped that I merged 'net' into 'net-next' right before I
+> pulled this.
 
-I applied the v2 patchset just few hours before you sent these so I
-cannot apply these anymore. Please send a new patch on top of v2.
+Good to hear.
+
+>> Secondly there's a non-trivial conflict in
+>> drivers/net/wireless/ath/ath10k/mac.c which is due to removal of
+>> FIF_PROMISC_IN_BSS in commit df1404650c. You need to remove more code
+>> than just the obvious conflicts shown by git. In the end of this mail I
+>> added a git diff output after I fixed the conflict, hopefully that helps
+>> you to fix it. The main points are that you remove
+>> ath10k_mac_should_disable_promisc() and the last ath10k_monitor_recalc()
+>> call from ath10k_vdev_start_restart() along with the obvious conflict
+>> fixes git points out.
+>> 
+>> There's also a patch from Michal which will also help to fix the
+>> resolution. Michal, please double check the resolution proposal below so
+>> that I didn't miss anything.
+>> 
+>> https://patchwork.kernel.org/patch/6387631/
+>
+> Thanks, I think I got the conflict resolution correct, please have a look.
+
+Looks good, thanks for fixing it.
 
 -- 
 Kalle Valo
