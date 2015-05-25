@@ -1,112 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:35805 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932507AbbELMpr (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:48152 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751044AbbEYI4d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 08:45:47 -0400
-Received: by labbd9 with SMTP id bd9so4772726lab.2
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2015 05:45:45 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] amth10k: fix promisc handling
-Date: Tue, 12 May 2015 12:45:36 +0000
-Message-Id: <1431434736-7077-1-git-send-email-michal.kazior@tieto.com> (sfid-20150512_144551_753905_B4796A85)
+	Mon, 25 May 2015 04:56:33 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NOW02DPQE64ZX00@mailout1.samsung.com> for
+ linux-wireless@vger.kernel.org; Mon, 25 May 2015 17:56:28 +0900 (KST)
+Date: Mon, 25 May 2015 08:56:30 +0000 (GMT)
+From: Rahul Jain <rahul.jain@samsung.com>
+Subject: PATCH] cfg80211: moving up BAND_2GHZ above BAND_5GHZ regulatory class
+ [EDT]
+To: "johannes.berg@intel.com" <johannes.berg@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Reply-to: rahul.jain@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <629053294.30301432544190297.JavaMail.weblogic@epmlwas02a> (sfid-20150525_105637_628424_F5429D69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch df1404650ccb ("mac80211: remove support for
-IFF_PROMISC") removed promiscuous flag propagation
-to drivers.
+RVAtRkVEQzc3MURGNEZGNDhBOTgyOUNCODUyNTRFMjlGRDMNCg0KaGVsbG8gSm9lLCBSYWZlbCwg
+V2lyZWxlc3MgQ29tbXVuaXR5LA0KDQpJIGhhdmUgaW5jb3Jwb3JhdGVkIHlvdXIgcmV2aWV3IGNv
+bW1lbnRzLiBQbGVhc2UgZmluZCB1cGRhdGVkIHBhdGNoLg0KDQpGcm9tIDMwZjRmYjcyYmNiMTBm
+OWY2NTg5ZWEyMmUyNmUzNzYzMWYwN2Y4ZmUgTW9uIFNlcCAxNyAwMDowMDowMCAyMDAxDQpGcm9t
+OiBSYWh1bCBKYWluIDxyYWh1bC5qYWluQHNhbXN1bmcuY29tPg0KRGF0ZTogTW9uLCAyNSBNYXkg
+MjAxNSAxNDoxNTozNiArMDUzMA0KU3ViamVjdDogW1BBVENIXSBjZmc4MDIxMTogbW92aW5nIHVw
+IEJBTkRfMkdIWiBhYm92ZSBCQU5EXzVHSFogcmVndWxhdG9yeQ0KIGNsYXNzDQoNCg0KU2lnbmVk
+LW9mZi1ieTogUmFodWwgSmFpbiA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4NCi0tLQ0KIG5ldC93
+aXJlbGVzcy91dGlsLmMgfCAgIDEyICsrKystLS0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0IGlu
+c2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9uZXQvd2lyZWxlc3Mv
+dXRpbC5jIGIvbmV0L3dpcmVsZXNzL3V0aWwuYw0KaW5kZXggNzAwNTFhYi4uYjFhY2EzZSAxMDA2
+NDQNCi0tLSBhL25ldC93aXJlbGVzcy91dGlsLmMNCisrKyBiL25ldC93aXJlbGVzcy91dGlsLmMN
+CkBAIC0xMzM1LDE3ICsxMzM1LDEzIEBAIGJvb2wgaWVlZTgwMjExX29wZXJhdGluZ19jbGFzc190
+b19iYW5kKHU4IG9wZXJhdGluZ19jbGFzcywNCiAJCQkJICAgICAgIGVudW0gaWVlZTgwMjExX2Jh
+bmQgKmJhbmQpDQogew0KIAlzd2l0Y2ggKG9wZXJhdGluZ19jbGFzcykgew0KKwljYXNlIDgxIC4u
+LiA4NDoNCisJCSpiYW5kID0gSUVFRTgwMjExX0JBTkRfMkdIWjsNCisJCXJldHVybiB0cnVlOw0K
+IAljYXNlIDExMjoNCi0JY2FzZSAxMTUgLi4uIDEyNzoNCi0JY2FzZSAxMjggLi4uIDEzMDoNCisJ
+Y2FzZSAxMTUgLi4uIDEzMDoNCiAJCSpiYW5kID0gSUVFRTgwMjExX0JBTkRfNUdIWjsNCiAJCXJl
+dHVybiB0cnVlOw0KLQljYXNlIDgxOg0KLQljYXNlIDgyOg0KLQljYXNlIDgzOg0KLQljYXNlIDg0
+Og0KLQkJKmJhbmQgPSBJRUVFODAyMTFfQkFORF8yR0haOw0KLQkJcmV0dXJuIHRydWU7DQogCWNh
+c2UgMTgwOg0KIAkJKmJhbmQgPSBJRUVFODAyMTFfQkFORF82MEdIWjsNCiAJCXJldHVybiB0cnVl
+Ow0KLS0gDQoxLjcuOS41DQoNCg0KVGhhbmtzDQotUmFodWwgSmFpbiANCg0K
 
-However the patch was designed against ath10k
-without 548462133d98 ("ath10k: fix interrupt
-storm").
-
-After merge the code drifted into being no longer
-correct and due to monitor vdev being
-overzealously started caused IBSS to crash on
-999.999.0.636 for QCA988X (this firmware revision
-is known to have issues with monitor vdev).
-
-This patch keeps expectations of commit
-548462133d98 (i.e. reduce irq storm by not
-enabling monitor vdev for AP) and doesn't break
-existing (known) setups that imply promiscuous
-mode on network interfaces.
-
-Contrary to what it looks like 548462133d98
-functionality is not reverted since the intention
-was a subset of what df1404650ccb did.
-
-Fixes: c17c997d5613 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 29 +----------------------------
- 1 file changed, 1 insertion(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 425dbe271495..594eb369ff7f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1031,22 +1031,6 @@ static int ath10k_monitor_stop(struct ath10k *ar)
- 	return 0;
- }
- 
--static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
--{
--	struct ath10k_vif *arvif;
--
--	if (!ar->num_started_vdevs)
--		return false;
--
--	list_for_each_entry(arvif, &ar->arvifs, list)
--		if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
--			return false;
--
--	ath10k_dbg(ar, ATH10K_DBG_MAC,
--		   "mac disabling promiscuous mode because vdev is started\n");
--	return true;
--}
--
- static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
- {
- 	int num_ctx;
-@@ -1065,7 +1049,6 @@ static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
- 		return false;
- 
- 	return ar->monitor ||
--	       !ath10k_mac_should_disable_promisc(ar) ||
- 	       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
- }
- 
-@@ -1267,7 +1250,7 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
- {
- 	struct ath10k *ar = arvif->ar;
- 	struct wmi_vdev_start_request_arg arg = {};
--	int ret = 0, ret2;
-+	int ret = 0;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -1326,16 +1309,6 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
- 	ar->num_started_vdevs++;
- 	ath10k_recalc_radar_detection(ar);
- 
--	ret = ath10k_monitor_recalc(ar);
--	if (ret) {
--		ath10k_warn(ar, "mac failed to recalc monitor for vdev %i restart %d: %d\n",
--			    arg.vdev_id, restart, ret);
--		ret2 = ath10k_vdev_stop(arvif);
--		if (ret2)
--			ath10k_warn(ar, "mac failed to stop vdev %i restart %d: %d\n",
--				    arg.vdev_id, restart, ret2);
--	}
--
- 	return ret;
- }
- 
--- 
-2.1.4
 
