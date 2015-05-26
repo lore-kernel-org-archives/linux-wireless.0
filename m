@@ -1,312 +1,289 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:38506 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbbEDJOs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 05:14:48 -0400
-Message-ID: <55473847.7040507@atmel.com> (sfid-20150504_111452_347621_E6D73EA2)
-Date: Mon, 4 May 2015 11:13:43 +0200
-From: Nicolas Ferre <nicolas.ferre@atmel.com>
-MIME-Version: 1.0
-To: Johnny Kim <johnny.kim@atmel.com>, <gregkh@linuxfoundation.org>,
-	<linux-wireless@vger.kernel.org>
-CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
-	<tony.cho@atmel.com>
-Subject: Re: [PATCH v2 1/2] staging: wilc1000: Add SDIO/SPI 802.11 driver
-References: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com>
-In-Reply-To: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751990AbbEZTSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:08 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/39] iwlwifi: refactor common transport alloc/init code
+Date: Tue, 26 May 2015 22:17:19 +0300
+Message-Id: <1432667872-18092-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211820_718803_5ACFDBEA)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 29/04/2015 14:50, Johnny Kim a écrit :
-> This driver is for the wilc1000 which is a single chip IEEE 802.11
-> b/g/n device.
-> The driver works together with cfg80211, which is the kernel side of
-> configuration management for wireless devices because the wilc1000
-> chipset is fullmac where the MLME is managed in hardware.
-> 
-> The driver worked from kernel version 2.6.38 and being now ported
-> to several others since then.
-> A TODO file is included as well in this commit.
-> 
-> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-> Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
-> Signed-off-by: Dean Lee <dean.lee@atmel.com>
-> Signed-off-by: Chris Park <chris.park@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
+The transport modules all need to allocate memory and set up
+certain values. Refactor that code into a new common function
+to share it and to simplify the error handling.
 
-> ---
-> Changes in v2:
-> - fix the permissions
-> - fix the folder tree
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Makefile     |   1 +
+ drivers/net/wireless/iwlwifi/iwl-trans.c  | 113 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans.h  |  20 +++---
+ drivers/net/wireless/iwlwifi/pcie/trans.c |  40 ++---------
+ 4 files changed, 131 insertions(+), 43 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans.c
 
-Nitpicking: This ^^^ should go there vvv, just after the "---".
-
-
-> ---
->  drivers/staging/Kconfig                           |    2 +
->  drivers/staging/Makefile                          |    1 +
->  drivers/staging/wilc1000/Kconfig                  |   55 +
->  drivers/staging/wilc1000/Makefile                 |   41 +
->  drivers/staging/wilc1000/TODO                     |    8 +
->  drivers/staging/wilc1000/coreconfigsimulator.h    |   20 +
->  drivers/staging/wilc1000/coreconfigurator.c       | 2201 ++++++
->  drivers/staging/wilc1000/coreconfigurator.h       |  498 ++
->  drivers/staging/wilc1000/fifo_buffer.c            |  142 +
->  drivers/staging/wilc1000/fifo_buffer.h            |   23 +
->  drivers/staging/wilc1000/host_interface.c         | 8074 +++++++++++++++++++++
->  drivers/staging/wilc1000/host_interface.h         | 1344 ++++
->  drivers/staging/wilc1000/itypes.h                 |   60 +
->  drivers/staging/wilc1000/linux_mon.c              |  643 ++
->  drivers/staging/wilc1000/linux_wlan.c             | 2953 ++++++++
->  drivers/staging/wilc1000/linux_wlan_common.h      |  170 +
->  drivers/staging/wilc1000/linux_wlan_sdio.c        |  249 +
->  drivers/staging/wilc1000/linux_wlan_sdio.h        |   14 +
->  drivers/staging/wilc1000/linux_wlan_spi.c         |  510 ++
->  drivers/staging/wilc1000/linux_wlan_spi.h         |   14 +
->  drivers/staging/wilc1000/wilc_debugfs.c           |  185 +
->  drivers/staging/wilc1000/wilc_errorsupport.h      |   84 +
->  drivers/staging/wilc1000/wilc_event.h             |  123 +
->  drivers/staging/wilc1000/wilc_exported_buf.c      |   76 +
->  drivers/staging/wilc1000/wilc_log.h               |   47 +
->  drivers/staging/wilc1000/wilc_memory.c            |   63 +
->  drivers/staging/wilc1000/wilc_memory.h            |  330 +
->  drivers/staging/wilc1000/wilc_msgqueue.c          |  211 +
->  drivers/staging/wilc1000/wilc_msgqueue.h          |  133 +
->  drivers/staging/wilc1000/wilc_osconfig.h          |   55 +
->  drivers/staging/wilc1000/wilc_oswrapper.h         |  133 +
->  drivers/staging/wilc1000/wilc_platform.h          |  181 +
->  drivers/staging/wilc1000/wilc_sdio.c              | 1298 ++++
->  drivers/staging/wilc1000/wilc_semaphore.c         |   70 +
->  drivers/staging/wilc1000/wilc_semaphore.h         |  115 +
->  drivers/staging/wilc1000/wilc_sleep.c             |   36 +
->  drivers/staging/wilc1000/wilc_sleep.h             |   45 +
->  drivers/staging/wilc1000/wilc_spi.c               | 1475 ++++
->  drivers/staging/wilc1000/wilc_strutils.c          |  431 ++
->  drivers/staging/wilc1000/wilc_strutils.h          |  412 ++
->  drivers/staging/wilc1000/wilc_thread.c            |   35 +
->  drivers/staging/wilc1000/wilc_thread.h            |  153 +
->  drivers/staging/wilc1000/wilc_time.c              |  163 +
->  drivers/staging/wilc1000/wilc_time.h              |  205 +
->  drivers/staging/wilc1000/wilc_timer.c             |   51 +
->  drivers/staging/wilc1000/wilc_timer.h             |  153 +
->  drivers/staging/wilc1000/wilc_type.h              |   34 +
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4592 ++++++++++++
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |  134 +
->  drivers/staging/wilc1000/wilc_wfi_netdevice.c     |  960 +++
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  277 +
->  drivers/staging/wilc1000/wilc_wlan.c              | 2434 +++++++
->  drivers/staging/wilc1000/wilc_wlan.h              |  321 +
->  drivers/staging/wilc1000/wilc_wlan_cfg.c          |  643 ++
->  drivers/staging/wilc1000/wilc_wlan_cfg.h          |   33 +
->  drivers/staging/wilc1000/wilc_wlan_if.h           |  991 +++
->  56 files changed, 33704 insertions(+)
->  create mode 100644 drivers/staging/wilc1000/Kconfig
->  create mode 100644 drivers/staging/wilc1000/Makefile
->  create mode 100644 drivers/staging/wilc1000/TODO
->  create mode 100644 drivers/staging/wilc1000/coreconfigsimulator.h
->  create mode 100644 drivers/staging/wilc1000/coreconfigurator.c
->  create mode 100644 drivers/staging/wilc1000/coreconfigurator.h
->  create mode 100644 drivers/staging/wilc1000/fifo_buffer.c
->  create mode 100644 drivers/staging/wilc1000/fifo_buffer.h
->  create mode 100644 drivers/staging/wilc1000/host_interface.c
->  create mode 100644 drivers/staging/wilc1000/host_interface.h
->  create mode 100644 drivers/staging/wilc1000/itypes.h
->  create mode 100644 drivers/staging/wilc1000/linux_mon.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_common.h
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_spi.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_spi.h
->  create mode 100644 drivers/staging/wilc1000/wilc_debugfs.c
->  create mode 100644 drivers/staging/wilc1000/wilc_errorsupport.h
->  create mode 100644 drivers/staging/wilc1000/wilc_event.h
->  create mode 100644 drivers/staging/wilc1000/wilc_exported_buf.c
->  create mode 100644 drivers/staging/wilc1000/wilc_log.h
->  create mode 100644 drivers/staging/wilc1000/wilc_memory.c
->  create mode 100644 drivers/staging/wilc1000/wilc_memory.h
->  create mode 100644 drivers/staging/wilc1000/wilc_msgqueue.c
->  create mode 100644 drivers/staging/wilc1000/wilc_msgqueue.h
->  create mode 100644 drivers/staging/wilc1000/wilc_osconfig.h
->  create mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
->  create mode 100644 drivers/staging/wilc1000/wilc_platform.h
->  create mode 100644 drivers/staging/wilc1000/wilc_sdio.c
->  create mode 100644 drivers/staging/wilc1000/wilc_semaphore.c
->  create mode 100644 drivers/staging/wilc1000/wilc_semaphore.h
->  create mode 100644 drivers/staging/wilc1000/wilc_sleep.c
->  create mode 100644 drivers/staging/wilc1000/wilc_sleep.h
->  create mode 100644 drivers/staging/wilc1000/wilc_spi.c
->  create mode 100644 drivers/staging/wilc1000/wilc_strutils.c
->  create mode 100644 drivers/staging/wilc1000/wilc_strutils.h
->  create mode 100644 drivers/staging/wilc1000/wilc_thread.c
->  create mode 100644 drivers/staging/wilc1000/wilc_thread.h
->  create mode 100644 drivers/staging/wilc1000/wilc_time.c
->  create mode 100644 drivers/staging/wilc1000/wilc_time.h
->  create mode 100644 drivers/staging/wilc1000/wilc_timer.c
->  create mode 100644 drivers/staging/wilc1000/wilc_timer.h
->  create mode 100644 drivers/staging/wilc1000/wilc_type.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_netdevice.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_netdevice.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan_cfg.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan_cfg.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan_if.h
-> 
-> diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
-> index bfacf69..da35af6 100644
-> --- a/drivers/staging/Kconfig
-> +++ b/drivers/staging/Kconfig
-> @@ -112,4 +112,6 @@ source "drivers/staging/i2o/Kconfig"
->  
->  source "drivers/staging/fsl-mc/Kconfig"
->  
-> +source "drivers/staging/wilc1000/Kconfig"
-> +
->  endif # STAGING
-> diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
-> index 2bbd1bf..edbe5ff 100644
-> --- a/drivers/staging/Makefile
-> +++ b/drivers/staging/Makefile
-> @@ -48,3 +48,4 @@ obj-$(CONFIG_COMMON_CLK_XLNX_CLKWZRD)	+= clocking-wizard/
->  obj-$(CONFIG_FB_TFT)		+= fbtft/
->  obj-$(CONFIG_I2O)		+= i2o/
->  obj-$(CONFIG_FSL_MC_BUS)	+= fsl-mc/
-> +obj-$(CONFIG_WILC1000)		+= wilc1000/
-> diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
-> new file mode 100644
-> index 0000000..101f908
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/Kconfig
-> @@ -0,0 +1,55 @@
-> +config WILC1000
-> +	tristate "WILC1000 support (WiFi only)"
-> +	---help---
-> +		This module only support IEEE 802.11n WiFi.
-> +
-> +choice
-> +        prompt "Memory Allocation"
-> +        depends on WILC1000
-> +        default WILC1000_PREALLOCATE_AT_LOADING_DRIVER
-> +
-> +        config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
-> +                bool "Preallocate memory at loading driver"
-> +                ---help---
-> +                        This choice supports static allocation of the memory
-> +                        for the receive buffer. The driver will allocate the RX buffer 
-> +                        during initial time. The driver will also free the buffer
-> +                        by calling network device stop.
-> +
-> +        config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
-> +                bool "Dynamically allocate memory in real time"
-> +                ---help---
-> +                        This choice supports dynamic allocation of the memory
-> +                        for the receive buffer. The driver will allocate the RX buffer
-> +                        when it is required.
-> +endchoice
-> +
-> +
-> +choice
-> +    prompt "Bus Type"
-> +    depends on WILC1000 
-> +    default WILC1000_SDIO
-> +    
-> +	config WILC1000_SDIO
-> +	    bool "SDIO support"
-> +	    depends on MMC
-> +		---help---
-> +			This module adds support for the SDIO interface of adapters using
-> +			WILC chipset. Select this if your platform is using the SDIO bus. 
-> +
-> +	config WILC1000_SPI
-> +	    bool "SPI support"
-> +		---help---
-> +			This module adds support for the SPI interface of adapters using
-> +			WILC chipset. Select this if your platform is using the SPI bus. 
-> +endchoice
-> +
-> +
-> +config WILC1000_HW_OOB_INTR
-> +    bool "Use out of band interrupt"
-> +    depends on WILC1000 && WILC1000_SDIO
-> +    default n
-> +    ---help---
-> +		If your platform don't recognize SDIO IRQ, connect chipset external IRQ pin
-> +		and check this option. Or, Use this to get all interrupts including SDIO interrupts.
-> +
-> diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-> new file mode 100644
-> index 0000000..84bd975
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/Makefile
-> @@ -0,0 +1,41 @@
-> +obj-$(CONFIG_WILC1000) += wilc1000.o
-> +obj-$(CONFIG_WILC1000_PREALLOCATE_DURING_SYSTEM_BOOT) += wilc_exported_buf.o
-> +
-> +
-> +ccflags-$(CONFIG_WILC1000_SDIO) += -DWILC_SDIO -DCOMPLEMENT_BOOT
-> +ccflags-$(CONFIG_WILC1000_HW_OOB_INTR) += -DWILC_SDIO_IRQ_GPIO
-> +ccflags-$(CONFIG_WILC1000_SPI) += -DWILC_SPI
-> +
-> +ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
-> +		-DAP_FIRMWARE=\"atmel/wilc1000_ap_fw.bin\" \
-> +		-DP2P_CONCURRENCY_FIRMWARE=\"atmel/wilc1000_p2p_fw.bin\"
-> +
-> +ccflags-y += -I$(src)/ -DEXPORT_SYMTAB  -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 \
-> +		-DPLL_WORKAROUND -DCONNECT_DIRECT  -DAGING_ALG \
-> +		-DWILC_PARSE_SCAN_IN_HOST -DDISABLE_PWRSAVE_AND_SCAN_DURING_IP \
-> +		-DWILC_PLATFORM=WILC_LINUXKERNEL -Wno-unused-function -DUSE_WIRELESS \
-> +		-DWILC_DEBUGFS
-> +#ccflags-y += -DTCP_ACK_FILTER
-> +
-> +ccflags-$(CONFIG_WILC1000_PREALLOCATE_DURING_SYSTEM_BOOT) += -DMEMORY_STATIC \
-> +								-DWILC_PREALLOC_AT_BOOT
-> +
-> +ccflags-$(CONFIG_WILC1000_PREALLOCATE_AT_LOADING_DRIVER) += -DMEMORY_STATIC \
-> +								-DWILC_PREALLOC_AT_INSMOD
-> +
-> +ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
-> +
-> +
-> +wilc1000-objs := wilc_wfi_netdevice.o wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
-> +			wilc_memory.o wilc_msgqueue.o wilc_semaphore.o wilc_sleep.o wilc_strutils.o \
-> +			wilc_thread.o wilc_time.o wilc_timer.o coreconfigurator.o host_interface.o \
-> +			fifo_buffer.o wilc_sdio.o wilc_spi.o wilc_wlan_cfg.o wilc_debugfs.o
-> +
-> +wilc1000-$(CONFIG_WILC1000_SDIO) += linux_wlan_sdio.o
-> +wilc1000-$(CONFIG_WILC1000_SPI) += linux_wlan_spi.o
-> +
-> +WILC1000_SRC_VERSION = 10.0
-> +PATCHLEVEL = 2
-> +WILC1000_FW_VERSION = 0
-> +
-> +ccflags-y += -D__DRIVER_VERSION__=\"$(WILC1000_SRC_VERSION).$(PATCHLEVEL)\"
-> diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
-> new file mode 100644
-> index 0000000..4dc807b
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/TODO
-> @@ -0,0 +1,8 @@
-> +TODO:
-> +- remove the dependencies of kernel versions
-> +- remove OS wrapper functions
-> +- remove custom debug and tracing functions
-> +- rework comments and function headers(also coding style)
-> +- remove build warnings
-> +- support soft-ap and p2p mode
-> +- support resume/suspend function
-> diff --git a/drivers/staging/wilc1000/coreconfigsimulator.h b/drivers/staging/wilc1000/coreconfigsimulator.h
-> new file mode 100644
-> index 0000000..6c3f431
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/coreconfigsimulator.h
-
-[..]
-
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index 3d32f41..dbfc5b1 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -9,6 +9,7 @@ iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
+ iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+ iwlwifi-$(CONFIG_IWLDVM) += iwl-1000.o iwl-2000.o iwl-5000.o iwl-6000.o
+ iwlwifi-$(CONFIG_IWLMVM) += iwl-7000.o iwl-8000.o
++iwlwifi-objs		+= iwl-trans.o
+ 
+ iwlwifi-objs += $(iwlwifi-m)
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+new file mode 100644
+index 0000000..9f8bcef
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -0,0 +1,113 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2015 Intel Mobile Communications GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2015 Intel Mobile Communications GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#include <linux/kernel.h>
++#include "iwl-trans.h"
++
++struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
++				  struct device *dev,
++				  const struct iwl_cfg *cfg,
++				  const struct iwl_trans_ops *ops,
++				  size_t dev_cmd_headroom)
++{
++	struct iwl_trans *trans;
++#ifdef CONFIG_LOCKDEP
++	static struct lock_class_key __key;
++#endif
++
++	trans = kzalloc(sizeof(*trans) + priv_size, GFP_KERNEL);
++	if (!trans)
++		return NULL;
++
++#ifdef CONFIG_LOCKDEP
++	lockdep_init_map(&trans->sync_cmd_lockdep_map, "sync_cmd_lockdep_map",
++			 &__key, 0);
++#endif
++
++	trans->dev = dev;
++	trans->cfg = cfg;
++	trans->ops = ops;
++	trans->dev_cmd_headroom = dev_cmd_headroom;
++
++	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
++		 "iwl_cmd_pool:%s", dev_name(trans->dev));
++	trans->dev_cmd_pool =
++		kmem_cache_create(trans->dev_cmd_pool_name,
++				  sizeof(struct iwl_device_cmd)
++				  + trans->dev_cmd_headroom,
++				  sizeof(void *),
++				  SLAB_HWCACHE_ALIGN,
++				  NULL);
++	if (!trans->dev_cmd_pool)
++		goto free;
++
++	return trans;
++ free:
++	kfree(trans);
++	return NULL;
++}
++
++void iwl_trans_free(struct iwl_trans *trans)
++{
++	kmem_cache_destroy(trans->dev_cmd_pool);
++	kfree(trans);
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 56254a8..eb34b94 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -1011,19 +1011,19 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
+ }
+ 
+ /*****************************************************
++ * transport helper functions
++ *****************************************************/
++struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
++				  struct device *dev,
++				  const struct iwl_cfg *cfg,
++				  const struct iwl_trans_ops *ops,
++				  size_t dev_cmd_headroom);
++void iwl_trans_free(struct iwl_trans *trans);
++
++/*****************************************************
+ * driver (transport) register/unregister functions
+ ******************************************************/
+ int __must_check iwl_pci_register_driver(void);
+ void iwl_pci_unregister_driver(void);
+ 
+-static inline void trans_lockdep_init(struct iwl_trans *trans)
+-{
+-#ifdef CONFIG_LOCKDEP
+-	static struct lock_class_key __key;
+-
+-	lockdep_init_map(&trans->sync_cmd_lockdep_map, "sync_cmd_lockdep_map",
+-			 &__key, 0);
+-#endif
+-}
+-
+ #endif /* __iwl_trans_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 1cb1204..dd1f828 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1366,14 +1366,13 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	iounmap(trans_pcie->hw_base);
+ 	pci_release_regions(trans_pcie->pci_dev);
+ 	pci_disable_device(trans_pcie->pci_dev);
+-	kmem_cache_destroy(trans->dev_cmd_pool);
+ 
+ 	if (trans_pcie->napi.poll)
+ 		netif_napi_del(&trans_pcie->napi);
+ 
+ 	iwl_pcie_free_fw_monitor(trans);
+ 
+-	kfree(trans);
++	iwl_trans_free(trans);
+ }
+ 
+ static void iwl_trans_pcie_set_pmi(struct iwl_trans *trans, bool state)
+@@ -2466,18 +2465,13 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	u16 pci_cmd;
+ 	int err;
+ 
+-	trans = kzalloc(sizeof(struct iwl_trans) +
+-			sizeof(struct iwl_trans_pcie), GFP_KERNEL);
+-	if (!trans) {
+-		err = -ENOMEM;
+-		goto out;
+-	}
++	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
++				&pdev->dev, cfg, &trans_ops_pcie, 0);
++	if (!trans)
++		return ERR_PTR(-ENOMEM);
+ 
+ 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	trans->ops = &trans_ops_pcie;
+-	trans->cfg = cfg;
+-	trans_lockdep_init(trans);
+ 	trans_pcie->trans = trans;
+ 	spin_lock_init(&trans_pcie->irq_lock);
+ 	spin_lock_init(&trans_pcie->reg_lock);
+@@ -2601,25 +2595,8 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	/* Initialize the wait queue for commands */
+ 	init_waitqueue_head(&trans_pcie->wait_command_queue);
+ 
+-	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
+-		 "iwl_cmd_pool:%s", dev_name(trans->dev));
+-
+-	trans->dev_cmd_headroom = 0;
+-	trans->dev_cmd_pool =
+-		kmem_cache_create(trans->dev_cmd_pool_name,
+-				  sizeof(struct iwl_device_cmd)
+-				  + trans->dev_cmd_headroom,
+-				  sizeof(void *),
+-				  SLAB_HWCACHE_ALIGN,
+-				  NULL);
+-
+-	if (!trans->dev_cmd_pool) {
+-		err = -ENOMEM;
+-		goto out_pci_disable_msi;
+-	}
+-
+ 	if (iwl_pcie_alloc_ict(trans))
+-		goto out_free_cmd_pool;
++		goto out_pci_disable_msi;
+ 
+ 	err = request_threaded_irq(pdev->irq, iwl_pcie_isr,
+ 				   iwl_pcie_irq_handler,
+@@ -2636,8 +2613,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 
+ out_free_ict:
+ 	iwl_pcie_free_ict(trans);
+-out_free_cmd_pool:
+-	kmem_cache_destroy(trans->dev_cmd_pool);
+ out_pci_disable_msi:
+ 	pci_disable_msi(pdev);
+ out_pci_release_regions:
+@@ -2645,7 +2620,6 @@ out_pci_release_regions:
+ out_pci_disable_device:
+ 	pci_disable_device(pdev);
+ out_no_pci:
+-	kfree(trans);
+-out:
++	iwl_trans_free(trans);
+ 	return ERR_PTR(err);
+ }
 -- 
-Nicolas Ferre
+2.1.4
+
