@@ -1,77 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:50364 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561AbbEKCll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 May 2015 22:41:41 -0400
-Message-ID: <555016DC.804@linux.intel.com> (sfid-20150511_044201_561929_913D99D3)
-Date: Mon, 11 May 2015 10:41:32 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59678 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754453AbbEZOCt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 10:02:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jakub Kicinski <moorray3@wp.pl>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: Re: [PATCHv3 0/2] add mt7601u driver
+References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+	<1432546473-18081-1-git-send-email-moorray3@wp.pl>
+Date: Tue, 26 May 2015 13:26:00 +0300
+In-Reply-To: <1432546473-18081-1-git-send-email-moorray3@wp.pl> (Jakub
+	Kicinski's message of "Mon, 25 May 2015 11:34:31 +0200")
+Message-ID: <87d21n3a9z.fsf@kamboji.qca.qualcomm.com> (sfid-20150526_160255_342950_5A48F9C5)
 MIME-Version: 1.0
-To: "brudley@broadcom.com" <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	"meuleman@broadcom.com" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
-	"hdegoede@redhat.com" <hdegoede@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3] brcmfmac: prohibit ACPI power management for brcmfmac
- driver
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ACPI will manage WiFi chip's power state during suspend/resume
-process on some tablet platforms(such as ASUS T100TA). This is
-not supported by brcmfmac driver now, and the context of WiFi
-chip will be damaged after resume. This patch informs ACPI not
-to manage WiFi chip's power state.
+Jakub Kicinski <moorray3@wp.pl> writes:
 
-Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-Acked-by: Arend van Spriel <arend@broadcom.com>
----
-Changes in v3:
-- Have the assignment separate for the if statement.
+> From: Jakub Kicinski <kubakici@wp.pl>
+>
+>> This miniseries adds support for the simplest of MediaTek Wi-Fi
+>> devices.  MT7601U is a single stream bgn chip with no bells or whistles.
+>> My driver is partially based on Felix's mt76 but IMHO it doesn't
+>> make sense to merge the two right now because MT7601U is a design
+>> somewhere between old Ralink devices and new Mediatek chips.  There
+>> wouldn't be all that much code sharing with the devices mt76 supports.
+>> Situation may obviously change when someone decides to extend m76 with
+>> support for the more recent USB dongles.
+>> 
+>> The driver supports only station mode.  I'm hoping to add AP support
+>> when time allows.
+>> 
+>> This driver sat on GitHub for quite a while and got some testing there.
+>> If anyone is interested in full git history and such here's a link:
+>> 
+>> http://github.com/kuba-moo/mt7601u
+>> 
+>> I split the submission into the build things and meta data (kconfig,
+>> Makefiles, MAINTAINERS update etc.) and the actual code to make the
+>> reviewing a little easier.
+>
+> v2:
+>  - don't zero parts of just allocated skb (Johannes)
+>  - add delay to polling of MAC state (Johannes)
+>  - use paged RX (Johannes)
+>  - add more device IDs (Jose)
+>  - reduce number of RX buffers
+>  - increase max length of USB dma aggregate
+>
+> v3:
+>  - rebase
+>
+> Jakub Kicinski (2):
+>   add mt7601u driver
+>   add mt7601u kbuild and others
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+I pushed v4 (a squashed version of these patches which didn't make it to
+the list for some reason) to the pending branch:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 9b508bd..c960a12 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -33,6 +33,7 @@
- #include <linux/suspend.h>
- #include <linux/errno.h>
- #include <linux/module.h>
-+#include <linux/acpi.h>
- #include <net/cfg80211.h>
- 
- #include <defs.h>
-@@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	int err;
- 	struct brcmf_sdio_dev *sdiodev;
- 	struct brcmf_bus *bus_if;
-+	struct device *dev;
-+	struct acpi_device *adev;
- 
- 	brcmf_dbg(SDIO, "Enter\n");
- 	brcmf_dbg(SDIO, "Class=%x\n", func->class);
-@@ -1121,6 +1124,12 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
- 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
- 
-+	/* prohibit ACPI power management for this device */
-+	dev = &func->dev;
-+	adev = ACPI_COMPANION(dev);
-+	if (adev)
-+		adev->flags.power_manageable = 0;
-+
- 	/* Consume func num 1 but dont do anything with it. */
- 	if (func->num == 1)
- 		return 0;
--- 1.7.1
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?h=pending&id=1feab03d9ecce61ec9a64a56fda7717e703135a9
 
+I'm planning to apply this soon. So if anyone has concerns or comments
+about this driver better to speak up now.
+
+-- 
+Kalle Valo
