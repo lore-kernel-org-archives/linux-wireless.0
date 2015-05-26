@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35689 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbbEKFB0 convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0147.hostedemail.com ([216.40.44.147]:36500 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751869AbbEZRGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 01:01:26 -0400
-Received: by widdi4 with SMTP id di4so90564634wid.0
-        for <linux-wireless@vger.kernel.org>; Sun, 10 May 2015 22:01:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <554CF805.1050602@codeaurora.org>
-References: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com>
-	<1431076388-24800-4-git-send-email-michal.kazior@tieto.com>
-	<554CF805.1050602@codeaurora.org>
-Date: Mon, 11 May 2015 07:01:24 +0200
-Message-ID: <CA+BoTQmyJpByXjtjeGLxqaBz5VJ4+Ch3668kh7m576i4bhc_KQ@mail.gmail.com> (sfid-20150511_070132_251701_1E93E5D3)
-Subject: Re: [PATCH 3/3] ath10k: enable pci soc powersaving
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Peter Oh <poh@codeaurora.org>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 26 May 2015 13:06:22 -0400
+Message-ID: <1432659977.2846.100.camel@perches.com> (sfid-20150526_190626_929514_97526C35)
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
+ of del_timer_sync()
+From: Joe Perches <joe@perches.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
+	Arek Rusniak <arek.rusi@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 26 May 2015 10:06:17 -0700
+In-Reply-To: <20150526163555.GA9685@kroah.com>
+References: <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
+	 <556268BC.5050807@lwfinger.net> <20150525091737.GQ4150@mwanda>
+	 <1432575448.2846.63.camel@perches.com> <20150526044611.GA3465@sudip-PC>
+	 <1432616108.2846.83.camel@perches.com> <20150526050212.GC3465@sudip-PC>
+	 <1432616879.2846.86.camel@perches.com> <20150526141401.GC21573@kroah.com>
+	 <1432651739.2846.93.camel@perches.com> <20150526163555.GA9685@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 May 2015 at 19:53, Peter Oh <poh@codeaurora.org> wrote:
-> Hi,
->
-> On 05/08/2015 02:13 AM, Michal Kazior wrote:
-[...]
->>   diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> index b26e32f42656..889262b07d19 100644
->> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> @@ -22,6 +22,7 @@
->>   #include "debug.h"
->>   #include "trace.h"
->>   #include "mac.h"
->> +#include "hif.h"
->>
->
-> Is it necessary change?
+On Tue, 2015-05-26 at 09:35 -0700, Greg KH wrote:
+> On Tue, May 26, 2015 at 07:48:59AM -0700, Joe Perches wrote:
+> > > > The main point is that patches shouldn't be applied without
+> > > > being submitted to a more widely read list.
+> > > 
+> > > I take the blame for any problems with Outreachy patches.
+> > 
+> > Are you going to change any procedure associated to these
+> > Outreachy patches?
+> 
+> 2 bugs out of 900?  Nah, I think that's good odds.
+> 
+> Also, the outreachy patch process would overwhelm everyone else on the
+> list, it's really high volume during the application phase, I'd prefer
+> it to stick with the mentors that wish to help out with the process.  If
+> you and/or Dan, or anyone else wishes to help out with this, I would
+> really appreciate it.  But I don't think that forcing them to post to
+> the driverdevel list is a good idea.
 
-Good catch, thanks! This is a leftover from early prototyping of the
-patch. I'll remove it in v2.
+I don't think that's necessary, but sending them to any
+listed maintainer should be.
+
+If you're collecting them, I suggest you stick them in
+a separate branch, post them to your driverdev list and
+cc the appropriate maintainers, wait a week, then apply
+them to your main branch.
+
+You already batch post hundreds of patches for kernel
+x.y.z stable branches.  What's another few hundred?
 
 
-Michał
