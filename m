@@ -1,46 +1,366 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20243 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196AbbEKQK4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 12:10:56 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2] wil6210: fix format specifier for dma_addr_t
-Date: Mon, 11 May 2015 19:10:48 +0300
-Message-Id: <1431360648-4854-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150511_181102_345423_DC9DB9A2)
+Received: from s3.sipsolutions.net ([5.9.151.49]:43134 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753549AbbEZNWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 09:22:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Matthieu Mauger <matthieux.mauger@intel.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] cfg80211: properly send NL80211_ATTR_DISCONNECTED_BY_AP in disconnect
+Date: Tue, 26 May 2015 15:22:20 +0200
+Message-Id: <1432646540-28707-1-git-send-email-johannes@sipsolutions.net> (sfid-20150526_152234_000710_45D46EE2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix format specifier used for dma_addr_t, namely use %pad
-Debug print virtual address for the same buffer as well.
+From: Johannes Berg <johannes.berg@intel.com>
 
-It can be applied as:
-fixup! wil6210: Add pmc debug mechanism memory management
+When we disconnect from the AP, drivers call cfg80211_disconnect().
+This doesn't know whether the disconnection was initiated locally
+or by the AP though, which can cause problems with the supplicant,
+for example with WPS. This issue obviously doesn't show up with any
+mac80211 based driver since mac80211 doesn't call this function.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Fix this by requiring drivers to indicate whether the disconnect is
+locally generated or not. I've tried to update the drivers, but may
+not have gotten the values correct, and some drivers may currently
+not be able to report correct values. In case of doubt I left it at
+false, which is the current behaviour.
+
+For libertas, make adjustments as indicated by Dan Williams.
+
+Reported-by: Matthieu Mauger <matthieux.mauger@intel.com>
+Tested-by: Matthieu Mauger <matthieux.mauger@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/pmc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |  4 ++--
+ drivers/net/wireless/ath/wil6210/main.c            |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  4 ++--
+ drivers/net/wireless/libertas/cfg.c                | 13 ++++++-------
+ drivers/net/wireless/libertas/cfg.h                |  3 ++-
+ drivers/net/wireless/libertas/cmd.h                |  3 ++-
+ drivers/net/wireless/libertas/cmdresp.c            | 13 ++++++++-----
+ drivers/net/wireless/mwifiex/join.c                |  2 +-
+ drivers/net/wireless/mwifiex/sta_event.c           |  2 +-
+ drivers/net/wireless/rndis_wlan.c                  |  2 +-
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c  |  2 +-
+ drivers/staging/wlan-ng/cfg80211.c                 |  2 +-
+ include/net/cfg80211.h                             |  4 +++-
+ net/wireless/core.h                                |  1 +
+ net/wireless/sme.c                                 |  4 +++-
+ net/wireless/util.c                                |  3 ++-
+ 16 files changed, 37 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pmc.c b/drivers/net/wireless/ath/wil6210/pmc.c
-index 3cb4f35..8a8cdc6 100644
---- a/drivers/net/wireless/ath/wil6210/pmc.c
-+++ b/drivers/net/wireless/ath/wil6210/pmc.c
-@@ -92,9 +92,9 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
- 			GFP_KERNEL);
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index cce4625a53ad..a511ef3614b9 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -889,7 +889,7 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
+ 					GFP_KERNEL);
+ 	} else if (vif->sme_state == SME_CONNECTED) {
+ 		cfg80211_disconnected(vif->ndev, proto_reason,
+-				      NULL, 0, GFP_KERNEL);
++				      NULL, 0, false, GFP_KERNEL);
+ 	}
  
- 	wil_dbg_misc(wil,
--		     "%s: allocated pring %p. %zd x %d = total %zd bytes\n",
-+		     "%s: allocated pring %p => %pad. %zd x %d = total %zd bytes\n",
- 		     __func__,
--		     (void *)pmc->pring_pa,
-+		     pmc->pring_va, &pmc->pring_pa,
- 		     sizeof(struct vring_tx_desc),
- 		     num_descriptors,
- 		     sizeof(struct vring_tx_desc) * num_descriptors);
+ 	vif->sme_state = SME_DISCONNECTED;
+@@ -3467,7 +3467,7 @@ void ath6kl_cfg80211_stop(struct ath6kl_vif *vif)
+ 					GFP_KERNEL);
+ 		break;
+ 	case SME_CONNECTED:
+-		cfg80211_disconnected(vif->ndev, 0, NULL, 0, GFP_KERNEL);
++		cfg80211_disconnected(vif->ndev, 0, NULL, 0, true, GFP_KERNEL);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index c2a238426425..38b953e108a7 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -224,7 +224,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 		if (test_bit(wil_status_fwconnected, wil->status)) {
+ 			clear_bit(wil_status_fwconnected, wil->status);
+ 			cfg80211_disconnected(ndev, reason_code,
+-					      NULL, 0, GFP_KERNEL);
++					      NULL, 0, false, GFP_KERNEL);
+ 		} else if (test_bit(wil_status_fwconnecting, wil->status)) {
+ 			cfg80211_connect_result(ndev, bssid, NULL, 0, NULL, 0,
+ 						WLAN_STATUS_UNSPECIFIED_FAILURE,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 8a15ebbce4a3..2e4e42245b8f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -1262,7 +1262,7 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif, u16 reason)
+ 		}
+ 		clear_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state);
+ 		cfg80211_disconnected(vif->wdev.netdev, reason, NULL, 0,
+-				      GFP_KERNEL);
++				      true, GFP_KERNEL);
+ 
+ 	}
+ 	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state);
+@@ -1928,7 +1928,7 @@ brcmf_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	clear_bit(BRCMF_VIF_STATUS_CONNECTED, &ifp->vif->sme_state);
+ 	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state);
+-	cfg80211_disconnected(ndev, reason_code, NULL, 0, GFP_KERNEL);
++	cfg80211_disconnected(ndev, reason_code, NULL, 0, true, GFP_KERNEL);
+ 
+ 	memcpy(&scbval.ea, &profile->bssid, ETH_ALEN);
+ 	scbval.val = cpu_to_le32(reason_code);
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 1a4d558022d8..8317afd065b4 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -835,14 +835,13 @@ static int lbs_cfg_scan(struct wiphy *wiphy,
+  * Events
+  */
+ 
+-void lbs_send_disconnect_notification(struct lbs_private *priv)
++void lbs_send_disconnect_notification(struct lbs_private *priv,
++				      bool locally_generated)
+ {
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+-	cfg80211_disconnected(priv->dev,
+-		0,
+-		NULL, 0,
+-		GFP_KERNEL);
++	cfg80211_disconnected(priv->dev, 0, NULL, 0, locally_generated,
++			      GFP_KERNEL);
+ 
+ 	lbs_deb_leave(LBS_DEB_CFG80211);
+ }
+@@ -1458,7 +1457,7 @@ int lbs_disconnect(struct lbs_private *priv, u16 reason)
+ 
+ 	cfg80211_disconnected(priv->dev,
+ 			reason,
+-			NULL, 0,
++			NULL, 0, true,
+ 			GFP_KERNEL);
+ 	priv->connect_status = LBS_DISCONNECTED;
+ 
+@@ -2031,7 +2030,7 @@ static int lbs_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ 	ret = lbs_cmd_with_response(priv, CMD_802_11_AD_HOC_STOP, &cmd);
+ 
+ 	/* TODO: consider doing this at MACREG_INT_CODE_ADHOC_BCN_LOST time */
+-	lbs_mac_event_disconnected(priv);
++	lbs_mac_event_disconnected(priv, true);
+ 
+ 	lbs_deb_leave_args(LBS_DEB_CFG80211, "ret %d", ret);
+ 	return ret;
+diff --git a/drivers/net/wireless/libertas/cfg.h b/drivers/net/wireless/libertas/cfg.h
+index 10995f59fe34..acccc2922401 100644
+--- a/drivers/net/wireless/libertas/cfg.h
++++ b/drivers/net/wireless/libertas/cfg.h
+@@ -10,7 +10,8 @@ struct wireless_dev *lbs_cfg_alloc(struct device *dev);
+ int lbs_cfg_register(struct lbs_private *priv);
+ void lbs_cfg_free(struct lbs_private *priv);
+ 
+-void lbs_send_disconnect_notification(struct lbs_private *priv);
++void lbs_send_disconnect_notification(struct lbs_private *priv,
++				      bool locally_generated);
+ void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
+ 
+ void lbs_scan_done(struct lbs_private *priv);
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index 4279e8ab95f2..0c5444b02c64 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -68,7 +68,8 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len);
+ 
+ /* From cmdresp.c */
+ 
+-void lbs_mac_event_disconnected(struct lbs_private *priv);
++void lbs_mac_event_disconnected(struct lbs_private *priv,
++				bool locally_generated);
+ 
+ 
+ 
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 65f18f1e869c..e5442e8956f7 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -19,10 +19,13 @@
+  * reset link state etc.
+  *
+  * @priv:	A pointer to struct lbs_private structure
++ * @locally_generated: indicates disconnect was requested locally
++ *		(usually by userspace)
+  *
+  * returns:	n/a
+  */
+-void lbs_mac_event_disconnected(struct lbs_private *priv)
++void lbs_mac_event_disconnected(struct lbs_private *priv,
++				bool locally_generated)
+ {
+ 	if (priv->connect_status != LBS_CONNECTED)
+ 		return;
+@@ -36,7 +39,7 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
+ 	msleep_interruptible(1000);
+ 
+ 	if (priv->wdev->iftype == NL80211_IFTYPE_STATION)
+-		lbs_send_disconnect_notification(priv);
++		lbs_send_disconnect_notification(priv, locally_generated);
+ 
+ 	/* report disconnect to upper layer */
+ 	netif_stop_queue(priv->dev);
+@@ -229,17 +232,17 @@ int lbs_process_event(struct lbs_private *priv, u32 event)
+ 
+ 	case MACREG_INT_CODE_DEAUTHENTICATED:
+ 		lbs_deb_cmd("EVENT: deauthenticated\n");
+-		lbs_mac_event_disconnected(priv);
++		lbs_mac_event_disconnected(priv, false);
+ 		break;
+ 
+ 	case MACREG_INT_CODE_DISASSOCIATED:
+ 		lbs_deb_cmd("EVENT: disassociated\n");
+-		lbs_mac_event_disconnected(priv);
++		lbs_mac_event_disconnected(priv, false);
+ 		break;
+ 
+ 	case MACREG_INT_CODE_LINK_LOST_NO_SCAN:
+ 		lbs_deb_cmd("EVENT: link lost\n");
+-		lbs_mac_event_disconnected(priv);
++		lbs_mac_event_disconnected(priv, true);
+ 		break;
+ 
+ 	case MACREG_INT_CODE_PS_SLEEP:
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 411a6c2f4aca..080ec3422db9 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1421,7 +1421,7 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+ 		ret = mwifiex_deauthenticate_infra(priv, mac);
+ 		if (ret)
+ 			cfg80211_disconnected(priv->netdev, 0, NULL, 0,
+-					      GFP_KERNEL);
++					      true, GFP_KERNEL);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return mwifiex_send_cmd(priv, HostCmd_CMD_802_11_AD_HOC_STOP,
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 0dc7a1d3993d..c9064b88d6a4 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -133,7 +133,7 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
+ 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
+ 	    priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT) {
+ 		cfg80211_disconnected(priv->netdev, reason_code, NULL, 0,
+-				      GFP_KERNEL);
++				      false, GFP_KERNEL);
+ 	}
+ 	eth_zero_addr(priv->cfg_bssid);
+ 
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index d72ff8e7125d..43db6976102f 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2861,7 +2861,7 @@ static void rndis_wlan_do_link_down_work(struct usbnet *usbdev)
+ 
+ 		deauthenticate(usbdev);
+ 
+-		cfg80211_disconnected(usbdev->net, 0, NULL, 0, GFP_KERNEL);
++		cfg80211_disconnected(usbdev->net, 0, NULL, 0, true, GFP_KERNEL);
+ 	}
+ 
+ 	netif_carrier_off(usbdev->net);
+diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+index bc95ce89af06..5ab2f6978209 100644
+--- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+@@ -379,7 +379,7 @@ void rtw_cfg80211_indicate_disconnect(struct rtw_adapter *padapter)
+ 						GFP_ATOMIC);
+ 		} else {
+ 			cfg80211_disconnected(padapter->pnetdev, 0, NULL,
+-					      0, GFP_ATOMIC);
++					      0, false, GFP_ATOMIC);
+ 		}
+ 	}
+ }
+diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
+index 7c87aecf4744..342e2b30c48f 100644
+--- a/drivers/staging/wlan-ng/cfg80211.c
++++ b/drivers/staging/wlan-ng/cfg80211.c
+@@ -722,7 +722,7 @@ void prism2_connect_result(wlandevice_t *wlandev, u8 failed)
+ void prism2_disconnected(wlandevice_t *wlandev)
+ {
+ 	cfg80211_disconnected(wlandev->netdev, 0, NULL,
+-		0, GFP_KERNEL);
++		0, false, GFP_KERNEL);
+ }
+ 
+ void prism2_roamed(wlandevice_t *wlandev)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d63ecec73090..a741678f24a2 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4575,13 +4575,15 @@ void cfg80211_roamed_bss(struct net_device *dev, struct cfg80211_bss *bss,
+  * @ie: information elements of the deauth/disassoc frame (may be %NULL)
+  * @ie_len: length of IEs
+  * @reason: reason code for the disconnection, set it to 0 if unknown
++ * @locally_generated: disconnection was requested locally
+  * @gfp: allocation flags
+  *
+  * After it calls this function, the driver should enter an idle state
+  * and not try to connect to any AP any more.
+  */
+ void cfg80211_disconnected(struct net_device *dev, u16 reason,
+-			   const u8 *ie, size_t ie_len, gfp_t gfp);
++			   const u8 *ie, size_t ie_len,
++			   bool locally_generated, gfp_t gfp);
+ 
+ /**
+  * cfg80211_ready_on_channel - notification of remain_on_channel start
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 801cd49c5a0c..311eef26bf88 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -222,6 +222,7 @@ struct cfg80211_event {
+ 			const u8 *ie;
+ 			size_t ie_len;
+ 			u16 reason;
++			bool locally_generated;
+ 		} dc;
+ 		struct {
+ 			u8 bssid[ETH_ALEN];
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index d11454f87bac..8020b5b094d4 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -938,7 +938,8 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ }
+ 
+ void cfg80211_disconnected(struct net_device *dev, u16 reason,
+-			   const u8 *ie, size_t ie_len, gfp_t gfp)
++			   const u8 *ie, size_t ie_len,
++			   bool locally_generated, gfp_t gfp)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+@@ -954,6 +955,7 @@ void cfg80211_disconnected(struct net_device *dev, u16 reason,
+ 	ev->dc.ie_len = ie_len;
+ 	memcpy((void *)ev->dc.ie, ie, ie_len);
+ 	ev->dc.reason = reason;
++	ev->dc.locally_generated = locally_generated;
+ 
+ 	spin_lock_irqsave(&wdev->event_lock, flags);
+ 	list_add_tail(&ev->list, &wdev->event_list);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 70051ab52f4f..4cb34557b873 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -887,7 +887,8 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ 		case EVENT_DISCONNECTED:
+ 			__cfg80211_disconnected(wdev->netdev,
+ 						ev->dc.ie, ev->dc.ie_len,
+-						ev->dc.reason, true);
++						ev->dc.reason,
++						!ev->dc.locally_generated);
+ 			break;
+ 		case EVENT_IBSS_JOINED:
+ 			__cfg80211_ibss_joined(wdev->netdev, ev->ij.bssid,
 -- 
-2.1.0
+2.1.4
 
