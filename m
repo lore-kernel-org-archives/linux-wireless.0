@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.11]:47795 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751537AbbEYJfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 05:35:31 -0400
-Date: Mon, 25 May 2015 11:35:27 +0200
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: Re: [PATCHv2 0/2] add mt7601u driver
-Message-ID: <20150525113527.5b8b31c0@north> (sfid-20150525_113533_673030_10CE847F)
-In-Reply-To: <87fv6l3wib.fsf@kamboji.qca.qualcomm.com>
-References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
-	<1430857363-30844-1-git-send-email-moorray3@wp.pl>
-	<87fv6l3wib.fsf@kamboji.qca.qualcomm.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59677 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303AbbEZOCt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 10:02:49 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [4.1] rtlwifi: Remove the clear interrupt routine from all drivers
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1431743367-10059-1-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Vincent Fann <vincent_fann@realtek.com>,
+	Shao Fu <shaofu@realtek.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Message-Id: <20150526105918.C651D14174E@smtp.codeaurora.org> (sfid-20150526_160259_948891_01217CC7)
+Date: Tue, 26 May 2015 10:59:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 25 May 2015 11:13:32 +0300, Kalle Valo wrote:
-> Jakub Kicinski <moorray3@wp.pl> writes:
-> 
-> > From: Jakub Kicinski <kubakici@wp.pl>
-> >
-> >> This miniseries adds support for the simplest of MediaTek Wi-Fi
-> >> devices.  MT7601U is a single stream bgn chip with no bells or whistles.
-> >> My driver is partially based on Felix's mt76 but IMHO it doesn't
-> >> make sense to merge the two right now because MT7601U is a design
-> >> somewhere between old Ralink devices and new Mediatek chips.  There
-> >> wouldn't be all that much code sharing with the devices mt76 supports.
-> >> Situation may obviously change when someone decides to extend m76 with
-> >> support for the more recent USB dongles.
-> >> 
-> >> The driver supports only station mode.  I'm hoping to add AP support
-> >> when time allows.
-> >> 
-> >> This driver sat on GitHub for quite a while and got some testing there.
-> >> If anyone is interested in full git history and such here's a link:
-> >> 
-> >> http://github.com/kuba-moo/mt7601u
-> >> 
-> >> I split the submission into the build things and meta data (kconfig,
-> >> Makefiles, MAINTAINERS update etc.) and the actual code to make the
-> >> reviewing a little easier.
-> >
-> > v2:
-> >  - don't zero parts of just allocated skb (Johannes)
-> >  - add delay to polling of MAC state (Johannes)
-> >  - use paged RX (Johannes)
-> >  - add more device IDs (Jose)
-> >  - reduce number of RX buffers
-> >  - increase max length of USB dma aggregate
-> 
-> It doens't compile anymore due to a mac80211 change. Can you rebase,
-> please?
-> 
-> drivers/net/wireless/mediatek/mt7601u/main.c: In function 'mt76_configure_filter':
-> drivers/net/wireless/mediatek/mt7601u/main.c:122:31: error: 'FIF_PROMISC_IN_BSS' undeclared (first use in this function)
-> drivers/net/wireless/mediatek/mt7601u/main.c:122:31: note: each undeclared identifier is reported only once for each function it appears in
-> 
 
-I just dropped the line configuring HW promisc for now like Johannes
-did in his removal patch.  However, the right fix is to configure it
-based on IEEE80211_CONF_MONITOR, correct?
+> From: Vincent Fann <vincent_fann@realtek.com>
+> 
+> Several of these drivers have there TX randomly blocked for 3~5 seconds while
+> measuring tx throughput (iperf). The root couse happens in rtl_pci_flush().
+> The function uses a while-loop to wait for TX queue length to decrease to 0.
+> The TX queue length counts the number of packets that are queued in the driver.
+> The driver relys on the TX OK interrupt to return skb and reduce TX queue length.
+> 
+> The interrupt subroutine disables interupts, reads the interrupt registers, and
+> then clears the registers in the beginning of _rtl_pci_interrupt(). After all
+> interupts process are finished, the driver invokes enable_interrupt() to enable
+> interupts. This behavior is normal for an interrupt subroutine.
+> 
+> But enable_interrupt() invokes clear_interrupt() again. This unexpected interrupt
+> clearing may cleari me fresh TX OK interrupts. These missing interrupts cause TX
+> queue length to never reduce to 0i, which causes rtl_pci_flush() to be stuck in
+> unterminated while-loop.
+> 
+> This patch removes clear_interrupt() in enable_interrupt() to avoid this behavior.
+> 
+> Signed-off-by: Vincent Fann <vincent_fann@realtek.com>
+> Signed-off-by: Shao Fu <shaofu@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> [3.18+]
+
+Thanks, applied to wireless-drivers-next.git.
+
+Kalle Valo
