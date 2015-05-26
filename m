@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60610 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756470AbbEUWud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 18:50:33 -0400
-Date: Fri, 22 May 2015 00:50:30 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	zohar@linux.vnet.ibm.com, mricon@kernel.org
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150521225030.GK23057@wotan.suse.de> (sfid-20150522_005050_803284_6CB85B03)
-References: <20150519200232.GM23057@wotan.suse.de>
- <20150520140426.GB126473@ubuntu-hedt>
- <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57919 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411AbbEZNwu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 09:52:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Fu\, Zhonghui" <zhonghui.fu@linux.intel.com>
+Cc: "brudley\@broadcom.com" <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman\@broadcom.com" <meuleman@broadcom.com>,
+	"pieterpg\@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede\@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list\@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmfmac: prohibit ACPI power management for brcmfmac driver
+References: <555016DC.804@linux.intel.com>
+Date: Tue, 26 May 2015 13:46:50 +0300
+In-Reply-To: <555016DC.804@linux.intel.com> (Zhonghui Fu's message of "Mon, 11
+	May 2015 10:41:32 +0800")
+Message-ID: <878ucb39b9.fsf@kamboji.qca.qualcomm.com> (sfid-20150526_155316_247188_273FF325)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2015 at 05:24:46PM +0100, One Thousand Gnomes wrote:
-> On Wed, 20 May 2015 09:04:26 -0500
-> Seth Forshee <seth.forshee@canonical.com> wrote:
-> 
-> > On Tue, May 19, 2015 at 10:02:32PM +0200, Luis R. Rodriguez wrote:
-> > > This begs the question on how we'd manage keys for firmware signing on
-> > > linux-firmare. Since the keys are x509 keys we need a CA. Based on some initial
-> > > discussions it would seem we'd need the Linux Foundation to create a key, this
-> > > would be embedded in the kernel and that key would be used to sign Kyle's key.
-> > > Kyle would in turn use his key for signing linux-firmware files. David, Kyle,
-> > > did I summarize this correctly ?
-> > 
-> > I raised the question of key revocation when we discussed this on irc,
-> > but it wasn't answered to my satisfaction. If a key signed by the
-> > kernel-embedded key is compromised, how can that key be revoked so that
-> > it is no longer trusted?
-> > 
-> > Someone mentioned UEFI blacklists, which I don't know much about, but
-> > not all systems have UEFI. The only reliable option that comes to mind
-> > for me is an in-kernel blacklist of keys which should no longer be
-> > trusted.
-> 
-> More to the point why do you want to sign firmware files ?
+"Fu, Zhonghui" <zhonghui.fu@linux.intel.com> writes:
 
-This would add support to firmware loading the same dog and pony show as used
-by the module and kexec code, sharing as much dog and pony as is possible. This
-also allows us to phase 802.11's dog and pony show which is sitting on the side all
-on it own and implicates distros to do more work.
+> ACPI will manage WiFi chip's power state during suspend/resume
+> process on some tablet platforms(such as ASUS T100TA). This is
+> not supported by brcmfmac driver now, and the context of WiFi
+> chip will be damaged after resume. This patch informs ACPI not
+> to manage WiFi chip's power state.
+>
+> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
 
- Luis
+Thanks, applied to wireless-drivers-next.git.
+
+-- 
+Kalle Valo
