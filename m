@@ -1,185 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:36530 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750802AbbEYSS0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 14:18:26 -0400
-Date: Mon, 25 May 2015 20:10:43 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi: Queue 16 stuck for 10000 ms - Microcode SW error detected.
-Message-ID: <20150525181043.GA10755@light.dominikbrodowski.net> (sfid-20150525_201830_605057_D9CB0D9E)
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:34828 "EHLO
+	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378AbbEZSGZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 14:06:25 -0400
+Received: by qkdn188 with SMTP id n188so96215882qkd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 11:06:24 -0700 (PDT)
+From: Jesse Jones <jjones@cococorp.com>
+References: <CAAnMG+OgtSzFXqLOoZ-JbOr7xnexC3P0+M0fFLWTBtWru=4SKg@mail.gmail.com>
+ <20150525161542.GA14318@localhost>
+In-Reply-To: <20150525161542.GA14318@localhost>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tKW2IUtsqtDRztdT"
+Date: Tue, 26 May 2015 11:06:23 -0700
+Message-ID: <3d7668c929311fbebc3309a3fc0c27d8@mail.gmail.com> (sfid-20150526_200629_997468_A0D710A7)
+Subject: RE: [PATCH] mac80211: fix a NULL dereference in ath9k (and likely
+ other drivers) when fixed mesh paths are used
+To: Bob Copeland <me@bobcopeland.com>,
+	Alexis Green <agreen@cococorp.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sounds good to me and I will try this though unfortunately not until next
+week when I get back from vacation.
 
---tKW2IUtsqtDRztdT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks,
+Jesse
 
-Hey,
+-----Original Message-----
+From: Bob Copeland [mailto:me@bobcopeland.com]
+Sent: Monday, May 25, 2015 9:16 AM
+To: Alexis Green
+Cc: Johannes Berg; linux-wireless; Jesse Jones
+Subject: Re: [PATCH] mac80211: fix a NULL dereference in ath9k (and likely
+other drivers) when fixed mesh paths are used
 
-on my pretty new iwlwifi device 8086:08b1 (7260), the following error just
-appeared twice in dmesg on 4.1.0-rc4+ (Linus' tree as of Saturday/Sunday
-morning):
+On Thu, May 21, 2015 at 06:05:13PM -0700, Alexis Green wrote:
+> This patch fixes a NULL dereference in ath9k (and likely other
+> drivers) when fixed mesh paths are used. The problem is that when a
+> station comes up sta_info_alloc allocates ath_node implicitly via
+> hw->sta_data_size. When it does that the ath_node is zeroed out. The
+> ath_node isn’t actually initialized until the station becomes associated
+> and ath9k_sta_state is called.
 
-iwlwifi 0000:02:00.0: Queue 16 stuck for 10000 ms.
-iwlwifi 0000:02:00.0: Current SW read_ptr 109 write_ptr 243
-iwl data: 00000000: 00 00 00 00 00 00 00 00 00 e0 ff 1f 00 00 00 00  ......=
-=2E.........
-iwlwifi 0000:02:00.0: FH TRBs(0) =3D 0x80003019
-iwlwifi 0000:02:00.0: FH TRBs(1) =3D 0xc011007c
-iwlwifi 0000:02:00.0: FH TRBs(2) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(3) =3D 0x80300015
-iwlwifi 0000:02:00.0: FH TRBs(4) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(5) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(6) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(7) =3D 0x007090d3
-iwlwifi 0000:02:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [22,=
-22]
-iwlwifi 0000:02:00.0: Q 1 is active and mapped to fifo 2 ra_tid 0x0000 [0,0]
-iwlwifi 0000:02:00.0: Q 2 is active and mapped to fifo 1 ra_tid 0x0000 [187=
-,187]
-iwlwifi 0000:02:00.0: Q 3 is active and mapped to fifo 0 ra_tid 0x0000 [10,=
-39]
-iwlwifi 0000:02:00.0: Q 4 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 5 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 6 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 7 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 8 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 9 is active and mapped to fifo 7 ra_tid 0x0000 [212=
-,212]
-iwlwifi 0000:02:00.0: Q 10 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 11 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 12 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 13 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 14 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 15 is active and mapped to fifo 5 ra_tid 0x0000 [0,=
-0]
-iwlwifi 0000:02:00.0: Q 16 is active and mapped to fifo 1 ra_tid 0x0000 [10=
-9,243]
-iwlwifi 0000:02:00.0: Q 17 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 18 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 19 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Microcode SW error detected.  Restarting 0x2000000.
-iwlwifi 0000:02:00.0: CSR values:
-iwlwifi 0000:02:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_R=
-EG)
-iwlwifi 0000:02:00.0:        CSR_HW_IF_CONFIG_REG: 0X40489204
-iwlwifi 0000:02:00.0:          CSR_INT_COALESCING: 0X80000040
-iwlwifi 0000:02:00.0:                     CSR_INT: 0X00000000
-iwlwifi 0000:02:00.0:                CSR_INT_MASK: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_FH_INT_STATUS: 0X00000000
-iwlwifi 0000:02:00.0:                 CSR_GPIO_IN: 0X00000000
-iwlwifi 0000:02:00.0:                   CSR_RESET: 0X00000000
-iwlwifi 0000:02:00.0:                CSR_GP_CNTRL: 0X080403c5
-iwlwifi 0000:02:00.0:                  CSR_HW_REV: 0X00000144
-iwlwifi 0000:02:00.0:              CSR_EEPROM_REG: 0X00000000
-iwlwifi 0000:02:00.0:               CSR_EEPROM_GP: 0X80000000
-iwlwifi 0000:02:00.0:              CSR_OTP_GP_REG: 0X803a0000
-iwlwifi 0000:02:00.0:                 CSR_GIO_REG: 0X00080040
-iwlwifi 0000:02:00.0:            CSR_GP_UCODE_REG: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_GP_DRIVER_REG: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-iwlwifi 0000:02:00.0:                 CSR_LED_REG: 0X00000060
-iwlwifi 0000:02:00.0:        CSR_DRAM_INT_TBL_REG: 0X8821408e
-iwlwifi 0000:02:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-iwlwifi 0000:02:00.0:             CSR_ANA_PLL_CFG: 0Xd55555d5
-iwlwifi 0000:02:00.0:      CSR_MONITOR_STATUS_REG: 0X3c08019d
-iwlwifi 0000:02:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-iwlwifi 0000:02:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0010
-iwlwifi 0000:02:00.0: FH register values:
-iwlwifi 0000:02:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X21418b00
-iwlwifi 0000:02:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X021418a0
-iwlwifi 0000:02:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000080
-iwlwifi 0000:02:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X00801114
-iwlwifi 0000:02:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
-iwlwifi 0000:02:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X03030000
-iwlwifi 0000:02:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
-iwlwifi 0000:02:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
-iwlwifi 0000:02:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
-iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-iwlwifi 0000:02:00.0: Status: 0x00000000, count: 6
-iwlwifi 0000:02:00.0: Loaded firmware version: 25.24.13.0
-iwlwifi 0000:02:00.0: 0x00000084 | NMI_INTERRUPT_UNKNOWN      =20
-iwlwifi 0000:02:00.0: 0x00000230 | uPc
-iwlwifi 0000:02:00.0: 0x00000000 | branchlink1
-iwlwifi 0000:02:00.0: 0x00000B2E | branchlink2
-iwlwifi 0000:02:00.0: 0x00016210 | interruptlink1
-iwlwifi 0000:02:00.0: 0x00016210 | interruptlink2
-iwlwifi 0000:02:00.0: 0x00000000 | data1
-iwlwifi 0000:02:00.0: 0x00000080 | data2
-iwlwifi 0000:02:00.0: 0x07030000 | data3
-iwlwifi 0000:02:00.0: 0x50C13A19 | beacon time
-iwlwifi 0000:02:00.0: 0x0844762D | tsf low
-iwlwifi 0000:02:00.0: 0x00000075 | tsf hi
-iwlwifi 0000:02:00.0: 0x00000000 | time gp1
-iwlwifi 0000:02:00.0: 0x4577111A | time gp2
-iwlwifi 0000:02:00.0: 0x00000000 | time gp3
-iwlwifi 0000:02:00.0: 0x00041918 | uCode version
-iwlwifi 0000:02:00.0: 0x00000144 | hw version
-iwlwifi 0000:02:00.0: 0x40489204 | board version
-iwlwifi 0000:02:00.0: 0x09D30018 | hcmd
-iwlwifi 0000:02:00.0: 0x24022003 | isr0
-iwlwifi 0000:02:00.0: 0x01800000 | isr1
-iwlwifi 0000:02:00.0: 0x0000000A | isr2
-iwlwifi 0000:02:00.0: 0x004140C0 | isr3
-iwlwifi 0000:02:00.0: 0x00000000 | isr4
-iwlwifi 0000:02:00.0: 0x00000110 | isr_pref
-iwlwifi 0000:02:00.0: 0x00000000 | wait_event
-iwlwifi 0000:02:00.0: 0x00000080 | l2p_control
-iwlwifi 0000:02:00.0: 0x00010030 | l2p_duration
-iwlwifi 0000:02:00.0: 0x0000003F | l2p_mhvalid
-iwlwifi 0000:02:00.0: 0x000000CE | l2p_addr_match
-iwlwifi 0000:02:00.0: 0x00000005 | lmpm_pmg_sel
-iwlwifi 0000:02:00.0: 0x09051509 | timestamp
-iwlwifi 0000:02:00.0: 0x00348090 | flow_handler
-ieee80211 phy0: Hardware restart was requested
-iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
+Good catch.
 
-wifi works fine afterwards (at maximum, a reconnect is required), but
-still something seems to be at odds here...
+I wonder if we should instead remove the mesh special case in
+ieee80211_tx_h_check_assoc() -- given that we require an assoc station in
+peering before we send data frames to that RA, and userspace should also be
+setting assoc flag after MPM completes, I can't think of a reason offhand
+why we'd need to bail out there.
 
-Best,
-	Dominik
+Does this also fix the problem for you?  It passed the wpa_supplicant test
+cases at least (but we aren't fixing mpaths in any of those...)
 
---tKW2IUtsqtDRztdT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+>From 246febaa51d555fda437cc8064798db06c5f4d6e Mon Sep 17 00:00:00 2001
+From: Bob Copeland <me@bobcopeland.com>
+Date: Mon, 25 May 2015 12:01:52 -0400
+Subject: [PATCH] mac80211: enable assoc check for mesh interfaces
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+We already set a station to be associated when peering completes, both in
+user space and in the kernel.  Thus we should always have an associated sta
+before sending data frames to that station.
 
-iQIcBAEBAgAGBQJVY2WjAAoJEJqXYIlMjaMNrpIQALKBp95V5CoGDmtmp03TgDUB
-1lzMvxFVPC9m+xxLvFYsh/GaurK1lpZJBQQtMsTfsrSkjb6sHCUm75fXb8DiSlMK
-5vnTzc/5vq2oO3PQratqhb29PrDhaTNzRy+h5UFx8eFdmfIkdYDzAjRmPyEnxkru
-sktjOQlDeQReHWq3dxKbdkJvK6QP5sIRXugov1eLLYdxWitcMmMN/rWPMaa/Fv+G
-pbaAdBb1L5PU79URn9x8PICT+LlLC0V3Ta/kvV8X9iFlet2Fh9ebf/+/DDzrfDO9
-hHTkMm/0yoRP3uoUiLMiOSi9GOLvc0bd6w4PF0NsQVfZ5Y3CWfZA54TWy0wzlNMg
-X5scq1T6lhOFr8GkHtubPql5EXf3whOLlv2Zbshe2CW/1OWvliuICXdFQSZw0RRO
-gscxHXnaZXIFSKp/VaX+bsrUmSMBUPy+Eugumf3+0IK20hfzk6OmAwBwCW8bTFA2
-NnSuBvBLAkX5noRbC7rxxoC+9z29Z5PWMAfic8edN4XhP66InYG46adWU6EDjL/3
-BWGib9jH+bIRaBAKQ9Zc+4DAVDRPpnNyYHy0MINDTd9EP21nJ8nRFOdVz0kQ5MAY
-puPmF/c++a5oZ+x8W2RVElrD9tXqJ57DeMY36lAF70wS1df7fIQwMc3Ts2HCiNlx
-MDDOVyzNflRWy3p5QqIf
-=esjm
------END PGP SIGNATURE-----
+Failure to do this can cause crashes in the lower-level driver due to
+transmitting unicast data frames before driver sta structures (e.g. ampdu
+state in ath9k) are initialized.  This could have happened if fixing mpaths,
+which could then allow TX to stations with whom we haven't yet completed
+peering.
 
---tKW2IUtsqtDRztdT--
+Reported-by: Alexis Green <agreen@cococorp.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ net/mac80211/tx.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c index
+667111ee6a20..5787f15a3a12 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -301,9 +301,6 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 	if (tx->sdata->vif.type == NL80211_IFTYPE_WDS)
+ 		return TX_CONTINUE;
+
+-	if (tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+-		return TX_CONTINUE;
+-
+ 	if (tx->flags & IEEE80211_TX_PS_BUFFERED)
+ 		return TX_CONTINUE;
+
+--
+2.1.4
+
+
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
