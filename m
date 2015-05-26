@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:38863 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756765AbbEWHPv (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:33886 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753186AbbEZQkf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 May 2015 03:15:51 -0400
-Received: by wichy4 with SMTP id hy4so7138037wic.1
-        for <linux-wireless@vger.kernel.org>; Sat, 23 May 2015 00:15:50 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V4] brcmfmac: allow NVRAM values to contain spaces
-Date: Sat, 23 May 2015 09:15:33 +0200
-Message-Id: <1432365333-1074-1-git-send-email-zajec5@gmail.com> (sfid-20150523_091554_393683_D90B6AC8)
-In-Reply-To: <1432331128-24011-1-git-send-email-zajec5@gmail.com>
-References: <1432331128-24011-1-git-send-email-zajec5@gmail.com>
+	Tue, 26 May 2015 12:40:35 -0400
+Message-ID: <5564A1FF.8080301@lwfinger.net> (sfid-20150526_184043_261562_7DEB2569)
+Date: Tue, 26 May 2015 11:40:31 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+CC: Joe Perches <joe@perches.com>,
+	Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
+	Arek Rusniak <arek.rusi@gmail.com>
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
+ of del_timer_sync()
+References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net> <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com> <556268BC.5050807@lwfinger.net> <20150525091737.GQ4150@mwanda> <1432575448.2846.63.camel@perches.com> <20150526044611.GA3465@sudip-PC> <1432616108.2846.83.camel@perches.com> <20150526050212.GC3465@sudip-PC> <1432616879.2846.86.camel@perches.com> <20150526141401.GC21573@kroah.com> <20150526154826.GJ11588@mwanda>
+In-Reply-To: <20150526154826.GJ11588@mwanda>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Platform NVRAMs often contain values with spaces. Even if right now most
-firmware-supported entries are simple values, we shouldn't reject these
-with spaces. It was semi-confirmed by Broadcom in the early patch adding
-support for platform NVRAMs.
+On 05/26/2015 10:48 AM, Dan Carpenter wrote:
+> On Tue, May 26, 2015 at 07:14:01AM -0700, Greg KH wrote:
+>> I take the blame for any problems with Outreachy patches.  Given the
+>> huge volume of them, one bug out of 900 isn't that bad of a percentage.
+>
+> We don't get many bugs through outreachy, but this isn't the first one.
+> For example, in March and April people complained about:
+>
+> 95745e9b1de2 ('staging: lustre: Use kasprintf.')
+> 45de432775d6 ('Staging: rtl8712: Use memdup_user() instead of copy_from_user()')
+>
+> There have been others but I have a short memory.  We have this
+> discussion every time.  How come no one caught this bug in review??  Oh,
+> it never went through the list.
+>
+> I'm fine with 5 bugs per 900 patches or whatever.  I wish that the
+> patches came to the list, but I get that that would double your review
+> workload to review 900 patches on the outreachy list and again on the
+> normal dev list.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Acked-by: Arend van Spriel <arend@broadcom.com>
----
-V2: Minor change in commit message only. Provide an example of NVRAM entry
-    using space (not just a '#'). It's unprefixed (shouldn't be uploaded to
-    hardware anyway), but proves it's allowed in general.
-V3: As commented by Arend, accept space only (not a '#').
-V4: Fix typo in "Broadcom" in commit message
----
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Adding the maintainer to the original list would still be a good step. I'm not 
+sure that I would have caught "rtl8712: Use memdup_user() instead of 
+copy_from_user()" in review, but I certainly would have seen that it was not 
+proper to do a blanket substitution of del_timer_sync() for a wrapper that used 
+del_timer().
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-index 45d7191..baad939 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-@@ -66,6 +66,12 @@ struct nvram_parser {
- 	bool multi_dev_v2;
- };
- 
-+/**
-+ * is_nvram_char() - check if char is a valid one for NVRAM entry
-+ *
-+ * It accepts all printable ASCII chars except for '#' which opens a comment.
-+ * Please note that ' ' (space) while accepted is not a valid key name char.
-+ */
- static bool is_nvram_char(char c)
- {
- 	/* comment marker excluded */
-@@ -73,7 +79,7 @@ static bool is_nvram_char(char c)
- 		return false;
- 
- 	/* key and value may have any other readable character */
--	return (c > 0x20 && c < 0x7f);
-+	return (c >= 0x20 && c < 0x7f);
- }
- 
- static bool is_whitespace(char c)
-@@ -120,7 +126,7 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
- 			nvp->multi_dev_v1 = true;
- 		if (strncmp(&nvp->fwnv->data[nvp->entry], "pcie/", 5) == 0)
- 			nvp->multi_dev_v2 = true;
--	} else if (!is_nvram_char(c)) {
-+	} else if (!is_nvram_char(c) || c == ' ') {
- 		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
- 			  nvp->line, nvp->column);
- 		return COMMENT;
--- 
-1.8.4.5
+Obviously the awful coding in rtl8712 contains more traps to trick the novices 
+than does most code. It also predates a lot of changes in checkpatch.pl and 
+contains a lot of low-hanging fruit.
+
+Larry
 
