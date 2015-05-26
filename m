@@ -1,134 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752078AbbEZTSw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:18:52 -0400
+	id S1752078AbbEZTTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:19:11 -0400
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>,
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 28/39] iwlwifi: mvm: add support for 8 level scan priority API
-Date: Tue, 26 May 2015 22:17:41 +0300
-Message-Id: <1432667872-18092-28-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211941_276168_DFBAAE04)
+Subject: [PATCH 37/39] iwlwifi: mvm: treat scan races also on UMAC scans
+Date: Tue, 26 May 2015 22:17:50 +0300
+Message-Id: <1432667872-18092-37-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211923_987765_1FC8CA79)
 In-Reply-To: <1432667798.26624.3.camel@intel.com>
 References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Add support for scan priority API with 8 levels instead of the
-existing 3 levels. This API is needed to define the priority of
-new ooc activities, e.g. gscan.
-Add a TLV flag to indicate if the new API is supported so that
-devices that does not support the new API will continue to use
-the old one.
+For UMAC, we were not treating a race condition that happens in the
+scan flows, because it was not using the same state flags.  Now that
+UMAC and LMAC scans use the same state flags, we can also handle the
+race conditions for UMAC.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-file.h     |  3 +++
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h | 11 +++++++++++
- drivers/net/wireless/iwlwifi/mvm/scan.c        | 26 ++++++++++++++++++++++----
- 3 files changed, 36 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index c7cfc38..839b2c4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -255,6 +255,8 @@ enum iwl_ucode_tlv_flag {
-  * @IWL_UCODE_TLV_API_LQ_SS_PARAMS: Configure STBC/BFER via LQ CMD ss_params
-  * @IWL_UCODE_TLV_API_STATS_V10: uCode supports/uses statistics API version 10
-  * @IWL_UCODE_TLV_API_NEW_VERSION: new versioning format
-+ * @IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY: scan APIs use 8-level priority
-+ *	instead of 3.
-  */
- enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_BT_COEX_SPLIT         = BIT(3),
-@@ -269,6 +271,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_LQ_SS_PARAMS		= BIT(18),
- 	IWL_UCODE_TLV_API_STATS_V10		= BIT(19),
- 	IWL_UCODE_TLV_API_NEW_VERSION		= BIT(20),
-+	IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY	= BIT(24),
- };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index d3af88b..cea2366 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2413,11 +2413,7 @@ static void iwl_mvm_mac_cancel_hw_scan(struct ieee80211_hw *hw,
+ 	 * cancel scan scan before ieee80211_scan_work() could run.
+ 	 * To handle that, simply return if the scan is not running.
+ 	*/
+-	/* FIXME: for now, we ignore this race for UMAC scans, since
+-	 * they don't set the scan_status.
+-	 */
+-	if ((mvm->scan_status & IWL_MVM_SCAN_REGULAR) ||
+-	    (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN))
++	if (mvm->scan_status & IWL_MVM_SCAN_REGULAR)
+ 		iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_REGULAR, true);
  
- /**
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-index 0228693..f34cf00 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-@@ -431,6 +431,17 @@ enum iwl_scan_priority {
- 	IWL_SCAN_PRIORITY_HIGH,
- };
- 
-+enum iwl_scan_priority_ext {
-+	IWL_SCAN_PRIORITY_EXT_0_LOWEST,
-+	IWL_SCAN_PRIORITY_EXT_1,
-+	IWL_SCAN_PRIORITY_EXT_2,
-+	IWL_SCAN_PRIORITY_EXT_3,
-+	IWL_SCAN_PRIORITY_EXT_4,
-+	IWL_SCAN_PRIORITY_EXT_5,
-+	IWL_SCAN_PRIORITY_EXT_6,
-+	IWL_SCAN_PRIORITY_EXT_7_HIGHEST,
-+};
-+
- /**
-  * iwl_scan_req_lmac - SCAN_REQUEST_CMD_API_S_VER_1
-  * @reserved1: for alignment and future use
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 9becece..d0312f0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -744,6 +744,21 @@ iwl_mvm_build_scan_probe(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	params->preq.common_data.len = cpu_to_le16(ies->common_ie_len);
- }
- 
-+static __le32 iwl_mvm_scan_priority(struct iwl_mvm *mvm,
-+				    enum iwl_scan_priority_ext prio)
-+{
-+	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY)
-+		return cpu_to_le32(prio);
-+
-+	if (prio <= IWL_SCAN_PRIORITY_EXT_2)
-+		return cpu_to_le32(IWL_SCAN_PRIORITY_LOW);
-+
-+	if (prio <= IWL_SCAN_PRIORITY_EXT_4)
-+		return cpu_to_le32(IWL_SCAN_PRIORITY_MEDIUM);
-+
-+	return cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
-+}
-+
- static void iwl_mvm_scan_lmac_dwell(struct iwl_mvm *mvm,
- 				    struct iwl_scan_req_lmac *cmd,
- 				    struct iwl_mvm_scan_params *params)
-@@ -755,7 +770,7 @@ static void iwl_mvm_scan_lmac_dwell(struct iwl_mvm *mvm,
- 				params->dwell[IEEE80211_BAND_2GHZ].fragmented;
- 	cmd->max_out_time = cpu_to_le32(params->max_out_time);
- 	cmd->suspend_time = cpu_to_le32(params->suspend_time);
--	cmd->scan_prio = cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
-+	cmd->scan_prio = iwl_mvm_scan_priority(mvm, IWL_SCAN_PRIORITY_EXT_6);
- }
- 
- static inline bool iwl_mvm_scan_fits(struct iwl_mvm *mvm, int n_ssids,
-@@ -1070,12 +1085,15 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 				params->dwell[IEEE80211_BAND_2GHZ].fragmented;
- 	cmd->max_out_time = cpu_to_le32(params->max_out_time);
- 	cmd->suspend_time = cpu_to_le32(params->suspend_time);
--	cmd->scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
-+	cmd->scan_priority =
-+		iwl_mvm_scan_priority(mvm, IWL_SCAN_PRIORITY_EXT_6);
- 
- 	if (iwl_mvm_scan_total_iterations(params) == 0)
--		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_HIGH);
-+		cmd->ooc_priority =
-+			iwl_mvm_scan_priority(mvm, IWL_SCAN_PRIORITY_EXT_6);
- 	else
--		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_LOW);
-+		cmd->ooc_priority =
-+			iwl_mvm_scan_priority(mvm, IWL_SCAN_PRIORITY_EXT_2);
- }
- 
- static void
+ 	mutex_unlock(&mvm->mutex);
+@@ -2767,11 +2763,7 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
+ 	 * could run.  To handle this, simply return if the scan is
+ 	 * not running.
+ 	*/
+-	/* FIXME: for now, we ignore this race for UMAC scans, since
+-	 * they don't set the scan_status.
+-	 */
+-	if (!(mvm->scan_status & IWL_MVM_SCAN_SCHED) &&
+-	    !(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
++	if (!(mvm->scan_status & IWL_MVM_SCAN_SCHED)) {
+ 		mutex_unlock(&mvm->mutex);
+ 		return 0;
+ 	}
 -- 
 2.1.4
 
