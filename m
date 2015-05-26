@@ -1,37 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0239.hostedemail.com ([216.40.44.239]:46590 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752220AbbEGO3H (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:58092 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932242AbbEZQf4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 10:29:07 -0400
-Message-ID: <1431008943.9365.127.camel@perches.com> (sfid-20150507_162921_210912_A8397A67)
-Subject: Re: [PATCH] staging: rtl8723au : remove goto & return error directly
-From: Joe Perches <joe@perches.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	"Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Date: Thu, 07 May 2015 07:29:03 -0700
-In-Reply-To: <wrfj7fsko4y4.fsf@ultrasam.lan.trained-monkey.org>
-References: <20150507111652.GA10574@IND12F0122>
-	 <wrfjk2wkoarp.fsf@ultrasam.lan.trained-monkey.org>
-	 <20150507121934.GH14154@mwanda>
-	 <wrfj7fsko4y4.fsf@ultrasam.lan.trained-monkey.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Tue, 26 May 2015 12:35:56 -0400
+Date: Tue, 26 May 2015 09:35:55 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Joe Perches <joe@perches.com>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
+	Arek Rusniak <arek.rusi@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
+ del_timer_sync()
+Message-ID: <20150526163555.GA9685@kroah.com> (sfid-20150526_183604_703425_B4615D4C)
+References: <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
+ <556268BC.5050807@lwfinger.net>
+ <20150525091737.GQ4150@mwanda>
+ <1432575448.2846.63.camel@perches.com>
+ <20150526044611.GA3465@sudip-PC>
+ <1432616108.2846.83.camel@perches.com>
+ <20150526050212.GC3465@sudip-PC>
+ <1432616879.2846.86.camel@perches.com>
+ <20150526141401.GC21573@kroah.com>
+ <1432651739.2846.93.camel@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432651739.2846.93.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-05-07 at 10:08 -0400, Jes Sorensen wrote:
-> Dan Carpenter <dan.carpenter@oracle.com> writes:
-> > On Thu, May 07, 2015 at 08:03:06AM -0400, Jes Sorensen wrote:
-> >> NACK!
-> > SHOUTING!
-> It's normal to write NACK in upper case
+On Tue, May 26, 2015 at 07:48:59AM -0700, Joe Perches wrote:
+> On Tue, 2015-05-26 at 07:14 -0700, Greg KH wrote:
+> > On Mon, May 25, 2015 at 10:07:59PM -0700, Joe Perches wrote:
+> > > As far as I understand, the Eudyptula Challenge list has
+> > > internal mechanisms to nominally review patches before some
+> > > patch is submitted to lkml.
+> > 
+> > No it does not.
+> 
+> That's not quite what was described to me by someone behind the
+> email address:
+> "Little Penguin <little@eudyptula-challenge.org>" back in August.
+> 
+> What I understood from that email was there is a qualifying
+> formatting component to the challenge and then patches were to be
+> sent to maintainers and lists.
 
-Not with an exclamation point.
+Hm, I don't know then, but from what I have seen, the tasks that send
+patches to the kernel are not pre-reviewed by anyone.  If they were, the
+quality level of the patches we get here would have been much higher :)
 
+> > > The main point is that patches shouldn't be applied without
+> > > being submitted to a more widely read list.
+> > 
+> > I take the blame for any problems with Outreachy patches.
+> 
+> Are you going to change any procedure associated to these
+> Outreachy patches?
 
+2 bugs out of 900?  Nah, I think that's good odds.
+
+Also, the outreachy patch process would overwhelm everyone else on the
+list, it's really high volume during the application phase, I'd prefer
+it to stick with the mentors that wish to help out with the process.  If
+you and/or Dan, or anyone else wishes to help out with this, I would
+really appreciate it.  But I don't think that forcing them to post to
+the driverdevel list is a good idea.
+
+thanks,
+
+greg k-h
