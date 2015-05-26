@@ -1,259 +1,459 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35192 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965460AbbEFAz0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:64407 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754913AbbEZNfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 20:55:26 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org
-Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>, stable@vger.kernel.org,
-	cocci@systeme.lip6.fr
-Subject: [PATCH v1 04/12] firmware: fix possible use after free on name on asynchronous request
-Date: Tue,  5 May 2015 17:44:22 -0700
-Message-Id: <1430873070-7290-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20150506_025617_852865_BF3B7CD4)
-In-Reply-To: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 26 May 2015 09:35:30 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4QDYxsO003727
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:29 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1umqg00bqj-9
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:29 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 6/6] mwifiex: device dump support via devcoredump framework
+Date: Tue, 26 May 2015 06:34:32 -0700
+Message-ID: <1432647272-5734-7-git-send-email-akarwar@marvell.com> (sfid-20150526_153543_246351_3B6AC8ED)
+In-Reply-To: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
+References: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Currently device dump generated in the driver is retrieved
+using ethtool set/get dump commands. We will get rid of
+ethtool approach and use devcoredump framework.
 
-Asynchronous firmware loading copies the pointer to the
-name passed as an argument only to be scheduled later and
-used. This behaviour works well for synchronous calling
-but in asynchronous mode there's a chance the caller could
-immediately free the passed string after making the
-asynchronous call. This could trigger a use after free
-having the kernel look on disk for arbitrary file names.
+Device dump can be trigger by
+cat /debugfs/mwifiex/mlanX/device_dump
+and when the dump operation is completed, data can be read by
+cat /sys/class/devcoredump/devcdX/data
 
-In order to force-test the issue you can use a test-driver
-designed to illustrate this issue on github [0], use the
-next-20150505-fix-use-after-free branch.
+We have prepared following script to split device dump data
+into multiple files.
 
-With this patch applied you get:
+ [root]# cat mwifiex_split_dump_data.sh
+ #!/bin/bash
+ # usage: ./mwifiex_split_dump_data.sh dump_data
 
-[  283.512445] firmware name: test_module_stuff.bin
-[  287.514020] firmware name: test_module_stuff.bin
-[  287.532489] firmware found
+ fw_dump_data=$1
 
-Without this patch applied you can end up with something such as:
+ mem_type="driverinfo ITCM DTCM SQRAM APU CIU ICU MAC"
 
-[  135.624216] firmware name: \xffffff80BJ
-[  135.624249] platform fake-dev.0: Direct firmware load for \xffffff80Bi failed with error -2
-[  135.624252] No firmware found
-[  135.624252] firmware found
+ for name in ${mem_type[@]}
+ do
+     sed -n "/Start dump $name/,/End dump/p" $fw_dump_data  > tmp.$name.log
+     if [ ! -s tmp.$name.log ]
+     then
+         rm -rf tmp.$name.log
+     else
+         #Remove the describle info "Start dump" and "End dump"
+         sed '1d' tmp.$name.log | sed '$d' > /data/$name.log
+         if [ -s /data/$name.log ]
+         then
+             echo "generate /data/$name.log"
+         else
+             sed '1d' tmp.$name.log | sed '$d' > /var/$name.log
+             echo "generate /var/$name.log"
+         fi
+         rm -rf tmp.$name.log
+     fi
+ done
 
-Unfortunatley in the worst and most common case however you
-can typically crash your system with a page fault by trying to
-free something which you cannot, and/or a NULL pointer
-dereference [1].
-
-The fix and issue using schedule_work() for asynchronous
-runs is generalized in the following SmPL grammar patch,
-when applied to next-20150505 only the firmware_class
-code is affected. This grammar patch can and should further
-be generalized to vet for for other kernel asynchronous
-mechanisms.
-
-@ calls_schedule_work @
-type T;
-T *priv_work;
-identifier func, work_func;
-identifier work;
-identifier priv_name, name;
-statement S;
-expression gfp;
-@@
-
- func(..., const char *name, ...)
- {
- 	...
- 	priv_work = kzalloc(sizeof(T), gfp);
- 	...
--	priv_work->priv_name = name;
-+	priv_work->priv_name = kstrdup_const(name, gfp);
-	...
-(... when any
- 	if (...)
- 	{
- 		...
-+ 		kfree_const(priv_work->priv_name);
- 		kfree(priv_work);
-		...
- 	}
-) ... when any
- 	INIT_WORK(&priv_work->work, work_func);
- 	...
- 	schedule_work(&priv_work->work);
- 	...
- }
-
-@ the_work_func depends on calls_schedule_work @
-type calls_schedule_work.T;
-T *priv_work;
-identifier calls_schedule_work.work_func;
-identifier calls_schedule_work.priv_name;
-identifier calls_schedule_work.work;
-identifier some_work;
-@@
-
- work_func(...)
- {
- 	...
- 	priv_work = container_of(some_work, T, work);
- 	...
-+	kfree_const(priv_work->priv_name);
- 	kfree(priv_work);
- 	...
- }
-
-[0] https://github.com/mcgrof/fake-firmware-test.git
-[1] The following kernel ring buffer splat:
-
-firmware name: test_module_stuff.bin
-firmware name:
-firmware found
-general protection fault: 0000 [#1] SMP
-Modules linked in: test(O) <...etc-it-does-not-matter>
- drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
-CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G           O    4.0.0-00010-g22b5bb0-dirty #176
-Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
-Workqueue: events request_firmware_work_func
-task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
-RIP: 0010:[<ffffffff814a586c>]  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
-RSP: 0000:ffff8800c7f97d78  EFLAGS: 00010286
-RAX: ffffffff81ae3700 RBX: ffffffff816d1181 RCX: 0000000000000006
-RDX: 0001ee850ff68500 RSI: 0000000000000246 RDI: c35d5f415e415d41
-RBP: ffff8800c7f97d88 R08: 000000000000000a R09: 0000000000000000
-R10: 0000000000000358 R11: ffff8800c7f97a7e R12: ffff8800c7ec1e80
-R13: ffff88021e2d4cc0 R14: ffff88021e2dff00 R15: 00000000000000c0
-FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000034b8cd8 CR3: 000000021073c000 CR4: 00000000001407e0
-Stack:
- ffffffff816d1181 ffff8800c7ec1e80 ffff8800c7f97da8 ffffffff814a58f8
- 000000000000000a ffffffff816d1181 ffff8800c7f97dc8 ffffffffa047002c
- ffff88021e2dff00 ffff8802116ac1c0 ffff8800c7f97df8 ffffffff814a65fe
-Call Trace:
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff814a58f8>] release_firmware+0x58/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
- [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
- [<ffffffff8108d911>] worker_thread+0x121/0x460
- [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
- [<ffffffff810928f9>] kthread+0xc9/0xe0
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
- [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
-Code: c7 c6 dd ad a3 81 48 c7 c7 20 97 ce 81 31 c0 e8 0b b2 ed ff e9 78 ff ff ff 66 0f 1f 44 00 00 0f 1f 44 00 00 55 48 89 e5 41 54 53 <4c> 8b 67 38 48 89 fb 4c 89 e7 e8 85 f7 22 00 f0 83 2b 01 74 0f
-RIP  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
- RSP <ffff8800c7f97d78>
----[ end trace 4e62c56a58d0eac1 ]---
-BUG: unable to handle kernel paging request at ffffffffffffffd8
-IP: [<ffffffff81093ee0>] kthread_data+0x10/0x20
-PGD 1c13067 PUD 1c15067 PMD 0
-Oops: 0000 [#2] SMP
-Modules linked in: test(O) <...etc-it-does-not-matter>
- drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
-CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G      D    O    4.0.0-00010-g22b5bb0-dirty #176
-Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
-task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
-RIP: 0010:[<ffffffff81092ee0>]  [<ffffffff81092ee0>] kthread_data+0x10/0x20
-RSP: 0018:ffff8800c7f97b18  EFLAGS: 00010096
-RAX: 0000000000000000 RBX: 0000000000000003 RCX: 000000000000000d
-RDX: 0000000000000003 RSI: 0000000000000003 RDI: ffff8800c7f8e290
-RBP: ffff8800c7f97b18 R08: 000000000000bc00 R09: 0000000000007e76
-R10: 0000000000000001 R11: 000000000000002f R12: ffff8800c7f8e290
-R13: 00000000000154c0 R14: 0000000000000003 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000028 CR3: 0000000210675000 CR4: 00000000001407e0
-Stack:
- ffff8800c7f97b38 ffffffff8108dcd5 ffff8800c7f97b38 ffff88021e2d54c0
- ffff8800c7f97b88 ffffffff816d1500 ffff880213d42368 ffff8800c7f8e290
- ffff8800c7f97b88 ffff8800c7f97fd8 ffff8800c7f8e710 0000000000000246
-Call Trace:
- [<ffffffff8108dcd5>] wq_worker_sleeping+0x15/0xa0
- [<ffffffff816d1500>] __schedule+0x6e0/0x940
- [<ffffffff816d1797>] schedule+0x37/0x90
- [<ffffffff810779bc>] do_exit+0x6bc/0xb40
- [<ffffffff8101898f>] oops_end+0x9f/0xe0
- [<ffffffff81018efb>] die+0x4b/0x70
- [<ffffffff81015622>] do_general_protection+0xe2/0x170
- [<ffffffff816d74e8>] general_protection+0x28/0x30
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff814a586c>] ? fw_free_buf+0xc/0x40
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff814a58f8>] release_firmware+0x58/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
- [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
- [<ffffffff8108d911>] worker_thread+0x121/0x460
- [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
- [<ffffffff810928f9>] kthread+0xc9/0xe0
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
- [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
-Code: 00 48 89 e5 5d 48 8b 40 c8 48 c1 e8 02 83 e0 01 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 8b 87 30 05 00 00 55 48 89 e5 <48> 8b 40 d8 5d c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
-RIP  [<ffffffff81092ee0>] kthread_data+0x10/0x20
- RSP <ffff8800c7f97b18>
-CR2: ffffffffffffffd8
----[ end trace 4e62c56a58d0eac2 ]---
-Fixing recursive fault but reboot is needed!
-
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Cc: stable@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Generated-by: Coccinelle SmPL
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/base/firmware_class.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/Kconfig   |  2 +
+ drivers/net/wireless/mwifiex/ethtool.c | 99 ----------------------------------
+ drivers/net/wireless/mwifiex/main.c    | 90 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/main.h    |  3 +-
+ drivers/net/wireless/mwifiex/pcie.c    | 21 +++-----
+ drivers/net/wireless/mwifiex/sdio.c    |  5 +-
+ 6 files changed, 103 insertions(+), 117 deletions(-)
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 6c5c9ed..2e85860 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -1242,6 +1242,7 @@ static void request_firmware_work_func(struct work_struct *work)
- 	put_device(fw_work->device); /* taken in request_firmware_nowait() */
- 
- 	module_put(fw_work->module);
-+	kfree_const(fw_work->name);
- 	kfree(fw_work);
+diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
+index aa01c9b..48edf38 100644
+--- a/drivers/net/wireless/mwifiex/Kconfig
++++ b/drivers/net/wireless/mwifiex/Kconfig
+@@ -12,6 +12,7 @@ config MWIFIEX_SDIO
+ 	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8887/SD8897"
+ 	depends on MWIFIEX && MMC
+ 	select FW_LOADER
++	select WANT_DEV_COREDUMP
+ 	---help---
+ 	  This adds support for wireless adapters based on Marvell
+ 	  8786/8787/8797/8887/8897 chipsets with SDIO interface.
+@@ -23,6 +24,7 @@ config MWIFIEX_PCIE
+ 	tristate "Marvell WiFi-Ex Driver for PCIE 8766/8897"
+ 	depends on MWIFIEX && PCI
+ 	select FW_LOADER
++	select WANT_DEV_COREDUMP
+ 	---help---
+ 	  This adds support for wireless adapters based on Marvell
+ 	  8766/8897 chipsets with PCIe interface.
+diff --git a/drivers/net/wireless/mwifiex/ethtool.c b/drivers/net/wireless/mwifiex/ethtool.c
+index c78bf0a..58400c6 100644
+--- a/drivers/net/wireless/mwifiex/ethtool.c
++++ b/drivers/net/wireless/mwifiex/ethtool.c
+@@ -64,106 +64,7 @@ static int mwifiex_ethtool_set_wol(struct net_device *dev,
+ 	return 0;
  }
  
-@@ -1281,7 +1282,7 @@ request_firmware_nowait(
- 		return -ENOMEM;
+-static int
+-mwifiex_get_dump_flag(struct net_device *dev, struct ethtool_dump *dump)
+-{
+-	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+-	struct mwifiex_adapter *adapter = priv->adapter;
+-	struct memory_type_mapping *entry;
+-
+-	if (!adapter->if_ops.device_dump)
+-		return -ENOTSUPP;
+-
+-	dump->flag = adapter->curr_mem_idx;
+-	dump->version = 1;
+-	if (adapter->curr_mem_idx == MWIFIEX_DRV_INFO_IDX) {
+-		dump->len = adapter->drv_info_size;
+-	} else if (adapter->curr_mem_idx != MWIFIEX_FW_DUMP_IDX) {
+-		entry = &adapter->mem_type_mapping_tbl[adapter->curr_mem_idx];
+-		dump->len = entry->mem_size;
+-	} else {
+-		dump->len = 0;
+-	}
+-
+-	return 0;
+-}
+-
+-static int
+-mwifiex_get_dump_data(struct net_device *dev, struct ethtool_dump *dump,
+-		      void *buffer)
+-{
+-	u8 *p = buffer;
+-	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+-	struct mwifiex_adapter *adapter = priv->adapter;
+-	struct memory_type_mapping *entry;
+-
+-	if (!adapter->if_ops.device_dump)
+-		return -ENOTSUPP;
+-
+-	if (adapter->curr_mem_idx == MWIFIEX_DRV_INFO_IDX) {
+-		if (!adapter->drv_info_dump)
+-			return -EFAULT;
+-		memcpy(p, adapter->drv_info_dump, adapter->drv_info_size);
+-		return 0;
+-	}
+-
+-	if (adapter->curr_mem_idx == MWIFIEX_FW_DUMP_IDX) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "device dump in progress!!\n");
+-		return -EBUSY;
+-	}
+-
+-	entry = &adapter->mem_type_mapping_tbl[adapter->curr_mem_idx];
+-
+-	if (!entry->mem_ptr)
+-		return -EFAULT;
+-
+-	memcpy(p, entry->mem_ptr, entry->mem_size);
+-
+-	entry->mem_size = 0;
+-	vfree(entry->mem_ptr);
+-	entry->mem_ptr = NULL;
+-
+-	return 0;
+-}
+-
+-static int mwifiex_set_dump(struct net_device *dev, struct ethtool_dump *val)
+-{
+-	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+-	struct mwifiex_adapter *adapter = priv->adapter;
+-
+-	if (!adapter->if_ops.device_dump)
+-		return -ENOTSUPP;
+-
+-	if (val->flag == MWIFIEX_DRV_INFO_IDX) {
+-		adapter->curr_mem_idx = MWIFIEX_DRV_INFO_IDX;
+-		return 0;
+-	}
+-
+-	if (adapter->curr_mem_idx == MWIFIEX_FW_DUMP_IDX) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "device dump in progress!!\n");
+-		return -EBUSY;
+-	}
+-
+-	if (val->flag == MWIFIEX_FW_DUMP_IDX) {
+-		adapter->curr_mem_idx = val->flag;
+-		adapter->if_ops.device_dump(adapter);
+-		return 0;
+-	}
+-
+-	if (val->flag < 0 || val->flag >= adapter->num_mem_types)
+-		return -EINVAL;
+-
+-	adapter->curr_mem_idx = val->flag;
+-
+-	return 0;
+-}
+-
+ const struct ethtool_ops mwifiex_ethtool_ops = {
+ 	.get_wol = mwifiex_ethtool_get_wol,
+ 	.set_wol = mwifiex_ethtool_set_wol,
+-	.get_dump_flag = mwifiex_get_dump_flag,
+-	.get_dump_data = mwifiex_get_dump_data,
+-	.set_dump = mwifiex_set_dump,
+ };
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index b7fbc2c..3ba4e0e 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -982,6 +982,96 @@ void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter)
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_drv_info_dump);
  
- 	fw_work->module = module;
--	fw_work->name = name;
-+	fw_work->name = kstrdup_const(name, gfp);
- 	fw_work->device = device;
- 	fw_work->context = context;
- 	fw_work->cont = cont;
-@@ -1289,6 +1290,7 @@ request_firmware_nowait(
- 		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
++void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter)
++{
++	u8 idx, *dump_data, *fw_dump_ptr;
++	u32 dump_len;
++
++	dump_len = (strlen("========Start dump driverinfo========\n") +
++		       adapter->drv_info_size +
++		       strlen("\n========End dump========\n"));
++
++	for (idx = 0; idx < adapter->num_mem_types; idx++) {
++		struct memory_type_mapping *entry =
++				&adapter->mem_type_mapping_tbl[idx];
++
++		if (entry->mem_ptr) {
++			dump_len += (strlen("========Start dump ") +
++					strlen(entry->mem_name) +
++					strlen("========\n") +
++					(entry->mem_size + 1) +
++					strlen("\n========End dump========\n"));
++		}
++	}
++
++	dump_data = vzalloc(dump_len + 1);
++	if (!dump_data)
++		goto done;
++
++	fw_dump_ptr = dump_data;
++
++	/* Dump all the memory data into single file, a userspace script will
++	 * be used to split all the memory data to multiple files
++	 */
++	mwifiex_dbg(adapter, MSG,
++		    "== mwifiex dump information to /sys/class/devcoredump start");
++
++	strcpy(fw_dump_ptr, "========Start dump driverinfo========\n");
++	fw_dump_ptr += strlen("========Start dump driverinfo========\n");
++	memcpy(fw_dump_ptr, adapter->drv_info_dump, adapter->drv_info_size);
++	fw_dump_ptr += adapter->drv_info_size;
++	strcpy(fw_dump_ptr, "\n========End dump========\n");
++	fw_dump_ptr += strlen("\n========End dump========\n");
++
++	for (idx = 0; idx < adapter->num_mem_types; idx++) {
++		struct memory_type_mapping *entry =
++					&adapter->mem_type_mapping_tbl[idx];
++
++		if (entry->mem_ptr) {
++			strcpy(fw_dump_ptr, "========Start dump ");
++			fw_dump_ptr += strlen("========Start dump ");
++
++			strcpy(fw_dump_ptr, entry->mem_name);
++			fw_dump_ptr += strlen(entry->mem_name);
++
++			strcpy(fw_dump_ptr, "========\n");
++			fw_dump_ptr += strlen("========\n");
++
++			memcpy(fw_dump_ptr, entry->mem_ptr, entry->mem_size);
++			fw_dump_ptr += entry->mem_size;
++
++			strcpy(fw_dump_ptr, "\n========End dump========\n");
++			fw_dump_ptr += strlen("\n========End dump========\n");
++		}
++	}
++
++	/* device dump data will be free in device coredump release function
++	 * after 5 min
++	 */
++	dev_coredumpv(adapter->dev, dump_data, dump_len, GFP_KERNEL);
++	mwifiex_dbg(adapter, MSG,
++		    "== mwifiex dump information to /sys/class/devcoredump end");
++
++done:
++	for (idx = 0; idx < adapter->num_mem_types; idx++) {
++		struct memory_type_mapping *entry =
++			&adapter->mem_type_mapping_tbl[idx];
++
++		if (entry->mem_ptr) {
++			vfree(entry->mem_ptr);
++			entry->mem_ptr = NULL;
++		}
++		entry->mem_size = 0;
++	}
++
++	if (adapter->drv_info_dump) {
++		vfree(adapter->drv_info_dump);
++		adapter->drv_info_dump = NULL;
++		adapter->drv_info_size = 0;
++	}
++}
++EXPORT_SYMBOL_GPL(mwifiex_upload_device_dump);
++
+ /*
+  * CFG802.11 network device handler for statistics retrieval.
+  */
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 01111fe..5a6c1c7 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -36,6 +36,7 @@
+ #include <linux/of.h>
+ #include <linux/idr.h>
+ #include <linux/inetdevice.h>
++#include <linux/devcoredump.h>
  
- 	if (!try_module_get(module)) {
-+		kfree_const(fw_work->name);
- 		kfree(fw_work);
- 		return -EFAULT;
+ #include "decl.h"
+ #include "ioctl.h"
+@@ -950,7 +951,6 @@ struct mwifiex_adapter {
+ 	u8 key_api_major_ver, key_api_minor_ver;
+ 	struct memory_type_mapping *mem_type_mapping_tbl;
+ 	u8 num_mem_types;
+-	u8 curr_mem_idx;
+ 	void *drv_info_dump;
+ 	u32 drv_info_size;
+ 	bool scan_chan_gap_enabled;
+@@ -1485,6 +1485,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ 			    u8 rx_rate, u8 ht_info);
+ 
+ void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter);
++void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
+ void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
+ void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
+ 
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 3a99368..77b9055 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -2314,7 +2314,6 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 	enum rdwr_status stat;
+ 	u32 memory_size;
+ 	int ret;
+-	static char *env[] = { "DRIVER=mwifiex_pcie", "EVENT=fw_dump", NULL };
+ 
+ 	if (!card->pcie.can_dump_fw)
+ 		return;
+@@ -2334,7 +2333,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 	/* Read the number of the memories which will dump */
+ 	stat = mwifiex_pcie_rdwr_firmware(adapter, doneflag);
+ 	if (stat == RDWR_STATUS_FAILURE)
+-		goto done;
++		return;
+ 
+ 	reg = creg->fw_dump_start;
+ 	mwifiex_read_reg_byte(adapter, reg, &dump_num);
+@@ -2345,7 +2344,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 
+ 		stat = mwifiex_pcie_rdwr_firmware(adapter, doneflag);
+ 		if (stat == RDWR_STATUS_FAILURE)
+-			goto done;
++			return;
+ 
+ 		memory_size = 0;
+ 		reg = creg->fw_dump_start;
+@@ -2361,7 +2360,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 						FW_DUMP_READ_DONE);
+ 			if (ret) {
+ 				mwifiex_dbg(adapter, ERROR, "PCIE write err\n");
+-				goto done;
++				return;
+ 			}
+ 			break;
+ 		}
+@@ -2373,7 +2372,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 		if (!entry->mem_ptr) {
+ 			mwifiex_dbg(adapter, ERROR,
+ 				    "Vmalloc %s failed\n", entry->mem_name);
+-			goto done;
++			return;
+ 		}
+ 		dbg_ptr = entry->mem_ptr;
+ 		end_ptr = dbg_ptr + memory_size;
+@@ -2385,7 +2384,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 		do {
+ 			stat = mwifiex_pcie_rdwr_firmware(adapter, doneflag);
+ 			if (RDWR_STATUS_FAILURE == stat)
+-				goto done;
++				return;
+ 
+ 			reg_start = creg->fw_dump_start;
+ 			reg_end = creg->fw_dump_end;
+@@ -2396,7 +2395,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 				} else {
+ 					mwifiex_dbg(adapter, ERROR,
+ 						    "Allocated buf not enough\n");
+-					goto done;
++					return;
+ 				}
+ 			}
+ 
+@@ -2409,18 +2408,14 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 			break;
+ 		} while (true);
  	}
+-	mwifiex_dbg(adapter, MSG, "== mwifiex firmware dump end ==\n");
+-
+-	kobject_uevent_env(&adapter->wiphy->dev.kobj, KOBJ_CHANGE, env);
+-
+-done:
+-	adapter->curr_mem_idx = 0;
++	mwifiex_dbg(adapter, DUMP, "== mwifiex firmware dump end ==\n");
+ }
+ 
+ static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
+ {
+ 	mwifiex_drv_info_dump(adapter);
+ 	mwifiex_pcie_fw_dump(adapter);
++	mwifiex_upload_device_dump(adapter);
+ }
+ 
+ static unsigned long iface_work_flags;
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 1f32c02..a0b121f 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -2185,7 +2185,6 @@ static void mwifiex_sdio_fw_dump(struct mwifiex_adapter *adapter)
+ 	u8 *dbg_ptr, *end_ptr, dump_num, idx, i, read_reg, doneflag = 0;
+ 	enum rdwr_status stat;
+ 	u32 memory_size;
+-	static char *env[] = { "DRIVER=mwifiex_sdio", "EVENT=fw_dump", NULL };
+ 
+ 	if (!card->can_dump_fw)
+ 		return;
+@@ -2297,17 +2296,15 @@ static void mwifiex_sdio_fw_dump(struct mwifiex_adapter *adapter)
+ 	}
+ 	mwifiex_dbg(adapter, MSG, "== mwifiex firmware dump end ==\n");
+ 
+-	kobject_uevent_env(&adapter->wiphy->dev.kobj, KOBJ_CHANGE, env);
+-
+ done:
+ 	sdio_release_host(card->func);
+-	adapter->curr_mem_idx = 0;
+ }
+ 
+ static void mwifiex_sdio_device_dump_work(struct mwifiex_adapter *adapter)
+ {
+ 	mwifiex_drv_info_dump(adapter);
+ 	mwifiex_sdio_fw_dump(adapter);
++	mwifiex_upload_device_dump(adapter);
+ }
+ 
+ static void mwifiex_sdio_work(struct work_struct *work)
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.8.1.4
 
