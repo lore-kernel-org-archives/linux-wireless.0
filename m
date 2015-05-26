@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38150 "EHLO comal.ext.ti.com"
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751023AbbEINkH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 09:40:07 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wl18xx : firmware pull request
-Date: Sat, 9 May 2015 13:40:00 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101265F62A7@DFRE01.ent.ti.com> (sfid-20150509_154011_701514_704AE3C8)
-Content-Type: text/plain; charset="windows-1255"
-MIME-Version: 1.0
+	id S1752072AbbEZTSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:35 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/39] iwlwifi: mvm: fix the net-detect SSIDs report order
+Date: Tue, 26 May 2015 22:17:33 +0300
+Message-Id: <1432667872-18092-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_213348_097057_3520A7D0)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-Please see below pull request,
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-- Firmware file was updated (8.9.0.0.39), includes bug fixes and improvements.
-- Configuration binary removed, it is no longer fits all releases.
-  Moreover it should be configured per HW platform.
-  More information can found in here :
-  http://processors.wiki.ti.com/index.php/Open_Source_Wireless_Connectivity_wlconf
+After the scan refactor, the order of the SSIDs passed to the firmware
+in all scans (including net-detect) are inverted.  This was causing
+the reporting code to use the wrong SSIDs.  To fix this, invert the
+array index when accessing the saved match SSIDs to report the
+wake-up.
 
-Regards,
-Yaniv
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/d3.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-The following changes since commit 8e181320b11de501046cf75c8c30915cd09a1e39:
-  Daniel Drake (1):
-        linux-firmware: Add Realtek Bluetooth HCD firmware
-
-are available in the git repository at:
-
-  git@git.ti.com:wilink8-wlan/linux-firmware.git for-upstream
-
-for you to fetch changes up to 4b1bff7e08c53807eb298cc94df69111239ef6f5
-Yaniv Machani (1):
-      wl18xx: update firmware file, remove conf file
-
- ti-connectivity/wl18xx-conf.bin |  Bin 1221 -> 0 bytes
- ti-connectivity/wl18xx-fw-4.bin |  Bin 681704 -> 724716 bytes
- 2 files changed, 0 insertions(+), 0 deletions(-)
- delete mode 100644 ti-connectivity/wl18xx-conf.bin
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index d30f168..408b0ce 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1785,7 +1785,7 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
+ 	for_each_set_bit(i, &matched_profiles, mvm->n_nd_match_sets) {
+ 		struct iwl_scan_offload_profile_match *fw_match;
+ 		struct cfg80211_wowlan_nd_match *match;
+-		int n_channels = 0;
++		int idx, n_channels = 0;
+ 
+ 		fw_match = &query.matches[i];
+ 
+@@ -1800,8 +1800,12 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
+ 
+ 		net_detect->matches[net_detect->n_matches++] = match;
+ 
+-		match->ssid.ssid_len = mvm->nd_match_sets[i].ssid.ssid_len;
+-		memcpy(match->ssid.ssid, mvm->nd_match_sets[i].ssid.ssid,
++		/* We inverted the order of the SSIDs in the scan
++		 * request, so invert the index here.
++		 */
++		idx = mvm->n_nd_match_sets - i - 1;
++		match->ssid.ssid_len = mvm->nd_match_sets[idx].ssid.ssid_len;
++		memcpy(match->ssid.ssid, mvm->nd_match_sets[idx].ssid.ssid,
+ 		       match->ssid.ssid_len);
+ 
+ 		if (mvm->n_nd_channels < n_channels)
+-- 
+2.1.4
 
