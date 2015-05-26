@@ -1,119 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:34570 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752895AbbEQOKb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2015 10:10:31 -0400
-Received: by pdbnk13 with SMTP id nk13so12394022pdb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 17 May 2015 07:10:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <555894E7.3080600@hauke-m.de>
-References: <CA+0W_As0c=eAijuvWfSBLMY4vj2P1-zoMsjz1mmNm0_vfepPCA@mail.gmail.com>
-	<5557556C.2080107@lwfinger.net>
-	<CACna6rwCapwThrMGt2HV_YyPQtZ+xRPJdBcapRqs2mkvGPdmSQ@mail.gmail.com>
-	<5557B396.9080300@gmail.com>
-	<CA+0W_At43pB=FeBR4jJzKxO3ruaATAidU8rimBOE3bLM1wKGsA@mail.gmail.com>
-	<CA+0W_AuXCgFoH2fm0kr5V9nkcNB9bCp8M4KF=J2=c5QCBrbL8A@mail.gmail.com>
-	<CA+0W_Asj3f10VJ=NVu_WGRO3iLyLZY3AhHnD3pkb7-r45j-yYA@mail.gmail.com>
-	<CA+0W_At6_zecdghFj1MS8XxiqvrELTd=TTPVZ84hEM=gqL-brw@mail.gmail.com>
-	<555894E7.3080600@hauke-m.de>
-Date: Sun, 17 May 2015 16:10:30 +0200
-Message-ID: <CA+0W_AtPf-4YbDN3CLWQw-dNeqZ-CsE6jT5MfmHjtVVwGJehCQ@mail.gmail.com> (sfid-20150517_161033_894506_3BD4A1C2)
-Subject: Re: lspci not working
-From: Schmirr Wurst <schmirrwurst@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Arend van Spriel <aspriel@gmail.com>,
-	=?UTF-8?Q?S=C3=A9bastien_Brennion?= <sebastien.brennion@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752157AbbEZTTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:19:05 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 34/39] iwlwifi: tracing: add rx cmd header fields
+Date: Tue, 26 May 2015 22:17:47 +0300
+Message-Id: <1432667872-18092-34-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211911_613514_B15EEF18)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-05-17 15:17 GMT+02:00 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 05/17/2015 03:00 PM, Schmirr Wurst wrote:
->> 2015-05-17 14:57 GMT+02:00 Schmirr Wurst <schmirrwurst@gmail.com>:
->>> I'm not familiar with inline answers and mailing list, tried to put
->>> some order in my answer + log file
->>>
->>> 2015-05-17 13:18 GMT+02:00 Rafał Miłecki <zajec5@gmail.com>:
->>>> On 17 May 2015 at 12:23, Arend van Spriel <arend@broadcom.com> wrote:
->>>>> On 05/17/15 02:21, Schmirr Wurst wrote:
->>>>>> I tried as suggested to had a look at
->>>>>> /sys/bus/sdio/devices, but the only devices around there a 3
->>>>>> mmc1:0001:1 to :3, I guess it is something else...
->>>>>>
->>>>>> I already try to install brcmfmac_sdio , with some tutorial from the
->>>>>> internet, but it didn't work...
->>>>>> actually, I see under /sys/bus/sdio/drivers brcmfmac_sdio ...
->>>>>>
->>>>>> In that directory, I see a directory mmc1:0001:2
->>>>>> under device I have 0xa94d
->>>>>>
->>>>>> I completly lost, maybe you understand that information, sorry..
->>>>>
->>>>>
->>>>> I do. The fact that you see a subdirectory mmc1:0001:2 in
->>>>> /sys/bus/sdio/drivers/brcmfmac_sdio means that the driver was probed for
->>>>> this device. Now would be a good time to share your (friends') kernel log,
->>>>> but my guess is you are either missing firmware or nvram data or both for
->>>>> this device.
->>> I ve attatched the kernel.log here https://drive.google.com/file/d/0B8gm4mLCCQAgMmNlVVFSYmNjOGs/view?usp=sharing
->>> In dmsg I see following linked with the brc driver :
->>> dmesg | grep brc
->>> [    7.987661] brcmf_sdio_drivestrengthinit: No SDIO Drive strength
->>> init done for chip 43340 rev 2 pmurev 20
->>> [    7.993487] usbcore: registered new interface driver brcmfmac
->>> [    7.996318] brcmfmac_sdio mmc1:0001:1: Direct firmware load for
->>> brcm/brcmfmac43340-sdio.bin failed with error -2
->>> [    9.011572] brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
->>> [   10.037365] brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
->>>>
->>>> It could also mean driver was loaded manually. So please also make
->>>> sure the friend uses kernel 4.0 or newer.
->>> Kernel : 4.0.0 #3 SMP PREEMPT Wed Apr 22 17:52:53 MSK 2015
->>> Distro:
->>> Distributor ID:    T100 Ubuntu 15.04
->>> Description:    Ubuntu 15.04
->>> Release:    15.04
->>> Codename:    vivid
->>> I ve installed it from the magic stick here
->>> https://plus.google.com/communities/117853703024346186936
->
-> The driver complains about missing firmware and Ubuntu 15.04 does not
-> contain it.
->
-> Please place this file
-> https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/plain/brcm/brcmfmac43340-sdio.bin
->
-> to /lib/firmware/brcm/brcmfmac43340-sdio.bin
->
-> Hauke
+From: Eliad Peller <eliad@wizery.com>
 
- Before that, the system was complaining about
-brcm/brcmfmac43340-sdio.bin, and now about brcm/brcmfmac43340-sdio.txt
-but errors are similar...
+Having explicit rx cmd header fields is useful, as it can
+be used for event filtering (e.g. saving only debug logs,
+rather than the whole data)
 
-43340 rev 2 pmurev 20
-May 17 15:53:48 scheissasus kernel: [    7.372974] usbcore: registered
-new interface driver brcmfmac
-May 17 15:53:48 scheissasus kernel: [    7.374344] brcmfmac_sdio
-mmc1:0001:1: Direct firmware load for brcm/brcmfmac43340-sdio.bin
-failed with error -2
-May 17 15:53:48 scheissasus kernel: [    8.383270] brcmf_sdio_htclk:
-HT Avail timeout (1000000): clkctl 0x50
-May 17 15:53:50 scheissasus kernel: [   11.401582] brcmf_sdio_htclk:
-HT Avail timeout (1000000): clkctl 0x50
-May 17 15:59:23 scheissasus kernel: [    7.496560]
-brcmf_sdio_drivestrengthinit: No SDIO Drive strength init done for
-chip 43340 rev 2 pmurev 20
-May 17 15:59:23 scheissasus kernel: [    7.500086] usbcore: registered
-new interface driver brcmfmac
-May 17 15:59:23 scheissasus kernel: [    7.506911] brcmfmac_sdio
-mmc1:0001:1: Direct firmware load for brcm/brcmfmac43340-sdio.txt
-failed with error -2
-May 17 15:59:23 scheissasus kernel: [    8.514107] brcmf_sdio_htclk:
-HT Avail timeout (1000000): clkctl 0x50
-May 17 15:59:23 scheissasus kernel: [    9.531340] brcmf_sdio_htclk:
-HT Avail timeout (1000000): clkctl 0x50
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h b/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
+index 223b875..948ce08 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h
+@@ -1,6 +1,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2015 Intel Mobile Communications GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -64,19 +65,21 @@ TRACE_EVENT(iwlwifi_dev_hcmd,
+ 
+ TRACE_EVENT(iwlwifi_dev_rx,
+ 	TP_PROTO(const struct device *dev, const struct iwl_trans *trans,
+-		 void *rxbuf, size_t len),
+-	TP_ARGS(dev, trans, rxbuf, len),
++		 struct iwl_rx_packet *pkt, size_t len),
++	TP_ARGS(dev, trans, pkt, len),
+ 	TP_STRUCT__entry(
+ 		DEV_ENTRY
+-		__dynamic_array(u8, rxbuf, iwl_rx_trace_len(trans, rxbuf, len))
++		__field(u8, cmd)
++		__dynamic_array(u8, rxbuf, iwl_rx_trace_len(trans, pkt, len))
+ 	),
+ 	TP_fast_assign(
+ 		DEV_ASSIGN;
+-		memcpy(__get_dynamic_array(rxbuf), rxbuf,
+-		       iwl_rx_trace_len(trans, rxbuf, len));
++		__entry->cmd = pkt->hdr.cmd;
++		memcpy(__get_dynamic_array(rxbuf), pkt,
++		       iwl_rx_trace_len(trans, pkt, len));
+ 	),
+ 	TP_printk("[%s] RX cmd %#.2x",
+-		  __get_str(dev), ((u8 *)__get_dynamic_array(rxbuf))[4])
++		  __get_str(dev), __entry->cmd)
+ );
+ 
+ TRACE_EVENT(iwlwifi_dev_tx,
+-- 
+2.1.4
+
