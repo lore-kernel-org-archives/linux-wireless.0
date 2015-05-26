@@ -1,125 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50310 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932111AbbE1O0R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:26:17 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEPEPW010911
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:17 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s4ha-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:16 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 03/17] mwifiex: support AP reset after bss_stop
-Date: Fri, 29 May 2015 01:24:44 +0530
-Message-ID: <1432842898-3219-4-git-send-email-patila@marvell.com> (sfid-20150528_162701_865472_3761B5F8)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36888 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751603AbbEZXHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 19:07:20 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20150526180813.0ba1b5f5@lxorguk.ukuu.org.uk>
+References: <20150526180813.0ba1b5f5@lxorguk.ukuu.org.uk> <20150519200232.GM23057@wotan.suse.de> <20150520140426.GB126473@ubuntu-hedt> <20150520172446.4dab5399@lxorguk.ukuu.org.uk> <20150520164613.GD10473@localhost> <20150521044104.GH22632@kroah.com> <20150521054101.GA15037@localhost> <20150521061453.GC30864@kroah.com> <1432213521.4230.43.camel@linux.vnet.ibm.com> <20150521154508.GA11821@kroah.com> <20150521155319.GG18164@localhost>
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: dhowells@redhat.com, Petko Manolov <petkan@mip-labs.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
+	serge@hallyn.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <david.woodhouse@intel.com>,
+	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
+	mricon@kernel.org
+Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Date: Wed, 27 May 2015 00:06:36 +0100
+Message-ID: <5032.1432681596@warthog.procyon.org.uk> (sfid-20150527_010726_461573_EE80A1E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would enable clearing of FW bss data structures when AP
-operations are stopped.
+One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk> wrote:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
- drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
- drivers/net/wireless/mwifiex/fw.h          |  1 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
- drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
- 5 files changed, 19 insertions(+), 2 deletions(-)
+> Ie you need to sign something more than the firmware, such as (firmware,
+> modinfo), so it's signed for "firmware X on PCI:8086,1114 or "firmware Y
+> on ACPI:0A1D"
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3a14d3a..d47799a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		return -1;
- 	}
- 
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "Failed to reset BSS\n");
-+		return -1;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index a1de83f..b5033d1 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		case HostCmd_CMD_UAP_BSS_START:
- 		case HostCmd_CMD_UAP_BSS_STOP:
- 		case HostCmd_CMD_UAP_STA_DEAUTH:
-+		case HOST_CMD_APCMD_SYS_RESET:
- 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
- 						      cmd_oid, data_buf,
- 						      cmd_ptr);
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 6a062dd..124120d 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_RSSI_INFO                         0x00a4
- #define HostCmd_CMD_FUNC_INIT                         0x00a9
- #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
-+#define HOST_CMD_APCMD_SYS_RESET                      0x00af
- #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
- #define HostCmd_CMD_UAP_BSS_START                     0x00b1
- #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index aa5b9a3..f20a09e 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 		break;
- 	case HostCmd_CMD_UAP_STA_DEAUTH:
- 		break;
-+	case HOST_CMD_APCMD_SYS_RESET:
-+		break;
- 	case HostCmd_CMD_MEF_CFG:
- 		break;
- 	case HostCmd_CMD_COALESCE_CFG:
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index a4ae283..0a3297e 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		break;
- 	case HostCmd_CMD_UAP_BSS_START:
- 	case HostCmd_CMD_UAP_BSS_STOP:
-+	case HOST_CMD_APCMD_SYS_RESET:
- 		cmd->command = cpu_to_le16(cmd_no);
- 		cmd->size = cpu_to_le16(S_DS_GEN);
- 		break;
-@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--		mwifiex_dbg(priv->adapter, ERROR,
--			    "Failed to stop the BSS\n");
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
-+		return -1;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
- 		return -1;
- 	}
- 
--- 
-1.8.1.4
+I'm suggesting that we use the name string passed to request_firmware().
 
+> IMHO we want the supplier of a given firmware providing signatures on
+> the firmware git tree if this is done. A generic linux-firmware owned key
+> would be both a horrendously inviting attack target, and a single point of
+> failure.
+> 
+> Git can already do all the needed commit signing bits unless I'm missing
+> something here ?
+
+How does this help the kernel check that it's been given the right firmware
+blob for its request?  Unless you compile into the kernel a list of hashes
+compiled from the linux-firmware git head (or representative root hash) - in
+which case we're back to Andy's hash list/hash tree approach with the problems
+that that entails.
+
+David
