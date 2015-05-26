@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55755 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415AbbE1Ixf convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0108.hostedemail.com ([216.40.44.108]:41860 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753177AbbEZOtG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 04:53:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH V4] brcmfmac: allow NVRAM values to contain spaces
-References: <1432331128-24011-1-git-send-email-zajec5@gmail.com>
-	<1432365333-1074-1-git-send-email-zajec5@gmail.com>
-Date: Thu, 28 May 2015 11:53:27 +0300
-In-Reply-To: <1432365333-1074-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Sat, 23 May 2015
- 09:15:33 +0200")
-Message-ID: <87twuxxeuw.fsf@kamboji.qca.qualcomm.com> (sfid-20150528_105339_775014_73E5842F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 26 May 2015 10:49:06 -0400
+Message-ID: <1432651739.2846.93.camel@perches.com> (sfid-20150526_164917_355470_5DF43806)
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
+ of del_timer_sync()
+From: Joe Perches <joe@perches.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
+	Arek Rusniak <arek.rusi@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 26 May 2015 07:48:59 -0700
+In-Reply-To: <20150526141401.GC21573@kroah.com>
+References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
+	 <556268BC.5050807@lwfinger.net> <20150525091737.GQ4150@mwanda>
+	 <1432575448.2846.63.camel@perches.com> <20150526044611.GA3465@sudip-PC>
+	 <1432616108.2846.83.camel@perches.com> <20150526050212.GC3465@sudip-PC>
+	 <1432616879.2846.86.camel@perches.com> <20150526141401.GC21573@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+On Tue, 2015-05-26 at 07:14 -0700, Greg KH wrote:
+> On Mon, May 25, 2015 at 10:07:59PM -0700, Joe Perches wrote:
+> > As far as I understand, the Eudyptula Challenge list has
+> > internal mechanisms to nominally review patches before some
+> > patch is submitted to lkml.
+> 
+> No it does not.
 
-> Platform NVRAMs often contain values with spaces. Even if right now most
-> firmware-supported entries are simple values, we shouldn't reject these
-> with spaces. It was semi-confirmed by Broadcom in the early patch adding
-> support for platform NVRAMs.
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> Acked-by: Arend van Spriel <arend@broadcom.com>
+That's not quite what was described to me by someone behind the
+email address:
+"Little Penguin <little@eudyptula-challenge.org>" back in August.
 
-Thanks, applied manually.
+What I understood from that email was there is a qualifying
+formatting component to the challenge and then patches were to be
+sent to maintainers and lists.
 
--- 
-Kalle Valo
+> > The main point is that patches shouldn't be applied without
+> > being submitted to a more widely read list.
+> 
+> I take the blame for any problems with Outreachy patches.
+
+Are you going to change any procedure associated to these
+Outreachy patches?
+
+
