@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.inescn.pt ([192.35.246.20]:52894 "EHLO trubo.inescn.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751499AbbEGK53 convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:21302 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753782AbbEZNfF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 06:57:29 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by trubo.inescn.pt (8.13.8/8.14.3/8) with ESMTP id t47ApEo7026230
-	for <linux-wireless@vger.kernel.org>; Thu, 7 May 2015 11:51:14 +0100
-Received: from trubo.inescn.pt ([127.0.0.1])
-	by localhost (trubo.inescn.pt [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id qoKr1SHPGS+3 for <linux-wireless@vger.kernel.org>;
-	Thu,  7 May 2015 11:51:10 +0100 (WEST)
-Received: from grover.inescn.pt (grover.inescn.pt [194.117.24.20])
-	by trubo.inescn.pt (8.13.8/8.14.4/3) with ESMTP id t47Ap9Fr026169
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 7 May 2015 11:51:09 +0100
-Received: from grover.inescn.pt (localhost.localdomain [127.0.0.1])
-	by grover.inescn.pt (8.13.8/8.13.8/8) with ESMTP id t47Ap98c026404
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 7 May 2015 11:51:09 +0100
-Received: (from apache@localhost)
-	by grover.inescn.pt (8.13.8/8.13.8/Submit) id t47Ap9nw026400
-	for linux-wireless@vger.kernel.org; Thu, 7 May 2015 11:51:09 +0100
-Message-ID: <20150507125109.179541ri1n6c7zj1@webmail.inescporto.pt> (sfid-20150507_125732_632460_E9492B10)
-Date: Thu, 07 May 2015 12:51:09 +0200
-From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inesctec.pt>
-To: linux-wireless@vger.kernel.org
-Subject: Access to ath9k tx/rx buffers
+	Tue, 26 May 2015 09:35:05 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4QDY7Go009227
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:04 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmahafj-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:04 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 0/6] mwifiex: device dump enhancements
+Date: Tue, 26 May 2015 06:34:26 -0700
+Message-ID: <1432647272-5734-1-git-send-email-akarwar@marvell.com> (sfid-20150526_153551_025607_57C42589)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all.
+This patch series fixes couple of bugs in device dump
+code paths, makes use of devcoredump mechanism after removing
+'ethtool dump' approach.
 
-I need access to transmission and reception buffers of ath9k driver,  
-in order to create shorter link than that one provided by libpcap by  
-manipulating those buffers from user space software. I did some  
-research and found things such as ioctl, netlink, mmap, amongst  
-others, but they didn't work as needed.
-Can someone give me some hint?
+Amitkumar Karwar (6):
+  mwifiex: fix SDIO firmware dump problem
+  mwifiex: fix a possible double free issue
+  mwifiex: dump driver information for PCIe interface
+  mwifiex: minor changes in debug messages
+  mwifiex: use generic name 'device dump'
+  mwifiex: device dump support via devcoredump framework
 
-Thanks for your time.
+ drivers/net/wireless/mwifiex/Kconfig   |   2 +
+ drivers/net/wireless/mwifiex/README    |   6 +-
+ drivers/net/wireless/mwifiex/cmdevt.c  |   4 +-
+ drivers/net/wireless/mwifiex/debugfs.c |  20 +++----
+ drivers/net/wireless/mwifiex/ethtool.c |  99 -------------------------------
+ drivers/net/wireless/mwifiex/init.c    |   1 +
+ drivers/net/wireless/mwifiex/main.c    | 103 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/mwifiex/main.h    |   9 +--
+ drivers/net/wireless/mwifiex/pcie.c    |  39 +++++++------
+ drivers/net/wireless/mwifiex/sdio.c    |  38 +++++++-----
+ 10 files changed, 163 insertions(+), 158 deletions(-)
 
+-- 
+1.8.1.4
 
-BR,
-Mário Lopes.
-
-
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
