@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:36715 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932698AbbENREd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 13:04:33 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath9k: match wait_for_completion_timeout return type
-Date: Thu, 14 May 2015 18:56:16 +0200
-Message-Id: <1431622576-9183-1-git-send-email-hofrat@osadl.org> (sfid-20150514_190455_884135_90185BA6)
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:35952 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbbEZFcI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 01:32:08 -0400
+Date: Tue, 26 May 2015 11:00:22 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	Stable <stable@vger.kernel.org>, netdev@vger.kernel.org,
+	Haggai Eran <haggai.eran@gmail.com>,
+	Arek Rusniak <arek.rusi@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
+ del_timer_sync()
+Message-ID: <20150526053022.GA4585@sudip-PC> (sfid-20150526_073359_160646_7FD0AE99)
+References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
+ <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
+ <556268BC.5050807@lwfinger.net>
+ <20150525091737.GQ4150@mwanda>
+ <1432575448.2846.63.camel@perches.com>
+ <20150526044611.GA3465@sudip-PC>
+ <1432616108.2846.83.camel@perches.com>
+ <20150526050212.GC3465@sudip-PC>
+ <1432616879.2846.86.camel@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432616879.2846.86.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-As time_left is exclusively used for wait_for_completion_timeout here its
-type is simply changed to unsigned long.
+On Mon, May 25, 2015 at 10:07:59PM -0700, Joe Perches wrote:
+> On Tue, 2015-05-26 at 10:32 +0530, Sudip Mukherjee wrote:
+> > On Mon, May 25, 2015 at 09:55:08PM -0700, Joe Perches wrote:
+> > > On Tue, 2015-05-26 at 10:16 +0530, Sudip Mukherjee wrote:
+> > > > On Mon, May 25, 2015 at 10:37:28AM -0700, Joe Perches wrote:
 
-API conformance testing for completions with coccinelle spatches are being
-used to locate API usage inconsistencies:
-./drivers/net/wireless/ath/ath9k/link.c:197
-        int return assigned to unsigned long
+> > But for eudyptula, patches have to properly submitted to lkml and
+> > maintainers. And today I am here just because of eudyptula. My patches
+> > and contributions here, everything started with it. :)
+> 
+> As far as I understand, the Eudyptula Challenge list has
+> internal mechanisms to nominally review patches before some
+> patch is submitted to lkml.
+well, yes, sort of. Submitting patch is task 10, and all the previous
+tasks will train people on creating patch, sending etc.
+> 
+> The main point is that patches shouldn't be applied without
+> being submitted to a more widely read list.
+yes, and Eudyptula requires the participant to send patch to maintainer,
+lkml and relevant mailing list where outreachy specifies not to send to
+lkml. Next outreachy will start from September.
 
-Patch was compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-
-Patch is against 4.1-rc3 (localversion-next is -next-20150514)
-
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
- drivers/net/wireless/ath/ath9k/link.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 90631d7..5ad0fee 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -172,7 +172,7 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_tx_control txctl;
--	int time_left;
-+	unsigned long time_left;
- 
- 	memset(&txctl, 0, sizeof(txctl));
- 	txctl.txq = sc->tx.txq_map[IEEE80211_AC_BE];
--- 
-1.7.10.4
-
+regards
+sudip
