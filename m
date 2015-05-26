@@ -1,121 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52228 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2993214AbbEEOlB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 10:41:01 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: extend get_key() to return PN for all ciphers
-Date: Tue,  5 May 2015 16:40:57 +0200
-Message-Id: <1430836857-4393-2-git-send-email-johannes@sipsolutions.net> (sfid-20150505_194356_959938_EFBA72B1)
-In-Reply-To: <1430836857-4393-1-git-send-email-johannes@sipsolutions.net>
-References: <1430836857-4393-1-git-send-email-johannes@sipsolutions.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30645 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255AbbEZUKR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 16:10:17 -0400
+Date: Tue, 26 May 2015 23:09:42 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Joe Perches <joe@perches.com>,
+	Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
+	Arek Rusniak <arek.rusi@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
+ del_timer_sync()
+Message-ID: <20150526200941.GC11734@mwanda> (sfid-20150526_221029_025229_ECB5FC62)
+References: <556268BC.5050807@lwfinger.net>
+ <20150525091737.GQ4150@mwanda>
+ <1432575448.2846.63.camel@perches.com>
+ <20150526044611.GA3465@sudip-PC>
+ <1432616108.2846.83.camel@perches.com>
+ <20150526050212.GC3465@sudip-PC>
+ <1432616879.2846.86.camel@perches.com>
+ <20150526141401.GC21573@kroah.com>
+ <1432651739.2846.93.camel@perches.com>
+ <20150526163555.GA9685@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150526163555.GA9685@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, May 26, 2015 at 09:35:55AM -0700, Greg KH wrote:
+> Also, the outreachy patch process would overwhelm everyone else on the
+> list, it's really high volume during the application phase, I'd prefer
+> it to stick with the mentors that wish to help out with the process.  If
+> you and/or Dan, or anyone else wishes to help out with this, I would
+> really appreciate it.  But I don't think that forcing them to post to
+> the driverdevel list is a good idea.
 
-For ciphers not supported by mac80211, the function currently
-doesn't return any PN data. Fix this by extending the driver's
-get_key_seq() a little more to allow moving arbitrary PN data.
+If it makes your life easier to merge them directly from outreachy
+that's great and I'm ok with that, but don't skip the normal review
+process as a favour to us.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h | 7 +++++++
- net/mac80211/cfg.c     | 9 +++++++++
- net/mac80211/key.c     | 4 ++--
- net/mac80211/key.h     | 3 +--
- 4 files changed, 19 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d719812759fc..c49840fe980f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1501,6 +1501,8 @@ struct ieee80211_key_conf {
- 	u8 key[0];
- };
- 
-+#define IEEE80211_MAX_PN_LEN	16
-+
- /**
-  * struct ieee80211_key_seq - key sequence counter
-  *
-@@ -1513,6 +1515,7 @@ struct ieee80211_key_conf {
-  *	reverse order than in packet)
-  * @gcmp: PN data, most significant byte first (big endian,
-  *	reverse order than in packet)
-+ * @hw: data for HW-only (e.g. cipher scheme) keys
-  */
- struct ieee80211_key_seq {
- 	union {
-@@ -1532,6 +1535,10 @@ struct ieee80211_key_seq {
- 		struct {
- 			u8 pn[6];
- 		} gcmp;
-+		struct {
-+			u8 seq[IEEE80211_MAX_PN_LEN];
-+			u8 seq_len;
-+		} hw;
- 	};
- };
- 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index dd7014b09396..3469bbdc891c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -431,6 +431,15 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
- 		params.seq = seq;
- 		params.seq_len = 6;
- 		break;
-+	default:
-+		if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
-+			break;
-+		if (WARN_ON(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV))
-+			break;
-+		drv_get_key_seq(sdata->local, key, &kseq);
-+		params.seq = kseq.hw.seq;
-+		params.seq_len = kseq.hw.seq_len;
-+		break;
- 	}
- 
- 	params.key = key->conf.key;
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 3e0b814f4db3..0a5d5c5ad30f 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -485,8 +485,8 @@ ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- 		break;
- 	default:
- 		if (cs) {
--			size_t len = (seq_len > MAX_PN_LEN) ?
--						MAX_PN_LEN : seq_len;
-+			size_t len = (seq_len > IEEE80211_MAX_PN_LEN) ?
-+						IEEE80211_MAX_PN_LEN : seq_len;
- 
- 			key->conf.iv_len = cs->hdr_len;
- 			key->conf.icv_len = cs->mic_len;
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index c5a31835be0e..df430a618764 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -18,7 +18,6 @@
- 
- #define NUM_DEFAULT_KEYS 4
- #define NUM_DEFAULT_MGMT_KEYS 2
--#define MAX_PN_LEN 16
- 
- struct ieee80211_local;
- struct ieee80211_sub_if_data;
-@@ -116,7 +115,7 @@ struct ieee80211_key {
- 		} gcmp;
- 		struct {
- 			/* generic cipher scheme */
--			u8 rx_pn[IEEE80211_NUM_TIDS + 1][MAX_PN_LEN];
-+			u8 rx_pn[IEEE80211_NUM_TIDS + 1][IEEE80211_MAX_PN_LEN];
- 		} gen;
- 	} u;
- 
--- 
-2.1.4
+regards,
+dan carpenter
 
