@@ -1,66 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57810 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755286AbbESHUm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 03:20:42 -0400
-Message-ID: <1432020039.7437.0.camel@sipsolutions.net> (sfid-20150519_092057_170182_AABAFE12)
-Subject: pull-request: mac80211-next 2015-05-19
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 19 May 2015 09:20:39 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:52456 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754852AbbEZNeG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 09:34:06 -0400
+Message-ID: <5564573F.3080802@broadcom.com> (sfid-20150526_153415_396535_7734098F)
+Date: Tue, 26 May 2015 13:21:35 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<stable@vger.kernel.org>
+Subject: Re: [PATCH for-4.1] brcmfmac: avoid null pointer access when brcmf_msgbuf_get_pktid()
+ fails
+References: <1432639186-18824-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1432639186-18824-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 05/26/15 13:19, Arend van Spriel wrote:
+> The function brcmf_msgbuf_get_pktid() may return a NULL pointer so
+> the callers should check the return pointer before accessing it to
+> avoid the crash below (see [1]):
+>
+> brcmfmac: brcmf_msgbuf_get_pktid: Invalid packet id 273 (not in use)
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000080
+> IP: [<ffffffff8145b225>] skb_pull+0x5/0x50
+> PGD 0
+> Oops: 0000 [#1] PREEMPT SMP
+> Modules linked in: pci_stub vboxpci(O) vboxnetflt(O) vboxnetadp(O) vboxdrv(O)
+>   snd_hda_codec_hdmi bnep mousedev hid_generic ushwmon msr ext4 crc16 mbcache
+>   jbd2 sd_mod uas usb_storage ahci libahci libata scsi_mod xhci_pci xhci_hcd
+>   usbcore usb_common
+> CPU: 0 PID: 1661 Comm: irq/61-brcmf_pc Tainted: G O    4.0.1-MacbookPro-ARCH #1
+> Hardware name: Apple Inc. MacBookPro12,1/Mac-E43C1C25D4880AD6,
+>   BIOS MBP121.88Z.0167.B02.1503241251 03/24/2015
+> task: ffff880264203cc0 ti: ffff88025ffe4000 task.ti: ffff88025ffe4000
+> RIP: 0010:[<ffffffff8145b225>]  [<ffffffff8145b225>] skb_pull+0x5/0x50
+> RSP: 0018:ffff88025ffe7d40  EFLAGS: 00010202
+> RAX: 0000000000000000 RBX: ffff88008a33c000 RCX: 0000000000000044
+> RDX: 0000000000000000 RSI: 000000000000004a RDI: 0000000000000000
+> RBP: ffff88025ffe7da8 R08: 0000000000000096 R09: 000000000000004a
+> R10: 0000000000000000 R11: 000000000000048e R12: ffff88025ff14f00
+> R13: 0000000000000000 R14: ffff880263b48200 R15: ffff88008a33c000
+> FS:  0000000000000000(0000) GS:ffff88026ec00000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000000080 CR3: 000000000180b000 CR4: 00000000003407f0
+> Stack:
+>   ffffffffa06aed74 ffff88025ffe7dc8 ffff880263b48270 ffff880263b48278
+>   05ea88020000004a 0002ffff81014635 000000001720b2f6 ffff88026ec116c0
+>   ffff880263b48200 0000000000010000 ffff880263b4ae00 ffff880264203cc0
+> Call Trace:
+>   [<ffffffffa06aed74>] ? brcmf_msgbuf_process_rx+0x404/0x480 [brcmfmac]
+>   [<ffffffff810cea60>] ? irq_finalize_oneshot.part.30+0xf0/0xf0
+>   [<ffffffffa06afb55>] brcmf_proto_msgbuf_rx_trigger+0x35/0xf0 [brcmfmac]
+>   [<ffffffffa06baf2a>] brcmf_pcie_isr_thread_v2+0x8a/0x130 [brcmfmac]
+>   [<ffffffff810cea80>] irq_thread_fn+0x20/0x50
+>   [<ffffffff810ceddf>] irq_thread+0x13f/0x170
+>   [<ffffffff810cebf0>] ? wake_threads_waitq+0x30/0x30
+>   [<ffffffff810ceca0>] ? irq_thread_dtor+0xb0/0xb0
+>   [<ffffffff81092a08>] kthread+0xd8/0xf0
+>   [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
+>   [<ffffffff8156d898>] ret_from_fork+0x58/0x90
+>   [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
+> Code: 01 83 e2 f7 88 50 01 48 83 c4 08 5b 5d f3 c3 0f 1f 80 00 00 00 00 83 e2
+>   f7 88 50 01 c3 66 0f 1f 84 00 00 00 00 00 0f 1f
+> RIP  [<ffffffff8145b225>] skb_pull+0x5/0x50
+>   RSP<ffff88025ffe7d40>
+> CR2: 0000000000000080
+> ---[ end trace b074c0f90e7c997d ]---
+>
+> [1] http://mid.gmane.org/20150430193259.GA5630@googlemail.com
+>
+> Cc:<stable@vger.kernel.org>  # v3.18, v3.19, v4.0, v4.1
+> Reported-by: Michael Hornung<mhornung.linux@gmail.com>
+> Reviewed-by: Hante Meuleman<meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel<arend@broadcom.com>
 
-My last pull request introduced two bugs, and we found two more that
-were present earlier, so I have four bug fixes now.
+> Change-Id: Ia82879e6acc3c768133e80de391a6a5cf9799b17
+> Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/3281
 
-Please pull.
+Sorry, Kalle
 
-Thanks,
-Johannes
+These should not have been here. Oh well.
 
+Regards,
+Arend
 
-The following changes since commit bbbe8c8c596b3784a2ed08772900e827f8ba72c5:
-
-  mac80211: add missing documentation for rate_ctrl_lock (2015-05-06 16:00:32 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-05-19
-
-for you to fetch changes up to 658358cec93a7130615cfc1d6843ab07e49625e6:
-
-  mac80211: fix throughput LED trigger (2015-05-11 19:16:04 +0200)
-
-----------------------------------------------------------------
-This just has a few fixes:
- * LED throughput trigger was crashing
- * fast-xmit wasn't treating QoS changes in IBSS correctly
- * TDLS could use the wrong channel definition
- * using a reserved channel context could use the wrong channel width
-
-----------------------------------------------------------------
-Andrei Otcheretianski (1):
-      mac80211: adjust reserved chan_ctx when assigned to vif
-
-Arik Nemtsov (1):
-      mac80211: TDLS: use the BSS chandef for HT/VHT operation IEs
-
-Johannes Berg (2):
-      mac80211: check fast-xmit if IBSS STA QoS changed
-      mac80211: fix throughput LED trigger
-
- net/mac80211/chan.c        |  4 ++++
- net/mac80211/ibss.c        |  5 ++++-
- net/mac80211/ieee80211_i.h |  1 -
- net/mac80211/led.c         | 12 ++++++------
- net/mac80211/tdls.c        | 27 ++++++++-------------------
- 5 files changed, 22 insertions(+), 27 deletions(-)
-
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 12 +++++-------
+>   1 file changed, 5 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> index 4ec9811..65efb14 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+> @@ -511,11 +511,9 @@ static int brcmf_msgbuf_query_dcmd(struct brcmf_pub *drvr, int ifidx,
+>   				     msgbuf->rx_pktids,
+>   				     msgbuf->ioctl_resp_pktid);
+>   	if (msgbuf->ioctl_resp_ret_len != 0) {
+> -		if (!skb) {
+> -			brcmf_err("Invalid packet id idx recv'd %d\n",
+> -				  msgbuf->ioctl_resp_pktid);
+> +		if (!skb)
+>   			return -EBADF;
+> -		}
+> +
+>   		memcpy(buf, skb->data, (len<  msgbuf->ioctl_resp_ret_len) ?
+>   				       len : msgbuf->ioctl_resp_ret_len);
+>   	}
+> @@ -874,10 +872,8 @@ brcmf_msgbuf_process_txstatus(struct brcmf_msgbuf *msgbuf, void *buf)
+>   	flowid -= BRCMF_NROF_H2D_COMMON_MSGRINGS;
+>   	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
+>   				     msgbuf->tx_pktids, idx);
+> -	if (!skb) {
+> -		brcmf_err("Invalid packet id idx recv'd %d\n", idx);
+> +	if (!skb)
+>   		return;
+> -	}
+>
+>   	set_bit(flowid, msgbuf->txstatus_done_map);
+>   	commonring = msgbuf->flowrings[flowid];
+> @@ -1156,6 +1152,8 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+>
+>   	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
+>   				     msgbuf->rx_pktids, idx);
+> +	if (!skb)
+> +		return;
+>
+>   	if (data_offset)
+>   		skb_pull(skb, data_offset);
 
