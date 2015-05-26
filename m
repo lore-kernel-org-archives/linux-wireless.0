@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51078 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752341AbbENIiQ (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:34816 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142AbbEZEro (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 04:38:16 -0400
-Date: Thu, 14 May 2015 11:37:50 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
-Subject: [patch] rndis_wlan: harmless issue calling set_bit()
-Message-ID: <20150514083750.GD1665@mwanda> (sfid-20150514_103822_822777_AFC07B91)
+	Tue, 26 May 2015 00:47:44 -0400
+Date: Tue, 26 May 2015 10:16:11 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudip@vectorindia.org>,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	Stable <stable@vger.kernel.org>, netdev@vger.kernel.org,
+	Haggai Eran <haggai.eran@gmail.com>,
+	Arek Rusniak <arek.rusi@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
+ del_timer_sync()
+Message-ID: <20150526044611.GA3465@sudip-PC> (sfid-20150526_064803_530083_99080266)
+References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
+ <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
+ <556268BC.5050807@lwfinger.net>
+ <20150525091737.GQ4150@mwanda>
+ <1432575448.2846.63.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432575448.2846.63.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are used like:
+On Mon, May 25, 2015 at 10:37:28AM -0700, Joe Perches wrote:
+> It'd be better if the approved patches from the intern list
+> (no idea what that is) were sent to lkml/devel@driverdev lists
+> for review before actually being applied.
+Its the outreachy program. And http://kernelnewbies.org/OutreachyApply
+mentions specifically: "email your first patch to the outreachy-kernel
+mailing list. Do not send patches to the main Linux mailing lists"
 
-	set_bit(WORK_LINK_UP, &priv->work_pending);
-
-The problem is that set_bit() takes the actual bit number and not a mask
-so static checkers get upset.  It doesn't affect run time because we do
-it consistently, but we may as well clean it up.
-
-Fixes: 6010ce07a66c ('rndis_wlan: do link-down state change in worker thread')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d72ff8e..96175a7 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -356,9 +356,9 @@ struct ndis_80211_pmkid {
- #define CAP_MODE_80211G		4
- #define CAP_MODE_MASK		7
- 
--#define WORK_LINK_UP		(1<<0)
--#define WORK_LINK_DOWN		(1<<1)
--#define WORK_SET_MULTICAST_LIST	(1<<2)
-+#define WORK_LINK_UP		0
-+#define WORK_LINK_DOWN		1
-+#define WORK_SET_MULTICAST_LIST	2
- 
- #define RNDIS_WLAN_ALG_NONE	0
- #define RNDIS_WLAN_ALG_WEP	(1<<0)
+regards
+sudip
