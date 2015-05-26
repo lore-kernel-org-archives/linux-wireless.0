@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:49143 "EHLO www.osadl.org"
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932996AbbELS0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 14:26:46 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] carl9170: match wait_for_completion_timeout return type
-Date: Tue, 12 May 2015 20:18:38 +0200
-Message-Id: <1431454718-23701-1-git-send-email-hofrat@osadl.org> (sfid-20150512_202650_707872_C55A8638)
+	id S1751992AbbEZTSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:09 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/39] iwlwifi: dump API to 14
+Date: Tue, 26 May 2015 22:17:20 +0300
+Message-Id: <1432667872-18092-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211821_301023_8C051070)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-An appropriately named unsigned long is added, and the assignments
-as well as error checking fixed up.
+The iwlmvm driver is now able to handle -14.ucode.
 
-API conformance testing for completions with coccinelle spatches are being
-used to locate API usage inconsistencies:
-./drivers/net/wireless/ath/carl9170/usb.c:675 
-	int return assigned to unsigned long
-
-Patch was compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_CARL9170=m
-
-Patch is against 4.1-rc3 (localversion-next is -next-20150512)
-
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/carl9170/usb.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index c9f9331..76842e6 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -651,6 +651,7 @@ int carl9170_exec_cmd(struct ar9170 *ar, const enum carl9170_cmd_oids cmd,
- 	unsigned int plen, void *payload, unsigned int outlen, void *out)
- {
- 	int err = -ENOMEM;
-+	unsigned long time_left;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 0afe494..b40b385 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -69,7 +69,7 @@
+ #include "iwl-agn-hw.h"
  
- 	if (!IS_ACCEPTING_CMD(ar))
- 		return -EIO;
-@@ -672,8 +673,8 @@ int carl9170_exec_cmd(struct ar9170 *ar, const enum carl9170_cmd_oids cmd,
- 	err = __carl9170_exec_cmd(ar, &ar->cmd, false);
+ /* Highest firmware API version supported */
+-#define IWL7260_UCODE_API_MAX	13
++#define IWL7260_UCODE_API_MAX	14
  
- 	if (!(cmd & CARL9170_CMD_ASYNC_FLAG)) {
--		err = wait_for_completion_timeout(&ar->cmd_wait, HZ);
--		if (err == 0) {
-+		time_left = wait_for_completion_timeout(&ar->cmd_wait, HZ);
-+		if (time_left == 0) {
- 			err = -ETIMEDOUT;
- 			goto err_unbuf;
- 		}
+ /* Oldest version we won't warn about */
+ #define IWL7260_UCODE_API_OK	12
 -- 
-1.7.10.4
+2.1.4
 
