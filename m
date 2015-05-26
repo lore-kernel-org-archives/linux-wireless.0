@@ -1,29 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34786 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbbERIEh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58681 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755268AbbEZN5v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 04:04:37 -0400
-Date: Mon, 18 May 2015 11:04:20 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>, gregkh@linuxfoundation.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	rachel.kim@atmel.com, dean.lee@atmel.com, tony.cho@atmel.com,
-	chris.park@atmel.com, Patrice VILCHEZ <patrice.vilchez@atmel.com>
-Subject: Re: [PATCH v3 1/2] staging: wilc1000: Add SDIO/SPI 802.11 driver
-Message-ID: <20150518080420.GG14154@mwanda> (sfid-20150518_100441_753617_28686D6B)
-References: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com>
- <5558E3B8.3040008@atmel.com>
+	Tue, 26 May 2015 09:57:51 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5558E3B8.3040008@atmel.com>
+Subject: Re: [1/4] mwifiex: add support for FW memory read/write operations
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1431371900-7260-1-git-send-email-patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <liuzy@marvell.com>, <crlo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Message-Id: <20150526105211.A1B321416B3@smtp.codeaurora.org> (sfid-20150526_155803_354624_DB5C5B1F)
+Date: Tue, 26 May 2015 10:52:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Was the patch sent to the list?  Maybe it was rejected for being too
-large?
 
-regards,
-dan carpenter
+> From: Chin-ran Lo <crlo@marvell.com>
+> 
+> This patch adds support for FW memory read/write operations via debugfs.
+> This is useful during debugging FW issues.
+> 
+> Examples:
+> 
+> For reading FW memory location:
+> echo r 0x01ac > /sys/kernel/debug/mwifiex/mlan0/memrw
+> cat /sys/kernel/debug/mwifiex/mlan0/memrw
+> 
+> For writing FW memory location:
+> echo w 0x01ac 0x55aa > /sys/kernel/debug/mwifiex/mlan0/memrw
+> 
+> Signed-off-by: Chin-ran Lo <crlo@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
 
+Thanks, 4 patches applied to wireless-drivers-next.git:
+
+c2c6c85fca47 mwifiex: add support for FW memory read/write operations
+c687a0077faa mwifiex: add prints debug ctrl support
+868093a9df75 mwifiex: add dump data debug support
+acebe8c10a6e mwifiex: change dbg print func to mwifiex_dbg
+
+Kalle Valo
