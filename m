@@ -1,99 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13215 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752664AbbESLgz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 07:36:55 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: disconnect TDLS stations on STA CSA
-Date: Tue, 19 May 2015 14:36:48 +0300
-Message-Id: <1432035408-8460-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150519_133658_698990_C9D99D85)
+Received: from smtp.codeaurora.org ([198.145.29.96]:59679 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753539AbbEZOCt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 10:02:49 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/5] rtlwifi: Update regulatory database
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1431725583-7324-2-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Shao Fu <shaofu@realtek.com>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
+Message-Id: <20150526105708.78A79141726@smtp.codeaurora.org> (sfid-20150526_160300_543324_F7533FF0)
+Date: Tue, 26 May 2015 10:57:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
 
-When a station does a channel switch, it's not well defined what its TDLS
-peers would do. Avoid a situation when the local side marks a potentially
-disconnected peer as a TDLS peer.
-Keeping peers connected through CSA is doubly problematic with the upcoming
-TDLS WIDER-BW feature which allows peers to widen the BSS channel. The
-new channel transitioned-to might not be compatible and would require
-a re-negotiation anyway.
+> From: Shao Fu <shaofu@realtek.com>
+> 
+> Driver rtlwifi maintains its own regulatory information, The Chrome Autotest
+> (https://www.chromium.org/chromium-os/testing/autotest-user-doc)
+> showed some errors. This patch adds the necessary information for rtlwifi.
+> 
+> Signed-off-by: Shao Fu <shaofu@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Make sure to disallow new TDLS link during CSA.
+Thanks, 5 patches applied to wireless-drivers-next.git:
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/mlme.c | 26 ++++++++++++++++++++++++++
- net/mac80211/tdls.c |  6 ++++++
- 2 files changed, 32 insertions(+)
+02b5fffbe9e0 rtlwifi: Update regulatory database
+852ce7805638 rtlwifi: rtl8188ee: Apply the new regulatory information
+5620302484d4 rtlwifi: rtl8192ee: Apply the regulatory changes to driver
+b23cd22d3923 rtlwifi: rtl8723be: Update driver for regulatory changes
+d10101a60372 rtlwifi: rtl8821ae: Fix problem with regulatory information
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 3294666..387fe70 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1098,6 +1098,24 @@ static void ieee80211_chswitch_timer(unsigned long data)
- 	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
- }
- 
-+static void ieee80211_teardown_tdls_peers(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct sta_info *sta;
-+	u16 reason = WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
-+		if (!sta->sta.tdls || sta->sdata != sdata || !sta->uploaded ||
-+		    !test_sta_flag(sta, WLAN_STA_AUTHORIZED))
-+			continue;
-+
-+		ieee80211_tdls_oper_request(&sdata->vif, sta->sta.addr,
-+					    NL80211_TDLS_TEARDOWN, reason,
-+					    GFP_ATOMIC);
-+	}
-+	rcu_read_unlock();
-+}
-+
- static void
- ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 				 u64 timestamp, u32 device_timestamp,
-@@ -1161,6 +1179,14 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
-+	/*
-+	 * Drop all TDLS peers - either we disconnect or move to a different
-+	 * channel from this point on. There's no telling what our peer will do.
-+	 * The TDLS WIDER_BW scenario is also problematic, as peers might now
-+	 * have an incompatible wider chandef.
-+	 */
-+	ieee80211_teardown_tdls_peers(sdata);
-+
- 	mutex_lock(&local->mtx);
- 	mutex_lock(&local->chanctx_mtx);
- 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 8a92a92..75e8e3b 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -1183,6 +1183,12 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
- 
- 	switch (oper) {
- 	case NL80211_TDLS_ENABLE_LINK:
-+		if (sdata->vif.csa_active) {
-+			tdls_dbg(sdata, "TDLS: disallow link during CSA\n");
-+			ret = -EBUSY;
-+			break;
-+		}
-+
- 		rcu_read_lock();
- 		sta = sta_info_get(sdata, peer);
- 		if (!sta) {
--- 
-2.1.4
-
+Kalle Valo
