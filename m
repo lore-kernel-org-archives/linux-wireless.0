@@ -1,380 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2407 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754910AbbEZNf0 (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39781 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753237AbbEZNcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:35:26 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4QDYpH9003451
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:25 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1umqg00bpw-3
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:24 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 5/6] mwifiex: use generic name 'device dump'
-Date: Tue, 26 May 2015 06:34:31 -0700
-Message-ID: <1432647272-5734-6-git-send-email-akarwar@marvell.com> (sfid-20150526_153538_730660_141E53A3)
-In-Reply-To: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
-References: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
+	Tue, 26 May 2015 09:32:35 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH for-4.1] brcmfmac: avoid null pointer access when brcmf_msgbuf_get_pktid() fails
+Date: Tue, 26 May 2015 13:19:46 +0200
+Message-ID: <1432639186-18824-1-git-send-email-arend@broadcom.com> (sfid-20150526_153318_666506_31A337AC)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently we are dumping driver information also inside
-firmware dump API. We will call it as device dump and
-dump driver and firmware data separately.
+The function brcmf_msgbuf_get_pktid() may return a NULL pointer so
+the callers should check the return pointer before accessing it to
+avoid the crash below (see [1]):
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+brcmfmac: brcmf_msgbuf_get_pktid: Invalid packet id 273 (not in use)
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000080
+IP: [<ffffffff8145b225>] skb_pull+0x5/0x50
+PGD 0
+Oops: 0000 [#1] PREEMPT SMP
+Modules linked in: pci_stub vboxpci(O) vboxnetflt(O) vboxnetadp(O) vboxdrv(O)
+ snd_hda_codec_hdmi bnep mousedev hid_generic ushwmon msr ext4 crc16 mbcache
+ jbd2 sd_mod uas usb_storage ahci libahci libata scsi_mod xhci_pci xhci_hcd
+ usbcore usb_common
+CPU: 0 PID: 1661 Comm: irq/61-brcmf_pc Tainted: G O    4.0.1-MacbookPro-ARCH #1
+Hardware name: Apple Inc. MacBookPro12,1/Mac-E43C1C25D4880AD6,
+ BIOS MBP121.88Z.0167.B02.1503241251 03/24/2015
+task: ffff880264203cc0 ti: ffff88025ffe4000 task.ti: ffff88025ffe4000
+RIP: 0010:[<ffffffff8145b225>]  [<ffffffff8145b225>] skb_pull+0x5/0x50
+RSP: 0018:ffff88025ffe7d40  EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffff88008a33c000 RCX: 0000000000000044
+RDX: 0000000000000000 RSI: 000000000000004a RDI: 0000000000000000
+RBP: ffff88025ffe7da8 R08: 0000000000000096 R09: 000000000000004a
+R10: 0000000000000000 R11: 000000000000048e R12: ffff88025ff14f00
+R13: 0000000000000000 R14: ffff880263b48200 R15: ffff88008a33c000
+FS:  0000000000000000(0000) GS:ffff88026ec00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000080 CR3: 000000000180b000 CR4: 00000000003407f0
+Stack:
+ ffffffffa06aed74 ffff88025ffe7dc8 ffff880263b48270 ffff880263b48278
+ 05ea88020000004a 0002ffff81014635 000000001720b2f6 ffff88026ec116c0
+ ffff880263b48200 0000000000010000 ffff880263b4ae00 ffff880264203cc0
+Call Trace:
+ [<ffffffffa06aed74>] ? brcmf_msgbuf_process_rx+0x404/0x480 [brcmfmac]
+ [<ffffffff810cea60>] ? irq_finalize_oneshot.part.30+0xf0/0xf0
+ [<ffffffffa06afb55>] brcmf_proto_msgbuf_rx_trigger+0x35/0xf0 [brcmfmac]
+ [<ffffffffa06baf2a>] brcmf_pcie_isr_thread_v2+0x8a/0x130 [brcmfmac]
+ [<ffffffff810cea80>] irq_thread_fn+0x20/0x50
+ [<ffffffff810ceddf>] irq_thread+0x13f/0x170
+ [<ffffffff810cebf0>] ? wake_threads_waitq+0x30/0x30
+ [<ffffffff810ceca0>] ? irq_thread_dtor+0xb0/0xb0
+ [<ffffffff81092a08>] kthread+0xd8/0xf0
+ [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
+ [<ffffffff8156d898>] ret_from_fork+0x58/0x90
+ [<ffffffff81092930>] ? kthread_create_on_node+0x1c0/0x1c0
+Code: 01 83 e2 f7 88 50 01 48 83 c4 08 5b 5d f3 c3 0f 1f 80 00 00 00 00 83 e2
+ f7 88 50 01 c3 66 0f 1f 84 00 00 00 00 00 0f 1f
+RIP  [<ffffffff8145b225>] skb_pull+0x5/0x50
+ RSP <ffff88025ffe7d40>
+CR2: 0000000000000080
+---[ end trace b074c0f90e7c997d ]---
+
+[1] http://mid.gmane.org/20150430193259.GA5630@googlemail.com
+
+Cc: <stable@vger.kernel.org> # v3.18, v3.19, v4.0, v4.1
+Reported-by: Michael Hornung <mhornung.linux@gmail.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Change-Id: Ia82879e6acc3c768133e80de391a6a5cf9799b17
+Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/3281
 ---
- drivers/net/wireless/mwifiex/README    |  6 +++---
- drivers/net/wireless/mwifiex/cmdevt.c  |  4 ++--
- drivers/net/wireless/mwifiex/debugfs.c | 20 ++++++++++----------
- drivers/net/wireless/mwifiex/ethtool.c | 12 ++++++------
- drivers/net/wireless/mwifiex/main.c    |  4 ++--
- drivers/net/wireless/mwifiex/main.h    |  6 +++---
- drivers/net/wireless/mwifiex/pcie.c    | 22 +++++++++++++---------
- drivers/net/wireless/mwifiex/sdio.c    | 22 +++++++++++++---------
- 8 files changed, 52 insertions(+), 44 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/README b/drivers/net/wireless/mwifiex/README
-index 31928ca..2f0f9b5 100644
---- a/drivers/net/wireless/mwifiex/README
-+++ b/drivers/net/wireless/mwifiex/README
-@@ -230,9 +230,9 @@ getlog
- 
- 	cat getlog
- 
--fw_dump
--	This command is used to dump firmware memory into files.
--	Separate file will be created for each memory segment.
-+device_dump
-+	This command is used to dump driver information and firmware memory
-+	segments.
- 	Usage:
- 
- 	cat fw_dump
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index ac89a1d..a1de83f 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -993,8 +993,8 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
- 		mwifiex_init_fw_complete(adapter);
- 
--	if (adapter->if_ops.fw_dump)
--		adapter->if_ops.fw_dump(adapter);
-+	if (adapter->if_ops.device_dump)
-+		adapter->if_ops.device_dump(adapter);
- 
- 	if (adapter->if_ops.card_reset)
- 		adapter->if_ops.card_reset(adapter);
-diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
-index 8895906..5a0636d4 100644
---- a/drivers/net/wireless/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/mwifiex/debugfs.c
-@@ -152,24 +152,24 @@ free_and_exit:
- }
- 
- /*
-- * Proc firmware dump read handler.
-+ * Proc device dump read handler.
-  *
-- * This function is called when the 'fw_dump' file is opened for
-+ * This function is called when the 'device_dump' file is opened for
-  * reading.
-- * This function dumps firmware memory in different files
-- * (ex. DTCM, ITCM, SQRAM etc.) based on the the segments for
-+ * This function dumps driver information and firmware memory segments
-+ * (ex. DTCM, ITCM, SQRAM etc.) for
-  * debugging.
-  */
- static ssize_t
--mwifiex_fw_dump_read(struct file *file, char __user *ubuf,
--		     size_t count, loff_t *ppos)
-+mwifiex_device_dump_read(struct file *file, char __user *ubuf,
-+			 size_t count, loff_t *ppos)
- {
- 	struct mwifiex_private *priv = file->private_data;
- 
--	if (!priv->adapter->if_ops.fw_dump)
-+	if (!priv->adapter->if_ops.device_dump)
- 		return -EIO;
- 
--	priv->adapter->if_ops.fw_dump(priv->adapter);
-+	priv->adapter->if_ops.device_dump(priv->adapter);
- 
- 	return 0;
- }
-@@ -885,7 +885,7 @@ static const struct file_operations mwifiex_dfs_##name##_fops = {       \
- MWIFIEX_DFS_FILE_READ_OPS(info);
- MWIFIEX_DFS_FILE_READ_OPS(debug);
- MWIFIEX_DFS_FILE_READ_OPS(getlog);
--MWIFIEX_DFS_FILE_READ_OPS(fw_dump);
-+MWIFIEX_DFS_FILE_READ_OPS(device_dump);
- MWIFIEX_DFS_FILE_OPS(regrdwr);
- MWIFIEX_DFS_FILE_OPS(rdeeprom);
- MWIFIEX_DFS_FILE_OPS(memrw);
-@@ -913,7 +913,7 @@ mwifiex_dev_debugfs_init(struct mwifiex_private *priv)
- 	MWIFIEX_DFS_ADD_FILE(getlog);
- 	MWIFIEX_DFS_ADD_FILE(regrdwr);
- 	MWIFIEX_DFS_ADD_FILE(rdeeprom);
--	MWIFIEX_DFS_ADD_FILE(fw_dump);
-+	MWIFIEX_DFS_ADD_FILE(device_dump);
- 	MWIFIEX_DFS_ADD_FILE(memrw);
- 	MWIFIEX_DFS_ADD_FILE(hscfg);
- 	MWIFIEX_DFS_ADD_FILE(histogram);
-diff --git a/drivers/net/wireless/mwifiex/ethtool.c b/drivers/net/wireless/mwifiex/ethtool.c
-index a6b3b41..c78bf0a 100644
---- a/drivers/net/wireless/mwifiex/ethtool.c
-+++ b/drivers/net/wireless/mwifiex/ethtool.c
-@@ -71,7 +71,7 @@ mwifiex_get_dump_flag(struct net_device *dev, struct ethtool_dump *dump)
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct memory_type_mapping *entry;
- 
--	if (!adapter->if_ops.fw_dump)
-+	if (!adapter->if_ops.device_dump)
- 		return -ENOTSUPP;
- 
- 	dump->flag = adapter->curr_mem_idx;
-@@ -97,7 +97,7 @@ mwifiex_get_dump_data(struct net_device *dev, struct ethtool_dump *dump,
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct memory_type_mapping *entry;
- 
--	if (!adapter->if_ops.fw_dump)
-+	if (!adapter->if_ops.device_dump)
- 		return -ENOTSUPP;
- 
- 	if (adapter->curr_mem_idx == MWIFIEX_DRV_INFO_IDX) {
-@@ -109,7 +109,7 @@ mwifiex_get_dump_data(struct net_device *dev, struct ethtool_dump *dump,
- 
- 	if (adapter->curr_mem_idx == MWIFIEX_FW_DUMP_IDX) {
- 		mwifiex_dbg(adapter, ERROR,
--			    "firmware dump in progress!!\n");
-+			    "device dump in progress!!\n");
- 		return -EBUSY;
- 	}
- 
-@@ -132,7 +132,7 @@ static int mwifiex_set_dump(struct net_device *dev, struct ethtool_dump *val)
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 
--	if (!adapter->if_ops.fw_dump)
-+	if (!adapter->if_ops.device_dump)
- 		return -ENOTSUPP;
- 
- 	if (val->flag == MWIFIEX_DRV_INFO_IDX) {
-@@ -142,13 +142,13 @@ static int mwifiex_set_dump(struct net_device *dev, struct ethtool_dump *val)
- 
- 	if (adapter->curr_mem_idx == MWIFIEX_FW_DUMP_IDX) {
- 		mwifiex_dbg(adapter, ERROR,
--			    "firmware dump in progress!!\n");
-+			    "device dump in progress!!\n");
- 		return -EBUSY;
- 	}
- 
- 	if (val->flag == MWIFIEX_FW_DUMP_IDX) {
- 		adapter->curr_mem_idx = val->flag;
--		adapter->if_ops.fw_dump(adapter);
-+		adapter->if_ops.device_dump(adapter);
- 		return 0;
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 3e7774f..b7fbc2c 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -873,7 +873,7 @@ mwifiex_tx_timeout(struct net_device *dev)
- 	}
- }
- 
--void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter)
-+void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter)
- {
- 	void *p;
- 	char drv_version[64];
-@@ -980,7 +980,7 @@ void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter)
- 	adapter->drv_info_size = p - adapter->drv_info_dump;
- 	mwifiex_dbg(adapter, MSG, "===mwifiex driverinfo dump end===\n");
- }
--EXPORT_SYMBOL_GPL(mwifiex_dump_drv_info);
-+EXPORT_SYMBOL_GPL(mwifiex_drv_info_dump);
- 
- /*
-  * CFG802.11 network device handler for statistics retrieval.
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 2f55161..01111fe 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -499,7 +499,7 @@ enum rdwr_status {
- };
- 
- enum mwifiex_iface_work_flags {
--	MWIFIEX_IFACE_WORK_FW_DUMP,
-+	MWIFIEX_IFACE_WORK_DEVICE_DUMP,
- 	MWIFIEX_IFACE_WORK_CARD_RESET,
- };
- 
-@@ -789,8 +789,8 @@ struct mwifiex_if_ops {
- 	int (*init_fw_port) (struct mwifiex_adapter *);
- 	int (*dnld_fw) (struct mwifiex_adapter *, struct mwifiex_fw_image *);
- 	void (*card_reset) (struct mwifiex_adapter *);
--	void (*fw_dump)(struct mwifiex_adapter *);
- 	int (*reg_dump)(struct mwifiex_adapter *, char *);
-+	void (*device_dump)(struct mwifiex_adapter *);
- 	int (*clean_pcie_ring) (struct mwifiex_adapter *adapter);
- 	void (*iface_work)(struct work_struct *work);
- 	void (*submit_rem_rx_urbs)(struct mwifiex_adapter *adapter);
-@@ -1484,7 +1484,7 @@ void mwifiex_hist_data_add(struct mwifiex_private *priv,
- u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
- 			    u8 rx_rate, u8 ht_info);
- 
--void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter);
-+void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter);
- void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
- void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
- 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 86ed396..3a99368 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -2305,7 +2305,7 @@ mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
- }
- 
- /* This function dump firmware memory to file */
--static void mwifiex_pcie_fw_dump_work(struct mwifiex_adapter *adapter)
-+static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *creg = card->pcie.reg;
-@@ -2316,8 +2316,6 @@ static void mwifiex_pcie_fw_dump_work(struct mwifiex_adapter *adapter)
- 	int ret;
- 	static char *env[] = { "DRIVER=mwifiex_pcie", "EVENT=fw_dump", NULL };
- 
--	mwifiex_dump_drv_info(adapter);
--
- 	if (!card->pcie.can_dump_fw)
- 		return;
- 
-@@ -2419,24 +2417,30 @@ done:
- 	adapter->curr_mem_idx = 0;
- }
- 
-+static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
-+{
-+	mwifiex_drv_info_dump(adapter);
-+	mwifiex_pcie_fw_dump(adapter);
-+}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 4ec9811..65efb14 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -511,11 +511,9 @@ static int brcmf_msgbuf_query_dcmd(struct brcmf_pub *drvr, int ifidx,
+ 				     msgbuf->rx_pktids,
+ 				     msgbuf->ioctl_resp_pktid);
+ 	if (msgbuf->ioctl_resp_ret_len != 0) {
+-		if (!skb) {
+-			brcmf_err("Invalid packet id idx recv'd %d\n",
+-				  msgbuf->ioctl_resp_pktid);
++		if (!skb)
+ 			return -EBADF;
+-		}
 +
- static unsigned long iface_work_flags;
- static struct mwifiex_adapter *save_adapter;
- static void mwifiex_pcie_work(struct work_struct *work)
- {
--	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_FW_DUMP,
-+	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
- 			       &iface_work_flags))
--		mwifiex_pcie_fw_dump_work(save_adapter);
-+		mwifiex_pcie_device_dump_work(save_adapter);
- }
- 
- static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
- /* This function dumps FW information */
--static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
-+static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
- {
- 	save_adapter = adapter;
--	if (test_bit(MWIFIEX_IFACE_WORK_FW_DUMP, &iface_work_flags))
-+	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags))
+ 		memcpy(buf, skb->data, (len < msgbuf->ioctl_resp_ret_len) ?
+ 				       len : msgbuf->ioctl_resp_ret_len);
+ 	}
+@@ -874,10 +872,8 @@ brcmf_msgbuf_process_txstatus(struct brcmf_msgbuf *msgbuf, void *buf)
+ 	flowid -= BRCMF_NROF_H2D_COMMON_MSGRINGS;
+ 	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
+ 				     msgbuf->tx_pktids, idx);
+-	if (!skb) {
+-		brcmf_err("Invalid packet id idx recv'd %d\n", idx);
++	if (!skb)
  		return;
+-	}
  
--	set_bit(MWIFIEX_IFACE_WORK_FW_DUMP, &iface_work_flags);
-+	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags);
+ 	set_bit(flowid, msgbuf->txstatus_done_map);
+ 	commonring = msgbuf->flowrings[flowid];
+@@ -1156,6 +1152,8 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
  
- 	schedule_work(&pcie_work);
- }
-@@ -2673,7 +2677,7 @@ static struct mwifiex_if_ops pcie_ops = {
- 	.cleanup_mpa_buf =		NULL,
- 	.init_fw_port =			mwifiex_pcie_init_fw_port,
- 	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
--	.fw_dump =			mwifiex_pcie_fw_dump,
-+	.device_dump =			mwifiex_pcie_device_dump,
- };
+ 	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
+ 				     msgbuf->rx_pktids, idx);
++	if (!skb)
++		return;
  
- /*
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 467ee9a..1f32c02 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -2177,7 +2177,7 @@ rdwr_status mwifiex_sdio_rdwr_firmware(struct mwifiex_adapter *adapter,
- }
- 
- /* This function dump firmware memory to file */
--static void mwifiex_sdio_fw_dump_work(struct mwifiex_adapter *adapter)
-+static void mwifiex_sdio_fw_dump(struct mwifiex_adapter *adapter)
- {
- 	struct sdio_mmc_card *card = adapter->card;
- 	int ret = 0;
-@@ -2187,8 +2187,6 @@ static void mwifiex_sdio_fw_dump_work(struct mwifiex_adapter *adapter)
- 	u32 memory_size;
- 	static char *env[] = { "DRIVER=mwifiex_sdio", "EVENT=fw_dump", NULL };
- 
--	mwifiex_dump_drv_info(adapter);
--
- 	if (!card->can_dump_fw)
- 		return;
- 
-@@ -2306,11 +2304,17 @@ done:
- 	adapter->curr_mem_idx = 0;
- }
- 
-+static void mwifiex_sdio_device_dump_work(struct mwifiex_adapter *adapter)
-+{
-+	mwifiex_drv_info_dump(adapter);
-+	mwifiex_sdio_fw_dump(adapter);
-+}
-+
- static void mwifiex_sdio_work(struct work_struct *work)
- {
--	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_FW_DUMP,
-+	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
- 			       &iface_work_flags))
--		mwifiex_sdio_fw_dump_work(save_adapter);
-+		mwifiex_sdio_device_dump_work(save_adapter);
- 	if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
- 			       &iface_work_flags))
- 		mwifiex_sdio_card_reset_work(save_adapter);
-@@ -2330,13 +2334,13 @@ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
- }
- 
- /* This function dumps FW information */
--static void mwifiex_sdio_fw_dump(struct mwifiex_adapter *adapter)
-+static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
- {
- 	save_adapter = adapter;
--	if (test_bit(MWIFIEX_IFACE_WORK_FW_DUMP, &iface_work_flags))
-+	if (test_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags))
- 		return;
- 
--	set_bit(MWIFIEX_IFACE_WORK_FW_DUMP, &iface_work_flags);
-+	set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags);
- 	schedule_work(&sdio_work);
- }
- 
-@@ -2453,8 +2457,8 @@ static struct mwifiex_if_ops sdio_ops = {
- 	.cmdrsp_complete = mwifiex_sdio_cmdrsp_complete,
- 	.event_complete = mwifiex_sdio_event_complete,
- 	.card_reset = mwifiex_sdio_card_reset,
--	.fw_dump = mwifiex_sdio_fw_dump,
- 	.reg_dump = mwifiex_sdio_reg_dump,
-+	.device_dump = mwifiex_sdio_device_dump,
- 	.deaggr_pkt = mwifiex_deaggr_sdio_pkt,
- };
- 
+ 	if (data_offset)
+ 		skb_pull(skb, data_offset);
 -- 
-1.8.1.4
+1.9.1
 
