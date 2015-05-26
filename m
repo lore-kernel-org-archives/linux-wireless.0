@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39634 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515AbbEaDDk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 May 2015 23:03:40 -0400
-Date: Sun, 31 May 2015 11:53:47 +0900
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Haggi Eran <haggai.eran@gmail.com>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150531025347.GA8074@kroah.com> (sfid-20150531_050347_931995_1C142858)
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
- <55634793.4050002@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55634793.4050002@lwfinger.net>
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751990AbbEZTSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:12 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/39] iwlwifi: pcie: simplify return value
+Date: Tue, 26 May 2015 22:17:21 +0300
+Message-Id: <1432667872-18092-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211821_888944_4BBA16A1)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2015 at 11:02:27AM -0500, Larry Finger wrote:
-> On 05/23/2015 04:16 PM, Larry Finger wrote:
-> >The driver is reporting a warning at kernel/time/timer.c:1096 due to calling
-> >del_timer_sync() while in interrupt mode. Such warnings are fixed by calling
-> >del_timer() instead.
-> >
-> >Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> >Cc: Stable <stable@vger.kernel.org>
-> >Cc: Haggi Eran <haggai.eran@gmail.com>
-> >---
-> 
-> Greg,
-> 
-> Please drop this patch. The same fixes were submitted as
-> https://lkml.org/lkml/2015/5/15/226.
+This was spot by Coccinelle.
 
-That's not working for me at the moment, what was the subject: name?  I
-think I already applied it to the testing tree...
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index dd1f828..d392ef4 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -973,12 +973,8 @@ static int iwl_pcie_load_given_ucode_8000(struct iwl_trans *trans,
+ 		return ret;
+ 
+ 	/* load to FW the binary sections of CPU2 */
+-	ret = iwl_pcie_load_cpu_sections_8000(trans, image, 2,
+-					      &first_ucode_section);
+-	if (ret)
+-		return ret;
+-
+-	return 0;
++	return iwl_pcie_load_cpu_sections_8000(trans, image, 2,
++					       &first_ucode_section);
+ }
+ 
+ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+-- 
+2.1.4
 
-greg k-h
