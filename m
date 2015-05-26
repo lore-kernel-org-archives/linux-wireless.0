@@ -1,50 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27713 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932420AbbENPMn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 11:12:43 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Liu CF/TW <cfliu.tw@gmail.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	<linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param for raw tx injection, sw crypto support.
-References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com>
-	<873837qo6l.fsf@kamboji.qca.qualcomm.com>
-	<554CE438.5000208@candelatech.com>
-	<CAG5N3qFB=yZJYSokUqF2=eNcS5SoCOntOyan6_OuahtFF5r=Bw@mail.gmail.com>
-	<871tinjosq.fsf@kamboji.qca.qualcomm.com>
-	<5550D629.2090501@candelatech.com>
-	<CAG5N3qE6nA2oEhR5Zk8sS331-ycM+jZLBy2BeGPX0ueHqvJ6Kg@mail.gmail.com>
-Date: Thu, 14 May 2015 18:12:36 +0300
-In-Reply-To: <CAG5N3qE6nA2oEhR5Zk8sS331-ycM+jZLBy2BeGPX0ueHqvJ6Kg@mail.gmail.com>
-	(Liu CF's message of "Tue, 12 May 2015 15:44:29 -0700")
-Message-ID: <87oalnchwb.fsf@kamboji.qca.qualcomm.com> (sfid-20150514_171248_056907_18775A1B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga02.intel.com ([134.134.136.20]:44025 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751953AbbEZTSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:02 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>, <stable@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/39] iwlwifi: pcie: fix tracking of cmd_in_flight
+Date: Tue, 26 May 2015 22:17:16 +0300
+Message-Id: <1432667872-18092-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_212056_572628_7621F387)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Liu CF/TW" <cfliu.tw@gmail.com> writes:
+From: Ilan Peer <ilan.peer@intel.com>
 
-> I am going to propose just one single module parameter control: enc_mode
->
-> - enc_mode = 0: Use HW crypto (default),
->
->   Driver behavior:
->      - ath10k driver uses native WiFi mode for both Tx/Rx.
->      - ath10k driver configures key to HW.
->      Given HW key descriptor is configured, mac80211 would offload Tx
-> encryption to HW and only do Rx decryption (by mac80211) if HW failed
-> to do it.
+The cmd_in_flight tracking was introduced to workaround faulty
+power management hardware, by having the driver keep the NIC
+awake as long as there are commands in flight. However, some of
+the code handling this workaround was unconditionally executed,
+which resulted with an inconsistent state where the driver assumed
+that the NIC was awake although it wasn't.
 
-But isn't the point here to use 802.11 frames ("raw mode")? Then why
-name the module paramater as enc_mode? I think that's confusing.
+Fix this by renaming 'cmd_in_flight' to 'cmd_hold_nic_awake' and
+handling the NIC requested awake state only for hardwares for
+which the workaround is needed.
 
-And to me enc_mode doesn't tell much, my first thought was "encoding
-mode". Wouldn't cryptmode tell more to the user?
+CC: <stable@vger.kernel.org> [4.1]
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/internal.h |  6 +++---
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |  4 ++--
+ drivers/net/wireless/iwlwifi/pcie/tx.c       | 23 +++++++++--------------
+ 3 files changed, 14 insertions(+), 19 deletions(-)
 
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 01996c9..376b84e 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -1,7 +1,7 @@
+ /******************************************************************************
+  *
+- * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2003 - 2015 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portions of the ieee80211 subsystem header files.
+@@ -320,7 +320,7 @@ struct iwl_trans_pcie {
+ 
+ 	/*protect hw register */
+ 	spinlock_t reg_lock;
+-	bool cmd_in_flight;
++	bool cmd_hold_nic_awake;
+ 	bool ref_cmd_in_flight;
+ 
+ 	/* protect ref counter */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index d894338..1cb1204 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1392,7 +1392,7 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent,
+ 
+ 	spin_lock_irqsave(&trans_pcie->reg_lock, *flags);
+ 
+-	if (trans_pcie->cmd_in_flight)
++	if (trans_pcie->cmd_hold_nic_awake)
+ 		goto out;
+ 
+ 	/* this bit wakes up the NIC */
+@@ -1458,7 +1458,7 @@ static void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans,
+ 	 */
+ 	__acquire(&trans_pcie->reg_lock);
+ 
+-	if (trans_pcie->cmd_in_flight)
++	if (trans_pcie->cmd_hold_nic_awake)
+ 		goto out;
+ 
+ 	__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 06952aa..5ef8044 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1039,18 +1039,14 @@ static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans,
+ 		iwl_trans_pcie_ref(trans);
+ 	}
+ 
+-	if (trans_pcie->cmd_in_flight)
+-		return 0;
+-
+-	trans_pcie->cmd_in_flight = true;
+-
+ 	/*
+ 	 * wake up the NIC to make sure that the firmware will see the host
+ 	 * command - we will let the NIC sleep once all the host commands
+ 	 * returned. This needs to be done only on NICs that have
+ 	 * apmg_wake_up_wa set.
+ 	 */
+-	if (trans->cfg->base_params->apmg_wake_up_wa) {
++	if (trans->cfg->base_params->apmg_wake_up_wa &&
++	    !trans_pcie->cmd_hold_nic_awake) {
+ 		__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
+ 					 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
+@@ -1064,10 +1060,10 @@ static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans,
+ 		if (ret < 0) {
+ 			__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
+ 					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-			trans_pcie->cmd_in_flight = false;
+ 			IWL_ERR(trans, "Failed to wake NIC for hcmd\n");
+ 			return -EIO;
+ 		}
++		trans_pcie->cmd_hold_nic_awake = true;
+ 	}
+ 
+ 	return 0;
+@@ -1085,15 +1081,14 @@ static int iwl_pcie_clear_cmd_in_flight(struct iwl_trans *trans)
+ 		iwl_trans_pcie_unref(trans);
+ 	}
+ 
+-	if (WARN_ON(!trans_pcie->cmd_in_flight))
+-		return 0;
+-
+-	trans_pcie->cmd_in_flight = false;
++	if (trans->cfg->base_params->apmg_wake_up_wa) {
++		if (WARN_ON(!trans_pcie->cmd_hold_nic_awake))
++			return 0;
+ 
+-	if (trans->cfg->base_params->apmg_wake_up_wa)
++		trans_pcie->cmd_hold_nic_awake = false;
+ 		__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
+-					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-
++					   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++	}
+ 	return 0;
+ }
+ 
 -- 
-Kalle Valo
+2.1.4
+
