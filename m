@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:35012 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbbEIJLr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 05:11:47 -0400
-Received: by widdi4 with SMTP id di4so54387531wid.0
-        for <linux-wireless@vger.kernel.org>; Sat, 09 May 2015 02:11:45 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:42236 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754046AbbEZOK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 10:10:29 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Juston Li <juston.h.li@gmail.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: fix sparse warning
+References: <1432357384-16665-1-git-send-email-juston.h.li@gmail.com>
+Date: Tue, 26 May 2015 10:10:21 -0400
+In-Reply-To: <1432357384-16665-1-git-send-email-juston.h.li@gmail.com> (Juston
+	Li's message of "Fri, 22 May 2015 22:03:04 -0700")
+Message-ID: <wrfjegm34egi.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150526_161051_683785_4BD6D98E)
 MIME-Version: 1.0
-In-Reply-To: <87pp6bp6jy.fsf@kamboji.qca.qualcomm.com>
-References: <1430841518-3932-1-git-send-email-ap420073@gmail.com>
-	<87pp6bp6jy.fsf@kamboji.qca.qualcomm.com>
-Date: Sat, 9 May 2015 18:11:45 +0900
-Message-ID: <CAMArcTW2qRiM4dVJQDDXJSuLEn6-GGJD4PJBTfhDDDOs+MxRrQ@mail.gmail.com> (sfid-20150509_111150_519483_794ADBA5)
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Modify REG_BCN_MAX_ERR related code.
-From: Taehee Yoo <ap420073@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-05-08 22:01 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
-> Taehee Yoo <ap420073@gmail.com> writes:
+Juston Li <juston.h.li@gmail.com> writes:
+> change cast to __le16 to fix the following warning:
+> drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:1488:20: warning: cast to restricted __le16
 >
->> 1. Remove setting REG_BCN_MAX_ERR code in _rtl92cu_set_media_status().
->> Initialization routine set REG_BCN_MAX_ERR to 0xFF.
->> also _rtl92cu_set_media_status set REG_BCN_MAX_ERR to same value.
->> so i remove this code.
->>
->> 2. Remove rtl92c_init_beacon_max_error's parameter.
->> because parameter "infra_mode" is not used.
->>
->> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
->
-> Please split the patches into two. Having a numbered list of changes in
-> the commit log is a strong indication that the patch should be split
-> into smaller patches.
->
-> --
-> Kalle Valo
+> Signed-off-by: Juston Li <juston.h.li@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thank you for your review!
-I'll resend two patchs.
+Looks OK to me
+
+Jes
+
+>
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> index 04d0183..e23af8e 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> @@ -1485,7 +1485,7 @@ void Hal_EfuseParseIDCode(struct rtw_adapter *padapter, u8 *hwinfo)
+>  	u16 EEPROMId;
+>  
+>  	/*  Checl 0x8129 again for making sure autoload status!! */
+> -	EEPROMId = le16_to_cpu(*((u16 *) hwinfo));
+> +	EEPROMId = le16_to_cpu(*((__le16 *) hwinfo));
+>  	if (EEPROMId != RTL_EEPROM_ID) {
+>  		DBG_8723A("EEPROM ID(%#x) is invalid!!\n", EEPROMId);
+>  		pEEPROM->bautoload_fail_flag = true;
