@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35369 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750839AbbEYEnC (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:38097 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754019AbbEZOA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 00:43:02 -0400
-Date: Mon, 25 May 2015 10:12:50 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: haggai.eran@gmail.com
-Cc: gregkh@linuxfoundation.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Stable <stable@vger.kernel.org>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150525044250.GA3385@sudip-PC> (sfid-20150525_064312_722326_5EFA1AED)
-Reply-To: 1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 26 May 2015 10:00:28 -0400
+Received: by wichy4 with SMTP id hy4so83047098wic.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 07:00:27 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: add missing firmware declarations
+Date: Tue, 26 May 2015 13:09:22 +0200
+Message-Id: <1432638562-12954-1-git-send-email-michal.kazior@tieto.com> (sfid-20150526_160032_256741_C2406398)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->I haven't been using kernel v4.1 so I haven't seen this warning, but looking
->at the code it seems to originate from the two recent patches to remove
->_cancel_timer and _cancel_timer_ex. I see that there's another patch in lkml [1]
->that changes del_timer_sync back to del_timer in more places. Perhaps it
->could prevent other warnings like this in the future.
+This could lead userspace initram images getting
+built without necessary firmware files included
+leading to probing failures of ath10k on boot with
+QCA61X4.
 
-_cancel_timer and _cancel_timer_ex both were internally using del_timer,
-and the issue was reported in bugzilla. I have given the reference of the
-bugzilla in my patch in lkml.
-I have changed the reference of del_timer_sync to del_timer in all places
-which were in interrupt context, in some places it was not removed as
-those were not in interrupt context.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-regards
-sudip
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 969a1231800e..d88be9f8c2d3 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2790,8 +2790,10 @@ MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_BOARD_DATA_FILE);
+ 
+ /* QCA6174 2.1 firmware files */
+ MODULE_FIRMWARE(QCA6174_HW_2_1_FW_DIR "/" ATH10K_FW_API4_FILE);
++MODULE_FIRMWARE(QCA6174_HW_2_1_FW_DIR "/" ATH10K_FW_API5_FILE);
+ MODULE_FIRMWARE(QCA6174_HW_2_1_FW_DIR "/" QCA6174_HW_2_1_BOARD_DATA_FILE);
+ 
+ /* QCA6174 3.1 firmware files */
+ MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_FW_API4_FILE);
++MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_FW_API5_FILE);
+ MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" QCA6174_HW_3_0_BOARD_DATA_FILE);
+-- 
+2.1.4
+
