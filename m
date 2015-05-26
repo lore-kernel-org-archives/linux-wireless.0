@@ -1,126 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3325 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755659AbbE2L1f (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:35957 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbbEZOZX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:27:35 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBRYx9009961
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:35 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5un9b-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:35 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv3 03/16] mwifiex: support AP reset after bss_stop
-Date: Fri, 29 May 2015 22:26:24 +0530
-Message-ID: <1432918598-27769-4-git-send-email-patila@marvell.com> (sfid-20150529_132738_053722_1E655712)
-In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
-References: <1432918598-27769-1-git-send-email-patila@marvell.com>
+	Tue, 26 May 2015 10:25:23 -0400
+Received: by pdfh10 with SMTP id h10so91941432pdf.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 07:25:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Tue, 26 May 2015 12:09:51 +0200
+Message-ID: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com> (sfid-20150526_162526_842048_ECF568D4)
+Subject: wl18xx: wlconf kernel compatibility
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "Machani, Yaniv" <yanivma@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Marc Kleine-Budde <mkl@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would enable clearing of FW bss data structures when AP
-operations are stopped.
+How do I know, which wlconf version is compatible with which kernel
+version? I have following problem:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
- drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
- drivers/net/wireless/mwifiex/fw.h          |  1 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
- drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
- 5 files changed, 19 insertions(+), 2 deletions(-)
+I have *.INI file for my particular WLAN chip. This file will be used
+to produce wl18xx-conf.bin. The size of this file will be check during
+device initialization. Depending on which kernel version is used the
+size of the required file differs. For example kernel 3.18 requires
+wl18xx-conf.bin to have 1221 bytes, 4.1 expects 1226 bytes. Recent
+wlconf (git://git.ti.com/wilink8-wlan/18xx-ti-utils.git) produces 1229
+bytes files.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3a14d3a..d47799a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		return -1;
- 	}
- 
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "Failed to reset BSS\n");
-+		return -1;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index a1de83f..b5033d1 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		case HostCmd_CMD_UAP_BSS_START:
- 		case HostCmd_CMD_UAP_BSS_STOP:
- 		case HostCmd_CMD_UAP_STA_DEAUTH:
-+		case HOST_CMD_APCMD_SYS_RESET:
- 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
- 						      cmd_oid, data_buf,
- 						      cmd_ptr);
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index cf386bc..45822a8 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_RSSI_INFO                         0x00a4
- #define HostCmd_CMD_FUNC_INIT                         0x00a9
- #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
-+#define HOST_CMD_APCMD_SYS_RESET                      0x00af
- #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
- #define HostCmd_CMD_UAP_BSS_START                     0x00b1
- #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index aa5b9a3..f20a09e 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 		break;
- 	case HostCmd_CMD_UAP_STA_DEAUTH:
- 		break;
-+	case HOST_CMD_APCMD_SYS_RESET:
-+		break;
- 	case HostCmd_CMD_MEF_CFG:
- 		break;
- 	case HostCmd_CMD_COALESCE_CFG:
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index a4ae283..0a3297e 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		break;
- 	case HostCmd_CMD_UAP_BSS_START:
- 	case HostCmd_CMD_UAP_BSS_STOP:
-+	case HOST_CMD_APCMD_SYS_RESET:
- 		cmd->command = cpu_to_le16(cmd_no);
- 		cmd->size = cpu_to_le16(S_DS_GEN);
- 		break;
-@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--		mwifiex_dbg(priv->adapter, ERROR,
--			    "Failed to stop the BSS\n");
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
-+		return -1;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
- 		return -1;
- 	}
- 
--- 
-1.8.1.4
+How should I determine correct wlconf version?
 
+Regards,
+Yegor
