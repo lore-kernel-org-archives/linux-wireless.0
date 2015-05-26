@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:35515 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbbEFGcq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 02:32:46 -0400
-Date: Wed, 6 May 2015 07:32:42 +0100
-From: Okash Khawaja <okash.khawaja@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: joe@perches.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes
- inside switch-case
-Message-ID: <20150506063241.GA3042@bytefire-computer> (sfid-20150506_083308_872162_70A41667)
-References: <20150505224020.GA3805@bytefire-computer>
- <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com>
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752018AbbEZTSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:24 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/39] iwlwifi: mvm: Configure agg. queue before assigning it to STA
+Date: Tue, 26 May 2015 22:17:27 +0300
+Message-Id: <1432667872-18092-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211828_390501_E06E18C6)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 06, 2015 at 07:59:04AM +0300, Kalle Valo wrote:
-> Okash Khawaja <okash.khawaja@gmail.com> writes:
-> 
-> > The PCI cache line size value was being compared against decimal values prefixed with 0x.
-> >
-> > Fixed the literals to use the correct hex values.
-> >
-> >
-> > Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
-> 
-> [...]
-> 
-> > @@ -1101,10 +1101,10 @@ static void adm8211_hw_init(struct ieee80211_hw *dev)
-> >  		case  0x8:
-> >  			reg |= (0x1 << 14);
-> >  			break;
-> > -		case 0x16:
-> > +		case 0x10:
-> >  			reg |= (0x2 << 14);
-> >  			break;
-> > -		case 0x32:
-> > +		case 0x20:
-> >  			reg |= (0x3 << 14);
-> >  			break;
-> >  		default:
-> 
-> Did you test this? How certain can we be that this doesn't break
-> anything?
-> 
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-I didn't test it as that would require the hardware that I don't have at the moment. However, the value in `cline` is PCI cache line size, which is the CPU's cache line size. It is less likely for cache line sizes to be 22 or 50, and more likely for them to be 16 or 32. Also, as far as I understand (and I might be wrong here), cache line size is used for things like aligning DMA requests with CPU cache line, which improve performance but wouldn't break anything if the value doesn't match. In this case, we will fall through to the default case which leaves `reg` unchanged.
+In order to imeplement the extended VI session feature for Miracast, the FW
+requires to detect the VI queue. The detection of the VI queue is done when
+it is assigned to a STA with ADD_STA command, so by this time the FW expects
+the queue to be already configured (mapped to VI AC and aggregation enabled).
+Previously, the queue configuration was done after STA modificaton which
+broke the extended VI session feature and resulted in higher latencies.
+Fix this by calling iwl_mvm_enable_agg_txq before station modification.
 
-If there is a way to test it with a mock set up or if you still think we need to test this on real board, I'll be happy to try get the hardware. But I will need some guidance around that. Thanks.
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-> -- 
-> Kalle Valo
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 1845b79..d68dc69 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -5,8 +5,8 @@
+  *
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,8 +31,8 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1000,13 +1000,13 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ 	fifo = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
+ 
++	iwl_mvm_enable_agg_txq(mvm, queue, fifo, mvmsta->sta_id, tid,
++			       buf_size, ssn, wdg_timeout);
++
+ 	ret = iwl_mvm_sta_tx_agg(mvm, sta, tid, queue, true);
+ 	if (ret)
+ 		return -EIO;
+ 
+-	iwl_mvm_enable_agg_txq(mvm, queue, fifo, mvmsta->sta_id, tid,
+-			       buf_size, ssn, wdg_timeout);
+-
+ 	/*
+ 	 * Even though in theory the peer could have different
+ 	 * aggregation reorder buffer sizes for different sessions,
+-- 
+2.1.4
+
