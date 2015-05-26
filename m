@@ -1,68 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:44944 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758373AbbEaSCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 14:02:50 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [ANN] -14.ucode is available
-Date: Sun, 31 May 2015 18:02:46 +0000
-Message-ID: <1433095362.28501.9.camel@intel.com> (sfid-20150531_200254_864624_FDD0AAF0)
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="=-uJMdeFsKta7XezAPIVUu"
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:13034 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753327AbbEZNfI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 09:35:08 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4QDYnnf009579
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:07 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmahafq-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:07 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/6] mwifiex: fix SDIO firmware dump problem
+Date: Tue, 26 May 2015 06:34:27 -0700
+Message-ID: <1432647272-5734-2-git-send-email-akarwar@marvell.com> (sfid-20150526_153527_111963_98575514)
+In-Reply-To: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
+References: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-uJMdeFsKta7XezAPIVUu
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It's been observed that firmware doesn't go back to normal
+state when all firmware memories are dumped. As a result,
+further commands are blocked. This happens due to missing
+driver change of writing READ DONE to control register for
+SDIO interface.
 
-The new -14.ucode is already available in [1].
+This patch adds a missing change to fix the problem.
 
-Since you'll need iwlwifi-next tree [2] to use it, I still don't send
-the pull request to mainline linux-firmware.git. -14.ucode just finished
-its validation cycle, but experience shows that lots of fixes still get
-merged after the validation cycle  based on feedback from the field. So
-you are more than welcome to give it a try and let us know how it went.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-For those who don't want to use iwlwifi-next, you can use iwlwifi's
-backport tree that has been made available here [3]. You can take either
-the master branch, or the Core11 branch which is the stabilization
-branch that matches -14.ucode.
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index f4b1de7..a3d810b8 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -2241,6 +2241,13 @@ static void mwifiex_sdio_fw_dump_work(struct mwifiex_adapter *adapter)
+ 
+ 		if (memory_size == 0) {
+ 			mwifiex_dbg(adapter, DUMP, "Firmware dump Finished!\n");
++			ret = mwifiex_write_reg(adapter,
++						card->reg->fw_dump_ctrl,
++						FW_DUMP_READ_DONE);
++			if (ret) {
++				mwifiex_dbg(adapter, ERROR, "SDIO write err\n");
++				return;
++			}
+ 			break;
+ 		}
+ 
+-- 
+1.8.1.4
 
-Thank you
-
-[1]
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git/
-
-[2]
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-next.git/
-
-[3]
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
-
---=-uJMdeFsKta7XezAPIVUu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAABAgAGBQJVa0zCAAoJEC0Llv5uNjIBm/IP/2GZ4vp5Sjk3o2h9QpcUlOTy
-VgtA8Y57tz78Hip5JEUHjySWKvgBra9sJhYCXC0JSqCBbYWGc/A8TwJES+q9RzpY
-ZhPN1eu1YWZ5bCf9BAhe0sKSD4wsC7f5C3v2B+ep27DMsvdfayuM9k0EbnLfgO11
-WgKk0T4WWlSnu2jd2d0XBI+0cwW5V7UcUse0VgiYaYk0CKkNfQPeAou7OPHpfEtW
-IqcD+xb0iIwD1E2qZADqpi1TEZZ38EqVLpUNmRqSWVw19IwzrKtrYVHRlf4cn2eD
-E8Hgg98oiGDnBPlVTGnDWcNAqmE2kQZXS/TBOOwzcUHVe7GRvE3LGGOFv9mwReEm
-BpTc9UOubZIB2NDHfF43raF7RTyCkayj1LjDYNr6TY5P/X7sd/OqCe/wRS1+tof2
-zbbRX4lmvdK4lRJJ+fngxb305D8uVOpGrzaAtpVQYMEDuhIQiHMkC4VsuLX4UUeU
-CH62l42ECV7ei1h1hxFTvPPSt/WwYYo0R/6BhX2opynON+f+UmECgHiFFO3VVMY6
-x0hp3UxJnD2WDu4Qh1+IsjFrgftMdRKSEV7hhARWajO3E62Qt1SBOD9AVqZduTX4
-Yp47wl+ZUO2T94XrW52ysk7pS7lriVlrqFveJKyDwVYTYglKoLzYzY/23aW83Rfk
-bfGnz8bHOxnSIkd4NgOm
-=iUV2
------END PGP SIGNATURE-----
-
---=-uJMdeFsKta7XezAPIVUu--
