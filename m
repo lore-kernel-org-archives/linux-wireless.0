@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:13034 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753327AbbEZNfI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57917 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400AbbEZNwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:35:08 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4QDYnnf009579
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:07 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmahafq-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 06:35:07 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/6] mwifiex: fix SDIO firmware dump problem
-Date: Tue, 26 May 2015 06:34:27 -0700
-Message-ID: <1432647272-5734-2-git-send-email-akarwar@marvell.com> (sfid-20150526_153527_111963_98575514)
-In-Reply-To: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
-References: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
+	Tue, 26 May 2015 09:52:50 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2,
+ 1/2] adm8211: fix checkpatch errors for indentation and new line
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20150511115325.GA5092@bytefire-computer>
+To: Okash Khawaja <okash.khawaja@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20150526104802.E5F631416A0@smtp.codeaurora.org> (sfid-20150526_155350_298531_128289EA)
+Date: Tue, 26 May 2015 10:48:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's been observed that firmware doesn't go back to normal
-state when all firmware memories are dumped. As a result,
-further commands are blocked. This happens due to missing
-driver change of writing READ DONE to control register for
-SDIO interface.
 
-This patch adds a missing change to fix the problem.
+> This patch fixes these checkpatch.pl errors around a single switch-case
+> block:
+> 
+> ERROR: switch and case should be at the same indent
+> ERROR: trailing statements should be on next line
+> 
+> More specifically, the fix has been applied to the five occurances of
+> the errors listed below.
+> 
+> ERROR: switch and case should be at the same indent
+> #1100: FILE: adm8211.c:1100:
+> +               switch (cline) {
+> [...]
+> +                 default: reg |= (0x0 << 14);
+> 
+> ERROR: trailing statements should be on next line
+> #1101: FILE: adm8211.c:1101:
+> +               case  0x8: reg |= (0x1 << 14);
+> 
+> ERROR: trailing statements should be on next line
+> #1103: FILE: adm8211.c:1103:
+> +               case 0x16: reg |= (0x2 << 14);
+> 
+> ERROR: trailing statements should be on next line
+> #1105: FILE: adm8211.c:1105:
+> +               case 0x32: reg |= (0x3 << 14);
+> 
+> ERROR: trailing statements should be on next line
+> #1107: FILE: adm8211.c:1107:
+> +                 default: reg |= (0x0 << 14);
+> 
+> 
+> Signed-off-by: Okash Khawaja <okash.khawaja@gmail.com>
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index f4b1de7..a3d810b8 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -2241,6 +2241,13 @@ static void mwifiex_sdio_fw_dump_work(struct mwifiex_adapter *adapter)
- 
- 		if (memory_size == 0) {
- 			mwifiex_dbg(adapter, DUMP, "Firmware dump Finished!\n");
-+			ret = mwifiex_write_reg(adapter,
-+						card->reg->fw_dump_ctrl,
-+						FW_DUMP_READ_DONE);
-+			if (ret) {
-+				mwifiex_dbg(adapter, ERROR, "SDIO write err\n");
-+				return;
-+			}
- 			break;
- 		}
- 
--- 
-1.8.1.4
+f5c65f38912e adm8211: fix checkpatch errors for indentation and new line
+fe0a483ecf44 adm8211: fixed the possible pci cache line sizes inside switch-case
 
+Kalle Valo
