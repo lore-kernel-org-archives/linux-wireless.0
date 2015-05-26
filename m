@@ -1,52 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:37917 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753710AbbEOOoi (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:58534 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbbEZXkv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 10:44:38 -0400
-Received: by wicnf17 with SMTP id nf17so139869692wic.1
-        for <linux-wireless@vger.kernel.org>; Fri, 15 May 2015 07:44:37 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CAGRGNgWbmWCmKUN8gGEJ4eQSMd8QW8M9ij0_kK8jv3HpS1df0Q@mail.gmail.com>
-References: <1431693340-8861-1-git-send-email-linux@rempel-privat.de>
-	<CAGRGNgWbmWCmKUN8gGEJ4eQSMd8QW8M9ij0_kK8jv3HpS1df0Q@mail.gmail.com>
-Date: Fri, 15 May 2015 16:44:37 +0200
-Message-ID: <CA+icZUXYEqzjkC=u1njYqRreDr3SKDokgE=D1SGOr+rcj-B4Ug@mail.gmail.com> (sfid-20150515_164451_653377_863CE9D9)
-Subject: Re: [PATCH] ath9k: add phy.c
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=UTF-8
+	Tue, 26 May 2015 19:40:51 -0400
+Date: Tue, 26 May 2015 19:40:47 -0400 (EDT)
+Message-Id: <20150526.194047.730701928865644574.davem@davemloft.net> (sfid-20150527_014059_952750_620123E0)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2015-05-26
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1432625103.2141.5.camel@sipsolutions.net>
+References: <1432625103.2141.5.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 15, 2015 at 4:38 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Oleksij,
->
-> On Fri, May 15, 2015 at 10:35 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->> ... and move dup code from ar5008_phy.c and ar9002_phy.c to phy.c
->
-> A better subject might be:
->
-> ath9k: consolidate common phy functions
->
-> "phy.c" doesn't really mean anything to people outside the developers
-> of this particular driver.
->
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 26 May 2015 09:25:03 +0200
 
-Jupp.
+> Unfortunately I neglected to send this to you last week before our long
+> weekend.
+> 
+> These changes look fairly big, but they're fairly contained to the
+> remain-on- channel and AP_VLAN key handling code.
+> 
+> However, if you think you don't want to pull them into net any more at
+> this stage just let me know.
 
-Is a consolidation also possible/wise/doable also for phy.h?
-( I see this snippet in your new phy.c file... )
-...
-+#include "phy.h"
-+#include "ar9002_phy.h"
-...
-
-IOW, can ar9002_phy.h move into phy.h?
-
-- sed@ -
+This looks fine, pulled, thanks Johannes.
