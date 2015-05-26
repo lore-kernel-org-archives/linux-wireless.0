@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44193 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751249AbbE0XaZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 19:30:25 -0400
-Message-ID: <1432769411.6319.36.camel@decadent.org.uk> (sfid-20150528_013028_889444_B6978F77)
-Subject: Re: [PATCH] mac80211: fix kernel-doc comments in mac80211.h
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: andrey.konovalov@linaro.org, emmanuel.grumbach@intel.com,
-	linux-wireless@vger.kernel.org
-Date: Thu, 28 May 2015 00:30:11 +0100
-In-Reply-To: <1432127031.19214.9.camel@sipsolutions.net>
-References: <555a4e12.e323700a.26a6.ffff9e65@mx.google.com>
-	 (sfid-20150518_223947_537367_CC6BC263) <1432127031.19214.9.camel@sipsolutions.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-TN0HPgK+Hcy+zNKrVyqR"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751992AbbEZTSO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:14 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/39] iwlwifi: mvm: Add debugfs entry for Tx power limit
+Date: Tue, 26 May 2015 22:17:22 +0300
+Message-Id: <1432667872-18092-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211826_832950_624DB8B4)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
---=-TN0HPgK+Hcy+zNKrVyqR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Add debugfs entry for showing the different Tx power restrictions that are
+caused due to various reasons.
 
-On Wed, 2015-05-20 at 15:03 +0200, Johannes Berg wrote:
-> On Mon, 2015-05-18 at 23:39 +0300, andrey.konovalov@linaro.org wrote:
-> > Commits a818292 "mac80211: convert rssi_callback() to event_callback()"
-> > and a940909 "mac80211: notify the driver about authentication status"
-> > added two errors and one warning when building docs for the mac80211
-> > driver. Fix the kernel-doc comments so that the documentation targets
-> > could be built successfully again.
->=20
-> This was already fixed.
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-It's been one week and this is still broken in Linus's tree.  There was
-a fix for some of the other warnings, but I don't see these errors fixed
-anywhere.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index 5f37eab..5c8a65d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -6,7 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -32,7 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -190,6 +190,21 @@ static ssize_t iwl_dbgfs_pm_params_write(struct ieee80211_vif *vif, char *buf,
+ 	return ret ?: count;
+ }
+ 
++static ssize_t iwl_dbgfs_tx_pwr_lmt_read(struct file *file,
++					 char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct ieee80211_vif *vif = file->private_data;
++	char buf[64];
++	int bufsz = sizeof(buf);
++	int pos;
++
++	pos = scnprintf(buf, bufsz, "bss limit = %d\n",
++			vif->bss_conf.txpower);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++
+ static ssize_t iwl_dbgfs_pm_params_read(struct file *file,
+ 					char __user *user_buf,
+ 					size_t count, loff_t *ppos)
+@@ -607,6 +622,7 @@ static ssize_t iwl_dbgfs_rx_phyinfo_read(struct file *file,
+ 	} while (0)
+ 
+ MVM_DEBUGFS_READ_FILE_OPS(mac_params);
++MVM_DEBUGFS_READ_FILE_OPS(tx_pwr_lmt);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(pm_params, 32);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(bf_params, 256);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(low_latency, 10);
+@@ -641,6 +657,7 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		MVM_DEBUGFS_ADD_FILE_VIF(pm_params, mvmvif->dbgfs_dir, S_IWUSR |
+ 					 S_IRUSR);
+ 
++	MVM_DEBUGFS_ADD_FILE_VIF(tx_pwr_lmt, mvmvif->dbgfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE_VIF(mac_params, mvmvif->dbgfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE_VIF(low_latency, mvmvif->dbgfs_dir,
+ 				 S_IRUSR | S_IWUSR);
+-- 
+2.1.4
 
-Ben.
-
---=20
-Ben Hutchings
-It is a miracle that curiosity survives formal education. - Albert Einstein
-
---=-TN0HPgK+Hcy+zNKrVyqR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUAVWZTiOe/yOyVhhEJAQqrGRAApTkHaeievT86SCa4VGfH9nl3H+FlqvXk
-So8miWu1ynzggps1mjEfr++ZTsJESHcIPe9SygeKWj4JgdF0CRhwkakBj1xjP3lV
-GEs54+wNtrAgN5iN8eNaziLy4Oiisu3wldO47J/Puiu6FbbdCNFg/CL/iCGy5tzR
-f8h722I8+Q36sFyErc29Vqk1xuShomjiEanbVmudBBOj3qbNbR8+7Wi4xzuOM4J9
-KpuhOGUTa/BbvBfr2QHIjZLeKmrygUUkoqlr6lL2Gpvvb2YESjyQZKtxOJFAWwXr
-v7EgIkEkeBXahERqh9IqgT0FlCYKa5eWcmVETq9iYrcrO2B4JXzUDgVkcKF5rpO+
-aORZyaqz+t2EEs4aYXXWhmB4WuArXDq8PTM5umcOcpEzViTLox+OhKvpza2y94Fk
-CZ+dXWVJ6+LvwIEAdACc6K4U6O1yejqfx9KQZbrOcZJ49Qc+HoBSaqA6CT7prgdI
-3Yowy0R6FonwRm1TgCsMnFQ2WoZYnWJrD2u8CkA7KUSS/9gHxGVmch3rhGziEvoM
-ziYcp8+YKJi8wWM2PJZYEsiJWjHjBBniOo3XCw2DIBz/efoeyo1zl6Z38PNGpSOY
-NjMvVK2s5R1hD1A9a5ctnnv0TNC4iQhsWYoLhiaV8eIOeHNfWXjBXZCQmzF/zye8
-3WEmu9nuYe8=
-=MiWE
------END PGP SIGNATURE-----
-
---=-TN0HPgK+Hcy+zNKrVyqR--
