@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:35691 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294AbbEWFP1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 May 2015 01:15:27 -0400
-Received: by oihd6 with SMTP id d6so27563639oih.2
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 22:15:26 -0700 (PDT)
-Message-ID: <55600CEB.5080703@lwfinger.net> (sfid-20150523_071531_979317_9C810F3F)
-Date: Sat, 23 May 2015 00:15:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?windows-1252?Q?Michael_B=FCsch?= <m@bues.ch>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Fix EFUSE_ANA8M map value
-References: <20150521214421.15983b0a@milhouse>	<555E5433.7000904@lwfinger.net>	<20150522070035.711c6195@wiggum>	<555F8FDC.3040609@lwfinger.net> <20150522231300.200a2e00@wiggum>
-In-Reply-To: <20150522231300.200a2e00@wiggum>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752032AbbEZTSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:22 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/39] iwlwifi: mvm: handle device start failure correctly
+Date: Tue, 26 May 2015 22:17:26 +0300
+Message-Id: <1432667872-18092-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211827_453030_27648F5A)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2015 04:13 PM, Michael Büsch wrote:
-> On Fri, 22 May 2015 15:21:48 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> What does lsusb say about your device?
->> 7392:7811, which is an Edimax EW-7811Un
->
-> It is exactly this device.
-> Does yours also fail with vanilla kernel?
+From: Johannes Berg <johannes.berg@intel.com>
 
-No, it is able to scan and connect with the vanilla kernel, but it is not 
-terribly reliable with about 25% ping loss. I just got a report of a regression. 
-Kernel 4.0 fails whereas 3.19 works. I have been seeing a lot of patches from 
-various sources. I thought they were OK, but I will need to bisect.
+If the device fails to start correctly prior to loading the
+regular runtime firmware (after having run the INIT firmware),
+treat that error correctly by actually checking the return
+value of _iwl_trans_start_hw() and stopping the device again
+before returning an error.
 
-Some days I am sorry that I ever heard of Linux. :)
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Larry
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 0601445..2f76fb2 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -662,9 +662,9 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 		 * device that are triggered by the INIT firwmare (MFUART).
+ 		 */
+ 		_iwl_trans_stop_device(mvm->trans, false);
+-		_iwl_trans_start_hw(mvm->trans, false);
++		ret = _iwl_trans_start_hw(mvm->trans, false);
+ 		if (ret)
+-			return ret;
++			goto error;
+ 	}
+ 
+ 	if (iwlmvm_mod_params.init_dbg)
+-- 
+2.1.4
 
