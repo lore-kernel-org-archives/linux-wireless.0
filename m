@@ -1,98 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:48474 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbbESXiH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 19:38:07 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-	Wed, 20 May 2015 09:38:05 +1000
-Message-ID: <1432078625.4510.207.camel@linux.vnet.ibm.com> (sfid-20150520_013823_552763_9E4CF1F6)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Andy Lutomirski <luto@kernel.org>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	mricon@kernel.org, Kees Cook <keescook@chromium.org>
-Date: Tue, 19 May 2015 19:37:05 -0400
-In-Reply-To: <20150519221902.GQ23057@wotan.suse.de>
-References: <20150519200232.GM23057@wotan.suse.de>
-	 <1432072117.4510.180.camel@linux.vnet.ibm.com>
-	 <20150519221902.GQ23057@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752059AbbEZTSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 May 2015 15:18:31 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avraham Stern <avraham.stern@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/39] iwlwifi: mvm: print scanned channel list on scan iteration complete notification
+Date: Tue, 26 May 2015 22:17:31 +0300
+Message-Id: <1432667872-18092-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_213349_427107_4C6B2EA4)
+In-Reply-To: <1432667798.26624.3.camel@intel.com>
+References: <1432667798.26624.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-05-20 at 00:19 +0200, Luis R. Rodriguez wrote:
-> On Tue, May 19, 2015 at 05:48:37PM -0400, Mimi Zohar wrote:
-> > On Tue, 2015-05-19 at 22:02 +0200, Luis R. Rodriguez wrote:
-> > > David Howells has posted v4 of his series of supporting PKCS#7 for module
-> > > signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and after
-> > > some review and patch shuffling I think this is ready for patch form.  My own
-> > > series however depend on quite a bit of other pending changes, one series which
-> > > will go through Rusty's tree, another series of fixes on firmware_class which
-> > > should go through Greg's tree. I'll wait until all this and David's own patches
-> > > get merged before posting firmware PKCS#7 support. Before all this though in
-> > > preparation for fw signing one thing we should start to talk about more broadly
-> > > however is how linux-firmware binary file signing would work in practice and
-> > > what we need, and make sure folks are OK with all this.
-> > 
-> > Commit 13752fe "security: introduce kernel_fw_from_file hook" introduced
-> > a new security hook.  (IMA is on this hook as well.)  Have you
-> > considered using this hook?
-> 
-> Yes, the same hook is used here.
-> 
-> > Are there other places that this hook would need to be called?
-> 
-> Nope, it'd be called. Folks who do not want to use key signing stuff can use
-> their own preferred LSM hook just as module signing has the kernel module
-> signing infrastructure but also module LSM hooks. It'd be similar here for
-> firmware.
+From: Avraham Stern <avraham.stern@intel.com>
 
-When the kernel module signing signature verification was upstreamed,
-Rusty was not aware of IMA-appraisal -
-https://lkml.org/lkml/2013/1/22/20  In this case, not only is there a
-security hook, but the IMA hook exists as well.  To appraise firmware,
-add a line to the IMA policy containing "appraise func=FIRMWARE_CHECK".
-Similarly, to add a measurement to the measurement list, add a line to
-the IMA policy containing "measure func=FIRMWAE_CHECK". 
+When receiving scan iteration complete notification, print a list of
+the channels that have been scanned in this iteration.
+This is useful for debugging.
 
-> Now that we have LSM hooks stacked on the way perhaps this is more in line with
-> what Andy has envisioned for alternatives for module signature verification.
-> But then again since an LSM hook already exists for both modules and firmware
-> perhaps this is sufficient for what Andy envisions? That is if folks do not want
-> this signing thing just disable it and add use your preferred LSM module of choice?
-> 
-> Now granted -- if we envision this module signing infrastructure as an LSM hook
-> in and of itself perhaps we should LSM'ify it. Its not right now.
-> 
-> > > I think we need one change here, we'd need to ensure that such key could only
-> > > be used for vetting firmware files, not modules loaded.  The firmware_class
-> > > could for instance still use all the keys in system_trusted_keyring, which
-> > > would include the UEFI key db, but it does not seems reasonable to expect keys
-> > > used for fw signing to also go into system_trusted_keyring to also be used for
-> > > module signing.
-> > 
-> > I agree totally!  For this reason, IMA defined a separate trusted
-> > keyring to be used for verifying file signatures.
-> 
-> OK I'll add that to my TODO list here.
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-You'll probably want to create a new trusted firmware keyring.   By
-trusted, only signed keys by a key on the system_keyring can be added to
-the.ima keyring.  Using the "ca_keys" boot command line option a
-specific key on the system keyring can be specified.
-
-Mimi
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 7777d56..e859584 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -312,16 +312,35 @@ int iwl_mvm_max_scan_ie_len(struct iwl_mvm *mvm)
+ 	return max_ie_len;
+ }
+ 
++static u8 *iwl_mvm_dump_channel_list(struct iwl_scan_results_notif *res,
++				     int num_res, u8 *buf, size_t buf_size)
++{
++	int i;
++	u8 *pos = buf, *end = buf + buf_size;
++
++	for (i = 0; pos < end && i < num_res; i++)
++		pos += snprintf(pos, end - pos, " %u", res[i].channel);
++
++	/* terminate the string in case the buffer was too short */
++	*(buf + buf_size - 1) = '\0';
++
++	return buf;
++}
++
+ int iwl_mvm_rx_scan_offload_iter_complete_notif(struct iwl_mvm *mvm,
+ 						struct iwl_rx_cmd_buffer *rxb,
+ 						struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_lmac_scan_complete_notif *notif = (void *)pkt->data;
++	u8 buf[256];
+ 
+ 	IWL_DEBUG_SCAN(mvm,
+-		       "Scan offload iteration complete: status=0x%x scanned channels=%d\n",
+-		       notif->status, notif->scanned_channels);
++		       "Scan offload iteration complete: status=0x%x scanned channels=%d channels list: %s\n",
++		       notif->status, notif->scanned_channels,
++		       iwl_mvm_dump_channel_list(notif->results,
++						 notif->scanned_channels, buf,
++						 sizeof(buf)));
+ 	return 0;
+ }
+ 
+-- 
+2.1.4
 
