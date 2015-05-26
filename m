@@ -1,74 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:40383 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752018AbbEZTSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:18:18 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/39] iwlwifi: update thermal throttling values for 8000 devices
-Date: Tue, 26 May 2015 22:17:24 +0300
-Message-Id: <1432667872-18092-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211943_124782_294A1DC9)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+	id S1751085AbbEZDw3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 May 2015 23:52:29 -0400
+Message-ID: <5563EDF4.9030106@linux.intel.com> (sfid-20150526_055256_590988_DA44C8E0)
+Date: Tue, 26 May 2015 11:52:20 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: "brudley@broadcom.com" <brudley@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	"meuleman@broadcom.com" <meuleman@broadcom.com>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmfmac: prohibit ACPI power management for brcmfmac
+ driver
+References: <555016DC.804@linux.intel.com> <55598622.8060307@linux.intel.com> <555C4DA9.8020600@broadcom.com>
+In-Reply-To: <555C4DA9.8020600@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
 
-8000 devices have different thermal throttling values from previous
-generations.
 
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-8000.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+On 2015/5/20 17:02, Arend van Spriel wrote:
+> On 05/18/15 08:26, Fu, Zhonghui wrote:
+>>
+>> Hi guys,
+>>
+>> Any comments about this patch?
+>
+> My acked is already there. I have not been able to test it, but I assume you did.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index 75881f9..5dca838 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -122,6 +122,27 @@ static const struct iwl_ht_params iwl8000_ht_params = {
- 	.ht40_bands = BIT(IEEE80211_BAND_2GHZ) | BIT(IEEE80211_BAND_5GHZ),
- };
- 
-+static const struct iwl_tt_params iwl8000_tt_params = {
-+	.ct_kill_entry = 115,
-+	.ct_kill_exit = 93,
-+	.ct_kill_duration = 5,
-+	.dynamic_smps_entry = 111,
-+	.dynamic_smps_exit = 107,
-+	.tx_protection_entry = 112,
-+	.tx_protection_exit = 105,
-+	.tx_backoff = {
-+		{.temperature = 110, .backoff = 200},
-+		{.temperature = 111, .backoff = 600},
-+		{.temperature = 112, .backoff = 1200},
-+		{.temperature = 113, .backoff = 2000},
-+		{.temperature = 114, .backoff = 4000},
-+	},
-+	.support_ct_kill = true,
-+	.support_dynamic_smps = true,
-+	.support_tx_protection = true,
-+	.support_tx_backoff = true,
-+};
-+
- #define IWL_DEVICE_8000							\
- 	.ucode_api_max = IWL8000_UCODE_API_MAX,				\
- 	.ucode_api_ok = IWL8000_UCODE_API_OK,				\
-@@ -141,7 +162,8 @@ static const struct iwl_ht_params iwl8000_ht_params = {
- 	.smem_offset = IWL8260_SMEM_OFFSET,				\
- 	.smem_len = IWL8260_SMEM_LEN,					\
- 	.default_nvm_file_B_step = DEFAULT_NVM_FILE_FAMILY_8000B,	\
--	.default_nvm_file_C_step = DEFAULT_NVM_FILE_FAMILY_8000C
-+	.default_nvm_file_C_step = DEFAULT_NVM_FILE_FAMILY_8000C,	\
-+	.thermal_params = &iwl8000_tt_params
- 
- const struct iwl_cfg iwl8260_2n_cfg = {
- 	.name = "Intel(R) Dual Band Wireless N 8260",
--- 
-2.1.4
+Yes, I have verified this patch on ASUS T100TA.
+
+Thanks,
+Zhonghui
+>
+> Regards,
+> Arend
+>
+>> Thanks,
+>> Zhonghui
+>>
+>> On 2015/5/11 10:41, Fu, Zhonghui wrote:
+>>> ACPI will manage WiFi chip's power state during suspend/resume
+>>> process on some tablet platforms(such as ASUS T100TA). This is
+>>> not supported by brcmfmac driver now, and the context of WiFi
+>>> chip will be damaged after resume. This patch informs ACPI not
+>>> to manage WiFi chip's power state.
+>>>
+>>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>>> ---
+>>> Changes in v3:
+>>> - Have the assignment separate for the if statement.
+>>>
+>>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    9 +++++++++
+>>>   1 files changed, 9 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> index 9b508bd..c960a12 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> @@ -33,6 +33,7 @@
+>>>   #include<linux/suspend.h>
+>>>   #include<linux/errno.h>
+>>>   #include<linux/module.h>
+>>> +#include<linux/acpi.h>
+>>>   #include<net/cfg80211.h>
+>>>
+>>>   #include<defs.h>
+>>> @@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>>>       int err;
+>>>       struct brcmf_sdio_dev *sdiodev;
+>>>       struct brcmf_bus *bus_if;
+>>> +    struct device *dev;
+>>> +    struct acpi_device *adev;
+>>>
+>>>       brcmf_dbg(SDIO, "Enter\n");
+>>>       brcmf_dbg(SDIO, "Class=%x\n", func->class);
+>>> @@ -1121,6 +1124,12 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>>>       brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
+>>>       brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+>>>
+>>> +    /* prohibit ACPI power management for this device */
+>>> +    dev =&func->dev;
+>>> +    adev = ACPI_COMPANION(dev);
+>>> +    if (adev)
+>>> +        adev->flags.power_manageable = 0;
+>>> +
+>>>       /* Consume func num 1 but dont do anything with it. */
+>>>       if (func->num == 1)
+>>>           return 0;
+>>> -- 1.7.1
+>>>
+>>
+>
 
