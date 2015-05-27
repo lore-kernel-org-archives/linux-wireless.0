@@ -1,28 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60405 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092AbbEKJwG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 05:52:06 -0400
-Message-ID: <1431337921.1964.15.camel@sipsolutions.net> (sfid-20150511_115210_912154_EBE83A3A)
-Subject: Re: [PATCH] mac80211: IBSS, clear fast_sta when update rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 11 May 2015 11:52:01 +0200
-In-Reply-To: <1431337193-17472-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150511_113957_922464_EF6D0870)
-References: <1431337193-17472-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150511_113957_922464_EF6D0870)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp-2.httrack.com ([195.154.67.106]:40518 "EHLO
+	smtp-2.httrack.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753291AbbE0Qwn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 12:52:43 -0400
+From: Xavier Roche <roche@httrack.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Trivial Patch Monkey <trivial@kernel.org>,
+	Xavier Roche <roche@httrack.com>
+Subject: [PATCH] Replaced #include <asm/(uaccess|atomic|io).h> by #include <linux/(uaccess|atomic|io).h>
+Date: Wed, 27 May 2015 18:33:31 +0200
+Message-Id: <1432744411-6635-1-git-send-email-roche@httrack.com> (sfid-20150527_185304_901291_F63CEB3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-05-11 at 11:39 +0200, Janusz Dziedzic wrote:
-> This is required to handle sta.wme correctly
-> after update rates (eg. when using HT/VHT) when
-> driver using IEEE80211_HW_SUPPORT_FAST_XMIT.
+Minor checkpatch.pl fix (staging tree -- also validated on linux-next)
 
-Wouldn't you want to check, so it can be re-assigned?
+Signed-off-by: Xavier Roche <roche@httrack.com>
+---
+ drivers/staging/rtl8723au/include/osdep_service.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/staging/rtl8723au/include/osdep_service.h b/drivers/staging/rtl8723au/include/osdep_service.h
+index dedb418..98250b1 100644
+--- a/drivers/staging/rtl8723au/include/osdep_service.h
++++ b/drivers/staging/rtl8723au/include/osdep_service.h
+@@ -29,10 +29,10 @@
+ #include <linux/kref.h>
+ #include <linux/netdevice.h>
+ #include <linux/skbuff.h>
+-#include <asm/uaccess.h>
++#include <linux/uaccess.h>
+ #include <asm/byteorder.h>
+-#include <asm/atomic.h>
+-#include <asm/io.h>
++#include <linux/atomic.h>
++#include <linux/io.h>
+ #include <linux/semaphore.h>
+ #include <linux/sem.h>
+ #include <linux/sched.h>
+-- 
+1.9.1
 
