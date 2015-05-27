@@ -1,149 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38881 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38553 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478AbbEZTSu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:18:50 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/39] iwlwifi: mvm: rename some LMAC-specific scan functions
-Date: Tue, 26 May 2015 22:17:40 +0300
-Message-Id: <1432667872-18092-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150526_211943_902544_6C331DDB)
-In-Reply-To: <1432667798.26624.3.camel@intel.com>
-References: <1432667798.26624.3.camel@intel.com>
+	id S1753007AbbE0Nyf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 09:54:35 -0400
+Message-ID: <1432734873.15971.2.camel@redhat.com> (sfid-20150527_155438_790882_7277866F)
+Subject: Re: packet loss, disconnects and possible bug in iwlwifi
+From: Dan Williams <dcbw@redhat.com>
+To: Nick Dimov <dimovnike@gmail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 27 May 2015 08:54:33 -0500
+In-Reply-To: <55650565.6020303@gmail.com>
+References: <55605637.1080503@gmail.com>
+	 <CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>
+	 <55650565.6020303@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
+> Hello,
+> thank you for your response. I attach the full syslog since the last
+> boot which contains some disconnects. I enabled debug mode for
+> wpa_supplicant with -dd option (let me know if you need anything else).
+> 
+> I also tried connecting directly, i.e. without NetworkManager but
+> manually with wpa_supplicant and I still get disconnects, howvever
+> wpa_supplicant gives different logs with different drivers. Please, see
+> the file wifi.log (you can see there the driver i used in
+> wpa_supplicant, that log doesn't have the debug activated but let me
+> know if you need that too)
 
-Some LMAC specific functions had too generic names
-(i.e. *_scan_offload_*) and were hard to distinguish from functions
-that are really generic.  Rename these functions to *_lmac_scan_* in
-to make it more consistent and easier to read.
+Also, make sure you stop NetworkManager when you're doing the manual
+connection.  With systemd, you need to 'systemctl mask NetworkManager'
+and then 'systemctl stop NetworkManager' to prevent it from being D-Bus
+activated too.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mvm.h  | 18 +++++++++---------
- drivers/net/wireless/iwlwifi/mvm/ops.c  |  6 +++---
- drivers/net/wireless/iwlwifi/mvm/scan.c | 22 +++++++++++-----------
- 3 files changed, 23 insertions(+), 23 deletions(-)
+The reason I say this is because in your logs there are
+locally-generated disconnections, and that happens when NetworkManager
+is still running and hasn't been told to stop handling WiFi, and then
+somebody runs another wpa_supplicant alongside.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 71b7763..760c626 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1127,21 +1127,21 @@ int iwl_mvm_max_scan_ie_len(struct iwl_mvm *mvm);
- void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm);
- 
- /* Scheduled scan */
--int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
--					   struct iwl_rx_cmd_buffer *rxb,
--					   struct iwl_device_cmd *cmd);
--int iwl_mvm_rx_scan_offload_iter_complete_notif(struct iwl_mvm *mvm,
--						struct iwl_rx_cmd_buffer *rxb,
--						struct iwl_device_cmd *cmd);
-+int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
-+					struct iwl_rx_cmd_buffer *rxb,
-+					struct iwl_device_cmd *cmd);
-+int iwl_mvm_rx_lmac_scan_iter_complete_notif(struct iwl_mvm *mvm,
-+					     struct iwl_rx_cmd_buffer *rxb,
-+					     struct iwl_device_cmd *cmd);
- int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 			     struct ieee80211_vif *vif,
- 			     struct cfg80211_sched_scan_request *req,
- 			     struct ieee80211_scan_ies *ies,
- 			     int type);
- int iwl_mvm_sched_scan_stop(struct iwl_mvm *mvm, bool notify);
--int iwl_mvm_rx_scan_offload_results(struct iwl_mvm *mvm,
--				    struct iwl_rx_cmd_buffer *rxb,
--				    struct iwl_device_cmd *cmd);
-+int iwl_mvm_rx_scan_match_found(struct iwl_mvm *mvm,
-+				struct iwl_rx_cmd_buffer *rxb,
-+				struct iwl_device_cmd *cmd);
- 
- /* UMAC scan */
- int iwl_mvm_config_scan(struct iwl_mvm *mvm);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 4935caf..690b336 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -238,10 +238,10 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 	RX_HANDLER(EOSP_NOTIFICATION, iwl_mvm_rx_eosp_notif, false),
- 
- 	RX_HANDLER(SCAN_ITERATION_COMPLETE,
--		   iwl_mvm_rx_scan_offload_iter_complete_notif, false),
-+		   iwl_mvm_rx_lmac_scan_iter_complete_notif, false),
- 	RX_HANDLER(SCAN_OFFLOAD_COMPLETE,
--		   iwl_mvm_rx_scan_offload_complete_notif, true),
--	RX_HANDLER(MATCH_FOUND_NOTIFICATION, iwl_mvm_rx_scan_offload_results,
-+		   iwl_mvm_rx_lmac_scan_complete_notif, true),
-+	RX_HANDLER(MATCH_FOUND_NOTIFICATION, iwl_mvm_rx_scan_match_found,
- 		   false),
- 	RX_HANDLER(SCAN_COMPLETE_UMAC, iwl_mvm_rx_umac_scan_complete_notif,
- 		   true),
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index bee92d7..9becece 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -325,9 +325,9 @@ static u8 *iwl_mvm_dump_channel_list(struct iwl_scan_results_notif *res,
- 	return buf;
- }
- 
--int iwl_mvm_rx_scan_offload_iter_complete_notif(struct iwl_mvm *mvm,
--						struct iwl_rx_cmd_buffer *rxb,
--						struct iwl_device_cmd *cmd)
-+int iwl_mvm_rx_lmac_scan_iter_complete_notif(struct iwl_mvm *mvm,
-+					     struct iwl_rx_cmd_buffer *rxb,
-+					     struct iwl_device_cmd *cmd)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_lmac_scan_complete_notif *notif = (void *)pkt->data;
-@@ -342,9 +342,9 @@ int iwl_mvm_rx_scan_offload_iter_complete_notif(struct iwl_mvm *mvm,
- 	return 0;
- }
- 
--int iwl_mvm_rx_scan_offload_results(struct iwl_mvm *mvm,
--				    struct iwl_rx_cmd_buffer *rxb,
--				    struct iwl_device_cmd *cmd)
-+int iwl_mvm_rx_scan_match_found(struct iwl_mvm *mvm,
-+				struct iwl_rx_cmd_buffer *rxb,
-+				struct iwl_device_cmd *cmd)
- {
- 	IWL_DEBUG_SCAN(mvm, "Scheduled scan results\n");
- 	ieee80211_sched_scan_results(mvm->hw);
-@@ -352,9 +352,9 @@ int iwl_mvm_rx_scan_offload_results(struct iwl_mvm *mvm,
- 	return 0;
- }
- 
--int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
--					   struct iwl_rx_cmd_buffer *rxb,
--					   struct iwl_device_cmd *cmd)
-+int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
-+					struct iwl_rx_cmd_buffer *rxb,
-+					struct iwl_device_cmd *cmd)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_periodic_scan_complete *scan_notif = (void *)pkt->data;
-@@ -557,7 +557,7 @@ static bool iwl_mvm_scan_pass_all(struct iwl_mvm *mvm,
- 	return true;
- }
- 
--static int iwl_mvm_send_scan_offload_abort(struct iwl_mvm *mvm)
-+static int iwl_mvm_send_lmac_scan_abort(struct iwl_mvm *mvm)
- {
- 	int ret;
- 	struct iwl_host_cmd cmd = {
-@@ -598,7 +598,7 @@ static int iwl_mvm_lmac_scan_stop(struct iwl_mvm *mvm, int type)
- 				   ARRAY_SIZE(scan_done_notif),
- 				   NULL, NULL);
- 
--	ret = iwl_mvm_send_scan_offload_abort(mvm);
-+	ret = iwl_mvm_send_lmac_scan_abort(mvm);
- 	if (ret) {
- 		IWL_DEBUG_SCAN(mvm, "Send stop %sscan failed %d\n",
- 			       sched ? "offloaded " : "", ret);
--- 
-2.1.4
+Dan
+
+> Thank you again,
+> Nick.
+> 
+> On 25.05.2015 14:33, Emmanuel Grumbach wrote:
+> > On Sat, May 23, 2015 at 1:28 PM, Nick Dimov <dimovnike@gmail.com> wrote:
+> >> Hello,
+> >> I recently bought the Intel 7260 AC wifi card (below is the PCI info)
+> >> and the card works perfectly in windows with the latest intel driver but
+> >> in linux I get deauthenticating and disconnects (reason -3) every minute
+> >> or so. When these disconnects happen I get packet loss. In the attached
+> >> file iwlwifi_dmesg.txt you can see the log that is produced each time a
+> >> disconnect happens. I also tried connecting on 2.4Ghz but I get the same
+> >> packet loss. I also put the last firmware from
+> >> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
+> >> but it did not help.
+> > Please increase the debug level of the supplicant. And attach the full syslog.
+> >
+> >> There is also another problem: In windows i can see it connecting on
+> >> 860mbps, but on linux it never goes higher than 600mbps (i check this
+> >> with iwconfig) and it stays somewhere on 500mbps.
+> >>
+> >> Can you please help me solve this?
+> >> Thank you.
+> >>
+> >> uname -a
+> >> Linux nick-laptop 3.19.0-18-generic #18-Ubuntu SMP Tue May 19 18:31:35
+> >> UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+> >>
+> >> lspci info:
+> >> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
+> >>         Subsystem: Intel Corporation Dual Band Wireless-AC 7260
+> >>         Flags: bus master, fast devsel, latency 0, IRQ 29
+> >>         Memory at f7200000 (64-bit, non-prefetchable) [size=8K]
+> >>         Capabilities: [c8] Power Management version 3
+> >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> >>         Capabilities: [40] Express Endpoint, MSI 00
+> >>         Capabilities: [100] Advanced Error Reporting
+> >>         Capabilities: [140] Device Serial Number d8-fc-93-ff-ff-e4-70-d7
+> >>         Capabilities: [14c] Latency Tolerance Reporting
+> >>         Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1
+> >> Len=014 <?>
+> >>         Kernel driver in use: iwlwifi
+> >>
+> 
+
 
