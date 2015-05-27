@@ -1,104 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37750 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751440AbbE0OIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 10:08:51 -0400
-Message-ID: <1432735728.15971.3.camel@redhat.com> (sfid-20150527_160854_531665_109D818D)
-Subject: Re: packet loss, disconnects and possible bug in iwlwifi
-From: Dan Williams <dcbw@redhat.com>
-To: Nick Dimov <dimovnike@gmail.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 27 May 2015 09:08:48 -0500
-In-Reply-To: <1432734873.15971.2.camel@redhat.com>
-References: <55605637.1080503@gmail.com>
-	 <CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>
-	 <55650565.6020303@gmail.com> <1432734873.15971.2.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:39635 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374AbbE0Rbv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 13:31:51 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Subject: [PATCH] brcmfmac: fix invalid access to struct acpi_device fields
+Date: Wed, 27 May 2015 19:31:41 +0200
+Message-ID: <1432747901-8472-1-git-send-email-arend@broadcom.com> (sfid-20150527_193155_106073_789E2FC0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-05-27 at 08:54 -0500, Dan Williams wrote:
-> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
-> > Hello,
-> > thank you for your response. I attach the full syslog since the last
-> > boot which contains some disconnects. I enabled debug mode for
-> > wpa_supplicant with -dd option (let me know if you need anything else).
-> > 
-> > I also tried connecting directly, i.e. without NetworkManager but
-> > manually with wpa_supplicant and I still get disconnects, howvever
-> > wpa_supplicant gives different logs with different drivers. Please, see
-> > the file wifi.log (you can see there the driver i used in
-> > wpa_supplicant, that log doesn't have the debug activated but let me
-> > know if you need that too)
-> 
-> Also, make sure you stop NetworkManager when you're doing the manual
-> connection.  With systemd, you need to 'systemctl mask NetworkManager'
-> and then 'systemctl stop NetworkManager' to prevent it from being D-Bus
-> activated too.
+The fields of struct acpi_device are only known when CONFIG_ACPI is
+defined. Fix this by using a helper function. This will resolve the
+issue found in linux-next:
 
-Or, "nmcli net off" to put NM to sleep temporarily, without messing
-around with systemd.
+ ../brcmfmac/bcmsdh.c: In function 'brcmf_ops_sdio_probe':
+ ../brcmfmac/bcmsdh.c:1139:7: error: dereferencing pointer to incomplete type
+   adev->flags.power_manageable = 0;
+       ^
 
-Dan
+Fixes: commit f0992ace680c ("brcmfmac: prohibit ACPI power management ...")
+Cc: Fu, Zhonghui <zhonghui.fu@linux.intel.com>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-> The reason I say this is because in your logs there are
-> locally-generated disconnections, and that happens when NetworkManager
-> is still running and hasn't been told to stop handling WiFi, and then
-> somebody runs another wpa_supplicant alongside.
-> 
-> Dan
-> 
-> > Thank you again,
-> > Nick.
-> > 
-> > On 25.05.2015 14:33, Emmanuel Grumbach wrote:
-> > > On Sat, May 23, 2015 at 1:28 PM, Nick Dimov <dimovnike@gmail.com> wrote:
-> > >> Hello,
-> > >> I recently bought the Intel 7260 AC wifi card (below is the PCI info)
-> > >> and the card works perfectly in windows with the latest intel driver but
-> > >> in linux I get deauthenticating and disconnects (reason -3) every minute
-> > >> or so. When these disconnects happen I get packet loss. In the attached
-> > >> file iwlwifi_dmesg.txt you can see the log that is produced each time a
-> > >> disconnect happens. I also tried connecting on 2.4Ghz but I get the same
-> > >> packet loss. I also put the last firmware from
-> > >> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
-> > >> but it did not help.
-> > > Please increase the debug level of the supplicant. And attach the full syslog.
-> > >
-> > >> There is also another problem: In windows i can see it connecting on
-> > >> 860mbps, but on linux it never goes higher than 600mbps (i check this
-> > >> with iwconfig) and it stays somewhere on 500mbps.
-> > >>
-> > >> Can you please help me solve this?
-> > >> Thank you.
-> > >>
-> > >> uname -a
-> > >> Linux nick-laptop 3.19.0-18-generic #18-Ubuntu SMP Tue May 19 18:31:35
-> > >> UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
-> > >>
-> > >> lspci info:
-> > >> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
-> > >>         Subsystem: Intel Corporation Dual Band Wireless-AC 7260
-> > >>         Flags: bus master, fast devsel, latency 0, IRQ 29
-> > >>         Memory at f7200000 (64-bit, non-prefetchable) [size=8K]
-> > >>         Capabilities: [c8] Power Management version 3
-> > >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-> > >>         Capabilities: [40] Express Endpoint, MSI 00
-> > >>         Capabilities: [100] Advanced Error Reporting
-> > >>         Capabilities: [140] Device Serial Number d8-fc-93-ff-ff-e4-70-d7
-> > >>         Capabilities: [14c] Latency Tolerance Reporting
-> > >>         Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1
-> > >> Len=014 <?>
-> > >>         Kernel driver in use: iwlwifi
-> > >>
-> > 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index b0d0ff5..71779b9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1117,6 +1117,18 @@ MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
+ static struct brcmfmac_sdio_platform_data *brcmfmac_sdio_pdata;
+ 
+ 
++static void brcmf_sdiod_acpi_set_power_manageable(struct device *dev,
++						  int val)
++{
++#if IS_ENABLED(CONFIG_ACPI)
++	struct acpi_device *adev;
++
++	adev = ACPI_COMPANION(dev);
++	if (adev)
++		adev->flags.power_manageable = 0;
++#endif
++}
++
+ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 				const struct sdio_device_id *id)
+ {
+@@ -1124,7 +1136,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	struct brcmf_sdio_dev *sdiodev;
+ 	struct brcmf_bus *bus_if;
+ 	struct device *dev;
+-	struct acpi_device *adev;
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 	brcmf_dbg(SDIO, "Class=%x\n", func->class);
+@@ -1132,11 +1143,9 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
+ 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+ 
+-	/* prohibit ACPI power management for this device */
+ 	dev = &func->dev;
+-	adev = ACPI_COMPANION(dev);
+-	if (adev)
+-		adev->flags.power_manageable = 0;
++	/* prohibit ACPI power management for this device */
++	brcmf_sdiod_acpi_set_power_manageable(dev, 0);
+ 
+ 	/* Consume func num 1 but dont do anything with it. */
+ 	if (func->num == 1)
+-- 
+1.9.1
 
