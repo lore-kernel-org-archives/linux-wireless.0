@@ -1,26 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57637 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367AbbEZNrt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51932 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbbE0KZb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 09:47:49 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 27 May 2015 06:25:31 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] amth10k: fix promisc handling
+References: <1431434736-7077-1-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQ=dzJS447Gx+XAXPT6gZDDKZ__6scbxe0QC-iMA47bZmQ@mail.gmail.com>
+	<874mn68jl7.fsf@kamboji.qca.qualcomm.com>
+	<87oal83kv4.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 27 May 2015 13:25:21 +0300
+In-Reply-To: <87oal83kv4.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Mon, 25 May 2015 15:25:03 +0300")
+Message-ID: <87egm21fn2.fsf@kamboji.qca.qualcomm.com> (sfid-20150527_122538_982815_9FDB0799)
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8188ee: Fix pwrseqcmd.h include path.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1431111713-32615-1-git-send-email-lauri.kentta@gmail.com>
-To: =?utf-8?q?Lauri_Kentt=C3=A4?= <lauri.kentta@gmail.com>
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, trivial@kernel.org,
-	=?UTF-8?q?Lauri=20Kentt=C3=A4?= <lauri.kentta@gmail.com>
-Message-Id: <20150526104244.75353141688@smtp.codeaurora.org> (sfid-20150526_154754_573184_C6A8D7F0)
-Date: Tue, 26 May 2015 10:42:44 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> Signed-off-by: Lauri Kenttä <lauri.kentta@gmail.com>
+>>>> Fixes: c17c997d5613 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next")
+>>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>>
+>>> Apparently this also fixes some weird issues with qca6174 hw2.1 notably:
+>>>  - ath10k causing disconnecting of other devices in a BSS
+>>>  - random Fw crashes
+>>>
+>>> Both problems started to happen because c17c997d5613 enabled monitor
+>>> vdev by default on STA interfaces. It seems that qca6174 hw2.1
+>>> firmware has issues similar to those of qca988x 999.999.0.636
+>>> regarding monitor vdev opration.
+>>>
+>>> Also, I've made a typo in the subject.
+>>>
+>>> I'll post v2 with subject fixed and extended commit log later.
+>>
+>> Keep in mind that c17c997d5613 is actually from wireless-testing.git
+>> which means that it will never go to wireless-drivers-next.git nor to
+>> net-next.git. So the merge conflict bug is purely in
+>> wireless-testing.git and in master branch of ath.git (but not in
+>> ath-next branch!).
+>>
+>> I think John should apply your v2 patch once you send it. But if you
+>> have something which should be fixed in ath-next remember to send that
+>> in a separate patch so that I can apply that directly to ath-next.
+>
+> Actually now that Dave pulled my pull request the issue is fixed in
+> wireless-drivers-next already. So once John pulls from
+> wireless-drivers-next and makes sure that ath10k is 100% identical in
+> both trees the issue should be sorted out and no need for extra patches.
 
-Thanks, applied to wireless-drivers-next.git.
-
+John now fixed this in wireless-testing, thanks John. And I now updated
+ath.git master branch so it should be ok as well. Please let me know if
+there are still problems.
+-- 
 Kalle Valo
