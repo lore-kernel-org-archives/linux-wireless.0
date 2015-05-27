@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:56662
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754550AbbE1VLk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 17:11:40 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: devel@driverdev.osuosl.org
-Cc: kernel-janitors@vger.kernel.org, HPDD-discuss@lists.01.org,
-	linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 0/9] drop unneeded goto
-Date: Thu, 28 May 2015 23:02:15 +0200
-Message-Id: <1432846944-7122-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20150528_231343_584276_3D6D17EB)
+Received: from mx1.redhat.com ([209.132.183.28]:46248 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752059AbbE0VCo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 17:02:44 -0400
+Message-ID: <1432760563.15971.37.camel@redhat.com> (sfid-20150527_230247_885849_B19C6138)
+Subject: Re: packet loss, disconnects and possible bug in iwlwifi
+From: Dan Williams <dcbw@redhat.com>
+To: Nick Dimov <dimovnike@gmail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 27 May 2015 16:02:43 -0500
+In-Reply-To: <55661EFC.30606@gmail.com>
+References: <55605637.1080503@gmail.com>
+		<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>
+		<55650565.6020303@gmail.com>	<1432742132.15971.29.camel@redhat.com>
+	 <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
+	 <55661EFC.30606@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches drop gotos that jump to a label that is at the next
-instruction, in the case that the label is not used elsewhere in the
-function.  The complete semantic patch that performs this transformation is
-as follows:
+On Wed, 2015-05-27 at 22:46 +0300, Nick Dimov wrote:
+> Hello everyone.
+> I updated the regulatory database from here
+> https://www.kernel.org/pub/software/network/wireless-regdb/ (just copied
+> the regulatory.bin and the public key) and the problem is gone! Thank to
+> all of you and especially to Emmanuel Grumbach for suggesting this.
+> 
+> Now another question - how to make it connect at 866mbps or at least
+> something close to it? Any ideas?
 
-// <smpl>
-@r@
-position p;
-identifier l;
-@@
+iwlwifi does dynamic rate scaling, so you'll almost never see 866mbps.
+When traffic is idle it drops back to 1mbit rates and then when traffic
+starts, scales up from there.  Also, I'm pretty sure you'll never get
+866mbps in the 2.4GHz band due to lack of bandwidth there, you'll have
+to go 5GHz for that.
 
-if (...) goto l@p;
-l:
+Use "iw dev <ifname> link" to see the current rate.
 
-@script:ocaml s@
-p << r.p;
-nm;
-@@
+Dan
 
-nm := (List.hd p).current_element
+> Thanks you,
+> Nick.
+> 
+> On 27.05.2015 21:34, Emmanuel Grumbach wrote:
+> > On Wed, May 27, 2015 at 6:55 PM, Dan Williams <dcbw@redhat.com> wrote:
+> >> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
+> >>> Hello,
+> >>> thank you for your response. I attach the full syslog since the last
+> >>> boot which contains some disconnects. I enabled debug mode for
+> >>> wpa_supplicant with -dd option (let me know if you need anything else).
+> >>>
+> >>> I also tried connecting directly, i.e. without NetworkManager but
+> >>> manually with wpa_supplicant and I still get disconnects, howvever
+> >>> wpa_supplicant gives different logs with different drivers. Please, see
+> >>> the file wifi.log (you can see there the driver i used in
+> >>> wpa_supplicant, that log doesn't have the debug activated but let me
+> >>> know if you need that too)
+> >> So if NM isn't involved in your later runs (and it's not, looking at the
+> >> logs), then I'm not sure what the issue could be except something in the
+> >> driver.
+> >>
+> >> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Event message
+> >> available
+> >> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Drv Event 20
+> >> (NL80211_CMD_DEL_STATION) received for wlan5
+> >> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Delete station
+> >> d8:50:e6:da:1d:b4
+> >> mai 27 02:31:54 nick-G55VW kernel: wlan5: deauthenticating from
+> >> d8:50:e6:da:1d:b4 by local choice (Reason: 3=DEAUTH_LEAVING)
+> >>
+> >> I don't see anything interesting around those lines, so I guess its up
+> >> to Emmanuel now...  the tracing he requests would be good to get.
+> >>
+> > I suspect a regulatory problem. This is why I asked what was the
+> > channel used on 2.4GHz. On 5.2GHz we have seen bugs happening because
+> > of the regulatory database being ancient on Ubuntu. 2.4GHz should rule
+> > these problems out, unless we are talking about channel 12 and up or
+> > something like that.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-@ok exists@
-identifier s.nm,l;
-position p != r.p;
-@@
-
-nm(...) {
-<+... goto l@p; ...+>
-}
-
-@depends on !ok@
-identifier s.nm;
-position r.p;
-identifier l;
-@@
-
-nm(...) {
-<...
-- if(...) goto l@p; l:
-...>
-}
-// </smpl>
 
