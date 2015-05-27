@@ -1,77 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:36184 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752373AbbENPiO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 11:38:14 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath9k_htc: match wait_for_completion_timeout return type
-Date: Thu, 14 May 2015 17:29:54 +0200
-Message-Id: <1431617394-30725-1-git-send-email-hofrat@osadl.org> (sfid-20150514_173836_451205_B2D1081A)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34300 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542AbbE0M5M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 08:57:12 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<michal.kazior@tieto.com>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Debugfs entry to enable/disable BTC feature
+References: <1430514659-11743-1-git-send-email-yanbol@qca.qualcomm.com>
+Date: Wed, 27 May 2015 15:56:57 +0300
+In-Reply-To: <1430514659-11743-1-git-send-email-yanbol@qca.qualcomm.com>
+	(Yanbo Li's message of "Fri, 1 May 2015 14:10:59 -0700")
+Message-ID: <871ti218me.fsf@kamboji.qca.qualcomm.com> (sfid-20150527_145716_565054_5A23DFAE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-As time_left is exclusively used for wait_for_completion_timeout here its
-type is simply changed to unsigned long.
+Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-API conformance testing for completions with coccinelle spatches are being
-used to locate API usage inconsistencies:
-./drivers/net/wireless/ath/ath9k/htc_hst.c:171
-	int return assigned to unsigned long
-./drivers/net/wireless/ath/ath9k/htc_hst.c:277
-	int return assigned to unsigned long
-./drivers/net/wireless/ath/ath9k/htc_hst.c:206
-	int return assigned to unsigned long
+> As some radio have no connection with BT modules, enable the BTC feature
+> will has some side effect if the radio's GPIO connect with any other HW
+> modules. Add the control switcher "btc_feature" at debugfs and set the
+> feature as disable by default to avoid such case.
+>
+> To enable this feature, execute:
+> echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/btc_feature
+> To disable:
+> echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/btc_feature
 
-Patch was compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH9K_HTC=m
+I suspect "BTC" does not really tell much for most of the people and
+acronyms should be always spelled out at least once.
 
-Patch is against 4.1-rc3 (localversion-next is -next-20150514)
+> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index 8444adf42195..6852e7fc5d5f 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -720,6 +720,8 @@ struct ath10k {
+>  		u32 fw_cold_reset_counter;
+>  	} stats;
+>  
+> +	bool btc_feature;
 
+Could we use ar->dev_flags instead?
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
- drivers/net/wireless/ath/ath9k/htc_hst.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+> +static ssize_t ath10k_write_btc_feature(struct file *file,
+> +					const char __user *ubuf,
+> +					size_t count, loff_t *ppos)
+> +{
+> +	struct ath10k *ar = file->private_data;
+> +	char buf[32];
+> +	size_t buf_size;
+> +	bool val;
+> +
+> +	buf_size = min(count, (sizeof(buf) - 1));
+> +	if (copy_from_user(buf, ubuf, buf_size))
+> +		return -EFAULT;
+> +
+> +	buf[buf_size] = '\0';
+> +	if (strtobool(buf, &val) != 0) {
+> +		ath10k_warn(ar, "Wrong BTC feature setting\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	mutex_lock(&ar->conf_mutex);
+> +	ar->btc_feature = val;
+> +	queue_work(ar->workqueue, &ar->restart_work);
+> +	mutex_unlock(&ar->conf_mutex);
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index d2408da..2294709 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -146,7 +146,8 @@ static int htc_config_pipe_credits(struct htc_target *target)
- {
- 	struct sk_buff *skb;
- 	struct htc_config_pipe_msg *cp_msg;
--	int ret, time_left;
-+	int ret;
-+	unsigned long time_left;
- 
- 	skb = alloc_skb(50 + sizeof(struct htc_frame_hdr), GFP_ATOMIC);
- 	if (!skb) {
-@@ -184,7 +185,8 @@ static int htc_setup_complete(struct htc_target *target)
- {
- 	struct sk_buff *skb;
- 	struct htc_comp_msg *comp_msg;
--	int ret = 0, time_left;
-+	int ret = 0;
-+	unsigned long time_left;
- 
- 	skb = alloc_skb(50 + sizeof(struct htc_frame_hdr), GFP_ATOMIC);
- 	if (!skb) {
-@@ -236,7 +238,8 @@ int htc_connect_service(struct htc_target *target,
- 	struct sk_buff *skb;
- 	struct htc_endpoint *endpoint;
- 	struct htc_conn_svc_msg *conn_msg;
--	int ret, time_left;
-+	int ret;
-+	unsigned long time_left;
- 
- 	/* Find an available endpoint */
- 	endpoint = get_next_avail_ep(target->endpoint);
+Shouldn't we test ATH10K_STATE_ON first?
+
+>  int ath10k_debug_create(struct ath10k *ar)
+>  {
+>  	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
+> @@ -2195,6 +2243,8 @@ int ath10k_debug_register(struct ath10k *ar)
+>  	debugfs_create_file("quiet_period", S_IRUGO | S_IWUSR,
+>  			    ar->debug.debugfs_phy, ar, &fops_quiet_period);
+>  
+> +	debugfs_create_file("btc_feature", S_IRUGO | S_IWUSR,
+> +			    ar->debug.debugfs_phy, ar,
+> &fops_btc_feature);
+
+At least some of the other drivers use term btcoex for this, I think we
+should be consistent and use the same.
+
+I can do the changes and send v2 for this.
+
 -- 
-1.7.10.4
-
+Kalle Valo
