@@ -1,75 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lan.nucleusys.com ([92.247.61.126]:43948 "EHLO
-	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S964804AbbEUQ7F (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:34887 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbbE0Alb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 12:59:05 -0400
-Date: Thu, 21 May 2015 19:58:56 +0300
-From: Petko Manolov <petkan@mip-labs.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: David Howells <dhowells@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Andy Lutomirski <luto@kernel.org>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	James Morris <james.l.morris@oracle.com>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Michal Marek <mmarek@suse.cz>,
-	Abelardo Ricart III <aricart@memnix.com>,
-	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
-	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150521165856.GJ18164@localhost> (sfid-20150521_185913_844545_367B93D7)
-References: <20150519221128.GP23057@wotan.suse.de>
- <20150519200232.GM23057@wotan.suse.de>
- <555BA438.2070802@kernel.org>
- <9567.1432223509@warthog.procyon.org.uk>
- <20150521164313.GH18164@localhost>
- <CALCETrX=8OpsRE2adMoX8P0xYA6hCjhPwCOJJ19gX=tMOSP0PQ@mail.gmail.com>
+	Tue, 26 May 2015 20:41:31 -0400
+Received: by wicmx19 with SMTP id mx19so94218372wic.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2015 17:41:30 -0700 (PDT)
+Message-ID: <556512B7.50505@gmail.com> (sfid-20150527_024134_301736_3F40A5AF)
+Date: Wed, 27 May 2015 03:41:27 +0300
+From: Nick Dimov <dimovnike@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALCETrX=8OpsRE2adMoX8P0xYA6hCjhPwCOJJ19gX=tMOSP0PQ@mail.gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: packet loss, disconnects and possible bug in iwlwifi
+References: <55605637.1080503@gmail.com>	<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>	<55650565.6020303@gmail.com> <CANUX_P3xRgUdNx_1h-pisaYcTiFGiPZjyvkdhnFQj05oMHSQVA@mail.gmail.com>
+In-Reply-To: <CANUX_P3xRgUdNx_1h-pisaYcTiFGiPZjyvkdhnFQj05oMHSQVA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-05-21 09:48:10, Andy Lutomirski wrote:
-> On Thu, May 21, 2015 at 9:43 AM, Petko Manolov <petkan@mip-labs.com> wrote:
-> > On 15-05-21 16:51:49, David Howells wrote:
-> >>
-> >> I do have patches to parse PGP key data and add the public keys found therein
-> >> onto the kernel keyring, but that would mean adding an extra key data parser.
-> >
-> > PGP is widely used so i would gladly have one more parser in the kernel.
-> 
-> <rant>
-> PGP is also a crappy format:
-> 
-> http://blog.cryptographyengineering.com/2014/08/whats-matter-with-pgp.html
-> 
-> and using PGP means we're probably stuck with PKCS#1 v1.5, which should have 
-> been phased out worldwide many years ago.
-> 
-> In any event, I don't see why PGP compatibility requires any sort of
-> OpenPGP parser in the kernel.  Just because GnuPG goes out of its way
-> to be incompatible with anything other than the OpenPGP ecosystem
-> doesn't mean that you can't relatively straightforwardly generate raw
-> PKCS#1 signatures from an OpenPGP key.
-> </rant>
+hello,
+I will record a tracing but now my kernel doesn't have
+CONFIG_IWLWIFI_TRACING  (default ubuntu kernel) so I will have to
+activate the setting and recompile it. As for wpa_supplicant - I checked
+several times and there is indeed a single process running, also its PID
+doesn't change during disconnects. Btw, I also tested with 4.0 kernel
+from the next release of ubuntu and the result is the same. Also the
+laptop is next to the router and there are no other networks on 5Ghz
+here (however the problem happens on 2.4Ghz too)
 
-Oh, i do agree with you in terms of quality of both formats.  However, this is 
-what is commonly used these days and not having these parsers in the kernel 
-would require us to write tools for conversion to saner format.  Which does not 
-exist for the moment.  Once we have those in place it would be all the same to 
-me.
+Thank you,
+Nick.
 
+On 27.05.2015 03:27, Emmanuel Grumbach wrote:
+> On Wed, May 27, 2015 at 2:44 AM, Nick Dimov <dimovnike@gmail.com> wrote:
+>> Hello,
+>> thank you for your response. I attach the full syslog since the last
+>> boot which contains some disconnects. I enabled debug mode for
+>> wpa_supplicant with -dd option (let me know if you need anything else).
+>>
+>> I also tried connecting directly, i.e. without NetworkManager but
+>> manually with wpa_supplicant and I still get disconnects, howvever
+>> wpa_supplicant gives different logs with different drivers. Please, see
+>> the file wifi.log (you can see there the driver i used in
+>> wpa_supplicant, that log doesn't have the debug activated but let me
+>> know if you need that too)
+> Please record tracing
+> (https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging#tracing)
+> and the syslog from the *same run*. Someone is disconnecting you and I
+> can't see who and why. Are you sure you have only one instance of the
+> supplicant running?
+>
+>> Thank you again,
+>> Nick.
+>>
+>> On 25.05.2015 14:33, Emmanuel Grumbach wrote:
+>>> On Sat, May 23, 2015 at 1:28 PM, Nick Dimov <dimovnike@gmail.com> wrote:
+>>>> Hello,
+>>>> I recently bought the Intel 7260 AC wifi card (below is the PCI info)
+>>>> and the card works perfectly in windows with the latest intel driver but
+>>>> in linux I get deauthenticating and disconnects (reason -3) every minute
+>>>> or so. When these disconnects happen I get packet loss. In the attached
+>>>> file iwlwifi_dmesg.txt you can see the log that is produced each time a
+>>>> disconnect happens. I also tried connecting on 2.4Ghz but I get the same
+>>>> packet loss. I also put the last firmware from
+>>>> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
+>>>> but it did not help.
+>>> Please increase the debug level of the supplicant. And attach the full syslog.
+>>>
+>>>> There is also another problem: In windows i can see it connecting on
+>>>> 860mbps, but on linux it never goes higher than 600mbps (i check this
+>>>> with iwconfig) and it stays somewhere on 500mbps.
+>>>>
+>>>> Can you please help me solve this?
+>>>> Thank you.
+>>>>
+>>>> uname -a
+>>>> Linux nick-laptop 3.19.0-18-generic #18-Ubuntu SMP Tue May 19 18:31:35
+>>>> UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+>>>>
+>>>> lspci info:
+>>>> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
+>>>>         Subsystem: Intel Corporation Dual Band Wireless-AC 7260
+>>>>         Flags: bus master, fast devsel, latency 0, IRQ 29
+>>>>         Memory at f7200000 (64-bit, non-prefetchable) [size=8K]
+>>>>         Capabilities: [c8] Power Management version 3
+>>>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>>>         Capabilities: [40] Express Endpoint, MSI 00
+>>>>         Capabilities: [100] Advanced Error Reporting
+>>>>         Capabilities: [140] Device Serial Number d8-fc-93-ff-ff-e4-70-d7
+>>>>         Capabilities: [14c] Latency Tolerance Reporting
+>>>>         Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1
+>>>> Len=014 <?>
+>>>>         Kernel driver in use: iwlwifi
+>>>>
 
-		Petko
