@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0108.hostedemail.com ([216.40.44.108]:41860 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753177AbbEZOtG (ORCPT
+Received: from bh-25.webhostbox.net ([208.91.199.152]:56003 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbbE0UCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 10:49:06 -0400
-Message-ID: <1432651739.2846.93.camel@perches.com> (sfid-20150526_164917_355470_5DF43806)
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
- of del_timer_sync()
-From: Joe Perches <joe@perches.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Tue, 26 May 2015 07:48:59 -0700
-In-Reply-To: <20150526141401.GC21573@kroah.com>
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
-	 <556268BC.5050807@lwfinger.net> <20150525091737.GQ4150@mwanda>
-	 <1432575448.2846.63.camel@perches.com> <20150526044611.GA3465@sudip-PC>
-	 <1432616108.2846.83.camel@perches.com> <20150526050212.GC3465@sudip-PC>
-	 <1432616879.2846.86.camel@perches.com> <20150526141401.GC21573@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 27 May 2015 16:02:23 -0400
+From: Guenter Roeck <linux@roeck-us.net>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: Rachel Kim <rachel.kim@atmel.com>, Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH -next] staging: wilc1000: Include linux/gpio.h instead of asm/gpio.h
+Date: Wed, 27 May 2015 13:02:16 -0700
+Message-Id: <1432756936-6188-1-git-send-email-linux@roeck-us.net> (sfid-20150527_220227_541033_03B70A72)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-05-26 at 07:14 -0700, Greg KH wrote:
-> On Mon, May 25, 2015 at 10:07:59PM -0700, Joe Perches wrote:
-> > As far as I understand, the Eudyptula Challenge list has
-> > internal mechanisms to nominally review patches before some
-> > patch is submitted to lkml.
-> 
-> No it does not.
+Fix:
 
-That's not quite what was described to me by someone behind the
-email address:
-"Little Penguin <little@eudyptula-challenge.org>" back in August.
+drivers/staging/wilc1000/linux_wlan.c:18:22: fatal error:
+	asm/gpio.h: No such file or directory
 
-What I understood from that email was there is a qualifying
-formatting component to the challenge and then patches were to be
-sent to maintainers and lists.
+Not every architecture has asm/gpio.h. Include linux/gpio.h instead.
 
-> > The main point is that patches shouldn't be applied without
-> > being submitted to a more widely read list.
-> 
-> I take the blame for any problems with Outreachy patches.
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Are you going to change any procedure associated to these
-Outreachy patches?
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 49b238a05a88..18f1bd00201a 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -15,7 +15,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+-#include <asm/gpio.h>
++#include <linux/gpio.h>
+ 
+ #include <linux/kthread.h>
+ #include <linux/firmware.h>
+-- 
+2.1.0
 
