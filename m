@@ -1,238 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54481 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754350AbbE1Pr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 11:47:27 -0400
-Subject: [PATCH 08/20] MODSIGN: Extract the blob PKCS#7 signature verifier
- from module signing [ver #5]
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Thu, 28 May 2015 16:47:20 +0100
-Message-ID: <20150528154720.1259.76076.stgit@warthog.procyon.org.uk> (sfid-20150528_175209_513279_BD6DC0DA)
-In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
-References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+Received: from mail-la0-f52.google.com ([209.85.215.52]:34878 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751585AbbE0Ld6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 07:33:58 -0400
+Received: by labko7 with SMTP id ko7so1277608lab.2
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 04:33:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <556512B7.50505@gmail.com>
+References: <55605637.1080503@gmail.com>
+	<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>
+	<55650565.6020303@gmail.com>
+	<CANUX_P3xRgUdNx_1h-pisaYcTiFGiPZjyvkdhnFQj05oMHSQVA@mail.gmail.com>
+	<556512B7.50505@gmail.com>
+Date: Wed, 27 May 2015 14:33:57 +0300
+Message-ID: <CANUX_P07VRny8bB6MrgcPwYF16o0RLiHarbnxsC76CGhq1XnaA@mail.gmail.com> (sfid-20150527_133402_728895_4BADA201)
+Subject: Re: packet loss, disconnects and possible bug in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Nick Dimov <dimovnike@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extract the function that drives the PKCS#7 signature verification given a
-data blob and a PKCS#7 blob out from the module signing code and lump it with
-the system keyring code as it's generic.  This makes it independent of module
-config options and opens it to use by the firmware loader.
+On Wed, May 27, 2015 at 3:41 AM, Nick Dimov <dimovnike@gmail.com> wrote:
+> hello,
+> I will record a tracing but now my kernel doesn't have
+> CONFIG_IWLWIFI_TRACING  (default ubuntu kernel) so I will have to
+> activate the setting and recompile it. As for wpa_supplicant - I checked
+> several times and there is indeed a single process running, also its PID
+> doesn't change during disconnects. Btw, I also tested with 4.0 kernel
+> from the next release of ubuntu and the result is the same. Also the
+> laptop is next to the router and there are no other networks on 5Ghz
+> here (however the problem happens on 2.4Ghz too)
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Cc: Luis R. Rodriguez <mcgrof@suse.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
----
+On what channel is the AP on 2.4GHz?
 
- include/keys/system_keyring.h |    5 ++++
- init/Kconfig                  |   29 ++++++++++++++++--------
- kernel/module_signing.c       |   44 +-----------------------------------
- kernel/system_keyring.c       |   50 +++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 75 insertions(+), 53 deletions(-)
-
-diff --git a/include/keys/system_keyring.h b/include/keys/system_keyring.h
-index 72665eb80692..9791c907cdb7 100644
---- a/include/keys/system_keyring.h
-+++ b/include/keys/system_keyring.h
-@@ -28,4 +28,9 @@ static inline struct key *get_system_trusted_keyring(void)
- }
- #endif
- 
-+#ifdef CONFIG_SYSTEM_DATA_VERIFICATION
-+extern int system_verify_data(const void *data, unsigned long len,
-+			      const void *raw_pkcs7, size_t pkcs7_len);
-+#endif
-+
- #endif /* _KEYS_SYSTEM_KEYRING_H */
-diff --git a/init/Kconfig b/init/Kconfig
-index fb98cba069c1..c05afd6594f2 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1758,6 +1758,24 @@ config SYSTEM_TRUSTED_KEYRING
- 
- 	  Keys in this keyring are used by module signature checking.
- 
-+config SYSTEM_DATA_VERIFICATION
-+	def_bool n
-+	select SYSTEM_TRUSTED_KEYRING
-+	select KEYS
-+	select CRYPTO
-+	select ASYMMETRIC_KEY_TYPE
-+	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
-+	select PUBLIC_KEY_ALGO_RSA
-+	select ASN1
-+	select OID_REGISTRY
-+	select X509_CERTIFICATE_PARSER
-+	select PKCS7_MESSAGE_PARSER
-+	help
-+	  Provide PKCS#7 message verification using the contents of the system
-+	  trusted keyring to provide public keys.  This then can be used for
-+	  module verification, kexec image verification and firmware blob
-+	  verification.
-+
- config PROFILING
- 	bool "Profiling support"
- 	help
-@@ -1866,16 +1884,7 @@ config MODULE_SRCVERSION_ALL
- config MODULE_SIG
- 	bool "Module signature verification"
- 	depends on MODULES
--	select SYSTEM_TRUSTED_KEYRING
--	select KEYS
--	select CRYPTO
--	select ASYMMETRIC_KEY_TYPE
--	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
--	select PUBLIC_KEY_ALGO_RSA
--	select ASN1
--	select OID_REGISTRY
--	select X509_CERTIFICATE_PARSER
--	select PKCS7_MESSAGE_PARSER
-+	select SYSTEM_DATA_VERIFICATION
- 	help
- 	  Check modules for valid signatures upon load: the signature
- 	  is simply appended to the module. For more information see
-diff --git a/kernel/module_signing.c b/kernel/module_signing.c
-index 8eb20cc66b39..70ad463f6df0 100644
---- a/kernel/module_signing.c
-+++ b/kernel/module_signing.c
-@@ -10,10 +10,8 @@
-  */
- 
- #include <linux/kernel.h>
--#include <linux/err.h>
- #include <keys/system_keyring.h>
- #include <crypto/public_key.h>
--#include <crypto/pkcs7.h>
- #include "module-internal.h"
- 
- /*
-@@ -37,46 +35,6 @@ struct module_signature {
- };
- 
- /*
-- * Verify a PKCS#7-based signature on a module.
-- */
--static int mod_verify_pkcs7(const void *mod, unsigned long modlen,
--			    const void *raw_pkcs7, size_t pkcs7_len)
--{
--	struct pkcs7_message *pkcs7;
--	bool trusted;
--	int ret;
--
--	pkcs7 = pkcs7_parse_message(raw_pkcs7, pkcs7_len);
--	if (IS_ERR(pkcs7))
--		return PTR_ERR(pkcs7);
--
--	/* The data should be detached - so we need to supply it. */
--	if (pkcs7_supply_detached_data(pkcs7, mod, modlen) < 0) {
--		pr_err("PKCS#7 signature with non-detached data\n");
--		ret = -EBADMSG;
--		goto error;
--	}
--
--	ret = pkcs7_verify(pkcs7);
--	if (ret < 0)
--		goto error;
--
--	ret = pkcs7_validate_trust(pkcs7, system_trusted_keyring, &trusted);
--	if (ret < 0)
--		goto error;
--
--	if (!trusted) {
--		pr_err("PKCS#7 signature not signed with a trusted key\n");
--		ret = -ENOKEY;
--	}
--
--error:
--	pkcs7_free_message(pkcs7);
--	pr_devel("<==%s() = %d\n", __func__, ret);
--	return ret;
--}
--
--/*
-  * Verify the signature on a module.
-  */
- int mod_verify_sig(const void *mod, unsigned long *_modlen)
-@@ -114,5 +72,5 @@ int mod_verify_sig(const void *mod, unsigned long *_modlen)
- 		return -EBADMSG;
- 	}
- 
--	return mod_verify_pkcs7(mod, modlen, mod + modlen, sig_len);
-+	return system_verify_data(mod, modlen, mod + modlen, sig_len);
- }
-diff --git a/kernel/system_keyring.c b/kernel/system_keyring.c
-index 4cda71ee51c7..95f2dcbc7616 100644
---- a/kernel/system_keyring.c
-+++ b/kernel/system_keyring.c
-@@ -16,6 +16,7 @@
- #include <linux/err.h>
- #include <keys/asymmetric-type.h>
- #include <keys/system_keyring.h>
-+#include <crypto/pkcs7.h>
- 
- struct key *system_trusted_keyring;
- EXPORT_SYMBOL_GPL(system_trusted_keyring);
-@@ -103,3 +104,52 @@ dodgy_cert:
- 	return 0;
- }
- late_initcall(load_system_certificate_list);
-+
-+#ifdef CONFIG_SYSTEM_DATA_VERIFICATION
-+
-+/**
-+ * Verify a PKCS#7-based signature on system data.
-+ * @data: The data to be verified.
-+ * @len: Size of @data.
-+ * @raw_pkcs7: The PKCS#7 message that is the signature.
-+ * @pkcs7_len: The size of @raw_pkcs7.
-+ */
-+int system_verify_data(const void *data, unsigned long len,
-+		       const void *raw_pkcs7, size_t pkcs7_len)
-+{
-+	struct pkcs7_message *pkcs7;
-+	bool trusted;
-+	int ret;
-+
-+	pkcs7 = pkcs7_parse_message(raw_pkcs7, pkcs7_len);
-+	if (IS_ERR(pkcs7))
-+		return PTR_ERR(pkcs7);
-+
-+	/* The data should be detached - so we need to supply it. */
-+	if (pkcs7_supply_detached_data(pkcs7, data, len) < 0) {
-+		pr_err("PKCS#7 signature with non-detached data\n");
-+		ret = -EBADMSG;
-+		goto error;
-+	}
-+
-+	ret = pkcs7_verify(pkcs7);
-+	if (ret < 0)
-+		goto error;
-+
-+	ret = pkcs7_validate_trust(pkcs7, system_trusted_keyring, &trusted);
-+	if (ret < 0)
-+		goto error;
-+
-+	if (!trusted) {
-+		pr_err("PKCS#7 signature not signed with a trusted key\n");
-+		ret = -ENOKEY;
-+	}
-+
-+error:
-+	pkcs7_free_message(pkcs7);
-+	pr_devel("<==%s() = %d\n", __func__, ret);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(system_verify_data);
-+
-+#endif /* CONFIG_SYSTEM_DATA_VERIFICATION */
-
+>
+> Thank you,
+> Nick.
+>
+> On 27.05.2015 03:27, Emmanuel Grumbach wrote:
+>> On Wed, May 27, 2015 at 2:44 AM, Nick Dimov <dimovnike@gmail.com> wrote:
+>>> Hello,
+>>> thank you for your response. I attach the full syslog since the last
+>>> boot which contains some disconnects. I enabled debug mode for
+>>> wpa_supplicant with -dd option (let me know if you need anything else).
+>>>
+>>> I also tried connecting directly, i.e. without NetworkManager but
+>>> manually with wpa_supplicant and I still get disconnects, howvever
+>>> wpa_supplicant gives different logs with different drivers. Please, see
+>>> the file wifi.log (you can see there the driver i used in
+>>> wpa_supplicant, that log doesn't have the debug activated but let me
+>>> know if you need that too)
+>> Please record tracing
+>> (https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging#tracing)
+>> and the syslog from the *same run*. Someone is disconnecting you and I
+>> can't see who and why. Are you sure you have only one instance of the
+>> supplicant running?
+>>
+>>> Thank you again,
+>>> Nick.
+>>>
+>>> On 25.05.2015 14:33, Emmanuel Grumbach wrote:
+>>>> On Sat, May 23, 2015 at 1:28 PM, Nick Dimov <dimovnike@gmail.com> wrote:
+>>>>> Hello,
+>>>>> I recently bought the Intel 7260 AC wifi card (below is the PCI info)
+>>>>> and the card works perfectly in windows with the latest intel driver but
+>>>>> in linux I get deauthenticating and disconnects (reason -3) every minute
+>>>>> or so. When these disconnects happen I get packet loss. In the attached
+>>>>> file iwlwifi_dmesg.txt you can see the log that is produced each time a
+>>>>> disconnect happens. I also tried connecting on 2.4Ghz but I get the same
+>>>>> packet loss. I also put the last firmware from
+>>>>> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
+>>>>> but it did not help.
+>>>> Please increase the debug level of the supplicant. And attach the full syslog.
+>>>>
+>>>>> There is also another problem: In windows i can see it connecting on
+>>>>> 860mbps, but on linux it never goes higher than 600mbps (i check this
+>>>>> with iwconfig) and it stays somewhere on 500mbps.
+>>>>>
+>>>>> Can you please help me solve this?
+>>>>> Thank you.
+>>>>>
+>>>>> uname -a
+>>>>> Linux nick-laptop 3.19.0-18-generic #18-Ubuntu SMP Tue May 19 18:31:35
+>>>>> UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+>>>>>
+>>>>> lspci info:
+>>>>> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
+>>>>>         Subsystem: Intel Corporation Dual Band Wireless-AC 7260
+>>>>>         Flags: bus master, fast devsel, latency 0, IRQ 29
+>>>>>         Memory at f7200000 (64-bit, non-prefetchable) [size=8K]
+>>>>>         Capabilities: [c8] Power Management version 3
+>>>>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>>>>         Capabilities: [40] Express Endpoint, MSI 00
+>>>>>         Capabilities: [100] Advanced Error Reporting
+>>>>>         Capabilities: [140] Device Serial Number d8-fc-93-ff-ff-e4-70-d7
+>>>>>         Capabilities: [14c] Latency Tolerance Reporting
+>>>>>         Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1
+>>>>> Len=014 <?>
+>>>>>         Kernel driver in use: iwlwifi
+>>>>>
+>
