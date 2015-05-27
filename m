@@ -1,206 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:48153 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752882AbbE2UEn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 16:04:43 -0400
-Date: Fri, 29 May 2015 22:04:06 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi: Queue 16 stuck for 10000 ms - Microcode SW error
- detected.
-Message-ID: <20150529200405.GA27272@light.dominikbrodowski.net> (sfid-20150529_220447_537637_9AAB8FFD)
-References: <20150525181043.GA10755@light.dominikbrodowski.net>
- <CANUX_P0+oGdKvY360xSekCmZjZFpe7PMS+shC9==-G-A-1O3sw@mail.gmail.com>
- <20150525184047.GA12142@light.dominikbrodowski.net>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:35745 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364AbbE0NNN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 09:13:13 -0400
+Received: by wicmx19 with SMTP id mx19so110880275wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 06:13:11 -0700 (PDT)
+Date: Wed, 27 May 2015 15:15:39 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	kvm-ppc@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	sparclinux@vger.kernel.org, linux-metag@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] treewide: Fix typo compatability -> compatibility
+Message-ID: <20150527131539.GQ8341@phenom.ffwll.local> (sfid-20150527_151318_639821_6A87EA0F)
+References: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
-In-Reply-To: <20150525184047.GA12142@light.dominikbrodowski.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 27, 2015 at 03:05:42PM +0300, Laurent Pinchart wrote:
+> Even though 'compatability' has a dedicated entry in the Wiktionary,
+> it's listed as 'Mispelling of compatibility'. Fix it.
+> 
+> Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> ---
+>  arch/metag/include/asm/elf.h             | 2 +-
+>  arch/powerpc/kvm/book3s.c                | 2 +-
+>  arch/sparc/include/uapi/asm/pstate.h     | 2 +-
+>  drivers/gpu/drm/drm_atomic_helper.c      | 4 ++--
+>  drivers/media/dvb-frontends/au8522_dig.c | 2 +-
+>  drivers/net/wireless/ipw2x00/ipw2100.h   | 2 +-
+>  6 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> I can split this into one patch per subsystem, but that seems a bit overkill.
+> Can someone take it ?
 
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Daniel Vetter <daniel.vetter@ffwll.ch> for the atomic_helper.c
+part.
+-Daniel
 
-On Mon, May 25, 2015 at 08:40:47PM +0200, Dominik Brodowski wrote:
-> On Mon, May 25, 2015 at 09:27:39PM +0300, Emmanuel Grumbach wrote:
-> > On Mon, May 25, 2015 at 9:10 PM, Dominik Brodowski
-> > <linux@dominikbrodowski.net> wrote:
-> > > Hey,
-> > >
-> > > on my pretty new iwlwifi device 8086:08b1 (7260), the following error=
- just
-> > > appeared twice in dmesg on 4.1.0-rc4+ (Linus' tree as of Saturday/Sun=
-day
-> > > morning):
-> >=20
-> > Firmware problem. Please try to update your -13.ucode from the git
-> > repository (https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-=
-firmware.git/)
->=20
-> Thanks, will test.
+> 
+> diff --git a/arch/metag/include/asm/elf.h b/arch/metag/include/asm/elf.h
+> index d2baf6961794..87b0cf1e0acb 100644
+> --- a/arch/metag/include/asm/elf.h
+> +++ b/arch/metag/include/asm/elf.h
+> @@ -11,7 +11,7 @@
+>  #define R_METAG_RELBRANCH                4
+>  #define R_METAG_GETSETOFF                5
+>  
+> -/* Backward compatability */
+> +/* Backward compatibility */
+>  #define R_METAG_REG32OP1                 6
+>  #define R_METAG_REG32OP2                 7
+>  #define R_METAG_REG32OP3                 8
+> diff --git a/arch/powerpc/kvm/book3s.c b/arch/powerpc/kvm/book3s.c
+> index 453a8a47a467..cb14dd78a2e7 100644
+> --- a/arch/powerpc/kvm/book3s.c
+> +++ b/arch/powerpc/kvm/book3s.c
+> @@ -901,7 +901,7 @@ int kvmppc_core_check_processor_compat(void)
+>  {
+>  	/*
+>  	 * We always return 0 for book3s. We check
+> -	 * for compatability while loading the HV
+> +	 * for compatibility while loading the HV
+>  	 * or PR module
+>  	 */
+>  	return 0;
+> diff --git a/arch/sparc/include/uapi/asm/pstate.h b/arch/sparc/include/uapi/asm/pstate.h
+> index 4b6b998afd99..cf832e14aa05 100644
+> --- a/arch/sparc/include/uapi/asm/pstate.h
+> +++ b/arch/sparc/include/uapi/asm/pstate.h
+> @@ -88,7 +88,7 @@
+>  #define VERS_MAXTL	_AC(0x000000000000ff00,UL) /* Max Trap Level.	*/
+>  #define VERS_MAXWIN	_AC(0x000000000000001f,UL) /* Max RegWindow Idx.*/
+>  
+> -/* Compatability Feature Register (%asr26), SPARC-T4 and later  */
+> +/* Compatibility Feature Register (%asr26), SPARC-T4 and later  */
+>  #define CFR_AES		_AC(0x0000000000000001,UL) /* Supports AES opcodes     */
+>  #define CFR_DES		_AC(0x0000000000000002,UL) /* Supports DES opcodes     */
+>  #define CFR_KASUMI	_AC(0x0000000000000004,UL) /* Supports KASUMI opcodes  */
+> diff --git a/drivers/gpu/drm/drm_atomic_helper.c b/drivers/gpu/drm/drm_atomic_helper.c
+> index b82ef6262469..12c5b79b0e8f 100644
+> --- a/drivers/gpu/drm/drm_atomic_helper.c
+> +++ b/drivers/gpu/drm/drm_atomic_helper.c
+> @@ -751,7 +751,7 @@ crtc_set_mode(struct drm_device *dev, struct drm_atomic_state *old_state)
+>   * This function shuts down all the outputs that need to be shut down and
+>   * prepares them (if required) with the new mode.
+>   *
+> - * For compatability with legacy crtc helpers this should be called before
+> + * For compatibility with legacy crtc helpers this should be called before
+>   * drm_atomic_helper_commit_planes(), which is what the default commit function
+>   * does. But drivers with different needs can group the modeset commits together
+>   * and do the plane commits at the end. This is useful for drivers doing runtime
+> @@ -776,7 +776,7 @@ EXPORT_SYMBOL(drm_atomic_helper_commit_modeset_disables);
+>   * This function enables all the outputs with the new configuration which had to
+>   * be turned off for the update.
+>   *
+> - * For compatability with legacy crtc helpers this should be called after
+> + * For compatibility with legacy crtc helpers this should be called after
+>   * drm_atomic_helper_commit_planes(), which is what the default commit function
+>   * does. But drivers with different needs can group the modeset commits together
+>   * and do the plane commits at the end. This is useful for drivers doing runtime
+> diff --git a/drivers/media/dvb-frontends/au8522_dig.c b/drivers/media/dvb-frontends/au8522_dig.c
+> index 5d06c99b0e97..edadcc7eea6c 100644
+> --- a/drivers/media/dvb-frontends/au8522_dig.c
+> +++ b/drivers/media/dvb-frontends/au8522_dig.c
+> @@ -922,7 +922,7 @@ module_param(debug, int, 0644);
+>  MODULE_PARM_DESC(debug, "Enable verbose debug messages");
+>  
+>  module_param(zv_mode, int, 0644);
+> -MODULE_PARM_DESC(zv_mode, "Turn on/off ZeeVee modulator compatability mode (default:on).\n"
+> +MODULE_PARM_DESC(zv_mode, "Turn on/off ZeeVee modulator compatibility mode (default:on).\n"
+>  	"\t\ton - modified AU8522 QAM256 initialization.\n"
+>  	"\t\tProvides faster lock when using ZeeVee modulator based sources");
+>  
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
+> index c6d78790cb0d..193947865efd 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2100.h
+> +++ b/drivers/net/wireless/ipw2x00/ipw2100.h
+> @@ -746,7 +746,7 @@ struct ipw2100_priv {
+>  #define IPW_REG_GPIO			IPW_REG_DOMAIN_0_OFFSET + 0x0030
+>  #define IPW_REG_FW_TYPE                 IPW_REG_DOMAIN_1_OFFSET + 0x0188
+>  #define IPW_REG_FW_VERSION 		IPW_REG_DOMAIN_1_OFFSET + 0x018C
+> -#define IPW_REG_FW_COMPATABILITY_VERSION IPW_REG_DOMAIN_1_OFFSET + 0x0190
+> +#define IPW_REG_FW_COMPATIBILITY_VERSION IPW_REG_DOMAIN_1_OFFSET + 0x0190
+>  
+>  #define IPW_REG_INDIRECT_ADDR_MASK	0x00FFFFFC
+>  
+> -- 
+> Regards,
+> 
+> Laurent Pinchart
+> 
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
 
-No joy. Firmware 25.27.13.0 also is not happy at times:
-
-iwlwifi 0000:02:00.0: invalid BA notification: Q 16, tid 0, flow 65535
-iwlwifi 0000:02:00.0: invalid BA notification: Q 16, tid 0, flow 65535
-iwlwifi 0000:02:00.0: invalid BA notification: Q 16, tid 0, flow 65535
-iwlwifi 0000:02:00.0: Queue 2 stuck for 10000 ms.
-iwlwifi 0000:02:00.0: Current SW read_ptr 36 write_ptr 67
-iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-=2E.........
-iwlwifi 0000:02:00.0: FH TRBs(0) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(1) =3D 0xc01100b8
-iwlwifi 0000:02:00.0: FH TRBs(2) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(3) =3D 0x80300008
-iwlwifi 0000:02:00.0: FH TRBs(4) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(5) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(6) =3D 0x00000000
-iwlwifi 0000:02:00.0: FH TRBs(7) =3D 0x0070904c
-iwlwifi 0000:02:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [9,9]
-iwlwifi 0000:02:00.0: Q 1 is active and mapped to fifo 2 ra_tid 0x0000 [0,0]
-iwlwifi 0000:02:00.0: Q 2 is active and mapped to fifo 1 ra_tid 0x0000 [36,=
-67]
-iwlwifi 0000:02:00.0: Q 3 is active and mapped to fifo 0 ra_tid 0x0000 [0,0]
-iwlwifi 0000:02:00.0: Q 4 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 5 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 6 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 7 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 8 is inactive and mapped to fifo 0 ra_tid 0x0000 [0=
-,0]
-iwlwifi 0000:02:00.0: Q 9 is active and mapped to fifo 7 ra_tid 0x0000 [77,=
-77]
-iwlwifi 0000:02:00.0: Q 10 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 11 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 12 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 13 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 14 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 15 is active and mapped to fifo 5 ra_tid 0x0000 [0,=
-0]
-iwlwifi 0000:02:00.0: Q 16 is active and mapped to fifo 1 ra_tid 0x0000 [16=
-9,230]
-iwlwifi 0000:02:00.0: Q 17 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 18 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Q 19 is inactive and mapped to fifo 0 ra_tid 0x0000 [=
-0,0]
-iwlwifi 0000:02:00.0: Microcode SW error detected.  Restarting 0x2000000.
-iwlwifi 0000:02:00.0: CSR values:
-iwlwifi 0000:02:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_R=
-EG)
-iwlwifi 0000:02:00.0:        CSR_HW_IF_CONFIG_REG: 0X40489204
-iwlwifi 0000:02:00.0:          CSR_INT_COALESCING: 0X80000040
-iwlwifi 0000:02:00.0:                     CSR_INT: 0X00000000
-iwlwifi 0000:02:00.0:                CSR_INT_MASK: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_FH_INT_STATUS: 0X00000000
-iwlwifi 0000:02:00.0:                 CSR_GPIO_IN: 0X00000000
-iwlwifi 0000:02:00.0:                   CSR_RESET: 0X00000000
-iwlwifi 0000:02:00.0:                CSR_GP_CNTRL: 0X080403c5
-iwlwifi 0000:02:00.0:                  CSR_HW_REV: 0X00000144
-iwlwifi 0000:02:00.0:              CSR_EEPROM_REG: 0X00000000
-iwlwifi 0000:02:00.0:               CSR_EEPROM_GP: 0X80000000
-iwlwifi 0000:02:00.0:              CSR_OTP_GP_REG: 0X803a0000
-iwlwifi 0000:02:00.0:                 CSR_GIO_REG: 0X00080040
-iwlwifi 0000:02:00.0:            CSR_GP_UCODE_REG: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_GP_DRIVER_REG: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-iwlwifi 0000:02:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-iwlwifi 0000:02:00.0:                 CSR_LED_REG: 0X00000060
-iwlwifi 0000:02:00.0:        CSR_DRAM_INT_TBL_REG: 0X8821408c
-iwlwifi 0000:02:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-iwlwifi 0000:02:00.0:             CSR_ANA_PLL_CFG: 0Xd55555d5
-iwlwifi 0000:02:00.0:      CSR_MONITOR_STATUS_REG: 0X3c08019d
-iwlwifi 0000:02:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-iwlwifi 0000:02:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0010
-iwlwifi 0000:02:00.0: FH register values:
-iwlwifi 0000:02:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X0d9f3000
-iwlwifi 0000:02:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X00d9f2f0
-iwlwifi 0000:02:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000e0
-iwlwifi 0000:02:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X00801114
-iwlwifi 0000:02:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
-iwlwifi 0000:02:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X03030000
-iwlwifi 0000:02:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
-iwlwifi 0000:02:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
-iwlwifi 0000:02:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
-iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-iwlwifi 0000:02:00.0: Status: 0x00000000, count: 6
-iwlwifi 0000:02:00.0: Loaded firmware version: 25.27.13.0
-iwlwifi 0000:02:00.0: 0x00000084 | NMI_INTERRUPT_UNKNOWN      =20
-iwlwifi 0000:02:00.0: 0x00A002F0 | uPc
-iwlwifi 0000:02:00.0: 0x00000000 | branchlink1
-iwlwifi 0000:02:00.0: 0x00000B2E | branchlink2
-iwlwifi 0000:02:00.0: 0x00016218 | interruptlink1
-iwlwifi 0000:02:00.0: 0x00016218 | interruptlink2
-iwlwifi 0000:02:00.0: 0x00000000 | data1
-iwlwifi 0000:02:00.0: 0x00000080 | data2
-iwlwifi 0000:02:00.0: 0x07030000 | data3
-iwlwifi 0000:02:00.0: 0xC600F06D | beacon time
-iwlwifi 0000:02:00.0: 0x95A5CF83 | tsf low
-iwlwifi 0000:02:00.0: 0x00000003 | tsf hi
-iwlwifi 0000:02:00.0: 0x00000000 | time gp1
-iwlwifi 0000:02:00.0: 0x164C8D06 | time gp2
-iwlwifi 0000:02:00.0: 0x00000000 | time gp3
-iwlwifi 0000:02:00.0: 0x0004191B | uCode version
-iwlwifi 0000:02:00.0: 0x00000144 | hw version
-iwlwifi 0000:02:00.0: 0x40489204 | board version
-iwlwifi 0000:02:00.0: 0x10A9001C | hcmd
-iwlwifi 0000:02:00.0: 0x00022002 | isr0
-iwlwifi 0000:02:00.0: 0x01800000 | isr1
-iwlwifi 0000:02:00.0: 0x0000000A | isr2
-iwlwifi 0000:02:00.0: 0x004174C0 | isr3
-iwlwifi 0000:02:00.0: 0x00000000 | isr4
-iwlwifi 0000:02:00.0: 0x00000110 | isr_pref
-iwlwifi 0000:02:00.0: 0x00000000 | wait_event
-iwlwifi 0000:02:00.0: 0x0000024D | l2p_control
-iwlwifi 0000:02:00.0: 0x00000020 | l2p_duration
-iwlwifi 0000:02:00.0: 0x00000003 | l2p_mhvalid
-iwlwifi 0000:02:00.0: 0x000000EE | l2p_addr_match
-iwlwifi 0000:02:00.0: 0x00000005 | lmpm_pmg_sel
-iwlwifi 0000:02:00.0: 0x21051936 | timestamp
-iwlwifi 0000:02:00.0: 0x0034E0E8 | flow_handler
-ieee80211 phy0: Hardware restart was requested
-iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
-iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
-iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
-iwlwifi 0000:02:00.0: L1 Enabled - LTR Disabled
-
-Best,
-	Dominik
-
---LZvS9be/3tNcYl/X
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJVaMY1AAoJEJqXYIlMjaMN4tQP/jfVoIZEuTM2YhdeBjetQ4An
-v8dkimvFRJULO9/qf/g4JOaDKphn58s8JBoF9FZWii+l2oJAxiC/mu1AVI8lyNKK
-tA9am612kyTFHLpewUM1FxOSeRQYQRvQ0Fk/WgHe8oyN8VAaebXOnD4r0ajW1ZvP
-r7R4sJNWwM/oI+sedCdmH2HrWx5w6vlVmgY3UbDkgt1fmKuYk6T5y5Hjc6vEw2lg
-p6y0m9QeLAdXDjjHRwDtVUT6P0UkGFJoJ0B4wM+I2TuBRMNS15wgorfglEvJXt5M
-WiaiaYO2wM6FnbCIPOVqt+wJcqT5plWfYhKvf0X/Z6eAbt7LsNpzf5g+H4XtSUmw
-4MmGwVnY3QX70bvFdx+YOFHExwNaDYk66FFeS6DxtfpJtx4wcyYSCYAeZzCPh7ca
-sexdxF9l7BvCzQJ7VoE92+UiSB1PUdiafVhJpH7BjzNrwZev5D1TQJpoApzlyzEX
-CONXzeCiOcfcaQc2vp9yyShvXJEIM9X2hJTbEXddjkcOBJtw2ybnzJTNqnM4saG1
-g/qt4rcA/3MOm6ccX2mtU7EcL3YiqIc+1DSO34H6OSOM6/kdNtvzOg8g/hFxEJgn
-/A6yUUWEnpEa2YwWYaiPqrEf+gsiPUS2pCpu6WX1ShSgJJfRrMZm5zxTIWguEFzh
-oEHo+jheP+EcVolMPiUO
-=8AXf
------END PGP SIGNATURE-----
-
---LZvS9be/3tNcYl/X--
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
