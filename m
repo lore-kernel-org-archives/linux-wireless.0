@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47467 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752224AbbEYKMY (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:37169 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753186AbbE0TTQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 06:12:24 -0400
-Date: Mon, 25 May 2015 13:12:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Vaishali Thakkar <vthakkar1994@gmail.com>
-Cc: Haggai Eran <haggai.eran@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Stable <stable@vger.kernel.org>, devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150525101207.GC22558@mwanda> (sfid-20150525_121234_479645_A591A3E0)
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>
- <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
- <556268BC.5050807@lwfinger.net>
- <20150525091737.GQ4150@mwanda>
- <CAK-LDb+1WscLTFw=NDY=_aUOGw72a4wRsqCU-1N+KJ11k15S5w@mail.gmail.com>
+	Wed, 27 May 2015 15:19:16 -0400
+Received: by wifw1 with SMTP id w1so34771794wif.0
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 12:19:15 -0700 (PDT)
+Message-ID: <55661894.9060007@gmail.com> (sfid-20150527_211922_973607_A37D091C)
+Date: Wed, 27 May 2015 22:18:44 +0300
+From: Nick Dimov <dimovnike@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK-LDb+1WscLTFw=NDY=_aUOGw72a4wRsqCU-1N+KJ11k15S5w@mail.gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Dan Williams <dcbw@redhat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: packet loss, disconnects and possible bug in iwlwifi
+References: <55605637.1080503@gmail.com>	<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>	<55650565.6020303@gmail.com>	<1432742132.15971.29.camel@redhat.com> <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
+In-Reply-To: <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 25, 2015 at 03:07:08PM +0530, Vaishali Thakkar wrote:
-> I am sorry for those patches. It was me who introduced those bugs. Yes, it
-> was sent during Outreachy process. But it was my mistake as a newbie. May
-> be I should have taken care of interrupt mode thing.
-> 
-> I would like to fix it if someone is not doing it. Sorry again. I will take
-> care of these things in my future patches.
+Hello,
+It looks the problem on 2.4Ghz is different - I get packet loss
+sometimes but there are no disconnects, no wpa_supplicant entries in
+syslog at all. Now it runs great and  is connected at 300mbps. I can not
+reproduce the packet loss on 2.4Ghz anymore.
+Does this help? How to update the regulatory database?
 
-No, it's not your fault for making mistakes.  We *expect* newbies to
-make mistakes.
-
-It's Greg's fault for merging these when they weren't sent to the list
-or to the other maintainers.  But Greg knows I'm annoyed already since
-we have been dealing with the fallout for months and I always make sure
-to complain whenever I have a chance.  /me shakes a fist!  Grrr....  :P
-
-regards,
-dan carpenter
+On 27.05.2015 21:34, Emmanuel Grumbach wrote:
+> On Wed, May 27, 2015 at 6:55 PM, Dan Williams <dcbw@redhat.com> wrote:
+>> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
+>>> Hello,
+>>> thank you for your response. I attach the full syslog since the last
+>>> boot which contains some disconnects. I enabled debug mode for
+>>> wpa_supplicant with -dd option (let me know if you need anything else).
+>>>
+>>> I also tried connecting directly, i.e. without NetworkManager but
+>>> manually with wpa_supplicant and I still get disconnects, howvever
+>>> wpa_supplicant gives different logs with different drivers. Please, see
+>>> the file wifi.log (you can see there the driver i used in
+>>> wpa_supplicant, that log doesn't have the debug activated but let me
+>>> know if you need that too)
+>> So if NM isn't involved in your later runs (and it's not, looking at the
+>> logs), then I'm not sure what the issue could be except something in the
+>> driver.
+>>
+>> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Event message
+>> available
+>> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Drv Event 20
+>> (NL80211_CMD_DEL_STATION) received for wlan5
+>> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Delete station
+>> d8:50:e6:da:1d:b4
+>> mai 27 02:31:54 nick-G55VW kernel: wlan5: deauthenticating from
+>> d8:50:e6:da:1d:b4 by local choice (Reason: 3=DEAUTH_LEAVING)
+>>
+>> I don't see anything interesting around those lines, so I guess its up
+>> to Emmanuel now...  the tracing he requests would be good to get.
+>>
+> I suspect a regulatory problem. This is why I asked what was the
+> channel used on 2.4GHz. On 5.2GHz we have seen bugs happening because
+> of the regulatory database being ancient on Ubuntu. 2.4GHz should rule
+> these problems out, unless we are talking about channel 12 and up or
+> something like that.
 
