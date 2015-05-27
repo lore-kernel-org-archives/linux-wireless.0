@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:34444 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbbEGJ61 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35851 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752426AbbE0HE3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 May 2015 05:58:27 -0400
-Received: by iedfl3 with SMTP id fl3so39232867ied.1
-        for <linux-wireless@vger.kernel.org>; Thu, 07 May 2015 02:58:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1430918151.1954.6.camel@sipsolutions.net>
-References: <1425902001-3163-1-git-send-email-eliad@wizery.com>
-	<1425905568.1928.7.camel@sipsolutions.net>
-	<CAB3XZEe71wE+zPR-knwvrFMjecvddJhVsMWJ9YcHkGa9xW-XZQ@mail.gmail.com>
-	<1430918151.1954.6.camel@sipsolutions.net>
-Date: Thu, 7 May 2015 12:58:26 +0300
-Message-ID: <CAB3XZEcMX170CKdSWDpScfiptXJYsF1uCj3E-jH0hBf4RKk9TQ@mail.gmail.com> (sfid-20150507_115837_171025_C903B0C4)
-Subject: Re: [PATCH] mac80211: handle hw roc cancel vs. expiration race
-From: Eliad Peller <eliad@wizery.com>
+	Wed, 27 May 2015 03:04:29 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Cathy Luo" <cluo@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: RE: [PATCH 5/6] mwifiex: use generic name 'device dump'
+Date: Wed, 27 May 2015 07:04:24 +0000
+Message-ID: <f92fc66de96b485dba99642987703334@SC-EXCH02.marvell.com> (sfid-20150527_090432_900121_8A9BB71D)
+References: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
+	 <1432647272-5734-6-git-send-email-akarwar@marvell.com>
+	 (sfid-20150526_153538_730660_141E53A3)
+ <1432650631.5169.11.camel@sipsolutions.net>
+In-Reply-To: <1432650631.5169.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 6, 2015 at 4:15 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> To revive an old thread - sorry...
->
->> >> Fix it by cancelling hw_roc_done on roc cancel.
->> >> Since hw_roc_done takes local->mtx, temporarily
->> >> release it (before re-acquiring it and starting
->> >> the next roc if needed).
->> >
->> > I can't say I like this, and I'm not even sure it doesn't leave a race?
->> > After all, the work will not take the RTNL.
->> >
->> the other way (cancel while hw_roc_done) is protected, since
->> ieee80211_cancel_roc() looks for a specific roc cookie.
->
-> But you're saying that we rely on RTNL to not modify the list, and the
-> hw_roc_done work doesn't use the RTNL? Hmm. Are you saying now that it
-> also checks that it was started? But then why do we even have this
-> issue?
->
-sorry, i'll have to recall the exact details...
-
-> Or I can see why we have this issue, but perhaps we could fix it by
-> flushing the work *after* we cancel, so in case the driver was
-> cancelling at the same time we'd not yet have started the next one?
->
-that's basically what i did - canceled the work after
-drv_cancel_remain_on_channel() was called.
-
->> > I think the only way to really fix that is to make the driver return the
->> > roc pointer or so and then we can either queue a work struct per roc
->> > struct, or at least mark the roc struct as driver-destroyed and
->> > double-check that in the work function?
->> >
->> that was my initial implementation. but then i thought it will be
->> nicer to implement it in mac80211 and avoid changing all the drivers
->> (with the need to save the cookie, etc.)
->> do you prefer adding such cookie/pointer param?
->
-> How difficult was it for the driver(s)? It seems it would make the code
-> far easier to reason about, which can only be a good thing. We'd save
-> the whole race discussion above :)
->
-sure. let's forget about this discussion and go with the clearer solution :)
-
-Eliad.
+SGkgSm9oYW5uZXMsDQoNCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNp
+cHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFR1ZXNkYXksIE1heSAyNiwgMjAxNSA4OjAxIFBNDQo+
+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
+cmc7IENhdGh5IEx1bzsgQXZpbmFzaCBQYXRpbA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDUvNl0g
+bXdpZmlleDogdXNlIGdlbmVyaWMgbmFtZSAnZGV2aWNlIGR1bXAnDQo+IA0KPiBPbiBUdWUsIDIw
+MTUtMDUtMjYgYXQgMDY6MzQgLTA3MDAsIEFtaXRrdW1hciBLYXJ3YXIgd3JvdGU6DQo+ID4gQ3Vy
+cmVudGx5IHdlIGFyZSBkdW1waW5nIGRyaXZlciBpbmZvcm1hdGlvbiBhbHNvIGluc2lkZSBmaXJt
+d2FyZSBkdW1wDQo+ID4gQVBJLiBXZSB3aWxsIGNhbGwgaXQgYXMgZGV2aWNlIGR1bXAgYW5kIGR1
+bXAgZHJpdmVyIGFuZCBmaXJtd2FyZSBkYXRhDQo+ID4gc2VwYXJhdGVseS4NCj4gDQo+IEhvbmVz
+dGx5LCBJIGRvbid0IHRoaW5rIHRoaXMgbWF0dGVycy4gSSBjYWxsZWQgaXQgJ2RldmNvcmVkdW1w
+JyBvcg0KPiAnZGV2aWNlJyBiZWNhdXNlIHRoZXJlIHdlcmUgcGVvcGxlIHNheWluZyBpdCBtaWdo
+dCBiZSB1c2VkIHRvIGR1bXANCj4gaGFyZHdhcmUgc3RhdGUsIHJhdGhlciB0aGFuIGZpcm13YXJl
+IHN0YXRlIChteSBvcmlnaW5hbCB0aG91Z2h0IHdhcyB0bw0KPiBjYWxsIHRoZSBmcmFtZXdvcmsg
+J2Z3Y29yZWR1bXAnKQ0KPiANCj4gSW4geW91ciBkcml2ZXIsIGl0J3MgcmVhbGx5IG9ubHkgZHVt
+cGluZyBmaXJtd2FyZSBzdGF0ZSAoYXMgZmFyIGFzIEkgY2FuDQo+IHRlbGwpLCBzbyBJIGRvbid0
+IHRoaW5rIHRoZSBuYW1lIG1hdHRlcnMuDQo+IA0KDQpUaGFua3MgZm9yIHlvdXIgcmV2aWV3LiBX
+ZSBhcmUgZHVtcGluZyBkcml2ZXIgZGF0YSBhcyB3ZWxsIGFsb25nIHdpdGggZmlybXdhcmUgc3Rh
+dGUuIEhlbmNlIHdlIHRob3VnaHQgb2YgcmVuYW1pbmcgJ2Z3X2R1bXAnIHdpdGggJ2RldmljZV9k
+dW1wJy4NCg0Kc3RhdGljIHZvaWQgbXdpZmlleF9zZGlvX2RldmljZV9kdW1wX3dvcmsoc3RydWN0
+IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikNCnsNCiAgICAgICAgbXdpZmlleF9kcnZfaW5mb19k
+dW1wKGFkYXB0ZXIpOw0KICAgICAgICBtd2lmaWV4X3NkaW9fZndfZHVtcChhZGFwdGVyKTsNCiAg
+ICAgICAgbXdpZmlleF91cGxvYWRfZGV2aWNlX2R1bXAoYWRhcHRlcik7DQp9DQoNCg0Kc3RhdGlj
+IHZvaWQgbXdpZmlleF9wY2llX2RldmljZV9kdW1wX3dvcmsoc3RydWN0IG13aWZpZXhfYWRhcHRl
+ciAqYWRhcHRlcikNCnsNCiAgICAgICAgbXdpZmlleF9kcnZfaW5mb19kdW1wKGFkYXB0ZXIpOw0K
+ICAgICAgICBtd2lmaWV4X3BjaWVfZndfZHVtcChhZGFwdGVyKTsNCiAgICAgICAgbXdpZmlleF91
+cGxvYWRfZGV2aWNlX2R1bXAoYWRhcHRlcik7DQp9DQoNCj4gSWYgeW91IHByZWZlciAiZGV2aWNl
+IGR1bXAiIHRoYXQncyBzdXJlbHkgZmluZSwgYnV0IGNoYW5naW5nIGFsbCB0aGUNCj4gZGVidWdm
+cyBmaWxlIG5hbWVzIGV0Yy4ganVzdCBiZWNhdXNlIEkgY2FsbGVkIHRoZSBmcmFtZXdvcmsNCj4g
+ImRldmNvcmVkdW1wIiBpc24ndCByZWFsbHkgbmVlZGVkIEkgdGhpbmsgOikNCg0KRGVidWdmcyBm
+aWxlIG5hbWUgaXMgY2hhbmdlZCBiZWNhdXNlICdkZXZpY2VfZHVtcCcgd2lsbCBub3cgdGFrZSBj
+YXJlIG9mIGR1bXBpbmcgYm90aCBkcml2ZXIgZGF0YSBhbmQgZmlybXdhcmUgc3RhdGUuDQoNCj4g
+DQo+IE5vdGUgdGhhdCB0aGUgZnJhbWV3b3JrIGlzIHJlYWxseSBhbHNvIGJ1aWx0IHRvIHN1cHBv
+cnQgInNwb250YW5lb3VzIg0KPiBkYXRhIGNvbGxlY3Rpb24sIGUuZy4gd2hlbiB0aGUgZHJpdmVy
+IG5vdGljZWQgdGhlIGZpcm13YXJlIGRvaW5nDQo+IHNvbWV0aGluZyBzdHJhbmdlLiBZb3Ugc2Vl
+bSB0byBzdXBwb3J0ICJ1c2VyLXRyaWdnZXJlZCIgb25seSwgd2hpY2ggaXMNCj4gcGVyZmVjdGx5
+IHJlYXNvbmFibGUgYWdhaW4gaWYgeW91IHdhbnQgaXQsIGJ1dCBub3QgbmVjZXNzYXJ5Lg0KDQpD
+dXJyZW50bHkgd2UgYXJlIHRyaWdnZXJpbmcgdGhlIGR1bXAgb3BlcmF0aW9uIGluIG91ciBjb21t
+YW5kIHRpbWVvdXQgaGFuZGxlciBhcyB3ZWxsLiBUaGlzIHdvdWxkIGhlbHAgdXMgZGVidWcgcG9z
+c2libGUgZmlybXdhcmUgYnVnIGNhdXNpbmcgdGltZW91dC4NCg0KUmVnYXJkcywNCkFtaXRrdW1h
+cg0KDQo=
