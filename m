@@ -1,74 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:64575 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755485AbbE2L1K (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:35875 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572AbbE0TYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:27:10 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBPGmC008616
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:10 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5un8q-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:10 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv3 00/17] mwifiex patches 
-Date: Fri, 29 May 2015 22:26:21 +0530
-Message-ID: <1432918598-27769-1-git-send-email-patila@marvell.com> (sfid-20150529_132716_240424_501EECF7)
+	Wed, 27 May 2015 15:24:15 -0400
+Received: by wgbgq6 with SMTP id gq6so18232296wgb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 12:24:14 -0700 (PDT)
+Message-ID: <556619DB.4070307@gmail.com> (sfid-20150527_212544_374438_22326523)
+Date: Wed, 27 May 2015 22:24:11 +0300
+From: Nick Dimov <dimovnike@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Dan Williams <dcbw@redhat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: packet loss, disconnects and possible bug in iwlwifi
+References: <55605637.1080503@gmail.com>	<CANUX_P0OzQ45pChQxc-9WVK=7_qh6M4CcE28U6pnu5RbH-qNuQ@mail.gmail.com>	<55650565.6020303@gmail.com>	<1432742132.15971.29.camel@redhat.com> <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
+In-Reply-To: <CANUX_P1FohPUd4+9znUorjZi7Js=xJiX4T=G9JA504-NdgUHZQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series mainly adds enhancements for mwifiex AP. 
-With this series, we support verbose information in station dump command
-also information about AP link. Another important enhancement is related
-to parsing IEs from Tail of beacon_data.
-Few issues seen during DFS testing are also fixed in this series.
-Patch series also includes some other misc patches.
+Hello,
+does it help that the disconnects happen at precise intervals, please
+check this:
 
-Avinash Patil (11):
-  mwifiex: verbose logging for association failure messages
-  mwifiex: correct bss_type assignment
-  mwifiex: support AP reset after bss_stop
-  mwifiex: enable 11d after bss reset
-  mwifiex: reset 11h active flag when chandef does not require dfs
-  mwifiex: disable CAC upon radar detection event
-  mwifiex: parse power constraint IE from Tail
-  mwifiex: support downloading IEs from tail
-  mwifiex: drop block-ack action frames
-  mwifiex: advertise PS ON by default support to cfg80211
-  mwifiex: update AP WMM settings from BSS_START event
+mai 27 22:18:52 nick-G55VW wpa_supplicant[4506]: wlan5:
+CTRL-EVENT-CONNECTED - Connection to d8:50:e6:da:1d:b4 completed [id=0
+id_str=]
+mai 27 22:19:56 nick-G55VW wpa_supplicant[4506]: wlan5:
+CTRL-EVENT-CONNECTED - Connection to d8:50:e6:da:1d:b4 completed [id=0
+id_str=]
+mai 27 22:20:59 nick-G55VW wpa_supplicant[4506]: wlan5:
+CTRL-EVENT-CONNECTED - Connection to d8:50:e6:da:1d:b4 completed [id=0
+id_str=]
+mai 27 22:22:03 nick-G55VW wpa_supplicant[4506]: wlan5:
+CTRL-EVENT-CONNECTED - Connection to d8:50:e6:da:1d:b4 completed [id=0
+id_str=]
 
-Xinming Hu (6):
-  mwifiex: add cfg80211 get_channel handler
-  mwifiex: maintain station statistic in uap mode
-  mwifiex: add sta_list firmware command
-  mwifiex: dump station support in uap mode
-  mwifiex: using right tid for addressing ra_list
-  mwifiex: do not decrease tx_pending for AMSDU packet once more
+You can see the interval is the same and is always 63-64 seconds.
 
- drivers/net/wireless/mwifiex/11h.c           |  32 +++++--
- drivers/net/wireless/mwifiex/11n.c           |  11 ++-
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   5 +-
- drivers/net/wireless/mwifiex/cfg80211.c      | 130 ++++++++++++++++++++++++---
- drivers/net/wireless/mwifiex/cmdevt.c        |   2 +
- drivers/net/wireless/mwifiex/fw.h            |  43 ++++++++-
- drivers/net/wireless/mwifiex/ie.c            | 102 ++++++++++++---------
- drivers/net/wireless/mwifiex/ioctl.h         |   1 +
- drivers/net/wireless/mwifiex/join.c          |  30 ++++++-
- drivers/net/wireless/mwifiex/main.h          |  23 ++++-
- drivers/net/wireless/mwifiex/sta_cmdresp.c   |  26 ++++++
- drivers/net/wireless/mwifiex/txrx.c          |  21 +++--
- drivers/net/wireless/mwifiex/uap_cmd.c       |  55 +++++++++++-
- drivers/net/wireless/mwifiex/uap_event.c     |  63 +++++++++++++
- drivers/net/wireless/mwifiex/uap_txrx.c      |  18 +++-
- drivers/net/wireless/mwifiex/util.c          |  56 +++++++++---
- 16 files changed, 525 insertions(+), 93 deletions(-)
 
--- 
-1.8.1.4
+On 27.05.2015 21:34, Emmanuel Grumbach wrote:
+> On Wed, May 27, 2015 at 6:55 PM, Dan Williams <dcbw@redhat.com> wrote:
+>> On Wed, 2015-05-27 at 02:44 +0300, Nick Dimov wrote:
+>>> Hello,
+>>> thank you for your response. I attach the full syslog since the last
+>>> boot which contains some disconnects. I enabled debug mode for
+>>> wpa_supplicant with -dd option (let me know if you need anything else).
+>>>
+>>> I also tried connecting directly, i.e. without NetworkManager but
+>>> manually with wpa_supplicant and I still get disconnects, howvever
+>>> wpa_supplicant gives different logs with different drivers. Please, see
+>>> the file wifi.log (you can see there the driver i used in
+>>> wpa_supplicant, that log doesn't have the debug activated but let me
+>>> know if you need that too)
+>> So if NM isn't involved in your later runs (and it's not, looking at the
+>> logs), then I'm not sure what the issue could be except something in the
+>> driver.
+>>
+>> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Event message
+>> available
+>> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Drv Event 20
+>> (NL80211_CMD_DEL_STATION) received for wlan5
+>> mai 27 02:31:54 nick-G55VW wpa_supplicant[1565]: nl80211: Delete station
+>> d8:50:e6:da:1d:b4
+>> mai 27 02:31:54 nick-G55VW kernel: wlan5: deauthenticating from
+>> d8:50:e6:da:1d:b4 by local choice (Reason: 3=DEAUTH_LEAVING)
+>>
+>> I don't see anything interesting around those lines, so I guess its up
+>> to Emmanuel now...  the tracing he requests would be good to get.
+>>
+> I suspect a regulatory problem. This is why I asked what was the
+> channel used on 2.4GHz. On 5.2GHz we have seen bugs happening because
+> of the regulatory database being ancient on Ubuntu. 2.4GHz should rule
+> these problems out, unless we are talking about channel 12 and up or
+> something like that.
 
