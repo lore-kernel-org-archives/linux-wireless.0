@@ -1,63 +1,400 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35851 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752426AbbE0HE3 (ORCPT
+Received: from mga14.intel.com ([192.55.52.115]:25962 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751796AbbE0NEX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 03:04:29 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cathy Luo" <cluo@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: RE: [PATCH 5/6] mwifiex: use generic name 'device dump'
-Date: Wed, 27 May 2015 07:04:24 +0000
-Message-ID: <f92fc66de96b485dba99642987703334@SC-EXCH02.marvell.com> (sfid-20150527_090432_900121_8A9BB71D)
-References: <1432647272-5734-1-git-send-email-akarwar@marvell.com>
-	 <1432647272-5734-6-git-send-email-akarwar@marvell.com>
-	 (sfid-20150526_153538_730660_141E53A3)
- <1432650631.5169.11.camel@sipsolutions.net>
-In-Reply-To: <1432650631.5169.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 27 May 2015 09:04:23 -0400
+From: "Mauger, MatthieuX" <matthieux.mauger@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Dan Williams <dcbw@redhat.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: RE: [PATCH v2] cfg80211: properly send
+ NL80211_ATTR_DISCONNECTED_BY_AP in disconnect
+Date: Wed, 27 May 2015 13:04:12 +0000
+Message-ID: <EE7846CC97FF2445A19665ED0567DD8E2E7D6A32@HASMSX105.ger.corp.intel.com> (sfid-20150527_150427_787974_63A4AE4A)
+References: <1432646540-28707-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1432646540-28707-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNp
-cHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFR1ZXNkYXksIE1heSAyNiwgMjAxNSA4OjAxIFBNDQo+
-IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
-cmc7IENhdGh5IEx1bzsgQXZpbmFzaCBQYXRpbA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDUvNl0g
-bXdpZmlleDogdXNlIGdlbmVyaWMgbmFtZSAnZGV2aWNlIGR1bXAnDQo+IA0KPiBPbiBUdWUsIDIw
-MTUtMDUtMjYgYXQgMDY6MzQgLTA3MDAsIEFtaXRrdW1hciBLYXJ3YXIgd3JvdGU6DQo+ID4gQ3Vy
-cmVudGx5IHdlIGFyZSBkdW1waW5nIGRyaXZlciBpbmZvcm1hdGlvbiBhbHNvIGluc2lkZSBmaXJt
-d2FyZSBkdW1wDQo+ID4gQVBJLiBXZSB3aWxsIGNhbGwgaXQgYXMgZGV2aWNlIGR1bXAgYW5kIGR1
-bXAgZHJpdmVyIGFuZCBmaXJtd2FyZSBkYXRhDQo+ID4gc2VwYXJhdGVseS4NCj4gDQo+IEhvbmVz
-dGx5LCBJIGRvbid0IHRoaW5rIHRoaXMgbWF0dGVycy4gSSBjYWxsZWQgaXQgJ2RldmNvcmVkdW1w
-JyBvcg0KPiAnZGV2aWNlJyBiZWNhdXNlIHRoZXJlIHdlcmUgcGVvcGxlIHNheWluZyBpdCBtaWdo
-dCBiZSB1c2VkIHRvIGR1bXANCj4gaGFyZHdhcmUgc3RhdGUsIHJhdGhlciB0aGFuIGZpcm13YXJl
-IHN0YXRlIChteSBvcmlnaW5hbCB0aG91Z2h0IHdhcyB0bw0KPiBjYWxsIHRoZSBmcmFtZXdvcmsg
-J2Z3Y29yZWR1bXAnKQ0KPiANCj4gSW4geW91ciBkcml2ZXIsIGl0J3MgcmVhbGx5IG9ubHkgZHVt
-cGluZyBmaXJtd2FyZSBzdGF0ZSAoYXMgZmFyIGFzIEkgY2FuDQo+IHRlbGwpLCBzbyBJIGRvbid0
-IHRoaW5rIHRoZSBuYW1lIG1hdHRlcnMuDQo+IA0KDQpUaGFua3MgZm9yIHlvdXIgcmV2aWV3LiBX
-ZSBhcmUgZHVtcGluZyBkcml2ZXIgZGF0YSBhcyB3ZWxsIGFsb25nIHdpdGggZmlybXdhcmUgc3Rh
-dGUuIEhlbmNlIHdlIHRob3VnaHQgb2YgcmVuYW1pbmcgJ2Z3X2R1bXAnIHdpdGggJ2RldmljZV9k
-dW1wJy4NCg0Kc3RhdGljIHZvaWQgbXdpZmlleF9zZGlvX2RldmljZV9kdW1wX3dvcmsoc3RydWN0
-IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikNCnsNCiAgICAgICAgbXdpZmlleF9kcnZfaW5mb19k
-dW1wKGFkYXB0ZXIpOw0KICAgICAgICBtd2lmaWV4X3NkaW9fZndfZHVtcChhZGFwdGVyKTsNCiAg
-ICAgICAgbXdpZmlleF91cGxvYWRfZGV2aWNlX2R1bXAoYWRhcHRlcik7DQp9DQoNCg0Kc3RhdGlj
-IHZvaWQgbXdpZmlleF9wY2llX2RldmljZV9kdW1wX3dvcmsoc3RydWN0IG13aWZpZXhfYWRhcHRl
-ciAqYWRhcHRlcikNCnsNCiAgICAgICAgbXdpZmlleF9kcnZfaW5mb19kdW1wKGFkYXB0ZXIpOw0K
-ICAgICAgICBtd2lmaWV4X3BjaWVfZndfZHVtcChhZGFwdGVyKTsNCiAgICAgICAgbXdpZmlleF91
-cGxvYWRfZGV2aWNlX2R1bXAoYWRhcHRlcik7DQp9DQoNCj4gSWYgeW91IHByZWZlciAiZGV2aWNl
-IGR1bXAiIHRoYXQncyBzdXJlbHkgZmluZSwgYnV0IGNoYW5naW5nIGFsbCB0aGUNCj4gZGVidWdm
-cyBmaWxlIG5hbWVzIGV0Yy4ganVzdCBiZWNhdXNlIEkgY2FsbGVkIHRoZSBmcmFtZXdvcmsNCj4g
-ImRldmNvcmVkdW1wIiBpc24ndCByZWFsbHkgbmVlZGVkIEkgdGhpbmsgOikNCg0KRGVidWdmcyBm
-aWxlIG5hbWUgaXMgY2hhbmdlZCBiZWNhdXNlICdkZXZpY2VfZHVtcCcgd2lsbCBub3cgdGFrZSBj
-YXJlIG9mIGR1bXBpbmcgYm90aCBkcml2ZXIgZGF0YSBhbmQgZmlybXdhcmUgc3RhdGUuDQoNCj4g
-DQo+IE5vdGUgdGhhdCB0aGUgZnJhbWV3b3JrIGlzIHJlYWxseSBhbHNvIGJ1aWx0IHRvIHN1cHBv
-cnQgInNwb250YW5lb3VzIg0KPiBkYXRhIGNvbGxlY3Rpb24sIGUuZy4gd2hlbiB0aGUgZHJpdmVy
-IG5vdGljZWQgdGhlIGZpcm13YXJlIGRvaW5nDQo+IHNvbWV0aGluZyBzdHJhbmdlLiBZb3Ugc2Vl
-bSB0byBzdXBwb3J0ICJ1c2VyLXRyaWdnZXJlZCIgb25seSwgd2hpY2ggaXMNCj4gcGVyZmVjdGx5
-IHJlYXNvbmFibGUgYWdhaW4gaWYgeW91IHdhbnQgaXQsIGJ1dCBub3QgbmVjZXNzYXJ5Lg0KDQpD
-dXJyZW50bHkgd2UgYXJlIHRyaWdnZXJpbmcgdGhlIGR1bXAgb3BlcmF0aW9uIGluIG91ciBjb21t
-YW5kIHRpbWVvdXQgaGFuZGxlciBhcyB3ZWxsLiBUaGlzIHdvdWxkIGhlbHAgdXMgZGVidWcgcG9z
-c2libGUgZmlybXdhcmUgYnVnIGNhdXNpbmcgdGltZW91dC4NCg0KUmVnYXJkcywNCkFtaXRrdW1h
-cg0KDQo=
+Hi Johannes,
+
+I'm about to merge the patch on our branch but I just want a little confirmation:
+In libertas driver, there is still one disconnect called with an hardcoded "true" rather than using the new introduced locally_generated.
+Is it volunteer or did you miss it ?
+
+Thanks,
+Matthieu
+
+
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Tuesday, May 26, 2015 3:22 PM
+To: linux-wireless@vger.kernel.org
+Cc: Mauger, MatthieuX; Dan Williams; Berg, Johannes
+Subject: [PATCH v2] cfg80211: properly send NL80211_ATTR_DISCONNECTED_BY_AP in disconnect
+
+From: Johannes Berg <johannes.berg@intel.com>
+
+When we disconnect from the AP, drivers call cfg80211_disconnect().
+This doesn't know whether the disconnection was initiated locally
+or by the AP though, which can cause problems with the supplicant,
+for example with WPS. This issue obviously doesn't show up with any
+mac80211 based driver since mac80211 doesn't call this function.
+
+Fix this by requiring drivers to indicate whether the disconnect is
+locally generated or not. I've tried to update the drivers, but may
+not have gotten the values correct, and some drivers may currently
+not be able to report correct values. In case of doubt I left it at
+false, which is the current behaviour.
+
+For libertas, make adjustments as indicated by Dan Williams.
+
+Reported-by: Matthieu Mauger <matthieux.mauger@intel.com>
+Tested-by: Matthieu Mauger <matthieux.mauger@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |  4 ++--
+ drivers/net/wireless/ath/wil6210/main.c            |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  4 ++--
+ drivers/net/wireless/libertas/cfg.c                | 13 ++++++-------
+ drivers/net/wireless/libertas/cfg.h                |  3 ++-
+ drivers/net/wireless/libertas/cmd.h                |  3 ++-
+ drivers/net/wireless/libertas/cmdresp.c            | 13 ++++++++-----
+ drivers/net/wireless/mwifiex/join.c                |  2 +-
+ drivers/net/wireless/mwifiex/sta_event.c           |  2 +-
+ drivers/net/wireless/rndis_wlan.c                  |  2 +-
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c  |  2 +-
+ drivers/staging/wlan-ng/cfg80211.c                 |  2 +-
+ include/net/cfg80211.h                             |  4 +++-
+ net/wireless/core.h                                |  1 +
+ net/wireless/sme.c                                 |  4 +++-
+ net/wireless/util.c                                |  3 ++-
+ 16 files changed, 37 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index cce4625a53ad..a511ef3614b9 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -889,7 +889,7 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
+                                        GFP_KERNEL);
+        } else if (vif->sme_state == SME_CONNECTED) {
+                cfg80211_disconnected(vif->ndev, proto_reason,
+-                                     NULL, 0, GFP_KERNEL);
++                                     NULL, 0, false, GFP_KERNEL);
+        }
+
+        vif->sme_state = SME_DISCONNECTED;
+@@ -3467,7 +3467,7 @@ void ath6kl_cfg80211_stop(struct ath6kl_vif *vif)
+                                        GFP_KERNEL);
+                break;
+        case SME_CONNECTED:
+-               cfg80211_disconnected(vif->ndev, 0, NULL, 0, GFP_KERNEL);
++               cfg80211_disconnected(vif->ndev, 0, NULL, 0, true, GFP_KERNEL);
+                break;
+        }
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index c2a238426425..38b953e108a7 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -224,7 +224,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+                if (test_bit(wil_status_fwconnected, wil->status)) {
+                        clear_bit(wil_status_fwconnected, wil->status);
+                        cfg80211_disconnected(ndev, reason_code,
+-                                             NULL, 0, GFP_KERNEL);
++                                             NULL, 0, false, GFP_KERNEL);
+                } else if (test_bit(wil_status_fwconnecting, wil->status)) {
+                        cfg80211_connect_result(ndev, bssid, NULL, 0, NULL, 0,
+                                                WLAN_STATUS_UNSPECIFIED_FAILURE,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 8a15ebbce4a3..2e4e42245b8f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -1262,7 +1262,7 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif, u16 reason)
+                }
+                clear_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state);
+                cfg80211_disconnected(vif->wdev.netdev, reason, NULL, 0,
+-                                     GFP_KERNEL);
++                                     true, GFP_KERNEL);
+
+        }
+        clear_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state);
+@@ -1928,7 +1928,7 @@ brcmf_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *ndev,
+
+        clear_bit(BRCMF_VIF_STATUS_CONNECTED, &ifp->vif->sme_state);
+        clear_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state);
+-       cfg80211_disconnected(ndev, reason_code, NULL, 0, GFP_KERNEL);
++       cfg80211_disconnected(ndev, reason_code, NULL, 0, true, GFP_KERNEL);
+
+        memcpy(&scbval.ea, &profile->bssid, ETH_ALEN);
+        scbval.val = cpu_to_le32(reason_code);
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 1a4d558022d8..8317afd065b4 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -835,14 +835,13 @@ static int lbs_cfg_scan(struct wiphy *wiphy,
+  * Events
+  */
+
+-void lbs_send_disconnect_notification(struct lbs_private *priv)
++void lbs_send_disconnect_notification(struct lbs_private *priv,
++                                     bool locally_generated)
+ {
+        lbs_deb_enter(LBS_DEB_CFG80211);
+
+-       cfg80211_disconnected(priv->dev,
+-               0,
+-               NULL, 0,
+-               GFP_KERNEL);
++       cfg80211_disconnected(priv->dev, 0, NULL, 0, locally_generated,
++                             GFP_KERNEL);
+
+        lbs_deb_leave(LBS_DEB_CFG80211);
+ }
+@@ -1458,7 +1457,7 @@ int lbs_disconnect(struct lbs_private *priv, u16 reason)
+
+        cfg80211_disconnected(priv->dev,
+                        reason,
+-                       NULL, 0,
++                       NULL, 0, true,
+                        GFP_KERNEL);
+        priv->connect_status = LBS_DISCONNECTED;
+
+@@ -2031,7 +2030,7 @@ static int lbs_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+        ret = lbs_cmd_with_response(priv, CMD_802_11_AD_HOC_STOP, &cmd);
+
+        /* TODO: consider doing this at MACREG_INT_CODE_ADHOC_BCN_LOST time */
+-       lbs_mac_event_disconnected(priv);
++       lbs_mac_event_disconnected(priv, true);
+
+        lbs_deb_leave_args(LBS_DEB_CFG80211, "ret %d", ret);
+        return ret;
+diff --git a/drivers/net/wireless/libertas/cfg.h b/drivers/net/wireless/libertas/cfg.h
+index 10995f59fe34..acccc2922401 100644
+--- a/drivers/net/wireless/libertas/cfg.h
++++ b/drivers/net/wireless/libertas/cfg.h
+@@ -10,7 +10,8 @@ struct wireless_dev *lbs_cfg_alloc(struct device *dev);
+ int lbs_cfg_register(struct lbs_private *priv);
+ void lbs_cfg_free(struct lbs_private *priv);
+
+-void lbs_send_disconnect_notification(struct lbs_private *priv);
++void lbs_send_disconnect_notification(struct lbs_private *priv,
++                                     bool locally_generated);
+ void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
+
+ void lbs_scan_done(struct lbs_private *priv);
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index 4279e8ab95f2..0c5444b02c64 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -68,7 +68,8 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len);
+
+ /* From cmdresp.c */
+
+-void lbs_mac_event_disconnected(struct lbs_private *priv);
++void lbs_mac_event_disconnected(struct lbs_private *priv,
++                               bool locally_generated);
+
+
+
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 65f18f1e869c..e5442e8956f7 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -19,10 +19,13 @@
+  * reset link state etc.
+  *
+  * @priv:      A pointer to struct lbs_private structure
++ * @locally_generated: indicates disconnect was requested locally
++ *             (usually by userspace)
+  *
+  * returns:    n/a
+  */
+-void lbs_mac_event_disconnected(struct lbs_private *priv)
++void lbs_mac_event_disconnected(struct lbs_private *priv,
++                               bool locally_generated)
+ {
+        if (priv->connect_status != LBS_CONNECTED)
+                return;
+@@ -36,7 +39,7 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
+        msleep_interruptible(1000);
+
+        if (priv->wdev->iftype == NL80211_IFTYPE_STATION)
+-               lbs_send_disconnect_notification(priv);
++               lbs_send_disconnect_notification(priv, locally_generated);
+
+        /* report disconnect to upper layer */
+        netif_stop_queue(priv->dev);
+@@ -229,17 +232,17 @@ int lbs_process_event(struct lbs_private *priv, u32 event)
+
+        case MACREG_INT_CODE_DEAUTHENTICATED:
+                lbs_deb_cmd("EVENT: deauthenticated\n");
+-               lbs_mac_event_disconnected(priv);
++               lbs_mac_event_disconnected(priv, false);
+                break;
+
+        case MACREG_INT_CODE_DISASSOCIATED:
+                lbs_deb_cmd("EVENT: disassociated\n");
+-               lbs_mac_event_disconnected(priv);
++               lbs_mac_event_disconnected(priv, false);
+                break;
+
+        case MACREG_INT_CODE_LINK_LOST_NO_SCAN:
+                lbs_deb_cmd("EVENT: link lost\n");
+-               lbs_mac_event_disconnected(priv);
++               lbs_mac_event_disconnected(priv, true);
+                break;
+
+        case MACREG_INT_CODE_PS_SLEEP:
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 411a6c2f4aca..080ec3422db9 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1421,7 +1421,7 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+                ret = mwifiex_deauthenticate_infra(priv, mac);
+                if (ret)
+                        cfg80211_disconnected(priv->netdev, 0, NULL, 0,
+-                                             GFP_KERNEL);
++                                             true, GFP_KERNEL);
+                break;
+        case NL80211_IFTYPE_ADHOC:
+                return mwifiex_send_cmd(priv, HostCmd_CMD_802_11_AD_HOC_STOP,
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 0dc7a1d3993d..c9064b88d6a4 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -133,7 +133,7 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
+        if (priv->bss_mode == NL80211_IFTYPE_STATION ||
+            priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT) {
+                cfg80211_disconnected(priv->netdev, reason_code, NULL, 0,
+-                                     GFP_KERNEL);
++                                     false, GFP_KERNEL);
+        }
+        eth_zero_addr(priv->cfg_bssid);
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index d72ff8e7125d..43db6976102f 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2861,7 +2861,7 @@ static void rndis_wlan_do_link_down_work(struct usbnet *usbdev)
+
+                deauthenticate(usbdev);
+
+-               cfg80211_disconnected(usbdev->net, 0, NULL, 0, GFP_KERNEL);
++               cfg80211_disconnected(usbdev->net, 0, NULL, 0, true, GFP_KERNEL);
+        }
+
+        netif_carrier_off(usbdev->net);
+diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+index bc95ce89af06..5ab2f6978209 100644
+--- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+@@ -379,7 +379,7 @@ void rtw_cfg80211_indicate_disconnect(struct rtw_adapter *padapter)
+                                                GFP_ATOMIC);
+                } else {
+                        cfg80211_disconnected(padapter->pnetdev, 0, NULL,
+-                                             0, GFP_ATOMIC);
++                                             0, false, GFP_ATOMIC);
+                }
+        }
+ }
+diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
+index 7c87aecf4744..342e2b30c48f 100644
+--- a/drivers/staging/wlan-ng/cfg80211.c
++++ b/drivers/staging/wlan-ng/cfg80211.c
+@@ -722,7 +722,7 @@ void prism2_connect_result(wlandevice_t *wlandev, u8 failed)
+ void prism2_disconnected(wlandevice_t *wlandev)
+ {
+        cfg80211_disconnected(wlandev->netdev, 0, NULL,
+-               0, GFP_KERNEL);
++               0, false, GFP_KERNEL);
+ }
+
+ void prism2_roamed(wlandevice_t *wlandev)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d63ecec73090..a741678f24a2 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4575,13 +4575,15 @@ void cfg80211_roamed_bss(struct net_device *dev, struct cfg80211_bss *bss,
+  * @ie: information elements of the deauth/disassoc frame (may be %NULL)
+  * @ie_len: length of IEs
+  * @reason: reason code for the disconnection, set it to 0 if unknown
++ * @locally_generated: disconnection was requested locally
+  * @gfp: allocation flags
+  *
+  * After it calls this function, the driver should enter an idle state
+  * and not try to connect to any AP any more.
+  */
+ void cfg80211_disconnected(struct net_device *dev, u16 reason,
+-                          const u8 *ie, size_t ie_len, gfp_t gfp);
++                          const u8 *ie, size_t ie_len,
++                          bool locally_generated, gfp_t gfp);
+
+ /**
+  * cfg80211_ready_on_channel - notification of remain_on_channel start
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 801cd49c5a0c..311eef26bf88 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -222,6 +222,7 @@ struct cfg80211_event {
+                        const u8 *ie;
+                        size_t ie_len;
+                        u16 reason;
++                       bool locally_generated;
+                } dc;
+                struct {
+                        u8 bssid[ETH_ALEN];
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index d11454f87bac..8020b5b094d4 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -938,7 +938,8 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ }
+
+ void cfg80211_disconnected(struct net_device *dev, u16 reason,
+-                          const u8 *ie, size_t ie_len, gfp_t gfp)
++                          const u8 *ie, size_t ie_len,
++                          bool locally_generated, gfp_t gfp)
+ {
+        struct wireless_dev *wdev = dev->ieee80211_ptr;
+        struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+@@ -954,6 +955,7 @@ void cfg80211_disconnected(struct net_device *dev, u16 reason,
+        ev->dc.ie_len = ie_len;
+        memcpy((void *)ev->dc.ie, ie, ie_len);
+        ev->dc.reason = reason;
++       ev->dc.locally_generated = locally_generated;
+
+        spin_lock_irqsave(&wdev->event_lock, flags);
+        list_add_tail(&ev->list, &wdev->event_list);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 70051ab52f4f..4cb34557b873 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -887,7 +887,8 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+                case EVENT_DISCONNECTED:
+                        __cfg80211_disconnected(wdev->netdev,
+                                                ev->dc.ie, ev->dc.ie_len,
+-                                               ev->dc.reason, true);
++                                               ev->dc.reason,
++                                               !ev->dc.locally_generated);
+                        break;
+                case EVENT_IBSS_JOINED:
+                        __cfg80211_ibss_joined(wdev->netdev, ev->ij.bssid,
+--
+2.1.4
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
