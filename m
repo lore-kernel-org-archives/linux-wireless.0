@@ -1,90 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26111 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555AbbE1G0h (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57535 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbbE0S4K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 02:26:37 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 2/2] mac80211: store low ack threshold in bss config
-Date: Thu, 28 May 2015 11:55:55 +0530
-Message-ID: <1432794355-3639-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150528_082648_997979_3CB71749)
-In-Reply-To: <1432794355-3639-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1432794355-3639-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Wed, 27 May 2015 14:56:10 -0400
+Message-ID: <55661349.50605@candelatech.com> (sfid-20150527_205626_234945_72A41CF9)
+Date: Wed, 27 May 2015 11:56:09 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: ferran <ranker72@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: modify mac address with multiple interfaces on a device
+References: <loom.20150527T185540-223@post.gmane.org>
+In-Reply-To: <loom.20150527T185540-223@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Store the low ack threshold configured by user in BSS config.
-This will be used by driver for triggering low ack event whenever
-the station is not ACKing the number of frames mentioned in
-threshold.
+On 05/27/2015 11:44 AM, ferran wrote:
+> Hi there,
+> 
+> I have noticed that having more than one interface pointing to the same
+> physical device, modifying the address of any of these interfaces gets
+> limited to the last 3 bits of the address, thus giving only 8 possible values.
+> 
+> Moreover, the mac address is set after the previous interface's one. Let's
+> put it in a example (output copied by hand)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- net/mac80211/cfg.c      | 1 +
- net/mac80211/sta_info.h | 3 +++
- net/mac80211/status.c   | 4 ++--
- 3 files changed, 6 insertions(+), 2 deletions(-)
+This does depend on the driver.  ath9k, for instance, has no limitations.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ff347a0..be0e310 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1145,6 +1145,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 					      params->opmode_notif,
- 					      band, false);
- 	}
-+	sta->low_ack_threshold = params->low_ack_threshold;
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 5c164fb..ab6af72 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -338,6 +338,8 @@ struct sta_ampdu_mlme {
-  *	using IEEE80211_NUM_TID entry for non-QoS frames
-  * @rx_msdu: MSDUs received from this station, using IEEE80211_NUM_TID
-  *	entry for non-QoS frames
-+ * @low_ack_threshold: Number of consecutive packet loss to trigger low ack
-+ *	event by driver.
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -459,6 +461,7 @@ struct sta_info {
- 	unsigned long last_tdls_pkt_time;
- 
- 	u8 reserved_tid;
-+	u16 low_ack_threshold;
- 
- 	/* keep last! */
- 	struct ieee80211_sta sta;
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 005fdbe..f78f8f1 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -520,7 +520,6 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
-  *  - on # of retransmissions
-  *  - current throughput (higher value for higher tpt)?
-  */
--#define STA_LOST_PKT_THRESHOLD	50
- #define STA_LOST_TDLS_PKT_THRESHOLD	10
- #define STA_LOST_TDLS_PKT_TIME		(10*HZ) /* 10secs since last ACK */
- 
-@@ -533,7 +532,8 @@ static void ieee80211_lost_packet(struct sta_info *sta,
- 		return;
- 
- 	sta->lost_packets++;
--	if (!sta->sta.tdls && sta->lost_packets < STA_LOST_PKT_THRESHOLD)
-+	if (!sta->sta.tdls &&
-+	    sta->lost_packets < sta->low_ack_threshold)
- 		return;
- 
- 	/*
+There are some subtitles relating to the ath9k BSSID mask that mean you often only
+want to change only bytes 1 and 2 (leaving 0, 3, 4, 5 alone), but it is not
+a hard requirement.
+
+Thanks,
+Ben
+
+> 
+> ---
+> 
+> $ iw dev
+> phy#0
+>      Interface wlan0
+>             ifindex 7
+>             type managed
+> $ sudo ip link set wlan0 down
+> $ sudo ip link set wlan0 address 00:11:22:33:44:55
+> [ mac is changed ]
+> $ sudo iw phy phy0 interface add mywlan type managed
+> $ iw dev
+> phy#0
+>      Interface mywlan
+>             ifindex 9
+>             type managed
+>      Interface wlan0
+>             ifindex 7
+>             type managed
+> $ ip link
+> [ ... ]
+> 7: wlan0: [...]
+>     link/ether 00:11:22:33:44:55 [...]
+> 7: mywlan: [...]
+>     link/ether 00:11:22:33:44:56 [...]
+> 
+> $ sudo ip link set wlan0 down
+> $ sudo ip link set wlan0 address aa:bb:cc:dd:ee:ff
+> RTNETLINK answers: Invalid argument
+> 
+> $ sudo ip link set wlan0 address 00:11:22:33:44:5f
+> RTNETLINK answers: Invalid argument
+> 
+> $ sudo ip link set wlan0 address 00:11:22:33:44:57
+> [ mac is changed ]
+> 
+> $ sudo iw mywlan del
+> $ sudo ip link set wlan0 address aa:bb:cc:dd:ee:ff
+> 
+> $ ip link
+> [ ... ]
+> 7: wlan0: [...]
+>     link/ether aa:bb:cc:dd:ee:ff [...]
+> 
+> ---
+> 
+> However, in another machine, using an iwlwifi card, I can change mac
+> addresses disregarding other interfaces on same physical device. Another
+> fact, when adding a new interface to a phy, the assigned mac address is
+> derived from the factory immutable one, instead of from the other interface's.
+> 
+> ---
+> 
+> Where can I confirm this behaviour, is it docummented? Am I right saying
+> that this depends on the actual driver? And how much difference is between
+> one and another?
+> 
+> Thank you very much
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
 -- 
-2.4.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
