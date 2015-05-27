@@ -1,56 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:35381 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907AbbEHJRB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 05:17:01 -0400
-Received: by lbbuc2 with SMTP id uc2so48906498lbb.2
-        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 02:16:59 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/3] ath10k: improve power efficiency
-Date: Fri,  8 May 2015 09:13:05 +0000
-Message-Id: <1431076388-24800-1-git-send-email-michal.kazior@tieto.com> (sfid-20150508_111708_029709_21BEC8A2)
+Received: from plane.gmane.org ([80.91.229.3]:59165 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751597AbbE0SuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 May 2015 14:50:08 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1YxgOy-0000Qa-F6
+	for linux-wireless@vger.kernel.org; Wed, 27 May 2015 20:50:04 +0200
+Received: from 147.83.206.82 ([147.83.206.82])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 20:50:04 +0200
+Received: from ranker72 by 147.83.206.82 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2015 20:50:04 +0200
+To: linux-wireless@vger.kernel.org
+From: ferran <ranker72@gmail.com>
+Subject: modify mac address with multiple interfaces on a device
+Date: Wed, 27 May 2015 18:44:24 +0000 (UTC)
+Message-ID: <loom.20150527T185540-223@post.gmane.org> (sfid-20150527_205017_356125_B96B0167)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some measurements for QCA61X4:
+Hi there,
 
-            Loaded    Started   Associated
-Unpatched    31mA      88mA       43mA
-Patched      14mA      15mA       23mA
+I have noticed that having more than one interface pointing to the same
+physical device, modifying the address of any of these interfaces gets
+limited to the last 3 bits of the address, thus giving only 8 possible values.
 
-Loaded = module loaded, driver bound, no interface
-         is running
+Moreover, the mac address is set after the previous interface's one. Let's
+put it in a example (output copied by hand)
 
-Started = Loaded, but one client interface is
-          running, not associated
+---
 
-Associated = Started, but associated to an AP as
-             client
+$ iw dev
+phy#0
+     Interface wlan0
+            ifindex 7
+            type managed
+$ sudo ip link set wlan0 down
+$ sudo ip link set wlan0 address 00:11:22:33:44:55
+[ mac is changed ]
+$ sudo iw phy phy0 interface add mywlan type managed
+$ iw dev
+phy#0
+     Interface mywlan
+            ifindex 9
+            type managed
+     Interface wlan0
+            ifindex 7
+            type managed
+$ ip link
+[ ... ]
+7: wlan0: [...]
+    link/ether 00:11:22:33:44:55 [...]
+7: mywlan: [...]
+    link/ether 00:11:22:33:44:56 [...]
 
-Note: Unpatched was consuming more power when
-Started than when Associated. This is no mistake.
+$ sudo ip link set wlan0 down
+$ sudo ip link set wlan0 address aa:bb:cc:dd:ee:ff
+RTNETLINK answers: Invalid argument
 
-I didn't have a way to measure QCA988X.
+$ sudo ip link set wlan0 address 00:11:22:33:44:5f
+RTNETLINK answers: Invalid argument
 
+$ sudo ip link set wlan0 address 00:11:22:33:44:57
+[ mac is changed ]
 
-Janusz Dziedzic (2):
-  ath10k: enable ASPM
-  ath10k: fix idle power consumption
+$ sudo iw mywlan del
+$ sudo ip link set wlan0 address aa:bb:cc:dd:ee:ff
 
-Michal Kazior (1):
-  ath10k: enable pci soc powersaving
+$ ip link
+[ ... ]
+7: wlan0: [...]
+    link/ether aa:bb:cc:dd:ee:ff [...]
 
- drivers/net/wireless/ath/ath10k/debug.h  |   1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |   1 +
- drivers/net/wireless/ath/ath10k/mac.c    |   9 +-
- drivers/net/wireless/ath/ath10k/pci.c    | 317 ++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/pci.h    |  97 +++++-----
- 5 files changed, 285 insertions(+), 140 deletions(-)
+---
 
--- 
-2.1.4
+However, in another machine, using an iwlwifi card, I can change mac
+addresses disregarding other interfaces on same physical device. Another
+fact, when adding a new interface to a phy, the assigned mac address is
+derived from the factory immutable one, instead of from the other interface's.
+
+---
+
+Where can I confirm this behaviour, is it docummented? Am I right saying
+that this depends on the actual driver? And how much difference is between
+one and another?
+
+Thank you very much
 
