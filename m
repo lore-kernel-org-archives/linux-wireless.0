@@ -1,77 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:27359 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752540AbbETMaT (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64001 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752656AbbE1NAq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 08:30:19 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NON004Y5EQHLK60@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Wed, 20 May 2015 21:30:17 +0900 (KST)
-Date: Wed, 20 May 2015 12:30:16 +0000 (GMT)
-From: Rahul Jain <rahul.jain@samsung.com>
-Subject: Re: Re: Re: [PATCH] Added 2 new Control Frames ( Beamforming Report
- Poll & VHT NDP Announcement) defined in 802.11ac [EDT]
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Reply-to: rahul.jain@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0
-Message-id: <1295813965.477021432125016290.JavaMail.weblogic@ep2mlwas05b> (sfid-20150520_143024_389808_B2E3D8AE)
+	Thu, 28 May 2015 09:00:46 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxMiS015076
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:46 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqgk-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:46 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 13/17] mwifiex: drop block-ack action frames
+Date: Thu, 28 May 2015 23:59:03 +0530
+Message-ID: <1432837747-2075-14-git-send-email-patila@marvell.com> (sfid-20150528_150052_011331_6574CF3D)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RGVhciBKb2hhbm5lcywNCg0KVGhhbmtzIGZvciBwb2ludGluZyBvdXQuIEkgaW5jb3Jwb3JhdGVk
-IHlvdXIgcmV2aWV3IGNvbW1lbnQgaW4gbmV3IHBhdGNoIGJlbG93Lg0KDQpGcm9tIDY5MzQwZDYz
-ZTBjNjNjMWFlNzVjZGI2MmJmNGJkMDRhOWM5NjFhMWYgTW9uIFNlcCAxNyAwMDowMDowMCAyMDAx
-DQpGcm9tOiByYWh1bCA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4NCkRhdGU6IFRodSwgMTQgTWF5
-IDIwMTUgMTA6MjE6NDggKzA1MzANClN1YmplY3Q6IFtQQVRDSF0gQWRkZWQgMiBuZXcgQ29udHJv
-bCBGcmFtZXMgKCBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCAmIFZIVA0KIE5EUCBBbm5vdW5jZW1l
-bnQpIGRlZmluZWQgaW4gODAyLjExYWMuDQoNCkJlYW1mb3JtaW5nIFJlcG9ydCBQb2xsIGZyYW1l
-IC0gVGhpcyBmcmFtZSBpcyB1c2VkIHRvIHJldHJpZXZlIGFkZGl0aW9uYWwNCmZlZWRiYWNrIGZy
-b20gdGhlIHNlY29uZCBhbmQgc3Vic2VxdWVudCBiZWFtZm9ybWVlcy4gVGhlIGJlYW1mb3JtZXIg
-bXVzdCB1c2UNCnRoZSBCZWFtZm9ybWluZyBSZXBvcnQgUG9sbCBmcmFtZS4gSW4gQmVhbWZvcm1p
-bmcgUmVwb3J0IFBvbGwsIHRoZSBGZWVkYmFjaw0KU2VnbWVudCBSZXRyYW5zbWlzc2lvbiBCaXRt
-YXAgZmllbGQgaW5kaWNhdGVzIHRoZSByZXF1ZXN0ZWQgZmVlZGJhY2sgc2VnbWVudHMNCm9mIGEg
-VkhUIENvbXByZXNzZWQgQmVhbWZvcm1pbmcgcmVwb3J0Lg0KDQpWSFQgTnVsbCBEYXRhIFBhY2tl
-dCAoTkRQKSBBbm5vdW5jZW1lbnQgLSBUaGlzIGZyYW1lIGlzIHVzZWQgYnkgQmVhbWZvcm1lcnMg
-dG8NCmdhaW4gY29udHJvbCBvZiB0aGUgY2hhbm5lbCBhbmQgaWRlbnRpeSBiZWZvcm1lZXMuIEJl
-YW1mb3JtZWVzIHdpbGwgcmVzcG9uZCB0bw0KdGhlIE5EUCBBbm5vdW5jZW1lbnQsIHdoaWxlIGFs
-bCBvdGhlciBzdGF0aW9ucyB3aWxsIHNpbXBseSBkZWZlciBjaGFubmVsIGFjY2Vzcw0KdW50aWwg
-dGhlIHNvdW5kaW5nIHNlcXVlbmNlIGlzIGNvbXBsZXRlDQoNClNpZ25lZC1vZmYtYnk6IHJhaHVs
-IDxyYWh1bC5qYWluQHNhbXN1bmcuY29tPg0KLS0tDQogaW5jbHVkZS9saW51eC9pZWVlODAyMTEu
-aCB8ICAgIDIgKysNCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1n
-aXQgYS9pbmNsdWRlL2xpbnV4L2llZWU4MDIxMS5oIGIvaW5jbHVkZS9saW51eC9pZWVlODAyMTEu
-aA0KaW5kZXggYjljNzg5Ny4uY2EzODYxNiAxMDA2NDQNCi0tLSBhL2luY2x1ZGUvbGludXgvaWVl
-ZTgwMjExLmgNCisrKyBiL2luY2x1ZGUvbGludXgvaWVlZTgwMjExLmgNCkBAIC03NSw2ICs3NSw4
-IEBADQogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQUNUSU9OCQkweDAwRDANCiANCiAvKiBjb250
-cm9sICovDQorI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQkVBTUZPUk1fUE9MTAkweDAwNDANCisj
-ZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9WSFRfTkRQX0FOTk9VQ0UJMHgwMDUwDQogI2RlZmluZSBJ
-RUVFODAyMTFfU1RZUEVfQ1RMX0VYVAkJMHgwMDYwDQogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVf
-QkFDS19SRVEJMHgwMDgwDQogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQkFDSwkJMHgwMDkwDQot
-LSANCjEuNy45LjUNCg0KDQoNCg0KVGhhbmtzDQotUmFodWwgSmFpbiANCg0KDQoNCi0tLS0tLS0g
-T3JpZ2luYWwgTWVzc2FnZSAtLS0tLS0tDQpTZW5kZXIgOiBKb2hhbm5lcyBCZXJnPGpvaGFubmVz
-QHNpcHNvbHV0aW9ucy5uZXQ+DQpEYXRlIDogTWF5IDIwLCAyMDE1IDE3OjQ0IChHTVQrMDU6MzAp
-DQpUaXRsZSA6IFJlOiBSZTogW1BBVENIXSBBZGRlZCAyIG5ldyBDb250cm9sIEZyYW1lcyAoIEJl
-YW1mb3JtaW5nIFJlcG9ydCBQb2xsICYgVkhUIE5EUCBBbm5vdW5jZW1lbnQpIGRlZmluZWQgaW4g
-ODAyLjExYWMgW0VEVF0NCg0KT24gV2VkLCAyMDE1LTA1LTIwIGF0IDExOjUxICswMDAwLCBSYWh1
-bCBKYWluIHdyb3RlOg0KPiBFUC1GRURDNzcxREY0RkY0OEE5ODI5Q0I4NTI1NEUyOUZEMw0KPiAN
-Cj4gRGVhciBKb2hhbm5lcywNCj4gDQo+IEFzIHBlciB5b3VyIHJlcXVlc3QsIEkgaGF2ZSB1cGRh
-dGVkIHRoZSBjb21taXQgbWVzc2FnZS4NCj4gVGhpcyBwYXRjaCBpcyBmaXJzdCBzdGVwIHRvd2Fy
-ZHMgZnVydGhlciBjaGFuZ2VzIHRvIGJlIGRvbmUgcmVsYXRlZCB0byA4MDIuMTFhYyBuZXcgZnJh
-bWVzLg0KDQpQZXJoYXBzIHlvdSBzaG91bGQgY29tYmluZSB0aGUgdHdvLWxpbmVyIHdpdGggb3Ro
-ZXIgcGF0Y2hlcyB0aGVuPw0KDQpTdGFuZGFsb25lLCB0aGlzIGlzbid0IHJlYWxseSB3b3J0aHdo
-aWxlIEkgdGhpbmsuDQoNCj4gVkhUIE51bGwgRGF0YSBQYWNrZXQgKE5EUCkgQW5ub3VuY2VtZW50
-IC0gVGhpcyBmcmFtZSBpcyB1c2VkIGJ5IEJlYW1mb3JtZXJzIHRvICANCj4gZ2FpbiBjb250cm9s
-IG9mIHRoZSBjaGFubmVsIGFuZCBpZGVudGl5IGJlZm9ybWVlcy4gQmVhbWZvcm1lZXMgd2lsbCBy
-ZXNwb25kIHRvICANCj4gdGhlIE5EUCBBbm5vdW5jZW1lbnQsIHdoaWxlIGFsbCBvdGhlciBzdGF0
-aW9ucyB3aWxsIHNpbXBseSBkZWZlciBjaGFubmVsIGFjY2VzcyANCj4gdW50aWwgdGhlIHNvdW5k
-aW5nIHNlcXVlbmNlIGlzIGNvbXBsZXRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICANCj4gLS0tICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCg0KQW55d2F5IHlvdSBm
-b3Jnb3QgUy1vLWIgbm93Lg0KDQpqb2hhbm5lcw==
+We often see ADDBA request packets coming to driver because driver
+has registered for action frame subtype. We dont process BA action
+frames in host. Drop such frames.
 
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Xinmin Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/util.c | 43 +++++++++++++++++++++++++------------
+ 1 file changed, 29 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 2e3dc07..790e619 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -329,7 +329,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
+ 			  struct rxpd *rx_pd)
+ {
+ 	u16 stype;
+-	u8 category, action_code;
++	u8 category, action_code, *addr2;
+ 	struct ieee80211_hdr *ieee_hdr = (void *)payload;
+ 
+ 	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
+@@ -337,21 +337,35 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
+ 	switch (stype) {
+ 	case IEEE80211_STYPE_ACTION:
+ 		category = *(payload + sizeof(struct ieee80211_hdr));
+-		action_code = *(payload + sizeof(struct ieee80211_hdr) + 1);
+-		if (category == WLAN_CATEGORY_PUBLIC &&
+-		    action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
++		switch (category) {
++		case WLAN_CATEGORY_PUBLIC:
++			action_code = *(payload + sizeof(struct ieee80211_hdr)
++					+ 1);
++			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
++				addr2 = ieee_hdr->addr2;
++				mwifiex_dbg(priv->adapter, INFO,
++					    "TDLS discovery response %pM nf=%d, snr=%d\n",
++					    addr2, rx_pd->nf, rx_pd->snr);
++				mwifiex_auto_tdls_update_peer_signal(priv,
++								     addr2,
++								     rx_pd->snr,
++								     rx_pd->nf);
++			}
++			break;
++		case WLAN_CATEGORY_BACK:
++			/*we dont indicate BACK action frames to cfg80211*/
++			mwifiex_dbg(priv->adapter, INFO,
++				    "drop BACK action frames");
++			return -1;
++		default:
+ 			mwifiex_dbg(priv->adapter, INFO,
+-				    "TDLS discovery response %pM nf=%d, snr=%d\n",
+-				    ieee_hdr->addr2, rx_pd->nf, rx_pd->snr);
+-			mwifiex_auto_tdls_update_peer_signal(priv,
+-							     ieee_hdr->addr2,
+-							     rx_pd->snr,
+-							     rx_pd->nf);
++				    "unknown public action frame category %d\n",
++				    category);
+ 		}
+-		break;
+ 	default:
+ 		mwifiex_dbg(priv->adapter, INFO,
+-			    "unknown mgmt frame subtype %#x\n", stype);
++		    "unknown mgmt frame subtype %#x\n", stype);
++		return 0;
+ 	}
+ 
+ 	return 0;
+@@ -387,8 +401,9 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 
+ 	ieee_hdr = (void *)skb->data;
+ 	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
+-		mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
+-					  pkt_len, rx_pd);
++		if (mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
++					      pkt_len, rx_pd))
++			return -1;
+ 	}
+ 	/* Remove address4 */
+ 	memmove(skb->data + sizeof(struct ieee80211_hdr_3addr),
+-- 
+1.8.1.4
 
