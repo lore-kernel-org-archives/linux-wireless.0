@@ -1,63 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbbECTdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:33:09 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 33/42] iwlwifi: mvm: avoid use-after-free on iwl_mvm_d0i3_enable_tx() [BUGFIX]
-Date: Sun,  3 May 2015 22:31:44 +0300
-Message-Id: <1430681513-7838-33-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213418_291171_17D4867C)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:35788 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752769AbbE1JnR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 05:43:17 -0400
+Received: by igbyr2 with SMTP id yr2so107511716igb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 02:43:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
+References: <1432667798.26624.3.camel@intel.com>
+	<87lhg9xe0c.fsf@kamboji.qca.qualcomm.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
+Date: Thu, 28 May 2015 11:43:16 +0200
+Message-ID: <CACna6rzWDW3hQBDCZzsE4OjA_1dkJj_UMehChiVDUfuskvCKrQ@mail.gmail.com> (sfid-20150528_114320_854916_FA48070D)
+Subject: Re: pull request: iwlwifi-next 2015-05-26
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On 28 May 2015 at 11:25, Grumbach, Emmanuel <emmanuel.grumbach@intel.com> wrote:
+>>
+>> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+>>
+>> > this is a pull request for 4.2. Nothing really stands out besides what
+>> > I wrote in the tag. Even the diffstat hints what is the biggest part
+>> > of this pull request :)
+>>
+>> I see there was a minor comment to one of the patches. Can I still pull this or
+>> what are you planning to do?
+>
+> I wasn't planning to fix that typo but...
 
-qos_seq points (to a struct) inside the command response data.
-
-Make sure to free the response only after qos_seq is not
-needed anymore.
-
-type=bugfix
-bug=not-tracked
-fixes=I78c07110b59dcd389207bd2b168b0a2760839fe0
-
-Change-Id: I619ce2c17e064dc98c7be9abc1e23175fdc8fb9a
-Reported-by: Heng Luo <heng.luo@intel.com>
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-on: https://gerrit.rds.intel.com/r/55381
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Tested-by: IWL Jenkins
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 1c66297..2ea0123 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -1263,11 +1263,13 @@ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk)
- 		ieee80211_iterate_active_interfaces(
- 			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
- 			iwl_mvm_d0i3_disconnect_iter, mvm);
--
--	iwl_free_resp(&get_status_cmd);
- out:
- 	iwl_mvm_d0i3_enable_tx(mvm, qos_seq);
- 
-+	/* qos_seq might point inside resp_pkt, so free it only now */
-+	if (get_status_cmd.resp_pkt)
-+		iwl_free_resp(&get_status_cmd);
-+
- 	/* the FW might have updated the regdomain */
- 	iwl_mvm_update_changed_regdom(mvm);
- 
--- 
-2.1.0
-
+I won't mind ;)
