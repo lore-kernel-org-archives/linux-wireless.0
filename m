@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0126.hostedemail.com ([216.40.44.126]:53985 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754070AbbE1S1h (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:16940 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754145AbbE1SbI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 14:27:37 -0400
-Message-ID: <1432837654.1556.2.camel@perches.com> (sfid-20150528_202740_337581_5E6CBE8E)
-Subject: Re: [PATCH 01/17] mwifiex: verbose logging for association failure
- messages
-From: Joe Perches <joe@perches.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, huxm@marvell.com
-Date: Thu, 28 May 2015 11:27:34 -0700
-In-Reply-To: <1432817889-26250-2-git-send-email-patila@marvell.com>
-References: <1432817889-26250-1-git-send-email-patila@marvell.com>
-	 <1432817889-26250-2-git-send-email-patila@marvell.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 28 May 2015 14:31:08 -0400
+Message-ID: <55675EE6.4020505@broadcom.com> (sfid-20150528_203112_692849_A535E632)
+Date: Thu, 28 May 2015 20:31:02 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jason Andryuk <jandryuk@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Subject: Re: [PATCH] brcmfmac: fix invalid access to struct acpi_device fields
+References: <1432747901-8472-1-git-send-email-arend@broadcom.com> <CAKf6xpuhDdRyQoYMxCQOkSvVzESkbWe=i4OvKm7C6hVRth6foA@mail.gmail.com>
+In-Reply-To: <CAKf6xpuhDdRyQoYMxCQOkSvVzESkbWe=i4OvKm7C6hVRth6foA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-05-28 at 18:27 +0530, Avinash Patil wrote:
-> This patch adds more logging support for association failure -
-> reason and states.
-[]
-> diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-[]
-> @@ -419,8 +419,12 @@ enum P2P_MODES {
->  #define HS_CFG_COND_MAC_EVENT		0x00000004
->  #define HS_CFG_COND_MULTICAST_DATA	0x00000008
->  
-> -#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
-> -#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
-> +#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
-> +#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
-> +#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
+On 05/28/15 18:48, Jason Andryuk wrote:
+> On Wed, May 27, 2015 at 1:31 PM, Arend van Spriel<arend@broadcom.com>  wrote:
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index b0d0ff5..71779b9 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -1117,6 +1117,18 @@ MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
+>>   static struct brcmfmac_sdio_platform_data *brcmfmac_sdio_pdata;
+>>
+>>
+>> +static void brcmf_sdiod_acpi_set_power_manageable(struct device *dev,
+>> +                                                 int val)
+>> +{
+>> +#if IS_ENABLED(CONFIG_ACPI)
+>> +       struct acpi_device *adev;
+>> +
+>> +       adev = ACPI_COMPANION(dev);
+>> +       if (adev)
+>> +               adev->flags.power_manageable = 0;
+>
+> Shouldn't this be " = val"?
 
-Is there really value in duplicating ASSOC_ERR_
-	ASSOC_ERR_ASSOC_ERR_<foo>
+Definitely. The only place where it is called uses 0 for val parameter 
+so there is no big issue, but I will fix it.
 
+Thanks for spotting that bit.
+
+Regards,
+Arend
+
+> -Jason
+>
+>> +#endif
+>> +}
+>> +
+>>   static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>>                                  const struct sdio_device_id *id)
+>>   {
 
