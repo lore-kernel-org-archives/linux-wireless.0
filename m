@@ -1,140 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39843 "EHLO
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35681 "EHLO
 	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751676AbbE1OQu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:16:50 -0400
+	by vger.kernel.org with ESMTP id S1753601AbbE1M7i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 08:59:38 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEF355003981
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:16:49 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s3t1-1
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:16:49 -0700
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxbgP014874
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:37 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5rwu8-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:37 -0700
 From: Avinash Patil <patila@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 03/17] mwifiex: support AP reset after bss_stop
-Date: Thu, 28 May 2015 14:16:47 +0000
-Message-ID: <1432842406790.81429@marvell.com> (sfid-20150528_161653_767182_12049E80)
-References: <1432817552-25866-1-git-send-email-patila@marvell.com>,<1432817552-25866-4-git-send-email-patila@marvell.com>
-In-Reply-To: <1432817552-25866-4-git-send-email-patila@marvell.com>
-Content-Type: text/plain; charset=US-ASCII
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 01/17] mwifiex: verbose logging for association failure messages
+Date: Thu, 28 May 2015 23:58:51 +0530
+Message-ID: <1432837747-2075-2-git-send-email-patila@marvell.com> (sfid-20150528_145940_943466_1D6EABEA)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-Please ignore this series. Looks like some of the patches are duplicated because of email client issue.
-I will resend v2.
-
-Thanks,
-Avinash
-
-________________________________________
-From: Avinash Patil <patila@marvell.com>
-Sent: Thursday, May 28, 2015 6:22 PM
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar; Cathy Luo; Xinming Hu; Avinash Patil
-Subject: [PATCH 03/17] mwifiex: support AP reset after bss_stop
-
-This would enable clearing of FW bss data structures when AP
-operations are stopped.
+This patch adds more logging support for association failure -
+reason and states.
 
 Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
- drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
- drivers/net/wireless/mwifiex/fw.h          |  1 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
- drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
- 5 files changed, 19 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
+ drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
+ 2 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3a14d3a..d47799a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
-                return -1;
-        }
-
-+       if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+                            HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+               mwifiex_dbg(priv->adapter, ERROR,
-+                           "Failed to reset BSS\n");
-+               return -1;
-+       }
-+
-        return 0;
- }
-
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index a1de83f..b5033d1 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
-                case HostCmd_CMD_UAP_BSS_START:
-                case HostCmd_CMD_UAP_BSS_STOP:
-                case HostCmd_CMD_UAP_STA_DEAUTH:
-+               case HOST_CMD_APCMD_SYS_RESET:
-                        ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
-                                                      cmd_oid, data_buf,
-                                                      cmd_ptr);
 diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 6a062dd..124120d 100644
+index c404390..6a062dd 100644
 --- a/drivers/net/wireless/mwifiex/fw.h
 +++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_RSSI_INFO                         0x00a4
- #define HostCmd_CMD_FUNC_INIT                         0x00a9
- #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
-+#define HOST_CMD_APCMD_SYS_RESET                      0x00af
- #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
- #define HostCmd_CMD_UAP_BSS_START                     0x00b1
- #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index aa5b9a3..f20a09e 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
-                break;
-        case HostCmd_CMD_UAP_STA_DEAUTH:
-                break;
-+       case HOST_CMD_APCMD_SYS_RESET:
-+               break;
-        case HostCmd_CMD_MEF_CFG:
-                break;
-        case HostCmd_CMD_COALESCE_CFG:
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index a4ae283..0a3297e 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
-                break;
-        case HostCmd_CMD_UAP_BSS_START:
-        case HostCmd_CMD_UAP_BSS_STOP:
-+       case HOST_CMD_APCMD_SYS_RESET:
-                cmd->command = cpu_to_le16(cmd_no);
-                cmd->size = cpu_to_le16(S_DS_GEN);
-                break;
-@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
-
-        if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
-                             HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--               mwifiex_dbg(priv->adapter, ERROR,
--                           "Failed to stop the BSS\n");
-+               mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
-+               return -1;
-+       }
+@@ -419,8 +419,12 @@ enum P2P_MODES {
+ #define HS_CFG_COND_MAC_EVENT		0x00000004
+ #define HS_CFG_COND_MULTICAST_DATA	0x00000008
+ 
+-#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+-#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
++#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
++#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
++#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
++#define ASSOC_ERR_AUTH_MSG_UNHANDLED		0xFFFE
++#define ASSOC_ERR_STA_FAILURE			0xFFFF
 +
-+       if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+                            HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+               mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
-                return -1;
-        }
-
---
+ 
+ #define CMD_F_HOSTCMD           (1 << 0)
+ #define CMD_F_CANCELED          (1 << 1)
+@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
+ 	DOT11H_I = 10,
+ };
+ 
++enum mwifiex_assocmd_failurepoint {
++	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
++	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
++	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
++	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
++};
++
+ #define MAX_SNMP_BUF_SIZE   128
+ 
+ struct host_cmd_ds_802_11_snmp_mib {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6208ef1..69a44bb 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static const char *assoc_failure_reason_to_str(u16 cap_info)
++{
++	switch (cap_info) {
++	case ASSOC_ERR_AUTH_ERR_STA_FAILURE:
++		return "ASSOC_ERR_AUTH_ERR_STA_FAILURE";
++	case ASSOC_ERR_AUTH_MSG_UNHANDLED:
++		return "ASSOC_ERR_AUTH_MSG_UNHANDLED";
++	case ASSOC_ERR_ASSOC_ERR_TIMEOUT:
++		return "ASSOC_ERR_ASSOC_ERR_TIMEOUT";
++	case ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED:
++		return "ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED";
++	case ASSOC_ERR_STA_FAILURE:
++		return "ASSOC_ERR_STA_FAILURE";
++	}
++
++	return "Unknown failure";
++}
+ /*
+  * Association firmware command response handler
+  *
+@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 			    status_code, cap_info,
+ 			    le16_to_cpu(assoc_rsp->a_id));
+ 
+-		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
+-			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
++		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
++			    assoc_failure_reason_to_str(cap_info));
++		if (cap_info == ASSOC_ERR_ASSOC_ERR_TIMEOUT) {
++			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
+ 				ret = WLAN_STATUS_AUTH_TIMEOUT;
+-			else
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: AUTH timeout\n");
++			} else {
+ 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: UNSPECIFIED failure\n");
++			}
+ 		} else {
+ 			ret = status_code;
+ 		}
+-- 
 1.8.1.4
 
