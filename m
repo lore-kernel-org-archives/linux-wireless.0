@@ -1,184 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:41565 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753930AbbE1LyV (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6500 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932111AbbE1N4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 07:54:21 -0400
-Message-ID: <556701E9.8090807@broadcom.com> (sfid-20150528_135430_892917_ADF777EC)
-Date: Thu, 28 May 2015 13:54:17 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 28 May 2015 09:56:17 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDoMp8018675
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:17 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s24y-4
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:17 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 03/17] mwifiex: support AP reset after bss_stop
+Date: Thu, 28 May 2015 18:22:18 +0530
+Message-ID: <1432817552-25866-4-git-send-email-patila@marvell.com> (sfid-20150528_155629_469257_D77E74BE)
+In-Reply-To: <1432817552-25866-1-git-send-email-patila@marvell.com>
+References: <1432817552-25866-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	<brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: use direct data pointer in NVRAM parser struct
-References: <1432813063-30922-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1432813063-30922-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/28/15 13:37, Rafał Miłecki wrote:
-> As we plan to add support for platform NVRAM we should store direct
-> data pointer without the extra struct firmware layer. This will allow
-> us to support other sources with the only requirement being u8 buffer.
->
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel<arend@broadcom.com>
-> ---
-> Tested on router with BCM43602-s using /lib/firmware/brcm/brcmfmac43602-pcie.txt
->
-> I've written this patch from scratch, it's inspired by the dropped:
-> [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
+This would enable clearing of FW bss data structures when AP
+operations are stopped.
 
-Hi Rafał,
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
+ drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
+ drivers/net/wireless/mwifiex/fw.h          |  1 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
+ drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
+ 5 files changed, 19 insertions(+), 2 deletions(-)
 
-So what is your goal here. The inspirational patch was dropped so it can 
-be resubmitted when the mips change it relies on has made its way 
-upstream. So I have to rebase the patch over here and your patch will 
-just give me conflicts during that rebase. So can we please wait or do 
-you need this change right now.
-
-Regards,
-Arend
-
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 40 +++++++++++-----------
->   1 file changed, 20 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> index 7ae6461..b72df87 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> @@ -43,7 +43,7 @@ enum nvram_parser_state {
->    * struct nvram_parser - internal info for parser.
->    *
->    * @state: current parser state.
-> - * @fwnv: input buffer being parsed.
-> + * @data: input buffer being parsed.
->    * @nvram: output buffer with parse result.
->    * @nvram_len: lenght of parse result.
->    * @line: current line.
-> @@ -55,7 +55,7 @@ enum nvram_parser_state {
->    */
->   struct nvram_parser {
->   	enum nvram_parser_state state;
-> -	const struct firmware *fwnv;
-> +	const u8 *data;
->   	u8 *nvram;
->   	u32 nvram_len;
->   	u32 line;
-> @@ -91,7 +91,7 @@ static enum nvram_parser_state brcmf_nvram_handle_idle(struct nvram_parser *nvp)
->   {
->   	char c;
->
-> -	c = nvp->fwnv->data[nvp->pos];
-> +	c = nvp->data[nvp->pos];
->   	if (c == '\n')
->   		return COMMENT;
->   	if (is_whitespace(c))
-> @@ -115,16 +115,16 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
->   	enum nvram_parser_state st = nvp->state;
->   	char c;
->
-> -	c = nvp->fwnv->data[nvp->pos];
-> +	c = nvp->data[nvp->pos];
->   	if (c == '=') {
->   		/* ignore RAW1 by treating as comment */
-> -		if (strncmp(&nvp->fwnv->data[nvp->entry], "RAW1", 4) == 0)
-> +		if (strncmp(&nvp->data[nvp->entry], "RAW1", 4) == 0)
->   			st = COMMENT;
->   		else
->   			st = VALUE;
-> -		if (strncmp(&nvp->fwnv->data[nvp->entry], "devpath", 7) == 0)
-> +		if (strncmp(&nvp->data[nvp->entry], "devpath", 7) == 0)
->   			nvp->multi_dev_v1 = true;
-> -		if (strncmp(&nvp->fwnv->data[nvp->entry], "pcie/", 5) == 0)
-> +		if (strncmp(&nvp->data[nvp->entry], "pcie/", 5) == 0)
->   			nvp->multi_dev_v2 = true;
->   	} else if (!is_nvram_char(c) || c == ' ') {
->   		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
-> @@ -145,11 +145,11 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
->   	char *ekv;
->   	u32 cplen;
->
-> -	c = nvp->fwnv->data[nvp->pos];
-> +	c = nvp->data[nvp->pos];
->   	if (!is_nvram_char(c)) {
->   		/* key,value pair complete */
-> -		ekv = (u8 *)&nvp->fwnv->data[nvp->pos];
-> -		skv = (u8 *)&nvp->fwnv->data[nvp->entry];
-> +		ekv = (u8 *)&nvp->data[nvp->pos];
-> +		skv = (u8 *)&nvp->data[nvp->entry];
->   		cplen = ekv - skv;
->   		if (nvp->nvram_len + cplen + 1>= BRCMF_FW_MAX_NVRAM_SIZE)
->   			return END;
-> @@ -170,7 +170,7 @@ brcmf_nvram_handle_comment(struct nvram_parser *nvp)
->   {
->   	char *eoc, *sol;
->
-> -	sol = (char *)&nvp->fwnv->data[nvp->pos];
-> +	sol = (char *)&nvp->data[nvp->pos];
->   	eoc = strchr(sol, '\n');
->   	if (!eoc) {
->   		eoc = strchr(sol, '\0');
-> @@ -201,17 +201,17 @@ static enum nvram_parser_state
->   };
->
->   static int brcmf_init_nvram_parser(struct nvram_parser *nvp,
-> -				   const struct firmware *nv)
-> +				   const u8 *data, size_t data_len)
->   {
->   	size_t size;
->
->   	memset(nvp, 0, sizeof(*nvp));
-> -	nvp->fwnv = nv;
-> +	nvp->data = data;
->   	/* Limit size to MAX_NVRAM_SIZE, some files contain lot of comment */
-> -	if (nv->size>  BRCMF_FW_MAX_NVRAM_SIZE)
-> +	if (data_len>  BRCMF_FW_MAX_NVRAM_SIZE)
->   		size = BRCMF_FW_MAX_NVRAM_SIZE;
->   	else
-> -		size = nv->size;
-> +		size = data_len;
->   	/* Alloc for extra 0 byte + roundup by 4 + length field */
->   	size += 1 + 3 + sizeof(u32);
->   	nvp->nvram = kzalloc(size, GFP_KERNEL);
-> @@ -356,18 +356,18 @@ fail:
->    * and converts newlines to NULs. Shortens buffer as needed and pads with NULs.
->    * End of buffer is completed with token identifying length of buffer.
->    */
-> -static void *brcmf_fw_nvram_strip(const struct firmware *nv, u32 *new_length,
-> -				  u16 domain_nr, u16 bus_nr)
-> +static void *brcmf_fw_nvram_strip(const u8 *data, size_t data_len,
-> +				  u32 *new_length, u16 domain_nr, u16 bus_nr)
->   {
->   	struct nvram_parser nvp;
->   	u32 pad;
->   	u32 token;
->   	__le32 token_le;
->
-> -	if (brcmf_init_nvram_parser(&nvp, nv)<  0)
-> +	if (brcmf_init_nvram_parser(&nvp, data, data_len)<  0)
->   		return NULL;
->
-> -	while (nvp.pos<  nv->size) {
-> +	while (nvp.pos<  data_len) {
->   		nvp.state = nv_parser_states[nvp.state](&nvp);
->   		if (nvp.state == END)
->   			break;
-> @@ -426,7 +426,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->   		goto fail;
->
->   	if (fw) {
-> -		nvram = brcmf_fw_nvram_strip(fw,&nvram_length,
-> +		nvram = brcmf_fw_nvram_strip(fw->data, fw->size,&nvram_length,
->   					     fwctx->domain_nr, fwctx->bus_nr);
->   		release_firmware(fw);
->   		if (!nvram&&  !(fwctx->flags&  BRCMF_FW_REQ_NV_OPTIONAL))
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 3a14d3a..d47799a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 		return -1;
+ 	}
+ 
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "Failed to reset BSS\n");
++		return -1;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index a1de83f..b5033d1 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		case HostCmd_CMD_UAP_BSS_START:
+ 		case HostCmd_CMD_UAP_BSS_STOP:
+ 		case HostCmd_CMD_UAP_STA_DEAUTH:
++		case HOST_CMD_APCMD_SYS_RESET:
+ 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
+ 						      cmd_oid, data_buf,
+ 						      cmd_ptr);
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 6a062dd..124120d 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_RSSI_INFO                         0x00a4
+ #define HostCmd_CMD_FUNC_INIT                         0x00a9
+ #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
++#define HOST_CMD_APCMD_SYS_RESET                      0x00af
+ #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
+ #define HostCmd_CMD_UAP_BSS_START                     0x00b1
+ #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index aa5b9a3..f20a09e 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_STA_DEAUTH:
+ 		break;
++	case HOST_CMD_APCMD_SYS_RESET:
++		break;
+ 	case HostCmd_CMD_MEF_CFG:
+ 		break;
+ 	case HostCmd_CMD_COALESCE_CFG:
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index a4ae283..0a3297e 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_BSS_START:
+ 	case HostCmd_CMD_UAP_BSS_STOP:
++	case HOST_CMD_APCMD_SYS_RESET:
+ 		cmd->command = cpu_to_le16(cmd_no);
+ 		cmd->size = cpu_to_le16(S_DS_GEN);
+ 		break;
+@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
+ 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
+-		mwifiex_dbg(priv->adapter, ERROR,
+-			    "Failed to stop the BSS\n");
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
++		return -1;
++	}
++
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
+ 		return -1;
+ 	}
+ 
+-- 
+1.8.1.4
 
