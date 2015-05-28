@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:35169 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867AbbEIEig (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49176 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487AbbE1NsC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 00:38:36 -0400
-Received: by igbyr2 with SMTP id yr2so36473781igb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 08 May 2015 21:38:35 -0700 (PDT)
-From: Brent Taylor <motobud@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Brent Taylor <motobud@gmail.com>
-Subject: [PATCH] ath6kl: Fix multiple clients associating in AP mode
-Date: Fri,  8 May 2015 23:38:27 -0500
-Message-Id: <1431146307-6442-1-git-send-email-motobud@gmail.com> (sfid-20150509_063923_031391_59A93160)
+	Thu, 28 May 2015 09:48:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2015-05-28
+References: <1432811843.26741.5.camel@intel.com>
+Date: Thu, 28 May 2015 16:47:52 +0300
+In-Reply-To: <1432811843.26741.5.camel@intel.com> (Emmanuel Grumbach's message
+	of "Thu, 28 May 2015 11:17:23 +0000")
+Message-ID: <87a8woyfsn.fsf@kamboji.qca.qualcomm.com> (sfid-20150528_154807_490440_C694CD91)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When one client is associated and connected to an ar6003 hw version
-2.0 with firmware 3.1.1.149, and another client tries to connect, the
-first client's MAC address is lost in the station list because the
-"aid" is always "1".  The structure "wmi_connect_event" has the "aid"
-as the second byte in the message, but it should be the first byte.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-This patch has been tested with linux-3.10.40
+> as we talked, here is the pull request for 4.1.
+> Thanks.
+>
+> The following changes since commit 292208914d8ca5a41cf68c2f1d2810a2ea2044e9:
+>
+>   iwlwifi: mvm: avoid use-after-free on iwl_mvm_d0i3_enable_tx() (2015-05-21 22:36:46 +0300)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-05-28
 
-Signed-off-by: Brent Taylor <motobud@gmail.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks, pulled.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 19f88b4..05d25a9 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1527,8 +1527,8 @@ struct wmi_connect_event {
- 			__le32 nw_type;
- 		} sta;
- 		struct {
--			u8 phymode;
- 			u8 aid;
-+			u8 phymode;
- 			u8 mac_addr[ETH_ALEN];
- 			u8 auth;
- 			u8 keymgmt;
 -- 
-2.4.0
-
+Kalle Valo
