@@ -1,40 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50958 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753239AbbEaIbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 04:31:34 -0400
-Message-ID: <1433061092.2370.1.camel@sipsolutions.net> (sfid-20150531_103140_329334_C6320DCA)
-Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL
- messages.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chaitanya T K <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 31 May 2015 10:31:32 +0200
-In-Reply-To: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150531_012825_827034_87A26BAD)
-References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
-	 (sfid-20150531_012825_827034_87A26BAD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:22641 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753862AbbE1N4R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 09:56:17 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDoMp7018675
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:17 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s24y-3
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:16 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 03/17] mwifiex: support AP reset after bss_stop
+Date: Thu, 28 May 2015 18:20:36 +0530
+Message-ID: <1432817450-25619-4-git-send-email-patila@marvell.com> (sfid-20150528_155627_583399_92822732)
+In-Reply-To: <1432817450-25619-1-git-send-email-patila@marvell.com>
+References: <1432817450-25619-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-05-31 at 04:58 +0530, Chaitanya T K wrote:
-> cfg80211 reuses the skb before asking for a fresh on from genl framework, 
-> this works efficiently for smaller messages but NLM_F_DUMP is normally 
-> used to transport larger data normally > PAGE_SIZE, so if the message 
-> occupies more than GOODSIZE its better to ask for a new, saves couple
-> of hanshakes with the driver.
-> 
-> This improves the time to get the DUMP response across to user space.
+This would enable clearing of FW bss data structures when AP
+operations are stopped.
 
-This doesn't make any sense. If the driver is slow to actually create
-the data, it should implement this logic, but realistically the driver
-should just check if there's enough space and only try to create data to
-put into the skb if it's sufficient?
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
+ drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
+ drivers/net/wireless/mwifiex/fw.h          |  1 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
+ drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
+ 5 files changed, 19 insertions(+), 2 deletions(-)
 
-It sounds to me like you're actually interacting with the hardware at
-this point (otherwise it wouldn't be slow!) which pretty much seems
-wrong anyway.
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 3a14d3a..d47799a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 		return -1;
+ 	}
+ 
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "Failed to reset BSS\n");
++		return -1;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index a1de83f..b5033d1 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		case HostCmd_CMD_UAP_BSS_START:
+ 		case HostCmd_CMD_UAP_BSS_STOP:
+ 		case HostCmd_CMD_UAP_STA_DEAUTH:
++		case HOST_CMD_APCMD_SYS_RESET:
+ 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
+ 						      cmd_oid, data_buf,
+ 						      cmd_ptr);
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 6a062dd..124120d 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_RSSI_INFO                         0x00a4
+ #define HostCmd_CMD_FUNC_INIT                         0x00a9
+ #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
++#define HOST_CMD_APCMD_SYS_RESET                      0x00af
+ #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
+ #define HostCmd_CMD_UAP_BSS_START                     0x00b1
+ #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index aa5b9a3..f20a09e 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_STA_DEAUTH:
+ 		break;
++	case HOST_CMD_APCMD_SYS_RESET:
++		break;
+ 	case HostCmd_CMD_MEF_CFG:
+ 		break;
+ 	case HostCmd_CMD_COALESCE_CFG:
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index a4ae283..0a3297e 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_BSS_START:
+ 	case HostCmd_CMD_UAP_BSS_STOP:
++	case HOST_CMD_APCMD_SYS_RESET:
+ 		cmd->command = cpu_to_le16(cmd_no);
+ 		cmd->size = cpu_to_le16(S_DS_GEN);
+ 		break;
+@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
+ 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
+-		mwifiex_dbg(priv->adapter, ERROR,
+-			    "Failed to stop the BSS\n");
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
++		return -1;
++	}
++
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
+ 		return -1;
+ 	}
+ 
+-- 
+1.8.1.4
 
