@@ -1,46 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38054 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754398AbbE1Prh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 11:47:37 -0400
-Subject: [PATCH 09/20] modsign: Abort modules_install when signing fails
- [ver #5]
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Thu, 28 May 2015 16:47:30 +0100
-Message-ID: <20150528154730.1259.25888.stgit@warthog.procyon.org.uk> (sfid-20150528_174754_099951_A68DD51C)
-In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
-References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:12438 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751836AbbE1NBK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 09:01:10 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxMiV015076
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:09 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqhd-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:09 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 15/17] mwifiex: update AP WMM settings from BSS_START event
+Date: Thu, 28 May 2015 23:59:05 +0530
+Message-ID: <1432837747-2075-16-git-send-email-patila@marvell.com> (sfid-20150528_150350_310211_E9E28A6F)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <David.Woodhouse@intel.com>
+This was missing and would cause issue in WMM handling.
 
-Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
-Signed-off-by: David Howells <dhowells@redhat.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
+ drivers/net/wireless/mwifiex/uap_event.c | 63 ++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
- scripts/Makefile.modinst |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/scripts/Makefile.modinst b/scripts/Makefile.modinst
-index e48a4e9d8868..07650eeaaf06 100644
---- a/scripts/Makefile.modinst
-+++ b/scripts/Makefile.modinst
-@@ -22,7 +22,7 @@ quiet_cmd_modules_install = INSTALL $@
-     mkdir -p $(2) ; \
-     cp $@ $(2) ; \
-     $(mod_strip_cmd) $(2)/$(notdir $@) ; \
--    $(mod_sign_cmd) $(2)/$(notdir $@) $(patsubst %,|| true,$(KBUILD_EXTMOD)) ; \
-+    $(mod_sign_cmd) $(2)/$(notdir $@) $(patsubst %,|| true,$(KBUILD_EXTMOD)) && \
-     $(mod_compress_cmd) $(2)/$(notdir $@)
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 06ce3fe..fee05f5 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -21,8 +21,70 @@
+ #include "main.h"
+ #include "11n.h"
  
- # Modules built outside the kernel source tree go into extra by default
++#define MWIFIEX_BSS_START_EVT_FIX_SIZE    12
+ 
++static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
++					 struct sk_buff *event)
++{
++	int evt_len;
++	u8 *curr;
++	u16 tlv_len;
++	struct mwifiex_ie_types_data *tlv_hdr;
++	struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
++	int mask = IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK;
++
++	priv->wmm_enabled = false;
++	skb_pull(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
++	evt_len = event->len;
++	curr = event->data;
++
++	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
++			 event->data, event->len);
++
++	while ((evt_len >= sizeof(tlv_hdr->header))) {
++		tlv_hdr = (struct mwifiex_ie_types_data *)curr;
++		tlv_len = le16_to_cpu(tlv_hdr->header.len);
++
++		if (evt_len < tlv_len + sizeof(tlv_hdr->header))
++			break;
++
++		switch (le16_to_cpu(tlv_hdr->header.type)) {
++		case WLAN_EID_HT_CAPABILITY:
++			priv->ap_11n_enabled = true;
++			break;
++
++		case WLAN_EID_VHT_CAPABILITY:
++			priv->ap_11ac_enabled = true;
++			break;
+ 
++		case WLAN_EID_VENDOR_SPECIFIC:
++			/* Point the regular IEEE IE 2 bytes into the Marvell IE
++			 * and setup the IEEE IE type and length byte fields
++			 */
++			wmm_param_ie = (void *)(curr + 2);
++			wmm_param_ie->vend_hdr.len = (u8)tlv_len;
++			wmm_param_ie->vend_hdr.element_id =
++						WLAN_EID_VENDOR_SPECIFIC;
++			mwifiex_dbg(priv->adapter, EVENT,
++				    "info: check uap capabilities:\t"
++				    "wmm parameter set count: %d\n",
++				    wmm_param_ie->qos_info_bitmap & mask);
++
++			mwifiex_wmm_setup_ac_downgrade(priv);
++			priv->wmm_enabled = true;
++			mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
++			break;
++
++		default:
++			break;
++		}
++
++		curr += (tlv_len + sizeof(tlv_hdr->header));
++		evt_len -= (tlv_len + sizeof(tlv_hdr->header));
++	}
++
++	return 0;
++}
+ 
+ /*
+  * This function handles AP interface specific events generated by firmware.
+@@ -134,6 +196,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		       ETH_ALEN);
+ 		if (priv->hist_data)
+ 			mwifiex_hist_data_reset(priv);
++		mwifiex_check_uap_capabilties(priv, adapter->event_skb);
+ 		break;
+ 	case EVENT_UAP_MIC_COUNTERMEASURES:
+ 		/* For future development */
+-- 
+1.8.1.4
 
