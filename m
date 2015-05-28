@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51726 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752940AbbEEVkR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 May 2015 17:40:17 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <55492249.2070900@gmail.com>
-Date: Tue, 05 May 2015 17:40:15 -0400
-In-Reply-To: <55492249.2070900@gmail.com> (Xose Vazquez Perez's message of
-	"Tue, 05 May 2015 22:04:25 +0200")
-Message-ID: <wrfj1tiu3dq8.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150505_234022_866169_BEAB36EE)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:44966 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753969AbbE1O0F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 10:26:05 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEP6UF007307
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:04 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyd2-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:04 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 02/17] mwifiex: correct bss_type assignment
+Date: Fri, 29 May 2015 01:24:43 +0530
+Message-ID: <1432842898-3219-3-git-send-email-patila@marvell.com> (sfid-20150528_162609_023271_6941C430)
+In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
+References: <1432842898-3219-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
-> Jes Sorensen wrote:
->
->> [...]
->> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
->> index 0c88916..e3911cc 100644
->> --- a/drivers/net/wireless/Makefile
->> +++ b/drivers/net/wireless/Makefile
->> @@ -39,6 +39,8 @@ obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
->>  
->>  obj-$(CONFIG_ADM8211)	+= adm8211.o
->>  
->> +obj-$(CONFIG_RTL8XXXU)	+= rtl8xxxu.o
->> +
->> [...]
->
-> rtl8xxxu is a really bad name.
->
-> You can see at: https://wireless.wiki.kernel.org/en/users/drivers/rtl819x
-> the normalized nomenclature for realtek drivers.
+Correct bss_type assignment in add_virtual_interface.
+This would ensure correct operation in multiple station scenarios.
 
-Right, the driver covers USB devices, hence the u at the end of the
-name. As I posted elsewhere, I intend to add support for other rtl8xxx
-USB chips, hence the 8xxx name.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-What is your issue?
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 4eeceda..3a14d3a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2518,7 +2518,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
+ 		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.sta_intf;
+ 
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+@@ -2544,7 +2544,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
+ 		priv->bss_started = 0;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.uap_intf;
+ 		priv->bss_mode = type;
+ 
+ 		break;
+@@ -2580,7 +2580,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_started = 0;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
+ 
+ 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
+ 			memset(&priv->wdev, 0, sizeof(priv->wdev));
+-- 
+1.8.1.4
 
-Jes
