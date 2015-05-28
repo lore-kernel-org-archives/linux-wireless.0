@@ -1,147 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:23016 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751255AbbEZTQn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:16:43 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: pull request: iwlwifi-next 2015-05-26
-Date: Tue, 26 May 2015 19:16:38 +0000
-Message-ID: <1432667798.26624.3.camel@intel.com> (sfid-20150526_211646_737308_D215AA8B)
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40231 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751836AbbE1N4O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 09:56:14 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDoeBo018844
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:13 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s24u-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:13 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 01/17] mwifiex: verbose logging for association failure messages
+Date: Thu, 28 May 2015 18:20:34 +0530
+Message-ID: <1432817450-25619-2-git-send-email-patila@marvell.com> (sfid-20150528_155617_727382_8784A19C)
+In-Reply-To: <1432817450-25619-1-git-send-email-patila@marvell.com>
+References: <1432817450-25619-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCnRoaXMgaXMgYSBwdWxsIHJlcXVlc3QgZm9yIDQuMi4gTm90aGluZyByZWFs
-bHkgc3RhbmRzIG91dCBiZXNpZGVzIHdoYXQgSQ0Kd3JvdGUgaW4gdGhlIHRhZy4gRXZlbiB0aGUg
-ZGlmZnN0YXQgaGludHMgd2hhdCBpcyB0aGUgYmlnZ2VzdCBwYXJ0IG9mDQp0aGlzIHB1bGwgcmVx
-dWVzdCA6KQ0KTm90ZSB0aGF0IHRoZXJlIGFyZSBmaXhlcyBoZXJlIHRoYXQgZGlkbid0IG1ha2Ug
-aXQgdG8gbXkgcHJldmlvdXMgcHVsbA0KcmVxdWVzdCBmb3IgNC4xLiBJIHRhZ2dlZCB0aGVtIGZv
-ciBzdGFibGUgc2luY2UgdGhlIHdvcmRpbmcgb2YgeW91ciBsYXN0DQpwdWxsIHJlcXVlc3QgZm9y
-IDQuMSB0byBEYXZlIGhpbnRlZCBtZSB0aGF0IHlvdSB3b24ndCBzZW5kIGFueSBwdWxsDQpyZXF1
-ZXN0IGZvciA0LjEgdG8gaGltIGFueW1vcmUuDQoNCkxldCBtZSBrbm93IGlmIHlvdSBoYXZlIGlz
-c3Vlcy4NCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCBiYmJlOGM4YzU5NmIz
-Nzg0YTJlZDA4NzcyOTAwZTgyN2Y4YmE3MmM1Og0KDQogIG1hYzgwMjExOiBhZGQgbWlzc2luZyBk
-b2N1bWVudGF0aW9uIGZvciByYXRlX2N0cmxfbG9jayAoMjAxNS0wNS0wNiAxNjowMDozMiArMDIw
-MCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0cHM6
-Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZp
-LW5leHQuZ2l0IHRhZ3MvaXdsd2lmaS1uZXh0LWZvci1rYWxsZS0yMDE1LTA1LTI2DQoNCmZvciB5
-b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byA2MzUwM2IxMTA2ZDk3OWJjMWJjNzM5MWZlYjNiZWZh
-NzAxZTY0NDhmOg0KDQogIGl3bHdpZmk6IG12bTogY2xlYW4gaW50ZXJmYWNlcyBvbiBkcnZfc3Rv
-cCAoMjAxNS0wNS0yNiAyMjowMjo0OCArMDMwMCkNCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KKiBzY2FuIHJld29ycyBj
-b250aW51YXRpb24gKEx1Y2EpDQoqIGNsZWFudXBzDQoqIGZpeGVzDQoNCi0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkFuZHJl
-aSBPdGNoZXJldGlhbnNraSAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IENvbmZpZ3VyZSBhZ2cu
-IHF1ZXVlIGJlZm9yZSBhc3NpZ25pbmcgaXQgdG8gU1RBDQoNCkFyaWsgTmVtdHNvdiAoMSk6DQog
-ICAgICBpd2x3aWZpOiBtdm06IGNsZWFuIGludGVyZmFjZXMgb24gZHJ2X3N0b3ANCg0KQXZyYWhh
-bSBTdGVybiAoMyk6DQogICAgICBpd2x3aWZpOiBtdm06IHByaW50IHNjYW5uZWQgY2hhbm5lbCBs
-aXN0IG9uIHNjYW4gaXRlcmF0aW9uIGNvbXBsZXRlIG5vdGlmaWNhdGlvbg0KICAgICAgaXdsd2lm
-aTogbXZtOiBhZGQgVU1BQyBzY2FuIGl0ZXJhdGlvbiBjb21wbGV0ZSBub3RpZmljYXRpb24NCiAg
-ICAgIGl3bHdpZmk6IG12bTogYWRkIHN1cHBvcnQgZm9yIDggbGV2ZWwgc2NhbiBwcmlvcml0eSBB
-UEkNCg0KQXZyaSBBbHRtYW4gKDIpOg0KICAgICAgaXdsd2lmaTogcGNpZTogZG9uJ3QgZGlzYWJs
-ZSB0aGUgYnVzbWFzdGVyIERNQSBjbG9jayBmb3IgZmFtaWx5IDgwMDANCiAgICAgIGl3bHdpZmk6
-IHBjaWU6IFJlbW92ZSByZWR1bmRhbnQgY2hlY2sgZm9yIGZhbWlseSB0eXBlDQoNCkVsaWFkIFBl
-bGxlciAoMyk6DQogICAgICBpd2x3aWZpOiBtdm06IGF2b2lkIHVzZS1hZnRlci1mcmVlIG9uIGl3
-bF9tdm1fZDBpM19lbmFibGVfdHgoKQ0KICAgICAgaXdsd2lmaTogbXZtOiBmaXggUk9DIHJlZmVy
-ZW5jZSBhY2NvdW50aW5nDQogICAgICBpd2x3aWZpOiB0cmFjaW5nOiBhZGQgcnggY21kIGhlYWRl
-ciBmaWVsZHMNCg0KRW1tYW51ZWwgR3J1bWJhY2ggKDEyKToNCiAgICAgIGl3bHdpZmk6IG12bTog
-Zm9yYmlkIE1JTU8gb24gZGV2aWNlcyB0aGF0IGRvbid0IHN1cHBvcnQgaXQNCiAgICAgIGl3bHdp
-Zmk6IDcwMDA6IG1vZGlmeSB0aGUgZmlybXdhcmUgbmFtZSBmb3IgMzE2NQ0KICAgICAgaXdsd2lm
-aTogbXZtOiBmaXggTUxNRSB0cmlnZ2VyDQogICAgICBpd2x3aWZpOiBtdm06IEJUIENvZXggLSBk
-dXBsaWNhdGUgdGhlIGNvbW1hbmQgaWYgc2VudCBBU1lOQw0KICAgICAgTWVyZ2UgcmVtb3RlLXRy
-YWNraW5nIGJyYW5jaCAnaXdsd2lmaS1maXhlcy9tYXN0ZXInIGludG8gaXdsd2lmaS1uZXh0DQog
-ICAgICBpd2x3aWZpOiBkdW1wIEFQSSB0byAxNA0KICAgICAgaXdsd2lmaTogcGNpZTogc2ltcGxp
-ZnkgcmV0dXJuIHZhbHVlDQogICAgICBpd2x3aWZpOiBtdm06IEJUIENvZXggLSByZW1vdmUgdXNl
-bGVzcyBjb2RlDQogICAgICBpd2x3aWZpOiBtdm06IEJUIENvZXggLSBhbGxvY2F0ZSBhIHNob3J0
-IGNvbW1hbmQgb24gdGhlIHN0YWNrDQogICAgICBpd2x3aWZpOiBtdm06IEJUIENvZXggLSBmaXgg
-c2hhcmVkIGFudGVubmEgY2hlY2sgd2l0aCBuZXcgQVBJDQogICAgICBNZXJnZSB0YWcgJ21hYzgw
-MjExLW5leHQtZm9yLWRhdmVtLTIwMTUtMDUtMDYnIGludG8gaXdsd2lmaS1uZXh0DQogICAgICBp
-d2x3aWZpOiBtdm06IGltcGxlbWVudCB0aGUgQmxvY2tBY2sgcmVsYXRlZCBkZWJ1ZyB0cmlnZ2Vy
-cw0KDQpFcmFuIEhhcmFyeSAoMSk6DQogICAgICBpd2x3aWZpOiA4MDAwOiBmYWxsYmFjayB0byBk
-ZWZhdWx0IE5WTSBmaWxlDQoNCkhhaW0gRHJleWZ1c3MgKDEpOg0KICAgICAgaXdsd2lmaTogbXZt
-OiBGcmVlIGZ3X3N0YXR1cyBhZnRlciB1c2UgdG8gYXZvaWQgbWVtb3J5IGxlYWsNCg0KSWRvIFlh
-cml2ICgxKToNCiAgICAgIGl3bHdpZmk6IHVwZGF0ZSB0aGVybWFsIHRocm90dGxpbmcgdmFsdWVz
-IGZvciA4MDAwIGRldmljZXMNCg0KSWxhbiBQZWVyICgxKToNCiAgICAgIGl3bHdpZmk6IHBjaWU6
-IGZpeCB0cmFja2luZyBvZiBjbWRfaW5fZmxpZ2h0DQoNCkpvaGFubmVzIEJlcmcgKDMpOg0KICAg
-ICAgaXdsd2lmaTogcmVmYWN0b3IgY29tbW9uIHRyYW5zcG9ydCBhbGxvYy9pbml0IGNvZGUNCiAg
-ICAgIGl3bHdpZmk6IG12bTogYWR2ZXJ0aXNlIHJhbmRvbWlzZWQgbmV0ZGV0ZWN0IE1BQyBhZGRy
-ZXNzDQogICAgICBpd2x3aWZpOiBtdm06IGhhbmRsZSBkZXZpY2Ugc3RhcnQgZmFpbHVyZSBjb3Jy
-ZWN0bHkNCg0KTGlhZCBLYXVmbWFuICgyKToNCiAgICAgIGl3bHdpZmk6IG52bTogZm9yY2UgbWFj
-IGZyb20gb3RwIGluIGNhc2UgbnZtIG1hYyBpcyByZXNlcnZlZA0KICAgICAgaXdsd2lmaTogbnZt
-OiBmaXggb3RwIHBhcnNpbmcgaW4gODAwMCBodyBmYW1pbHkNCg0KTHVjaWFubyBDb2VsaG8gKDE4
-KToNCiAgICAgIGl3bHdpZmk6IG12bTogdGFrZSB0aGUgVUNPREVfRE9XTiByZWZlcmVuY2Ugd2hl
-biByZXN1bWluZw0KICAgICAgaXdsd2lmaTogbXZtOiBjbGVhbiBuZXQtZGV0ZWN0IGluZm8gaWYg
-ZGV2aWNlIHdhcyByZXNldCBkdXJpbmcgc3VzcGVuZA0KICAgICAgaXdsd2lmaTogcGNpZTogZG9u
-J3QgY2FsbCBzZXRfcHdyIGZ1bmN0aW9ucyBmb3IgZmFtaWx5IDgwMDANCiAgICAgIGl3bHdpZmk6
-IG12bTogc21hbGwgZml4IGluIGEgY29tbWVudCBhYm91dCBVTUFDIHNjYW4gc2NoZWR1bGVzDQog
-ICAgICBpd2x3aWZpOiBtdm06IHJlbW92ZSB0aGUgVU1BQyBzcGVjaWZpYyBzY2FuIHR5cGVzDQog
-ICAgICBpd2x3aWZpOiBtdm06IGZpeCB0aGUgbmV0LWRldGVjdCBTU0lEcyByZXBvcnQgb3JkZXIN
-CiAgICAgIGl3bHdpZmk6IG12bTogbWFrZSBpd2xfbXZtX2NvbmZpZ19zY2hlZF9zY2FuX3Byb2Zp
-bGVzKCkgc3RhdGljDQogICAgICBpd2x3aWZpOiBtdm06IHJlb3JnYW5pemUgc2NhbiBzdG9wcGlu
-ZyBmdW5jdGlvbnMNCiAgICAgIGl3bHdpZmk6IG12bTogZG9uJ3Qgc3RvcCByZWd1bGFyIHNjYW5z
-IHdoZW4gZ29pbmcgb3V0IG9mIGlkbGUgc3RhdGUNCiAgICAgIGl3bHdpZmk6IG12bTogY29tYmlu
-ZSBwYXJ0IG9mIHRoZSBzY2FuIHN0b3AgZmxvd3MNCiAgICAgIGl3bHdpZmk6IG12bTogcmVuYW1l
-IHVtYWMgc2NhbiBzdG9wIGZ1bmN0aW9uDQogICAgICBpd2x3aWZpOiBtdm06IHJlbmFtZSBzb21l
-IExNQUMtc3BlY2lmaWMgc2NhbiBmdW5jdGlvbnMNCiAgICAgIGl3bHdpZmk6IG12bTogcmVmYWN0
-b3IgVU1BQyBzY2FuIFVJRCBoYW5kbGluZw0KICAgICAgaXdsd2lmaTogbXZtOiByZW1vdmUgY29k
-ZSB0aGF0IHN0b3BzIG11bHRpcGxlIFVNQUMgc2NhbnMgb2YgYSB0eXBlDQogICAgICBpd2x3aWZp
-OiBtdm06IGNvbWJpbmUgVU1BQyBhbmQgTE1BQyBzY2FuX3N0b3AgZnVuY3Rpb25zDQogICAgICBp
-d2x3aWZpOiBtdm06IGNvbWJpbmUgcmVndWxhciBhbmQgc2NoZWQgc2NhbiBzdG9wIGZ1bmN0aW9u
-cw0KICAgICAgaXdsd2lmaTogbXZtOiBtYWtlIFVNQUMgc2NhbnMgdXNlIHRoZSBzdG9wcGluZyBz
-Y2FuIHN0YXR1cw0KICAgICAgaXdsd2lmaTogbXZtOiB0cmVhdCBzY2FuIHJhY2VzIGFsc28gb24g
-VU1BQyBzY2Fucw0KDQpNYXR0aSBHb3R0bGllYiAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IEFk
-ZCBkZWJ1Z2ZzIGVudHJ5IGZvciBUeCBwb3dlciBsaW1pdA0KDQpOaWNob2xhcyBLcmF1c2UgKDEp
-Og0KICAgICAgaXdsd2lmaTogUmVtb3ZlIHVzZSBvZiB0aGUgZGVwcmVjYWN0ZWQgUFRSX1JFVA0K
-DQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9LY29uZmlnICAgICAgICAgICAgICAgIHwg
-ICAxMyArLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvTWFrZWZpbGUgICAgICAgICAg
-ICAgICB8ICAgIDEgKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTcwMDAuYyAg
-ICAgICAgICAgICB8ICAgNDEgKystDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wt
-ODAwMC5jICAgICAgICAgICAgIHwgICA3MCArKystLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
-bHdpZmkvaXdsLWNvbmZpZy5oICAgICAgICAgICB8ICAgNDQgKysrDQogZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9pd2wtZGV2dHJhY2UtaXdsd2lmaS5oIHwgICAxNSArLQ0KIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWRydi5jICAgICAgICAgICAgICB8ICAgIDYgKy0NCiBk
-cml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1lZXByb20tcGFyc2UuYyAgICAgfCAgICA1
-ICsNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1lZXByb20tcGFyc2UuaCAgICAg
-fCAgICAzICsNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1mdy1lcnJvci1kdW1w
-LmggICAgfCAgICA2ICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtZnctZmls
-ZS5oICAgICAgICAgIHwgICA0MCArKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3
-bC1udm0tcGFyc2UuYyAgICAgICAgfCAgIDMyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9pd2wtcHJwaC5oICAgICAgICAgICAgIHwgICAgMyArDQogZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsd2lmaS9pd2wtdHJhbnMuYyAgICAgICAgICAgIHwgIDExMyArKysrKysrDQogZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMuaCAgICAgICAgICAgIHwgICA2MSArKy0t
-DQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vY29leC5jICAgICAgICAgICAgIHwg
-ICA4MSArLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL2NvZXhfbGVnYWN5
-LmMgICAgICB8ICAgIDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9kMy5j
-ICAgICAgICAgICAgICAgfCAgIDQzICsrLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-bXZtL2RlYnVnZnMtdmlmLmMgICAgICB8ICAgMjEgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL212bS9kZWJ1Z2ZzLmMgICAgICAgICAgfCAgICA1ICstDQogZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9tdm0vZnctYXBpLXBvd2VyLmggICAgIHwgICAzNCArKysNCiBkcml2ZXJz
-L25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9mdy1hcGktc2Nhbi5oICAgICAgfCAgMTM0ICsrKy0t
-LS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL2Z3LWFwaS5oICAgICAgICAg
-ICB8ICAgMjUgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9mdy5jICAgICAg
-ICAgICAgICAgfCAgIDY3ICsrLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0v
-bWFjODAyMTEuYyAgICAgICAgIHwgIDM2NCArKysrKysrKysrKysrLS0tLS0tLS0tDQogZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbXZtLmggICAgICAgICAgICAgIHwgIDE0MCArKysr
-LS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9udm0uYyAgICAgICAgICAg
-ICAgfCAgICA4ICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vb3BzLmMgICAg
-ICAgICAgICAgIHwgICA0NSArLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9y
-cy5jICAgICAgICAgICAgICAgfCAgIDIzICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9tdm0vcnMuaCAgICAgICAgICAgICAgIHwgICAgMiAtDQogZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aXdsd2lmaS9tdm0vcnguYyAgICAgICAgICAgICAgIHwgICAgNSArDQogZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9tdm0vc2Nhbi5jICAgICAgICAgICAgIHwgMTM3MCArKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3N0YS5jICAg
-ICAgICAgICAgICB8ICAgMTQgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS90
-aW1lLWV2ZW50LmMgICAgICAgfCAgIDE1ICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9tdm0vdHQuYyAgICAgICAgICAgICAgIHwgICA0MCArLS0NCiBkcml2ZXJzL25ldC93aXJlbGVz
-cy9pd2x3aWZpL212bS90eC5jICAgICAgICAgICAgICAgfCAgIDMxICstDQogZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9wY2llL2ludGVybmFsLmggICAgICAgIHwgICAgNiArLQ0KIGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5jICAgICAgICAgICB8ICAxNjAgKysr
-KystLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90eC5jICAgICAgICAg
-ICAgICB8ICAgMjUgKy0NCiAzOSBmaWxlcyBjaGFuZ2VkLCAxNjMzIGluc2VydGlvbnMoKyksIDE0
-ODAgZGVsZXRpb25zKC0pDQogY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvbmV0L3dpcmVsZXNz
-L2l3bHdpZmkvaXdsLXRyYW5zLmMNCg0K
+This patch adds more logging support for association failure -
+reason and states.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
+ drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
+ 2 files changed, 40 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c404390..6a062dd 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -419,8 +419,12 @@ enum P2P_MODES {
+ #define HS_CFG_COND_MAC_EVENT		0x00000004
+ #define HS_CFG_COND_MULTICAST_DATA	0x00000008
+ 
+-#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+-#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
++#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
++#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
++#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
++#define ASSOC_ERR_AUTH_MSG_UNHANDLED		0xFFFE
++#define ASSOC_ERR_STA_FAILURE			0xFFFF
++
+ 
+ #define CMD_F_HOSTCMD           (1 << 0)
+ #define CMD_F_CANCELED          (1 << 1)
+@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
+ 	DOT11H_I = 10,
+ };
+ 
++enum mwifiex_assocmd_failurepoint {
++	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
++	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
++	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
++	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
++};
++
+ #define MAX_SNMP_BUF_SIZE   128
+ 
+ struct host_cmd_ds_802_11_snmp_mib {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6208ef1..69a44bb 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static const char *assoc_failure_reason_to_str(u16 cap_info)
++{
++	switch (cap_info) {
++	case ASSOC_ERR_AUTH_ERR_STA_FAILURE:
++		return "ASSOC_ERR_AUTH_ERR_STA_FAILURE";
++	case ASSOC_ERR_AUTH_MSG_UNHANDLED:
++		return "ASSOC_ERR_AUTH_MSG_UNHANDLED";
++	case ASSOC_ERR_ASSOC_ERR_TIMEOUT:
++		return "ASSOC_ERR_ASSOC_ERR_TIMEOUT";
++	case ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED:
++		return "ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED";
++	case ASSOC_ERR_STA_FAILURE:
++		return "ASSOC_ERR_STA_FAILURE";
++	}
++
++	return "Unknown failure";
++}
+ /*
+  * Association firmware command response handler
+  *
+@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 			    status_code, cap_info,
+ 			    le16_to_cpu(assoc_rsp->a_id));
+ 
+-		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
+-			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
++		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
++			    assoc_failure_reason_to_str(cap_info));
++		if (cap_info == ASSOC_ERR_ASSOC_ERR_TIMEOUT) {
++			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
+ 				ret = WLAN_STATUS_AUTH_TIMEOUT;
+-			else
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: AUTH timeout\n");
++			} else {
+ 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: UNSPECIFIED failure\n");
++			}
+ 		} else {
+ 			ret = status_code;
+ 		}
+-- 
+1.8.1.4
+
