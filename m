@@ -1,83 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:34350 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752023AbbEKNFW (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49466 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753601AbbE1M7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 09:05:22 -0400
-Received: by laat2 with SMTP id t2so92606063laa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2015 06:05:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: fix AP_VLAN crypto tailroom calculation
-Date: Mon, 11 May 2015 13:05:03 +0000
-Message-Id: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com> (sfid-20150511_150528_015679_F7C93854)
+	Thu, 28 May 2015 08:59:41 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCwn2v014693
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:40 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqdb-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:40 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 02/17] mwifiex: correct bss_type assignment
+Date: Thu, 28 May 2015 23:58:52 +0530
+Message-ID: <1432837747-2075-3-git-send-email-patila@marvell.com> (sfid-20150528_145943_870241_2EF87A97)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AP_VLANs may inherit crypto keys from parent AP.
-Moreover AP_VLANs may have PTK keys of their own.
-Hence both AP_VLAN sdata and AP sdata must be
-inspected.
+Correct bss_type assignment in add_virtual_interface.
+This would ensure correct operation in multiple station scenarios.
 
-Some splats I was seeing:
-
- (a) WARNING: CPU: 1 PID: 0 at /devel/src/linux/net/mac80211/wep.c:102 ieee80211_wep_add_iv
- (b) WARNING: CPU: 1 PID: 0 at /devel/src/linux/net/mac80211/wpa.c:73 ieee80211_tx_h_michael_mic_add
- (c) WARNING: CPU: 3 PID: 0 at /devel/src/linux/net/mac80211/wpa.c:433 ieee80211_crypto_ccmp_encrypt
-
-I've seen (a) and (b) with ath9k hw crypto and (c)
-with ath9k sw crypto. All of them were related to
-insufficient skb tailroom and I was able to
-trigger these with ping6 program.
-
-This patch effectively fixes Tx when using
-AP_VLANs with WEP and WPA in some setups.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- net/mac80211/tx.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8df134213adf..0887d6e5c424 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1593,6 +1593,25 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 4eeceda..3a14d3a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2518,7 +2518,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
+ 		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.sta_intf;
  
- /* device xmit handlers */
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+@@ -2544,7 +2544,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
+ 		priv->bss_started = 0;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.uap_intf;
+ 		priv->bss_mode = type;
  
-+static bool
-+ieee80211_need_crypto_tx_tailroom(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_sub_if_data *parent_sdata;
-+
-+	if (sdata->crypto_tx_tailroom_needed_cnt)
-+		return true;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN && sdata->bss) {
-+		parent_sdata = container_of(sdata->bss,
-+					    struct ieee80211_sub_if_data,
-+					    u.ap);
-+		if (parent_sdata->crypto_tx_tailroom_needed_cnt)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
- 				struct sk_buff *skb,
- 				int head_need, bool may_encrypt)
-@@ -1600,7 +1619,7 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	int tail_need = 0;
+ 		break;
+@@ -2580,7 +2580,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_started = 0;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
  
--	if (may_encrypt && sdata->crypto_tx_tailroom_needed_cnt) {
-+	if (may_encrypt && ieee80211_need_crypto_tx_tailroom(sdata)) {
- 		tail_need = IEEE80211_ENCRYPT_TAILROOM;
- 		tail_need -= skb_tailroom(skb);
- 		tail_need = max_t(int, tail_need, 0);
+ 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
+ 			memset(&priv->wdev, 0, sizeof(priv->wdev));
 -- 
-2.1.4
+1.8.1.4
 
