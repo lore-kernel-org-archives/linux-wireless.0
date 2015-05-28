@@ -1,71 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48010 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932804AbbELOlH (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40863 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753857AbbE1N4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 10:41:07 -0400
-Message-ID: <55521102.9020306@candelatech.com> (sfid-20150512_164112_683379_21CBDC00)
-Date: Tue, 12 May 2015 07:41:06 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 28 May 2015 09:56:17 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDoMp6018675
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:16 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s24y-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:16 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 01/17] mwifiex: verbose logging for association failure messages
+Date: Thu, 28 May 2015 18:27:53 +0530
+Message-ID: <1432817889-26250-2-git-send-email-patila@marvell.com> (sfid-20150528_155625_287473_6787BC92)
+In-Reply-To: <1432817889-26250-1-git-send-email-patila@marvell.com>
+References: <1432817889-26250-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>,
-	s prasad <sprasad.kandregula@gmail.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
-References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com>	<CA+BoTQkFSQe0di1vqqB5cAPKaizRkBT5cu4fA8dQ_uR_a2HdJw@mail.gmail.com>	<CAJa-X96spUg7+EZqH-Mv3s7OzbHzmXmcZ7uOw1KvPShexW6D_w@mail.gmail.com>	<CA+BoTQ=Qpws=928TZe22Ds-UO_qQJ2Om+=DW=VUNUS59o1BQAA@mail.gmail.com>	<CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com>	<CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com>	<CAJa-X945Xvn0jHQVcKn-pyYQVNpxXnqjOH_VHJv8pVwR4kFXcw@mail.gmail.com> <CA+BoTQmLFGAn2z=E3J1C2qfNP34v57B7-rtALUQhNXrHqJeA6Q@mail.gmail.com>
-In-Reply-To: <CA+BoTQmLFGAn2z=E3J1C2qfNP34v57B7-rtALUQhNXrHqJeA6Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds more logging support for association failure -
+reason and states.
 
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
+ drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
+ 2 files changed, 40 insertions(+), 5 deletions(-)
 
-On 05/12/2015 03:14 AM, Michal Kazior wrote:
-> On 12 May 2015 at 11:31, s prasad <sprasad.kandregula@gmail.com> wrote:
->> May I know, is this firmware or driver constraint?
->> If somebody have patch for this, am ready to test it.
->
-> Short answer: There's nothing, yet.
->
-> Long answer:
->
->  From what I know official firmware doesn't support injecting packets
-> via monitor vdev. This is a firmware limitation.
->
-> A way around this may be creating and using an additional vdev, e.g.
-> AP. This will be rather ugly but may work. There's no patch for it.
->
-> An alternative would be to ask Ben to modify his CT-firmware branch.
-
-I gave this a decent try a month or two ago, and had no luck.  The hardware
-(from what I can tell), just will not send a frame to an unknown peer.
-
-I noticed the other day that ANQP will not work on ath10k, and I suspect
-similar issues..so I will be in that code again.  Maybe I'll learn
-how to trick it into sending arbitrary frames.
-
-All that said, there is no way to specify rate-ctrl info on a per-pkt
-basis when injecting frames, so I don't know what good injecting frames
-on a mgt device will accomplish.
-
-Thanks,
-Ben
-
-> Also there's a problem with submitting raw 802.11 frames to firmware.
-> There's some work ongoing [1].
->
-> [1]: http://lists.infradead.org/pipermail/ath10k/2015-May/005144.html
->
->
-> Michał
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c404390..6a062dd 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -419,8 +419,12 @@ enum P2P_MODES {
+ #define HS_CFG_COND_MAC_EVENT		0x00000004
+ #define HS_CFG_COND_MULTICAST_DATA	0x00000008
+ 
+-#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+-#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
++#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
++#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
++#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
++#define ASSOC_ERR_AUTH_MSG_UNHANDLED		0xFFFE
++#define ASSOC_ERR_STA_FAILURE			0xFFFF
++
+ 
+ #define CMD_F_HOSTCMD           (1 << 0)
+ #define CMD_F_CANCELED          (1 << 1)
+@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
+ 	DOT11H_I = 10,
+ };
+ 
++enum mwifiex_assocmd_failurepoint {
++	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
++	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
++	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
++	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
++};
++
+ #define MAX_SNMP_BUF_SIZE   128
+ 
+ struct host_cmd_ds_802_11_snmp_mib {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6208ef1..69a44bb 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static const char *assoc_failure_reason_to_str(u16 cap_info)
++{
++	switch (cap_info) {
++	case ASSOC_ERR_AUTH_ERR_STA_FAILURE:
++		return "ASSOC_ERR_AUTH_ERR_STA_FAILURE";
++	case ASSOC_ERR_AUTH_MSG_UNHANDLED:
++		return "ASSOC_ERR_AUTH_MSG_UNHANDLED";
++	case ASSOC_ERR_ASSOC_ERR_TIMEOUT:
++		return "ASSOC_ERR_ASSOC_ERR_TIMEOUT";
++	case ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED:
++		return "ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED";
++	case ASSOC_ERR_STA_FAILURE:
++		return "ASSOC_ERR_STA_FAILURE";
++	}
++
++	return "Unknown failure";
++}
+ /*
+  * Association firmware command response handler
+  *
+@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 			    status_code, cap_info,
+ 			    le16_to_cpu(assoc_rsp->a_id));
+ 
+-		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
+-			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
++		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
++			    assoc_failure_reason_to_str(cap_info));
++		if (cap_info == ASSOC_ERR_ASSOC_ERR_TIMEOUT) {
++			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
+ 				ret = WLAN_STATUS_AUTH_TIMEOUT;
+-			else
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: AUTH timeout\n");
++			} else {
+ 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: UNSPECIFIED failure\n");
++			}
+ 		} else {
+ 			ret = status_code;
+ 		}
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.1.4
+
