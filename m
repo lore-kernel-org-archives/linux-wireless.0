@@ -1,59 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:33589 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080AbbEZTwt (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:65037 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753936AbbE1OZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 15:52:49 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-	Wed, 27 May 2015 01:22:46 +0530
-Message-ID: <1432669955.2450.269.camel@linux.vnet.ibm.com> (sfid-20150526_215309_465206_91738816)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Petko Manolov <petkan@mip-labs.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	mricon@kernel.org
-Date: Tue, 26 May 2015 15:52:35 -0400
-In-Reply-To: <20150526180813.0ba1b5f5@lxorguk.ukuu.org.uk>
-References: <20150519200232.GM23057@wotan.suse.de>
-	 <20150520140426.GB126473@ubuntu-hedt>
-	 <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
-	 <20150520164613.GD10473@localhost>	<20150521044104.GH22632@kroah.com>
-	 <20150521054101.GA15037@localhost>	<20150521061453.GC30864@kroah.com>
-	 <1432213521.4230.43.camel@linux.vnet.ibm.com>
-	 <20150521154508.GA11821@kroah.com>	<20150521155319.GG18164@localhost>
-	 <20150526180813.0ba1b5f5@lxorguk.ukuu.org.uk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 May 2015 10:25:47 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEOZBl007178
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:46 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqybu-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:46 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 00/17] mwifiex patches 
+Date: Fri, 29 May 2015 01:24:41 +0530
+Message-ID: <1432842898-3219-1-git-send-email-patila@marvell.com> (sfid-20150528_162550_284612_480E6EA5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-05-26 at 18:08 +0100, One Thousand Gnomes wrote:
+This patch series mainly adds enhancements for mwifiex AP. 
+With this series, we support verbose information in station dump command
+also inforamation about AP link. Another important enhancement is related
+to parsing IEs from Tail of beacon_data.
+Few issues seen during DFS testing are also fixed in this series.
+Patch series also includes some other misc patches.
 
-> IMHO we want the supplier of a given firmware providing signatures on
-> the firmware git tree if this is done. A generic linux-firmware owned key
-> would be both a horrendously inviting attack target, and a single point of
-> failure.
-> 
-> Git can already do all the needed commit signing bits unless I'm missing
-> something here ?
+Avinash Patil (11):
+  mwifiex: verbose logging for association failure messages
+  mwifiex: correct bss_type assignment
+  mwifiex: support AP reset after bss_stop
+  mwifiex: enable 11d after bss reset
+  mwifiex: reset 11h active flag when chandef does not require dfs
+  mwifiex: disable CAC upon radar detection event
+  mwifiex: parse power constraint IE from Tail
+  mwifiex: support downloading IEs from tail
+  mwifiex: drop block-ack action frames
+  mwifiex: advertise PS ON by default support to cfg80211
+  mwifiex: update AP WMM settings from BSS_START event
 
-Nice!  I haven't tried signing commits yet.  Assuming the signatures can
-be extracted from git, the firmware blob git commit signature could be
-stored either as a security xattr or appended (eg. similar to kernel
-modules).  The end system owner could then make the decision to load the
-associated public key or not.
+Xinming Hu (6):
+  mwifiex: add cfg80211 get_channel handler
+  mwifiex: maintain station statistic in uap mode
+  mwifiex: add sta_list firmware command
+  mwifiex: dump station support in uap mode
+  mwifiex: using right tid for addressing ra_list
+  mwifiex: do not decrease tx_pending for AMSDU packet once more
 
-Mimi
+ drivers/net/wireless/mwifiex/11h.c           |  32 +++++--
+ drivers/net/wireless/mwifiex/11n.c           |  11 ++-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   5 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      | 130 ++++++++++++++++++++++++---
+ drivers/net/wireless/mwifiex/cmdevt.c        |   2 +
+ drivers/net/wireless/mwifiex/fw.h            |  43 ++++++++-
+ drivers/net/wireless/mwifiex/ie.c            | 102 ++++++++++++---------
+ drivers/net/wireless/mwifiex/ioctl.h         |   1 +
+ drivers/net/wireless/mwifiex/join.c          |  30 ++++++-
+ drivers/net/wireless/mwifiex/main.h          |  23 ++++-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |  26 ++++++
+ drivers/net/wireless/mwifiex/txrx.c          |  21 +++--
+ drivers/net/wireless/mwifiex/uap_cmd.c       |  55 +++++++++++-
+ drivers/net/wireless/mwifiex/uap_event.c     |  63 +++++++++++++
+ drivers/net/wireless/mwifiex/uap_txrx.c      |  18 +++-
+ drivers/net/wireless/mwifiex/util.c          |  56 +++++++++---
+ 16 files changed, 525 insertions(+), 93 deletions(-)
+
+-- 
+1.8.1.4
 
