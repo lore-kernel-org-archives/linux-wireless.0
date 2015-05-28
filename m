@@ -1,128 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59607 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751650AbbETAjW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 20:39:22 -0400
-Date: Wed, 20 May 2015 02:39:17 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Andy Lutomirski <luto@amacapital.net>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Casey Schaufler <casey@schaufler-ca.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Andy Lutomirski <luto@kernel.org>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	James Morris <james.l.morris@oracle.com>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Michal Marek <mmarek@suse.cz>,
-	Abelardo Ricart III <aricart@memnix.com>,
-	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
-	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150520003917.GV23057@wotan.suse.de> (sfid-20150520_023939_544300_E72881D5)
-References: <20150519200232.GM23057@wotan.suse.de>
- <555BA438.2070802@kernel.org>
- <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com>
- <CALCETrX1YrdwfPJxVbzE0MQK=HChK8sDztt6MZcJiCvTEDCn7Q@mail.gmail.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29166 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753601AbbE1M7d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 08:59:33 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxWEl014853
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:32 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5rwtw-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:32 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 00/17] mwifiex patches 
+Date: Thu, 28 May 2015 23:58:50 +0530
+Message-ID: <1432837747-2075-1-git-send-email-patila@marvell.com> (sfid-20150528_145937_463099_6C50B345)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALCETrX1YrdwfPJxVbzE0MQK=HChK8sDztt6MZcJiCvTEDCn7Q@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 04:42:05PM -0700, Andy Lutomirski wrote:
-> On Tue, May 19, 2015 at 4:30 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> > Hi All,
-> >
-> > On Wed, May 20, 2015 at 6:59 AM, Andy Lutomirski <luto@kernel.org> wrote:
-> >> [added cc's from the other thread]
-> >>
-> >> On 05/19/2015 01:02 PM, Luis R. Rodriguez wrote:
-> >>>
-> >>> David Howells has posted v4 of his series of supporting PKCS#7 for module
-> >>> signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and
-> >>> after
-> >>> some review and patch shuffling I think this is ready for patch form.  My
-> >>> own
-> >>> series however depend on quite a bit of other pending changes, one series
-> >>> which
-> >>> will go through Rusty's tree, another series of fixes on firmware_class
-> >>> which
-> >>> should go through Greg's tree. I'll wait until all this and David's own
-> >>> patches
-> >>> get merged before posting firmware PKCS#7 support. Before all this though
-> >>> in
-> >>> preparation for fw signing one thing we should start to talk about more
-> >>> broadly
-> >>> however is how linux-firmware binary file signing would work in practice
-> >>> and
-> >>> what we need, and make sure folks are OK with all this.
-> >>>
-> >>> First, firmware signing will be completely optional as with module
-> >>> signing.
-> >>>
-> >>
-> >> ...
-> >>
-> >>> Other than this last nitpick, any other concerns or recommendations ?
-> >>
-> >>
-> >> A couple.  Some of these are general concerns with the existing
-> >> infrastructure, but #1 is a specific problem that gets much worse if we add
-> >> firmware signing.  Feel free to ignore 2-4.
-> >>
-> >> 1. We should get the signature semantics right.  I think that, for modules,
-> >> we currently sign literally the module payload.  For modules, in my
-> >> semi-amateurish crypto universe [1], this is fine *as long as the key in
-> >> question is used for no other purpose*.  For firmware, it's dangerous, since
-> >> it would be vulnerable to substitution attacks in which the adversary
-> >> convinces us to interpret one firmware file as firmware for another device
-> >> or purpose entirely.
-> >>
-> >> We should be signing something that's semantically equivalent to "This is a
-> >> valid module: xyz", "This is a valid 'regulatory.bin': xyz", or "This is a
-> >> valid kexec image: xyz".
-> >
-> > Something that occurred to me (as a complete bystander) was: would it
-> > make sense to have keys able to be restricted to particular "types" of
-> > signable data? I.e. the key that can sign a valid regulatory.bin file
-> > cannot be used to sign a module or a kexec image. - This could remove
-> > the need to have multiple keyrings. (Also, UEFI keys unless otherwise
-> > tagged could be restricted to only signing bootloaders or kernels)
-> 
-> Seems sensible to me.
+This patch series mainly adds enhancements for mwifiex AP. 
+With this series, we support verbose information in station dump command
+also inforamation about AP link. Another important enhancement is related
+to parsing IEs from Tail of beacon_data.
+Few issues seen during DFS testing are also fixed in this series.
+Patch series also includes some other misc patches.
 
-As for having keys for fw signing be specific to fw data without a keyring,
-if that is desirable I think we can devise a way to do that. For instance
-if we wanted to we can have FW_SIG by default trust first keys on
-system_trusted_keyring just as module signature works -- or if we wanted to
-just trust, say a Kyle key. Not sure if the later is possible yet, but htat
-would require some changes. Then as an evolution if we wanted to enable a
-specific request fw to be mapped to a specific fw file the new APIs I was
-looking to add could easily enable this provided that we first decide we
-do want to trust say one key perhaps not on system_trusted_keyring for fw
-signing. That'd need to be decided first.
+Avinash Patil (11):
+  mwifiex: verbose logging for association failure messages
+  mwifiex: correct bss_type assignment
+  mwifiex: support AP reset after bss_stop
+  mwifiex: enable 11d after bss reset
+  mwifiex: reset 11h active flag when chandef does not require dfs
+  mwifiex: disable CAC upon radar detection event
+  mwifiex: parse power constraint IE from Tail
+  mwifiex: support downloading IEs from tail
+  mwifiex: drop block-ack action frames
+  mwifiex: advertise PS ON by default support to cfg80211
+  mwifiex: update AP WMM settings from BSS_START event
 
-As for the UEFI stuff -- from what I gather its too late there. We could
-certainly go with something else for fw signing though, just lemme hear it
-hard and clear.
+Xinming Hu (6):
+  mwifiex: add cfg80211 get_channel handler
+  mwifiex: maintain station statistic in uap mode
+  mwifiex: add sta_list firmware command
+  mwifiex: dump station support in uap mode
+  mwifiex: using right tid for addressing ra_list
+  mwifiex: do not decrease tx_pending for AMSDU packet once more
 
-> FWIW, I'm starting to think that UEFI-based validation of kexec images
-> should be totally separate.  It uses a nasty PE format with a hideous
-> PKCS #7 formatted signature.  Maybe that should be a completely
-> separate piece of code.
+ drivers/net/wireless/mwifiex/11h.c           |  32 +++++--
+ drivers/net/wireless/mwifiex/11n.c           |  11 ++-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   5 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      | 130 ++++++++++++++++++++++++---
+ drivers/net/wireless/mwifiex/cmdevt.c        |   2 +
+ drivers/net/wireless/mwifiex/fw.h            |  43 ++++++++-
+ drivers/net/wireless/mwifiex/ie.c            | 102 ++++++++++++---------
+ drivers/net/wireless/mwifiex/ioctl.h         |   1 +
+ drivers/net/wireless/mwifiex/join.c          |  30 ++++++-
+ drivers/net/wireless/mwifiex/main.h          |  23 ++++-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |  26 ++++++
+ drivers/net/wireless/mwifiex/txrx.c          |  21 +++--
+ drivers/net/wireless/mwifiex/uap_cmd.c       |  55 +++++++++++-
+ drivers/net/wireless/mwifiex/uap_event.c     |  63 +++++++++++++
+ drivers/net/wireless/mwifiex/uap_txrx.c      |  18 +++-
+ drivers/net/wireless/mwifiex/util.c          |  56 +++++++++---
+ 16 files changed, 525 insertions(+), 93 deletions(-)
 
-LSM'ify it I guess? Again, if that's reasonable then I think we'll need
-stacking and that's still not merged.
+-- 
+1.8.1.4
 
-  Luis
