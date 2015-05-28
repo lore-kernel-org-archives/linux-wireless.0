@@ -1,82 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:34437 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750979AbbEVFCH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 01:02:07 -0400
-Date: Fri, 22 May 2015 07:00:35 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Fix EFUSE_ANA8M map value
-Message-ID: <20150522070035.711c6195@wiggum> (sfid-20150522_070238_535611_93D470EB)
-In-Reply-To: <555E5433.7000904@lwfinger.net>
-References: <20150521214421.15983b0a@milhouse>
- <555E5433.7000904@lwfinger.net>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18091 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753530AbbE1O1H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 10:27:07 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEP5ml010385
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:06 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s4k4-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:06 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 07/17] mwifiex: add cfg80211 get_channel handler
+Date: Fri, 29 May 2015 01:24:48 +0530
+Message-ID: <1432842898-3219-8-git-send-email-patila@marvell.com> (sfid-20150528_162711_561930_E9CD6E15)
+In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
+References: <1432842898-3219-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/bZ0YGXJ_+1E_nytLmMzXKfG"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/bZ0YGXJ_+1E_nytLmMzXKfG
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Xinming Hu <huxm@marvell.com>
 
-On Thu, 21 May 2015 16:54:59 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+This patch add cfg80211 get_channel handler for mwifiex.
+The handler will be used to report current channel to upper
+layer utility.
 
-> On 05/21/2015 02:44 PM, Michael B=C3=BCsch wrote:
-> > The map entry EFUSE_ANA8M is supposed to be a bit mask of the SYS_CLK r=
-egister (see efuse.c)
-> > It doesn't make sense to assign the enumeration value EFUSE_ANA8M. Assi=
-gn the bitmask ANA8M instead.
-> > rtl8192se does not have ANA8M, so use 0 as bitmask.
-> >
-> > Signed-off-by: Michael Buesch <m@bues.ch>
-> >
-> > ---
-> >
-> > This is RFC, because I don't really know the device.
-> > The rtl8192se part of the patch is just a guess, because this driver's =
-reg.h doesn't have an ANA8M define.
->=20
-> I think the patch is correct. Certainly loading an array entry with the o=
-ffset=20
-> of the array makes little sense. This change makes the older drivers=20
-> (rtl8192c{e,u} and rtl8192se match the newer ones.
->=20
-> Once I test the patch, I will send it on to Kalle with my S-o-b.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11h.c      |  2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c | 58 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/mwifiex/main.h     |  5 ++-
+ drivers/net/wireless/mwifiex/uap_cmd.c  |  5 ++-
+ 4 files changed, 66 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
+index bb2ffd9..71a1b58 100644
+--- a/drivers/net/wireless/mwifiex/11h.c
++++ b/drivers/net/wireless/mwifiex/11h.c
+@@ -305,7 +305,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	mwifiex_uap_set_channel(bss_cfg, priv->dfs_chandef);
++	mwifiex_uap_set_channel(priv, bss_cfg, priv->dfs_chandef);
+ 
+ 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
+ 		mwifiex_dbg(priv->adapter, ERROR,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index fb93e13..ddeb919 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -67,6 +67,22 @@ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type)
+ 	}
+ }
+ 
++/* This function maps IEEE HT secondary channel type to NL80211 channel type
++ */
++u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset)
++{
++	switch (second_chan_offset) {
++	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
++		return NL80211_CHAN_HT20;
++	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++		return NL80211_CHAN_HT40PLUS;
++	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++		return NL80211_CHAN_HT40MINUS;
++	default:
++		return NL80211_CHAN_HT20;
++	}
++}
++
+ /*
+  * This function checks whether WEP is set.
+  */
+@@ -1785,7 +1801,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
+ 
+-	mwifiex_uap_set_channel(bss_cfg, params->chandef);
++	mwifiex_uap_set_channel(priv, bss_cfg, params->chandef);
+ 	mwifiex_set_uap_rates(bss_cfg, params);
+ 
+ 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
+@@ -3373,6 +3389,45 @@ mwifiex_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
++					struct wireless_dev *wdev,
++					struct cfg80211_chan_def *chandef)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
++	struct mwifiex_bssdescriptor *curr_bss;
++	struct ieee80211_channel *chan;
++	u8 second_chan_offset;
++	enum nl80211_channel_type chan_type;
++	enum ieee80211_band band;
++	int freq;
++	int ret = -ENODATA;
++
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP &&
++	    cfg80211_chandef_valid(&priv->bss_chandef)) {
++		*chandef = priv->bss_chandef;
++		ret = 0;
++	} else if (priv->media_connected) {
++		curr_bss = &priv->curr_bss_params.bss_descriptor;
++		band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
++		freq = ieee80211_channel_to_frequency(curr_bss->channel, band);
++		chan = ieee80211_get_channel(wiphy, freq);
++
++		if (curr_bss->bcn_ht_oper) {
++			second_chan_offset = curr_bss->bcn_ht_oper->ht_param &
++					IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
++			chan_type = mwifiex_sec_chan_offset_to_chan_type
++							(second_chan_offset);
++			cfg80211_chandef_create(chandef, chan, chan_type);
++		} else {
++			cfg80211_chandef_create(chandef, chan,
++						NL80211_CHAN_NO_HT);
++		}
++		ret = 0;
++	}
++
++	return ret;
++}
++
+ static int
+ mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+@@ -3478,6 +3533,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.tdls_oper = mwifiex_cfg80211_tdls_oper,
+ 	.add_station = mwifiex_cfg80211_add_station,
+ 	.change_station = mwifiex_cfg80211_change_station,
++	.get_channel = mwifiex_cfg80211_get_channel,
+ 	.start_radar_detection = mwifiex_cfg80211_start_radar_detection,
+ 	.channel_switch = mwifiex_cfg80211_channel_switch,
+ };
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 3ac18c6..88d3779 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -642,6 +642,7 @@ struct mwifiex_private {
+ 	u8 del_list_idx;
+ 	bool hs2_enabled;
+ 	struct mwifiex_uap_bss_param bss_cfg;
++	struct cfg80211_chan_def bss_chandef;
+ 	struct station_parameters *sta_params;
+ 	struct sk_buff_head tdls_txq;
+ 	u8 check_tdls_tx;
+@@ -1382,6 +1383,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
+ 					struct mwifiex_bssdescriptor *bss_desc);
+ 
+ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type);
++u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset);
+ 
+ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 					      const char *name,
+@@ -1399,7 +1401,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+ 			 struct cfg80211_beacon_data *data);
+ int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
+ u8 *mwifiex_11d_code_2_region(u8 code);
+-void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
++void mwifiex_uap_set_channel(struct mwifiex_private *priv,
++			     struct mwifiex_uap_bss_param *bss_cfg,
+ 			     struct cfg80211_chan_def chandef);
+ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 			     struct mwifiex_uap_bss_param *bss_cfg);
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 56a4768..68fbdf6 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -776,11 +776,14 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 	return 0;
+ }
+ 
+-void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
++void mwifiex_uap_set_channel(struct mwifiex_private *priv,
++			     struct mwifiex_uap_bss_param *bss_cfg,
+ 			     struct cfg80211_chan_def chandef)
+ {
+ 	u8 config_bands = 0;
+ 
++	priv->bss_chandef = chandef;
++
+ 	bss_cfg->channel = ieee80211_frequency_to_channel(
+ 						     chandef.chan->center_freq);
+ 
+-- 
+1.8.1.4
 
-Thanks. I did this, because I have an rtl8192cu device that does not work (=
-even with this patch).
-It doesn't return any scan results. I'll have to debug this further. Any su=
-ggestions?
-
---=20
-Michael
-
---Sig_/bZ0YGXJ_+1E_nytLmMzXKfG
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJVXrfzAAoJEPUyvh2QjYsOwX4QANHNu6a8l96lUaPnfkiNTszp
-pBOMz5OpfR8gxoBuvrgiM6jjsv7w6e4eFGT8GjhL8/EuOZKbO0lltuFYElsx4owA
-+gieNT7NW/NRN+lAqXtnCXQpcSIYBkVpzEf6xpXrMYarNMgcF2nGihrNt9ApAFFF
-r7Tw6l7Oe5FSJiFaqAOXU2hHv08wcxDab11Gwn4TEwMfWY8eUcGHNIXS3poxbhR1
-QebDm/+KCqzJ+Mny58BD/woYojdOp58lm7kUDHHNAU7eOB8vFVnRCcOudetwoLbI
-ZmTuZowvl49TrZkRB+UPI+elrnsLS3xeElG30FGzS3aaI6HLnFqLIiS+qB1Hhelb
-mYsMO0MJNOTg+JwxVr9rg/TdH1KVhUhS4YeQ1FhrpO5j13K/c02ebr64nItf2kv5
-lwG0vM9IOBYY78dLuyqlui3uaOAp8tv7+NxbX/BjBPb1bX/fvcPN2GVvmyJmSSzj
-03tr63oaqjd4SyHybbobzsnqUxOSUiJR0eIzW21nO8jVa9MluvXBNsTbLp+khHyf
-DCt3zwjKmMnob094+T7j328mx+cfVzcZaPNVm1oJdyNskX3BB59WtnRtoyL9+2bP
-EtJR0GFmMWx5feXOXN7dZrkXdllmWh4gEOK2lUwxApbUYxsPftB4RwvSNR28S/4b
-z1bbfnrdRA/QjsxhDBe1
-=2uYa
------END PGP SIGNATURE-----
-
---Sig_/bZ0YGXJ_+1E_nytLmMzXKfG--
