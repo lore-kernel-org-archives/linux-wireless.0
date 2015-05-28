@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38275 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933015AbbENI5x (ORCPT
+Received: from mx1.redhat.com ([209.132.183.28]:42111 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753162AbbE1P5M convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 04:57:53 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4E8nhG2032214
-	for <linux-wireless@vger.kernel.org>; Thu, 14 May 2015 01:57:52 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1ucq1br9uj-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 14 May 2015 01:57:51 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH] mwifiex: reduce severity of debug messages for mgmt rx
-Date: Thu, 14 May 2015 19:57:31 +0530
-Message-ID: <1431613651-9049-1-git-send-email-patila@marvell.com> (sfid-20150514_105800_297676_AE9A94F3)
+	Thu, 28 May 2015 11:57:12 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+Cc: dhowells@redhat.com, mcgrof@gmail.com, mjg59@srcf.ucam.org,
+	keyrings@linux-nfs.org, gregkh@linuxfoundation.org,
+	kyle@kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, seth.forshee@canonical.com,
+	linux-security-module@vger.kernel.org, zohar@linux.vnet.ibm.com,
+	dwmw2@infradead.org
+Subject: Re: [PATCH 00/20] MODSIGN: Use PKCS#7 for module signatures [ver #5]
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Date: Thu, 28 May 2015 16:57:05 +0100
+Message-ID: <1912.1432828625@warthog.procyon.org.uk> (sfid-20150528_175717_210960_88C796FA)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would ensure dmesg logs are not spammed with "unknown mgmt frame
-subtype" messages.
+David Howells <dhowells@redhat.com> wrote:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Additionally, the last four patches are provisionally added to support firmware
 
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 3c0b3c1..fd8ef3c 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -350,7 +350,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 		}
- 		break;
- 	default:
--		mwifiex_dbg(priv->adapter, ERROR,
-+		mwifiex_dbg(priv->adapter, INFO,
- 			    "unknown mgmt frame subytpe %#x\n", stype);
- 	}
- 
--- 
-1.8.1.4
+The last five, that is.
 
+David
