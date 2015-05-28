@@ -1,117 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35642 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754048AbbE1O0r (ORCPT
+Received: from smtprelay0126.hostedemail.com ([216.40.44.126]:53985 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754070AbbE1S1h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:26:47 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEOCmD006886
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:46 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyem-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:46 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 06/17] mwifiex: disable CAC upon radar detection event
-Date: Fri, 29 May 2015 01:24:47 +0530
-Message-ID: <1432842898-3219-7-git-send-email-patila@marvell.com> (sfid-20150528_162658_560933_942F4F39)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 28 May 2015 14:27:37 -0400
+Message-ID: <1432837654.1556.2.camel@perches.com> (sfid-20150528_202740_337581_5E6CBE8E)
+Subject: Re: [PATCH 01/17] mwifiex: verbose logging for association failure
+ messages
+From: Joe Perches <joe@perches.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+	cluo@marvell.com, huxm@marvell.com
+Date: Thu, 28 May 2015 11:27:34 -0700
+In-Reply-To: <1432817889-26250-2-git-send-email-patila@marvell.com>
+References: <1432817889-26250-1-git-send-email-patila@marvell.com>
+	 <1432817889-26250-2-git-send-email-patila@marvell.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to disable ongoing CAC in FW upon
-detecting radar during CAC period.
+On Thu, 2015-05-28 at 18:27 +0530, Avinash Patil wrote:
+> This patch adds more logging support for association failure -
+> reason and states.
+[]
+> diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+[]
+> @@ -419,8 +419,12 @@ enum P2P_MODES {
+>  #define HS_CFG_COND_MAC_EVENT		0x00000004
+>  #define HS_CFG_COND_MULTICAST_DATA	0x00000008
+>  
+> -#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+> -#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
+> +#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
+> +#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
+> +#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11h.c  | 30 ++++++++++++++++++++++++++----
- drivers/net/wireless/mwifiex/main.h |  2 ++
- 2 files changed, 28 insertions(+), 4 deletions(-)
+Is there really value in duplicating ASSOC_ERR_
+	ASSOC_ERR_ASSOC_ERR_<foo>
 
-diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
-index 65cd461..bb2ffd9 100644
---- a/drivers/net/wireless/mwifiex/11h.c
-+++ b/drivers/net/wireless/mwifiex/11h.c
-@@ -161,19 +161,38 @@ int mwifiex_cmd_issue_chan_report_request(struct mwifiex_private *priv,
- 	cr_req->chan_desc.chan_width = radar_params->chandef->width;
- 	cr_req->msec_dwell_time = cpu_to_le32(radar_params->cac_time_ms);
- 
--	mwifiex_dbg(priv->adapter, MSG,
--		    "11h: issuing DFS Radar check for channel=%d\n",
--		    radar_params->chandef->chan->hw_value);
-+	if (radar_params->cac_time_ms)
-+		mwifiex_dbg(priv->adapter, MSG,
-+			    "11h: issuing DFS Radar check for channel=%d\n",
-+			    radar_params->chandef->chan->hw_value);
-+	else
-+		mwifiex_dbg(priv->adapter, MSG, "cancelling CAC\n");
- 
- 	return 0;
- }
- 
-+int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
-+				 struct cfg80211_chan_def *chandef)
-+{
-+	struct mwifiex_radar_params radar_params;
-+
-+	memset(&radar_params, 0, sizeof(struct mwifiex_radar_params));
-+	radar_params.chandef = chandef;
-+	radar_params.cac_time_ms = 0;
-+
-+	return mwifiex_send_cmd(priv, HostCmd_CMD_CHAN_REPORT_REQUEST,
-+				HostCmd_ACT_GEN_SET, 0, &radar_params, true);
-+}
-+
- /* This function is to abort ongoing CAC upon stopping AP operations
-  * or during unload.
-  */
- void mwifiex_abort_cac(struct mwifiex_private *priv)
- {
- 	if (priv->wdev.cac_started) {
-+		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
-+			mwifiex_dbg(priv->adapter, ERROR,
-+				    "failed to stop CAC in FW\n");
- 		mwifiex_dbg(priv->adapter, MSG,
- 			    "Aborting delayed work for CAC.\n");
- 		cancel_delayed_work_sync(&priv->dfs_cac_work);
-@@ -245,6 +264,9 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
- 	if (le32_to_cpu(rdr_event->passed)) {
- 		mwifiex_dbg(priv->adapter, MSG,
- 			    "radar detected; indicating kernel\n");
-+		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
-+			mwifiex_dbg(priv->adapter, ERROR,
-+				    "Failed to stop CAC in FW\n");
- 		cfg80211_radar_event(priv->adapter->wiphy, &priv->dfs_chandef,
- 				     GFP_KERNEL);
- 		mwifiex_dbg(priv->adapter, MSG, "regdomain: %d\n",
-@@ -252,7 +274,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
- 		mwifiex_dbg(priv->adapter, MSG, "radar detection type: %d\n",
- 			    rdr_event->det_type);
- 	} else {
--		mwifiex_dbg(priv->adapter, ERROR,
-+		mwifiex_dbg(priv->adapter, MSG,
- 			    "false radar detection event!\n");
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5a6c1c7..3ac18c6 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1473,6 +1473,8 @@ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
- void mwifiex_dfs_cac_work_queue(struct work_struct *work);
- void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work);
- void mwifiex_abort_cac(struct mwifiex_private *priv);
-+int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
-+				 struct cfg80211_chan_def *chandef);
- int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
- 				      struct sk_buff *skb);
- 
--- 
-1.8.1.4
 
