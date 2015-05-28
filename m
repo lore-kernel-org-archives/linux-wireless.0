@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45141 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649AbbEDKPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 06:15:16 -0400
-Message-ID: <1430734511.2013.18.camel@sipsolutions.net> (sfid-20150504_121520_026009_F0702BB5)
-Subject: Re: [PATCH 1/2] add mt7601u driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jakub =?UTF-8?Q?Kici=C5=84ski?= <moorray3@wp.pl>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Date: Mon, 04 May 2015 12:15:11 +0200
-In-Reply-To: <20150504120401.30835e07@north>
-References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
-	 <1430571690-9054-2-git-send-email-moorray3@wp.pl>
-	 <1430732248.2013.16.camel@sipsolutions.net> <20150504120401.30835e07@north>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:55348 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381AbbE1IvA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 04:51:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH] brcmfmac: simplify check finding NVRAM v1 device path
+References: <1432112468-24092-1-git-send-email-zajec5@gmail.com>
+Date: Thu, 28 May 2015 11:50:53 +0300
+In-Reply-To: <1432112468-24092-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 20 May 2015
+ 11:01:08 +0200")
+Message-ID: <87617dytjm.fsf@kamboji.qca.qualcomm.com> (sfid-20150528_105105_529244_F393D0FC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-05-04 at 12:04 +0200, Jakub Kiciński wrote:
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-> > Don't know how your buffers are set up, but if the DMA engine consumes
-> > pages you could consider using paged RX instead of the memcpy().
-> 
-> DMA engine can concatenate multiple frames into a single USB bulk
-> transfer to a large continuous buffer.  There is no way to request 
-> any alignment of the frames within that large buffer so I think paged 
-> RX is not an option.
+> With a simple use of snprintf and small buffer we can compare NVRAM
+> entry value with a full string. This way we avoid checking random chars
+> at magic offsets.
+> Tested on BCM43602 with NVRAM hacked to use v1 format.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-You could probably still do it because the networking stack only
-requires the *headers* to be aligned. But if they headers aren't in the
-skb->data (skb->head) then they'll be pulled into that by the network
-stack, where they'll be aligned.
+Thanks, applied manually.
 
-johannes
-
+-- 
+Kalle Valo
