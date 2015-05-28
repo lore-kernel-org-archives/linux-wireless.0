@@ -1,66 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24011 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34730 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751702AbbEUTuY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 15:50:24 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-05-21
-Date: Thu, 21 May 2015 19:50:19 +0000
-Message-ID: <1432237819.26813.4.camel@intel.com> (sfid-20150521_215029_946425_8A806CB2)
-Content-Type: text/plain; charset="utf-8"
+	id S1754529AbbE1Ps7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 11:48:59 -0400
+Subject: [PATCH 18/20] X.509: Parse the keyUsage extension to detect
+ key-signing keys [ver #5]
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Thu, 28 May 2015 16:48:53 +0100
+Message-ID: <20150528154853.1259.65019.stgit@warthog.procyon.org.uk> (sfid-20150528_175057_941803_22216C20)
+In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCkkgYW0gYXdhcmUgdGhhdCB0aGlzIHB1bGwgcmVxdWVzdCBpcyBxdWl0ZSBs
-YXJnZSBmb3IgNC4xLCBidXQgSSByZWFsbHkNCnRoaW5rIHRoYXQgYWxsIHRoZXNlIHBhdGNoZXMg
-YXJlIHJlYWxseSBqdXN0aWZpZWQuDQpBIGZldyBvZiB0aGVtIGZpeCAzMTY1IGFuZCA4MjYwIHdo
-aWNoIHdpbGwgYmUgc3VwcG9ydGVkIHN0YXJ0aW5nIGZyb20NCjQuMS4gT3RoZXIgcGF0Y2hlcyBm
-aXggcmFuZG9tIGJ1Z3MgdGhhdCB3ZXJlIGRpc2NvdmVyZWQganVzdCBub3cuDQoNCk5vdGUgdGhh
-dCBteSBhdmFpbGFiaWxpdHkgaXMgbGltaXRlZCBpbiB0aGUgbmV4dCB3ZWVrLCBidXQgSSdsbCB0
-cnkgdG8NCmhhbmRsZSBhbnkgaXNzdWVzIHlvdSBtYXkgaGF2ZSBBU0FQLg0KDQpUaGUgZm9sbG93
-aW5nIGNoYW5nZXMgc2luY2UgY29tbWl0IGU3YWZlODlmZDY3ZDQwYTdmNWZmZjgxMzBjNWY5MjVk
-OTlhOTRiMWY6DQoNCiAgaXdsd2lmaTogbXZtOiBmb3JjZSBxdW90YSB1cGRhdGUgdXBkYXRlIGFm
-dGVyIEZXIHJlc3RhcnQgKDIwMTUtMDQtMjggMTU6MDI6MjUgKzAzMDApDQoNCmFyZSBhdmFpbGFi
-bGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcv
-cHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1maXhlcy5naXQgdGFncy9p
-d2x3aWZpLWZvci1rYWxsZS0yMDE1LTA1LTIxDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1
-cCB0byAyOTIyMDg5MTRkOGNhNWE0MWNmNjhjMmYxZDI4MTBhMmVhMjA0NGU5Og0KDQogIGl3bHdp
-Zmk6IG12bTogYXZvaWQgdXNlLWFmdGVyLWZyZWUgb24gaXdsX212bV9kMGkzX2VuYWJsZV90eCgp
-ICgyMDE1LTA1LTIxIDIyOjM2OjQ2ICswMzAwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoqIGZpeCBmaXJtd2FyZSBu
-YW1lIGFuZCBvdGhlciB0aGluZ3MgdG8gZW5hYmxlIDMxNjUNCiogZml4IGJhZCBBUE1HIGNvbmZp
-Z3VyYXRpb24gZm9yIDgwMDAgKG5vIEFNUEcgb24gdGhlc2UgZGV2aWNlcykNCiogZml4IE1BQyBh
-ZGRyZXNzIGFzc2lnbm1lbnQgZm9yIDgwMDANCiogZml4IGZpcm13YXJlIGRlYnVnZ2luZyB0cmln
-Z2VycyAoTUxNRSkNCiogZml4IHNldmVyYWwgYnVncyBpbiBsb3cgcG93ZXIgc3RhdGVzIGNvZGUg
-KG5ldC1kZXRlY3QsDQogIGQwaTMpDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkF2cmkgQWx0bWFuICgxKToNCiAgICAg
-IGl3bHdpZmk6IHBjaWU6IGRvbid0IGRpc2FibGUgdGhlIGJ1c21hc3RlciBETUEgY2xvY2sgZm9y
-IGZhbWlseSA4MDAwDQoNCkVsaWFkIFBlbGxlciAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IGF2
-b2lkIHVzZS1hZnRlci1mcmVlIG9uIGl3bF9tdm1fZDBpM19lbmFibGVfdHgoKQ0KDQpFbW1hbnVl
-bCBHcnVtYmFjaCAoNCk6DQogICAgICBpd2x3aWZpOiBtdm06IGZvcmJpZCBNSU1PIG9uIGRldmlj
-ZXMgdGhhdCBkb24ndCBzdXBwb3J0IGl0DQogICAgICBpd2x3aWZpOiA3MDAwOiBtb2RpZnkgdGhl
-IGZpcm13YXJlIG5hbWUgZm9yIDMxNjUNCiAgICAgIGl3bHdpZmk6IG12bTogZml4IE1MTUUgdHJp
-Z2dlcg0KICAgICAgaXdsd2lmaTogbXZtOiBCVCBDb2V4IC0gZHVwbGljYXRlIHRoZSBjb21tYW5k
-IGlmIHNlbnQgQVNZTkMNCg0KSGFpbSBEcmV5ZnVzcyAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06
-IEZyZWUgZndfc3RhdHVzIGFmdGVyIHVzZSB0byBhdm9pZCBtZW1vcnkgbGVhaw0KDQpMaWFkIEth
-dWZtYW4gKDEpOg0KICAgICAgaXdsd2lmaTogbnZtOiBmb3JjZSBtYWMgZnJvbSBvdHAgaW4gY2Fz
-ZSBudm0gbWFjIGlzIHJlc2VydmVkDQoNCkx1Y2lhbm8gQ29lbGhvICgyKToNCiAgICAgIGl3bHdp
-Zmk6IG12bTogdGFrZSB0aGUgVUNPREVfRE9XTiByZWZlcmVuY2Ugd2hlbiByZXN1bWluZw0KICAg
-ICAgaXdsd2lmaTogbXZtOiBjbGVhbiBuZXQtZGV0ZWN0IGluZm8gaWYgZGV2aWNlIHdhcyByZXNl
-dCBkdXJpbmcgc3VzcGVuZA0KDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9LY29uZmln
-ICAgICAgICAgICAgfCAgMSArDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtNzAw
-MC5jICAgICAgICAgfCAxNiArKysrKysrKy0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aXdsd2lmaS9pd2wtZWVwcm9tLXBhcnNlLmMgfCAgNSArKysrKw0KIGRyaXZlcnMvbmV0L3dpcmVs
-ZXNzL2l3bHdpZmkvaXdsLWVlcHJvbS1wYXJzZS5oIHwgIDMgKysrDQogZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9pd2wtbnZtLXBhcnNlLmMgICAgfCAzMCArKysrKysrKysrKysrKysrKysr
-KysrKy0tLS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9jb2V4X2xlZ2Fj
-eS5jICB8ICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vZDMuYyAgICAg
-ICAgICAgfCAyMiArKysrKysrKysrKysrKysrLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aXdsd2lmaS9tdm0vbWFjODAyMTEuYyAgICAgfCAgMyAtLS0NCiBkcml2ZXJzL25ldC93aXJlbGVz
-cy9pd2x3aWZpL212bS9vcHMuYyAgICAgICAgICB8ICA2ICsrKystLQ0KIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL2l3bHdpZmkvbXZtL3JzLmMgICAgICAgICAgIHwgIDMgKysrDQogZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmMgICAgICAgfCAgOCArKysrKy0tLQ0KIDExIGZp
-bGVzIGNoYW5nZWQsIDY5IGluc2VydGlvbnMoKyksIDMwIGRlbGV0aW9ucygtKQ0KDQo=
+Parse the keyUsage extension to detect keys for which the purpose is key
+signing and to restrict their use only to the verification of signatures on
+keys.
+
+Not-yet-signed-off-by: David Howells <dhowells@redhat.com>
+---
+
+ crypto/asymmetric_keys/x509_cert_parser.c |   45 ++++++++++++++++++++++++++++-
+ 1 file changed, 44 insertions(+), 1 deletion(-)
+
+diff --git a/crypto/asymmetric_keys/x509_cert_parser.c b/crypto/asymmetric_keys/x509_cert_parser.c
+index 4d9e9a7f8fd2..82b869de1759 100644
+--- a/crypto/asymmetric_keys/x509_cert_parser.c
++++ b/crypto/asymmetric_keys/x509_cert_parser.c
+@@ -457,9 +457,51 @@ int x509_process_extension(void *context, size_t hdrlen,
+ 	struct x509_parse_context *ctx = context;
+ 	struct asymmetric_key_id *kid;
+ 	const unsigned char *v = value;
++	u32 shift, tmp;
+ 
+ 	pr_debug("Extension: %u\n", ctx->last_oid);
+ 
++	if (ctx->last_oid == OID_keyUsage) {
++		/* There's a bitstring inside the content that we want to get
++		 * at.  This bitstring is shuffled up so that the most
++		 * significant set bit is the MSB of the second byte.  The
++		 * first byte tells us how far we have to shift the string back
++		 * to put bit string bit 0 on a byte bit 0.
++		 */
++		if (vlen < 3)
++			return -EBADMSG;
++		if (v[0] != ASN1_BTS || v[1] != vlen - 2)
++			return -EBADMSG;
++		shift = v[2];
++		if (shift > 7)
++			return -EBADMSG;
++		v += 3;
++		vlen -= 3;
++		if (vlen > 2) {
++			/* We only care about the least significant 9 bits, but
++			 * they will be spread over up to two bytes (leading 0s
++			 * aren't stored).
++			 */
++			v += vlen - 2;
++			vlen = 2;
++		}
++
++		tmp = 0;
++		if (vlen == 2) {
++			tmp = (u32)*v << 8;
++			v++;
++		}
++		if (vlen >= 1)
++			tmp |= *v;
++		tmp >>= shift;
++		pr_debug("keyUsage %x\n", tmp);
++		/* check for keyCertSign */
++		if (tmp & (1 << 5))
++			ctx->cert->pub->usage_restriction =
++				PKEY_RESTRICTED_TO_KEY_SIGNING;
++		return 0;
++	}
++
+ 	if (ctx->last_oid == OID_subjectKeyIdentifier) {
+ 		/* Get hold of the key fingerprint */
+ 		if (ctx->cert->skid || vlen < 3)
+@@ -492,7 +534,8 @@ int x509_process_extension(void *context, size_t hdrlen,
+ 		/* Get hold of the extended key usage information */
+ 		ctx->raw_extusage = v;
+ 		ctx->raw_extusage_size = vlen;
+-		ctx->cert->pub->usage_restriction = PKEY_RESTRICTED_USAGE;
++		if (ctx->cert->pub->usage_restriction == PKEY_USAGE_NOT_SPECIFIED)
++			ctx->cert->pub->usage_restriction = PKEY_RESTRICTED_USAGE;
+ 		return 0;
+ 	}
+ 
+
