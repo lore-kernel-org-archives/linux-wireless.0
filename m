@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45307 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57322 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160AbbEDK4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 06:56:50 -0400
-Message-ID: <1430737006.2013.19.camel@sipsolutions.net> (sfid-20150504_125653_819974_91CED297)
-Subject: Re: [PATCH] mac80211: fix 90 kernel-doc warnings
+	id S1752549AbbE1NTD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 09:19:03 -0400
+Message-ID: <1432819140.2459.6.camel@sipsolutions.net> (sfid-20150528_151906_693235_4011E0EC)
+Subject: Re: [PATCH v2 1/2] nl80211: Add support to configure low ack
+ threshold
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 04 May 2015 12:56:46 +0200
-In-Reply-To: <553DA95E.7010406@infradead.org> (sfid-20150427_051611_280767_5C76737F)
-References: <553DA95E.7010406@infradead.org>
-	 (sfid-20150427_051611_280767_5C76737F)
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 28 May 2015 15:19:00 +0200
+In-Reply-To: <1432794355-3639-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1432794355-3639-1-git-send-email-rmanohar@qti.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-04-26 at 20:13 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Eliminate 90 of these warnings:
-> 
-> Warning(..//include/net/mac80211.h:1682): No description found for parameter 'drv_priv[0]'
+On Thu, 2015-05-28 at 11:55 +0530, Rajkumar Manoharan wrote:
 
-Applied, thanks.
+> @@ -837,6 +839,7 @@ struct station_parameters {
+>  	u8 supported_oper_classes_len;
+>  	u8 opmode_notif;
+>  	bool opmode_notif_used;
+> +	u16 low_ack_threshold;
+
+This cannot work, it leaves no way to detect "no change"; you need to
+add that, document it and also implement it in the mac80211 patch.
 
 johannes
 
