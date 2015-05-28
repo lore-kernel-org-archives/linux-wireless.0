@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:34483 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774AbbEBSk5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33352 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbbE1KUK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2015 14:40:57 -0400
-Received: by obfe9 with SMTP id e9so83824490obf.1
-        for <linux-wireless@vger.kernel.org>; Sat, 02 May 2015 11:40:57 -0700 (PDT)
-Message-ID: <55451A36.8030505@lwfinger.net> (sfid-20150502_204101_299433_A7AE0D12)
-Date: Sat, 02 May 2015 13:40:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 28 May 2015 06:20:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-05-26
+References: <1432667798.26624.3.camel@intel.com>
+	<87lhg9xe0c.fsf@kamboji.qca.qualcomm.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
+Date: Thu, 28 May 2015 13:20:03 +0300
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B7583B6@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Thu, 28 May 2015 09:25:05 +0000")
+Message-ID: <87egm1xauk.fsf@kamboji.qca.qualcomm.com> (sfid-20150528_122016_125438_59D5106A)
 MIME-Version: 1.0
-To: =?UTF-8?B?TmVyaWp1cyBCYWxpxatuYXM=?=
-	<nerijus@users.sourceforge.net>, linux-wireless@vger.kernel.org
-Subject: Re: b43 AP does not work
-References: <loom.20150502T183011-57@post.gmane.org> <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org> <loom.20150502T191744-147@post.gmane.org>
-In-Reply-To: <loom.20150502T191744-147@post.gmane.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2015 12:18 PM, Nerijus Baliūnas wrote:
-> Nerijus Baliūnas <nerijus@...> writes:
->
->> IIRC I used "access point" mode of the NM applet and it worked, but now I
->> cannot find such option (at least in MATE). Is it somehow possible to still
->> use hostapd manually?
->
-> Just FYI - "access point" mode of the NM applet works (in Gnome). But it
-> would still be nice to have hostapd working.N�����r��y���b�X��ǧv�^�)޺{.n�+����{��*ޕ�,�{ay�ʇڙ�,j��f���h���z��w������j:+v���w�j�m��������zZ+�����ݢj"��!tml=
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Then turn off NM.
+>> > Note that there are fixes here that didn't make it to my previous pull
+>> > request for 4.1. I tagged them for stable since the wording of your
+>> > last pull request for 4.1 to Dave hinted me that you won't send any
+>> > pull request for 4.1 to him anymore.
+>> 
+>> Yeah, I said that hopefully it's the last pull request. I got one important fix
+>> from Arend so I will try to send one more, but let's see how it goes.
+>> 
+> ... if that's the case, do you want me to split the patches
+> differently and add the ones I CCed to stable to iwlwifi-fixes?
+
+Sure, go ahead if you want to do that. But please keep in mind that the
+bar is higher when we go closer to the actual release. I found two
+patches from the patchset with CC stable (I hope I didn't miss
+anything):
+
+[PATCH 03/39] iwlwifi: pcie: fix tracking of cmd_in_flight
+[PATCH 32/39] iwlwifi: nvm: fix otp parsing in 8000 hw family
+
+In my opinion these two are ok.
+
+> If I re-spin iwlwifi-next anyway, I'll fix the typo above.
+
+Ok, I don't care about the typo in the commit log, we do those all the
+time :) I just wanted to check that I don't pull anything which I'm not
+supposed to pull.
 
 
+-- 
+Kalle Valo
