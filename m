@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:34171 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbbDGFMY convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35199 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752560AbbE1O06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 01:12:24 -0400
-Received: by wgbdm7 with SMTP id dm7so44165286wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2015 22:12:23 -0700 (PDT)
+	Thu, 28 May 2015 10:26:58 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEP6UH007307
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:57 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyd2-3
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:26:57 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 05/17] mwifiex: reset 11h active flag when chandef does not require dfs
+Date: Fri, 29 May 2015 01:24:46 +0530
+Message-ID: <1432842898-3219-6-git-send-email-patila@marvell.com> (sfid-20150528_162706_863137_44841112)
+In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
+References: <1432842898-3219-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <5523273F.4060803@candelatech.com>
-References: <5523273F.4060803@candelatech.com>
-Date: Tue, 7 Apr 2015 07:12:23 +0200
-Message-ID: <CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com> (sfid-20150407_071228_528733_19E0636B)
-Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 April 2015 at 02:39, Ben Greear <greearb@candelatech.com> wrote:
-> Has anyone tried running ath10k to ath9k IBSS?
->
-> I'm trying this with a somewhat hacked 4.0-rc6 kernel,
-> and latest wpa_supplicant.
->
-> ath9k to ath9k works with and without encryption, and ath10k to ath10k works
-> (w/out encryption at least).
->
-> But, if I try to tell ath10k to connect to ath9k, then the ath9k reports
-> interface combinations
-> issues and will not associate.  I've added some debug, and the issue is the
-> 'num==0' part here:
->
->
-> int cfg80211_check_combinations(struct wiphy *wiphy,
->                                 const int num_different_channels,
->                                 const u8 radar_detect,
->                                 const int iftype_num[NUM_NL80211_IFTYPES])
-> {
->         int err, num = 0;
->
->         err = cfg80211_iter_combinations(wiphy, num_different_channels,
->                                          radar_detect, iftype_num,
->                                          cfg80211_iter_sum_ifcombs, &num);
->         if (err) {
->                 pr_info("cfg-comb-check: failed to iterate combinations\n");
->                 return err;
->         }
->         if (num == 0) {
->                 pr_info("cfg-comb-check: iter-combinations returned
-> num==0\n");
->                 return -EBUSY;
->         }
->
->         return 0;
-> }
-> EXPORT_SYMBOL(cfg80211_check_combinations);
->
-> There should be exactly one interface on this radio that is admin-up, and it
-> is the
-> one that I am trying to make run in adhoc mode.
->
-> Any ideas on this?
+This patch fixes an issue where we were still setting 11h_active
+flag to true for channel defs where DFS is not required.
 
-IBSS with non-fixed or dfs channel? It would bump
-num_different_channels and yield no valid combinations. But why would
-that work fine with, e.g. ath9k-ath9k otherwise - no idea.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index d47799a..fb93e13 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1820,7 +1820,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 				    "Failed to disable 11h extensions!!");
+ 			return -1;
+ 		}
+-		priv->state_11h.is_11h_active = true;
++		priv->state_11h.is_11h_active = false;
+ 	}
+ 
+ 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
+-- 
+1.8.1.4
 
-Michał
