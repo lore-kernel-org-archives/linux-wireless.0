@@ -1,69 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47498 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753803AbbE1N4Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 09:56:16 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDsiZD021127
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:15 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqvu9-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:15 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 02/17] mwifiex: correct bss_type assignment
-Date: Thu, 28 May 2015 18:20:35 +0530
-Message-ID: <1432817450-25619-3-git-send-email-patila@marvell.com> (sfid-20150528_155621_652799_F4BA395D)
-In-Reply-To: <1432817450-25619-1-git-send-email-patila@marvell.com>
-References: <1432817450-25619-1-git-send-email-patila@marvell.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38306 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753969AbbE1Pqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 11:46:32 -0400
+Subject: [PATCH 02/20] X.509: Support X.509 lookup by Issuer+Serial form
+ AuthorityKeyIdentifier [ver #5]
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Thu, 28 May 2015 16:46:25 +0100
+Message-ID: <20150528154625.1259.29228.stgit@warthog.procyon.org.uk> (sfid-20150528_175324_147364_5495DC3C)
+In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct bss_type assignment in add_virtual_interface.
-This would ensure correct operation in multiple station scenarios.
+If an X.509 certificate has an AuthorityKeyIdentifier extension that provides
+an issuer and serialNumber, then make it so that these are used in preference
+to the keyIdentifier field also held therein for searching for the signing
+certificate.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+If both the issuer+serialNumber and the keyIdentifier are supplied, then the
+certificate is looked up by the former but the latter is checked as well.  If
+the latter doesn't match the subjectKeyIdentifier of the parent certificate,
+EKEYREJECTED is returned.
+
+This makes it possible to chain X.509 certificates based on the issuer and
+serialNumber fields rather than on subjectKeyIdentifier.  This is necessary as
+we are having to deal with keys that are represented by X.509 certificates
+that lack a subjectKeyIdentifier.
+
+Signed-off-by: David Howells <dhowells@redhat.com>
+Tested-by: Vivek Goyal <vgoyal@redhat.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 4eeceda..3a14d3a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2518,7 +2518,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.sta_intf;
+ crypto/asymmetric_keys/pkcs7_trust.c     |   10 +++-
+ crypto/asymmetric_keys/pkcs7_verify.c    |   47 +++++++++++++----
+ crypto/asymmetric_keys/x509_public_key.c |   84 +++++++++++++++++++++---------
+ include/crypto/public_key.h              |    3 +
+ 4 files changed, 103 insertions(+), 41 deletions(-)
+
+diff --git a/crypto/asymmetric_keys/pkcs7_trust.c b/crypto/asymmetric_keys/pkcs7_trust.c
+index 0f6463b6692b..90d6d47965b0 100644
+--- a/crypto/asymmetric_keys/pkcs7_trust.c
++++ b/crypto/asymmetric_keys/pkcs7_trust.c
+@@ -54,7 +54,8 @@ static int pkcs7_validate_trust_one(struct pkcs7_message *pkcs7,
+ 		/* Look to see if this certificate is present in the trusted
+ 		 * keys.
+ 		 */
+-		key = x509_request_asymmetric_key(trust_keyring, x509->id,
++		key = x509_request_asymmetric_key(trust_keyring,
++						  x509->id, x509->skid,
+ 						  false);
+ 		if (!IS_ERR(key)) {
+ 			/* One of the X.509 certificates in the PKCS#7 message
+@@ -85,8 +86,10 @@ static int pkcs7_validate_trust_one(struct pkcs7_message *pkcs7,
+ 	/* No match - see if the root certificate has a signer amongst the
+ 	 * trusted keys.
+ 	 */
+-	if (last && last->akid_skid) {
+-		key = x509_request_asymmetric_key(trust_keyring, last->akid_skid,
++	if (last && (last->akid_id || last->akid_skid)) {
++		key = x509_request_asymmetric_key(trust_keyring,
++						  last->akid_id,
++						  last->akid_skid,
+ 						  false);
+ 		if (!IS_ERR(key)) {
+ 			x509 = last;
+@@ -103,6 +106,7 @@ static int pkcs7_validate_trust_one(struct pkcs7_message *pkcs7,
+ 	 */
+ 	key = x509_request_asymmetric_key(trust_keyring,
+ 					  sinfo->signing_cert_id,
++					  NULL,
+ 					  false);
+ 	if (!IS_ERR(key)) {
+ 		pr_devel("sinfo %u: Direct signer is key %x\n",
+diff --git a/crypto/asymmetric_keys/pkcs7_verify.c b/crypto/asymmetric_keys/pkcs7_verify.c
+index a4d083f7e9e1..42bfc9de0d79 100644
+--- a/crypto/asymmetric_keys/pkcs7_verify.c
++++ b/crypto/asymmetric_keys/pkcs7_verify.c
+@@ -170,6 +170,7 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
+ 				  struct pkcs7_signed_info *sinfo)
+ {
+ 	struct x509_certificate *x509 = sinfo->signer, *p;
++	struct asymmetric_key_id *auth;
+ 	int ret;
  
- 		break;
- 	case NL80211_IFTYPE_AP:
-@@ -2544,7 +2544,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.uap_intf;
- 		priv->bss_mode = type;
+ 	kenter("");
+@@ -187,11 +188,14 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
+ 			goto maybe_missing_crypto_in_x509;
  
- 		break;
-@@ -2580,7 +2580,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
+ 		pr_debug("- issuer %s\n", x509->issuer);
++		if (x509->akid_id)
++			pr_debug("- authkeyid.id %*phN\n",
++				 x509->akid_id->len, x509->akid_id->data);
+ 		if (x509->akid_skid)
+-			pr_debug("- authkeyid %*phN\n",
++			pr_debug("- authkeyid.skid %*phN\n",
+ 				 x509->akid_skid->len, x509->akid_skid->data);
  
- 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
- 			memset(&priv->wdev, 0, sizeof(priv->wdev));
--- 
-1.8.1.4
+-		if (!x509->akid_skid ||
++		if ((!x509->akid_id && !x509->akid_skid) ||
+ 		    strcmp(x509->subject, x509->issuer) == 0) {
+ 			/* If there's no authority certificate specified, then
+ 			 * the certificate must be self-signed and is the root
+@@ -215,21 +219,42 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
+ 		/* Look through the X.509 certificates in the PKCS#7 message's
+ 		 * list to see if the next one is there.
+ 		 */
+-		pr_debug("- want %*phN\n",
+-			 x509->akid_skid->len, x509->akid_skid->data);
+-		for (p = pkcs7->certs; p; p = p->next) {
+-			if (!p->skid)
+-				continue;
+-			pr_debug("- cmp [%u] %*phN\n",
+-				 p->index, p->skid->len, p->skid->data);
+-			if (asymmetric_key_id_same(p->skid, x509->akid_skid))
+-				goto found_issuer;
++		auth = x509->akid_id;
++		if (auth) {
++			pr_debug("- want %*phN\n", auth->len, auth->data);
++			for (p = pkcs7->certs; p; p = p->next) {
++				pr_debug("- cmp [%u] %*phN\n",
++					 p->index, p->id->len, p->id->data);
++				if (asymmetric_key_id_same(p->id, auth))
++					goto found_issuer_check_skid;
++			}
++		} else {
++			auth = x509->akid_skid;
++			pr_debug("- want %*phN\n", auth->len, auth->data);
++			for (p = pkcs7->certs; p; p = p->next) {
++				if (!p->skid)
++					continue;
++				pr_debug("- cmp [%u] %*phN\n",
++					 p->index, p->skid->len, p->skid->data);
++				if (asymmetric_key_id_same(p->skid, auth))
++					goto found_issuer;
++			}
+ 		}
+ 
+ 		/* We didn't find the root of this chain */
+ 		pr_debug("- top\n");
+ 		return 0;
+ 
++	found_issuer_check_skid:
++		/* We matched issuer + serialNumber, but if there's an
++		 * authKeyId.keyId, that must match the CA subjKeyId also.
++		 */
++		if (x509->akid_skid &&
++		    !asymmetric_key_id_same(p->skid, x509->akid_skid)) {
++			pr_warn("Sig %u: X.509 chain contains auth-skid nonmatch (%u->%u)\n",
++				sinfo->index, x509->index, p->index);
++			return -EKEYREJECTED;
++		}
+ 	found_issuer:
+ 		pr_debug("- subject %s\n", p->subject);
+ 		if (p->seen) {
+diff --git a/crypto/asymmetric_keys/x509_public_key.c b/crypto/asymmetric_keys/x509_public_key.c
+index 49b875b709d5..8a4e3a29ec31 100644
+--- a/crypto/asymmetric_keys/x509_public_key.c
++++ b/crypto/asymmetric_keys/x509_public_key.c
+@@ -52,23 +52,37 @@ __setup("ca_keys=", ca_keys_setup);
+ /**
+  * x509_request_asymmetric_key - Request a key by X.509 certificate params.
+  * @keyring: The keys to search.
+- * @kid: The key ID.
++ * @id: The issuer & serialNumber to look for or NULL.
++ * @skid: The subjectKeyIdentifier to look for or NULL.
+  * @partial: Use partial match if true, exact if false.
+  *
+- * Find a key in the given keyring by subject name and key ID.  These might,
+- * for instance, be the issuer name and the authority key ID of an X.509
+- * certificate that needs to be verified.
++ * Find a key in the given keyring by identifier.  The preferred identifier is
++ * the issuer + serialNumber and the fallback identifier is the
++ * subjectKeyIdentifier.  If both are given, the lookup is by the former, but
++ * the latter must also match.
+  */
+ struct key *x509_request_asymmetric_key(struct key *keyring,
+-					const struct asymmetric_key_id *kid,
++					const struct asymmetric_key_id *id,
++					const struct asymmetric_key_id *skid,
+ 					bool partial)
+ {
+-	key_ref_t key;
+-	char *id, *p;
+-
++	struct key *key;
++	key_ref_t ref;
++	const char *lookup;
++	char *req, *p;
++	int len;
++
++	if (id) {
++		lookup = id->data;
++		len = id->len;
++	} else {
++		lookup = skid->data;
++		len = skid->len;
++	}
++	
+ 	/* Construct an identifier "id:<keyid>". */
+-	p = id = kmalloc(2 + 1 + kid->len * 2 + 1, GFP_KERNEL);
+-	if (!id)
++	p = req = kmalloc(2 + 1 + len * 2 + 1, GFP_KERNEL);
++	if (!req)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	if (partial) {
+@@ -79,32 +93,48 @@ struct key *x509_request_asymmetric_key(struct key *keyring,
+ 		*p++ = 'x';
+ 	}
+ 	*p++ = ':';
+-	p = bin2hex(p, kid->data, kid->len);
++	p = bin2hex(p, lookup, len);
+ 	*p = 0;
+ 
+-	pr_debug("Look up: \"%s\"\n", id);
++	pr_debug("Look up: \"%s\"\n", req);
+ 
+-	key = keyring_search(make_key_ref(keyring, 1),
+-			     &key_type_asymmetric, id);
+-	if (IS_ERR(key))
+-		pr_debug("Request for key '%s' err %ld\n", id, PTR_ERR(key));
+-	kfree(id);
++	ref = keyring_search(make_key_ref(keyring, 1),
++			     &key_type_asymmetric, req);
++	if (IS_ERR(ref))
++		pr_debug("Request for key '%s' err %ld\n", req, PTR_ERR(ref));
++	kfree(req);
+ 
+-	if (IS_ERR(key)) {
+-		switch (PTR_ERR(key)) {
++	if (IS_ERR(ref)) {
++		switch (PTR_ERR(ref)) {
+ 			/* Hide some search errors */
+ 		case -EACCES:
+ 		case -ENOTDIR:
+ 		case -EAGAIN:
+ 			return ERR_PTR(-ENOKEY);
+ 		default:
+-			return ERR_CAST(key);
++			return ERR_CAST(ref);
++		}
++	}
++
++	key = key_ref_to_ptr(ref);
++	if (id && skid) {
++		const struct asymmetric_key_ids *kids = asymmetric_key_ids(key);
++		if (!kids->id[1]) {
++			pr_debug("issuer+serial match, but expected SKID missing\n");
++			goto reject;
++		}
++		if (!asymmetric_key_id_same(skid, kids->id[1])) {
++			pr_debug("issuer+serial match, but SKID does not\n");
++			goto reject;
+ 		}
+ 	}
++	
++	pr_devel("<==%s() = 0 [%x]\n", __func__, key_serial(key));
++	return key;
+ 
+-	pr_devel("<==%s() = 0 [%x]\n", __func__,
+-		 key_serial(key_ref_to_ptr(key)));
+-	return key_ref_to_ptr(key);
++reject:
++	key_put(key);
++	return ERR_PTR(-EKEYREJECTED);
+ }
+ EXPORT_SYMBOL_GPL(x509_request_asymmetric_key);
+ 
+@@ -217,7 +247,8 @@ static int x509_validate_trust(struct x509_certificate *cert,
+ 	if (ca_keyid && !asymmetric_key_id_partial(cert->akid_skid, ca_keyid))
+ 		return -EPERM;
+ 
+-	key = x509_request_asymmetric_key(trust_keyring, cert->akid_skid,
++	key = x509_request_asymmetric_key(trust_keyring,
++					  cert->akid_id, cert->akid_skid,
+ 					  false);
+ 	if (!IS_ERR(key))  {
+ 		if (!use_builtin_keys
+@@ -274,8 +305,9 @@ static int x509_key_preparse(struct key_preparsed_payload *prep)
+ 	cert->pub->id_type = PKEY_ID_X509;
+ 
+ 	/* Check the signature on the key if it appears to be self-signed */
+-	if (!cert->akid_skid ||
+-	    asymmetric_key_id_same(cert->skid, cert->akid_skid)) {
++	if ((!cert->akid_skid && !cert->akid_id) ||
++	    asymmetric_key_id_same(cert->skid, cert->akid_skid) ||
++	    asymmetric_key_id_same(cert->id, cert->akid_id)) {
+ 		ret = x509_check_signature(cert->pub, cert); /* self-signed */
+ 		if (ret < 0)
+ 			goto error_free_cert;
+diff --git a/include/crypto/public_key.h b/include/crypto/public_key.h
+index 54add2069901..b6f27a240856 100644
+--- a/include/crypto/public_key.h
++++ b/include/crypto/public_key.h
+@@ -101,7 +101,8 @@ extern int verify_signature(const struct key *key,
+ 
+ struct asymmetric_key_id;
+ extern struct key *x509_request_asymmetric_key(struct key *keyring,
+-					       const struct asymmetric_key_id *kid,
++					       const struct asymmetric_key_id *id,
++					       const struct asymmetric_key_id *skid,
+ 					       bool partial);
+ 
+ #endif /* _LINUX_PUBLIC_KEY_H */
 
