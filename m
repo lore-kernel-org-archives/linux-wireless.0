@@ -1,140 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:37263 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933352AbbELWpK (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2227 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754099AbbE1NAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 18:45:10 -0400
-Received: by igbsb11 with SMTP id sb11so29078712igb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 12 May 2015 15:45:10 -0700 (PDT)
+	Thu, 28 May 2015 09:00:07 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SD068l015573
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:06 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5rwvb-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:06 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 08/17] mwifiex: maintain station statistic in uap mode
+Date: Thu, 28 May 2015 23:58:58 +0530
+Message-ID: <1432837747-2075-9-git-send-email-patila@marvell.com> (sfid-20150528_150010_708880_58FD9113)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <5550D629.2090501@candelatech.com>
-References: <CAG5N3qG7090vB6XoUaQSHvQw7GpE+gXvJAbKrv7def3nV0OFJw@mail.gmail.com>
- <873837qo6l.fsf@kamboji.qca.qualcomm.com> <554CE438.5000208@candelatech.com>
- <CAG5N3qFB=yZJYSokUqF2=eNcS5SoCOntOyan6_OuahtFF5r=Bw@mail.gmail.com>
- <871tinjosq.fsf@kamboji.qca.qualcomm.com> <5550D629.2090501@candelatech.com>
-From: "Liu CF/TW" <cfliu.tw@gmail.com>
-Date: Tue, 12 May 2015 15:44:29 -0700
-Message-ID: <CAG5N3qE6nA2oEhR5Zk8sS331-ycM+jZLBy2BeGPX0ueHqvJ6Kg@mail.gmail.com> (sfid-20150513_004515_711005_10F683CD)
-Subject: Re: [PATCH] ath10k/mac80211: add rawtxrx, nohwcrypt module param for
- raw tx injection, sw crypto support.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am going to propose just one single module parameter control: enc_mode
+From: Xinming Hu <huxm@marvell.com>
 
-- enc_mode = 0: Use HW crypto (default),
+This patch maintain statistic information for the stations associated
+to the mwifiex micro AP, include tx/rx bytes/packets, signal strength,
+tx bitrate.
 
-  Driver behavior:
-     - ath10k driver uses native WiFi mode for both Tx/Rx.
-     - ath10k driver configures key to HW.
-     Given HW key descriptor is configured, mac80211 would offload Tx
-encryption to HW and only do Rx decryption (by mac80211) if HW failed
-to do it.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h       |  7 ++++++-
+ drivers/net/wireless/mwifiex/main.h     | 13 +++++++++++++
+ drivers/net/wireless/mwifiex/txrx.c     | 13 +++++++++++--
+ drivers/net/wireless/mwifiex/uap_txrx.c | 18 +++++++++++++++++-
+ drivers/net/wireless/mwifiex/util.c     | 13 +++++++++++++
+ 5 files changed, 60 insertions(+), 4 deletions(-)
 
-  Use case:
-      - The only mode current driver supports to date.
-      - The CT firmware special use case should fall into this
-category where firmware overrides the ath10k driver setting to force
-Rx fallback to SW decryption (in mac80211).
-         (From Ben's description, I believe CT FW overrides the global
-Rx decap mode=raw mode  + mangle the HW Rx descriptor to skip HW
-decryption)
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 124120d..1a87188 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -632,7 +632,12 @@ struct uap_rxpd {
+ 	__le16 rx_pkt_type;
+ 	__le16 seq_num;
+ 	u8 priority;
+-	u8 reserved1;
++	u8 rx_rate;
++	s8 snr;
++	s8 nf;
++	u8 ht_info;
++	u8 reserved[3];
++	u8 flags;
+ };
+ 
+ struct mwifiex_fw_chan_stats {
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 88d3779..837e610 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -741,6 +741,18 @@ struct mwifiex_tdls_capab {
+ 	struct ieee80211_vht_operation vhtoper;
+ };
+ 
++struct mwifiex_station_stats {
++	u64 last_rx;
++	s8 rssi;
++	u64 rx_bytes;
++	u64 tx_bytes;
++	u32 rx_packets;
++	u32 tx_packets;
++	u32 tx_failed;
++	u8 last_tx_rate;
++	u8 last_tx_htinfo;
++};
++
+ /* This is AP/TDLS specific structure which stores information
+  * about associated/peer STA
+  */
+@@ -755,6 +767,7 @@ struct mwifiex_sta_node {
+ 	u16 max_amsdu;
+ 	u8 tdls_status;
+ 	struct mwifiex_tdls_capab tdls_cap;
++	struct mwifiex_station_stats stats;
+ };
+ 
+ struct mwifiex_auto_tdls_peer {
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 28dcc84..c4c7d8d 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -88,13 +88,22 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	u8 *head_ptr;
+ 	struct txpd *local_tx_pd = NULL;
++	struct mwifiex_sta_node *dest_node;
++	struct ethhdr *hdr = (void *)skb->data;
+ 
+ 	hroom = (adapter->iface_type == MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
+ 
+-	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
++	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP) {
++		dest_node = mwifiex_get_sta_entry(priv, hdr->h_dest);
++		if (dest_node) {
++			dest_node->stats.tx_bytes += skb->len;
++			dest_node->stats.tx_packets++;
++		}
++
+ 		head_ptr = mwifiex_process_uap_txpd(priv, skb);
+-	else
++	} else {
+ 		head_ptr = mwifiex_process_sta_txpd(priv, skb);
++	}
+ 
+ 	if ((adapter->data_sent || adapter->tx_lock_flag) && head_ptr) {
+ 		skb_queue_tail(&adapter->tx_data_q, skb);
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index 61c52fd..8766741 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -97,6 +97,7 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 	struct mwifiex_txinfo *tx_info;
+ 	int hdr_chop;
+ 	struct ethhdr *p_ethhdr;
++	struct mwifiex_sta_node *src_node;
+ 
+ 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
+ 	rx_pkt_hdr = (void *)uap_rx_pd + le16_to_cpu(uap_rx_pd->rx_pkt_offset);
+@@ -180,6 +181,15 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 	tx_info->bss_type = priv->bss_type;
+ 	tx_info->flags |= MWIFIEX_BUF_FLAG_BRIDGED_PKT;
+ 
++	src_node = mwifiex_get_sta_entry(priv, rx_pkt_hdr->eth803_hdr.h_source);
++	if (src_node) {
++		src_node->stats.last_rx = jiffies;
++		src_node->stats.rx_bytes += skb->len;
++		src_node->stats.rx_packets++;
++		src_node->stats.last_tx_rate = uap_rx_pd->rx_rate;
++		src_node->stats.last_tx_htinfo = uap_rx_pd->ht_info;
++	}
++
+ 	if (is_unicast_ether_addr(rx_pkt_hdr->eth803_hdr.h_dest)) {
+ 		/* Update bridge packet statistics as the
+ 		 * packet is not going to kernel/upper layer.
+@@ -275,6 +285,8 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
+ 	rx_pkt_type = le16_to_cpu(uap_rx_pd->rx_pkt_type);
+ 	rx_pkt_hdr = (void *)uap_rx_pd + le16_to_cpu(uap_rx_pd->rx_pkt_offset);
+ 
++	ether_addr_copy(ta, rx_pkt_hdr->eth803_hdr.h_source);
++
+ 	if ((le16_to_cpu(uap_rx_pd->rx_pkt_offset) +
+ 	     le16_to_cpu(uap_rx_pd->rx_pkt_length)) > (u16) skb->len) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -282,6 +294,11 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
+ 			    skb->len, le16_to_cpu(uap_rx_pd->rx_pkt_offset),
+ 			    le16_to_cpu(uap_rx_pd->rx_pkt_length));
+ 		priv->stats.rx_dropped++;
++
++		node = mwifiex_get_sta_entry(priv, ta);
++		if (node)
++			node->stats.tx_failed++;
++
+ 		dev_kfree_skb_any(skb);
+ 		return 0;
+ 	}
+@@ -295,7 +312,6 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
+ 		return ret;
+ 	}
+ 
+-	memcpy(ta, rx_pkt_hdr->eth803_hdr.h_source, ETH_ALEN);
+ 
+ 	if (rx_pkt_type != PKT_TYPE_BAR && uap_rx_pd->priority < MAX_NUM_TID) {
+ 		spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 370323a..2e3dc07 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -416,12 +416,25 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+  */
+ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
+ {
++	struct mwifiex_sta_node *src_node;
++	struct ethhdr *p_ethhdr;
++
+ 	if (!skb)
+ 		return -1;
+ 
+ 	priv->stats.rx_bytes += skb->len;
+ 	priv->stats.rx_packets++;
+ 
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
++		p_ethhdr = (void *)skb->data;
++		src_node = mwifiex_get_sta_entry(priv, p_ethhdr->h_source);
++		if (src_node) {
++			src_node->stats.last_rx = jiffies;
++			src_node->stats.rx_bytes += skb->len;
++			src_node->stats.rx_packets++;
++		}
++	}
++
+ 	skb->dev = priv->netdev;
+ 	skb->protocol = eth_type_trans(skb, priv->netdev);
+ 	skb->ip_summed = CHECKSUM_NONE;
+-- 
+1.8.1.4
 
-- enc_mode = 1: Use SW crypto.
-
-  Driver behavior:
-     - ath10k driver uses raw encap mode for both Tx/Rx
-     - ath10k driver doesn't configure actual key to HW but program
-CLEAR key context to bypass HW.
-     This is the classic nohwcrypt=1 mode. Only SW crypto is enabled globally.
-  Use case:
-     - NEW: Full SW crypto on both Tx/Rx.
-     - NEW: raw injected Tx frame. If encryption required, would use
-mac80211 SW crypto.
-
-- enc_mode = 2: Supports both HW and SW crypto simultaneously.
-
-  Driver behavior:
-     - ath10k driver uses raw encap mode for both Tx/Rx
-     - ath10k driver configures key to HW only if the per BSS config
-enables it (either via debugfs or nl80211 attribute, TBD)
-       If HW key is configured, use HW crypto. Otherwise, use SW crypto.
-
-  Use case:
-    - NEW: raw injected Tx frame. If encryption is required, could
-support both SW or HW crypto (by the per BSS config)
-    - NEW: some BSS could use HW crypto with no performance hit while
-some BSS could bypass HW crypto (ex: CAPWAP like split-MAC encrypted
-frames)
-
-Ben, in this case, as long as enc_mode == 0, your FW should continue
-to work. I will add a new FW feature TX_RAW_ENCAP_SUPPORTED, and fail
-at module load time if enc_mode !=0 and FW doesn't support it. Would
-this address your concerns?
-
-David.
-
-
-On Mon, May 11, 2015 at 9:17 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 05/11/2015 05:12 AM, Kalle Valo wrote:
->> "Liu CF/TW" <cfliu.tw@gmail.com> writes:
->>
->>>>> I wonder does it make any sense to have nohwcrypt parameter? Especially
->>>>> if ath10k doesn't support case rawtxrx=0 and nohwcrypt=1. One
->>>>> possibility I came up is to have multiple values for rawtxrx, for
->>>>> example is rawtxrx=1 means HW crypt enabled and rawtxrx=2 HW crypt
->>>>> disabled. Ideas welcome.
->>>
->>> Indeed. I picked nohwcrypt because it seems to be the convention in
->>> previous Atheros drivers for this feature.
->>
->> Yeah, but I don't think we need to follow that in ath10k. Especially not
->> until we get SW encryption working in all cases.
->
-> What do you mean 'all cases'?  Many upstream firmware builds will just
-> crash if you try raw tx, regardless of any encryption options.
->
->
->>> In this case, I will drop nohwcrypt and do as you suggested.
->>>
->>> rawmode = 0: Raw mode disabled. Use the default native WiFi mode. In
->>> this mode, only HW crypto is supported.
->>> rawmode = 1: Use Raw rx decap + raw tx encap mode. Supports both SW
->>> and HW crypto.
->>> rawmode = 2: Same as 1, but with HW crypto engine globally disabled.
->>
->> I would guess that HW crypto globally disabled (value 2 above) will be
->> more popular, right? So would it make sense to reverse the values and
->> use value 1 for that?
->
-> You are combining multiple different (but related) things into a single
-> enum.  Maybe make it a bitfield instead so that new combinations can be
-> added later w/out making such a mess in the code?
->
->
->>> When rawmode = 1, I want a further per BSS control to make some BSS
->>> use HW crypto and some BSS bypass HW crypto.
->>> For those BSS that have HW crypto bypassed, their data frames may come
->>> from either the normal wlan interfaces (therefore mac80211 sw crypto
->>> used), or from monitor interfaces (therefore Tx injected frames
->>> already encrypted + Rx frames still encrypted)
->>
->> Ok, we need to think how to configure this. Maybe a debugfs interface?
->
-> I'm curious the order of operations...seems like you will have to create
-> and start using the BSS before you get access to it in debugfs?  Or are you
-> going to create a table of mac-addresses or something like that?
->
-> Thanks,
-> Ben
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
