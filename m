@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39972 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751257AbbEXRHu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 May 2015 13:07:50 -0400
-Date: Sun, 24 May 2015 19:07:47 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Robert Dolca <robert.dolca@gmail.com>
-Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [linux-nfc] [PATCH 1/8] NFC: NCI: Allow connection close with
- dev down
-Message-ID: <20150524170747.GB15886@ribalta.ccr.corp.intel.com> (sfid-20150524_190847_368406_CE274E94)
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
- <1424772112-27399-2-git-send-email-robert.dolca@intel.com>
- <20150326002925.GA10954@ribalta.home>
- <CAFPB+Yc-+1s4Y1iWnnCHWjnk=U5Rq-6Wq-idtakCxju8pvYi4Q@mail.gmail.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:27876 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753822AbbE1N4Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 09:56:16 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SDoMp5018675
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:16 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5s24y-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:56:16 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 04/17] mwifiex: enable 11d after bss reset
+Date: Thu, 28 May 2015 18:20:37 +0530
+Message-ID: <1432817450-25619-5-git-send-email-patila@marvell.com> (sfid-20150528_155623_401487_C227FB42)
+In-Reply-To: <1432817450-25619-1-git-send-email-patila@marvell.com>
+References: <1432817450-25619-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFPB+Yc-+1s4Y1iWnnCHWjnk=U5Rq-6Wq-idtakCxju8pvYi4Q@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robert,
+BSS reset would reset all state information in FW.
+Issue 11d config command after reset to enabled 11d in FW.
 
-On Tue, Mar 31, 2015 at 05:03:42PM +0300, Robert Dolca wrote:
-> On Thu, Mar 26, 2015 at 2:29 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
-> > Hi Robert,
-> >
-> > On Tue, Feb 24, 2015 at 12:01:45PM +0200, Robert Dolca wrote:
-> >> By calling __nci_request instead of nci_request allows the driver to use
-> >> the function while initializing the device (setup stage)
-> >>
-> >> Signed-off-by: Robert Dolca <robert.dolca@intel.com>
-> >> ---
-> >>  net/nfc/nci/core.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-> >> index 9575a18..c4dd5d8 100644
-> >> --- a/net/nfc/nci/core.c
-> >> +++ b/net/nfc/nci/core.c
-> >> @@ -558,7 +558,7 @@ static void nci_core_conn_close_req(struct nci_dev *ndev, unsigned long opt)
-> >>
-> >>  int nci_core_conn_close(struct nci_dev *ndev, u8 conn_id)
-> >>  {
-> >> -     return nci_request(ndev, nci_core_conn_close_req, conn_id,
-> >> +     return __nci_request(ndev, nci_core_conn_close_req, conn_id,
-> >>                               msecs_to_jiffies(NCI_CMD_TIMEOUT));
-> > You're fixing your problem by removing the NCI request serialization and
-> > removing the check for your device being UP.
-> > I assume you need to open and close a proprietary connection from your
-> > setup hook ? Then please extend nci_request() to check for both NCI_UP
-> > and NCI_INIT.
-> 
-> You are right, I am opening and closing a connection from the setup
-> function. The setup is called by nci_open_device. At the beginning of
-> nci_open_device, req_lock is being acquired and it is release at the
-> end of the function. That means that when setup is being called
-> req_lock is acuired. As you said I can modify nci_request to check for
-> NCI_INIT but it tries to acquire req_lock and it can not succeed.
-I see, I thought the issue was only about checking the NCI_* flags.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_cmd.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-As a short term solution, I propose you do the following:
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 0a3297e..56a4768 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -806,6 +806,8 @@ void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
+ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 			     struct mwifiex_uap_bss_param *bss_cfg)
+ {
++	enum state_11d_t state_11d;
++
+ 	if (mwifiex_del_mgmt_ies(priv))
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "Failed to delete mgmt IEs!\n");
+@@ -830,6 +832,16 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 		return -1;
+ 	}
+ 
++	/* Send cmd to FW to enable 11D function */
++	state_11d = ENABLE_11D;
++	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
++			     HostCmd_ACT_GEN_SET, DOT11D_I,
++			     &state_11d, true)) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "11D: failed to enable 11D\n");
++		return -1;
++	}
++
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
+ 			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
+ 		mwifiex_dbg(priv->adapter, ERROR,
+-- 
+1.8.1.4
 
-a) Export nci_core_conn_create_req, nci_core_conn_close_req and
-__nci_request.
-b) Call __nci_request() directly from your fdp_nci_close_conn() and
-fdp_nci_create_conn() routines.
-
-The long term, scalable fix would be to implement and export an
-__nci_send_cmd_sync() routine, that would transparently build an NCI
-request and tail it to the ndev req skb queue, and put the caller on a
-wait queue. The created request's response callback would then wake the
-caller up.
-
-Cheers,
-Samuel.
