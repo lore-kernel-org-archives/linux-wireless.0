@@ -1,210 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43272 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750870AbbECMaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 08:30:07 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Guo, Chaohong" <chaohong.guo@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: pull request: update for -12.ucode firmware for Intel WiFi devices
- driven by iwlmvm
-Date: Sun, 3 May 2015 12:30:02 +0000
-Message-ID: <1430656195.25666.8.camel@intel.com> (sfid-20150503_143225_438779_8A241E87)
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="=-R24qHqBVRwkDv/rHply8"
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:28510 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753367AbbE1O1s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 10:27:48 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEPRgj007969
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:47 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyh7-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:47 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 10/17] mwifiex: dump station support in uap mode
+Date: Fri, 29 May 2015 01:24:51 +0530
+Message-ID: <1432842898-3219-11-git-send-email-patila@marvell.com> (sfid-20150528_162751_025638_05FDBFB6)
+In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
+References: <1432842898-3219-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-R24qHqBVRwkDv/rHply8
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Xinming Hu <huxm@marvell.com>
 
-Dear linux-firmware maintainers,
+This patch extend cfg80211 dump_station handler, support for
+dump stations associated to mwifiex micro AP.
 
-Intel released a new version of the firmware for the devices below:
-3160, 7260 and 7265.
-This release fixes disconnections and stability issues.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 51 +++++++++++++++++++++++++++++----
+ 1 file changed, 46 insertions(+), 5 deletions(-)
 
-The following changes since commit ec89525b2ab65f1d5ae4f67e27f0d525ddedd2ef=
-:
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ddeb919..16528c1 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1229,6 +1229,7 @@ mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 tx_htinfo,
+  */
+ static int
+ mwifiex_dump_station_info(struct mwifiex_private *priv,
++			  struct mwifiex_sta_node *node,
+ 			  struct station_info *sinfo)
+ {
+ 	u32 rate;
+@@ -1238,6 +1239,30 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+ 			BIT(NL80211_STA_INFO_TX_BITRATE) |
+ 			BIT(NL80211_STA_INFO_SIGNAL) | BIT(NL80211_STA_INFO_SIGNAL_AVG);
+ 
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
++		if (!node)
++			return -ENOENT;
++
++		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
++				BIT(NL80211_STA_INFO_TX_FAILED);
++		sinfo->inactive_time =
++			jiffies_to_msecs(jiffies - node->stats.last_rx);
++
++		sinfo->signal = node->stats.rssi;
++		sinfo->signal_avg = node->stats.rssi;
++		sinfo->rx_bytes = node->stats.rx_bytes;
++		sinfo->tx_bytes = node->stats.tx_bytes;
++		sinfo->rx_packets = node->stats.rx_packets;
++		sinfo->tx_packets = node->stats.tx_packets;
++		sinfo->tx_failed = node->stats.tx_failed;
++
++		mwifiex_parse_htinfo(priv, node->stats.last_tx_htinfo,
++				     &sinfo->txrate);
++		sinfo->txrate.legacy = node->stats.last_tx_rate * 5;
++
++		return 0;
++	}
++
+ 	/* Get signal information from the firmware */
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_RSSI_INFO,
+ 			     HostCmd_ACT_GEN_GET, 0, NULL, true)) {
+@@ -1304,7 +1329,7 @@ mwifiex_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (memcmp(mac, priv->cfg_bssid, ETH_ALEN))
+ 		return -ENOENT;
+ 
+-	return mwifiex_dump_station_info(priv, sinfo);
++	return mwifiex_dump_station_info(priv, NULL, sinfo);
+ }
+ 
+ /*
+@@ -1315,13 +1340,29 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 			      int idx, u8 *mac, struct station_info *sinfo)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	static struct mwifiex_sta_node *node;
+ 
+-	if (!priv->media_connected || idx)
+-		return -ENOENT;
++	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
++	    priv->media_connected && idx == 0) {
++		ether_addr_copy(mac, priv->cfg_bssid);
++		return mwifiex_dump_station_info(priv, NULL, sinfo);
++	} else if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
++		mwifiex_send_cmd(priv, HOSTCMD_CMD_UAP_STA_LIST,
++				 HostCmd_ACT_GEN_GET, 0, NULL, true);
++
++		if (node && (&node->list == &priv->sta_list)) {
++			node = NULL;
++			return -ENOENT;
++		}
+ 
+-	memcpy(mac, priv->cfg_bssid, ETH_ALEN);
++		node = list_prepare_entry(node, &priv->sta_list, list);
++		list_for_each_entry_continue(node, &priv->sta_list, list) {
++			ether_addr_copy(mac, node->mac_addr);
++			return mwifiex_dump_station_info(priv, node, sinfo);
++		}
++	}
+ 
+-	return mwifiex_dump_station_info(priv, sinfo);
++	return -ENOENT;
+ }
+ 
+ static int
+-- 
+1.8.1.4
 
-  firmware: WHENCE: note nvidia xusb.bin firmware versions (2015-04-10 11:0=
-0:59 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git =
-master
-
-for you to fetch changes up to 888ea193da7f6e3f03758e89bd1785d3fa393760:
-
-  iwlwifi: update -12.ucode for 3160 / 7260 / 7265 / 7265D (2015-05-03 15:0=
-8:00 +0300)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: update -12.ucode for 3160 / 7260 / 7265 / 7265D
-
- WHENCE                 |   8 ++++----
- iwlwifi-3160-12.ucode  | Bin 683996 -> 683996 bytes
- iwlwifi-7260-12.ucode  | Bin 782300 -> 782300 bytes
- iwlwifi-7265-12.ucode  | Bin 880604 -> 880604 bytes
- iwlwifi-7265D-12.ucode | Bin 1002800 -> 1002800 bytes
- 5 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/WHENCE b/WHENCE
-index 8d81633..ca97c1c 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -832,7 +832,7 @@ File: iwlwifi-7260-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-7260-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- File: iwlwifi-3160-7.ucode
- Version: 22.1.7.0
-@@ -847,7 +847,7 @@ File: iwlwifi-3160-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-3160-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- File: iwlwifi-7265-8.ucode
- Version: 22.24.8.0
-@@ -859,13 +859,13 @@ File: iwlwifi-7265-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-7265-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- File: iwlwifi-7265D-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-7265D-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
-=20
-diff --git a/iwlwifi-3160-12.ucode b/iwlwifi-3160-12.ucode
-index 45bce48..84b1bad 100644
-Binary files a/iwlwifi-3160-12.ucode and b/iwlwifi-3160-12.ucode differ
-diff --git a/iwlwifi-7260-12.ucode b/iwlwifi-7260-12.ucode
-index 7ec91f0..a5da1d2 100644
-Binary files a/iwlwifi-7260-12.ucode and b/iwlwifi-7260-12.ucode differ
-diff --git a/iwlwifi-7265-12.ucode b/iwlwifi-7265-12.ucode
-index 84ae2ce..7a9a579 100644
-Binary files a/iwlwifi-7265-12.ucode and b/iwlwifi-7265-12.ucode differ
-diff --git a/iwlwifi-7265D-12.ucode b/iwlwifi-7265D-12.ucode
-index 3f36b55..cd2c1e0 100644
-Binary files a/iwlwifi-7265D-12.ucode and b/iwlwifi-7265D-12.ucode differ
-The following changes since commit ec89525b2ab65f1d5ae4f67e27f0d525ddedd2ef=
-:
-
-  firmware: WHENCE: note nvidia xusb.bin firmware versions (2015-04-10 11:0=
-0:59 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git =
-master
-
-for you to fetch changes up to 888ea193da7f6e3f03758e89bd1785d3fa393760:
-
-  iwlwifi: update -12.ucode for 3160 / 7260 / 7265 / 7265D (2015-05-03 15:0=
-8:00 +0300)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: update -12.ucode for 3160 / 7260 / 7265 / 7265D
-
- WHENCE                 |   8 ++++----
- iwlwifi-3160-12.ucode  | Bin 683996 -> 683996 bytes
- iwlwifi-7260-12.ucode  | Bin 782300 -> 782300 bytes
- iwlwifi-7265-12.ucode  | Bin 880604 -> 880604 bytes
- iwlwifi-7265D-12.ucode | Bin 1002800 -> 1002800 bytes
- 5 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/WHENCE b/WHENCE
-index 8d81633..ca97c1c 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -832,7 +832,7 @@ File: iwlwifi-7260-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-7260-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- File: iwlwifi-3160-7.ucode
- Version: 22.1.7.0
-@@ -847,7 +847,7 @@ File: iwlwifi-3160-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-3160-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- File: iwlwifi-7265-8.ucode
- Version: 22.24.8.0
-@@ -859,13 +859,13 @@ File: iwlwifi-7265-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-7265-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- File: iwlwifi-7265D-10.ucode
- Version: 23.15.10.0
-=20
- File: iwlwifi-7265D-12.ucode
--Version: 25.15.12.0
-+Version: 25.17.12.0
-=20
- Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
-=20
-diff --git a/iwlwifi-3160-12.ucode b/iwlwifi-3160-12.ucode
-index 45bce48..84b1bad 100644
-Binary files a/iwlwifi-3160-12.ucode and b/iwlwifi-3160-12.ucode differ
-diff --git a/iwlwifi-7260-12.ucode b/iwlwifi-7260-12.ucode
-index 7ec91f0..a5da1d2 100644
-Binary files a/iwlwifi-7260-12.ucode and b/iwlwifi-7260-12.ucode differ
-diff --git a/iwlwifi-7265-12.ucode b/iwlwifi-7265-12.ucode
-index 84ae2ce..7a9a579 100644
-Binary files a/iwlwifi-7265-12.ucode and b/iwlwifi-7265-12.ucode differ
-diff --git a/iwlwifi-7265D-12.ucode b/iwlwifi-7265D-12.ucode
-index 3f36b55..cd2c1e0 100644
-Binary files a/iwlwifi-7265D-12.ucode and b/iwlwifi-7265D-12.ucode differ
-
-
---=-R24qHqBVRwkDv/rHply8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAABAgAGBQJVRhTDAAoJEC0Llv5uNjIBkYkP/0ZQ0ZUIvIhdwJ133yXj27Ya
-JYgLNmTfl87u/Dt3+JcMdyEGREHG8w5zDyk9xxDIzbewZlBw8oqMmk+0Ql431BK+
-I7Nnm7QRhHrKV/m9swKUIOvmyYs7nkWZqkfTtBLpQb0+FdwgOmLgYtqKUgekSq5S
-jeuLHMqAV/uowQbcvUhUcS4KLugZgJXQIqsdZz9Q1gdTkSTTiGSllJlRc2RihX5B
-89zwrpFW/8pz3WpHlmUKxbdUSpTgjvzINuVONIkQ+RH3v2kBDtLglEnGF7/BTja9
-NQTVEHyFTH9nS80NhbjGxui9QvX6PhD49s5mSVUYqkCHI2v4SpfslBZ8zcOZm7vU
-N/HrNYv+kg43G9C/ktEMCsD2At7NC9gOgP99TzA67o/YI8jBzC5tRBjhhXf6IpkB
-bYp1UD+/enuduiWet0wLaKF51fBXtqtYk78iWcOi2sOkzq2Z5zj+QXH04DV4LTdQ
-GjTsJXwkCqU1FK1vdQpL4OZusgwFhMhIbaUAdDlBCJgF5KM3IFRjBDuyEvj1P95/
-PwWwVkLsl5AIV6a4/etEWWt39J7mEmUHtCEQNdhCuhKAH6Xs2RhyHnFNHRMUq7Wx
-NGS0aa2t2q/lMKl/b7ObPGfYMBLb+rXXGIV2C0IHkkLhP5Jjeo5XLkI011+IyKAE
-ahB48t/f+OudSHunfoOy
-=Anxo
------END PGP SIGNATURE-----
-
---=-R24qHqBVRwkDv/rHply8--
