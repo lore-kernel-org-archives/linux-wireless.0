@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57553 "EHLO sipsolutions.net"
+Received: from mga01.intel.com ([192.55.52.88]:24325 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbbEFMt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 08:49:28 -0400
-Message-ID: <1430916566.1954.1.camel@sipsolutions.net> (sfid-20150506_144945_382411_0A75B002)
-Subject: Re: [PATCH] cfg80211: change GO_CONCURRENT to IR_CONCURRENT for STA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 06 May 2015 14:49:26 +0200
-In-Reply-To: <CA+XVXfdAgAvh49-JR24f4J_MBBy+B24xGFOVzO-=jAvo9z7eYg@mail.gmail.com> (sfid-20150427_153126_903710_F57B9234)
-References: <1427793259-18851-1-git-send-email-arik@wizery.com>
-	 <1429871610.1852.33.camel@sipsolutions.net>
-	 <CA+XVXfdAgAvh49-JR24f4J_MBBy+B24xGFOVzO-=jAvo9z7eYg@mail.gmail.com>
-	 (sfid-20150427_153126_903710_F57B9234)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753927AbbE1LRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 07:17:52 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2015-05-28
+Date: Thu, 28 May 2015 11:17:23 +0000
+Message-ID: <1432811843.26741.5.camel@intel.com> (sfid-20150528_131812_437437_0B377EB2)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-04-27 at 16:31 +0300, Arik Nemtsov wrote:
-> On Fri, Apr 24, 2015 at 1:33 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >
-> > On Tue, 2015-03-31 at 12:14 +0300, Arik Nemtsov wrote:
-> > > The GO_CONCURRENT regulatory definition can be extended to station
-> > > interfaces requesting to IR as part of TDLS off-channel operations.
-> > > Rename the GO_CONCURRENT flag to IR_CONCURRENT and allow the added
-> > > use-case.
-> > >
-> > > Change internal users of GO_CONCURRENT to use the new definition.
-> > >
-> > > Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> > > Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-> > > ---
-> > > This patch depends on "cfg80211: Allow GO concurrent relaxation after
-> > > BSS disconnetion" which was recently sent by Emmanuel. It will also
-> > > conflict with a different change to iwlwifi/iwl-nvm-parse.c that's currently
-> > > in Kalle's tree ("iwlwifi: mvm: consider LAR support during NVM parse").
-> > > But that's not too hard to fix.
-> >
-> > Perhaps you should rebase it to not have that dependency since we're
-> > still discussing that other patch.
-> 
-> I think Ilan will send an updated version pretty soon for the
-> dependency. Otherwise, the conflict will happen on his side..
-
-Ok, but it doesn't apply anyway now.
-
-johannes
-
+SGkgS2FsbGUsDQoNCmFzIHdlIHRhbGtlZCwgaGVyZSBpcyB0aGUgcHVsbCByZXF1ZXN0IGZvciA0
+LjEuDQpUaGFua3MuDQoNCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCAyOTIy
+MDg5MTRkOGNhNWE0MWNmNjhjMmYxZDI4MTBhMmVhMjA0NGU5Og0KDQogIGl3bHdpZmk6IG12bTog
+YXZvaWQgdXNlLWFmdGVyLWZyZWUgb24gaXdsX212bV9kMGkzX2VuYWJsZV90eCgpICgyMDE1LTA1
+LTIxIDIyOjM2OjQ2ICswMzAwKQ0KDQphcmUgYXZhaWxhYmxlIGluIHRoZSBnaXQgcmVwb3NpdG9y
+eSBhdDoNCg0KICBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dp
+dC9pd2x3aWZpL2l3bHdpZmktZml4ZXMuZ2l0IHRhZ3MvaXdsd2lmaS1mb3Ita2FsbGUtMjAxNS0w
+NS0yOA0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8gZjExNWZkZmQ2MWJkNjI3ZTk5
+ZDYzNmJiNjFhM2QzZmY5MzM5NzA0ODoNCg0KICBpd2x3aWZpOiBudm06IGZpeCBvdHAgcGFyc2lu
+ZyBpbiA4MDAwIGh3IGZhbWlseSAoMjAxNS0wNS0yOCAxMzoyODowMCArMDMwMCkNCg0KLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LQ0KKiBmaXggT1RQIHBhcnNpbmcgODI2MA0KKiBmaXggcG93ZXJzYXZlIGhhbmRsaW5nIGZvciA4
+MjYwDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0NCklsYW4gUGVlciAoMSk6DQogICAgICBpd2x3aWZpOiBwY2llOiBmaXgg
+dHJhY2tpbmcgb2YgY21kX2luX2ZsaWdodA0KDQpMaWFkIEthdWZtYW4gKDEpOg0KICAgICAgaXds
+d2lmaTogbnZtOiBmaXggb3RwIHBhcnNpbmcgaW4gODAwMCBodyBmYW1pbHkNCg0KIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLW52bS1wYXJzZS5jIHwgIDIgKy0NCiBkcml2ZXJzL25l
+dC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvaW50ZXJuYWwuaCB8ICA2ICsrKy0tLQ0KIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5jICAgIHwgIDQgKystLQ0KIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90eC5jICAgICAgIHwgMjMgKysrKysrKysrLS0tLS0t
+LS0tLS0tLS0NCiA0IGZpbGVzIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDIwIGRlbGV0aW9u
+cygtKQ0KDQo=
