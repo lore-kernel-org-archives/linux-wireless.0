@@ -1,72 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:35951 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933642AbbELV4R (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40512 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752213AbbE1OZy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 17:56:17 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: ming.lei@canonical.com, rusty@rustcorp.com.au
-Cc: torvalds@linux-foundation.org, dhowells@redhat.com,
-	seth.forshee@canonical.com, linux-kernel@vger.kernel.org,
-	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
-	gregkh@linuxfoundation.org, jlee@suse.com, tiwai@suse.de,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Subject: [PATCH v3 2/4] firmware: check for file truncation on direct firmware loading
-Date: Tue, 12 May 2015 14:49:41 -0700
-Message-Id: <1431467383-28540-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_235634_722134_FF26EEBE)
-In-Reply-To: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1431467383-28540-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 28 May 2015 10:25:54 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEOZBm007178
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:53 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyca-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:25:53 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 01/17] mwifiex: verbose logging for association failure messages
+Date: Fri, 29 May 2015 01:24:42 +0530
+Message-ID: <1432842898-3219-2-git-send-email-patila@marvell.com> (sfid-20150528_162556_714577_9B2F117C)
+In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
+References: <1432842898-3219-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+This patch adds more logging support for association failure -
+reason and states.
 
-When direct firmware loading is used we iterate over a list
-of possible firmware paths and concatenate the desired firmware
-name with each path and look for the file there. Should the
-passed firmware name be too long we end up truncating the
-file we want to look for, the search however is still done.
-Add a check for truncation instead of looking for a
-truncated firmware filename.
-
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/base/firmware_class.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
+ drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
+ 2 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 49139a1..9ffa707 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -320,7 +320,7 @@ fail:
- static int fw_get_filesystem_firmware(struct device *device,
- 				       struct firmware_buf *buf)
- {
--	int i;
-+	int i, len;
- 	int rc = -ENOENT;
- 	char *path;
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c404390..6a062dd 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -419,8 +419,12 @@ enum P2P_MODES {
+ #define HS_CFG_COND_MAC_EVENT		0x00000004
+ #define HS_CFG_COND_MULTICAST_DATA	0x00000008
  
-@@ -335,7 +335,12 @@ static int fw_get_filesystem_firmware(struct device *device,
- 		if (!fw_path[i][0])
- 			continue;
+-#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+-#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
++#define ASSOC_ERR_AUTH_ERR_STA_FAILURE		0xFFFB
++#define ASSOC_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
++#define ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
++#define ASSOC_ERR_AUTH_MSG_UNHANDLED		0xFFFE
++#define ASSOC_ERR_STA_FAILURE			0xFFFF
++
  
--		snprintf(path, PATH_MAX, "%s/%s", fw_path[i], buf->fw_id);
-+		len = snprintf(path, PATH_MAX, "%s/%s",
-+			       fw_path[i], buf->fw_id);
-+		if (len >= PATH_MAX) {
-+			rc = -ENAMETOOLONG;
-+			break;
-+		}
+ #define CMD_F_HOSTCMD           (1 << 0)
+ #define CMD_F_CANCELED          (1 << 1)
+@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
+ 	DOT11H_I = 10,
+ };
  
- 		file = filp_open(path, O_RDONLY, 0);
- 		if (IS_ERR(file))
++enum mwifiex_assocmd_failurepoint {
++	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
++	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
++	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
++	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
++};
++
+ #define MAX_SNMP_BUF_SIZE   128
+ 
+ struct host_cmd_ds_802_11_snmp_mib {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6208ef1..69a44bb 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static const char *assoc_failure_reason_to_str(u16 cap_info)
++{
++	switch (cap_info) {
++	case ASSOC_ERR_AUTH_ERR_STA_FAILURE:
++		return "ASSOC_ERR_AUTH_ERR_STA_FAILURE";
++	case ASSOC_ERR_AUTH_MSG_UNHANDLED:
++		return "ASSOC_ERR_AUTH_MSG_UNHANDLED";
++	case ASSOC_ERR_ASSOC_ERR_TIMEOUT:
++		return "ASSOC_ERR_ASSOC_ERR_TIMEOUT";
++	case ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED:
++		return "ASSOC_ERR_ASSOC_ERR_AUTH_REFUSED";
++	case ASSOC_ERR_STA_FAILURE:
++		return "ASSOC_ERR_STA_FAILURE";
++	}
++
++	return "Unknown failure";
++}
+ /*
+  * Association firmware command response handler
+  *
+@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 			    status_code, cap_info,
+ 			    le16_to_cpu(assoc_rsp->a_id));
+ 
+-		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
+-			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
++		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
++			    assoc_failure_reason_to_str(cap_info));
++		if (cap_info == ASSOC_ERR_ASSOC_ERR_TIMEOUT) {
++			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
+ 				ret = WLAN_STATUS_AUTH_TIMEOUT;
+-			else
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: AUTH timeout\n");
++			} else {
+ 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: UNSPECIFIED failure\n");
++			}
+ 		} else {
+ 			ret = status_code;
+ 		}
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.8.1.4
 
