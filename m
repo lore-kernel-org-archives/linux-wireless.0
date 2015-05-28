@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50711 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbbEIMCV (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:56662
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754550AbbE1VLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 08:02:21 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Modify REG_BCN_MAX_ERR related code.
-References: <1430841518-3932-1-git-send-email-ap420073@gmail.com>
-	<87pp6bp6jy.fsf@kamboji.qca.qualcomm.com>
-	<CAMArcTW2qRiM4dVJQDDXJSuLEn6-GGJD4PJBTfhDDDOs+MxRrQ@mail.gmail.com>
-Date: Sat, 09 May 2015 15:02:14 +0300
-In-Reply-To: <CAMArcTW2qRiM4dVJQDDXJSuLEn6-GGJD4PJBTfhDDDOs+MxRrQ@mail.gmail.com>
-	(Taehee Yoo's message of "Sat, 9 May 2015 18:11:45 +0900")
-Message-ID: <87h9rmnem1.fsf@kamboji.qca.qualcomm.com> (sfid-20150509_140225_648796_EBBEFD3F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 28 May 2015 17:11:40 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, HPDD-discuss@lists.01.org,
+	linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/9] drop unneeded goto
+Date: Thu, 28 May 2015 23:02:15 +0200
+Message-Id: <1432846944-7122-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20150528_231343_584276_3D6D17EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taehee Yoo <ap420073@gmail.com> writes:
+These patches drop gotos that jump to a label that is at the next
+instruction, in the case that the label is not used elsewhere in the
+function.  The complete semantic patch that performs this transformation is
+as follows:
 
-> 2015-05-08 22:01 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
->> Taehee Yoo <ap420073@gmail.com> writes:
->>
->>> 1. Remove setting REG_BCN_MAX_ERR code in _rtl92cu_set_media_status().
->>> Initialization routine set REG_BCN_MAX_ERR to 0xFF.
->>> also _rtl92cu_set_media_status set REG_BCN_MAX_ERR to same value.
->>> so i remove this code.
->>>
->>> 2. Remove rtl92c_init_beacon_max_error's parameter.
->>> because parameter "infra_mode" is not used.
->>>
->>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
->>
->> Please split the patches into two. Having a numbered list of changes in
->> the commit log is a strong indication that the patch should be split
->> into smaller patches.
->>
->> --
->> Kalle Valo
->
-> Thank you for your review!
-> I'll resend two patchs.
+// <smpl>
+@r@
+position p;
+identifier l;
+@@
 
-Thanks. But when you send new versions please mark them as v2, v3 and so
-on as that makes it easy for me to see what is the latest version.
+if (...) goto l@p;
+l:
 
--- 
-Kalle Valo
+@script:ocaml s@
+p << r.p;
+nm;
+@@
+
+nm := (List.hd p).current_element
+
+@ok exists@
+identifier s.nm,l;
+position p != r.p;
+@@
+
+nm(...) {
+<+... goto l@p; ...+>
+}
+
+@depends on !ok@
+identifier s.nm;
+position r.p;
+identifier l;
+@@
+
+nm(...) {
+<...
+- if(...) goto l@p; l:
+...>
+}
+// </smpl>
+
