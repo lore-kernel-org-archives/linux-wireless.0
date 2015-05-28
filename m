@@ -1,51 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36723 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54481 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513AbbEDT2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 15:28:21 -0400
-Message-ID: <1430767700.10844.24.camel@redhat.com> (sfid-20150504_212824_992300_D8E3F2C8)
-Subject: Re: b43 AP does not work
-From: Dan Williams <dcbw@redhat.com>
-To: Nerijus =?UTF-8?Q?Bali=C5=ABnas?= <nerijus@users.sourceforge.net>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 04 May 2015 14:28:20 -0500
-In-Reply-To: <loom.20150504T205530-427@post.gmane.org>
-References: <loom.20150502T183011-57@post.gmane.org>
-	   <5544FFE5.5090706@lwfinger.net> <loom.20150502T190504-905@post.gmane.org>
-	   <loom.20150502T191744-147@post.gmane.org>
-	  <1430752777.17017.2.camel@redhat.com>
-	  <loom.20150504T173700-271@post.gmane.org>
-	 <1430760100.10844.6.camel@redhat.com>
-	 <loom.20150504T205530-427@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754350AbbE1Pr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 11:47:27 -0400
+Subject: [PATCH 08/20] MODSIGN: Extract the blob PKCS#7 signature verifier
+ from module signing [ver #5]
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Thu, 28 May 2015 16:47:20 +0100
+Message-ID: <20150528154720.1259.76076.stgit@warthog.procyon.org.uk> (sfid-20150528_175209_513279_BD6DC0DA)
+In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-05-04 at 19:00 +0000, Nerijus Baliūnas wrote:
-> Dan Williams <dcbw@...> writes:
-> 
-> > NM actually does allow you to do that by editing the hotspot connection
-> > files directly.
-> 
-> > If you take a look into /etc/NetworkManager/system-connections/ you
-> > should see the config file, where you can edit stuff like 'channel',
-> > 'ssid', 'band', 'pairwise', 'group', 'proto', etc, stuff that's familiar
-> > to wpa_supplicant config too.  See 'man nm-settings' for more details on
-> > all these key/value pairs.
-> 
-> I edited /etc/NetworkManager/system-connections/Hotspot, ran systemctl
-> restart NetworkManager and ssid and password were changed. Then I added
-> channel=10 to the file, restarted NM, but when I enable hotspot in Gnome,
-> ssid is localhost.localdomain and password is random again. I was not able
-> to have my edited ssid and password values back.
+Extract the function that drives the PKCS#7 signature verification given a
+data blob and a PKCS#7 blob out from the module signing code and lump it with
+the system keyring code as it's generic.  This makes it independent of module
+config options and opens it to use by the firmware loader.
 
-You don't actually need to restart NM, you can simply run "nmcli con
-reload" to get NM to notice the changes.  I don't recall how GNOME Shell
-handles the Hotspot button in its UI, but you should be able to test
-independently of GNOME Shell by doing:
+Signed-off-by: David Howells <dhowells@redhat.com>
+Cc: Luis R. Rodriguez <mcgrof@suse.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
+---
 
-nmcli con up <name of hotspot connection>
+ include/keys/system_keyring.h |    5 ++++
+ init/Kconfig                  |   29 ++++++++++++++++--------
+ kernel/module_signing.c       |   44 +-----------------------------------
+ kernel/system_keyring.c       |   50 +++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 75 insertions(+), 53 deletions(-)
 
-Dan
+diff --git a/include/keys/system_keyring.h b/include/keys/system_keyring.h
+index 72665eb80692..9791c907cdb7 100644
+--- a/include/keys/system_keyring.h
++++ b/include/keys/system_keyring.h
+@@ -28,4 +28,9 @@ static inline struct key *get_system_trusted_keyring(void)
+ }
+ #endif
+ 
++#ifdef CONFIG_SYSTEM_DATA_VERIFICATION
++extern int system_verify_data(const void *data, unsigned long len,
++			      const void *raw_pkcs7, size_t pkcs7_len);
++#endif
++
+ #endif /* _KEYS_SYSTEM_KEYRING_H */
+diff --git a/init/Kconfig b/init/Kconfig
+index fb98cba069c1..c05afd6594f2 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1758,6 +1758,24 @@ config SYSTEM_TRUSTED_KEYRING
+ 
+ 	  Keys in this keyring are used by module signature checking.
+ 
++config SYSTEM_DATA_VERIFICATION
++	def_bool n
++	select SYSTEM_TRUSTED_KEYRING
++	select KEYS
++	select CRYPTO
++	select ASYMMETRIC_KEY_TYPE
++	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
++	select PUBLIC_KEY_ALGO_RSA
++	select ASN1
++	select OID_REGISTRY
++	select X509_CERTIFICATE_PARSER
++	select PKCS7_MESSAGE_PARSER
++	help
++	  Provide PKCS#7 message verification using the contents of the system
++	  trusted keyring to provide public keys.  This then can be used for
++	  module verification, kexec image verification and firmware blob
++	  verification.
++
+ config PROFILING
+ 	bool "Profiling support"
+ 	help
+@@ -1866,16 +1884,7 @@ config MODULE_SRCVERSION_ALL
+ config MODULE_SIG
+ 	bool "Module signature verification"
+ 	depends on MODULES
+-	select SYSTEM_TRUSTED_KEYRING
+-	select KEYS
+-	select CRYPTO
+-	select ASYMMETRIC_KEY_TYPE
+-	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
+-	select PUBLIC_KEY_ALGO_RSA
+-	select ASN1
+-	select OID_REGISTRY
+-	select X509_CERTIFICATE_PARSER
+-	select PKCS7_MESSAGE_PARSER
++	select SYSTEM_DATA_VERIFICATION
+ 	help
+ 	  Check modules for valid signatures upon load: the signature
+ 	  is simply appended to the module. For more information see
+diff --git a/kernel/module_signing.c b/kernel/module_signing.c
+index 8eb20cc66b39..70ad463f6df0 100644
+--- a/kernel/module_signing.c
++++ b/kernel/module_signing.c
+@@ -10,10 +10,8 @@
+  */
+ 
+ #include <linux/kernel.h>
+-#include <linux/err.h>
+ #include <keys/system_keyring.h>
+ #include <crypto/public_key.h>
+-#include <crypto/pkcs7.h>
+ #include "module-internal.h"
+ 
+ /*
+@@ -37,46 +35,6 @@ struct module_signature {
+ };
+ 
+ /*
+- * Verify a PKCS#7-based signature on a module.
+- */
+-static int mod_verify_pkcs7(const void *mod, unsigned long modlen,
+-			    const void *raw_pkcs7, size_t pkcs7_len)
+-{
+-	struct pkcs7_message *pkcs7;
+-	bool trusted;
+-	int ret;
+-
+-	pkcs7 = pkcs7_parse_message(raw_pkcs7, pkcs7_len);
+-	if (IS_ERR(pkcs7))
+-		return PTR_ERR(pkcs7);
+-
+-	/* The data should be detached - so we need to supply it. */
+-	if (pkcs7_supply_detached_data(pkcs7, mod, modlen) < 0) {
+-		pr_err("PKCS#7 signature with non-detached data\n");
+-		ret = -EBADMSG;
+-		goto error;
+-	}
+-
+-	ret = pkcs7_verify(pkcs7);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = pkcs7_validate_trust(pkcs7, system_trusted_keyring, &trusted);
+-	if (ret < 0)
+-		goto error;
+-
+-	if (!trusted) {
+-		pr_err("PKCS#7 signature not signed with a trusted key\n");
+-		ret = -ENOKEY;
+-	}
+-
+-error:
+-	pkcs7_free_message(pkcs7);
+-	pr_devel("<==%s() = %d\n", __func__, ret);
+-	return ret;
+-}
+-
+-/*
+  * Verify the signature on a module.
+  */
+ int mod_verify_sig(const void *mod, unsigned long *_modlen)
+@@ -114,5 +72,5 @@ int mod_verify_sig(const void *mod, unsigned long *_modlen)
+ 		return -EBADMSG;
+ 	}
+ 
+-	return mod_verify_pkcs7(mod, modlen, mod + modlen, sig_len);
++	return system_verify_data(mod, modlen, mod + modlen, sig_len);
+ }
+diff --git a/kernel/system_keyring.c b/kernel/system_keyring.c
+index 4cda71ee51c7..95f2dcbc7616 100644
+--- a/kernel/system_keyring.c
++++ b/kernel/system_keyring.c
+@@ -16,6 +16,7 @@
+ #include <linux/err.h>
+ #include <keys/asymmetric-type.h>
+ #include <keys/system_keyring.h>
++#include <crypto/pkcs7.h>
+ 
+ struct key *system_trusted_keyring;
+ EXPORT_SYMBOL_GPL(system_trusted_keyring);
+@@ -103,3 +104,52 @@ dodgy_cert:
+ 	return 0;
+ }
+ late_initcall(load_system_certificate_list);
++
++#ifdef CONFIG_SYSTEM_DATA_VERIFICATION
++
++/**
++ * Verify a PKCS#7-based signature on system data.
++ * @data: The data to be verified.
++ * @len: Size of @data.
++ * @raw_pkcs7: The PKCS#7 message that is the signature.
++ * @pkcs7_len: The size of @raw_pkcs7.
++ */
++int system_verify_data(const void *data, unsigned long len,
++		       const void *raw_pkcs7, size_t pkcs7_len)
++{
++	struct pkcs7_message *pkcs7;
++	bool trusted;
++	int ret;
++
++	pkcs7 = pkcs7_parse_message(raw_pkcs7, pkcs7_len);
++	if (IS_ERR(pkcs7))
++		return PTR_ERR(pkcs7);
++
++	/* The data should be detached - so we need to supply it. */
++	if (pkcs7_supply_detached_data(pkcs7, data, len) < 0) {
++		pr_err("PKCS#7 signature with non-detached data\n");
++		ret = -EBADMSG;
++		goto error;
++	}
++
++	ret = pkcs7_verify(pkcs7);
++	if (ret < 0)
++		goto error;
++
++	ret = pkcs7_validate_trust(pkcs7, system_trusted_keyring, &trusted);
++	if (ret < 0)
++		goto error;
++
++	if (!trusted) {
++		pr_err("PKCS#7 signature not signed with a trusted key\n");
++		ret = -ENOKEY;
++	}
++
++error:
++	pkcs7_free_message(pkcs7);
++	pr_devel("<==%s() = %d\n", __func__, ret);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(system_verify_data);
++
++#endif /* CONFIG_SYSTEM_DATA_VERIFICATION */
 
