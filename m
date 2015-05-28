@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:51155 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754359AbbEKNsr (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25138 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752656AbbE1NA6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 09:48:47 -0400
-Date: Mon, 11 May 2015 09:48:45 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: "Machani, Yaniv" <yanivma@ti.com>
-Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: wl18xx : firmware pull request [V2] (updated WHENCE)
-Message-ID: <20150511134844.GN27807@merlin.infradead.org> (sfid-20150511_154930_990330_2BCCBF3C)
-References: <AE1C82FB3D0EC64DB1F752C81CBD1101265F6B46@DFRE01.ent.ti.com>
+	Thu, 28 May 2015 09:00:58 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxMiU015076
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:58 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqh1-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:00:58 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 14/17] mwifiex: advertise PS ON by default support to cfg80211
+Date: Thu, 28 May 2015 23:59:04 +0530
+Message-ID: <1432837747-2075-15-git-send-email-patila@marvell.com> (sfid-20150528_150101_385408_E11AB94D)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101265F6B46@DFRE01.ent.ti.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 10, 2015 at 05:46:38AM +0000, Machani, Yaniv wrote:
-> - Firmware file was updated (8.9.0.0.39), includes bug fixes and improvements.
-> - Configuration binary removed, it is no longer fits all releases.
->   Moreover it should be configured per HW platform.
->   More information can found in here :
->   http://processors.wiki.ti.com/index.php/Open_Source_Wireless_Connectivity_wlconf
-> 
+This would enable driver to enter powersave as soon as connected.
 
-I assume this is an embedded part, and not something for general use?
-In general, we'd like linux-firmware to be decoupled from kernel
-upgrades, so that distributions can upgrade them asynchronously, and
-removing wlconf.bin could break existing users.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
->   git@git.ti.com:wilink8-wlan/linux-firmware.git for-upstream
-> 
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 1226555..3d3794f 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -3685,7 +3685,8 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
+ 			WIPHY_FLAG_AP_UAPSD |
+ 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+-			WIPHY_FLAG_HAS_CHANNEL_SWITCH;
++			WIPHY_FLAG_HAS_CHANNEL_SWITCH |
++			WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
+ 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+-- 
+1.8.1.4
 
-FWIW, you need to specify the public git:// url here instead of SSH.
-
-> for you to fetch changes up to dbe3f134bb69b62edd29be89452d016def8f6d7f
-> Yaniv Machani (1):
->       wl18xx: update firmware file, remove conf file
-> 
-
-Pulled.
-
->  WHENCE                          |    4 +---
->  ti-connectivity/wl18xx-conf.bin |  Bin 1221 -> 0 bytes
->  ti-connectivity/wl18xx-fw-4.bin |  Bin 681704 -> 724716 bytes
->  3 files changed, 1 insertions(+), 3 deletions(-)
->  delete mode 100644 ti-connectivity/wl18xx-conf.bin
-> 
-
-regards, Kyle
