@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:44772 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754426AbbEOTRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 May 2015 15:17:32 -0400
-Message-ID: <1431717445.7716.4.camel@coelho.fi> (sfid-20150515_211735_903530_E44DD32D)
-From: Luca Coelho <luca@coelho.fi>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 15 May 2015 22:17:25 +0300
-In-Reply-To: <55563D20.9030702@gmail.com>
-References: <55563D20.9030702@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: new release of py80211 - v1.0-alpha
+Received: from smtp-2.httrack.com ([195.154.67.106]:48723 "EHLO
+	smtp-2.httrack.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653AbbE1Fkw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 01:40:52 -0400
+From: Xavier Roche <roche@httrack.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Trivial Patch Monkey <trivial@kernel.org>,
+	Xavier Roche <roche@httrack.com>
+Subject: [PATCH] rtl8723au: replaced asm/atomic.h by linux/atomic.h
+Date: Thu, 28 May 2015 07:39:31 +0200
+Message-Id: <1432791571-17262-1-git-send-email-roche@httrack.com> (sfid-20150528_074058_181322_39A9665C)
+In-Reply-To: <1432744411-6635-1-git-send-email-roche@httrack.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-05-15 at 20:38 +0200, Arend van Spriel wrote:
-> Recently got triggered by Luca and with some free time to spare extended 
-> the functionality in py80211. It is still mostly about retrieving 
-> information although it also supports scanning now dealing with 
-> notifications from the scan multicast group. It has been a fun week 
-> puzzling on some hurdles. Hopefully I can keep spending more time on 
-> this personal project and keep momentum.
-> 
-> The project can be found on github and the release notes are here [1].
+Minor additional checkpatch.pl fix for include/rtw_io.h
 
-This is very cool! I was trying your updates for scanning today and it
-works great! I already started converting my test modules to use it.
+Signed-off-by: Xavier Roche <roche@httrack.com>
+---
+ drivers/staging/rtl8723au/include/rtw_io.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I know the hurdles you were talking about, I had gone through a few of
-them, but I was just hacking through, with much less class. ;)
-
-I hope I'll be able to start contributing to your project in the near
-future.
-
-Big thanks for getting momentum from my quick query about the state of
-the your project. :)
-
---
-Luca.
+diff --git a/drivers/staging/rtl8723au/include/rtw_io.h b/drivers/staging/rtl8723au/include/rtw_io.h
+index c8119e2..dfdf35a 100644
+--- a/drivers/staging/rtl8723au/include/rtw_io.h
++++ b/drivers/staging/rtl8723au/include/rtw_io.h
+@@ -24,7 +24,7 @@
+ #include <linux/list.h>
+ /* include <linux/smp_lock.h> */
+ #include <linux/spinlock.h>
+-#include <asm/atomic.h>
++#include <linux/atomic.h>
+ 
+ #include <linux/usb.h>
+ #include <linux/usb/ch9.h>
+-- 
+1.9.1
 
