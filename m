@@ -1,63 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0147.hostedemail.com ([216.40.44.147]:36500 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751869AbbEZRGW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 13:06:22 -0400
-Message-ID: <1432659977.2846.100.camel@perches.com> (sfid-20150526_190626_929514_97526C35)
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
- of del_timer_sync()
-From: Joe Perches <joe@perches.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Tue, 26 May 2015 10:06:17 -0700
-In-Reply-To: <20150526163555.GA9685@kroah.com>
-References: <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
-	 <556268BC.5050807@lwfinger.net> <20150525091737.GQ4150@mwanda>
-	 <1432575448.2846.63.camel@perches.com> <20150526044611.GA3465@sudip-PC>
-	 <1432616108.2846.83.camel@perches.com> <20150526050212.GC3465@sudip-PC>
-	 <1432616879.2846.86.camel@perches.com> <20150526141401.GC21573@kroah.com>
-	 <1432651739.2846.93.camel@perches.com> <20150526163555.GA9685@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:34352 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754465AbbE1Pry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 May 2015 11:47:54 -0400
+Subject: [PATCH 11/20] modsign: Allow signing key to be PKCS#11 [ver #5]
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Thu, 28 May 2015 16:47:47 +0100
+Message-ID: <20150528154747.1259.81028.stgit@warthog.procyon.org.uk> (sfid-20150528_175143_303442_546365B2)
+In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-05-26 at 09:35 -0700, Greg KH wrote:
-> On Tue, May 26, 2015 at 07:48:59AM -0700, Joe Perches wrote:
-> > > > The main point is that patches shouldn't be applied without
-> > > > being submitted to a more widely read list.
-> > > 
-> > > I take the blame for any problems with Outreachy patches.
-> > 
-> > Are you going to change any procedure associated to these
-> > Outreachy patches?
-> 
-> 2 bugs out of 900?  Nah, I think that's good odds.
-> 
-> Also, the outreachy patch process would overwhelm everyone else on the
-> list, it's really high volume during the application phase, I'd prefer
-> it to stick with the mentors that wish to help out with the process.  If
-> you and/or Dan, or anyone else wishes to help out with this, I would
-> really appreciate it.  But I don't think that forcing them to post to
-> the driverdevel list is a good idea.
+From: David Woodhouse <David.Woodhouse@intel.com>
 
-I don't think that's necessary, but sending them to any
-listed maintainer should be.
+This is only the key; the corresponding *cert* still needs to be in
+$(topdir)/signing_key.x509. And there's no way to actually use this
+from the build system yet.
 
-If you're collecting them, I suggest you stick them in
-a separate branch, post them to your driverdev list and
-cc the appropriate maintainers, wait a week, then apply
-them to your main branch.
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
 
-You already batch post hundreds of patches for kernel
-x.y.z stable branches.  What's another few hundred?
+ scripts/sign-file.c |   29 ++++++++++++++++++++++++-----
+ 1 file changed, 24 insertions(+), 5 deletions(-)
 
+diff --git a/scripts/sign-file.c b/scripts/sign-file.c
+index 720b9bc933ae..ad0aa21bd3ac 100755
+--- a/scripts/sign-file.c
++++ b/scripts/sign-file.c
+@@ -22,6 +22,7 @@
+ #include <openssl/pem.h>
+ #include <openssl/pkcs7.h>
+ #include <openssl/err.h>
++#include <openssl/engine.h>
+ 
+ struct module_signature {
+ 	uint8_t		algo;		/* Public-key crypto algorithm [0] */
+@@ -154,11 +155,29 @@ int main(int argc, char **argv)
+ 	/* Read the private key and the X.509 cert the PKCS#7 message
+ 	 * will point to.
+ 	 */
+-	b = BIO_new_file(private_key_name, "rb");
+-	ERR(!b, "%s", private_key_name);
+-	private_key = PEM_read_bio_PrivateKey(b, NULL, pem_pw_cb, NULL);
+-	ERR(!private_key, "%s", private_key_name);
+-	BIO_free(b);
++	if (!strncmp(private_key_name, "pkcs11:", 7)) {
++		ENGINE *e;
++
++		ENGINE_load_builtin_engines();
++		drain_openssl_errors();
++		e = ENGINE_by_id("pkcs11");
++		ERR(!e, "Load PKCS#11 ENGINE");
++		if (ENGINE_init(e))
++			drain_openssl_errors();
++		else
++			ERR(1, "ENGINE_init");
++		if (key_pass)
++			ERR(!ENGINE_ctrl_cmd_string(e, "PIN", key_pass, 0), "Set PKCS#11 PIN");
++		private_key = ENGINE_load_private_key(e, private_key_name, NULL,
++						      NULL);
++		ERR(!private_key, "%s", private_key_name);
++	} else {
++		b = BIO_new_file(private_key_name, "rb");
++		ERR(!b, "%s", private_key_name);
++		private_key = PEM_read_bio_PrivateKey(b, NULL, pem_pw_cb, NULL);
++		ERR(!private_key, "%s", private_key_name);
++		BIO_free(b);
++	}
+ 
+ 	b = BIO_new_file(x509_name, "rb");
+ 	ERR(!b, "%s", x509_name);
 
