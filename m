@@ -1,156 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:34302 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758090AbbEaJgE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57338 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006AbbE1TZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 05:36:04 -0400
-Received: by wgv5 with SMTP id 5so92564733wgv.1
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 02:36:03 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/9] staging: vt6655: use workqueue for interrupt handling
-Date: Sun, 31 May 2015 10:35:24 +0100
-Message-Id: <1433064928-2139-5-git-send-email-tvboxspy@gmail.com> (sfid-20150531_113610_954877_8CCB2206)
-In-Reply-To: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
-References: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 28 May 2015 15:25:41 -0400
+From: Yanbo Li <yanbol@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath10k: Ignore the adjacent radio's activity when surveying a channel
+Date: Thu, 28 May 2015 12:23:06 -0700
+Message-ID: <1432840986-21918-2-git-send-email-yanbol@qca.qualcomm.com> (sfid-20150528_212545_843032_68AC3B34)
+In-Reply-To: <1432840986-21918-1-git-send-email-yanbol@qca.qualcomm.com>
+References: <1432840986-21918-1-git-send-email-yanbol@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce vnt_interrupt to handle interrupt and use workqueue
-to queue and queue on vif.
+The overall goal for a scanning radio is to evaluate the outside radio
+environment. Some platforms integrate several radios together. When one radio
+wants to survey the current channel, the adjacent radio's activity will make
+this survey result inaccurate. the switcher can be used to enable the FW to
+ignore the survey time slot when the adjacent radio is active, especially for
+TX. This skipped scan approach will make the survey result more accurate.
 
-Convert device_intr to void call vnt_interrupt_process
-from vnt_interrupt_work providing vif is valid.
+This technique requires a precondition that the scanning and adjacent radio
+have some physical connection to make them aware of each other's activity from
+within the FW layer, and the FW claimed supporting this capability.
 
-This removes troublesome heavy code from the interupt handler and
-allows to remove atomic from other areas of driver.
+To enable this feature, execute:
+echo 2 > /sys/kernel/debug/ieee80211/phyX/ath10k/adjacent_wlan_interfrc
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Then run the survey scan and dump the stastics:
+iw dev wifiX survey dump
+The TX&RX counter showed already deducted the time slot be interfered
+
+To check whether the feature is enabled, execute:
+cat /sys/kernel/debug/ieee80211/phyX/ath10k/adjacent_wlan_interfrc
+INTERFRC DETECT FOR SURVEY SCAN: Enable/Disable
+
+Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
 ---
- drivers/staging/vt6655/device.h      |  2 ++
- drivers/staging/vt6655/device_main.c | 36 ++++++++++++++++++++++++++----------
- 2 files changed, 28 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h  | 1 +
+ drivers/net/wireless/ath/ath10k/debug.c | 4 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c   | 5 +++++
+ drivers/net/wireless/ath/ath10k/wmi.h   | 7 +++++++
+ 4 files changed, 17 insertions(+)
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index e9c4bf3..b928c2a 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -405,6 +405,8 @@ struct vnt_private {
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index fb0e8521fc45..164160aaf8a7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -491,6 +491,7 @@ enum ath10k_cal_mode {
  
- 	unsigned short wBeaconInterval;
- 
-+	struct work_struct interrupt_work;
-+
- 	struct ieee80211_low_level_stats low_stats;
+ enum ath10k_wlan_interfrc_mask {
+ 	ATH10K_SPECTRAL_INTERFRC	= 0x00000001,
++	ATH10K_SURVEY_INTERFRC		= 0x00000002,
  };
  
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 31f4ec7..d5f090f 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -32,7 +32,6 @@
-  *   device_free_info - device structure resource free function
-  *   device_get_pci_info - get allocated pci io/mem resource
-  *   device_print_info - print out resource
-- *   device_intr - interrupt handle function
-  *   device_rx_srv - rx service function
-  *   device_alloc_rx_buf - rx buffer pre-allocated function
-  *   device_free_tx_buf - free tx buffer function
-@@ -148,7 +147,6 @@ static void vt6655_init_info(struct pci_dev *pcid,
- static void device_free_info(struct vnt_private *pDevice);
- static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
- static void device_print_info(struct vnt_private *pDevice);
--static  irqreturn_t  device_intr(int irq,  void *dev_instance);
+ static inline const char *ath10k_cal_mode_str(enum ath10k_cal_mode mode)
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 534dfb8ada95..3051cbaebc74 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2190,6 +2190,10 @@ static ssize_t ath10k_read_adjacent_wlan_interfrc(struct file *file,
+ 			 interfrc_5g);
+ 	len += scnprintf(buf + len, buf_len - len, "2G INTERFRC: %d\n",
+ 			 interfrc_2g);
++	len += scnprintf(buf + len, buf_len - len,
++			 "INTERFRC DETECT FOR SURVEY SCAN: %s\n",
++			 ar->wlan_interfrc_mask & ATH10K_SURVEY_INTERFRC ?
++			 "Enable" : "Disable");
  
- #ifdef CONFIG_PM
- static int device_notify_reboot(struct notifier_block *, unsigned long event, void *ptr);
-@@ -1053,27 +1051,24 @@ static void vnt_check_bb_vga(struct vnt_private *priv)
- 	}
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 1fb850817589..dbd394422905 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3942,6 +3942,11 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
+ 		      ar->wmi.svc_map)))
+ 		features |= WMI_10_2_ADJ_RADIO_SPECTRAL_INTERFRC;
+ 
++	if ((ar->wlan_interfrc_mask & ATH10K_SURVEY_INTERFRC) &&
++	    (test_bit(WMI_SERVICE_ADJ_RADIO_SURVEY_INTERFRC, ar->wmi.svc_map)))
++		features |= WMI_10_2_ADJ_RADIO_SURVEY_INTERFRC;
++
++
+ 	cmd->resource_config.feature_mask = __cpu_to_le32(features);
+ 
+ 	memcpy(&cmd->resource_config.common, &config, sizeof(config));
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 36bb0768d87f..7cbad1932bf5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -151,6 +151,7 @@ enum wmi_service {
+ 	WMI_SERVICE_ATF,
+ 	WMI_SERVICE_COEX_GPIO,
+ 	WMI_SERVICE_ADJ_RADIO_SPECTRAL_INTERFRC,
++	WMI_SERVICE_ADJ_RADIO_SURVEY_INTERFRC,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -183,6 +184,7 @@ enum wmi_10x_service {
+ 	WMI_10X_SERVICE_ATF,
+ 	WMI_10X_SERVICE_COEX_GPIO,
+ 	WMI_10X_SERVICE_ADJ_RADIO_SPECTRAL_INTERFRC,
++	WMI_10X_SERVICE_ADJ_RADIO_SURVEY_INTERFRC,
+ };
+ 
+ enum wmi_main_service {
+@@ -302,6 +304,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_ATF);
+ 	SVCSTR(WMI_SERVICE_COEX_GPIO);
+ 	SVCSTR(WMI_SERVICE_ADJ_RADIO_SPECTRAL_INTERFRC);
++	SVCSTR(WMI_SERVICE_ADJ_RADIO_SURVEY_INTERFRC);
+ 
+ 	default:
+ 		return NULL;
+@@ -372,6 +375,9 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_COEX_GPIO, len);
+ 	SVCMAP(WMI_10X_SERVICE_ADJ_RADIO_SPECTRAL_INTERFRC,
+ 	       WMI_SERVICE_ADJ_RADIO_SPECTRAL_INTERFRC, len);
++	SVCMAP(WMI_10X_SERVICE_ADJ_RADIO_SURVEY_INTERFRC,
++	       WMI_SERVICE_ADJ_RADIO_SURVEY_INTERFRC, len);
++
  }
  
--static  irqreturn_t  device_intr(int irq,  void *dev_instance)
-+static void vnt_interrupt_process(struct vnt_private *pDevice)
- {
--	struct vnt_private *pDevice = dev_instance;
- 	struct ieee80211_low_level_stats *low_stats = &pDevice->low_stats;
- 	int             max_count = 0;
- 	u32 mib_counter;
- 	unsigned char byOrgPageSel = 0;
--	int             handled = 0;
- 	unsigned long flags;
+ static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
+@@ -1973,6 +1979,7 @@ enum wmi_10_2_feature_mask {
+ 	WMI_10_2_ATF_CONFIG    = BIT(1),
+ 	WMI_10_2_COEX_GPIO     = BIT(3),
+ 	WMI_10_2_ADJ_RADIO_SPECTRAL_INTERFRC	= BIT(4),
++	WMI_10_2_ADJ_RADIO_SURVEY_INTERFRC	= BIT(5),
+ };
  
- 	MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
- 
- 	if (pDevice->dwIsr == 0)
--		return IRQ_RETVAL(handled);
-+		return;
- 
- 	if (pDevice->dwIsr == 0xffffffff) {
- 		pr_debug("dwIsr = 0xffff\n");
--		return IRQ_RETVAL(handled);
-+		return;
- 	}
- 
--	handled = 1;
- 	MACvIntDisable(pDevice->PortOffset);
- 
- 	spin_lock_irqsave(&pDevice->lock, flags);
-@@ -1175,8 +1170,25 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
- 	spin_unlock_irqrestore(&pDevice->lock, flags);
- 
- 	MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
-+}
-+
-+static void vnt_interrupt_work(struct work_struct *work)
-+{
-+	struct vnt_private *priv =
-+		container_of(work, struct vnt_private, interrupt_work);
-+
-+	if (priv->vif)
-+		vnt_interrupt_process(priv);
-+}
-+
-+static irqreturn_t vnt_interrupt(int irq,  void *arg)
-+{
-+	struct vnt_private *priv = arg;
- 
--	return IRQ_RETVAL(handled);
-+	if (priv->vif)
-+		schedule_work(&priv->interrupt_work);
-+
-+	return IRQ_HANDLED;
- }
- 
- static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
-@@ -1268,7 +1280,7 @@ static int vnt_start(struct ieee80211_hw *hw)
- 	if (!device_init_rings(priv))
- 		return -ENOMEM;
- 
--	ret = request_irq(priv->pcid->irq, &device_intr,
-+	ret = request_irq(priv->pcid->irq, &vnt_interrupt,
- 			  IRQF_SHARED, "vt6655", priv);
- 	if (ret) {
- 		dev_dbg(&priv->pcid->dev, "failed to start irq\n");
-@@ -1297,6 +1309,8 @@ static void vnt_stop(struct ieee80211_hw *hw)
- 
- 	ieee80211_stop_queues(hw);
- 
-+	cancel_work_sync(&priv->interrupt_work);
-+
- 	MACbShutdown(priv->PortOffset);
- 	MACbSoftwareReset(priv->PortOffset);
- 	CARDbRadioPowerOff(priv);
-@@ -1783,6 +1797,8 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 		return -ENODEV;
- 	}
- 
-+	INIT_WORK(&priv->interrupt_work, vnt_interrupt_work);
-+
- 	/* do reset */
- 	if (!MACbSoftwareReset(priv->PortOffset)) {
- 		dev_err(&pcid->dev, ": Failed to access MAC hardware..\n");
+ struct wmi_resource_config_10_2 {
 -- 
-2.1.4
+1.9.1
 
