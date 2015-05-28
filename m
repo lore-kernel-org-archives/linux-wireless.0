@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:58661 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753309AbbEHRzn (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40925 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753221AbbE1M7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 May 2015 13:55:43 -0400
-Message-ID: <554CF89D.403@broadcom.com> (sfid-20150508_195547_450498_6642FD7D)
-Date: Fri, 8 May 2015 19:55:41 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 28 May 2015 08:59:49 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCxVde015123
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:48 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqdg-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 05:59:48 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 04/17] mwifiex: enable 11d after bss reset
+Date: Thu, 28 May 2015 23:58:54 +0530
+Message-ID: <1432837747-2075-5-git-send-email-patila@marvell.com> (sfid-20150528_145951_641698_1D2D4E46)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Kyle McMartin <kyle@infradead.org>
-CC: <linux-firmware@kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/4] brcm: add firmware for BCM4324(1) B5 chipset
-References: <1429518626-15321-1-git-send-email-arend@broadcom.com> <1429518626-15321-5-git-send-email-arend@broadcom.com> <20150508170142.GJ27807@merlin.infradead.org>
-In-Reply-To: <20150508170142.GJ27807@merlin.infradead.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/15 19:01, Kyle McMartin wrote:
-> On Mon, Apr 20, 2015 at 10:30:26AM +0200, Arend van Spriel wrote:
->> This patch provides firmware for the B5 version of the BCM4324(1)
->> device. This device can be found in Lenovo Thinkpad Tablets.
->>
->> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
->> Reviewed-by: Hante Meuleman<meuleman@broadcom.com>
->> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->> ---
->>   brcm/brcmfmac43241b5-sdio.bin | Bin 0 ->  408682 bytes
->>   1 file changed, 0 insertions(+), 0 deletions(-)
->>   create mode 100644 brcm/brcmfmac43241b5-sdio.bin
->>
->
-> Please make sure to add files to WHENCE when you submit new firmwares.
-> I've added this one myself.
+BSS reset would reset all state information in FW.
+Issue 11d config command after reset to enabled 11d in FW.
 
-Ah. Sorry. It is on my checklist for firmware submissions, but it 
-slipped this time.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_cmd.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Regards,
-Arend
-
-> regards, --Kyle
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 0a3297e..56a4768 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -806,6 +806,8 @@ void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
+ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 			     struct mwifiex_uap_bss_param *bss_cfg)
+ {
++	enum state_11d_t state_11d;
++
+ 	if (mwifiex_del_mgmt_ies(priv))
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "Failed to delete mgmt IEs!\n");
+@@ -830,6 +832,16 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 		return -1;
+ 	}
+ 
++	/* Send cmd to FW to enable 11D function */
++	state_11d = ENABLE_11D;
++	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
++			     HostCmd_ACT_GEN_SET, DOT11D_I,
++			     &state_11d, true)) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "11D: failed to enable 11D\n");
++		return -1;
++	}
++
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
+ 			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
+ 		mwifiex_dbg(priv->adapter, ERROR,
+-- 
+1.8.1.4
 
