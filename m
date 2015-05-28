@@ -1,66 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb3-smtp-cloud2.xs4all.net ([194.109.24.29]:33278 "EHLO
-	lb3-smtp-cloud2.xs4all.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753323AbbESICU (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:8015 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751284AbbE1NBX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 04:02:20 -0400
-Message-ID: <1432022535.9091.48.camel@x220> (sfid-20150519_100226_362219_68E4E540)
-Subject: Re: [PATCH v1 03/12] crypto: qat - address recursive dependency
- when fw signing is enabled
-From: Paul Bolle <pebolle@tiscali.nl>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	rusty@rustcorp.com.au, dhowells@redhat.com, ming.lei@canonical.com,
-	seth.forshee@canonical.com, kyle@kernel.org,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-	keescook@chromium.org, casey@schaufler-ca.com, tiwai@suse.de,
-	mjg59@srcf.ucam.org, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org, jlee@suse.com,
-	linux-kernel@vger.kernel.org,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	John Griffin <john.griffin@intel.com>
-Date: Tue, 19 May 2015 10:02:15 +0200
-In-Reply-To: <20150519000921.GA23057@wotan.suse.de>
-References: <1430873070-7290-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1430873070-7290-4-git-send-email-mcgrof@do-not-panic.com>
-	 <20150506033330.GA16470@gondor.apana.org.au>
-	 <1430988137.8171.58.camel@x220> <1431021995.8171.97.camel@x220>
-	 <20150518200100.GY23057@wotan.suse.de> <1431981930.9091.29.camel@x220>
-	 <20150519000921.GA23057@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 May 2015 09:01:23 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SCwkwE014687
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:22 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqqht-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 06:01:22 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 16/17] mwifiex: using right tid for addressing ra_list
+Date: Thu, 28 May 2015 23:59:06 +0530
+Message-ID: <1432837747-2075-17-git-send-email-patila@marvell.com> (sfid-20150528_150132_108017_3CC72503)
+In-Reply-To: <1432837747-2075-1-git-send-email-patila@marvell.com>
+References: <1432837747-2075-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-05-19 at 02:09 +0200, Luis R. Rodriguez wrote:
-> On Mon, May 18, 2015 at 10:45:30PM +0200, Paul Bolle wrote:
-> > [...] so, probably, almost
-> > all .config files have FW_LOADER set. So I think, except for some corner
-> > cases, either converting all "select FW_LOADER" to "depends on
-> > FW_LOADER" or simply dropping  "select FW_LOADER" all together, should
-> > be fine.
-> 
-> Well, that makes sense. I just dropped all "select FW_LOADER" entries
-> on next-20150518, then I enabled everything with 'make allyesconfig'
-> and then went into menuconfig to disable FW_LOADER. The build worked.
-> 
-> Going to try a few more build matrix combinations and send patches to
-> do away with this.
-> 
-> > Those corner cases should then be handled on a case by case basis. 
+From: Xinming Hu <huxm@marvell.com>
 
-Having slept on this, it occurred to me a randconfig could hit those
-corner cases. (Make that will hit them, actually.) Of course, one might
-argue that randconfig and EXPERT's advice, "Only use this if you really
-know what you are doing.", are at odds. Which opens another can of
-worms: how much do we care about .config files in which randconfig
-visited the kernels darker corners? Just enough, I'm afraid.
+This patch fixes issue with the accessing correct ra_list by
+downgrading corresponding tid number.
 
-So it seems I've wasted your time by suggesting to drop those selects.
-And now I wonder what trouble using "depends on" will generate here...
+Alternatively, ra lists are created in mwifiex_wmm_add_buf_txqueue
+using downgraded tid number.
 
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n.c           | 11 ++++++++---
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |  5 ++++-
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
-Paul Bolle
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 8422986..4d8ef49 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -156,7 +156,7 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 			      struct host_cmd_ds_command *resp)
+ {
+-	int tid;
++	int tid, tid_down;
+ 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
+ 	struct mwifiex_ra_list_tbl *ra_list;
+@@ -167,7 +167,9 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 
+ 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
+ 	       >> BLOCKACKPARAM_TID_POS;
+-	ra_list = mwifiex_wmm_get_ralist_node(priv, tid, add_ba_rsp->
++
++	tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
++	ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, add_ba_rsp->
+ 		peer_mac_addr);
+ 	if (le16_to_cpu(add_ba_rsp->status_code) != BA_RESULT_SUCCESS) {
+ 		if (ra_list) {
+@@ -530,13 +532,16 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
+ 	struct mwifiex_tx_ba_stream_tbl *new_node;
+ 	struct mwifiex_ra_list_tbl *ra_list;
+ 	unsigned long flags;
++	int tid_down;
+ 
+ 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
+ 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
+ 				   GFP_ATOMIC);
+ 		if (!new_node)
+ 			return;
+-		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, ra);
++
++		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
++		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, ra);
+ 		if (ra_list) {
+ 			ra_list->ba_status = ba_status;
+ 			ra_list->amsdu_in_ampdu = false;
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 39d7a95..64401a7 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -663,6 +663,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 	struct mwifiex_ra_list_tbl *ra_list;
+ 	u8 cleanup_rx_reorder_tbl;
+ 	unsigned long flags;
++	int tid_down;
+ 
+ 	if (type == TYPE_DELBA_RECEIVE)
+ 		cleanup_rx_reorder_tbl = (initiator) ? true : false;
+@@ -688,7 +689,9 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 				    "event: TID, RA not found in table\n");
+ 			return;
+ 		}
+-		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, peer_mac);
++
++		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
++		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, peer_mac);
+ 		if (ra_list) {
+ 			ra_list->amsdu_in_ampdu = false;
+ 			ra_list->ba_status = BA_SETUP_NONE;
+-- 
+1.8.1.4
 
