@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:22342 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754254AbbENFCa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 May 2015 01:02:30 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NOB00G85Q03T720@mailout1.samsung.com> for
- linux-wireless@vger.kernel.org; Thu, 14 May 2015 14:02:27 +0900 (KST)
-Date: Thu, 14 May 2015 05:02:23 +0000 (GMT)
-From: Rahul Jain <rahul.jain@samsung.com>
-Subject: [PATCH] Added 2 new Control Frames ( Beamforming Report Poll & VHT
- NDP Announcement) defined in 802.11ac
-To: linux-wireless@vger.kernel.org, johannes.berg@intel.com
-Reply-to: rahul.jain@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0
-Message-id: <2076339160.163631431579743152.JavaMail.weblogic@ep2mlwas05d> (sfid-20150514_070252_547798_4C831930)
+Received: from s3.sipsolutions.net ([5.9.151.49]:37804 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755920AbbE2LHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2015 07:07:24 -0400
+Message-ID: <1432897642.2104.4.camel@sipsolutions.net> (sfid-20150529_130747_298904_0B369841)
+Subject: Re: [PATCH v2 1/2] cfg80211: ignore netif running state when
+ changing iftype
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 29 May 2015 13:07:22 +0200
+In-Reply-To: <1432285043-8878-1-git-send-email-michal.kazior@tieto.com> (sfid-20150522_105742_600921_0255DD40)
+References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
+	 <1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150522_105742_600921_0255DD40)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-aGVsbG8gQWxsLAoKQmVsb3cgaXMgdGhlIHBhdGNoIGZvciAyIG5ldyBjb250cm9sIGZyYW1lcyBk
-ZWZpbmVkIGluIDgwMi4xMWFjLgpQbGVhc2UgcmV2aWV3IGFuZCBtZXJnZS4KCkZyb20gYjljYTMz
-NTA0MDU0N2U1NjU2ODRmNWJmNjBkMzdkYjg5NjMyMjY2MyBNb24gU2VwIDE3IDAwOjAwOjAwIDIw
-MDEgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIApG
-cm9tOiByYWh1bCA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4KRGF0ZTogVGh1LCAxNCBNYXkgMjAx
-NSAxMDoyMTo0OCArMDUzMApTdWJqZWN0OiBbUEFUQ0hdIEFkZGVkIDIgbmV3IENvbnRyb2wgRnJh
-bWVzICggQmVhbWZvcm1pbmcgUmVwb3J0IFBvbGwgJiBWSFQgCiBORFAgQW5ub3VuY2VtZW50KSBk
-ZWZpbmVkIGluIDgwMi4xMWFjCgoKU2lnbmVkLW9mZi1ieTogcmFodWwgPHJhaHVsLmphaW5Ac2Ft
-c3VuZy5jb20+Ci0tLQogaW5jbHVkZS9saW51eC9pZWVlODAyMTEuaCB8ICAgIDIgKysKIDEgZmls
-ZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2ll
-ZWU4MDIxMS5oIGIvaW5jbHVkZS9saW51eC9pZWVlODAyMTEuaAppbmRleCBiOWM3ODk3Li5jYTM4
-NjE2IDEwMDY0NAotLS0gYS9pbmNsdWRlL2xpbnV4L2llZWU4MDIxMS5oCisrKyBiL2luY2x1ZGUv
-bGludXgvaWVlZTgwMjExLmgKQEAgLTc1LDYgKzc1LDggQEAKICNkZWZpbmUgSUVFRTgwMjExX1NU
-WVBFX0FDVElPTiAgICAgICAgIDB4MDBEMAogCiAvKiBjb250cm9sICovCisjZGVmaW5lIElFRUU4
-MDIxMV9TVFlQRV9CRUFNRk9STV9QT0xMICAweDAwNDAKKyNkZWZpbmUgSUVFRTgwMjExX1NUWVBF
-X1ZIVF9ORFBfQU5OT1VDRSAgICAgICAgMHgwMDUwCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9D
-VExfRVhUICAgICAgICAgICAgICAgIDB4MDA2MAogI2RlZmluZSBJRUVFODAyMTFfU1RZUEVfQkFD
-S19SRVEgICAgICAgMHgwMDgwCiAjZGVmaW5lIElFRUU4MDIxMV9TVFlQRV9CQUNLICAgICAgICAg
-ICAweDAwOTAKLS0gCjEuNy45LjU=
+On Fri, 2015-05-22 at 10:57 +0200, Michal Kazior wrote:
+> It was possible for mac80211 to be coerced into an
+> unexpected flow causing sdata union to become
+> corrupted. Station pointer was put into
+> sdata->u.vlan.sta memory location while it was
+> really master AP's sdata->u.ap.next_beacon. This
+> led to station entry being later freed as
+> next_beacon before __sta_info_flush() in
+> ieee80211_stop_ap() and a subsequent invalid
+> pointer dereference crash.
+> 
+> The problem was that ieee80211_ptr->use_4addr
+> wasn't cleared on interface type changes.
+> 
+> This could be reproduced with the following steps:
+> 
+>  # host A and host B have just booted; no
+>  # wpa_s/hostapd running; all vifs are down
+>  host A> iw wlan0 set type station
+>  host A> iw wlan0 set 4addr on
+>  host A> printf 'interface=wlan0\nssid=4addrcrash\nchannel=1\nwds_sta=1' > /tmp/hconf
+>  host A> hostapd -B /tmp/conf
+>  host B> iw wlan0 set 4addr on
+>  host B> ifconfig wlan0 up
+>  host B> iw wlan0 connect -w hostAssid
+>  host A> pkill hostapd
+>  # host A crashed:
+> 
+>  [  127.928192] BUG: unable to handle kernel NULL pointer dereference at 00000000000006c8
+>  [  127.929014] IP: [<ffffffff816f4f32>] __sta_info_flush+0xac/0x158
+>  ...
+>  [  127.934578]  [<ffffffff8170789e>] ieee80211_stop_ap+0x139/0x26c
+>  [  127.934578]  [<ffffffff8100498f>] ? dump_trace+0x279/0x28a
+>  [  127.934578]  [<ffffffff816dc661>] __cfg80211_stop_ap+0x84/0x191
+>  [  127.934578]  [<ffffffff816dc7ad>] cfg80211_stop_ap+0x3f/0x58
+>  [  127.934578]  [<ffffffff816c5ad6>] nl80211_stop_ap+0x1b/0x1d
+>  [  127.934578]  [<ffffffff815e53f8>] genl_family_rcv_msg+0x259/0x2b5
+> 
+> Note: This isn't a revert of f8cdddb8d61d
+> ("cfg80211: check iface combinations only when
+> iface is running") as far as functionality is
+> considered because b6a550156bc ("cfg80211/mac80211:
+> move more combination checks to mac80211") moved
+> the logic somewhere else already.
+> 
+> Fixes: f8cdddb8d61d ("cfg80211: check iface combinations only when iface is running")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
+Applied.
+
+johannes
 
