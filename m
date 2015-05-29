@@ -1,130 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.9]:14982 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751693AbbEBNCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 May 2015 09:02:50 -0400
-From: moorray3@wp.pl
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH 2/2] add mt7601u build infrastructure and co.
-Date: Sat,  2 May 2015 15:01:30 +0200
-Message-Id: <1430571690-9054-3-git-send-email-moorray3@wp.pl> (sfid-20150502_150258_765977_51C12E74)
-In-Reply-To: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
-References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18917 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755765AbbE2L2C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2015 07:28:02 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBQNrX009516
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:02 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5unab-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:02 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv3 06/16] mwifiex: disable CAC upon radar detection event
+Date: Fri, 29 May 2015 22:26:27 +0530
+Message-ID: <1432918598-27769-7-git-send-email-patila@marvell.com> (sfid-20150529_132806_527971_EC0B495A)
+In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
+References: <1432918598-27769-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+This patch adds support to disable ongoing CAC in FW upon
+detecting radar during CAC period.
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- MAINTAINERS                                    |  6 ++++++
- drivers/net/wireless/Kconfig                   |  1 +
- drivers/net/wireless/Makefile                  |  2 ++
- drivers/net/wireless/mediatek/Kconfig          | 10 ++++++++++
- drivers/net/wireless/mediatek/Makefile         |  1 +
- drivers/net/wireless/mediatek/mt7601u/Kconfig  |  6 ++++++
- drivers/net/wireless/mediatek/mt7601u/Makefile |  9 +++++++++
- 7 files changed, 35 insertions(+)
- create mode 100644 drivers/net/wireless/mediatek/Kconfig
- create mode 100644 drivers/net/wireless/mediatek/Makefile
- create mode 100644 drivers/net/wireless/mediatek/mt7601u/Kconfig
- create mode 100644 drivers/net/wireless/mediatek/mt7601u/Makefile
+ drivers/net/wireless/mwifiex/11h.c  | 30 ++++++++++++++++++++++++++----
+ drivers/net/wireless/mwifiex/main.h |  2 ++
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2e5bbc0d68b2..14850b47ea01 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6342,6 +6342,12 @@ F:	include/uapi/linux/meye.h
- F:	include/uapi/linux/ivtv*
- F:	include/uapi/linux/uvcvideo.h
+diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
+index 65cd461..bb2ffd9 100644
+--- a/drivers/net/wireless/mwifiex/11h.c
++++ b/drivers/net/wireless/mwifiex/11h.c
+@@ -161,19 +161,38 @@ int mwifiex_cmd_issue_chan_report_request(struct mwifiex_private *priv,
+ 	cr_req->chan_desc.chan_width = radar_params->chandef->width;
+ 	cr_req->msec_dwell_time = cpu_to_le32(radar_params->cac_time_ms);
  
-+MEDIATEK MT7601U WIRELESS LAN DRIVER
-+M:	Jakub Kicinski <kubakici@wp.pl>
-+L:	linux-wireless@vger.kernel.org
-+S:	Maintained
-+F:	drivers/net/wireless/mediatek/mt7601u/
-+
- MEGARAID SCSI/SAS DRIVERS
- M:	Kashyap Desai <kashyap.desai@avagotech.com>
- M:	Sumit Saxena <sumit.saxena@avagotech.com>
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 16604bdf5197..a63ab2e83105 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -277,6 +277,7 @@ source "drivers/net/wireless/libertas/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
- source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/rt2x00/Kconfig"
-+source "drivers/net/wireless/mediatek/Kconfig"
- source "drivers/net/wireless/rtlwifi/Kconfig"
- source "drivers/net/wireless/ti/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 0c8891686718..6b9e729dd8ac 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -45,6 +45,8 @@ obj-$(CONFIG_IWLWIFI)	+= iwlwifi/
- obj-$(CONFIG_IWLEGACY)	+= iwlegacy/
- obj-$(CONFIG_RT2X00)	+= rt2x00/
+-	mwifiex_dbg(priv->adapter, MSG,
+-		    "11h: issuing DFS Radar check for channel=%d\n",
+-		    radar_params->chandef->chan->hw_value);
++	if (radar_params->cac_time_ms)
++		mwifiex_dbg(priv->adapter, MSG,
++			    "11h: issuing DFS Radar check for channel=%d\n",
++			    radar_params->chandef->chan->hw_value);
++	else
++		mwifiex_dbg(priv->adapter, MSG, "cancelling CAC\n");
  
-+obj-$(CONFIG_WL_MEDIATEK)	+= mediatek/
-+
- obj-$(CONFIG_P54_COMMON)	+= p54/
+ 	return 0;
+ }
  
- obj-$(CONFIG_ATH_CARDS)		+= ath/
-diff --git a/drivers/net/wireless/mediatek/Kconfig b/drivers/net/wireless/mediatek/Kconfig
-new file mode 100644
-index 000000000000..cba300c6b5da
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/Kconfig
-@@ -0,0 +1,10 @@
-+menuconfig WL_MEDIATEK
-+	bool "Mediatek Wireless LAN support"
-+	---help---
-+	  Enable community drivers for MediaTek WiFi devices.
-+	  Those drivers make use of the Linux mac80211 stack.
++int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
++				 struct cfg80211_chan_def *chandef)
++{
++	struct mwifiex_radar_params radar_params;
 +
++	memset(&radar_params, 0, sizeof(struct mwifiex_radar_params));
++	radar_params.chandef = chandef;
++	radar_params.cac_time_ms = 0;
 +
-+if WL_MEDIATEK
-+source "drivers/net/wireless/mediatek/mt7601u/Kconfig"
-+endif # WL_MEDIATEK
-diff --git a/drivers/net/wireless/mediatek/Makefile b/drivers/net/wireless/mediatek/Makefile
-new file mode 100644
-index 000000000000..9d5f182fd7fd
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_MT7601U)	+= mt7601u/
-diff --git a/drivers/net/wireless/mediatek/mt7601u/Kconfig b/drivers/net/wireless/mediatek/mt7601u/Kconfig
-new file mode 100644
-index 000000000000..f46bed92796b
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt7601u/Kconfig
-@@ -0,0 +1,6 @@
-+config MT7601U
-+	tristate "MediaTek MT7601U (USB) support"
-+	depends on MAC80211
-+	depends on USB
-+	---help---
-+	  This adds support for MT7601U-based wireless USB dongles.
-diff --git a/drivers/net/wireless/mediatek/mt7601u/Makefile b/drivers/net/wireless/mediatek/mt7601u/Makefile
-new file mode 100644
-index 000000000000..ea9ed8a5db4d
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt7601u/Makefile
-@@ -0,0 +1,9 @@
-+ccflags-y += -D__CHECK_ENDIAN__
++	return mwifiex_send_cmd(priv, HostCmd_CMD_CHAN_REPORT_REQUEST,
++				HostCmd_ACT_GEN_SET, 0, &radar_params, true);
++}
 +
-+obj-$(CONFIG_MT7601U)	+= mt7601u.o
-+
-+mt7601u-objs	= \
-+	usb.o init.o main.o mcu.o trace.o dma.o core.o eeprom.o phy.o \
-+	mac.o util.o debugfs.o tx.o
-+
-+CFLAGS_trace.o := -I$(src)
+ /* This function is to abort ongoing CAC upon stopping AP operations
+  * or during unload.
+  */
+ void mwifiex_abort_cac(struct mwifiex_private *priv)
+ {
+ 	if (priv->wdev.cac_started) {
++		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
++			mwifiex_dbg(priv->adapter, ERROR,
++				    "failed to stop CAC in FW\n");
+ 		mwifiex_dbg(priv->adapter, MSG,
+ 			    "Aborting delayed work for CAC.\n");
+ 		cancel_delayed_work_sync(&priv->dfs_cac_work);
+@@ -245,6 +264,9 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ 	if (le32_to_cpu(rdr_event->passed)) {
+ 		mwifiex_dbg(priv->adapter, MSG,
+ 			    "radar detected; indicating kernel\n");
++		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
++			mwifiex_dbg(priv->adapter, ERROR,
++				    "Failed to stop CAC in FW\n");
+ 		cfg80211_radar_event(priv->adapter->wiphy, &priv->dfs_chandef,
+ 				     GFP_KERNEL);
+ 		mwifiex_dbg(priv->adapter, MSG, "regdomain: %d\n",
+@@ -252,7 +274,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ 		mwifiex_dbg(priv->adapter, MSG, "radar detection type: %d\n",
+ 			    rdr_event->det_type);
+ 	} else {
+-		mwifiex_dbg(priv->adapter, ERROR,
++		mwifiex_dbg(priv->adapter, MSG,
+ 			    "false radar detection event!\n");
+ 	}
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5a6c1c7..3ac18c6 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1473,6 +1473,8 @@ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
+ void mwifiex_dfs_cac_work_queue(struct work_struct *work);
+ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work);
+ void mwifiex_abort_cac(struct mwifiex_private *priv);
++int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
++				 struct cfg80211_chan_def *chandef);
+ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ 				      struct sk_buff *skb);
+ 
 -- 
-2.1.0
+1.8.1.4
 
