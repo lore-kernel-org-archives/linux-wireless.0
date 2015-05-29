@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:58715 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754541AbbEUNGV (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54634 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755656AbbE2J1o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 09:06:21 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-	Thu, 21 May 2015 23:06:18 +1000
-Message-ID: <1432213521.4230.43.camel@linux.vnet.ibm.com> (sfid-20150521_150651_544651_8DA58FBA)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-security-module@vger.kernel.org, james.l.morris@oracle.com,
-	serge@hallyn.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	mricon@kernel.org
-Date: Thu, 21 May 2015 09:05:21 -0400
-In-Reply-To: <20150521061453.GC30864@kroah.com>
-References: <20150519200232.GM23057@wotan.suse.de>
-	 <20150520140426.GB126473@ubuntu-hedt>
-	 <20150520172446.4dab5399@lxorguk.ukuu.org.uk>
-	 <20150520164613.GD10473@localhost> <20150521044104.GH22632@kroah.com>
-	 <20150521054101.GA15037@localhost> <20150521061453.GC30864@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 29 May 2015 05:27:44 -0400
+From: Avinash Patil <patila@marvell.com>
+To: Joe Perches <joe@perches.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, "Xinming Hu" <huxm@marvell.com>
+Subject: Re: [PATCH 01/17] mwifiex: verbose logging for association failure
+ messages
+Date: Fri, 29 May 2015 09:27:38 +0000
+Message-ID: <1432911458.11339.24.camel@pe-lt950> (sfid-20150529_112759_516011_032BDE03)
+References: <1432817889-26250-1-git-send-email-patila@marvell.com>
+	 <1432817889-26250-2-git-send-email-patila@marvell.com>
+	 <1432837654.1556.2.camel@perches.com>
+In-Reply-To: <1432837654.1556.2.camel@perches.com>
+Reply-To: Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-05-20 at 23:14 -0700, Greg Kroah-Hartman wrote:
-> On Thu, May 21, 2015 at 08:41:02AM +0300, Petko Manolov wrote:
-> > > I too don't understand this need to sign something that you don't really know 
-> > > what it is from some other company, just to send it to a separate device that 
-> > > is going to do whatever it wants with it if it is signed or not.
-> > 
-> > This is not the point.  What you need to know is _where_ the firmware came from, 
-> > not _what_ it does once it reach your system.  If you don't care about such 
-> > things, just ignore the signature. :)
-> 
-> Ok, but how do we know "where"?  Who is going to start signing and
-> attesting to the validity of all of the firmware images in the
-> linux-firmware tree suddenly?  Why is it the kernel's job to attest this
-> "where"?  Shouldn't your distro/manufacturer be doing that as part of
-> their "put this file on this disk" responsibilities (i.e. the package
-> manager?)
-
-Signatures don't provide any guarantees as to code quality or
-correctness.   They do provide file integrity and provenance.  In
-addition to the license and a Signed-off-by line, having the firmware
-provider include a signature of the firmware would be nice.
-
-> What is verifying a firmware image signature in the kernel attesting
-> that isn't already known in userspace?
-
-Appraising and enforcing firmware integrity before use.
-
-Mimi
-
+T24gVGh1LCAyMDE1LTA1LTI4IGF0IDExOjI3IC0wNzAwLCBKb2UgUGVyY2hlcyB3cm90ZToNCj4g
+T24gVGh1LCAyMDE1LTA1LTI4IGF0IDE4OjI3ICswNTMwLCBBdmluYXNoIFBhdGlsIHdyb3RlOg0K
+PiA+IFRoaXMgcGF0Y2ggYWRkcyBtb3JlIGxvZ2dpbmcgc3VwcG9ydCBmb3IgYXNzb2NpYXRpb24g
+ZmFpbHVyZSAtDQo+ID4gcmVhc29uIGFuZCBzdGF0ZXMuDQo+IFtdDQo+ID4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvZncuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L213aWZpZXgvZncuaA0KPiBbXQ0KPiA+IEBAIC00MTksOCArNDE5LDEyIEBAIGVudW0gUDJQX01P
+REVTIHsNCj4gPiAgI2RlZmluZSBIU19DRkdfQ09ORF9NQUNfRVZFTlQJCTB4MDAwMDAwMDQNCj4g
+PiAgI2RlZmluZSBIU19DRkdfQ09ORF9NVUxUSUNBU1RfREFUQQkweDAwMDAwMDA4DQo+ID4gIA0K
+PiA+IC0jZGVmaW5lIE1XSUZJRVhfVElNRU9VVF9GT1JfQVBfUkVTUAkJMHhmZmZjDQo+ID4gLSNk
+ZWZpbmUgTVdJRklFWF9TVEFUVVNfQ09ERV9BVVRIX1RJTUVPVVQJMg0KPiA+ICsjZGVmaW5lIEFT
+U09DX0VSUl9BVVRIX0VSUl9TVEFfRkFJTFVSRQkJMHhGRkZCDQo+ID4gKyNkZWZpbmUgQVNTT0Nf
+RVJSX0FTU09DX0VSUl9USU1FT1VUCQkweEZGRkMNCj4gPiArI2RlZmluZSBBU1NPQ19FUlJfQVNT
+T0NfRVJSX0FVVEhfUkVGVVNFRAkweEZGRkQNCj4gDQo+IElzIHRoZXJlIHJlYWxseSB2YWx1ZSBp
+biBkdXBsaWNhdGluZyBBU1NPQ19FUlJfDQo+IAlBU1NPQ19FUlJfQVNTT0NfRVJSXzxmb28+DQo+
+IA0KPiANCkhtbS4uVHJ1ZS4NCkFjdHVhbGx5IGZpcnN0IHBhcnQgb2YgbWVzc2FnZSBpcyBmb3Ig
+Y29ubmVjdGlvbiBmYWlsdXJlLg0KSSB0aGluayBiZXR0ZXIgZm9ybWF0IHdvdWxkIGJlIENPTk5F
+Q1RfRVJSX3tBVVRIL0FTU09DfV9FUlIuDQpJIHdpbGwgbW9kaWZ5IHBhdGNoIGFjY29yZGluZ2x5
+IGFuZCByZXNlbmQgdjMuDQoNCi1BdmluYXNoDQoNCg0K
