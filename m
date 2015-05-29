@@ -1,541 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:34626 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946AbbESAv7 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58502 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755485AbbE2L1S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 20:51:59 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: ming.lei@canonical.com
-Cc: rusty@rustcorp.com.au, torvalds@linux-foundation.org,
-	dhowells@redhat.com, seth.forshee@canonical.com,
-	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
-	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-	jlee@suse.com, tiwai@suse.de, casey@schaufler-ca.com,
-	keescook@chromium.org, mjg59@srcf.ucam.org,
-	akpm@linux-foundation.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <David.Woodhouse@intel.com>
-Subject: [RFC v3 2/2] firmware: add firmware signature checking support
-Date: Mon, 18 May 2015 17:45:25 -0700
-Message-Id: <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150519_025204_512819_D6D3746B)
-In-Reply-To: <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 29 May 2015 07:27:18 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBOCrM013093
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:18 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1upn7d87qp-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:18 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv3 01/16] mwifiex: verbose logging for association failure messages
+Date: Fri, 29 May 2015 22:26:22 +0530
+Message-ID: <1432918598-27769-2-git-send-email-patila@marvell.com> (sfid-20150529_132721_410451_8695EB64)
+In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
+References: <1432918598-27769-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+This patch adds more detailed information about association failures
+- reason and states.
 
-Systems that have module signing currently enabled may
-wish to extend vetting of firmware passed to the kernel
-as well. We can re-use most of the code for module signing
-for firmware signature verification and signing. This will
-also later enable re-use of this same code for subsystems
-that wish to provide their own cryptographic verification
-requirements on userspace data needed.
-
-Contrary to module signing the signature files are expected
-to be completely detached for practical and licensing puposes.
-If you have foo.bin, you'll need foo.bin.p7s file present
-for firmware signing.
-
-There's both a config option and a boot parameter which control
-whether we accept or fail with unsigned firmware and firmware
-that are signed with an unknown key. If firmware signing is
-enabled permissively we'll only log into the kernel ring buffer
-when use of an unsigned firmware file is used. If firmware
-signing is in enforced mode the kernel will not allow invalid
-or unsigned firmware files to be loaded into the kernel.
-
-Contrary to module signing we do not taint the kernel in
-the permissive fw signing mode due to restrictions on the
-firmware_class API, extensions to enable this are expected
-however in the future.
-
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Cc: David Woodhouse <David.Woodhouse@intel.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- Documentation/firmware_class/signing.txt |  90 +++++++++++++
- drivers/base/Kconfig                     |  18 +++
- drivers/base/firmware_class.c            | 213 ++++++++++++++++++++++++++++++-
- 3 files changed, 314 insertions(+), 7 deletions(-)
- create mode 100644 Documentation/firmware_class/signing.txt
+ drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
+ drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
+ 2 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/firmware_class/signing.txt b/Documentation/firmware_class/signing.txt
-new file mode 100644
-index 0000000..b03f654
---- /dev/null
-+++ b/Documentation/firmware_class/signing.txt
-@@ -0,0 +1,90 @@
-+			================================
-+			KERNEL FIRMWARE SIGNING FACILITY
-+			================================
-+
-+CONTENTS
-+
-+ - Overview.
-+ - Configuring firmware signing.
-+ - Using signing keys.
-+ - Signing firmware files.
-+
-+
-+========
-+OVERVIEW
-+========
-+
-+Device drivers which require a firmware to be uploaded onto a device as its own
-+device's microcode use any of the following APIs:
-+
-+  * request_firmware()
-+  * request_firmware_direct()
-+  * request_firmware_nowait()
-+
-+The kernel firmware signing facility enables to cryptographically sign
-+firmware files on a system using the same keys used for module signing.
-+Firmware files's signatures consist of PKCS#7 messages of the respective
-+firmware file. A firmware file named foo.bin, would have its respective
-+signature on the filesystem as foo.bin.p7s. When firmware signature
-+checking is enabled (FIRMWARE_SIG) and when one of the above APIs is used
-+against foo.bin, the file foo.bin.p7s will also be looked for. If
-+FIRMWARE_SIG_FORCE is enabled the foo.bin file will only be allowed to
-+be returned to callers of the above APIs if and only if the foo.bin.p7s
-+file is confirmed to be a valid signature of the foo.bin file. If
-+FIRMWARE_SIG_FORCE is not enabled and only FIRMWARE_SIG is enabled the
-+kernel will be permissive and enabled unsigned firmware files, or firmware
-+files with incorrect signatures. If FIRMWARE_SIG is not enabled the
-+signature file is ignored completely.
-+
-+Firmware signing increases security by making it harder to load a malicious
-+firmware into the kernel.  The firmware signature checking is done by the
-+kernel so that it is not necessary to have trusted userspace bits.
-+
-+============================
-+CONFIGURING FIRMWARE SIGNING
-+============================
-+
-+The firmware signing facility is enabled by going to the section:
-+
-+-> Device Drivers
-+  -> Generic Driver Options
-+    -> Userspace firmware loading support (FW_LOADER [=y])
-+      -> Firmware signature verification (FIRMWARE_SIG [=y])
-+
-+If you want to not allow unsigned firmware to be loaded you should
-+enable:
-+
-+"Require all firmware to be validly signed" (FIRMWARE_SIG_FORCE [=y]),
-+under the same menu.
-+
-+==================
-+USING SIGNING KEYS
-+==================
-+
-+The same key types used for module signing can be used for firmware
-+signing. For details on that refer to Documentation/module-signing.txt.
-+
-+You will need:
-+
-+  A) A DER-encoded X.509 certificate containing the public key.
-+  B) A DER-encoded PKCS#7 message containing the signatures, these are
-+     the .p7s files.
-+  C) A binary blob that is the detached data for the PKCS#7 message, this
-+     is the firmware files
-+
-+A) is must be made available to the kernel. One way to do this is to provide a
-+DER-encoded in the source directory as <name>.x509 when you build the kernel.
-+
-+======================
-+SIGNING FIRMWARE FILES
-+======================
-+
-+To generate a DER-encoded PKCS#7 signature message for each firmware file
-+you can use openssl as follows:
-+
-+	openssl smime -sign -in $FIRMWARE_BLOB_NAME \
-+		-outform DER \
-+		-inkey $PRIVATE_KEY_FILE_IN_PEM_FORM \
-+		-signer $X509_CERT_FILE_IN_PEM_FORM \
-+		-nocerts -md $DIGEST_ALGORITHM -binary > \
-+		$(FIRMWARE_BLOB_NAME).p7s
-diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
-index 98504ec..fa076ea 100644
---- a/drivers/base/Kconfig
-+++ b/drivers/base/Kconfig
-@@ -85,6 +85,24 @@ config FW_LOADER
- 	  require userspace firmware loading support, but a module built
- 	  out-of-tree does.
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c404390..cf386bc 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -419,8 +419,12 @@ enum P2P_MODES {
+ #define HS_CFG_COND_MAC_EVENT		0x00000004
+ #define HS_CFG_COND_MULTICAST_DATA	0x00000008
  
-+config FIRMWARE_SIG
-+	bool "Firmware signature verification"
-+	depends on FW_LOADER
-+	select SYSDATA_SIG
-+	help
-+	  Check firmware files for valid signatures upon load: if the firmware
-+	  was called foo.bin, a respective foo.bin.p7s is expected to be
-+	  present as the signature. For more information see
-+	  Documentation/firmware_class/signing.txt
+-#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+-#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
++#define CONNECT_ERR_AUTH_ERR_STA_FAILURE	0xFFFB
++#define CONNECT_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
++#define CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
++#define CONNECT_ERR_AUTH_MSG_UNHANDLED		0xFFFE
++#define CONNECT_ERR_STA_FAILURE			0xFFFF
 +
-+config FIRMWARE_SIG_FORCE
-+	bool "Require all firmware to be validly signed"
-+	depends on FIRMWARE_SIG
-+	help
-+	  Reject unsigned files or signed files for which we don't have a
-+	  key.  Without this, you'll only get a record on the kernel ring
-+	  buffer of firmware files loaded without a signature.
-+
- config FIRMWARE_IN_KERNEL
- 	bool "Include in-kernel firmware blobs in kernel binary"
- 	depends on FW_LOADER
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 134dd77..97cab65 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -29,6 +29,7 @@
- #include <linux/syscore_ops.h>
- #include <linux/reboot.h>
- #include <linux/security.h>
-+#include <keys/system_keyring.h>
  
- #include <generated/utsrelease.h>
- 
-@@ -38,6 +39,11 @@ MODULE_AUTHOR("Manuel Estrada Sainz");
- MODULE_DESCRIPTION("Multi purpose firmware loading support");
- MODULE_LICENSE("GPL");
- 
-+static bool fw_sig_enforce = IS_ENABLED(CONFIG_FIRMWARE_SIG_FORCE);
-+#ifndef CONFIG_FIRMWARE_SIG_FORCE
-+module_param(fw_sig_enforce, bool_enable_only, 0644);
-+#endif /* !CONFIG_FIRMWARE_SIG_FORCE */
-+
- /* Builtin firmware support */
- 
- #ifdef CONFIG_FW_LOADER
-@@ -142,6 +148,9 @@ struct firmware_buf {
- 	unsigned long status;
- 	void *data;
- 	size_t size;
-+	void *data_sig;
-+	size_t size_sig;
-+	bool sig_ok;
- #ifdef CONFIG_FW_LOADER_USER_HELPER
- 	bool is_paged_buf;
- 	bool need_uevent;
-@@ -151,6 +160,7 @@ struct firmware_buf {
- 	struct list_head pending_list;
- #endif
- 	const char *fw_id;
-+	const char *fw_sig;
+ #define CMD_F_HOSTCMD           (1 << 0)
+ #define CMD_F_CANCELED          (1 << 1)
+@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
+ 	DOT11H_I = 10,
  };
  
- struct fw_cache_entry {
-@@ -180,17 +190,33 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
- 					      struct firmware_cache *fwc)
- {
- 	struct firmware_buf *buf;
-+	const char *sign_ext = ".p7s";
-+	char *signed_name;
++enum mwifiex_assocmd_failurepoint {
++	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
++	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
++	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
++	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
++};
 +
-+	signed_name = kzalloc(PATH_MAX, GFP_ATOMIC);
-+	if (!signed_name)
-+		return NULL;
+ #define MAX_SNMP_BUF_SIZE   128
  
- 	buf = kzalloc(sizeof(*buf), GFP_ATOMIC);
--	if (!buf)
-+	if (!buf) {
-+		kfree(signed_name);
- 		return NULL;
-+	}
- 
- 	buf->fw_id = kstrdup_const(fw_name, GFP_ATOMIC);
- 	if (!buf->fw_id) {
-+		kfree(signed_name);
- 		kfree(buf);
- 		return NULL;
- 	}
- 
-+	strcpy(signed_name, buf->fw_id);
-+	strncat(signed_name, sign_ext, strlen(sign_ext));
-+	buf->fw_sig = kstrdup_const(signed_name, GFP_ATOMIC);
-+	if (!buf->fw_sig)
-+		goto out;
-+
-+
- 	kref_init(&buf->ref);
- 	buf->fwc = fwc;
- 	init_completion(&buf->completion);
-@@ -201,6 +227,11 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
- 	pr_debug("%s: fw-%s buf=%p\n", __func__, fw_name, buf);
- 
- 	return buf;
-+out:
-+	kfree(signed_name);
-+	kfree_const(buf->fw_id);
-+	kfree(buf);
-+	return NULL;
- }
- 
- static struct firmware_buf *__fw_lookup_buf(const char *fw_name)
-@@ -262,6 +293,7 @@ static void __fw_free_buf(struct kref *ref)
- #endif
- 		vfree(buf->data);
- 	kfree_const(buf->fw_id);
-+	kfree_const(buf->fw_sig);
- 	kfree(buf);
- }
- 
-@@ -325,7 +357,84 @@ fail:
- 	return rc;
- }
- 
-+#ifdef CONFIG_FIRMWARE_SIG_FORCE
-+static struct file *get_filesystem_file_sig(const char *sig_name)
-+{
-+	return filp_open(sig_name, O_RDONLY, 0);
-+}
-+
-+static bool get_filesystem_file_sig_ok(struct file *file_sig)
-+{
-+	if (IS_ERR(file_sig))
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int read_file_signature_contents(struct file *file_sig,
-+					struct firmware_buf *fw_buf)
-+{
-+	int rc;
-+
-+	rc = __read_file_contents(file_sig,
-+				  &fw_buf->data_sig,
-+				  &fw_buf->size_sig);
-+	if (rc)
-+		return rc;
-+
-+	return 0;
-+}
-+
-+#elif CONFIG_FIRMWARE_SIG
-+static struct file *get_filesystem_file_sig(const char *sig_name)
-+{
-+	struct file *file;
-+
-+	file = filp_open(sig_name, O_RDONLY, 0);
-+	if (IS_ERR(file))
-+		pr_info("singature %s not present, but this is OK\n", sig_name);
-+
-+	return file;
-+}
-+
-+static bool get_filesystem_file_sig_ok(struct file *file_sig)
-+{
-+	return 0;
-+}
-+
-+static int read_file_signature_contents(struct file *file_sig,
-+					struct firmware_buf *fw_buf)
-+{
-+	int rc;
-+
-+	rc = __read_file_contents(file,
-+				  &fw_buf->data_sig,
-+				  &fw_buf->size_sig);
-+	if (rc)
-+		pr_info("could not read signature %s, but this is OK\n",
-+			fw_buf->fw_sig);
-+
-+	return 0;
-+}
-+#else
-+static struct file *get_filesystem_file_sig(const char *sig_name)
-+{
-+	return NULL;
-+}
-+
-+static bool get_filesystem_file_sig_ok(struct file *file_sig)
-+{
-+	return 0;
-+}
-+
-+static int read_file_signature_contents(struct file *file_sig,
-+					struct firmware_buf *fw_buf)
-+{
-+	return 0;
-+}
-+#endif
-+
- static int fw_read_file_contents(struct file *file,
-+				 struct file *file_sig,
- 				 struct firmware_buf *fw_buf)
- {
- 	int rc;
-@@ -336,6 +445,10 @@ static int fw_read_file_contents(struct file *file,
- 	if (rc)
- 		return rc;
- 
-+	rc = read_file_signature_contents(file_sig, fw_buf);
-+	if (rc)
-+		return rc;
-+
+ struct host_cmd_ds_802_11_snmp_mib {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6208ef1..e233b04 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
  	return 0;
  }
  
-@@ -343,15 +456,20 @@ static int fw_get_filesystem_firmware(struct device *device,
- 				       struct firmware_buf *buf)
- {
- 	int i, len;
--	int rc = -ENOENT;
--	char *path;
-+	int rc = -ENOMEM;
-+	char *path, *path_sig = NULL;
- 
- 	path = __getname();
- 	if (!path)
- 		return -ENOMEM;
- 
-+	path_sig = __getname();
-+	if (!path_sig)
-+		goto out;
++static const char *assoc_failure_reason_to_str(u16 cap_info)
++{
++	switch (cap_info) {
++	case CONNECT_ERR_AUTH_ERR_STA_FAILURE:
++		return "CONNECT_ERR_AUTH_ERR_STA_FAILURE";
++	case CONNECT_ERR_AUTH_MSG_UNHANDLED:
++		return "CONNECT_ERR_AUTH_MSG_UNHANDLED";
++	case CONNECT_ERR_ASSOC_ERR_TIMEOUT:
++		return "CONNECT_ERR_ASSOC_ERR_TIMEOUT";
++	case CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED:
++		return "CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED";
++	case CONNECT_ERR_STA_FAILURE:
++		return "CONNECT_ERR_STA_FAILURE";
++	}
 +
- 	for (i = 0; i < ARRAY_SIZE(fw_path); i++) {
- 		struct file *file;
-+		struct file *file_sig;
++	return "Unknown connect failure";
++}
+ /*
+  * Association firmware command response handler
+  *
+@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 			    status_code, cap_info,
+ 			    le16_to_cpu(assoc_rsp->a_id));
  
- 		/* skip the unset customized path */
- 		if (!fw_path[i][0])
-@@ -364,18 +482,43 @@ static int fw_get_filesystem_firmware(struct device *device,
- 			break;
+-		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
+-			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
++		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
++			    assoc_failure_reason_to_str(cap_info));
++		if (cap_info == CONNECT_ERR_ASSOC_ERR_TIMEOUT) {
++			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
+ 				ret = WLAN_STATUS_AUTH_TIMEOUT;
+-			else
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: AUTH timeout\n");
++			} else {
+ 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: UNSPECIFIED failure\n");
++			}
+ 		} else {
+ 			ret = status_code;
  		}
- 
-+		len = snprintf(path_sig, PATH_MAX, "%s/%s",
-+			       fw_path[i], buf->fw_sig);
-+		if (len >= PATH_MAX) {
-+			rc = -ENAMETOOLONG;
-+			break;
-+		}
-+
- 		file = filp_open(path, O_RDONLY, 0);
--		if (IS_ERR(file))
-+		if (IS_ERR(file)) {
-+			rc = -ENOENT;
- 			continue;
--		rc = fw_read_file_contents(file, buf);
-+		}
-+
-+		file_sig = get_filesystem_file_sig(path_sig);
-+		rc = get_filesystem_file_sig_ok(file_sig);
-+		if (rc) {
-+			fput(file);
-+			if (!IS_ERR(file_sig))
-+				fput(file_sig);
-+			continue;
-+		}
-+
-+		rc = fw_read_file_contents(file, file_sig, buf);
-+
- 		fput(file);
-+		if (!IS_ERR(file_sig))
-+			fput(file_sig);
-+
- 		if (rc)
- 			dev_warn(device, "firmware, attempted to load %s, but failed with error %d\n",
- 				path, rc);
- 		else
- 			break;
- 	}
-+out:
- 	__putname(path);
-+	__putname(path_sig);
- 
- 	if (!rc) {
- 		dev_dbg(device, "firmware: direct-loading firmware %s\n",
-@@ -410,11 +553,42 @@ static void fw_set_page_data(struct firmware_buf *buf, struct firmware *fw)
- 	fw->size = buf->size;
- 	fw->data = buf->data;
- 
--	pr_debug("%s: fw-%s buf=%p data=%p size=%u\n",
-+	pr_debug("%s: fw-%s buf=%p data=%p size=%u sig_ok=%d\n",
- 		 __func__, buf->fw_id, buf, buf->data,
--		 (unsigned int)buf->size);
-+		 (unsigned int)buf->size, buf->sig_ok);
- }
- 
-+#ifdef CONFIG_FIRMWARE_SIG
-+static int firmware_sig_check(struct firmware *fw, const char *name)
-+{
-+	int err = -ENOKEY;
-+	struct firmware_buf *buf = fw->priv;
-+	const void *data = buf->data;
-+	const void *data_sig = buf->data_sig;
-+
-+	err = system_verify_data(data, buf->size, data_sig, buf->size_sig);
-+	if (!err) {
-+		buf->sig_ok = true;
-+		fw_set_page_data(buf, fw);
-+		return 0;
-+	}
-+
-+	/* Not having a signature is only an error if we're strict. */
-+	if (err == -ENOKEY && !fw_sig_enforce)
-+		err = 0;
-+
-+	fw_set_page_data(buf, fw);
-+
-+	return err;
-+}
-+#else /* !CONFIG_FIRMWARE_SIG */
-+static int firmware_sig_check(struct firmware *fw, const char *name)
-+{
-+	return 0;
-+}
-+#endif /* !CONFIG_MODULE_SIG */
-+
-+
- #ifdef CONFIG_PM_SLEEP
- static void fw_name_devm_release(struct device *dev, void *res)
- {
-@@ -1120,6 +1294,22 @@ static int assign_firmware_buf(struct firmware *fw, struct device *device,
- 	return 0;
- }
- 
-+#ifdef CONFIG_FIRMWARE_SIG
-+static void fw_check_sig_ok(const struct firmware *fw, const char *name)
-+{
-+	struct firmware_buf *buf = fw->priv;
-+
-+	if (!buf->sig_ok)
-+		pr_notice_once("%s: firmware verification failed: signature "
-+				       "and/or required key missing\n", name);
-+}
-+#else
-+static void fw_check_sig_ok(const struct firmware *fw, const char *name)
-+{
-+	return;
-+}
-+#endif
-+
- /* called from request_firmware() and request_firmware_work_func() */
- static int
- _request_firmware(const struct firmware **firmware_p, const char *name,
-@@ -1177,6 +1367,15 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
- 	usermodehelper_read_unlock();
- 
-  out:
-+	if (ret >= 0) {
-+		ret = firmware_sig_check(fw, name);
-+		if (ret)
-+			goto out_bad_sig;
-+		fw_check_sig_ok(fw, name);
-+	}
-+
-+ out_bad_sig:
-+
- 	if (ret < 0) {
- 		release_firmware(fw);
- 		fw = NULL;
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.8.1.4
 
