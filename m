@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43247 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37784 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751750AbbEUIbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 04:31:03 -0400
-Message-ID: <1432197058.2343.7.camel@sipsolutions.net> (sfid-20150521_103108_304915_750836E9)
-Subject: Re: [PATCH v2 2/2] mac80211: prevent possible crypto tx tailroom
+	id S1752034AbbE2LFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2015 07:05:09 -0400
+Message-ID: <1432897506.2104.3.camel@sipsolutions.net> (sfid-20150529_130532_646826_AB2554A9)
+Subject: Re: [PATCH v3] mac80211: prevent possible crypto tx tailroom
  corruption
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 21 May 2015 10:30:58 +0200
-In-Reply-To: <CA+BoTQkpjDodKNdSvj2ZdKemXU_2E39MVGZPob8+jkjBGESEfg@mail.gmail.com> (sfid-20150521_101657_739944_260917A1)
-References: <1431349503-5461-1-git-send-email-michal.kazior@tieto.com>
-	 <1431508609-9841-1-git-send-email-michal.kazior@tieto.com>
-	 <1431508609-9841-2-git-send-email-michal.kazior@tieto.com>
-	 <1432127653.19214.12.camel@sipsolutions.net>
-	 <CA+BoTQkpjDodKNdSvj2ZdKemXU_2E39MVGZPob8+jkjBGESEfg@mail.gmail.com>
-	 (sfid-20150521_101657_739944_260917A1)
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 29 May 2015 13:05:06 +0200
+In-Reply-To: <1432282960-4980-1-git-send-email-michal.kazior@tieto.com> (sfid-20150522_102253_713902_7F0F9AAA)
+References: <1431508609-9841-2-git-send-email-michal.kazior@tieto.com>
+	 <1432282960-4980-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150522_102253_713902_7F0F9AAA)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-05-21 at 10:16 +0200, Michal Kazior wrote:
-
-> >>       rtnl_lock();
-> >> +     list_for_each_entry(sdata, &local->interfaces, list)
-> >> +             cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
-> >
-> > Would it make sense to just flush the work here? That way we don't have
-> > to do all the other things.
+On Fri, 2015-05-22 at 10:22 +0200, Michal Kazior wrote:
+> There was a possible race between
+> ieee80211_reconfig() and
+> ieee80211_delayed_tailroom_dec(). This could
+> result in inability to transmit data if driver
+> crashed during roaming or rekeying and subsequent
+> skbs with insufficient tailroom appeared.
 > 
-> Hmm.. dec_tailroom_needed_wk is queued on system workqueue now so
-> there's no feasible way of flushing it (restart_work is on a system
-> workqueue as well). It'd need to be moved to local->workqueue. I guess
-> that would work too.
+> This race was probably never seen in the wild
+> because a device driver would have to crash AND
+> recover within 0.5s which is very unlikely.
+> 
+> I was able to prove this race exists after
+> changing the delay to 10s locally and crashing
+> ath10k via debugfs immediately after GTK
+> rekeying. In case of ath10k the counter went below
+> 0. This was harmless but other drivers which
+> actually require tailroom (e.g. for WEP ICV or
+> MMIC) could end up with the counter at 0 instead
+> of >0 and introduce insufficient skb tailroom
+> failures because mac80211 would not resize skbs
+> appropriately anymore.
+> 
+> Fixes: 8d1f7ecd2af5 ("mac80211: defer tailroom counter manipulation when roaming")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-flush_work()?
+Applied.
 
 johannes
 
