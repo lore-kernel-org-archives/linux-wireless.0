@@ -1,23 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55786 "EHLO
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30797 "EHLO
 	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755855AbbE2L2k (ORCPT
+	by vger.kernel.org with ESMTP id S1755769AbbE2L2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 May 2015 07:28:40 -0400
+	Fri, 29 May 2015 07:28:08 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBQVTB009531
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:40 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5unc5-1
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBPBBc008386
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:07 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5unaq-1
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:40 -0700
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:07 -0700
 From: Avinash Patil <patila@marvell.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
 	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv3 10/16] mwifiex: dump station support in uap mode
-Date: Fri, 29 May 2015 22:26:31 +0530
-Message-ID: <1432918598-27769-11-git-send-email-patila@marvell.com> (sfid-20150529_133350_542325_E2CC7D02)
+Subject: [PATCHv3 07/16] mwifiex: add cfg80211 get_channel handler
+Date: Fri, 29 May 2015 22:26:28 +0530
+Message-ID: <1432918598-27769-8-git-send-email-patila@marvell.com> (sfid-20150529_132811_908575_090D6815)
 In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
 References: <1432918598-27769-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
@@ -27,102 +27,173 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Xinming Hu <huxm@marvell.com>
 
-This patch extend cfg80211 dump_station handler, support for
-dump stations associated to mwifiex micro AP.
+This patch add cfg80211 get_channel handler for mwifiex.
+The handler will be used to report current channel to upper
+layer utility.
 
 Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
 Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 51 +++++++++++++++++++++++++++++----
- 1 file changed, 46 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/11h.c      |  2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c | 58 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/mwifiex/main.h     |  5 ++-
+ drivers/net/wireless/mwifiex/uap_cmd.c  |  5 ++-
+ 4 files changed, 66 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
+index bb2ffd9..71a1b58 100644
+--- a/drivers/net/wireless/mwifiex/11h.c
++++ b/drivers/net/wireless/mwifiex/11h.c
+@@ -305,7 +305,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	mwifiex_uap_set_channel(bss_cfg, priv->dfs_chandef);
++	mwifiex_uap_set_channel(priv, bss_cfg, priv->dfs_chandef);
+ 
+ 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
+ 		mwifiex_dbg(priv->adapter, ERROR,
 diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index ddeb919..16528c1 100644
+index fb93e13..ddeb919 100644
 --- a/drivers/net/wireless/mwifiex/cfg80211.c
 +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1229,6 +1229,7 @@ mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 tx_htinfo,
-  */
- static int
- mwifiex_dump_station_info(struct mwifiex_private *priv,
-+			  struct mwifiex_sta_node *node,
- 			  struct station_info *sinfo)
- {
- 	u32 rate;
-@@ -1238,6 +1239,30 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
- 			BIT(NL80211_STA_INFO_TX_BITRATE) |
- 			BIT(NL80211_STA_INFO_SIGNAL) | BIT(NL80211_STA_INFO_SIGNAL_AVG);
- 
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
-+		if (!node)
-+			return -ENOENT;
-+
-+		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
-+				BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->inactive_time =
-+			jiffies_to_msecs(jiffies - node->stats.last_rx);
-+
-+		sinfo->signal = node->stats.rssi;
-+		sinfo->signal_avg = node->stats.rssi;
-+		sinfo->rx_bytes = node->stats.rx_bytes;
-+		sinfo->tx_bytes = node->stats.tx_bytes;
-+		sinfo->rx_packets = node->stats.rx_packets;
-+		sinfo->tx_packets = node->stats.tx_packets;
-+		sinfo->tx_failed = node->stats.tx_failed;
-+
-+		mwifiex_parse_htinfo(priv, node->stats.last_tx_htinfo,
-+				     &sinfo->txrate);
-+		sinfo->txrate.legacy = node->stats.last_tx_rate * 5;
-+
-+		return 0;
-+	}
-+
- 	/* Get signal information from the firmware */
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_RSSI_INFO,
- 			     HostCmd_ACT_GEN_GET, 0, NULL, true)) {
-@@ -1304,7 +1329,7 @@ mwifiex_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (memcmp(mac, priv->cfg_bssid, ETH_ALEN))
- 		return -ENOENT;
- 
--	return mwifiex_dump_station_info(priv, sinfo);
-+	return mwifiex_dump_station_info(priv, NULL, sinfo);
+@@ -67,6 +67,22 @@ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type)
+ 	}
  }
  
++/* This function maps IEEE HT secondary channel type to NL80211 channel type
++ */
++u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset)
++{
++	switch (second_chan_offset) {
++	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
++		return NL80211_CHAN_HT20;
++	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++		return NL80211_CHAN_HT40PLUS;
++	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++		return NL80211_CHAN_HT40MINUS;
++	default:
++		return NL80211_CHAN_HT20;
++	}
++}
++
  /*
-@@ -1315,13 +1340,29 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 			      int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	static struct mwifiex_sta_node *node;
+  * This function checks whether WEP is set.
+  */
+@@ -1785,7 +1801,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
  
--	if (!priv->media_connected || idx)
--		return -ENOENT;
-+	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
-+	    priv->media_connected && idx == 0) {
-+		ether_addr_copy(mac, priv->cfg_bssid);
-+		return mwifiex_dump_station_info(priv, NULL, sinfo);
-+	} else if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
-+		mwifiex_send_cmd(priv, HOSTCMD_CMD_UAP_STA_LIST,
-+				 HostCmd_ACT_GEN_GET, 0, NULL, true);
-+
-+		if (node && (&node->list == &priv->sta_list)) {
-+			node = NULL;
-+			return -ENOENT;
-+		}
+-	mwifiex_uap_set_channel(bss_cfg, params->chandef);
++	mwifiex_uap_set_channel(priv, bss_cfg, params->chandef);
+ 	mwifiex_set_uap_rates(bss_cfg, params);
  
--	memcpy(mac, priv->cfg_bssid, ETH_ALEN);
-+		node = list_prepare_entry(node, &priv->sta_list, list);
-+		list_for_each_entry_continue(node, &priv->sta_list, list) {
-+			ether_addr_copy(mac, node->mac_addr);
-+			return mwifiex_dump_station_info(priv, node, sinfo);
-+		}
-+	}
- 
--	return mwifiex_dump_station_info(priv, sinfo);
-+	return -ENOENT;
+ 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
+@@ -3373,6 +3389,45 @@ mwifiex_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
  }
  
++static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
++					struct wireless_dev *wdev,
++					struct cfg80211_chan_def *chandef)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
++	struct mwifiex_bssdescriptor *curr_bss;
++	struct ieee80211_channel *chan;
++	u8 second_chan_offset;
++	enum nl80211_channel_type chan_type;
++	enum ieee80211_band band;
++	int freq;
++	int ret = -ENODATA;
++
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP &&
++	    cfg80211_chandef_valid(&priv->bss_chandef)) {
++		*chandef = priv->bss_chandef;
++		ret = 0;
++	} else if (priv->media_connected) {
++		curr_bss = &priv->curr_bss_params.bss_descriptor;
++		band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
++		freq = ieee80211_channel_to_frequency(curr_bss->channel, band);
++		chan = ieee80211_get_channel(wiphy, freq);
++
++		if (curr_bss->bcn_ht_oper) {
++			second_chan_offset = curr_bss->bcn_ht_oper->ht_param &
++					IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
++			chan_type = mwifiex_sec_chan_offset_to_chan_type
++							(second_chan_offset);
++			cfg80211_chandef_create(chandef, chan, chan_type);
++		} else {
++			cfg80211_chandef_create(chandef, chan,
++						NL80211_CHAN_NO_HT);
++		}
++		ret = 0;
++	}
++
++	return ret;
++}
++
  static int
+ mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+@@ -3478,6 +3533,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.tdls_oper = mwifiex_cfg80211_tdls_oper,
+ 	.add_station = mwifiex_cfg80211_add_station,
+ 	.change_station = mwifiex_cfg80211_change_station,
++	.get_channel = mwifiex_cfg80211_get_channel,
+ 	.start_radar_detection = mwifiex_cfg80211_start_radar_detection,
+ 	.channel_switch = mwifiex_cfg80211_channel_switch,
+ };
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 3ac18c6..88d3779 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -642,6 +642,7 @@ struct mwifiex_private {
+ 	u8 del_list_idx;
+ 	bool hs2_enabled;
+ 	struct mwifiex_uap_bss_param bss_cfg;
++	struct cfg80211_chan_def bss_chandef;
+ 	struct station_parameters *sta_params;
+ 	struct sk_buff_head tdls_txq;
+ 	u8 check_tdls_tx;
+@@ -1382,6 +1383,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
+ 					struct mwifiex_bssdescriptor *bss_desc);
+ 
+ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type);
++u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset);
+ 
+ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 					      const char *name,
+@@ -1399,7 +1401,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+ 			 struct cfg80211_beacon_data *data);
+ int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
+ u8 *mwifiex_11d_code_2_region(u8 code);
+-void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
++void mwifiex_uap_set_channel(struct mwifiex_private *priv,
++			     struct mwifiex_uap_bss_param *bss_cfg,
+ 			     struct cfg80211_chan_def chandef);
+ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 			     struct mwifiex_uap_bss_param *bss_cfg);
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 56a4768..68fbdf6 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -776,11 +776,14 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 	return 0;
+ }
+ 
+-void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
++void mwifiex_uap_set_channel(struct mwifiex_private *priv,
++			     struct mwifiex_uap_bss_param *bss_cfg,
+ 			     struct cfg80211_chan_def chandef)
+ {
+ 	u8 config_bands = 0;
+ 
++	priv->bss_chandef = chandef;
++
+ 	bss_cfg->channel = ieee80211_frequency_to_channel(
+ 						     chandef.chan->center_freq);
+ 
 -- 
 1.8.1.4
 
