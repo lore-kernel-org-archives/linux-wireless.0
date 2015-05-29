@@ -1,256 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34037 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933203AbbELSl5 (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:50445 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755363AbbE2Nrz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 14:41:57 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: ming.lei@canonical.com, rusty@rustcorp.com.au
-Cc: dhowells@redhat.com, seth.forshee@canonical.com,
-	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-	pebolle@tiscali.nl, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Subject: [PATCH v2 4/5] firmware: fix possible use after free on name on asynchronous request
-Date: Tue, 12 May 2015 11:30:56 -0700
-Message-Id: <1431455457-25322-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20150512_204218_449990_DC31C2E0)
-In-Reply-To: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 29 May 2015 09:47:55 -0400
+Message-ID: <1432907257.6319.50.camel@decadent.org.uk> (sfid-20150529_154758_274328_DC3BD71A)
+Subject: Re: debian: crda package depends on iw?
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 29 May 2015 14:47:37 +0100
+In-Reply-To: <1432905874.11687.4.camel@coelho.fi>
+References: <1432905874.11687.4.camel@coelho.fi>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-44cvFbfrrOUS7Eo+Zx7n"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Asynchronous firmware loading copies the pointer to the
-name passed as an argument only to be scheduled later and
-used. This behaviour works well for synchronous calling
-but in asynchronous mode there's a chance the caller could
-immediately free the passed string after making the
-asynchronous call. This could trigger a use after free
-having the kernel look on disk for arbitrary file names.
+--=-44cvFbfrrOUS7Eo+Zx7n
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-In order to force-test the issue you can use a test-driver
-designed to illustrate this issue on github [0], use the
-next-20150505-fix-use-after-free branch.
+On Fri, 2015-05-29 at 16:24 +0300, Luca Coelho wrote:
+> Hi Ben,
+>=20
+> I just noticed that the crda package depends on the iw package in Debian
+> (I'm using jessie):
+>=20
+> luca@weizen:~$ apt-cache show crda
+> Package: crda
+> Version: 3.13-1
+> Installed-Size: 293
+> Maintainer: Ben Hutchings <ben@decadent.org.uk>
+> Architecture: amd64
+> Depends: libc6 (>=3D 2.7), libnl-3-200 (>=3D 3.2.7), libnl-genl-3-200 (>=
+=3D 3.2.7), libssl1.0.0 (>=3D 1.0.0), wireless-regdb, iw (>=3D 3.2-1~)
+> Description-en: wireless Central Regulatory Domain Agent
+>  This package provides a Central Regulatory Domain Agent (CRDA) to be use=
+d by
+>  the Linux kernel cfg80211 wireless subsystem to query and apply the regu=
+latory
+>  domain settings wireless devices may operate within for a given location=
+.
+>  .
+>  CRDA queries operational frequency regulations stored within the regulat=
+ory
+>  database provided by the wireless-regdb package.
+> Description-md5: bacfc9c20ed2cf2120d3c95c8e749666
+> Multi-Arch: foreign
+> Homepage: http://wireless.kernel.org/en/developers/Regulatory/CRDA
+> Tag: role::program
+> Section: net
+> Priority: optional
+> Filename: pool/main/c/crda/crda_3.13-1_amd64.deb
+> Size: 59958
+> MD5sum: 6eacfbb62c7647ee3bba653ee5adfe70
+> SHA1: 0f02aebc61f68b87189c867369dbd5df74f4e5ca
+> SHA256: 52d114e826944a492d68b3e4e77aed0feeee9c28f6a7c3d5c587027eb283f2cc
+>=20
+> Is there a specific reason for this or is it just accidental?
 
-With this patch applied you get:
+setregdomain is a script that runs iw.
 
-[  283.512445] firmware name: test_module_stuff.bin
-[  287.514020] firmware name: test_module_stuff.bin
-[  287.532489] firmware found
+Ben.
 
-Without this patch applied you can end up with something such as:
+--=20
+Ben Hutchings
+Make three consecutive correct guesses and you will be considered an expert=
+.
 
-[  135.624216] firmware name: \xffffff80BJ
-[  135.624249] platform fake-dev.0: Direct firmware load for \xffffff80Bi failed with error -2
-[  135.624252] No firmware found
-[  135.624252] firmware found
+--=-44cvFbfrrOUS7Eo+Zx7n
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Unfortunatley in the worst and most common case however you
-can typically crash your system with a page fault by trying to
-free something which you cannot, and/or a NULL pointer
-dereference [1].
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-The fix and issue using schedule_work() for asynchronous
-runs is generalized in the following SmPL grammar patch,
-when applied to next-20150505 only the firmware_class
-code is affected. This grammar patch can and should further
-be generalized to vet for for other kernel asynchronous
-mechanisms.
+iQIVAwUAVWhuAue/yOyVhhEJAQrjlA//VnRmLAahdP8tYBUjpKv8vqJCjKywumqx
+Bn50CdHZGWhHfcVPtT5rLJG3ph6ZPXoTlZwph7524naF2XfN3CRbVVWkoV+YY/+1
+DLSrZiEPBI/XKBisosGBTrtWGsHGFxLwWE4DwY3naZc8Y3e+zFyDF0vqacUBGyVO
+LLD4Ot6FHGwkQULksVOOt2L7sxuVjkfC1XoS68sAeGzRpO8lKV/QzKflrX6Zesjn
+R6poKLt6Utt++Pmj9mPRkMOERzLuUl13+SbJP81HN/mz99e2c8iJAN0dgg06we+c
+A/p+g0tWFPWU3URLjEi9N3boZjEbUWwgd8mtZgmMQp1LbwMEtTJ8vVCW0Vy6TipA
+otmlH4HVWpyTiVVN0WEQgcPgdCeiPbkoVpk11Krc15VfDr5Tuz/KpQ5u0u+a/2+L
+eNjMoJrc2Dz26iPWPS+SJgy3o8sEVOE/vEpohJcnDi75KcgmbbcYMVEyt8pHmu2Y
+9fKq82RoXdV1Tb1XiNwDqGWmjjQdSIFnJ1bDG9gLiSM/jmARYdVoGMn8/4c2Jfsb
+ZT9qH/7dVEtr/UG/F4Es74PZZMqGPRb8RcJlM/YAp6WZ0GxNcNPST09K9iESw85Z
+rjGzXn6tghNY/ZeafZfuUYu4XnMCdvevZSNCapO8QP+YDP6nRNZt7XcHFfc/pa00
+8VPTFkJD7pc=
+=NUo5
+-----END PGP SIGNATURE-----
 
-@ calls_schedule_work @
-type T;
-T *priv_work;
-identifier func, work_func;
-identifier work;
-identifier priv_name, name;
-expression gfp;
-@@
-
- func(..., const char *name, ...)
- {
- 	...
- 	priv_work = kzalloc(sizeof(T), gfp);
- 	...
--	priv_work->priv_name = name;
-+	priv_work->priv_name = kstrdup_const(name, gfp);
-	...
-(... when any
- 	if (...)
- 	{
- 		...
-+ 		kfree_const(priv_work->priv_name);
- 		kfree(priv_work);
-		...
- 	}
-) ... when any
- 	INIT_WORK(&priv_work->work, work_func);
- 	...
- 	schedule_work(&priv_work->work);
- 	...
- }
-
-@ the_work_func depends on calls_schedule_work @
-type calls_schedule_work.T;
-T *priv_work;
-identifier calls_schedule_work.work_func;
-identifier calls_schedule_work.priv_name;
-identifier calls_schedule_work.work;
-identifier some_work;
-@@
-
- work_func(...)
- {
- 	...
- 	priv_work = container_of(some_work, T, work);
- 	...
-+	kfree_const(priv_work->priv_name);
- 	kfree(priv_work);
- 	...
- }
-
-[0] https://github.com/mcgrof/fake-firmware-test.git
-[1] The following kernel ring buffer splat:
-
-firmware name: test_module_stuff.bin
-firmware name:
-firmware found
-general protection fault: 0000 [#1] SMP
-Modules linked in: test(O) <...etc-it-does-not-matter>
- drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
-CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G           O    4.0.0-00010-g22b5bb0-dirty #176
-Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
-Workqueue: events request_firmware_work_func
-task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
-RIP: 0010:[<ffffffff814a586c>]  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
-RSP: 0000:ffff8800c7f97d78  EFLAGS: 00010286
-RAX: ffffffff81ae3700 RBX: ffffffff816d1181 RCX: 0000000000000006
-RDX: 0001ee850ff68500 RSI: 0000000000000246 RDI: c35d5f415e415d41
-RBP: ffff8800c7f97d88 R08: 000000000000000a R09: 0000000000000000
-R10: 0000000000000358 R11: ffff8800c7f97a7e R12: ffff8800c7ec1e80
-R13: ffff88021e2d4cc0 R14: ffff88021e2dff00 R15: 00000000000000c0
-FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000034b8cd8 CR3: 000000021073c000 CR4: 00000000001407e0
-Stack:
- ffffffff816d1181 ffff8800c7ec1e80 ffff8800c7f97da8 ffffffff814a58f8
- 000000000000000a ffffffff816d1181 ffff8800c7f97dc8 ffffffffa047002c
- ffff88021e2dff00 ffff8802116ac1c0 ffff8800c7f97df8 ffffffff814a65fe
-Call Trace:
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff814a58f8>] release_firmware+0x58/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
- [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
- [<ffffffff8108d911>] worker_thread+0x121/0x460
- [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
- [<ffffffff810928f9>] kthread+0xc9/0xe0
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
- [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
-Code: c7 c6 dd ad a3 81 48 c7 c7 20 97 ce 81 31 c0 e8 0b b2 ed ff e9 78 ff ff ff 66 0f 1f 44 00 00 0f 1f 44 00 00 55 48 89 e5 41 54 53 <4c> 8b 67 38 48 89 fb 4c 89 e7 e8 85 f7 22 00 f0 83 2b 01 74 0f
-RIP  [<ffffffff814a586c>] fw_free_buf+0xc/0x40
- RSP <ffff8800c7f97d78>
----[ end trace 4e62c56a58d0eac1 ]---
-BUG: unable to handle kernel paging request at ffffffffffffffd8
-IP: [<ffffffff81093ee0>] kthread_data+0x10/0x20
-PGD 1c13067 PUD 1c15067 PMD 0
-Oops: 0000 [#2] SMP
-Modules linked in: test(O) <...etc-it-does-not-matter>
- drm sr_mod cdrom xhci_pci xhci_hcd rtsx_pci mfd_core video button sg
-CPU: 3 PID: 87 Comm: kworker/3:2 Tainted: G      D    O    4.0.0-00010-g22b5bb0-dirty #176
-Hardware name: LENOVO 20AW000LUS/20AW000LUS, BIOS GLET43WW (1.18 ) 12/04/2013
-task: ffff8800c7f8e290 ti: ffff8800c7f94000 task.ti: ffff8800c7f94000
-RIP: 0010:[<ffffffff81092ee0>]  [<ffffffff81092ee0>] kthread_data+0x10/0x20
-RSP: 0018:ffff8800c7f97b18  EFLAGS: 00010096
-RAX: 0000000000000000 RBX: 0000000000000003 RCX: 000000000000000d
-RDX: 0000000000000003 RSI: 0000000000000003 RDI: ffff8800c7f8e290
-RBP: ffff8800c7f97b18 R08: 000000000000bc00 R09: 0000000000007e76
-R10: 0000000000000001 R11: 000000000000002f R12: ffff8800c7f8e290
-R13: 00000000000154c0 R14: 0000000000000003 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff88021e2c0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000028 CR3: 0000000210675000 CR4: 00000000001407e0
-Stack:
- ffff8800c7f97b38 ffffffff8108dcd5 ffff8800c7f97b38 ffff88021e2d54c0
- ffff8800c7f97b88 ffffffff816d1500 ffff880213d42368 ffff8800c7f8e290
- ffff8800c7f97b88 ffff8800c7f97fd8 ffff8800c7f8e710 0000000000000246
-Call Trace:
- [<ffffffff8108dcd5>] wq_worker_sleeping+0x15/0xa0
- [<ffffffff816d1500>] __schedule+0x6e0/0x940
- [<ffffffff816d1797>] schedule+0x37/0x90
- [<ffffffff810779bc>] do_exit+0x6bc/0xb40
- [<ffffffff8101898f>] oops_end+0x9f/0xe0
- [<ffffffff81018efb>] die+0x4b/0x70
- [<ffffffff81015622>] do_general_protection+0xe2/0x170
- [<ffffffff816d74e8>] general_protection+0x28/0x30
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff814a586c>] ? fw_free_buf+0xc/0x40
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff814a58f8>] release_firmware+0x58/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffffa047002c>] test_mod_cb+0x2c/0x43 [test]
- [<ffffffff814a65fe>] request_firmware_work_func+0x5e/0x80
- [<ffffffff816d1181>] ? __schedule+0x361/0x940
- [<ffffffff8108d23a>] process_one_work+0x14a/0x3f0
- [<ffffffff8108d911>] worker_thread+0x121/0x460
- [<ffffffff8108d7f0>] ? rescuer_thread+0x310/0x310
- [<ffffffff810928f9>] kthread+0xc9/0xe0
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
- [<ffffffff816d52d8>] ret_from_fork+0x58/0x90
- [<ffffffff81092830>] ? kthread_create_on_node+0x180/0x180
-Code: 00 48 89 e5 5d 48 8b 40 c8 48 c1 e8 02 83 e0 01 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 8b 87 30 05 00 00 55 48 89 e5 <48> 8b 40 d8 5d c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
-RIP  [<ffffffff81092ee0>] kthread_data+0x10/0x20
- RSP <ffff8800c7f97b18>
-CR2: ffffffffffffffd8
----[ end trace 4e62c56a58d0eac2 ]---
-Fixing recursive fault but reboot is needed!
-
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Kyle McMartin <kyle@kernel.org>
-Generated-by: Coccinelle SmPL
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- drivers/base/firmware_class.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 448388b..ae1ed56 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -1275,6 +1275,7 @@ static void request_firmware_work_func(struct work_struct *work)
- 	put_device(fw_work->device); /* taken in request_firmware_nowait() */
- 
- 	module_put(fw_work->module);
-+	kfree_const(fw_work->name);
- 	kfree(fw_work);
- }
- 
-@@ -1319,7 +1320,9 @@ request_firmware_nowait(
- 		return -ENOMEM;
- 
- 	fw_work->module = module;
--	fw_work->name = name;
-+	fw_work->name = kstrdup_const(name, gfp);
-+	if (!fw_work->name)
-+		return -ENOMEM;
- 	fw_work->device = device;
- 	fw_work->context = context;
- 	fw_work->cont = cont;
-@@ -1327,6 +1330,7 @@ request_firmware_nowait(
- 		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
- 
- 	if (!try_module_get(module)) {
-+		kfree_const(fw_work->name);
- 		kfree(fw_work);
- 		return -EFAULT;
- 	}
--- 
-2.3.2.209.gd67f9d5.dirty
-
+--=-44cvFbfrrOUS7Eo+Zx7n--
