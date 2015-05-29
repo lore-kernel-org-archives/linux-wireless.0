@@ -1,84 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50810 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029AbbE0OSH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 10:18:07 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v4] ath10k: bypass PLL setting on target init for QCA9888
-Date: Wed, 27 May 2015 17:17:33 +0300
-Message-ID: <1432736253-30040-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20150527_161816_931914_259D4423)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:37870 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752034AbbE2LZR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2015 07:25:17 -0400
+Message-ID: <1432898714.2104.15.camel@sipsolutions.net> (sfid-20150529_132523_581856_6A992446)
+Subject: pull-request: mac80211-next 2015-05-29
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 29 May 2015 13:25:14 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Hi Dave,
 
-Some of of qca988x solutions are having global reset issue
-during target initialization. Bypassing PLL setting before
-downloading firmware and letting the SoC run on REF_CLK is fixing
-the problem. Corresponding firmware change is also needed to set
-the clock source once the target is initialized. Since 10.2.4
-firmware is having this ROM patch, applying skip_clock_init only
-for 10.2.4 firmware versions.
+It's been a while since I sent anything for -next, but with the merge
+window getting closer I wanted to send a few more things, mostly fixes.
+Of course I expect that tomorrow somebody will send an important fix,
+but hey :-)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
-v4:
+johannes
 
-* add ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT
-* add comment to ath10k_core_start()
 
- drivers/net/wireless/ath/ath10k/core.c |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h |    3 +++
- 2 files changed, 19 insertions(+)
+The following changes since commit 658358cec93a7130615cfc1d6843ab07e49625e6:
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index bcccae19325d..e3249630d9d5 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1084,6 +1084,22 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 	if (status)
- 		goto err;
- 
-+	/* Some of of qca988x solutions are having global reset issue
-+         * during target initialization. Bypassing PLL setting before
-+         * downloading firmware and letting the SoC run on REF_CLK is
-+         * fixing the problem. Corresponding firmware change is also needed
-+         * to set the clock source once the target is initialized.
-+	 */
-+	if (test_bit(ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT,
-+		     ar->fw_features)) {
-+		status = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
-+		if (status) {
-+			ath10k_err(ar, "could not write to skip_clock_init: %d\n",
-+				   status);
-+			goto err;
-+		}
-+	}
-+
- 	status = ath10k_download_fw(ar, mode);
- 	if (status)
- 		goto err;
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 70fcdc9c2758..21a8bf166005 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -468,6 +468,9 @@ enum ath10k_fw_features {
- 	 */
- 	ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDING,
- 
-+	/* Firmware supports bypassing PLL setting on init. */ 
-+	ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT = 9,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
--- 
-1.7.9.5
+  mac80211: fix throughput LED trigger (2015-05-11 19:16:04 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-05-29
+
+for you to fetch changes up to f7959e9c73200f2ae361d0d311aa501f2c6a05c7:
+
+  net: rfkill: gpio: make better use of gpiod API (2015-05-29 13:13:45 +0200)
+
+----------------------------------------------------------------
+As we get closer to the merge window, here are a few
+more things for -next:
+ * disconnect TDLS stations on CSA to avoid issues
+ * fix a memory leak introduced in a recent commit
+ * switch rfkill and cfg80211 to PM ops
+ * in an unlikely scenario, prevent a bookkeeping
+   value to get corrupted leading to dropped packets
+ * fix a crash in VLAN assignment
+ * switch rfkill-gpio to more modern gpiod API
+ * send disconnected event to userspace with proper
+   local/remote indication
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      mac80211: disconnect TDLS stations on STA CSA
+
+Johannes Berg (3):
+      mac80211: fix memory leak
+      mac80211: add missing drv_priv description for TXQ struct
+      cfg80211: properly send NL80211_ATTR_DISCONNECTED_BY_AP in disconnect
+
+Lars-Peter Clausen (2):
+      net: rfkill: Switch to PM ops
+      cfg80211: Switch to PM ops
+
+Michal Kazior (3):
+      mac80211: check fast-xmit on station change
+      mac80211: prevent possible crypto tx tailroom corruption
+      cfg80211: ignore netif running state when changing iftype
+
+Uwe Kleine-König (1):
+      net: rfkill: gpio: make better use of gpiod API
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |  4 ++--
+ drivers/net/wireless/ath/wil6210/main.c            |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  4 ++--
+ drivers/net/wireless/libertas/cfg.c                | 13 +++++------
+ drivers/net/wireless/libertas/cfg.h                |  3 ++-
+ drivers/net/wireless/libertas/cmd.h                |  3 ++-
+ drivers/net/wireless/libertas/cmdresp.c            | 13 ++++++-----
+ drivers/net/wireless/mwifiex/join.c                |  2 +-
+ drivers/net/wireless/mwifiex/sta_event.c           |  2 +-
+ drivers/net/wireless/rndis_wlan.c                  |  2 +-
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c  |  2 +-
+ drivers/staging/wlan-ng/cfg80211.c                 |  2 +-
+ include/net/cfg80211.h                             |  4 +++-
+ include/net/mac80211.h                             |  1 +
+ net/mac80211/cfg.c                                 |  1 +
+ net/mac80211/main.c                                |  7 +++++-
+ net/mac80211/mlme.c                                | 26 ++++++++++++++++++++++
+ net/mac80211/tdls.c                                |  6 +++++
+ net/rfkill/core.c                                  | 12 +++++++---
+ net/rfkill/rfkill-gpio.c                           | 24 +++++++++-----------
+ net/wireless/core.h                                |  1 +
+ net/wireless/sme.c                                 |  4 +++-
+ net/wireless/sysfs.c                               | 14 +++++++-----
+ net/wireless/util.c                                |  5 +++--
+ 24 files changed, 105 insertions(+), 52 deletions(-)
+
 
