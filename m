@@ -1,315 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:30339 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183AbbEQSyp (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:48075 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755927AbbE2L3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 May 2015 14:54:45 -0400
-Message-ID: <5558E3B8.3040008@atmel.com> (sfid-20150517_205448_794754_776DF2D8)
-Date: Sun, 17 May 2015 20:53:44 +0200
-From: Nicolas Ferre <nicolas.ferre@atmel.com>
+	Fri, 29 May 2015 07:29:22 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBSR4x015503
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:29:21 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1upn7d87ur-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:29:21 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv3 15/16] mwifiex: update AP WMM settings from BSS_START event
+Date: Fri, 29 May 2015 22:26:36 +0530
+Message-ID: <1432918598-27769-16-git-send-email-patila@marvell.com> (sfid-20150529_132929_257402_BE757BAA)
+In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
+References: <1432918598-27769-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Johnny Kim <johnny.kim@atmel.com>, <gregkh@linuxfoundation.org>,
-	<devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>
-CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
-	<dean.lee@atmel.com>, <tony.cho@atmel.com>,
-	Patrice VILCHEZ <patrice.vilchez@atmel.com>
-Subject: Re: [PATCH v3 1/2] staging: wilc1000: Add SDIO/SPI 802.11 driver
-References: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com>
-In-Reply-To: <b442bf7ee73817953edb91ab0646d6371b6e71b3.1431320004.git.johnny.kim@atmel.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 11/05/2015 07:30, Johnny Kim a écrit :
-> This driver is for the wilc1000 which is a single chip IEEE 802.11
-> b/g/n device.
-> The driver works together with cfg80211, which is the kernel side of
-> configuration management for wireless devices because the wilc1000
-> chipset is fullmac where the MLME is managed in hardware.
-> 
-> The driver worked from kernel version 2.6.38 and being now ported
-> to several others since then.
-> A TODO file is included as well in this commit.
-> 
-> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-> Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
-> Signed-off-by: Dean Lee <dean.lee@atmel.com>
-> Signed-off-by: Chris Park <chris.park@atmel.com>
-> Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
-> ---
-> Changes in v3:
-> - fix the permissions.
-> - fix the folder tree.
-> - forget to add the mailing-list during the previous sending.
+This was missing and would cause issue in WMM handling.
 
-Hi Greg,
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_event.c | 63 ++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
-Do you have any comment on this v3 series (aka ping ;-)).
-
-Bye,
-
->  drivers/staging/Kconfig                           |    2 +
->  drivers/staging/Makefile                          |    1 +
->  drivers/staging/wilc1000/Kconfig                  |   55 +
->  drivers/staging/wilc1000/Makefile                 |   41 +
->  drivers/staging/wilc1000/TODO                     |    8 +
->  drivers/staging/wilc1000/coreconfigsimulator.h    |   20 +
->  drivers/staging/wilc1000/coreconfigurator.c       | 2201 ++++++
->  drivers/staging/wilc1000/coreconfigurator.h       |  498 ++
->  drivers/staging/wilc1000/fifo_buffer.c            |  142 +
->  drivers/staging/wilc1000/fifo_buffer.h            |   23 +
->  drivers/staging/wilc1000/host_interface.c         | 8074 +++++++++++++++++++++
->  drivers/staging/wilc1000/host_interface.h         | 1344 ++++
->  drivers/staging/wilc1000/itypes.h                 |   60 +
->  drivers/staging/wilc1000/linux_mon.c              |  643 ++
->  drivers/staging/wilc1000/linux_wlan.c             | 2953 ++++++++
->  drivers/staging/wilc1000/linux_wlan_common.h      |  170 +
->  drivers/staging/wilc1000/linux_wlan_sdio.c        |  249 +
->  drivers/staging/wilc1000/linux_wlan_sdio.h        |   14 +
->  drivers/staging/wilc1000/linux_wlan_spi.c         |  510 ++
->  drivers/staging/wilc1000/linux_wlan_spi.h         |   14 +
->  drivers/staging/wilc1000/wilc_debugfs.c           |  185 +
->  drivers/staging/wilc1000/wilc_errorsupport.h      |   84 +
->  drivers/staging/wilc1000/wilc_event.h             |  123 +
->  drivers/staging/wilc1000/wilc_exported_buf.c      |   76 +
->  drivers/staging/wilc1000/wilc_log.h               |   47 +
->  drivers/staging/wilc1000/wilc_memory.c            |   63 +
->  drivers/staging/wilc1000/wilc_memory.h            |  330 +
->  drivers/staging/wilc1000/wilc_msgqueue.c          |  211 +
->  drivers/staging/wilc1000/wilc_msgqueue.h          |  133 +
->  drivers/staging/wilc1000/wilc_osconfig.h          |   55 +
->  drivers/staging/wilc1000/wilc_oswrapper.h         |  133 +
->  drivers/staging/wilc1000/wilc_platform.h          |  181 +
->  drivers/staging/wilc1000/wilc_sdio.c              | 1298 ++++
->  drivers/staging/wilc1000/wilc_semaphore.c         |   70 +
->  drivers/staging/wilc1000/wilc_semaphore.h         |  115 +
->  drivers/staging/wilc1000/wilc_sleep.c             |   36 +
->  drivers/staging/wilc1000/wilc_sleep.h             |   45 +
->  drivers/staging/wilc1000/wilc_spi.c               | 1475 ++++
->  drivers/staging/wilc1000/wilc_strutils.c          |  431 ++
->  drivers/staging/wilc1000/wilc_strutils.h          |  412 ++
->  drivers/staging/wilc1000/wilc_thread.c            |   35 +
->  drivers/staging/wilc1000/wilc_thread.h            |  153 +
->  drivers/staging/wilc1000/wilc_time.c              |  163 +
->  drivers/staging/wilc1000/wilc_time.h              |  205 +
->  drivers/staging/wilc1000/wilc_timer.c             |   51 +
->  drivers/staging/wilc1000/wilc_timer.h             |  153 +
->  drivers/staging/wilc1000/wilc_type.h              |   34 +
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4592 ++++++++++++
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |  134 +
->  drivers/staging/wilc1000/wilc_wfi_netdevice.c     |  960 +++
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  277 +
->  drivers/staging/wilc1000/wilc_wlan.c              | 2434 +++++++
->  drivers/staging/wilc1000/wilc_wlan.h              |  321 +
->  drivers/staging/wilc1000/wilc_wlan_cfg.c          |  643 ++
->  drivers/staging/wilc1000/wilc_wlan_cfg.h          |   33 +
->  drivers/staging/wilc1000/wilc_wlan_if.h           |  991 +++
->  56 files changed, 33704 insertions(+)
->  create mode 100644 drivers/staging/wilc1000/Kconfig
->  create mode 100644 drivers/staging/wilc1000/Makefile
->  create mode 100644 drivers/staging/wilc1000/TODO
->  create mode 100644 drivers/staging/wilc1000/coreconfigsimulator.h
->  create mode 100644 drivers/staging/wilc1000/coreconfigurator.c
->  create mode 100644 drivers/staging/wilc1000/coreconfigurator.h
->  create mode 100644 drivers/staging/wilc1000/fifo_buffer.c
->  create mode 100644 drivers/staging/wilc1000/fifo_buffer.h
->  create mode 100644 drivers/staging/wilc1000/host_interface.c
->  create mode 100644 drivers/staging/wilc1000/host_interface.h
->  create mode 100644 drivers/staging/wilc1000/itypes.h
->  create mode 100644 drivers/staging/wilc1000/linux_mon.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_common.h
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_spi.c
->  create mode 100644 drivers/staging/wilc1000/linux_wlan_spi.h
->  create mode 100644 drivers/staging/wilc1000/wilc_debugfs.c
->  create mode 100644 drivers/staging/wilc1000/wilc_errorsupport.h
->  create mode 100644 drivers/staging/wilc1000/wilc_event.h
->  create mode 100644 drivers/staging/wilc1000/wilc_exported_buf.c
->  create mode 100644 drivers/staging/wilc1000/wilc_log.h
->  create mode 100644 drivers/staging/wilc1000/wilc_memory.c
->  create mode 100644 drivers/staging/wilc1000/wilc_memory.h
->  create mode 100644 drivers/staging/wilc1000/wilc_msgqueue.c
->  create mode 100644 drivers/staging/wilc1000/wilc_msgqueue.h
->  create mode 100644 drivers/staging/wilc1000/wilc_osconfig.h
->  create mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
->  create mode 100644 drivers/staging/wilc1000/wilc_platform.h
->  create mode 100644 drivers/staging/wilc1000/wilc_sdio.c
->  create mode 100644 drivers/staging/wilc1000/wilc_semaphore.c
->  create mode 100644 drivers/staging/wilc1000/wilc_semaphore.h
->  create mode 100644 drivers/staging/wilc1000/wilc_sleep.c
->  create mode 100644 drivers/staging/wilc1000/wilc_sleep.h
->  create mode 100644 drivers/staging/wilc1000/wilc_spi.c
->  create mode 100644 drivers/staging/wilc1000/wilc_strutils.c
->  create mode 100644 drivers/staging/wilc1000/wilc_strutils.h
->  create mode 100644 drivers/staging/wilc1000/wilc_thread.c
->  create mode 100644 drivers/staging/wilc1000/wilc_thread.h
->  create mode 100644 drivers/staging/wilc1000/wilc_time.c
->  create mode 100644 drivers/staging/wilc1000/wilc_time.h
->  create mode 100644 drivers/staging/wilc1000/wilc_timer.c
->  create mode 100644 drivers/staging/wilc1000/wilc_timer.h
->  create mode 100644 drivers/staging/wilc1000/wilc_type.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_netdevice.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wfi_netdevice.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan_cfg.c
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan_cfg.h
->  create mode 100644 drivers/staging/wilc1000/wilc_wlan_if.h
-> 
-> diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
-> index bfacf69..da35af6 100644
-> --- a/drivers/staging/Kconfig
-> +++ b/drivers/staging/Kconfig
-> @@ -112,4 +112,6 @@ source "drivers/staging/i2o/Kconfig"
->  
->  source "drivers/staging/fsl-mc/Kconfig"
->  
-> +source "drivers/staging/wilc1000/Kconfig"
-> +
->  endif # STAGING
-> diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
-> index 2bbd1bf..edbe5ff 100644
-> --- a/drivers/staging/Makefile
-> +++ b/drivers/staging/Makefile
-> @@ -48,3 +48,4 @@ obj-$(CONFIG_COMMON_CLK_XLNX_CLKWZRD)	+= clocking-wizard/
->  obj-$(CONFIG_FB_TFT)		+= fbtft/
->  obj-$(CONFIG_I2O)		+= i2o/
->  obj-$(CONFIG_FSL_MC_BUS)	+= fsl-mc/
-> +obj-$(CONFIG_WILC1000)		+= wilc1000/
-> diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
-> new file mode 100644
-> index 0000000..101f908
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/Kconfig
-> @@ -0,0 +1,55 @@
-> +config WILC1000
-> +	tristate "WILC1000 support (WiFi only)"
-> +	---help---
-> +		This module only support IEEE 802.11n WiFi.
-> +
-> +choice
-> +        prompt "Memory Allocation"
-> +        depends on WILC1000
-> +        default WILC1000_PREALLOCATE_AT_LOADING_DRIVER
-> +
-> +        config WILC1000_PREALLOCATE_AT_LOADING_DRIVER
-> +                bool "Preallocate memory at loading driver"
-> +                ---help---
-> +                        This choice supports static allocation of the memory
-> +                        for the receive buffer. The driver will allocate the RX buffer 
-> +                        during initial time. The driver will also free the buffer
-> +                        by calling network device stop.
-> +
-> +        config WILC1000_DYNAMICALLY_ALLOCATE_MEMROY
-> +                bool "Dynamically allocate memory in real time"
-> +                ---help---
-> +                        This choice supports dynamic allocation of the memory
-> +                        for the receive buffer. The driver will allocate the RX buffer
-> +                        when it is required.
-> +endchoice
-> +
-> +
-> +choice
-> +    prompt "Bus Type"
-> +    depends on WILC1000 
-> +    default WILC1000_SDIO
-> +    
-> +	config WILC1000_SDIO
-> +	    bool "SDIO support"
-> +	    depends on MMC
-> +		---help---
-> +			This module adds support for the SDIO interface of adapters using
-> +			WILC chipset. Select this if your platform is using the SDIO bus. 
-> +
-> +	config WILC1000_SPI
-> +	    bool "SPI support"
-> +		---help---
-> +			This module adds support for the SPI interface of adapters using
-> +			WILC chipset. Select this if your platform is using the SPI bus. 
-> +endchoice
-> +
-> +
-> +config WILC1000_HW_OOB_INTR
-> +    bool "Use out of band interrupt"
-> +    depends on WILC1000 && WILC1000_SDIO
-> +    default n
-> +    ---help---
-> +		If your platform don't recognize SDIO IRQ, connect chipset external IRQ pin
-> +		and check this option. Or, Use this to get all interrupts including SDIO interrupts.
-> +
-> diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-> new file mode 100644
-> index 0000000..84bd975
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/Makefile
-> @@ -0,0 +1,41 @@
-> +obj-$(CONFIG_WILC1000) += wilc1000.o
-> +obj-$(CONFIG_WILC1000_PREALLOCATE_DURING_SYSTEM_BOOT) += wilc_exported_buf.o
-> +
-> +
-> +ccflags-$(CONFIG_WILC1000_SDIO) += -DWILC_SDIO -DCOMPLEMENT_BOOT
-> +ccflags-$(CONFIG_WILC1000_HW_OOB_INTR) += -DWILC_SDIO_IRQ_GPIO
-> +ccflags-$(CONFIG_WILC1000_SPI) += -DWILC_SPI
-> +
-> +ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
-> +		-DAP_FIRMWARE=\"atmel/wilc1000_ap_fw.bin\" \
-> +		-DP2P_CONCURRENCY_FIRMWARE=\"atmel/wilc1000_p2p_fw.bin\"
-> +
-> +ccflags-y += -I$(src)/ -DEXPORT_SYMTAB  -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 \
-> +		-DPLL_WORKAROUND -DCONNECT_DIRECT  -DAGING_ALG \
-> +		-DWILC_PARSE_SCAN_IN_HOST -DDISABLE_PWRSAVE_AND_SCAN_DURING_IP \
-> +		-DWILC_PLATFORM=WILC_LINUXKERNEL -Wno-unused-function -DUSE_WIRELESS \
-> +		-DWILC_DEBUGFS
-> +#ccflags-y += -DTCP_ACK_FILTER
-> +
-> +ccflags-$(CONFIG_WILC1000_PREALLOCATE_DURING_SYSTEM_BOOT) += -DMEMORY_STATIC \
-> +								-DWILC_PREALLOC_AT_BOOT
-> +
-> +ccflags-$(CONFIG_WILC1000_PREALLOCATE_AT_LOADING_DRIVER) += -DMEMORY_STATIC \
-> +								-DWILC_PREALLOC_AT_INSMOD
-> +
-> +ccflags-$(CONFIG_WILC1000_DYNAMICALLY_ALLOCATE_MEMROY) += -DWILC_NORMAL_ALLOC
-> +
-> +
-> +wilc1000-objs := wilc_wfi_netdevice.o wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
-> +			wilc_memory.o wilc_msgqueue.o wilc_semaphore.o wilc_sleep.o wilc_strutils.o \
-> +			wilc_thread.o wilc_time.o wilc_timer.o coreconfigurator.o host_interface.o \
-> +			fifo_buffer.o wilc_sdio.o wilc_spi.o wilc_wlan_cfg.o wilc_debugfs.o
-> +
-> +wilc1000-$(CONFIG_WILC1000_SDIO) += linux_wlan_sdio.o
-> +wilc1000-$(CONFIG_WILC1000_SPI) += linux_wlan_spi.o
-> +
-> +WILC1000_SRC_VERSION = 10.0
-> +PATCHLEVEL = 2
-> +WILC1000_FW_VERSION = 0
-> +
-> +ccflags-y += -D__DRIVER_VERSION__=\"$(WILC1000_SRC_VERSION).$(PATCHLEVEL)\"
-> diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
-> new file mode 100644
-> index 0000000..5dfeb3e
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/TODO
-> @@ -0,0 +1,8 @@
-> +TODO:
-> +- remove the defined feature as kernel versions
-> +- remove OS wrapper functions
-> +- remove custom debug and tracing functions
-> +- rework comments and function headers(also coding style)
-> +- remove build warnings
-> +- support soft-ap and p2p mode
-> +- support resume/suspend function
-> diff --git a/drivers/staging/wilc1000/coreconfigsimulator.h b/drivers/staging/wilc1000/coreconfigsimulator.h
-> new file mode 100644
-> index 0000000..6c3f431
-> --- /dev/null
-> +++ b/drivers/staging/wilc1000/coreconfigsimulator.h
-> @@ -0,0 +1,20 @@
-
-[..]
-
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 06ce3fe..fee05f5 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -21,8 +21,70 @@
+ #include "main.h"
+ #include "11n.h"
+ 
++#define MWIFIEX_BSS_START_EVT_FIX_SIZE    12
+ 
++static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
++					 struct sk_buff *event)
++{
++	int evt_len;
++	u8 *curr;
++	u16 tlv_len;
++	struct mwifiex_ie_types_data *tlv_hdr;
++	struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
++	int mask = IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK;
++
++	priv->wmm_enabled = false;
++	skb_pull(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
++	evt_len = event->len;
++	curr = event->data;
++
++	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
++			 event->data, event->len);
++
++	while ((evt_len >= sizeof(tlv_hdr->header))) {
++		tlv_hdr = (struct mwifiex_ie_types_data *)curr;
++		tlv_len = le16_to_cpu(tlv_hdr->header.len);
++
++		if (evt_len < tlv_len + sizeof(tlv_hdr->header))
++			break;
++
++		switch (le16_to_cpu(tlv_hdr->header.type)) {
++		case WLAN_EID_HT_CAPABILITY:
++			priv->ap_11n_enabled = true;
++			break;
++
++		case WLAN_EID_VHT_CAPABILITY:
++			priv->ap_11ac_enabled = true;
++			break;
+ 
++		case WLAN_EID_VENDOR_SPECIFIC:
++			/* Point the regular IEEE IE 2 bytes into the Marvell IE
++			 * and setup the IEEE IE type and length byte fields
++			 */
++			wmm_param_ie = (void *)(curr + 2);
++			wmm_param_ie->vend_hdr.len = (u8)tlv_len;
++			wmm_param_ie->vend_hdr.element_id =
++						WLAN_EID_VENDOR_SPECIFIC;
++			mwifiex_dbg(priv->adapter, EVENT,
++				    "info: check uap capabilities:\t"
++				    "wmm parameter set count: %d\n",
++				    wmm_param_ie->qos_info_bitmap & mask);
++
++			mwifiex_wmm_setup_ac_downgrade(priv);
++			priv->wmm_enabled = true;
++			mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
++			break;
++
++		default:
++			break;
++		}
++
++		curr += (tlv_len + sizeof(tlv_hdr->header));
++		evt_len -= (tlv_len + sizeof(tlv_hdr->header));
++	}
++
++	return 0;
++}
+ 
+ /*
+  * This function handles AP interface specific events generated by firmware.
+@@ -134,6 +196,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		       ETH_ALEN);
+ 		if (priv->hist_data)
+ 			mwifiex_hist_data_reset(priv);
++		mwifiex_check_uap_capabilties(priv, adapter->event_skb);
+ 		break;
+ 	case EVENT_UAP_MIC_COUNTERMEASURES:
+ 		/* For future development */
 -- 
-Nicolas Ferre
+1.8.1.4
+
