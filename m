@@ -1,103 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lan.nucleusys.com ([92.247.61.126]:44034 "EHLO
-	zztop.nucleusys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751569AbbEURpR (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:36807 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbbE2Ffc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 May 2015 13:45:17 -0400
-Date: Thu, 21 May 2015 20:44:55 +0300
-From: Petko Manolov <petkan@mip-labs.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: David Howells <dhowells@redhat.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>, Joey Lee <jlee@suse.de>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Kyle McMartin <kyle@kernel.org>,
-	Sedat Dilek <sedat.dilek@gmail.com>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Michal Marek <mmarek@suse.cz>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	keyrings@linux-nfs.org, Abelardo Ricart III <aricart@memnix.com>,
-	"Serge E. Hallyn" <serge@hallyn.com>
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-Message-ID: <20150521174455.GL18164@localhost> (sfid-20150521_194539_664062_64466C8F)
-References: <20150519200232.GM23057@wotan.suse.de>
- <555BA438.2070802@kernel.org>
- <20150519221128.GP23057@wotan.suse.de>
- <9567.1432223509@warthog.procyon.org.uk>
- <CALCETrX3krCsqCLvLYx1QdnjFK=R8FF7ta=vozDcGYSTUHvSrA@mail.gmail.com>
- <20150521165101.GI18164@localhost>
- <CALCETrU3biPZEY4hxPfUavNUP1EmBeT2H2tSfiCXw+NJmxoYqg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALCETrU3biPZEY4hxPfUavNUP1EmBeT2H2tSfiCXw+NJmxoYqg@mail.gmail.com>
+	Fri, 29 May 2015 01:35:32 -0400
+Received: by wivl4 with SMTP id l4so6446098wiv.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 22:35:31 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix possible ps sleep crash
+Date: Fri, 29 May 2015 07:35:24 +0200
+Message-Id: <1432877724-8256-1-git-send-email-michal.kazior@tieto.com> (sfid-20150529_073607_320129_0A301D37)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-05-21 09:55:42, Andy Lutomirski wrote:
-> 
-> I read plenty of the code.  I said "data" not "file" for a reason.
-> I'll quote some code:
-> 
-> int ima_appraise_measurement(int func, struct integrity_iint_cache *iint,
->                              struct file *file, const unsigned char *filename,
->                              struct evm_ima_xattr_data *xattr_value,
->                              int xattr_len, int opened)
-> 
-> There is no struct file in init_module.
-> 
-> {
->         static const char op[] = "appraise_data";
->         char *cause = "unknown";
->         struct dentry *dentry = file->f_path.dentry;
->         struct inode *inode = dentry->d_inode;
->         enum integrity_status status = INTEGRITY_UNKNOWN;
->         int rc = xattr_len, hash_start = 0;
-> 
->         if (!inode->i_op->getxattr)
->                 return INTEGRITY_UNKNOWN;
+If probing failed pci sleep timer could remain
+running and trigger after ath10k structures were
+freed causing invalid pointer dereference:
 
-Yes, not all filesystems support extended attributes, but this is not 
-necessarily end of the game.  IMA code may be modified to use detached 
-signatures.  In fact i was considering this option not so long ago, but dropped 
-the idea as more elegant solution was presented.
+ BUG: unable to handle kernel paging request at ffffc90001c80004
+ IP: [<ffffffff81354728>] iowrite32+0x38/0x40
+ ...
+ Call Trace:
+  <IRQ>
+  [<ffffffffa00da048>] ? __ath10k_pci_sleep+0x48/0x60 [ath10k_pci]
+  [<ffffffffa00da44e>] ath10k_pci_ps_timer+0x5e/0x80 [ath10k_pci]
+  [<ffffffff810b210e>] call_timer_fn+0x3e/0x120
+  [<ffffffffa00da3f0>] ? ath10k_pci_wake+0x150/0x150 [ath10k_pci]
+  [<ffffffff810b3d11>] run_timer_softirq+0x201/0x2e0
+  [<ffffffff8105d73f>] __do_softirq+0xaf/0x290
+  [<ffffffff8105da95>] irq_exit+0x95/0xa0
+  [<ffffffff81950406>] smp_apic_timer_interrupt+0x46/0x60
+  [<ffffffff8194e77e>] apic_timer_interrupt+0x6e/0x80
 
-> I maintain my claim that IMA is not appropriate for module signing in general.  
-> It might make sense for the kind of thing that Chromium does (approving of 
-> modules using finit_module based on their source instead of their payload and 
-> verifying the payload indirectly using IMA or dm-verity), but that's not the 
-> problem that David and Luis are trying to solve.
+Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I guess this is all backwards.  Module signing/verification must be autonomous 
-process/infrastructure.  The fact that IMA may do the same for you given a few 
-conditions are met does not make it a replacement.
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 17a060e8efa2..f37de77811f6 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2850,6 +2850,7 @@ err_free_pipes:
+ 	ath10k_pci_free_pipes(ar);
+ 
+ err_sleep:
++	ath10k_pci_sleep_sync(ar);
+ 	ath10k_pci_release(ar);
+ 
+ err_core_destroy:
+-- 
+2.1.4
 
-I do not use module signing for one particular project, because we're building 
-custom kernel and initramfs.  IMA is enabled early on so an attempt to read .ko 
-file results in verifying it's signature.  Yes, the filesystem does support 
-xattr. :)
-
-> Also, especially for firmware on regular distros, IMA is ridiculous. IIRC 
-> there is no general support for xattrs in initramfs, and there is no reason to 
-> start requiring such support just to allow firmware to live in initramfs.
-
-For regular distro, maybe.  If one needs better overall security - not so - i 
-actually quite like IMA. ;) Adding xattrs to initramfs is not bad idea at all, 
-IMA arguments aside.
-
-> I think that using IMA for this has a similar problem to using PKCS#7: it's a 
-> big hammer that is much more complex than necessary to solve the problem at 
-> hand.
-
-Absolutely.  Using IMA just for module signing is a bit of an overkill.
-
-
-		Petko
