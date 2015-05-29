@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60005 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751870AbbEKIbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 04:31:48 -0400
-Message-ID: <1431333103.1964.4.camel@sipsolutions.net> (sfid-20150511_103153_119205_8123160A)
-Subject: Re: pull-request: mac80211-next 2015-05-06
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Mon, 11 May 2015 10:31:43 +0200
-In-Reply-To: <20150509.173446.1826713590855601099.davem@davemloft.net>
-References: <1430920780.1954.10.camel@sipsolutions.net>
-	 <1430920954.1954.11.camel@sipsolutions.net>
-	 <20150509.172803.2129151083625591640.davem@davemloft.net>
-	 <20150509.173446.1826713590855601099.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:17334 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755387AbbE2PAn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2015 11:00:43 -0400
+Date: Fri, 29 May 2015 18:00:25 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: liuzy@marvell.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: mwifiex: add dump data debug support
+Message-ID: <20150529150025.GB10313@mwanda> (sfid-20150529_170054_423103_E264E3DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-05-09 at 17:34 -0400, David Miller wrote:
+Hello Zhaoyang Liu,
 
-> Johhannes, the hash table size Kconfig entry absolutely not appropriate.
-> 
-> If anything, it should be hidden behind the strongest possible "DEBUG
-> ONLY" type dependencies, so that the user is never prompted for this
-> confusing option.
+This is a semi-automatic email about new static checker warnings.
 
-Hmm. It's hidden behind "MAC80211_DEBUG_MENU", which already should be
-discouragement, there's nothing in there that the user should ever
-select unless they're developing/debugging on this.
+The patch 868093a9df75: "mwifiex: add dump data debug support" from 
+May 12, 2015, leads to the following Smatch complaint:
 
-I can word the help text more strongly, perhaps? Or make the debug menu
-also depend on CONFIG_EXPERT (but most people seem to set that
-anyway ...)?
+drivers/net/wireless/mwifiex/cmdevt.c:475 mwifiex_process_event()
+	 error: we previously assumed 'skb' could be null (see line 467)
 
-I'm happy to change this, but am not entirely sure how to discourage its
-use any further than we already do. Any suggestions?
+drivers/net/wireless/mwifiex/cmdevt.c
+   466	
+   467		if (skb) {
+                    ^^^
+Old check for NULL.
 
-johannes
+   468			rx_info = MWIFIEX_SKB_RXCB(skb);
+   469			memset(rx_info, 0, sizeof(*rx_info));
+   470			rx_info->bss_num = priv->bss_num;
+   471			rx_info->bss_type = priv->bss_type;
+   472		}
+   473	
+   474		mwifiex_dbg(adapter, EVENT, "EVENT: cause: %#x\n", eventcause);
+   475		mwifiex_dbg_dump(adapter, EVT_D, "Event Buf:", skb->data, skb->len);
+                                                               ^^^^^
+Patch introduces unchecked dereference.
 
+   476	
+   477		if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
 
+regards,
+dan carpenter
