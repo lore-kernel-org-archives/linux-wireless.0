@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:33209 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753262AbbETN6O (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:35241 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757250AbbE2WYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 May 2015 09:58:14 -0400
-Received: by wgjc11 with SMTP id c11so53937617wgj.0
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2015 06:58:12 -0700 (PDT)
+	Fri, 29 May 2015 18:24:45 -0400
+Received: by labko7 with SMTP id ko7so62156495lab.2
+        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 15:24:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1432129299.19214.16.camel@sipsolutions.net>
-References: <1431602181-17700-1-git-send-email-chaitanya.mgit@gmail.com>
- <1432020671.7437.5.camel@sipsolutions.net> <CABPxzY+7KDGRs3fO1wsy3FPt__YPBnzr5CcZ_HTEh2ePsdtUdQ@mail.gmail.com>
- <1432129299.19214.16.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 20 May 2015 19:27:52 +0530
-Message-ID: <CABPxzY+v_7SbKJp5AkFzpdZiMkojrHWwjGiKqR7t25DPdtn7mQ@mail.gmail.com> (sfid-20150520_155817_235759_0DD6C5DE)
-Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused by
- race between suspend and Tx packet.
+Date: Fri, 29 May 2015 15:24:44 -0700
+Message-ID: <CAAnMG+MdokAvP4YNHnPX+o+0vi2vDfYB8Bj0x-kSci0yDa+bEg@mail.gmail.com> (sfid-20150530_002449_472835_CA9451BC)
+Subject: [PATCH] mac80211: Always check rates and capabilities in mesh mode
+From: Alexis Green <agreen@cococorp.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jesse Jones <jjones@cococorp.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 20, 2015 at 7:11 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2015-05-19 at 13:53 +0530, Krishna Chaitanya wrote:
->
->> > I'm not sure I get it - we always transmit a frame after resume.
->> Let me explain the sequence of events:
->>
->> tx_frame:
->>       dynamic_ps_disable_work.
->>                  get the chip out of power save.
->> suspend came:
->>      dynamic ps timer is cancelled.
->>     tx queues are flushed.
->> chip stays out of power save unless there is one more
->> tx frame which kicks the dynamic ps timer again.
->
-> So initially, for suspend, this shouldn't matter.
-Some chipsets are using power_save state from mac80211
-to stay in DOZE mode, so in that case we end up
-drawing more power. We can force the chipset fw to enter
-DOZE independent of the mac80211 power save state but
-when resuming the chip FW should again configure as per
-mac80211 power save state.
+In mesh mode there is a race between establishing links and processing rates
+and capabilities in beacons. This is very noticeable with slow beacons (e.g.
+beacon intervals of 1s) and manifested for us as stations using minstrel when
+minstrel_ht should be used. Fixed by changing mesh_sta_info_init so that it
+always checks rates and such if it has not already done so.
 
-> And after suspend we always transmit a frame. What gives?
+Signed-off-by: Alexis Green <agreen@cococorp.com>
+CC: Jesse Jones <jjones@cococorp.com>
 
-Yes, but we have seen that in idle case this delay is more like
-30secs-1min depending on the keepalive packet.
+---
 
-Till that time the chip is active and drawing more power.
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index ac843fc..4f9f23c 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -394,8 +394,9 @@ static void mesh_sta_info_init(struct
+ieee80211_sub_if_data *sdata,
+        sta->last_rx = jiffies;
+
+        /* rates and capabilities don't change during peering */
+-       if (sta->plink_state == NL80211_PLINK_ESTAB)
++       if (sta->plink_state == NL80211_PLINK_ESTAB && sta->processedBeacon)
+                goto out;
++       sta->processedBeacon = true;
+
+        if (sta->sta.supp_rates[band] != rates)
+                changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 9bd1e97..e3ae2b0 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -369,6 +369,8 @@ struct ieee80211_fast_tx {
+  * @rx_msdu: MSDUs received from this station, using IEEE80211_NUM_TID
+  *     entry for non-QoS frames
+  * @fast_tx: TX fastpath information
++ * @processedBeacon: set to true after peer rates and capabilities are
++ *     processed
+  */
+ struct sta_info {
+        /* General information, mostly static */
+@@ -473,6 +475,7 @@ struct sta_info {
+        enum nl80211_mesh_power_mode local_pm;
+        enum nl80211_mesh_power_mode peer_pm;
+        enum nl80211_mesh_power_mode nonpeer_pm;
++       bool processedBeacon;
+ #endif
+
+ #ifdef CONFIG_MAC80211_DEBUGFS
