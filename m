@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:34055 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbbEPRQW (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:8338 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756459AbbE2PX6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 May 2015 13:16:22 -0400
-Received: by laat2 with SMTP id t2so164520747laa.1
-        for <linux-wireless@vger.kernel.org>; Sat, 16 May 2015 10:16:20 -0700 (PDT)
+	Fri, 29 May 2015 11:23:58 -0400
+From: Avinash Patil <patila@marvell.com>
+To: =?utf-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, "Xinming Hu" <huxm@marvell.com>
+Subject: RE: [PATCHv3 09/16] mwifiex: add sta_list firmware command
+Date: Fri, 29 May 2015 15:23:47 +0000
+Message-ID: <a66e3a258cd5435ba69da9ff025a035a@SC-EXCH02.marvell.com> (sfid-20150529_172401_364467_833E6AB1)
+References: <1432918598-27769-1-git-send-email-patila@marvell.com>
+	<1432918598-27769-10-git-send-email-patila@marvell.com>
+ <87382fh9ln.fsf@nemi.mork.no>
+In-Reply-To: <87382fh9ln.fsf@nemi.mork.no>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <55575AC8.2060301@lwfinger.net>
-References: <CAJ=9Czbh2cT-qvkEmvVWPCwWdAJ5H_kAcRXirW4MQDhrMb4XRg@mail.gmail.com>
-	<55575AC8.2060301@lwfinger.net>
-Date: Sat, 16 May 2015 20:16:20 +0300
-Message-ID: <CAJ=9CzasMnjhMSWT0P=eenvaeDA04Q2aGhY0z1npD-NDuh7YeQ@mail.gmail.com> (sfid-20150516_191625_613686_87D48A30)
-Subject: Re: kernel page fault in r8712u
-From: Haggai Eran <haggai.eran@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 May 2015 at 17:57, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> The problem appears to be from r8712u. From the stack dump, the problem
-> happens when r8712_free_recvframe() calls __dev_kfree_skb_any(). A
-> complication is that my copy of the kernel source does not show such a call.
-> :(
->
-> Please use gdb to help with the debugging. From the main directory of your
-> source, enter the command 'gdb drivers/staging/rtl8712/r8712u.ko'. Once it
-> prompts you, enter 'l *r8712_free_recvframe+0x2c'. The first character is
-> ell, not one. That will show the actual line of code. Please post that info.
-
-Here's what I get:
-
-(gdb) l *r8712_free_recvframe+0x2c
-0x16714 is in r8712_free_recvframe (drivers/staging/rtl8712/rtl8712_recv.c:145).
-140             struct _adapter *padapter = precvframe->u.hdr.adapter;
-141             struct recv_priv *precvpriv = &padapter->recvpriv;
-142
-143             if (precvframe->u.hdr.pkt) {
-144
-dev_kfree_skb_any(precvframe->u.hdr.pkt);/*free skb by driver*/
-145                     precvframe->u.hdr.pkt = NULL;
-146             }
-147             spin_lock_irqsave(&pfree_recv_queue->lock, irqL);
-148             list_del_init(&(precvframe->u.hdr.list));
-149             list_add_tail(&(precvframe->u.hdr.list),
-&pfree_recv_queue->queue);
-
-It seems that dev_kfree_skb_any is an inline function that calls
-__dev_kfree_skb_any,
-so that should explain why that call didn't show up in the stack dump.
-
-Haggai
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCasO4cm4gTW9yayBbbWFpbHRv
+OmJqb3JuQG1vcmsubm9dDQo+IFNlbnQ6IEZyaWRheSwgTWF5IDI5LCAyMDE1IDU6MzYgUE0NCj4g
+VG86IEF2aW5hc2ggUGF0aWwNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsg
+QW1pdGt1bWFyIEthcndhcjsgQ2F0aHkgTHVvOyBYaW5taW5nIEh1DQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0h2MyAwOS8xNl0gbXdpZmlleDogYWRkIHN0YV9saXN0IGZpcm13YXJlIGNvbW1hbmQNCj4g
+DQo+IEF2aW5hc2ggUGF0aWwgPHBhdGlsYUBtYXJ2ZWxsLmNvbT4gd3JpdGVzOg0KPiANCj4gPiAg
+CQljYXNlIEhvc3RDbWRfQ01EX1VBUF9CU1NfU1RPUDoNCj4gPiAgCQljYXNlIEhvc3RDbWRfQ01E
+X1VBUF9TVEFfREVBVVRIOg0KPiA+ICAJCWNhc2UgSE9TVF9DTURfQVBDTURfU1lTX1JFU0VUOg0K
+PiA+ICsJCWNhc2UgSE9TVENNRF9DTURfVUFQX1NUQV9MSVNUOg0KPiANCj4gDQo+IEp1c3Qgd29u
+ZGVyaW5nLCBub3QgcmVhbGx5IG9iamVjdGluZy4uLi4gQnV0IHdvdWxkbid0IGl0IGJlIG5pY2Ug
+d2l0aCBzb21lDQo+IGNvbnNpc3RlbmN5IGhlcmU/DQo+IA0KPg0KDQpUaGFua3MgZm9yIHJldmll
+dy4uLndpbGwgbW9kaWZ5IGNhc2UgSE9TVENNRF9DTURfVUFQX1NUQV9MSVNUIHRvIGNhc2UgSE9T
+VF9DTURfQVBDTURfU1RBX0xJU1Qgc28gYXMga2VlcCBjb25zaXN0ZW5jeSB3aXRoIFNZU19SRVNF
+VC4NCiANCj4gQmrDuHJuDQoNCi1BdmluYXNoDQo=
