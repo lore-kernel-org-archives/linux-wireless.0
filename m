@@ -1,93 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:9552 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751895AbbECTdE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:33:04 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 31/42] iwlwifi: mvm: trim sched scan delay down to 16-bit for LMAC as well
-Date: Sun,  3 May 2015 22:31:42 +0300
-Message-Id: <1430681513-7838-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213318_722587_E6486B5B)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:49412 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755436AbbE2Mmc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2015 08:42:32 -0400
+Date: Fri, 29 May 2015 14:42:30 +0200
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
+	<u.kleine-koenig@pengutronix.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kernel@pengutronix.de
+Subject: Re: [PATCH RFC next 2/2] net: rfkill: gpio: simplify code flow
+Message-ID: <20150529124230.GJ18985@pengutronix.de> (sfid-20150529_144236_117524_D7D74FFE)
+References: <1432806373-17372-1-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1432806373-17372-3-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1432898224.2104.12.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1432898224.2104.12.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Fri, May 29, 2015 at 01:17:04PM +0200, Johannes Berg wrote:
+> On Thu, 2015-05-28 at 11:46 +0200, Uwe Kleine-König wrote:
+> > When assigning directly to the pointer contained in the driver data the
+> > local variable can be dropped together with the extra assignment to it.
+> 
+> I'm not really sure I see the big benefit of this? It doesn't really
+> seem to make the code much easier to read/follow.
+> 
+> I also don't really see the (perceived) objection with "dynamic memory"
+> though since that memory is freed pretty much immediately as soon as we
+> return a non-zero value from this function ... the function itself
+> allocates the memory, and clearly we return without it ever being able
+> to use it, so ...
+> 
+> Anyway - I might apply this for the few removed lines of code, but only
+> with a better commit log.
+Alternatively squash it into patch 1/2 and add:
 
-In theory, LMAC scans can handle a 32-bit delay, but since waiting for
-over 18 hours to start the scan is a bit silly and to keep it aligned
-with UMAC scans (which only support 16-bit delays), trim it down to
-16-bits.
+	While touching the code simplify it a bit to not need a local
+	variable for the gpio descriptors.
 
-This makes the LMAC vs. UMAC and the UMAC reg scan vs. UMAC sched scan
-code more similar.
+?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+Best regards
+Uwe
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index f4d38f5..1abbc66 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -80,7 +80,7 @@ struct iwl_mvm_scan_params {
- 	u32 suspend_time;
- 	bool passive_fragmented;
- 	u32 n_channels;
--	u32 delay;
-+	u16 delay;
- 	int n_ssids;
- 	struct cfg80211_ssid *ssids;
- 	struct ieee80211_channel **channels;
-@@ -1279,14 +1279,7 @@ static int iwl_mvm_sched_scan_umac(struct iwl_mvm *mvm,
- 	/* With UMAC we use only one schedule, so take the final one only */
- 	sec_part->schedule[0].iter_count = params->schedule[1].iterations;
- 
--	if (params->delay > U16_MAX) {
--		IWL_DEBUG_SCAN(mvm,
--			       "delay value is > 16-bits, set to max possible\n");
--		sec_part->delay = cpu_to_le16(U16_MAX);
--	} else {
--		sec_part->delay = cpu_to_le16(params->delay);
--	}
--
-+	sec_part->delay = cpu_to_le16(params->delay);
- 	sec_part->preq = params->preq;
- 
- 	return 0;
-@@ -1458,7 +1451,6 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 	params.n_ssids = req->n_ssids;
- 	params.flags = req->flags;
- 	params.n_channels = req->n_channels;
--	params.delay = req->delay;
- 	params.ssids = req->ssids;
- 	params.channels = req->channels;
- 	params.mac_addr = req->mac_addr;
-@@ -1481,6 +1473,19 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 		params.interval = req->interval / MSEC_PER_SEC;
- 	}
- 
-+	/* In theory, LMAC scans can handle a 32-bit delay, but since
-+	 * waiting for over 18 hours to start the scan is a bit silly
-+	 * and to keep it aligned with UMAC scans (which only support
-+	 * 16-bit delays), trim it down to 16-bits.
-+	 */
-+	if (req->delay > U16_MAX) {
-+		IWL_DEBUG_SCAN(mvm,
-+			       "delay value is > 16-bits, set to max possible\n");
-+		params.delay = U16_MAX;
-+	} else {
-+		params.delay = req->delay;
-+	}
-+
- 	iwl_mvm_scan_calc_dwell(mvm, vif, &params);
- 
- 	ret = iwl_mvm_config_sched_scan_profiles(mvm, req);
 -- 
-2.1.0
-
+Pengutronix e.K.                           | Uwe Kleine-König            |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
