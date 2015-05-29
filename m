@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:35353 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbbEKRsR convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:35280 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439AbbE2LeK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 May 2015 13:48:17 -0400
-Content-Type: text/plain;
-	charset=us-ascii
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH 2/2] adm8211: fix the possible pci cache line sizes inside switch-case
-From: Okash Khawaja <okash.khawaja@gmail.com>
-In-Reply-To: <CAOiHx=kzSsFenqPSNeAX6P5wJK8Hr-q+s+rJoQQMPbSGmE50xw@mail.gmail.com>
-Date: Mon, 11 May 2015 18:48:11 +0100
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"joe@perches.com" <joe@perches.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Message-Id: <4C95B6D2-3A68-4360-BE3C-5264DD0ED8DF@gmail.com> (sfid-20150511_194838_607288_88796C0D)
-References: <20150505224020.GA3805@bytefire-computer> <87wq0ms3mv.fsf@kamboji.qca.qualcomm.com> <20150506063241.GA3042@bytefire-computer> <87k2wflj7p.fsf@kamboji.qca.qualcomm.com> <2CBE2DDF-92E5-45C9-95F8-C5CF918D12D9@gmail.com> <87vbfzjt4t.fsf@kamboji.qca.qualcomm.com> <CAOiHx=kzSsFenqPSNeAX6P5wJK8Hr-q+s+rJoQQMPbSGmE50xw@mail.gmail.com>
-To: Jonas Gorski <jogo@openwrt.org>
+	Fri, 29 May 2015 07:34:10 -0400
+Received: by wicmx19 with SMTP id mx19so14652085wic.0
+        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:34:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1432897812.2104.7.camel@sipsolutions.net>
+References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
+	<1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
+	<1432285043-8878-2-git-send-email-michal.kazior@tieto.com>
+	<1432897812.2104.7.camel@sipsolutions.net>
+Date: Fri, 29 May 2015 13:34:07 +0200
+Message-ID: <CA+BoTQmkg8KBhFGqSsdt6Sks6JGUDGnM2oSzMSEWtCEz-abwzA@mail.gmail.com> (sfid-20150529_133414_453174_0F64E8F7)
+Subject: Re: [PATCH v2 2/2] mac80211: guard against invalid ptr deref
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 11 May 2015, at 14:24, Jonas Gorski <jogo@openwrt.org> wrote:
-> 
-> Hi,
-> 
->> On Mon, May 11, 2015 at 12:38 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Okash Khawaja <okash.khawaja@gmail.com> writes:
->> 
->>> Sure, I'll create v2 of the patch with updated commit log.
->>> 
->>> Since it's part of a patch set, do you want me to send both the
->>> patches in the patch set together as v2 or just this patch?
->> 
->> Please resend the whole patchset as v2, less problems that way.
-> 
-> If you are sending a v2 anyway, I'd suggest using decimal values for
-> the cases, as cache line sizes are usually given in decimal anyway. So
-> just drop the "0x" instead of converting the values ;-)
-> 
-> 
-> Jonas
+On 29 May 2015 at 13:10, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2015-05-22 at 10:57 +0200, Michal Kazior wrote:
+>> It was possible for mac80211 to be coerced into an
+>> unexpected flow causing sdata union to become
+>> corrupted. Station pointer was put into
+>> sdata->u.vlan.sta memory location while it was
+>> really master AP's sdata->u.ap.next_beacon. This
+>> led to station entry being later freed as
+>> next_beacon before __sta_info_flush() in
+>> ieee80211_stop_ap() and a subsequent invalid
+>> pointer dereference crash.
+>>
+>> The problem was that ieee80211_ptr->use_4addr
+>> wasn't cleared on interface type changes.
+[...]
+>> Even though this can and should be fixed in
+>> cfg80211 it still makes sense to add a sanity
+>> check to mac80211 to prevent future problems.
+>
+> I'm a bit undecided about this. Is this really the only place that
+> assumes use_4addr implies that it's a VLAN, in a context like this?
 
-Jonas, I had already sent the updated patch by the time I received your email. Is there a convention around this?
-Thanks
+Hmm.. I guess TDLS could also have use_4addr and still be a
+IFTYPE_STATION, right? In which case parent condition should be
+modified instead:
+
+ if (vlansdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+     params->vlan->ieee80211_ptr->use_4addr) { ...
+
+
+Michał
