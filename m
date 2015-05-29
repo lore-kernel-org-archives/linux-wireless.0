@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:35687 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbbEYPwr (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38561 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161059AbbE2Qs5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 May 2015 11:52:47 -0400
-Message-ID: <5563454B.1080400@lwfinger.net> (sfid-20150525_175305_128719_5C760F50)
-Date: Mon, 25 May 2015 10:52:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 29 May 2015 12:48:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Add debugfs support to configure beacon tx mode
+In-Reply-To: <1431594885-32346-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Thu, 14 May 2015 14:44:45 +0530")
+References: <1431594885-32346-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Fri, 29 May 2015 19:48:43 +0300
+Message-ID: <878uc7wcr8.fsf@kamboji.qca.qualcomm.com> (sfid-20150529_184907_752407_3504D26C)
 MIME-Version: 1.0
-To: Vaishali Thakkar <vthakkar1994@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-CC: Haggai Eran <haggai.eran@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Stable <stable@vger.kernel.org>, devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call
- of del_timer_sync()
-References: <1432415812-1285-1-git-send-email-Larry.Finger@lwfinger.net>	<CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>	<556268BC.5050807@lwfinger.net>	<20150525091737.GQ4150@mwanda> <CAK-LDb+1WscLTFw=NDY=_aUOGw72a4wRsqCU-1N+KJ11k15S5w@mail.gmail.com>
-In-Reply-To: <CAK-LDb+1WscLTFw=NDY=_aUOGw72a4wRsqCU-1N+KJ11k15S5w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2015 04:37 AM, Vaishali Thakkar wrote:
->
-> On 25 May 2015 14:49, "Dan Carpenter" <dan.carpenter@oracle.com
-> <mailto:dan.carpenter@oracle.com>> wrote:
->  >
->  > On Sun, May 24, 2015 at 07:11:40PM -0500, Larry Finger wrote:
->  > > On 05/24/2015 02:03 PM, Haggai Eran wrote:
->  > > >On 24 May 2015 at 00:16, Larry Finger <Larry.Finger@lwfinger.net
-> <mailto:Larry.Finger@lwfinger.net>> wrote:
->  > > >>The driver is reporting a warning at kernel/time/timer.c:1096 due to calling
->  > > >>del_timer_sync() while in interrupt mode. Such warnings are fixed by calling
->  > > >>del_timer() instead.
->  > > >>
->  > > >>Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net
-> <mailto:Larry.Finger@lwfinger.net>>
->  > > >>Cc: Stable <stable@vger.kernel.org <mailto:stable@vger.kernel.org>>
->  > > >>Cc: Haggi Eran <haggai.eran@gmail.com <mailto:haggai.eran@gmail.com>>
->  > > >
->  > > >Hi,
->  > > >
->  > > >I haven't been using kernel v4.1 so I haven't seen this warning, but looking
->  > > >at the code it seems to originate from the two recent patches to remove
->  > > >_cancel_timer and _cancel_timer_ex. I see that there's another patch in
-> lkml [1]
->  > > >that changes del_timer_sync back to del_timer in more places. Perhaps it
->  > > >could prevent other warnings like this in the future.
->  > > >
->  > > >Regards,
->  > > >Haggai
->  > > >
->  > > >[1] https://lkml.org/lkml/2015/5/15/226
->  > >
->  > > Yes, the script kiddies make changes they do not understand and
->  > > screw everything up. Unfortunately, I did not catch these in review.
->  > > I think I will submit V2 and blast the contributor.
->  >
->  > Don't blast the contributor...  These are special intern patches that
->  > dont' go through the normal review process.  The intern process is over
->  > this year.  The lack of normal review introduced a number of bugs this
->  > year.  I always complain to Greg about it and he says that I should join
->  > the intern mailing list if I care so much.
->
-> I am sorry for those patches. It was me who introduced those bugs. Yes, it was
-> sent during Outreachy process. But it was my mistake as a newbie. May be I
-> should have taken care of interrupt mode thing.
->
-> I would like to fix it if someone is not doing it. Sorry again. I will take care
-> of these things in my future patches.
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-No, one of us will fix the problems with r8712u. The hardware is needed for 
-proper testing, and I doubt that you have it.
+> Introduce debugfs entry to select beacon tx mode to
+> staggered or bursted mode. In staggered mode, software beacon
+> alert will be evenly distributed for each beaconing interfaces
+> by (beacon intval / number of vif). In bursted mode, batch of
+> beacons will be sent out as batch at beacon interval.
+>
+> By default, staggered mode is selected.
+>
+> To select bursted mode
+>
+> echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/beacon_tx_mode
+>
+> For staggered mode,
+>
+> echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/beacon_tx_mode
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-Larry
+In my opinion this should be configured via nl80211, not from debugfs.
 
+-- 
+Kalle Valo
