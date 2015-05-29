@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57050 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753387AbbE1JLz (ORCPT
+Received: from mx1.redhat.com ([209.132.183.28]:37786 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754594AbbE2Mkh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 05:11:55 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2015-05-26
-References: <1432667798.26624.3.camel@intel.com>
-Date: Thu, 28 May 2015 12:11:47 +0300
-In-Reply-To: <1432667798.26624.3.camel@intel.com> (Emmanuel Grumbach's message
-	of "Tue, 26 May 2015 19:16:38 +0000")
-Message-ID: <87lhg9xe0c.fsf@kamboji.qca.qualcomm.com> (sfid-20150528_111159_066704_875A3141)
+	Fri, 29 May 2015 08:40:37 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <5567C131.8050005@kernel.org>
+References: <5567C131.8050005@kernel.org> <20150528154605.1259.42518.stgit@warthog.procyon.org.uk> <20150528154834.1259.22434.stgit@warthog.procyon.org.uk>
+To: Andy Lutomirski <luto@kernel.org>
+Cc: dhowells@redhat.com, Luis Rodriguez <mcgrof@suse.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>, keyrings@linux-nfs.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kyle McMartin <kyle@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	LSM List <linux-security-module@vger.kernel.org>,
+	Mimi Zohar <zohar@us.ibm.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH 16/20] PKCS#7: Add an optional authenticated attribute to hold firmware name [ver #5]
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Date: Fri, 29 May 2015 13:40:29 +0100
+Message-ID: <29091.1432903229@warthog.procyon.org.uk> (sfid-20150529_144044_759324_A1AAC59F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+Andy Lutomirski <luto@kernel.org> wrote:
 
-> this is a pull request for 4.2. Nothing really stands out besides what I
-> wrote in the tag. Even the diffstat hints what is the biggest part of
-> this pull request :)
+> This is insecure because PKCS#7 authenticated attributes are broken (see
+> RFC2315 section 9.4 note 4).  You need to either require that everything have
+> authenticated attributes or require that nothing have authenticated
+> attributes.   Maybe this insecurity doesn't matter in practice, but I don't
+> wouldn't want to bet on it.
 
-I see there was a minor comment to one of the patches. Can I still pull
-this or what are you planning to do?
+You can also fudge the signature (or a hash) by adding extra data to or
+modifying the data blob and by switching signature values between signature
+blobs.
 
-> Note that there are fixes here that didn't make it to my previous pull
-> request for 4.1. I tagged them for stable since the wording of your last
-> pull request for 4.1 to Dave hinted me that you won't send any pull
-> request for 4.1 to him anymore.
+PKCS#7 authenticated attributes aren't as broken as you make out.  They are
+added to the signature hash - so an attacker *would* have to fudge things to
+make it work.  Further, we can easily make it so that auth attrs are
+*required*.
 
-Yeah, I said that hopefully it's the last pull request. I got one
-important fix from Arend so I will try to send one more, but let's see
-how it goes.
+> On top of that, this is a ton of code to support something trivial.
 
--- 
-Kalle Valo
+I don't think it's as bad as you're making it out to be.
+
+> And it requires an OID to be registered (ick).
+
+That shouldn't be too hard to achieve - at least if we don't mind having RH
+space OIDs.
+
+> Earlier you suggested just appending the signature purpose to the thing being
+> signed.  What's wrong with that?
+
+You can't tell the difference between a corrupted key/signature and a firmware
+blob being loaded for the wrong request.  Firstly, I want to be able to detect
+the difference and secondly, it makes it easier to debug it if something does
+go wrong.
+
+> P.S.  Or you could stop using PKCS#7 if possible.
+
+We've discussed this before.  We have to have a PKCS#7 parser in the kernel
+anyway if we're going to support signed PE files for kexec.
+
+David
