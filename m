@@ -1,115 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:35312 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080AbbESXm1 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3325 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755659AbbE2L1f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 May 2015 19:42:27 -0400
-Received: by labbd9 with SMTP id bd9so49224717lab.2
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2015 16:42:25 -0700 (PDT)
+	Fri, 29 May 2015 07:27:35 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBRYx9009961
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:35 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1unvy5un9b-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:27:35 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv3 03/16] mwifiex: support AP reset after bss_stop
+Date: Fri, 29 May 2015 22:26:24 +0530
+Message-ID: <1432918598-27769-4-git-send-email-patila@marvell.com> (sfid-20150529_132738_053722_1E655712)
+In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
+References: <1432918598-27769-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com>
-References: <20150519200232.GM23057@wotan.suse.de> <555BA438.2070802@kernel.org>
- <CAGRGNgX5h7mPyE93DEjEOuSdJUocBjHJacntnje9h02u7=5AMw@mail.gmail.com>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Tue, 19 May 2015 16:42:05 -0700
-Message-ID: <CALCETrX1YrdwfPJxVbzE0MQK=HChK8sDztt6MZcJiCvTEDCn7Q@mail.gmail.com> (sfid-20150520_014245_361538_B0FF0542)
-Subject: Re: [RFD] linux-firmware key arrangement for firmware signing
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Andy Lutomirski <luto@kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	James Morris <james.l.morris@oracle.com>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <david.woodhouse@intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joey Lee <jlee@suse.de>, Rusty Russell <rusty@rustcorp.com.au>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Konstantin Ryabitsev <mricon@kernel.org>,
-	Michal Marek <mmarek@suse.cz>,
-	Abelardo Ricart III <aricart@memnix.com>,
-	Sedat Dilek <sedat.dilek@gmail.com>, keyrings@linux-nfs.org,
-	Borislav Petkov <bp@alien8.de>, Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 19, 2015 at 4:30 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi All,
->
-> On Wed, May 20, 2015 at 6:59 AM, Andy Lutomirski <luto@kernel.org> wrote:
->> [added cc's from the other thread]
->>
->> On 05/19/2015 01:02 PM, Luis R. Rodriguez wrote:
->>>
->>> David Howells has posted v4 of his series of supporting PKCS#7 for module
->>> signing. I'm in my v3 series now on RFCs for firmware PKCS#7 support, and
->>> after
->>> some review and patch shuffling I think this is ready for patch form.  My
->>> own
->>> series however depend on quite a bit of other pending changes, one series
->>> which
->>> will go through Rusty's tree, another series of fixes on firmware_class
->>> which
->>> should go through Greg's tree. I'll wait until all this and David's own
->>> patches
->>> get merged before posting firmware PKCS#7 support. Before all this though
->>> in
->>> preparation for fw signing one thing we should start to talk about more
->>> broadly
->>> however is how linux-firmware binary file signing would work in practice
->>> and
->>> what we need, and make sure folks are OK with all this.
->>>
->>> First, firmware signing will be completely optional as with module
->>> signing.
->>>
->>
->> ...
->>
->>> Other than this last nitpick, any other concerns or recommendations ?
->>
->>
->> A couple.  Some of these are general concerns with the existing
->> infrastructure, but #1 is a specific problem that gets much worse if we add
->> firmware signing.  Feel free to ignore 2-4.
->>
->> 1. We should get the signature semantics right.  I think that, for modules,
->> we currently sign literally the module payload.  For modules, in my
->> semi-amateurish crypto universe [1], this is fine *as long as the key in
->> question is used for no other purpose*.  For firmware, it's dangerous, since
->> it would be vulnerable to substitution attacks in which the adversary
->> convinces us to interpret one firmware file as firmware for another device
->> or purpose entirely.
->>
->> We should be signing something that's semantically equivalent to "This is a
->> valid module: xyz", "This is a valid 'regulatory.bin': xyz", or "This is a
->> valid kexec image: xyz".
->
-> Something that occurred to me (as a complete bystander) was: would it
-> make sense to have keys able to be restricted to particular "types" of
-> signable data? I.e. the key that can sign a valid regulatory.bin file
-> cannot be used to sign a module or a kexec image. - This could remove
-> the need to have multiple keyrings. (Also, UEFI keys unless otherwise
-> tagged could be restricted to only signing bootloaders or kernels)
+This would enable clearing of FW bss data structures when AP
+operations are stopped.
 
-Seems sensible to me.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
+ drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
+ drivers/net/wireless/mwifiex/fw.h          |  1 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
+ drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
+ 5 files changed, 19 insertions(+), 2 deletions(-)
 
-FWIW, I'm starting to think that UEFI-based validation of kexec images
-should be totally separate.  It uses a nasty PE format with a hideous
-PKCS #7 formatted signature.  Maybe that should be a completely
-separate piece of code.
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 3a14d3a..d47799a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 		return -1;
+ 	}
+ 
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "Failed to reset BSS\n");
++		return -1;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index a1de83f..b5033d1 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		case HostCmd_CMD_UAP_BSS_START:
+ 		case HostCmd_CMD_UAP_BSS_STOP:
+ 		case HostCmd_CMD_UAP_STA_DEAUTH:
++		case HOST_CMD_APCMD_SYS_RESET:
+ 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
+ 						      cmd_oid, data_buf,
+ 						      cmd_ptr);
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index cf386bc..45822a8 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_RSSI_INFO                         0x00a4
+ #define HostCmd_CMD_FUNC_INIT                         0x00a9
+ #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
++#define HOST_CMD_APCMD_SYS_RESET                      0x00af
+ #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
+ #define HostCmd_CMD_UAP_BSS_START                     0x00b1
+ #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index aa5b9a3..f20a09e 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_STA_DEAUTH:
+ 		break;
++	case HOST_CMD_APCMD_SYS_RESET:
++		break;
+ 	case HostCmd_CMD_MEF_CFG:
+ 		break;
+ 	case HostCmd_CMD_COALESCE_CFG:
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index a4ae283..0a3297e 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_BSS_START:
+ 	case HostCmd_CMD_UAP_BSS_STOP:
++	case HOST_CMD_APCMD_SYS_RESET:
+ 		cmd->command = cpu_to_le16(cmd_no);
+ 		cmd->size = cpu_to_le16(S_DS_GEN);
+ 		break;
+@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
+ 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
+-		mwifiex_dbg(priv->adapter, ERROR,
+-			    "Failed to stop the BSS\n");
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
++		return -1;
++	}
++
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
+ 		return -1;
+ 	}
+ 
+-- 
+1.8.1.4
 
->
-> Also, are multiple signatures a sensible thing? E.g. regulatory.bin
-> gets signed by Seth, then Kyle, then $DISTRO and any one key is enough
-> to validate it.
-
-That might further complicate matters.
-
---Andy
