@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33864 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbbEIJQL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 May 2015 05:16:11 -0400
-Received: by pacyx8 with SMTP id yx8so69446222pac.1
-        for <linux-wireless@vger.kernel.org>; Sat, 09 May 2015 02:16:10 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] rtlwifi: rtl8192cu: Remove setting REG_BCN_MAX_ERR code in _rtl92cu_set_media_status().
-Date: Sat,  9 May 2015 18:15:23 +0900
-Message-Id: <1431162923-5037-1-git-send-email-ap420073@gmail.com> (sfid-20150509_111614_886841_31D39973)
+Received: from s3.sipsolutions.net ([5.9.151.49]:37927 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752065AbbE2LjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 May 2015 07:39:18 -0400
+Message-ID: <1432899554.2104.17.camel@sipsolutions.net> (sfid-20150529_133922_141233_62F6F486)
+Subject: Re: [PATCH v2 2/2] mac80211: guard against invalid ptr deref
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 29 May 2015 13:39:14 +0200
+In-Reply-To: <CA+BoTQmkg8KBhFGqSsdt6Sks6JGUDGnM2oSzMSEWtCEz-abwzA@mail.gmail.com> (sfid-20150529_133408_532814_43B8B10C)
+References: <1432039021-29666-1-git-send-email-michal.kazior@tieto.com>
+	 <1432285043-8878-1-git-send-email-michal.kazior@tieto.com>
+	 <1432285043-8878-2-git-send-email-michal.kazior@tieto.com>
+	 <1432897812.2104.7.camel@sipsolutions.net>
+	 <CA+BoTQmkg8KBhFGqSsdt6Sks6JGUDGnM2oSzMSEWtCEz-abwzA@mail.gmail.com>
+	 (sfid-20150529_133408_532814_43B8B10C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialization routine set REG_BCN_MAX_ERR to 0xFF.
-also _rtl92cu_set_media_status set REG_BCN_MAX_ERR to same value.
-so i remove this code.
+On Fri, 2015-05-29 at 13:34 +0200, Michal Kazior wrote:
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 1 -
- 1 file changed, 1 deletion(-)
+> > I'm a bit undecided about this. Is this really the only place that
+> > assumes use_4addr implies that it's a VLAN, in a context like this?
+> 
+> Hmm.. I guess TDLS could also have use_4addr and still be a
+> IFTYPE_STATION, right? 
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index d310d55..3c1639b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1323,7 +1323,6 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
- 	enum led_ctl_mode ledaction = LED_CTL_NO_LINK;
- 
- 	bt_msr &= 0xfc;
--	rtl_write_byte(rtlpriv, REG_BCN_MAX_ERR, 0xFF);
- 	if (type == NL80211_IFTYPE_UNSPECIFIED || type ==
- 	    NL80211_IFTYPE_STATION) {
- 		_rtl92cu_stop_tx_beacon(hw);
--- 
-2.1.0
+No, TDLS can neither get here (VLAN assignment) nor does it actually set
+use_4addr. The only other thing that can set use_4addr is the station
+interface itself, but then we also can't get here.
+
+That wasn't really my point though - I was thinking more along the lines
+of code in rx.c, tx.c that just checks use_4addr? Not really sure.
+
+johannes
+
 
