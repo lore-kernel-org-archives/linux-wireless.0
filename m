@@ -1,77 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58092 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932242AbbEZQf4 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42863 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755874AbbE2L2q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 12:35:56 -0400
-Date: Tue, 26 May 2015 09:35:55 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Joe Perches <joe@perches.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	devel@driverdev.osuosl.org,
-	Sudip Mukherjee <sudip@vectorindia.org>,
-	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	netdev@vger.kernel.org, Haggai Eran <haggai.eran@gmail.com>,
-	Arek Rusniak <arek.rusi@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] staging: r8712u: Fix kernel warning for improper call of
- del_timer_sync()
-Message-ID: <20150526163555.GA9685@kroah.com> (sfid-20150526_183604_703425_B4615D4C)
-References: <CAJ=9CzbPmo+f4zjY4CqQ7TsUENpwy+zHcpxeLTbAH0DAZSkqsQ@mail.gmail.com>
- <556268BC.5050807@lwfinger.net>
- <20150525091737.GQ4150@mwanda>
- <1432575448.2846.63.camel@perches.com>
- <20150526044611.GA3465@sudip-PC>
- <1432616108.2846.83.camel@perches.com>
- <20150526050212.GC3465@sudip-PC>
- <1432616879.2846.86.camel@perches.com>
- <20150526141401.GC21573@kroah.com>
- <1432651739.2846.93.camel@perches.com>
+	Fri, 29 May 2015 07:28:46 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4TBSUpg015510
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:45 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1upn7d87tw-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2015 04:28:45 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv3 11/16] mwifiex: parse power constraint IE from Tail
+Date: Fri, 29 May 2015 22:26:32 +0530
+Message-ID: <1432918598-27769-12-git-send-email-patila@marvell.com> (sfid-20150529_133350_704749_1288779C)
+In-Reply-To: <1432918598-27769-1-git-send-email-patila@marvell.com>
+References: <1432918598-27769-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432651739.2846.93.camel@perches.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 26, 2015 at 07:48:59AM -0700, Joe Perches wrote:
-> On Tue, 2015-05-26 at 07:14 -0700, Greg KH wrote:
-> > On Mon, May 25, 2015 at 10:07:59PM -0700, Joe Perches wrote:
-> > > As far as I understand, the Eudyptula Challenge list has
-> > > internal mechanisms to nominally review patches before some
-> > > patch is submitted to lkml.
-> > 
-> > No it does not.
-> 
-> That's not quite what was described to me by someone behind the
-> email address:
-> "Little Penguin <little@eudyptula-challenge.org>" back in August.
-> 
-> What I understood from that email was there is a qualifying
-> formatting component to the challenge and then patches were to be
-> sent to maintainers and lists.
+This patch adds support to parse power constraint IEs from
+Tail buffer. This power constraint is then set to FW during
+bss_config download.
 
-Hm, I don't know then, but from what I have seen, the tasks that send
-patches to the kernel are not pre-reviewed by anyone.  If they were, the
-quality level of the patches we get here would have been much higher :)
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |  3 +++
+ drivers/net/wireless/mwifiex/fw.h       |  6 ++++++
+ drivers/net/wireless/mwifiex/ioctl.h    |  1 +
+ drivers/net/wireless/mwifiex/main.h     |  3 +++
+ drivers/net/wireless/mwifiex/uap_cmd.c  | 27 +++++++++++++++++++++++++++
+ 5 files changed, 40 insertions(+)
 
-> > > The main point is that patches shouldn't be applied without
-> > > being submitted to a more widely read list.
-> > 
-> > I take the blame for any problems with Outreachy patches.
-> 
-> Are you going to change any procedure associated to these
-> Outreachy patches?
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 16528c1..1226555 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1867,6 +1867,9 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ 	mwifiex_set_wmm_params(priv, bss_cfg, params);
+ 
++	if (mwifiex_is_11h_active(priv))
++		mwifiex_set_tpc_params(priv, bss_cfg, params);
++
+ 	if (mwifiex_is_11h_active(priv) &&
+ 	    !cfg80211_chandef_dfs_required(wiphy, &params->chandef,
+ 					   priv->bss_mode)) {
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 734551c..703e5e9 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -128,6 +128,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ 
+ #define TLV_TYPE_UAP_SSID			0x0000
+ #define TLV_TYPE_UAP_RATES			0x0001
++#define TLV_TYPE_PWR_CONSTRAINT			0x0020
+ 
+ #define PROPRIETARY_TLV_BASE_ID                 0x0100
+ #define TLV_TYPE_KEY_MATERIAL       (PROPRIETARY_TLV_BASE_ID + 0)
+@@ -1780,6 +1781,11 @@ struct host_cmd_tlv_ageout_timer {
+ 	__le32 sta_ao_timer;
+ } __packed;
+ 
++struct host_cmd_tlv_power_constraint {
++	struct mwifiex_ie_types_header header;
++	u8 constraint;
++} __packed;
++
+ struct host_cmd_ds_version_ext {
+ 	u8 version_str_sel;
+ 	char version_str[128];
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 6f11a25..4f0174c 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -113,6 +113,7 @@ struct mwifiex_uap_bss_param {
+ 	u32 sta_ao_timer;
+ 	u32 ps_sta_ao_timer;
+ 	u8 qos_info;
++	u8 power_constraint;
+ 	struct mwifiex_types_wmm_info wmm_info;
+ };
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 837e610..d92c527 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1149,6 +1149,9 @@ void mwifiex_set_ht_params(struct mwifiex_private *priv,
+ void mwifiex_set_vht_params(struct mwifiex_private *priv,
+ 			    struct mwifiex_uap_bss_param *bss_cfg,
+ 			    struct cfg80211_ap_settings *params);
++void mwifiex_set_tpc_params(struct mwifiex_private *priv,
++			    struct mwifiex_uap_bss_param *bss_cfg,
++			    struct cfg80211_ap_settings *params);
+ void mwifiex_set_uap_rates(struct mwifiex_uap_bss_param *bss_cfg,
+ 			   struct cfg80211_ap_settings *params);
+ void mwifiex_set_vht_width(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 865b363..61e8bf3 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -222,6 +222,23 @@ void mwifiex_set_vht_params(struct mwifiex_private *priv,
+ 	return;
+ }
+ 
++/* This function updates 11ac related parameters from IE
++ * and sets them into bss_config structure.
++ */
++void mwifiex_set_tpc_params(struct mwifiex_private *priv,
++			    struct mwifiex_uap_bss_param *bss_cfg,
++			    struct cfg80211_ap_settings *params)
++{
++	const u8 *tpc_ie;
++
++	tpc_ie = cfg80211_find_ie(WLAN_EID_TPC_REQUEST, params->beacon.tail,
++				  params->beacon.tail_len);
++	if (tpc_ie)
++		bss_cfg->power_constraint = *(tpc_ie + 2);
++	else
++		bss_cfg->power_constraint = 0;
++}
++
+ /* Enable VHT only when cfg80211_ap_settings has VHT IE.
+  * Otherwise disable VHT.
+  */
+@@ -466,6 +483,7 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 	struct host_cmd_tlv_auth_type *auth_type;
+ 	struct host_cmd_tlv_rates *tlv_rates;
+ 	struct host_cmd_tlv_ageout_timer *ao_timer, *ps_ao_timer;
++	struct host_cmd_tlv_power_constraint *pwr_ct;
+ 	struct mwifiex_ie_types_htcap *htcap;
+ 	struct mwifiex_ie_types_wmmcap *wmm_cap;
+ 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
+@@ -644,6 +662,15 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 		tlv += sizeof(*ao_timer);
+ 	}
+ 
++	if (bss_cfg->power_constraint) {
++		pwr_ct = (void *)tlv;
++		pwr_ct->header.type = cpu_to_le16(TLV_TYPE_PWR_CONSTRAINT);
++		pwr_ct->header.len = cpu_to_le16(sizeof(u8));
++		pwr_ct->constraint = bss_cfg->power_constraint;
++		cmd_size += sizeof(*pwr_ct);
++		tlv += sizeof(*pwr_ct);
++	}
++
+ 	if (bss_cfg->ps_sta_ao_timer) {
+ 		ps_ao_timer = (struct host_cmd_tlv_ageout_timer *)tlv;
+ 		ps_ao_timer->header.type =
+-- 
+1.8.1.4
 
-2 bugs out of 900?  Nah, I think that's good odds.
-
-Also, the outreachy patch process would overwhelm everyone else on the
-list, it's really high volume during the application phase, I'd prefer
-it to stick with the mentors that wish to help out with the process.  If
-you and/or Dan, or anyone else wishes to help out with this, I would
-really appreciate it.  But I don't think that forcing them to post to
-the driverdevel list is a good idea.
-
-thanks,
-
-greg k-h
