@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.9]:28231 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751891AbbEDKEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 May 2015 06:04:07 -0400
-Date: Mon, 4 May 2015 12:04:01 +0200
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: Re: [PATCH 1/2] add mt7601u driver
-Message-ID: <20150504120401.30835e07@north> (sfid-20150504_120411_821410_206AEBCD)
-In-Reply-To: <1430732248.2013.16.camel@sipsolutions.net>
-References: <1430571690-9054-1-git-send-email-moorray3@wp.pl>
-	<1430571690-9054-2-git-send-email-moorray3@wp.pl>
-	<1430732248.2013.16.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:34797 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbbE3XYq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 May 2015 19:24:46 -0400
+Received: by pdbki1 with SMTP id ki1so79895382pdb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2015 16:24:46 -0700 (PDT)
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [PATCH] cfg80211: Don't re-use the skb for larger NL messages.
+Date: Sun, 31 May 2015 04:54:35 +0530
+Message-Id: <1433028275-9576-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150531_012832_771928_8471DF71)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 04 May 2015 11:37:28 +0200, Johannes Berg wrote:
-> On Sat, 2015-05-02 at 15:01 +0200, moorray3@wp.pl wrote:
-> 
-> > +int mt7601u_wait_asic_ready(struct mt7601u_dev *dev)
-> > +{
-> > +	int i = 100;
-> > +	u32 val;
-> > +
-> > +	do {
-> > +		val = mt7601u_rr(dev, MT_MAC_CSR0);
-> > +		if (val && ~val)
-> > +			return 0;
-> 
-> No delays here? Seems odd. You do have one in the next function where
-> you also call the _rr() function.
+This improves the time to get the DUMP response across to user space.
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+---
+ net/wireless/nl80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-I have not seen this check fail ever, but placing a delay won't hurt.
-
-> > +	skb = alloc_skb(seg_len, GFP_ATOMIC);
-> > +	if (!skb)
-> > +		return NULL;
-> > +
-> > +	memset(skb->cb, 0, sizeof(skb->cb));
-> 
-> Pretty sure that's pointless.
-
-Shamefully pointless, thanks for spotting it.
-
-> > +	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD)) {
-> > +		int hdr_len = ieee80211_get_hdrlen_from_buf(data, seg_len);
-> > +
-> > +		memcpy(skb_put(skb, hdr_len), data, hdr_len);
-> > +		data += hdr_len + 2;
-> > +		seg_len -= hdr_len;
-> > +	}
-> > +
-> > +	memcpy(skb_put(skb, seg_len), data, seg_len);
-> > +
-> > +	return skb;
-> 
-> Don't know how your buffers are set up, but if the DMA engine consumes
-> pages you could consider using paged RX instead of the memcpy().
-
-DMA engine can concatenate multiple frames into a single USB bulk
-transfer to a large continuous buffer.  There is no way to request 
-any alignment of the frames within that large buffer so I think paged 
-RX is not an option.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c264eff..152bd0c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7636,6 +7636,10 @@ static int nl80211_testmode_dump(struct sk_buff *skb,
+ 		}
+ 
+ 		genlmsg_end(skb, hdr);
++
++		/* Don't re-use skb, when we know nla_put fails*/
++		if (skb->len > NLMSG_GOODSIZE / 2)
++			break;
+ 	}
+ 
+ 	err = skb->len;
