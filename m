@@ -1,157 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54124 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932135AbbE1PsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 11:48:03 -0400
-Subject: [PATCH 12/20] modsign: Allow external signing key to be specified
- [ver #5]
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Thu, 28 May 2015 16:47:56 +0100
-Message-ID: <20150528154756.1259.38918.stgit@warthog.procyon.org.uk> (sfid-20150528_174815_254059_8181A8A3)
-In-Reply-To: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
-References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:34121 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757967AbbEaG6u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2015 02:58:50 -0400
+Received: by wgv5 with SMTP id 5so91103070wgv.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2015 23:58:48 -0700 (PDT)
+Message-ID: <556AB128.3050909@gmail.com> (sfid-20150531_085854_538022_FD189F46)
+Date: Sun, 31 May 2015 08:58:48 +0200
+From: Arend van Spriel <aspriel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Chaitanya T K <chaitanya.mgit@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL messages.
+References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
+In-Reply-To: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <David.Woodhouse@intel.com>
+On 31-05-15 01:28, Chaitanya T K wrote:
+> cfg80211 reuses the skb before asking for a fresh on from genl framework, 
+> this works efficiently for smaller messages but NLM_F_DUMP is normally 
+> used to transport larger data normally > PAGE_SIZE, so if the message 
+> occupies more than GOODSIZE its better to ask for a new, saves couple
+> of hanshakes with the driver.
+> 
+> This improves the time to get the DUMP response across to user space.
+> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+> ---
+> V2: no new line, so commit log was cut off. Updated now.
+> ---
+>  net/wireless/nl80211.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index c264eff..152bd0c 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -7636,6 +7636,10 @@ static int nl80211_testmode_dump(struct sk_buff *skb,
+>  		}
+>  
+>  		genlmsg_end(skb, hdr);
+> +
+> +		/* Don't re-use skb, when we know nla_put fails*/
 
-Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
-Signed-off-by: David Howells <dhowells@redhat.com>
----
+After reading the commit message this comment is not clear to me. Maybe
+it is just me ;-)
 
- Documentation/module-signing.txt |   31 ++++++++++++++++++++++++++-----
- Makefile                         |    2 +-
- init/Kconfig                     |   14 ++++++++++++++
- kernel/Makefile                  |    5 +++++
- 4 files changed, 46 insertions(+), 6 deletions(-)
+> +		if (skb->len > NLMSG_GOODSIZE / 2)
 
-diff --git a/Documentation/module-signing.txt b/Documentation/module-signing.txt
-index faaa6ea002f7..84597c7ea175 100644
---- a/Documentation/module-signing.txt
-+++ b/Documentation/module-signing.txt
-@@ -88,6 +88,22 @@ This has a number of options available:
-      than being a module) so that modules signed with that algorithm can have
-      their signatures checked without causing a dependency loop.
- 
-+ (4) "File name or PKCS#11 URI of module signing key" (CONFIG_MODULE_SIG_KEY)
-+
-+     Setting this option to something other than its default of
-+     "signing_key.priv" will disable the autogeneration of signing keys and
-+     allow the kernel modules to be signed with a key of your choosing.
-+     The string provided should identify a file containing a private key
-+     in PEM form, or — on systems where the OpenSSL ENGINE_pkcs11 is
-+     appropriately installed — a PKCS#11 URI as defined by RFC7512.
-+
-+     If the PEM file containing the private key is encrypted, or if the
-+     PKCS#11 token requries a PIN, this can be provided at build time by
-+     means of the KBUILD_SIGN_PIN variable.
-+
-+     The corresponding X.509 certificate in DER form should still be placed
-+     in a file named signing_key.x509 in the top-level build directory.
-+
- 
- =======================
- GENERATING SIGNING KEYS
-@@ -100,8 +116,9 @@ it can be deleted or stored securely.  The public key gets built into the
- kernel so that it can be used to check the signatures as the modules are
- loaded.
- 
--Under normal conditions, the kernel build will automatically generate a new
--keypair using openssl if one does not exist in the files:
-+Under normal conditions, when CONFIG_MODULE_SIG_KEY is unchanged from its
-+default of "signing_key.priv", the kernel build will automatically generate
-+a new keypair using openssl if one does not exist in the files:
- 
- 	signing_key.priv
- 	signing_key.x509
-@@ -135,8 +152,12 @@ kernel sources tree and the openssl command.  The following is an example to
- generate the public/private key files:
- 
- 	openssl req -new -nodes -utf8 -sha256 -days 36500 -batch -x509 \
--	   -config x509.genkey -outform DER -out signing_key.x509 \
--	   -keyout signing_key.priv
-+	   -config x509.genkey -outform PEM -out kernel_key.pem \
-+	   -keyout kernel_key.pem
-+
-+The full pathname for the resulting kernel_key.pem file can then be specified
-+in the CONFIG_MODULE_SIG_KEY option, and the certificate and key therein will
-+be used instead of an autogenerated keypair.
- 
- 
- =========================
-@@ -181,7 +202,7 @@ To manually sign a module, use the scripts/sign-file tool available in
- the Linux kernel source tree.  The script requires 4 arguments:
- 
- 	1.  The hash algorithm (e.g., sha256)
--	2.  The private key filename
-+	2.  The private key filename or PKCS#11 URI
- 	3.  The public key filename
- 	4.  The kernel module to be signed
- 
-diff --git a/Makefile b/Makefile
-index ad27fc9fa02b..9590e67c2094 100644
---- a/Makefile
-+++ b/Makefile
-@@ -872,7 +872,7 @@ INITRD_COMPRESS-$(CONFIG_RD_LZ4)   := lz4
- # export INITRD_COMPRESS := $(INITRD_COMPRESS-y)
- 
- ifdef CONFIG_MODULE_SIG_ALL
--MODSECKEY = ./signing_key.priv
-+MODSECKEY = $(CONFIG_MODULE_SIG_KEY)
- MODPUBKEY = ./signing_key.x509
- export MODPUBKEY
- mod_sign_cmd = scripts/sign-file $(CONFIG_MODULE_SIG_HASH) $(MODSECKEY) $(MODPUBKEY)
-diff --git a/init/Kconfig b/init/Kconfig
-index c05afd6594f2..385181546f6a 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1954,6 +1954,20 @@ config MODULE_SIG_HASH
- 	default "sha384" if MODULE_SIG_SHA384
- 	default "sha512" if MODULE_SIG_SHA512
- 
-+config MODULE_SIG_KEY
-+	string "File name or PKCS#11 URI of module signing key"
-+	default "signing_key.priv"
-+	depends on MODULE_SIG
-+	help
-+         Provide the file name of a private key in PKCS#8 PEM format, or
-+         a PKCS#11 URI according to RFC7512. The corresponding X.509
-+         certificate in DER form should be present in signing_key.x509
-+         in the top-level build directory.
-+
-+         If this option is unchanged from its default "signing_key.priv",
-+         then the kernel will automatically generate the private key and
-+         certificate as described in Documentation/module-signing.txt
-+
- config MODULE_COMPRESS
- 	bool "Compress modules on installation"
- 	depends on MODULES
-diff --git a/kernel/Makefile b/kernel/Makefile
-index 60c302cfb4d3..050a55eca566 100644
---- a/kernel/Makefile
-+++ b/kernel/Makefile
-@@ -170,6 +170,10 @@ ifndef CONFIG_MODULE_SIG_HASH
- $(error Could not determine digest type to use from kernel config)
- endif
- 
-+# We do it this way rather than having a boolean option for enabling an
-+# external private key, because 'make randconfig' might enable such a
-+# boolean option and we unfortunately can't make it depend on !RANDCONFIG.
-+ifeq ($(CONFIG_MODULE_SIG_KEY),"signing_key.priv")
- signing_key.priv signing_key.x509: x509.genkey
- 	@echo "###"
- 	@echo "### Now generating an X.509 key pair to be used for signing modules."
-@@ -207,3 +211,4 @@ x509.genkey:
- 	@echo >>x509.genkey "subjectKeyIdentifier=hash"
- 	@echo >>x509.genkey "authorityKeyIdentifier=keyid"
- endif
-+endif
+This definitely does not match the description in the commit message:
+'message occupies more than GOODSIZE' != (skb->len > NLMSG_GOODSIZE / 2)
 
+Regards,
+Arend
+
+> +			break;
+>  	}
+>  
+>  	err = skb->len;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
