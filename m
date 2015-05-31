@@ -1,113 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38279 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932226AbbE1O2S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:28:18 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEP6UP007307
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:28:17 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyjv-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:28:17 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 13/17] mwifiex: drop block-ack action frames
-Date: Fri, 29 May 2015 01:24:54 +0530
-Message-ID: <1432842898-3219-14-git-send-email-patila@marvell.com> (sfid-20150528_162829_983722_D2BD82D6)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:51616 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755374AbbEaLVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2015 07:21:47 -0400
+Message-ID: <1433071305.2370.14.camel@sipsolutions.net> (sfid-20150531_132151_256785_24DACF35)
+Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL
+ messages.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 31 May 2015 13:21:45 +0200
+In-Reply-To: <CABPxzY+9FwDPwRcZ4QT4QcfhMqmaQsrs=LT5E8tDKQG2t+wFRA@mail.gmail.com> (sfid-20150531_131751_864869_998A17F8)
+References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
+	 <1433061092.2370.1.camel@sipsolutions.net>
+	 <CABPxzYK-8TtYdiFeFrX7AVcsXQFaa3oxHREq+jgohHh1tCg5GQ@mail.gmail.com>
+	 <1433068947.2370.5.camel@sipsolutions.net>
+	 <CABPxzY+9FwDPwRcZ4QT4QcfhMqmaQsrs=LT5E8tDKQG2t+wFRA@mail.gmail.com>
+	 (sfid-20150531_131751_864869_998A17F8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We often see ADDBA request packets coming to driver because driver
-has registered for action frame subtype. We dont process BA action
-frames in host. Drop such frames.
+On Sun, 2015-05-31 at 16:47 +0530, Krishna Chaitanya wrote:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Xinmin Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/util.c | 43 +++++++++++++++++++++++++------------
- 1 file changed, 29 insertions(+), 14 deletions(-)
+> > Note # of "messages" as you say is actually irrelevant - you should look
+> 
+> Well with 138 messages the function and each message 3072 bytes
+> calls b/w cfg80211 and driver
+>        without the patch: would be 276 calls
+>        with this patch: would be 138 calls
+> Thats a lot of function calls, don't you think?
 
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 2e3dc07..790e619 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -329,7 +329,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 			  struct rxpd *rx_pd)
- {
- 	u16 stype;
--	u8 category, action_code;
-+	u8 category, action_code, *addr2;
- 	struct ieee80211_hdr *ieee_hdr = (void *)payload;
- 
- 	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
-@@ -337,21 +337,35 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 	switch (stype) {
- 	case IEEE80211_STYPE_ACTION:
- 		category = *(payload + sizeof(struct ieee80211_hdr));
--		action_code = *(payload + sizeof(struct ieee80211_hdr) + 1);
--		if (category == WLAN_CATEGORY_PUBLIC &&
--		    action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
-+		switch (category) {
-+		case WLAN_CATEGORY_PUBLIC:
-+			action_code = *(payload + sizeof(struct ieee80211_hdr)
-+					+ 1);
-+			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
-+				addr2 = ieee_hdr->addr2;
-+				mwifiex_dbg(priv->adapter, INFO,
-+					    "TDLS discovery response %pM nf=%d, snr=%d\n",
-+					    addr2, rx_pd->nf, rx_pd->snr);
-+				mwifiex_auto_tdls_update_peer_signal(priv,
-+								     addr2,
-+								     rx_pd->snr,
-+								     rx_pd->nf);
-+			}
-+			break;
-+		case WLAN_CATEGORY_BACK:
-+			/*we dont indicate BACK action frames to cfg80211*/
-+			mwifiex_dbg(priv->adapter, INFO,
-+				    "drop BACK action frames");
-+			return -1;
-+		default:
- 			mwifiex_dbg(priv->adapter, INFO,
--				    "TDLS discovery response %pM nf=%d, snr=%d\n",
--				    ieee_hdr->addr2, rx_pd->nf, rx_pd->snr);
--			mwifiex_auto_tdls_update_peer_signal(priv,
--							     ieee_hdr->addr2,
--							     rx_pd->snr,
--							     rx_pd->nf);
-+				    "unknown public action frame category %d\n",
-+				    category);
- 		}
--		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, INFO,
--			    "unknown mgmt frame subtype %#x\n", stype);
-+		    "unknown mgmt frame subtype %#x\n", stype);
-+		return 0;
- 	}
- 
- 	return 0;
-@@ -387,8 +401,9 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 
- 	ieee_hdr = (void *)skb->data;
- 	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
--		mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
--					  pkt_len, rx_pd);
-+		if (mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
-+					      pkt_len, rx_pd))
-+			return -1;
- 	}
- 	/* Remove address4 */
- 	memmove(skb->data + sizeof(struct ieee80211_hdr_3addr),
--- 
-1.8.1.4
+No, I don't think so. That really should be within the noise, it's all
+in the icache already after the first round.
+
+> > at how often the kernel/user boundary is crossed, that's really far more
+> > interesting, and your patch makes that MUCH worse when the put size is
+> > small (say 100 bytes) because then you're practically doing that twice
+> > as often.
+> 
+> My patch doesn't deteriorate the situation, and not change the kernel to
+> user boundary. With/Without the patch 3072 bytes are transported in a
+> single message from kernel to user.
+
+*in your case*
+
+In the case that somebody is creating smaller messages it makes things
+MUCH worse by allowing only half the data to be carried across the
+kernel/userspace boundary each time any data crosses it, so it will
+result in many more syscalls in that case. If you're worried about the
+overhead of a simple function (pointer) call in the kernel, then surely
+you should be far more worried about this.
+
+johannes
 
