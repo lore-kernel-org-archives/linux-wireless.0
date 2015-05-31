@@ -1,78 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:39316 "EHLO
-	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933131AbbELVVN (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:38457 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754435AbbEaJf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 May 2015 17:21:13 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-	by mailout.nyi.internal (Postfix) with ESMTP id 060722105C
-	for <linux-wireless@vger.kernel.org>; Tue, 12 May 2015 17:21:13 -0400 (EDT)
-Date: Tue, 12 May 2015 14:21:11 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: ming.lei@canonical.com, rusty@rustcorp.com.au, dhowells@redhat.com,
-	seth.forshee@canonical.com, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, pebolle@tiscali.nl,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Kyle McMartin <kyle@kernel.org>
-Subject: Re: [PATCH v2 1/5] firmware: fix __getname() missing failure check
-Message-ID: <20150512212111.GB10402@kroah.com> (sfid-20150512_232451_351698_BC15B3A3)
-References: <1431455457-25322-1-git-send-email-mcgrof@do-not-panic.com>
- <1431455457-25322-2-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431455457-25322-2-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 31 May 2015 05:35:57 -0400
+Received: by wizo1 with SMTP id o1so70810010wiz.1
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 02:35:56 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/9] staging: vt6655: dead code remove STAvUpdate802_11Counter
+Date: Sun, 31 May 2015 10:35:21 +0100
+Message-Id: <1433064928-2139-2-git-send-email-tvboxspy@gmail.com> (sfid-20150531_113607_677370_F64237A9)
+In-Reply-To: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
+References: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 12, 2015 at 11:30:53AM -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> The request_firmware*() APIs uses __getname() to iterate
-> over the list of paths possible for firmware to be found,
-> the code however never checked for failure on __getname().
-> Although *very unlikely*, this can still happen. Add the
-> missing check.
-> 
-> There is still no checks on the concatenation of the path
-> and filename passed, that requires a bit more work and
-> subsequent patches address this. The commit that introduced
-> this is abb139e7 ("firmware: teach the kernel to load
-> firmware files directly from the filesystem").
-> 
-> mcgrof@ergon ~/linux (git::firmware-fixes) $ git describe --contains abb139e7
-> v3.7-rc1~120
-> 
-> Cc: Linus Torvalds <torvalds@linux-foundation.org>
-> Cc: Ming Lei <ming.lei@canonical.com>
-> Cc: Rusty Russell <rusty@rustcorp.com.au>
-> Cc: David Howells <dhowells@redhat.com>
-> Cc: Kyle McMartin <kyle@kernel.org>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> ---
->  drivers/base/firmware_class.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-> index 171841a..bc6c8e6 100644
-> --- a/drivers/base/firmware_class.c
-> +++ b/drivers/base/firmware_class.c
-> @@ -322,7 +322,11 @@ static int fw_get_filesystem_firmware(struct device *device,
->  {
->  	int i;
->  	int rc = -ENOENT;
-> -	char *path = __getname();
-> +	char *path;
-> +
-> +	path = __getname();
-> +	if (unlikely(!path))
+This function is nolonger of any future use.
 
-Please only use likely/unlikely on code paths that actually care about
-it (i.e. you can measure the difference).  Otherwise it is pretty
-useless, and people have determined that sometimes it is slower as
-humans get this wrong a lot of time...
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/mib.c | 27 ---------------------------
+ drivers/staging/vt6655/mib.h |  6 ------
+ 2 files changed, 33 deletions(-)
 
-thanks,
+diff --git a/drivers/staging/vt6655/mib.c b/drivers/staging/vt6655/mib.c
+index d55c762..e9d23a7 100644
+--- a/drivers/staging/vt6655/mib.c
++++ b/drivers/staging/vt6655/mib.c
+@@ -110,30 +110,3 @@ void STAvUpdateIsrStatCounter(PSStatCounter pStatistic, unsigned long dwIsr)
+ 	if (dwIsr & ISR_SOFTTIMER1)           /* ISR, bit21 */
+ 		pStatistic->ISRStat.dwIsrSTIMER1Int++;
+ }
+-
+-/*
+- * Description: Update 802.11 mib counter
+- *
+- * Parameters:
+- *  In:
+- *      p802_11Counter  - Pointer to 802.11 mib counter
+- *      pStatistic      - Pointer to Statistic Counter Data Structure
+- *      dwCounter       - hardware counter for 802.11 mib
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- */
+-void
+-STAvUpdate802_11Counter(
+-	PSDot11Counters         p802_11Counter,
+-	PSStatCounter           pStatistic,
+-	unsigned long dwCounter
+-)
+-{
+-	p802_11Counter->RTSSuccessCount += (unsigned long long)  (dwCounter & 0x000000ff);
+-	p802_11Counter->RTSFailureCount += (unsigned long long) ((dwCounter & 0x0000ff00) >> 8);
+-	p802_11Counter->ACKFailureCount += (unsigned long long) ((dwCounter & 0x00ff0000) >> 16);
+-	p802_11Counter->FCSErrorCount +=   (unsigned long long) ((dwCounter & 0xff000000) >> 24);
+-}
+diff --git a/drivers/staging/vt6655/mib.h b/drivers/staging/vt6655/mib.h
+index 5cb59b8..64ca360 100644
+--- a/drivers/staging/vt6655/mib.h
++++ b/drivers/staging/vt6655/mib.h
+@@ -73,10 +73,4 @@ typedef struct tagSStatCounter {
+ 
+ void STAvUpdateIsrStatCounter(PSStatCounter pStatistic, unsigned long dwIsr);
+ 
+-void STAvUpdate802_11Counter(
+-	PSDot11Counters p802_11Counter,
+-	PSStatCounter   pStatistic,
+-	unsigned long dwCounter
+-);
+-
+ #endif // __MIB_H__
+-- 
+2.1.4
 
-greg k-h
