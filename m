@@ -1,96 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:38654 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbbEFIcy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 May 2015 04:32:54 -0400
-Received: by igbhj9 with SMTP id hj9so9857718igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2015 01:32:53 -0700 (PDT)
+Received: from mga03.intel.com ([134.134.136.65]:44944 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758373AbbEaSCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2015 14:02:50 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [ANN] -14.ucode is available
+Date: Sun, 31 May 2015 18:02:46 +0000
+Message-ID: <1433095362.28501.9.camel@intel.com> (sfid-20150531_200254_864624_FDD0AAF0)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="=-uJMdeFsKta7XezAPIVUu"
 MIME-Version: 1.0
-In-Reply-To: <CAGm1_kvrBShO4CNefJfyrRc9FRr4hvV2QL=QZvoS=_9JFV8jMA@mail.gmail.com>
-References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
-	<1419834253-18331-6-git-send-email-eliad@wizery.com>
-	<5512A9BC.5010902@pengutronix.de>
-	<CAB3XZEfw5EurqA2jZypAj4LkQwwAiVeKd5wKKsxpOAh-RrCq0w@mail.gmail.com>
-	<5512B6F2.8090407@pengutronix.de>
-	<CAB3XZEdyq6FJUTwXm40EUYemmLvuHfZ8JsUvHyCvS3twFhw=Dw@mail.gmail.com>
-	<CAGm1_kvrBShO4CNefJfyrRc9FRr4hvV2QL=QZvoS=_9JFV8jMA@mail.gmail.com>
-Date: Wed, 6 May 2015 11:32:53 +0300
-Message-ID: <CAB3XZEcPm-bkgCh6Wkzr716RpRqd8Pc81754oCvSKXtWWAqOEA@mail.gmail.com> (sfid-20150506_103300_330422_C6FD911C)
-Subject: Re: [PATCH 06/13] wlcore: enable sleep during AP mode operation
-From: Eliad Peller <eliad@wizery.com>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: Marc Kleine-Budde <mkl@pengutronix.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kobi Leibovitch <kobi.lev100@gmail.com>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"Machani, Yaniv" <yanivma@ti.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Yegor,
+--=-uJMdeFsKta7XezAPIVUu
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, May 4, 2015 at 12:16 PM, Yegor Yefremov
-<yegorslists@googlemail.com> wrote:
-> On Wed, Mar 25, 2015 at 2:45 PM, Eliad Peller <eliad@wizery.com> wrote:
->> On Wed, Mar 25, 2015 at 3:24 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
->>> On 03/25/2015 01:58 PM, Eliad Peller wrote:
->>>> hi Marc,
->>>>
->>>> On Wed, Mar 25, 2015 at 2:27 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
->>>>> On 12/29/2014 07:24 AM, Eliad Peller wrote:
->>>>>> From: Kobi L <kobi.lev100@gmail.com>
->>>>>>
->>>>>> Enable ELP authorization in AP mode and enable the use
->>>>>> of the wakeup bit in the ELP register.
->>>>>>
->>>>>> Introduce AP role sleep configuration which is disabled
->>>>>> by default. When configured, it allows the AP to sleep
->>>>>> when ELP is authorized for it.
->>>>>>
->>>>>> Signed-off-by: Kobi Leibovitch <kobi.lev100@gmail.com>
->>>>>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->>>>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
->>>>>
->>>>> [...]
->>>>>
->>>>>
->>>>> This patch requires a new firmware, loading of "wl18xx-conf.bin" from
->>>>> [1] fails with:
->>>>>
->>>>>> wlcore: ERROR configuration binary file size is wrong, expected 1226 got 1221
->>>>>
->>>> thanks. seems you're right.
->>>>
->>>> anyway, note that this file is not actual fw, but only the default
->>>> configuration params.
->>>> you can just delete it, and the driver will load just fine.
->>>> you can then recreate it with something like:
->>>> cat /sys/kernel/debug/ieee80211/phy0/wlcore/wl18xx/conf >
->>>> /lib/firmware/ti-connectivity/wl18xx-conf.bin
->>>>
->>>> actually, i don't think it makes much sense to have this file in the
->>>> linux-firmware git at all.
->>>> i'll try handling it.
->>>
->>> Thanks, there are more file with size of ~1k, are they optional, too?
->>> What's the "error" message if these optional files are not present?
->>>
->> AFAIK, the other nvs files are basically required for proper operation.
->>
->>> From working with $CUSTOMERS I gained the impression, messages like
->>> "error failed to load...." for optional file don't shine the best light
->>> on Linux, a neutral "using default values" is far better.
->> i agree :)
->
-> Added Yaniv Machani in CC.
->
-> Any update on the wl18xx-conf.bin issue? This file is still in
-> linux-firmware repo.
->
-thanks for the reminder :)
+The new -14.ucode is already available in [1].
 
-just sent a patch to fallback to default conf in case of invalid/outdated conf.
+Since you'll need iwlwifi-next tree [2] to use it, I still don't send
+the pull request to mainline linux-firmware.git. -14.ucode just finished
+its validation cycle, but experience shows that lots of fixes still get
+merged after the validation cycle  based on feedback from the field. So
+you are more than welcome to give it a try and let us know how it went.
 
-Eliad.
+For those who don't want to use iwlwifi-next, you can use iwlwifi's
+backport tree that has been made available here [3]. You can take either
+the master branch, or the Core11 branch which is the stabilization
+branch that matches -14.ucode.
+
+Thank you
+
+[1]
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git/
+
+[2]
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-next.git/
+
+[3]
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
+
+--=-uJMdeFsKta7XezAPIVUu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAABAgAGBQJVa0zCAAoJEC0Llv5uNjIBm/IP/2GZ4vp5Sjk3o2h9QpcUlOTy
+VgtA8Y57tz78Hip5JEUHjySWKvgBra9sJhYCXC0JSqCBbYWGc/A8TwJES+q9RzpY
+ZhPN1eu1YWZ5bCf9BAhe0sKSD4wsC7f5C3v2B+ep27DMsvdfayuM9k0EbnLfgO11
+WgKk0T4WWlSnu2jd2d0XBI+0cwW5V7UcUse0VgiYaYk0CKkNfQPeAou7OPHpfEtW
+IqcD+xb0iIwD1E2qZADqpi1TEZZ38EqVLpUNmRqSWVw19IwzrKtrYVHRlf4cn2eD
+E8Hgg98oiGDnBPlVTGnDWcNAqmE2kQZXS/TBOOwzcUHVe7GRvE3LGGOFv9mwReEm
+BpTc9UOubZIB2NDHfF43raF7RTyCkayj1LjDYNr6TY5P/X7sd/OqCe/wRS1+tof2
+zbbRX4lmvdK4lRJJ+fngxb305D8uVOpGrzaAtpVQYMEDuhIQiHMkC4VsuLX4UUeU
+CH62l42ECV7ei1h1hxFTvPPSt/WwYYo0R/6BhX2opynON+f+UmECgHiFFO3VVMY6
+x0hp3UxJnD2WDu4Qh1+IsjFrgftMdRKSEV7hhARWajO3E62Qt1SBOD9AVqZduTX4
+Yp47wl+ZUO2T94XrW52ysk7pS7lriVlrqFveJKyDwVYTYglKoLzYzY/23aW83Rfk
+bfGnz8bHOxnSIkd4NgOm
+=iUV2
+-----END PGP SIGNATURE-----
+
+--=-uJMdeFsKta7XezAPIVUu--
