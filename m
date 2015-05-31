@@ -1,197 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:36353 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756794AbbEVKQS convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37507 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925AbbEaJf7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 May 2015 06:16:18 -0400
-Received: by wizk4 with SMTP id k4so42459578wiz.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 May 2015 03:16:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
-References: <87k2w26oef.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 22 May 2015 12:16:17 +0200
-Message-ID: <CA+BoTQmukTiNFrsLA5rdiQe=Ga45JNuFzSmqQ4h-VJMW97f=_w@mail.gmail.com> (sfid-20150522_121630_539403_411EF584)
-Subject: Re: pull-request: wireless-drivers-next 2015-05-21
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: David Miller <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 31 May 2015 05:35:59 -0400
+Received: by wifw1 with SMTP id w1so70931257wif.0
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 02:35:58 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/9] staging: vt6655: Remove call to STAvUpdateIsrStatCounter.
+Date: Sun, 31 May 2015 10:35:22 +0100
+Message-Id: <1433064928-2139-3-git-send-email-tvboxspy@gmail.com> (sfid-20150531_113608_316752_A2659A94)
+In-Reply-To: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
+References: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 May 2015 at 15:39, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Hi Dave,
->
-> here's a wireless-drivers pull request for 4.2. This time please pay
-> extra attention to this pull as there are two problems:
->
-> First of all as you can see the diffstat from git-pull-request in the
-> end is just weird. I was long and hard trying to check everything and to
-> my understanding all the merges look ok and I cannot explain the reason
-> for the diffstat, but of course I might be missing something. Maybe
-> git-request-pull is just buggy? At least with gitk everything looks to
-> be ok and the patch list below also looks valid.
->
-> Secondly there's a non-trivial conflict in
-> drivers/net/wireless/ath/ath10k/mac.c which is due to removal of
-> FIF_PROMISC_IN_BSS in commit df1404650c. You need to remove more code
-> than just the obvious conflicts shown by git. In the end of this mail I
-> added a git diff output after I fixed the conflict, hopefully that helps
-> you to fix it. The main points are that you remove
-> ath10k_mac_should_disable_promisc() and the last ath10k_monitor_recalc()
-> call from ath10k_vdev_start_restart() along with the obvious conflict
-> fixes git points out.
->
-> There's also a patch from Michal which will also help to fix the
-> resolution. Michal, please double check the resolution proposal below so
-> that I didn't miss anything.
->
-> https://patchwork.kernel.org/patch/6387631/
+This function does not provide any data to users.
 
-[...]
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device.h      | 2 --
+ drivers/staging/vt6655/device_main.c | 1 -
+ 2 files changed, 3 deletions(-)
 
-> diff --cc drivers/net/wireless/ath/ath10k/mac.c
-> index fcd08b2f8d26,eaa0182e001d..000000000000
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@@ -766,9 -1031,68 +1031,48 @@@ static int ath10k_monitor_stop(struct a
->         return 0;
->   }
->
->  -static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
->  -{
->  -      struct ath10k_vif *arvif;
->  -
->  -      if (!(ar->filter_flags & FIF_PROMISC_IN_BSS))
->  -              return true;
->  -
->  -      if (!ar->num_started_vdevs)
->  -              return false;
->  -
->  -      list_for_each_entry(arvif, &ar->arvifs, list)
->  -              if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
->  -                      return false;
->  -
->  -      ath10k_dbg(ar, ATH10K_DBG_MAC,
->  -                 "mac disabling promiscuous mode because vdev is started\n");
->  -      return true;
->  -}
->  -
-> + static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
-> + {
-> +       int num_ctx;
-> +
-> +       /* At least one chanctx is required to derive a channel to start
-> +        * monitor vdev on.
-> +        */
-> +       num_ctx = ath10k_mac_num_chanctxs(ar);
-> +       if (num_ctx == 0)
-> +               return false;
-> +
-> +       /* If there's already an existing special monitor interface then don't
-> +        * bother creating another monitor vdev.
-> +        */
-> +       if (ar->monitor_arvif)
-> +               return false;
-> +
-> +       return ar->monitor ||
->  -             !ath10k_mac_should_disable_promisc(ar) ||
-> +              test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
-> + }
-> +
-> + static bool ath10k_mac_monitor_vdev_is_allowed(struct ath10k *ar)
-> + {
-> +       int num_ctx;
-> +
-> +       num_ctx = ath10k_mac_num_chanctxs(ar);
-> +
-> +       /* FIXME: Current interface combinations and cfg80211/mac80211 code
-> +        * shouldn't allow this but make sure to prevent handling the following
-> +        * case anyway since multi-channel DFS hasn't been tested at all.
-> +        */
-> +       if (test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags) && num_ctx > 1)
-> +               return false;
-> +
-> +       return true;
-> + }
-> +
->   static int ath10k_monitor_recalc(struct ath10k *ar)
->   {
-> -       bool should_start;
-> +       bool needed;
-> +       bool allowed;
-> +       int ret;
->
->         lockdep_assert_held(&ar->conf_mutex);
->
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index a49c6c6..62e07f5 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -286,8 +286,6 @@ struct vnt_private {
+ 	unsigned char abyCurrentNetAddr[ETH_ALEN]; __aligned(2)
+ 	bool bLinkPass;          /* link status: OK or fail */
+ 
+-	/* Adapter statistics */
+-	SStatCounter                scStatistic;
+ 	/* 802.11 counter */
+ 	SDot11Counters              s802_11Counter;
+ 
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index c27f5ef..31f4ec7 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1100,7 +1100,6 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
+ 	 * update ISR counter
+ 	 */
+ 	while (pDevice->dwIsr && pDevice->vif) {
+-		STAvUpdateIsrStatCounter(&pDevice->scStatistic, pDevice->dwIsr);
+ 		MACvWriteISR(pDevice->PortOffset, pDevice->dwIsr);
+ 
+ 		if (pDevice->dwIsr & ISR_FETALERR) {
+-- 
+2.1.4
 
-Looks good to me.
-
-There's still some code left which is unnecessary (see 2 last hunks on
-patchwork) because due to FIF_PROMISC_IN_BSS removal entire commit
-548462133d98 becomes obsolete. Since these 2 hunk leftovers don't
-break anything functionally I guess this can be cleaned up in a follow
-up patch after the merge. Just my 2cc.
-
-
-> @@@ -871,12 -1231,46 +1211,46 @@@ static void ath10k_recalc_radar_detecti
->         }
->   }
->
-> - static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
-> + static int ath10k_vdev_stop(struct ath10k_vif *arvif)
-> + {
-> +       struct ath10k *ar = arvif->ar;
-> +       int ret;
-> +
-> +       lockdep_assert_held(&ar->conf_mutex);
-> +
-> +       reinit_completion(&ar->vdev_setup_done);
-> +
-> +       ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
-> +       if (ret) {
-> +               ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
-> +                           arvif->vdev_id, ret);
-> +               return ret;
-> +       }
-> +
-> +       ret = ath10k_vdev_setup_sync(ar);
-> +       if (ret) {
-> +               ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
-> +                           arvif->vdev_id, ret);
-> +               return ret;
-> +       }
-> +
-> +       WARN_ON(ar->num_started_vdevs == 0);
-> +
-> +       if (ar->num_started_vdevs != 0) {
-> +               ar->num_started_vdevs--;
-> +               ath10k_recalc_radar_detection(ar);
-> +       }
-> +
-> +       return ret;
-> + }
-> +
-> + static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
-> +                                    const struct cfg80211_chan_def *chandef,
-> +                                    bool restart)
->   {
->         struct ath10k *ar = arvif->ar;
-> -       struct cfg80211_chan_def *chandef = &ar->chandef;
->         struct wmi_vdev_start_request_arg arg = {};
->  -      int ret = 0, ret2;
->  +      int ret = 0;
->
->         lockdep_assert_held(&ar->conf_mutex);
->
-
-Kalle, I'm not seeing this when I merge your pull tag on top of
-net-next/master. Am I missing something?
-
-Anyway FYI ath10k_vdev_stop() was moved up in the code to avoid
-forward declaration in 822b7e0b633b.
-
-
-Michał
