@@ -1,93 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:1907 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbbECTc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 May 2015 15:32:29 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/42] iwlwifi: mvm: check if scan can be started before cancelling other scans
-Date: Sun,  3 May 2015 22:31:19 +0300
-Message-Id: <1430681513-7838-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150503_213234_157556_BF88D6C3)
-In-Reply-To: <1430681438.3240.3.camel@intel.com>
-References: <1430681438.3240.3.camel@intel.com>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:34302 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758090AbbEaJgE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2015 05:36:04 -0400
+Received: by wgv5 with SMTP id 5so92564733wgv.1
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 02:36:03 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 5/9] staging: vt6655: use workqueue for interrupt handling
+Date: Sun, 31 May 2015 10:35:24 +0100
+Message-Id: <1433064928-2139-5-git-send-email-tvboxspy@gmail.com> (sfid-20150531_113610_954877_8CCB2206)
+In-Reply-To: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
+References: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Introduce vnt_interrupt to handle interrupt and use workqueue
+to queue and queue on vif.
 
-If a new scan cannot be run for some reason, we shouldn't cancel other
-ongoing scans.  Move the checks to before the code that cancels other
-scans.
+Convert device_intr to void call vnt_interrupt_process
+from vnt_interrupt_work providing vif is valid.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This removes troublesome heavy code from the interupt handler and
+allows to remove atomic from other areas of driver.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+ drivers/staging/vt6655/device.h      |  2 ++
+ drivers/staging/vt6655/device_main.c | 36 ++++++++++++++++++++++++++----------
+ 2 files changed, 28 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 15dc4a4..f57d584 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2387,13 +2387,6 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index e9c4bf3..b928c2a 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -405,6 +405,8 @@ struct vnt_private {
  
- 	mutex_lock(&mvm->mutex);
+ 	unsigned short wBeaconInterval;
  
--	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) &&
--	    (mvm->scan_status & IWL_MVM_SCAN_SCHED)) {
--		ret = iwl_mvm_scan_offload_stop(mvm, true);
--		if (ret)
--			goto out;
--	}
--
- 	if (iwl_mvm_is_lar_supported(mvm) && !mvm->lar_regdom_set) {
- 		IWL_ERR(mvm, "scan while LAR regdomain is not set\n");
- 		ret = -EBUSY;
-@@ -2405,6 +2398,13 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
- 		goto out;
++	struct work_struct interrupt_work;
++
+ 	struct ieee80211_low_level_stats low_stats;
+ };
+ 
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 31f4ec7..d5f090f 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -32,7 +32,6 @@
+  *   device_free_info - device structure resource free function
+  *   device_get_pci_info - get allocated pci io/mem resource
+  *   device_print_info - print out resource
+- *   device_intr - interrupt handle function
+  *   device_rx_srv - rx service function
+  *   device_alloc_rx_buf - rx buffer pre-allocated function
+  *   device_free_tx_buf - free tx buffer function
+@@ -148,7 +147,6 @@ static void vt6655_init_info(struct pci_dev *pcid,
+ static void device_free_info(struct vnt_private *pDevice);
+ static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
+ static void device_print_info(struct vnt_private *pDevice);
+-static  irqreturn_t  device_intr(int irq,  void *dev_instance);
+ 
+ #ifdef CONFIG_PM
+ static int device_notify_reboot(struct notifier_block *, unsigned long event, void *ptr);
+@@ -1053,27 +1051,24 @@ static void vnt_check_bb_vga(struct vnt_private *priv)
+ 	}
+ }
+ 
+-static  irqreturn_t  device_intr(int irq,  void *dev_instance)
++static void vnt_interrupt_process(struct vnt_private *pDevice)
+ {
+-	struct vnt_private *pDevice = dev_instance;
+ 	struct ieee80211_low_level_stats *low_stats = &pDevice->low_stats;
+ 	int             max_count = 0;
+ 	u32 mib_counter;
+ 	unsigned char byOrgPageSel = 0;
+-	int             handled = 0;
+ 	unsigned long flags;
+ 
+ 	MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
+ 
+ 	if (pDevice->dwIsr == 0)
+-		return IRQ_RETVAL(handled);
++		return;
+ 
+ 	if (pDevice->dwIsr == 0xffffffff) {
+ 		pr_debug("dwIsr = 0xffff\n");
+-		return IRQ_RETVAL(handled);
++		return;
  	}
  
-+	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) &&
-+	    (mvm->scan_status & IWL_MVM_SCAN_SCHED)) {
-+		ret = iwl_mvm_scan_offload_stop(mvm, true);
-+		if (ret)
-+			goto out;
-+	}
+-	handled = 1;
+ 	MACvIntDisable(pDevice->PortOffset);
+ 
+ 	spin_lock_irqsave(&pDevice->lock, flags);
+@@ -1175,8 +1170,25 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
+ 	spin_unlock_irqrestore(&pDevice->lock, flags);
+ 
+ 	MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
++}
 +
- 	iwl_mvm_ref(mvm, IWL_MVM_REF_SCAN);
++static void vnt_interrupt_work(struct work_struct *work)
++{
++	struct vnt_private *priv =
++		container_of(work, struct vnt_private, interrupt_work);
++
++	if (priv->vif)
++		vnt_interrupt_process(priv);
++}
++
++static irqreturn_t vnt_interrupt(int irq,  void *arg)
++{
++	struct vnt_private *priv = arg;
  
- 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
-@@ -2758,13 +2758,6 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
+-	return IRQ_RETVAL(handled);
++	if (priv->vif)
++		schedule_work(&priv->interrupt_work);
++
++	return IRQ_HANDLED;
+ }
  
- 	mutex_lock(&mvm->mutex);
+ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+@@ -1268,7 +1280,7 @@ static int vnt_start(struct ieee80211_hw *hw)
+ 	if (!device_init_rings(priv))
+ 		return -ENOMEM;
  
--	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) &&
--	    (mvm->scan_status & IWL_MVM_SCAN_REGULAR)) {
--		ret = iwl_mvm_cancel_scan(mvm);
--		if (ret)
--			goto out;
--	}
--
- 	if (iwl_mvm_is_lar_supported(mvm) && !mvm->lar_regdom_set) {
- 		IWL_ERR(mvm, "sched-scan while LAR regdomain is not set\n");
- 		ret = -EBUSY;
-@@ -2781,6 +2774,13 @@ static int iwl_mvm_mac_sched_scan_start(struct ieee80211_hw *hw,
- 		goto out;
+-	ret = request_irq(priv->pcid->irq, &device_intr,
++	ret = request_irq(priv->pcid->irq, &vnt_interrupt,
+ 			  IRQF_SHARED, "vt6655", priv);
+ 	if (ret) {
+ 		dev_dbg(&priv->pcid->dev, "failed to start irq\n");
+@@ -1297,6 +1309,8 @@ static void vnt_stop(struct ieee80211_hw *hw)
+ 
+ 	ieee80211_stop_queues(hw);
+ 
++	cancel_work_sync(&priv->interrupt_work);
++
+ 	MACbShutdown(priv->PortOffset);
+ 	MACbSoftwareReset(priv->PortOffset);
+ 	CARDbRadioPowerOff(priv);
+@@ -1783,6 +1797,8 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 		return -ENODEV;
  	}
  
-+	if (!(mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) &&
-+	    (mvm->scan_status & IWL_MVM_SCAN_REGULAR)) {
-+		ret = iwl_mvm_cancel_scan(mvm);
-+		if (ret)
-+			goto out;
-+	}
++	INIT_WORK(&priv->interrupt_work, vnt_interrupt_work);
 +
- 	ret = iwl_mvm_scan_offload_start(mvm, vif, req, ies);
- 	if (ret)
- 		mvm->scan_status &= ~IWL_MVM_SCAN_SCHED;
+ 	/* do reset */
+ 	if (!MACbSoftwareReset(priv->PortOffset)) {
+ 		dev_err(&pcid->dev, ": Failed to access MAC hardware..\n");
 -- 
-2.1.0
+2.1.4
 
