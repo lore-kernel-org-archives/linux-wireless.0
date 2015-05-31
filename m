@@ -1,125 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from galahad.ideasonboard.com ([185.26.127.97]:42461 "EHLO
-	galahad.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbbE0MFX (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:36371 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758167AbbEaJgJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 May 2015 08:05:23 -0400
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-metag@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: [PATCH] treewide: Fix typo compatability -> compatibility
-Date: Wed, 27 May 2015 15:05:42 +0300
-Message-Id: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com> (sfid-20150527_140544_877916_A0302941)
+	Sun, 31 May 2015 05:36:09 -0400
+Received: by wgbgq6 with SMTP id gq6so92646832wgb.3
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 02:36:07 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 8/9] staging: vt6655: replace and resize dwIsr
+Date: Sun, 31 May 2015 10:35:27 +0100
+Message-Id: <1433064928-2139-8-git-send-email-tvboxspy@gmail.com> (sfid-20150531_113617_717388_17B58902)
+In-Reply-To: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
+References: <1433064928-2139-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even though 'compatability' has a dedicated entry in the Wiktionary,
-it's listed as 'Mispelling of compatibility'. Fix it.
+dwIsr is not used outside vnt_interrupt_process and should
+be u32.
 
-Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Move to function and resize to u32.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- arch/metag/include/asm/elf.h             | 2 +-
- arch/powerpc/kvm/book3s.c                | 2 +-
- arch/sparc/include/uapi/asm/pstate.h     | 2 +-
- drivers/gpu/drm/drm_atomic_helper.c      | 4 ++--
- drivers/media/dvb-frontends/au8522_dig.c | 2 +-
- drivers/net/wireless/ipw2x00/ipw2100.h   | 2 +-
- 6 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/staging/vt6655/device.h      |  1 -
+ drivers/staging/vt6655/device_main.c | 33 +++++++++++++++++----------------
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-I can split this into one patch per subsystem, but that seems a bit overkill.
-Can someone take it ?
-
-diff --git a/arch/metag/include/asm/elf.h b/arch/metag/include/asm/elf.h
-index d2baf6961794..87b0cf1e0acb 100644
---- a/arch/metag/include/asm/elf.h
-+++ b/arch/metag/include/asm/elf.h
-@@ -11,7 +11,7 @@
- #define R_METAG_RELBRANCH                4
- #define R_METAG_GETSETOFF                5
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index b928c2a..5cf1b33 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -238,7 +238,6 @@ struct vnt_private {
+ 	CHIP_TYPE                   chip_id;
  
--/* Backward compatability */
-+/* Backward compatibility */
- #define R_METAG_REG32OP1                 6
- #define R_METAG_REG32OP2                 7
- #define R_METAG_REG32OP3                 8
-diff --git a/arch/powerpc/kvm/book3s.c b/arch/powerpc/kvm/book3s.c
-index 453a8a47a467..cb14dd78a2e7 100644
---- a/arch/powerpc/kvm/book3s.c
-+++ b/arch/powerpc/kvm/book3s.c
-@@ -901,7 +901,7 @@ int kvmppc_core_check_processor_compat(void)
- {
- 	/*
- 	 * We always return 0 for book3s. We check
--	 * for compatability while loading the HV
-+	 * for compatibility while loading the HV
- 	 * or PR module
+ 	void __iomem                *PortOffset;
+-	unsigned long dwIsr;
+ 	u32                         memaddr;
+ 	u32                         ioaddr;
+ 	u32                         io_size;
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 575ba87..aec3cce 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1056,15 +1056,16 @@ static void vnt_interrupt_process(struct vnt_private *priv)
+ 	struct ieee80211_low_level_stats *low_stats = &priv->low_stats;
+ 	int             max_count = 0;
+ 	u32 mib_counter;
++	u32 isr;
+ 	unsigned long flags;
+ 
+-	MACvReadISR(priv->PortOffset, &priv->dwIsr);
++	MACvReadISR(priv->PortOffset, &isr);
+ 
+-	if (priv->dwIsr == 0)
++	if (isr == 0)
+ 		return;
+ 
+-	if (priv->dwIsr == 0xffffffff) {
+-		pr_debug("dwIsr = 0xffff\n");
++	if (isr == 0xffffffff) {
++		pr_debug("isr = 0xffff\n");
+ 		return;
+ 	}
+ 
+@@ -1086,18 +1087,18 @@ static void vnt_interrupt_process(struct vnt_private *priv)
+ 	 * than RD/TD write back
+ 	 * update ISR counter
  	 */
- 	return 0;
-diff --git a/arch/sparc/include/uapi/asm/pstate.h b/arch/sparc/include/uapi/asm/pstate.h
-index 4b6b998afd99..cf832e14aa05 100644
---- a/arch/sparc/include/uapi/asm/pstate.h
-+++ b/arch/sparc/include/uapi/asm/pstate.h
-@@ -88,7 +88,7 @@
- #define VERS_MAXTL	_AC(0x000000000000ff00,UL) /* Max Trap Level.	*/
- #define VERS_MAXWIN	_AC(0x000000000000001f,UL) /* Max RegWindow Idx.*/
+-	while (priv->dwIsr && priv->vif) {
+-		MACvWriteISR(priv->PortOffset, priv->dwIsr);
++	while (isr && priv->vif) {
++		MACvWriteISR(priv->PortOffset, isr);
  
--/* Compatability Feature Register (%asr26), SPARC-T4 and later  */
-+/* Compatibility Feature Register (%asr26), SPARC-T4 and later  */
- #define CFR_AES		_AC(0x0000000000000001,UL) /* Supports AES opcodes     */
- #define CFR_DES		_AC(0x0000000000000002,UL) /* Supports DES opcodes     */
- #define CFR_KASUMI	_AC(0x0000000000000004,UL) /* Supports KASUMI opcodes  */
-diff --git a/drivers/gpu/drm/drm_atomic_helper.c b/drivers/gpu/drm/drm_atomic_helper.c
-index b82ef6262469..12c5b79b0e8f 100644
---- a/drivers/gpu/drm/drm_atomic_helper.c
-+++ b/drivers/gpu/drm/drm_atomic_helper.c
-@@ -751,7 +751,7 @@ crtc_set_mode(struct drm_device *dev, struct drm_atomic_state *old_state)
-  * This function shuts down all the outputs that need to be shut down and
-  * prepares them (if required) with the new mode.
-  *
-- * For compatability with legacy crtc helpers this should be called before
-+ * For compatibility with legacy crtc helpers this should be called before
-  * drm_atomic_helper_commit_planes(), which is what the default commit function
-  * does. But drivers with different needs can group the modeset commits together
-  * and do the plane commits at the end. This is useful for drivers doing runtime
-@@ -776,7 +776,7 @@ EXPORT_SYMBOL(drm_atomic_helper_commit_modeset_disables);
-  * This function enables all the outputs with the new configuration which had to
-  * be turned off for the update.
-  *
-- * For compatability with legacy crtc helpers this should be called after
-+ * For compatibility with legacy crtc helpers this should be called after
-  * drm_atomic_helper_commit_planes(), which is what the default commit function
-  * does. But drivers with different needs can group the modeset commits together
-  * and do the plane commits at the end. This is useful for drivers doing runtime
-diff --git a/drivers/media/dvb-frontends/au8522_dig.c b/drivers/media/dvb-frontends/au8522_dig.c
-index 5d06c99b0e97..edadcc7eea6c 100644
---- a/drivers/media/dvb-frontends/au8522_dig.c
-+++ b/drivers/media/dvb-frontends/au8522_dig.c
-@@ -922,7 +922,7 @@ module_param(debug, int, 0644);
- MODULE_PARM_DESC(debug, "Enable verbose debug messages");
+-		if (priv->dwIsr & ISR_FETALERR) {
++		if (isr & ISR_FETALERR) {
+ 			pr_debug(" ISR_FETALERR\n");
+ 			VNSvOutPortB(priv->PortOffset + MAC_REG_SOFTPWRCTL, 0);
+ 			VNSvOutPortW(priv->PortOffset +
+ 				     MAC_REG_SOFTPWRCTL, SOFTPWRCTL_SWPECTI);
+-			device_error(priv, priv->dwIsr);
++			device_error(priv, isr);
+ 		}
  
- module_param(zv_mode, int, 0644);
--MODULE_PARM_DESC(zv_mode, "Turn on/off ZeeVee modulator compatability mode (default:on).\n"
-+MODULE_PARM_DESC(zv_mode, "Turn on/off ZeeVee modulator compatibility mode (default:on).\n"
- 	"\t\ton - modified AU8522 QAM256 initialization.\n"
- 	"\t\tProvides faster lock when using ZeeVee modulator based sources");
+-		if (priv->dwIsr & ISR_TBTT) {
++		if (isr & ISR_TBTT) {
+ 			if (priv->op_mode != NL80211_IFTYPE_ADHOC)
+ 				vnt_check_bb_vga(priv);
  
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
-index c6d78790cb0d..193947865efd 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.h
-@@ -746,7 +746,7 @@ struct ipw2100_priv {
- #define IPW_REG_GPIO			IPW_REG_DOMAIN_0_OFFSET + 0x0030
- #define IPW_REG_FW_TYPE                 IPW_REG_DOMAIN_1_OFFSET + 0x0188
- #define IPW_REG_FW_VERSION 		IPW_REG_DOMAIN_1_OFFSET + 0x018C
--#define IPW_REG_FW_COMPATABILITY_VERSION IPW_REG_DOMAIN_1_OFFSET + 0x0190
-+#define IPW_REG_FW_COMPATIBILITY_VERSION IPW_REG_DOMAIN_1_OFFSET + 0x0190
+@@ -1116,7 +1117,7 @@ static void vnt_interrupt_process(struct vnt_private *priv)
  
- #define IPW_REG_INDIRECT_ADDR_MASK	0x00FFFFFC
+ 		}
  
+-		if (priv->dwIsr & ISR_BNTX) {
++		if (isr & ISR_BNTX) {
+ 			if (priv->op_mode == NL80211_IFTYPE_ADHOC) {
+ 				priv->bIsBeaconBufReadySet = false;
+ 				priv->cbBeaconBufReadySetCnt = 0;
+@@ -1125,19 +1126,19 @@ static void vnt_interrupt_process(struct vnt_private *priv)
+ 			priv->bBeaconSent = true;
+ 		}
+ 
+-		if (priv->dwIsr & ISR_RXDMA0)
++		if (isr & ISR_RXDMA0)
+ 			max_count += device_rx_srv(priv, TYPE_RXDMA0);
+ 
+-		if (priv->dwIsr & ISR_RXDMA1)
++		if (isr & ISR_RXDMA1)
+ 			max_count += device_rx_srv(priv, TYPE_RXDMA1);
+ 
+-		if (priv->dwIsr & ISR_TXDMA0)
++		if (isr & ISR_TXDMA0)
+ 			max_count += device_tx_srv(priv, TYPE_TXDMA0);
+ 
+-		if (priv->dwIsr & ISR_AC0DMA)
++		if (isr & ISR_AC0DMA)
+ 			max_count += device_tx_srv(priv, TYPE_AC0DMA);
+ 
+-		if (priv->dwIsr & ISR_SOFTTIMER1) {
++		if (isr & ISR_SOFTTIMER1) {
+ 			if (priv->vif->bss_conf.enable_beacon)
+ 				vnt_beacon_make(priv, priv->vif);
+ 		}
+@@ -1148,7 +1149,7 @@ static void vnt_interrupt_process(struct vnt_private *priv)
+ 		    ieee80211_queue_stopped(priv->hw, 0))
+ 			ieee80211_wake_queues(priv->hw);
+ 
+-		MACvReadISR(priv->PortOffset, &priv->dwIsr);
++		MACvReadISR(priv->PortOffset, &isr);
+ 
+ 		MACvReceive0(priv->PortOffset);
+ 		MACvReceive1(priv->PortOffset);
 -- 
-Regards,
-
-Laurent Pinchart
+2.1.4
 
