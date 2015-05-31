@@ -1,160 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1942 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932219AbbE1O15 (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:35162 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757936AbbEaKYC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 May 2015 10:27:57 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t4SEOb8k007181
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:56 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1umgmaqyhp-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2015 07:27:56 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 11/17] mwifiex: parse power constraint IE from Tail
-Date: Fri, 29 May 2015 01:24:52 +0530
-Message-ID: <1432842898-3219-12-git-send-email-patila@marvell.com> (sfid-20150528_162809_772623_E27A80FC)
-In-Reply-To: <1432842898-3219-1-git-send-email-patila@marvell.com>
-References: <1432842898-3219-1-git-send-email-patila@marvell.com>
+	Sun, 31 May 2015 06:24:02 -0400
+Received: by wicmx19 with SMTP id mx19so51546410wic.0
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 03:24:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1433067731-20114-1-git-send-email-chaitanya.mgit@gmail.com>
+References: <1433067731-20114-1-git-send-email-chaitanya.mgit@gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sun, 31 May 2015 15:53:40 +0530
+Message-ID: <CABPxzY+WrV3XAdHvbg_SzPENjxBHqxV45HKVd--aDT-N9NbkUg@mail.gmail.com> (sfid-20150531_122409_564167_65F03913)
+Subject: Re: [PATCH] mac80211: Fix power save state stuck in ACTIVE caused by
+ race between suspend and Tx packet.
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to parse power constraint IEs from
-Tail buffer. This power constraint is then set to FW during
-bss_config download.
+On Sun, May 31, 2015 at 3:52 PM, Chaitanya T K <chaitanya.mgit@gmail.com> wrote:
+> From: Chaitanya T K <chaitanya.mgit@gmail.com>
+>
+> If we receive suspend after TX path has executed
+> dynamic ps disable work, the driver will be in
+> ACTIVE state during suspend and even after it
+> resumes.
+>
+> As before suspend all data packets are flushed
+> it is safe to put the driver in to sleep for
+> optimal power during suspend or up on resume.
+>
+> Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+> ---
+>  net/mac80211/pm.c |   15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+>
+> diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+> index ac6ad62..c9d71c2 100644
+> --- a/net/mac80211/pm.c
+> +++ b/net/mac80211/pm.c
+> @@ -76,6 +76,21 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+>                         if (sdata->vif.type != NL80211_IFTYPE_STATION)
+>                                 continue;
+>                         ieee80211_mgd_quiesce(sdata);
+> +                       /* This is to handle a race where suspend
+> +                        * is invoked after dynamic ps work disables
+> +                        * power save due to TX. This causes the driver
+> +                        * to be stuck in ACTIVE during suspend and
+> +                        * after resume unless there is another TX,
+> +                        * after which the dynamic ps puts driver
+> +                        * back to DOZE.
+> +                        */
+> +                       if (sdata->u.mgd.associated &&
+> +                           sdata->u.mgd.powersave &&
+> +                            !(local->hw.conf.flags & IEEE80211_CONF_PS)) {
+> +                               local->hw.conf.flags |= IEEE80211_CONF_PS;
+> +                               ieee80211_hw_config(local,
+> +                                                   IEEE80211_CONF_CHANGE_PS);
+> +                       }
+>                 }
+>
+>                 err = drv_suspend(local, wowlan);
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |  3 +++
- drivers/net/wireless/mwifiex/fw.h       |  6 ++++++
- drivers/net/wireless/mwifiex/ioctl.h    |  1 +
- drivers/net/wireless/mwifiex/main.h     |  3 +++
- drivers/net/wireless/mwifiex/uap_cmd.c  | 27 +++++++++++++++++++++++++++
- 5 files changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 16528c1..1226555 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1867,6 +1867,9 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	mwifiex_set_wmm_params(priv, bss_cfg, params);
- 
-+	if (mwifiex_is_11h_active(priv))
-+		mwifiex_set_tpc_params(priv, bss_cfg, params);
-+
- 	if (mwifiex_is_11h_active(priv) &&
- 	    !cfg80211_chandef_dfs_required(wiphy, &params->chandef,
- 					   priv->bss_mode)) {
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 72e471b..f9dc715 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -128,6 +128,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- 
- #define TLV_TYPE_UAP_SSID			0x0000
- #define TLV_TYPE_UAP_RATES			0x0001
-+#define TLV_TYPE_PWR_CONSTRAINT			0x0020
- 
- #define PROPRIETARY_TLV_BASE_ID                 0x0100
- #define TLV_TYPE_KEY_MATERIAL       (PROPRIETARY_TLV_BASE_ID + 0)
-@@ -1780,6 +1781,11 @@ struct host_cmd_tlv_ageout_timer {
- 	__le32 sta_ao_timer;
- } __packed;
- 
-+struct host_cmd_tlv_power_constraint {
-+	struct mwifiex_ie_types_header header;
-+	u8 constraint;
-+} __packed;
-+
- struct host_cmd_ds_version_ext {
- 	u8 version_str_sel;
- 	char version_str[128];
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 6f11a25..4f0174c 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -113,6 +113,7 @@ struct mwifiex_uap_bss_param {
- 	u32 sta_ao_timer;
- 	u32 ps_sta_ao_timer;
- 	u8 qos_info;
-+	u8 power_constraint;
- 	struct mwifiex_types_wmm_info wmm_info;
- };
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 837e610..d92c527 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1149,6 +1149,9 @@ void mwifiex_set_ht_params(struct mwifiex_private *priv,
- void mwifiex_set_vht_params(struct mwifiex_private *priv,
- 			    struct mwifiex_uap_bss_param *bss_cfg,
- 			    struct cfg80211_ap_settings *params);
-+void mwifiex_set_tpc_params(struct mwifiex_private *priv,
-+			    struct mwifiex_uap_bss_param *bss_cfg,
-+			    struct cfg80211_ap_settings *params);
- void mwifiex_set_uap_rates(struct mwifiex_uap_bss_param *bss_cfg,
- 			   struct cfg80211_ap_settings *params);
- void mwifiex_set_vht_width(struct mwifiex_private *priv,
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 865b363..61e8bf3 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -222,6 +222,23 @@ void mwifiex_set_vht_params(struct mwifiex_private *priv,
- 	return;
- }
- 
-+/* This function updates 11ac related parameters from IE
-+ * and sets them into bss_config structure.
-+ */
-+void mwifiex_set_tpc_params(struct mwifiex_private *priv,
-+			    struct mwifiex_uap_bss_param *bss_cfg,
-+			    struct cfg80211_ap_settings *params)
-+{
-+	const u8 *tpc_ie;
-+
-+	tpc_ie = cfg80211_find_ie(WLAN_EID_TPC_REQUEST, params->beacon.tail,
-+				  params->beacon.tail_len);
-+	if (tpc_ie)
-+		bss_cfg->power_constraint = *(tpc_ie + 2);
-+	else
-+		bss_cfg->power_constraint = 0;
-+}
-+
- /* Enable VHT only when cfg80211_ap_settings has VHT IE.
-  * Otherwise disable VHT.
-  */
-@@ -466,6 +483,7 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 	struct host_cmd_tlv_auth_type *auth_type;
- 	struct host_cmd_tlv_rates *tlv_rates;
- 	struct host_cmd_tlv_ageout_timer *ao_timer, *ps_ao_timer;
-+	struct host_cmd_tlv_power_constraint *pwr_ct;
- 	struct mwifiex_ie_types_htcap *htcap;
- 	struct mwifiex_ie_types_wmmcap *wmm_cap;
- 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
-@@ -644,6 +662,15 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 		tlv += sizeof(*ao_timer);
- 	}
- 
-+	if (bss_cfg->power_constraint) {
-+		pwr_ct = (void *)tlv;
-+		pwr_ct->header.type = cpu_to_le16(TLV_TYPE_PWR_CONSTRAINT);
-+		pwr_ct->header.len = cpu_to_le16(sizeof(u8));
-+		pwr_ct->constraint = bss_cfg->power_constraint;
-+		cmd_size += sizeof(*pwr_ct);
-+		tlv += sizeof(*pwr_ct);
-+	}
-+
- 	if (bss_cfg->ps_sta_ao_timer) {
- 		ps_ao_timer = (struct host_cmd_tlv_ageout_timer *)tlv;
- 		ps_ao_timer->header.type =
+Johannes,
+
+I was final able to fix my "from" problem in git send-email.
+Sorry for previous spamming. We can continue the discussion
+in this thread.
+
+Regards,
+Chaitanya T K>
+
+
 -- 
-1.8.1.4
-
+Thanks,
+Regards,
+Chaitanya T K.
