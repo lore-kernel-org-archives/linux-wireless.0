@@ -1,91 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52612 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50958 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752169AbbERG0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 May 2015 02:26:47 -0400
-Message-ID: <55598622.8060307@linux.intel.com> (sfid-20150518_082650_403624_54A5BFA0)
-Date: Mon, 18 May 2015 14:26:42 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: "brudley@broadcom.com" <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	"meuleman@broadcom.com" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
-	"hdegoede@redhat.com" <hdegoede@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmfmac: prohibit ACPI power management for brcmfmac
- driver
-References: <555016DC.804@linux.intel.com>
-In-Reply-To: <555016DC.804@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
+	id S1753239AbbEaIbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 May 2015 04:31:34 -0400
+Message-ID: <1433061092.2370.1.camel@sipsolutions.net> (sfid-20150531_103140_329334_C6320DCA)
+Subject: Re: [PATCH v2] cfg80211: Don't re-use the skb for larger NL
+ messages.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chaitanya T K <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 31 May 2015 10:31:32 +0200
+In-Reply-To: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150531_012825_827034_87A26BAD)
+References: <1433028494-9665-1-git-send-email-chaitanya.mgit@gmail.com>
+	 (sfid-20150531_012825_827034_87A26BAD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2015-05-31 at 04:58 +0530, Chaitanya T K wrote:
+> cfg80211 reuses the skb before asking for a fresh on from genl framework, 
+> this works efficiently for smaller messages but NLM_F_DUMP is normally 
+> used to transport larger data normally > PAGE_SIZE, so if the message 
+> occupies more than GOODSIZE its better to ask for a new, saves couple
+> of hanshakes with the driver.
+> 
+> This improves the time to get the DUMP response across to user space.
 
-Hi guys,
+This doesn't make any sense. If the driver is slow to actually create
+the data, it should implement this logic, but realistically the driver
+should just check if there's enough space and only try to create data to
+put into the skb if it's sufficient?
 
-Any comments about this patch?
+It sounds to me like you're actually interacting with the hardware at
+this point (otherwise it wouldn't be slow!) which pretty much seems
+wrong anyway.
 
-
-
-Thanks,
-Zhonghui
-
-On 2015/5/11 10:41, Fu, Zhonghui wrote:
-> ACPI will manage WiFi chip's power state during suspend/resume
-> process on some tablet platforms(such as ASUS T100TA). This is
-> not supported by brcmfmac driver now, and the context of WiFi
-> chip will be damaged after resume. This patch informs ACPI not
-> to manage WiFi chip's power state.
->
-> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-> Acked-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Changes in v3:
-> - Have the assignment separate for the if statement.
->
->  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 9b508bd..c960a12 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -33,6 +33,7 @@
->  #include <linux/suspend.h>
->  #include <linux/errno.h>
->  #include <linux/module.h>
-> +#include <linux/acpi.h>
->  #include <net/cfg80211.h>
->  
->  #include <defs.h>
-> @@ -1114,6 +1115,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->  	int err;
->  	struct brcmf_sdio_dev *sdiodev;
->  	struct brcmf_bus *bus_if;
-> +	struct device *dev;
-> +	struct acpi_device *adev;
->  
->  	brcmf_dbg(SDIO, "Enter\n");
->  	brcmf_dbg(SDIO, "Class=%x\n", func->class);
-> @@ -1121,6 +1124,12 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->  	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
->  	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
->  
-> +	/* prohibit ACPI power management for this device */
-> +	dev = &func->dev;
-> +	adev = ACPI_COMPANION(dev);
-> +	if (adev)
-> +		adev->flags.power_manageable = 0;
-> +
->  	/* Consume func num 1 but dont do anything with it. */
->  	if (func->num == 1)
->  		return 0;
-> -- 1.7.1
->
+johannes
 
