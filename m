@@ -1,38 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59679 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539AbbEZOCt (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38392 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754559AbbEaAix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 May 2015 10:02:49 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 30 May 2015 20:38:53 -0400
+Date: Sun, 31 May 2015 09:00:08 +0900
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] staging: wilc1000: Cleanup to coreconfigurator
+Message-ID: <20150531000008.GC20036@kroah.com> (sfid-20150531_023915_329018_7347A6D2)
+References: <1433018659-25958-1-git-send-email-kholmanskikh.s.s@gmail.com>
+ <1433018659-25958-2-git-send-email-kholmanskikh.s.s@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [1/5] rtlwifi: Update regulatory database
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1431725583-7324-2-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Shao Fu <shaofu@realtek.com>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20150526105708.78A79141726@smtp.codeaurora.org> (sfid-20150526_160300_543324_F7533FF0)
-Date: Tue, 26 May 2015 10:57:08 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433018659-25958-2-git-send-email-kholmanskikh.s.s@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, May 30, 2015 at 11:44:19PM +0300, Stanislav Kholmanskikh wrote:
+> Fixed several syntax/style issues found with checkpatch.pl, plus
+> aligned structs/enums to follow a common style per struct/enum.
 
-> From: Shao Fu <shaofu@realtek.com>
-> 
-> Driver rtlwifi maintains its own regulatory information, The Chrome Autotest
-> (https://www.chromium.org/chromium-os/testing/autotest-user-doc)
-> showed some errors. This patch adds the necessary information for rtlwifi.
-> 
-> Signed-off-by: Shao Fu <shaofu@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Again, please only do one thing per patch.
 
-Thanks, 5 patches applied to wireless-drivers-next.git:
+thanks,
 
-02b5fffbe9e0 rtlwifi: Update regulatory database
-852ce7805638 rtlwifi: rtl8188ee: Apply the new regulatory information
-5620302484d4 rtlwifi: rtl8192ee: Apply the regulatory changes to driver
-b23cd22d3923 rtlwifi: rtl8723be: Update driver for regulatory changes
-d10101a60372 rtlwifi: rtl8821ae: Fix problem with regulatory information
-
-Kalle Valo
+greg k-h
