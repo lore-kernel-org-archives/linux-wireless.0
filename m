@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:32850 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194AbbFHIyb (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19417 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609AbbFAHN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 04:54:31 -0400
-Received: by obcej4 with SMTP id ej4so42192036obc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 01:54:30 -0700 (PDT)
+	Mon, 1 Jun 2015 03:13:26 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Marty Faltesek <mfaltesek@google.com>,
+	Martin Faltesek <martin.faltesek@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: system hang with backports-20150511/20150525
+References: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com>
+	<CA+BoTQnfXGLSvbx+hLfi_2w90-LgC3Uba0ZcO+Pt7J3FcEE9wg@mail.gmail.com>
+Date: Mon, 1 Jun 2015 10:13:20 +0300
+In-Reply-To: <CA+BoTQnfXGLSvbx+hLfi_2w90-LgC3Uba0ZcO+Pt7J3FcEE9wg@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 1 Jun 2015 08:36:06 +0200")
+Message-ID: <87vbf7vr3j.fsf@kamboji.qca.qualcomm.com> (sfid-20150601_091329_422420_BD5B93DF)
 MIME-Version: 1.0
-In-Reply-To: <CAEFj986CCryd1fK6NpoQYOmCiu+KRjq8RsSgvWqQOvLBPvFoeg@mail.gmail.com>
-References: <CAEFj986CCryd1fK6NpoQYOmCiu+KRjq8RsSgvWqQOvLBPvFoeg@mail.gmail.com>
-Date: Mon, 8 Jun 2015 16:54:30 +0800
-Message-ID: <CAEFj987VjaQpwx2VMxYeH7TWcKVvjN6hSRsqTSbSXa1ZammezQ@mail.gmail.com> (sfid-20150608_105434_969689_36E28982)
-Subject: Re: [PATCH] mac80211: Fix a case of incorrect metric used when
- forwarding a PREQ
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As mentioned in Section 13.10.9.3 Case E2, the PREQ forwarding should
-use metric "as received + own metric toward transmitter of received
-PREQ". So you are right.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Just MP_F_RF bit is no longer use. After replying with PREP,
-forwarding the PREQ by setting the IEEE80211_PREQ_TO_FLAG in the per
-target flags.
+> +ath10k list
+>
+> On 1 June 2015 at 03:37, Marty Faltesek <mfaltesek@google.com> wrote:
+>> Starting with backports-20150511, and continuing with
+>> backports-20150525, we see frequent system hangs. backports-20150424
+>> had no issue.
+>
+> I don't see such binary releases on
+> https://backports.wiki.kernel.org/index.php/Main_Page
+> Hence I don't know what kernel you've backported the drivers from and
+> I can't compare anything.
+>
+> Can you provide more details, please?
 
----
-Chun-Yeow
+I suspect it's from here:
 
-On Mon, Jun 8, 2015 at 4:07 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> Hi, Alexis Green
->
-> I just take a look back on the code before implementing the Proactive
-> PREQ for PREP. For the case of reply and forward (target_flags &
-> MP_F_RF), the previous metric used is the one which resolved from
-> mpath->metric.
->
-> Refer here: https://github.com/o11s/open80211s/blob/o11s-0.4.2/net/mac80211/mesh_hwmp.c
->
-> But to say that, I cannpt confirm whether this is correct. The
-> standard 802.11-2012 has no longer specified bit-1 MP_F_RF (Refer
-> section 8.4.2.115 per target flag). So maybe it is not relevant
-> anymore. We may need to remove as well.
->
-> ----
-> Chun-Yeow
+https://www.kernel.org/pub/linux/kernel/projects/backports/2015/05/25/
+
+The backports project pages are a bit confusing and that location is
+hard to find.
+
+-- 
+Kalle Valo
