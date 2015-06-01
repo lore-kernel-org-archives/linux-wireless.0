@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:19776 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbbFALrp (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56511 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932077AbbFAMea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 07:47:45 -0400
-Message-ID: <556C4658.7020007@broadcom.com> (sfid-20150601_134748_272009_F809BE3F)
-Date: Mon, 1 Jun 2015 13:47:36 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 1 Jun 2015 08:34:30 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CUdPs028520
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:34:26 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1urjjr0nfu-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:34:26 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv4 17/17] mwifiex: do not decrease tx_pending for AMSDU packet once more
+Date: Mon, 1 Jun 2015 23:32:15 +0530
+Message-ID: <1433181735-15712-18-git-send-email-patila@marvell.com> (sfid-20150601_150350_544385_42B69E54)
+In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
+References: <1433181735-15712-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	<brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: set wiphy perm_addr to hardware MAC address
-References: <1433033546-19214-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1433033546-19214-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/31/15 02:52, Rafał Miłecki wrote:
-> This allows e.g. user space to use /sys/class/ieee80211/*/macaddress
+From: Xinming Hu <huxm@marvell.com>
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-> index 6fe2b75..955dd0a 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-> @@ -6071,6 +6071,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
->   		brcmf_err("Could not allocate wiphy device\n");
->   		return NULL;
->   	}
-> +	memcpy(wiphy->perm_addr, drvr->mac, ETH_ALEN);
->   	set_wiphy_dev(wiphy, busdev);
->
->   	cfg = wiphy_priv(wiphy);
+Negative adapter->tx_pending is observed while running data traffic,
+because tx_pending is decreased once more for AMSDU packet.
+
+since tx_pending have been decreased for all the source MSDU packets,
+we don't need to update once more for AMSDU packet.
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/txrx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index c4c7d8d..5ed9b79 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -319,11 +319,11 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
+ 		priv->stats.tx_errors++;
+ 	}
+ 
+-	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT) {
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
+ 		atomic_dec_return(&adapter->pending_bridged_pkts);
+-		if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
+-			goto done;
+-	}
++
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
++		goto done;
+ 
+ 	if (aggr)
+ 		/* For skb_aggr, do not wake up tx queue */
+-- 
+1.8.1.4
 
