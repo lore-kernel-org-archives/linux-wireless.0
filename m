@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58212 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932251AbbFJMfw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 08:35:52 -0400
-Message-ID: <1433939749.3145.6.camel@sipsolutions.net> (sfid-20150610_143555_472528_13275EA0)
-Subject: Re: [PATCH] cfg80211: check correct maximum bandwidth for quarter
- and half rate.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthias May <matthias.may@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 10 Jun 2015 14:35:49 +0200
-In-Reply-To: <55782CE5.9010300@neratec.com>
-References: <1433863625-30579-1-git-send-email-matthias.may@neratec.com>
-		 (sfid-20150609_173523_482237_45077999) <1433881789.1892.29.camel@sipsolutions.net>
-	 <55782CE5.9010300@neratec.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:35212 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896AbbFARHL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 13:07:11 -0400
+Received: by lbbuc2 with SMTP id uc2so88788580lbb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 10:07:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <16916.1433173823@warthog.procyon.org.uk>
+References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
+ <20150528154834.1259.22434.stgit@warthog.procyon.org.uk> <5567C131.8050005@kernel.org>
+ <29091.1432903229@warthog.procyon.org.uk> <CALCETrUG7utqU7uKeC6q1rchBYL08V7peP1Ont95ZpBTiV7J9A@mail.gmail.com>
+ <16916.1433173823@warthog.procyon.org.uk>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Mon, 1 Jun 2015 10:06:49 -0700
+Message-ID: <CALCETrX0kSAW4FvYKmZK8pVzi5XTJs3RtQxqYbyC_KTHeDhMjA@mail.gmail.com> (sfid-20150601_190718_276560_EF16B0F1)
+Subject: Re: [PATCH 16/20] PKCS#7: Add an optional authenticated attribute to
+ hold firmware name [ver #5]
+To: David Howells <dhowells@redhat.com>
+Cc: Andy Lutomirski <luto@kernel.org>,
+	Luis Rodriguez <mcgrof@suse.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>, keyrings@linux-nfs.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kyle McMartin <kyle@kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	LSM List <linux-security-module@vger.kernel.org>,
+	Mimi Zohar <zohar@us.ibm.com>,
+	David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-10 at 14:26 +0200, Matthias May wrote:
+On Mon, Jun 1, 2015 at 8:50 AM, David Howells <dhowells@redhat.com> wrote:
+> Andy Lutomirski <luto@amacapital.net> wrote:
+>
+>> > You can also fudge the signature (or a hash) by adding extra data to or
+>> > modifying the data blob and by switching signature values between signature
+>> > blobs.
+>>
+>> So there's another design error in PKCS#7?  Great!
+>
+> No.  This applies to *all* signatures where you're signing a hash.
 
-> I'm not sure what exactly you mean that the handle_channel_custom needs 
-> to loop through 5/10/20.
-> The freq_reg_info_regd sets the disabled flag on the channel at init.
+What kind of fudging are you talking about here?  I don't see what
+not-intentionally-signed message can be generically fudged to look
+like it's signed.
 
-That's kinda my point - this isn't true. freg_req_info_regd() *doesn't*
-change any channel flags, it just returns some information, and through
-freq_reg_info() this is even exported to drivers.
-
-> This is not while trying to start operation on a channel, because the 
-> channel is already disabled.
-> Or do you mean to actually have different sets of flags for the 
-> different bandwidths?
-
-I mean basically what you did below, except handle it explicitly at the
-outer level.
-
-> I see that it's erroneously possible to run a 10/20MHz channel on 5175, 
-> even though this shouldn't be allowed.
-> However setting the proper flags bw_flags should fix this.
-> 
-> Expanding the patch with the patch below ensures that one can't start 
-> operation on a channel which it's not allowed on.
-> Or is there a better way?
-
-I was thinking you should extend freq_reg_info_regd() to get the desired
-bandwidth, in which case you'd have to call it three times (5, 10, 20).
-
-However, you could also make the API so that freq_reg_info_regd() gets
-the *minimum* bandwidth [that the caller is willing to handle].
-
-That way, you could set the argument to 20 MHz (for now) in
-freq_reg_info(), and to 5 MHz in the other callers that you're modifying
-(with the proposed additional patch) to actually handle the returned
-bandwidth lower than 20 MHz.
-
-
-
-This is really the crux of the problem - with your patch,
-freq_reg_info_regd() and thus freq_reg_info() can return something that
-doesn't fit the requested channel. You're changing the semantics of this
-function to no longer mean "return the rule that fits a 20MHz channel
-around the given center frequency" but to mean "return a rule around the
-given center frequency" - no matter how wide that rule can allow
-channels to be.
-
-If you change the function to pass in a "minimum required bandwidth"
-argument *and* change the checking as suggested with the combination, I
-think it'll be OK.
-
-johannes
-
+--Andy
