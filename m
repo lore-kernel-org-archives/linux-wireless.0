@@ -1,118 +1,366 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:17830 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752440AbbFAMdN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:33:13 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CUhrw018191
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:33:13 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk3t-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:33:13 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 06/17] mwifiex: disable CAC upon radar detection event
-Date: Mon, 1 Jun 2015 23:32:04 +0530
-Message-ID: <1433181735-15712-7-git-send-email-patila@marvell.com> (sfid-20150601_143317_115506_B94C960A)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:59221 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751234AbbFAOfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 10:35:32 -0400
+Message-ID: <1433169326.3505.12.camel@sipsolutions.net> (sfid-20150601_163544_410747_F26A9F2B)
+Subject: Re: [PATCH 7/7] mac80211: Switch to new AEAD interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Steffen Klassert <steffen.klassert@secunet.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 01 Jun 2015 16:35:26 +0200
+In-Reply-To: <1433167519.3505.11.camel@sipsolutions.net>
+References: <20150521103938.GA23035@gondor.apana.org.au>
+	 <1706098.2opyZ2hT8S@tachyon.chronox.de>
+	 <1433166161.3505.7.camel@sipsolutions.net> <2141601.IbD2v8KjaT@tauon>
+	 <1433167519.3505.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to disable ongoing CAC in FW upon
-detecting radar during CAC period.
+On Mon, 2015-06-01 at 16:05 +0200, Johannes Berg wrote:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Ok - here the length is kinda passed a part of the AAD buffer, but this
+> is really just some arcane code that should be fixed to use a proper
+> struct. The value there, even though it is __be16 and looks like it came
+> from the data, is actually created locally, see ccmp_special_blocks()
+> and gcmp_special_blocks().
+
+IOW, I think something like this would make sense:
+
+(but I'll hold it until after Herbert's patches I guess)
+
+>From 20bd0e92ab0d7ef545687da762228622bcdabeec Mon Sep 17 00:00:00 2001
+From: Johannes Berg <johannes.berg@intel.com>
+Date: Mon, 1 Jun 2015 16:33:11 +0200
+Subject: [PATCH] mac80211: move AAD length out of AAD buffer
+
+The code currently passes the AAD buffer as a __be16 with the
+length, followed by the actual data, but doesn't use a struct
+or make this explicit in any other way, so it's confusing.
+
+Change the code to pass the AAD length explicity outside of
+the buffer.
+
+Reported-by: Stephan Mueller <smueller@chronox.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/11h.c  | 30 ++++++++++++++++++++++++++----
- drivers/net/wireless/mwifiex/main.h |  2 ++
- 2 files changed, 28 insertions(+), 4 deletions(-)
+ net/mac80211/aes_ccm.c | 18 +++++++-------
+ net/mac80211/aes_ccm.h | 14 ++++++-----
+ net/mac80211/aes_gcm.c | 10 ++++----
+ net/mac80211/aes_gcm.h |  6 +++--
+ net/mac80211/wpa.c     | 64 +++++++++++++++++++++++++++-----------------------
+ 5 files changed, 62 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
-index 65cd461..bb2ffd9 100644
---- a/drivers/net/wireless/mwifiex/11h.c
-+++ b/drivers/net/wireless/mwifiex/11h.c
-@@ -161,19 +161,38 @@ int mwifiex_cmd_issue_chan_report_request(struct mwifiex_private *priv,
- 	cr_req->chan_desc.chan_width = radar_params->chandef->width;
- 	cr_req->msec_dwell_time = cpu_to_le32(radar_params->cac_time_ms);
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index 208df7c0b6ea..b6e2f096127a 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -19,9 +19,10 @@
+ #include "key.h"
+ #include "aes_ccm.h"
  
--	mwifiex_dbg(priv->adapter, MSG,
--		    "11h: issuing DFS Radar check for channel=%d\n",
--		    radar_params->chandef->chan->hw_value);
-+	if (radar_params->cac_time_ms)
-+		mwifiex_dbg(priv->adapter, MSG,
-+			    "11h: issuing DFS Radar check for channel=%d\n",
-+			    radar_params->chandef->chan->hw_value);
-+	else
-+		mwifiex_dbg(priv->adapter, MSG, "cancelling CAC\n");
+-void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic,
+-			       size_t mic_len)
++void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0,
++			       u8 *aad, size_t aad_len,
++			       u8 *data, size_t data_len,
++			       u8 *mic, size_t mic_len)
+ {
+ 	struct scatterlist assoc, pt, ct[2];
  
- 	return 0;
+@@ -33,7 +34,7 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+-	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
++	sg_init_one(&assoc, aad, aad_len);
+ 	sg_init_table(ct, 2);
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, mic_len);
+@@ -45,9 +46,10 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	crypto_aead_encrypt(aead_req);
  }
  
-+int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
-+				 struct cfg80211_chan_def *chandef)
-+{
-+	struct mwifiex_radar_params radar_params;
-+
-+	memset(&radar_params, 0, sizeof(struct mwifiex_radar_params));
-+	radar_params.chandef = chandef;
-+	radar_params.cac_time_ms = 0;
-+
-+	return mwifiex_send_cmd(priv, HostCmd_CMD_CHAN_REPORT_REQUEST,
-+				HostCmd_ACT_GEN_SET, 0, &radar_params, true);
-+}
-+
- /* This function is to abort ongoing CAC upon stopping AP operations
-  * or during unload.
-  */
- void mwifiex_abort_cac(struct mwifiex_private *priv)
+-int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			      u8 *data, size_t data_len, u8 *mic,
+-			      size_t mic_len)
++int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0,
++			      u8 *aad, size_t aad_len,
++			      u8 *data, size_t data_len,
++			      u8 *mic, size_t mic_len)
  {
- 	if (priv->wdev.cac_started) {
-+		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
-+			mwifiex_dbg(priv->adapter, ERROR,
-+				    "failed to stop CAC in FW\n");
- 		mwifiex_dbg(priv->adapter, MSG,
- 			    "Aborting delayed work for CAC.\n");
- 		cancel_delayed_work_sync(&priv->dfs_cac_work);
-@@ -245,6 +264,9 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
- 	if (le32_to_cpu(rdr_event->passed)) {
- 		mwifiex_dbg(priv->adapter, MSG,
- 			    "radar detected; indicating kernel\n");
-+		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
-+			mwifiex_dbg(priv->adapter, ERROR,
-+				    "Failed to stop CAC in FW\n");
- 		cfg80211_radar_event(priv->adapter->wiphy, &priv->dfs_chandef,
- 				     GFP_KERNEL);
- 		mwifiex_dbg(priv->adapter, MSG, "regdomain: %d\n",
-@@ -252,7 +274,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
- 		mwifiex_dbg(priv->adapter, MSG, "radar detection type: %d\n",
- 			    rdr_event->det_type);
+ 	struct scatterlist assoc, pt, ct[2];
+ 	char aead_req_data[sizeof(struct aead_request) +
+@@ -61,7 +63,7 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+-	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
++	sg_init_one(&assoc, aad, aad_len);
+ 	sg_init_table(ct, 2);
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, mic_len);
+diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
+index 6a73d1e4d186..bfe355e4a680 100644
+--- a/net/mac80211/aes_ccm.h
++++ b/net/mac80211/aes_ccm.h
+@@ -15,12 +15,14 @@
+ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
+ 						    size_t key_len,
+ 						    size_t mic_len);
+-void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic,
+-			       size_t mic_len);
+-int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			      u8 *data, size_t data_len, u8 *mic,
+-			      size_t mic_len);
++void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0,
++			       u8 *aad, size_t aad_len,
++			       u8 *data, size_t data_len,
++			       u8 *mic, size_t mic_len);
++int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0,
++			      u8 *aad, size_t aad_len,
++			      u8 *data, size_t data_len,
++			      u8 *mic, size_t mic_len);
+ void ieee80211_aes_key_free(struct crypto_aead *tfm);
+ 
+ #endif /* AES_CCM_H */
+diff --git a/net/mac80211/aes_gcm.c b/net/mac80211/aes_gcm.c
+index fd278bbe1b0d..fb6823c5e381 100644
+--- a/net/mac80211/aes_gcm.c
++++ b/net/mac80211/aes_gcm.c
+@@ -16,7 +16,8 @@
+ #include "key.h"
+ #include "aes_gcm.h"
+ 
+-void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0,
++			       u8 *aad, size_t aad_len,
+ 			       u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist assoc, pt, ct[2];
+@@ -29,7 +30,7 @@ void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+-	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
++	sg_init_one(&assoc, aad, aad_len);
+ 	sg_init_table(ct, 2);
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, IEEE80211_GCMP_MIC_LEN);
+@@ -41,7 +42,8 @@ void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 	crypto_aead_encrypt(aead_req);
+ }
+ 
+-int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0,
++			      u8 *aad, size_t aad_len,
+ 			      u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist assoc, pt, ct[2];
+@@ -56,7 +58,7 @@ int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 	memset(aead_req, 0, sizeof(aead_req_data));
+ 
+ 	sg_init_one(&pt, data, data_len);
+-	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
++	sg_init_one(&assoc, aad, aad_len);
+ 	sg_init_table(ct, 2);
+ 	sg_set_buf(&ct[0], data, data_len);
+ 	sg_set_buf(&ct[1], mic, IEEE80211_GCMP_MIC_LEN);
+diff --git a/net/mac80211/aes_gcm.h b/net/mac80211/aes_gcm.h
+index 1347fda6b76a..67ca10e3e7a4 100644
+--- a/net/mac80211/aes_gcm.h
++++ b/net/mac80211/aes_gcm.h
+@@ -11,9 +11,11 @@
+ 
+ #include <linux/crypto.h>
+ 
+-void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0,
++			       u8 *aad, size_t aad_len,
+ 			       u8 *data, size_t data_len, u8 *mic);
+-int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0,
++			      u8 *aad, size_t aad_len,
+ 			      u8 *data, size_t data_len, u8 *mic);
+ struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
+ 							size_t key_len);
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 9d63d93c836e..b32c043b48b1 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -304,7 +304,7 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+ }
+ 
+ 
+-static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
++static u16 ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
+ {
+ 	__le16 mask_fc;
+ 	int a4_included, mgmt;
+@@ -352,22 +352,23 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
+ 
+ 	/* AAD (extra authenticate-only data) / masked 802.11 header
+ 	 * FC | A1 | A2 | A3 | SC | [A4] | [QC] */
+-	put_unaligned_be16(len_a, &aad[0]);
+-	put_unaligned(mask_fc, (__le16 *)&aad[2]);
+-	memcpy(&aad[4], &hdr->addr1, 3 * ETH_ALEN);
++	put_unaligned(mask_fc, (__le16 *)aad);
++	memcpy(&aad[2], &hdr->addr1, 3 * ETH_ALEN);
+ 
+ 	/* Mask Seq#, leave Frag# */
+-	aad[22] = *((u8 *) &hdr->seq_ctrl) & 0x0f;
+-	aad[23] = 0;
++	aad[20] = *((u8 *) &hdr->seq_ctrl) & 0x0f;
++	aad[21] = 0;
+ 
+ 	if (a4_included) {
+-		memcpy(&aad[24], hdr->addr4, ETH_ALEN);
+-		aad[30] = qos_tid;
+-		aad[31] = 0;
++		memcpy(&aad[22], hdr->addr4, ETH_ALEN);
++		aad[28] = qos_tid;
++		aad[29] = 0;
  	} else {
--		mwifiex_dbg(priv->adapter, ERROR,
-+		mwifiex_dbg(priv->adapter, MSG,
- 			    "false radar detection event!\n");
+-		memset(&aad[24], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
+-		aad[24] = qos_tid;
++		memset(&aad[22], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
++		aad[22] = qos_tid;
  	}
++
++	return len_a;
+ }
  
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5a6c1c7..3ac18c6 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1473,6 +1473,8 @@ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
- void mwifiex_dfs_cac_work_queue(struct work_struct *work);
- void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work);
- void mwifiex_abort_cac(struct mwifiex_private *priv);
-+int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
-+				 struct cfg80211_chan_def *chandef);
- int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
- 				      struct sk_buff *skb);
  
+@@ -407,6 +408,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 	u64 pn64;
+ 	u8 aad[2 * AES_BLOCK_SIZE];
+ 	u8 b_0[AES_BLOCK_SIZE];
++	size_t aad_len;
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+@@ -460,8 +462,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 		return 0;
+ 
+ 	pos += IEEE80211_CCMP_HDR_LEN;
+-	ccmp_special_blocks(skb, pn, b_0, aad);
+-	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
++	aad_len = ccmp_special_blocks(skb, pn, b_0, aad);
++	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, aad_len, pos, len,
+ 				  skb_put(skb, mic_len), mic_len);
+ 
+ 	return 0;
+@@ -529,10 +531,10 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
+ 		u8 aad[2 * AES_BLOCK_SIZE];
+ 		u8 b_0[AES_BLOCK_SIZE];
+ 		/* hardware didn't decrypt/verify MIC */
+-		ccmp_special_blocks(skb, pn, b_0, aad);
++		size_t aad_len = ccmp_special_blocks(skb, pn, b_0, aad);
+ 
+ 		if (ieee80211_aes_ccm_decrypt(
+-			    key->u.ccmp.tfm, b_0, aad,
++			    key->u.ccmp.tfm, b_0, aad, aad_len,
+ 			    skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
+ 			    data_len,
+ 			    skb->data + skb->len - mic_len, mic_len))
+@@ -550,7 +552,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
+ 	return RX_CONTINUE;
+ }
+ 
+-static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
++static u16 gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
+ {
+ 	__le16 mask_fc;
+ 	u8 qos_tid;
+@@ -565,7 +567,6 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
+ 	/* AAD (extra authenticate-only data) / masked 802.11 header
+ 	 * FC | A1 | A2 | A3 | SC | [A4] | [QC]
+ 	 */
+-	put_unaligned_be16(ieee80211_hdrlen(hdr->frame_control) - 2, &aad[0]);
+ 	/* Mask FC: zero subtype b4 b5 b6 (if not mgmt)
+ 	 * Retry, PwrMgt, MoreData; set Protected
+ 	 */
+@@ -576,12 +577,12 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
+ 		mask_fc &= ~cpu_to_le16(0x0070);
+ 	mask_fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 
+-	put_unaligned(mask_fc, (__le16 *)&aad[2]);
+-	memcpy(&aad[4], &hdr->addr1, 3 * ETH_ALEN);
++	put_unaligned(mask_fc, (__le16 *)aad);
++	memcpy(&aad[2], &hdr->addr1, 3 * ETH_ALEN);
+ 
+ 	/* Mask Seq#, leave Frag# */
+-	aad[22] = *((u8 *)&hdr->seq_ctrl) & 0x0f;
+-	aad[23] = 0;
++	aad[20] = *((u8 *)&hdr->seq_ctrl) & 0x0f;
++	aad[21] = 0;
+ 
+ 	if (ieee80211_is_data_qos(hdr->frame_control))
+ 		qos_tid = *ieee80211_get_qos_ctl(hdr) &
+@@ -590,13 +591,15 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
+ 		qos_tid = 0;
+ 
+ 	if (ieee80211_has_a4(hdr->frame_control)) {
+-		memcpy(&aad[24], hdr->addr4, ETH_ALEN);
+-		aad[30] = qos_tid;
+-		aad[31] = 0;
++		memcpy(&aad[22], hdr->addr4, ETH_ALEN);
++		aad[28] = qos_tid;
++		aad[29] = 0;
+ 	} else {
+-		memset(&aad[24], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
+-		aad[24] = qos_tid;
++		memset(&aad[22], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
++		aad[22] = qos_tid;
+ 	}
++
++	return ieee80211_hdrlen(hdr->frame_control) - 2;
+ }
+ 
+ static inline void gcmp_pn2hdr(u8 *hdr, const u8 *pn, int key_id)
+@@ -632,6 +635,7 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	u64 pn64;
+ 	u8 aad[2 * AES_BLOCK_SIZE];
+ 	u8 j_0[AES_BLOCK_SIZE];
++	size_t aad_len;
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+@@ -686,8 +690,8 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 
+ 	pos += IEEE80211_GCMP_HDR_LEN;
+-	gcmp_special_blocks(skb, pn, j_0, aad);
+-	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
++	aad_len = gcmp_special_blocks(skb, pn, j_0, aad);
++	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, aad_len, pos, len,
+ 				  skb_put(skb, IEEE80211_GCMP_MIC_LEN));
+ 
+ 	return 0;
+@@ -752,10 +756,10 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 		u8 aad[2 * AES_BLOCK_SIZE];
+ 		u8 j_0[AES_BLOCK_SIZE];
+ 		/* hardware didn't decrypt/verify MIC */
+-		gcmp_special_blocks(skb, pn, j_0, aad);
++		size_t aad_len = gcmp_special_blocks(skb, pn, j_0, aad);
+ 
+ 		if (ieee80211_aes_gcm_decrypt(
+-			    key->u.gcmp.tfm, j_0, aad,
++			    key->u.gcmp.tfm, j_0, aad, aad_len,
+ 			    skb->data + hdrlen + IEEE80211_GCMP_HDR_LEN,
+ 			    data_len,
+ 			    skb->data + skb->len - IEEE80211_GCMP_MIC_LEN))
 -- 
-1.8.1.4
+2.1.4
+
+
 
