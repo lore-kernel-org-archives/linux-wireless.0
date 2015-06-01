@@ -1,70 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51967 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752511AbbFCGAd (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:33656 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751493AbbFASae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 02:00:33 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t535xoRV028459
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:00:32 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvggty-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:00:32 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv5 02/17] mwifiex: correct bss_type assignment
-Date: Wed, 3 Jun 2015 16:59:32 +0530
-Message-ID: <1433330987-6808-3-git-send-email-patila@marvell.com> (sfid-20150603_080036_600483_E8068771)
-In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
-References: <1433330987-6808-1-git-send-email-patila@marvell.com>
+	Mon, 1 Jun 2015 14:30:34 -0400
+Received: by igbpi8 with SMTP id pi8so68108179igb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 11:30:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CABPxzYKPhgW6-ugi8kaO8sDvTKm-ScAOOXWavuTNo4w4+WS+6g@mail.gmail.com>
+References: <CABPxzYKPhgW6-ugi8kaO8sDvTKm-ScAOOXWavuTNo4w4+WS+6g@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 2 Jun 2015 00:00:13 +0530
+Message-ID: <CABPxzY+QEQNA7T+bNqeamM4B8YEwCJx+_kivGQ+3w_UnRNb--Q@mail.gmail.com> (sfid-20150601_203038_778446_F2F96621)
+Subject: Re: cfg80211: Beacon hints for DFS channels
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct bss_type assignment in add_virtual_interface.
-This would ensure correct operation in multiple station scenarios.
+On Thu, Mar 19, 2015 at 1:37 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> Hi,
+>
+> In the Regulatory and DFS wiki it is mentioned that
+> beacon hints are not processed for DFS channels.
+> But i could not find the related piece of code which
+> does this.
+>
+> So in DFS channels can we process beacon hints?
+> Assuming that if AP is beaconing then there is no
+> RADAR in that channel. But how do we handle
+> channel switch (if we dont disconnect) then that
+> channel is enabled for active scan?
+>       (or)
+> should be we have something like this:
+>
+> ---
+>
+>  net/wireless/reg.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 8c6cf52..25b3173 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1384,7 +1384,8 @@ static void handle_reg_beacon(struct wiphy
+> *wiphy, unsigned int chan_idx,
+>         chan_before.center_freq = chan->center_freq;
+>         chan_before.flags = chan->flags;
+>
+> -       if (chan->flags & IEEE80211_CHAN_NO_IR) {
+> +       if (!(chan->flags & IEEE80211_CHAN_RADAR) &&
+> +             (chan->flags & IEEE80211_CHAN_NO_IR)) {
+>                 chan->flags &= ~IEEE80211_CHAN_NO_IR;
+>                 channel_changed = true;
+>         }
+>
+Luis,
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Any comments on this? We are seeing the below behavior:
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 4eeceda..3a14d3a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2518,7 +2518,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.sta_intf;
- 
- 		break;
- 	case NL80211_IFTYPE_AP:
-@@ -2544,7 +2544,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.uap_intf;
- 		priv->bss_mode = type;
- 
- 		break;
-@@ -2580,7 +2580,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
- 		priv->bss_started = 0;
--		priv->bss_num = 0;
-+		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
- 
- 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
- 			memset(&priv->wdev, 0, sizeof(priv->wdev));
+Channel 60 in US:
+     Initially marked as NO_IR
+     found a beacon: channel changed to ~NO_IR.
+     AP found a radar, issued CSA and move to other channel.
+     STA disconnected and does active scan in channel 60..
+Now,
+
+a) we can disable beacons hints for DFS channels as per wiki,
+so all DFS channels will be marked as NO_IR.
+
+b) up on receiving the ECSA/CSA mark the channel as NO_IR.
+
+Let me know your thoughts.
+
+Regards,
+Chaitanya T K.
+
+
+
+
 -- 
-1.8.1.4
-
+Thanks,
+Regards,
+Chaitanya T K.
