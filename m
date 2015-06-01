@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gosford.compton.nu ([217.169.17.27]:43069 "EHLO
-	gosford.compton.nu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790AbbF2K2h (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:36190 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753221AbbFAONr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 06:28:37 -0400
-Subject: Re: Null pointer dereference when station associates [introduced by
- 4.0.5?]
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <558EC27A.60804@compton.nu> (sfid-20150627_181129_907073_7F8F41EE)
- <1435565678.2156.9.camel@sipsolutions.net> <55910222.8020906@compton.nu>
- <55910DC8.9040700@compton.nu> <55911375.3070003@compton.nu>
- <55911CEA.7010103@compton.nu>
-Cc: stable@vger.kernel.org
-From: Tom Hughes <tom@compton.nu>
-Message-ID: <55911DD1.20606@compton.nu> (sfid-20150629_122843_515469_C0E2AE3E)
-Date: Mon, 29 Jun 2015 11:28:33 +0100
+	Mon, 1 Jun 2015 10:13:47 -0400
+Received: by igbpi8 with SMTP id pi8so62252658igb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 07:13:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <55911CEA.7010103@compton.nu>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1433166856-3285-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1433166856-3285-1-git-send-email-Wojciech.Dubowik@neratec.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 2 Jun 2015 00:13:25 +1000
+Message-ID: <CAGRGNgW=qy2TuojGt5CDE0sATkKeMTHCtBJnFQOjJ=3pP7Kzzw@mail.gmail.com> (sfid-20150601_161455_772652_A8F38FB1)
+Subject: Re: [PATCH] mac80211: Fix double locking on CSA counter update
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29/06/15 11:24, Tom Hughes wrote:
+Hi Wojciech,
 
-> So I think this happens when hostapd switches the interface
-> to AP mode, which causes the netdev to be torn down and then
-> recreated, and the debugfs directory along with it.
->
-> Except that if the netlink message to change the mode was
-> sent from a daemon whose selinux context prevents searching
-> debugfs the recreation somehow fails and leaves an invalid
-> state that later causes the null pointer deref.
+On Mon, Jun 1, 2015 at 11:54 PM, Wojciech Dubowik
+<Wojciech.Dubowik@neratec.com> wrote:
+> We call rcu locked ieee80211_csa_update_counter from
+> already locked section. Fix it by decrementing counter
+> directly instead of calling ieee80211_csa_update_counter.
 
-Think I have it...
+Stupid question: wouldn't it be better to split the work from
+ieee80211_csa_update_counter() into a separate function without
+locking and call that instead?
 
-The teardown runs ieee80211_debugfs_remove_netdev
-which clears sdata->vif.debugfs_dir but does not clear 
-sdata->debugfs.subdir_stations so that when ieee80211_debugfs_add_netdev 
-later fails to create the top level
-netdev directory we are left with a bogus pointer for the stations 
-directory.
-
-Then when we try and add an entry to the stations directory things blow up.
-
-Tom
+Thanks,
 
 -- 
-Tom Hughes (tom@compton.nu)
-http://compton.nu/
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
