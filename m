@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64573 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752175AbbFXNGC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2015 09:06:02 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: RE: [PATCH] mwifiex: avoid freeing improper pointer in
- mwifiex_set_wowlan_mef_entry
-Date: Wed, 24 Jun 2015 13:05:49 +0000
-Message-ID: <8d4b003dd3a44d1081f565c1f90a543d@SC-EXCH04.marvell.com> (sfid-20150624_150607_383985_99059F4A)
-References: <1435085145-9668-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1435085145-9668-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44418 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbbFAHhh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 03:37:37 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wireless-regdb: Add 60GHz regulatory rules for Japan (JP)
+Date: Mon,  1 Jun 2015 10:37:26 +0300
+Message-Id: <1433144246-18214-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150601_093744_057942_C54F8D21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Source is ARIB STD-T74, available at:
+http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
 
-> From: John W. Linville [mailto:linville@tuxdriver.com]
-> Sent: Wednesday, June 24, 2015 12:16 AM
-> To: linux-wireless@vger.kernel.org
-> Cc: Amitkumar Karwar; Avinash Patil; Kalle Valo; John W. Linville
-> Subject: [PATCH] mwifiex: avoid freeing improper pointer in
-> mwifiex_set_wowlan_mef_entry
-> 
-> mwifiex_set_wowlan_mef_entry attempts to free a passed-in pointer in
-> case of an error.  The only caller (mwifiex_set_mef_filter) passes that
-> pointer as an offset into allocated memory, so any attempt to free that
-> will not be the actual allocated pointer.
-> 
-> Address this by changing mwifiex_set_wowlan_mef_entry to not do any
-> free, and to cause mwifiex_set_mef_filter to do the appropriate free if
-> the call to mwifiex_set_wowlan_mef_entry fails.
-> 
-> Coverity CID #1295879
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ db.txt | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+diff --git a/db.txt b/db.txt
+index df7f7b1..7157ae8 100644
+--- a/db.txt
++++ b/db.txt
+@@ -584,6 +584,9 @@ country JP: DFS-JP
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (23), DFS
++	# 60 gHz band channels 2-4 at 10mW,
++	# ref: http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
++	(59000 - 66000 @ 2160), (10 mW)
+ 
+ country KE: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-- 
+2.1.4
 
-Thanks,
-Amitkumar
