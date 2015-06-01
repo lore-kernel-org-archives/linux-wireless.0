@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:52186 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751786AbbFKIar (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 04:30:47 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Z2xsq-0001ci-V7
-	for linux-wireless@vger.kernel.org; Thu, 11 Jun 2015 10:30:45 +0200
-Received: from c-4dabdb54.030-194-6d6c6d4.cust.bredbandsbolaget.se ([84.219.171.77])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 10:30:44 +0200
-Received: from quite by c-4dabdb54.030-194-6d6c6d4.cust.bredbandsbolaget.se with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 10:30:44 +0200
-To: linux-wireless@vger.kernel.org
-From: Daniel Lublin <quite@hack.org>
-Subject: Re: values in /proc/net/wireless are static, doesn't change; iwlwifi, Intel 6205
-Date: Thu, 11 Jun 2015 08:30:39 +0000 (UTC)
-Message-ID: <loom.20150611T103011-578@post.gmane.org> (sfid-20150611_103051_260554_CB70491A)
-References: <loom.20150611T094911-428@post.gmane.org>  (sfid-20150611_100009_243262_EFBCBBEB) <1434009970.1915.3.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39083 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbbFAHSu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 03:18:50 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: Re: [PATCH v4] ath10k: bypass PLL setting on target init for QCA9888
+References: <1432736253-30040-1-git-send-email-kvalo@qca.qualcomm.com>
+Date: Mon, 1 Jun 2015 10:18:44 +0300
+In-Reply-To: <1432736253-30040-1-git-send-email-kvalo@qca.qualcomm.com> (Kalle
+	Valo's message of "Wed, 27 May 2015 17:17:33 +0300")
+Message-ID: <87r3pvvquj.fsf@kamboji.qca.qualcomm.com> (sfid-20150601_091932_255172_1DD2DF05)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> The fix just went into net.git.
+> From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>
+> Some of of qca988x solutions are having global reset issue
+> during target initialization. Bypassing PLL setting before
+> downloading firmware and letting the SoC run on REF_CLK is fixing
+> the problem. Corresponding firmware change is also needed to set
+> the clock source once the target is initialized. Since 10.2.4
+> firmware is having this ROM patch, applying skip_clock_init only
+> for 10.2.4 firmware versions.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Aha! There you go. Where do I find it? Beginner kernel git diver...
+Thanks, applied.
 
-
-
+-- 
+Kalle Valo
