@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10465 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754910AbbFWSAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 14:00:30 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>
-Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-Date: Tue, 23 Jun 2015 18:00:20 +0000
-Message-ID: <1435082418.2777.11.camel@ipeer-box> (sfid-20150623_200110_022633_0C88CA13)
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
-	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
-	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
-In-Reply-To: <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:34885 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753911AbbFAVcZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 17:32:25 -0400
+Received: by iesa3 with SMTP id a3so119379580ies.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 14:32:24 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1433190967.3505.17.camel@sipsolutions.net>
+References: <1433178885-8787-1-git-send-email-chaitanya.mgit@gmail.com> <1433190967.3505.17.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 2 Jun 2015 03:02:04 +0530
+Message-ID: <CABPxzYLMiX1chbNxUd4gfK2HeKkXxHEw1rjf+5on4mskxce1Gg@mail.gmail.com> (sfid-20150601_233233_352249_DE5816D7)
+Subject: Re: [PATCH V2] mac80211: Fix power save state stuck in ACTIVE caused
+ by race between suspend and Tx packet.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEtyaXNobmEgQ2hhaXRhbnlhIDxjaGFp
-dGFueWEubWdpdEBnbWFpbC5jb208bWFpbHRvOktyaXNobmElMjBDaGFpdGFueWElMjAlM2NjaGFp
-dGFueWEubWdpdEBnbWFpbC5jb20lM2U+Pg0KVG86ICJQZWVyLCBJbGFuIiA8aWxhbi5wZWVyQGlu
-dGVsLmNvbTxtYWlsdG86JTIyUGVlciwlMjBJbGFuJTIyJTIwJTNjaWxhbi5wZWVyQGludGVsLmNv
-bSUzZT4+DQpDYzogSmFudXN6IER6aWVkemljIDxqYW51c3ouZHppZWR6aWNAdGlldG8uY29tPG1h
-aWx0bzpKYW51c3olMjBEemllZHppYyUyMCUzY2phbnVzei5kemllZHppY0B0aWV0by5jb20lM2U+
-PiwgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnIDxsaW51eC13aXJlbGVzc0B2Z2VyLmtl
-cm5lbC5vcmc8bWFpbHRvOiUyMmxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyUyMiUyMCUz
-Y2xpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyUzZT4+DQpTdWJqZWN0OiBSZTogQVAgKyBQ
-MlBfR08gbXVsdGljaGFuIHRlc3RzIHdpdGggaW50ZWw3MjYwIGFzIGEgUDJQX0NMSUVOVCAtIGRp
-cmVjdCBwcm9iZSBpc3N1ZQ0KRGF0ZTogVHVlLCAyMyBKdW4gMjAxNSAxNzozNDo1OSArMDUzMA0K
-DQoNCg0KT24gVHVlLCBKdW4gMjMsIDIwMTUgYXQgNToyNSBQTSwgUGVlciwgSWxhbiA8aWxhbi5w
-ZWVyQGludGVsLmNvbTxtYWlsdG86aWxhbi5wZWVyQGludGVsLmNvbT4+IHdyb3RlOg0KPj4gPj4N
-Cj4+ID4+IEkgc3VzcGVjdCB0aGlzIGlzIGJlY2F1c2Ugb2YgUDJQX0dPIE5vQT8NCj4+ID4+IFdo
-byBzaG91bGQgY2FyZSBhYm91dCB0aGlzIGRpcmVjdCBwcm9iZXMgdHggd2hlbiBHTyBpcyBub3Qg
-cHJlc2VudD8NCj4+ID4+DQo+PiA+PiBJbiBjYXNlIHdlIGRpZG4ndCBzZW5kIGRpcmVjdCBwcm9i
-ZXMgLSB0aGVyZSBpcyBubyBwcm9ibGVtIGFuZCBUQw0KPj4gPj4gd29ya3MgY29ycmVjdGx5DQo+
-PiA+Pg0KPj4gPg0KPj4gPiBJbnRlcmVzdGluZyA6KQ0KPj4gPg0KPj4gPiBBbnkgY2hhbmNlIHlv
-dSBjYW4gcHJvdmlkZSB0cmFjZS1jbWQgYW5kIHNuaWZmZXIgY2FwdHVyZT8NCj4+ID4NCj4+ID4g
-Tm9ybWFsbHksIGlmIHdlIHByb3ZpZGVkIHRoZSBGVyB3aXRoIHRoZSBCU1NJRCBpbmZvcm1hdGlv
-biBhbmQgVFNGDQo+PiA+IGluZm9ybWF0aW9uIGZvciBzeW5jaW5nLCBvbmNlIHRoZSBGVyBoZWFy
-cyB0aGUgMXN0IGJlYWNvbiB3aXRoIHRoZSBOb0ENCj4+ID4gaXQgc2hvdWxkIHN5bmMgb24gaXQg
-YW5kIG5vdCB0cnkgdG8gYXR0ZW1wdCB0byB0cmFuc21pdCBhbnkgZnJhbWVzIGFzDQo+PiA+IGxv
-bmcgYXMgdGhlIEFQIGlzIGFic2VudC4gSXQgbWlnaHQgYWxzbyBiZSByZWxhdGVkIHRvIHRoZSBm
-YWN0IHRoYXQNCj4+ID4gdGhlIHByb2JlIHJlcXVlc3RzIGFyZSBzZW50IHRvIGJyb2FkY2FzdCBh
-ZGRyZXNzLCBidXQgSSBuZWVkIHRvDQo+PiA+IGZ1cnRoZXIgY2hlY2tzIHRoaXMuIEFueXdheSwg
-aGF2aW5nIHNvbWUgZGF0YSB3b3VsZCBoZWxwIDspDQo+PiA+DQo+PiBUaGF0cyBleGFjdGx5IHRo
-ZSBwb2ludCwgaWYgR08gaXMgaW4gTm9BIEZXIHdpbGwgbm90IHRyYW5zbWl0IGJ1dCBtYWM4MDIx
-MQ0KPj4gdGltZWQtb3V0IGZvciBkaXJlY3QgcHJvYmUuDQo+Pg0KPj4gU28gdGhlIHF1ZXN0aW9u
-IGlzIHNob3VsZCBtYWM4MDIxMSBldmVuIHNlbmQgdGhlIGRpcmVjdCBwcm9iZSBpbiB0aGlzIGNh
-c2UNCj4+IHdoZW4gR08gaXMgaW4gTm9BPw0KPg0KPiBJIHRoaW5rIHRoYXQgdGhpcyBzaG91bGQg
-YmUgdGhlIGRyaXZlcidzL0ZXIHJlc3BvbnNpYmlsaXR5LCBhcyBhdCB0aGlzIHN0YWdlIG1hYzgw
-MjExIGFscmVhZHkgY29uZmlndXJlZCBhbGwgdGhlIGluZm9ybWF0aW9uIG5lZWRlZCBmb3IgdGhl
-IGRyaXZlciB0byBzeW5jIChhc3N1bWluZyBpdCBoZWFyZCBhIGJlYWNvbi9wcm9iZSkgYW5kIGlu
-IGFkZGl0aW9uIG1nZF9wcmVwYXJlX3R4KCkgaXMgY2FsbGVkIHRvIGhhdmUgdGhlIGRyaXZlci9G
-VyBwcmVwYXJlIGZvciBhIHRyYW5zbWlzc2lvbiBvZiB0aGUgbWdtdC4gZnJhbWUsIGluY2x1ZGlu
-ZyBzeW5jaHJvbml6YXRpb24gd2l0aCB0aGUgUDJQIEdPIHBvd2VyIHN0YXRlLg0KQWdyZWUsIHRo
-ZSBhY3R1YWwgdHJhbnNtaXNzaW9uIHNob3VsZCBkZWZpbml0ZWx5IGJlIGluIGRyaXZlci9GVw0K
-YnV0IHRoZSB0aW1lb3V0IGZvciBzdWNoIGZyYW1lcyBhcmUgc3RpbGwgYXQgbWFjODAyMTEsIHNv
-IHVubGVzcyBzdQ0KaXQgc3luY2hyb25pemVzIHRoZSB0aW1lb3V0cyB0byBHTyBOb0EgcGVyaW9k
-IHRoaXMgImNhbiIgZmFpbA0KZGVwZW5kaW5nIG9uIHRoZSBhYnNlbmNlIHBlcmlvZCBvZiBHTy4g
-RGVmYXVsdCBhdXRoX3RpbWVvdXQgaXMgMjAwbXMuDQoNCg0KSSBkbyBub3QgdGhpbmsgdGhhdCBt
-YWM4MDIxMSBzaG91bGQgaGFuZGxlIHRoZSBzeW5jaHJvbml6YXRpb24sIG1vc3RseSBzaW5jZSBp
-dCBkb2VzIG5vdCAgZ2V0IHRoZSBiZWFjb25zIGZyb20gdGhlIEFQIHdlIGFyZSBhc3NvY2lhdGVk
-IHdpdGguICBBcyBJIGV4cGxhaW5lZCBhYm92ZSwgdGhpcyBzaG91bGQgYmUgdGhlIGRyaXZlcnMv
-RlcgcmVzcG9uc2liaWxpdHkgb25jZSB0aGV5IGhhdmUgYWxsIHRoZSBpbmZvcm1hdGlvbiB0aGV5
-IHJlcXVpcmUuIEFzIHN1Y2gsIEkgdGhpbmsgdGhhdCBpcyBleHBlY3RlZCBmcm9tIHRoZSBkcml2
-ZXIvRlcgdG8gb25seSBzZW5kIHRoZSBmcmFtZXMgd2hlbiB0aGUgUDJQIEdPL0FQIGlzIG9uIHRo
-ZSBjaGFubmVsLg0KDQpSZWdhcmRzLA0KDQpJbGFuLg0KDQoNCg0K
+On Tue, Jun 2, 2015 at 2:06 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2015-06-01 at 22:44 +0530, Chaitanya T K wrote:
+>> From: Chaitanya T K <chaitanya.mgit@gmail.com>
+>>
+>> If suspended during TX in progress, there can be
+>> race where the driver is put of of power-save due
+>> to TX and during suspend dynamic_ps_time is cancelled
+>> and TX packet is flushed, leaving the driver in ACTIVE
+>> even after resuming until dynamic_ps_time puts
+>> driver back in DOZE. (Which only happens if there
+>> is another TX).
+>>
+>> This can lead high power consumption of chipset during (or)
+>> after resuming also.
+>
+> This isn't what your patch is actually doing though. You need to mention
+> WoWLAN at the very least in your commit log;
+Yes, WoWLAN is enabled in our testing. Without wowlan the connection
+will not be intact. So i assumed the check "is_associated" would
+imply wowlan.
+
+> or are you just randomly
+> changing the code until it fixes your bug? :)
+I am not that lucky to find a proper fix that way :-).
