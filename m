@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40838 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015AbbFJVwz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 17:52:55 -0400
-Message-ID: <5578B1B6.8040006@candelatech.com> (sfid-20150610_235258_187085_AFBF2490)
-Date: Wed, 10 Jun 2015 14:52:54 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Add netdev name to  NL80211_CMD_STOP_AP event?
-References: <5578AA11.2020505@candelatech.com>   (sfid-20150610_232022_833916_9A1896A2) <1433972365.3145.18.camel@sipsolutions.net>  <5578AF90.5030609@candelatech.com> <1433972952.3145.19.camel@sipsolutions.net>
-In-Reply-To: <1433972952.3145.19.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:33240 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751591AbbFAUgJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 16:36:09 -0400
+Message-ID: <1433190967.3505.17.camel@sipsolutions.net> (sfid-20150601_223613_838915_E4587257)
+Subject: Re: [PATCH V2] mac80211: Fix power save state stuck in ACTIVE
+ caused by race between suspend and Tx packet.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chaitanya T K <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 01 Jun 2015 22:36:07 +0200
+In-Reply-To: <1433178885-8787-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150601_191550_985047_1F5BDBC6)
+References: <1433178885-8787-1-git-send-email-chaitanya.mgit@gmail.com>
+	 (sfid-20150601_191550_985047_1F5BDBC6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2015 02:49 PM, Johannes Berg wrote:
-> On Wed, 2015-06-10 at 14:43 -0700, Ben Greear wrote:
+On Mon, 2015-06-01 at 22:44 +0530, Chaitanya T K wrote:
+> From: Chaitanya T K <chaitanya.mgit@gmail.com>
 > 
->> I was thinking netdevice might go away before user-space can decode the
->> message ( I was assuming that on delete you would stop and very shortly
->> after that delete the netdev).
+> If suspended during TX in progress, there can be 
+> race where the driver is put of of power-save due
+> to TX and during suspend dynamic_ps_time is cancelled
+> and TX packet is flushed, leaving the driver in ACTIVE
+> even after resuming until dynamic_ps_time puts 
+> driver back in DOZE. (Which only happens if there
+> is another TX).
 > 
-> Yeah, but in that case ... does it matter? :)
+> This can lead high power consumption of chipset during (or)
+> after resuming also.
 
-iw will probably print stack garbage, but that would be fixed
-easily enough w/out the kernel patch.
+This isn't what your patch is actually doing though. You need to mention
+WoWLAN at the very least in your commit log; or are you just randomly
+changing the code until it fixes your bug? :)
 
->> It's a small patch to iw and the kernel as far as I can tell...
-> 
-> It's small *now*, but if we add it to all events it'll end up pretty
-> big...
-
-I'll stick with just the stop_ap cmd for now.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
