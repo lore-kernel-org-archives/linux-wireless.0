@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:35398 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907AbbFMGl3 (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:35186 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552AbbFAJeM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2015 02:41:29 -0400
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/2] staging: wilc1000: remove itypes.h
-Date: Sat, 13 Jun 2015 15:41:19 +0900
-Message-Id: <1434177679-9831-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150613_084134_813702_06EDE951)
-In-Reply-To: <1434177679-9831-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1434177679-9831-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 1 Jun 2015 05:34:12 -0400
+Received: by wgme6 with SMTP id e6so108928208wgm.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 02:34:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1433150613-5662-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1433150613-5662-1-git-send-email-rmani@qti.qualcomm.com>
+Date: Mon, 1 Jun 2015 11:34:11 +0200
+Message-ID: <CA+BoTQk+gRKdue26G1-Q=qsxf4y1Q5YJffSrPsUgYX8oMfMF=A@mail.gmail.com> (sfid-20150601_113416_128480_51776D71)
+Subject: Re: [PATCH] ath10k: free wmi mgmt event skb when parsing fails
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove itypes.h that is not needed.
+On 1 June 2015 at 11:23, Raja Mani <rmani@qti.qualcomm.com> wrote:
+> When wmi mgmt event function fails to parse given skb,
+> it should be freed on failure condition to avoid memory
+> leaks. Found this during the code review.
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/wmi.c |    1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index b892eb8..818bd25 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -2089,6 +2089,7 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+>         ret = ath10k_wmi_pull_mgmt_rx(ar, skb, &arg);
+>         if (ret) {
+>                 ath10k_warn(ar, "failed to parse mgmt rx event: %d\n", ret);
+> +               dev_kfree_skb(skb);
+>                 return ret;
+>         }
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.c |  1 -
- drivers/staging/wilc1000/host_interface.c   |  1 -
- drivers/staging/wilc1000/itypes.h           | 39 -----------------------------
- 3 files changed, 41 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/itypes.h
+Good catch! Looks good to me.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 9abc73d..792ba6d 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -12,7 +12,6 @@
- /*****************************************************************************/
- /* File Includes                                                             */
- /*****************************************************************************/
--#include "itypes.h"
- #include "coreconfigurator.h"
- /*****************************************************************************/
- /* Constants                                                                 */
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ca59f1b..1e9a2f1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1,6 +1,5 @@
- #include "host_interface.h"
- #include "wilc_oswrapper.h"
--#include "itypes.h"
- #include "coreconfigurator.h"
- 
- extern s32 TransportInit(void);
-diff --git a/drivers/staging/wilc1000/itypes.h b/drivers/staging/wilc1000/itypes.h
-deleted file mode 100644
-index d64ae35..0000000
---- a/drivers/staging/wilc1000/itypes.h
-+++ /dev/null
-@@ -1,39 +0,0 @@
--/*****************************************************************************/
--/*                                                                           */
--/*                     Ittiam 802.11 MAC SOFTWARE                            */
--/*                                                                           */
--/*                  ITTIAM SYSTEMS PVT LTD, BANGALORE                        */
--/*                           COPYRIGHT(C) 2005                               */
--/*                                                                           */
--/*  This program  is  proprietary to  Ittiam  Systems  Private  Limited  and */
--/*  is protected under Indian  Copyright Law as an unpublished work. Its use */
--/*  and  disclosure  is  limited by  the terms  and  conditions of a license */
--/*  agreement. It may not be copied or otherwise  reproduced or disclosed to */
--/*  persons outside the licensee's organization except in accordance with the*/
--/*  terms  and  conditions   of  such  an  agreement.  All  copies  and      */
--/*  reproductions shall be the property of Ittiam Systems Private Limited and*/
--/*  must bear this notice in its entirety.                                   */
--/*                                                                           */
--/*****************************************************************************/
--
--/*****************************************************************************/
--/*                                                                           */
--/*  File Name         : itypes.h                                             */
--/*                                                                           */
--/*  Description       : This file contains all the data type definitions for */
--/*                      MAC implementation.                                  */
--/*                                                                           */
--/*  List of Functions : None                                                 */
--/*  Issues / Problems : None                                                 */
--/*                                                                           */
--/*  Revision History  :                                                      */
--/*                                                                           */
--/*         DD MM YYYY   Author(s)       Changes                              */
--/*         01 05 2005   Ittiam          Draft                                */
--/*                                                                           */
--/*****************************************************************************/
--
--#ifndef ITYPES_H
--#define ITYPES_H
--
--#endif /* ITYPES_H */
--- 
-1.9.1
 
+Michał
