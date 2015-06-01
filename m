@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35784 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854AbbFBHOy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40601 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764AbbFAG3k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 03:14:54 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH] ath10k: remove unused variable 'id' in ath10k_pci_tx_pipe_cleanup()
-Date: Tue, 2 Jun 2015 12:44:27 +0530
-Message-ID: <1433229267-11314-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150602_091457_429016_0F9A87DB)
+	Mon, 1 Jun 2015 02:29:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2015-06-01
+Date: Mon, 01 Jun 2015 09:29:32 +0300
+Message-ID: <874mmsvt4j.fsf@kamboji.qca.qualcomm.com> (sfid-20150601_083048_758853_03AC80A9)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mete_data is extracted from ce descriptor and stored in variable 'id'.
-later, id is not used anywhere in the same function.
+Hi Dave,
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |    3 ---
- 1 file changed, 3 deletions(-)
+here are three more important fixes I'm hoping to get to 4.1 still, I
+hope I'm not too late with these. Please let me know if there are any
+problems.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 969a123..bbc349a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1275,7 +1275,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 	struct ath10k_ce_ring *ce_ring;
- 	struct ce_desc *ce_desc;
- 	struct sk_buff *skb;
--	unsigned int id;
- 	int i;
- 
- 	ar = pci_pipe->hif_ce_state;
-@@ -1299,8 +1298,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 			continue;
- 
- 		ce_ring->per_transfer_context[i] = NULL;
--		id = MS(__le16_to_cpu(ce_desc[i].flags),
--			CE_DESC_FLAGS_META_DATA);
- 
- 		ar_pci->msg_callbacks_current.tx_completion(ar, skb);
- 	}
+Kalle
+
+The following changes since commit aefa441b150279dd8d25658e018898a3fe9a6769:
+
+  Merge tag 'iwlwifi-for-kalle-2015-05-21' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-05-22 10:47:02 +0300)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-06-01
+
+for you to fetch changes up to 38fe44e61a894f1c7b3e60b0614030271070ea53:
+
+  Merge tag 'iwlwifi-for-kalle-2015-05-28' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-05-28 16:28:03 +0300)
+
+----------------------------------------------------------------
+
+iwlwifi:
+
+* fix OTP parsing 8260
+* fix powersave handling for 8260
+
+brcmfmac:
+
+* fix null pointer crash
+
+----------------------------------------------------------------
+Arend van Spriel (1):
+      brcmfmac: avoid null pointer access when brcmf_msgbuf_get_pktid() fails
+
+Ilan Peer (1):
+      iwlwifi: pcie: fix tracking of cmd_in_flight
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2015-05-28' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Liad Kaufman (1):
+      iwlwifi: nvm: fix otp parsing in 8000 hw family
+
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c |   12 +++++------
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c     |    2 +-
+ drivers/net/wireless/iwlwifi/pcie/internal.h     |    6 +++---
+ drivers/net/wireless/iwlwifi/pcie/trans.c        |    4 ++--
+ drivers/net/wireless/iwlwifi/pcie/tx.c           |   23 +++++++++-------------
+ 5 files changed, 20 insertions(+), 27 deletions(-)
+
 -- 
-1.7.10.4
-
+Kalle Valo
