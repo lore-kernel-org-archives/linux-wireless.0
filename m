@@ -1,114 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39065 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753720AbbFPFzm (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:33729 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbbFAGgI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:55:42 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 7/8] ath10k: set max spatial stream to 4 for 10.4 fw
-Date: Tue, 16 Jun 2015 11:23:14 +0530
-Message-ID: <1434433995-8451-8-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_075545_268255_3699F30B)
-In-Reply-To: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
+	Mon, 1 Jun 2015 02:36:08 -0400
+Received: by wgez8 with SMTP id z8so105348656wge.0
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 23:36:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com>
+References: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com>
+Date: Mon, 1 Jun 2015 08:36:06 +0200
+Message-ID: <CA+BoTQnfXGLSvbx+hLfi_2w90-LgC3Uba0ZcO+Pt7J3FcEE9wg@mail.gmail.com> (sfid-20150601_083615_997610_485248FC)
+Subject: Re: system hang with backports-20150511/20150525
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Marty Faltesek <mfaltesek@google.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Martin Faltesek <martin.faltesek@gmail.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.4 fw supports upto 4 spatial stream. Limit max spatial
-stream to 4 for 10.4 firmware and to 3 for non 10.4 firmware.
++ath10k list
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 4 ++++
- drivers/net/wireless/ath/ath10k/core.h | 1 +
- drivers/net/wireless/ath/ath10k/wmi.c  | 6 +++---
- drivers/net/wireless/ath/ath10k/wmi.h  | 3 ++-
- 4 files changed, 10 insertions(+), 4 deletions(-)
+On 1 June 2015 at 03:37, Marty Faltesek <mfaltesek@google.com> wrote:
+> Starting with backports-20150511, and continuing with
+> backports-20150525, we see frequent system hangs. backports-20150424
+> had no issue.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 23e855c..e9f2bf9f 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1292,6 +1292,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
- 		ar->fw_stats_req_mask = WMI_STAT_PDEV | WMI_STAT_VDEV |
- 			WMI_STAT_PEER;
-+		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_1:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
-@@ -1301,6 +1302,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
- 		ar->fw_stats_req_mask = WMI_STAT_PEER;
-+		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_TLV:
- 		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
-@@ -1311,6 +1313,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->wow.max_num_patterns = TARGET_TLV_NUM_WOW_PATTERNS;
- 		ar->fw_stats_req_mask = WMI_STAT_PDEV | WMI_STAT_VDEV |
- 			WMI_STAT_PEER;
-+		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_4:
- 		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
-@@ -1320,6 +1323,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->num_tids = TARGET_10_4_TGT_NUM_TIDS;
- 		ar->htt.max_num_pending_tx = TARGET_10_4_NUM_MSDU_DESC;
- 		ar->fw_stats_req_mask = WMI_STAT_PEER;
-+		ar->max_spatial_stream = WMI_10_4_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7721548..8647ca3 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -578,6 +578,7 @@ struct ath10k {
- 	u32 ht_cap_info;
- 	u32 vht_cap_info;
- 	u32 num_rf_chains;
-+	u32 max_spatial_stream;
- 	/* protected by conf_mutex */
- 	bool ani_enabled;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 00201eb..2f81ff2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3818,10 +3818,10 @@ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb)
- 	if (ar->fw_api == 1 && ar->fw_version_build > 636)
- 		set_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features);
- 
--	if (ar->num_rf_chains > WMI_MAX_SPATIAL_STREAM) {
-+	if (ar->num_rf_chains > ar->max_spatial_stream) {
- 		ath10k_warn(ar, "hardware advertises support for more spatial streams than it should (%d > %d)\n",
--			    ar->num_rf_chains, WMI_MAX_SPATIAL_STREAM);
--		ar->num_rf_chains = WMI_MAX_SPATIAL_STREAM;
-+			    ar->num_rf_chains, ar->max_spatial_stream);
-+		ar->num_rf_chains = ar->max_spatial_stream;
- 	}
- 
- 	ar->supp_tx_chainmask = (1 << ar->num_rf_chains) - 1;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 90c872c..aa9b313 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1702,7 +1702,8 @@ enum wmi_channel_change_cause {
- /* Indicate reason for channel switch */
- #define WMI_CHANNEL_CHANGE_CAUSE_CSA (1 << 13)
- 
--#define WMI_MAX_SPATIAL_STREAM   3
-+#define WMI_MAX_SPATIAL_STREAM        3 /* default max ss */
-+#define WMI_10_4_MAX_SPATIAL_STREAM   4
- 
- /* HT Capabilities*/
- #define WMI_HT_CAP_ENABLED                0x0001   /* HT Enabled/ disabled */
--- 
-1.8.1.2
+I don't see such binary releases on
+https://backports.wiki.kernel.org/index.php/Main_Page
+Hence I don't know what kernel you've backported the drivers from and
+I can't compare anything.
 
+Can you provide more details, please?
+
+
+> After the freeze, the console is non-responsive, as well as the
+> network stack (ssh/ping does not work). Using sysrq, I can see log
+> messages continuing from ath10k_pci after the freeze, along with some
+> other threads as well.
+
+You probably refer to:
+
+[ 1026.951643] ath10k_pci 0000:01:00.0: SWBA overrun on vdev 0,
+skipped old beacon
+[ 1026.951674] ath10k_pci 0000:01:00.0: SWBA overrun on vdev 0,
+skipped old beacon
+[ 1026.951698] ath10k_pci 0000:01:00.0: SWBA overrun on vdev 0,
+skipped old beacon
+
+What's puzzling to me are these timestamps. SWBA events are generated
+by firmware (and sent to host) every beacon interval which is ~100ms
+in most cases. In your case however I can see a burst of at least 10
+SWBA events within 1ms. Either top(irq) or bottom(tasklet) got stuck
+for some time.
+
+It could be useful if you could enable ath10k debugging with
+debug_mask=0xffffff3f (this could generate a lot of messages if you're
+running traffic through ath10k).
+
+
+> mac80211/ath10k/cfg80211 are the only modules in use from backports,
+> so it seems like a deadlock  could possibly be with mac80211 or
+> ath10k.
+>
+> LOCKDEP didn't reveal anything.
+
+You might want to try tune /proc/sys/kernel/hung_task_timeout_secs
+down (e.g. 5 or 10 seconds) and see what happens when you hit the
+problem.
+
+
+> Using a 3.2.26 kernel on ARM. AP mode. No encryption.
+>
+> I've collected ftrace events for sched mac80211 net napi cfg80211
+> workqueue, which are included in the dmesg you can find here because
+> of its size:
+>
+> http://tinyurl.com/dmesg-ftrace
+>
+> In the logs, the last timestamp that my test script wrote is:
+>
+> [ 1021.291495] hbeat0352
+>
+> I've captured  ftrace events before and after 1021.291495.
+
+Your dmesg looks really messy and I'm worried if SWBA events really
+came in a burst or not.
+
+
+Michał
