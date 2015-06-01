@@ -1,68 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from galahad.ideasonboard.com ([185.26.127.97]:59136 "EHLO
-	galahad.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751489AbbFKOkr (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:14997 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181AbbFAL7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 10:40:47 -0400
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-metag@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sparclinux@vger.kernel.org,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>
-Subject: Re: [PATCH] treewide: Fix typo compatability -> compatibility
-Date: Thu, 11 Jun 2015 07:23:46 +0300
-Message-ID: <5648670.yvOusp8qsY@avalon> (sfid-20150611_164123_558807_4F8CFF87)
-In-Reply-To: <CALLJCT38g36pxj1xjHbJYgd+JTx5fUHKnXvOwCnChHGU69g4UQ@mail.gmail.com>
-References: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com> <20150609192703.4a8babf6@recife.lan> <CALLJCT38g36pxj1xjHbJYgd+JTx5fUHKnXvOwCnChHGU69g4UQ@mail.gmail.com>
+	Mon, 1 Jun 2015 07:59:13 -0400
+Message-ID: <556C490E.90509@broadcom.com> (sfid-20150601_135920_189412_A19A57E8)
+Date: Mon, 1 Jun 2015 13:59:10 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	<linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	<brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH] brcmfmac: support NVRAMs containing pci devpaths (instead
+ of pcie)
+References: <1432815561-6639-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1432815561-6639-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 05/28/15 14:19, Rafał Miłecki wrote:
+> Recently Broadcom added support for NVRAMs with entries for multiple
+> PCIe devices. One of the supported formats is based on prefixes defined
+> like: devpath0=pcie/1/4/ and entries like 0:foo=bar 0:baz=qux etc.
+>
+> Unfortunately there are also a bit older devices using different way of
+> defining prefixes, e.g. SmartRG SR400ac (2 x BCM43602) with entries:
+> devpath0=pci/1/1/
+> devpath1=pci/2/1
+> Broadcom stated this old format will never be used/supported by brcmfmac
+> but given the simplicity of this patch I'll insist on supporting it.
 
-On Wednesday 10 June 2015 13:00:20 Masanari Iida wrote:
-> On Wed, Jun 10, 2015 at 7:27 AM, Mauro Carvalho Chehab wrote:
-> > Em Wed, 27 May 2015 15:05:42 +0300
-> > 
-> > Laurent Pinchart <laurent.pinchart@ideasonboard.com> escreveu:
-> >> Even though 'compatability' has a dedicated entry in the Wiktionary,
-> >> it's listed as 'Mispelling of compatibility'. Fix it.
-> >> 
-> >> Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> > 
-> > Acked-by: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
-> > 
-> >> ---
-> >> 
-> >>  arch/metag/include/asm/elf.h             | 2 +-
-> >>  arch/powerpc/kvm/book3s.c                | 2 +-
-> >>  arch/sparc/include/uapi/asm/pstate.h     | 2 +-
-> >>  drivers/gpu/drm/drm_atomic_helper.c      | 4 ++--
-> >>  drivers/media/dvb-frontends/au8522_dig.c | 2 +-
-> >>  drivers/net/wireless/ipw2x00/ipw2100.h   | 2 +-
-> >>  6 files changed, 7 insertions(+), 7 deletions(-)
-> >> 
-> >> I can split this into one patch per subsystem, but that seems a bit
-> >> overkill. Can someone take it ?
-> > 
-> > Who? That's the problem with treewide patches ;)
-> > 
-> > Perhaps you should re-submit it with the acks you got to akpm.
-> 
-> Laurent,
-> Please re-submit your patch to  trivial@kernel.org  with [trivial] in the
-> title.
-> 
-> Ex.
-> [PATCH] [trivial]  treewide: Fix typo compatability -> compatibility
+Well, if you insist :-p
 
-Done, thank you.
-
--- 
-Regards,
-
-Laurent Pinchart
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 10 ++++++++--
+>   1 file changed, 8 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> index b72df87..743f16b 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+> @@ -232,6 +232,8 @@ static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
+>   				    u16 bus_nr)
+>   {
+>   	/* Device path with a leading '=' key-value separator */
+> +	char pci_path[] = "=pci/?/?";
+> +	size_t pci_len;
+>   	char pcie_path[] = "=pcie/?/?";
+>   	size_t pcie_len;
+>
+> @@ -251,6 +253,9 @@ static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
+>   	/* First search for the devpathX and see if it is the configuration
+>   	 * for domain_nr/bus_nr. Search complete nvp
+>   	 */
+> +	snprintf(pci_path, sizeof(pci_path), "=pci/%d/%d", domain_nr,
+> +		 bus_nr);
+> +	pci_len = strlen(pci_path);
+>   	snprintf(pcie_path, sizeof(pcie_path), "=pcie/%d/%d", domain_nr,
+>   		 bus_nr);
+>   	pcie_len = strlen(pcie_path);
+> @@ -260,8 +265,9 @@ static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
+>   		/* Format: devpathX=pcie/Y/Z/
+>   		 * Y = domain_nr, Z = bus_nr, X = virtual ID
+>   		 */
+> -		if ((strncmp(&nvp->nvram[i], "devpath", 7) == 0)&&
+> -		    (strncmp(&nvp->nvram[i + 8], pcie_path, pcie_len) == 0)) {
+> +		if (strncmp(&nvp->nvram[i], "devpath", 7) == 0&&
+> +		    (!strncmp(&nvp->nvram[i + 8], pci_path, pci_len) ||
+> +		     !strncmp(&nvp->nvram[i + 8], pcie_path, pcie_len))) {
+>   			id = nvp->nvram[i + 7] - '0';
+>   			found = true;
+>   			break;
 
