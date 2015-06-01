@@ -1,64 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:43332 "EHLO mail.hofr.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751129AbbFNGTo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2015 02:19:44 -0400
-Date: Sun, 14 Jun 2015 08:19:41 +0200
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	Daniele Alessandrelli <daniele.alessandrelli@gmail.com>,
-	Aleh Suprunovich <br@ahlamon.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUG ?] staging: rtl8723au: condition with no effect
-Message-ID: <20150614061941.GA27959@opentech.at> (sfid-20150614_081958_881243_0624757B)
-References: <1434191497-5611-1-git-send-email-hofrat@osadl.org> <wrfjy4jn1dri.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <wrfjy4jn1dri.fsf@redhat.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:35488 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032AbbFATi6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 15:38:58 -0400
+Received: by igbyr2 with SMTP id yr2so70218063igb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 12:38:58 -0700 (PDT)
+From: David Liu <cfliu.tw@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, kvalo@qca.qualcomm.com,
+	David Liu <cfliu.tw@gmail.com>
+Subject: [PATCH] mac80211: support IEEE80211_KEY_FLAG_RESERVE_TAILROOM for CCMP and TKIP.
+Date: Mon,  1 Jun 2015 12:38:18 -0700
+Message-Id: <1433187498-15124-1-git-send-email-cfliu.tw@gmail.com> (sfid-20150601_213916_279898_ACBC4919)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 13 Jun 2015, Jes Sorensen wrote:
+The change reserves neccessary tailroom in CCMP and TKIP if required by
+drivers that sets IEEE80211_KEY_FLAG_RESERVE_TAILROOM. For example,
+ath10k HW engine in raw Tx/Rx encap mode requires SW reserve MIC/ICV space.
 
-> Nicholas Mc Guire <hofrat@osadl.org> writes:
-> > scanning for trivial bug-patters with coccinelle spatches returned:
-> > ./drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:1395
-> > 	WARNING: condition with no effect (if branch == else)
-> >
-> > drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c - line numbers from 4.1-rc7
-> > 1395    if (bWithoutHWSM) {
-> > 1396            /* value16 |= (APDM_HOST | FSM_HSUS |/PFM_ALDN); */
-> > 1397            /*  2010/08/31 According to Filen description, we need to
-> > 1398                use HW to shut down 8051 automatically. */
-> > 1399            /*  Because suspend operation need the asistance of 8051
-> > 1400                to wait for 3ms. */
-> > 1401            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
-> > 1402    } else {
-> > 1403            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
-> > 1404    }
-> > 1405 
-> > 1406    rtl8723au_write16(padapter, REG_APS_FSMCO, value16);    /* 0x4802 */
-> >
-> > Not clear what the intent is but this looks like a typo/bug in the assigment
-> > of value16 as the condition here has no effect.
-> 
-> Doesn't look like a typo, looks like someone at some point had commented
-> out PFM_ALDN in the bWithoutHWSM case. Why they did that and then later
-> overrode it, I have no idea.
->
-as far as its traceable in git log if == else was in there from the
-very beginning (including that comment) - both the if and else were
-updated in commit cffca68d7b2f ("staging: rtl8723au: _DisableAnalog(): Avoid
-zero-init variables unnecessaril") but without changing PFM_ALDN - as there
-are no comments to the meaning of these bits in the header file there is
-no way to really come up with a resonable patch. anyway its either wrong 
-settings or the condition should be removed.
+Signed-off-by: David Liu <cfliu.tw@gmail.com>
+---
+ net/mac80211/wpa.c | 24 +++++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
-thx!
-hofrat
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 9d63d93..b56f31a 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -192,7 +192,9 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+-	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
++	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE) &&
++	    !(info->control.hw_key->flags &
++	      IEEE80211_KEY_FLAG_RESERVE_TAILROOM)) {
+ 		/* hwaccel - with no need for software-generated IV */
+ 		return 0;
+ 	}
+@@ -200,7 +202,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	len = skb->len - hdrlen;
+ 
+-	if (info->control.hw_key)
++	if (info->control.hw_key && !(info->control.hw_key->flags &
++				      IEEE80211_KEY_FLAG_RESERVE_TAILROOM))
+ 		tail = 0;
+ 	else
+ 		tail = IEEE80211_TKIP_ICV_LEN;
+@@ -227,8 +230,12 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	spin_unlock(&key->u.tkip.txlock);
+ 
+ 	/* hwaccel - with software IV */
+-	if (info->control.hw_key)
++	if (info->control.hw_key) {
++		if (info->control.hw_key->flags &
++		    IEEE80211_KEY_FLAG_RESERVE_TAILROOM)
++			skb_put(skb, tail);
+ 		return 0;
++	}
+ 
+ 	/* Add room for ICV */
+ 	skb_put(skb, IEEE80211_TKIP_ICV_LEN);
+@@ -411,6 +418,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE) &&
++	    !(info->control.hw_key->flags &
++	       IEEE80211_KEY_FLAG_RESERVE_TAILROOM) &&
+ 	    !((info->control.hw_key->flags &
+ 	       IEEE80211_KEY_FLAG_GENERATE_IV_MGMT) &&
+ 	      ieee80211_is_mgmt(hdr->frame_control))) {
+@@ -424,7 +433,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	len = skb->len - hdrlen;
+ 
+-	if (info->control.hw_key)
++	if (info->control.hw_key && !(info->control.hw_key->flags &
++				      IEEE80211_KEY_FLAG_RESERVE_TAILROOM))
+ 		tail = 0;
+ 	else
+ 		tail = mic_len;
+@@ -456,8 +466,12 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
+ 
+ 	/* hwaccel - with software CCMP header */
+-	if (info->control.hw_key)
++	if (info->control.hw_key) {
++		if (info->control.hw_key->flags &
++		    IEEE80211_KEY_FLAG_RESERVE_TAILROOM)
++			skb_put(skb, tail);
+ 		return 0;
++	}
+ 
+ 	pos += IEEE80211_CCMP_HDR_LEN;
+ 	ccmp_special_blocks(skb, pn, b_0, aad);
+-- 
+2.1.4
+
