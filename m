@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:36534 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728AbbFFQSa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2015 12:18:30 -0400
-Received: by oihb142 with SMTP id b142so71103399oih.3
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Jun 2015 09:18:29 -0700 (PDT)
-Message-ID: <55731D53.2020808@lwfinger.net> (sfid-20150606_181833_741904_C4B96D19)
-Date: Sat, 06 Jun 2015 11:18:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192c: Add init codes for "fw_version" and
- "fw_subversion".
-References: <1433588537-27853-1-git-send-email-ap420073@gmail.com>
-In-Reply-To: <1433588537-27853-1-git-send-email-ap420073@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:59241 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751487AbbFAOk7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 10:40:59 -0400
+Message-ID: <1433169656.3505.13.camel@sipsolutions.net> (sfid-20150601_164103_415088_4C61CBCA)
+Subject: Re: [PATCH] mac80211: Fix double locking on CSA counter update
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 01 Jun 2015 16:40:56 +0200
+In-Reply-To: <556C6AEB.9070407@neratec.com> (sfid-20150601_162345_309420_15E143F0)
+References: <1433166856-3285-1-git-send-email-Wojciech.Dubowik@neratec.com>
+	 <CAGRGNgW=qy2TuojGt5CDE0sATkKeMTHCtBJnFQOjJ=3pP7Kzzw@mail.gmail.com>
+	 <556C6AEB.9070407@neratec.com> (sfid-20150601_162345_309420_15E143F0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2015 06:02 AM, Taehee Yoo wrote:
-> The variable "fw_version" is used in the _ResetDigitalProcedure1().
-> but It is not initialized. so I add init codes for "fw_version" and
-> "fw_subversion".
->
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c | 2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-> index 29983bc..9b5ce28 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-> @@ -233,6 +233,8 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
->   	pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
->   	pfwdata = (u8 *)rtlhal->pfirmware;
->   	fwsize = rtlhal->fwsize;
-> +	rtlhal->fw_version = pfwheader->version;
-> +	rtlhal->fw_subversion = pfwheader->subversion;
->
->   	if (IS_FW_HEADER_EXIST(pfwheader)) {
->   		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+On Mon, 2015-06-01 at 16:23 +0200, Wojciech Dubowik wrote:
+> On 01/06/15 16:13, Julian Calaby wrote:
+> > Hi Wojciech,
+> >
+> > On Mon, Jun 1, 2015 at 11:54 PM, Wojciech Dubowik
+> > <Wojciech.Dubowik@neratec.com> wrote:
+> >> We call rcu locked ieee80211_csa_update_counter from
+> >> already locked section. Fix it by decrementing counter
+> >> directly instead of calling ieee80211_csa_update_counter.
+> > Stupid question: wouldn't it be better to split the work from
+> > ieee80211_csa_update_counter() into a separate function without
+> > locking and call that instead?
+> Yes. It would be better for maintenance. It's just that they will
+> have different input parameters
+> 
+> ieee80211_csa_update_counter(struct ieee80211_vif *
+> __ieee80211_csa_update_counter(struct beacon_data *
+> 
+> as it doesn't make sense to dereference beacon twice.
+> 
+> I guess it's not a problem?
 
-This patch is not correct. If the firmware does not have a header, then you will 
-be changing fw_version and fw_subversion to random bytes from the body of the 
-firmware. At present, they are initialized to zero as part of the rtl_priv 
-struct. You need to move the two new statements inside the IS_FW_HEADER_EXIST 
-test, but before pfwdata is adjusted to remove the header.
+Seems fine to me.
 
-Larry
-
+johannes
 
