@@ -1,53 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39383 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690AbbFJT6x (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54687 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752933AbbFAMcp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 15:58:53 -0400
-Message-ID: <557896FC.8040204@candelatech.com> (sfid-20150610_215855_788810_B10477C2)
-Date: Wed, 10 Jun 2015 12:58:52 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 1 Jun 2015 08:32:45 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CUtwA028935
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:32:43 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1urjjr0nbs-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:32:43 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv4 01/17] mwifiex: verbose logging for association failure messages
+Date: Mon, 1 Jun 2015 23:31:59 +0530
+Message-ID: <1433181735-15712-2-git-send-email-patila@marvell.com> (sfid-20150601_143247_712171_5F4F2F34)
+In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
+References: <1433181735-15712-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Allowing station to over-ride default VHT-oper element?
-References: <5578901C.60502@candelatech.com>  (sfid-20150610_212943_327894_FFEA768B) <1433966120.3145.15.camel@sipsolutions.net>
-In-Reply-To: <1433966120.3145.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2015 12:55 PM, Johannes Berg wrote:
-> On Wed, 2015-06-10 at 12:29 -0700, Ben Greear wrote:
-> 
->> First, is this even a valid thing to do, or does VHT imply
->> that stations are always available to do 80Mhz?
-> 
-> According to the spec, a VHT STA must support 80 MHz:
-> 
-> 802.11ac-2013, 22.1.1:
-> 
-> 	A VHT STA shall support the following features:
-> 		[...]
-> 		- 20 MHz, 40 MHz, and 80 MHz channel widths
-> 
-> Consequently, there's no bit indicating whether or not 80 MHz bandwidth
-> is supported (like there is, for VHT, indicating 40 MHz is supported or
-> not.)
-> 
-> Also it is invalid to advertise a VHT capabilities IE and an HT
-> capabilities IE without 40 MHz.
+This patch adds more detailed information about association failures
+- reason and states.
 
-Ok, thanks for that..one less piece of work for me to do :)
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Reviewed-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
+ drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
+ 2 files changed, 40 insertions(+), 5 deletions(-)
 
->From what I can tell, it *IS* ok to have an AP do VHT on 40Mhz though?
-
-Thanks,
-Ben
-
-
-
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c404390..cf386bc 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -419,8 +419,12 @@ enum P2P_MODES {
+ #define HS_CFG_COND_MAC_EVENT		0x00000004
+ #define HS_CFG_COND_MULTICAST_DATA	0x00000008
+ 
+-#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+-#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
++#define CONNECT_ERR_AUTH_ERR_STA_FAILURE	0xFFFB
++#define CONNECT_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
++#define CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
++#define CONNECT_ERR_AUTH_MSG_UNHANDLED		0xFFFE
++#define CONNECT_ERR_STA_FAILURE			0xFFFF
++
+ 
+ #define CMD_F_HOSTCMD           (1 << 0)
+ #define CMD_F_CANCELED          (1 << 1)
+@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
+ 	DOT11H_I = 10,
+ };
+ 
++enum mwifiex_assocmd_failurepoint {
++	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
++	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
++	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
++	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
++};
++
+ #define MAX_SNMP_BUF_SIZE   128
+ 
+ struct host_cmd_ds_802_11_snmp_mib {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 6208ef1..e233b04 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static const char *assoc_failure_reason_to_str(u16 cap_info)
++{
++	switch (cap_info) {
++	case CONNECT_ERR_AUTH_ERR_STA_FAILURE:
++		return "CONNECT_ERR_AUTH_ERR_STA_FAILURE";
++	case CONNECT_ERR_AUTH_MSG_UNHANDLED:
++		return "CONNECT_ERR_AUTH_MSG_UNHANDLED";
++	case CONNECT_ERR_ASSOC_ERR_TIMEOUT:
++		return "CONNECT_ERR_ASSOC_ERR_TIMEOUT";
++	case CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED:
++		return "CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED";
++	case CONNECT_ERR_STA_FAILURE:
++		return "CONNECT_ERR_STA_FAILURE";
++	}
++
++	return "Unknown connect failure";
++}
+ /*
+  * Association firmware command response handler
+  *
+@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 			    status_code, cap_info,
+ 			    le16_to_cpu(assoc_rsp->a_id));
+ 
+-		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
+-			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
++		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
++			    assoc_failure_reason_to_str(cap_info));
++		if (cap_info == CONNECT_ERR_ASSOC_ERR_TIMEOUT) {
++			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
+ 				ret = WLAN_STATUS_AUTH_TIMEOUT;
+-			else
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: AUTH timeout\n");
++			} else {
+ 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "ASSOC_RESP: UNSPECIFIED failure\n");
++			}
+ 		} else {
+ 			ret = status_code;
+ 		}
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.1.4
 
