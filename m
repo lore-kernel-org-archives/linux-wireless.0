@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37269 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754559AbbFOSup (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1178 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447AbbFAOVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 14:50:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Pontus Fuchs <pontusf@broadcom.com>
-Subject: Re: [1/7] brcmfmac: Check if firmware supports p2p
-References: <20150615101022.23F92140C1F@smtp.codeaurora.org>
-	<557F17BF.9060601@broadcom.com>
-Date: Mon, 15 Jun 2015 21:50:39 +0300
-In-Reply-To: <557F17BF.9060601@broadcom.com> (Arend van Spriel's message of
-	"Mon, 15 Jun 2015 20:21:51 +0200")
-Message-ID: <874mm8ajr4.fsf@kamboji.qca.qualcomm.com> (sfid-20150615_205049_505627_256C80FE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 1 Jun 2015 10:21:35 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] wireless-regdb: Add 60GHz regulatory rules for Japan (JP)
+Date: Mon,  1 Jun 2015 17:21:28 +0300
+Message-Id: <1433168488-3893-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150601_162139_279863_9BA1A6C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+Source is ARIB STD-T74, available at:
+http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
 
->> Thanks, 7 patches applied to wireless-drivers-next.git:
->>
->> 2b560d7148eb brcmfmac: Check if firmware supports p2p
->> 2e5f66fe9593 brcmfmac: Build wiphy mode and interface combinations dynamically
->> 1f0dc59a6de9 brcmfmac: rework .get_station() callback
->> 5768f31e4e75 brcmfmac: have sdio return -EIO when device communication is not possible
->> f37d69a4babc brcmfmac: free ifp for non-netdev interface in p2p module
->> 55479df8840d brcmfmac: move p2p attach/detach functions
->> f7a40873d2fa brcmfmac: assure p2pdev is unregistered upon driver unload
->
-> As it turns out two patches in this series introduced a new issue (I
-> had one of those days :-( ). I have fixes for them. Should I send them
-> now or can it wait until 4.2-rc1 has landed.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ db.txt | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Please send them now and I'll try to apply them as soon as possible.
-
+diff --git a/db.txt b/db.txt
+index df7f7b1..f361030 100644
+--- a/db.txt
++++ b/db.txt
+@@ -584,6 +584,9 @@ country JP: DFS-JP
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (23), DFS
++	# 60 GHz band channels 2-4 at 10mW,
++	# ref: http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
++	(59000 - 66000 @ 2160), (10 mW)
+ 
+ country KE: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
 -- 
-Kalle Valo
+2.1.4
+
