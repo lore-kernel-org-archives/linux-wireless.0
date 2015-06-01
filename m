@@ -1,77 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vn0-f52.google.com ([209.85.216.52]:46629 "EHLO
-	mail-vn0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753062AbbFHR2N (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:17830 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752440AbbFAMdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 13:28:13 -0400
-Received: by vnbf7 with SMTP id f7so18635826vnb.13
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 10:28:12 -0700 (PDT)
-From: Jesse Jones <jjones@cococorp.com>
-References: <CAEFj986CCryd1fK6NpoQYOmCiu+KRjq8RsSgvWqQOvLBPvFoeg@mail.gmail.com>
- <CAEFj987VjaQpwx2VMxYeH7TWcKVvjN6hSRsqTSbSXa1ZammezQ@mail.gmail.com>
-In-Reply-To: <CAEFj987VjaQpwx2VMxYeH7TWcKVvjN6hSRsqTSbSXa1ZammezQ@mail.gmail.com>
+	Mon, 1 Jun 2015 08:33:13 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CUhrw018191
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:33:13 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk3t-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:33:13 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv4 06/17] mwifiex: disable CAC upon radar detection event
+Date: Mon, 1 Jun 2015 23:32:04 +0530
+Message-ID: <1433181735-15712-7-git-send-email-patila@marvell.com> (sfid-20150601_143317_115506_B94C960A)
+In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
+References: <1433181735-15712-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Date: Mon, 8 Jun 2015 10:28:12 -0700
-Message-ID: <3ae0dc14a0cf7a0d8008a49dd6b2376f@mail.gmail.com> (sfid-20150608_192816_486529_A0BDCCEE)
-Subject: RE: [PATCH] mac80211: Fix a case of incorrect metric used when
- forwarding a PREQ
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I took a look at the spec too and also didn't see mention of the MP_F_RF
-flag. Section 13.10.9.3 for example talks about PREQ handling and in case E2
-talks about sending replies back. It says to do that if target only is not
-set which makes sense: MP_F_RF and MP_F_DO are exclusive options so it's
-silly to use two different flags for them.
+This patch adds support to disable ongoing CAC in FW upon
+detecting radar during CAC period.
 
-But for the purposes of this patch that is a moot issue: the semantics of
-the function don't change and the original code was both confusing and using
-the wrong value for metric for the not target only, intermediate station
-case.
-
-  -- Jesse
-
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org
-[mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Yeoh Chun-Yeow
-Sent: Monday, June 08, 2015 1:55 AM
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix a case of incorrect metric used when
-forwarding a PREQ
-
-As mentioned in Section 13.10.9.3 Case E2, the PREQ forwarding should use
-metric "as received + own metric toward transmitter of received PREQ". So
-you are right.
-
-Just MP_F_RF bit is no longer use. After replying with PREP, forwarding the
-PREQ by setting the IEEE80211_PREQ_TO_FLAG in the per target flags.
-
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
-Chun-Yeow
+ drivers/net/wireless/mwifiex/11h.c  | 30 ++++++++++++++++++++++++++----
+ drivers/net/wireless/mwifiex/main.h |  2 ++
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
-On Mon, Jun 8, 2015 at 4:07 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-wrote:
-> Hi, Alexis Green
->
-> I just take a look back on the code before implementing the Proactive
-> PREQ for PREP. For the case of reply and forward (target_flags &
-> MP_F_RF), the previous metric used is the one which resolved from
-> mpath->metric.
->
-> Refer here:
-> https://github.com/o11s/open80211s/blob/o11s-0.4.2/net/mac80211/mesh_h
-> wmp.c
->
-> But to say that, I cannpt confirm whether this is correct. The
-> standard 802.11-2012 has no longer specified bit-1 MP_F_RF (Refer
-> section 8.4.2.115 per target flag). So maybe it is not relevant
-> anymore. We may need to remove as well.
->
-> ----
-> Chun-Yeow
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
+index 65cd461..bb2ffd9 100644
+--- a/drivers/net/wireless/mwifiex/11h.c
++++ b/drivers/net/wireless/mwifiex/11h.c
+@@ -161,19 +161,38 @@ int mwifiex_cmd_issue_chan_report_request(struct mwifiex_private *priv,
+ 	cr_req->chan_desc.chan_width = radar_params->chandef->width;
+ 	cr_req->msec_dwell_time = cpu_to_le32(radar_params->cac_time_ms);
+ 
+-	mwifiex_dbg(priv->adapter, MSG,
+-		    "11h: issuing DFS Radar check for channel=%d\n",
+-		    radar_params->chandef->chan->hw_value);
++	if (radar_params->cac_time_ms)
++		mwifiex_dbg(priv->adapter, MSG,
++			    "11h: issuing DFS Radar check for channel=%d\n",
++			    radar_params->chandef->chan->hw_value);
++	else
++		mwifiex_dbg(priv->adapter, MSG, "cancelling CAC\n");
+ 
+ 	return 0;
+ }
+ 
++int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
++				 struct cfg80211_chan_def *chandef)
++{
++	struct mwifiex_radar_params radar_params;
++
++	memset(&radar_params, 0, sizeof(struct mwifiex_radar_params));
++	radar_params.chandef = chandef;
++	radar_params.cac_time_ms = 0;
++
++	return mwifiex_send_cmd(priv, HostCmd_CMD_CHAN_REPORT_REQUEST,
++				HostCmd_ACT_GEN_SET, 0, &radar_params, true);
++}
++
+ /* This function is to abort ongoing CAC upon stopping AP operations
+  * or during unload.
+  */
+ void mwifiex_abort_cac(struct mwifiex_private *priv)
+ {
+ 	if (priv->wdev.cac_started) {
++		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
++			mwifiex_dbg(priv->adapter, ERROR,
++				    "failed to stop CAC in FW\n");
+ 		mwifiex_dbg(priv->adapter, MSG,
+ 			    "Aborting delayed work for CAC.\n");
+ 		cancel_delayed_work_sync(&priv->dfs_cac_work);
+@@ -245,6 +264,9 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ 	if (le32_to_cpu(rdr_event->passed)) {
+ 		mwifiex_dbg(priv->adapter, MSG,
+ 			    "radar detected; indicating kernel\n");
++		if (mwifiex_stop_radar_detection(priv, &priv->dfs_chandef))
++			mwifiex_dbg(priv->adapter, ERROR,
++				    "Failed to stop CAC in FW\n");
+ 		cfg80211_radar_event(priv->adapter->wiphy, &priv->dfs_chandef,
+ 				     GFP_KERNEL);
+ 		mwifiex_dbg(priv->adapter, MSG, "regdomain: %d\n",
+@@ -252,7 +274,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ 		mwifiex_dbg(priv->adapter, MSG, "radar detection type: %d\n",
+ 			    rdr_event->det_type);
+ 	} else {
+-		mwifiex_dbg(priv->adapter, ERROR,
++		mwifiex_dbg(priv->adapter, MSG,
+ 			    "false radar detection event!\n");
+ 	}
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5a6c1c7..3ac18c6 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1473,6 +1473,8 @@ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
+ void mwifiex_dfs_cac_work_queue(struct work_struct *work);
+ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work);
+ void mwifiex_abort_cac(struct mwifiex_private *priv);
++int mwifiex_stop_radar_detection(struct mwifiex_private *priv,
++				 struct cfg80211_chan_def *chandef);
+ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ 				      struct sk_buff *skb);
+ 
+-- 
+1.8.1.4
+
