@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38319 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391AbbFRETx (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:35994 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751910AbbFARPv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 00:19:53 -0400
-Date: Wed, 17 Jun 2015 21:19:51 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Sunghoon Cho <ywhsbliss@gmail.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, Rachel.kim@atmel.com,
-	dean.lee@atmel.com
-Subject: Re: [PATCH 2/5] staging: wilc1000: remove the warnings on multiple
- blank line uses.
-Message-ID: <20150618041951.GA10740@kroah.com> (sfid-20150618_061955_324768_BA76D726)
-References: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
- <8780894482d8ada4d46da9e008945a5bd03e12fe.1434526056.git.ywhsbliss@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8780894482d8ada4d46da9e008945a5bd03e12fe.1434526056.git.ywhsbliss@gmail.com>
+	Mon, 1 Jun 2015 13:15:51 -0400
+Received: by wgbgq6 with SMTP id gq6so120327655wgb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 10:15:50 -0700 (PDT)
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [PATCH V2] mac80211: Fix power save state stuck in ACTIVE caused by race between suspend and Tx packet.
+Date: Mon,  1 Jun 2015 22:44:45 +0530
+Message-Id: <1433178885-8787-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150601_191555_052478_F1449F6D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 17, 2015 at 04:28:52PM +0900, Sunghoon Cho wrote:
-> This patch removes the warnings reported by checkpatch.pl regarding
-> the multiple blank line.
-> 
-> Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan_if.h | 12 ------------
->  1 file changed, 12 deletions(-)
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
 
-Doesn't apply :(
+If suspended during TX in progress, there can be 
+race where the driver is put of of power-save due
+to TX and during suspend dynamic_ps_time is cancelled
+and TX packet is flushed, leaving the driver in ACTIVE
+even after resuming until dynamic_ps_time puts 
+driver back in DOZE. (Which only happens if there
+is another TX).
 
-Please rebase all of these and resend.
+This can lead high power consumption of chipset during (or)
+after resuming also.
 
-thanks,
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+---
+V2: Updated Comment and Commit log.
+---
+ net/mac80211/pm.c |   15 +++++++++++++++
+ net/mac80211/pm.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-greg k-h
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index ac6ad62..cc311be 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -76,6 +76,21 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 				continue;
+ 			ieee80211_mgd_quiesce(sdata);
++			/* If suspended during TX in progress, there
++			 * can be a race where the driver is put out
++			 * of power-save due to TX and during suspend
++			 * dynamic_ps_timer is cancelled and TX packet
++			 * is flushed, leaving the driver in ACTIVE even
++			 * after resuming until dynamic_ps_timer puts
++			 * driver back in DOZE.
++			 */
++			if (sdata->u.mgd.associated &&
++			    sdata->u.mgd.powersave &&
++			     !(local->hw.conf.flags & IEEE80211_CONF_PS)) {
++				local->hw.conf.flags |= IEEE80211_CONF_PS;
++				ieee80211_hw_config(local,
++						    IEEE80211_CONF_CHANGE_PS);
++			}
+ 		}
+ 
+ 		err = drv_suspend(local, wowlan);
