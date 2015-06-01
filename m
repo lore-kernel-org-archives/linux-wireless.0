@@ -1,34 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:51449 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753831AbbFCRuw (ORCPT
+Received: from mail-yh0-f45.google.com ([209.85.213.45]:34895 "EHLO
+	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751488AbbFATmu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 13:50:52 -0400
-From: Scott Branden <sbranden@broadcom.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stable <stable@vger.kernel.org>, Andrew Kurn <kurn@sfu.ca>
-Subject: RE: New USB ID 2001:3c25
-Date: Wed, 3 Jun 2015 17:50:49 +0000
-Message-ID: <6A6FBA3BBCB70741B2E7FD80BFDD32DB2B33CF50@SJEXCHMB10.corp.ad.broadcom.com> (sfid-20150603_195056_576746_50B9E1BC)
-References: <556E6000.90402@lwfinger.net>
-In-Reply-To: <556E6000.90402@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 1 Jun 2015 15:42:50 -0400
+Received: by yhda23 with SMTP id a23so36145118yhd.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 12:42:49 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CA+BoTQmmm6NA2Lb5TB9rSiXYWWarGLGaE5KFJW0_aaqz1YwR3g@mail.gmail.com>
+References: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com>
+	<CA+BoTQnfXGLSvbx+hLfi_2w90-LgC3Uba0ZcO+Pt7J3FcEE9wg@mail.gmail.com>
+	<87vbf7vr3j.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmmm6NA2Lb5TB9rSiXYWWarGLGaE5KFJW0_aaqz1YwR3g@mail.gmail.com>
+Date: Mon, 1 Jun 2015 15:42:49 -0400
+Message-ID: <CAOiWkA8GepFEd2+47g_SfFFk5GuMOGCLkwwyZhj9MxchFgXxbA@mail.gmail.com> (sfid-20150601_214253_930037_9AEBA3A4)
+Subject: Re: system hang with backports-20150511/20150525
+From: Marty Faltesek <mfaltesek@google.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Martin Faltesek <martin.faltesek@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTGFycnksDQoNClRoZXJlIGlzIG5vIHByb2JsZW0gYXBwbHlpbmcgdGhpcyBwYXRjaCB0byB0
-aGUgc3RhYmxlIHRyZWUuDQpJIGRpZG4ndCBrbm93IGl0IHdhcyBteSByZXNwb25zaWJpbGl0eSB0
-byBpbmZvcm0gdGhlIHN0YWJsZSBtYWlsaW5nIGxpc3QgZXZlcnkgdGltZSBhIHBhdGNoIGlzIGFj
-Y2VwdGVkDQppbiB0aGUgbGF0ZXN0IGtlcm5lbCB0aGF0IGNvdWxkIGJlIGFwcGxpZWQgdG8gdGhl
-IHN0YWJsZSB0cmVlPw0KDQpSZWdhcmRzLA0KIFNjb3R0DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2Fn
-ZS0tLS0tDQpGcm9tOiBMYXJyeSBGaW5nZXIgW21haWx0bzpsYXJyeS5maW5nZXJAZ21haWwuY29t
-XSBPbiBCZWhhbGYgT2YgTGFycnkgRmluZ2VyDQpTZW50OiBUdWVzZGF5LCBKdW5lIDAyLCAyMDE1
-IDc6MDIgUE0NClRvOiBTY290dCBCcmFuZGVuDQpDYzogbGludXgtd2lyZWxlc3M7IFN0YWJsZTsg
-QW5kcmV3IEt1cm4NClN1YmplY3Q6IE5ldyBVU0IgSUQgMjAwMTozYzI1DQoNClNjb3R0LA0KDQpJ
-IHNlZSB0aGF0IHlvdSBhZGRlZCB0aGUgVVNCIElEIGluIHRoZSBzdWJqZWN0IGZvciB0aGUgRFdB
-LTEzMCBkZXZpY2UgaW4gY29tbWl0IGVhMzQ1YzE0NWZmMjMxOTdlYWIzNGQwYzRkMGM4YTkzZDdi
-ZWE4YzYuDQoNCklzIHRoZXJlIGFueSByZWFzb24gdGhhdCB0aGUgbmV3IElEIHNob3VsZCBub3Qg
-aGF2ZSBiZWVuIHNlbnQgdG8gU3RhYmxlIGFzIHdlbGwsIG9yIHdhcyB0aGF0IGFuIG92ZXJzaWdo
-dD8NCg0KVGhhbmtzLA0KDQpMYXJyeQ0K
+I disabled IEEE80211_HW_SUPPORT_FAST_XMIT before, and still saw the
+hang. I repeated today to confirm.
+
+I added the extra ath10k debug flags you requested, and it causes a
+system reset without any messages, very soon after the last hbeat
+timestamp. I've uploaded  log "crash.6.1.15.13.46" to
+http://tinyurl.com/dmesg-ftrace.
+
+Any advice on how to bisect when using backports?
+
+On Mon, Jun 1, 2015 at 4:27 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 1 June 2015 at 09:13, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> +ath10k list
+>>>
+>>> On 1 June 2015 at 03:37, Marty Faltesek <mfaltesek@google.com> wrote:
+>>>> Starting with backports-20150511, and continuing with
+>>>> backports-20150525, we see frequent system hangs. backports-20150424
+>>>> had no issue.
+>>>
+>>> I don't see such binary releases on
+>>> https://backports.wiki.kernel.org/index.php/Main_Page
+>>> Hence I don't know what kernel you've backported the drivers from and
+>>> I can't compare anything.
+>>>
+>>> Can you provide more details, please?
+>>
+>> I suspect it's from here:
+>>
+>> https://www.kernel.org/pub/linux/kernel/projects/backports/2015/05/25/
+>>
+>> The backports project pages are a bit confusing and that location is
+>> hard to find.
+>
+> Oh, thanks!
+>
+> Hmm.. There was a ton of changes between 20150424 and 20150511. For
+> one, ath10k started to use chanctx API and FAST_XMIT. But it's not a
+> given these two are to blame.
+>
+> The latter can be easily disabled by removing
+> IEEE80211_HW_SUPPORT_FAST_XMIT from ar->hw->flags in ath10k's mac.c.
+> The former.. not so easy. I'd be awesome if you could do a git bisect.
+> The commit ids are a3da0fb6(good) f17107c(bad) (you need linux-next
+> git repo including its tags for these ids to be resolvable).
+>
+>
+> Michał
