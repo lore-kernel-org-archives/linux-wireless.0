@@ -1,33 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55252 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750752AbbFKKtR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 06:49:17 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id D1C303AD50D
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 10:49:17 +0000 (UTC)
-Received: from localhost (dhcp-27-216.brq.redhat.com [10.34.27.216])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id t5BAnHH2004336
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 06:49:17 -0400
-Date: Thu, 11 Jun 2015 12:49:09 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2800: fix assigning same WCID for different stations
-Message-ID: <20150611104908.GA18173@redhat.com> (sfid-20150611_124922_260584_BC1D5B6B)
-References: <1433946037-11347-1-git-send-email-sgruszka@redhat.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45477 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752141AbbFAMdm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Jun 2015 08:33:42 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CT8Mp017226
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:33:41 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk4v-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:33:41 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv4 10/17] mwifiex: dump station support in uap mode
+Date: Mon, 1 Jun 2015 23:32:08 +0530
+Message-ID: <1433181735-15712-11-git-send-email-patila@marvell.com> (sfid-20150601_143350_399735_D21CEB33)
+In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
+References: <1433181735-15712-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433946037-11347-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 10, 2015 at 04:20:37PM +0200, Stanislaw Gruszka wrote:
-> On some hardware reading WCID entries table results getting 0xff
-> numbers, no matter of value written there before. This cause assigning
-> the same WCID for different stations and makes not possible to connect
-> to more than one station.
+From: Xinming Hu <huxm@marvell.com>
 
-This fix is incomplete, I'll send second patch.
+This patch extend cfg80211 dump_station handler, support for
+dump stations associated to mwifiex micro AP.
 
-Stanislaw
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 51 +++++++++++++++++++++++++++++----
+ 1 file changed, 46 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ddeb919..5274502 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1229,6 +1229,7 @@ mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 tx_htinfo,
+  */
+ static int
+ mwifiex_dump_station_info(struct mwifiex_private *priv,
++			  struct mwifiex_sta_node *node,
+ 			  struct station_info *sinfo)
+ {
+ 	u32 rate;
+@@ -1238,6 +1239,30 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+ 			BIT(NL80211_STA_INFO_TX_BITRATE) |
+ 			BIT(NL80211_STA_INFO_SIGNAL) | BIT(NL80211_STA_INFO_SIGNAL_AVG);
+ 
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
++		if (!node)
++			return -ENOENT;
++
++		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
++				BIT(NL80211_STA_INFO_TX_FAILED);
++		sinfo->inactive_time =
++			jiffies_to_msecs(jiffies - node->stats.last_rx);
++
++		sinfo->signal = node->stats.rssi;
++		sinfo->signal_avg = node->stats.rssi;
++		sinfo->rx_bytes = node->stats.rx_bytes;
++		sinfo->tx_bytes = node->stats.tx_bytes;
++		sinfo->rx_packets = node->stats.rx_packets;
++		sinfo->tx_packets = node->stats.tx_packets;
++		sinfo->tx_failed = node->stats.tx_failed;
++
++		mwifiex_parse_htinfo(priv, node->stats.last_tx_htinfo,
++				     &sinfo->txrate);
++		sinfo->txrate.legacy = node->stats.last_tx_rate * 5;
++
++		return 0;
++	}
++
+ 	/* Get signal information from the firmware */
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_RSSI_INFO,
+ 			     HostCmd_ACT_GEN_GET, 0, NULL, true)) {
+@@ -1304,7 +1329,7 @@ mwifiex_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (memcmp(mac, priv->cfg_bssid, ETH_ALEN))
+ 		return -ENOENT;
+ 
+-	return mwifiex_dump_station_info(priv, sinfo);
++	return mwifiex_dump_station_info(priv, NULL, sinfo);
+ }
+ 
+ /*
+@@ -1315,13 +1340,29 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 			      int idx, u8 *mac, struct station_info *sinfo)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	static struct mwifiex_sta_node *node;
+ 
+-	if (!priv->media_connected || idx)
+-		return -ENOENT;
++	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
++	    priv->media_connected && idx == 0) {
++		ether_addr_copy(mac, priv->cfg_bssid);
++		return mwifiex_dump_station_info(priv, NULL, sinfo);
++	} else if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
++		mwifiex_send_cmd(priv, HOST_CMD_APCMD_STA_LIST,
++				 HostCmd_ACT_GEN_GET, 0, NULL, true);
++
++		if (node && (&node->list == &priv->sta_list)) {
++			node = NULL;
++			return -ENOENT;
++		}
+ 
+-	memcpy(mac, priv->cfg_bssid, ETH_ALEN);
++		node = list_prepare_entry(node, &priv->sta_list, list);
++		list_for_each_entry_continue(node, &priv->sta_list, list) {
++			ether_addr_copy(mac, node->mac_addr);
++			return mwifiex_dump_station_info(priv, node, sinfo);
++		}
++	}
+ 
+-	return mwifiex_dump_station_info(priv, sinfo);
++	return -ENOENT;
+ }
+ 
+ static int
+-- 
+1.8.1.4
 
