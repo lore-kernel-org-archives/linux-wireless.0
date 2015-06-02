@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:36573 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbbFJFO6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38257 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585AbbFBHeg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 01:14:58 -0400
-Received: by wgbgq6 with SMTP id gq6so26724157wgb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 22:14:57 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2] ath10k: enable VHT for IBSS
-Date: Wed, 10 Jun 2015 07:14:44 +0200
-Message-Id: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150610_071501_448137_94CB2EC0)
+	Tue, 2 Jun 2015 03:34:36 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH v2] ath10k: remove unused variable 'id' in ath10k_pci_tx_pipe_cleanup()
+Date: Tue, 2 Jun 2015 13:04:15 +0530
+Message-ID: <1433230455-11644-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150602_093439_338340_3B9DA01D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable VHT support for IBSS, while mac80211/cfg80211 and
-wpa_supplicant already support this.
+mete_data is extracted from ce descriptor and stored in variable 'id'.
+later, id is not used anywhere in the same function.
 
-In my test env, ath10k 2x2 I get:
-(udp) ath10k-1 >>>> ath10k-2 (server) -  speed: 419 Mbits/sec
-(tcp) ath10k-1 >>>> ath10k-2 (server) -  speed: 404 Mbits/sec
+Fixes: d84a512dca23 ("ath10k: remove transfer_id from
+ath10k_hif_cb::tx_completion")
 
-During tests I used wpa_supplicant (current version), which
-already support IBSS VHT, and choose highest available BW.
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f4de717..14a8f25 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6949,6 +6949,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 		goto err_free;
- 	}
+V2 changes:
+  - added original commit msg detail in commit log which 
+    introduced this unused variable.
+
+ drivers/net/wireless/ath/ath10k/pci.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 969a123..bbc349a 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1275,7 +1275,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
+ 	struct ath10k_ce_ring *ce_ring;
+ 	struct ce_desc *ce_desc;
+ 	struct sk_buff *skb;
+-	unsigned int id;
+ 	int i;
  
-+	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
-+
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
- 	 * so we only advertise to mac we can do the queues thing
+ 	ar = pci_pipe->hif_ce_state;
+@@ -1299,8 +1298,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
+ 			continue;
+ 
+ 		ce_ring->per_transfer_context[i] = NULL;
+-		id = MS(__le16_to_cpu(ce_desc[i].flags),
+-			CE_DESC_FLAGS_META_DATA);
+ 
+ 		ar_pci->msg_callbacks_current.tx_completion(ar, skb);
+ 	}
 -- 
-1.9.1
+1.7.10.4
 
