@@ -1,41 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44418 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbbFAHhh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 03:37:37 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless-regdb: Add 60GHz regulatory rules for Japan (JP)
-Date: Mon,  1 Jun 2015 10:37:26 +0300
-Message-Id: <1433144246-18214-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150601_093744_057942_C54F8D21)
+Received: from mx3.wp.pl ([212.77.101.9]:41166 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751049AbbFBTLk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2015 15:11:40 -0400
+From: Jakub Kicinski <moorray3@wp.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH 1/4] mt7601u: unify paged and non-paged RX dma paths
+Date: Tue,  2 Jun 2015 21:11:25 +0200
+Message-Id: <1433272288-6450-1-git-send-email-moorray3@wp.pl> (sfid-20150602_211143_364312_2CAB2505)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is ARIB STD-T74, available at:
-http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
+From: Jakub Kicinski <kubakici@wp.pl>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
 ---
- db.txt | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/mediatek/mt7601u/dma.c | 62 ++++++-----------------------
+ 1 file changed, 12 insertions(+), 50 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index df7f7b1..7157ae8 100644
---- a/db.txt
-+++ b/db.txt
-@@ -584,6 +584,9 @@ country JP: DFS-JP
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (23), DFS
-+	# 60 gHz band channels 2-4 at 10mW,
-+	# ref: http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
-+	(59000 - 66000 @ 2160), (10 mW)
+diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
+index 9c9e1288644b..16df67b2e62c 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/dma.c
++++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
+@@ -34,56 +34,28 @@ static unsigned int ieee80211_get_hdrlen_from_buf(const u8 *data, unsigned len)
  
- country KE: DFS-JP
- 	(2402 - 2482 @ 40), (20)
+ static struct sk_buff *
+ mt7601u_rx_skb_from_seg(struct mt7601u_dev *dev, struct mt7601u_rxwi *rxwi,
+-			u8 *data, u32 seg_len)
++			void *data, u32 seg_len, u32 truesize, struct page *p)
+ {
+ 	struct sk_buff *skb;
+ 	u32 true_len;
++	int hdr_len, copy, frag;
+ 
+-	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD))
+-		seg_len -= 2;
+-
+-	skb = alloc_skb(seg_len, GFP_ATOMIC);
+-	if (!skb)
+-		return NULL;
+-
+-	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD)) {
+-		int hdr_len = ieee80211_get_hdrlen_from_buf(data, seg_len);
+-
+-		memcpy(skb_put(skb, hdr_len), data, hdr_len);
+-		data += hdr_len + 2;
+-		seg_len -= hdr_len;
+-	}
+-
+-	memcpy(skb_put(skb, seg_len), data, seg_len);
+-
+-	true_len = mt76_mac_process_rx(dev, skb, skb->data, rxwi);
+-	skb_trim(skb, true_len);
+-
+-	return skb;
+-}
+-
+-static struct sk_buff *
+-mt7601u_rx_skb_from_seg_paged(struct mt7601u_dev *dev,
+-			      struct mt7601u_rxwi *rxwi, void *data,
+-			      u32 seg_len, u32 truesize, struct page *p)
+-{
+-	unsigned int hdr_len = ieee80211_get_hdrlen_from_buf(data, seg_len);
+-	unsigned int true_len, copy, frag;
+-	struct sk_buff *skb;
+-
+-	skb = alloc_skb(128, GFP_ATOMIC);
++	skb = alloc_skb(p ? 128 : seg_len, GFP_ATOMIC);
+ 	if (!skb)
+ 		return NULL;
+ 
+ 	true_len = mt76_mac_process_rx(dev, skb, data, rxwi);
+ 
++	hdr_len = ieee80211_get_hdrlen_from_buf(data, true_len);
+ 	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD)) {
+ 		memcpy(skb_put(skb, hdr_len), data, hdr_len);
++
+ 		data += hdr_len + 2;
+ 		true_len -= hdr_len;
+ 		hdr_len = 0;
+ 	}
+ 
++	/* If not doing paged RX allocated skb will always have enough space */
+ 	copy = (true_len <= skb_tailroom(skb)) ? true_len : hdr_len + 8;
+ 	frag = true_len - copy;
+ 
+@@ -100,7 +72,7 @@ mt7601u_rx_skb_from_seg_paged(struct mt7601u_dev *dev,
+ }
+ 
+ static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
+-				   u32 seg_len, struct page *p, bool paged)
++				   u32 seg_len, struct page *p)
+ {
+ 	struct sk_buff *skb;
+ 	struct mt7601u_rxwi *rxwi;
+@@ -126,11 +98,7 @@ static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
+ 
+ 	trace_mt_rx(dev, rxwi, fce_info);
+ 
+-	if (paged)
+-		skb = mt7601u_rx_skb_from_seg_paged(dev, rxwi, data, seg_len,
+-						    truesize, p);
+-	else
+-		skb = mt7601u_rx_skb_from_seg(dev, rxwi, data, seg_len);
++	skb = mt7601u_rx_skb_from_seg(dev, rxwi, data, seg_len, truesize, p);
+ 	if (!skb)
+ 		return;
+ 
+@@ -158,23 +126,17 @@ mt7601u_rx_process_entry(struct mt7601u_dev *dev, struct mt7601u_dma_buf_rx *e)
+ 	u32 seg_len, data_len = e->urb->actual_length;
+ 	u8 *data = page_address(e->p);
+ 	struct page *new_p = NULL;
+-	bool paged = true;
+ 	int cnt = 0;
+ 
+ 	if (!test_bit(MT7601U_STATE_INITIALIZED, &dev->state))
+ 		return;
+ 
+ 	/* Copy if there is very little data in the buffer. */
+-	if (data_len < 512) {
+-		paged = false;
+-	} else {
++	if (data_len > 512)
+ 		new_p = dev_alloc_pages(MT_RX_ORDER);
+-		if (!new_p)
+-			paged = false;
+-	}
+ 
+ 	while ((seg_len = mt7601u_rx_next_seg_len(data, data_len))) {
+-		mt7601u_rx_process_seg(dev, data, seg_len, e->p, paged);
++		mt7601u_rx_process_seg(dev, data, seg_len, new_p ? e->p : NULL);
+ 
+ 		data_len -= seg_len;
+ 		data += seg_len;
+@@ -182,9 +144,9 @@ mt7601u_rx_process_entry(struct mt7601u_dev *dev, struct mt7601u_dma_buf_rx *e)
+ 	}
+ 
+ 	if (cnt > 1)
+-		trace_mt_rx_dma_aggr(dev, cnt, paged);
++		trace_mt_rx_dma_aggr(dev, cnt, !!new_p);
+ 
+-	if (paged) {
++	if (new_p) {
+ 		/* we have one extra ref from the allocator */
+ 		__free_pages(e->p, MT_RX_ORDER);
+ 
 -- 
-2.1.4
+2.1.0
 
