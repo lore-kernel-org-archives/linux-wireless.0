@@ -1,55 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f49.google.com ([209.85.213.49]:32795 "EHLO
-	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108AbbFHRK6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 13:10:58 -0400
-Received: by yhpn97 with SMTP id n97so42750793yhp.0
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 10:10:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAAVw_ZFi3Q1hi+uoeO_V=XUMNhZCViVq5iPrrJL9UakKB46Mag@mail.gmail.com>
-References: <CAAVw_ZFi3Q1hi+uoeO_V=XUMNhZCViVq5iPrrJL9UakKB46Mag@mail.gmail.com>
-Date: Mon, 8 Jun 2015 10:10:57 -0700
-Message-ID: <CAAnMG+Oeps87PaxV4DAqyOokz9T6ikf3Xv0vA_EC+impRM5Fxg@mail.gmail.com> (sfid-20150608_191110_511650_06A5A954)
-Subject: Re: mac80211 modification
-From: Alexis Green <agreen@cococorp.com>
-To: Duy Tai Nguyen <duytai.cse@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:39991 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753574AbbFBSdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2015 14:33:05 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: rename single hw-scan flag to follow naming convention
+Date: Tue,  2 Jun 2015 20:33:02 +0200
+Message-Id: <1433269982-29434-1-git-send-email-johannes@sipsolutions.net> (sfid-20150602_203308_516481_308DEDB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You should build mac80211 as module instead of built-in driver and
-"make modules" instead of full make. This way you'll be just
-rebuilding mac80211.ko instead of the whole thing.
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Mon, Jun 8, 2015 at 2:39 AM, Duy Tai Nguyen <duytai.cse@gmail.com> wrote:
-> Hi,
->
-> I want to inject particular data into beacon frame in Android device.
-> I found two approaches:
-> 1. Write loadable kernel module.
-> 2. Modify MAC80211 subsystem
-> In the first approach, I found that I could not include directly
-> source code from MAC80211 sub system in folder /net/mac80211/. Thus, I
-> used the second approach, but, every time I change any line of source
-> code, it takes 30 minutes to build zImage  then install new kernel in
-> my Android device. Finally, I was stuck.
-> Therefore, my questions are:
-> 1. Is it right approach to modify MAC80211 subsystem?
-> 2. Are there any faster approach to modify MAC80211 and test source code?
-> 3. I am curious about the way you write code and test MAC80211. Could
-> you explain in details?
-> Best Regards,
-> Duy Tai.
-> ------------------------------------------------------------------------------------------------------------
-> Nguyen Duy Tai
-> Ym: kimjiwoo741
-> Phone: +841676919422
-> Faculty of Computer Science and Engineering.
-> University of Technology HCMC.
-> ------------------------------------------------------------------------------------------------------------
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The naming convention is to always have the flags prefixed with
+IEEE80211_HW_ so they're 'namespaced', make this flag follow it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
+ include/net/mac80211.h                      | 4 ++--
+ net/mac80211/scan.c                         | 6 +++---
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 84555170b6f7..6b45b96ac238 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -450,7 +450,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	    !iwlwifi_mod_params.sw_crypto)
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+ 
+-	hw->flags |= IEEE80211_SINGLE_HW_SCAN_ON_ALL_BANDS;
++	hw->flags |= IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS;
+ 	hw->wiphy->features |=
+ 		NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
+ 		NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 68a3cc9796d2..e09a32cb139f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1885,7 +1885,7 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_SUPPORTS_CLONED_SKBS: The driver will never modify the payload
+  *	or tailroom of TX skbs without copying them first.
+  *
+- * @IEEE80211_SINGLE_HW_SCAN_ON_ALL_BANDS: The HW supports scanning on all bands
++ * @IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS: The HW supports scanning on all bands
+  *	in one command, mac80211 doesn't have to run separate scans per band.
+  */
+ enum ieee80211_hw_flags {
+@@ -1917,7 +1917,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_HT_CCK_RATES		= 1<<27,
+ 	IEEE80211_HW_CHANCTX_STA_CSA			= 1<<28,
+ 	IEEE80211_HW_SUPPORTS_CLONED_SKBS		= 1<<29,
+-	IEEE80211_SINGLE_HW_SCAN_ON_ALL_BANDS		= 1<<30,
++	IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS		= 1<<30,
+ };
+ 
+ /**
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 7bb6a9383f58..3eb121d2aa45 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -257,7 +257,7 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
+ 	if (test_bit(SCAN_HW_CANCELLED, &local->scanning))
+ 		return false;
+ 
+-	if (local->hw.flags & IEEE80211_SINGLE_HW_SCAN_ON_ALL_BANDS) {
++	if (local->hw.flags & IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS) {
+ 		for (i = 0; i < req->n_channels; i++) {
+ 			local->hw_scan_req->req.channels[i] = req->channels[i];
+ 			bands_used |= BIT(req->channels[i]->band);
+@@ -326,7 +326,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 		return;
+ 
+ 	if (hw_scan && !aborted &&
+-	    !(local->hw.flags & IEEE80211_SINGLE_HW_SCAN_ON_ALL_BANDS) &&
++	    !(local->hw.flags & IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS) &&
+ 	    ieee80211_prep_hw_scan(local)) {
+ 		int rc;
+ 
+@@ -520,7 +520,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->hw_scan_ies_bufsize = local->scan_ies_len + req->ie_len;
+ 
+-		if (local->hw.flags & IEEE80211_SINGLE_HW_SCAN_ON_ALL_BANDS) {
++		if (local->hw.flags & IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS) {
+ 			int i, n_bands = 0;
+ 			u8 bands_counted = 0;
+ 
+-- 
+2.1.4
+
