@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:34187 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754019AbbFOLqk (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:38903 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbbFBJB7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 07:46:40 -0400
-Received: by wgv5 with SMTP id 5so66559392wgv.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2015 04:46:39 -0700 (PDT)
+	Tue, 2 Jun 2015 05:01:59 -0400
+From: kholmanskikh.s.s@gmail.com
+Date: Tue, 2 Jun 2015 13:01:46 +0400
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
+	johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] staging: wilc1000: Fix some compile time warnings
+Message-ID: <20150602090146.GA13228@ubuntu-pc> (sfid-20150602_110225_565363_48A32466)
+References: <1433184981-6077-1-git-send-email-kholmanskikh.s.s@gmail.com>
+ <20150602045520.GA17524@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <CALhHN=pUKuXAEb3JEEVTHATEHhvoLe52QDh-pixiS9oUo=6j6Q@mail.gmail.com>
-References: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com>
-	<21886.43539.833126.629494@gargle.gargle.HOWL>
-	<CALhHN=pUKuXAEb3JEEVTHATEHhvoLe52QDh-pixiS9oUo=6j6Q@mail.gmail.com>
-Date: Mon, 15 Jun 2015 13:46:39 +0200
-Message-ID: <CALhHN=qWSsckzaDkvtRAq4sSC671n7r-tK3a=wKXqyHF+CJU5Q@mail.gmail.com> (sfid-20150615_134644_247355_62000019)
-Subject: Re: [RFC] ath9k: advertise p2p dev support when chanctx
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150602045520.GA17524@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 June 2015 at 13:38, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
-> On 15 June 2015 at 12:33, Sujith Manoharan <sujith@msujith.org> wrote:
->> Janusz Dziedzic wrote:
->>> Add p2p dev support when ath9k loaded with
->>> use_chanctx=1. This will fix problem, when first
->>> interface is an AP and next we would like to run
->>> p2p_find. Before p2p scan failed.
->>>
->>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->>> ---
->>> @Felix, Sujith please review. I am not sure if didn't miss some
->>> case for NL80211_IFTYPE_P2P_DEVICE (special handling required?).
->>
->> At least the callbacks for adding/removing interfaces need
->> to be handled ?
->>
-> Strange, but I didn't hit any problem yet with my simple patch.
->
->> But, can you describe the sequence of commands used that
->> resulted in this issue ?
->>
-> 1. load ath9k with use_chanctx=1
-> 2. run wpa_supplicant using wlan0
-> 3. connect wlan0 to AP
-3. setup AP using wlan0
-> 4. run p2p_find form wpa_cli
-> 5. scan will failed with Operation not supported (even I will
-> force-ap-scan, while chanctx version using hw_scan callback ...)
-> 6. p2p_find will fail
->
-> BR
-> Janusz
+On Tue, Jun 02, 2015 at 01:55:20PM +0900, Greg KH wrote:
+> On Mon, Jun 01, 2015 at 09:56:18PM +0300, Stanislav Kholmanskikh wrote:
+> > Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+> > ---
+> > Changes since V1:
+> > 
+> > Split the V1 series into more logically unrelated patches
+> > and updated patch descriptions accordingly.
+> 
+> This series doesn't apply on my tree due to other changes from someone
+> else that I just took.  Can you rebase it and resend?
+
+Sure. Done.
+
+I cut off the first two patches, because they are redundant now.
+
+Thanks.
+
+> 
+> thanks,
+> 
+> greg k-h
