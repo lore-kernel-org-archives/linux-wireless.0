@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60003 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752062AbbFJUBY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 16:01:24 -0400
-Message-ID: <1433966481.3145.17.camel@sipsolutions.net> (sfid-20150610_220130_916848_DE11F768)
-Subject: Re: Allowing station to over-ride default VHT-oper element?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Jun 2015 22:01:21 +0200
-In-Reply-To: <557896FC.8040204@candelatech.com>
-References: <5578901C.60502@candelatech.com>
-	  (sfid-20150610_212943_327894_FFEA768B) <1433966120.3145.15.camel@sipsolutions.net>
-	 <557896FC.8040204@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail1.bemta8.messagelabs.com ([216.82.243.208]:5845 "EHLO
+	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753533AbbFBQgk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Jun 2015 12:36:40 -0400
+From: "Hodaszi, Robert" <robert.hodaszi@digi.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Cannot disable transmission retry
+Date: Tue, 2 Jun 2015 16:29:27 +0000
+Message-ID: <1433262583.7119.5.camel@A1-HR-PC> (sfid-20150602_183644_259067_2D8B7637)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-10 at 12:58 -0700, Ben Greear wrote:
-
-> Ok, thanks for that..one less piece of work for me to do :)
-> 
-> From what I can tell, it *IS* ok to have an AP do VHT on 40Mhz though?
-
-It may even be compelled to do so by the spec, since there could be
-overlapping networks (see 10.39.2.)
-
-johannes
-
+SGVsbG8sDQoNCk9uIGtlcm5lbCAzLjEzLCBJIHdhcyBhYmxlIHRvIGRpc2FibGUgdGhlIHRyYW5z
+bWlzc2lvbiByZXRyaWVzIG9uIHRoZQ0Kd2xhbjAgaW50ZXJmYWNlIHdpdGggJ2l3Y29uZmlnIHds
+YW4wIHJldHJ5IDAnLiBOb3cgSSB1cGRhdGVkIG15IGtlcm5lbA0KdG8gMy4xNiwgYW5kIGl0IHJl
+dHVybnMgd2l0aCAnSW52YWxpZCBhcmd1bWVudCcgZXJyb3IuDQoNClRoZSBjYXVzZSBpcyB0aGlz
+IGNvbW1pdDoNCg0KY2ZnODAyMTE6IGFkZCBzYW5pdHkgY2hlY2sgZm9yIHJldHJ5IGxpbWl0IGlu
+IHdleHQtY29tcGF0DQpodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0
+L3RvcnZhbGRzL2xpbnV4LmdpdC9jb21taXQvP2lkPWY1YWEwZDIxZGQ1YWRhMDQwZmY0MmI0ZDQw
+MzU3Mjg1ZTRhY2U0NDENCg0KDQotLS0gYS9uZXQvd2lyZWxlc3Mvd2V4dC1jb21wYXQuYw0KKysr
+IGIvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMNCkBAIC0zNzAsNyArMzcwLDcgQEAgc3RhdGlj
+IGludCBjZmc4MDIxMV93ZXh0X3Npd3JldHJ5KHN0cnVjdCBuZXRfZGV2aWNlDQoqZGV2LA0KdTgg
+b3Nob3J0ID0gd2Rldi0+d2lwaHktPnJldHJ5X3Nob3J0Ow0KaW50IGVycjsNCg0KLSBpZiAocmV0
+cnktPmRpc2FibGVkIHx8DQorIGlmIChyZXRyeS0+ZGlzYWJsZWQgfHwgcmV0cnktPnZhbHVlIDwg
+MSB8fCByZXRyeS0+dmFsdWUgPiAyNTUgfHwNCihyZXRyeS0+ZmxhZ3MgJiBJV19SRVRSWV9UWVBF
+KSAhPSBJV19SRVRSWV9MSU1JVCkNCnJldHVybiAtRUlOVkFMOw0KDQoNCg0KSSdtIHdvbmRlcmlu
+ZywgaXMgdGhlICdyZXRyeS0+dmFsdWUgPCAxJyBpcyBuZWNlc3Nhcnk/IEkgd291bGQgd3JpdGUN
+CidyZXRyeS0+dmFsdWUgPCAwJyBpbnN0ZWFkLCB0byBtYWtlIHBvc3NpYmxlIHRvIGRpc2FibGUg
+dGhlIHJldHJpZXMuDQpTaG91bGQgSSBzZW5kIGEgcGF0Y2g/DQoNClRoYW5rcyENCg0KUm9iZXJ0
+IEhvZGFzemkNCg==
