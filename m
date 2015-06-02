@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51736 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbbFVJ3v (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:34702 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607AbbFBOmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 05:29:51 -0400
-Date: Mon, 22 Jun 2015 12:29:37 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Dean Lee <dean.lee@atmel.com>, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com
-Subject: Re: [PATCH 1/2] staging: wilc1000: modify type casting warning
-Message-ID: <20150622092937.GX28762@mwanda> (sfid-20150622_112954_920310_4DDBE41D)
-References: <1434438685-24336-1-git-send-email-dean.lee@atmel.com>
- <20150616130643.GB11143@kroah.com>
+	Tue, 2 Jun 2015 10:42:35 -0400
+Received: by oifu123 with SMTP id u123so127207866oif.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 07:42:35 -0700 (PDT)
+Date: Tue, 2 Jun 2015 09:42:31 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [wireless-regdb] [PATCH] wireless-regdb: Add 60GHz regulatory
+ rules for Russia (RU)
+Message-ID: <20150602144231.GA31648@ubuntu-hedt> (sfid-20150602_164238_773529_7DB371B7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150616130643.GB11143@kroah.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 16, 2015 at 06:06:43AM -0700, Greg KH wrote:
-> This shows you are doing something really wrong here, why not just fix
-> the function type to be a real pointer to a real structure?
+On Tue, Jun 02, 2015 at 05:04:09PM +0300, Vladimir Kondratiev wrote:
+> Source is document named
+> Changes to NLA 124_Order №129_22042015.pdf
+> 
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> ---
+>  db.txt | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/db.txt b/db.txt
+> index f361030..79dac92 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -978,6 +978,8 @@ country RU: DFS-ETSI
+>  	(5250 - 5330 @ 80), (20), DFS
+>  	(5650 - 5730 @ 80), (30), DFS
+>  	(5735 - 5835 @ 80), (30)
+> +	# 60 GHz band channels 1-4, ref: Changes to NLA 124_Order №129_22042015.pdf
+> +	(57000 - 66000 @ 2160), (40)
 
-You are right, of course.
+It looks like your tree is out of date and missing:
 
-> Or even better, just remove the parameter as I don't think they are
-> even used.
+  aa1d66d wireless-regdb: Disable VHT80 where 40/80 MHz on 5 GHz is not allowed
 
-I don't know how far you traced the code, you may be right.  It
-eventually becomes driver_handler[] in wilc_wlan_cfg_commit() and we
-do this:
+I see that you directed the patch at John, so I'm guessing that you're
+still using his tree. I took over maintainership of the database in
+December, and you should be using this repo for new work:
 
-drivers/staging/wilc1000/wilc_wlan.c
-  1883          cfg->wid_header[1] = seq_no;    /* sequence number */
-  1884          cfg->wid_header[2] = (uint8_t)total_len;
-  1885          cfg->wid_header[3] = (uint8_t)(total_len >> 8);
-  1886          cfg->wid_header[4] = (uint8_t)driver_handler;
-  1887          cfg->wid_header[5] = (uint8_t)(driver_handler >> 8);
-  1888          cfg->wid_header[6] = (uint8_t)(driver_handler >> 16);
-  1889          cfg->wid_header[7] = (uint8_t)(driver_handler >> 24);
+  git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git
 
-We put it in the header.
-
-  1890          p->cfg_seq_no = seq_no;
-  1891  
-  1892          /**
-  1893           *      Add to TX queue
-  1894           **/
-  1895  
-  1896          /*Edited by Amr - BugID_4720*/
-  1897          if (!wilc_wlan_txq_add_cfg_pkt(&cfg->wid_header[0], total_len))
-
-And I don't know what we do with it after this.
-
-  1898                  return -1;
-  1899  
-  1900          return 0;
-  1901  }
-
-regards,
-dan carpenter
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Thanks,
+Seth
