@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34530 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528AbbFFN1v (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50311 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751374AbbFBHr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2015 09:27:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Machani\, Yaniv" <yanivma@ti.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Marc Kleine-Budde <mkl@pengutronix.de>
-Subject: Re: wl18xx: wlconf kernel compatibility
-References: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com>
-Date: Sat, 06 Jun 2015 16:27:43 +0300
-In-Reply-To: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com>
-	(Yegor Yefremov's message of "Tue, 26 May 2015 12:09:51 +0200")
-Message-ID: <87bngtnf00.fsf@kamboji.qca.qualcomm.com> (sfid-20150606_152929_364064_03781C55)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 2 Jun 2015 03:47:27 -0400
+Message-ID: <1433231239.17081.0.camel@coelho.fi> (sfid-20150602_094731_063717_2320E361)
+From: Luca Coelho <luca@coelho.fi>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 02 Jun 2015 10:47:19 +0300
+In-Reply-To: <1432907257.6319.50.camel@decadent.org.uk>
+References: <1432905874.11687.4.camel@coelho.fi>
+	 <1432907257.6319.50.camel@decadent.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: debian: crda package depends on iw?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yegor Yefremov <yegorslists@googlemail.com> writes:
 
-> How do I know, which wlconf version is compatible with which kernel
-> version? I have following problem:
->
-> I have *.INI file for my particular WLAN chip. This file will be used
-> to produce wl18xx-conf.bin. The size of this file will be check during
-> device initialization. Depending on which kernel version is used the
-> size of the required file differs. For example kernel 3.18 requires
-> wl18xx-conf.bin to have 1221 bytes, 4.1 expects 1226 bytes. Recent
-> wlconf (git://git.ti.com/wilink8-wlan/18xx-ti-utils.git) produces 1229
-> bytes files.
->
-> How should I determine correct wlconf version?
+On Fri, 2015-05-29 at 14:47 +0100, Ben Hutchings wrote:
+> On Fri, 2015-05-29 at 16:24 +0300, Luca Coelho wrote:
+> > Hi Ben,
+> > 
+> > I just noticed that the crda package depends on the iw package in Debian
+> > (I'm using jessie):
+> > 
+> > luca@weizen:~$ apt-cache show crda
+> > Package: crda
+> > Version: 3.13-1
+> > Installed-Size: 293
+> > Maintainer: Ben Hutchings <ben@decadent.org.uk>
+> > Architecture: amd64
+> > Depends: libc6 (>= 2.7), libnl-3-200 (>= 3.2.7), libnl-genl-3-200 (>= 3.2.7), libssl1.0.0 (>= 1.0.0), wireless-regdb, iw (>= 3.2-1~)
+> > Description-en: wireless Central Regulatory Domain Agent
+> >  This package provides a Central Regulatory Domain Agent (CRDA) to be used by
+> >  the Linux kernel cfg80211 wireless subsystem to query and apply the regulatory
+> >  domain settings wireless devices may operate within for a given location.
+> >  .
+> >  CRDA queries operational frequency regulations stored within the regulatory
+> >  database provided by the wireless-regdb package.
+> > Description-md5: bacfc9c20ed2cf2120d3c95c8e749666
+> > Multi-Arch: foreign
+> > Homepage: http://wireless.kernel.org/en/developers/Regulatory/CRDA
+> > Tag: role::program
+> > Section: net
+> > Priority: optional
+> > Filename: pool/main/c/crda/crda_3.13-1_amd64.deb
+> > Size: 59958
+> > MD5sum: 6eacfbb62c7647ee3bba653ee5adfe70
+> > SHA1: 0f02aebc61f68b87189c867369dbd5df74f4e5ca
+> > SHA256: 52d114e826944a492d68b3e4e77aed0feeee9c28f6a7c3d5c587027eb283f2cc
+> > 
+> > Is there a specific reason for this or is it just accidental?
+> 
+> setregdomain is a script that runs iw.
 
-I also complained about something along these lines earlier, this is not
-how upstream drivers are supposed to work. Users should not be forced to
-find correct files from somewhere, instead everything should just work
-out of box.
+Ah, okay, thanks for clarifying! I wasn't expecting this dependency.
 
-Can anyone help Yegor to solve his problem? But in the long run wl18xx
-really should manage this better.
+--
+Cheers,
+Luca.
 
--- 
-Kalle Valo
