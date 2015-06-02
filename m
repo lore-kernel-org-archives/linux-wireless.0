@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:42293 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619AbbFIUyn (ORCPT
+Received: from mail-am1on0127.outbound.protection.outlook.com ([157.56.112.127]:46556
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752983AbbFBKci convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 16:54:43 -0400
-Date: Tue, 09 Jun 2015 13:54:42 -0700 (PDT)
-Message-Id: <20150609.135442.1357702617373015039.davem@davemloft.net> (sfid-20150609_230114_491391_F9A16557)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	gerrit@erg.abdn.ac.uk, alexkaltsas@gmail.com,
-	johannes.berg@intel.com
-Subject: Re: [PATCH 4.1] cfg80211: wext: clear sinfo struct before calling
- driver
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1433878544-10749-1-git-send-email-johannes@sipsolutions.net>
-References: <1433878544-10749-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 2 Jun 2015 06:32:38 -0400
+From: "Dhere, Chaitanya (C.)" <cvijaydh@visteon.com>
+To: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] staging: wilc1000: Modification in code to use ARRAY_SIZE
+ macro
+Date: Tue, 2 Jun 2015 09:58:50 +0000
+Message-ID: <20150602095844.GA31971@ubuntu> (sfid-20150602_123242_148647_67C24721)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue,  9 Jun 2015 21:35:44 +0200
+From: Chaitanya Dhere <cvijaydh@visteon.com>
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Until recently, mac80211 overwrote all the statistics it could
-> provide when getting called, but it now relies on the struct
-> having been zeroed by the caller. This was always the case in
-> nl80211, but wext used a static struct which could even cause
-> values from one device leak to another.
-> 
-> Using a static struct is OK (as even documented in a comment)
-> since the whole usage of this function and its return value is
-> always locked under RTNL. Not clearing the struct for calling
-> the driver has always been wrong though, since drivers were
-> free to only fill values they could report, so calling this
-> for one device and then for another would always have leaked
-> values from one to the other.
-> 
-> Fix this by initializing the structure in question before the
-> driver method call.
-> 
-> This fixes https://bugzilla.kernel.org/show_bug.cgi?id=99691
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Gerrit Renker <gerrit@erg.abdn.ac.uk>
-> Reported-by: Alexander Kaltsas <alexkaltsas@gmail.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> Dave, would you mind applying this patch directly? It seems a
-> bit pointless to send a pull request for a single patch again.
+In this patch, ARRAY_SIZE() macro is used to determine the
+size. This change was detected with the help of coccinelle
+tool.
 
-Sure, I'll do that right now.
+Signed-off-by: Chaitanya Dhere <cvijaydh@visteon.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks Johannes.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index b033eb8..592b8ae 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1737,7 +1737,7 @@ static int linux_wlan_read_mac_addr(void *vp)
+ 	mm_segment_t old_fs;
+ 	loff_t pos = 0;
+ 	int index;
+-	int array_size = sizeof(path_string) / sizeof(path_string[0]);
++	int array_size = ARRAY_SIZE(path_string);
+ 
+ 	/* change to KERNEL_DS address limit */
+ 	old_fs = get_fs();
+-- 
+1.7.9.5
