@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:52245 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932220AbbFOMZp (ORCPT
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:35397 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065AbbFBAQj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 08:25:45 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 1 Jun 2015 20:16:39 -0400
+Received: by igbyr2 with SMTP id yr2so75103340igb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 17:16:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21886.50258.16025.465771@gargle.gargle.HOWL> (sfid-20150615_142552_385003_EAFC09D3)
-Date: Mon, 15 Jun 2015 17:55:54 +0530
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [RFC] ath9k: allow to receive probe request when offchannel
-In-Reply-To: <CALhHN=r5FyRzG18KOmN7zFRhx2O4jjQ-MxUmRfcT9EKpmpbqig@mail.gmail.com>
-References: <1433912583-15918-1-git-send-email-janusz.dziedzic@tieto.com>
-	<CALhHN=r5FyRzG18KOmN7zFRhx2O4jjQ-MxUmRfcT9EKpmpbqig@mail.gmail.com>
+In-Reply-To: <1433185600.4861.42.camel@perches.com>
+References: <1433181735-15712-1-git-send-email-patila@marvell.com>
+ <1433181735-15712-2-git-send-email-patila@marvell.com> <1433185600.4861.42.camel@perches.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 2 Jun 2015 10:16:18 +1000
+Message-ID: <CAGRGNgXX+3u1vtCAbXJ9epnM2=Hjnd6eJbJj1nG=SaNLw7Uobg@mail.gmail.com> (sfid-20150602_021642_861691_BC35535F)
+Subject: Re: [PATCHv4 01/17] mwifiex: verbose logging for association failure messages
+To: Avinash Patil <patila@marvell.com>
+Cc: Joe Perches <joe@perches.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>, cluo@marvell.com,
+	huxm@marvell.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic wrote:
-> >         case ATH_OFFCHANNEL_ROC_START:
-> > +               /* Allow to receive probe requests */
-> > +               rfilt = ath_calcrxfilter(sc);
-> > +               rfilt |= ATH9K_RX_FILTER_PROBEREQ;
-> > +               ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
-> > +
+Hi Avinash,
 
-ath9k_set_offchannel_state() would be a better place to do this,
-since setting up various bits in the HW for offchannel operation
-is done there. Also, it would make sure that the HW state is
-retained when a chip reset is done for some reason.
+On Tue, Jun 2, 2015 at 5:06 AM, Joe Perches <joe@perches.com> wrote:
+> On Mon, 2015-06-01 at 23:31 +0530, Avinash Patil wrote:
+>> This patch adds more detailed information about association failures
+>> - reason and states.
+>>
+>> Signed-off-by: Avinash Patil <patila@marvell.com>
+>> Signed-off-by: Cathy Luo <cluo@marvell.com>
+>> Reviewed-by: Joe Perches <joe@perches.com>
+>
+> Hello Avinash.
+>
+> I didn't sign this.
+>
+> In the future, please do not add sign-off type signatures
+> for others that do not actually give you some signature.
 
-Sujith
+If this was inspired by some comment Joe made, there's "Reported-by"
+and "Suggested-by" for crediting him with the idea, that said, it's
+still a little rude to add them without permission.
+
+See section 13 of https://www.kernel.org/doc/Documentation/SubmittingPatches
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
