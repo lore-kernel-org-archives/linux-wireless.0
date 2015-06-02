@@ -1,68 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:35440 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbbFEU6x (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:37426 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753146AbbFBIzS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 16:58:53 -0400
-Received: by obbgp2 with SMTP id gp2so40738829obb.2
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 13:58:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5571F70D.4020101@candelatech.com>
-References: <1430829048-22549-1-git-send-email-vthiagar@qti.qualcomm.com>
-	<5571D903.7060203@candelatech.com>
-	<CAFuUQkjP18E6fjvgZMayJYiEQtpjVUAKb+_zDmS3yBfi-QF8Cg@mail.gmail.com>
-	<5571F70D.4020101@candelatech.com>
-Date: Fri, 5 Jun 2015 13:58:52 -0700
-Message-ID: <CAFuUQki+BF-WDHLbjsPCmF2jieYPHR8t-q4vG34ZEfkSE7QFiA@mail.gmail.com> (sfid-20150605_225857_417412_0FFF3A27)
-Subject: Re: [PATCH] ath10k: Fix survey information reporting
-From: YanBo <dreamfly281@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Jun 2015 04:55:18 -0400
+From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+To: gregkh@linuxfoundation.org, johnny.kim@atmel.com,
+	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	devel@driverdev.osuosl.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Subject: [PATCH v3 1/2] staging: wilc1000: Cleanup to coreconfigurator
+Date: Tue,  2 Jun 2015 12:55:06 +0400
+Message-Id: <1433235307-13146-1-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20150602_105555_818817_5EA6BF7E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 5, 2015 at 12:22 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 06/05/2015 12:10 PM, YanBo wrote:
->> On Fri, Jun 5, 2015 at 10:14 AM, Ben Greear <greearb@candelatech.com> wrote:
->>> I applied these and some other related patches to my hacked-upon 4.0.4, but
->>> I am seeing some inconsistencies between how ath10k and ath9k
->>> reports survey info.  I am using my CT firmware based on 10.1.
->>>
->>> ath9k reports ever-increasing counters for the channel time
->>> and busy time.
->>>
->>> With ath10k, it reports the same values until I do a scan
->>> again, and even then, it is not additive.
->>>
->>> First, should the value only update when we do a scan?
->>>
->>> And second, should ath10k report ever increasing totals
->>> to match ath9k behaviour?
->>>
->>
->> It should be match with ath9k, but the ath10k doesn't accumulate the
->> survey count at currently code,
->> I drafted a patch to fix this issue, will send to public mailist soon.
->
-> I notice you can get current cycle stats out of the pdev stats as well,
-> and those update every time you ask firmware for stats.
->
-> It won't be 100% accurate because you don't know when firmware
-> was off-channel or not, but I guess it will be better for me than
-> nothing.  I certainly don't want to be scanning all the time,
-> but grabbing firmware stats already happens when you get ethtool
-> stats, so as long as I poll often enough to catch wraps, I think it
-> will be good enough.
->
-> I guess to get really accurate values, one would have to hack the
-> firmware to keep its own accumulated stats and properly deal with
-> channel changes.
->
+Fixed several syntax/style issues found with checkpatch.pl.
 
-The new FW (from 10.2.4.70 IIRC)  add an new WMI interface to supply such
-kinds of count.
+Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+---
+Changes since V2:
+* The first 2 patches were removed, because what they fix is already fixed now.
 
-BR /Yanbo
+
+ drivers/staging/wilc1000/coreconfigurator.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index e3e3f20..43864dc 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -28,7 +28,7 @@
+ #define INVALID         255
+ #define MAC_ADDR_LEN    6
+ #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
+-							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
++				 BEACON_INTERVAL_LEN + CAP_INFO_LEN)
+ 
+ /*****************************************************************************/
+ /* Function Macros                                                           */
+@@ -672,14 +672,14 @@ INLINE WILC_Uint16 get_asoc_id(u8 *data)
+ WILC_Sint32 CoreConfiguratorInit(void)
+ {
+ 	WILC_Sint32 s32Error = WILC_SUCCESS;
+-	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorInit() \n");
++	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorInit()\n");
+ 
+ 	sema_init(&SemHandleSendPkt, 1);
+ 	sema_init(&SemHandlePktResp, 0);
+ 
+ 	gps8ConfigPacket = (WILC_Sint8 *)WILC_MALLOC(MAX_PACKET_BUFF_SIZE);
+ 	if (gps8ConfigPacket == NULL) {
+-		PRINT_ER("failed in gps8ConfigPacket allocation \n");
++		PRINT_ER("failed in gps8ConfigPacket allocation\n");
+ 		s32Error = WILC_NO_MEM;
+ 		goto _fail_;
+ 	}
+@@ -710,13 +710,13 @@ u8 *get_tim_elm(u8 *pu8msa, WILC_Uint16 u16RxLen, WILC_Uint16 u16TagParamOffset)
+ 	/* Search for the TIM Element Field and return if the element is found */
+ 	while (u16index < (u16RxLen - FCS_LEN)) {
+ 		if (pu8msa[u16index] == ITIM) {
+-			return(&pu8msa[u16index]);
++			return &pu8msa[u16index];
+ 		} else {
+ 			u16index += (IE_HDR_LEN + pu8msa[u16index + 1]);
+ 		}
+ 	}
+ 
+-	return(0);
++	return 0;
+ }
+ 
+ /* This function gets the current channel information from
+@@ -728,7 +728,7 @@ u8 get_current_channel_802_11n(u8 *pu8msa, WILC_Uint16 u16RxLen)
+ 	index = TAG_PARAM_OFFSET;
+ 	while (index < (u16RxLen - FCS_LEN)) {
+ 		if (pu8msa[index] == IDSPARMS)
+-			return (pu8msa[index + 2]);
++			return pu8msa[index + 2];
+ 		else
+ 			/* Increment index by length information and header */
+ 			index += pu8msa[index + 1] + IE_HDR_LEN;
+@@ -750,7 +750,7 @@ u8 get_current_channel(u8 *pu8msa, WILC_Uint16 u16RxLen)
+ #else /* FIVE_GHZ_BAND */
+ 	/* Extract current channel information from */
+ 	/* the beacon/probe response frame          */
+-	return (get_current_channel_802_11n(pu8msa, u16RxLen));
++	return get_current_channel_802_11n(pu8msa, u16RxLen);
+ #endif /* FIVE_GHZ_BAND */
+ #else
+ 	return 0;
+@@ -1444,7 +1444,7 @@ void ProcessAdrWid(WILC_Char *pcPacket, WILC_Sint32 *ps32PktLen,
+ void ProcessBinWid(WILC_Char *pcPacket, WILC_Sint32 *ps32PktLen,
+ 		   tstrWID *pstrWID, u8 *pu8val, WILC_Sint32 s32ValueSize)
+ {
+-	/* WILC_ERROR("processing Binary WIDs is not supported \n"); */
++	/* WILC_ERROR("processing Binary WIDs is not supported\n"); */
+ 
+ 	WILC_Uint16 u16MsgLen = 0;
+ 	WILC_Uint16 idx    = 0;
+@@ -1583,7 +1583,7 @@ WILC_Sint32 further_process_response(u8 *resp,
+ 			WILC_memcpy(pstrWIDresult->ps8WidVal, cfg_str, cfg_len); /* mostafa: no need currently for the extra NULL byte */
+ 			pstrWIDresult->s32ValueSize = cfg_len;
+ 		} else {
+-			PRINT_ER("allocated WID buffer length is smaller than the received WID Length \n");
++			PRINT_ER("allocated WID buffer length is smaller than the received WID Length\n");
+ 			retval = -2;
+ 		}
+ 
+@@ -2027,7 +2027,7 @@ WILC_Sint32 ConfigProvideResponse(WILC_Char *pcRespBuffer, WILC_Sint32 s32RespLe
+ 		} else {
+ 			WILC_memcpy(gstrConfigPktInfo.pcRespBuffer, pcRespBuffer, gstrConfigPktInfo.s32MaxRespBuffLen);
+ 			gstrConfigPktInfo.s32BytesRead = gstrConfigPktInfo.s32MaxRespBuffLen;
+-			PRINT_ER("BusProvideResponse() Response greater than the prepared Buffer Size \n");
++			PRINT_ER("BusProvideResponse() Response greater than the prepared Buffer Size\n");
+ 		}
+ 
+ 		up(&SemHandlePktResp);
+@@ -2076,7 +2076,7 @@ WILC_Sint32 ConfigPktReceived(u8 *pu8RxPacket, WILC_Sint32 s32RxPacketLen)
+ 		break;
+ 
+ 	default:
+-		PRINT_ER("ConfigPktReceived(): invalid received msg type at the Core Configurator \n");
++		PRINT_ER("ConfigPktReceived(): invalid received msg type at the Core Configurator\n");
+ 		break;
+ 	}
+ 
+@@ -2097,7 +2097,7 @@ WILC_Sint32 CoreConfiguratorDeInit(void)
+ {
+ 	WILC_Sint32 s32Error = WILC_SUCCESS;
+ 
+-	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorDeInit() \n");
++	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorDeInit()\n");
+ 
+ 	if (gps8ConfigPacket != NULL) {
+ 
+-- 
+1.9.1
+
