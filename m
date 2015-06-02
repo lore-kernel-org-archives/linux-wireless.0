@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56066 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbbFQJj1 (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:34155 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbbFBHVi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 05:39:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 2 Jun 2015 03:21:38 -0400
+Received: by wibut5 with SMTP id ut5so59809173wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 00:21:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21889.16487.258289.588207@gargle.gargle.HOWL> (sfid-20150617_113931_515282_2050CDD4)
-Date: Wed, 17 Jun 2015 15:09:51 +0530
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv2] ath9k: make rxfilter per HW
-In-Reply-To: <CALhHN=ro4K6mALLHqgVRGm50UGg5hh9mnSSAnNHwZdZ5ywOk-Q@mail.gmail.com>
-References: <1434520009-8824-1-git-send-email-janusz.dziedzic@tieto.com>
-	<21889.11726.101648.552280@gargle.gargle.HOWL>
-	<55812FB5.1070005@openwrt.org>
-	<21889.14109.54454.563245@gargle.gargle.HOWL>
-	<CALhHN=ro4K6mALLHqgVRGm50UGg5hh9mnSSAnNHwZdZ5ywOk-Q@mail.gmail.com>
+In-Reply-To: <1433229267-11314-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1433229267-11314-1-git-send-email-rmani@qti.qualcomm.com>
+Date: Tue, 2 Jun 2015 09:21:36 +0200
+Message-ID: <CA+BoTQkfNB=fR=Vak729qFU2TOSC_8_fMfgRc1RJ1UO0t9XwRQ@mail.gmail.com> (sfid-20150602_092141_670396_BAF80529)
+Subject: Re: [PATCH] ath10k: remove unused variable 'id' in ath10k_pci_tx_pipe_cleanup()
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic wrote:
-> This is what I have with use_chanctx=1
-> Jun 17 06:57:54 dell6430 kernel: [53297.753256] xxx ath_calcrxfilter
-> filter: 0x207
-> 
-> 0x000000080 is for probe_req
+On 2 June 2015 at 09:14, Raja Mani <rmani@qti.qualcomm.com> wrote:
+> mete_data is extracted from ce descriptor and stored in variable 'id'.
+> later, id is not used anywhere in the same function.
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c |    3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> index 969a123..bbc349a 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -1275,7 +1275,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
+>         struct ath10k_ce_ring *ce_ring;
+>         struct ce_desc *ce_desc;
+>         struct sk_buff *skb;
+> -       unsigned int id;
+>         int i;
+>
+>         ar = pci_pipe->hif_ce_state;
+> @@ -1299,8 +1298,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
+>                         continue;
+>
+>                 ce_ring->per_transfer_context[i] = NULL;
+> -               id = MS(__le16_to_cpu(ce_desc[i].flags),
+> -                       CE_DESC_FLAGS_META_DATA);
+>
+>                 ar_pci->msg_callbacks_current.tx_completion(ar, skb);
 
-Ok, so the probe_req filter is set before actually initiating
-RoC - this appears to be the current design in wpa_s.
+Good catch. I forgot to remove this. I guess one could say this qualifies as:
 
-I am not sure if using a global filter that disregards
-the opmode of a context is the right approach, though...
+ Fixes: d84a512dca23 ("ath10k: remove transfer_id from
+ath10k_hif_cb::tx_completion")
 
-Sujith
+
+Michał
