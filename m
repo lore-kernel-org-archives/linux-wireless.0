@@ -1,56 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:35225 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754853AbbFPWnd (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:35317 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751394AbbFBI3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 18:43:33 -0400
-Received: by wgbhy7 with SMTP id hy7so23046852wgb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2015 15:43:32 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/2] staging: vt6655: use module_pci_driver helper
-Date: Tue, 16 Jun 2015 23:43:12 +0100
-Message-Id: <1434494592-2639-2-git-send-email-tvboxspy@gmail.com> (sfid-20150617_004337_736816_49486809)
-In-Reply-To: <1434494592-2639-1-git-send-email-tvboxspy@gmail.com>
-References: <1434494592-2639-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 2 Jun 2015 04:29:22 -0400
+Date: Tue, 2 Jun 2015 10:29:17 +0200
+From: Konrad Zapalowicz <bergo.torino@gmail.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: wilc1000: fix warning while printing
+Message-ID: <20150602082917.GB5903@patagonia> (sfid-20150602_102941_853259_2C6DCFFA)
+References: <1433231814-4204-1-git-send-email-sudipm.mukherjee@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433231814-4204-1-git-send-email-sudipm.mukherjee@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove  vt6655_init_module and vt6655_cleanup_module and replace
-module_pci_driver
+On 06/02, Sudip Mukherjee wrote:
+> size_t should print using %zu, but here it was using %d and hence we
+> were getting warning while printing.
+> 
+> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> ---
+> 
+> I think it will be easy to remove the other warnings if all the typedefs
+> are removed first.
+> 
+>  drivers/staging/wilc1000/wilc_spi.c               | 2 +-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+> index d0e7610..6d854fd 100644
+> --- a/drivers/staging/wilc1000/wilc_spi.c
+> +++ b/drivers/staging/wilc1000/wilc_spi.c
+> @@ -404,7 +404,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz,
+>  #undef NUM_DUMMY_BYTES
+>  
+>  	if (len2 > (sizeof(wb) / sizeof(wb[0]))) {
+> -		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%d)\n",
+> +		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%lu)\n",
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 17 +----------------
- 1 file changed, 1 insertion(+), 16 deletions(-)
+Hi, it seems that the above line should use %zu too. Am I correct or I'm
+missing something?
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index c393b73..0bfc939 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1878,19 +1878,4 @@ static struct pci_driver device_driver = {
- #endif
- };
- 
--static int __init vt6655_init_module(void)
--{
--	int ret;
--
--	ret = pci_register_driver(&device_driver);
--
--	return ret;
--}
--
--static void __exit vt6655_cleanup_module(void)
--{
--	pci_unregister_driver(&device_driver);
--}
--
--module_init(vt6655_init_module);
--module_exit(vt6655_cleanup_module);
-+module_pci_driver(device_driver);
--- 
-2.1.4
+ - konrad
 
+>  			 len2, (sizeof(wb) / sizeof(wb[0])));
+>  		result = N_FAIL;
+>  		return result;
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index e9ab2cb..6fdb0d6 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -638,7 +638,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+>  		}
+>  
+>  
+> -		PRINT_D(CFG80211_DBG, "Association request info elements length = %d\n", pstrConnectInfo->ReqIEsLen);
+> +		PRINT_D(CFG80211_DBG, "Association request info elements length = %zu\n", pstrConnectInfo->ReqIEsLen);
+>  
+>  		PRINT_D(CFG80211_DBG, "Association response info elements length = %d\n", pstrConnectInfo->u16RespIEsLen);
+>  
+> @@ -778,7 +778,7 @@ static int WILC_WFI_CfgScan(struct wiphy *wiphy, struct cfg80211_scan_request *r
+>  		}
+>  
+>  		PRINT_D(CFG80211_DBG, "Requested num of scan channel %d\n", request->n_channels);
+> -		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %d\n", request->ie_len);
+> +		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %zu\n", request->ie_len);
+>  
+>  		PRINT_D(CFG80211_DBG, "Number of SSIDs %d\n", request->n_ssids);
+>  
+> @@ -3316,7 +3316,7 @@ static int WILC_WFI_start_ap(struct wiphy *wiphy, struct net_device *dev,
+>  	priv = wiphy_priv(wiphy);
+>  	PRINT_D(HOSTAPD_DBG, "Starting ap\n");
+>  
+> -	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %d Tail length = %d\n",
+> +	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
+>  		settings->beacon_interval, settings->dtim_period, beacon->head_len, beacon->tail_len);
+>  
+>  	s32Error = WILC_WFI_CfgSetChannel(wiphy, &settings->chandef);
+> -- 
+> 1.8.1.2
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
