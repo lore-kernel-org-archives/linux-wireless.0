@@ -1,57 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:37627 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318AbbFJFDa (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33939 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbbFBH5F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 01:03:30 -0400
-Received: by wifx6 with SMTP id x6so34702456wif.0
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 22:03:28 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, nbd@openwrt.org,
-	c_manoha@qca.qualcomm.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC] ath9k: allow to receive probe request when offchannel
-Date: Wed, 10 Jun 2015 07:03:03 +0200
-Message-Id: <1433912583-15918-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150610_070333_700634_EA46928B)
+	Tue, 2 Jun 2015 03:57:05 -0400
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: [PATCH] staging: wilc1000: fix warning while printing
+Date: Tue,  2 Jun 2015 13:26:54 +0530
+Message-Id: <1433231814-4204-1-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20150602_095711_685961_E21C77F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix problem that p2p group negotiation didn't work
-correctly when chanctx used, because we didn't receive
-probe requests when offchannel and use_chanctx=1
+size_t should print using %zu, but here it was using %d and hence we
+were getting warning while printing.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
 ---
-@Felix, Sujith could you review? I am not sure I put this in correct place.
 
- drivers/net/wireless/ath/ath9k/channel.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+I think it will be easy to remove the other warnings if all the typedefs
+are removed first.
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 2066650..6301d44 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1157,6 +1157,7 @@ static bool ath_chanctx_defer_switch(struct ath_softc *sc)
- static void ath_offchannel_channel_change(struct ath_softc *sc)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	u32 rfilt;
+ drivers/staging/wilc1000/wilc_spi.c               | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index d0e7610..6d854fd 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -404,7 +404,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz,
+ #undef NUM_DUMMY_BYTES
  
- 	ath_dbg(common, CHAN_CTX, "%s: offchannel state: %s\n",
- 		__func__, offchannel_state_string(sc->offchannel.state));
-@@ -1179,6 +1180,11 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
- 		ath_scan_complete(sc, false);
- 		break;
- 	case ATH_OFFCHANNEL_ROC_START:
-+		/* Allow to receive probe requests */
-+		rfilt = ath_calcrxfilter(sc);
-+		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
-+		ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
-+
- 		if (sc->cur_chan != &sc->offchannel.chan)
- 			break;
+ 	if (len2 > (sizeof(wb) / sizeof(wb[0]))) {
+-		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%d)\n",
++		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%lu)\n",
+ 			 len2, (sizeof(wb) / sizeof(wb[0])));
+ 		result = N_FAIL;
+ 		return result;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e9ab2cb..6fdb0d6 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -638,7 +638,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+ 		}
  
+ 
+-		PRINT_D(CFG80211_DBG, "Association request info elements length = %d\n", pstrConnectInfo->ReqIEsLen);
++		PRINT_D(CFG80211_DBG, "Association request info elements length = %zu\n", pstrConnectInfo->ReqIEsLen);
+ 
+ 		PRINT_D(CFG80211_DBG, "Association response info elements length = %d\n", pstrConnectInfo->u16RespIEsLen);
+ 
+@@ -778,7 +778,7 @@ static int WILC_WFI_CfgScan(struct wiphy *wiphy, struct cfg80211_scan_request *r
+ 		}
+ 
+ 		PRINT_D(CFG80211_DBG, "Requested num of scan channel %d\n", request->n_channels);
+-		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %d\n", request->ie_len);
++		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %zu\n", request->ie_len);
+ 
+ 		PRINT_D(CFG80211_DBG, "Number of SSIDs %d\n", request->n_ssids);
+ 
+@@ -3316,7 +3316,7 @@ static int WILC_WFI_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	priv = wiphy_priv(wiphy);
+ 	PRINT_D(HOSTAPD_DBG, "Starting ap\n");
+ 
+-	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %d Tail length = %d\n",
++	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
+ 		settings->beacon_interval, settings->dtim_period, beacon->head_len, beacon->tail_len);
+ 
+ 	s32Error = WILC_WFI_CfgSetChannel(wiphy, &settings->chandef);
 -- 
-1.9.1
+1.8.1.2
 
