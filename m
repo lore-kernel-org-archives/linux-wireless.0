@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:33168 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbFOPrh (ORCPT
+Received: from mail1.bemta8.messagelabs.com ([216.82.243.196]:56876 "EHLO
+	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752558AbbFCNOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 11:47:37 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Wed, 3 Jun 2015 09:14:49 -0400
+From: "Hodaszi, Robert" <robert.hodaszi@digi.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"royujjal@gmail.com" <royujjal@gmail.com>
+Subject: Re: [PATCH] cfg80211: modify lower retry limit to 0
+Date: Wed, 3 Jun 2015 13:14:24 +0000
+Message-ID: <1433337281.7119.38.camel@A1-HR-PC> (sfid-20150603_151453_132714_6AB417D1)
+References: <1433335560-17985-1-git-send-email-robert.hodaszi@digi.com>
+	 (sfid-20150603_145244_934464_B91AF765)
+ <1433336717.2274.13.camel@sipsolutions.net>
+In-Reply-To: <1433336717.2274.13.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21886.62363.946771.345441@gargle.gargle.HOWL> (sfid-20150615_174741_270258_7BEBDF23)
-Date: Mon, 15 Jun 2015 21:17:39 +0530
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [RFC] ath9k: advertise p2p dev support when chanctx
-In-Reply-To: <CALhHN=pUKuXAEb3JEEVTHATEHhvoLe52QDh-pixiS9oUo=6j6Q@mail.gmail.com>
-References: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com>
-	<21886.43539.833126.629494@gargle.gargle.HOWL>
-	<CALhHN=pUKuXAEb3JEEVTHATEHhvoLe52QDh-pixiS9oUo=6j6Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic wrote:
-> > At least the callbacks for adding/removing interfaces need
-> > to be handled ?
-> >
-> Strange, but I didn't hit any problem yet with my simple patch.
-
-Ok. But I am not very familiar with how p2p-device is supposed
-to be used...
-
-Sujith
+VGhlIHByb2JsZW0gaXMgaWYgSSBjaGFuZ2UgdGhlIHJ0MjgwMCBkcml2ZXIgdG8gc2V0IDAgaWYg
+aXQgZ2V0cyAxLA0KZXRjLiwgdGhhdCB3aWxsIGJyZWFrIGFsbCBleGlzdGluZyB1c2VyLXNwYWNl
+IHByb2dyYW1zLg0KDQpBbmQgYWxzbyB3aXRoIHRoZSBjdXJyZW50IGxvd2VyIGxpbWl0LCBJIGNh
+bm5vdCBkaXNhYmxlIHRyYW5zbWlzc2lvbg0KcmV0cmllcy4gVGhlIG1pbmltYWwgdHJhbnNtaXQg
+YXR0ZW1wdHMgdmFsdWUgaXMgMiAocmV0cnkgaXMgMSkuDQoNClJvYmVydA0KDQoNCjIwMTUuIDA2
+LiAzLCBzemVyZGEga2VsdGV6w6lzc2VsIDE1LjA1LWtvciBKb2hhbm5lcyBCZXJnIGV6dCDDrXJ0
+YToNCj4gT24gV2VkLCAyMDE1LTA2LTAzIGF0IDE0OjQ2ICswMjAwLCBSb2JlcnQgSG9kYXN6aSB3
+cm90ZToNCj4gPiBGcm9tOiBSb2JlcnQgSG9kYXN6aSA8cm9iZXJ0LmhvZGFzemlAZGlnaS5jb20+
+DQo+ID4gDQo+ID4gVG8gZGlzYWJsZSB0aGUgdHJhbnNtaXQgcmV0cmllcyBvbiBSVDI4eHggZHJp
+dmVyLCB0aGUgcmV0cnkgbGltaXQgc2hvdWxkDQo+ID4gYmUgc2V0IHRvIDAuIFRoZSBjdXJyZW50
+IGxvd2VyIGxpbWl0ICgxKSBwcmV2ZW50cyBpdC4NCj4gDQo+IFNvIGFjdHVhbGx5IC0gd2UgaGF2
+ZSB0aGUgc2FtZSBsaW1pdCBpbiBubDgwMjExLi4uIHdlIHNob3VsZCBjaGFuZ2UgYm90aA0KPiBh
+dCB0aGUgc2FtZSB0aW1lLg0KPiANCj4gSG93ZXZlciwgSSdtIHdpdGhkcmF3aW5nIG15IGVhcmxp
+ZXIgY29tbWVudC4gVGhlIGRvdDExU2hvcnRSZXRyeUxpbWl0DQo+IGFuZCBkb3QxMUxvbmdSZXRy
+eUxpbWl0IGNvdW50ZXJzICh3aGljaCBjb3JyZXNwb25kIHRvIHRoaXMpIGFyZSBkZWZpbmVkDQo+
+IHRvIGhhdmUgYSByYW5nZSAxLi4yNTUsIGFuZCBzZW1hbnRpY2FsbHkgYXJlIGFjdHVhbGx5IHRo
+ZSBudW1iZXIgb2YNCj4gcGVybWlzc2libGUgdHJhbnNtaXNzaW9uICphdHRlbXB0cyogKHNlZSB0
+aGVpciBkZWZpbml0aW9uIGluDQo+IDgwMi4xMS0yMDEyKS4NCj4gDQo+IEFzIGEgY29uc2VxdWVu
+Y2UsIEknZCBzYXkgdGhlIGRyaXZlciBpcyBkb2luZyB0aGluZ3Mgd3JvbmcgaGVyZSBhbmQgdGhp
+cw0KPiBwYXJ0IGlzIGFjdHVhbGx5IGNvcnJlY3QuDQo+IA0KPiBZb3UgY291bGQgYXJndWUgdGhh
+dCB0aGlzIGlzIHVzZXJzcGFjZSBBUEkgdGhhdCBtdXN0IG5ldmVyIGNoYW5nZSwNCj4gYnV0IC4u
+LiBkdW5uby4gSWYgeW91IGZlZWwgc3Ryb25nbHkgYWJvdXQgdGhpcyBJIGd1ZXNzIHdlIGNvdWxk
+IGFjY2VwdCAwDQo+IGFuZCB0cmFuc2xhdGUgaXQgdG8gMSBpbiBjZmc4MDIxMSB0byBnZXQgdGhl
+IGNvcnJlY3Qgc2VtYW50aWNzLCBidXQNCj4geW91J2Qgc3RpbGwgaGF2ZSB0aGUgZHJpdmVyIGJ1
+ZyB0aGVuLiBJIGRvbid0IHRoaW5rIHdlIHNob3VsZCBhY2NlcHQgMA0KPiBhbmQgcGFzcyBpdCB0
+byB0aGUgZHJpdmVyLCBzaW5jZSBpdCBuZWVkIG5vdCBleHBlY3Qgc3VjaCBhIHZhbHVlIGJhc2Vk
+DQo+IG9uIHRoZSA4MDIuMTEgc3BlYy4NCj4gDQo+IGpvaGFubmVzDQo+IA0K
