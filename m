@@ -1,356 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:38132 "EHLO
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:38798 "EHLO
 	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932607AbbFLJyo (ORCPT
+	with ESMTP id S1751762AbbFCKRR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 05:54:44 -0400
-Received: by wibdq8 with SMTP id dq8so12073991wib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 02:54:43 -0700 (PDT)
-Date: Fri, 12 Jun 2015 11:54:40 +0200
-From: Konrad Zapalowicz <bergo.torino@gmail.com>
-To: "Dean.lee" <dean.lee@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, johnny.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: remove oswrapper & type file
-Message-ID: <20150612095440.GA20488@patagonia> (sfid-20150612_115451_824011_B6C911D6)
-References: <1434097869-3781-1-git-send-email-dean.lee@atmel.com>
- <20150612091702.GA18158@patagonia>
- <557AA984.6020303@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <557AA984.6020303@atmel.com>
+	Wed, 3 Jun 2015 06:17:17 -0400
+Received: by wibdt2 with SMTP id dt2so6720349wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 03:17:16 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/3] ath10k: remove ath10k_chanctx struct
+Date: Wed,  3 Jun 2015 12:16:55 +0200
+Message-Id: <1433326616-23279-2-git-send-email-michal.kazior@tieto.com> (sfid-20150603_121721_624083_A75D6252)
+In-Reply-To: <1433326616-23279-1-git-send-email-michal.kazior@tieto.com>
+References: <1433326616-23279-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/12, Dean.lee wrote:
-> 
-> 
-> On 2015년 06월 12일 18:17, Konrad Zapalowicz wrote:
-> >On 06/12, Dean Lee wrote:
-> >>remove OS Wrapper & Type files.
-> >>now does not used os wrapper file.
-> >>type file is included os wrapper file.
-> >>so delete files and rework include method.
-> >I do not understand the commit message and it does not parse well.
-> >
-> >  - konrad
-> Sorry. my english language skill is very poor...:'-(
-> 
-> remove OS Wrapper function(wilc_oswrapper.h) is in our plan.
-> i try removed OS Wrapper function and it's done.
-> and i found wilc_type.h file is does not used it.
-> so i deleted them and modify #include line in another file.
+In practice there's no point in having a copy of
+chanctx_conf.
 
-This is better now. Just focus on what has been done [that is do not
-write 'try'] and send the v2 of this patch with updated commit message.
+Most of the time the channel pointer (and band
+along with it) is accessed and this can't change
+after a chanctx is created because switching is
+done using explicit chanctx swapping via
+switch_vif_chanctx().
 
-Thanks
+The only thing that can change within a
+chanctx_conf and is used by the driver is
+radar_enabled and channel width. These are however
+always accessed in adequate mac80211 callback
+context which guarantees safe access to the
+chanctx data.
 
- - konrad
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h |  9 ------
+ drivers/net/wireless/ath/ath10k/mac.c  | 53 ++++------------------------------
+ 2 files changed, 6 insertions(+), 56 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 45f9603a0868..78094f23c9dd 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -284,15 +284,6 @@ struct ath10k_sta {
+ #endif
+ };
  
-> thanks for your comment.
-> 
-> B.R
-> 
-> dean
-> 
-> >>Signed-off-by: Dean Lee <dean.lee@atmel.com>
-> >>---
-> >>  drivers/staging/wilc1000/coreconfigurator.h |  1 -
-> >>  drivers/staging/wilc1000/fifo_buffer.c      |  1 -
-> >>  drivers/staging/wilc1000/fifo_buffer.h      |  5 +++-
-> >>  drivers/staging/wilc1000/host_interface.c   |  1 -
-> >>  drivers/staging/wilc1000/wilc_memory.c      |  2 +-
-> >>  drivers/staging/wilc1000/wilc_memory.h      |  4 ++-
-> >>  drivers/staging/wilc1000/wilc_msgqueue.c    |  2 +-
-> >>  drivers/staging/wilc1000/wilc_msgqueue.h    |  5 ++++
-> >>  drivers/staging/wilc1000/wilc_oswrapper.h   | 41 -----------------------------
-> >>  drivers/staging/wilc1000/wilc_sleep.c       |  2 +-
-> >>  drivers/staging/wilc1000/wilc_sleep.h       |  3 +++
-> >>  drivers/staging/wilc1000/wilc_strutils.c    |  2 +-
-> >>  drivers/staging/wilc1000/wilc_strutils.h    |  4 +++
-> >>  drivers/staging/wilc1000/wilc_timer.c       |  2 +-
-> >>  drivers/staging/wilc1000/wilc_timer.h       |  3 +++
-> >>  drivers/staging/wilc1000/wilc_type.h        | 34 ------------------------
-> >>  drivers/staging/wilc1000/wilc_wlan.h        |  2 +-
-> >>  drivers/staging/wilc1000/wilc_wlan_if.h     | 10 ++++++-
-> >>  18 files changed, 37 insertions(+), 87 deletions(-)
-> >>  delete mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
-> >>  delete mode 100644 drivers/staging/wilc1000/wilc_type.h
-> >>
-> >>diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-> >>index 697ceb1..f2f6e64 100644
-> >>--- a/drivers/staging/wilc1000/coreconfigurator.h
-> >>+++ b/drivers/staging/wilc1000/coreconfigurator.h
-> >>@@ -12,7 +12,6 @@
-> >>  #ifndef CORECONFIGURATOR_H
-> >>  #define CORECONFIGURATOR_H
-> >>-#include "wilc_oswrapper.h"
-> >>  #include "wilc_wlan_if.h"
-> >>  /*****************************************************************************/
-> >>  /* Constants                                                                 */
-> >>diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
-> >>index c801406..b6c07cf 100644
-> >>--- a/drivers/staging/wilc1000/fifo_buffer.c
-> >>+++ b/drivers/staging/wilc1000/fifo_buffer.c
-> >>@@ -1,6 +1,5 @@
-> >>-#include "wilc_oswrapper.h"
-> >>  #include "fifo_buffer.h"
-> >>diff --git a/drivers/staging/wilc1000/fifo_buffer.h b/drivers/staging/wilc1000/fifo_buffer.h
-> >>index 57f7732..7b76998 100644
-> >>--- a/drivers/staging/wilc1000/fifo_buffer.h
-> >>+++ b/drivers/staging/wilc1000/fifo_buffer.h
-> >>@@ -1,5 +1,8 @@
-> >>-#include "wilc_oswrapper.h"
-> >>+#include <linux/types.h>
-> >>+#include <linux/semaphore.h>
-> >>+#include "wilc_memory.h"
-> >>+#include "wilc_strutils.h"
-> >>  #define tHANDLE	void *
-> >>diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> >>index a1e90a5..60245b1 100644
-> >>--- a/drivers/staging/wilc1000/host_interface.c
-> >>+++ b/drivers/staging/wilc1000/host_interface.c
-> >>@@ -1,5 +1,4 @@
-> >>  #include "host_interface.h"
-> >>-#include "wilc_oswrapper.h"
-> >>  #include "itypes.h"
-> >>  #include "coreconfigurator.h"
-> >>diff --git a/drivers/staging/wilc1000/wilc_memory.c b/drivers/staging/wilc1000/wilc_memory.c
-> >>index 080fa61..ca6850c7 100644
-> >>--- a/drivers/staging/wilc1000/wilc_memory.c
-> >>+++ b/drivers/staging/wilc1000/wilc_memory.c
-> >>@@ -1,5 +1,5 @@
-> >>-#include "wilc_oswrapper.h"
-> >>+#include "wilc_memory.h"
-> >>  /*!
-> >>   *  @author	syounan
-> >>diff --git a/drivers/staging/wilc1000/wilc_memory.h b/drivers/staging/wilc1000/wilc_memory.h
-> >>index 93642d0..a7a80e5 100644
-> >>--- a/drivers/staging/wilc1000/wilc_memory.h
-> >>+++ b/drivers/staging/wilc1000/wilc_memory.h
-> >>@@ -10,6 +10,9 @@
-> >>   *  @version	1.0
-> >>   */
-> >>+#include <linux/types.h>
-> >>+#include <linux/slab.h>
-> >>+
-> >>  /*!
-> >>   *  @struct             tstrWILC_MemoryAttrs
-> >>   *  @brief		Memory API options
-> >>@@ -234,4 +237,3 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
-> >>  #endif
-> >>-
-> >>diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-> >>index 04fe5a5..16bcef4 100644
-> >>--- a/drivers/staging/wilc1000/wilc_msgqueue.c
-> >>+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-> >>@@ -1,5 +1,5 @@
-> >>-#include "wilc_oswrapper.h"
-> >>+#include "wilc_msgqueue.h"
-> >>  #include <linux/spinlock.h>
-> >>  /*!
-> >>diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-> >>index 2ca02db..35b1001 100644
-> >>--- a/drivers/staging/wilc1000/wilc_msgqueue.h
-> >>+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-> >>@@ -10,6 +10,11 @@
-> >>   *  @version	1.0
-> >>   */
-> >>+#include "wilc_platform.h"
-> >>+#include "wilc_errorsupport.h"
-> >>+#include "wilc_memory.h"
-> >>+#include "wilc_strutils.h"
-> >>+
-> >>  /*!
-> >>   *  @struct             tstrWILC_MsgQueueAttrs
-> >>   *  @brief		Message Queue API options
-> >>diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
-> >>deleted file mode 100644
-> >>index e97aa96..0000000
-> >>--- a/drivers/staging/wilc1000/wilc_oswrapper.h
-> >>+++ /dev/null
-> >>@@ -1,41 +0,0 @@
-> >>-#ifndef __WILC_OSWRAPPER_H__
-> >>-#define __WILC_OSWRAPPER_H__
-> >>-
-> >>-/*!
-> >>- *  @file	wilc_oswrapper.h
-> >>- *  @brief	Top level OS Wrapper, include this file and it will include all
-> >>- *              other files as necessary
-> >>- *  @author	syounan
-> >>- *  @date	10 Aug 2010
-> >>- *  @version	1.0
-> >>- */
-> >>-
-> >>-/* OS Wrapper interface version */
-> >>-#define WILC_OSW_INTERFACE_VER 2
-> >>-
-> >>-/* Os Configuration File */
-> >>-#include "wilc_osconfig.h"
-> >>-#include "wilc_platform.h"
-> >>-
-> >>-/* Logging Functions */
-> >>-#include "wilc_log.h"
-> >>-
-> >>-/* Error reporting and handling support */
-> >>-#include "wilc_errorsupport.h"
-> >>-
-> >>-/* Sleep support */
-> >>-#include "wilc_sleep.h"
-> >>-
-> >>-/* Timer support */
-> >>-#include "wilc_timer.h"
-> >>-
-> >>-/* Memory support */
-> >>-#include "wilc_memory.h"
-> >>-
-> >>-/* String Utilities */
-> >>-#include "wilc_strutils.h"
-> >>-
-> >>-/* Message Queue */
-> >>-#include "wilc_msgqueue.h"
-> >>-
-> >>-#endif
-> >>diff --git a/drivers/staging/wilc1000/wilc_sleep.c b/drivers/staging/wilc1000/wilc_sleep.c
-> >>index 569b833..adab3ca 100644
-> >>--- a/drivers/staging/wilc1000/wilc_sleep.c
-> >>+++ b/drivers/staging/wilc1000/wilc_sleep.c
-> >>@@ -1,5 +1,5 @@
-> >>-#include "wilc_oswrapper.h"
-> >>+#include "wilc_sleep.h"
-> >>  /*
-> >>   *  @author	mdaftedar
-> >>diff --git a/drivers/staging/wilc1000/wilc_sleep.h b/drivers/staging/wilc1000/wilc_sleep.h
-> >>index 261f4ed..cf9047f 100644
-> >>--- a/drivers/staging/wilc1000/wilc_sleep.h
-> >>+++ b/drivers/staging/wilc1000/wilc_sleep.h
-> >>@@ -1,6 +1,9 @@
-> >>  #ifndef __WILC_SLEEP_H__
-> >>  #define __WILC_SLEEP_H__
-> >>+#include <linux/types.h>
-> >>+#include <linux/delay.h>
-> >>+
-> >>  /*!
-> >>   *  @brief	forces the current thread to sleep until the given time has elapsed
-> >>   *  @param[in]	u32TimeMilliSec Time to sleep in Milli seconds
-> >>diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
-> >>index 19c561b..fa279808 100644
-> >>--- a/drivers/staging/wilc1000/wilc_strutils.c
-> >>+++ b/drivers/staging/wilc1000/wilc_strutils.c
-> >>@@ -1,7 +1,7 @@
-> >>  #define _CRT_SECURE_NO_DEPRECATE
-> >>-#include "wilc_oswrapper.h"
-> >>+#include "wilc_strutils.h"
-> >>  /*!
-> >>diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
-> >>index 936e8da..1e1be13 100644
-> >>--- a/drivers/staging/wilc1000/wilc_strutils.h
-> >>+++ b/drivers/staging/wilc1000/wilc_strutils.h
-> >>@@ -10,6 +10,10 @@
-> >>   *  @version	1.0
-> >>   */
-> >>+#include <linux/types.h>
-> >>+#include <linux/string.h>
-> >>+#include "wilc_errorsupport.h"
-> >>+
-> >>  /*!
-> >>   *  @brief	Compares two memory buffers
-> >>   *  @param[in]	pvArg1 pointer to the first memory location
-> >>diff --git a/drivers/staging/wilc1000/wilc_timer.c b/drivers/staging/wilc1000/wilc_timer.c
-> >>index c31bf0c..dc71157 100644
-> >>--- a/drivers/staging/wilc1000/wilc_timer.c
-> >>+++ b/drivers/staging/wilc1000/wilc_timer.c
-> >>@@ -1,5 +1,5 @@
-> >>-#include "wilc_oswrapper.h"
-> >>+#include "wilc_timer.h"
-> >>  WILC_ErrNo WILC_TimerCreate(WILC_TimerHandle *pHandle,
-> >>  	tpfWILC_TimerFunction pfCallback, tstrWILC_TimerAttrs *pstrAttrs)
-> >>diff --git a/drivers/staging/wilc1000/wilc_timer.h b/drivers/staging/wilc1000/wilc_timer.h
-> >>index a0f9154..931269d 100644
-> >>--- a/drivers/staging/wilc1000/wilc_timer.h
-> >>+++ b/drivers/staging/wilc1000/wilc_timer.h
-> >>@@ -10,6 +10,9 @@
-> >>   *  @version	1.0
-> >>   */
-> >>+#include "wilc_platform.h"
-> >>+#include "wilc_errorsupport.h"
-> >>+
-> >>  typedef void (*tpfWILC_TimerFunction)(void *);
-> >>  /*!
-> >>diff --git a/drivers/staging/wilc1000/wilc_type.h b/drivers/staging/wilc1000/wilc_type.h
-> >>deleted file mode 100644
-> >>index 5f36e7f..0000000
-> >>--- a/drivers/staging/wilc1000/wilc_type.h
-> >>+++ /dev/null
-> >>@@ -1,34 +0,0 @@
-> >>-/* ////////////////////////////////////////////////////////////////////////// */
-> >>-/*  */
-> >>-/* Copyright (c) Atmel Corporation.  All rights reserved. */
-> >>-/*  */
-> >>-/* Module Name:  wilc_type.h */
-> >>-/*  */
-> >>-/*  */
-> >>-/* //////////////////////////////////////////////////////////////////////////// */
-> >>-#ifndef WILC_TYPE_H
-> >>-#define WILC_TYPE_H
-> >>-
-> >>-/********************************************
-> >>- *
-> >>- *      Type Defines
-> >>- *
-> >>- ********************************************/
-> >>-#ifdef WIN32
-> >>-typedef char int8_t;
-> >>-typedef short int16_t;
-> >>-typedef long int32_t;
-> >>-typedef unsigned char uint8_t;
-> >>-typedef unsigned short uint16_t;
-> >>-typedef unsigned long uint32_t;
-> >>-#else
-> >>-#ifdef _linux_
-> >>-/*typedef unsigned char         uint8_t;
-> >>- * typedef unsigned short       uint16_t;
-> >>- * typedef unsigned long        uint32_t;*/
-> >>-#include <stdint.h>
-> >>-#else
-> >>-#include "wilc_oswrapper.h"
-> >>-#endif
-> >>-#endif
-> >>-#endif
-> >>diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-> >>index 0ba7ec6..5c9c4bb 100644
-> >>--- a/drivers/staging/wilc1000/wilc_wlan.h
-> >>+++ b/drivers/staging/wilc1000/wilc_wlan.h
-> >>@@ -1,7 +1,7 @@
-> >>  #ifndef WILC_WLAN_H
-> >>  #define WILC_WLAN_H
-> >>-#include "wilc_type.h"
-> >>+#include <linux/types.h>
-> >>  #define ISWILC1000(id)   (((id & 0xfffff000) == 0x100000) ? 1 : 0)
-> >>diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-> >>index ea0ec41..d7271b9 100644
-> >>--- a/drivers/staging/wilc1000/wilc_wlan_if.h
-> >>+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-> >>@@ -20,7 +20,15 @@
-> >>  /* #define USE_OLD_SPI_SW */
-> >>-#include "wilc_type.h"
-> >>+#include "wilc_osconfig.h"
-> >>+#include "wilc_platform.h"
-> >>+#include "wilc_log.h"
-> >>+#include "wilc_errorsupport.h"
-> >>+#include "wilc_sleep.h"
-> >>+#include "wilc_timer.h"
-> >>+#include "wilc_memory.h"
-> >>+#include "wilc_strutils.h"
-> >>+#include "wilc_msgqueue.h"
-> >>  #include "linux_wlan_common.h"
-> >>-- 
-> >>2.4.3
-> >>
-> >>_______________________________________________
-> >>devel mailing list
-> >>devel@linuxdriverproject.org
-> >>http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
-> 
+-struct ath10k_chanctx {
+-	/* Used to story copy of chanctx_conf to avoid inconsistencies. Ideally
+-	 * mac80211 should allow some sort of explicit locking to guarantee
+-	 * that the publicly available chanctx_conf can be accessed safely at
+-	 * all times.
+-	 */
+-	struct ieee80211_chanctx_conf conf;
+-};
+-
+ #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
+ 
+ enum ath10k_beacon_state {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index fe53b1f5e6c9..b60369f78940 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6188,25 +6188,11 @@ ath10k_mac_update_rx_channel(struct ath10k *ar,
+ 	rcu_read_unlock();
+ }
+ 
+-static void
+-ath10k_mac_chan_ctx_init(struct ath10k *ar,
+-			 struct ath10k_chanctx *arctx,
+-			 struct ieee80211_chanctx_conf *conf)
+-{
+-	lockdep_assert_held(&ar->conf_mutex);
+-	lockdep_assert_held(&ar->data_lock);
+-
+-	memset(arctx, 0, sizeof(*arctx));
+-
+-	arctx->conf = *conf;
+-}
+-
+ static int
+ ath10k_mac_op_add_chanctx(struct ieee80211_hw *hw,
+ 			  struct ieee80211_chanctx_conf *ctx)
+ {
+ 	struct ath10k *ar = hw->priv;
+-	struct ath10k_chanctx *arctx = (void *)ctx->drv_priv;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC,
+ 		   "mac chanctx add freq %hu width %d ptr %p\n",
+@@ -6215,7 +6201,6 @@ ath10k_mac_op_add_chanctx(struct ieee80211_hw *hw,
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	spin_lock_bh(&ar->data_lock);
+-	ath10k_mac_chan_ctx_init(ar, arctx, ctx);
+ 	ath10k_mac_update_rx_channel(ar, ctx, NULL, 0);
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+@@ -6255,16 +6240,12 @@ ath10k_mac_op_change_chanctx(struct ieee80211_hw *hw,
+ 			     u32 changed)
+ {
+ 	struct ath10k *ar = hw->priv;
+-	struct ath10k_chanctx *arctx = (void *)ctx->drv_priv;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC,
+-		   "mac chanctx change freq %hu->%hu width %d->%d ptr %p changed %x\n",
+-		   arctx->conf.def.chan->center_freq,
+-		   ctx->def.chan->center_freq,
+-		   arctx->conf.def.width, ctx->def.width,
+-		   ctx, changed);
++		   "mac chanctx change freq %hu width %d ptr %p changed %x\n",
++		   ctx->def.chan->center_freq, ctx->def.width, ctx, changed);
+ 
+ 	/* This shouldn't really happen because channel switching should use
+ 	 * switch_vif_chanctx().
+@@ -6272,10 +6253,6 @@ ath10k_mac_op_change_chanctx(struct ieee80211_hw *hw,
+ 	if (WARN_ON(changed & IEEE80211_CHANCTX_CHANGE_CHANNEL))
+ 		goto unlock;
+ 
+-	spin_lock_bh(&ar->data_lock);
+-	arctx->conf = *ctx;
+-	spin_unlock_bh(&ar->data_lock);
+-
+ 	ath10k_recalc_radar_detection(ar);
+ 
+ 	/* FIXME: How to configure Rx chains properly? */
+@@ -6295,7 +6272,6 @@ ath10k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 				 struct ieee80211_chanctx_conf *ctx)
+ {
+ 	struct ath10k *ar = hw->priv;
+-	struct ath10k_chanctx *arctx = (void *)ctx->drv_priv;
+ 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
+ 	int ret;
+ 
+@@ -6310,11 +6286,11 @@ ath10k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 		return -EBUSY;
+ 	}
+ 
+-	ret = ath10k_vdev_start(arvif, &arctx->conf.def);
++	ret = ath10k_vdev_start(arvif, &ctx->def);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to start vdev %i addr %pM on freq %d: %d\n",
+ 			    arvif->vdev_id, vif->addr,
+-			    arctx->conf.def.chan->center_freq, ret);
++			    ctx->def.chan->center_freq, ret);
+ 		goto err;
+ 	}
+ 
+@@ -6389,7 +6365,6 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif;
+-	struct ath10k_chanctx *arctx_new, *arctx_old;
+ 	int i;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+@@ -6401,29 +6376,14 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 	spin_lock_bh(&ar->data_lock);
+ 	for (i = 0; i < n_vifs; i++) {
+ 		arvif = ath10k_vif_to_arvif(vifs[i].vif);
+-		arctx_new = (void *)vifs[i].new_ctx->drv_priv;
+-		arctx_old = (void *)vifs[i].old_ctx->drv_priv;
+ 
+ 		ath10k_dbg(ar, ATH10K_DBG_MAC,
+-			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d ptr %p->%p\n",
++			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d\n",
+ 			   arvif->vdev_id,
+ 			   vifs[i].old_ctx->def.chan->center_freq,
+ 			   vifs[i].new_ctx->def.chan->center_freq,
+ 			   vifs[i].old_ctx->def.width,
+-			   vifs[i].new_ctx->def.width,
+-			   arctx_old, arctx_new);
+-
+-		if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS) {
+-			ath10k_mac_chan_ctx_init(ar, arctx_new,
+-						 vifs[i].new_ctx);
+-		}
+-
+-		arctx_new->conf = *vifs[i].new_ctx;
+-
+-		/* FIXME: ath10k_mac_chan_reconfigure() uses current, i.e. not
+-		 * yet updated chanctx_conf pointer.
+-		 */
+-		arctx_old->conf = *vifs[i].new_ctx;
++			   vifs[i].new_ctx->def.width);
+ 	}
+ 	ath10k_mac_update_rx_channel(ar, NULL, vifs, n_vifs);
+ 	spin_unlock_bh(&ar->data_lock);
+@@ -6926,7 +6886,6 @@ int ath10k_mac_register(struct ath10k *ar)
+ 
+ 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
+ 	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
+-	ar->hw->chanctx_data_size = sizeof(struct ath10k_chanctx);
+ 
+ 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
+ 
+-- 
+2.1.4
+
