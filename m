@@ -1,100 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02.posteo.de ([89.146.194.165]:58317 "EHLO mx02.posteo.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752984AbbFHUQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 16:16:32 -0400
-Message-ID: <1433794640.28058.26.camel@embedded.rocks> (sfid-20150608_221636_538480_29F31573)
-Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Date: Mon, 08 Jun 2015 22:17:20 +0200
-In-Reply-To: <5575C6FA.6030104@broadcom.com>
-References: <1433766944.28058.16.camel@embedded.rocks>
-		 <55758D7E.3000603@broadcom.com> <1433771289.28058.24.camel@embedded.rocks>
-	 <5575C6FA.6030104@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:41591 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768AbbFCHTG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 03:19:06 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-05-28
+References: <1432667798.26624.3.camel@intel.com>
+	<1432811748.26741.3.camel@intel.com>
+	<87zj4htglg.fsf@kamboji.qca.qualcomm.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B762261@hasmsx107.ger.corp.intel.com>
+Date: Wed, 03 Jun 2015 10:18:59 +0300
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B762261@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Wed, 3 Jun 2015 07:12:11 +0000")
+Message-ID: <87vbf5tg2k.fsf@kamboji.qca.qualcomm.com> (sfid-20150603_091909_786129_FA5FE0CE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mo, 2015-06-08 at 18:46 +0200, Arend van Spriel wrote:
-> On 06/08/15 15:48, Jörg Krause wrote:
-> > Hi Arend,
-> > 
-> > On Mo, 2015-06-08 at 14:41 +0200, Arend van Spriel wrote:
-> > > On 06/08/15 14:35, Jörg Krause wrote:
-> > > > Hi,
-> > > > 
-> > > > I've trouble creating the p2p interface on a BCM43362 wifi 
-> > > > device
-> > > > running Linux kernel 4.0.4:
-> > > > 
-> > > >       # dmesg | grep brcmfmac
-> > > >       [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: Firmware
-> > > > version =
-> > > >       wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01
-> > > > -b30a427d
-> > > >       [    7.158905] brcmfmac: brcmf_cfg80211_reg_notifier: not 
-> > > > a
-> > > > ISO3166
-> > > >       code
-> > > >       [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: timeout
-> > > > occurred
-> > > > 
-> > > > Trying to add the p2p interface manually:
-> > > > 
-> > > >       # iw phy0 interface add p2p0 type __p2pdev
-> > > >       [  372.042704] brcmfmac: brcmf_link_down: WLC_DISASSOC 
-> > > > failed
-> > > > (-52)
-> > > >       [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: timeout
-> > > > occurred
-> > > >       [  373.679377] brcmfmac: brcmf_cfg80211_del_key: invalid 
-> > > > key
-> > > > index (4)
-> > > >       [  373.685733] brcmfmac: brcmf_cfg80211_del_key: invalid 
-> > > > key
-> > > > index (5)
-> > > > 
-> > > > Any idea?
-> > > 
-> > > Wondering whether it is similar to what Rafal reported. Can you 
-> > > do a
-> > > hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
-> > 
-> > I managed to set up the p2p interface by recompiling the kernel 
-> > with
-> > CONFIG_BRCMDBG and loading the brcmfmac module with p2pon=1.
-> > 
-> > I had a discussion some month ago with Hante Meulemann about 
-> > setting up
-> > the p2p interface. This is one of his replies:
-> > 
-> >      "For what I can see from the log is that we don’t get the 
-> > event from
-> >      the FW indicating that the p2p interface was created. This 
-> > probably
-> >      means that there is a bug in this FW for this device. I need 
-> > to discuss
-> >      this to see how much priority we can give this. The best 
-> > option for you
-> >      for the moment is to use the legacy method with the 'p2pon=1' 
-> > command."
-> 
-> Thanks for digging your email archive as we clearly forgot about this 
-> 
-> entirely.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Me too :-)
+>> 
+>> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+>> 
+>> > Hi Kalle,
+>> >
+>> > this is the same pull request for 4.2 with the typo fixed and without
+>> > the patches that are now targeted to 4.1
+>> >
+>> > Thanks
+>> >
+>> >
+>> > The following changes since commit
+>> bbbe8c8c596b3784a2ed08772900e827f8ba72c5:
+>> >
+>> >   mac80211: add missing documentation for rate_ctrl_lock (2015-05-06
+>> > 16:00:32 +0200)
+>> >
+>> > are available in the git repository at:
+>> >
+>> >
+>> > https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.g
+>> > it tags/iwlwifi-next-for-kalle-2015-05-28
+>> 
+>> Hmm, something is not right with this one (or I just haven't fully woken up
+>> yet). Maybe you forgot to sign the tag?
+>> 
+>
+> Hmm.. Weird. Anyway - I was just adding some more content for another
+> pull request. So let me send another one that includes everything.
 
-> The timeout in your log indeed indicates it is missing a 
-> notification from firmware. I assume your primary interface is in 
-> managed mode when trying to create the p2p_dev interface. Is that 
-> correct?
+Sounds good. But can you do that still today? I was hoping to send a
+pull request to Dave today.
 
-Correct.
-
-Best regards
-Jörg Krause
+-- 
+Kalle Valo
