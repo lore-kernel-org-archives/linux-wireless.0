@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:32996 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754185AbbFJSCo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 14:02:44 -0400
-Received: by iebgx4 with SMTP id gx4so39842076ieb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2015 11:02:43 -0700 (PDT)
-Message-ID: <55787BA1.9030807@cococorp.com> (sfid-20150610_200248_160035_CE5FAF39)
-Date: Wed, 10 Jun 2015 11:02:09 -0700
-From: Alexis Green <agreen@cococorp.com>
-Reply-To: agreen@cococorp.com
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
-Subject: [PATCH] mac80211: Add missing case to PERR processing
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:4314 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753262AbbFCHcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 03:32:06 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/15] iwlwifi: bump the iwlmvm API number to 15
+Date: Wed,  3 Jun 2015 10:31:35 +0300
+Message-Id: <1433316696-4612-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093350_948650_3C241E51)
+In-Reply-To: <1433316253.25661.3.camel@intel.com>
+References: <1433316253.25661.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the nexthop is unable to resolve its own nexthop it will send back a
-PERR with a zero target_sn. According to section 13.10.11.4.3 step b in the
-2012 standard that perr should be forwarded and the associated mpath->sn
-should be incremented. Neither one of those was happening whichis rather
-bad because the originator was not told that packets are black holing.
+The driver is now ready to handle the -15.ucode.
 
-Signed-off-by: Alexis Green <agreen@cococorp.com>
-CC: Jesse Jones <jjones@cococorp.com>
-
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 3c7cf3c..28c18cb 100755
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -736,9 +736,12 @@ static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
- 		if (mpath->flags & MESH_PATH_ACTIVE &&
- 		    ether_addr_equal(ta, sta->sta.addr) &&
- 		    (!(mpath->flags & MESH_PATH_SN_VALID) ||
--		    SN_GT(target_sn, mpath->sn))) {
-+		    SN_GT(target_sn, mpath->sn)  || target_sn == 0)) {
- 			mpath->flags &= ~MESH_PATH_ACTIVE;
--			mpath->sn = target_sn;
-+			if (target_sn != 0)
-+				mpath->sn = target_sn;
-+			else
-+				mpath->sn += 1;
- 			spin_unlock_bh(&mpath->state_lock);
- 			if (!ifmsh->mshcfg.dot11MeshForwarding)
- 				goto endperr;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index b40b385..cc35f79 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -69,7 +69,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL7260_UCODE_API_MAX	14
++#define IWL7260_UCODE_API_MAX	15
+ 
+ /* Oldest version we won't warn about */
+ #define IWL7260_UCODE_API_OK	12
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 5c08f70..72040cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -69,7 +69,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	14
++#define IWL8000_UCODE_API_MAX	15
+ 
+ /* Oldest version we won't warn about */
+ #define IWL8000_UCODE_API_OK	12
+-- 
+2.1.4
+
