@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:10623 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752905AbbFAMdI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48266 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752302AbbFCJ05 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:33:08 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CSipo017091
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:33:08 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk3c-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:33:08 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 05/17] mwifiex: reset 11h active flag when chandef does not require dfs
-Date: Mon, 1 Jun 2015 23:32:03 +0530
-Message-ID: <1433181735-15712-6-git-send-email-patila@marvell.com> (sfid-20150601_143312_403805_FEEA76D1)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
+	Wed, 3 Jun 2015 05:26:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-06-03
+References: <1432667798.26624.3.camel@intel.com>
+	<1432811748.26741.3.camel@intel.com>
+	<87zj4htglg.fsf@kamboji.qca.qualcomm.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B762261@hasmsx107.ger.corp.intel.com>
+	<1433316253.25661.3.camel@intel.com>
+	<1433316634.25661.5.camel@intel.com>
+Date: Wed, 03 Jun 2015 12:26:50 +0300
+In-Reply-To: <1433316634.25661.5.camel@intel.com> (Emmanuel Grumbach's message
+	of "Wed, 3 Jun 2015 07:30:32 +0000")
+Message-ID: <87r3ptta5h.fsf@kamboji.qca.qualcomm.com> (sfid-20150603_112701_252775_8CEFA967)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an issue where we were still setting 11h_active
-flag to true for channel defs where DFS is not required.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Wed, 2015-06-03 at 10:24 +0300, Emmanuel Grumbach wrote:
+>> Hi Kalle,
+>> 
+>> As promised, here is the enlarged pull request for 4.2. I double checked
+>> that the tag is signed this time.
+>> I also signed this email, just in case...
+>> 
+>> I'll reply to this pull request with the diff between the previous one
+>> and this one. All the other patches have been sent to the ML already.
+>> The good thing with this new pull request is that it allows us to jump
+>> to -15.ucode which is starting validation right now. I hope its first
+>> version will be available in 3 weeks-ish.	
+>> 
+>> Let me know if you have issues with this.
+>> 
+>> Thank you.
+>> 
+>> The following changes since commit bbbe8c8c596b3784a2ed08772900e827f8ba72c5:
+>> 
+>>   mac80211: add missing documentation for rate_ctrl_lock (2015-05-06 16:00:32 +0200)
+>> 
+>> are available in the git repository at:
+>> 
+>>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-for-kalle-2015-06-03
+>
+> And since I can't seem to be able to do things right the first time, I
+> renamed the tag to iwlwifi-next0for-kalle-2015-06-03: so
+>
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2015-06-03
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index d47799a..fb93e13 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1820,7 +1820,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 				    "Failed to disable 11h extensions!!");
- 			return -1;
- 		}
--		priv->state_11h.is_11h_active = true;
-+		priv->state_11h.is_11h_active = false;
- 	}
- 
- 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
+Thanks, I pulled iwlwifi-next-for-kalle-2015-06-03 now and everything
+looked ok.
+
 -- 
-1.8.1.4
-
+Kalle Valo
