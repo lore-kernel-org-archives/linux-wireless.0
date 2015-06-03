@@ -1,52 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:36003 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbbF0Upf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Jun 2015 16:45:35 -0400
-Received: by wguu7 with SMTP id u7so112694098wgu.3
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jun 2015 13:45:34 -0700 (PDT)
-From: poma <pomidorabelisima@gmail.com>
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-To: =?UTF-8?Q?Jakub_Kici=c5=84ski?= <moorray3@wp.pl>
-References: <544DB5A8.7090405@openmailbox.org>
- <20141027152026.GB19976@tuxdriver.com> <544E8CB4.3000607@rempel-privat.de>
- <20141028134608.GA26283@tuxdriver.com> <544FA303.5060303@broadcom.com>
- <544FA627.3000004@rempel-privat.de> <5450BEB2.60208@openwrt.org>
- <5461F937.9060004@rempel-privat.de> <5463CB6C.3030204@openwrt.org>
- <5463D28F.9080106@lwfinger.net> <20150206182915.7467bac7@north>
- <54EF261E.4040109@gmail.com> <20150226154028.380b96f2@north>
- <55592C54.6010204@gmail.com> <555CBEFC.50902@gmail.com>
- <20150520191428.42e9a3ec@north> <555DDFB7.9060705@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Etna <etna@openmailbox.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Hua Shao <hua.shao@mediatek.com>,
-	Jay Hung <jay.hung@mediatek.com>
-Message-ID: <558F0B68.6030007@gmail.com> (sfid-20150627_225157_290049_8210ED66)
-Date: Sat, 27 Jun 2015 22:45:28 +0200
-MIME-Version: 1.0
-In-Reply-To: <555DDFB7.9060705@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mga01.intel.com ([192.55.52.88]:4314 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753396AbbFCHcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 03:32:05 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/15] iwlwifi: mvm: Add DC2DC_CONFIG_CMD (0x83) cmd & TLV
+Date: Wed,  3 Jun 2015 10:31:34 +0300
+Message-Id: <1433316696-4612-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093350_555713_E4D2C840)
+In-Reply-To: <1433316253.25661.3.camel@intel.com>
+References: <1433316253.25661.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-mt7601u landed in 'linux-next'
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/drivers/net/wireless/mediatek/mt7601u
+Add DC2DC_CONFIG_CMD (0x83) cmd.
 
-the v4.2 kernel is predicted for Sunday, 2015-08-23
-http://phb-crystal-ball.org
+Add IWL_UCODE_TLV_CAPA_DC2DC_CONFIG_SUPPORT tlv.
 
-For the firmware(mt7601u.bin) as part of the essential functionality of the device
-it would be good to land in 'linux-firmware' *even* before the actual kernel release v4.2
-http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree
+The command allows the driver get & set the DCDC's frequency tune.
+(freq_tune is the divider that is used to calculate the actual DCDC's
+clock rate)
+The command always returns the current/updated frequency tune values of
+the DCDC.
 
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h  | 46 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/ops.c     |  1 +
+ 3 files changed, 49 insertions(+)
 
-tempus fugit
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 7efd629..a9b5ae4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -297,6 +297,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  *	which also implies support for the scheduler configuration command
+  * @IWL_UCODE_TLV_CAPA_TDLS_CHANNEL_SWITCH: supports TDLS channel switching
+  * @IWL_UCODE_TLV_CAPA_HOTSPOT_SUPPORT: supports Hot Spot Command
++ * @IWL_UCODE_TLV_CAPA_DC2DC_SUPPORT: supports DC2DC Command
+  * @IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS: support radio and beacon statistics
+  * @IWL_UCODE_TLV_CAPA_BT_COEX_PLCR: enabled BT Coex packet level co-running
+  * @IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC: ucode supports LAR updates with different
+@@ -318,6 +319,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_DQA_SUPPORT			= (__force iwl_ucode_tlv_capa_t)12,
+ 	IWL_UCODE_TLV_CAPA_TDLS_CHANNEL_SWITCH		= (__force iwl_ucode_tlv_capa_t)13,
+ 	IWL_UCODE_TLV_CAPA_HOTSPOT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)18,
++	IWL_UCODE_TLV_CAPA_DC2DC_CONFIG_SUPPORT		= (__force iwl_ucode_tlv_capa_t)19,
+ 	IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS		= (__force iwl_ucode_tlv_capa_t)22,
+ 	IWL_UCODE_TLV_CAPA_BT_COEX_PLCR			= (__force iwl_ucode_tlv_capa_t)28,
+ 	IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC		= (__force iwl_ucode_tlv_capa_t)29,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 7128379..16e9ef4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -171,6 +171,9 @@ enum {
+ 	/* Thermal Throttling*/
+ 	REPLY_THERMAL_MNG_BACKOFF = 0x7e,
+ 
++	/* Set/Get DC2DC frequency tune */
++	DC2DC_CONFIG_CMD = 0x83,
++
+ 	/* NVM */
+ 	NVM_ACCESS_CMD = 0x88,
+ 
+@@ -1389,6 +1392,49 @@ struct iwl_mvm_marker {
+ 	__le32 metadata[0];
+ } __packed; /* MARKER_API_S_VER_1 */
+ 
++/*
++ * enum iwl_dc2dc_config_id - flag ids
++ *
++ * Ids of dc2dc configuration flags
++ */
++enum iwl_dc2dc_config_id {
++	DCDC_LOW_POWER_MODE_MSK_SET  = 0x1, /* not used */
++	DCDC_FREQ_TUNE_SET = 0x2,
++}; /* MARKER_ID_API_E_VER_1 */
++
++/**
++ * struct iwl_dc2dc_config_cmd - configure dc2dc values
++ *
++ * (DC2DC_CONFIG_CMD = 0x83)
++ *
++ * Set/Get & configure dc2dc values.
++ * The command always returns the current dc2dc values.
++ *
++ * @flags: set/get dc2dc
++ * @enable_low_power_mode: not used.
++ * @dc2dc_freq_tune0: frequency divider - digital domain
++ * @dc2dc_freq_tune1: frequency divider - analog domain
++ */
++struct iwl_dc2dc_config_cmd {
++	__le32 flags;
++	__le32 enable_low_power_mode; /* not used */
++	__le32 dc2dc_freq_tune0;
++	__le32 dc2dc_freq_tune1;
++} __packed; /* DC2DC_CONFIG_CMD_API_S_VER_1 */
++
++/**
++ * struct iwl_dc2dc_config_resp - response for iwl_dc2dc_config_cmd
++ *
++ * Current dc2dc values returned by the FW.
++ *
++ * @dc2dc_freq_tune0: frequency divider - digital domain
++ * @dc2dc_freq_tune1: frequency divider - analog domain
++ */
++struct iwl_dc2dc_config_resp {
++	__le32 dc2dc_freq_tune0;
++	__le32 dc2dc_freq_tune1;
++} __packed; /* DC2DC_CONFIG_RESP_API_S_VER_1 */
++
+ /***********************************
+  * Smart Fifo API
+  ***********************************/
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 2801f97..e4fa500 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -281,6 +281,7 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
+ 	CMD(BINDING_CONTEXT_CMD),
+ 	CMD(TIME_QUOTA_CMD),
+ 	CMD(NON_QOS_TX_COUNTER_CMD),
++	CMD(DC2DC_CONFIG_CMD),
+ 	CMD(NVM_ACCESS_CMD),
+ 	CMD(PHY_CONFIGURATION_CMD),
+ 	CMD(CALIB_RES_NOTIF_PHY_DB),
+-- 
+2.1.4
 
