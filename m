@@ -1,31 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1457 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496AbbFIKvO (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:62063 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752511AbbFCGAr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 06:51:14 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: prevent memory leak in wmi rx ops
-References: <1433762607-28854-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 9 Jun 2015 13:51:08 +0300
-In-Reply-To: <1433762607-28854-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 8 Jun 2015 13:23:27 +0200")
-Message-ID: <87sia1f943.fsf@kamboji.qca.qualcomm.com> (sfid-20150609_125117_012638_E1315361)
+	Wed, 3 Jun 2015 02:00:47 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t53605sm028746
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:00:46 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvgguc-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:00:46 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv5 04/17] mwifiex: enable 11d after bss reset
+Date: Wed, 3 Jun 2015 16:59:34 +0530
+Message-ID: <1433330987-6808-5-git-send-email-patila@marvell.com> (sfid-20150603_080050_301352_2D6F5DF8)
+In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
+References: <1433330987-6808-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+BSS reset would reset all state information in FW.
+Issue 11d config command after reset to enabled 11d in FW.
 
-> Found during code review. This was pretty much
-> impossible to happen but better safe than sorry.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_cmd.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Thanks, applied.
-
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 0a3297e..56a4768 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -806,6 +806,8 @@ void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
+ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 			     struct mwifiex_uap_bss_param *bss_cfg)
+ {
++	enum state_11d_t state_11d;
++
+ 	if (mwifiex_del_mgmt_ies(priv))
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "Failed to delete mgmt IEs!\n");
+@@ -830,6 +832,16 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 		return -1;
+ 	}
+ 
++	/* Send cmd to FW to enable 11D function */
++	state_11d = ENABLE_11D;
++	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
++			     HostCmd_ACT_GEN_SET, DOT11D_I,
++			     &state_11d, true)) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "11D: failed to enable 11D\n");
++		return -1;
++	}
++
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
+ 			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
+ 		mwifiex_dbg(priv->adapter, ERROR,
 -- 
-Kalle Valo
+1.8.1.4
+
