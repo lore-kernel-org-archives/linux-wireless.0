@@ -1,69 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0118.outbound.protection.outlook.com ([157.55.234.118]:49999
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752307AbbFPH0d convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51967 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752511AbbFCGAd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 03:26:33 -0400
-From: "Abdul, Hussain (H.)" <habdul@visteon.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
-	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
-	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
-	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
-	"dean.lee@atmel.com" <dean.lee@atmel.com>,
-	"chris.park@atmel.com" <chris.park@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] Staging: wilc1000: Remove casting the values returned by
- kmalloc()
-Date: Tue, 16 Jun 2015 07:10:28 +0000
-Message-ID: <1434438549-5340-1-git-send-email-habdul@visteon.com> (sfid-20150616_092638_509828_AD373A1A)
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 3 Jun 2015 02:00:33 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t535xoRV028459
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:00:32 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvggty-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:00:32 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv5 02/17] mwifiex: correct bss_type assignment
+Date: Wed, 3 Jun 2015 16:59:32 +0530
+Message-ID: <1433330987-6808-3-git-send-email-patila@marvell.com> (sfid-20150603_080036_600483_E8068771)
+In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
+References: <1433330987-6808-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abdul Hussain <habdul@visteon.com>
+Correct bss_type assignment in add_virtual_interface.
+This would ensure correct operation in multiple station scenarios.
 
-This patch removes casting the values returned by memory allocation functions.
-
-Signed-off-by: Abdul Hussain <habdul@visteon.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 6 +++---
+ drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 5f87148..c1e9272 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -580,7 +580,7 @@ static void linux_wlan_dbg(uint8_t *buff)
- static void *linux_wlan_malloc_atomic(uint32_t sz)
- {
- 	char *pntr = NULL;
--	pntr = (char *)kmalloc(sz, GFP_ATOMIC);
-+	pntr = kmalloc(sz, GFP_ATOMIC);
- 	PRINT_D(MEM_DBG, "Allocating %d bytes at address %p\n", sz, pntr);
- 	return (void *)pntr;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 4eeceda..3a14d3a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2518,7 +2518,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
+ 		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.sta_intf;
  
-@@ -588,7 +588,7 @@ static void *linux_wlan_malloc_atomic(uint32_t sz)
- static void *linux_wlan_malloc(uint32_t sz)
- {
- 	char *pntr = NULL;
--	pntr = (char *)kmalloc(sz, GFP_KERNEL);
-+	pntr = kmalloc(sz, GFP_KERNEL);
- 	PRINT_D(MEM_DBG, "Allocating %d bytes at address %p\n", sz, pntr);
- 	return (void *)pntr;
- }
-@@ -605,7 +605,7 @@ void linux_wlan_free(void *vp)
- static void *internal_alloc(uint32_t size, uint32_t flag)
- {
- 	char *pntr = NULL;
--	pntr = (char *)kmalloc(size, flag);
-+	pntr = kmalloc(size, flag);
- 	PRINT_D(MEM_DBG, "Allocating %d bytes at address %p\n", size, pntr);
- 	return (void *)pntr;
- }
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+@@ -2544,7 +2544,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_priority = 0;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
+ 		priv->bss_started = 0;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.uap_intf;
+ 		priv->bss_mode = type;
+ 
+ 		break;
+@@ -2580,7 +2580,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_priority = MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_started = 0;
+-		priv->bss_num = 0;
++		priv->bss_num = adapter->curr_iface_comb.p2p_intf;
+ 
+ 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
+ 			memset(&priv->wdev, 0, sizeof(priv->wdev));
 -- 
-1.9.1
+1.8.1.4
+
