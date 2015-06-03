@@ -1,49 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39027 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbbF3JKr (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45294 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752887AbbFCGBr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2015 05:10:47 -0400
-Date: Tue, 30 Jun 2015 12:10:24 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "Dean.lee" <dean.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	nicolas.ferre@atmel.com
-Subject: Re: [PATCH 1/6] staging: wilc1000: modify build error
-Message-ID: <20150630091024.GL28762@mwanda> (sfid-20150630_111052_298528_D0A5DFC1)
-References: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
- <20150630085007.GK28762@mwanda>
- <55925A25.8030608@atmel.com>
+	Wed, 3 Jun 2015 02:01:47 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t535x9mv013714
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:01:47 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1usq1cgmbh-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:01:46 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv5 13/17] mwifiex: drop block-ack action frames
+Date: Wed, 3 Jun 2015 16:59:43 +0530
+Message-ID: <1433330987-6808-14-git-send-email-patila@marvell.com> (sfid-20150603_080351_541067_B8745FDE)
+In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
+References: <1433330987-6808-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55925A25.8030608@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 30, 2015 at 05:58:13PM +0900, Dean.lee wrote:
-> 
-> 
-> On 2015년 06월 30일 17:50, Dan Carpenter wrote:
-> >On Tue, Jun 30, 2015 at 05:34:33PM +0900, Dean Lee wrote:
-> >>this function needs more arguments.
-> >>
-> >Sudip sent a patch for this but he passed false instead of true.
-> >
-> >We are disconnecting because we got CONN_DISCONN_EVENT_DISCONN_NOTIF as
-> >a response which seems like not locally generated.  I think false is
-> >correct here.
-> >
-> >regards,
-> >dan carpenter
-> >
-> i simply sync linux-next repository.
+We often see ADDBA request packets coming to driver because driver
+has registered for action frame subtype. We dont process BA action
+frames in host; drop such frames.
 
-Yeah.  Stephen Rothwell changed it to true so that linux-next would
-compile, but he is not a specialist here so I think he may have got it
-wrong.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Xinmin Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/util.c | 43 +++++++++++++++++++++++++------------
+ 1 file changed, 29 insertions(+), 14 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 2e3dc07..790e619 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -329,7 +329,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
+ 			  struct rxpd *rx_pd)
+ {
+ 	u16 stype;
+-	u8 category, action_code;
++	u8 category, action_code, *addr2;
+ 	struct ieee80211_hdr *ieee_hdr = (void *)payload;
+ 
+ 	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
+@@ -337,21 +337,35 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
+ 	switch (stype) {
+ 	case IEEE80211_STYPE_ACTION:
+ 		category = *(payload + sizeof(struct ieee80211_hdr));
+-		action_code = *(payload + sizeof(struct ieee80211_hdr) + 1);
+-		if (category == WLAN_CATEGORY_PUBLIC &&
+-		    action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
++		switch (category) {
++		case WLAN_CATEGORY_PUBLIC:
++			action_code = *(payload + sizeof(struct ieee80211_hdr)
++					+ 1);
++			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
++				addr2 = ieee_hdr->addr2;
++				mwifiex_dbg(priv->adapter, INFO,
++					    "TDLS discovery response %pM nf=%d, snr=%d\n",
++					    addr2, rx_pd->nf, rx_pd->snr);
++				mwifiex_auto_tdls_update_peer_signal(priv,
++								     addr2,
++								     rx_pd->snr,
++								     rx_pd->nf);
++			}
++			break;
++		case WLAN_CATEGORY_BACK:
++			/*we dont indicate BACK action frames to cfg80211*/
++			mwifiex_dbg(priv->adapter, INFO,
++				    "drop BACK action frames");
++			return -1;
++		default:
+ 			mwifiex_dbg(priv->adapter, INFO,
+-				    "TDLS discovery response %pM nf=%d, snr=%d\n",
+-				    ieee_hdr->addr2, rx_pd->nf, rx_pd->snr);
+-			mwifiex_auto_tdls_update_peer_signal(priv,
+-							     ieee_hdr->addr2,
+-							     rx_pd->snr,
+-							     rx_pd->nf);
++				    "unknown public action frame category %d\n",
++				    category);
+ 		}
+-		break;
+ 	default:
+ 		mwifiex_dbg(priv->adapter, INFO,
+-			    "unknown mgmt frame subtype %#x\n", stype);
++		    "unknown mgmt frame subtype %#x\n", stype);
++		return 0;
+ 	}
+ 
+ 	return 0;
+@@ -387,8 +401,9 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 
+ 	ieee_hdr = (void *)skb->data;
+ 	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
+-		mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
+-					  pkt_len, rx_pd);
++		if (mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
++					      pkt_len, rx_pd))
++			return -1;
+ 	}
+ 	/* Remove address4 */
+ 	memmove(skb->data + sizeof(struct ieee80211_hdr_3addr),
+-- 
+1.8.1.4
 
