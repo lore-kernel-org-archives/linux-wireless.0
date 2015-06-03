@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48108 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753392AbbFCHcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:32:04 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/15] iwlwifi: mvm: Remove old scan commands
-Date: Wed,  3 Jun 2015 10:31:33 +0300
-Message-Id: <1433316696-4612-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093350_823440_B725A27A)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+Received: from mail-db3on0136.outbound.protection.outlook.com ([157.55.234.136]:58752
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751761AbbFCKUv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 06:20:51 -0400
+From: "Sharma, Abhishek (A.)" <asharm14@visteon.com>
+To: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] staging: wilc1000: Remove commented variable declerations
+Date: Wed, 3 Jun 2015 10:06:14 +0000
+Message-ID: <DB4PR06MB01614B5658E23A307437186C8B40@DB4PR06MB016.eurprd06.prod.outlook.com> (sfid-20150603_122056_356601_CCEDBDB1)
+References: <20150603095523.GA25864@jarvis.asia.jci.com>
+In-Reply-To: <20150603095523.GA25864@jarvis.asia.jci.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+Please discard this patch . I will send V2 of it .
 
-The firmwares that used these commands is not supported
-anymore. Remove them.
+-----Original Message-----
+From: Sharma, Abhishek (A.) 
+Sent: Wednesday, June 03, 2015 3:26 PM
+To: Johnny Kim; Rachel Kim; Dean Lee; Chris Park; Greg Kroah-Hartman; linux-wireless@vger.kernel.org; devel@driverdev.osuosl.org; linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: Remove commented variable declerations
 
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Removing the commented static variable declerations.
+
+Signed-off-by: Abhishek Sharma <asharm14@visteon.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api.h | 7 -------
- drivers/net/wireless/iwlwifi/mvm/ops.c    | 5 -----
- 2 files changed, 12 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 0ed7675..7128379 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -171,13 +171,6 @@ enum {
- 	/* Thermal Throttling*/
- 	REPLY_THERMAL_MNG_BACKOFF = 0x7e,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index e63788f..e1d9755 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -29,10 +29,6 @@ int sdio_xfer_cnt(void);  uint32_t wilc_get_chipid(uint8_t update);
+ WILC_Uint16 Set_machw_change_vir_if(WILC_Bool bValue);
  
--	/* Scanning */
--	SCAN_REQUEST_CMD = 0x80,
--	SCAN_ABORT_CMD = 0x81,
--	SCAN_START_NOTIFICATION = 0x82,
--	SCAN_RESULTS_NOTIFICATION = 0x83,
--	SCAN_COMPLETE_NOTIFICATION = 0x84,
+-/* static uint32_t vmm_table[WILC_VMM_TBL_SIZE]; */
+-/* static uint32_t vmm_table_rbk[WILC_VMM_TBL_SIZE]; */
 -
- 	/* NVM */
- 	NVM_ACCESS_CMD = 0x88,
+-/* static uint32_t vmm_table_rbk[WILC_VMM_TBL_SIZE]; */
  
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 91ca626..2801f97 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -281,11 +281,6 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(BINDING_CONTEXT_CMD),
- 	CMD(TIME_QUOTA_CMD),
- 	CMD(NON_QOS_TX_COUNTER_CMD),
--	CMD(SCAN_REQUEST_CMD),
--	CMD(SCAN_ABORT_CMD),
--	CMD(SCAN_START_NOTIFICATION),
--	CMD(SCAN_RESULTS_NOTIFICATION),
--	CMD(SCAN_COMPLETE_NOTIFICATION),
- 	CMD(NVM_ACCESS_CMD),
- 	CMD(PHY_CONFIGURATION_CMD),
- 	CMD(CALIB_RES_NOTIF_PHY_DB),
--- 
+ 
+ typedef struct {
+--
 2.1.4
-
