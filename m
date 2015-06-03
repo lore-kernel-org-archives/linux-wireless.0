@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:35681 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753842AbbFOOzw convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:33017 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173AbbFCHQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 10:55:52 -0400
-Received: by labko7 with SMTP id ko7so59723181lab.2
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2015 07:55:51 -0700 (PDT)
+	Wed, 3 Jun 2015 03:16:22 -0400
+Received: by iebgx4 with SMTP id gx4so7002344ieb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 00:16:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87pp4ylipy.fsf@nemi.mork.no>
-References: <557B1A2F.1010608@mindchasers.com>
-	<CANUX_P1Q9pkHF6xVgUJyAF_-x9n_g4TfaT9cr2dej7jxp+ZXTg@mail.gmail.com>
-	<87pp4ylipy.fsf@nemi.mork.no>
-Date: Mon, 15 Jun 2015 17:55:50 +0300
-Message-ID: <CANUX_P05GbgpWsjpydDOTTCLktWFNb84DfwLqe3m5c0QAxOfYw@mail.gmail.com> (sfid-20150615_165557_714340_1D6D7B50)
-Subject: Re: iwlwifi in AP mode is experimental?
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Cc: "Robert E. Cochran" <wifi@mindchasers.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1433314971.2274.1.camel@sipsolutions.net>
+References: <1433273994-14430-1-git-send-email-johannes@sipsolutions.net>
+ <CAGRGNgV_4axC8Cq5AYkd7RQdJOnrT_9L85qisrrZnKYHyUEczQ@mail.gmail.com> <1433314971.2274.1.camel@sipsolutions.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 3 Jun 2015 17:16:01 +1000
+Message-ID: <CAGRGNgV7=D7d+QKSjWZrKiUxNKtSGDc8_LuZSRcgvPj-prUHsw@mail.gmail.com> (sfid-20150603_091626_000137_1A27FF25)
+Subject: Re: [RFC] mac80211: convert HW flags to unsigned long bitmap
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	gregory.greenman@intel.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 14, 2015 at 12:52 PM, Bjørn Mork <bjorn@mork.no> wrote:
-> Emmanuel Grumbach <egrumbach@gmail.com> writes:
->
->> I can't think about anything specific that is not supported,
->
-> Is AP mode on 5 GHz supported on the 3160?
->
+Hi Johannes,
 
-So apparently I was wrong. We do support AP mode on 5GHz, but only
-with 7265-D and onward. This will work only when regulatory conditions
-apply.
+On Wed, Jun 3, 2015 at 5:02 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2015-06-03 at 10:57 +1000, Julian Calaby wrote:
+>
+>> Why not add a ieee80211_hw_clear() function? Yes, it'd only be used in
+>> 3 places, but it'd look neater.
+>
+> Well, this was actually intentional.
+>
+> Drivers are not *supposed* to be doing this, the hardware flags are
+> supposed to be constant hardware description flags. The three drivers
+> clearing this specific but currently work OK due to the way this
+> particular flag is treated, but that wouldn't necessarily the case for
+> all of the flags; adding a _clear() function would seem to imply that
+> it's OK to do this, when it's really not.
+
+Ok, fair enough then. It just looked really odd to be setting it with
+a function in one branch of an if statement and clearing it open coded
+in the other.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
