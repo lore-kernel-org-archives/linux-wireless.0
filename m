@@ -1,126 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14183 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751386AbbFAMc6 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:47259 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755221AbbFCMMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:32:58 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CUdPj028520
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:32:57 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1urjjr0nc4-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:32:57 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 03/17] mwifiex: support AP reset after bss_stop
-Date: Mon, 1 Jun 2015 23:32:01 +0530
-Message-ID: <1433181735-15712-4-git-send-email-patila@marvell.com> (sfid-20150601_143300_981365_12AC33DE)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
+	Wed, 3 Jun 2015 08:12:49 -0400
+Message-ID: <556EEF3C.7000107@broadcom.com> (sfid-20150603_141322_986252_FFA15EB4)
+Date: Wed, 3 Jun 2015 14:12:44 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"brcm80211 development" <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH] brcmfmac: use direct data pointer in NVRAM parser struct
+References: <1432813063-30922-1-git-send-email-zajec5@gmail.com>	<556701E9.8090807@broadcom.com>	<CACna6rwm5L1tSd7S=9PNKnju-sxHxhYPbA0EcdJ5K=MwJzJvUA@mail.gmail.com>	<55678789.60802@broadcom.com> <CACna6rz=jrkFDkePMvPNRk_X4UwxdwGecGxtdynXgpJCkN-0FA@mail.gmail.com> <55681D51.1070503@broadcom.com>
+In-Reply-To: <55681D51.1070503@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would enable clearing of FW bss data structures when AP
-operations are stopped.
+On 05/29/15 10:03, Arend van Spriel wrote:
+> On 05/29/15 07:20, Rafał Miłecki wrote:
+>> On 28 May 2015 at 23:24, Arend van Spriel<arend@broadcom.com> wrote:
+>>> On 05/28/15 14:34, Rafał Miłecki wrote:
+>>>>
+>>>> On 28 May 2015 at 13:54, Arend van Spriel<arend@broadcom.com> wrote:
+>>>>>
+>>>>> On 05/28/15 13:37, Rafał Miłecki wrote:
+>>>>>>
+>>>>>>
+>>>>>> As we plan to add support for platform NVRAM we should store direct
+>>>>>> data pointer without the extra struct firmware layer. This will allow
+>>>>>> us to support other sources with the only requirement being u8
+>>>>>> buffer.
+>>>>>>
+>>>>>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+>>>>>> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
+>>>>>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+>>>>>> ---
+>>>>>> Tested on router with BCM43602-s using
+>>>>>> /lib/firmware/brcm/brcmfmac43602-pcie.txt
+>>>>>>
+>>>>>> I've written this patch from scratch, it's inspired by the dropped:
+>>>>>> [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
+>>>>>
+>>>>>
+>>>>>
+>>>>> Hi Rafał,
+>>>>>
+>>>>> So what is your goal here. The inspirational patch was dropped so
+>>>>> it can
+>>>>> be
+>>>>> resubmitted when the mips change it relies on has made its way
+>>>>> upstream.
+>>>>> So
+>>>>> I have to rebase the patch over here and your patch will just give me
+>>>>> conflicts during that rebase. So can we please wait or do you need
+>>>>> this
+>>>>> change right now.
+>>>>
+>>>>
+>>>> The dropped patch will require rebasing/rewriting anyway. There were
+>>>> few changes to firmware.c already, I've few more planned, you'll have
+>>>> to drop some code form your patch (parts that will go into MIPS tree)
+>>>> and probably apply few changes as requested in comments.
+>>>
+>>>
+>>> I already did that and submitted the mips part to Ralf. I am sorry to
+>>> say
+>>> this but what annoys me is that since then you started submitting
+>>> patches
+>>> that seem to be taken from the dropped patch. So I have a problem
+>>> seeing the
+>>> bright side. If Ralf takes the mips part it ends up in linux-next and
+>>> we can
+>>> submit the brcmfmac part.
+>>
+>> This is truly the first patch based on your dropped one. All other 5
+>> patches were addressing problems I noticed by myself. One of them
+>> fixed the same issue you /silently/ did in the dropped one, but I
+>> wasn't even aware of that until I started rebasing your patch. We
+>> simply noticed the same problem and fixed it on our owns.
+>>
+>> So I think this patch is the only one that could annoy you, but
+>> *honestly* my intention was exactly the opposite. As already said, I
+>> just wanted to do possible cleanup early and let you maintain 50% of
+>> your original patch instead the whole one.
+>>
+>> I really don't want to have you annoyed because the need of rebasing
+>> your patch. What you said about Ralf's tree and linux-next isn't
+>> exactly true. I do believe Kalle won't merge linux-next into
+>> wireless-driver-next, so we have to wait for 4.2-rc1, then for Dave
+>> merging Linus's tree, then Kalle merging Dave's tree.
+>
+> Well, it is an integration issue. So yes, wireless-drivers-next (and
+> net-next) would not build for CONFIG_BCM47XX with the brcmfmac patch,
+> because of the missing mips patch. However, the linux-next tree will
+> have no build issue and consequently 4.2-rc1 will have no build issue. I
+> think this is acceptable although I would like to hear the opinion of
+> Kalle on this.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
- drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
- drivers/net/wireless/mwifiex/fw.h          |  1 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
- drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
- 5 files changed, 19 insertions(+), 2 deletions(-)
+Hi Kalle,
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3a14d3a..d47799a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		return -1;
- 	}
- 
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "Failed to reset BSS\n");
-+		return -1;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index a1de83f..b5033d1 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		case HostCmd_CMD_UAP_BSS_START:
- 		case HostCmd_CMD_UAP_BSS_STOP:
- 		case HostCmd_CMD_UAP_STA_DEAUTH:
-+		case HOST_CMD_APCMD_SYS_RESET:
- 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
- 						      cmd_oid, data_buf,
- 						      cmd_ptr);
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index cf386bc..45822a8 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_RSSI_INFO                         0x00a4
- #define HostCmd_CMD_FUNC_INIT                         0x00a9
- #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
-+#define HOST_CMD_APCMD_SYS_RESET                      0x00af
- #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
- #define HostCmd_CMD_UAP_BSS_START                     0x00b1
- #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index aa5b9a3..f20a09e 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 		break;
- 	case HostCmd_CMD_UAP_STA_DEAUTH:
- 		break;
-+	case HOST_CMD_APCMD_SYS_RESET:
-+		break;
- 	case HostCmd_CMD_MEF_CFG:
- 		break;
- 	case HostCmd_CMD_COALESCE_CFG:
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index a4ae283..0a3297e 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		break;
- 	case HostCmd_CMD_UAP_BSS_START:
- 	case HostCmd_CMD_UAP_BSS_STOP:
-+	case HOST_CMD_APCMD_SYS_RESET:
- 		cmd->command = cpu_to_le16(cmd_no);
- 		cmd->size = cpu_to_le16(S_DS_GEN);
- 		break;
-@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--		mwifiex_dbg(priv->adapter, ERROR,
--			    "Failed to stop the BSS\n");
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
-+		return -1;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
- 		return -1;
- 	}
- 
--- 
-1.8.1.4
+Do you have an opinion on this? mips-next and linux-next now have the 
+function brcmfmac needs for CONFIG_BCM47XX so I could submit brcmfmac 
+patch, but that means wireless-drivers-next (and net-next) will not 
+build for CONFIG_BCM47XX until after the 4.2 merge window.
+
+Regards,
+Arend
+
+> Regards,
+> Arend
+>
+>> We really
+>> shouldn't stop development for weeks because of having some patch
+>> prepared for later submitting.
+>> I think the only think you can do to make your life easier is to
+>> submit cleanup part of your prepared patch. This is exactly what I
+>> tried to do for you.
+>>
+>
 
