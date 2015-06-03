@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63199 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100AbbFHMlg (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:33230 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751558AbbFCSWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 08:41:36 -0400
-Message-ID: <55758D7E.3000603@broadcom.com> (sfid-20150608_144139_731016_E538EF53)
-Date: Mon, 8 Jun 2015 14:41:34 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <joerg.krause@embedded.rocks>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
-References: <1433766944.28058.16.camel@embedded.rocks>
-In-Reply-To: <1433766944.28058.16.camel@embedded.rocks>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Wed, 3 Jun 2015 14:22:35 -0400
+Received: by pdbqa5 with SMTP id qa5so12931608pdb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 11:22:34 -0700 (PDT)
+From: Chaitanya T K <chaitanya.mgit@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Chaitanya T K <chaitanya.mgit@gmail.com>
+Subject: [PATCH V3] mac80211: minstrel_ht: Handle Dynamic SMPS state of the peer.
+Date: Wed,  3 Jun 2015 23:52:12 +0530
+Message-Id: <1433355732-7604-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150603_202238_305381_5125904D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/15 14:35, Jörg Krause wrote:
-> Hi,
->
-> I've trouble creating the p2p interface on a BCM43362 wifi device
-> running Linux kernel 4.0.4:
->
->      # dmesg | grep brcmfmac
->      [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
->      wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
->      [    7.158905] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166
->      code
->      [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
->
-> Trying to add the p2p interface manually:
->
->      # iw phy0 interface add p2p0 type __p2pdev
->      [  372.042704] brcmfmac: brcmf_link_down: WLC_DISASSOC failed (-52)
->      [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
->      [  373.679377] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
->      [  373.685733] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
->
-> Any idea?
+In case of Dynamic SMPS enable RTS/CTS for all rates.
 
-Wondering whether it is similar to what Rafal reported. Can you do a 
-hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+---
+V3: Moved the check to set_rate.
+V2: Fix indent and add signoff.
+---
+ net/mac80211/rc80211_minstrel_ht.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Regards,
-Arend
-
-> Best regards
-> Jörg Krause
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 7430a1d..600208f 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -867,7 +867,15 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	else
+ 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
+ 
+-	if (offset > 0) {
++	/* Enable RTS/CTS for below cases.
++	 * 1) Handle STA's SMPS State, if Nss > 1.
++	 *    a. Use RTS_CTS, if STA is in Dynamic SMPS Mode
++	 *    b. Mark Nss > 1 as unsupported, if STA is in static SMPS mode
++	 * 2) 2nd and 3rd Rates, as 1st Rate Failed.
++	 */
++	if ((mi->sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
++	     group->streams > 1) ||
++	     offset > 0) {
+ 		ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
+ 		flags |= IEEE80211_TX_RC_USE_RTS_CTS;
+ 	}
+-- 
+1.9.1
 
