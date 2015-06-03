@@ -1,132 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02.posteo.de ([89.146.194.165]:48628 "EHLO mx02.posteo.de"
+Received: from mga14.intel.com ([192.55.52.115]:13488 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751459AbbFHVS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 17:18:27 -0400
-Message-ID: <1433798355.28058.27.camel@embedded.rocks> (sfid-20150608_231830_509032_25142CC7)
-Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Date: Mon, 08 Jun 2015 23:19:15 +0200
-In-Reply-To: <557605CC.6070907@broadcom.com>
-References: <1433766944.28058.16.camel@embedded.rocks>
-			 <55758D7E.3000603@broadcom.com>
-	 <1433771289.28058.24.camel@embedded.rocks>	 <5575C6FA.6030104@broadcom.com>
-	 <1433794640.28058.26.camel@embedded.rocks> <557605CC.6070907@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753145AbbFCHbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 03:31:51 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/15] iwlwifi: mvm: don't use EBS for P2P find
+Date: Wed,  3 Jun 2015 10:31:26 +0300
+Message-Id: <1433316696-4612-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093156_590653_DFDA6344)
+In-Reply-To: <1433316253.25661.3.camel@intel.com>
+References: <1433316253.25661.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mo, 2015-06-08 at 23:14 +0200, Arend van Spriel wrote:
-> On 06/08/15 22:17, Jörg Krause wrote:
-> > On Mo, 2015-06-08 at 18:46 +0200, Arend van Spriel wrote:
-> > > On 06/08/15 15:48, Jörg Krause wrote:
-> > > > Hi Arend,
-> > > > 
-> > > > On Mo, 2015-06-08 at 14:41 +0200, Arend van Spriel wrote:
-> > > > > On 06/08/15 14:35, Jörg Krause wrote:
-> > > > > > Hi,
-> > > > > > 
-> > > > > > I've trouble creating the p2p interface on a BCM43362 wifi
-> > > > > > device
-> > > > > > running Linux kernel 4.0.4:
-> > > > > > 
-> > > > > >        # dmesg | grep brcmfmac
-> > > > > >        [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: 
-> > > > > > Firmware
-> > > > > > version =
-> > > > > >        wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 
-> > > > > > 01
-> > > > > > -b30a427d
-> > > > > >        [    7.158905] brcmfmac: 
-> > > > > > brcmf_cfg80211_reg_notifier: not
-> > > > > > a
-> > > > > > ISO3166
-> > > > > >        code
-> > > > > >        [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: 
-> > > > > > timeout
-> > > > > > occurred
-> > > > > > 
-> > > > > > Trying to add the p2p interface manually:
-> > > > > > 
-> > > > > >        # iw phy0 interface add p2p0 type __p2pdev
-> > > > > >        [  372.042704] brcmfmac: brcmf_link_down: 
-> > > > > > WLC_DISASSOC
-> > > > > > failed
-> > > > > > (-52)
-> > > > > >        [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: 
-> > > > > > timeout
-> > > > > > occurred
-> > > > > >        [  373.679377] brcmfmac: brcmf_cfg80211_del_key: 
-> > > > > > invalid
-> > > > > > key
-> > > > > > index (4)
-> > > > > >        [  373.685733] brcmfmac: brcmf_cfg80211_del_key: 
-> > > > > > invalid
-> > > > > > key
-> > > > > > index (5)
-> > > > > > 
-> > > > > > Any idea?
-> > > > > 
-> > > > > Wondering whether it is similar to what Rafal reported. Can 
-> > > > > you
-> > > > > do a
-> > > > > hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
-> > > > 
-> > > > I managed to set up the p2p interface by recompiling the kernel
-> > > > with
-> > > > CONFIG_BRCMDBG and loading the brcmfmac module with p2pon=1.
-> > > > 
-> > > > I had a discussion some month ago with Hante Meulemann about
-> > > > setting up
-> > > > the p2p interface. This is one of his replies:
-> > > > 
-> > > >       "For what I can see from the log is that we don’t get the
-> > > > event from
-> > > >       the FW indicating that the p2p interface was created. 
-> > > > This
-> > > > probably
-> > > >       means that there is a bug in this FW for this device. I 
-> > > > need
-> > > > to discuss
-> > > >       this to see how much priority we can give this. The best
-> > > > option for you
-> > > >       for the moment is to use the legacy method with the 
-> > > > 'p2pon=1'
-> > > > command."
-> > > 
-> > > Thanks for digging your email archive as we clearly forgot about 
-> > > this
-> > > 
-> > > entirely.
-> > 
-> > Me too :-)
-> > 
-> > > The timeout in your log indeed indicates it is missing a
-> > > notification from firmware. I assume your primary interface is in
-> > > managed mode when trying to create the p2p_dev interface. Is that
-> > > correct?
-> > 
-> > Correct.
-> 
-> So do you have the following commit in your kernel tree:
-> 
-> commit f48556e1b6a60f1b394a6c4b0a7b8cacba3eb107
-> Author: Arend van Spriel <arend@broadcom.com>
-> Date:   Tue Sep 30 10:23:16 2014 +0200
-> 
->      brcmfmac: assure P2P discovery is disabled when setting 
-> P2P_DEVICE 
-> mac addre
-> 
+From: David Spinadel <david.spinadel@intel.com>
 
-Yes.
+Don't use EBS for P2P find to make sure we find all GOs in
+our only attempt.
 
-$ git log --oneline --grep="brcmfmac: assure P2P discovery is disabled
-when setting P2P_DEVICE"
-f48556e brcmfmac: assure P2P discovery is disabled when setting
-P2P_DEVICE mac address
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 9409237..794109e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -770,19 +770,23 @@ static inline bool iwl_mvm_scan_fits(struct iwl_mvm *mvm, int n_ssids,
+ 		 iwl_mvm_max_scan_ie_fw_cmd_room(mvm)));
+ }
+ 
+-static inline bool iwl_mvm_scan_use_ebs(struct iwl_mvm *mvm, int n_iterations)
++static inline bool iwl_mvm_scan_use_ebs(struct iwl_mvm *mvm,
++					struct ieee80211_vif *vif,
++					int n_iterations)
+ {
+ 	const struct iwl_ucode_capabilities *capa = &mvm->fw->ucode_capa;
+ 
+ 	/* We can only use EBS if:
+ 	 *	1. the feature is supported;
+ 	 *	2. the last EBS was successful;
+-	 *	3. if only single scan, the single scan EBS API is supported.
++	 *	3. if only single scan, the single scan EBS API is supported;
++	 *	4. it's not a p2p find operation.
+ 	 */
+ 	return ((capa->flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT) &&
+ 		mvm->last_ebs_successful &&
+ 		(n_iterations > 1 ||
+-		 (capa->api[0] & IWL_UCODE_TLV_API_SINGLE_SCAN_EBS)));
++		 (capa->api[0] & IWL_UCODE_TLV_API_SINGLE_SCAN_EBS)) &&
++		vif->type != NL80211_IFTYPE_P2P_DEVICE);
+ }
+ 
+ static int iwl_mvm_scan_total_iterations(struct iwl_mvm_scan_params *params)
+@@ -860,7 +864,7 @@ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	cmd->schedule[1].iterations = params->schedule[1].iterations;
+ 	cmd->schedule[1].full_scan_mul = params->schedule[1].iterations;
+ 
+-	if (iwl_mvm_scan_use_ebs(mvm, n_iterations)) {
++	if (iwl_mvm_scan_use_ebs(mvm, vif, n_iterations)) {
+ 		cmd->channel_opt[0].flags =
+ 			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
+ 				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+@@ -1102,7 +1106,7 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	cmd->uid = cpu_to_le32(uid);
+ 	cmd->general_flags = cpu_to_le32(iwl_mvm_scan_umac_flags(mvm, params));
+ 
+-	if (iwl_mvm_scan_use_ebs(mvm, n_iterations))
++	if (iwl_mvm_scan_use_ebs(mvm, vif, n_iterations))
+ 		cmd->channel_flags = IWL_SCAN_CHANNEL_FLAG_EBS |
+ 				     IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+ 				     IWL_SCAN_CHANNEL_FLAG_CACHE_ADD;
+-- 
+2.1.4
 
