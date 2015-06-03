@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:36503 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752157AbbFDAsY (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48955 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752511AbbFCGAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 20:48:24 -0400
-Received: by pdjm12 with SMTP id m12so18510168pdj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 17:48:23 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192cu: Fix performance issue.
-Date: Thu,  4 Jun 2015 09:47:42 +0900
-Message-Id: <1433378862-2064-1-git-send-email-ap420073@gmail.com> (sfid-20150604_024905_662054_25AB2F15)
+	Wed, 3 Jun 2015 02:00:49 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t535xbHX028287
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:00:48 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvgguf-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:00:48 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv5 05/17] mwifiex: reset 11h active flag when chandef does not require dfs
+Date: Wed, 3 Jun 2015 16:59:35 +0530
+Message-ID: <1433330987-6808-6-git-send-email-patila@marvell.com> (sfid-20150603_080052_363550_AEEF1757)
+In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
+References: <1433330987-6808-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After physical reconnect, the rtl8192cu chipset shows low
-transmission rates.It cause is that variable "iqk_initialized"
-do not de-initialized. So I add this code.
+This patch fixes an issue where we were still setting 11h_active
+flag to true for channel defs where DFS is not required.
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 1898596..6a4ef05 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -987,7 +987,6 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	int err = 0;
--	static bool iqk_initialized;
- 	unsigned long flags;
- 
- 	/* As this function can take a very long time (up to 350 ms)
-@@ -1038,11 +1037,11 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
- 	if (ppsc->rfpwr_state == ERFON) {
- 		rtl92c_phy_set_rfpath_switch(hw, 1);
--		if (iqk_initialized) {
-+		if (rtlphy->iqk_initialized) {
- 			rtl92c_phy_iq_calibrate(hw, true);
- 		} else {
- 			rtl92c_phy_iq_calibrate(hw, false);
--			iqk_initialized = true;
-+			rtlphy->iqk_initialized = true;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index d47799a..fb93e13 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1820,7 +1820,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 				    "Failed to disable 11h extensions!!");
+ 			return -1;
  		}
- 		rtl92c_dm_check_txpower_tracking(hw);
- 		rtl92c_phy_lc_calibrate(hw);
-@@ -1391,6 +1390,9 @@ void rtl92cu_card_disable(struct ieee80211_hw *hw)
- 		_CardDisableHWSM(hw);
- 	else
- 		_CardDisableWithoutHWSM(hw);
-+
-+	/* after power off we should do iqk again */
-+	rtlpriv->phy.iqk_initialized = false;
- }
+-		priv->state_11h.is_11h_active = true;
++		priv->state_11h.is_11h_active = false;
+ 	}
  
- void rtl92cu_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
 -- 
-2.1.4
+1.8.1.4
 
