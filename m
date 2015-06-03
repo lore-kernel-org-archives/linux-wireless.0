@@ -1,66 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0139.outbound.protection.outlook.com ([157.55.234.139]:11968
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752889AbbF2NQs convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:34138 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986AbbFCR7C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 09:16:48 -0400
-From: "Mutharaju, Prasanna (P.)" <mkarthi3@visteon.com>
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] staging:wilc1000: code cleanup Fix reported by coccinelle
-Date: Mon, 29 Jun 2015 12:43:32 +0000
-Message-ID: <20150629124227.GA16645@ubuntu> (sfid-20150629_151652_152053_00C4A607)
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 3 Jun 2015 13:59:02 -0400
+Message-ID: <556F405D.2000909@lwfinger.net> (sfid-20150603_195907_658076_A9AC6629)
+Date: Wed, 03 Jun 2015 12:58:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Scott Branden <sbranden@broadcom.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Stable <stable@vger.kernel.org>, Andrew Kurn <kurn@sfu.ca>
+Subject: Re: New USB ID 2001:3c25
+References: <556E6000.90402@lwfinger.net> <6A6FBA3BBCB70741B2E7FD80BFDD32DB2B33CF50@SJEXCHMB10.corp.ad.broadcom.com>
+In-Reply-To: <6A6FBA3BBCB70741B2E7FD80BFDD32DB2B33CF50@SJEXCHMB10.corp.ad.broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prasanna Karthik <mkarthi3@visteon.com>
+On 06/03/2015 12:50 PM, Scott Branden wrote:
+> Hi Larry,
+>
+> There is no problem applying this patch to the stable tree.
+> I didn't know it was my responsibility to inform the stable mailing list every time a patch is accepted
+> in the latest kernel that could be applied to the stable tree?
 
-Removed {} for single statement if block
+It is not necessary; however, it is best if it gets called to their attention. 
+I'm not sure if my E-mail was the reason, but your patch was applied to several 
+of the stable versions this morning. The rest will probably follow soon.
 
-Signed-off-by: Prasanna Karthik <mkarthi3@visteon.com>
----
- drivers/staging/wilc1000/fifo_buffer.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
+The easy way to do this is to add "Cc: Stable <stable@vger.kernel.org>" to the 
+original patch at submission. That way, stable gets the message as soon as it 
+goes into mainline.
 
-diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
-index b6c07cf..be38493 100644
---- a/drivers/staging/wilc1000/fifo_buffer.c
-+++ b/drivers/staging/wilc1000/fifo_buffer.c
-@@ -31,11 +31,10 @@ u32 FIFO_DeInit(tHANDLE hFifo)
- 	u32 u32Error = 0;
- 	tstrFifoHandler *pstrFifoHandler = (tstrFifoHandler *) hFifo;
- 	if (pstrFifoHandler) {
--		if (pstrFifoHandler->pu8Buffer)	{
-+		if (pstrFifoHandler->pu8Buffer)
- 			WILC_FREE (pstrFifoHandler->pu8Buffer);
--		} else {
-+		else
- 			u32Error = 1;
--		}
- 
- 		WILC_FREE (pstrFifoHandler);
- 	} else {
-@@ -52,11 +51,11 @@ u32 FIFO_ReadBytes(tHANDLE hFifo, u8 *pu8Buffer, u32 u32BytesToRead, u32 *pu32By
- 		if (pstrFifoHandler->u32TotalBytes) {
- 			down(&pstrFifoHandler->SemBuffer);
- 
--			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes) {
-+			if (u32BytesToRead > pstrFifoHandler->u32TotalBytes)
- 				*pu32BytesRead = pstrFifoHandler->u32TotalBytes;
--			} else {
-+			else
- 				*pu32BytesRead = u32BytesToRead;
--			}
-+
- 			if ((pstrFifoHandler->u32ReadOffset + u32BytesToRead) <= pstrFifoHandler->u32BufferLength) {
- 				WILC_memcpy(pu8Buffer, pstrFifoHandler->pu8Buffer + pstrFifoHandler->u32ReadOffset,
- 					    *pu32BytesRead);
--- 
-1.7.0.4
+Thanks,
+
+Larry
+
+
