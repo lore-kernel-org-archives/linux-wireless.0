@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33235 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818AbbFLNdf (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:33051 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564AbbFCA5o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 09:33:35 -0400
-Message-ID: <557ADFAD.5080004@candelatech.com> (sfid-20150612_153339_032156_BE034F3F)
-Date: Fri, 12 Jun 2015 06:33:33 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 2 Jun 2015 20:57:44 -0400
+Received: by igbpi8 with SMTP id pi8so99518680igb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 17:57:44 -0700 (PDT)
 MIME-Version: 1.0
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2] ath10k: enable VHT for IBSS
-References: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com> <87mw06bab5.fsf@kamboji.qca.qualcomm.com> <CALhHN=pD+ROqjhYOXsjb7Dc=XGp+YZy6w445ipC4cOGOYUEA3g@mail.gmail.com>
-In-Reply-To: <CALhHN=pD+ROqjhYOXsjb7Dc=XGp+YZy6w445ipC4cOGOYUEA3g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1433273994-14430-1-git-send-email-johannes@sipsolutions.net>
+References: <1433273994-14430-1-git-send-email-johannes@sipsolutions.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 3 Jun 2015 10:57:23 +1000
+Message-ID: <CAGRGNgV_4axC8Cq5AYkd7RQdJOnrT_9L85qisrrZnKYHyUEczQ@mail.gmail.com> (sfid-20150603_025748_083176_0D78CDAC)
+Subject: Re: [RFC] mac80211: convert HW flags to unsigned long bitmap
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	gregory.greenman@intel.com, Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
+Minor nit:
 
-On 06/11/2015 10:12 PM, Janusz Dziedzic wrote:
-> On 11 June 2015 at 16:15, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
->>
->>> Enable VHT support for IBSS, while mac80211/cfg80211 and
->>> wpa_supplicant already support this.
->>>
->>> In my test env, ath10k 2x2 I get:
->>> (udp) ath10k-1 >>>> ath10k-2 (server) -  speed: 419 Mbits/sec
->>> (tcp) ath10k-1 >>>> ath10k-2 (server) -  speed: 404 Mbits/sec
->>
->> What hw and firmware version? Do you expect this to work with both
->> qca988x and qca6174?
->>
-> Results are for qca9888x.
-> But IBSS (VHT IBSS) works correctly also with qca6174 FW.
+On Wed, Jun 3, 2015 at 5:39 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
->> Oh, we should still add ATH10K_FW_FEATURE_NO_ADHOC so that we can
->> disable ad-hoc on 10.x firmwares. Anyone have some spare time to cook up
->> a patch?
->>
-> I am not sure we need this, while we add
-> ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC)
-> only for main and tlv version. Seems we already cover 10.x case correctly.
+> As we're running out of hardware capability flags pretty quickly,
+> convert them to use the regular test_bit() style unsigned long
+> bitmaps.
+>
+> This introduces a number of helper functions/macros to set and to
+> test the bits, along with new debugfs code.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index e09a32cb139f..dc56734d0154 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -2050,6 +2053,20 @@ struct ieee80211_hw {
+>         int txq_ac_max_pending;
+>  };
+>
+> +static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
+> +                                      enum ieee80211_hw_flags flg)
+> +{
+> +       return test_bit(flg, hw->flags);
+> +}
+> +#define ieee80211_hw_check(hw, flg)    _ieee80211_hw_check(hw, IEEE80211_HW_##flg)
+> +
+> +static inline void _ieee80211_hw_set(struct ieee80211_hw *hw,
+> +                                    enum ieee80211_hw_flags flg)
+> +{
+> +       return __set_bit(flg, hw->flags);
+> +}
+> +#define ieee80211_hw_set(hw, flg)      _ieee80211_hw_set(hw, IEEE80211_HW_##flg)
+> +
 
-If you give me some way to advertise my CT 10.1 firmware supports ADHOC
-mode in the upstream driver then there will be one more firmware
-variant that works with IBSS in stock kernels....
-
-Maybe a feature flag 'ATH10K_FW_FEATURE_SUPPORTS_ADHOC' ?  You can special case
-older firmware that is known to support ADHOC but has no feature
-flag for it.  And new firmware could add the feature flag as needed.
+Why not add a ieee80211_hw_clear() function? Yes, it'd only be used in
+3 places, but it'd look neater.
 
 Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
