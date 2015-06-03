@@ -1,47 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35169 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750752AbbFKJpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 05:45:24 -0400
-Message-ID: <1434015922.1915.6.camel@sipsolutions.net> (sfid-20150611_114527_922690_7AF6C2D9)
-Subject: Re: Exposing enum ieee80211_channel_flags to user
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Jun 2015 11:45:22 +0200
-In-Reply-To: <CACna6rwHXzGTZ+NS9PpZENJATVzRzm1Wkija0_CrveMoM05d5g@mail.gmail.com> (sfid-20150611_113544_857208_070F0480)
-References: <CACna6rwHXzGTZ+NS9PpZENJATVzRzm1Wkija0_CrveMoM05d5g@mail.gmail.com>
-	 (sfid-20150611_113544_857208_070F0480)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24987 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753031AbbFCGCR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 02:02:17 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t5361o96030346
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:02:17 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvgh1a-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:02:17 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv5 16/17] mwifiex: using right tid for addressing ra_list
+Date: Wed, 3 Jun 2015 16:59:46 +0530
+Message-ID: <1433330987-6808-17-git-send-email-patila@marvell.com> (sfid-20150603_080351_373713_9B9F7582)
+In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
+References: <1433330987-6808-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-06-11 at 11:35 +0200, Rafał Miłecki wrote:
+From: Xinming Hu <huxm@marvell.com>
 
-> iw also wasn't helpful:
-> Frequencies:
->         * 5180 MHz [36] (30.0 dBm)
->         * 5200 MHz [40] (30.0 dBm)
->         * 5220 MHz [44] (30.0 dBm)
->         * 5240 MHz [48] (30.0 dBm)
-> 
-> After some in-kernel debugging (nl80211_set_wiphy,
-> cfg80211_chandef_usable, cfg80211_secondary_chans_ok) I finally
-> realized it was because of:
-> IEEE80211_CHAN_NO_80MHZ
-> 
-> Do you have any idea how we could handle such cases nicely? To let
-> user find out what's going on (wrong)?
-> 
-> Should "iw" be extended to print flag names? Or should hostapd check
-> for channels in some smarter way? Any other ideas?
+This patch fixes issue with the accessing correct ra_list by
+downgrading corresponding tid number.
 
-We already have the flags exposed to iw, it's just not printing them.
-There was a patch to print them, but it wasn't complete, and the
-submitter kinda went away. You can see the discussion here:
+Alternatively, ra lists are created in mwifiex_wmm_add_buf_txqueue
+using downgraded tid number.
 
-http://mid.gmane.org/1425452686-28196-1-git-send-email-arnagara@qti.qualcomm.com
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n.c           | 11 ++++++++---
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |  5 ++++-
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 8422986..4d8ef49 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -156,7 +156,7 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 			      struct host_cmd_ds_command *resp)
+ {
+-	int tid;
++	int tid, tid_down;
+ 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
+ 	struct mwifiex_ra_list_tbl *ra_list;
+@@ -167,7 +167,9 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 
+ 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
+ 	       >> BLOCKACKPARAM_TID_POS;
+-	ra_list = mwifiex_wmm_get_ralist_node(priv, tid, add_ba_rsp->
++
++	tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
++	ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, add_ba_rsp->
+ 		peer_mac_addr);
+ 	if (le16_to_cpu(add_ba_rsp->status_code) != BA_RESULT_SUCCESS) {
+ 		if (ra_list) {
+@@ -530,13 +532,16 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
+ 	struct mwifiex_tx_ba_stream_tbl *new_node;
+ 	struct mwifiex_ra_list_tbl *ra_list;
+ 	unsigned long flags;
++	int tid_down;
+ 
+ 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
+ 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
+ 				   GFP_ATOMIC);
+ 		if (!new_node)
+ 			return;
+-		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, ra);
++
++		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
++		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, ra);
+ 		if (ra_list) {
+ 			ra_list->ba_status = ba_status;
+ 			ra_list->amsdu_in_ampdu = false;
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 39d7a95..64401a7 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -663,6 +663,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 	struct mwifiex_ra_list_tbl *ra_list;
+ 	u8 cleanup_rx_reorder_tbl;
+ 	unsigned long flags;
++	int tid_down;
+ 
+ 	if (type == TYPE_DELBA_RECEIVE)
+ 		cleanup_rx_reorder_tbl = (initiator) ? true : false;
+@@ -688,7 +689,9 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 				    "event: TID, RA not found in table\n");
+ 			return;
+ 		}
+-		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, peer_mac);
++
++		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
++		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, peer_mac);
+ 		if (ra_list) {
+ 			ra_list->amsdu_in_ampdu = false;
+ 			ra_list->ba_status = BA_SETUP_NONE;
+-- 
+1.8.1.4
 
