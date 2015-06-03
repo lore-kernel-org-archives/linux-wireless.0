@@ -1,439 +1,802 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3967 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbbFPFrh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:47:37 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 06/10] ath10k: add 10.4 fw wmi pdev cmd ids
-Date: Tue, 16 Jun 2015 11:15:19 +0530
-Message-ID: <1434433523-8357-7-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_074741_275063_937AA594)
-In-Reply-To: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:44324 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753213AbbFCHbz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 03:31:55 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/15] iwlwifi: pcie: New RBD allocation model
+Date: Wed,  3 Jun 2015 10:31:28 +0300
+Message-Id: <1433316696-4612-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093201_281622_36FF9CFF)
+In-Reply-To: <1433316253.25661.3.camel@intel.com>
+References: <1433316253.25661.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include 10.4 firmware wmi pdev cmd id and prepare wmi vdev map
-table wmi_10_4_pdev_param_map and update non 10.4 firmware
-pdev cmd map table with newly added vdev cmd id specifically for
-10.4 firmware as unsupported.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+As a preperation for multiple RX queues change the RBD
+allocation model.
+
+The new model includes a background allocator. The allocator is
+called by the interrupt handler when there are two released
+buffers by the queue, and the allocator starts allocating eight
+pages per request.
+When the queue has released 8 pages it tries claiming the
+request. If the pages are not ready - it keeps claiming.
+This new model should make sure that RBDs are always available
+across the multiple queues.
+
+The RBDs are transferred between the allocator and the queue.
+The queue moves the free RBDs upon freeing them to the allocator.
+The allocator moves them back to the queue's possession when the
+request is claimed.
+The allocator has an initial pool to make sure there are always RBDs
+available for the request completion.
+Release of the buffers at exit is done per pools - the allocator
+frees its own initial pool and the queue frees its own pool.
+
+Existing code refactor -
+-Queue's initial pool is the size of the queue only as the allocation
+of the new buffers no longer uses this pool.
+-Removal of replenish background work, and replenish calls in the
+interrupt handler and restock().
+-The replenish() and the rxq used_list are used only during
+initialization.
+-Moved page allocation to a new function for code reuse.
+
+New code -
+Allocator code - new structure and functions.
+Interrupt handler uses the allocator functions for replenishing buffers.
+Reuse of the restock() method.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  32 +++++
- drivers/net/wireless/ath/ath10k/wmi.c     | 188 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     | 116 ++++++++++++++++++
- 3 files changed, 336 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-fh.h        |   6 -
+ drivers/net/wireless/iwlwifi/pcie/internal.h |  51 +++-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       | 414 +++++++++++++++++++++------
+ 3 files changed, 374 insertions(+), 97 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index df8ac2e..e165e26 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -3204,6 +3204,38 @@ static struct wmi_pdev_param_map wmi_tlv_pdev_param_map = {
- 	.burst_dur = WMI_TLV_PDEV_PARAM_BURST_DUR,
- 	.burst_enable = WMI_TLV_PDEV_PARAM_BURST_ENABLE,
- 	.cal_period = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.aggr_burst = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_decap_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.smart_antenna_default_antenna = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.antenna_gain = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_filter = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_to_ucast_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.proxy_sta_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.remove_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.peer_sta_ps_statechg_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_ac_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.block_interbss = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_disable_reset_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_msdu_ttl_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_ppdu_duration_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.txbf_sound_period_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_promisc_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_burst_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.en_stats = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.mu_group_policy = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_detection = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_threshold = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.dpd_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_bcast_echo = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_strict_sch = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_sched_duration = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.ant_plzn = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rts_fixed_rate = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.pdev_reset = WMI_PDEV_PARAM_UNSUPPORTED,
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index d45dc02..d560648 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -438,12 +438,6 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(unsigned int chnl)
+ #define RX_QUEUE_MASK                         255
+ #define RX_QUEUE_SIZE_LOG                     8
  
- static struct wmi_vdev_param_map wmi_tlv_vdev_param_map = {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9aa6989..0625009 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1007,6 +1007,38 @@ static struct wmi_pdev_param_map wmi_pdev_param_map = {
- 	.burst_dur = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.burst_enable = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.cal_period = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.aggr_burst = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_decap_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.smart_antenna_default_antenna = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.antenna_gain = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_filter = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_to_ucast_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.proxy_sta_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.remove_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.peer_sta_ps_statechg_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_ac_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.block_interbss = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_disable_reset_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_msdu_ttl_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_ppdu_duration_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.txbf_sound_period_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_promisc_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_burst_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.en_stats = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.mu_group_policy = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_detection = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_threshold = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.dpd_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_bcast_echo = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_strict_sch = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_sched_duration = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.ant_plzn = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rts_fixed_rate = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.pdev_reset = WMI_PDEV_PARAM_UNSUPPORTED,
- };
+-/*
+- * RX related structures and functions
+- */
+-#define RX_FREE_BUFFERS 64
+-#define RX_LOW_WATERMARK 8
+-
+ /**
+  * struct iwl_rb_status - reserve buffer status
+  * 	host memory mapped FH registers
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 01996c9..9a3dae6 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -44,6 +44,15 @@
+ #include "iwl-io.h"
+ #include "iwl-op-mode.h"
  
- static struct wmi_pdev_param_map wmi_10x_pdev_param_map = {
-@@ -1060,6 +1092,38 @@ static struct wmi_pdev_param_map wmi_10x_pdev_param_map = {
- 	.burst_dur = WMI_10X_PDEV_PARAM_BURST_DUR,
- 	.burst_enable = WMI_10X_PDEV_PARAM_BURST_ENABLE,
- 	.cal_period = WMI_10X_PDEV_PARAM_CAL_PERIOD,
-+	.aggr_burst = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_decap_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.smart_antenna_default_antenna = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.antenna_gain = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_filter = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_to_ucast_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.proxy_sta_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.remove_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.peer_sta_ps_statechg_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_ac_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.block_interbss = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_disable_reset_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_msdu_ttl_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_ppdu_duration_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.txbf_sound_period_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_promisc_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_burst_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.en_stats = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.mu_group_policy = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_detection = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_threshold = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.dpd_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_bcast_echo = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_strict_sch = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_sched_duration = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.ant_plzn = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rts_fixed_rate = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.pdev_reset = WMI_PDEV_PARAM_UNSUPPORTED,
- };
++/*
++ * RX related structures and functions
++ */
++#define RX_NUM_QUEUES 1
++#define RX_POST_REQ_ALLOC 2
++#define RX_CLAIM_REQ_ALLOC 8
++#define RX_POOL_SIZE ((RX_CLAIM_REQ_ALLOC - RX_POST_REQ_ALLOC) * RX_NUM_QUEUES)
++#define RX_LOW_WATERMARK 8
++
+ struct iwl_host_cmd;
  
- static struct wmi_pdev_param_map wmi_10_2_4_pdev_param_map = {
-@@ -1113,6 +1177,38 @@ static struct wmi_pdev_param_map wmi_10_2_4_pdev_param_map = {
- 	.burst_dur = WMI_10X_PDEV_PARAM_BURST_DUR,
- 	.burst_enable = WMI_10X_PDEV_PARAM_BURST_ENABLE,
- 	.cal_period = WMI_10X_PDEV_PARAM_CAL_PERIOD,
-+	.aggr_burst = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_decap_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.smart_antenna_default_antenna = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.antenna_gain = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rx_filter = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_to_ucast_tid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.proxy_sta_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_mode = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.remove_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.peer_sta_ps_statechg_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.igmpmld_ac_override = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.block_interbss = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_disable_reset_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_msdu_ttl_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_ppdu_duration_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.txbf_sound_period_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_promisc_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_burst_mode_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.en_stats = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.mu_group_policy = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_detection = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.noise_threshold = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.dpd_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.set_mcast_bcast_echo = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_strict_sch = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.atf_sched_duration = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.ant_plzn = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.rts_fixed_rate = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.pdev_reset = WMI_PDEV_PARAM_UNSUPPORTED,
- };
- 
- /* firmware 10.2 specific mappings */
-@@ -1269,6 +1365,97 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
- 	.pdev_reserve_ast_entry_cmdid = WMI_CMD_UNSUPPORTED,
- };
- 
-+static struct wmi_pdev_param_map wmi_10_4_pdev_param_map = {
-+	.tx_chain_mask = WMI_10_4_PDEV_PARAM_TX_CHAIN_MASK,
-+	.rx_chain_mask = WMI_10_4_PDEV_PARAM_RX_CHAIN_MASK,
-+	.txpower_limit2g = WMI_10_4_PDEV_PARAM_TXPOWER_LIMIT2G,
-+	.txpower_limit5g = WMI_10_4_PDEV_PARAM_TXPOWER_LIMIT5G,
-+	.txpower_scale = WMI_10_4_PDEV_PARAM_TXPOWER_SCALE,
-+	.beacon_gen_mode = WMI_10_4_PDEV_PARAM_BEACON_GEN_MODE,
-+	.beacon_tx_mode = WMI_10_4_PDEV_PARAM_BEACON_TX_MODE,
-+	.resmgr_offchan_mode = WMI_10_4_PDEV_PARAM_RESMGR_OFFCHAN_MODE,
-+	.protection_mode = WMI_10_4_PDEV_PARAM_PROTECTION_MODE,
-+	.dynamic_bw = WMI_10_4_PDEV_PARAM_DYNAMIC_BW,
-+	.non_agg_sw_retry_th = WMI_10_4_PDEV_PARAM_NON_AGG_SW_RETRY_TH,
-+	.agg_sw_retry_th = WMI_10_4_PDEV_PARAM_AGG_SW_RETRY_TH,
-+	.sta_kickout_th = WMI_10_4_PDEV_PARAM_STA_KICKOUT_TH,
-+	.ac_aggrsize_scaling = WMI_10_4_PDEV_PARAM_AC_AGGRSIZE_SCALING,
-+	.ltr_enable = WMI_10_4_PDEV_PARAM_LTR_ENABLE,
-+	.ltr_ac_latency_be = WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_BE,
-+	.ltr_ac_latency_bk = WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_BK,
-+	.ltr_ac_latency_vi = WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_VI,
-+	.ltr_ac_latency_vo = WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_VO,
-+	.ltr_ac_latency_timeout = WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_TIMEOUT,
-+	.ltr_sleep_override = WMI_10_4_PDEV_PARAM_LTR_SLEEP_OVERRIDE,
-+	.ltr_rx_override = WMI_10_4_PDEV_PARAM_LTR_RX_OVERRIDE,
-+	.ltr_tx_activity_timeout = WMI_10_4_PDEV_PARAM_LTR_TX_ACTIVITY_TIMEOUT,
-+	.l1ss_enable = WMI_10_4_PDEV_PARAM_L1SS_ENABLE,
-+	.dsleep_enable = WMI_10_4_PDEV_PARAM_DSLEEP_ENABLE,
-+	.pcielp_txbuf_flush = WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_FLUSH,
-+	.pcielp_txbuf_watermark = WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_WATERMARK,
-+	.pcielp_txbuf_tmo_en = WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_TMO_EN,
-+	.pcielp_txbuf_tmo_value = WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_TMO_VALUE,
-+	.pdev_stats_update_period =
-+			WMI_10_4_PDEV_PARAM_PDEV_STATS_UPDATE_PERIOD,
-+	.vdev_stats_update_period =
-+			WMI_10_4_PDEV_PARAM_VDEV_STATS_UPDATE_PERIOD,
-+	.peer_stats_update_period =
-+			WMI_10_4_PDEV_PARAM_PEER_STATS_UPDATE_PERIOD,
-+	.bcnflt_stats_update_period =
-+			WMI_10_4_PDEV_PARAM_BCNFLT_STATS_UPDATE_PERIOD,
-+	.pmf_qos = WMI_10_4_PDEV_PARAM_PMF_QOS,
-+	.arp_ac_override = WMI_10_4_PDEV_PARAM_ARP_AC_OVERRIDE,
-+	.dcs = WMI_10_4_PDEV_PARAM_DCS,
-+	.ani_enable = WMI_10_4_PDEV_PARAM_ANI_ENABLE,
-+	.ani_poll_period = WMI_10_4_PDEV_PARAM_ANI_POLL_PERIOD,
-+	.ani_listen_period = WMI_10_4_PDEV_PARAM_ANI_LISTEN_PERIOD,
-+	.ani_ofdm_level = WMI_10_4_PDEV_PARAM_ANI_OFDM_LEVEL,
-+	.ani_cck_level = WMI_10_4_PDEV_PARAM_ANI_CCK_LEVEL,
-+	.dyntxchain = WMI_10_4_PDEV_PARAM_DYNTXCHAIN,
-+	.proxy_sta = WMI_10_4_PDEV_PARAM_PROXY_STA,
-+	.idle_ps_config = WMI_10_4_PDEV_PARAM_IDLE_PS_CONFIG,
-+	.power_gating_sleep = WMI_10_4_PDEV_PARAM_POWER_GATING_SLEEP,
-+	.fast_channel_reset = WMI_10_4_PDEV_PARAM_FAST_CHANNEL_RESET,
-+	.burst_dur = WMI_10_4_PDEV_PARAM_BURST_DUR,
-+	.burst_enable = WMI_10_4_PDEV_PARAM_BURST_ENABLE,
-+	.cal_period = WMI_10_4_PDEV_PARAM_CAL_PERIOD,
-+	.aggr_burst = WMI_10_4_PDEV_PARAM_AGGR_BURST,
-+	.rx_decap_mode = WMI_10_4_PDEV_PARAM_RX_DECAP_MODE,
-+	.smart_antenna_default_antenna =
-+			WMI_10_4_PDEV_PARAM_SMART_ANTENNA_DEFAULT_ANTENNA,
-+	.igmpmld_override = WMI_10_4_PDEV_PARAM_IGMPMLD_OVERRIDE,
-+	.igmpmld_tid = WMI_10_4_PDEV_PARAM_IGMPMLD_TID,
-+	.antenna_gain = WMI_10_4_PDEV_PARAM_ANTENNA_GAIN,
-+	.rx_filter = WMI_10_4_PDEV_PARAM_RX_FILTER,
-+	.set_mcast_to_ucast_tid = WMI_10_4_PDEV_SET_MCAST_TO_UCAST_TID,
-+	.proxy_sta_mode = WMI_10_4_PDEV_PARAM_PROXY_STA_MODE,
-+	.set_mcast2ucast_mode = WMI_10_4_PDEV_PARAM_SET_MCAST2UCAST_MODE,
-+	.set_mcast2ucast_buffer = WMI_10_4_PDEV_PARAM_SET_MCAST2UCAST_BUFFER,
-+	.remove_mcast2ucast_buffer =
-+			WMI_10_4_PDEV_PARAM_REMOVE_MCAST2UCAST_BUFFER,
-+	.peer_sta_ps_statechg_enable =
-+			WMI_10_4_PDEV_PEER_STA_PS_STATECHG_ENABLE,
-+	.igmpmld_ac_override = WMI_10_4_PDEV_PARAM_IGMPMLD_AC_OVERRIDE,
-+	.block_interbss = WMI_10_4_PDEV_PARAM_BLOCK_INTERBSS,
-+	.set_disable_reset_cmdid = WMI_10_4_PDEV_PARAM_SET_DISABLE_RESET_CMDID,
-+	.set_msdu_ttl_cmdid = WMI_10_4_PDEV_PARAM_SET_MSDU_TTL_CMDID,
-+	.set_ppdu_duration_cmdid = WMI_10_4_PDEV_PARAM_SET_PPDU_DURATION_CMDID,
-+	.txbf_sound_period_cmdid = WMI_10_4_PDEV_PARAM_TXBF_SOUND_PERIOD_CMDID,
-+	.set_promisc_mode_cmdid = WMI_10_4_PDEV_PARAM_SET_PROMISC_MODE_CMDID,
-+	.set_burst_mode_cmdid = WMI_10_4_PDEV_PARAM_SET_BURST_MODE_CMDID,
-+	.en_stats = WMI_10_4_PDEV_PARAM_EN_STATS,
-+	.mu_group_policy = WMI_10_4_PDEV_PARAM_MU_GROUP_POLICY,
-+	.noise_detection = WMI_10_4_PDEV_PARAM_NOISE_DETECTION,
-+	.noise_threshold = WMI_10_4_PDEV_PARAM_NOISE_THRESHOLD,
-+	.dpd_enable = WMI_10_4_PDEV_PARAM_DPD_ENABLE,
-+	.set_mcast_bcast_echo = WMI_10_4_PDEV_PARAM_SET_MCAST_BCAST_ECHO,
-+	.atf_strict_sch = WMI_10_4_PDEV_PARAM_ATF_STRICT_SCH,
-+	.atf_sched_duration = WMI_10_4_PDEV_PARAM_ATF_SCHED_DURATION,
-+	.ant_plzn = WMI_10_4_PDEV_PARAM_ANT_PLZN,
-+	.rts_fixed_rate = WMI_10_4_PDEV_PARAM_RTS_FIXED_RATE,
-+	.pdev_reset = WMI_10_4_PDEV_PARAM_PDEV_RESET,
+ /*This file includes the declaration that are internal to the
+@@ -77,29 +86,29 @@ struct isr_statistics {
+  * struct iwl_rxq - Rx queue
+  * @bd: driver's pointer to buffer of receive buffer descriptors (rbd)
+  * @bd_dma: bus address of buffer of receive buffer descriptors (rbd)
+- * @pool:
+- * @queue:
+  * @read: Shared index to newest available Rx buffer
+  * @write: Shared index to oldest written Rx packet
+  * @free_count: Number of pre-allocated buffers in rx_free
++ * @used_count: Number of RBDs handled to allocator to use for allocation
+  * @write_actual:
+- * @rx_free: list of free SKBs for use
+- * @rx_used: List of Rx buffers with no SKB
++ * @rx_free: list of RBDs with allocated RB ready for use
++ * @rx_used: list of RBDs with no RB attached
+  * @need_update: flag to indicate we need to update read/write index
+  * @rb_stts: driver's pointer to receive buffer status
+  * @rb_stts_dma: bus address of receive buffer status
+  * @lock:
++ * @pool: initial pool of iwl_rx_mem_buffer for the queue
++ * @queue: actual rx queue
+  *
+  * NOTE:  rx_free and rx_used are used as a FIFO for iwl_rx_mem_buffers
+  */
+ struct iwl_rxq {
+ 	__le32 *bd;
+ 	dma_addr_t bd_dma;
+-	struct iwl_rx_mem_buffer pool[RX_QUEUE_SIZE + RX_FREE_BUFFERS];
+-	struct iwl_rx_mem_buffer *queue[RX_QUEUE_SIZE];
+ 	u32 read;
+ 	u32 write;
+ 	u32 free_count;
++	u32 used_count;
+ 	u32 write_actual;
+ 	struct list_head rx_free;
+ 	struct list_head rx_used;
+@@ -107,6 +116,32 @@ struct iwl_rxq {
+ 	struct iwl_rb_status *rb_stts;
+ 	dma_addr_t rb_stts_dma;
+ 	spinlock_t lock;
++	struct iwl_rx_mem_buffer pool[RX_QUEUE_SIZE];
++	struct iwl_rx_mem_buffer *queue[RX_QUEUE_SIZE];
 +};
 +
- void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
- 				const struct wmi_channel_arg *arg)
++/**
++ * struct iwl_rb_allocator - Rx allocator
++ * @pool: initial pool of allocator
++ * @req_pending: number of requests the allcator had not processed yet
++ * @req_ready: number of requests honored and ready for claiming
++ * @rbd_allocated: RBDs with pages allocated and ready to be handled to
++ *	the queue. This is a list of &struct iwl_rx_mem_buffer
++ * @rbd_empty: RBDs with no page attached for allocator use. This is a list
++ *	of &struct iwl_rx_mem_buffer
++ * @lock: protects the rbd_allocated and rbd_empty lists
++ * @alloc_wq: work queue for background calls
++ * @rx_alloc: work struct for background calls
++ */
++struct iwl_rb_allocator {
++	struct iwl_rx_mem_buffer pool[RX_POOL_SIZE];
++	atomic_t req_pending;
++	atomic_t req_ready;
++	struct list_head rbd_allocated;
++	struct list_head rbd_empty;
++	spinlock_t lock;
++	struct workqueue_struct *alloc_wq;
++	struct work_struct rx_alloc;
+ };
+ 
+ struct iwl_dma_ptr {
+@@ -250,7 +285,7 @@ iwl_pcie_get_scratchbuf_dma(struct iwl_txq *txq, int idx)
+ /**
+  * struct iwl_trans_pcie - PCIe transport specific data
+  * @rxq: all the RX queue data
+- * @rx_replenish: work that will be called when buffers need to be allocated
++ * @rba: allocator for RX replenishing
+  * @drv - pointer to iwl_drv
+  * @trans: pointer to the generic transport area
+  * @scd_base_addr: scheduler sram base address in SRAM
+@@ -273,7 +308,7 @@ iwl_pcie_get_scratchbuf_dma(struct iwl_txq *txq, int idx)
+  */
+ struct iwl_trans_pcie {
+ 	struct iwl_rxq rxq;
+-	struct work_struct rx_replenish;
++	struct iwl_rb_allocator rba;
+ 	struct iwl_trans *trans;
+ 	struct iwl_drv *drv;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index adad8d0..a3fbaa0 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1,7 +1,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portions of the ieee80211 subsystem header files.
+@@ -74,16 +74,29 @@
+  * resets the Rx queue buffers with new memory.
+  *
+  * The management in the driver is as follows:
+- * + A list of pre-allocated SKBs is stored in iwl->rxq->rx_free.  When
+- *   iwl->rxq->free_count drops to or below RX_LOW_WATERMARK, work is scheduled
+- *   to replenish the iwl->rxq->rx_free.
+- * + In iwl_pcie_rx_replenish (scheduled) if 'processed' != 'read' then the
+- *   iwl->rxq is replenished and the READ INDEX is updated (updating the
+- *   'processed' and 'read' driver indexes as well)
++ * + A list of pre-allocated RBDs is stored in iwl->rxq->rx_free.
++ *   When the interrupt handler is called, the request is processed.
++ *   The page is either stolen - transferred to the upper layer
++ *   or reused - added immediately to the iwl->rxq->rx_free list.
++ * + When the page is stolen - the driver updates the matching queue's used
++ *   count, detaches the RBD and transfers it to the queue used list.
++ *   When there are two used RBDs - they are transferred to the allocator empty
++ *   list. Work is then scheduled for the allocator to start allocating
++ *   eight buffers.
++ *   When there are another 6 used RBDs - they are transferred to the allocator
++ *   empty list and the driver tries to claim the pre-allocated buffers and
++ *   add them to iwl->rxq->rx_free. If it fails - it continues to claim them
++ *   until ready.
++ *   When there are 8+ buffers in the free list - either from allocation or from
++ *   8 reused unstolen pages - restock is called to update the FW and indexes.
++ * + In order to make sure the allocator always has RBDs to use for allocation
++ *   the allocator has initial pool in the size of num_queues*(8-2) - the
++ *   maximum missing RBDs per allocation request (request posted with 2
++ *    empty RBDs, there is no guarantee when the other 6 RBDs are supplied).
++ *   The queues supplies the recycle of the rest of the RBDs.
+  * + A received packet is processed and handed to the kernel network stack,
+  *   detached from the iwl->rxq.  The driver 'processed' index is updated.
+- * + The Host/Firmware iwl->rxq is replenished at irq thread time from the
+- *   rx_free list. If there are no allocated buffers in iwl->rxq->rx_free,
++ * + If there are no allocated buffers in iwl->rxq->rx_free,
+  *   the READ INDEX is not incremented and iwl->status(RX_STALLED) is set.
+  *   If there were enough free buffers and RX_STALLED is set it is cleared.
+  *
+@@ -92,18 +105,32 @@
+  *
+  * iwl_rxq_alloc()            Allocates rx_free
+  * iwl_pcie_rx_replenish()    Replenishes rx_free list from rx_used, and calls
+- *                            iwl_pcie_rxq_restock
++ *                            iwl_pcie_rxq_restock.
++ *                            Used only during initialization.
+  * iwl_pcie_rxq_restock()     Moves available buffers from rx_free into Rx
+  *                            queue, updates firmware pointers, and updates
+- *                            the WRITE index.  If insufficient rx_free buffers
+- *                            are available, schedules iwl_pcie_rx_replenish
++ *                            the WRITE index.
++ * iwl_pcie_rx_allocator()     Background work for allocating pages.
+  *
+  * -- enable interrupts --
+  * ISR - iwl_rx()             Detach iwl_rx_mem_buffers from pool up to the
+  *                            READ INDEX, detaching the SKB from the pool.
+  *                            Moves the packet buffer from queue to rx_used.
++ *                            Posts and claims requests to the allocator.
+  *                            Calls iwl_pcie_rxq_restock to refill any empty
+  *                            slots.
++ *
++ * RBD life-cycle:
++ *
++ * Init:
++ * rxq.pool -> rxq.rx_used -> rxq.rx_free -> rxq.queue
++ *
++ * Regular Receive interrupt:
++ * Page Stolen:
++ * rxq.queue -> rxq.rx_used -> allocator.rbd_empty ->
++ * allocator.rbd_allocated -> rxq.rx_free -> rxq.queue
++ * Page not Stolen:
++ * rxq.queue -> rxq.rx_free -> rxq.queue
+  * ...
+  *
+  */
+@@ -240,10 +267,6 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
+ 		rxq->free_count--;
+ 	}
+ 	spin_unlock(&rxq->lock);
+-	/* If the pre-allocated buffer pool is dropping low, schedule to
+-	 * refill it */
+-	if (rxq->free_count <= RX_LOW_WATERMARK)
+-		schedule_work(&trans_pcie->rx_replenish);
+ 
+ 	/* If we've added more space for the firmware to place data, tell it.
+ 	 * Increment device's write pointer in multiples of 8. */
+@@ -255,6 +278,44 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
+ }
+ 
+ /*
++ * iwl_pcie_rx_alloc_page - allocates and returns a page.
++ *
++ */
++static struct page *iwl_pcie_rx_alloc_page(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_rxq *rxq = &trans_pcie->rxq;
++	struct page *page;
++	gfp_t gfp_mask = GFP_KERNEL;
++
++	if (rxq->free_count > RX_LOW_WATERMARK)
++		gfp_mask |= __GFP_NOWARN;
++
++	if (trans_pcie->rx_page_order > 0)
++		gfp_mask |= __GFP_COMP;
++
++	/* Alloc a new receive buffer */
++	page = alloc_pages(gfp_mask, trans_pcie->rx_page_order);
++	if (!page) {
++		if (net_ratelimit())
++			IWL_DEBUG_INFO(trans, "alloc_pages failed, order: %d\n",
++				       trans_pcie->rx_page_order);
++		/* Issue an error if the hardware has consumed more than half
++		 * of its free buffer list and we don't have enough
++		 * pre-allocated buffers.
++`		 */
++		if (rxq->free_count <= RX_LOW_WATERMARK &&
++		    iwl_rxq_space(rxq) > (RX_QUEUE_SIZE / 2) &&
++		    net_ratelimit())
++			IWL_CRIT(trans,
++				 "Failed to alloc_pages with GFP_KERNEL. Only %u free buffers remaining.\n",
++				 rxq->free_count);
++		return NULL;
++	}
++	return page;
++}
++
++/*
+  * iwl_pcie_rxq_alloc_rbs - allocate a page for each used RBD
+  *
+  * A used RBD is an Rx buffer that has been given to the stack. To use it again
+@@ -263,13 +324,12 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
+  * iwl_pcie_rxq_restock. The latter function will update the HW to use the newly
+  * allocated buffers.
+  */
+-static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
++static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans)
  {
-@@ -5841,6 +6028,7 @@ int ath10k_wmi_attach(struct ath10k *ar)
- 		ar->wmi.ops = &wmi_10_4_ops;
- 		ar->wmi.cmd = &wmi_10_4_cmd_map;
- 		ar->wmi.vdev_param = &wmi_10_4_vdev_param_map;
-+		ar->wmi.pdev_param = &wmi_10_4_pdev_param_map;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
- 		ar->wmi.cmd = &wmi_10_2_4_cmd_map;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index ea74cd0..92bffee 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2966,6 +2966,38 @@ struct wmi_pdev_param_map {
- 	u32 burst_dur;
- 	u32 burst_enable;
- 	u32 cal_period;
-+	u32 aggr_burst;
-+	u32 rx_decap_mode;
-+	u32 smart_antenna_default_antenna;
-+	u32 igmpmld_override;
-+	u32 igmpmld_tid;
-+	u32 antenna_gain;
-+	u32 rx_filter;
-+	u32 set_mcast_to_ucast_tid;
-+	u32 proxy_sta_mode;
-+	u32 set_mcast2ucast_mode;
-+	u32 set_mcast2ucast_buffer;
-+	u32 remove_mcast2ucast_buffer;
-+	u32 peer_sta_ps_statechg_enable;
-+	u32 igmpmld_ac_override;
-+	u32 block_interbss;
-+	u32 set_disable_reset_cmdid;
-+	u32 set_msdu_ttl_cmdid;
-+	u32 set_ppdu_duration_cmdid;
-+	u32 txbf_sound_period_cmdid;
-+	u32 set_promisc_mode_cmdid;
-+	u32 set_burst_mode_cmdid;
-+	u32 en_stats;
-+	u32 mu_group_policy;
-+	u32 noise_detection;
-+	u32 noise_threshold;
-+	u32 dpd_enable;
-+	u32 set_mcast_bcast_echo;
-+	u32 atf_strict_sch;
-+	u32 atf_sched_duration;
-+	u32 ant_plzn;
-+	u32 rts_fixed_rate;
-+	u32 pdev_reset;
- };
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	struct page *page;
+-	gfp_t gfp_mask = priority;
  
- #define WMI_PDEV_PARAM_UNSUPPORTED 0
-@@ -3181,6 +3213,90 @@ enum wmi_10x_pdev_param {
- 	WMI_10X_PDEV_PARAM_CAL_PERIOD
- };
+ 	while (1) {
+ 		spin_lock(&rxq->lock);
+@@ -279,32 +339,10 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
+ 		}
+ 		spin_unlock(&rxq->lock);
  
-+enum wmi_10_4_pdev_param {
-+	WMI_10_4_PDEV_PARAM_TX_CHAIN_MASK = 0x1,
-+	WMI_10_4_PDEV_PARAM_RX_CHAIN_MASK,
-+	WMI_10_4_PDEV_PARAM_TXPOWER_LIMIT2G,
-+	WMI_10_4_PDEV_PARAM_TXPOWER_LIMIT5G,
-+	WMI_10_4_PDEV_PARAM_TXPOWER_SCALE,
-+	WMI_10_4_PDEV_PARAM_BEACON_GEN_MODE,
-+	WMI_10_4_PDEV_PARAM_BEACON_TX_MODE,
-+	WMI_10_4_PDEV_PARAM_RESMGR_OFFCHAN_MODE,
-+	WMI_10_4_PDEV_PARAM_PROTECTION_MODE,
-+	WMI_10_4_PDEV_PARAM_DYNAMIC_BW,
-+	WMI_10_4_PDEV_PARAM_NON_AGG_SW_RETRY_TH,
-+	WMI_10_4_PDEV_PARAM_AGG_SW_RETRY_TH,
-+	WMI_10_4_PDEV_PARAM_STA_KICKOUT_TH,
-+	WMI_10_4_PDEV_PARAM_AC_AGGRSIZE_SCALING,
-+	WMI_10_4_PDEV_PARAM_LTR_ENABLE,
-+	WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_BE,
-+	WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_BK,
-+	WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_VI,
-+	WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_VO,
-+	WMI_10_4_PDEV_PARAM_LTR_AC_LATENCY_TIMEOUT,
-+	WMI_10_4_PDEV_PARAM_LTR_SLEEP_OVERRIDE,
-+	WMI_10_4_PDEV_PARAM_LTR_RX_OVERRIDE,
-+	WMI_10_4_PDEV_PARAM_LTR_TX_ACTIVITY_TIMEOUT,
-+	WMI_10_4_PDEV_PARAM_L1SS_ENABLE,
-+	WMI_10_4_PDEV_PARAM_DSLEEP_ENABLE,
-+	WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_FLUSH,
-+	WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_WATERMARK,
-+	WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_TMO_EN,
-+	WMI_10_4_PDEV_PARAM_PCIELP_TXBUF_TMO_VALUE,
-+	WMI_10_4_PDEV_PARAM_PDEV_STATS_UPDATE_PERIOD,
-+	WMI_10_4_PDEV_PARAM_VDEV_STATS_UPDATE_PERIOD,
-+	WMI_10_4_PDEV_PARAM_PEER_STATS_UPDATE_PERIOD,
-+	WMI_10_4_PDEV_PARAM_BCNFLT_STATS_UPDATE_PERIOD,
-+	WMI_10_4_PDEV_PARAM_PMF_QOS,
-+	WMI_10_4_PDEV_PARAM_ARP_AC_OVERRIDE,
-+	WMI_10_4_PDEV_PARAM_DCS,
-+	WMI_10_4_PDEV_PARAM_ANI_ENABLE,
-+	WMI_10_4_PDEV_PARAM_ANI_POLL_PERIOD,
-+	WMI_10_4_PDEV_PARAM_ANI_LISTEN_PERIOD,
-+	WMI_10_4_PDEV_PARAM_ANI_OFDM_LEVEL,
-+	WMI_10_4_PDEV_PARAM_ANI_CCK_LEVEL,
-+	WMI_10_4_PDEV_PARAM_DYNTXCHAIN,
-+	WMI_10_4_PDEV_PARAM_PROXY_STA,
-+	WMI_10_4_PDEV_PARAM_IDLE_PS_CONFIG,
-+	WMI_10_4_PDEV_PARAM_POWER_GATING_SLEEP,
-+	WMI_10_4_PDEV_PARAM_AGGR_BURST,
-+	WMI_10_4_PDEV_PARAM_RX_DECAP_MODE,
-+	WMI_10_4_PDEV_PARAM_FAST_CHANNEL_RESET,
-+	WMI_10_4_PDEV_PARAM_BURST_DUR,
-+	WMI_10_4_PDEV_PARAM_BURST_ENABLE,
-+	WMI_10_4_PDEV_PARAM_SMART_ANTENNA_DEFAULT_ANTENNA,
-+	WMI_10_4_PDEV_PARAM_IGMPMLD_OVERRIDE,
-+	WMI_10_4_PDEV_PARAM_IGMPMLD_TID,
-+	WMI_10_4_PDEV_PARAM_ANTENNA_GAIN,
-+	WMI_10_4_PDEV_PARAM_RX_FILTER,
-+	WMI_10_4_PDEV_SET_MCAST_TO_UCAST_TID,
-+	WMI_10_4_PDEV_PARAM_PROXY_STA_MODE,
-+	WMI_10_4_PDEV_PARAM_SET_MCAST2UCAST_MODE,
-+	WMI_10_4_PDEV_PARAM_SET_MCAST2UCAST_BUFFER,
-+	WMI_10_4_PDEV_PARAM_REMOVE_MCAST2UCAST_BUFFER,
-+	WMI_10_4_PDEV_PEER_STA_PS_STATECHG_ENABLE,
-+	WMI_10_4_PDEV_PARAM_IGMPMLD_AC_OVERRIDE,
-+	WMI_10_4_PDEV_PARAM_BLOCK_INTERBSS,
-+	WMI_10_4_PDEV_PARAM_SET_DISABLE_RESET_CMDID,
-+	WMI_10_4_PDEV_PARAM_SET_MSDU_TTL_CMDID,
-+	WMI_10_4_PDEV_PARAM_SET_PPDU_DURATION_CMDID,
-+	WMI_10_4_PDEV_PARAM_TXBF_SOUND_PERIOD_CMDID,
-+	WMI_10_4_PDEV_PARAM_SET_PROMISC_MODE_CMDID,
-+	WMI_10_4_PDEV_PARAM_SET_BURST_MODE_CMDID,
-+	WMI_10_4_PDEV_PARAM_EN_STATS,
-+	WMI_10_4_PDEV_PARAM_MU_GROUP_POLICY,
-+	WMI_10_4_PDEV_PARAM_NOISE_DETECTION,
-+	WMI_10_4_PDEV_PARAM_NOISE_THRESHOLD,
-+	WMI_10_4_PDEV_PARAM_DPD_ENABLE,
-+	WMI_10_4_PDEV_PARAM_SET_MCAST_BCAST_ECHO,
-+	WMI_10_4_PDEV_PARAM_ATF_STRICT_SCH,
-+	WMI_10_4_PDEV_PARAM_ATF_SCHED_DURATION,
-+	WMI_10_4_PDEV_PARAM_ANT_PLZN,
-+	WMI_10_4_PDEV_PARAM_RTS_FIXED_RATE,
-+	WMI_10_4_PDEV_PARAM_CAL_PERIOD,
-+	WMI_10_4_PDEV_PARAM_PDEV_RESET,
-+};
+-		if (rxq->free_count > RX_LOW_WATERMARK)
+-			gfp_mask |= __GFP_NOWARN;
+-
+-		if (trans_pcie->rx_page_order > 0)
+-			gfp_mask |= __GFP_COMP;
+-
+ 		/* Alloc a new receive buffer */
+-		page = alloc_pages(gfp_mask, trans_pcie->rx_page_order);
+-		if (!page) {
+-			if (net_ratelimit())
+-				IWL_DEBUG_INFO(trans, "alloc_pages failed, "
+-					   "order: %d\n",
+-					   trans_pcie->rx_page_order);
+-
+-			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
+-			    net_ratelimit())
+-				IWL_CRIT(trans, "Failed to alloc_pages with %s."
+-					 "Only %u free buffers remaining.\n",
+-					 priority == GFP_ATOMIC ?
+-					 "GFP_ATOMIC" : "GFP_KERNEL",
+-					 rxq->free_count);
+-			/* We don't reschedule replenish work here -- we will
+-			 * call the restock method and if it still needs
+-			 * more buffers it will schedule replenish */
++		page = iwl_pcie_rx_alloc_page(trans);
++		if (!page)
+ 			return;
+-		}
+ 
+ 		spin_lock(&rxq->lock);
+ 
+@@ -355,7 +393,7 @@ static void iwl_pcie_rxq_free_rbs(struct iwl_trans *trans)
+ 
+ 	lockdep_assert_held(&rxq->lock);
+ 
+-	for (i = 0; i < RX_FREE_BUFFERS + RX_QUEUE_SIZE; i++) {
++	for (i = 0; i < RX_QUEUE_SIZE; i++) {
+ 		if (!rxq->pool[i].page)
+ 			continue;
+ 		dma_unmap_page(trans->dev, rxq->pool[i].page_dma,
+@@ -372,32 +410,144 @@ static void iwl_pcie_rxq_free_rbs(struct iwl_trans *trans)
+  * When moving to rx_free an page is allocated for the slot.
+  *
+  * Also restock the Rx queue via iwl_pcie_rxq_restock.
+- * This is called as a scheduled work item (except for during initialization)
++ * This is called only during initialization
+  */
+-static void iwl_pcie_rx_replenish(struct iwl_trans *trans, gfp_t gfp)
++static void iwl_pcie_rx_replenish(struct iwl_trans *trans)
+ {
+-	iwl_pcie_rxq_alloc_rbs(trans, gfp);
++	iwl_pcie_rxq_alloc_rbs(trans);
+ 
+ 	iwl_pcie_rxq_restock(trans);
+ }
+ 
+-static void iwl_pcie_rx_replenish_work(struct work_struct *data)
++/*
++ * iwl_pcie_rx_allocator - Allocates pages in the background for RX queues
++ *
++ * Allocates for each received request 8 pages
++ * Called as a scheduled work item.
++ */
++static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_rb_allocator *rba = &trans_pcie->rba;
 +
- struct wmi_pdev_set_param_cmd {
- 	__le32 param_id;
- 	__le32 param_value;
++	while (atomic_read(&rba->req_pending)) {
++		int i;
++		struct list_head local_empty;
++		struct list_head local_allocated;
++
++		INIT_LIST_HEAD(&local_allocated);
++		spin_lock(&rba->lock);
++		/* swap out the entire rba->rbd_empty to a local list */
++		list_replace_init(&rba->rbd_empty, &local_empty);
++		spin_unlock(&rba->lock);
++
++		for (i = 0; i < RX_CLAIM_REQ_ALLOC;) {
++			struct iwl_rx_mem_buffer *rxb;
++			struct page *page;
++
++			/* List should never be empty - each reused RBD is
++			 * returned to the list, and initial pool covers any
++			 * possible gap between the time the page is allocated
++			 * to the time the RBD is added.
++			 */
++			BUG_ON(list_empty(&local_empty));
++			/* Get the first rxb from the rbd list */
++			rxb = list_first_entry(&local_empty,
++					       struct iwl_rx_mem_buffer, list);
++			BUG_ON(rxb->page);
++
++			/* Alloc a new receive buffer */
++			page = iwl_pcie_rx_alloc_page(trans);
++			if (!page)
++				continue;
++			rxb->page = page;
++
++			/* Get physical address of the RB */
++			rxb->page_dma = dma_map_page(trans->dev, page, 0,
++					PAGE_SIZE << trans_pcie->rx_page_order,
++					DMA_FROM_DEVICE);
++			if (dma_mapping_error(trans->dev, rxb->page_dma)) {
++				rxb->page = NULL;
++				__free_pages(page, trans_pcie->rx_page_order);
++				continue;
++			}
++			/* dma address must be no more than 36 bits */
++			BUG_ON(rxb->page_dma & ~DMA_BIT_MASK(36));
++			/* and also 256 byte aligned! */
++			BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
++
++			/* move the allocated entry to the out list */
++			list_move(&rxb->list, &local_allocated);
++			i++;
++		}
++
++		spin_lock(&rba->lock);
++		/* add the allocated rbds to the allocator allocated list */
++		list_splice_tail(&local_allocated, &rba->rbd_allocated);
++		/* add the unused rbds back to the allocator empty list */
++		list_splice_tail(&local_empty, &rba->rbd_empty);
++		spin_unlock(&rba->lock);
++
++		atomic_dec(&rba->req_pending);
++		atomic_inc(&rba->req_ready);
++	}
++}
++
++/*
++ * iwl_pcie_rx_allocator_get - Returns the pre-allocated pages
++.*
++.* Called by queue when the queue posted allocation request and
++ * has freed 8 RBDs in order to restock itself.
++ */
++static int iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
++				     struct iwl_rx_mem_buffer
++				     *out[RX_CLAIM_REQ_ALLOC])
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_rb_allocator *rba = &trans_pcie->rba;
++	int i;
++
++	if (atomic_dec_return(&rba->req_ready) < 0) {
++		atomic_inc(&rba->req_ready);
++		IWL_DEBUG_RX(trans,
++			     "Allocation request not ready, pending requests = %d\n",
++			     atomic_read(&rba->req_pending));
++		return -ENOMEM;
++	}
++
++	spin_lock(&rba->lock);
++	for (i = 0; i < RX_CLAIM_REQ_ALLOC; i++) {
++		/* Get next free Rx buffer, remove it from free list */
++		out[i] = list_first_entry(&rba->rbd_allocated,
++			       struct iwl_rx_mem_buffer, list);
++		list_del(&out[i]->list);
++	}
++	spin_unlock(&rba->lock);
++
++	return 0;
++}
++
++static void iwl_pcie_rx_allocator_work(struct work_struct *data)
+ {
++	struct iwl_rb_allocator *rba_p =
++		container_of(data, struct iwl_rb_allocator, rx_alloc);
+ 	struct iwl_trans_pcie *trans_pcie =
+-	    container_of(data, struct iwl_trans_pcie, rx_replenish);
++		container_of(rba_p, struct iwl_trans_pcie, rba);
+ 
+-	iwl_pcie_rx_replenish(trans_pcie->trans, GFP_KERNEL);
++	iwl_pcie_rx_allocator(trans_pcie->trans);
+ }
+ 
+ static int iwl_pcie_rx_alloc(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
++	struct iwl_rb_allocator *rba = &trans_pcie->rba;
+ 	struct device *dev = trans->dev;
+ 
+ 	memset(&trans_pcie->rxq, 0, sizeof(trans_pcie->rxq));
+ 
+ 	spin_lock_init(&rxq->lock);
++	spin_lock_init(&rba->lock);
+ 
+ 	if (WARN_ON(rxq->bd || rxq->rb_stts))
+ 		return -EINVAL;
+@@ -487,15 +637,49 @@ static void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
+ 	INIT_LIST_HEAD(&rxq->rx_free);
+ 	INIT_LIST_HEAD(&rxq->rx_used);
+ 	rxq->free_count = 0;
++	rxq->used_count = 0;
+ 
+-	for (i = 0; i < RX_FREE_BUFFERS + RX_QUEUE_SIZE; i++)
++	for (i = 0; i < RX_QUEUE_SIZE; i++)
+ 		list_add(&rxq->pool[i].list, &rxq->rx_used);
+ }
+ 
++static void iwl_pcie_rx_init_rba(struct iwl_rb_allocator *rba)
++{
++	int i;
++
++	lockdep_assert_held(&rba->lock);
++
++	INIT_LIST_HEAD(&rba->rbd_allocated);
++	INIT_LIST_HEAD(&rba->rbd_empty);
++
++	for (i = 0; i < RX_POOL_SIZE; i++)
++		list_add(&rba->pool[i].list, &rba->rbd_empty);
++}
++
++static void iwl_pcie_rx_free_rba(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_rb_allocator *rba = &trans_pcie->rba;
++	int i;
++
++	lockdep_assert_held(&rba->lock);
++
++	for (i = 0; i < RX_POOL_SIZE; i++) {
++		if (!rba->pool[i].page)
++			continue;
++		dma_unmap_page(trans->dev, rba->pool[i].page_dma,
++			       PAGE_SIZE << trans_pcie->rx_page_order,
++			       DMA_FROM_DEVICE);
++		__free_pages(rba->pool[i].page, trans_pcie->rx_page_order);
++		rba->pool[i].page = NULL;
++	}
++}
++
+ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
++	struct iwl_rb_allocator *rba = &trans_pcie->rba;
+ 	int i, err;
+ 
+ 	if (!rxq->bd) {
+@@ -503,11 +687,21 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ 		if (err)
+ 			return err;
+ 	}
++	if (!rba->alloc_wq)
++		rba->alloc_wq = alloc_workqueue("rb_allocator",
++						WQ_HIGHPRI | WQ_UNBOUND, 1);
++	INIT_WORK(&rba->rx_alloc, iwl_pcie_rx_allocator_work);
++
++	spin_lock(&rba->lock);
++	atomic_set(&rba->req_pending, 0);
++	atomic_set(&rba->req_ready, 0);
++	/* free all first - we might be reconfigured for a different size */
++	iwl_pcie_rx_free_rba(trans);
++	iwl_pcie_rx_init_rba(rba);
++	spin_unlock(&rba->lock);
+ 
+ 	spin_lock(&rxq->lock);
+ 
+-	INIT_WORK(&trans_pcie->rx_replenish, iwl_pcie_rx_replenish_work);
+-
+ 	/* free all first - we might be reconfigured for a different size */
+ 	iwl_pcie_rxq_free_rbs(trans);
+ 	iwl_pcie_rx_init_rxb_lists(rxq);
+@@ -522,7 +716,7 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	memset(rxq->rb_stts, 0, sizeof(*rxq->rb_stts));
+ 	spin_unlock(&rxq->lock);
+ 
+-	iwl_pcie_rx_replenish(trans, GFP_KERNEL);
++	iwl_pcie_rx_replenish(trans);
+ 
+ 	iwl_pcie_rx_hw_init(trans, rxq);
+ 
+@@ -537,6 +731,7 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
++	struct iwl_rb_allocator *rba = &trans_pcie->rba;
+ 
+ 	/*if rxq->bd is NULL, it means that nothing has been allocated,
+ 	 * exit now */
+@@ -545,7 +740,15 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 		return;
+ 	}
+ 
+-	cancel_work_sync(&trans_pcie->rx_replenish);
++	cancel_work_sync(&rba->rx_alloc);
++	if (rba->alloc_wq) {
++		destroy_workqueue(rba->alloc_wq);
++		rba->alloc_wq = NULL;
++	}
++
++	spin_lock(&rba->lock);
++	iwl_pcie_rx_free_rba(trans);
++	spin_unlock(&rba->lock);
+ 
+ 	spin_lock(&rxq->lock);
+ 	iwl_pcie_rxq_free_rbs(trans);
+@@ -566,6 +769,43 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 	rxq->rb_stts = NULL;
+ }
+ 
++/*
++ * iwl_pcie_rx_reuse_rbd - Recycle used RBDs
++ *
++ * Called when a RBD can be reused. The RBD is transferred to the allocator.
++ * When there are 2 empty RBDs - a request for allocation is posted
++ */
++static void iwl_pcie_rx_reuse_rbd(struct iwl_trans *trans,
++				  struct iwl_rx_mem_buffer *rxb,
++				  struct iwl_rxq *rxq)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_rb_allocator *rba = &trans_pcie->rba;
++
++	/* Count the used RBDs */
++	rxq->used_count++;
++
++	/* Move the RBD to the used list, will be moved to allocator in batches
++	 * before claiming or posting a request*/
++	list_add_tail(&rxb->list, &rxq->rx_used);
++
++	/* If we have RX_POST_REQ_ALLOC new released rx buffers -
++	 * issue a request for allocator. Modulo RX_CLAIM_REQ_ALLOC is
++	 * used for the case we failed to claim RX_CLAIM_REQ_ALLOC,
++	 * after but we still need to post another request.
++	 */
++	if ((rxq->used_count % RX_CLAIM_REQ_ALLOC) == RX_POST_REQ_ALLOC) {
++		/* Move the 2 RBDs to the allocator ownership.
++		 Allocator has another 6 from pool for the request completion*/
++		spin_lock(&rba->lock);
++		list_splice_tail_init(&rxq->rx_used, &rba->rbd_empty);
++		spin_unlock(&rba->lock);
++
++		atomic_inc(&rba->req_pending);
++		queue_work(rba->alloc_wq, &rba->rx_alloc);
++	}
++}
++
+ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 				struct iwl_rx_mem_buffer *rxb)
+ {
+@@ -688,13 +928,13 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 			 */
+ 			__free_pages(rxb->page, trans_pcie->rx_page_order);
+ 			rxb->page = NULL;
+-			list_add_tail(&rxb->list, &rxq->rx_used);
++			iwl_pcie_rx_reuse_rbd(trans, rxb, rxq);
+ 		} else {
+ 			list_add_tail(&rxb->list, &rxq->rx_free);
+ 			rxq->free_count++;
+ 		}
+ 	} else
+-		list_add_tail(&rxb->list, &rxq->rx_used);
++		iwl_pcie_rx_reuse_rbd(trans, rxb, rxq);
+ }
+ 
+ /*
+@@ -704,10 +944,7 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
+-	u32 r, i;
+-	u8 fill_rx = 0;
+-	u32 count = 8;
+-	int total_empty;
++	u32 r, i, j;
+ 
+ restart:
+ 	spin_lock(&rxq->lock);
+@@ -720,14 +957,6 @@ restart:
+ 	if (i == r)
+ 		IWL_DEBUG_RX(trans, "HW = SW = %d\n", r);
+ 
+-	/* calculate total frames need to be restock after handling RX */
+-	total_empty = r - rxq->write_actual;
+-	if (total_empty < 0)
+-		total_empty += RX_QUEUE_SIZE;
+-
+-	if (total_empty > (RX_QUEUE_SIZE / 2))
+-		fill_rx = 1;
+-
+ 	while (i != r) {
+ 		struct iwl_rx_mem_buffer *rxb;
+ 
+@@ -739,29 +968,48 @@ restart:
+ 		iwl_pcie_rx_handle_rb(trans, rxb);
+ 
+ 		i = (i + 1) & RX_QUEUE_MASK;
+-		/* If there are a lot of unused frames,
+-		 * restock the Rx queue so ucode wont assert. */
+-		if (fill_rx) {
+-			count++;
+-			if (count >= 8) {
+-				rxq->read = i;
+-				spin_unlock(&rxq->lock);
+-				iwl_pcie_rx_replenish(trans, GFP_ATOMIC);
+-				count = 0;
+-				goto restart;
++
++		/* If we have RX_CLAIM_REQ_ALLOC released rx buffers -
++		 * try to claim the pre-allocated buffers from the allocator */
++		if (rxq->used_count >= RX_CLAIM_REQ_ALLOC) {
++			struct iwl_rb_allocator *rba = &trans_pcie->rba;
++			struct iwl_rx_mem_buffer *out[RX_CLAIM_REQ_ALLOC];
++
++			/* Add the remaining 6 empty RBDs for allocator use */
++			spin_lock(&rba->lock);
++			list_splice_tail_init(&rxq->rx_used, &rba->rbd_empty);
++			spin_unlock(&rba->lock);
++
++			/* If not ready - continue, will try to reclaim later.
++			* No need to reschedule work - allocator exits only on
++			* success */
++			if (!iwl_pcie_rx_allocator_get(trans, out)) {
++				/* If success - then RX_CLAIM_REQ_ALLOC
++				 * buffers were retrieved and should be added
++				 * to free list */
++				rxq->used_count -= RX_CLAIM_REQ_ALLOC;
++				for (j = 0; j < RX_CLAIM_REQ_ALLOC; j++) {
++					list_add_tail(&out[j]->list,
++						      &rxq->rx_free);
++					rxq->free_count++;
++				}
+ 			}
+ 		}
++		/* handle restock for two cases:
++		* - we just pulled buffers from the allocator
++		* - we have 8+ unstolen pages accumulated */
++		if (rxq->free_count >=  RX_CLAIM_REQ_ALLOC) {
++			rxq->read = i;
++			spin_unlock(&rxq->lock);
++			iwl_pcie_rxq_restock(trans);
++			goto restart;
++		}
+ 	}
+ 
+ 	/* Backtrack one entry */
+ 	rxq->read = i;
+ 	spin_unlock(&rxq->lock);
+ 
+-	if (fill_rx)
+-		iwl_pcie_rx_replenish(trans, GFP_ATOMIC);
+-	else
+-		iwl_pcie_rxq_restock(trans);
+-
+ 	if (trans_pcie->napi.poll)
+ 		napi_gro_flush(&trans_pcie->napi, false);
+ }
 -- 
-1.8.1.2
+2.1.4
 
