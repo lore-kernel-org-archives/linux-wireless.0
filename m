@@ -1,90 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:20484 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751487AbbFAOvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 10:51:46 -0400
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: julian.calaby@gmail.com,
-	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [PATCH v2] mac80211: Fix double locking on CSA counter update
-Date: Mon,  1 Jun 2015 16:51:31 +0200
-Message-Id: <1433170291-28665-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20150601_165150_599042_C9CB69CD)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57393 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752511AbbFCGAm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 02:00:42 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t5360F9k028812
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:00:41 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvggu8-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:00:41 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv5 03/17] mwifiex: support AP reset after bss_stop
+Date: Wed, 3 Jun 2015 16:59:33 +0530
+Message-ID: <1433330987-6808-4-git-send-email-patila@marvell.com> (sfid-20150603_080046_178979_5545529B)
+In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
+References: <1433330987-6808-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We call rcu locked ieee80211_csa_update_counter from already locked
-section. Fix it by splitting ieee80211_csa_update_counter into
-locked and unlocked variants and use the latter in rcu locked section.
+This would enable clearing of FW bss data structures when AP
+operations are stopped.
 
-v2: Use splitted functions instead of direct counter decrement.
-
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- net/mac80211/tx.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
+ drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
+ drivers/net/wireless/mwifiex/fw.h          |  1 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
+ drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
+ 5 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8df1342..312b199 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3216,6 +3216,16 @@ static void ieee80211_set_csa(struct ieee80211_sub_if_data *sdata,
- 	rcu_read_unlock();
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 3a14d3a..d47799a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 		return -1;
+ 	}
+ 
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "Failed to reset BSS\n");
++		return -1;
++	}
++
+ 	return 0;
  }
  
-+static u8 __ieee80211_csa_update_counter(struct beacon_data *beacon)
-+{
-+	beacon->csa_current_counter--;
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index a1de83f..b5033d1 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		case HostCmd_CMD_UAP_BSS_START:
+ 		case HostCmd_CMD_UAP_BSS_STOP:
+ 		case HostCmd_CMD_UAP_STA_DEAUTH:
++		case HOST_CMD_APCMD_SYS_RESET:
+ 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
+ 						      cmd_oid, data_buf,
+ 						      cmd_ptr);
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index cf386bc..45822a8 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_RSSI_INFO                         0x00a4
+ #define HostCmd_CMD_FUNC_INIT                         0x00a9
+ #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
++#define HOST_CMD_APCMD_SYS_RESET                      0x00af
+ #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
+ #define HostCmd_CMD_UAP_BSS_START                     0x00b1
+ #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index aa5b9a3..f20a09e 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_STA_DEAUTH:
+ 		break;
++	case HOST_CMD_APCMD_SYS_RESET:
++		break;
+ 	case HostCmd_CMD_MEF_CFG:
+ 		break;
+ 	case HostCmd_CMD_COALESCE_CFG:
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index a4ae283..0a3297e 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 		break;
+ 	case HostCmd_CMD_UAP_BSS_START:
+ 	case HostCmd_CMD_UAP_BSS_STOP:
++	case HOST_CMD_APCMD_SYS_RESET:
+ 		cmd->command = cpu_to_le16(cmd_no);
+ 		cmd->size = cpu_to_le16(S_DS_GEN);
+ 		break;
+@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
+ 
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
+ 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
+-		mwifiex_dbg(priv->adapter, ERROR,
+-			    "Failed to stop the BSS\n");
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
++		return -1;
++	}
 +
-+	/* the counter should never reach 0 */
-+	WARN_ON_ONCE(!beacon->csa_current_counter);
-+
-+	return beacon->csa_current_counter;
-+}
-+
- u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-@@ -3234,11 +3244,7 @@ u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
- 	if (!beacon)
- 		goto unlock;
++	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
++			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
++		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
+ 		return -1;
+ 	}
  
--	beacon->csa_current_counter--;
--
--	/* the counter should never reach 0 */
--	WARN_ON_ONCE(!beacon->csa_current_counter);
--	count = beacon->csa_current_counter;
-+	count = __ieee80211_csa_update_counter(beacon);
- 
- unlock:
- 	rcu_read_unlock();
-@@ -3338,7 +3344,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		if (beacon) {
- 			if (beacon->csa_counter_offsets[0]) {
- 				if (!is_template)
--					ieee80211_csa_update_counter(vif);
-+					__ieee80211_csa_update_counter(beacon);
- 
- 				ieee80211_set_csa(sdata, beacon);
- 			}
-@@ -3384,7 +3390,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 
- 		if (beacon->csa_counter_offsets[0]) {
- 			if (!is_template)
--				ieee80211_csa_update_counter(vif);
-+				__ieee80211_csa_update_counter(beacon);
- 
- 			ieee80211_set_csa(sdata, beacon);
- 		}
-@@ -3414,7 +3420,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 				 * for now we leave it consistent with overall
- 				 * mac80211's behavior.
- 				 */
--				ieee80211_csa_update_counter(vif);
-+				__ieee80211_csa_update_counter(beacon);
- 
- 			ieee80211_set_csa(sdata, beacon);
- 		}
 -- 
-1.9.1
+1.8.1.4
 
