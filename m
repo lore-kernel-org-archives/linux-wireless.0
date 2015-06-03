@@ -1,63 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:36181 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932313AbbFEPhG (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:55310 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752984AbbFCGCH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 11:37:06 -0400
-Received: by obbqz1 with SMTP id qz1so38933936obb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 08:37:05 -0700 (PDT)
-Message-ID: <5571C21E.1050101@lwfinger.net> (sfid-20150605_173710_830325_768B2283)
-Date: Fri, 05 Jun 2015 10:37:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 3 Jun 2015 02:02:07 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t536149O014720
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:02:06 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1usq1cgmc8-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:02:06 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv5 15/17] mwifiex: update AP WMM settings from BSS_START event
+Date: Wed, 3 Jun 2015 16:59:45 +0530
+Message-ID: <1433330987-6808-16-git-send-email-patila@marvell.com> (sfid-20150603_080350_832432_424ACC95)
+In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
+References: <1433330987-6808-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] rtlwifi: rtl8192cu: remove duplicated routine in
- _rtl92c_phy_rf6052_config_parafile
-References: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
-In-Reply-To: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2015 09:01 AM, Taehee Yoo wrote:
-> in the _rtl92c_phy_rf6052_config_parafile(), RF90_PATH_A and
-> RF90_PATH_B are same routine. so i remove one of these routine.
-> also the return routine is duplicated. so i remove it.
->
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/rf.c | 4 ----
->   1 file changed, 4 deletions(-)
->
+This was missing and would cause issue in WMM handling.
 
-The code changes are OK, but the commit message needs some work. The phrase 
-"RF90_PATH_A and RF90_PATH_B are same routine" should be changed to "cases 
-RF90_PATH_A and RF90_PATH_B call the same routine".
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_event.c | 63 ++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
-Larry
-
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-> index b878d56..8ce055c 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
-> @@ -452,9 +452,6 @@ static bool _rtl92c_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
->   		udelay(1);
->   		switch (rfpath) {
->   		case RF90_PATH_A:
-> -			rtstatus = rtl92cu_phy_config_rf_with_headerfile(hw,
-> -					(enum radio_path) rfpath);
-> -			break;
->   		case RF90_PATH_B:
->   			rtstatus = rtl92cu_phy_config_rf_with_headerfile(hw,
->   					(enum radio_path) rfpath);
-> @@ -483,7 +480,6 @@ static bool _rtl92c_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
->   		}
->   	}
->   	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "<---\n");
-> -	return rtstatus;
->   phy_rf_cfg_fail:
->   	return rtstatus;
->   }
->
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 06ce3fe..fee05f5 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -21,8 +21,70 @@
+ #include "main.h"
+ #include "11n.h"
+ 
++#define MWIFIEX_BSS_START_EVT_FIX_SIZE    12
+ 
++static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
++					 struct sk_buff *event)
++{
++	int evt_len;
++	u8 *curr;
++	u16 tlv_len;
++	struct mwifiex_ie_types_data *tlv_hdr;
++	struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
++	int mask = IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK;
++
++	priv->wmm_enabled = false;
++	skb_pull(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
++	evt_len = event->len;
++	curr = event->data;
++
++	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
++			 event->data, event->len);
++
++	while ((evt_len >= sizeof(tlv_hdr->header))) {
++		tlv_hdr = (struct mwifiex_ie_types_data *)curr;
++		tlv_len = le16_to_cpu(tlv_hdr->header.len);
++
++		if (evt_len < tlv_len + sizeof(tlv_hdr->header))
++			break;
++
++		switch (le16_to_cpu(tlv_hdr->header.type)) {
++		case WLAN_EID_HT_CAPABILITY:
++			priv->ap_11n_enabled = true;
++			break;
++
++		case WLAN_EID_VHT_CAPABILITY:
++			priv->ap_11ac_enabled = true;
++			break;
+ 
++		case WLAN_EID_VENDOR_SPECIFIC:
++			/* Point the regular IEEE IE 2 bytes into the Marvell IE
++			 * and setup the IEEE IE type and length byte fields
++			 */
++			wmm_param_ie = (void *)(curr + 2);
++			wmm_param_ie->vend_hdr.len = (u8)tlv_len;
++			wmm_param_ie->vend_hdr.element_id =
++						WLAN_EID_VENDOR_SPECIFIC;
++			mwifiex_dbg(priv->adapter, EVENT,
++				    "info: check uap capabilities:\t"
++				    "wmm parameter set count: %d\n",
++				    wmm_param_ie->qos_info_bitmap & mask);
++
++			mwifiex_wmm_setup_ac_downgrade(priv);
++			priv->wmm_enabled = true;
++			mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
++			break;
++
++		default:
++			break;
++		}
++
++		curr += (tlv_len + sizeof(tlv_hdr->header));
++		evt_len -= (tlv_len + sizeof(tlv_hdr->header));
++	}
++
++	return 0;
++}
+ 
+ /*
+  * This function handles AP interface specific events generated by firmware.
+@@ -134,6 +196,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		       ETH_ALEN);
+ 		if (priv->hist_data)
+ 			mwifiex_hist_data_reset(priv);
++		mwifiex_check_uap_capabilties(priv, adapter->event_skb);
+ 		break;
+ 	case EVENT_UAP_MIC_COUNTERMEASURES:
+ 		/* For future development */
+-- 
+1.8.1.4
 
