@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:59686 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbbFOUsp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 16:48:45 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 1/2] brcmfmac: fix double free of p2pdev interface
-Date: Mon, 15 Jun 2015 22:48:38 +0200
-Message-ID: <1434401319-16136-2-git-send-email-arend@broadcom.com> (sfid-20150615_224853_194604_A4B679A7)
-In-Reply-To: <1434401319-16136-1-git-send-email-arend@broadcom.com>
-References: <1434401319-16136-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:42935 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752652AbbFCHCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 03:02:54 -0400
+Message-ID: <1433314971.2274.1.camel@sipsolutions.net> (sfid-20150603_090257_231962_76735686)
+Subject: Re: [RFC] mac80211: convert HW flags to unsigned long bitmap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	gregory.greenman@intel.com
+Date: Wed, 03 Jun 2015 09:02:51 +0200
+In-Reply-To: <CAGRGNgV_4axC8Cq5AYkd7RQdJOnrT_9L85qisrrZnKYHyUEczQ@mail.gmail.com> (sfid-20150603_025745_650833_28A1FD99)
+References: <1433273994-14430-1-git-send-email-johannes@sipsolutions.net>
+	 <CAGRGNgV_4axC8Cq5AYkd7RQdJOnrT_9L85qisrrZnKYHyUEczQ@mail.gmail.com>
+	 (sfid-20150603_025745_650833_28A1FD99)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When freeing the driver ifp pointer it should also be removed from
-the driver interface list, which is what brcmf_remove_interface()
-does. Otherwise, the ifp pointer will be freed twice triggering
-a kernel oops.
+On Wed, 2015-06-03 at 10:57 +1000, Julian Calaby wrote:
 
-Fixes: f37d69a4babc ("brcmfmac: free ifp for non-netdev interface in p2p module")
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Why not add a ieee80211_hw_clear() function? Yes, it'd only be used in
+> 3 places, but it'd look neater.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 2e1598f..a9ba775 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2140,7 +2140,7 @@ static void brcmf_p2p_delete_p2pdev(struct brcmf_p2p_info *p2p,
- {
- 	cfg80211_unregister_wdev(&vif->wdev);
- 	p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
--	kfree(vif->ifp);
-+	brcmf_remove_interface(vif->ifp->drvr, vif->ifp->bssidx);
- 	brcmf_free_vif(vif);
- }
- 
--- 
-1.9.1
+Well, this was actually intentional.
+
+Drivers are not *supposed* to be doing this, the hardware flags are
+supposed to be constant hardware description flags. The three drivers
+clearing this specific but currently work OK due to the way this
+particular flag is treated, but that wouldn't necessarily the case for
+all of the flags; adding a _clear() function would seem to imply that
+it's OK to do this, when it's really not.
+
+johannes
 
