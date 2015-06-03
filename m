@@ -1,76 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:34337 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610AbbFUKGX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2015 06:06:23 -0400
-Received: by wicnd19 with SMTP id nd19so52395271wic.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2015 03:06:22 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/3] staging: vt6655: Correct listen interval TBTT wake up
-Date: Sun, 21 Jun 2015 11:05:55 +0100
-Message-Id: <1434881155-3464-3-git-send-email-tvboxspy@gmail.com> (sfid-20150621_120627_406535_EA34547A)
-In-Reply-To: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
-References: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:13470 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753113AbbFCHbu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 03:31:50 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/15] iwlwifi: mvm: add inactive state to ebs status
+Date: Wed,  3 Jun 2015 10:31:25 +0300
+Message-Id: <1433316696-4612-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093154_584975_8105105D)
+In-Reply-To: <1433316253.25661.3.camel@intel.com>
+References: <1433316253.25661.3.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PSbIsNextTBTTWakeUp is called at beacon intervals.
+From: David Spinadel <david.spinadel@intel.com>
 
-The should listen to next beacon on count down of wake_up_count == 1.
+Currently EBS status in scan complete notifications is set to
+success if EBS wasn't activated. FW will add a special return
+value for cases when EBS wasn't activated and we add a print
+of this status.
 
-This restores this back to vendors code but modified for mac80211.
+This change is needed for debug only, no behavior changes.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6655/device.h |  1 +
- drivers/staging/vt6655/power.c  | 16 ++++++++++++----
- 2 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  1 +
+ drivers/net/wireless/iwlwifi/mvm/scan.c        | 33 +++++++++++++++++++-------
+ 2 files changed, 25 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 5cf1b33..6aebb49 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -403,6 +403,7 @@ struct vnt_private {
- 	unsigned char abyEEPROM[EEP_MAX_CONTEXT_SIZE]; /* unsigned long alignment */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+index f34cf00..5e4cbdb 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+@@ -294,6 +294,7 @@ enum iwl_scan_ebs_status {
+ 	IWL_SCAN_EBS_SUCCESS,
+ 	IWL_SCAN_EBS_FAILED,
+ 	IWL_SCAN_EBS_CHAN_NOT_FOUND,
++	IWL_SCAN_EBS_INACTIVE,
+ };
  
- 	unsigned short wBeaconInterval;
-+	u16 wake_up_count;
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 4f4570d..9409237 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -352,6 +352,20 @@ int iwl_mvm_rx_scan_match_found(struct iwl_mvm *mvm,
+ 	return 0;
+ }
  
- 	struct work_struct interrupt_work;
- 
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index be3c4e9..06e6b9d 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -157,10 +157,18 @@ PSbIsNextTBTTWakeUp(
- 	struct ieee80211_conf *conf = &hw->conf;
- 	bool bWakeUp = false;
- 
--	if (conf->listen_interval == 1) {
--		/* Turn on wake up to listen next beacon */
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
--		bWakeUp = true;
-+	if (conf->listen_interval > 1) {
-+		if (!pDevice->wake_up_count)
-+			pDevice->wake_up_count = conf->listen_interval;
++static const char *iwl_mvm_ebs_status_str(enum iwl_scan_ebs_status status)
++{
++	switch (status) {
++	case IWL_SCAN_EBS_SUCCESS:
++		return "successful";
++	case IWL_SCAN_EBS_INACTIVE:
++		return "inactive";
++	case IWL_SCAN_EBS_FAILED:
++	case IWL_SCAN_EBS_CHAN_NOT_FOUND:
++	default:
++		return "failed";
++	}
++}
 +
-+		--pDevice->wake_up_count;
-+
-+		if (pDevice->wake_up_count == 1) {
-+			/* Turn on wake up to listen next beacon */
-+			MACvRegBitsOn(pDevice->PortOffset,
-+				      MAC_REG_PSCTL, PSCTL_LNBCN);
-+			bWakeUp = true;
-+		}
+ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
+ 					struct iwl_rx_cmd_buffer *rxb,
+ 					struct iwl_device_cmd *cmd)
+@@ -359,7 +373,6 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_periodic_scan_complete *scan_notif = (void *)pkt->data;
+ 	bool aborted = (scan_notif->status == IWL_SCAN_OFFLOAD_ABORTED);
+-	bool ebs_successful = (scan_notif->ebs_status == IWL_SCAN_EBS_SUCCESS);
+ 
+ 	/* scan status must be locked for proper checking */
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -379,13 +392,13 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
+ 
+ 		IWL_DEBUG_SCAN(mvm, "Scheduled scan %s, EBS status %s\n",
+ 			       aborted ? "aborted" : "completed",
+-			       ebs_successful ? "successful" : "failed");
++			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
+ 
+ 		mvm->scan_status &= ~IWL_MVM_SCAN_STOPPING_SCHED;
+ 	} else if (mvm->scan_status & IWL_MVM_SCAN_STOPPING_REGULAR) {
+ 		IWL_DEBUG_SCAN(mvm, "Regular scan %s, EBS status %s\n",
+ 			       aborted ? "aborted" : "completed",
+-			       ebs_successful ? "successful" : "failed");
++			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
+ 
+ 		mvm->scan_status &= ~IWL_MVM_SCAN_STOPPING_REGULAR;
+ 	} else if (mvm->scan_status & IWL_MVM_SCAN_SCHED) {
+@@ -393,14 +406,14 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
+ 
+ 		IWL_DEBUG_SCAN(mvm, "Scheduled scan %s, EBS status %s (FW)\n",
+ 			       aborted ? "aborted" : "completed",
+-			       ebs_successful ? "successful" : "failed");
++			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
+ 
+ 		mvm->scan_status &= ~IWL_MVM_SCAN_SCHED;
+ 		ieee80211_sched_scan_stopped(mvm->hw);
+ 	} else if (mvm->scan_status & IWL_MVM_SCAN_REGULAR) {
+ 		IWL_DEBUG_SCAN(mvm, "Regular scan %s, EBS status %s (FW)\n",
+ 			       aborted ? "aborted" : "completed",
+-			       ebs_successful ? "successful" : "failed");
++			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
+ 
+ 		mvm->scan_status &= ~IWL_MVM_SCAN_REGULAR;
+ 		ieee80211_scan_completed(mvm->hw,
+@@ -408,7 +421,9 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
  	}
  
- 	return bWakeUp;
+-	mvm->last_ebs_successful = ebs_successful;
++	mvm->last_ebs_successful =
++			scan_notif->ebs_status == IWL_SCAN_EBS_SUCCESS ||
++			scan_notif->ebs_status == IWL_SCAN_EBS_INACTIVE;
+ 
+ 	return 0;
+ }
+@@ -1376,10 +1391,10 @@ int iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
+ 		       uid, mvm->scan_uid_status[uid],
+ 		       notif->status == IWL_SCAN_OFFLOAD_COMPLETED ?
+ 				"completed" : "aborted",
+-		       notif->ebs_status == IWL_SCAN_EBS_SUCCESS ?
+-				"success" : "failed");
++		       iwl_mvm_ebs_status_str(notif->ebs_status));
+ 
+-	if (notif->ebs_status)
++	if (notif->ebs_status != IWL_SCAN_EBS_SUCCESS &&
++	    notif->ebs_status != IWL_SCAN_EBS_INACTIVE)
+ 		mvm->last_ebs_successful = false;
+ 
+ 	mvm->scan_uid_status[uid] = 0;
 -- 
 2.1.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
