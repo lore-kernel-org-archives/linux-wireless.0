@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailsec111.isp.belgacom.be ([195.238.20.107]:60564 "EHLO
-	mailsec111.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751550AbbFJT7l convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 15:59:41 -0400
-Date: Wed, 10 Jun 2015 21:59:38 +0200 (CEST)
-From: Fabian Frederick <fabf@skynet.be>
-Reply-To: Fabian Frederick <fabf@skynet.be>
-To: Joe Perches <joe@perches.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Julia Lawall <Julia.Lawall@lip6.fr>,
-	Kalle Valo <kvalo@codeaurora.org>
-Message-ID: <1121998377.24127.1433966378845.open-xchange@webmail.nmp.proximus.be> (sfid-20150610_215946_993031_F27E03CF)
-In-Reply-To: <1433965966.32331.25.camel@perches.com>
-References: <1433954015-24872-1-git-send-email-fabf@skynet.be> <1433965966.32331.25.camel@perches.com>
-Subject: Re: [PATCH 1/1 linux-next] ath5k: use swap() in
- ath5k_hw_get_median_noise_floor()
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:34324 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbbFDE51 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2015 00:57:27 -0400
+Received: by payr10 with SMTP id r10so21607280pay.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 21:57:27 -0700 (PDT)
+Received: from [192.168.1.6] (c-73-157-100-119.hsd1.wa.comcast.net. [73.157.100.119])
+        by mx.google.com with ESMTPSA id yn5sm2364301pac.48.2015.06.03.21.57.25
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 03 Jun 2015 21:57:25 -0700 (PDT)
+Message-ID: <556FDAB4.70206@gmail.com> (sfid-20150604_065730_602429_CD8FAEB7)
+Date: Wed, 03 Jun 2015 21:57:24 -0700
+From: huiwang <huiwang20070407@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: Driver for Netgear AC1200 (with chipset mediatek mt7612u)
+References: <556F2892.9040602@gmail.com>
+In-Reply-To: <556F2892.9040602@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+Hi All
+Please help, is there a driver for mediatek mt7612u? I see it's source code
+on mediatek's website. But it can not build with my linux kernel 3.16.0. Is
+there a patch for this driver?
+http://mediatek.com/en/downloads/mt7612u/
+Thanks
+Hui
 
-> On 10 June 2015 at 21:52 Joe Perches <joe@perches.com> wrote:
->
->
-> On Wed, 2015-06-10 at 18:33 +0200, Fabian Frederick wrote:
-> > Use kernel.h macro definition.
-> >
-> > Thanks to Julia Lawall for Coccinelle scripting support.
-> []
-> > diff --git a/drivers/net/wireless/ath/ath5k/phy.c
-> > b/drivers/net/wireless/ath/ath5k/phy.c
-> []
-> > @@ -1566,17 +1566,13 @@ static s16
-> >  ath5k_hw_get_median_noise_floor(struct ath5k_hw *ah)
-> >  {
-> >     s16 sort[ATH5K_NF_CAL_HIST_MAX];
-> > -   s16 tmp;
-> >     int i, j;
-> > 
-> >     memcpy(sort, ah->ah_nfcal_hist.nfval, sizeof(sort));
-> >     for (i = 0; i < ATH5K_NF_CAL_HIST_MAX - 1; i++) {
-> >             for (j = 1; j < ATH5K_NF_CAL_HIST_MAX - i; j++) {
-> > -                   if (sort[j] > sort[j - 1]) {
-> > -                           tmp = sort[j];
-> > -                           sort[j] = sort[j - 1];
-> > -                           sort[j - 1] = tmp;
-> > -                   }
-> > +                   if (sort[j] > sort[j - 1])
-> > +                           swap(sort[j], sort[j]);
->
-> swap(a, a) doesn't look useful.
-Thanks a lot Joe, I'll fix this one :)
 
-Regards,
-Fabian
->
->
+
