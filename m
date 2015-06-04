@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31350 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753877AbbFJJga (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 05:36:30 -0400
-Date: Wed, 10 Jun 2015 12:36:11 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, Rachel.kim@atmel.com,
-	dean.lee@atmel.com, tony.cho@atmel.com, chris.park@atmel.com
-Subject: Re: [PATCH 1/4] staging: wilc1000: modify data type
-Message-ID: <20150610093611.GD28762@mwanda> (sfid-20150610_113633_766980_D1E63EC4)
-References: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com>
- <1433923607-20927-2-git-send-email-johnny.kim@atmel.com>
+Received: from mga09.intel.com ([134.134.136.24]:28514 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751956AbbFDTnb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2015 15:43:31 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kirill@shutemov.name" <kirill@shutemov.name>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: [BUG 4.1.0-rc6] iwlwifi: "Error sending REPLY_TXFIFO_FLUSH:
+ time out after 2000ms"
+Date: Thu, 4 Jun 2015 19:43:02 +0000
+Message-ID: <1433446982.22937.4.camel@intel.com> (sfid-20150604_214355_143272_4CFB178E)
+References: <20150604173710.GA1188@node.dhcp.inet.fi>
+	 <1433441600.17813.0.camel@intel.com>
+	 <20150604193234.GA1795@node.dhcp.inet.fi>
+In-Reply-To: <20150604193234.GA1795@node.dhcp.inet.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433923607-20927-2-git-send-email-johnny.kim@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 10, 2015 at 05:06:44PM +0900, Johnny Kim wrote:
-> This replace the argument of the function to the independent data type
-> in system.
-> 
-> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-
-This changelog says what you are doing but not why.
-
-What is the point of ->u32Address?  Now that it's not 32 bits, the name
-makes no sense.  Why not just make it a pointer?
-
-There was someone changing all the datatypes with sed.  In some ways,
-those patches were easier to review because they were mindless and not
-really expected to make sense.  After we just sed the code to make it
-look more normal then we can think about 64 bit bugs (like this patch
-and the next).
-
-regards,
-dan carpenter
-
+T24gVGh1LCAyMDE1LTA2LTA0IGF0IDIyOjMyICswMzAwLCBLaXJpbGwgQS4gU2h1dGVtb3Ygd3Jv
+dGU6DQo+IE9uIFRodSwgSnVuIDA0LCAyMDE1IGF0IDA2OjEzOjIyUE0gKzAwMDAsIEdydW1iYWNo
+LCBFbW1hbnVlbCB3cm90ZToNCj4gPiBPbiBUaHUsIDIwMTUtMDYtMDQgYXQgMjA6MzcgKzAzMDAs
+IEtpcmlsbCBBLiBTaHV0ZW1vdiB3cm90ZToNCj4gPiA+IEhpLA0KPiA+ID4gDQo+ID4gPiBJJ3Zl
+IHRyaWdlcmVkIHRoZSBidWcgZmV3IHRpbWVzIGFmdGVyIHNldmVyYWwgc3VzcGVuZC9yZXN1bWUg
+Y3ljbGVzLg0KPiA+ID4gSGFyZHdhcmUgaXMgVGhpbmtwYWQgWDEgMjAxMyB3aXRoIEludGVsIENv
+cnBvcmF0aW9uIENlbnRyaW5vIEFkdmFuY2VkLU4NCj4gPiA+IDYyMDUgKDgwODY6MDA4NSkgKHJl
+diA5NikuDQo+ID4gPiANCj4gPiANCj4gPiBUaGlzIHJlYWxseSBsb29rcyBsaWtlIHRoZSBwbGF0
+Zm9ybSBwcm9ibGVtIHBlb3BsZSBoYXZlIGJlZW4gaGl0dGluZy4NCj4gPiBUaGUgZGV2aWNlIGlz
+IG5vIGxvbmdlciBhY2Nlc3NpYmxlLg0KPiA+IFVuZm9ydHVuYXRlbHksIEkgcmVhbGx5IGRvbid0
+IGtub3cgd2hhdCB3ZSBjYW4gZG8gaW4gdGhhdCBjYXNlLg0KPiANCj4gSXMgdGhlcmUgYW55dGhp
+bmcgSSBjYW4gZG8gdG8gcHJvdmlkZSBpbmZvIHlvdSBuZWVkPw0KPiANClRoaW5nIGlzIHRoYXQg
+SSBoYXZlIGFscmVhZHkgdGFsa2VkIHRvIHRoZSByZWxldmFudCBwZW9wbGUgaW50ZXJuYWxseS4N
+ClRoZSBwcm9ibGVtIGhlcmUgaXMgdGhhdCB0aGUgUENJIGJ1cyBpcyBub3QgZG9pbmcgaXRzIHdv
+cmsgYW55bW9yZS4gVGhpcw0KY2FuIGhhcHBlbiB3aGVuIG9uZSBvZiB0aGUgc2lkZXMgZG9lcyBh
+IHZpb2xhdGlvbiB0aGF0IHRoZSBvdGhlciBzaWRlDQppc24ndCByZWFkeSB0byBjb3BlIHdpdGgu
+IFRoZSBwcm9wZXIgd2F5IHRvIGNvcGUgd2l0aCB0aGlzIGlzIHRvIHRha2UNCnRoZSBtYWNoaW5l
+IGFuZCB0byBwbHVnIGl0IGluIGEgUENJIGFuYWx5emVyLiBUaGlzIGlzIGFuIGVxdWlwbWVudCB0
+aGF0DQptb25pdG9ycyBhbGwgdGhlIFBDSSB0cmFuc2FjdGlvbnMgb24gdGhlIGJ1cy4gWW91IGFy
+ZSBub3QgdGhlIGZpcnN0IHRvDQpjb21wbGFpbiwgSSBoYXZlIGhhZCBhIGxvdCBvZiBjb21wbGFp
+bnRzIGFib3V0IHRoaXMgcmVjZW50bHkuIFNvbWVvbmUNCmV2ZW4gdHJpZWQgdG8gYmlzZWN0IGJl
+Y2F1c2UgaGUgdGhvdWdodCB0aGlzIHdhcyBhIHJlZ3Jlc3Npb24uIFRoaXMNCmRpZG4ndCBicmlu
+ZyBhbnkgY29uY2x1c2lvbiBzaW5jZSB0aGUgY29tbWl0IHRoYXQgc2VydmVkIGFzIHRoZSAnZ29v
+ZCcNCmJhc2VsaW5lIHdhc24ndCB3b3JraW5nIGFueW1vcmUgYWZ0ZXIgaGUgZmluaXNoZWQgdGhl
+IGJpc2VjdGlvbi4NCkluIHNob3J0LCB1bmxlc3MgeW91IGFyZSByZWFkeSB0byBzZW5kIHRoZSBh
+Y3R1YWwgc3lzdGVtIHRoYXQgaXMgZ2l2aW5nDQp5b3UgdHJvdWJsZSwgdGhlcmUgaXNuJ3QgbXVj
+aCBJIGNhbiBkby4NCllvdSBjYW4gdHJ5IHRoZSBzdGVwIGluDQpodHRwczovL2J1Z3ppbGxhLmtl
+cm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTkxMTcxI2M0MiB0byBzZWUgaWYgaXQgY2FuDQpoZWxw
+IHJlY292ZXJpbmcuDQo=
