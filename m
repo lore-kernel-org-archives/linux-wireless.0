@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:25126 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751481AbbFCHMO convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53266 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751420AbbFDWMA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:12:14 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: pull request: iwlwifi-next 2015-05-28
-Date: Wed, 3 Jun 2015 07:12:11 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B762261@hasmsx107.ger.corp.intel.com> (sfid-20150603_091218_684998_905F92AD)
-References: <1432667798.26624.3.camel@intel.com>
-	<1432811748.26741.3.camel@intel.com>
- <87zj4htglg.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87zj4htglg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 4 Jun 2015 18:12:00 -0400
+Message-ID: <5570CD2F.4040604@candelatech.com> (sfid-20150605_001205_729038_A406D770)
+Date: Thu, 04 Jun 2015 15:11:59 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: c_mpubbi@qti.qualcomm.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: new debugfs interface to enable adaptive CCA
+References: <1431093663-15206-1-git-send-email-c_mpubbi@qti.qualcomm.com> <CA+BoTQ=480Wg4WmL0eBZ7CS9aVHjH8Lt-2x-FzAuGwsAuNA8-w@mail.gmail.com>
+In-Reply-To: <CA+BoTQ=480Wg4WmL0eBZ7CS9aVHjH8Lt-2x-FzAuGwsAuNA8-w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
-> 
-> > Hi Kalle,
-> >
-> > this is the same pull request for 4.2 with the typo fixed and without
-> > the patches that are now targeted to 4.1
-> >
-> > Thanks
-> >
-> >
-> > The following changes since commit
-> bbbe8c8c596b3784a2ed08772900e827f8ba72c5:
-> >
-> >   mac80211: add missing documentation for rate_ctrl_lock (2015-05-06
-> > 16:00:32 +0200)
-> >
-> > are available in the git repository at:
-> >
-> >
-> > https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.g
-> > it tags/iwlwifi-next-for-kalle-2015-05-28
-> 
-> Hmm, something is not right with this one (or I just haven't fully woken up
-> yet). Maybe you forgot to sign the tag?
-> 
+Is there any way to make this work on a 10.1 firmware, even if that means
+manually poking registers through debugfs?
 
-Hmm.. Weird.
-Anyway - I was just adding some more content for another pull request. So let me send another one that includes everything.
+I have a user of CT firmware that would really like Adaptive CCA to
+work, so if I can just get some clues as to what needs setting,
+I can write up an API that works with my 10.1 firmware...
+
+Thanks,
+Ben
+
+
+On 05/10/2015 11:05 PM, Michal Kazior wrote:
+> On 8 May 2015 at 16:01,  <c_mpubbi@qti.qualcomm.com> wrote:
+>> From: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
+>>
+>> For devices working in 2.4 GHz to be ETSI compliant,
+>> it is required to support adaptive CCA. Some firmwares
+>> support adaptive CCA and is disabled by default.
+>>
+>> The patch is an attempt to add a new debugfs interface to enable
+>> adaptive cca on supported firmwares. Support for this feature is
+>> advertised with a new firmware feature flag.
+> 
+> I guess this should be configured automatically depending on DFS
+> domain. You can't expect users to configure their devices via debugfs,
+> can you? This should just work.
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
