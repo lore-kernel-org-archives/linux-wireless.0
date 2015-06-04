@@ -1,132 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:34732 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734AbbFSAGh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 20:06:37 -0400
-Received: by pdbki1 with SMTP id ki1so77193807pdb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 17:06:36 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH] staging: wilc1000: fix checkpatch warning
-Date: Fri, 19 Jun 2015 09:06:28 +0900
-Message-Id: <1434672388-4074-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150619_020640_431486_3E52C53F)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52847 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750805AbbFDE4E convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Jun 2015 00:56:04 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t544svsB010945
+	for <linux-wireless@vger.kernel.org>; Wed, 3 Jun 2015 21:56:01 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvkjkx-1
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 21:56:01 -0700
+From: David Lin <dlin@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Pete Hsieh <peteh@marvell.com>, Chor Teck Law <ctlaw@marvell.com>
+Subject: [PATCH] mwlwifi: Initial submission of wireless driver to mainline
+Date: Thu, 4 Jun 2015 04:55:59 +0000
+Message-ID: <141c66f2950e4832a2bd99064db75970@SC-EXCH02.marvell.com> (sfid-20150604_065613_821632_75C8A27E)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix warning founded by checkpatch.pl.
-WARNING: __func__ should be used instead of gcc specific __FUNCTION__
+Hi all,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c        |  2 +-
- drivers/staging/wilc1000/linux_wlan_common.h | 16 ++++++++--------
- drivers/staging/wilc1000/wilc_platform.h     |  2 +-
- 3 files changed, 10 insertions(+), 10 deletions(-)
+	Herewith, I am submitting the Linux driver for WRT1900AC. The work
+was initially developed as part of openwrt effort and maintained on
+https://github.com/kaloz/mwlwifi, thanks to the host where it is
+nurtured.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 8ecbb2d..fb875c2 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2425,7 +2425,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
- 				snprintf(buff, size, "rssi %d", rssi);
- 
- 				if (copy_to_user(wrq->u.data.pointer, buff, size)) {
--					PRINT_ER("%s: failed to copy data to user buffer\n", __FUNCTION__);
-+					PRINT_ER("%s: failed to copy data to user buffer\n", __func__);
- 					s32Error = -EFAULT;
- 					goto done;
- 				}
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 830d96a..2476bfd 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -54,7 +54,7 @@ extern atomic_t DEBUG_LEVEL;
- 	do {								\
- 		if ((atomic_read(&DEBUG_LEVEL) & DEBUG) &&		\
- 		   ((atomic_read(&REGION)) & (region))) {		\
--			printk("DBG [%s: %d]", __FUNCTION__, __LINE__);	\
-+			printk("DBG [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
- 	} while (0)
-@@ -63,7 +63,7 @@ extern atomic_t DEBUG_LEVEL;
- 	do {								\
- 		if ((atomic_read(&DEBUG_LEVEL) & INFO) &&		\
- 		   ((atomic_read(&REGION)) & (region))) {		\
--			printk("INFO [%s]", __FUNCTION__);		\
-+			printk("INFO [%s]", __func__);			\
- 			printk(__VA_ARGS__);				\
- 		}							\
- 	} while (0)
-@@ -72,7 +72,7 @@ extern atomic_t DEBUG_LEVEL;
- 	do {								\
- 		if ((atomic_read(&DEBUG_LEVEL) & WRN) &&		\
- 		   ((atomic_read(&REGION)) & (region))) {		\
--			printk("WRN [%s: %d]", __FUNCTION__, __LINE__);	\
-+			printk("WRN [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
- 	} while (0)
-@@ -80,7 +80,7 @@ extern atomic_t DEBUG_LEVEL;
- #define PRINT_ER(...)							\
- 	do {								\
- 		if ((atomic_read(&DEBUG_LEVEL) & ERR)) {		\
--			printk("ERR [%s: %d]", __FUNCTION__, __LINE__);	\
-+			printk("ERR [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
- 	} while (0)
-@@ -96,7 +96,7 @@ extern atomic_t DEBUG_LEVEL;
- #define PRINT_D(region, ...)						\
- 	do {								\
- 		if (DEBUG == 1 && ((REGION)&(region))) {		\
--			printk("DBG [%s: %d]", __FUNCTION__, __LINE__); \
-+			printk("DBG [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
- 	} while (0)
-@@ -104,7 +104,7 @@ extern atomic_t DEBUG_LEVEL;
- #define PRINT_INFO(region, ...)						\
- 	do {								\
- 		if (INFO == 1 && ((REGION)&(region))) {			\
--			printk("INFO [%s]", __FUNCTION__);		\
-+			printk("INFO [%s]", __func__);			\
- 			printk(__VA_ARGS__);				\
- 		}							\
- 	} while (0)
-@@ -112,14 +112,14 @@ extern atomic_t DEBUG_LEVEL;
- #define PRINT_WRN(region, ...)						\
- 	do {								\
- 		if (WRN == 1 && ((REGION)&(region))) {			\
--			printk("WRN [%s: %d]", __FUNCTION__, __LINE__); \
-+			printk("WRN [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
- 	} while (0)
- 
- #define PRINT_ER(...)							\
- 	do {								\
--		printk("ERR [%s: %d]", __FUNCTION__, __LINE__);		\
-+		printk("ERR [%s: %d]", __func__, __LINE__);		\
- 		printk(__VA_ARGS__);					\
- 	} while (0)
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
-index 7ddea83..d03532c 100644
---- a/drivers/staging/wilc1000/wilc_platform.h
-+++ b/drivers/staging/wilc1000/wilc_platform.h
-@@ -47,6 +47,6 @@ typedef time_t WILC_Time;
- 
- /* Generic printf function */
- #define __WILC_FILE__		__FILE__
--#define __WILC_FUNCTION__	__FUNCTION__
-+#define __WILC_FUNCTION__	__func__
- #define __WILC_LINE__		__LINE__
- #endif
+	Recently, I have also patched it to pass checkpatch.pl so that it
+can be qualified for mainline.
+
+	This is still work in progress, with 8864 chipset more mature and
+tested, while 8897 for the similar use case is added recently. We
+will continue to maintain and enhance it.
+
+We hope the community will welcome this initial submission!
+
+Regards,
+
+David Lin (1):
+  Add new mac80211 driver mwlwifi.
+
+ drivers/net/wireless/Kconfig                |    1 +
+ drivers/net/wireless/Makefile               |    2 +
+ drivers/net/wireless/mwlwifi/Kconfig        |   17 +
+ drivers/net/wireless/mwlwifi/Makefile       |    9 +
+ drivers/net/wireless/mwlwifi/mwl_debug.c    |  207 ++
+ drivers/net/wireless/mwlwifi/mwl_debug.h    |  118 +
+ drivers/net/wireless/mwlwifi/mwl_dev.h      |  465 ++++
+ drivers/net/wireless/mwlwifi/mwl_fwcmd.c    | 3615 +++++++++++++++++++++++++++
+ drivers/net/wireless/mwlwifi/mwl_fwcmd.h    |  184 ++
+ drivers/net/wireless/mwlwifi/mwl_fwdl.c     |  218 ++
+ drivers/net/wireless/mwlwifi/mwl_fwdl.h     |   29 +
+ drivers/net/wireless/mwlwifi/mwl_mac80211.c |  877 +++++++
+ drivers/net/wireless/mwlwifi/mwl_mac80211.h |   32 +
+ drivers/net/wireless/mwlwifi/mwl_main.c     | 1095 ++++++++
+ drivers/net/wireless/mwlwifi/mwl_rx.c       |  589 +++++
+ drivers/net/wireless/mwlwifi/mwl_rx.h       |   30 +
+ drivers/net/wireless/mwlwifi/mwl_sysadpt.h  |   64 +
+ drivers/net/wireless/mwlwifi/mwl_tx.c       |  892 +++++++
+ drivers/net/wireless/mwlwifi/mwl_tx.h       |   34 +
+ 19 files changed, 8478 insertions(+)
+ create mode 100644 drivers/net/wireless/mwlwifi/Kconfig
+ create mode 100644 drivers/net/wireless/mwlwifi/Makefile
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_debug.c
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_debug.h
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_dev.h
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwcmd.c
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwcmd.h
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwdl.c
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwdl.h
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_mac80211.c
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_mac80211.h
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_main.c
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_rx.c
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_rx.h
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_sysadpt.h
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_tx.c
+ create mode 100644 drivers/net/wireless/mwlwifi/mwl_tx.h
+
 -- 
 1.9.1
 
