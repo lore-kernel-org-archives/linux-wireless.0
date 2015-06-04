@@ -1,100 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38383 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbbFEVUG (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:35761 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752102AbbFDLxP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 17:20:06 -0400
-Message-ID: <55721285.9040404@candelatech.com> (sfid-20150605_232010_511404_5762170A)
-Date: Fri, 05 Jun 2015 14:20:05 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 4 Jun 2015 07:53:15 -0400
 MIME-Version: 1.0
-To: YanBo <dreamfly281@gmail.com>
-CC: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix survey information reporting
-References: <1430829048-22549-1-git-send-email-vthiagar@qti.qualcomm.com> <5571D903.7060203@candelatech.com> <CAFuUQkjP18E6fjvgZMayJYiEQtpjVUAKb+_zDmS3yBfi-QF8Cg@mail.gmail.com> <5571F70D.4020101@candelatech.com> <55720425.2050604@candelatech.com> <CAFuUQkgeCY2wS1NJoA1qS4NTJuvwZuiMAp=dZx=kErc6N-Da_Q@mail.gmail.com>
-In-Reply-To: <CAFuUQkgeCY2wS1NJoA1qS4NTJuvwZuiMAp=dZx=kErc6N-Da_Q@mail.gmail.com>
+In-Reply-To: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
+References: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
+Date: Thu, 4 Jun 2015 15:53:12 +0400
+Message-ID: <CA++WF2Ne88btDrWHVoLNfiqMPc9sR73zifZ50JVGHP8_h1R9OA@mail.gmail.com> (sfid-20150604_135322_256686_08A9CA2F)
+Subject: Re: [PATCH] treewide: Fix typo compatability -> compatibility
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-metag@vger.kernel.org,
+	kvm-ppc@vger.kernel.org, wireless <linux-wireless@vger.kernel.org>,
+	sparclinux@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2015 02:00 PM, YanBo wrote:
-> On Fri, Jun 5, 2015 at 1:18 PM, Ben Greear <greearb@candelatech.com> wrote:
->> I think the wrapping might be even more weird that previously suspected.  Here is output from my
->> system.
->>
->> It looks to me that when cycle count overflows, it right-shifts all of these
->> counters one bit.  Clever, I guess, but surely a pain in the ass to deal with!
->>
->>
->> while true; do cat /debug/ieee80211/wiphy0/ath10k/fw_stats|head -10|tail -4; date; echo;sleep 1; done
->> ....
->>                 TX frame count  131810463
->>                 RX frame count 2326362883
->>                 RX clear count 2542947851
->>                    Cycle count 4180338939
->> Fri Jun  5 13:13:48 PDT 2015
->>
->>                 TX frame count  134407497
->>                 RX frame count 2374518035
->>                 RX clear count 2595337341
->>                    Cycle count 4269010333
->> Fri Jun  5 13:13:49 PDT 2015
->>
->>                 TX frame count   69523007
->>                 RX frame count 1229973316
->>                 RX clear count 1344131636
->>                    Cycle count 2210412416
->> Fri Jun  5 13:13:50 PDT 2015
->>
->>                 TX frame count   72305753
->>                 RX frame count 1280184579
->>                 RX clear count 1398937635
->>                    Cycle count 2299234941
->> Fri Jun  5 13:13:51 PDT 2015
->>
->>                 TX frame count   75050021
->>                 RX frame count 1330205664
->>                 RX clear count 1453548082
->>                    Cycle count 2387901854
->> Fri Jun  5 13:13:52 PDT 2015
->>
->>
-> The scan count is 32 bits hence, it will wrap rapidly with 24 seconds
-> cycle, the new WMI interface will
-> supply these count in 64 bits to avoid such issue.
+On 27 May 2015 at 16:05, Laurent Pinchart
+<laurent.pinchart@ideasonboard.com> wrote:
+> Even though 'compatability' has a dedicated entry in the Wiktionary,
+> it's listed as 'Mispelling of compatibility'. Fix it.
+>
+> Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> ---
+>  drivers/net/wireless/ipw2x00/ipw2100.h   | 2 +-
+>
 
-That is not the problem... you can just sample often to resolve that.
+Acked-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 
-The problem is that the other 3 are divided by 2 at time when the main
-cycle-counter counter wraps.  So as far as I can tell, you cannot
-actually calculate precise totals from old and new values for the tx/rx/rx-clear
-counters if cycle-counter has wrapped since you last read stats.
+for ipw2100 part.
 
-Only way I can see to deal with it is to sample often enough that I can
-afford to throw away samples where cycle-count wraps.  With this implemented,
-I see ath10k 'activity' calculation the same as ath9k.
-
-This wrap logic is coming out of the hardware registers as far as I
-can tell, so I'm not sure that just firmware changes can really resolve
-this fully.
-
-If all they are doing is implementing faster polling in the firmware
-itself, that seems like a waste of effort and precious instruction RAM.
-
-Maybe newer hardware will act in a more sane manner so we can deal with
-normal 32-bit wraps.
-
-Thanks,
-Ben
-
-> 
-> BR /Yanbo
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Stanislav.
