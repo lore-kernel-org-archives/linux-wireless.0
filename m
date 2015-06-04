@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40491 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754528AbbFWL4A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 07:56:00 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-Date: Tue, 23 Jun 2015 11:55:56 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com> (sfid-20150623_135605_009399_C4AB45BA)
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
- <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
-In-Reply-To: <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:36503 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752157AbbFDAsY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Jun 2015 20:48:24 -0400
+Received: by pdjm12 with SMTP id m12so18510168pdj.3
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 17:48:23 -0700 (PDT)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192cu: Fix performance issue.
+Date: Thu,  4 Jun 2015 09:47:42 +0900
+Message-Id: <1433378862-2064-1-git-send-email-ap420073@gmail.com> (sfid-20150604_024905_662054_25AB2F15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+Pg0KPiA+PiBJIHN1c3BlY3QgdGhpcyBpcyBiZWNhdXNlIG9mIFAyUF9HTyBOb0E/DQo+ID4+
-IFdobyBzaG91bGQgY2FyZSBhYm91dCB0aGlzIGRpcmVjdCBwcm9iZXMgdHggd2hlbiBHTyBpcyBu
-b3QgcHJlc2VudD8NCj4gPj4NCj4gPj4gSW4gY2FzZSB3ZSBkaWRuJ3Qgc2VuZCBkaXJlY3QgcHJv
-YmVzIC0gdGhlcmUgaXMgbm8gcHJvYmxlbSBhbmQgVEMNCj4gPj4gd29ya3MgY29ycmVjdGx5DQo+
-ID4+DQo+ID4NCj4gPiBJbnRlcmVzdGluZyA6KQ0KPiA+DQo+ID4gQW55IGNoYW5jZSB5b3UgY2Fu
-IHByb3ZpZGUgdHJhY2UtY21kIGFuZCBzbmlmZmVyIGNhcHR1cmU/DQo+ID4NCj4gPiBOb3JtYWxs
-eSwgaWYgd2UgcHJvdmlkZWQgdGhlIEZXIHdpdGggdGhlIEJTU0lEIGluZm9ybWF0aW9uIGFuZCBU
-U0YNCj4gPiBpbmZvcm1hdGlvbiBmb3Igc3luY2luZywgb25jZSB0aGUgRlcgaGVhcnMgdGhlIDFz
-dCBiZWFjb24gd2l0aCB0aGUgTm9BDQo+ID4gaXQgc2hvdWxkIHN5bmMgb24gaXQgYW5kIG5vdCB0
-cnkgdG8gYXR0ZW1wdCB0byB0cmFuc21pdCBhbnkgZnJhbWVzIGFzDQo+ID4gbG9uZyBhcyB0aGUg
-QVAgaXMgYWJzZW50LiBJdCBtaWdodCBhbHNvIGJlIHJlbGF0ZWQgdG8gdGhlIGZhY3QgdGhhdA0K
-PiA+IHRoZSBwcm9iZSByZXF1ZXN0cyBhcmUgc2VudCB0byBicm9hZGNhc3QgYWRkcmVzcywgYnV0
-IEkgbmVlZCB0bw0KPiA+IGZ1cnRoZXIgY2hlY2tzIHRoaXMuIEFueXdheSwgaGF2aW5nIHNvbWUg
-ZGF0YSB3b3VsZCBoZWxwIDspDQo+ID4NCj4gVGhhdHMgZXhhY3RseSB0aGUgcG9pbnQsIGlmIEdP
-IGlzIGluIE5vQSBGVyB3aWxsIG5vdCB0cmFuc21pdCBidXQgbWFjODAyMTENCj4gdGltZWQtb3V0
-IGZvciBkaXJlY3QgcHJvYmUuDQo+IA0KPiBTbyB0aGUgcXVlc3Rpb24gaXMgc2hvdWxkIG1hYzgw
-MjExIGV2ZW4gc2VuZCB0aGUgZGlyZWN0IHByb2JlIGluIHRoaXMgY2FzZQ0KPiB3aGVuIEdPIGlz
-IGluIE5vQT8NCg0KSSB0aGluayB0aGF0IHRoaXMgc2hvdWxkIGJlIHRoZSBkcml2ZXIncy9GVyBy
-ZXNwb25zaWJpbGl0eSwgYXMgYXQgdGhpcyBzdGFnZSBtYWM4MDIxMSBhbHJlYWR5IGNvbmZpZ3Vy
-ZWQgYWxsIHRoZSBpbmZvcm1hdGlvbiBuZWVkZWQgZm9yIHRoZSBkcml2ZXIgdG8gc3luYyAoYXNz
-dW1pbmcgaXQgaGVhcmQgYSBiZWFjb24vcHJvYmUpIGFuZCBpbiBhZGRpdGlvbiBtZ2RfcHJlcGFy
-ZV90eCgpIGlzIGNhbGxlZCB0byBoYXZlIHRoZSBkcml2ZXIvRlcgcHJlcGFyZSBmb3IgYSB0cmFu
-c21pc3Npb24gb2YgdGhlIG1nbXQuIGZyYW1lLCBpbmNsdWRpbmcgc3luY2hyb25pemF0aW9uIHdp
-dGggdGhlIFAyUCBHTyBwb3dlciBzdGF0ZS4NCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
+After physical reconnect, the rtl8192cu chipset shows low
+transmission rates.It cause is that variable "iqk_initialized"
+do not de-initialized. So I add this code.
+
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 1898596..6a4ef05 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -987,7 +987,6 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	int err = 0;
+-	static bool iqk_initialized;
+ 	unsigned long flags;
+ 
+ 	/* As this function can take a very long time (up to 350 ms)
+@@ -1038,11 +1037,11 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
+ 	if (ppsc->rfpwr_state == ERFON) {
+ 		rtl92c_phy_set_rfpath_switch(hw, 1);
+-		if (iqk_initialized) {
++		if (rtlphy->iqk_initialized) {
+ 			rtl92c_phy_iq_calibrate(hw, true);
+ 		} else {
+ 			rtl92c_phy_iq_calibrate(hw, false);
+-			iqk_initialized = true;
++			rtlphy->iqk_initialized = true;
+ 		}
+ 		rtl92c_dm_check_txpower_tracking(hw);
+ 		rtl92c_phy_lc_calibrate(hw);
+@@ -1391,6 +1390,9 @@ void rtl92cu_card_disable(struct ieee80211_hw *hw)
+ 		_CardDisableHWSM(hw);
+ 	else
+ 		_CardDisableWithoutHWSM(hw);
++
++	/* after power off we should do iqk again */
++	rtlpriv->phy.iqk_initialized = false;
+ }
+ 
+ void rtl92cu_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+-- 
+2.1.4
+
