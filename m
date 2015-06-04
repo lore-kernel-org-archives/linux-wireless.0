@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:10376 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753861AbbFOMbr (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13454 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753002AbbFDOCf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 08:31:47 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: enable VHT for IBSS
-References: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com>
-	<87mw06bab5.fsf@kamboji.qca.qualcomm.com>
-	<CALhHN=pD+ROqjhYOXsjb7Dc=XGp+YZy6w445ipC4cOGOYUEA3g@mail.gmail.com>
-Date: Mon, 15 Jun 2015 15:31:41 +0300
-In-Reply-To: <CALhHN=pD+ROqjhYOXsjb7Dc=XGp+YZy6w445ipC4cOGOYUEA3g@mail.gmail.com>
-	(Janusz Dziedzic's message of "Fri, 12 Jun 2015 07:12:05 +0200")
-Message-ID: <87pp4x9mqa.fsf@kamboji.qca.qualcomm.com> (sfid-20150615_143151_284907_019F69AA)
+	Thu, 4 Jun 2015 10:02:35 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t54DxwNM016871
+	for <linux-wireless@vger.kernel.org>; Thu, 4 Jun 2015 07:02:34 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvmuh4-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2015 07:02:34 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	<liuzy@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 2/2] mwifiex: update current config_band info in start_ap
+Date: Fri, 5 Jun 2015 01:01:54 +0530
+Message-ID: <1433446314-13098-2-git-send-email-patila@marvell.com> (sfid-20150604_160237_973733_68EAFCD7)
+In-Reply-To: <1433446314-13098-1-git-send-email-patila@marvell.com>
+References: <1433446314-13098-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+It was observed that AP beacons would not reflect correct regulatory
+information upon starting AP in A band. This was because of missing
+AP config band update in set_channel of start_ap.
 
-> On 11 June 2015 at 16:15, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
->>
->>> Enable VHT support for IBSS, while mac80211/cfg80211 and
->>> wpa_supplicant already support this.
->>>
->>> In my test env, ath10k 2x2 I get:
->>> (udp) ath10k-1 >>>> ath10k-2 (server) -  speed: 419 Mbits/sec
->>> (tcp) ath10k-1 >>>> ath10k-2 (server) -  speed: 404 Mbits/sec
->>
->> What hw and firmware version? Do you expect this to work with both
->> qca988x and qca6174?
->
-> Results are for qca9888x.
-> But IBSS (VHT IBSS) works correctly also with qca6174 FW.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_cmd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Ok, thanks. I added this info to the commit log in the pending branch.
-
->> Oh, we should still add ATH10K_FW_FEATURE_NO_ADHOC so that we can
->> disable ad-hoc on 10.x firmwares. Anyone have some spare time to cook up
->> a patch?
->>
-> I am not sure we need this, while we add
-> ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC)
-> only for main and tlv version. Seems we already cover 10.x case correctly.
-
-Ah, I had forgotten that. Good that we have that.
-
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index a62b43e..b749300 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -832,6 +832,8 @@ void mwifiex_uap_set_channel(struct mwifiex_private *priv,
+ 		if (chandef.width > NL80211_CHAN_WIDTH_40)
+ 			config_bands |= BAND_AAC;
+ 	}
++
++	priv->adapter->config_bands = config_bands;
+ }
+ 
+ int mwifiex_config_start_uap(struct mwifiex_private *priv,
 -- 
-Kalle Valo
+1.8.1.4
+
