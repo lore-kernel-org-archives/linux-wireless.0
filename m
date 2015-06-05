@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34035 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367AbbFWLnT (ORCPT
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:34557 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660AbbFEMid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 07:43:19 -0400
-Received: by pabvl15 with SMTP id vl15so5523673pab.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2015 04:43:19 -0700 (PDT)
-Date: Tue, 23 Jun 2015 17:13:08 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
-	dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com
-Subject: Re: [PATCH 1/4] staging: wilc1000: wilc_wfi_netdevice.c: remove
- commented codes
-Message-ID: <20150623114146.GA9221@sudip-PC> (sfid-20150623_134328_361503_56DA56CD)
-References: <1435018667-12507-1-git-send-email-chaehyun.lim@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435018667-12507-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 5 Jun 2015 08:38:33 -0400
+From: Masanari Iida <standby24x7@gmail.com>
+To: sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: corbet@lwn.net, linux-media@vger.kernel.org,
+	Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] Doc:nfc: Fix typo in nfc-hci.txt
+Date: Fri,  5 Jun 2015 21:38:19 +0900
+Message-Id: <1433507899-13387-1-git-send-email-standby24x7@gmail.com> (sfid-20150605_143850_618578_1C5B7747)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2015 at 09:17:44AM +0900, Chaehyun Lim wrote:
-> Remove commented codes.
-> 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_netdevice.c | 21 ---------------------
->  1 file changed, 21 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.c b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-> index 170ca65..478cd2b 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-<snip>
-> @@ -931,10 +914,6 @@ int WILC_WFI_InitModule(void)
->  
->  	WILC_memset(priv[0]->au8AssociatedBss, 0xFF, ETH_ALEN);
->  
-> -
-> -	/* ret = host_int_init(&priv[0]->hWILCWFIDrv); */
-> -	/*copy handle to the other driver*/
-> -	/* priv[1]->hWILCWFIDrv = priv[0]->hWILCWFIDrv; */
->  	if (ret)
->  		PRINT_ER("Error Init Driver\n");
-This is not applying. My file is having here:
-if (ret) {
-	PRINT_ER("Error Init Driver\n");
-}
+This patch fix a spelling typo in nfc-hci.txt
 
-is this patch dependent on some prior patch which is not yet applied
-to staging?
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ Documentation/nfc/nfc-hci.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-regards
-sudip
+diff --git a/Documentation/nfc/nfc-hci.txt b/Documentation/nfc/nfc-hci.txt
+index 0686c9e..0dc078c 100644
+--- a/Documentation/nfc/nfc-hci.txt
++++ b/Documentation/nfc/nfc-hci.txt
+@@ -122,7 +122,7 @@ This must be done from a context that can sleep.
+ PHY Management
+ --------------
+ 
+-The physical link (i2c, ...) management is defined by the following struture:
++The physical link (i2c, ...) management is defined by the following structure:
+ 
+ struct nfc_phy_ops {
+ 	int (*write)(void *dev_id, struct sk_buff *skb);
+-- 
+2.4.2.387.gf86f31a
+
