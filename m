@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51233 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbbFOJiw (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:34203 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422727AbbFEOBz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 05:38:52 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [V2] rtlwifi: rtl8192c: Add init codes for "fw_version"
- and"fw_subversion".
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1433684016-24340-1-git-send-email-ap420073@gmail.com>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
-	linux-wireless@vger.kernel.org
-Message-Id: <20150615093851.5F08714086F@smtp.codeaurora.org> (sfid-20150615_113855_610014_C652E0F3)
-Date: Mon, 15 Jun 2015 09:38:51 +0000 (UTC)
+	Fri, 5 Jun 2015 10:01:55 -0400
+Received: by pdbki1 with SMTP id ki1so54128782pdb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 07:01:54 -0700 (PDT)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] rtlwifi: rtl8192cu: Fix variable isfirst_ampdu
+Date: Fri,  5 Jun 2015 23:01:38 +0900
+Message-Id: <1433512898-30137-3-git-send-email-ap420073@gmail.com> (sfid-20150605_160201_080796_EF915D9D)
+In-Reply-To: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
+References: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rtl92cu_rx_query_desc set a isampdu twice.
+but second code is related to isfirst_ampdu.
+so i change it.
 
-> The variable "fw_version" is used in the _ResetDigitalProcedure1().
-> but It is not initialized. so I add init codes for "fw_version" and
-> "fw_subversion".
-> 
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks, applied to wireless-drivers-next.git.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index cbead00..95880fe 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -321,7 +321,7 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
+ 	stats->rate = (u8) GET_RX_DESC_RX_MCS(pdesc);
+ 	stats->shortpreamble = (u16) GET_RX_DESC_SPLCP(pdesc);
+ 	stats->isampdu = (bool) (GET_RX_DESC_PAGGR(pdesc) == 1);
+-	stats->isampdu = (bool) ((GET_RX_DESC_PAGGR(pdesc) == 1)
++	stats->isfirst_ampdu = (bool)((GET_RX_DESC_PAGGR(pdesc) == 1)
+ 				   && (GET_RX_DESC_FAGGR(pdesc) == 1));
+ 	stats->timestamp_low = GET_RX_DESC_TSFL(pdesc);
+ 	stats->rx_is40Mhzpacket = (bool) GET_RX_DESC_BW(pdesc);
+-- 
+2.1.4
 
-Kalle Valo
