@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40779 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbbFJVnp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8194 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754774AbbFERnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 17:43:45 -0400
-Message-ID: <5578AF90.5030609@candelatech.com> (sfid-20150610_234347_989140_73DFFFB6)
-Date: Wed, 10 Jun 2015 14:43:44 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 5 Jun 2015 13:43:22 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Liu CF/TW <cfliu.tw@gmail.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add cryptmode param to support sw crypto and raw tx injection.
+References: <1433383018-47335-1-git-send-email-cfliu.tw@gmail.com>
+	<CAG5N3qFZdQ5roH-OJWoo4UqSSv4864Uz5xRrepOpvEO_Upjyzw@mail.gmail.com>
+Date: Fri, 5 Jun 2015 20:43:11 +0300
+In-Reply-To: <CAG5N3qFZdQ5roH-OJWoo4UqSSv4864Uz5xRrepOpvEO_Upjyzw@mail.gmail.com>
+	(Liu CF's message of "Thu, 4 Jun 2015 10:53:14 -0700")
+Message-ID: <87r3pqnj9s.fsf@kamboji.qca.qualcomm.com> (sfid-20150605_194327_306211_0E4D9894)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Add netdev name to  NL80211_CMD_STOP_AP event?
-References: <5578AA11.2020505@candelatech.com>  (sfid-20150610_232022_833916_9A1896A2) <1433972365.3145.18.camel@sipsolutions.net>
-In-Reply-To: <1433972365.3145.18.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2015 02:39 PM, Johannes Berg wrote:
-> On Wed, 2015-06-10 at 14:20 -0700, Ben Greear wrote:
->> While trying to make 'iw' able to print out something useful for
->> the 'stop_ap' event, I notice there is not really any human friendly
->> info in the message (just phy id (which may not match phy name), ifindex, and some other
->> wiphy related numeric ID.
->>
->> Any reason not to add the netdev name (NL80211_ATTR_IFNAME) to this and
->> related messages?
-> 
-> We're not really adding that *anywhere*, and you can trivially look it
-> up based on the ifindex, so why bother?
+"Liu CF/TW" <cfliu.tw@gmail.com> writes:
 
-I was thinking netdevice might go away before user-space can decode the
-message ( I was assuming that on delete you would stop and very shortly
-after that delete the netdev).
+> Kalle et al. Please ignore this patch and review the new email with
+> subject line changed with [PATCH V2] highlighted. Looks like only by
+> doing so would it start a new thread in the ML.
+> That patch is exactly the same as the last one in this thread. I
+> updated the commit message with more testing details.
 
-It's a small patch to iw and the kernel as far as I can tell...when I
-get it working, I'll post for consideration..if you don't want it,
-I won't complain :)
-
-Thanks,
-Ben
-
-> 
-> johannes
-> 
-
+If you send a new version of the patch, please increase the version
+number so that it's easy to find the latest patch. "v2" vs "V2" is just
+confusing, so just mark the new patch as v3. It's not like we are
+running out of version numbers or anything like that.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
