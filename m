@@ -1,140 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58160 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbbFHMij (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:36625 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752329AbbFEPbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 08:38:39 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 1/4] brcmfmac: Update msgbuf read pointer quicker.
-Date: Mon, 8 Jun 2015 14:38:32 +0200
-Message-ID: <1433767115-8136-2-git-send-email-arend@broadcom.com> (sfid-20150608_143845_903831_CE2C1EF2)
-In-Reply-To: <1433767115-8136-1-git-send-email-arend@broadcom.com>
-References: <1433767115-8136-1-git-send-email-arend@broadcom.com>
+	Fri, 5 Jun 2015 11:31:51 -0400
+Received: by oihb142 with SMTP id b142so55758980oih.3
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 08:31:50 -0700 (PDT)
+Message-ID: <5571C0E3.1050601@lwfinger.net> (sfid-20150605_173154_804662_A3A5CB66)
+Date: Fri, 05 Jun 2015 10:31:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Taehee Yoo <ap420073@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] rtlwifi: rtl8192cu: Fix variable isfirst_ampdu
+References: <1433512898-30137-1-git-send-email-ap420073@gmail.com> <1433512898-30137-3-git-send-email-ap420073@gmail.com>
+In-Reply-To: <1433512898-30137-3-git-send-email-ap420073@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 06/05/2015 09:01 AM, Taehee Yoo wrote:
+> rtl92cu_rx_query_desc set a isampdu twice.
+> but second code is related to isfirst_ampdu.
+> so i change it.
+>
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
-On device to host data using msgbuf the read pointer gets updated
-once all data is processed. Updating this pointer more frequently
-allows the firmware to add more data quicker. This will result in
-slightly higher and more stable throughput on CPU bounded host
-processors.
+Looks good.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/commonring.c | 19 ++++++++-----------
- drivers/net/wireless/brcm80211/brcmfmac/commonring.h |  3 ++-
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c     | 12 +++++++++++-
- 3 files changed, 21 insertions(+), 13 deletions(-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/commonring.c b/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
-index 26c6587..7b0e521 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
-@@ -223,8 +223,6 @@ void brcmf_commonring_write_cancel(struct brcmf_commonring *commonring,
- void *brcmf_commonring_get_read_ptr(struct brcmf_commonring *commonring,
- 				    u16 *n_items)
- {
--	void *ret_addr;
--
- 	if (commonring->cr_update_wptr)
- 		commonring->cr_update_wptr(commonring->cr_ctx);
- 
-@@ -235,19 +233,18 @@ void *brcmf_commonring_get_read_ptr(struct brcmf_commonring *commonring,
- 	if (*n_items == 0)
- 		return NULL;
- 
--	ret_addr = commonring->buf_addr +
--		   (commonring->r_ptr * commonring->item_len);
--
--	commonring->r_ptr += *n_items;
--	if (commonring->r_ptr == commonring->depth)
--		commonring->r_ptr = 0;
--
--	return ret_addr;
-+	return commonring->buf_addr +
-+	       (commonring->r_ptr * commonring->item_len);
- }
- 
- 
--int brcmf_commonring_read_complete(struct brcmf_commonring *commonring)
-+int brcmf_commonring_read_complete(struct brcmf_commonring *commonring,
-+				   u16 n_items)
- {
-+	commonring->r_ptr += n_items;
-+	if (commonring->r_ptr == commonring->depth)
-+		commonring->r_ptr = 0;
-+
- 	if (commonring->cr_write_rptr)
- 		return commonring->cr_write_rptr(commonring->cr_ctx);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/commonring.h b/drivers/net/wireless/brcm80211/brcmfmac/commonring.h
-index 3d40401..b850336 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/commonring.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/commonring.h
-@@ -62,7 +62,8 @@ void brcmf_commonring_write_cancel(struct brcmf_commonring *commonring,
- 				   u16 n_items);
- void *brcmf_commonring_get_read_ptr(struct brcmf_commonring *commonring,
- 				    u16 *n_items);
--int brcmf_commonring_read_complete(struct brcmf_commonring *commonring);
-+int brcmf_commonring_read_complete(struct brcmf_commonring *commonring,
-+				   u16 n_items);
- 
- #define brcmf_commonring_n_items(commonring) (commonring->depth)
- #define brcmf_commonring_len_item(commonring) (commonring->item_len)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 1b47de0..898c380 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -75,6 +75,8 @@
- 
- #define BRCMF_MSGBUF_DELAY_TXWORKER_THRS	96
- #define BRCMF_MSGBUF_TRICKLE_TXWORKER_THRS	32
-+#define BRCMF_MSGBUF_UPDATE_RX_PTR_THRS		48
-+
- 
- struct msgbuf_common_hdr {
- 	u8				msgtype;
-@@ -1257,19 +1259,27 @@ static void brcmf_msgbuf_process_rx(struct brcmf_msgbuf *msgbuf,
- {
- 	void *buf;
- 	u16 count;
-+	u16 processed;
- 
- again:
- 	buf = brcmf_commonring_get_read_ptr(commonring, &count);
- 	if (buf == NULL)
- 		return;
- 
-+	processed = 0;
- 	while (count) {
- 		brcmf_msgbuf_process_msgtype(msgbuf,
- 					     buf + msgbuf->rx_dataoffset);
- 		buf += brcmf_commonring_len_item(commonring);
-+		processed++;
-+		if (processed == BRCMF_MSGBUF_UPDATE_RX_PTR_THRS) {
-+			brcmf_commonring_read_complete(commonring, processed);
-+			processed = 0;
-+		}
- 		count--;
- 	}
--	brcmf_commonring_read_complete(commonring);
-+	if (processed)
-+		brcmf_commonring_read_complete(commonring, processed);
- 
- 	if (commonring->r_ptr == 0)
- 		goto again;
--- 
-1.9.1
+Larry
+
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+> index cbead00..95880fe 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+> @@ -321,7 +321,7 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
+>   	stats->rate = (u8) GET_RX_DESC_RX_MCS(pdesc);
+>   	stats->shortpreamble = (u16) GET_RX_DESC_SPLCP(pdesc);
+>   	stats->isampdu = (bool) (GET_RX_DESC_PAGGR(pdesc) == 1);
+> -	stats->isampdu = (bool) ((GET_RX_DESC_PAGGR(pdesc) == 1)
+> +	stats->isfirst_ampdu = (bool)((GET_RX_DESC_PAGGR(pdesc) == 1)
+>   				   && (GET_RX_DESC_FAGGR(pdesc) == 1));
+>   	stats->timestamp_low = GET_RX_DESC_TSFL(pdesc);
+>   	stats->rx_is40Mhzpacket = (bool) GET_RX_DESC_BW(pdesc);
+>
 
