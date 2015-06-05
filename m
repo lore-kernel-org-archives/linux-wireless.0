@@ -1,147 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:60818 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752536AbbFXMVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2015 08:21:04 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
-Subject: RE: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-Date: Wed, 24 Jun 2015 12:20:58 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com> (sfid-20150624_142115_447516_281D3121)
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
-	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
-	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
- <1435082418.2777.11.camel@ipeer-box>
-In-Reply-To: <1435082418.2777.11.camel@ipeer-box>
-Content-Type: multipart/mixed;
-	boundary="_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_"
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:36181 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932313AbbFEPhG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2015 11:37:06 -0400
+Received: by obbqz1 with SMTP id qz1so38933936obb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 08:37:05 -0700 (PDT)
+Message-ID: <5571C21E.1050101@lwfinger.net> (sfid-20150605_173710_830325_768B2283)
+Date: Fri, 05 Jun 2015 10:37:02 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Taehee Yoo <ap420073@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] rtlwifi: rtl8192cu: remove duplicated routine in
+ _rtl92c_phy_rf6052_config_parafile
+References: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
+In-Reply-To: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+On 06/05/2015 09:01 AM, Taehee Yoo wrote:
+> in the _rtl92c_phy_rf6052_config_parafile(), RF90_PATH_A and
+> RF90_PATH_B are same routine. so i remove one of these routine.
+> also the return routine is duplicated. so i remove it.
+>
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/rf.c | 4 ----
+>   1 file changed, 4 deletions(-)
+>
 
-SGkgSmFudXN6LA0KDQpBbnkgY2hhbmNlIHlvdSBjYW4gY2hlY2sgaWYgdGhlIGF0dGFjaGVkIHBh
-dGNoIGZpeGVzIHRoZSBpc3N1ZSB5b3UgcmVwb3J0ZWQ/IA0KDQpUaGFua3MgaW4gYWR2YW5jZSwN
-Cg0KSWxhbi4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC13
-aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4g
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUGVlciwgSWxhbg0KPiBTZW50OiBU
-dWVzZGF5LCBKdW5lIDIzLCAyMDE1IDIxOjAwDQo+IFRvOiBjaGFpdGFueWEubWdpdEBnbWFpbC5j
-b20NCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgamFudXN6LmR6aWVkemlj
-QHRpZXRvLmNvbQ0KPiBTdWJqZWN0OiBSZTogQVAgKyBQMlBfR08gbXVsdGljaGFuIHRlc3RzIHdp
-dGggaW50ZWw3MjYwIGFzIGEgUDJQX0NMSUVOVCAtDQo+IGRpcmVjdCBwcm9iZSBpc3N1ZQ0KPiAN
-Cj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS3Jpc2huYSBDaGFpdGFueWEN
-Cj4gPGNoYWl0YW55YS5tZ2l0QGdtYWlsLmNvbTxtYWlsdG86S3Jpc2huYSUyMENoYWl0YW55YSUy
-MCUzY2NoYWl0YW55YS5tDQo+IGdpdEBnbWFpbC5jb20lM2U+Pg0KPiBUbzogIlBlZXIsIElsYW4i
-DQo+IDxpbGFuLnBlZXJAaW50ZWwuY29tPG1haWx0bzolMjJQZWVyLCUyMElsYW4lMjIlMjAlM2Np
-bGFuLnBlZXJAaW50ZWwuYw0KPiBvbSUzZT4+DQo+IENjOiBKYW51c3ogRHppZWR6aWMNCj4gPGph
-bnVzei5kemllZHppY0B0aWV0by5jb208bWFpbHRvOkphbnVzeiUyMER6aWVkemljJTIwJTNjamFu
-dXN6LmR6aWVkemljDQo+IEB0aWV0by5jb20lM2U+PiwgbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnIDxsaW51eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPG1haWx0bzolMjJsaW51
-eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnJTIyJTIwJTNjbGludXgtd2lyZWxlc3NAdmdl
-ci5rZXJuZWwub3JnJTNlPj4NCj4gU3ViamVjdDogUmU6IEFQICsgUDJQX0dPIG11bHRpY2hhbiB0
-ZXN0cyB3aXRoIGludGVsNzI2MCBhcyBhIFAyUF9DTElFTlQgLQ0KPiBkaXJlY3QgcHJvYmUgaXNz
-dWUNCj4gRGF0ZTogVHVlLCAyMyBKdW4gMjAxNSAxNzozNDo1OSArMDUzMA0KPiANCj4gDQo+IA0K
-PiBPbiBUdWUsIEp1biAyMywgMjAxNSBhdCA1OjI1IFBNLCBQZWVyLCBJbGFuDQo+IDxpbGFuLnBl
-ZXJAaW50ZWwuY29tPG1haWx0bzppbGFuLnBlZXJAaW50ZWwuY29tPj4gd3JvdGU6DQo+ID4+ID4+
-DQo+ID4+ID4+IEkgc3VzcGVjdCB0aGlzIGlzIGJlY2F1c2Ugb2YgUDJQX0dPIE5vQT8NCj4gPj4g
-Pj4gV2hvIHNob3VsZCBjYXJlIGFib3V0IHRoaXMgZGlyZWN0IHByb2JlcyB0eCB3aGVuIEdPIGlz
-IG5vdCBwcmVzZW50Pw0KPiA+PiA+Pg0KPiA+PiA+PiBJbiBjYXNlIHdlIGRpZG4ndCBzZW5kIGRp
-cmVjdCBwcm9iZXMgLSB0aGVyZSBpcyBubyBwcm9ibGVtIGFuZCBUQw0KPiA+PiA+PiB3b3JrcyBj
-b3JyZWN0bHkNCj4gPj4gPj4NCj4gPj4gPg0KPiA+PiA+IEludGVyZXN0aW5nIDopDQo+ID4+ID4N
-Cj4gPj4gPiBBbnkgY2hhbmNlIHlvdSBjYW4gcHJvdmlkZSB0cmFjZS1jbWQgYW5kIHNuaWZmZXIg
-Y2FwdHVyZT8NCj4gPj4gPg0KPiA+PiA+IE5vcm1hbGx5LCBpZiB3ZSBwcm92aWRlZCB0aGUgRlcg
-d2l0aCB0aGUgQlNTSUQgaW5mb3JtYXRpb24gYW5kIFRTRg0KPiA+PiA+IGluZm9ybWF0aW9uIGZv
-ciBzeW5jaW5nLCBvbmNlIHRoZSBGVyBoZWFycyB0aGUgMXN0IGJlYWNvbiB3aXRoIHRoZQ0KPiA+
-PiA+IE5vQSBpdCBzaG91bGQgc3luYyBvbiBpdCBhbmQgbm90IHRyeSB0byBhdHRlbXB0IHRvIHRy
-YW5zbWl0IGFueQ0KPiA+PiA+IGZyYW1lcyBhcyBsb25nIGFzIHRoZSBBUCBpcyBhYnNlbnQuIEl0
-IG1pZ2h0IGFsc28gYmUgcmVsYXRlZCB0byB0aGUNCj4gPj4gPiBmYWN0IHRoYXQgdGhlIHByb2Jl
-IHJlcXVlc3RzIGFyZSBzZW50IHRvIGJyb2FkY2FzdCBhZGRyZXNzLCBidXQgSQ0KPiA+PiA+IG5l
-ZWQgdG8gZnVydGhlciBjaGVja3MgdGhpcy4gQW55d2F5LCBoYXZpbmcgc29tZSBkYXRhIHdvdWxk
-IGhlbHAgOykNCj4gPj4gPg0KPiA+PiBUaGF0cyBleGFjdGx5IHRoZSBwb2ludCwgaWYgR08gaXMg
-aW4gTm9BIEZXIHdpbGwgbm90IHRyYW5zbWl0IGJ1dA0KPiA+PiBtYWM4MDIxMSB0aW1lZC1vdXQg
-Zm9yIGRpcmVjdCBwcm9iZS4NCj4gPj4NCj4gPj4gU28gdGhlIHF1ZXN0aW9uIGlzIHNob3VsZCBt
-YWM4MDIxMSBldmVuIHNlbmQgdGhlIGRpcmVjdCBwcm9iZSBpbiB0aGlzDQo+ID4+IGNhc2Ugd2hl
-biBHTyBpcyBpbiBOb0E/DQo+ID4NCj4gPiBJIHRoaW5rIHRoYXQgdGhpcyBzaG91bGQgYmUgdGhl
-IGRyaXZlcidzL0ZXIHJlc3BvbnNpYmlsaXR5LCBhcyBhdCB0aGlzIHN0YWdlDQo+IG1hYzgwMjEx
-IGFscmVhZHkgY29uZmlndXJlZCBhbGwgdGhlIGluZm9ybWF0aW9uIG5lZWRlZCBmb3IgdGhlIGRy
-aXZlciB0bw0KPiBzeW5jIChhc3N1bWluZyBpdCBoZWFyZCBhIGJlYWNvbi9wcm9iZSkgYW5kIGlu
-IGFkZGl0aW9uIG1nZF9wcmVwYXJlX3R4KCkgaXMNCj4gY2FsbGVkIHRvIGhhdmUgdGhlIGRyaXZl
-ci9GVyBwcmVwYXJlIGZvciBhIHRyYW5zbWlzc2lvbiBvZiB0aGUgbWdtdC4gZnJhbWUsDQo+IGlu
-Y2x1ZGluZyBzeW5jaHJvbml6YXRpb24gd2l0aCB0aGUgUDJQIEdPIHBvd2VyIHN0YXRlLg0KPiBB
-Z3JlZSwgdGhlIGFjdHVhbCB0cmFuc21pc3Npb24gc2hvdWxkIGRlZmluaXRlbHkgYmUgaW4gZHJp
-dmVyL0ZXIGJ1dCB0aGUNCj4gdGltZW91dCBmb3Igc3VjaCBmcmFtZXMgYXJlIHN0aWxsIGF0IG1h
-YzgwMjExLCBzbyB1bmxlc3Mgc3UgaXQgc3luY2hyb25pemVzIHRoZQ0KPiB0aW1lb3V0cyB0byBH
-TyBOb0EgcGVyaW9kIHRoaXMgImNhbiIgZmFpbCBkZXBlbmRpbmcgb24gdGhlIGFic2VuY2UgcGVy
-aW9kIG9mDQo+IEdPLiBEZWZhdWx0IGF1dGhfdGltZW91dCBpcyAyMDBtcy4NCj4gDQo+IA0KPiBJ
-IGRvIG5vdCB0aGluayB0aGF0IG1hYzgwMjExIHNob3VsZCBoYW5kbGUgdGhlIHN5bmNocm9uaXph
-dGlvbiwgbW9zdGx5IHNpbmNlDQo+IGl0IGRvZXMgbm90ICBnZXQgdGhlIGJlYWNvbnMgZnJvbSB0
-aGUgQVAgd2UgYXJlIGFzc29jaWF0ZWQgd2l0aC4gIEFzIEkNCj4gZXhwbGFpbmVkIGFib3ZlLCB0
-aGlzIHNob3VsZCBiZSB0aGUgZHJpdmVycy9GVyByZXNwb25zaWJpbGl0eSBvbmNlIHRoZXkgaGF2
-ZQ0KPiBhbGwgdGhlIGluZm9ybWF0aW9uIHRoZXkgcmVxdWlyZS4gQXMgc3VjaCwgSSB0aGluayB0
-aGF0IGlzIGV4cGVjdGVkIGZyb20gdGhlDQo+IGRyaXZlci9GVyB0byBvbmx5IHNlbmQgdGhlIGZy
-YW1lcyB3aGVuIHRoZSBQMlAgR08vQVAgaXMgb24gdGhlIGNoYW5uZWwuDQo+IA0KPiBSZWdhcmRz
-LA0KPiANCj4gSWxhbi4NCj4gDQo+IA0KPiANCj4gTiAgICAgciAgeSAgIGIgWCAgx6d2IF4gKd66
-ey5uICsgICAgeyAgKt6VICwge2F5IB3Kh9qZICxqICAgZiAgIGggICB6IB4gdyAgICAgICBqOit2
-ICAgdyBqIG0gICAgICAgICB6WisNCj4g3aJqIiAgISBpDQo=
+The code changes are OK, but the commit message needs some work. The phrase 
+"RF90_PATH_A and RF90_PATH_B are same routine" should be changed to "cases 
+RF90_PATH_A and RF90_PATH_B call the same routine".
 
---_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_
-Content-Type: application/octet-stream;
-	name="0001-iwlwifi-mvm-Use-the-AP-station-for-non_sta-transmit.patch"
-Content-Description: 0001-iwlwifi-mvm-Use-the-AP-station-for-non_sta-transmit.patch
-Content-Disposition: attachment;
-	filename="0001-iwlwifi-mvm-Use-the-AP-station-for-non_sta-transmit.patch";
-	size=2293; creation-date="Wed, 24 Jun 2015 12:15:52 GMT";
-	modification-date="Wed, 24 Jun 2015 12:15:52 GMT"
-Content-Transfer-Encoding: base64
+Larry
 
-RnJvbSAxMjVkNzQ2MDlmNmY1YTU4ZDliMTFiMjE2ZDZkNjI2MGRlM2JhNTllIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBJbGFuIFBlZXIgPGlsYW4ucGVlckBpbnRlbC5jb20+CkRhdGU6
-IFdlZCwgMjQgSnVuIDIwMTUgMDk6MjM6MDEgKzAzMDAKU3ViamVjdDogW1BBVENIXSBpd2x3aWZp
-OiBtdm06IFVzZSB0aGUgQVAgc3RhdGlvbiBmb3Igbm9uX3N0YSB0cmFuc21pdAoKSW4gaXdsX212
-bV90eF9za2Jfbm9uX3N0YSgpLCBpbiBjYXNlIG9mIG1hbmFnZWQgaW50ZXJmYWNlLAp1c2UgdGhl
-IEFQIHN0YXRpb24gaW5zdGVhZCBvZiB0aGUgYXV4aWxpYXJ5IHN0YXRpb24gYXMKb3RoZXJ3aXNl
-LCB0aGUgZnJhbWVzIGNhbiBiZSBzZW50IHRvIGFuIGFic2VudCBQMlAgR08gYXMKdGhlIEZXIGRv
-ZXMgbm90IGJsb2NrIHRyYW5zbWlzc2lvbnMgZm9yIHRoZSBhdXhpbGlhcnkgc3RhdGlvbgpzaW5j
-ZSBpdCBpcyBub3QgYXNzb2NpYXRlZCB3aXRoIHRoZSBzdGF0aW9uIE1BQyBjb250ZXh0LgoKQ2hh
-bmdlLUlkOiBJMWFhMTU1NmU4ZmI4YzUxOTVjZDdiZmUxNjA2NTIxZjhkMjVmMTc1OQpTaWduZWQt
-b2ZmLWJ5OiBJbGFuIFBlZXIgPGlsYW4ucGVlckBpbnRlbC5jb20+Ci0tLQogZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9tdm0vdHguYyB8IDI0ICsrKysrKysrKysrKysrKystLS0tLS0tLQog
-MSBmaWxlIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCgpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vdHguYyBiL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3R4LmMKaW5kZXggN2JhN2ExMTguLmVhYzUxNDIgMTAwNjQ0
-Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3R4LmMKKysrIGIvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vdHguYwpAQCAtMzY2LDE4ICszNjYsMjYgQEAgaW50
-IGl3bF9tdm1fdHhfc2tiX25vbl9zdGEoc3RydWN0IGl3bF9tdm0gKm12bSwgc3RydWN0IHNrX2J1
-ZmYgKnNrYikKIAkJSUVFRTgwMjExX1NLQl9DQihza2IpLT5od19xdWV1ZSA9IG12bS0+YXV4X3F1
-ZXVlOwogCiAJLyoKLQkgKiBJZiB0aGUgaW50ZXJmYWNlIG9uIHdoaWNoIGZyYW1lIGlzIHNlbnQg
-aXMgdGhlIFAyUF9ERVZJQ0UKKwkgKiBJZiB0aGUgaW50ZXJmYWNlIG9uIHdoaWNoIHRoZSBmcmFt
-ZSBpcyBzZW50IGlzIHRoZSBQMlBfREVWSUNFCiAJICogb3IgYW4gQVAvR08gaW50ZXJmYWNlIHVz
-ZSB0aGUgYnJvYWRjYXN0IHN0YXRpb24gYXNzb2NpYXRlZAotCSAqIHdpdGggaXQ7IG90aGVyd2lz
-ZSB1c2UgdGhlIEFVWCBzdGF0aW9uLgorCSAqIHdpdGggaXQ7IG90aGVyd2lzZSBpZiB0aGUgaW50
-ZXJmYWNlIGlzIGEgbWFuYWdlZCBpbnRlcmZhY2UKKwkgKiB1c2UgdGhlIEFQIHN0YXRpb24gYXNz
-b2NpYXRlZCB3aXRoIGl0OyBvdGhlcndpc2UgdXNlIHRoZSBBVVgKKwkgKiBzdGF0aW9uLgogCSAq
-LwotCWlmIChpbmZvLT5jb250cm9sLnZpZiAmJgotCSAgICAoaW5mby0+Y29udHJvbC52aWYtPnR5
-cGUgPT0gTkw4MDIxMV9JRlRZUEVfUDJQX0RFVklDRSB8fAotCSAgICAgaW5mby0+Y29udHJvbC52
-aWYtPnR5cGUgPT0gTkw4MDIxMV9JRlRZUEVfQVApKSB7CisJc3RhX2lkID0gbXZtLT5hdXhfc3Rh
-LnN0YV9pZDsKKwlpZiAoaW5mby0+Y29udHJvbC52aWYpIHsKIAkJc3RydWN0IGl3bF9tdm1fdmlm
-ICptdm12aWYgPQogCQkJaXdsX212bV92aWZfZnJvbV9tYWM4MDIxMShpbmZvLT5jb250cm9sLnZp
-Zik7Ci0JCXN0YV9pZCA9IG12bXZpZi0+YmNhc3Rfc3RhLnN0YV9pZDsKLQl9IGVsc2UgewotCQlz
-dGFfaWQgPSBtdm0tPmF1eF9zdGEuc3RhX2lkOworCisJCWlmIChpbmZvLT5jb250cm9sLnZpZi0+
-dHlwZSA9PSBOTDgwMjExX0lGVFlQRV9QMlBfREVWSUNFIHx8CisJCSAgICBpbmZvLT5jb250cm9s
-LnZpZi0+dHlwZSA9PSBOTDgwMjExX0lGVFlQRV9BUCkKKwkJCXN0YV9pZCA9IG12bXZpZi0+YmNh
-c3Rfc3RhLnN0YV9pZDsKKwkJZWxzZSBpZiAoaW5mby0+Y29udHJvbC52aWYtPnR5cGUgPT0gTkw4
-MDIxMV9JRlRZUEVfU1RBVElPTikgeworCQkJdTggYXBfc3RhX2lkID0gQUNDRVNTX09OQ0UobXZt
-dmlmLT5hcF9zdGFfaWQpOworCisJCQlpZiAoYXBfc3RhX2lkICE9IElXTF9NVk1fU1RBVElPTl9D
-T1VOVCkKKwkJCQlzdGFfaWQgPSBhcF9zdGFfaWQ7CisJCX0KIAl9CiAKIAlJV0xfREVCVUdfVFgo
-bXZtLCAic3RhdGlvbiBJZCAlZCwgcXVldWU9JWRcbiIsIHN0YV9pZCwgaW5mby0+aHdfcXVldWUp
-OwotLSAKMS45LjEKCg==
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+> index b878d56..8ce055c 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+> @@ -452,9 +452,6 @@ static bool _rtl92c_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
+>   		udelay(1);
+>   		switch (rfpath) {
+>   		case RF90_PATH_A:
+> -			rtstatus = rtl92cu_phy_config_rf_with_headerfile(hw,
+> -					(enum radio_path) rfpath);
+> -			break;
+>   		case RF90_PATH_B:
+>   			rtstatus = rtl92cu_phy_config_rf_with_headerfile(hw,
+>   					(enum radio_path) rfpath);
+> @@ -483,7 +480,6 @@ static bool _rtl92c_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
+>   		}
+>   	}
+>   	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "<---\n");
+> -	return rtstatus;
+>   phy_rf_cfg_fail:
+>   	return rtstatus;
+>   }
+>
 
---_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_--
