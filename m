@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0183.hostedemail.com ([216.40.44.183]:36532 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751897AbbFZPQa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 11:16:30 -0400
-Message-ID: <1435331786.9377.56.camel@perches.com> (sfid-20150626_171635_219847_768E8C38)
-Subject: Re: [PATCH 3/4] staging: wilc1000: remove whitespaces before quoted
- newlines
-From: Joe Perches <joe@perches.com>
-To: Luis de Bethencourt <luis@debethencourt.com>
-Cc: linux-kernel@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Date: Fri, 26 Jun 2015 08:16:26 -0700
-In-Reply-To: <20150626151141.GA31177@goodgumbo.baconseed.org>
-References: <20150626144555.GA30031@goodgumbo.baconseed.org>
-	 <1435330172.9377.52.camel@perches.com>
-	 <20150626151141.GA31177@goodgumbo.baconseed.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46402 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1423011AbbFEPKD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2015 11:10:03 -0400
+From: David Lin <dlin@marvell.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Pete Hsieh" <peteh@marvell.com>, Chor Teck Law <ctlaw@marvell.com>
+Subject: RE: [PATCH] mwlwifi: Initial submission of wireless driver to
+ mainline
+Date: Fri, 5 Jun 2015 15:09:59 +0000
+Message-ID: <30794f68f6374c509f1f98002ff7a7ab@SC-EXCH02.marvell.com> (sfid-20150605_171010_236013_3FD65F9F)
+References: <141c66f2950e4832a2bd99064db75970@SC-EXCH02.marvell.com>
+ <557073D2.4080704@candelatech.com>
+ <a244e659293f480fb9a53ee6a83f03bf@SC-EXCH02.marvell.com>
+ <55712547.4010408@candelatech.com>
+In-Reply-To: <55712547.4010408@candelatech.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-06-26 at 17:11 +0200, Luis de Bethencourt wrote:
-> On Fri, Jun 26, 2015 at 07:49:32AM -0700, Joe Perches wrote:
-> > On Fri, 2015-06-26 at 16:45 +0200, Luis de Bethencourt wrote:
-> > > Fix all checkpatch.pl warnings:
-> > > WARNING: unnecessary whitespace before a quoted newline
-> > 
-> > Unassociated but:
-> > 
-> > > diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> > []
-> > > @@ -740,7 +740,7 @@ s32 Handle_set_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
-> > >  	if (pu8IPAddr[0] < 192)
-> > >  		pu8IPAddr[0] = 0;
-> > >  
-> > > -	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %d.%d.%d.%d \n", idx, pu8IPAddr[0], pu8IPAddr[1], pu8IPAddr[2], pu8IPAddr[3]);
-> > > +	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %d.%d.%d.%d\n", idx, pu8IPAddr[0], pu8IPAddr[1], pu8IPAddr[2], pu8IPAddr[3]);
-> > 
-> > These printks with ip addresses could use vsprintf extension %pI4
-> > 
-> > 	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n",
-> > 		   idx, pu8IPAddr);
-> > 
-> > 
+> On 06/05/2015 12:29 PM, Ben Greear wrote:
+> On 06/04/2015 07:41 PM, David Lin wrote:
+> >> On 06/03/2015 09:55 PM, David Lin wrote:
+> >>> Hi all,
+> >>>
+> >>> 	Herewith, I am submitting the Linux driver for WRT1900AC. The
+> work
+> >>> was initially developed as part of openwrt effort and maintained on
+> >>> https://github.com/kaloz/mwlwifi, thanks to the host where it is
+> >>> nurtured.
+> >>>
+> >>> 	Recently, I have also patched it to pass checkpatch.pl so that it
+> >>> can be qualified for mainline.
+> >>>
+> >>> 	This is still work in progress, with 8864 chipset more mature and
+> >>> tested, while 8897 for the similar use case is added recently. We
+> >>> will continue to maintain and enhance it.
+> >>>
+> >>> We hope the community will welcome this initial submission!
+> >>
+> >> Do you have any notes on what features this driver/NIC provides?
+> >>
+> >> Does it require firmware, and if so, is source available?
+> >>
+> > Support both 11b/g/a/n/ac AP mode, and STA mode (though the primary use
+> > case is AP). Driver matches most features in mac80211 and
+> > hostapd/supplicant. All basic securities mode have been validated.
+> >
+> > Yes, it will require firmware microcode. Matching "binary" is reprovided as a
+> > separate .bin file(s) for each chip. Source codes of chip-dependent microcode
+> > will not be provided.
 > 
-> Hi Joe,
+> Can it do multiple virtual stations (and other virtual device combinations)?
+> 
+> With ath10k, for instance, there is a complex firmware between the host and
+> the NIC hardware, so any bugs and limitations in the firmware make it almost
+> impossible to add interesting features or fix bugs w/out being able to modify
+> the firmware source.
+> 
+> Any comments on how 'thick' the marvell firmware is?
+> 
+Yes, the partitioning technically allows multiple logical interfaces. However, this open source driver is not yet developed for many combinations, yet.
+ 
+It is hard to comment about "thickness" of the firmware :) All (most?) 802.11 mgmt packets are handled in host driver. Think of microcode as part of hardware or controlling/abstracting the hardware.
 
-Hello Luis.
-
-> I could send this as a 5th patch in the series if you'd like, and set you as
-> author.
-
-Sure, but if you're doing it, you are the author.
-You could use a "Suggested-by" tag, but I don't care.
-
-> -   PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %d.%d.%d.%d\n", idx, pu8IPAddr[0], pu8IPAddr[1], pu8    IPAddr[2], pu8IPAddr[3]);
-> +   PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n", idx, pu8IPAddr);
-
-There are 3 sites in host_interface that could be changed.
-
-
+Thanks,
+David
+> 
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
