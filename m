@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38533 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906AbbFRGVL (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:32820 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751921AbbFEWAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 02:21:11 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/10] Add QCA99X0 support
-References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Thu, 18 Jun 2015 09:20:51 +0300
-In-Reply-To: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
-	(Vasanthakumar Thiagarajan's message of "Tue, 16 Jun 2015 10:42:12
-	+0530")
-Message-ID: <87wpz17d18.fsf@kamboji.qca.qualcomm.com> (sfid-20150618_082115_530712_9296D80D)
+	Fri, 5 Jun 2015 18:00:37 -0400
+Received: by labpy14 with SMTP id py14so63216812lab.0
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 15:00:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <30794f68f6374c509f1f98002ff7a7ab@SC-EXCH02.marvell.com>
+References: <141c66f2950e4832a2bd99064db75970@SC-EXCH02.marvell.com>
+	<557073D2.4080704@candelatech.com>
+	<a244e659293f480fb9a53ee6a83f03bf@SC-EXCH02.marvell.com>
+	<55712547.4010408@candelatech.com>
+	<30794f68f6374c509f1f98002ff7a7ab@SC-EXCH02.marvell.com>
+Date: Fri, 5 Jun 2015 15:00:35 -0700
+Message-ID: <CAAnMG+NaQ8YzC6g2X-1odoWmMJO7edzfFqUPaWBi3cn7iLF2sw@mail.gmail.com> (sfid-20150606_000040_597650_598C76F2)
+Subject: Re: [PATCH] mwlwifi: Initial submission of wireless driver to mainline
+From: Alexis Green <agreen@cococorp.com>
+To: David Lin <dlin@marvell.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>,
+	Chor Teck Law <ctlaw@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+Are there plans to add support for 802.11s mesh point mode?
 
-> This patch set adds changes for QCA99X0 chip in pci probe,
-> Copy Engine init and firmware downloads. Since it is still
-> work in progress the support for this chip is not yet
-> advertised in pci device table.
+On Fri, Jun 5, 2015 at 8:09 AM, David Lin <dlin@marvell.com> wrote:
+>> On 06/05/2015 12:29 PM, Ben Greear wrote:
+>> On 06/04/2015 07:41 PM, David Lin wrote:
+>> >> On 06/03/2015 09:55 PM, David Lin wrote:
+>> >>> Hi all,
+>> >>>
+>> >>>   Herewith, I am submitting the Linux driver for WRT1900AC. The
+>> work
+>> >>> was initially developed as part of openwrt effort and maintained on
+>> >>> https://github.com/kaloz/mwlwifi, thanks to the host where it is
+>> >>> nurtured.
+>> >>>
+>> >>>   Recently, I have also patched it to pass checkpatch.pl so that it
+>> >>> can be qualified for mainline.
+>> >>>
+>> >>>   This is still work in progress, with 8864 chipset more mature and
+>> >>> tested, while 8897 for the similar use case is added recently. We
+>> >>> will continue to maintain and enhance it.
+>> >>>
+>> >>> We hope the community will welcome this initial submission!
+>> >>
+>> >> Do you have any notes on what features this driver/NIC provides?
+>> >>
+>> >> Does it require firmware, and if so, is source available?
+>> >>
+>> > Support both 11b/g/a/n/ac AP mode, and STA mode (though the primary use
+>> > case is AP). Driver matches most features in mac80211 and
+>> > hostapd/supplicant. All basic securities mode have been validated.
+>> >
+>> > Yes, it will require firmware microcode. Matching "binary" is reprovided as a
+>> > separate .bin file(s) for each chip. Source codes of chip-dependent microcode
+>> > will not be provided.
+>>
+>> Can it do multiple virtual stations (and other virtual device combinations)?
+>>
+>> With ath10k, for instance, there is a complex firmware between the host and
+>> the NIC hardware, so any bugs and limitations in the firmware make it almost
+>> impossible to add interesting features or fix bugs w/out being able to modify
+>> the firmware source.
+>>
+>> Any comments on how 'thick' the marvell firmware is?
+>>
+> Yes, the partitioning technically allows multiple logical interfaces. However, this open source driver is not yet developed for many combinations, yet.
 >
-> Vasanthakumar Thiagarajan (10):
->   ath10k: Add a table to store hw specific values
->   ath10k: Add new reg_address/mask to hw register table
->   ath10k: Add hw register/values for QCA99X0 chip
->   ath10k: Copy Engine related changes for QCA99X0
->   ath10k: Make target cpu address to CE address conversion chip specific
->   ath10k: Add chip reset sequence for QCA99X0
->   ath10k: Extend CE src desc flags for interrupt indication
->   ath10k: Fix BMI communication timeout for QCA99X0
->   ath10k: Add support for code swap
->   ath10k: Add BMI param value to execute otp to hw_param
-
-These patches don't apply and don't have proper sha1 ids. Please rebase.
-And remember always to use ath.git master branch as the baseline, don't
-apply any custom patches because that will break 3-way merge.
-
-Applying: ath10k: Add a table to store hw specific values
-Applying: ath10k: Add new reg_address/mask to hw register table
-Applying: ath10k: Add hw register/values for QCA99X0 chip
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/core.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0003 ath10k: Add hw register/values for QCA99X0 chip
-
--- 
-Kalle Valo
+> It is hard to comment about "thickness" of the firmware :) All (most?) 802.11 mgmt packets are handled in host driver. Think of microcode as part of hardware or controlling/abstracting the hardware.
+>
+> Thanks,
+> David
+>>
+>> --
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
