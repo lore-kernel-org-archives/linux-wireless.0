@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail6.webfaction.com ([74.55.86.74]:52880 "EHLO
-	smtp.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753419AbbFLSEs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 14:04:48 -0400
-Received: from [192.168.1.14] (c-73-194-208-34.hsd1.nj.comcast.net [73.194.208.34])
-	by smtp.webfaction.com (Postfix) with ESMTP id 43C7E211FF90
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 17:43:17 +0000 (UTC)
-Message-ID: <557B1A2F.1010608@mindchasers.com> (sfid-20150612_200451_778474_F0F4C860)
-Date: Fri, 12 Jun 2015 13:43:11 -0400
-From: "Robert E. Cochran" <wifi@mindchasers.com>
+Received: from tex.lwn.net ([70.33.254.29]:50395 "EHLO vena.lwn.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751422AbbFEW4R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Jun 2015 18:56:17 -0400
+Date: Sat, 6 Jun 2015 07:56:10 +0900
+From: Jonathan Corbet <corbet@lwn.net>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] Doc:nfc: Fix typo in nfc-hci.txt
+Message-ID: <20150606075610.216f1a2e@lwn.net> (sfid-20150606_005621_514339_0D4B368E)
+In-Reply-To: <1433507899-13387-1-git-send-email-standby24x7@gmail.com>
+References: <1433507899-13387-1-git-send-email-standby24x7@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi in AP mode is experimental?
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Fri,  5 Jun 2015 21:38:19 +0900
+Masanari Iida <standby24x7@gmail.com> wrote:
 
-On wireless.wiki.kernel.org, iwlwifi is listed as experimental for AP Mode.
+> This patch fix a spelling typo in nfc-hci.txt
 
-We have done some basic testing with a 3160 card in AP mode & hostapd 
-without issue.  Now we need to determine if it makes sense to ramp up a 
-rigorous test plan for it.
+Applied to the docs tree, thanks.
 
-Is AP mode with iwlwifi basically a "use at your own risk" scenario?  
-Can I expect AP mode to be supported more fully in the future?  Is there 
-a particular HW module that does AP mode better than others?  Is there a 
-list of missing features?  Are others using iwlwifi for AP mode in a  
-product?
-
-Any additional, current information on this will be greatly appreciated.
-
-Thank you,
-
-Bob
-
+jon
