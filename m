@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:33140 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbbF3M3i (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:34639 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbbFEKwE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2015 08:29:38 -0400
-Received: by ieqy10 with SMTP id y10so10986354ieq.0
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2015 05:29:37 -0700 (PDT)
+	Fri, 5 Jun 2015 06:52:04 -0400
+Received: by wibut5 with SMTP id ut5so17042347wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 03:52:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1838270231.63341435666635059.JavaMail.weblogic@ep2mlwas06c>
-References: <1838270231.63341435666635059.JavaMail.weblogic@ep2mlwas06c>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 30 Jun 2015 22:29:18 +1000
-Message-ID: <CAGRGNgVvugS6G19E-_B01+WQS4t9SzcYpudH6kiw1tXLPus41A@mail.gmail.com> (sfid-20150630_142941_889532_5E048F0A)
-Subject: Re: [PATCH] iw: Static analyser fixes
-To: amit.khatri@samsung.com
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Rahul Jain <rahul.jain@samsung.com>,
-	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>
+In-Reply-To: <01fb01d09f7c$d6bdfa00$8439ee00$@acksys.fr>
+References: <01eb01d09f64$fd522730$f7f67590$@acksys.fr>
+	<CA+BoTQnehkYETptdaw4VsqKmhAampJ9_Zm_bNfH6PwGX7SqRww@mail.gmail.com>
+	<01f701d09f71$47ae9910$d70bcb30$@acksys.fr>
+	<CA+BoTQkQyTbgctPOTSvLH76+YKkjvYySJSYtGszJ3TT35-uXQQ@mail.gmail.com>
+	<01fb01d09f7c$d6bdfa00$8439ee00$@acksys.fr>
+Date: Fri, 5 Jun 2015 12:52:03 +0200
+Message-ID: <CA+BoTQkBPkNPCX2YJSvSBbcGe_4RT3Ua_54MVmSMwUyWef-gzA@mail.gmail.com> (sfid-20150605_125210_444528_0FA8FAA9)
+Subject: Re: ATH10K and VLAN : Frame with VLAN tag are not sent
+From: Michal Kazior <michal.kazior@tieto.com>
+To: voncken <cedric.voncken@acksys.fr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amit,
-
-On Tue, Jun 30, 2015 at 10:17 PM, Amit Khatri <amit.khatri@samsung.com> wrote:
-> Hi Johannes,
+On 5 June 2015 at 12:46, voncken <cedric.voncken@acksys.fr> wrote:
+>> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> owner@vger.kernel.org] De la part de Michal Kazior
+>> Envoyé : vendredi 5 juin 2015 11:46
+>> À : voncken
+>> Cc : linux-wireless; ath10k@lists.infradead.org
+>> Objet : Re: ATH10K and VLAN : Frame with VLAN tag are not sent
+>>
+>> [...]
+>> >> I see no reason why this should fail. The dot1q encapsulation
+>> >> shouldn't influence how firmware behaves.. but maybe I'm wrong.
+>> >>
+>> >> It's still unclear to me what your topology looks like. Perhaps
+>> >> you're having problem with environmental configuration itself? Did
+>> >> you try other Wi-Fi device (e.g. ath9k) instead of ath10k?
+>> > Yes I tested with ath9k wireless card, the same configuration works.
+>> >
+>> > I did an interesting test. With ostinato software I generate an ICMP
+>> frame without vlan tag. I changed the ethertype in the frame.
+>> > I tried with the ethertype 0x800 (IP), 0x801, 0x8892 (PROFINET), 0x8100
+>> (dot1q), 0x0600. All frames are sent except when the ethertype is set to
+>> 0x8100. It seems the firmware do not accept the ethertype 0x8100.
+>>
+>> Interesting. This may suggest firmware actually doesn't handle dot1q VLAN
+>> tagging properly in NWifi Tx encap mode. Can you try changing it to 802.3
+>> encap and re-test, please?
+>>
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -3172,7 +3172,7 @@ ath10k_tx_h_get_txmode(struct ath10k *ar, struct
+>> ieee80211_vif *vif,
+>>         if (ieee80211_is_data_present(fc) && sta && sta->tdls)
+>>                 return ATH10K_HW_TXRX_ETHERNET;
+>>
+>> -       return ATH10K_HW_TXRX_NATIVE_WIFI;
+>> +       return ATH10K_HW_TXRX_ETHERNET;
+>>  }
+>>
+>> Note: Your backports may not have the necessary code.. In which case
+>> it'll be difficult to do this the easy way. If that's the case I suggest
+>> you get latest backports or generate them yourself from the latest
+>> kvalo/ath master.
+> I will try to change my backport. But it is not easy, because I need to use a cross-compiler. From openwrt website I can download a backport 2015-05-08. I will try to integrate it.
 >
-> Subject: [PATCH] iw: Static analyser fixes
->
-> Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
-> Signed-off-by: Rahul Jain <rahul.jain@samsung.com>
-> ---
->  cqm.c   | 2 ++
->  event.c | 6 +++++-
->  iw.c    | 2 +-
->  scan.c  | 2 ++
->  4 files changed, 10 insertions(+), 2 deletions(-)
->
-> diff --git a/event.c b/event.c
-> index f73e078..06d236b 100644
-> --- a/event.c
-> +++ b/event.c
-> @@ -49,8 +49,10 @@ static void print_frame(struct print_event_args *args, struct nlattr *attr)
->         char macbuf[6*3];
->         uint16_t tmp;
->
-> -       if (!attr)
-> +       if (!attr) {
->                 printf(" [no frame]");
-> +               goto out;
-> +       }
->
->         frame = nla_data(attr);
->         len = nla_len(attr);
-> @@ -97,6 +99,8 @@ static void print_frame(struct print_event_args *args, struct nlattr *attr)
->         for (i = 0; i < len; i++)
->                 printf(" %.02x", frame[i]);
->         printf("]");
-> + out:
-> +       ;  /*empty statement to avoid compiler error */
+> Do you know how I can generate a tar file for openwrt from kale git hub?
 
-Er, why not just return in the if (!attr) block?
+That's non-trivial as far as I understand. You could try generating a
+quilt patch in openwrt to update ath10k. Either some sort of manual
+cherry-picking of the txmode patch for ath10k or create a partial diff
+(e.g. only drivers/net/wireless/ath/ath10k) between openwrt backports
+and kvalo/ath generated backports.
 
-Thanks,
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Michał
