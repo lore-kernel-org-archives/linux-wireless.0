@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:35595 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964821AbbFKVFE (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:33221 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750831AbbFETKh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 17:05:04 -0400
-Received: by pabli10 with SMTP id li10so4109217pab.2
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 14:05:03 -0700 (PDT)
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [PATCH V4] mac80211: minstrel_ht: Handle Dynamic SMPS state of the peer.
-Date: Fri, 12 Jun 2015 02:34:52 +0530
-Message-Id: <1434056692-8011-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150611_230508_221700_F6F0EFB0)
+	Fri, 5 Jun 2015 15:10:37 -0400
+Received: by obcej4 with SMTP id ej4so10026183obc.0
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 12:10:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5571D903.7060203@candelatech.com>
+References: <1430829048-22549-1-git-send-email-vthiagar@qti.qualcomm.com>
+	<5571D903.7060203@candelatech.com>
+Date: Fri, 5 Jun 2015 12:10:36 -0700
+Message-ID: <CAFuUQkjP18E6fjvgZMayJYiEQtpjVUAKb+_zDmS3yBfi-QF8Cg@mail.gmail.com> (sfid-20150605_211041_093603_B1C796A7)
+Subject: Re: [PATCH] ath10k: Fix survey information reporting
+From: YanBo <dreamfly281@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of Dynamic SMPS enable RTS/CTS for all rates.
+On Fri, Jun 5, 2015 at 10:14 AM, Ben Greear <greearb@candelatech.com> wrote:
+> I applied these and some other related patches to my hacked-upon 4.0.4, but
+> I am seeing some inconsistencies between how ath10k and ath9k
+> reports survey info.  I am using my CT firmware based on 10.1.
+>
+> ath9k reports ever-increasing counters for the channel time
+> and busy time.
+>
+> With ath10k, it reports the same values until I do a scan
+> again, and even then, it is not additive.
+>
+> First, should the value only update when we do a scan?
+>
+> And second, should ath10k report ever increasing totals
+> to match ath9k behaviour?
+>
 
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
----
-V4: Updated commit log and fixed indent.
-V3: Moved the check to set_rate.
-V2:Fix indent and add signoff.
----
- net/mac80211/rc80211_minstrel_ht.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+It should be match with ath9k, but the ath10k doesn't accumulate the
+survey count at currently code,
+I drafted a patch to fix this issue, will send to public mailist soon.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 7430a1d..c8753ce 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -867,7 +867,13 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	else
- 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
- 
--	if (offset > 0) {
-+	/* Enable RTS/CTS for below cases.
-+	 * 1) To Handle STA's SMPS State, if Nss > 1.
-+	 * 2) 2nd and 3rd Rates, as 1st Rate Failed.
-+	 */
-+	if (offset > 0 &&
-+	    (mi->sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
-+	     group->streams > 1)) {
- 		ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
- 		flags |= IEEE80211_TX_RC_USE_RTS_CTS;
- 	}
--- 
-1.9.1
-
+BR /Yanbo
