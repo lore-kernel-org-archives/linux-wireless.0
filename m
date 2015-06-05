@@ -1,139 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:11475 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbbFVHr5 (ORCPT
+Received: from smtp29.msg.oleane.net ([62.161.4.29]:55181 "EHLO
+	smtp29.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422897AbbFEOIO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 03:47:57 -0400
-Message-ID: <5587BDA9.5000107@broadcom.com> (sfid-20150622_094800_795721_2E996996)
-Date: Mon, 22 Jun 2015 09:47:53 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 5 Jun 2015 10:08:14 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Michal Kazior'" <michal.kazior@tieto.com>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+References: <01eb01d09f64$fd522730$f7f67590$@acksys.fr>	<CA+BoTQnehkYETptdaw4VsqKmhAampJ9_Zm_bNfH6PwGX7SqRww@mail.gmail.com>	<01f701d09f71$47ae9910$d70bcb30$@acksys.fr>	<CA+BoTQkQyTbgctPOTSvLH76+YKkjvYySJSYtGszJ3TT35-uXQQ@mail.gmail.com>	<01fb01d09f7c$d6bdfa00$8439ee00$@acksys.fr>	<CA+BoTQkBPkNPCX2YJSvSBbcGe_4RT3Ua_54MVmSMwUyWef-gzA@mail.gmail.com> <CA+BoTQmkV9Pg9pMiVarhj_peSPFCBZykMJDx_sZ0HbQ-4NUmdA@mail.gmail.com>
+In-Reply-To: <CA+BoTQmkV9Pg9pMiVarhj_peSPFCBZykMJDx_sZ0HbQ-4NUmdA@mail.gmail.com>
+Subject: RE: ATH10K and VLAN : Frame with VLAN tag are not sent
+Date: Fri, 5 Jun 2015 16:07:09 +0200
+Message-ID: <020501d09f98$e9853150$bc8f93f0$@acksys.fr> (sfid-20150605_160920_896411_67489C78)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcmfmac: one faulty "iw interface add" command breaks in-firmware
- BSS state
-References: <CACna6rzr35hM-VLxgvxtGPnnxSMPx6TM18Qfc8E1Obm7iVPG4A@mail.gmail.com>
-In-Reply-To: <CACna6rzr35hM-VLxgvxtGPnnxSMPx6TM18Qfc8E1Obm7iVPG4A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain;
+	charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/15 21:59, Rafał Miłecki wrote:
-> Hi,
->
-> I've discovered some bug in brcmfmac&  its BSS management. It was
-> exposed by OpenWrt user space change ("fix") I introduced in:
-> http://git.openwrt.org/?p=openwrt.git;a=commit;h=1cbb5e8de50457c1d9724ca75cc6815df5721289
-> and it's related to the "interface add" command.
->
-> I've router with BCM43602 and I'm using a very recent brcmfmac.
->
-> brcmfmac 0000:01:00.0: enabling device (0140 ->  0142)
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Mar  3 2015
-> 04:46:51 version 7.35.177.33 (r538052) FWID 01-c8317c80
-> brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code
->
-> wlan0     Link encap:Ethernet  HWaddr 00:23:6A:A3:7D:95
->            BROADCAST MULTICAST  MTU:1500  Metric:1
->            RX packets:8 errors:0 dropped:4 overruns:0 frame:0
->            TX packets:19 errors:0 dropped:0 overruns:0 carrier:0
->            collisions:0 txqueuelen:1000
->            RX bytes:505 (505.0 B)  TX bytes:1730 (1.6 KiB)
->
-> I'll just describe two scenarios that should make things clear. Both
-> after a cold boot.
->
->
-> 1) Standard (working) scenario
-> # hostapd /etc/hostapd.conf
-> Configuration file: /etc/hostapd.conf
-> Failed to create interface mon.wlan0: -95 (Operation not supported)
-> [  105.483797] brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
-> [  105.490308] brcmfmac: brcmf_add_if: ignore IF event
-> [  105.499067] device wlan0 entered promiscuous mode
-> [  105.503939] br-lan: port 2(wlan0) entered forwarding state
-> [  105.509437] br-lan: port 2(wlan0) entered forwarding state
-> wlan0: Could not connect to kernel driver
-> Using interface wlan0 with hwaddr 00:23:6a:a3:7d:95 and ssid "OpenWrtA"
-> [  105.640966] brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
-> [  105.647478] brcmfmac: brcmf_add_if: ignore IF event
-> wlan0: interface state UNINITIALIZED->ENABLED
-> wlan0: AP-ENABLED
-> [  107.510613] br-lan: port 2(wlan0) entered forwarding state
->
-> This results in a working AP, my devices are able to connect
->
->
-> 2) Scenario with iw command "mistake":
-> # iw phy phy0 interface add wlan0 type __ap
+> >>> >
+> >>> > I did an interesting test. With ostinato software I generate an
+> >>> > ICMP
+> >>> frame without vlan tag. I changed the ethertype in the frame.
+> >>> > I tried with the ethertype 0x800 (IP), 0x801, 0x8892 (PROFINET),
+> >>> > 0x8100
+> >>> (dot1q), 0x0600. All frames are sent except when the ethertype is
+> >>> set to 0x8100. It seems the firmware do not accept the ethertype
+> 0x8100.
+> >>>
+> >>> Interesting. This may suggest firmware actually doesn't handle dot1q
+> >>> VLAN tagging properly in NWifi Tx encap mode. Can you try changing
+> >>> it to 802.3 encap and re-test, please?
+> >>>
+> >>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> >>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> >>> @@ -3172,7 +3172,7 @@ ath10k_tx_h_get_txmode(struct ath10k *ar,
+> >>> struct ieee80211_vif *vif,
+> >>>         if (ieee80211_is_data_present(fc) && sta && sta->tdls)
+> >>>                 return ATH10K_HW_TXRX_ETHERNET;
+> >>>
+> >>> -       return ATH10K_HW_TXRX_NATIVE_WIFI;
+> >>> +       return ATH10K_HW_TXRX_ETHERNET;
+> >>>  }
+> >>>
+> >>> Note: Your backports may not have the necessary code.. In which case
+> >>> it'll be difficult to do this the easy way. If that's the case I
+> >>> suggest you get latest backports or generate them yourself from the
+> >>> latest kvalo/ath master.
+> >> I will try to change my backport. But it is not easy, because I need
+> to use a cross-compiler. From openwrt website I can download a backport
+> 2015-05-08. I will try to integrate it.
+> >>
+> >> Do you know how I can generate a tar file for openwrt from kale git
+> hub?
+> >
+> > That's non-trivial as far as I understand. You could try generating a
+> > quilt patch in openwrt to update ath10k. Either some sort of manual
+> > cherry-picking of the txmode patch for ath10k or create a partial diff
+> > (e.g. only drivers/net/wireless/ath/ath10k) between openwrt backports
+> > and kvalo/ath generated backports.
+> 
+> I've managed to reproduce your problem in my setup.
+> 
+> With NWifi Txed frames with dot1Q VLAN tagging aren't even sent OTA and
+> are reported as not acked by firmware.
+> 
+> When I changed the Tx encap mode to 802.3 (ethernet) I can see frames OTA
+> but they are corrupted 3addr frames with invalid SA/DA addresses.
+> I'm guessing this is because firmware expects explicit
+> WMI_PEER_ADD_WDS_ENTRY_CMDID to be issued when trying too use 802.3 Tx
+> encap with 4addr frames.
+> 
 
-Now this is a pretty silly scenario as there already is a wlan0 
-interface. Admittedly, this should be rejected as such. This clearly is 
-a user mistake (not sure why you quoted that :-p ) and it might be good 
-to catch this in cfg80211 as it probably applies to other drivers as 
-well. This probably explains why register_netdev fails.
+Thanks for these informations, but where I need to set the flag WMI_PEER_ADD_WDS_ENTRY_CMDID?
+The backport 2015-05-08 should support your modification. I'm trying du compile it.
 
-Regards,
-Arend
+> 
+> Michał
 
-> [   65.036358] brcmfmac: brcmf_net_attach: couldn't register the net device
-> [   65.043080] brcmfmac: brcmf_ap_add_vif: Registering netdevice failed
-> command failed: Invalid exchange (-52)
-> # hostapd /etc/hostapd.conf
-> Configuration file: /etc/hostapd.conf
-> Failed to create interface mon.wlan0: -95 (Operation not supported)
-> [   83.393594] brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
-> [   83.400122] brcmfmac: brcmf_add_if: ignore IF event
-> [   83.409448] device wlan0 entered promiscuous mode
-> [   83.414259] br-lan: port 2(wlan0) entered forwarding state
-> [   83.419802] br-lan: port 2(wlan0) entered forwarding state
-> wlan0: Could not connect to kernel driver
-> Using interface wlan0 with hwaddr 00:23:6a:a3:7d:95 and ssid "OpenWrtA"
-> [   83.550307] brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
-> [   83.556814] brcmfmac: brcmf_add_if: ignore IF event
-> wlan0: interface state UNINITIALIZED->ENABLED
-> wlan0: AP-ENABLED
-> [   85.418417] br-lan: port 2(wlan0) entered forwarding state
->
-> In this case in-firmware BSS state seems to be broken and BSS seems to
-> be using *different* address. Following wpa_supplicant log should make
-> it clear.
-
-Well, you now have a STA and AP interface in firmware, but only STA 
-netdev so the AP interface is pretty useless. I am not sure about the 
-mac address, but I think it is expected. Otherwise you would have two 
-interfaces with the same mac address.
-
-Regards,
-Arend
-
-> wlp2s0b1: State: SCANNING ->  AUTHENTICATING
-> EAPOL: External notification - EAP success=0
-> EAPOL: Supplicant port status: Unauthorized
-> EAPOL: External notification - EAP fail=0
-> EAPOL: Supplicant port status: Unauthorized
-> EAPOL: External notification - portControl=Auto
-> EAPOL: Supplicant port status: Unauthorized
-> nl80211: Authenticate (ifindex=3)
->    * bssid=00:23:6a:a3:7d:95
->    * freq=2462
->    * SSID - hexdump_ascii(len=8):
->       4f 70 65 6e 57 72 74 41                           OpenWrtA
->    * IEs - hexdump(len=0): [NULL]
->    * Auth Type 0
-> nl80211: Authentication request send successfully
-> RSN: Ignored PMKID candidate without preauth flag
-> nl80211: Event message available
-> nl80211: New station 00:23:6a:a3:7d:95
-> nl80211: Event message available
-> nl80211: MLME event 37
-> nl80211: Authenticate event
-> wlp2s0b1: Event AUTH (11) received
-> wlp2s0b1: SME: Ignore authentication with unexpected peer 02:23:6a:a3:7d:96
-> wlp2s0b1: SME: Authentication timeout
-> wpa_driver_nl80211_deauthenticate(addr=00:23:6a:a3:7d:95 reason_code=3)
->
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
