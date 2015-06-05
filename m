@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34155 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752805AbbFBHVi convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:33494 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbbFEWH3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 03:21:38 -0400
-Received: by wibut5 with SMTP id ut5so59809173wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 00:21:37 -0700 (PDT)
+	Fri, 5 Jun 2015 18:07:29 -0400
+Received: by iebgx4 with SMTP id gx4so66728468ieb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 15:07:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1433229267-11314-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1433229267-11314-1-git-send-email-rmani@qti.qualcomm.com>
-Date: Tue, 2 Jun 2015 09:21:36 +0200
-Message-ID: <CA+BoTQkfNB=fR=Vak729qFU2TOSC_8_fMfgRc1RJ1UO0t9XwRQ@mail.gmail.com> (sfid-20150602_092141_670396_BAF80529)
-Subject: Re: [PATCH] ath10k: remove unused variable 'id' in ath10k_pci_tx_pipe_cleanup()
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Raja Mani <rmani@qti.qualcomm.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+In-Reply-To: <87r3pqnj9s.fsf@kamboji.qca.qualcomm.com>
+References: <1433383018-47335-1-git-send-email-cfliu.tw@gmail.com>
+ <CAG5N3qFZdQ5roH-OJWoo4UqSSv4864Uz5xRrepOpvEO_Upjyzw@mail.gmail.com> <87r3pqnj9s.fsf@kamboji.qca.qualcomm.com>
+From: "Liu CF/TW" <cfliu.tw@gmail.com>
+Date: Fri, 5 Jun 2015 15:06:48 -0700
+Message-ID: <CAG5N3qEghv7UvKjO61FhPdqACxe7Fdbqe+AwcONEaKckJ3LxaA@mail.gmail.com> (sfid-20150606_000732_241178_6087286A)
+Subject: Re: [PATCH v2] ath10k: add cryptmode param to support sw crypto and
+ raw tx injection.
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 June 2015 at 09:14, Raja Mani <rmani@qti.qualcomm.com> wrote:
-> mete_data is extracted from ce descriptor and stored in variable 'id'.
-> later, id is not used anywhere in the same function.
+On Fri, Jun 5, 2015 at 10:43 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> "Liu CF/TW" <cfliu.tw@gmail.com> writes:
 >
-> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/pci.c |    3 ---
->  1 file changed, 3 deletions(-)
+>> Kalle et al. Please ignore this patch and review the new email with
+>> subject line changed with [PATCH V2] highlighted. Looks like only by
+>> doing so would it start a new thread in the ML.
+>> That patch is exactly the same as the last one in this thread. I
+>> updated the commit message with more testing details.
 >
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-> index 969a123..bbc349a 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -1275,7 +1275,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
->         struct ath10k_ce_ring *ce_ring;
->         struct ce_desc *ce_desc;
->         struct sk_buff *skb;
-> -       unsigned int id;
->         int i;
+> If you send a new version of the patch, please increase the version
+> number so that it's easy to find the latest patch. "v2" vs "V2" is just
+> confusing, so just mark the new patch as v3. It's not like we are
+> running out of version numbers or anything like that.
 >
->         ar = pci_pipe->hif_ce_state;
-> @@ -1299,8 +1298,6 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
->                         continue;
->
->                 ce_ring->per_transfer_context[i] = NULL;
-> -               id = MS(__le16_to_cpu(ce_desc[i].flags),
-> -                       CE_DESC_FLAGS_META_DATA);
->
->                 ar_pci->msg_callbacks_current.tx_completion(ar, skb);
+> --
+> Kalle Valo
 
-Good catch. I forgot to remove this. I guess one could say this qualifies as:
+Kalle,
 
- Fixes: d84a512dca23 ("ath10k: remove transfer_id from
-ath10k_hif_cb::tx_completion")
+Sure. Will do, with 'v3' next time.
+Do you have other comments so I can address them together with Michal's in v3?
 
-
-Michał
+Thanks
+David
