@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:36177 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbbF0RAe convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:35324 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447AbbFETop (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Jun 2015 13:00:34 -0400
-Received: by wicnd19 with SMTP id nd19so40023185wic.1
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jun 2015 10:00:33 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: =?utf-8?B?U3rFkXRzIMOBa29z?= <szotsaki@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Realtek RTL8191SU really slow with =?UTF-8?B?4oCeTuKAnQ==?= mode enabled
-Date: Sat, 27 Jun 2015 19:00:31 +0200
-Message-ID: <1576201.5zzoPiW6A9@debian64> (sfid-20150627_190044_097907_179D0233)
-In-Reply-To: <37780383.GGTrC2kAY2@linux-suse.hu>
-References: <37780383.GGTrC2kAY2@linux-suse.hu>
+	Fri, 5 Jun 2015 15:44:45 -0400
+Received: by igbzc4 with SMTP id zc4so23719664igb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 12:44:45 -0700 (PDT)
+Message-ID: <5571FBFA.9060902@cococorp.com> (sfid-20150605_214449_177319_757996A5)
+Date: Fri, 05 Jun 2015 12:43:54 -0700
+From: Alexis Green <agreen@cococorp.com>
+Reply-To: agreen@cococorp.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Subject: [PATCH] mac80211: Fix incorrectly named last_hop_metric variable
+ in mesh_rx_path_sel_frame
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+The last hop metric should refer to link cost (this is how
+hwmp_route_info_get uses it for example). But in mesh_rx_path_sel_frame
+we are not dealing with link cost but with the total cost to the origin
+of a PREQ or PREP.
 
-On Saturday, June 27, 2015 11:16:21 AM Szőts Ákos wrote:
-> I have a "0bda:8172 Realtek RTL8191SU 802.11n WLAN Adapter” working
-> - previously with kernel v4.0 staging driver r8712u,
-> - and now with wireless kernel v4.1 driver rtl8192su (from 
-> https://github.com/chunkeey/rtl8192su).
-> 
-> My problem is when, by default, the 802.11n mode is enabled, the USB dongle's 
-> connection speed is only around 1 Mb/s (with both drivers). When I turn it off 
-> with "options rtl8192su ht_enable=0" in its config file, I get my full internet 
-> speed, about 30 Mb/s.
+Signed-off-by: Alexis Green <agreen@cococorp.com>
+CC: Jesse Jones <jjones@cococorp.com>
 
-Wait! There isn't any ht_enable option for the rtl8192su(.ko) driver...?!
+---
 
-> I'm asking whether it's a problem in the firmware or somewhere in the driver 
-> code? If it's the latter case and you're interested in, I would like to help 
-> debugging the problem and help you to fix this issue.
-Can't help you with debugging the problem as long as I can't reproduce the
-issue. No idea if this is a hardware, firmware, driver, setup or some
-kind of interaction issue. In my opinion: you simply disable HT, then you
-just did take a feature away rather than dealing with anything. But, if
-that's what you want: fine.
-
-Note: I think the simplest solution would be to have a working reference.
-If you are looking for a wifi usb-stick, ath9k_htc solutions are usually
-the way to go.
-
-Regards,
-  Christian
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 214e63b..be33e41 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -854,7 +854,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee802_11_elems elems;
+ 	size_t baselen;
+-	u32 last_hop_metric;
++	u32 path_metric;
+ 	struct sta_info *sta;
+ 
+ 	/* need action_code */
+@@ -877,21 +877,21 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+ 		if (elems.preq_len != 37)
+ 			/* Right now we support just 1 destination and no AE */
+ 			return;
+-		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.preq,
+-						      MPATH_PREQ);
+-		if (last_hop_metric)
++		path_metric = hwmp_route_info_get(sdata, mgmt, elems.preq,
++						  MPATH_PREQ);
++		if (path_metric)
+ 			hwmp_preq_frame_process(sdata, mgmt, elems.preq,
+-						last_hop_metric);
++						path_metric);
+ 	}
+ 	if (elems.prep) {
+ 		if (elems.prep_len != 31)
+ 			/* Right now we support no AE */
+ 			return;
+-		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.prep,
+-						      MPATH_PREP);
+-		if (last_hop_metric)
++		path_metric = hwmp_route_info_get(sdata, mgmt, elems.prep,
++						  MPATH_PREP);
++		if (path_metric)
+ 			hwmp_prep_frame_process(sdata, mgmt, elems.prep,
+-						last_hop_metric);
++						path_metric);
+ 	}
+ 	if (elems.perr) {
+ 		if (elems.perr_len != 15)
