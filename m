@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:48181 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368AbbFNXFT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34530 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751528AbbFFN1v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2015 19:05:19 -0400
-Date: Mon, 15 Jun 2015 09:04:56 +1000
-From: James Cameron <quozl@laptop.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnaud LE CAM <arnaud.lecam@yahoo.fr>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Bug ?] 10ec:b723 Realtek RTL8723BE wireless card drops
- connection
-Message-ID: <20150614230456.GE12739@us.netrek.org> (sfid-20150615_010530_133040_28AC9428)
-References: <1434268591.3014.YahooMailBasic@web172003.mail.ir2.yahoo.com>
- <557D9966.5050209@lwfinger.net>
+	Sat, 6 Jun 2015 09:27:51 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Yegor Yefremov <yegorslists@googlemail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Machani\, Yaniv" <yanivma@ti.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Marc Kleine-Budde <mkl@pengutronix.de>
+Subject: Re: wl18xx: wlconf kernel compatibility
+References: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com>
+Date: Sat, 06 Jun 2015 16:27:43 +0300
+In-Reply-To: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com>
+	(Yegor Yefremov's message of "Tue, 26 May 2015 12:09:51 +0200")
+Message-ID: <87bngtnf00.fsf@kamboji.qca.qualcomm.com> (sfid-20150606_152929_364064_03781C55)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <557D9966.5050209@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 14, 2015 at 10:10:30AM -0500, Larry Finger wrote:
-> To address your problem, power saving does not work correctly on
-> this device. That is why there are numerous posts on the web telling
-> people to use ips=0. It seems that Ubuntu people never look at
-> anything but the Ubuntu literature; however, I'm sure that I posted
-> this "suggestion" there as well. The Realtek group is currently
-> rewriting the entire dynamic management code for all their drivers.
-> When complete, this should improve performance and should help the
-> power-save condition. No, I do not know when the new code will be
-> ready, or how much improvement it will make.
+Yegor Yefremov <yegorslists@googlemail.com> writes:
 
-Thanks for summary.
+> How do I know, which wlconf version is compatible with which kernel
+> version? I have following problem:
+>
+> I have *.INI file for my particular WLAN chip. This file will be used
+> to produce wl18xx-conf.bin. The size of this file will be check during
+> device initialization. Depending on which kernel version is used the
+> size of the required file differs. For example kernel 3.18 requires
+> wl18xx-conf.bin to have 1221 bytes, 4.1 expects 1226 bytes. Recent
+> wlconf (git://git.ti.com/wilink8-wlan/18xx-ti-utils.git) produces 1229
+> bytes files.
+>
+> How should I determine correct wlconf version?
 
-OLPC is also seeing the issue.  Power saving mode impacts battery run
-time; one of our design goals.  ips=0 seems to solve with 3.19, but
-not fully with 4.1-rc7; still some periods of packet loss.
+I also complained about something along these lines earlier, this is not
+how upstream drivers are supposed to work. Users should not be forced to
+find correct files from somewhere, instead everything should just work
+out of box.
 
-I offer to test any rtl8723be changes.
-
-(I'm also looking into IBSS, because Sugar desktop relies on
-ad-hoc.  No beacons on creating an IBSS through NetworkManager, but
-beacons are fine with "iw dev wlan0 ibss join x 2437".  But I'm not
-yet ready to report problem; still some debugging to do.)
+Can anyone help Yegor to solve his problem? But in the long run wl18xx
+really should manage this better.
 
 -- 
-James Cameron
-http://quozl.linux.org.au/
+Kalle Valo
