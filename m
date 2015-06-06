@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:37786 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbbFZTqZ (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:34124 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191AbbFFK5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 15:46:25 -0400
-Received: by wicgi11 with SMTP id gi11so26399141wic.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2015 12:46:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <a159a6cc0459b2fa089f0f222085aeb2@mail.gmail.com>
-References: <CAEFj986kwfLXqPm+qN6pbB+_Pe3m2-9PLNZXf6+pH_fCeQqZ8A@mail.gmail.com>
-	<CAEFj984fG7oidP_u2vnH6p+VigjX_NF29JOfFWeAara8GCaiCg@mail.gmail.com>
-	<CAEFj986=3t=9B5d_2JP1Yo2fSOEvb7wgRfgMWdyw4DnutrGANQ@mail.gmail.com>
-	<a159a6cc0459b2fa089f0f222085aeb2@mail.gmail.com>
-Date: Sat, 27 Jun 2015 03:46:23 +0800
-Message-ID: <CAEFj9877azQTokwHAgg2-rn8Y5j41+5dW3BVAJpJwhwx2u4NRA@mail.gmail.com> (sfid-20150626_214629_978033_887C6D33)
-Subject: Re: [PATCH] mac80211: mesh - don't special case routing to transmitter
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Jesse Jones <jjones@cococorp.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 6 Jun 2015 06:57:25 -0400
+Received: by pdbki1 with SMTP id ki1so69368003pdb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Jun 2015 03:57:24 -0700 (PDT)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH V2 1/3] rtlwifi: rtl8192cu: remove duplicated routine in _rtl92c_phy_rf6052_config_parafile
+Date: Sat,  6 Jun 2015 19:57:14 +0900
+Message-Id: <1433588234-27248-1-git-send-email-ap420073@gmail.com> (sfid-20150606_125731_410987_591A7BD3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> There are two test scenarios:
-> 1) When creating the path to a ta where the direct hop is a bad path.
-> Relatively easy to setup and demonstrate poor performance pre-patch.
-> 2) Incorrect routing when the metric for an existing SN is changed without
-> also updating the SN. Hard to demonstrate. We've certainly seen similar bugs
-> with our own mesh protocols but that was with protocols explicitly designed
-> with testing support. Best approach is probably via something like
-> http://alloy.mit.edu/alloy/
+in the _rtl92c_phy_rf6052_config_parafile(), cases
+RF90_PATH_A and RF90_PATH_B call the same routine.
+so i remove one of these routine. also the return
+routine is duplicated. so i remove it.
 
-If the direct hop is a bad path, could it be due the metric calculation.
-
-Also, you may also add your vendor specific mesh protocol to open
-source community.
-
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
-Chun-Yeow
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+index b878d56..8ce055c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+@@ -452,9 +452,6 @@ static bool _rtl92c_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
+ 		udelay(1);
+ 		switch (rfpath) {
+ 		case RF90_PATH_A:
+-			rtstatus = rtl92cu_phy_config_rf_with_headerfile(hw,
+-					(enum radio_path) rfpath);
+-			break;
+ 		case RF90_PATH_B:
+ 			rtstatus = rtl92cu_phy_config_rf_with_headerfile(hw,
+ 					(enum radio_path) rfpath);
+@@ -483,7 +480,6 @@ static bool _rtl92c_phy_rf6052_config_parafile(struct ieee80211_hw *hw)
+ 		}
+ 	}
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "<---\n");
+-	return rtstatus;
+ phy_rf_cfg_fail:
+ 	return rtstatus;
+ }
+-- 
+2.1.4
+
