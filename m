@@ -1,152 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.9]:41166 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751049AbbFBTLk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 15:11:40 -0400
-From: Jakub Kicinski <moorray3@wp.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH 1/4] mt7601u: unify paged and non-paged RX dma paths
-Date: Tue,  2 Jun 2015 21:11:25 +0200
-Message-Id: <1433272288-6450-1-git-send-email-moorray3@wp.pl> (sfid-20150602_211143_364312_2CAB2505)
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:33852 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753114AbbFGMEK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2015 08:04:10 -0400
+Received: by pdbki1 with SMTP id ki1so82353575pdb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 05:04:10 -0700 (PDT)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH V2 2/3] rtlwifi: rtl8192cu: debug message change "RTL8192CE" to "RTL8192CU"
+Date: Sun,  7 Jun 2015 21:03:56 +0900
+Message-Id: <1433678637-7718-1-git-send-email-ap420073@gmail.com> (sfid-20150607_140441_130574_628B2EA9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+In the rtlwifi/rtl8192cu, I change debug message "RTL8192CE" to
+"RTL8192CU".
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt7601u/dma.c | 62 ++++++-----------------------
- 1 file changed, 12 insertions(+), 50 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
-index 9c9e1288644b..16df67b2e62c 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
-@@ -34,56 +34,28 @@ static unsigned int ieee80211_get_hdrlen_from_buf(const u8 *data, unsigned len)
- 
- static struct sk_buff *
- mt7601u_rx_skb_from_seg(struct mt7601u_dev *dev, struct mt7601u_rxwi *rxwi,
--			u8 *data, u32 seg_len)
-+			void *data, u32 seg_len, u32 truesize, struct page *p)
- {
- 	struct sk_buff *skb;
- 	u32 true_len;
-+	int hdr_len, copy, frag;
- 
--	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD))
--		seg_len -= 2;
--
--	skb = alloc_skb(seg_len, GFP_ATOMIC);
--	if (!skb)
--		return NULL;
--
--	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD)) {
--		int hdr_len = ieee80211_get_hdrlen_from_buf(data, seg_len);
--
--		memcpy(skb_put(skb, hdr_len), data, hdr_len);
--		data += hdr_len + 2;
--		seg_len -= hdr_len;
--	}
--
--	memcpy(skb_put(skb, seg_len), data, seg_len);
--
--	true_len = mt76_mac_process_rx(dev, skb, skb->data, rxwi);
--	skb_trim(skb, true_len);
--
--	return skb;
--}
--
--static struct sk_buff *
--mt7601u_rx_skb_from_seg_paged(struct mt7601u_dev *dev,
--			      struct mt7601u_rxwi *rxwi, void *data,
--			      u32 seg_len, u32 truesize, struct page *p)
--{
--	unsigned int hdr_len = ieee80211_get_hdrlen_from_buf(data, seg_len);
--	unsigned int true_len, copy, frag;
--	struct sk_buff *skb;
--
--	skb = alloc_skb(128, GFP_ATOMIC);
-+	skb = alloc_skb(p ? 128 : seg_len, GFP_ATOMIC);
- 	if (!skb)
- 		return NULL;
- 
- 	true_len = mt76_mac_process_rx(dev, skb, data, rxwi);
- 
-+	hdr_len = ieee80211_get_hdrlen_from_buf(data, true_len);
- 	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD)) {
- 		memcpy(skb_put(skb, hdr_len), data, hdr_len);
-+
- 		data += hdr_len + 2;
- 		true_len -= hdr_len;
- 		hdr_len = 0;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+index 12f6d47..5534dad 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+@@ -162,7 +162,7 @@ bool _rtl92cu_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl819XMACPHY_Array\n");
+ 	arraylength =  rtlphy->hwparam_tables[MAC_REG].length ;
+ 	ptrarray = rtlphy->hwparam_tables[MAC_REG].pdata;
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Img:RTL8192CEMAC_2T_ARRAY\n");
++	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Img:RTL8192CUMAC_2T_ARRAY\n");
+ 	for (i = 0; i < arraylength; i = i + 2)
+ 		rtl_write_byte(rtlpriv, ptrarray[i], (u8) ptrarray[i + 1]);
+ 	return true;
+@@ -259,18 +259,18 @@ bool rtl92cu_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 		radiob_arraylen = rtlphy->hwparam_tables[RADIOB_2T].length;
+ 		radiob_array_table = rtlphy->hwparam_tables[RADIOB_2T].pdata;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "Radio_A:RTL8192CERADIOA_2TARRAY\n");
++			 "Radio_A:RTL8192CURADIOA_2TARRAY\n");
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "Radio_B:RTL8192CE_RADIOB_2TARRAY\n");
++			 "Radio_B:RTL8192CU_RADIOB_2TARRAY\n");
+ 	} else {
+ 		radioa_arraylen = rtlphy->hwparam_tables[RADIOA_1T].length;
+ 		radioa_array_table = rtlphy->hwparam_tables[RADIOA_1T].pdata;
+ 		radiob_arraylen = rtlphy->hwparam_tables[RADIOB_1T].length;
+ 		radiob_array_table = rtlphy->hwparam_tables[RADIOB_1T].pdata;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "Radio_A:RTL8192CE_RADIOA_1TARRAY\n");
++			 "Radio_A:RTL8192CU_RADIOA_1TARRAY\n");
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-			 "Radio_B:RTL8192CE_RADIOB_1TARRAY\n");
++			 "Radio_B:RTL8192CU_RADIOB_1TARRAY\n");
  	}
- 
-+	/* If not doing paged RX allocated skb will always have enough space */
- 	copy = (true_len <= skb_tailroom(skb)) ? true_len : hdr_len + 8;
- 	frag = true_len - copy;
- 
-@@ -100,7 +72,7 @@ mt7601u_rx_skb_from_seg_paged(struct mt7601u_dev *dev,
- }
- 
- static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
--				   u32 seg_len, struct page *p, bool paged)
-+				   u32 seg_len, struct page *p)
- {
- 	struct sk_buff *skb;
- 	struct mt7601u_rxwi *rxwi;
-@@ -126,11 +98,7 @@ static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
- 
- 	trace_mt_rx(dev, rxwi, fce_info);
- 
--	if (paged)
--		skb = mt7601u_rx_skb_from_seg_paged(dev, rxwi, data, seg_len,
--						    truesize, p);
--	else
--		skb = mt7601u_rx_skb_from_seg(dev, rxwi, data, seg_len);
-+	skb = mt7601u_rx_skb_from_seg(dev, rxwi, data, seg_len, truesize, p);
- 	if (!skb)
- 		return;
- 
-@@ -158,23 +126,17 @@ mt7601u_rx_process_entry(struct mt7601u_dev *dev, struct mt7601u_dma_buf_rx *e)
- 	u32 seg_len, data_len = e->urb->actual_length;
- 	u8 *data = page_address(e->p);
- 	struct page *new_p = NULL;
--	bool paged = true;
- 	int cnt = 0;
- 
- 	if (!test_bit(MT7601U_STATE_INITIALIZED, &dev->state))
- 		return;
- 
- 	/* Copy if there is very little data in the buffer. */
--	if (data_len < 512) {
--		paged = false;
--	} else {
-+	if (data_len > 512)
- 		new_p = dev_alloc_pages(MT_RX_ORDER);
--		if (!new_p)
--			paged = false;
--	}
- 
- 	while ((seg_len = mt7601u_rx_next_seg_len(data, data_len))) {
--		mt7601u_rx_process_seg(dev, data, seg_len, e->p, paged);
-+		mt7601u_rx_process_seg(dev, data, seg_len, new_p ? e->p : NULL);
- 
- 		data_len -= seg_len;
- 		data += seg_len;
-@@ -182,9 +144,9 @@ mt7601u_rx_process_entry(struct mt7601u_dev *dev, struct mt7601u_dma_buf_rx *e)
- 	}
- 
- 	if (cnt > 1)
--		trace_mt_rx_dma_aggr(dev, cnt, paged);
-+		trace_mt_rx_dma_aggr(dev, cnt, !!new_p);
- 
--	if (paged) {
-+	if (new_p) {
- 		/* we have one extra ref from the allocator */
- 		__free_pages(e->p, MT_RX_ORDER);
- 
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Radio No %x\n", rfpath);
+ 	switch (rfpath) {
 -- 
-2.1.0
+2.1.4
 
