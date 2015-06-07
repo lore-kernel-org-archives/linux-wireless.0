@@ -1,185 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5281 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbbFPFzL (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:36644 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752652AbbFGL3S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:55:11 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 5/8] ath10k: add 10.4 fw specific htt msg definitions
-Date: Tue, 16 Jun 2015 11:23:12 +0530
-Message-ID: <1434433995-8451-6-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_075514_951736_92D6E905)
-In-Reply-To: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 7 Jun 2015 07:29:18 -0400
+Received: by wgbgq6 with SMTP id gq6so83742277wgb.3
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 04:29:17 -0700 (PDT)
+From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Subject: [PATCH] net:rtlwifi:fix tm_trigger usage
+Date: Sun,  7 Jun 2015 13:19:16 +0200
+Message-Id: <1433675956-5787-1-git-send-email-ulli.kroll@googlemail.com> (sfid-20150607_132925_257144_EC349C4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New htt event table is added for 10.4 firmware. New htt event
-HTT_T2H_MSG_TYPE_EN_STATS is available only in 10.4, adding this
-to generic htt event table.
+While working on getting my rtl8821au driver in pretty shape for
+inclusion, it is dicosvered that the tm_trigger flag is used only for
+the first device using this driver.
+This flag handles the thermal power management in the hardware.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+To change this add a entry in sttruct rtl_dm, so each device can handle
+is separately.
+
+Signed-off-by: Hans Ulli Kroll <ulli.kroll@googlemail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c   |  3 +++
- drivers/net/wireless/ath/ath10k/htt.c    | 35 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/htt.h    | 30 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c |  3 +++
- drivers/net/wireless/ath/ath10k/hw.h     |  2 ++
- 5 files changed, 73 insertions(+)
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c       |  7 +++----
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |  7 +++----
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |  7 +++----
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |  7 +++----
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c       |  7 +++----
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 14 +++++---------
+ drivers/net/wireless/rtlwifi/wifi.h               |  1 +
+ 7 files changed, 21 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 4e762d0..23e855c 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1318,6 +1318,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
- 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
- 		ar->num_tids = TARGET_10_4_TGT_NUM_TIDS;
-+		ar->htt.max_num_pending_tx = TARGET_10_4_NUM_MSDU_DESC;
- 		ar->fw_stats_req_mask = WMI_STAT_PEER;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
-@@ -1343,6 +1344,8 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 			ar->htt.op_version = ATH10K_FW_HTT_OP_VERSION_TLV;
- 			break;
- 		case ATH10K_FW_WMI_OP_VERSION_10_4:
-+			ar->htt.op_version = ATH10K_FW_HTT_OP_VERSION_10_4;
-+			break;
- 		case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 		case ATH10K_FW_WMI_OP_VERSION_MAX:
- 			WARN_ON(1);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 6da6ef2..2bb9acc 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -102,6 +102,37 @@ static const enum htt_t2h_msg_type htt_tlv_t2h_msg_types[] = {
- 	[HTT_TLV_T2H_MSG_TYPE_TEST] = HTT_T2H_MSG_TYPE_TEST,
- };
- 
-+static const enum htt_t2h_msg_type htt_10_4_t2h_msg_types[] = {
-+	[HTT_10_4_T2H_MSG_TYPE_VERSION_CONF] = HTT_T2H_MSG_TYPE_VERSION_CONF,
-+	[HTT_10_4_T2H_MSG_TYPE_RX_IND] = HTT_T2H_MSG_TYPE_RX_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_RX_FLUSH] = HTT_T2H_MSG_TYPE_RX_FLUSH,
-+	[HTT_10_4_T2H_MSG_TYPE_PEER_MAP] = HTT_T2H_MSG_TYPE_PEER_MAP,
-+	[HTT_10_4_T2H_MSG_TYPE_PEER_UNMAP] = HTT_T2H_MSG_TYPE_PEER_UNMAP,
-+	[HTT_10_4_T2H_MSG_TYPE_RX_ADDBA] = HTT_T2H_MSG_TYPE_RX_ADDBA,
-+	[HTT_10_4_T2H_MSG_TYPE_RX_DELBA] = HTT_T2H_MSG_TYPE_RX_DELBA,
-+	[HTT_10_4_T2H_MSG_TYPE_TX_COMPL_IND] = HTT_T2H_MSG_TYPE_TX_COMPL_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_PKTLOG] = HTT_T2H_MSG_TYPE_PKTLOG,
-+	[HTT_10_4_T2H_MSG_TYPE_STATS_CONF] = HTT_T2H_MSG_TYPE_STATS_CONF,
-+	[HTT_10_4_T2H_MSG_TYPE_RX_FRAG_IND] = HTT_T2H_MSG_TYPE_RX_FRAG_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_SEC_IND] = HTT_T2H_MSG_TYPE_SEC_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_RC_UPDATE_IND] = HTT_T2H_MSG_TYPE_RC_UPDATE_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_TX_INSPECT_IND] =
-+				HTT_T2H_MSG_TYPE_TX_INSPECT_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_MGMT_TX_COMPL_IND] =
-+				HTT_T2H_MSG_TYPE_MGMT_TX_COMPLETION,
-+	[HTT_10_4_T2H_MSG_TYPE_CHAN_CHANGE] = HTT_T2H_MSG_TYPE_CHAN_CHANGE,
-+	[HTT_10_4_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND] =
-+				HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_RX_PN_IND] = HTT_T2H_MSG_TYPE_RX_PN_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND] =
-+				HTT_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_TEST] = HTT_T2H_MSG_TYPE_TEST,
-+	[HTT_10_4_T2H_MSG_TYPE_EN_STATS] = HTT_T2H_MSG_TYPE_EN_STATS,
-+	[HTT_10_4_T2H_MSG_TYPE_AGGR_CONF] = HTT_T2H_MSG_TYPE_AGGR_CONF,
-+	[HTT_10_4_T2H_MSG_TYPE_STATS_NOUPLOAD] =
-+				HTT_T2H_MSG_TYPE_STATS_NOUPLOAD,
-+};
-+
- int ath10k_htt_connect(struct ath10k_htt *htt)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+index d930c1f..ce4da9d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+@@ -1123,23 +1123,22 @@ static void rtl88e_dm_init_txpower_tracking(struct ieee80211_hw *hw)
+ void rtl88e_dm_check_txpower_tracking(struct ieee80211_hw *hw)
  {
- 	struct ath10k_htc_svc_conn_req conn_req;
-@@ -147,6 +178,10 @@ int ath10k_htt_init(struct ath10k *ar)
- 		2; /* ip4 dscp or ip6 priority */
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	static u8 tm_trigger;
  
- 	switch (ar->htt.op_version) {
-+	case ATH10K_FW_HTT_OP_VERSION_10_4:
-+		ar->htt.t2h_msg_types = htt_10_4_t2h_msg_types;
-+		ar->htt.t2h_msg_types_max = HTT_10_4_T2H_NUM_MSGS;
-+		break;
- 	case ATH10K_FW_HTT_OP_VERSION_10_1:
- 		ar->htt.t2h_msg_types = htt_10x_t2h_msg_types;
- 		ar->htt.t2h_msg_types_max = HTT_10X_T2H_NUM_MSGS;
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 7e8a0d8..2a2ba12 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -349,6 +349,35 @@ enum htt_tlv_t2h_msg_type {
- 	HTT_TLV_T2H_NUM_MSGS
- };
+ 	if (!rtlpriv->dm.txpower_tracking)
+ 		return;
  
-+enum htt_10_4_t2h_msg_type {
-+	HTT_10_4_T2H_MSG_TYPE_VERSION_CONF           = 0x0,
-+	HTT_10_4_T2H_MSG_TYPE_RX_IND                 = 0x1,
-+	HTT_10_4_T2H_MSG_TYPE_RX_FLUSH               = 0x2,
-+	HTT_10_4_T2H_MSG_TYPE_PEER_MAP               = 0x3,
-+	HTT_10_4_T2H_MSG_TYPE_PEER_UNMAP             = 0x4,
-+	HTT_10_4_T2H_MSG_TYPE_RX_ADDBA               = 0x5,
-+	HTT_10_4_T2H_MSG_TYPE_RX_DELBA               = 0x6,
-+	HTT_10_4_T2H_MSG_TYPE_TX_COMPL_IND           = 0x7,
-+	HTT_10_4_T2H_MSG_TYPE_PKTLOG                 = 0x8,
-+	HTT_10_4_T2H_MSG_TYPE_STATS_CONF             = 0x9,
-+	HTT_10_4_T2H_MSG_TYPE_RX_FRAG_IND            = 0xa,
-+	HTT_10_4_T2H_MSG_TYPE_SEC_IND                = 0xb,
-+	HTT_10_4_T2H_MSG_TYPE_RC_UPDATE_IND          = 0xc,
-+	HTT_10_4_T2H_MSG_TYPE_TX_INSPECT_IND         = 0xd,
-+	HTT_10_4_T2H_MSG_TYPE_MGMT_TX_COMPL_IND      = 0xe,
-+	HTT_10_4_T2H_MSG_TYPE_CHAN_CHANGE            = 0xf,
-+	HTT_10_4_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND   = 0x10,
-+	HTT_10_4_T2H_MSG_TYPE_RX_PN_IND              = 0x11,
-+	HTT_10_4_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND = 0x12,
-+	HTT_10_4_T2H_MSG_TYPE_TEST                   = 0x13,
-+	HTT_10_4_T2H_MSG_TYPE_EN_STATS               = 0x14,
-+	HTT_10_4_T2H_MSG_TYPE_AGGR_CONF              = 0x15,
-+	/* 0x16, 0x17 are reserved */
-+	HTT_10_4_T2H_MSG_TYPE_STATS_NOUPLOAD         = 0x18,
-+	/* keep this last */
-+	HTT_10_4_T2H_NUM_MSGS
-+};
-+
- enum htt_t2h_msg_type {
- 	HTT_T2H_MSG_TYPE_VERSION_CONF,
- 	HTT_T2H_MSG_TYPE_RX_IND,
-@@ -375,6 +404,7 @@ enum htt_t2h_msg_type {
- 	HTT_T2H_MSG_TYPE_AGGR_CONF,
- 	HTT_T2H_MSG_TYPE_STATS_NOUPLOAD,
- 	HTT_T2H_MSG_TYPE_TEST,
-+	HTT_T2H_MSG_TYPE_EN_STATS,
- 	/* keep this last */
- 	HTT_T2H_NUM_MSGS
- };
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 89eb16b..43c8f65 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2074,6 +2074,9 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	case HTT_T2H_MSG_TYPE_CHAN_CHANGE:
- 		break;
-+	case HTT_T2H_MSG_TYPE_EN_STATS:
-+		ath10k_warn(ar, "htt event enhanced stats not implemented\n");
-+		break;
- 	default:
- 		ath10k_warn(ar, "htt event (%d) not handled\n",
- 			    resp->hdr.msg_type);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 799ab8a..aee9e33 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -153,6 +153,8 @@ enum ath10k_fw_htt_op_version {
+-	if (!tm_trigger) {
++	if (!rtlpriv->dm.tm_trigger) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER, BIT(17)|BIT(16),
+ 			      0x03);
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Trigger 88E Thermal Meter!!\n");
+-		tm_trigger = 1;
++		rtlpriv->dm.tm_trigger = 1;
+ 		return;
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Schedule TxPowerTracking !!\n");
+ 				dm_txpower_track_cb_therm(hw);
+-		tm_trigger = 0;
++		rtlpriv->dm.tm_trigger = 0;
+ 	}
+ }
  
- 	ATH10K_FW_HTT_OP_VERSION_TLV = 3,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index f5ee67c..0aca6f4 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -1169,23 +1169,22 @@ static void rtl92c_dm_check_txpower_tracking_thermal_meter(
+ 						struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	static u8 tm_trigger;
  
-+	ATH10K_FW_HTT_OP_VERSION_10_4 = 4,
-+
- 	/* keep last */
- 	ATH10K_FW_HTT_OP_VERSION_MAX,
- };
+ 	if (!rtlpriv->dm.txpower_tracking)
+ 		return;
+ 
+-	if (!tm_trigger) {
++	if (!rtlpriv->dm.tm_trigger) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER, RFREG_OFFSET_MASK,
+ 			      0x60);
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Trigger 92S Thermal Meter!!\n");
+-		tm_trigger = 1;
++		rtlpriv->dm.tm_trigger = 1;
+ 		return;
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Schedule TxPowerTracking direct call!!\n");
+ 		rtl92c_dm_txpower_tracking_directcall(hw);
+-		tm_trigger = 0;
++		rtlpriv->dm.tm_trigger = 0;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index a1be5a6..587b8c5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -1240,23 +1240,22 @@ static void rtl92d_dm_initialize_txpower_tracking(struct ieee80211_hw *hw)
+ void rtl92d_dm_check_txpower_tracking_thermal_meter(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	static u8 tm_trigger;
+ 
+ 	if (!rtlpriv->dm.txpower_tracking)
+ 		return;
+ 
+-	if (!tm_trigger) {
++	if (!rtlpriv->dm.tm_trigger) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER, BIT(17) |
+ 			      BIT(16), 0x03);
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Trigger 92S Thermal Meter!!\n");
+-		tm_trigger = 1;
++		rtlpriv->dm.tm_trigger = 1;
+ 		return;
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Schedule TxPowerTracking direct call!!\n");
+ 		rtl92d_dm_txpower_tracking_callback_thermalmeter(hw);
+-		tm_trigger = 0;
++		rtlpriv->dm.tm_trigger = 0;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
+index 575980b..9bae5a9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
+@@ -200,7 +200,6 @@ static void _rtl92s_dm_check_txpowertracking_thermalmeter(
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+-	static u8 tm_trigger;
+ 	u8 tx_power_checkcnt = 5;
+ 
+ 	/* 2T2R TP issue */
+@@ -215,13 +214,13 @@ static void _rtl92s_dm_check_txpowertracking_thermalmeter(
+ 		return;
+ 	}
+ 
+-	if (!tm_trigger) {
++	if (!rtlpriv->dm.tm_trigger) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER,
+ 			      RFREG_OFFSET_MASK, 0x60);
+-		tm_trigger = 1;
++		rtlpriv->dm.tm_trigger = 1;
+ 	} else {
+ 		_rtl92s_dm_txpowertracking_callback_thermalmeter(hw);
+-		tm_trigger = 0;
++		rtlpriv->dm.tm_trigger = 0;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+index e77c3a4..3a81cdb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+@@ -909,23 +909,22 @@ static void rtl8723be_dm_txpower_tracking_callback_thermalmeter(
+ void rtl8723be_dm_check_txpower_tracking(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	static u8 tm_trigger;
+ 
+ 	if (!rtlpriv->dm.txpower_tracking)
+ 		return;
+ 
+-	if (!tm_trigger) {
++	if (!rtlpriv->dm.tm_trigger) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER, BIT(17) | BIT(16),
+ 			      0x03);
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Trigger 8723be Thermal Meter!!\n");
+-		tm_trigger = 1;
++		rtlpriv->dm.tm_trigger = 1;
+ 		return;
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Schedule TxPowerTracking !!\n");
+ 		rtl8723be_dm_txpower_tracking_callback_thermalmeter(hw);
+-		tm_trigger = 0;
++		rtlpriv->dm.tm_trigger = 0;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+index 342678d..b57cfd9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+@@ -1068,20 +1068,18 @@ static void rtl8812ae_dm_check_txpower_tracking_thermalmeter(
+ 		struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	static u8 tm_trigger;
+ 
+-	if (!tm_trigger) {
++	if (!rtlpriv->dm.tm_trigger) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER_88E,
+ 			      BIT(17) | BIT(16), 0x03);
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Trigger 8812 Thermal Meter!!\n");
+-		tm_trigger = 1;
++		rtlpriv->dm.tm_trigger = 1;
+ 		return;
+ 	}
+ 	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 		 "Schedule TxPowerTracking direct call!!\n");
+ 	rtl8812ae_dm_txpower_tracking_callback_thermalmeter(hw);
+-	tm_trigger = 0;
+ }
+ 
+ static void rtl8821ae_dm_iq_calibrate(struct ieee80211_hw *hw)
+@@ -2519,21 +2517,19 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
+ void rtl8821ae_dm_check_txpower_tracking_thermalmeter(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	static u8 tm_trigger;
+-
+-	if (!tm_trigger) {
++	if (!rtlpriv->dm.tm_trigger) {
+ 		rtl_set_rfreg(hw, RF90_PATH_A, RF_T_METER_88E, BIT(17)|BIT(16),
+ 			      0x03);
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Trigger 8821ae Thermal Meter!!\n");
+-		tm_trigger = 1;
++		rtlpriv->dm.tm_trigger = 1;
+ 		return;
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+ 			 "Schedule TxPowerTracking !!\n");
+ 
+ 		rtl8821ae_dm_txpower_tracking_callback_thermalmeter(hw);
+-		tm_trigger = 0;
++		rtlpriv->dm.tm_trigger = 0;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 5157291..2b770b5 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1665,6 +1665,7 @@ struct rtl_dm {
+ 	u8 last_dtp_lvl;
+ 	u8 thermalvalue_avg[AVG_THERMAL_NUM];
+ 	u8 thermalvalue_avg_index;
++	u8 tm_trigger;
+ 	bool done_txpower;
+ 	u8 dynamic_txhighpower_lvl;	/*Tx high power level */
+ 	u8 dm_flag;		/*Indicate each dynamic mechanism's status. */
 -- 
-1.8.1.2
+2.4.2
 
