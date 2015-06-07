@@ -1,75 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:34442 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbbFDIns (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:47820 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752821AbbFGN4o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 04:43:48 -0400
-Received: by payr10 with SMTP id r10so25340513pay.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2015 01:43:48 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] rtlwifi: rtl8192cu: remove IS_HARDWARE_TYPE_8192CE and IS_HARDWARE_TYPE_8192CU
-Date: Thu,  4 Jun 2015 17:43:34 +0900
-Message-Id: <1433407416-752-1-git-send-email-ap420073@gmail.com> (sfid-20150604_104352_694189_68173990)
+	Sun, 7 Jun 2015 09:56:44 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 5/6] wil6210: platform hooks for modile init/exit
+Date: Sun,  7 Jun 2015 16:56:30 +0300
+Message-Id: <1433685391-9026-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150607_155651_337037_62A5BE48)
+In-Reply-To: <1433685391-9026-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1433685391-9026-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-in the rtlwifi/rtl8192cu, IS_HARDWARE_TYPE_8192CE and IS_HARDWARE_TYPE_8192CU
-is unnecessary. because rtlwifi/rtl8192cu codes aren't shared.
+Provide platform hooks for module init/exit.
+If platform require to perform some specific actions
+in global context, this is where to do so.
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+Example may be turning on power for the PCIE based
+on DT information.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/phy.c | 18 +++---------------
- 1 file changed, 3 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/wil6210/pcie_bus.c     | 22 +++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/wil_platform.c |  9 +++++++++
+ drivers/net/wireless/ath/wil6210/wil_platform.h |  3 +++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-index 12f6d47..a750621 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-@@ -108,13 +108,8 @@ void rtl92cu_phy_set_rf_reg(struct ieee80211_hw *hw,
- bool rtl92cu_phy_mac_config(struct ieee80211_hw *hw)
- {
- 	bool rtstatus;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	bool is92c = IS_92C_SERIAL(rtlhal->version);
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 58c7916..a4417d4 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -291,7 +291,27 @@ static struct pci_driver wil6210_driver = {
+ 	.name		= WIL_NAME,
+ };
  
- 	rtstatus = _rtl92cu_phy_config_mac_with_headerfile(hw);
--	if (is92c && IS_HARDWARE_TYPE_8192CE(rtlhal))
--		rtl_write_byte(rtlpriv, 0x14, 0x71);
- 	return rtstatus;
- }
+-module_pci_driver(wil6210_driver);
++static int __init wil6210_driver_init(void)
++{
++	int rc;
++
++	rc = wil_platform_modinit();
++	if (rc)
++		return rc;
++
++	rc = pci_register_driver(&wil6210_driver);
++	if (rc)
++		wil_platform_modexit();
++	return rc;
++}
++module_init(wil6210_driver_init);
++
++static void __exit wil6210_driver_exit(void)
++{
++	pci_unregister_driver(&wil6210_driver);
++	wil_platform_modexit();
++}
++module_exit(wil6210_driver_exit);
  
-@@ -122,7 +117,6 @@ bool rtl92cu_phy_bb_config(struct ieee80211_hw *hw)
- {
- 	bool rtstatus = true;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	u16 regval;
- 	u32 regval32;
- 	u8 b_reg_hwparafile = 1;
-@@ -134,17 +128,11 @@ bool rtl92cu_phy_bb_config(struct ieee80211_hw *hw)
- 	rtl_write_byte(rtlpriv, REG_AFE_PLL_CTRL, 0x83);
- 	rtl_write_byte(rtlpriv, REG_AFE_PLL_CTRL + 1, 0xdb);
- 	rtl_write_byte(rtlpriv, REG_RF_CTRL, RF_EN | RF_RSTB | RF_SDMRSTB);
--	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
--		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, FEN_PPLL | FEN_PCIEA |
--			       FEN_DIO_PCIE |	FEN_BB_GLB_RSTn | FEN_BBRSTB);
--	} else if (IS_HARDWARE_TYPE_8192CU(rtlhal)) {
--		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, FEN_USBA | FEN_USBD |
--			       FEN_BB_GLB_RSTn | FEN_BBRSTB);
--	}
-+	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN, FEN_USBA | FEN_USBD |
-+		       FEN_BB_GLB_RSTn | FEN_BBRSTB);
- 	regval32 = rtl_read_dword(rtlpriv, 0x87c);
- 	rtl_write_dword(rtlpriv, 0x87c, regval32 & (~BIT(31)));
--	if (IS_HARDWARE_TYPE_8192CU(rtlhal))
--		rtl_write_byte(rtlpriv, REG_LDOHCI12_CTRL, 0x0f);
-+	rtl_write_byte(rtlpriv, REG_LDOHCI12_CTRL, 0x0f);
- 	rtl_write_byte(rtlpriv, REG_AFE_XTAL_CTRL + 1, 0x80);
- 	if (b_reg_hwparafile == 1)
- 		rtstatus = _rtl92c_phy_bb8192c_config_parafile(hw);
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_AUTHOR("Qualcomm Atheros <wil6210@qca.qualcomm.com>");
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.c b/drivers/net/wireless/ath/wil6210/wil_platform.c
+index 976a071..1db680f 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_platform.c
++++ b/drivers/net/wireless/ath/wil6210/wil_platform.c
+@@ -17,6 +17,15 @@
+ #include "linux/device.h"
+ #include "wil_platform.h"
+ 
++int __init wil_platform_modinit(void)
++{
++	return 0;
++}
++
++void wil_platform_modexit(void)
++{
++}
++
+ /**
+  * wil_platform_init() - wil6210 platform module init
+  *
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
+index 158c73b..d7fa19b 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_platform.h
++++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
+@@ -31,4 +31,7 @@ struct wil_platform_ops {
+ 
+ void *wil_platform_init(struct device *dev, struct wil_platform_ops *ops);
+ 
++int __init wil_platform_modinit(void);
++void wil_platform_modexit(void);
++
+ #endif /* __WIL_PLATFORM_H__ */
 -- 
 2.1.4
 
