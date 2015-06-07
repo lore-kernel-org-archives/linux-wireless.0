@@ -1,163 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5640 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbFPFNr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:13:47 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH 04/10] ath10k: Copy Engine related changes for QCA99X0
-Date: Tue, 16 Jun 2015 10:42:16 +0530
-Message-ID: <1434431542-14724-5-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071352_108083_A0383AAB)
-In-Reply-To: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:42769 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750920AbbFGHac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2015 03:30:32 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Yegor Yefremov <yegorslists@googlemail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Eliad Peller" <eliad@wizery.com>,
+	Marc Kleine-Budde <mkl@pengutronix.de>
+Subject: RE: wl18xx: wlconf kernel compatibility
+Date: Sun, 7 Jun 2015 07:30:18 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101266353E4@DFRE01.ent.ti.com> (sfid-20150607_093038_274901_B4F3E453)
+References: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com>
+ <87bngtnf00.fsf@kamboji.qca.qualcomm.com>
+ <CAGm1_ku=YSQw5W11=NJA79pgPN8ptfE4iv8CCuXR1DTz=9JLAQ@mail.gmail.com>
+In-Reply-To: <CAGm1_ku=YSQw5W11=NJA79pgPN8ptfE4iv8CCuXR1DTz=9JLAQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QCA99X0 supports upto 12 Copy engines. Host and target
-CE configuration table is updated to support new copy engine
-pipes. This also fixes the assumption of diagnostic CE by making
-CE_7 as the one instead of CE_COUNT - 1.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ce.h  |  2 +-
- drivers/net/wireless/ath/ath10k/hw.h  |  3 ++
- drivers/net/wireless/ath/ath10k/pci.c | 69 ++++++++++++++++++++++++++++++++++-
- 3 files changed, 71 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 93939de..bb4b8f3 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -21,7 +21,7 @@
- #include "hif.h"
- 
- /* Maximum number of Copy Engine's supported */
--#define CE_COUNT_MAX 8
-+#define CE_COUNT_MAX 12
- #define CE_HTT_H2T_MSG_SRC_NENTRIES 4096
- 
- /* Descriptor rings must be aligned to this boundary */
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 76caeab..5819659 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -343,6 +343,9 @@ enum ath10k_hw_rate_cck {
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
- #define TARGET_TLV_NUM_WOW_PATTERNS		22
- 
-+/* Diagnostic Window */
-+#define CE_DIAG_PIPE	7
-+
- #define NUM_TARGET_CE_CONFIG_WLAN ar->hw_values->num_target_ce_config_wlan
- 
- /* Number of Copy Engines supported */
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 190f7f3..980390a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -156,6 +156,38 @@ static const struct ce_attr host_ce_config_wlan[] = {
- 		.src_sz_max = DIAG_TRANSFER_LIMIT,
- 		.dest_nentries = 2,
- 	},
-+
-+	/* CE8: target->host pktlog */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 128,
-+	},
-+
-+	/* CE9 target autonomous qcache memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE10: target autonomous hif memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE11: target autonomous hif memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
- };
- 
- /* Target firmware's Copy Engine configuration. */
-@@ -233,6 +265,38 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
- 	},
- 
- 	/* CE7 used only by Host */
-+	{
-+		.pipenum = __cpu_to_le32(7),
-+		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
-+		.nentries = __cpu_to_le32(0),
-+		.nbytes_max = __cpu_to_le32(0),
-+		.flags = __cpu_to_le32(0),
-+		.reserved = __cpu_to_le32(0),
-+	},
-+
-+	/* CE8 target->host packtlog */
-+	{
-+		.pipenum = __cpu_to_le32(8),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),
-+		.nentries = __cpu_to_le32(64),
-+		.nbytes_max = __cpu_to_le32(2048),
-+		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
-+		.reserved = __cpu_to_le32(0),
-+	},
-+
-+	/* CE9 target autonomous qcache memcpy */
-+	{
-+		.pipenum = __cpu_to_le32(9),
-+		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
-+		.nentries = __cpu_to_le32(32),
-+		.nbytes_max = __cpu_to_le32(2048),
-+		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
-+		.reserved = __cpu_to_le32(0),
-+	},
-+
-+	/* It not necessary to send target wlan configuration for CE10 & CE11
-+	 * as these CEs are not actively used in target.
-+	 */
- };
- 
- /*
-@@ -1759,7 +1823,8 @@ static int ath10k_pci_init_config(struct ath10k *ar)
- 
- 	ret = ath10k_pci_diag_write_mem(ar, pipe_cfg_targ_addr,
- 					target_ce_config_wlan,
--					sizeof(target_ce_config_wlan));
-+					sizeof(struct ce_pipe_config) *
-+					NUM_TARGET_CE_CONFIG_WLAN);
- 
- 	if (ret != 0) {
- 		ath10k_err(ar, "Failed to write pipe cfg: %d\n", ret);
-@@ -1873,7 +1938,7 @@ static int ath10k_pci_alloc_pipes(struct ath10k *ar)
- 		}
- 
- 		/* Last CE is Diagnostic Window */
--		if (i == CE_COUNT - 1) {
-+		if (i == CE_DIAG_PIPE) {
- 			ar_pci->ce_diag = pipe->ce_hdl;
- 			continue;
- 		}
--- 
-1.9.1
-
+SGksDQpBcyB0aGUgY29uZmlndXJhdGlvbiBmaWxlIGlzIEhXIGRlcGVuZGVkIGl0IHNob3VsZCBi
+ZSBjcmVhdGVkIHBlciBwbGF0Zm9ybSwNCndlIGhhdmUgc2V0IHRoaXMgd2lraSBwYWdlIGFuZCBz
+Y3JpcHQgdG8gaGVscCB3aXRoIGluaXRpYWwgc2V0dXAgOg0KaHR0cDovL3Byb2Nlc3NvcnMud2lr
+aS50aS5jb20vaW5kZXgucGhwL09wZW5fU291cmNlX1dpcmVsZXNzX0Nvbm5lY3Rpdml0eV93bGNv
+bmYNCg0KV2UgaGF2ZSBhbHNvIHB1c2hlZCBhIHBhdGNoIHRoYXQgbWFrZXMgc3VyZSB0aGUgZHJp
+dmVyIHdpbGwgbm90IGNyYXNoIGlmIHRoZXJlIGlzIGEgZmlsZSBzaXplIG1pc21hdGNoLCANCmFu
+ZCB3aWxsIGZhbGwgYmFjayB0byBkZWZhdWx0Lg0KDQpSZWdhcmRzLA0KWWFuaXYNCg0KPiAtLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBZZWdvciBZZWZyZW1vdiBbbWFpbHRvOnll
+Z29yc2xpc3RzQGdvb2dsZW1haWwuY29tXQ0KPiBTZW50OiBTYXR1cmRheSwgSnVuZSAwNiwgMjAx
+NSA2OjE5IFBNDQo+IFRvOiBLYWxsZSBWYWxvDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
+cm5lbC5vcmc7IE1hY2hhbmksIFlhbml2OyBFbGlhZCBQZWxsZXI7IE1hcmMgS2xlaW5lLQ0KPiBC
+dWRkZQ0KPiBTdWJqZWN0OiBSZTogd2wxOHh4OiB3bGNvbmYga2VybmVsIGNvbXBhdGliaWxpdHkN
+Cj4gDQo+IEhpIEthbGxlLA0KPiANCj4gT24gU2F0LCBKdW4gNiwgMjAxNSBhdCAzOjI3IFBNLCBL
+YWxsZSBWYWxvIDxrdmFsb0Bjb2RlYXVyb3JhLm9yZz4gd3JvdGU6DQo+ID4gWWVnb3IgWWVmcmVt
+b3YgPHllZ29yc2xpc3RzQGdvb2dsZW1haWwuY29tPiB3cml0ZXM6DQo+ID4NCj4gPj4gSG93IGRv
+IEkga25vdywgd2hpY2ggd2xjb25mIHZlcnNpb24gaXMgY29tcGF0aWJsZSB3aXRoIHdoaWNoIGtl
+cm5lbA0KPiA+PiB2ZXJzaW9uPyBJIGhhdmUgZm9sbG93aW5nIHByb2JsZW06DQo+ID4+DQo+ID4+
+IEkgaGF2ZSAqLklOSSBmaWxlIGZvciBteSBwYXJ0aWN1bGFyIFdMQU4gY2hpcC4gVGhpcyBmaWxl
+IHdpbGwgYmUgdXNlZA0KPiA+PiB0byBwcm9kdWNlIHdsMTh4eC1jb25mLmJpbi4gVGhlIHNpemUg
+b2YgdGhpcyBmaWxlIHdpbGwgYmUgY2hlY2sNCj4gPj4gZHVyaW5nIGRldmljZSBpbml0aWFsaXph
+dGlvbi4gRGVwZW5kaW5nIG9uIHdoaWNoIGtlcm5lbCB2ZXJzaW9uIGlzDQo+ID4+IHVzZWQgdGhl
+IHNpemUgb2YgdGhlIHJlcXVpcmVkIGZpbGUgZGlmZmVycy4gRm9yIGV4YW1wbGUga2VybmVsIDMu
+MTgNCj4gPj4gcmVxdWlyZXMgd2wxOHh4LWNvbmYuYmluIHRvIGhhdmUgMTIyMSBieXRlcywgNC4x
+IGV4cGVjdHMgMTIyNiBieXRlcy4NCj4gPj4gUmVjZW50IHdsY29uZiAoZ2l0Oi8vZ2l0LnRpLmNv
+bS93aWxpbms4LXdsYW4vMTh4eC10aS11dGlscy5naXQpDQo+ID4+IHByb2R1Y2VzIDEyMjkgYnl0
+ZXMgZmlsZXMuDQo+ID4+DQo+ID4+IEhvdyBzaG91bGQgSSBkZXRlcm1pbmUgY29ycmVjdCB3bGNv
+bmYgdmVyc2lvbj8NCj4gPg0KPiA+IEkgYWxzbyBjb21wbGFpbmVkIGFib3V0IHNvbWV0aGluZyBh
+bG9uZyB0aGVzZSBsaW5lcyBlYXJsaWVyLCB0aGlzIGlzDQo+ID4gbm90IGhvdyB1cHN0cmVhbSBk
+cml2ZXJzIGFyZSBzdXBwb3NlZCB0byB3b3JrLiBVc2VycyBzaG91bGQgbm90IGJlDQo+ID4gZm9y
+Y2VkIHRvIGZpbmQgY29ycmVjdCBmaWxlcyBmcm9tIHNvbWV3aGVyZSwgaW5zdGVhZCBldmVyeXRo
+aW5nIHNob3VsZA0KPiA+IGp1c3Qgd29yayBvdXQgb2YgYm94Lg0KPiA+DQo+ID4gQ2FuIGFueW9u
+ZSBoZWxwIFllZ29yIHRvIHNvbHZlIGhpcyBwcm9ibGVtPyBCdXQgaW4gdGhlIGxvbmcgcnVuIHds
+MTh4eA0KPiA+IHJlYWxseSBzaG91bGQgbWFuYWdlIHRoaXMgYmV0dGVyLg0KPiANCj4gSSBjb3Vs
+ZCBzb2x2ZSB0aGUgcHJvYmxlbSwgdGhvdWdoIGZvciB0aGUgZnV0dXJlIGl0IHNob3VsZCBiZSBj
+bGVhciwgd2hhdCB3bGNvbmYNCj4gdmVyc2lvbiB0byB1c2UuDQo+IA0KPiBTZWUgbXkgcG9zdCBo
+ZXJlOg0KPiBodHRwOi8vZTJlLnRpLmNvbS9zdXBwb3J0L3dpcmVsZXNzX2Nvbm5lY3Rpdml0eS9m
+LzMwNy9wLzQyNjIyOS8xNTIzMjM1IzE1Mg0KPiAzMjM1DQo+IA0KPiBZZWdvcg0K
