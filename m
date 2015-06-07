@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46794 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753042AbbFQIrw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 04:47:52 -0400
-Message-ID: <1434530870.1884.12.camel@sipsolutions.net> (sfid-20150617_104812_764234_D44B16FA)
-Subject: Re: [PATCH V3] mac80211: wowlan: suspend: Fix power save state
- stuck in ACTIVE caused by race between suspend and Tx packet.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chaitanya T K <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Jun 2015 10:47:50 +0200
-In-Reply-To: <1433943751-11221-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150610_154245_778081_DC26490D)
-References: <1433943751-11221-1-git-send-email-chaitanya.mgit@gmail.com>
-	 (sfid-20150610_154245_778081_DC26490D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:32997 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbbFGLPn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2015 07:15:43 -0400
+Received: by wgez8 with SMTP id z8so83532309wge.0
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 04:15:42 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] bcma: make calls to PCI hostmode functions config-safe
+Date: Sun,  7 Jun 2015 13:15:30 +0200
+Message-Id: <1433675731-16328-1-git-send-email-zajec5@gmail.com> (sfid-20150607_131932_482186_D60604C0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-10 at 19:12 +0530, Chaitanya T K wrote:
-> From: Chaitanya T K <chaitanya.mgit@gmail.com>
-> 
-> Background: When wowlan is enabled, the chipset stays in low
-> power state maintaining the connection as per the
-> mac80211 power save state.
-> 
-> If suspended during TX in progress, there can be 
-> race where the driver is put of of power-save due
-> to TX and during suspend dynamic_ps_time is cancelled
-> and TX packet is flushed, leaving the driver in ACTIVE
-> even after resuming until dynamic_ps_time puts 
-> driver back in DOZE. (Which only happens if there
-> is another TX).
-> 
-> This can lead to high power consumption of chipset 
-> during (or) after resuming.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ include/linux/bcma/bcma_driver_pci.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-I still don't like it. I also don't believe that what you're writing is
-actually true. The only problem I can see is that it leads to higher
-power consumption *while the system is suspended* - at resume time we
-send a packet and thus kick the timers...
-
-I was going to change it to this:
-
--------
-mac80211: ensure powersave is enabled when going to WoWLAN
-
-If the system suspends while the client powersave mechanism
-is waiting to suspend due to a previous TX, the system will 
-go to sleep with the NIC being awake (active) rather than
-in doze mode. Unless the driver handles this, it leads to
-excessive power consumption while sleeping.
--------
-
-but I'm not convinced all of this is right.
-
-johannes
+diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
+index 5ba6918..9657f11 100644
+--- a/include/linux/bcma/bcma_driver_pci.h
++++ b/include/linux/bcma/bcma_driver_pci.h
+@@ -246,7 +246,18 @@ static inline void bcma_core_pci_power_save(struct bcma_bus *bus, bool up)
+ }
+ #endif
+ 
++#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
+ extern int bcma_core_pci_pcibios_map_irq(const struct pci_dev *dev);
+ extern int bcma_core_pci_plat_dev_init(struct pci_dev *dev);
++#else
++static inline int bcma_core_pci_pcibios_map_irq(const struct pci_dev *dev)
++{
++	return -ENOTSUPP;
++}
++static inline int bcma_core_pci_plat_dev_init(struct pci_dev *dev)
++{
++	return -ENOTSUPP;
++}
++#endif
+ 
+ #endif /* LINUX_BCMA_DRIVER_PCI_H_ */
+-- 
+1.8.4.5
 
