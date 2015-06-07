@@ -1,38 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:33919 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754252AbbFVLnc (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:36618 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbbFGQXk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 07:43:32 -0400
-Received: by lbnk3 with SMTP id k3so782243lbn.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 04:43:31 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, nbd@openwrt.org, sujith@msujith.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 0/3] ath9k: P2P patches when chanctx used
-Date: Mon, 22 Jun 2015 13:43:02 +0200
-Message-Id: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150622_134335_978857_825DE73E)
+	Sun, 7 Jun 2015 12:23:40 -0400
+Received: by oihb142 with SMTP id b142so79952241oih.3
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 09:23:40 -0700 (PDT)
+Message-ID: <55747008.6020103@lwfinger.net> (sfid-20150607_182355_990710_C0FD58E4)
+Date: Sun, 07 Jun 2015 11:23:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Taehee Yoo <ap420073@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2] rtlwifi: rtl8192c: Add init codes for "fw_version"
+ and "fw_subversion".
+References: <1433684016-24340-1-git-send-email-ap420073@gmail.com>	<55745D9E.60504@lwfinger.net> <CAMArcTVcqiqnoKR0d2=Y+=cOTzTh+07etwOStSrbb9C42yCoqQ@mail.gmail.com>
+In-Reply-To: <CAMArcTVcqiqnoKR0d2=Y+=cOTzTh+07etwOStSrbb9C42yCoqQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patches for problems I hit during P2P tests when
-multichannel used (driver loaded with use_chanctx=1).
+On 06/07/2015 10:18 AM, Taehee Yoo wrote:
+> 2015-06-08 0:05 GMT+09:00 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 06/07/2015 08:33 AM, Taehee Yoo wrote:
+>>>
+>>> The variable "fw_version" is used in the _ResetDigitalProcedure1().
+>>> but It is not initialized. so I add init codes for "fw_version" and
+>>> "fw_subversion".
+>>>
+>>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+>>> ---
+>>
+>>
+>> V2 - Moved new statements into location where header is known to exist.
+>>
+>> You should have something like this after the separator (---) in the commit
+>> message for any resubmission.
+>>
+>> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>
+>> Larry
+>>
+>>
+>>>    drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c | 3 ++-
+>>>    1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+>>> b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+>>> index 29983bc..14b819e 100644
+>>> --- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+>>> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+>>> @@ -233,13 +233,14 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
+>>>          pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
+>>>          pfwdata = (u8 *)rtlhal->pfirmware;
+>>>          fwsize = rtlhal->fwsize;
+>>> -
+>>>          if (IS_FW_HEADER_EXIST(pfwheader)) {
+>>>                  RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+>>>                           "Firmware Version(%d),
+>>> Signature(%#x),Size(%d)\n",
+>>>                            pfwheader->version, pfwheader->signature,
+>>>                            (int)sizeof(struct rtl92c_firmware_header));
+>>>
+>>> +               rtlhal->fw_version = pfwheader->version;
+>>> +               rtlhal->fw_subversion = pfwheader->subversion;
+>>>                  pfwdata = pfwdata + sizeof(struct rtl92c_firmware_header);
+>>>                  fwsize = fwsize - sizeof(struct rtl92c_firmware_header);
+>>>          }
+>>>
+>>
+>
+> Thank you for your feedback!
+> Would i resend it?
 
-Janusz Dziedzic (3):
-  ath9k: handle RoC abort correctly
-  ath9k: make rxfilter per HW
-  ath9k: advertise p2p dev support when chanctx
+No, but remember that for next time.
 
- drivers/net/wireless/ath/ath9k/ath9k.h   |  3 ++-
- drivers/net/wireless/ath/ath9k/channel.c |  3 ++-
- drivers/net/wireless/ath/ath9k/init.c    |  6 +++++-
- drivers/net/wireless/ath/ath9k/main.c    |  2 +-
- drivers/net/wireless/ath/ath9k/recv.c    | 12 ++++++------
- 5 files changed, 16 insertions(+), 10 deletions(-)
+Larry
 
--- 
-1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
