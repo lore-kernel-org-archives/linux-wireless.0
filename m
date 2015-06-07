@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.12]:46934 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750756AbbFBTKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 15:10:25 -0400
-From: Jakub Kicinski <moorray3@wp.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH] mac80211: remove obsolete sentence from documentation
-Date: Tue,  2 Jun 2015 21:10:13 +0200
-Message-Id: <1433272213-6346-1-git-send-email-moorray3@wp.pl> (sfid-20150602_211029_482359_34035E78)
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:34895 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670AbbFGMEQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Jun 2015 08:04:16 -0400
+Received: by pdbnf5 with SMTP id nf5so82554774pdb.2
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 05:04:15 -0700 (PDT)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH V2 3/3] rtlwifi: rtl8192cu: Fix variable isfirst_ampdu
+Date: Sun,  7 Jun 2015 21:03:57 +0900
+Message-Id: <1433678637-7718-2-git-send-email-ap420073@gmail.com> (sfid-20150607_140441_712836_5E19236D)
+In-Reply-To: <1433678637-7718-1-git-send-email-ap420073@gmail.com>
+References: <1433678637-7718-1-git-send-email-ap420073@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+rtl92cu_rx_query_desc set a isampdu twice.
+but second code is related to isfirst_ampdu.
+so i change it.
 
-FIF_PROMISC_IN_BSS was removed in commit df1404650ccb
-("mac80211: remove support for IFF_PROMISC").
-
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- include/net/mac80211.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2f8b7decace0..e117119927ec 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2591,8 +2591,7 @@ void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb);
-  *
-  * @FIF_OTHER_BSS: pass frames destined to other BSSes
-  *
-- * @FIF_PSPOLL: pass PS Poll frames, if PROMISC_IN_BSS is not set then only
-- * 	those addressed to this station.
-+ * @FIF_PSPOLL: pass PS Poll frames
-  *
-  * @FIF_PROBE_REQ: pass probe request frames
-  */
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index cbead00..95880fe 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -321,7 +321,7 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
+ 	stats->rate = (u8) GET_RX_DESC_RX_MCS(pdesc);
+ 	stats->shortpreamble = (u16) GET_RX_DESC_SPLCP(pdesc);
+ 	stats->isampdu = (bool) (GET_RX_DESC_PAGGR(pdesc) == 1);
+-	stats->isampdu = (bool) ((GET_RX_DESC_PAGGR(pdesc) == 1)
++	stats->isfirst_ampdu = (bool)((GET_RX_DESC_PAGGR(pdesc) == 1)
+ 				   && (GET_RX_DESC_FAGGR(pdesc) == 1));
+ 	stats->timestamp_low = GET_RX_DESC_TSFL(pdesc);
+ 	stats->rx_is40Mhzpacket = (bool) GET_RX_DESC_BW(pdesc);
 -- 
-2.1.0
+2.1.4
 
