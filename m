@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:18328 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995AbbFPHMZ (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:34068 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767AbbFGLPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 03:12:25 -0400
-From: Dean Lee <dean.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>
-CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <dean.lee@atmel.com>
-Subject: [PATCH 2/2] staging: wilc1000: modify uninitialized warning
-Date: Tue, 16 Jun 2015 16:11:25 +0900
-Message-ID: <1434438685-24336-2-git-send-email-dean.lee@atmel.com> (sfid-20150616_091229_511244_A22EDB58)
-In-Reply-To: <1434438685-24336-1-git-send-email-dean.lee@atmel.com>
-References: <1434438685-24336-1-git-send-email-dean.lee@atmel.com>
+	Sun, 7 Jun 2015 07:15:47 -0400
+Received: by wibut5 with SMTP id ut5so58982787wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 04:15:46 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] bcma: lower dependency of BCMA_DRIVER_PCI_HOSTMODE
+Date: Sun,  7 Jun 2015 13:15:31 +0200
+Message-Id: <1433675731-16328-2-git-send-email-zajec5@gmail.com> (sfid-20150607_131933_485390_327CFFB3)
+In-Reply-To: <1433675731-16328-1-git-send-email-zajec5@gmail.com>
+References: <1433675731-16328-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-initialize it.
+This extension of BCMA_DRIVER_PCI has no reason to depend on
+BCMA_HOST_PCI. User may just want to have PCI device attached to SoC
+registered without enabling any extra client mode code.
+This can be useful when having non-bcma PCI device attached or when
+using other PCI driver.
 
-Signed-off-by: Dean Lee <dean.lee@atmel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/bcma/Kconfig | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 358283f..03e6bc5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -7241,7 +7241,7 @@ s32 host_int_add_beacon(WILC_WFIDrvHandle hWFIDrv, u32 u32Interval,
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	tstrHostIFmsg strHostIFmsg;
--	tstrHostIFSetBeacon *pstrSetBeaconParam = &strHostIFmsg.uniHostIFmsgBody.strHostIFSetBeacon;
-+	tstrHostIFSetBeacon *pstrSetBeaconParam = NULL;
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index fc6ffcf..be5fffb 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -29,12 +29,6 @@ config BCMA_HOST_PCI
+ 	select BCMA_DRIVER_PCI
+ 	default y
  
- 	if (pstrWFIDrv == NULL) {
- 		WILC_ERRORREPORT(s32Error, WILC_INVALID_ARGUMENT);
-@@ -7251,6 +7251,7 @@ s32 host_int_add_beacon(WILC_WFIDrvHandle hWFIDrv, u32 u32Interval,
+-config BCMA_DRIVER_PCI_HOSTMODE
+-	bool "Driver for PCI core working in hostmode"
+-	depends on BCMA && MIPS && BCMA_HOST_PCI
+-	help
+-	  PCI core hostmode operation (external PCI bus).
+-
+ config BCMA_HOST_SOC
+ 	bool "Support for BCMA in a SoC"
+ 	depends on BCMA
+@@ -61,6 +55,12 @@ config BCMA_DRIVER_PCI
+ 	  This driver is also prerequisite for a hostmode PCIe core
+ 	  support.
  
- 	PRINT_D(HOSTINF_DBG, "Setting adding beacon message queue params\n");
- 
-+	pstrSetBeaconParam = &strHostIFmsg.uniHostIFmsgBody.strHostIFSetBeacon;
- 
- 	/* prepare the WiphyParams Message */
- 	strHostIFmsg.u16MsgId = HOST_IF_MSG_ADD_BEACON;
++config BCMA_DRIVER_PCI_HOSTMODE
++	bool "Driver for PCI core working in hostmode"
++	depends on BCMA && MIPS && BCMA_DRIVER_PCI
++	help
++	  PCI core hostmode operation (external PCI bus).
++
+ config BCMA_DRIVER_MIPS
+ 	bool "BCMA Broadcom MIPS core driver"
+ 	depends on BCMA && MIPS
 -- 
-2.4.3
+1.8.4.5
 
