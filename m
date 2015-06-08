@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:38039 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204AbbFEFl6 convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57160 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752916AbbFHL27 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 01:41:58 -0400
-Received: by wibdq8 with SMTP id dq8so7056190wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2015 22:41:56 -0700 (PDT)
+	Mon, 8 Jun 2015 07:28:59 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jakub Kicinski <moorray3@wp.pl>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: Re: [PATCH 1/4] mt7601u: unify paged and non-paged RX dma paths
+References: <1433272288-6450-1-git-send-email-moorray3@wp.pl>
+Date: Mon, 08 Jun 2015 14:28:54 +0300
+In-Reply-To: <1433272288-6450-1-git-send-email-moorray3@wp.pl> (Jakub
+	Kicinski's message of "Tue, 2 Jun 2015 21:11:25 +0200")
+Message-ID: <87zj4ajv61.fsf@kamboji.qca.qualcomm.com> (sfid-20150608_132904_180047_BA94D01B)
 MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901A71F95@sbs2003.acksys.local>
-References: <773DB8A82AB6A046AE0195C68612A31901A71F95@sbs2003.acksys.local>
-Date: Fri, 5 Jun 2015 07:41:56 +0200
-Message-ID: <CA+BoTQkES9g3PejUbx4D6MtQcSA4pAT83yrLK71zVC0tWYovLA@mail.gmail.com> (sfid-20150605_074203_634954_F371748D)
-Subject: Re: ATH10K and VLAN
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 June 2015 at 16:46, Cedric VONCKEN <cedric.voncken@acksys.fr> wrote:
->         I'm testing to send a VLAN frame through ATH10K device.
->         I'm using compat wireless 2015-03-09 from openWRT. The ATH10K firmware used is 10.2.4.45
->
->         My test platform is:
->                 Pc1 : IP 10.101.4.3 (without VLAN)
->                         VLAN 1 : IP 192.168.5.1
->
->                 Equipment in AP mode. The netdev is bridged with eth0
->
->                 Equipment in client mode with WDS mode enables. The client is connected to the AP. The netdev is bridged with eth0.
->                 AP and client use ATH10K wireless card.
->
->                 PC2: IP 10.101.4.4 (without VLAN)
->                         VLAN 1 : IP 192.168.5.2
->
->                 The PC1 is connected to the equipment in AP mode and the PC2 is connected to the equipment in client mode.
->
->
->         I can ping from PC1 to PC2 without vlan (ping 10.101.4.4).
->         I cannot ping from PC1 to PC2 with VLAN.
->         With tcpdump I checked the vlan frame is sent to the netdev but this frame is not send to the air.
->
->         Is it possible to send a VLAN frame through ATH10K? If no, is it a driver limitation or firmware limitation?
+Jakub Kicinski <moorray3@wp.pl> writes:
 
-I'm not sure if IFTYPE_WDS works with ath10k but IFTYPE_AP_VLAN works
-fine for me on latest github.com/kvalo/ath master branch. Can you test
-if it works with no encryption, please?
+> From: Jakub Kicinski <kubakici@wp.pl>
+>
+> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
 
+Thanks, applied all four manually.
 
-Michał
+-- 
+Kalle Valo
