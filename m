@@ -1,123 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18878 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751169AbbFZB0A (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:34323 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753077AbbFHTey (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2015 21:26:00 -0400
-From: David Lin <dlin@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v3] Add new mac80211 driver mwlwifi.
-Date: Fri, 26 Jun 2015 01:25:56 +0000
-Message-ID: <9228e2c85d5d4bab9ad2cc859fa6c946@SC-EXCH02.marvell.com> (sfid-20150626_032604_231116_54434553)
-References: <909c66d61ee943f5a5ca202040944f2d@SC-EXCH02.marvell.com>
- <1435225107.2096.12.camel@sipsolutions.net>
-In-Reply-To: <1435225107.2096.12.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 8 Jun 2015 15:34:54 -0400
+Received: by igbhj9 with SMTP id hj9so67427747igb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 12:34:54 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAAnMG+Oeps87PaxV4DAqyOokz9T6ikf3Xv0vA_EC+impRM5Fxg@mail.gmail.com>
+References: <CAAVw_ZFi3Q1hi+uoeO_V=XUMNhZCViVq5iPrrJL9UakKB46Mag@mail.gmail.com>
+ <CAAnMG+Oeps87PaxV4DAqyOokz9T6ikf3Xv0vA_EC+impRM5Fxg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 9 Jun 2015 01:04:33 +0530
+Message-ID: <CABPxzYKr4uszh5g2KURj4tVG_vKNrNFaz4JyhCK4FuaRzdvhpQ@mail.gmail.com> (sfid-20150608_213505_254155_B4D1C268)
+Subject: Re: mac80211 modification
+To: Alexis Green <agreen@cococorp.com>
+Cc: Duy Tai Nguyen <duytai.cse@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiBPbiBUaHUsIDIwMTUtMDYtMjUgYXQgMDM6NDggKzAw
-MDAsIERhdmlkIExpbiB3cm90ZToNCj4gPiBTaWduZWQtb2ZmLWJ5OiBEYXZpZCBMaW4gPGRsaW5A
-bWFydmVsbC5jb20+DQo+IA0KPiBUaGlzIHJlYWxseSBuZWVkcyBhIGNvbW1pdCBtZXNzYWdlLCBs
-aWtlIHNheWluZyB3aGF0IGNoaXBzIGl0IHN1cHBvcnRzLA0KPiBwZXJoYXBzIHdoZXJlIHRvIGZp
-bmQgdGhlbSwgYW5kIHNpbWlsYXIuDQo+IA0KTy5LLiBXZSB3aWxsIGFkZCBpdC4NCj4NCj4gPiAg
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvS2NvbmZpZyAgICAgICAgICAgIHwgICAgMSArDQo+ID4gIGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL01ha2VmaWxlICAgICAgICAgICB8ICAgIDIgKw0KPiA+ICBkcml2
-ZXJzL25ldC93aXJlbGVzcy9td2x3aWZpL0tjb25maWcgICAgfCAgIDE3ICsNCj4gPiAgZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvbXdsd2lmaS9NYWtlZmlsZSAgIHwgICAgOSArDQo+ID4gIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL213bHdpZmkvZGV2LmggICAgICB8ICA0MzUgKysrKysrDQo+ID4gIGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL213bHdpZmkvZndjbWQuYyAgICB8IDIzMjgNCj4gKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKw0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9td2x3aWZpL2Z3
-Y21kLmggICAgfCAgMTc1ICsrKw0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9td2x3aWZpL2Z3
-ZGwuYyAgICAgfCAgMTgzICsrKw0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9td2x3aWZpL2Z3
-ZGwuaCAgICAgfCAgIDI3ICsNCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdsd2lmaS9ob3N0
-Y21kLmggIHwgIDc1MyArKysrKysrKysrDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213bHdp
-ZmkvaXNyLmMgICAgICB8ICAxNDggKysNCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdsd2lm
-aS9pc3IuaCAgICAgIHwgICAyNiArDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213bHdpZmkv
-bWFjODAyMTEuYyB8ICA3NDMgKysrKysrKysrKw0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9t
-d2x3aWZpL21hYzgwMjExLmggfCAgIDI1ICsNCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXds
-d2lmaS9tYWluLmMgICAgIHwgIDg1OCArKysrKysrKysrKysNCj4gPiAgZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbXdsd2lmaS9yeC5jICAgICAgIHwgIDUyMyArKysrKysrDQo+ID4gIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL213bHdpZmkvcnguaCAgICAgICB8ICAgMjUgKw0KPiA+ICBkcml2ZXJzL25ldC93
-aXJlbGVzcy9td2x3aWZpL3N5c2FkcHQuaCAgfCAgIDY3ICsNCj4gPiAgZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbXdsd2lmaS90eC5jICAgICAgIHwgIDgzNiArKysrKysrKysrKw0KPiA+ICBkcml2ZXJz
-L25ldC93aXJlbGVzcy9td2x3aWZpL3R4LmggICAgICAgfCAgIDI4ICsNCj4gPiAgMjAgZmlsZXMg
-Y2hhbmdlZCwgNzIwOSBpbnNlcnRpb25zKCspDQo+IA0KPiBZb3UncmUgbWlzc2luZyBhIE1BSU5U
-QUlORVJTIGVudHJ5Lg0KPg0KV2Ugd2lsbCBhZGQgaXQuDQo+DQo+ID4gKysrIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbXdsd2lmaS9LY29uZmlnDQo+ID4gQEAgLTAsMCArMSwxNyBAQA0KPiA+ICtj
-b25maWcgTVdMV0lGSQ0KPiA+ICsJdHJpc3RhdGUgIk1hcnZlbGwgV2lyZWxlc3MgV2lGaSBkcml2
-ZXIgKG13bHdpZmkpIg0KPiA+ICsJZGVwZW5kcyBvbiBQQ0kgJiYgTUFDODAyMTEgJiYgTVdJRklF
-WF9QQ0lFPW4NCj4gDQo+IFVoLCB3aGF0J3Mgd2l0aCB0aGUgZXhjbHVzaW9uIG9mIE1XSUZJRVhf
-UENJRT8gQ291bGRuJ3QgdXNlIGEgZGlmZmVyZW50IFBDSSBJRD8NCj4gSSByZWFsbHkgdGhpbmsg
-eW91IG5lZWQgdG8gZ2V0IHJpZCBvZiB0aGlzLCBvdGhlcndpc2UgcGVvcGxlIGNhbid0IGV2ZW4N
-Cj4gKmJ1aWxkLXRlc3QqIHRoZWlyIHdpZmkgY2hhbmdlcyBmdWxseS4NCj4NCkJvdGggdGhlIGRy
-aXZlcnMgYXJlIG9wZXJhYmxlIGZvciB0aGUgc2FtZSBjaGlwIHBhcnQgbnVtYmVyIDg4OTcgYW5k
-IGl0cyBtb2R1bGVzIChib2FyZHMpIG1hbnVmYWN0dXJlZCBvdXQgdGhlcmUuIFRoZSBQQ0kgRGV2
-aWNlIElEIGlzIGEgZml4ZWQgdmFsdWUgKGJ5IGNoaXAvbWFudWZhY3R1cmVyKSBvbiB0aG9zZSBt
-b2R1bGVzLiBBcyBzYWlkIGVhcmxpZXIsIHRoZSB0d28gZHJpdmVycyBhcmUgZm9yIG1hYzgwMjEx
-IGhvc3QgbWFjLCBhbmQgZmlybXdhcmUgbWFjIHJlc3BlY3RpdmVseS4gVGhleSBzZXJ2ZSBkaWZm
-ZXJlbnQgcHVycG9zZXMuIFVzZXJzIG5lZWQgdG8gY2hvb3NlIHdoaWNoIGRyaXZlciB0aGV5IHdh
-bnQgdG8gdXNlIGZvciB0aGUgc2FtZSB3aWZpIGhhcmR3YXJlLCBhbmQgdGhleSBjYW5ub3QgdXNl
-IGJvdGggb2YgdGhlbSBhdCB0aGUgc2FtZSB0aW1lLiBUaGUgbXdpZmlleCBpcyBtb3JlIHdpZGVs
-eSB1c2VkIG5vdyBhbmQgc3RhIGNlbnRyaWMuIFdlIGRvIG5vdCB3YW50IHRvIGJyZWFrIGl0Lg0K
-DQpJIGFtIG5vdCBzdXJlIGJ1dCBJIGJlbGlldmUgdGhleSBhcmUgYWxzbyBtdWx0aXBsZSBmbGF2
-b3JzIG9mIGRyaXZlciBmb3Igc29tZSBvdGhlciBjaGlwcy4gQW55IGFkdmljZSBob3cgdGhleSBh
-cmUgaGFuZGxlZCwgY29uc2lkZXJpbmcgdGhhdCBjaGFuZ2luZyB0aGUgaGFyZHdhcmUvYm9hcmQg
-aXMgbm90IGFuIG9wdGlvbj8gSSBndWVzcyB3ZSB3YW50IHRoZSBjb21tdW5pdHkgdG8gYmUgYmV0
-dGVyIHNlcnZlZCB1c2luZyB0aGUgc2FtZSBoYXJkd2FyZS4gT3BpbmlvbiBmcm9tIG90aGVycyBh
-cmUgd2VsY29tZWQuDQo+DQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdsd2lmaS9N
-YWtlZmlsZQ0KPiA+IEBAIC0wLDAgKzEsOSBAQA0KPiA+ICtvYmotJChDT05GSUdfTVdMV0lGSSkJ
-Kz0gbXdsd2lmaS5vDQo+ID4gKw0KPiA+ICttd2x3aWZpLW9ianMJCSs9IG1haW4ubw0KPiA+ICtt
-d2x3aWZpLW9ianMJCSs9IG1hYzgwMjExLm8NCj4gPiArbXdsd2lmaS1vYmpzCQkrPSBmd2RsLm8N
-Cj4gPiArbXdsd2lmaS1vYmpzCQkrPSBmd2NtZC5vDQo+ID4gK213bHdpZmktb2JqcwkJKz0gdHgu
-bw0KPiA+ICttd2x3aWZpLW9ianMJCSs9IHJ4Lm8NCj4gPiArbXdsd2lmaS1vYmpzCQkrPSBpc3Iu
-bw0KPiANCj4gUGxlYXNlIGFkZA0KPiANCj4gY2NmbGFncy15ICs9IC1EX19DSEVDS19FTkRJQU5f
-Xw0KPiANCj4gdG8gdGhpcyBmaWxlIHRvIGFsd2F5cyBmbGFnIHNwYXJzZSBlcnJvcnMuIFlvdSBo
-YXZlIGNoZWNrZWQgd2l0aCBzcGFyc2UsIHJpZ2h0Pw0KPiANCj4gT2sgLi4uIHlvdSBjbGVhcmx5
-IGhhdmVuJ3QuIFBsZWFzZSBhZGQgdGhlIGxpbmUgYWJvdmUsIGFuZCBmaXggdXAgdGhlIHJlc3Vs
-dHMuDQo+IEFsc28sIHlvdSByZWFsbHkgbmVlZCB0byB0cnkgYnVpbGRpbmcgdGhpcyBkcml2ZXIg
-b24gNjQtYml0LCBpdCByZXBvcnRzIGEgZ29vZA0KPiBudW1iZXIgb2Ygd2FybmluZ3MuDQo+IA0K
-PiBJZiB5b3UncmUgdXAgdG8gaXQsIGFsc28gdHJ5IHJ1bm5pbmcgc21hdGNoIG9uIGl0LCBpdCBy
-ZXBvcnRzIGEgbnVtYmVyIG9mIG1vcmUNCj4gd2FybmluZ3MgdGhhdCBzcGFyc2UgbWlzc2VzLCBs
-aWtlIHRoaXMgb25lOg0KPiANCj4gDQo+IG13bF9yeF9yaW5nX2luaXQoKSB3YXJuOiB2YXJpYWJs
-ZSBkZXJlZmVyZW5jZWQgYmVmb3JlIGNoZWNrDQo+ICdyeF9obmRsLT5wc2tfYnVmZicgKHNlZSBs
-aW5lIDEwOCkNCj4gDQpBbHRob3VnaCAiLURfX0NIRUNLX0VORElBTl9fIiBkb2VzIG5vdCBwdXQg
-aW50byBNYWtlZmlsZSwgSSBoYWQgdXNlZCAiQz0yIENGPSItRF9fQ0hFQ0tfRU5ESUFOX18iIHRv
-IGNoZWNrIHdhcm5pbmdzIGZvciBlbmRpYW4gYW5kIHJlbW92ZSB0aGVzZSB3YXJuaW5ncy4NCklm
-IHlvdSB0aGluayB3ZSBuZWVkIHRvIGFkZCB0aGlzIHRvIE1ha2VmaWxlIGFuZCBtYWtlIHN1cmUg
-emVybyB3YXJuaW5nIG1lc3NhZ2VzLCB3ZSB3aWxsIGRvIHRoYXQgKG9ubHkgZm9yIHNwYXJzZXIp
-Lg0KDQpCVFcsIGlzIGl0IHBvc3NpYmxlIGZvciB5b3UgdG8gZ2l2ZSB1cyBhbGwgeW91ciBjb21t
-ZW50cyBiYXNlZCBvbiB0aGlzIHBhdGNoPyBTbyB3ZSBjYW4gaW5jbHVkZSB0aGVzZSBtb2RpZmlj
-YXRpb25zIGluIFBBVENIIHY0LiBUaGFua3MuDQo+IA0KPiBUaGlzIGlzIGdvaW5nIHRvIGJlIG9u
-bHkgYSB2ZXJ5IHN1cGVyZmljaWFsIHJldmlldyB1bnRpbCB0aGUgZHJpdmVyIGJ1aWxkcyBjbGVh
-bmx5Lg0KPiBJIGRvIHRoaW5rIHRoZSBmaXJtd2FyZSBBUEkgc3R1ZmYgSSB3YXMgY29uY2VybmVk
-IGFib3V0IGVhcmxpZXIgbG9va3MgYmV0dGVyDQo+IG5vdyB0aG91Z2gNCj4gDQo+IEkgdGhpbmsg
-eW91IHdlbnQgYSBiaXQgb3ZlcmJhb3JkIHdpdGggd2lwaHlfaW5mbygpLCBhIG51bWJlciBvZiB0
-aG9zZSAobGlrZSB0aGUNCj4gYmVhY29uIGluZm8gb25lKSBzdXJlbHkgYXJlIG1vcmUgZGVidWcg
-bWVzc2FnZXMgdGhhbiBvcGVyYXRpb25hbCBtZXNzYWdlcw0KPiB0aGF0IHNob3VsZCBiZSBzaG93
-biBhbGwgdGhlIHRpbWUuDQo+IA0KPiANCj4gPiArPiAJPiAvKiBJbmZvIGZvciBkZWJ1Z2dpbmcN
-Cj4gPiArPiAJPiAqLw0KPiA+ICs+IAk+IHdpcGh5X2luZm8oaHctPndpcGh5LCAiJXMgLi4uIiwg
-X19mdW5jX18pOw0KPiA+ICs+IAk+IHdpcGh5X2luZm8oaHctPndpcGh5LCAiICAtLT5wUGh5c1R4
-UmluZ1swXSA9ICV4IiwNCj4gPiArPiAJPiAJPiAgICBwcml2LT5kZXNjX2RhdGFbMF0ucHBoeXNf
-dHhfcmluZyk7DQo+ID4gKz4gCT4gd2lwaHlfaW5mbyhody0+d2lwaHksICIgIC0tPnBQaHlzVHhS
-aW5nWzFdID0gJXgiLA0KPiA+ICs+IAk+IAk+ICAgIHByaXYtPmRlc2NfZGF0YVsxXS5wcGh5c190
-eF9yaW5nKTsNCj4gPiArPiAJPiB3aXBoeV9pbmZvKGh3LT53aXBoeSwgIiAgLS0+cFBoeXNUeFJp
-bmdbMl0gPSAleCIsDQo+ID4gKz4gCT4gCT4gICAgcHJpdi0+ZGVzY19kYXRhWzJdLnBwaHlzX3R4
-X3JpbmcpOw0KPiA+ICs+IAk+IHdpcGh5X2luZm8oaHctPndpcGh5LCAiICAtLT5wUGh5c1R4Umlu
-Z1szXSA9ICV4IiwNCj4gPiArPiAJPiAJPiAgICBwcml2LT5kZXNjX2RhdGFbM10ucHBoeXNfdHhf
-cmluZyk7DQo+ID4gKz4gCT4gd2lwaHlfaW5mbyhody0+d2lwaHksICIgIC0tPnBQaHlzUnhSaW5n
-ICAgID0gJXgiLA0KPiA+ICs+IAk+IAk+ICAgIHByaXYtPmRlc2NfZGF0YVswXS5wcGh5c19yeF9y
-aW5nKTsNCj4gPiArPiAJPiB3aXBoeV9pbmZvKGh3LT53aXBoeSwgIiAgLS0+bnVtdHhxICVkIHdj
-YnBlcnEgJWQgdG90YWxyeHdjYg0KPiAlZCIsDQo+ID4gKz4gCT4gCT4gICAgU1lTQURQVF9OVU1f
-T0ZfREVTQ19EQVRBLA0KPiA+ICs+IAk+IAk+ICAgIFNZU0FEUFRfTUFYX05VTV9UWF9ERVNDLA0K
-PiA+ICs+IAk+IAk+ICAgIFNZU0FEUFRfTUFYX05VTV9SWF9ERVNDKTsNCj4gDQo+IExpa2UgdGhh
-dCAuLi4gSSd2ZSBldmVuIHJlYWQgdGhlIGNvbW1lbnQgOikNCj4gDQpXZSB3aWxsIG1vZGlmeSBp
-dC4NCj4gDQo+ID4gKz4gCT4gc3Bpbl9sb2NrX2lycXNhdmUoJnByaXYtPmZ3Y21kX2xvY2ssIGZs
-YWdzKQ0KPiA+DQo+IA0KPiBZb3UgcmVhbGx5IG9ubHkgbmVlZCBfaXJxc2F2ZSBvbiB0aGUgc3Ry
-ZWFtX2xvY2ssIHRoZSBvdGhlcnMgYXJlbid0IHVzZWQgaW4NCj4gSVJRIGNvbnRleHQgc28gZG9u
-J3QgbmVlZCB0byBkaXNhYmxlIElSUXMuIFBlcmhhcHMgQkhzLCBoYXZlbid0IGNoZWNrZWQuDQo+
-DQpXZSB3aWxsIG1vZGlmeSBpdC4NCiANCj4NCj4gSm9oYW5uZXMNCj4NClRoYW5rcywNCkRhdmlk
-DQo=
+On Mon, Jun 8, 2015 at 10:40 PM, Alexis Green <agreen@cococorp.com> wrote:
+>
+> You should build mac80211 as module instead of built-in driver and
+> "make modules" instead of full make. This way you'll be just
+> rebuilding mac80211.ko instead of the whole thing.
+>
+> On Mon, Jun 8, 2015 at 2:39 AM, Duy Tai Nguyen <duytai.cse@gmail.com> wrote:
+> > Hi,
+> >
+> > I want to inject particular data into beacon frame in Android device.
+> > I found two approaches:
+> > 1. Write loadable kernel module.
+> > 2. Modify MAC80211 subsystem
+> > In the first approach, I found that I could not include directly
+> > source code from MAC80211 sub system in folder /net/mac80211/. Thus, I
+> > used the second approach, but, every time I change any line of source
+> > code, it takes 30 minutes to build zImage  then install new kernel in
+> > my Android device. Finally, I was stuck.
+> > Therefore, my questions are:
+> > 1. Is it right approach to modify MAC80211 subsystem?
+> > 2. Are there any faster approach to modify MAC80211 and test source code?
+> > 3. I am curious about the way you write code and test MAC80211. Could
+> > you explain in details?
+
+The way i do it is, as below:
+
+1) First time compile the full kernel. With mac80211=m
+2) Next time: after changing source :
+       make modules M=net/mac80211
+       make modules_install M=net/mac80211
+
+       modprobe -v mac80211 -r
+       modprobe -v mac80211
+3) I normally use mac80211_hwsim to test the mac80211 code.
+ Refer: https://wireless.wiki.kernel.org/en/users/drivers/mac80211_hwsim
+In that case:
+
+       modprobe -v mac80211_hwsim -r
+       modprobe -v mac80211_hwsim
