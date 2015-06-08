@@ -1,81 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vn0-f49.google.com ([209.85.216.49]:37602 "EHLO
-	mail-vn0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252AbbFYTIz (ORCPT
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:33238 "EHLO
+	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792AbbFHAnS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2015 15:08:55 -0400
-Received: by vnbf129 with SMTP id f129so12482040vnb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 12:08:54 -0700 (PDT)
-From: Jesse Jones <jjones@cococorp.com>
-References: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
-In-Reply-To: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
-MIME-Version: 1.0
-Date: Thu, 25 Jun 2015 12:08:53 -0700
-Message-ID: <bf8dddcd2564399d6f0f70db7960e19e@mail.gmail.com> (sfid-20150625_210858_535817_376F072A)
-Subject: RE: [PATCH] mac80211: mesh - always do every discovery retry
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 7 Jun 2015 20:43:18 -0400
+From: David Decotigny <ddecotig@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Cc: Joe Perches <joe@perches.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	David Decotigny <ddecotig@gmail.com>
+Subject: [PATCH v2 2/2] staging: rtl8723au: core: remove redundant endianness conversion
+Date: Sun,  7 Jun 2015 17:43:02 -0700
+Message-Id: <1433724182-657-3-git-send-email-ddecotig@gmail.com> (sfid-20150608_024345_711150_76BA0418)
+In-Reply-To: <1433724182-657-1-git-send-email-ddecotig@gmail.com>
+References: <1433724182-657-1-git-send-email-ddecotig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Instead of stopping path discovery when a path is found continue
-> > attempting to find paths until we hit the
-> > dot11MeshHWMPmaxPREQretries limit.
->
-> Let think about that if you have more nodes, you will probably flood
-> the networks with more mgmt frame than previous implementation. It
-> also increases the latency for data to be sent.
+Source and destination have the same little-endian annotation: this
+patch removes incorrect byte-swap on non-LE cpus.
 
-Yes, it will cause more management packets to be sent. PREQs will flood out
-dot11MeshHWMPmaxPREQretries times and PREPs will be sent back but only along
-the best path.
+This addresses the following sparse warning:
+drivers/staging/rtl8723au/core/rtw_mlme_ext.c:3911:56: warning: incorrect type in argument 1 (different base types)
+drivers/staging/rtl8723au/core/rtw_mlme_ext.c:3911:56:    expected unsigned short [unsigned] [usertype] val
+drivers/staging/rtl8723au/core/rtw_mlme_ext.c:3911:56:    got restricted __le16 [usertype] BA_timeout_value
 
-No it will not cause additional latency. Imagine a classic challenging
-topology for mesh routing: four or more nodes arranged into a U where we
-want to route from one end of the U to the other end. But the short direct
-hop is very bad and the links along the U are all excellent.
+Signed-off-by: David Decotigny <ddecotig@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Before what would happen is that we would first hear a PREP from the direct
-hop (because the packets don't have to travel as far). We'd then select that
-route because it has newer information than what we had previously. If we
-got a PREP from the long path we'd then switch to that because it is just as
-new and a better metric. But the longer that path the greater the chance
-that we'll lose either a PREQ or a PREP. And because the PHY doesn't
-retransmit management packets this happens rather often in practice. And if
-we periodically refresh paths as currently happens we have even more
-opportunities to select the wrong path.
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+index 7c3b5dd..142f214 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+@@ -3906,8 +3906,8 @@ void issue_action_BA23a(struct rtw_adapter *padapter,
+ 		put_unaligned_le16(BA_para_set,
+ 				   &mgmt->u.action.u.addba_resp.capab);
+ 
+-		put_unaligned_le16(pmlmeinfo->ADDBA_req.BA_timeout_value,
+-				   &mgmt->u.action.u.addba_resp.timeout);
++		mgmt->u.action.u.addba_resp.timeout
++			= pmlmeinfo->ADDBA_req.BA_timeout_value;
+ 
+ 		pattrib->pktlen += 8;
+ 		break;
+-- 
+2.2.0.rc0.207.ga3a616c
 
-Of course using multiple hops sucks but it sucks even more to use a 5 Mbps
-link when 50 Mbps links are available.
-
-> > This is important because path messages are not reliable and it is
-> > relatively common to have a short bad path to the destination along
-> > with a longer but better path. With the original code rather often a
-> > path message along the long path would be lost so we would stick
-> > with the
-> bad path.
-> > With this change we have a greater chance to get messages over the
-> > longer path allowing us to select the long path if it's better.
->
-> Try to take a look on the dot11MeshHWMPpreqMinInterval
-> (mesh_hwmp_preq_min_interval) and
-> (mesh_hwmp_active_path_timeout). I think that you can probably have
-> more aggressive path selection interval by modifying these two values.
-
-Not entirely sure what you mean about being more aggressive. If you mean
-sending out the PREQs more rapidly that is something I have gone back and
-forth on.  My current thinking is to do a few attempts quickly to try and
-get a good path immediately and then lengthen the delay to try to compensate
-for noise bursts.
-
-> I don't think that flooding PREQ for resolved path not necessary a good
-> case>
-> for all. Thanks
-
-It's just as important to do multiple discoveries for an established path as
-for a brand new path. In either case if we send one PREQ out we'll often
-fail to choose the right path.
-
-> Chun-Yeow
-
-  -- Jesse
