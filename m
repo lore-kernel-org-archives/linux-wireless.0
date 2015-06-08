@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60015 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699AbbFPFsg (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27814 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753112AbbFHO7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:48:36 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 10/10] ath10k: handle 10.4 fw wmi ready event
-Date: Tue, 16 Jun 2015 11:15:23 +0530
-Message-ID: <1434433523-8357-11-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_080350_635463_E8D43A01)
-In-Reply-To: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
+	Mon, 8 Jun 2015 10:59:47 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Liu CF/TW <cfliu.tw@gmail.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2] ath10k: add 'cryptmode' param to support raw tx injection and sw crypto.
+References: <1433440033-49570-1-git-send-email-cfliu.tw@gmail.com>
+Date: Mon, 8 Jun 2015 17:59:40 +0300
+In-Reply-To: <1433440033-49570-1-git-send-email-cfliu.tw@gmail.com> (Liu CF's
+	message of "Thu, 4 Jun 2015 10:47:13 -0700")
+Message-ID: <87pp56gs9v.fsf@kamboji.qca.qualcomm.com> (sfid-20150608_165952_449855_DA256DE8)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reuse existing function ath10k_wmi_op_pull_rdy_ev()
-to parse WMI_10_4_READY_EVENTID and handle the same
-event in ath10k_wmi_10_4_op_rx().
+Liu CF/TW <cfliu.tw@gmail.com> writes:
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> This change supports bypassing HW crypto engine by enabling raw Rx/Tx mode.
+> This will enable use cases such as sw crypto and raw tx injection.
+> This change introduces a new module param 'cryptmode'.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index e5d948e..8d4ff3e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4252,6 +4252,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_wmi_event_mgmt_rx(ar, skb);
- 		/* mgmt_rx() owns the skb now! */
- 		return;
-+	case WMI_10_4_READY_EVENTID:
-+		ath10k_wmi_event_ready(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -6184,6 +6187,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.map_svc = wmi_10_4_svc_map,
- 	.pull_mgmt_rx = ath10k_wmi_10_4_op_pull_mgmt_rx_ev,
- 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
-+	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
- 	.gen_init = ath10k_wmi_10_4_op_gen_init,
- };
- 
+Please use full words, eg. sw -> software, hw -> hardware
+
+> cryptmode:
+>
+>  0    Use HW crypto engine. Use native WiFi mode Tx/Rx encap
+
+"Use hardware crypto engine with native Wi-Fi mode TX/RX encapsulation
+to the firmware"
+
+>  1    Use SW crypto engine. Use raw mode Tx/Rx encap
+
+"Use sofware crypto engine from mac80211 with raw mode TX/RX
+encapsulation to the firmware"
+
+>  2    Supports both SW & HW crypto engine. Use raw mode Tx/Rx encap.
+
+It's not clear how to use this. How does the user choose between SW or
+HW crypto modes? Please document that fully in the commit log.
+
+>  ath10k
+>  cryptmode
+>  param      Testing Status
+>  -------    ---------------------------------
+>     0       HW CCMP/TKIP tested ok.
+>             Note: HW crypto bypass not supported by ath10k hw in native WiFi
+>             mode.
+
+What's "HW crypto bypass"? Please write the commit log so that everyone
+can understand it.
+
+>     1       - mac80211 SW crypto tested ok.
+>             - raw Tx frame injection tested ok.
+
+What does "mac80211 SW crypto tested ok" exactly mean?
+
+>     2       HW CCMP/TKIP tested ok.
+>             SW CCMP/TKIP tested ok.
+
+How were the HW and SW modes chosen?
+
+>             Tested raw Tx encrypted frame injection ok.
+
+With HW or SW crypto mode?
+
 -- 
-1.8.1.2
-
+Kalle Valo
