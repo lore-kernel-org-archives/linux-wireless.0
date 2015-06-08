@@ -1,302 +1,566 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39523 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933042AbbFVIHr (ORCPT
+Received: from mail-vn0-f46.google.com ([209.85.216.46]:43573 "EHLO
+	mail-vn0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbbFHT4q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 04:07:47 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xp0l015532
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:47 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1v55hgut8q-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:47 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 11/17] mwifiex: support for bypass tx queue
-Date: Mon, 22 Jun 2015 19:06:17 +0530
-Message-ID: <1434980183-2901-12-git-send-email-patila@marvell.com> (sfid-20150622_103352_311824_D14D4706)
-In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
-References: <1434980183-2901-1-git-send-email-patila@marvell.com>
+	Mon, 8 Jun 2015 15:56:46 -0400
+Received: by vnbg7 with SMTP id g7so13262822vnb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 12:56:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
+References: <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
+	<1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
+Date: Mon, 8 Jun 2015 12:56:44 -0700
+Message-ID: <CAGXu5jJnPqgpvXd05-dtSbYeSVndcpH1_XMMczPWn5Gq-DUtcw@mail.gmail.com> (sfid-20150608_215651_072932_3F8E0486)
+Subject: Re: [RFC v3 2/2] firmware: add firmware signature checking support
+From: Kees Cook <keescook@chromium.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	David Howells <dhowells@redhat.com>,
+	seth.forshee@canonical.com, LKML <linux-kernel@vger.kernel.org>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>, jlee@suse.com,
+	Takashi Iwai <tiwai@suse.de>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <David.Woodhouse@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for another TX queue in driver- bypass
-TX queue. This queue is used for sending data/mgmt packets while
-in disconnected state i.e. when port is yet not unblocked.
-TDLS setup packets would also be queued in this queue.
+On Mon, May 18, 2015 at 5:45 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+>
+> Systems that have module signing currently enabled may
+> wish to extend vetting of firmware passed to the kernel
+> as well. We can re-use most of the code for module signing
+> for firmware signature verification and signing. This will
+> also later enable re-use of this same code for subsystems
+> that wish to provide their own cryptographic verification
+> requirements on userspace data needed.
+>
+> Contrary to module signing the signature files are expected
+> to be completely detached for practical and licensing puposes.
+> If you have foo.bin, you'll need foo.bin.p7s file present
+> for firmware signing.
+>
+> There's both a config option and a boot parameter which control
+> whether we accept or fail with unsigned firmware and firmware
+> that are signed with an unknown key. If firmware signing is
+> enabled permissively we'll only log into the kernel ring buffer
+> when use of an unsigned firmware file is used. If firmware
+> signing is in enforced mode the kernel will not allow invalid
+> or unsigned firmware files to be loaded into the kernel.
+>
+> Contrary to module signing we do not taint the kernel in
+> the permissive fw signing mode due to restrictions on the
+> firmware_class API, extensions to enable this are expected
+> however in the future.
+>
+> Cc: Rusty Russell <rusty@rustcorp.com.au>
+> Cc: David Howells <dhowells@redhat.com>
+> Cc: Ming Lei <ming.lei@canonical.com>
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Cc: Kyle McMartin <kyle@kernel.org>
+> Cc: David Woodhouse <David.Woodhouse@intel.com>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+> ---
+>  Documentation/firmware_class/signing.txt |  90 +++++++++++++
+>  drivers/base/Kconfig                     |  18 +++
+>  drivers/base/firmware_class.c            | 213 ++++++++++++++++++++++++++++++-
+>  3 files changed, 314 insertions(+), 7 deletions(-)
+>  create mode 100644 Documentation/firmware_class/signing.txt
+>
+> diff --git a/Documentation/firmware_class/signing.txt b/Documentation/firmware_class/signing.txt
+> new file mode 100644
+> index 0000000..b03f654
+> --- /dev/null
+> +++ b/Documentation/firmware_class/signing.txt
+> @@ -0,0 +1,90 @@
+> +                       ================================
+> +                       KERNEL FIRMWARE SIGNING FACILITY
+> +                       ================================
+> +
+> +CONTENTS
+> +
+> + - Overview.
+> + - Configuring firmware signing.
+> + - Using signing keys.
+> + - Signing firmware files.
+> +
+> +
+> +========
+> +OVERVIEW
+> +========
+> +
+> +Device drivers which require a firmware to be uploaded onto a device as its own
+> +device's microcode use any of the following APIs:
+> +
+> +  * request_firmware()
+> +  * request_firmware_direct()
+> +  * request_firmware_nowait()
+> +
+> +The kernel firmware signing facility enables to cryptographically sign
+> +firmware files on a system using the same keys used for module signing.
+> +Firmware files's signatures consist of PKCS#7 messages of the respective
+> +firmware file. A firmware file named foo.bin, would have its respective
+> +signature on the filesystem as foo.bin.p7s. When firmware signature
+> +checking is enabled (FIRMWARE_SIG) and when one of the above APIs is used
+> +against foo.bin, the file foo.bin.p7s will also be looked for. If
+> +FIRMWARE_SIG_FORCE is enabled the foo.bin file will only be allowed to
+> +be returned to callers of the above APIs if and only if the foo.bin.p7s
+> +file is confirmed to be a valid signature of the foo.bin file. If
+> +FIRMWARE_SIG_FORCE is not enabled and only FIRMWARE_SIG is enabled the
+> +kernel will be permissive and enabled unsigned firmware files, or firmware
+> +files with incorrect signatures. If FIRMWARE_SIG is not enabled the
+> +signature file is ignored completely.
+> +
+> +Firmware signing increases security by making it harder to load a malicious
+> +firmware into the kernel.  The firmware signature checking is done by the
+> +kernel so that it is not necessary to have trusted userspace bits.
+> +
+> +============================
+> +CONFIGURING FIRMWARE SIGNING
+> +============================
+> +
+> +The firmware signing facility is enabled by going to the section:
+> +
+> +-> Device Drivers
+> +  -> Generic Driver Options
+> +    -> Userspace firmware loading support (FW_LOADER [=y])
+> +      -> Firmware signature verification (FIRMWARE_SIG [=y])
+> +
+> +If you want to not allow unsigned firmware to be loaded you should
+> +enable:
+> +
+> +"Require all firmware to be validly signed" (FIRMWARE_SIG_FORCE [=y]),
+> +under the same menu.
+> +
+> +==================
+> +USING SIGNING KEYS
+> +==================
+> +
+> +The same key types used for module signing can be used for firmware
+> +signing. For details on that refer to Documentation/module-signing.txt.
+> +
+> +You will need:
+> +
+> +  A) A DER-encoded X.509 certificate containing the public key.
+> +  B) A DER-encoded PKCS#7 message containing the signatures, these are
+> +     the .p7s files.
+> +  C) A binary blob that is the detached data for the PKCS#7 message, this
+> +     is the firmware files
+> +
+> +A) is must be made available to the kernel. One way to do this is to provide a
+> +DER-encoded in the source directory as <name>.x509 when you build the kernel.
+> +
+> +======================
+> +SIGNING FIRMWARE FILES
+> +======================
+> +
+> +To generate a DER-encoded PKCS#7 signature message for each firmware file
+> +you can use openssl as follows:
+> +
+> +       openssl smime -sign -in $FIRMWARE_BLOB_NAME \
+> +               -outform DER \
+> +               -inkey $PRIVATE_KEY_FILE_IN_PEM_FORM \
+> +               -signer $X509_CERT_FILE_IN_PEM_FORM \
+> +               -nocerts -md $DIGEST_ALGORITHM -binary > \
+> +               $(FIRMWARE_BLOB_NAME).p7s
+> diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+> index 98504ec..fa076ea 100644
+> --- a/drivers/base/Kconfig
+> +++ b/drivers/base/Kconfig
+> @@ -85,6 +85,24 @@ config FW_LOADER
+>           require userspace firmware loading support, but a module built
+>           out-of-tree does.
+>
+> +config FIRMWARE_SIG
+> +       bool "Firmware signature verification"
+> +       depends on FW_LOADER
+> +       select SYSDATA_SIG
+> +       help
+> +         Check firmware files for valid signatures upon load: if the firmware
+> +         was called foo.bin, a respective foo.bin.p7s is expected to be
+> +         present as the signature. For more information see
+> +         Documentation/firmware_class/signing.txt
+> +
+> +config FIRMWARE_SIG_FORCE
+> +       bool "Require all firmware to be validly signed"
+> +       depends on FIRMWARE_SIG
+> +       help
+> +         Reject unsigned files or signed files for which we don't have a
+> +         key.  Without this, you'll only get a record on the kernel ring
+> +         buffer of firmware files loaded without a signature.
+> +
+>  config FIRMWARE_IN_KERNEL
+>         bool "Include in-kernel firmware blobs in kernel binary"
+>         depends on FW_LOADER
+> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+> index 134dd77..97cab65 100644
+> --- a/drivers/base/firmware_class.c
+> +++ b/drivers/base/firmware_class.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/syscore_ops.h>
+>  #include <linux/reboot.h>
+>  #include <linux/security.h>
+> +#include <keys/system_keyring.h>
+>
+>  #include <generated/utsrelease.h>
+>
+> @@ -38,6 +39,11 @@ MODULE_AUTHOR("Manuel Estrada Sainz");
+>  MODULE_DESCRIPTION("Multi purpose firmware loading support");
+>  MODULE_LICENSE("GPL");
+>
+> +static bool fw_sig_enforce = IS_ENABLED(CONFIG_FIRMWARE_SIG_FORCE);
+> +#ifndef CONFIG_FIRMWARE_SIG_FORCE
+> +module_param(fw_sig_enforce, bool_enable_only, 0644);
+> +#endif /* !CONFIG_FIRMWARE_SIG_FORCE */
+> +
+>  /* Builtin firmware support */
+>
+>  #ifdef CONFIG_FW_LOADER
+> @@ -142,6 +148,9 @@ struct firmware_buf {
+>         unsigned long status;
+>         void *data;
+>         size_t size;
+> +       void *data_sig;
+> +       size_t size_sig;
+> +       bool sig_ok;
+>  #ifdef CONFIG_FW_LOADER_USER_HELPER
+>         bool is_paged_buf;
+>         bool need_uevent;
+> @@ -151,6 +160,7 @@ struct firmware_buf {
+>         struct list_head pending_list;
+>  #endif
+>         const char *fw_id;
+> +       const char *fw_sig;
+>  };
+>
+>  struct fw_cache_entry {
+> @@ -180,17 +190,33 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
+>                                               struct firmware_cache *fwc)
+>  {
+>         struct firmware_buf *buf;
+> +       const char *sign_ext = ".p7s";
+> +       char *signed_name;
+> +
+> +       signed_name = kzalloc(PATH_MAX, GFP_ATOMIC);
+> +       if (!signed_name)
+> +               return NULL;
+>
+>         buf = kzalloc(sizeof(*buf), GFP_ATOMIC);
+> -       if (!buf)
+> +       if (!buf) {
+> +               kfree(signed_name);
+>                 return NULL;
+> +       }
+>
+>         buf->fw_id = kstrdup_const(fw_name, GFP_ATOMIC);
+>         if (!buf->fw_id) {
+> +               kfree(signed_name);
+>                 kfree(buf);
+>                 return NULL;
+>         }
+>
+> +       strcpy(signed_name, buf->fw_id);
+> +       strncat(signed_name, sign_ext, strlen(sign_ext));
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |  4 +++
- drivers/net/wireless/mwifiex/init.c     |  1 +
- drivers/net/wireless/mwifiex/main.c     | 49 ++++++++++++++++++++++++++++--
- drivers/net/wireless/mwifiex/main.h     |  2 ++
- drivers/net/wireless/mwifiex/wmm.c      | 53 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/wmm.h      |  4 +++
- 6 files changed, 111 insertions(+), 2 deletions(-)
+fw_id is potentially unbounded, so using strncat hear poses an
+overflow risk. Maybe better to use strlcpy?
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 1d445cb..46f9dc2 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2789,6 +2789,7 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
- 	struct mwifiex_adapter *adapter = priv->adapter;
-+	struct sk_buff *skb, *tmp;
- 
- #ifdef CONFIG_DEBUG_FS
- 	mwifiex_dev_debugfs_remove(priv);
-@@ -2796,6 +2797,9 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 
- 	mwifiex_stop_net_dev_queue(priv->netdev, adapter);
- 
-+	skb_queue_walk_safe(&priv->bypass_txq, skb, tmp)
-+		mwifiex_write_data_complete(priv->adapter, skb, 0, -1);
-+
- 	if (netif_carrier_ok(priv->netdev))
- 		netif_carrier_off(priv->netdev);
- 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index df7fdc0..e1b62bf 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -499,6 +499,7 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
- 		INIT_LIST_HEAD(&priv->sta_list);
- 		INIT_LIST_HEAD(&priv->auto_tdls_list);
- 		skb_queue_head_init(&priv->tdls_txq);
-+		skb_queue_head_init(&priv->bypass_txq);
- 
- 		spin_lock_init(&priv->tx_ba_stream_tbl_lock);
- 		spin_lock_init(&priv->rx_reorder_tbl_lock);
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 2a2e5db..278dc94 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -276,6 +276,7 @@ process_start:
- 		     !adapter->pm_wakeup_fw_try) &&
- 		    (is_command_pending(adapter) ||
- 		     !skb_queue_empty(&adapter->tx_data_q) ||
-+		     !mwifiex_bypass_txlist_empty(adapter) ||
- 		     !mwifiex_wmm_lists_empty(adapter))) {
- 			adapter->pm_wakeup_fw_try = true;
- 			mod_timer(&adapter->wakeup_timer, jiffies + (HZ*3));
-@@ -303,6 +304,7 @@ process_start:
- 			     (mwifiex_get_priv(adapter,
- 					       MWIFIEX_BSS_ROLE_STA)) ||
- 			    (mwifiex_wmm_lists_empty(adapter) &&
-+			     mwifiex_bypass_txlist_empty(adapter) &&
- 			     skb_queue_empty(&adapter->tx_data_q))) {
- 				if (adapter->cmd_sent || adapter->curr_cmd ||
- 					!mwifiex_is_send_cmd_allowed
-@@ -373,6 +375,22 @@ process_start:
- 
- 		if ((adapter->scan_chan_gap_enabled ||
- 		     !adapter->scan_processing) &&
-+		    !adapter->data_sent &&
-+		    !mwifiex_bypass_txlist_empty(adapter) &&
-+		    !mwifiex_is_tdls_chan_switching
-+			(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA))) {
-+			mwifiex_process_bypass_tx(adapter);
-+			if (adapter->hs_activated) {
-+				adapter->is_hs_configured = false;
-+				mwifiex_hs_activated_event
-+					(mwifiex_get_priv
-+					 (adapter, MWIFIEX_BSS_ROLE_ANY),
-+					 false);
-+			}
-+		}
-+
-+		if ((adapter->scan_chan_gap_enabled ||
-+		     !adapter->scan_processing) &&
- 		    !adapter->data_sent && !mwifiex_wmm_lists_empty(adapter) &&
- 		    !mwifiex_is_tdls_chan_switching
- 			(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA))) {
-@@ -389,6 +407,7 @@ process_start:
- 		if (adapter->delay_null_pkt && !adapter->cmd_sent &&
- 		    !adapter->curr_cmd && !is_command_pending(adapter) &&
- 		    (mwifiex_wmm_lists_empty(adapter) &&
-+		     mwifiex_bypass_txlist_empty(adapter) &&
- 		     skb_queue_empty(&adapter->tx_data_q))) {
- 			if (!mwifiex_send_null_packet
- 			    (mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
-@@ -659,6 +678,26 @@ mwifiex_close(struct net_device *dev)
- 	return 0;
- }
- 
-+static bool
-+mwifiex_bypass_tx_queue(struct mwifiex_private *priv,
-+			struct sk_buff *skb)
-+{
-+	struct ethhdr *eth_hdr = (struct ethhdr *)skb->data;
-+
-+	if (ntohs(eth_hdr->h_proto) == ETH_P_PAE ||
-+	    mwifiex_is_skb_mgmt_frame(skb) ||
-+	    (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA &&
-+	     ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
-+	     (ntohs(eth_hdr->h_proto) == ETH_P_TDLS))) {
-+		mwifiex_dbg(priv->adapter, DATA,
-+			    "bypass txqueue; eth type %#x, mgmt %d\n",
-+			     ntohs(eth_hdr->h_proto),
-+			     mwifiex_is_skb_mgmt_frame(skb));
-+		return true;
-+	}
-+
-+	return false;
-+}
- /*
-  * Add buffer into wmm tx queue and queue work to transmit it.
-  */
-@@ -676,8 +715,14 @@ int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb)
- 		}
- 	}
- 
--	atomic_inc(&priv->adapter->tx_pending);
--	mwifiex_wmm_add_buf_txqueue(priv, skb);
-+	if (mwifiex_bypass_tx_queue(priv, skb)) {
-+		atomic_inc(&priv->adapter->tx_pending);
-+		atomic_inc(&priv->adapter->bypass_tx_pending);
-+		mwifiex_wmm_add_buf_bypass_txqueue(priv, skb);
-+	 } else {
-+		atomic_inc(&priv->adapter->tx_pending);
-+		mwifiex_wmm_add_buf_txqueue(priv, skb);
-+	 }
- 
- 	mwifiex_queue_main_work(priv->adapter);
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index d74ef2d..c59430e 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -664,6 +664,7 @@ struct mwifiex_private {
- 	struct cfg80211_beacon_data beacon_after;
- 	struct mwifiex_11h_intf_state state_11h;
- 	struct mwifiex_ds_mem_rw mem_rw;
-+	struct sk_buff_head bypass_txq;
- };
- 
- 
-@@ -834,6 +835,7 @@ struct mwifiex_adapter {
- 	wait_queue_head_t init_wait_q;
- 	void *card;
- 	struct mwifiex_if_ops if_ops;
-+	atomic_t bypass_tx_pending;
- 	atomic_t rx_pending;
- 	atomic_t tx_pending;
- 	atomic_t cmd_pending;
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 6196daa..7995f92 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -449,6 +449,11 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
- 	}
- }
- 
-+int mwifiex_bypass_txlist_empty(struct mwifiex_adapter *adapter)
-+{
-+	return atomic_read(&adapter->bypass_tx_pending) ? false : true;
-+}
-+
- /*
-  * This function checks if WMM Tx queue is empty.
-  */
-@@ -581,6 +586,10 @@ mwifiex_clean_txrx(struct mwifiex_private *priv)
- 	skb_queue_walk_safe(&priv->tdls_txq, skb, tmp)
- 		mwifiex_write_data_complete(priv->adapter, skb, 0, -1);
- 
-+	skb_queue_walk_safe(&priv->bypass_txq, skb, tmp)
-+		mwifiex_write_data_complete(priv->adapter, skb, 0, -1);
-+	atomic_set(&priv->adapter->bypass_tx_pending, 0);
-+
- 	idr_for_each(&priv->ack_status_frames, mwifiex_free_ack_frame, NULL);
- 	idr_destroy(&priv->ack_status_frames);
- }
-@@ -753,6 +762,18 @@ mwifiex_is_ralist_valid(struct mwifiex_private *priv,
- }
- 
- /*
-+ * This function adds a packet to bypass TX queue.
-+ * This is special TX queue for packets which can be sent even when port_open
-+ * is false.
-+ */
-+void
-+mwifiex_wmm_add_buf_bypass_txqueue(struct mwifiex_private *priv,
-+				   struct sk_buff *skb)
-+{
-+	skb_queue_tail(&priv->bypass_txq, skb);
-+}
-+
-+/*
-  * This function adds a packet to WMM queue.
-  *
-  * In disconnected state the packet is immediately dropped and the
-@@ -1429,6 +1450,38 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
- 	return 0;
- }
- 
-+void mwifiex_process_bypass_tx(struct mwifiex_adapter *adapter)
-+{
-+	struct mwifiex_tx_param tx_param;
-+	struct sk_buff *skb;
-+	struct mwifiex_txinfo *tx_info;
-+	struct mwifiex_private *priv;
-+	int i;
-+
-+	if (adapter->data_sent || adapter->tx_lock_flag)
-+		return;
-+
-+	for (i = 0; i < adapter->priv_num; ++i) {
-+		priv = adapter->priv[i];
-+
-+		if (skb_queue_empty(&priv->bypass_txq))
-+			continue;
-+
-+		skb = skb_dequeue(&priv->bypass_txq);
-+		tx_info = MWIFIEX_SKB_TXCB(skb);
-+
-+		/* no aggregation for bypass packets */
-+		tx_param.next_pkt_len = 0;
-+
-+		if (mwifiex_process_tx(priv, skb, &tx_param) == -EBUSY) {
-+			skb_queue_head(&priv->bypass_txq, skb);
-+			tx_info->flags |= MWIFIEX_BUF_FLAG_REQUEUED_PKT;
-+		} else {
-+			atomic_dec(&adapter->bypass_tx_pending);
-+		}
-+	}
-+}
-+
- /*
-  * This function transmits the highest priority packet awaiting in the
-  * WMM Queues.
-diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
-index c12dd0e..38f0976 100644
---- a/drivers/net/wireless/mwifiex/wmm.h
-+++ b/drivers/net/wireless/mwifiex/wmm.h
-@@ -99,12 +99,16 @@ mwifiex_wmm_is_ra_list_empty(struct list_head *ra_list_hhead)
- 
- void mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 				 struct sk_buff *skb);
-+void mwifiex_wmm_add_buf_bypass_txqueue(struct mwifiex_private *priv,
-+					struct sk_buff *skb);
- void mwifiex_ralist_add(struct mwifiex_private *priv, const u8 *ra);
- void mwifiex_rotate_priolists(struct mwifiex_private *priv,
- 			      struct mwifiex_ra_list_tbl *ra, int tid);
- 
- int mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter);
-+int mwifiex_bypass_txlist_empty(struct mwifiex_adapter *adapter);
- void mwifiex_wmm_process_tx(struct mwifiex_adapter *adapter);
-+void mwifiex_process_bypass_tx(struct mwifiex_adapter *adapter);
- int mwifiex_is_ralist_valid(struct mwifiex_private *priv,
- 			    struct mwifiex_ra_list_tbl *ra_list, int tid);
- 
+> +       buf->fw_sig = kstrdup_const(signed_name, GFP_ATOMIC);
+> +       if (!buf->fw_sig)
+> +               goto out;
+> +
+> +
+>         kref_init(&buf->ref);
+>         buf->fwc = fwc;
+>         init_completion(&buf->completion);
+> @@ -201,6 +227,11 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
+>         pr_debug("%s: fw-%s buf=%p\n", __func__, fw_name, buf);
+>
+>         return buf;
+> +out:
+> +       kfree(signed_name);
+> +       kfree_const(buf->fw_id);
+> +       kfree(buf);
+> +       return NULL;
+>  }
+>
+>  static struct firmware_buf *__fw_lookup_buf(const char *fw_name)
+> @@ -262,6 +293,7 @@ static void __fw_free_buf(struct kref *ref)
+>  #endif
+>                 vfree(buf->data);
+>         kfree_const(buf->fw_id);
+> +       kfree_const(buf->fw_sig);
+>         kfree(buf);
+>  }
+>
+> @@ -325,7 +357,84 @@ fail:
+>         return rc;
+>  }
+>
+> +#ifdef CONFIG_FIRMWARE_SIG_FORCE
+> +static struct file *get_filesystem_file_sig(const char *sig_name)
+> +{
+> +       return filp_open(sig_name, O_RDONLY, 0);
+> +}
+> +
+> +static bool get_filesystem_file_sig_ok(struct file *file_sig)
+> +{
+> +       if (IS_ERR(file_sig))
+> +               return -EINVAL;
+> +       return 0;
+> +}
+> +
+> +static int read_file_signature_contents(struct file *file_sig,
+> +                                       struct firmware_buf *fw_buf)
+> +{
+> +       int rc;
+> +
+> +       rc = __read_file_contents(file_sig,
+> +                                 &fw_buf->data_sig,
+> +                                 &fw_buf->size_sig);
+> +       if (rc)
+> +               return rc;
+> +
+> +       return 0;
+> +}
+> +
+> +#elif CONFIG_FIRMWARE_SIG
+> +static struct file *get_filesystem_file_sig(const char *sig_name)
+> +{
+> +       struct file *file;
+> +
+> +       file = filp_open(sig_name, O_RDONLY, 0);
+> +       if (IS_ERR(file))
+> +               pr_info("singature %s not present, but this is OK\n", sig_name);
+> +
+> +       return file;
+> +}
+> +
+> +static bool get_filesystem_file_sig_ok(struct file *file_sig)
+> +{
+> +       return 0;
+> +}
+> +
+> +static int read_file_signature_contents(struct file *file_sig,
+> +                                       struct firmware_buf *fw_buf)
+> +{
+> +       int rc;
+> +
+> +       rc = __read_file_contents(file,
+> +                                 &fw_buf->data_sig,
+> +                                 &fw_buf->size_sig);
+> +       if (rc)
+> +               pr_info("could not read signature %s, but this is OK\n",
+> +                       fw_buf->fw_sig);
+> +
+> +       return 0;
+> +}
+> +#else
+> +static struct file *get_filesystem_file_sig(const char *sig_name)
+> +{
+> +       return NULL;
+> +}
+> +
+> +static bool get_filesystem_file_sig_ok(struct file *file_sig)
+> +{
+> +       return 0;
+> +}
+> +
+> +static int read_file_signature_contents(struct file *file_sig,
+> +                                       struct firmware_buf *fw_buf)
+> +{
+> +       return 0;
+> +}
+> +#endif
+> +
+>  static int fw_read_file_contents(struct file *file,
+> +                                struct file *file_sig,
+>                                  struct firmware_buf *fw_buf)
+>  {
+>         int rc;
+> @@ -336,6 +445,10 @@ static int fw_read_file_contents(struct file *file,
+>         if (rc)
+>                 return rc;
+>
+> +       rc = read_file_signature_contents(file_sig, fw_buf);
+> +       if (rc)
+> +               return rc;
+> +
+>         return 0;
+>  }
+>
+> @@ -343,15 +456,20 @@ static int fw_get_filesystem_firmware(struct device *device,
+>                                        struct firmware_buf *buf)
+>  {
+>         int i, len;
+> -       int rc = -ENOENT;
+> -       char *path;
+> +       int rc = -ENOMEM;
+> +       char *path, *path_sig = NULL;
+>
+>         path = __getname();
+>         if (!path)
+>                 return -ENOMEM;
+>
+> +       path_sig = __getname();
+> +       if (!path_sig)
+> +               goto out;
+> +
+>         for (i = 0; i < ARRAY_SIZE(fw_path); i++) {
+>                 struct file *file;
+> +               struct file *file_sig;
+>
+>                 /* skip the unset customized path */
+>                 if (!fw_path[i][0])
+> @@ -364,18 +482,43 @@ static int fw_get_filesystem_firmware(struct device *device,
+>                         break;
+>                 }
+>
+> +               len = snprintf(path_sig, PATH_MAX, "%s/%s",
+> +                              fw_path[i], buf->fw_sig);
+> +               if (len >= PATH_MAX) {
+> +                       rc = -ENAMETOOLONG;
+> +                       break;
+> +               }
+> +
+>                 file = filp_open(path, O_RDONLY, 0);
+> -               if (IS_ERR(file))
+> +               if (IS_ERR(file)) {
+> +                       rc = -ENOENT;
+>                         continue;
+> -               rc = fw_read_file_contents(file, buf);
+> +               }
+> +
+> +               file_sig = get_filesystem_file_sig(path_sig);
+> +               rc = get_filesystem_file_sig_ok(file_sig);
+> +               if (rc) {
+> +                       fput(file);
+> +                       if (!IS_ERR(file_sig))
+> +                               fput(file_sig);
+> +                       continue;
+> +               }
+> +
+> +               rc = fw_read_file_contents(file, file_sig, buf);
+> +
+>                 fput(file);
+> +               if (!IS_ERR(file_sig))
+> +                       fput(file_sig);
+> +
+>                 if (rc)
+>                         dev_warn(device, "firmware, attempted to load %s, but failed with error %d\n",
+>                                 path, rc);
+>                 else
+>                         break;
+>         }
+> +out:
+>         __putname(path);
+> +       __putname(path_sig);
+>
+>         if (!rc) {
+>                 dev_dbg(device, "firmware: direct-loading firmware %s\n",
+> @@ -410,11 +553,42 @@ static void fw_set_page_data(struct firmware_buf *buf, struct firmware *fw)
+>         fw->size = buf->size;
+>         fw->data = buf->data;
+>
+> -       pr_debug("%s: fw-%s buf=%p data=%p size=%u\n",
+> +       pr_debug("%s: fw-%s buf=%p data=%p size=%u sig_ok=%d\n",
+>                  __func__, buf->fw_id, buf, buf->data,
+> -                (unsigned int)buf->size);
+> +                (unsigned int)buf->size, buf->sig_ok);
+>  }
+>
+> +#ifdef CONFIG_FIRMWARE_SIG
+> +static int firmware_sig_check(struct firmware *fw, const char *name)
+> +{
+> +       int err = -ENOKEY;
+> +       struct firmware_buf *buf = fw->priv;
+> +       const void *data = buf->data;
+> +       const void *data_sig = buf->data_sig;
+> +
+> +       err = system_verify_data(data, buf->size, data_sig, buf->size_sig);
+> +       if (!err) {
+> +               buf->sig_ok = true;
+> +               fw_set_page_data(buf, fw);
+> +               return 0;
+> +       }
+> +
+> +       /* Not having a signature is only an error if we're strict. */
+> +       if (err == -ENOKEY && !fw_sig_enforce)
+> +               err = 0;
+> +
+> +       fw_set_page_data(buf, fw);
+> +
+> +       return err;
+> +}
+> +#else /* !CONFIG_FIRMWARE_SIG */
+> +static int firmware_sig_check(struct firmware *fw, const char *name)
+> +{
+> +       return 0;
+> +}
+> +#endif /* !CONFIG_MODULE_SIG */
+> +
+> +
+>  #ifdef CONFIG_PM_SLEEP
+>  static void fw_name_devm_release(struct device *dev, void *res)
+>  {
+> @@ -1120,6 +1294,22 @@ static int assign_firmware_buf(struct firmware *fw, struct device *device,
+>         return 0;
+>  }
+>
+> +#ifdef CONFIG_FIRMWARE_SIG
+> +static void fw_check_sig_ok(const struct firmware *fw, const char *name)
+> +{
+> +       struct firmware_buf *buf = fw->priv;
+> +
+> +       if (!buf->sig_ok)
+> +               pr_notice_once("%s: firmware verification failed: signature "
+> +                                      "and/or required key missing\n", name);
+> +}
+> +#else
+> +static void fw_check_sig_ok(const struct firmware *fw, const char *name)
+> +{
+> +       return;
+> +}
+> +#endif
+> +
+>  /* called from request_firmware() and request_firmware_work_func() */
+>  static int
+>  _request_firmware(const struct firmware **firmware_p, const char *name,
+> @@ -1177,6 +1367,15 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
+>         usermodehelper_read_unlock();
+>
+>   out:
+> +       if (ret >= 0) {
+> +               ret = firmware_sig_check(fw, name);
+> +               if (ret)
+> +                       goto out_bad_sig;
+> +               fw_check_sig_ok(fw, name);
+> +       }
+> +
+> + out_bad_sig:
+> +
+>         if (ret < 0) {
+>                 release_firmware(fw);
+>                 fw = NULL;
+> --
+> 2.3.2.209.gd67f9d5.dirty
+>
+
+Thanks,
+
+-Kees
+
 -- 
-1.8.1.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Kees Cook
+Chrome OS Security
