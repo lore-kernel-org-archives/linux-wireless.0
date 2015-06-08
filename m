@@ -1,118 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57076 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbbFVOnD (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:35135 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567AbbFHAnN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 10:43:03 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH v2 09/10] ath10k: adjust default peer limits if qcache enabled in 10.4 fw
-Date: Mon, 22 Jun 2015 20:10:17 +0530
-Message-ID: <1434984018-24057-10-git-send-email-rmani@qti.qualcomm.com> (sfid-20150622_164307_374879_BB38E0E9)
-In-Reply-To: <1434984018-24057-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434984018-24057-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 7 Jun 2015 20:43:13 -0400
+From: David Decotigny <ddecotig@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Cc: Joe Perches <joe@perches.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	David Decotigny <ddecotig@gmail.com>
+Subject: [PATCH v2 1/2] staging: rtl8723au: core: avoid bitwise arithmetic with forced endianness
+Date: Sun,  7 Jun 2015 17:43:01 -0700
+Message-Id: <1433724182-657-2-git-send-email-ddecotig@gmail.com> (sfid-20150608_024345_115384_A9F77741)
+In-Reply-To: <1433724182-657-1-git-send-email-ddecotig@gmail.com>
+References: <1433724182-657-1-git-send-email-ddecotig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.4 firmware supports upto 512 clients when qcache feature is enabled.
-Make adjustment on default max peer count, active peers, number of tid in
-such case to meet qcache requirement. 10.4 fw has extra unit info flag
-NUM_UNITS_IS_NUM_ACTIVE_PEERS which is also handled in this patch.
+This fixes bitwise arithmetic performed on the host on a variable
+previously converted to little-endian, and subsequently converted
+again to little-endian:
+  - issue_action_BA23a() called with "status" crafted in host byte order
+  - "status" converted to LE
+  - bitwise arithmetic on the (LE) "status", performed with masks and
+    shifts in host byte order
+  - result converted to LE (again) and stored in device structure
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+Sparse warning addressed by this patch:
+  drivers/staging/rtl8723au/core/rtw_mlme_ext.c:3806:16: warning: incorrect type in assignment (different base types)
+  drivers/staging/rtl8723au/core/rtw_mlme_ext.c:3806:16:    expected unsigned short [unsigned] status
+  drivers/staging/rtl8723au/core/rtw_mlme_ext.c:3806:16:    got restricted __le16 [usertype] <noident>
+
+Additional notes: initial cpu_to_le16 was introduced by kernel bulk
+  commit 5e93f3520 "staging: r8723au: Add source files for new driver
+  - part 1", initially from github according to commit description. On
+  github, this traces back to another bulk commit: 2896bda04353 "Add
+  new files in core directory", which is the 1st version of the
+  driver.
+
+Signed-off-by: David Decotigny <ddecotig@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/hw.h  |  6 ++++++
- drivers/net/wireless/ath/ath10k/wmi.c | 27 +++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/wmi.h |  5 +++--
- 3 files changed, 32 insertions(+), 6 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 52fc024..568c5ea5 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -360,6 +360,12 @@ enum ath10k_hw_rate_cck {
- #define TARGET_10_4_NUM_PEERS			((TARGET_10_4_NUM_STATIONS) + \
- 						 (TARGET_10_4_NUM_VDEVS))
- #define TARGET_10_4_ACTIVE_PEERS		0
-+
-+/* TODO: increase qcache max client limit to 512 after
-+ * testing with 512 client.
-+ */
-+#define TARGET_10_4_NUM_QCACHE_PEERS_MAX	256
-+#define TARGET_10_4_QCACHE_ACTIVE_PEERS		50
- #define TARGET_10_4_NUM_OFFLOAD_PEERS		0
- #define TARGET_10_4_NUM_OFFLOAD_REORDER_BUFFS	0
- #define TARGET_10_4_NUM_PEER_KEYS		2
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9502032..62ea0bc 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3826,20 +3826,39 @@ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb)
- 		return;
- 	}
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+index 196beaf..7c3b5dd 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+@@ -3803,8 +3803,6 @@ void issue_action_BA23a(struct rtw_adapter *padapter,
  
-+	if (test_bit(WMI_SERVICE_PEER_CACHING, ar->wmi.svc_map)) {
-+		ar->max_num_peers = TARGET_10_4_NUM_QCACHE_PEERS_MAX +
-+				    TARGET_10_4_NUM_VDEVS;
-+		ar->num_active_peers = TARGET_10_4_QCACHE_ACTIVE_PEERS +
-+				       TARGET_10_4_NUM_VDEVS;
-+		ar->num_tids = ar->num_active_peers * 2;
-+		ar->max_num_stations = TARGET_10_4_NUM_QCACHE_PEERS_MAX;
-+	}
-+
-+	/* TODO: Adjust max peer count for cases like WMI_SERVICE_RATECTRL_CACHE
-+	 * and WMI_SERVICE_IRAM_TIDS, etc.
-+	 */
-+
- 	for (i = 0; i < num_mem_reqs; ++i) {
- 		req_id = __le32_to_cpu(arg.mem_reqs[i]->req_id);
- 		num_units = __le32_to_cpu(arg.mem_reqs[i]->num_units);
- 		unit_size = __le32_to_cpu(arg.mem_reqs[i]->unit_size);
- 		num_unit_info = __le32_to_cpu(arg.mem_reqs[i]->num_unit_info);
+ 	pattrib->pktlen = sizeof(struct ieee80211_hdr_3addr) + 1;
  
--		if (num_unit_info & NUM_UNITS_IS_NUM_PEERS)
-+		if (num_unit_info & NUM_UNITS_IS_NUM_ACTIVE_PEERS) {
-+			if (ar->num_active_peers)
-+				num_units = ar->num_active_peers + 1;
-+			else
-+				num_units = ar->max_num_peers + 1;
-+		} else if (num_unit_info & NUM_UNITS_IS_NUM_PEERS) {
- 			/* number of units to allocate is number of
- 			 * peers, 1 extra for self peer on target */
- 			/* this needs to be tied, host and target
- 			 * can get out of sync */
--			num_units = TARGET_10X_NUM_PEERS + 1;
--		else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
--			num_units = TARGET_10X_NUM_VDEVS + 1;
-+			num_units = ar->max_num_peers + 1;
-+		} else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS) {
-+			num_units = ar->max_num_vdevs + 1;
-+		}
- 
- 		ath10k_dbg(ar, ATH10K_DBG_WMI,
- 			   "wmi mem_req_id %d num_units %d num_unit_info %d unit size %d actual units %d\n",
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index b1bec03..b1e4932 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2377,8 +2377,9 @@ struct wmi_resource_config_10_2 {
- 	__le32 feature_mask;
- } __packed;
- 
--#define NUM_UNITS_IS_NUM_VDEVS   0x1
--#define NUM_UNITS_IS_NUM_PEERS   0x2
-+#define NUM_UNITS_IS_NUM_VDEVS         BIT(0)
-+#define NUM_UNITS_IS_NUM_PEERS         BIT(1)
-+#define NUM_UNITS_IS_NUM_ACTIVE_PEERS  BIT(2)
- 
- struct wmi_resource_config_10_4 {
- 	/* Number of virtual devices (VAPs) to support */
+-	status = cpu_to_le16(status);
+-
+ 	switch (action) {
+ 	case WLAN_ACTION_ADDBA_REQ:
+ 		pattrib->pktlen += sizeof(mgmt->u.action.u.addba_req);
 -- 
-1.8.1.2
+2.2.0.rc0.207.ga3a616c
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
