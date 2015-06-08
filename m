@@ -1,61 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54714 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752460AbbFITbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 15:31:19 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Gerrit Renker <gerrit@erg.abdn.ac.uk>,
-	Alexander Kaltsas <alexkaltsas@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: wext: clear sinfo struct before calling driver
-Date: Tue,  9 Jun 2015 21:31:16 +0200
-Message-Id: <1433878276-5659-1-git-send-email-johannes@sipsolutions.net> (sfid-20150609_213123_047371_C1CBC261)
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58160 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176AbbFHMij (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2015 08:38:39 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/4] brcmfmac: Update msgbuf read pointer quicker.
+Date: Mon, 8 Jun 2015 14:38:32 +0200
+Message-ID: <1433767115-8136-2-git-send-email-arend@broadcom.com> (sfid-20150608_143845_903831_CE2C1EF2)
+In-Reply-To: <1433767115-8136-1-git-send-email-arend@broadcom.com>
+References: <1433767115-8136-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Until recently, mac80211 overwrote all the statistics it could
-provide when getting called, but it now relies on the struct
-having been zeroed by the caller. This was always the case in
-nl80211, but wext used a static struct which could even cause
-values from one device leak to another.
+On device to host data using msgbuf the read pointer gets updated
+once all data is processed. Updating this pointer more frequently
+allows the firmware to add more data quicker. This will result in
+slightly higher and more stable throughput on CPU bounded host
+processors.
 
-Using a static struct is OK (as even documented in a comment)
-since the whole usage of this function and its return value is
-always locked under RTNL. Not clearing the struct for calling
-the driver has always been wrong though, since drivers were
-free to only fill values they could report, so calling this
-for one device and then for another would always have leaked
-values from one to the other.
-
-Fix this by initializing the structure in question before the
-driver method call.
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=99691
-
-Cc: stable@vger.kernel.org
-Reported-by: Gerrit Renker <gerrit@erg.abdn.ac.uk>
-Reported-by: Alexander Kaltsas <alexkaltsas@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/wireless/wext-compat.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/commonring.c | 19 ++++++++-----------
+ drivers/net/wireless/brcm80211/brcmfmac/commonring.h |  3 ++-
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c     | 12 +++++++++++-
+ 3 files changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index fff1bef6ed6d..fd682832a0e3 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1333,6 +1333,8 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	memcpy(bssid, wdev->current_bss->pub.bssid, ETH_ALEN);
- 	wdev_unlock(wdev);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/commonring.c b/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
+index 26c6587..7b0e521 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
+@@ -223,8 +223,6 @@ void brcmf_commonring_write_cancel(struct brcmf_commonring *commonring,
+ void *brcmf_commonring_get_read_ptr(struct brcmf_commonring *commonring,
+ 				    u16 *n_items)
+ {
+-	void *ret_addr;
+-
+ 	if (commonring->cr_update_wptr)
+ 		commonring->cr_update_wptr(commonring->cr_ctx);
  
-+	memset(&sinfo, 0, sizeof(sinfo));
-+
- 	if (rdev_get_station(rdev, dev, bssid, &sinfo))
+@@ -235,19 +233,18 @@ void *brcmf_commonring_get_read_ptr(struct brcmf_commonring *commonring,
+ 	if (*n_items == 0)
  		return NULL;
  
+-	ret_addr = commonring->buf_addr +
+-		   (commonring->r_ptr * commonring->item_len);
+-
+-	commonring->r_ptr += *n_items;
+-	if (commonring->r_ptr == commonring->depth)
+-		commonring->r_ptr = 0;
+-
+-	return ret_addr;
++	return commonring->buf_addr +
++	       (commonring->r_ptr * commonring->item_len);
+ }
+ 
+ 
+-int brcmf_commonring_read_complete(struct brcmf_commonring *commonring)
++int brcmf_commonring_read_complete(struct brcmf_commonring *commonring,
++				   u16 n_items)
+ {
++	commonring->r_ptr += n_items;
++	if (commonring->r_ptr == commonring->depth)
++		commonring->r_ptr = 0;
++
+ 	if (commonring->cr_write_rptr)
+ 		return commonring->cr_write_rptr(commonring->cr_ctx);
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/commonring.h b/drivers/net/wireless/brcm80211/brcmfmac/commonring.h
+index 3d40401..b850336 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/commonring.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/commonring.h
+@@ -62,7 +62,8 @@ void brcmf_commonring_write_cancel(struct brcmf_commonring *commonring,
+ 				   u16 n_items);
+ void *brcmf_commonring_get_read_ptr(struct brcmf_commonring *commonring,
+ 				    u16 *n_items);
+-int brcmf_commonring_read_complete(struct brcmf_commonring *commonring);
++int brcmf_commonring_read_complete(struct brcmf_commonring *commonring,
++				   u16 n_items);
+ 
+ #define brcmf_commonring_n_items(commonring) (commonring->depth)
+ #define brcmf_commonring_len_item(commonring) (commonring->item_len)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 1b47de0..898c380 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -75,6 +75,8 @@
+ 
+ #define BRCMF_MSGBUF_DELAY_TXWORKER_THRS	96
+ #define BRCMF_MSGBUF_TRICKLE_TXWORKER_THRS	32
++#define BRCMF_MSGBUF_UPDATE_RX_PTR_THRS		48
++
+ 
+ struct msgbuf_common_hdr {
+ 	u8				msgtype;
+@@ -1257,19 +1259,27 @@ static void brcmf_msgbuf_process_rx(struct brcmf_msgbuf *msgbuf,
+ {
+ 	void *buf;
+ 	u16 count;
++	u16 processed;
+ 
+ again:
+ 	buf = brcmf_commonring_get_read_ptr(commonring, &count);
+ 	if (buf == NULL)
+ 		return;
+ 
++	processed = 0;
+ 	while (count) {
+ 		brcmf_msgbuf_process_msgtype(msgbuf,
+ 					     buf + msgbuf->rx_dataoffset);
+ 		buf += brcmf_commonring_len_item(commonring);
++		processed++;
++		if (processed == BRCMF_MSGBUF_UPDATE_RX_PTR_THRS) {
++			brcmf_commonring_read_complete(commonring, processed);
++			processed = 0;
++		}
+ 		count--;
+ 	}
+-	brcmf_commonring_read_complete(commonring);
++	if (processed)
++		brcmf_commonring_read_complete(commonring, processed);
+ 
+ 	if (commonring->r_ptr == 0)
+ 		goto again;
 -- 
-2.1.4
+1.9.1
 
