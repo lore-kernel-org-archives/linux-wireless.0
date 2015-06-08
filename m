@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:36013 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814AbbFAXsy (ORCPT
+Received: from mail-yh0-f49.google.com ([209.85.213.49]:32795 "EHLO
+	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108AbbFHRK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 19:48:54 -0400
-Received: by ieclw1 with SMTP id lw1so26107283iec.3
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 16:48:54 -0700 (PDT)
+	Mon, 8 Jun 2015 13:10:58 -0400
+Received: by yhpn97 with SMTP id n97so42750793yhp.0
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 10:10:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1433190860.3505.16.camel@sipsolutions.net>
-References: <1433187498-15124-1-git-send-email-cfliu.tw@gmail.com> <1433190860.3505.16.camel@sipsolutions.net>
-From: "Liu CF/TW" <cfliu.tw@gmail.com>
-Date: Mon, 1 Jun 2015 16:48:13 -0700
-Message-ID: <CAG5N3qFDTJW3-YmpCLKXeniZGtWYpHo7Bmpn+u2sxoAs7S0t4w@mail.gmail.com> (sfid-20150602_014857_820253_30E91B15)
-Subject: Re: [PATCH] mac80211: support IEEE80211_KEY_FLAG_RESERVE_TAILROOM for
- CCMP and TKIP.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <CAAVw_ZFi3Q1hi+uoeO_V=XUMNhZCViVq5iPrrJL9UakKB46Mag@mail.gmail.com>
+References: <CAAVw_ZFi3Q1hi+uoeO_V=XUMNhZCViVq5iPrrJL9UakKB46Mag@mail.gmail.com>
+Date: Mon, 8 Jun 2015 10:10:57 -0700
+Message-ID: <CAAnMG+Oeps87PaxV4DAqyOokz9T6ikf3Xv0vA_EC+impRM5Fxg@mail.gmail.com> (sfid-20150608_191110_511650_06A5A954)
+Subject: Re: mac80211 modification
+From: Alexis Green <agreen@cococorp.com>
+To: Duy Tai Nguyen <duytai.cse@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes, yes indeed you are right. This change is indeed not required/right.
-It's the special sw crypto path I'm working on in ath10k that resulted
-in the ieee80211_key_enable_hw_accel() code being skipped.
-I will fix this in ath10k driver internally.
+You should build mac80211 as module instead of built-in driver and
+"make modules" instead of full make. This way you'll be just
+rebuilding mac80211.ko instead of the whole thing.
 
-Thanks
-David
-
-On Mon, Jun 1, 2015 at 1:34 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2015-06-01 at 12:38 -0700, David Liu wrote:
->> The change reserves neccessary tailroom in CCMP and TKIP if required by
->> drivers that sets IEEE80211_KEY_FLAG_RESERVE_TAILROOM. For example,
->> ath10k HW engine in raw Tx/Rx encap mode requires SW reserve MIC/ICV space.
+On Mon, Jun 8, 2015 at 2:39 AM, Duy Tai Nguyen <duytai.cse@gmail.com> wrote:
+> Hi,
 >
-> I don't think this makes all that much sense. The flag is already
-> honoured today to actually leave enough tailroom in the SKB, and the
-> remainder of the code can very easily be done in the driver (in fact, if
-> you have a half-decent DMA engine, it's far more efficient to *not* set
-> this flag!)
->
-> You're also breaking other drivers with your change. Just do it in the
-> driver.
->
-> johannes
->
+> I want to inject particular data into beacon frame in Android device.
+> I found two approaches:
+> 1. Write loadable kernel module.
+> 2. Modify MAC80211 subsystem
+> In the first approach, I found that I could not include directly
+> source code from MAC80211 sub system in folder /net/mac80211/. Thus, I
+> used the second approach, but, every time I change any line of source
+> code, it takes 30 minutes to build zImage  then install new kernel in
+> my Android device. Finally, I was stuck.
+> Therefore, my questions are:
+> 1. Is it right approach to modify MAC80211 subsystem?
+> 2. Are there any faster approach to modify MAC80211 and test source code?
+> 3. I am curious about the way you write code and test MAC80211. Could
+> you explain in details?
+> Best Regards,
+> Duy Tai.
+> ------------------------------------------------------------------------------------------------------------
+> Nguyen Duy Tai
+> Ym: kimjiwoo741
+> Phone: +841676919422
+> Faculty of Computer Science and Engineering.
+> University of Technology HCMC.
+> ------------------------------------------------------------------------------------------------------------
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
