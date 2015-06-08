@@ -1,189 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:19779 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932964AbbFVIG5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 04:06:57 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xsAO015567
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:57 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1v55hgut60-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:57 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 04/17] mwifiex: add tdls channel switch status
-Date: Mon, 22 Jun 2015 19:06:10 +0530
-Message-ID: <1434980183-2901-5-git-send-email-patila@marvell.com> (sfid-20150622_100701_755908_B6C9CEA8)
-In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
-References: <1434980183-2901-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx02.posteo.de ([89.146.194.165]:48628 "EHLO mx02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751459AbbFHVS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2015 17:18:27 -0400
+Message-ID: <1433798355.28058.27.camel@embedded.rocks> (sfid-20150608_231830_509032_25142CC7)
+Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Date: Mon, 08 Jun 2015 23:19:15 +0200
+In-Reply-To: <557605CC.6070907@broadcom.com>
+References: <1433766944.28058.16.camel@embedded.rocks>
+			 <55758D7E.3000603@broadcom.com>
+	 <1433771289.28058.24.camel@embedded.rocks>	 <5575C6FA.6030104@broadcom.com>
+	 <1433794640.28058.26.camel@embedded.rocks> <557605CC.6070907@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Mo, 2015-06-08 at 23:14 +0200, Arend van Spriel wrote:
+> On 06/08/15 22:17, Jörg Krause wrote:
+> > On Mo, 2015-06-08 at 18:46 +0200, Arend van Spriel wrote:
+> > > On 06/08/15 15:48, Jörg Krause wrote:
+> > > > Hi Arend,
+> > > > 
+> > > > On Mo, 2015-06-08 at 14:41 +0200, Arend van Spriel wrote:
+> > > > > On 06/08/15 14:35, Jörg Krause wrote:
+> > > > > > Hi,
+> > > > > > 
+> > > > > > I've trouble creating the p2p interface on a BCM43362 wifi
+> > > > > > device
+> > > > > > running Linux kernel 4.0.4:
+> > > > > > 
+> > > > > >        # dmesg | grep brcmfmac
+> > > > > >        [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: 
+> > > > > > Firmware
+> > > > > > version =
+> > > > > >        wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 
+> > > > > > 01
+> > > > > > -b30a427d
+> > > > > >        [    7.158905] brcmfmac: 
+> > > > > > brcmf_cfg80211_reg_notifier: not
+> > > > > > a
+> > > > > > ISO3166
+> > > > > >        code
+> > > > > >        [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: 
+> > > > > > timeout
+> > > > > > occurred
+> > > > > > 
+> > > > > > Trying to add the p2p interface manually:
+> > > > > > 
+> > > > > >        # iw phy0 interface add p2p0 type __p2pdev
+> > > > > >        [  372.042704] brcmfmac: brcmf_link_down: 
+> > > > > > WLC_DISASSOC
+> > > > > > failed
+> > > > > > (-52)
+> > > > > >        [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: 
+> > > > > > timeout
+> > > > > > occurred
+> > > > > >        [  373.679377] brcmfmac: brcmf_cfg80211_del_key: 
+> > > > > > invalid
+> > > > > > key
+> > > > > > index (4)
+> > > > > >        [  373.685733] brcmfmac: brcmf_cfg80211_del_key: 
+> > > > > > invalid
+> > > > > > key
+> > > > > > index (5)
+> > > > > > 
+> > > > > > Any idea?
+> > > > > 
+> > > > > Wondering whether it is similar to what Rafal reported. Can 
+> > > > > you
+> > > > > do a
+> > > > > hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
+> > > > 
+> > > > I managed to set up the p2p interface by recompiling the kernel
+> > > > with
+> > > > CONFIG_BRCMDBG and loading the brcmfmac module with p2pon=1.
+> > > > 
+> > > > I had a discussion some month ago with Hante Meulemann about
+> > > > setting up
+> > > > the p2p interface. This is one of his replies:
+> > > > 
+> > > >       "For what I can see from the log is that we don’t get the
+> > > > event from
+> > > >       the FW indicating that the p2p interface was created. 
+> > > > This
+> > > > probably
+> > > >       means that there is a bug in this FW for this device. I 
+> > > > need
+> > > > to discuss
+> > > >       this to see how much priority we can give this. The best
+> > > > option for you
+> > > >       for the moment is to use the legacy method with the 
+> > > > 'p2pon=1'
+> > > > command."
+> > > 
+> > > Thanks for digging your email archive as we clearly forgot about 
+> > > this
+> > > 
+> > > entirely.
+> > 
+> > Me too :-)
+> > 
+> > > The timeout in your log indeed indicates it is missing a
+> > > notification from firmware. I assume your primary interface is in
+> > > managed mode when trying to create the p2p_dev interface. Is that
+> > > correct?
+> > 
+> > Correct.
+> 
+> So do you have the following commit in your kernel tree:
+> 
+> commit f48556e1b6a60f1b394a6c4b0a7b8cacba3eb107
+> Author: Arend van Spriel <arend@broadcom.com>
+> Date:   Tue Sep 30 10:23:16 2014 +0200
+> 
+>      brcmfmac: assure P2P discovery is disabled when setting 
+> P2P_DEVICE 
+> mac addre
+> 
 
-This patch add new tdls status used for tdls channel switch.
-Driver in turn would block cmd path and data path if tdls
-channel switching. Data path to non tdls peer should be blocked
-if tdls channel switch to off-channel.
+Yes.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/decl.h |  3 ++
- drivers/net/wireless/mwifiex/main.c | 14 +++++++--
- drivers/net/wireless/mwifiex/main.h |  3 ++
- drivers/net/wireless/mwifiex/util.c | 59 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 77 insertions(+), 2 deletions(-)
+$ git log --oneline --grep="brcmfmac: assure P2P discovery is disabled
+when setting P2P_DEVICE"
+f48556e brcmfmac: assure P2P discovery is disabled when setting
+P2P_DEVICE mac address
 
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index 51e3447..098e1f1 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -141,6 +141,9 @@ enum mwifiex_tdls_status {
- 	TDLS_SETUP_COMPLETE,
- 	TDLS_SETUP_FAILURE,
- 	TDLS_LINK_TEARDOWN,
-+	TDLS_CHAN_SWITCHING,
-+	TDLS_IN_BASE_CHAN,
-+	TDLS_IN_OFF_CHAN,
- };
- 
- enum mwifiex_tdls_error_code {
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 3ba4e0e..2a2e5db 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -299,9 +299,15 @@ process_start:
- 
- 			if ((!adapter->scan_chan_gap_enabled &&
- 			     adapter->scan_processing) || adapter->data_sent ||
-+			     mwifiex_is_tdls_chan_switching
-+			     (mwifiex_get_priv(adapter,
-+					       MWIFIEX_BSS_ROLE_STA)) ||
- 			    (mwifiex_wmm_lists_empty(adapter) &&
- 			     skb_queue_empty(&adapter->tx_data_q))) {
- 				if (adapter->cmd_sent || adapter->curr_cmd ||
-+					!mwifiex_is_send_cmd_allowed
-+						(mwifiex_get_priv(adapter,
-+						MWIFIEX_BSS_ROLE_STA)) ||
- 				    (!is_command_pending(adapter)))
- 					break;
- 			}
-@@ -342,7 +348,9 @@ process_start:
- 			continue;
- 		}
- 
--		if (!adapter->cmd_sent && !adapter->curr_cmd) {
-+		if (!adapter->cmd_sent && !adapter->curr_cmd &&
-+		    mwifiex_is_send_cmd_allowed
-+		    (mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA))) {
- 			if (mwifiex_exec_next_cmd(adapter) == -1) {
- 				ret = -1;
- 				break;
-@@ -365,7 +373,9 @@ process_start:
- 
- 		if ((adapter->scan_chan_gap_enabled ||
- 		     !adapter->scan_processing) &&
--		    !adapter->data_sent && !mwifiex_wmm_lists_empty(adapter)) {
-+		    !adapter->data_sent && !mwifiex_wmm_lists_empty(adapter) &&
-+		    !mwifiex_is_tdls_chan_switching
-+			(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA))) {
- 			mwifiex_wmm_process_tx(adapter);
- 			if (adapter->hs_activated) {
- 				adapter->is_hs_configured = false;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 2106a5c..d27e6aa 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1461,6 +1461,9 @@ struct mwifiex_sta_node *
- mwifiex_add_sta_entry(struct mwifiex_private *priv, const u8 *mac);
- struct mwifiex_sta_node *
- mwifiex_get_sta_entry(struct mwifiex_private *priv, const u8 *mac);
-+u8 mwifiex_is_tdls_chan_switching(struct mwifiex_private *priv);
-+u8 mwifiex_is_tdls_off_chan(struct mwifiex_private *priv);
-+u8 mwifiex_is_send_cmd_allowed(struct mwifiex_private *priv);
- int mwifiex_send_tdls_data_frame(struct mwifiex_private *priv, const u8 *peer,
- 				 u8 action_code, u8 dialog_token,
- 				 u16 status_code, const u8 *extra_ies,
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 790e619..2504e42 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -531,6 +531,65 @@ mwifiex_get_sta_entry(struct mwifiex_private *priv, const u8 *mac)
- 	return NULL;
- }
- 
-+static struct mwifiex_sta_node *
-+mwifiex_get_tdls_sta_entry(struct mwifiex_private *priv, u8 status)
-+{
-+	struct mwifiex_sta_node *node;
-+
-+	list_for_each_entry(node, &priv->sta_list, list) {
-+		if (node->tdls_status == status)
-+			return node;
-+	}
-+
-+	return NULL;
-+}
-+
-+/* If tdls channel switching is on-going, tx data traffic should be
-+ * blocked until the switching stage completed.
-+ */
-+u8 mwifiex_is_tdls_chan_switching(struct mwifiex_private *priv)
-+{
-+	struct mwifiex_sta_node *sta_ptr;
-+
-+	if (!priv || !ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info))
-+		return false;
-+
-+	sta_ptr = mwifiex_get_tdls_sta_entry(priv, TDLS_CHAN_SWITCHING);
-+	if (sta_ptr)
-+		return true;
-+
-+	return false;
-+}
-+
-+u8 mwifiex_is_tdls_off_chan(struct mwifiex_private *priv)
-+{
-+	struct mwifiex_sta_node *sta_ptr;
-+
-+	if (!priv || !ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info))
-+		return false;
-+
-+	sta_ptr = mwifiex_get_tdls_sta_entry(priv, TDLS_IN_OFF_CHAN);
-+	if (sta_ptr)
-+		return true;
-+
-+	return false;
-+}
-+
-+/* If tdls channel switching is on-going or tdls operate on off-channel,
-+ * cmd path should be blocked until tdls switched to base-channel.
-+ */
-+u8 mwifiex_is_send_cmd_allowed(struct mwifiex_private *priv)
-+{
-+	if (!priv || !ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info))
-+		return true;
-+
-+	if (mwifiex_is_tdls_chan_switching(priv) ||
-+	    mwifiex_is_tdls_off_chan(priv))
-+		return false;
-+
-+	return true;
-+}
-+
- /* This function will add a sta_node entry to associated station list
-  * table with the given mac address.
-  * If entry exist already, existing entry is returned.
--- 
-1.8.1.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
