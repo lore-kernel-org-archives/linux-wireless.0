@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45040 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932717AbbFCOwb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 10:52:31 -0400
-Message-ID: <1433343146.2274.17.camel@sipsolutions.net> (sfid-20150603_165246_892512_AFF249E6)
-Subject: Re: [PATCH] cfg80211: modify lower retry limit to 0
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Hodaszi, Robert" <robert.hodaszi@digi.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"royujjal@gmail.com" <royujjal@gmail.com>
-Date: Wed, 03 Jun 2015 16:52:26 +0200
-In-Reply-To: <1433337281.7119.38.camel@A1-HR-PC>
-References: <1433335560-17985-1-git-send-email-robert.hodaszi@digi.com>
-	 (sfid-20150603_145244_934464_B91AF765) <1433336717.2274.13.camel@sipsolutions.net>
-	 <1433337281.7119.38.camel@A1-HR-PC>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63199 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752100AbbFHMlg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2015 08:41:36 -0400
+Message-ID: <55758D7E.3000603@broadcom.com> (sfid-20150608_144139_731016_E538EF53)
+Date: Mon, 8 Jun 2015 14:41:34 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <joerg.krause@embedded.rocks>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+References: <1433766944.28058.16.camel@embedded.rocks>
+In-Reply-To: <1433766944.28058.16.camel@embedded.rocks>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-03 at 13:14 +0000, Hodaszi, Robert wrote:
-> The problem is if I change the rt2800 driver to set 0 if it gets 1,
-> etc., that will break all existing user-space programs.
+On 06/08/15 14:35, Jörg Krause wrote:
+> Hi,
+>
+> I've trouble creating the p2p interface on a BCM43362 wifi device
+> running Linux kernel 4.0.4:
+>
+>      # dmesg | grep brcmfmac
+>      [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
+>      wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01-b30a427d
+>      [    7.158905] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166
+>      code
+>      [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+>
+> Trying to add the p2p interface manually:
+>
+>      # iw phy0 interface add p2p0 type __p2pdev
+>      [  372.042704] brcmfmac: brcmf_link_down: WLC_DISASSOC failed (-52)
+>      [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+>      [  373.679377] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
+>      [  373.685733] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
+>
+> Any idea?
 
-Well, I guess it's a question of which userspace even uses it, and how
-it'll break.
+Wondering whether it is similar to what Rafal reported. Can you do a 
+hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
 
-Perhaps we should modify the wext userspace API to allow 0-254, and add
-1 to the value before passing it to the driver. That way, in wext it
-would be "compatible" with your expected behaviour, but internally we'd
-still use the 802.11 semantics. I'd accept a patch doing this, since
-you're the only one to ever even admit to using it (and still using
-wext) :-)
+Regards,
+Arend
 
-Of course we should also fix the driver to treat it as # of transmission
-attempts rather than # of retries, since clearly that's required for the
-nl80211 API which is documented to do it like the spec.
-
-johannes
+> Best regards
+> Jörg Krause
 
