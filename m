@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:36359 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753428AbbFJS7J (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57284 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355AbbFHTlJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 14:59:09 -0400
-Date: Wed, 10 Jun 2015 21:59:02 +0300
-From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
+	Mon, 8 Jun 2015 15:41:09 -0400
+Date: Mon, 8 Jun 2015 12:41:08 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
 	chris.park@atmel.com, devel@driverdev.osuosl.org,
 	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] staging: wilc1000: Align enum members in
- coreconfigurator
-Message-ID: <20150610185902.GA2423@kholmanskikh> (sfid-20150610_205915_318378_6A73AD08)
-References: <1433796869-2737-1-git-send-email-kholmanskikh.s.s@gmail.com>
- <1433796869-2737-2-git-send-email-kholmanskikh.s.s@gmail.com>
- <20150609173955.GB22547@kroah.com>
+Subject: Re: [PATCH v3 1/2] staging: wilc1000: Cleanup to coreconfigurator
+Message-ID: <20150608194108.GA25683@kroah.com> (sfid-20150608_214113_709924_6B62FA84)
+References: <1433235307-13146-1-git-send-email-kholmanskikh.s.s@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150609173955.GB22547@kroah.com>
+In-Reply-To: <1433235307-13146-1-git-send-email-kholmanskikh.s.s@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 09, 2015 at 10:39:55AM -0700, Greg KH wrote:
-> On Mon, Jun 08, 2015 at 11:54:29PM +0300, Stanislav Kholmanskikh wrote:
-> > Aligned enum members to follow a common style per enum.
-> 
-> You also reformatted defines, which you didn't mention here :(
+On Tue, Jun 02, 2015 at 12:55:06PM +0400, Stanislav Kholmanskikh wrote:
+> Fixed several syntax/style issues found with checkpatch.pl.
 
-Sorry. :(
+What exactly is "several"?  Please be specific as to what type of
+changes you are making.
 
-I've sent V5 adressing this and your feedback to patch 1.
+Please fix and resend both of these.
 
-Thank you.
+thanks,
+
+greg k-h
