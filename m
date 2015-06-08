@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44505 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:63516 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760126AbbFCNFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 09:05:24 -0400
-Message-ID: <1433336717.2274.13.camel@sipsolutions.net> (sfid-20150603_150640_950701_72CA8BAD)
-Subject: Re: [PATCH] cfg80211: modify lower retry limit to 0
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Robert Hodaszi <robert.hodaszi@digi.com>
-Cc: davem@davemloft.net, royujjal@gmail.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 03 Jun 2015 15:05:17 +0200
-In-Reply-To: <1433335560-17985-1-git-send-email-robert.hodaszi@digi.com> (sfid-20150603_145244_934464_B91AF765)
-References: <1433335560-17985-1-git-send-email-robert.hodaszi@digi.com>
-	 (sfid-20150603_145244_934464_B91AF765)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752410AbbFHV06 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2015 17:26:58 -0400
+Date: Mon, 8 Jun 2015 23:26:54 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Valentin Rothberg <valentinrothberg@gmail.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	clement.perrochaud@effinnov.com, charles.gorand@effinnov.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	pebolle@tiscali.nl, rupran@einserver.de, stefan.hengelein@fau.de
+Subject: Re: [PATCH] drivers/nfc: remove obsolete setting of DEBUG
+Message-ID: <20150608212654.GE5089@ribalta.mp.intel.com> (sfid-20150608_232720_676339_4843FA1F)
+References: <1430212127-5841-1-git-send-email-valentinrothberg@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430212127-5841-1-git-send-email-valentinrothberg@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-03 at 14:46 +0200, Robert Hodaszi wrote:
-> From: Robert Hodaszi <robert.hodaszi@digi.com>
+Hi Valentin,
+
+On Tue, Apr 28, 2015 at 11:08:47AM +0200, Valentin Rothberg wrote:
+> The CPP identifier 'DEBUG' is not used in the source code of nfc at all,
+> so we can safely remove setting it in both Makefiles.
 > 
-> To disable the transmit retries on RT28xx driver, the retry limit should
-> be set to 0. The current lower limit (1) prevents it.
+> Signed-off-by: Valentin Rothberg <valentinrothberg@gmail.com>
+> ---
+> I detected this issue with ./scripts/checkkconfigsymbols.py since
+> CONFIG_NFC_DEBUG is not defined in Kconfig.
+> ---
+>  drivers/nfc/Makefile         | 2 --
+>  drivers/nfc/nxp-nci/Makefile | 2 --
+>  2 files changed, 4 deletions(-)
+Applied, with a massaged commit message.
 
-So actually - we have the same limit in nl80211... we should change both
-at the same time.
-
-However, I'm withdrawing my earlier comment. The dot11ShortRetryLimit
-and dot11LongRetryLimit counters (which correspond to this) are defined
-to have a range 1..255, and semantically are actually the number of
-permissible transmission *attempts* (see their definition in
-802.11-2012).
-
-As a consequence, I'd say the driver is doing things wrong here and this
-part is actually correct.
-
-You could argue that this is userspace API that must never change,
-but ... dunno. If you feel strongly about this I guess we could accept 0
-and translate it to 1 in cfg80211 to get the correct semantics, but
-you'd still have the driver bug then. I don't think we should accept 0
-and pass it to the driver, since it need not expect such a value based
-on the 802.11 spec.
-
-johannes
-
+Cheers,
+Samuel.
