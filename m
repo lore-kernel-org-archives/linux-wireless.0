@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:35288 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754424AbbFPKLq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46213 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbbFHIqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 06:11:46 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: prevent debugfs mmio access crash kernel
-References: <1434008594-6726-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 16 Jun 2015 13:11:41 +0300
-In-Reply-To: <1434008594-6726-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 11 Jun 2015 09:43:14 +0200")
-Message-ID: <87ioao7yjm.fsf@kamboji.qca.qualcomm.com> (sfid-20150616_121150_447953_FADE0A38)
-MIME-Version: 1.0
+	Mon, 8 Jun 2015 04:46:32 -0400
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [PATCHv5,
+ 01/17] mwifiex: verbose logging for association failure messages
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1433330987-6808-2-git-send-email-patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Message-Id: <20150608084631.C91DA140775@smtp.codeaurora.org> (sfid-20150608_104635_816787_28264633)
+Date: Mon,  8 Jun 2015 08:46:31 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
 
-> It was possible to force an out of bounds MMIO
-> read/write via debugfs. E.g. on QCA988X this could
-> be triggered with:
->
->  echo 0x2080e0 | tee /sys/kernel/debug/ieee80211/*/ath10k/reg_addr
->  cat /sys/kernel/debug/ieee80211/*/ath10k/reg_value
->
->  BUG: unable to handle kernel paging request at ffffc90001e080e0
->  IP: [<ffffffff8135c860>] ioread32+0x40/0x50
->  ...
->  Call Trace:
->   [<ffffffffa00d0c7f>] ? ath10k_pci_read32+0x4f/0x70 [ath10k_pci]
->   [<ffffffffa0080f50>] ath10k_reg_value_read+0x90/0xf0 [ath10k_core]
->   [<ffffffff8115c2c1>] ? handle_mm_fault+0xa91/0x1050
->   [<ffffffff81189758>] __vfs_read+0x28/0xe0
->   [<ffffffff812e4694>] ? security_file_permission+0x84/0xa0
->   [<ffffffff81189ce3>] ? rw_verify_area+0x53/0x100
->   [<ffffffff81189e1a>] vfs_read+0x8a/0x140
->   [<ffffffff8118acb9>] SyS_read+0x49/0xb0
->   [<ffffffff8104e39c>] ? trace_do_page_fault+0x3c/0xc0
->   [<ffffffff8196596e>] system_call_fastpath+0x12/0x71
->
-> Reported-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> This patch adds more detailed information about association failures
+>  - reason and states.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
 
-Thanks, applied.
+Thanks, 17 patches applied to wireless-drivers-next.git:
 
--- 
+12d111097428 mwifiex: verbose logging for association failure messages
+c951a6671340 mwifiex: correct bss_type assignment
+ed5cfbe6ba27 mwifiex: support AP reset after bss_stop
+88af6f053ad8 mwifiex: enable 11d after bss reset
+7b7166256d27 mwifiex: reset 11h active flag when chandef does not require dfs
+511c8989fe5a mwifiex: disable CAC upon radar detection event
+7ee38bf4edea mwifiex: add cfg80211 get_channel handler
+442f6f9b49c8 mwifiex: maintain station statistic in uap mode
+b21783e94e20 mwifiex: add sta_list firmware command
+8baca1a34d4c mwifiex: dump station support in uap mode
+8a73dd639889 mwifiex: parse power constraint IE from Tail
+e4f59aca0b63 mwifiex: support downloading IEs from tail
+3e6f8a4b955f mwifiex: drop block-ack action frames
+c2b6680f63ff mwifiex: advertise PS ON by default support to cfg80211
+debfc6008169 mwifiex: update AP WMM settings from BSS_START event
+719a25e33153 mwifiex: using right tid for addressing ra_list
+ec264a43029f mwifiex: do not decrease tx_pending for AMSDU packet once more
+
 Kalle Valo
