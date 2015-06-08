@@ -1,30 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:43872 "EHLO canardo.mork.no"
+Received: from mx02.posteo.de ([89.146.194.165]:58317 "EHLO mx02.posteo.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750854AbbFNJxK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2015 05:53:10 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Robert E. Cochran" <wifi@mindchasers.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi in AP mode is experimental?
-References: <557B1A2F.1010608@mindchasers.com>
-	<CANUX_P1Q9pkHF6xVgUJyAF_-x9n_g4TfaT9cr2dej7jxp+ZXTg@mail.gmail.com>
-Date: Sun, 14 Jun 2015 11:52:57 +0200
-In-Reply-To: <CANUX_P1Q9pkHF6xVgUJyAF_-x9n_g4TfaT9cr2dej7jxp+ZXTg@mail.gmail.com>
-	(Emmanuel Grumbach's message of "Sat, 13 Jun 2015 23:13:13 +0300")
-Message-ID: <87pp4ylipy.fsf@nemi.mork.no> (sfid-20150614_115641_982094_F4BC7371)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1752984AbbFHUQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2015 16:16:32 -0400
+Message-ID: <1433794640.28058.26.camel@embedded.rocks> (sfid-20150608_221636_538480_29F31573)
+Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Date: Mon, 08 Jun 2015 22:17:20 +0200
+In-Reply-To: <5575C6FA.6030104@broadcom.com>
+References: <1433766944.28058.16.camel@embedded.rocks>
+		 <55758D7E.3000603@broadcom.com> <1433771289.28058.24.camel@embedded.rocks>
+	 <5575C6FA.6030104@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <egrumbach@gmail.com> writes:
+On Mo, 2015-06-08 at 18:46 +0200, Arend van Spriel wrote:
+> On 06/08/15 15:48, Jörg Krause wrote:
+> > Hi Arend,
+> > 
+> > On Mo, 2015-06-08 at 14:41 +0200, Arend van Spriel wrote:
+> > > On 06/08/15 14:35, Jörg Krause wrote:
+> > > > Hi,
+> > > > 
+> > > > I've trouble creating the p2p interface on a BCM43362 wifi 
+> > > > device
+> > > > running Linux kernel 4.0.4:
+> > > > 
+> > > >       # dmesg | grep brcmfmac
+> > > >       [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: Firmware
+> > > > version =
+> > > >       wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01
+> > > > -b30a427d
+> > > >       [    7.158905] brcmfmac: brcmf_cfg80211_reg_notifier: not 
+> > > > a
+> > > > ISO3166
+> > > >       code
+> > > >       [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: timeout
+> > > > occurred
+> > > > 
+> > > > Trying to add the p2p interface manually:
+> > > > 
+> > > >       # iw phy0 interface add p2p0 type __p2pdev
+> > > >       [  372.042704] brcmfmac: brcmf_link_down: WLC_DISASSOC 
+> > > > failed
+> > > > (-52)
+> > > >       [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: timeout
+> > > > occurred
+> > > >       [  373.679377] brcmfmac: brcmf_cfg80211_del_key: invalid 
+> > > > key
+> > > > index (4)
+> > > >       [  373.685733] brcmfmac: brcmf_cfg80211_del_key: invalid 
+> > > > key
+> > > > index (5)
+> > > > 
+> > > > Any idea?
+> > > 
+> > > Wondering whether it is similar to what Rafal reported. Can you 
+> > > do a
+> > > hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
+> > 
+> > I managed to set up the p2p interface by recompiling the kernel 
+> > with
+> > CONFIG_BRCMDBG and loading the brcmfmac module with p2pon=1.
+> > 
+> > I had a discussion some month ago with Hante Meulemann about 
+> > setting up
+> > the p2p interface. This is one of his replies:
+> > 
+> >      "For what I can see from the log is that we don’t get the 
+> > event from
+> >      the FW indicating that the p2p interface was created. This 
+> > probably
+> >      means that there is a bug in this FW for this device. I need 
+> > to discuss
+> >      this to see how much priority we can give this. The best 
+> > option for you
+> >      for the moment is to use the legacy method with the 'p2pon=1' 
+> > command."
+> 
+> Thanks for digging your email archive as we clearly forgot about this 
+> 
+> entirely.
 
-> I can't think about anything specific that is not supported,
+Me too :-)
 
-Is AP mode on 5 GHz supported on the 3160?
+> The timeout in your log indeed indicates it is missing a 
+> notification from firmware. I assume your primary interface is in 
+> managed mode when trying to create the p2p_dev interface. Is that 
+> correct?
 
+Correct.
 
-Bjørn
+Best regards
+Jörg Krause
