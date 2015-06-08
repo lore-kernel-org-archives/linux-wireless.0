@@ -1,46 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:35019 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752328AbbFUKGV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39855 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752100AbbFHHJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2015 06:06:21 -0400
-Received: by wiga1 with SMTP id a1so52553915wig.0
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2015 03:06:20 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/3] staging: vt6655: vnt_tx_packet don't wakeup from power saving.
-Date: Sun, 21 Jun 2015 11:05:54 +0100
-Message-Id: <1434881155-3464-2-git-send-email-tvboxspy@gmail.com> (sfid-20150621_120625_745359_49A5DB16)
-In-Reply-To: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
-References: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 8 Jun 2015 03:09:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jakub Kicinski <moorray3@wp.pl>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: Re: [PATCH 1/4] mt7601u: unify paged and non-paged RX dma paths
+References: <1433272288-6450-1-git-send-email-moorray3@wp.pl>
+Date: Mon, 08 Jun 2015 10:09:03 +0300
+In-Reply-To: <1433272288-6450-1-git-send-email-moorray3@wp.pl> (Jakub
+	Kicinski's message of "Tue, 2 Jun 2015 21:11:25 +0200")
+Message-ID: <87k2vellrk.fsf@kamboji.qca.qualcomm.com> (sfid-20150608_090914_829525_E8BE12A9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 changes the wake state before attempting to tx data
+Jakub Kicinski <moorray3@wp.pl> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 3 ---
- 1 file changed, 3 deletions(-)
+> From: Jakub Kicinski <kubakici@wp.pl>
+>
+> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index b1357af..c421f78 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1211,9 +1211,6 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	vnt_generate_fifo_header(priv, dma_idx, head_td, skb);
- 
--	if (MACbIsRegBitsOn(priv->PortOffset, MAC_REG_PSCTL, PSCTL_PS))
--		MACbPSWakeup(priv->PortOffset);
--
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	priv->bPWBitOn = false;
+No need to change anything now but in the future please avoid empty
+commit logs. And at some point I'll start automatically rejecting
+patches with empty commit logs so better get used to this already now.
+
 -- 
-2.1.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Kalle Valo
