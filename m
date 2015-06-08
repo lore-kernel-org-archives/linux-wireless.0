@@ -1,36 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43221 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753607AbbFBNkK (ORCPT
+Received: from smtp-2.httrack.com ([195.154.67.106]:43193 "EHLO
+	smtp-2.httrack.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752405AbbFHSnS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 09:40:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <huxm@marvell.com>
-Subject: Re: [PATCHv4 00/17] mwifiex patches
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
-Date: Tue, 02 Jun 2015 16:40:01 +0300
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com> (Avinash
-	Patil's message of "Mon, 1 Jun 2015 23:31:58 +0530")
-Message-ID: <874mmqut3i.fsf@kamboji.qca.qualcomm.com> (sfid-20150602_154015_199268_A3782F22)
+	Mon, 8 Jun 2015 14:43:18 -0400
+Date: Mon, 8 Jun 2015 20:42:25 +0200 (CEST)
+From: Xavier Roche <roche@httrack.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Trivial Patch Monkey <trivial@kernel.org>
+Subject: Re: [PATCH] rtl8723au: replaced asm/atomic.h by linux/atomic.h
+In-Reply-To: <87oakqlo7r.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <alpine.DEB.2.11.1506082041370.21482@proliant.localnet> (sfid-20150608_204323_305813_0C70CAAF)
+References: <1432791571-17262-1-git-send-email-roche@httrack.com> <87oakqlo7r.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avinash Patil <patila@marvell.com> writes:
+Hi Kalle,
 
-> This patch series mainly adds enhancements for mwifiex AP. 
-> With this series, we support verbose information in station dump command
-> also information about AP link.
-> Another important enhancement is related to parsing IEs from tail of beacondata.
-> Few issues seen during DFS testing are also fixed in this series.
+On Mon, 8 Jun 2015, Kalle Valo wrote:
+> For staging patches please prefix the title "staging: "
+> Here's a tip how you can check what commit title you should use:
+> git log --oneline drivers/staging/rtl8723au/include/rtw_io.h
 
-When you send a new version of a patch or patchset, please add a
-changelog so that people don't have to guess what has changed since
-previous version. For example, this cover letter is a good place to add
-it. You can find lots of examples from the mailing list archives.
+Thanks a lot!
 
--- 
-Kalle Valo
+Xavier
