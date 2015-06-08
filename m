@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47578 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752078AbbFBUST (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:33835 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbbFHIHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 16:18:19 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 8 Jun 2015 04:07:35 -0400
+Received: by oigz2 with SMTP id z2so24877142oig.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 01:07:35 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [1/6] mwifiex: fix SDIO firmware dump problem
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1432647272-5734-2-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20150602201819.4C74F13FFCF@smtp.codeaurora.org> (sfid-20150602_221822_903968_6CFC691F)
-Date: Tue,  2 Jun 2015 20:18:19 +0000 (UTC)
+Date: Mon, 8 Jun 2015 16:07:35 +0800
+Message-ID: <CAEFj986CCryd1fK6NpoQYOmCiu+KRjq8RsSgvWqQOvLBPvFoeg@mail.gmail.com> (sfid-20150608_100739_893536_7D774138)
+Subject: Re: [PATCH] mac80211: Fix a case of incorrect metric used when
+ forwarding a PREQ
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi, Alexis Green
 
-> It's been observed that firmware doesn't go back to normal
-> state when all firmware memories are dumped. As a result,
-> further commands are blocked. This happens due to missing
-> driver change of writing READ DONE to control register for
-> SDIO interface.
-> 
-> This patch adds a missing change to fix the problem.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+I just take a look back on the code before implementing the Proactive
+PREQ for PREP. For the case of reply and forward (target_flags &
+MP_F_RF), the previous metric used is the one which resolved from
+mpath->metric.
 
-Thanks, 6 patches applied to wireless-drivers-next.git:
+Refer here: https://github.com/o11s/open80211s/blob/o11s-0.4.2/net/mac80211/mesh_hwmp.c
 
-e065ddb89175 mwifiex: fix SDIO firmware dump problem
-0769b27739ee mwifiex: fix a possible double free issue
-38b130e22e40 mwifiex: dump driver information for PCIe interface
-9cc0dbf04367 mwifiex: minor changes in debug messages
-fc697159ad4c mwifiex: use generic name 'device dump'
-57670ee882d4 mwifiex: device dump support via devcoredump framework
+But to say that, I cannpt confirm whether this is correct. The
+standard 802.11-2012 has no longer specified bit-1 MP_F_RF (Refer
+section 8.4.2.115 per target flag). So maybe it is not relevant
+anymore. We may need to remove as well.
 
-Kalle Valo
+----
+Chun-Yeow
