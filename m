@@ -1,128 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45477 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752141AbbFAMdm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:33:42 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CT8Mp017226
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:33:41 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk4v-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:33:41 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 10/17] mwifiex: dump station support in uap mode
-Date: Mon, 1 Jun 2015 23:32:08 +0530
-Message-ID: <1433181735-15712-11-git-send-email-patila@marvell.com> (sfid-20150601_143350_399735_D21CEB33)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx02.posteo.de ([89.146.194.165]:41800 "EHLO mx02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932141AbbFHNrU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Jun 2015 09:47:20 -0400
+Message-ID: <1433771289.28058.24.camel@embedded.rocks> (sfid-20150608_154728_936726_D253384B)
+Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Date: Mon, 08 Jun 2015 15:48:09 +0200
+In-Reply-To: <55758D7E.3000603@broadcom.com>
+References: <1433766944.28058.16.camel@embedded.rocks>
+	 <55758D7E.3000603@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Hi Arend,
 
-This patch extend cfg80211 dump_station handler, support for
-dump stations associated to mwifiex micro AP.
+On Mo, 2015-06-08 at 14:41 +0200, Arend van Spriel wrote:
+> On 06/08/15 14:35, Jörg Krause wrote:
+> > Hi,
+> > 
+> > I've trouble creating the p2p interface on a BCM43362 wifi device
+> > running Linux kernel 4.0.4:
+> > 
+> >      # dmesg | grep brcmfmac
+> >      [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: Firmware 
+> > version =
+> >      wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01
+> > -b30a427d
+> >      [    7.158905] brcmfmac: brcmf_cfg80211_reg_notifier: not a 
+> > ISO3166
+> >      code
+> >      [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: timeout 
+> > occurred
+> > 
+> > Trying to add the p2p interface manually:
+> > 
+> >      # iw phy0 interface add p2p0 type __p2pdev
+> >      [  372.042704] brcmfmac: brcmf_link_down: WLC_DISASSOC failed 
+> > (-52)
+> >      [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: timeout 
+> > occurred
+> >      [  373.679377] brcmfmac: brcmf_cfg80211_del_key: invalid key 
+> > index (4)
+> >      [  373.685733] brcmfmac: brcmf_cfg80211_del_key: invalid key 
+> > index (5)
+> > 
+> > Any idea?
+> 
+> Wondering whether it is similar to what Rafal reported. Can you do a 
+> hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 51 +++++++++++++++++++++++++++++----
- 1 file changed, 46 insertions(+), 5 deletions(-)
+I managed to set up the p2p interface by recompiling the kernel with
+CONFIG_BRCMDBG and loading the brcmfmac module with p2pon=1.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index ddeb919..5274502 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1229,6 +1229,7 @@ mwifiex_parse_htinfo(struct mwifiex_private *priv, u8 tx_htinfo,
-  */
- static int
- mwifiex_dump_station_info(struct mwifiex_private *priv,
-+			  struct mwifiex_sta_node *node,
- 			  struct station_info *sinfo)
- {
- 	u32 rate;
-@@ -1238,6 +1239,30 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
- 			BIT(NL80211_STA_INFO_TX_BITRATE) |
- 			BIT(NL80211_STA_INFO_SIGNAL) | BIT(NL80211_STA_INFO_SIGNAL_AVG);
- 
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
-+		if (!node)
-+			return -ENOENT;
-+
-+		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
-+				BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->inactive_time =
-+			jiffies_to_msecs(jiffies - node->stats.last_rx);
-+
-+		sinfo->signal = node->stats.rssi;
-+		sinfo->signal_avg = node->stats.rssi;
-+		sinfo->rx_bytes = node->stats.rx_bytes;
-+		sinfo->tx_bytes = node->stats.tx_bytes;
-+		sinfo->rx_packets = node->stats.rx_packets;
-+		sinfo->tx_packets = node->stats.tx_packets;
-+		sinfo->tx_failed = node->stats.tx_failed;
-+
-+		mwifiex_parse_htinfo(priv, node->stats.last_tx_htinfo,
-+				     &sinfo->txrate);
-+		sinfo->txrate.legacy = node->stats.last_tx_rate * 5;
-+
-+		return 0;
-+	}
-+
- 	/* Get signal information from the firmware */
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_RSSI_INFO,
- 			     HostCmd_ACT_GEN_GET, 0, NULL, true)) {
-@@ -1304,7 +1329,7 @@ mwifiex_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (memcmp(mac, priv->cfg_bssid, ETH_ALEN))
- 		return -ENOENT;
- 
--	return mwifiex_dump_station_info(priv, sinfo);
-+	return mwifiex_dump_station_info(priv, NULL, sinfo);
- }
- 
- /*
-@@ -1315,13 +1340,29 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 			      int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	static struct mwifiex_sta_node *node;
- 
--	if (!priv->media_connected || idx)
--		return -ENOENT;
-+	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
-+	    priv->media_connected && idx == 0) {
-+		ether_addr_copy(mac, priv->cfg_bssid);
-+		return mwifiex_dump_station_info(priv, NULL, sinfo);
-+	} else if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
-+		mwifiex_send_cmd(priv, HOST_CMD_APCMD_STA_LIST,
-+				 HostCmd_ACT_GEN_GET, 0, NULL, true);
-+
-+		if (node && (&node->list == &priv->sta_list)) {
-+			node = NULL;
-+			return -ENOENT;
-+		}
- 
--	memcpy(mac, priv->cfg_bssid, ETH_ALEN);
-+		node = list_prepare_entry(node, &priv->sta_list, list);
-+		list_for_each_entry_continue(node, &priv->sta_list, list) {
-+			ether_addr_copy(mac, node->mac_addr);
-+			return mwifiex_dump_station_info(priv, node, sinfo);
-+		}
-+	}
- 
--	return mwifiex_dump_station_info(priv, sinfo);
-+	return -ENOENT;
- }
- 
- static int
--- 
-1.8.1.4
+I had a discussion some month ago with Hante Meulemann about setting up
+the p2p interface. This is one of his replies:
 
+    "For what I can see from the log is that we don’t get the event from
+    the FW indicating that the p2p interface was created. This probably
+    means that there is a bug in this FW for this device. I need to discuss
+    this to see how much priority we can give this. The best option for you
+    for the moment is to use the legacy method with the 'p2pon=1' command."
+
+Best regards
+Jörg Krause
