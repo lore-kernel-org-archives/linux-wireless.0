@@ -1,79 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14641 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751078AbbFFBDk (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:42293 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbbFIUyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 21:03:40 -0400
-From: David Lin <dlin@marvell.com>
-To: Alexis Green <agreen@cococorp.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>,
-	"Chor Teck Law" <ctlaw@marvell.com>
-Subject: RE: [PATCH] mwlwifi: Initial submission of wireless driver to
- mainline
-Date: Sat, 6 Jun 2015 01:03:34 +0000
-Message-ID: <89cd1cc96d164de18a88c9030498eb45@SC-EXCH02.marvell.com> (sfid-20150606_030344_069967_3C77F7C0)
-References: <141c66f2950e4832a2bd99064db75970@SC-EXCH02.marvell.com>
-	<557073D2.4080704@candelatech.com>
-	<a244e659293f480fb9a53ee6a83f03bf@SC-EXCH02.marvell.com>
-	<55712547.4010408@candelatech.com>
-	<30794f68f6374c509f1f98002ff7a7ab@SC-EXCH02.marvell.com>
- <CAAnMG+NaQ8YzC6g2X-1odoWmMJO7edzfFqUPaWBi3cn7iLF2sw@mail.gmail.com>
-In-Reply-To: <CAAnMG+NaQ8YzC6g2X-1odoWmMJO7edzfFqUPaWBi3cn7iLF2sw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 9 Jun 2015 16:54:43 -0400
+Date: Tue, 09 Jun 2015 13:54:42 -0700 (PDT)
+Message-Id: <20150609.135442.1357702617373015039.davem@davemloft.net> (sfid-20150609_230114_491391_F9A16557)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	gerrit@erg.abdn.ac.uk, alexkaltsas@gmail.com,
+	johannes.berg@intel.com
+Subject: Re: [PATCH 4.1] cfg80211: wext: clear sinfo struct before calling
+ driver
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1433878544-10749-1-git-send-email-johannes@sipsolutions.net>
+References: <1433878544-10749-1-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiAwNi8wNi8yMDE1IDY6MDEgQU0sIEFsZXhpcyBHcmVlbiB3cm90ZToNCj4gQXJlIHRoZXJl
-IHBsYW5zIHRvIGFkZCBzdXBwb3J0IGZvciA4MDIuMTFzIG1lc2ggcG9pbnQgbW9kZT8NCj4gDQpZ
-ZXMsIGl0IHdpbGwgYmUgd29ya2VkIG9uIGluIHRoZSBmdXR1cmUuDQoNClRoYW5rcywNCkRhdmlk
-DQo+DQo+IE9uIEZyaSwgSnVuIDUsIDIwMTUgYXQgODowOSBBTSwgRGF2aWQgTGluIDxkbGluQG1h
-cnZlbGwuY29tPiB3cm90ZToNCj4gPj4gT24gMDYvMDUvMjAxNSAxMjoyOSBQTSwgQmVuIEdyZWVh
-ciB3cm90ZToNCj4gPj4gT24gMDYvMDQvMjAxNSAwNzo0MSBQTSwgRGF2aWQgTGluIHdyb3RlOg0K
-PiA+PiA+PiBPbiAwNi8wMy8yMDE1IDA5OjU1IFBNLCBEYXZpZCBMaW4gd3JvdGU6DQo+ID4+ID4+
-PiBIaSBhbGwsDQo+ID4+ID4+Pg0KPiA+PiA+Pj4gICBIZXJld2l0aCwgSSBhbSBzdWJtaXR0aW5n
-IHRoZSBMaW51eCBkcml2ZXIgZm9yIFdSVDE5MDBBQy4gVGhlDQo+ID4+IHdvcmsNCj4gPj4gPj4+
-IHdhcyBpbml0aWFsbHkgZGV2ZWxvcGVkIGFzIHBhcnQgb2Ygb3BlbndydCBlZmZvcnQgYW5kIG1h
-aW50YWluZWQNCj4gPj4gPj4+IG9uIGh0dHBzOi8vZ2l0aHViLmNvbS9rYWxvei9td2x3aWZpLCB0
-aGFua3MgdG8gdGhlIGhvc3Qgd2hlcmUgaXQNCj4gPj4gPj4+IGlzIG51cnR1cmVkLg0KPiA+PiA+
-Pj4NCj4gPj4gPj4+ICAgUmVjZW50bHksIEkgaGF2ZSBhbHNvIHBhdGNoZWQgaXQgdG8gcGFzcyBj
-aGVja3BhdGNoLnBsIHNvIHRoYXQNCj4gPj4gPj4+IGl0IGNhbiBiZSBxdWFsaWZpZWQgZm9yIG1h
-aW5saW5lLg0KPiA+PiA+Pj4NCj4gPj4gPj4+ICAgVGhpcyBpcyBzdGlsbCB3b3JrIGluIHByb2dy
-ZXNzLCB3aXRoIDg4NjQgY2hpcHNldCBtb3JlIG1hdHVyZQ0KPiA+PiA+Pj4gYW5kIHRlc3RlZCwg
-d2hpbGUgODg5NyBmb3IgdGhlIHNpbWlsYXIgdXNlIGNhc2UgaXMgYWRkZWQNCj4gPj4gPj4+IHJl
-Y2VudGx5LiBXZSB3aWxsIGNvbnRpbnVlIHRvIG1haW50YWluIGFuZCBlbmhhbmNlIGl0Lg0KPiA+
-PiA+Pj4NCj4gPj4gPj4+IFdlIGhvcGUgdGhlIGNvbW11bml0eSB3aWxsIHdlbGNvbWUgdGhpcyBp
-bml0aWFsIHN1Ym1pc3Npb24hDQo+ID4+ID4+DQo+ID4+ID4+IERvIHlvdSBoYXZlIGFueSBub3Rl
-cyBvbiB3aGF0IGZlYXR1cmVzIHRoaXMgZHJpdmVyL05JQyBwcm92aWRlcz8NCj4gPj4gPj4NCj4g
-Pj4gPj4gRG9lcyBpdCByZXF1aXJlIGZpcm13YXJlLCBhbmQgaWYgc28sIGlzIHNvdXJjZSBhdmFp
-bGFibGU/DQo+ID4+ID4+DQo+ID4+ID4gU3VwcG9ydCBib3RoIDExYi9nL2Evbi9hYyBBUCBtb2Rl
-LCBhbmQgU1RBIG1vZGUgKHRob3VnaCB0aGUgcHJpbWFyeQ0KPiA+PiA+IHVzZSBjYXNlIGlzIEFQ
-KS4gRHJpdmVyIG1hdGNoZXMgbW9zdCBmZWF0dXJlcyBpbiBtYWM4MDIxMSBhbmQNCj4gPj4gPiBo
-b3N0YXBkL3N1cHBsaWNhbnQuIEFsbCBiYXNpYyBzZWN1cml0aWVzIG1vZGUgaGF2ZSBiZWVuIHZh
-bGlkYXRlZC4NCj4gPj4gPg0KPiA+PiA+IFllcywgaXQgd2lsbCByZXF1aXJlIGZpcm13YXJlIG1p
-Y3JvY29kZS4gTWF0Y2hpbmcgImJpbmFyeSIgaXMNCj4gPj4gPiByZXByb3ZpZGVkIGFzIGEgc2Vw
-YXJhdGUgLmJpbiBmaWxlKHMpIGZvciBlYWNoIGNoaXAuIFNvdXJjZSBjb2Rlcw0KPiA+PiA+IG9m
-IGNoaXAtZGVwZW5kZW50IG1pY3JvY29kZSB3aWxsIG5vdCBiZSBwcm92aWRlZC4NCj4gPj4NCj4g
-Pj4gQ2FuIGl0IGRvIG11bHRpcGxlIHZpcnR1YWwgc3RhdGlvbnMgKGFuZCBvdGhlciB2aXJ0dWFs
-IGRldmljZSBjb21iaW5hdGlvbnMpPw0KPiA+Pg0KPiA+PiBXaXRoIGF0aDEwaywgZm9yIGluc3Rh
-bmNlLCB0aGVyZSBpcyBhIGNvbXBsZXggZmlybXdhcmUgYmV0d2VlbiB0aGUNCj4gPj4gaG9zdCBh
-bmQgdGhlIE5JQyBoYXJkd2FyZSwgc28gYW55IGJ1Z3MgYW5kIGxpbWl0YXRpb25zIGluIHRoZQ0K
-PiA+PiBmaXJtd2FyZSBtYWtlIGl0IGFsbW9zdCBpbXBvc3NpYmxlIHRvIGFkZCBpbnRlcmVzdGlu
-ZyBmZWF0dXJlcyBvciBmaXgNCj4gPj4gYnVncyB3L291dCBiZWluZyBhYmxlIHRvIG1vZGlmeSB0
-aGUgZmlybXdhcmUgc291cmNlLg0KPiA+Pg0KPiA+PiBBbnkgY29tbWVudHMgb24gaG93ICd0aGlj
-aycgdGhlIG1hcnZlbGwgZmlybXdhcmUgaXM/DQo+ID4+DQo+ID4gWWVzLCB0aGUgcGFydGl0aW9u
-aW5nIHRlY2huaWNhbGx5IGFsbG93cyBtdWx0aXBsZSBsb2dpY2FsIGludGVyZmFjZXMuIEhvd2V2
-ZXIsDQo+IHRoaXMgb3BlbiBzb3VyY2UgZHJpdmVyIGlzIG5vdCB5ZXQgZGV2ZWxvcGVkIGZvciBt
-YW55IGNvbWJpbmF0aW9ucywgeWV0Lg0KPiA+DQo+ID4gSXQgaXMgaGFyZCB0byBjb21tZW50IGFi
-b3V0ICJ0aGlja25lc3MiIG9mIHRoZSBmaXJtd2FyZSA6KSBBbGwgKG1vc3Q/KSA4MDIuMTENCj4g
-bWdtdCBwYWNrZXRzIGFyZSBoYW5kbGVkIGluIGhvc3QgZHJpdmVyLiBUaGluayBvZiBtaWNyb2Nv
-ZGUgYXMgcGFydCBvZg0KPiBoYXJkd2FyZSBvciBjb250cm9sbGluZy9hYnN0cmFjdGluZyB0aGUg
-aGFyZHdhcmUuDQo+ID4NCj4gPiBUaGFua3MsDQo+ID4gRGF2aWQNCj4gPj4NCj4gPj4gLS0NCj4g
-Pj4gQmVuIEdyZWVhciA8Z3JlZWFyYkBjYW5kZWxhdGVjaC5jb20+DQo+ID4+IENhbmRlbGEgVGVj
-aG5vbG9naWVzIEluYyAgaHR0cDovL3d3dy5jYW5kZWxhdGVjaC5jb20NCj4gPiAtLQ0KPiA+IFRv
-IHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZQ0K
-PiA+IGxpbnV4LXdpcmVsZXNzIiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
-QHZnZXIua2VybmVsLm9yZw0KPiA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
-Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue,  9 Jun 2015 21:35:44 +0200
+
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Until recently, mac80211 overwrote all the statistics it could
+> provide when getting called, but it now relies on the struct
+> having been zeroed by the caller. This was always the case in
+> nl80211, but wext used a static struct which could even cause
+> values from one device leak to another.
+> 
+> Using a static struct is OK (as even documented in a comment)
+> since the whole usage of this function and its return value is
+> always locked under RTNL. Not clearing the struct for calling
+> the driver has always been wrong though, since drivers were
+> free to only fill values they could report, so calling this
+> for one device and then for another would always have leaked
+> values from one to the other.
+> 
+> Fix this by initializing the structure in question before the
+> driver method call.
+> 
+> This fixes https://bugzilla.kernel.org/show_bug.cgi?id=99691
+> 
+> Cc: stable@vger.kernel.org
+> Reported-by: Gerrit Renker <gerrit@erg.abdn.ac.uk>
+> Reported-by: Alexander Kaltsas <alexkaltsas@gmail.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> Dave, would you mind applying this patch directly? It seems a
+> bit pointless to send a pull request for a single patch again.
+
+Sure, I'll do that right now.
+
+Thanks Johannes.
