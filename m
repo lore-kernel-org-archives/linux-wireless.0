@@ -1,98 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34681 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458AbbFLPWO (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:36004 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751158AbbFIXUt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 11:22:14 -0400
-Message-ID: <557AF925.4000609@candelatech.com> (sfid-20150612_172218_501807_D5099CC1)
-Date: Fri, 12 Jun 2015 08:22:13 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 9 Jun 2015 19:20:49 -0400
+Received: by igbpi8 with SMTP id pi8so23104426igb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 16:20:49 -0700 (PDT)
+Message-ID: <557774B8.6000702@cococorp.com> (sfid-20150610_012053_575410_637AFCD9)
+Date: Tue, 09 Jun 2015 16:20:24 -0700
+From: Alexis Green <agreen@cococorp.com>
+Reply-To: agreen@cococorp.com
 MIME-Version: 1.0
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Question on beacon-miss offloading.
-References: <5579F87F.4070601@candelatech.com> <557A1BE9.7070305@candelatech.com> <CA+BoTQkLyaP-2sHiu7Wn-ZzGj2JnZs4qzQKGu7PiTtUy4d9xLQ@mail.gmail.com> <557ADEAB.80504@candelatech.com> <CABPxzYK6LWZW1JWoBBTs_QPWtupU17Pr7w3J-H6=QD1Xd5uLrg@mail.gmail.com>
-In-Reply-To: <CABPxzYK6LWZW1JWoBBTs_QPWtupU17Pr7w3J-H6=QD1Xd5uLrg@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Subject: [PATCH v2] mac80211: Fix a case of incorrect metric used when forwarding
+ a PREQ
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/12/2015 07:10 AM, Krishna Chaitanya wrote:
-> On Fri, Jun 12, 2015 at 6:59 PM, Ben Greear <greearb@candelatech.com> wrote:
->>
->>
->> On 06/11/2015 11:03 PM, Michal Kazior wrote:
->>>
->>> On 12 June 2015 at 01:38, Ben Greear <greearb@candelatech.com> wrote:
->>>>
->>>> On 06/11/2015 02:07 PM, Ben Greear wrote:
->>>>>
->>>>> In my ath10k CT firmware, I am disabling the beacon-miss offloading
->>>>> to save space and because it will not work with lots of virtual
->>>>> stations.
->>>>>
->>>>> But, it must be that I need some way to tell the stack that this
->>>>> feature is not enabled, because when suddenly kill my AP, then
->>>>> the ath10k station connected to it shows endless 'beacon loss' events
->>>>> in 'iw events' output, but it never actually loses connection.
->>>>>
->>>>> Stock firmware works fine, so probably I just need to disable
->>>>> some feature flag when registering the ath10k hardware
->>>>> when using CT firmware.
->>>>>
->>>>> With stock firmware, I see a quick dissassociation due to inactivity.
->>>>>
->>>>> I am having poor luck finding how a driver tells the stack
->>>>> it has beacon miss offload or not, so, does anyone know how
->>>>> this is controlled?
->>>>
->>>>
->>>> I still am not sure why stock firmware works, but it appears
->>>> the reason mine is failing is that the ACK status for mgt frames
->>>> is always set to TRUE since the ath10k wmi-mgt-tx API is so
->>>> lame.  So, mac80211 does a probe, ath10k lies and says it was
->>>> acked, and mac80211 then things all is well for another few
->>>> seconds.
->>>
->>>
->>> mac80211 shouldn't do a Probe Req to an AP on beacon loss because
->>> ath10k advertises it supports tx-status report. Hence mac80211 should
->>> use NullFunc frames which shouldn't go through wmi-mgmt-tx but htt
->>> tx-frm.
->>>
->>> But then again: NullFunc status reporting via htt tx-frm was broken on
->>> 10.1 if memory serves right. I believe it was fixed in 10.2 or 10.2.4.
->>>
->>> This problem has been effectively obscured on stock 10.1 by the
->>> offloaded beacon miss.
->>
->>
->> For what it's worth, I looked at the 4.0.4 ath10k yesterday, and it appears
->> it
->> ignores the message that the 10.1 firmware sends when beacon loss happens
->> anyway.  Maybe I misread the firmware code..it's a pile of indirection.
->>
->> Do you know how the firmware is supposed to signal beacon loss to
->> the host (from the host's perspective).
-> 
-> Normally driver would advertise IEEE80211_HW_CONNECTION_MONITOR
-> to disable mac80211 from tracking connection. and driver should call
-> ieee80211_beacon_loss up on receiving beacon loss event from FW
-> which triggers disconnection in mac80211.
+This patch fixes a bug in hwmp_preq_frame_process where the wrong metric
+can be used when forwarding a PREQ. This happens because the code uses
+the same metric variable to record the value of the metric to the source
+of the PREQ and the value of the metric to the target of the PREQ.
 
+This comes into play when both reply and forward are set which happens
+when IEEE80211_PREQ_PROACTIVE_PREP_FLAG is set and when MP_F_DO | MP_F_RF
+is set. The original code had a special case to handle the first case
+but not the second.
 
-I do not see any calls to beacon_loss() in the ath10k driver,
-so probably that firmware feature is not just fully wired up
-to the driver.  Just as well since that firmware feature is
-disabled in my (-diet variant) firmware entirely.
+The patch uses distinct variables for the two metrics which makes the
+code flow much clearer and removes the need to restore the original
+value of metric when forwarding.
 
-Thanks,
-Ben
+Signed-off-by: Alexis Green <agreen@cococorp.com>
+CC: Jesse Jones <jjones@cococorp.com>
 
+---
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 214e63b..84d1044 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -510,14 +510,14 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 
+ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				    struct ieee80211_mgmt *mgmt,
+-				    const u8 *preq_elem, u32 metric)
++				    const u8 *preq_elem, u32 orig_metric)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_path *mpath = NULL;
+ 	const u8 *target_addr, *orig_addr;
+ 	const u8 *da;
+ 	u8 target_flags, ttl, flags;
+-	u32 orig_sn, target_sn, lifetime, orig_metric;
++	u32 orig_sn, target_sn, lifetime, target_metric;
+ 	bool reply = false;
+ 	bool forward = true;
+ 	bool root_is_gate;
+@@ -528,7 +528,6 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	target_sn = PREQ_IE_TARGET_SN(preq_elem);
+ 	orig_sn = PREQ_IE_ORIG_SN(preq_elem);
+ 	target_flags = PREQ_IE_TARGET_F(preq_elem);
+-	orig_metric = metric;
+ 	/* Proactive PREQ gate announcements */
+ 	flags = PREQ_IE_FLAGS(preq_elem);
+ 	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+@@ -539,7 +538,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		mhwmp_dbg(sdata, "PREQ is for us\n");
+ 		forward = false;
+ 		reply = true;
+-		metric = 0;
++		target_metric = 0;
+ 		if (time_after(jiffies, ifmsh->last_sn_update +
+ 					net_traversal_jiffies(sdata)) ||
+ 		    time_before(jiffies, ifmsh->last_sn_update)) {
+@@ -556,7 +555,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				reply = true;
+ 				target_addr = sdata->vif.addr;
+ 				target_sn = ++ifmsh->sn;
+-				metric = 0;
++				target_metric = 0;
+ 				ifmsh->last_sn_update = jiffies;
+ 			}
+ 			if (root_is_gate)
+@@ -574,7 +573,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			} else if ((!(target_flags & MP_F_DO)) &&
+ 					(mpath->flags & MESH_PATH_ACTIVE)) {
+ 				reply = true;
+-				metric = mpath->metric;
++				target_metric = mpath->metric;
+ 				target_sn = mpath->sn;
+ 				if (target_flags & MP_F_RF)
+ 					target_flags |= MP_F_DO;
+@@ -593,7 +592,8 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
+ 					       orig_sn, 0, target_addr,
+ 					       target_sn, mgmt->sa, 0, ttl,
+-					       lifetime, metric, 0, sdata);
++					       lifetime, target_metric, 0,
++					       sdata);
+ 		} else {
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 		}
+@@ -619,13 +619,12 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		if (flags & IEEE80211_PREQ_PROACTIVE_PREP_FLAG) {
+ 			target_addr = PREQ_IE_TARGET_ADDR(preq_elem);
+ 			target_sn = PREQ_IE_TARGET_SN(preq_elem);
+-			metric = orig_metric;
+ 		}
+ 
+ 		mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
+ 				       orig_sn, target_flags, target_addr,
+ 				       target_sn, da, hopcount, ttl, lifetime,
+-				       metric, preq_id, sdata);
++				       orig_metric, preq_id, sdata);
+ 		if (!is_multicast_ether_addr(da))
+ 			ifmsh->mshstats.fwded_unicast++;
+ 		else
