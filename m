@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43873 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111AbbFKOr6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45266 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbbFILYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 10:47:58 -0400
-Date: Thu, 11 Jun 2015 07:47:58 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Dean.lee" <dean.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: modify odd print message
-Message-ID: <20150611144758.GA3671@kroah.com> (sfid-20150611_164802_194789_4AE6D53A)
-References: <1433994264-26509-1-git-send-email-dean.lee@atmel.com>
- <20150611035037.GA22550@kroah.com>
- <5579140C.9070905@atmel.com>
+	Tue, 9 Jun 2015 07:24:52 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brent Taylor <motobud@gmail.com>
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath6kl: Fix multiple clients associating in AP mode
+References: <1431146307-6442-1-git-send-email-motobud@gmail.com>
+Date: Tue, 09 Jun 2015 14:24:46 +0300
+In-Reply-To: <1431146307-6442-1-git-send-email-motobud@gmail.com> (Brent
+	Taylor's message of "Fri, 8 May 2015 23:38:27 -0500")
+Message-ID: <878ubtf7k1.fsf@kamboji.qca.qualcomm.com> (sfid-20150609_132456_417146_C768EB2D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5579140C.9070905@atmel.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2015 at 01:52:28PM +0900, Dean.lee wrote:
-> 
-> 
-> On 2015년 06월 11일 12:50, Greg KH wrote:
-> >On Thu, Jun 11, 2015 at 12:44:24PM +0900, Dean Lee wrote:
-> >>This driver has odd message in print string.
-> >>So this patch removes the data type.
-> >>
-> >>Signed-off-by: Dean Lee <dean.lee@atmel.com>
-> >>---
-> >>  drivers/staging/wilc1000/host_interface.c | 3 +--
-> >>  1 file changed, 1 insertion(+), 2 deletions(-)
-> >>
-> >>diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> >>index 1ecb373..9e055c4 100644
-> >>--- a/drivers/staging/wilc1000/host_interface.c
-> >>+++ b/drivers/staging/wilc1000/host_interface.c
-> >>@@ -703,7 +703,7 @@ static WILC_Sint32 Handle_SetOperationMode(void *drvHandler, tstrHostIfSetOperat
-> >>  	strWID.s32ValueSize = sizeof(WILC_Uint32);
-> >>  	/*Sending Cfg*/
-> >>-	PRINT_INFO(HOSTINF_DBG, "(size_t)pstrWFIDrv= %p \n", pstrWFIDrv);
-> >>+	PRINT_INFO(HOSTINF_DBG, "pstrWFIDrv= %p \n", pstrWFIDrv);
-> >Why are you printing a kernel pointer to userspace always?  That's not a
-> >good idea, why not just delete this line, how useful is it?
-> >
-> >thanks,
-> >
-> >greg k-h
-> we need this line for deep level debugging.
-> sometime we need check and compare pointer value.
+Brent Taylor <motobud@gmail.com> writes:
 
-Really, even at this stage of development for the code?
+> When one client is associated and connected to an ar6003 hw version
+> 2.0 with firmware 3.1.1.149, and another client tries to connect, the
+> first client's MAC address is lost in the station list because the
+> "aid" is always "1".  The structure "wmi_connect_event" has the "aid"
+> as the second byte in the message, but it should be the first byte.
+>
+> This patch has been tested with linux-3.10.40
+>
+> Signed-off-by: Brent Taylor <motobud@gmail.com>
 
-> but we have plan for rework print message.
-> delete unused & not required print message.
+Thanks, applied to ath.git.
 
-Good, all of them need to be reworked.
-
-thanks,
-
-greg k-h
+-- 
+Kalle Valo
