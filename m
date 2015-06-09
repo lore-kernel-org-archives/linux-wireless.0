@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:50468 "EHLO plane.gmane.org"
+Received: from mail.neratec.com ([46.140.151.2]:49802 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752411AbbFKIAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 04:00:05 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Z2xP9-0003ZU-8x
-	for linux-wireless@vger.kernel.org; Thu, 11 Jun 2015 10:00:03 +0200
-Received: from c-4dabdb54.030-194-6d6c6d4.cust.bredbandsbolaget.se ([84.219.171.77])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 10:00:03 +0200
-Received: from quite by c-4dabdb54.030-194-6d6c6d4.cust.bredbandsbolaget.se with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 10:00:03 +0200
+	id S933205AbbFIPfK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 11:35:10 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.neratec.com (Postfix) with ESMTP id CE8C3A06B60
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Jun 2015 17:27:10 +0200 (CEST)
+From: Matthias May <matthias.may@neratec.com>
 To: linux-wireless@vger.kernel.org
-From: Daniel Lublin <quite@hack.org>
-Subject: values in /proc/net/wireless are static, doesn't change; iwlwifi, Intel 6205
-Date: Thu, 11 Jun 2015 07:55:23 +0000 (UTC)
-Message-ID: <loom.20150611T094911-428@post.gmane.org> (sfid-20150611_100009_243262_EFBCBBEB)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Matthias May <matthias.may@neratec.com>
+Subject: [PATCH] cfg80211: check correct maximum bandwidth for quarter and half rate.
+Date: Tue,  9 Jun 2015 17:27:05 +0200
+Message-Id: <1433863625-30579-1-git-send-email-matthias.may@neratec.com> (sfid-20150609_173523_482237_45077999)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm on a thinkpad X230 with Intel Advanced-N 6205 card, iwlwifi driver. 
+When using quarter and half rates we might want to use self defined
+frequencies with self defined country codes closer to the border.
+To avoid these frequencies to be disabled, we need to check if
+the frequency fits the band with the actual bandwidth.
 
-Reading /proc/net/wireless, I find that the values there does not change. No 
-matter me moving around, changing distance to my AP. On my old machine (X60), 
-I was used to sometimes using for example wavemon(1) to find out where I get 
-the best reception. I this a limitation of my network card, driver, or some 
-combitation? As designed, or a flaw?
+Signed-off-by: Matthias May <matthias.may@neratec.com>
+---
+ net/wireless/reg.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-The values in question: Quality link/level/noise: 52.  -58.  -256
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fc2f135..c8fabda 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1016,6 +1016,7 @@ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+ 	for (i = 0; i < regd->n_reg_rules; i++) {
+ 		const struct ieee80211_reg_rule *rr;
+ 		const struct ieee80211_freq_range *fr = NULL;
++		u32 max_bw = MHZ_TO_KHZ(20);
+ 
+ 		rr = &regd->reg_rules[i];
+ 		fr = &rr->freq_range;
+@@ -1028,8 +1028,10 @@ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+ 		 */
+ 		if (!band_rule_found)
+ 			band_rule_found = freq_in_rule_band(fr, center_freq);
++		if (fr->max_bandwidth_khz < max_bw)
++			max_bw = fr->max_bandwidth_khz;
+ 
+-		bw_fits = reg_does_bw_fit(fr, center_freq, MHZ_TO_KHZ(20));
++		bw_fits = reg_does_bw_fit(fr, center_freq, max_bw);
+ 
+ 		if (band_rule_found && bw_fits)
+ 			return rr;
+-- 
+2.1.4
 
