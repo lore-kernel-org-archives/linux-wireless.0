@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14692 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753329AbbFOLET (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:35507 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753738AbbFIUAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 07:04:19 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t5FB03mX024596
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2015 04:04:18 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1v042959k5-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2015 04:04:18 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: add missing break statement in switch case
-Date: Mon, 15 Jun 2015 04:03:35 -0700
-Message-ID: <1434366215-1107-1-git-send-email-akarwar@marvell.com> (sfid-20150615_130423_009309_60822EF7)
+	Tue, 9 Jun 2015 16:00:52 -0400
+Received: by iesa3 with SMTP id a3so20847652ies.2
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 13:00:52 -0700 (PDT)
+Message-ID: <557745EB.9080907@cococorp.com> (sfid-20150609_220106_006787_5643C673)
+Date: Tue, 09 Jun 2015 13:00:43 -0700
+From: Alexis Green <agreen@cococorp.com>
+Reply-To: agreen@cococorp.com
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Subject: [PATCH v2]: mac80211: Always check rates and capabilities in mesh
+ mode
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds missing break statement at the end of
-EVENT_BT_COEX_WLAN_PARA_CHANGE switch section.
+In mesh mode there is a race between establishing links and processing
+rates and capabilities in beacons. This is very noticeable with slow
+beacons (e.g. beacon intervals of 1s) and manifested for us as stations
+using minstrel when minstrel_ht should be used. Fixed by changing
+mesh_sta_info_init so that it always checks rates and such if it has not
+already done so.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Alexis Green <agreen@cococorp.com>
+CC: Jesse Jones <jjones@cococorp.com>
+
 ---
- drivers/net/wireless/mwifiex/sta_event.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index ac229ef..848de26 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -592,6 +592,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		dev_dbg(adapter->dev, "EVENT: BT coex wlan param update\n");
- 		mwifiex_bt_coex_wlan_param_update_event(priv,
- 							adapter->event_skb);
-+		break;
- 	default:
- 		mwifiex_dbg(adapter, ERROR, "event: unknown event id: %#x\n",
- 			    eventcause);
--- 
-1.8.1.4
-
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index ac843fc..54656af 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -394,8 +394,9 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 	sta->last_rx = jiffies;
+ 
+ 	/* rates and capabilities don't change during peering */
+-	if (sta->plink_state == NL80211_PLINK_ESTAB)
++	if (sta->plink_state == NL80211_PLINK_ESTAB && sta->processed_beacon)
+ 		goto out;
++	sta->processed_beacon = true;
+ 
+ 	if (sta->sta.supp_rates[band] != rates)
+ 		changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 9bd1e97..226f8ca4 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -369,6 +369,8 @@ struct ieee80211_fast_tx {
+  * @rx_msdu: MSDUs received from this station, using IEEE80211_NUM_TID
+  *	entry for non-QoS frames
+  * @fast_tx: TX fastpath information
++ * @processed_beacon: set to true after peer rates and capabilities are
++ *	processed
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -473,6 +475,7 @@ struct sta_info {
+ 	enum nl80211_mesh_power_mode local_pm;
+ 	enum nl80211_mesh_power_mode peer_pm;
+ 	enum nl80211_mesh_power_mode nonpeer_pm;
++	bool processed_beacon;
+ #endif
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
