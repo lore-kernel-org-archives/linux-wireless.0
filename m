@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48227 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751248AbbFKNXS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 09:23:18 -0400
-Message-ID: <55798BC5.3030800@candelatech.com> (sfid-20150611_152321_846540_9EF8EF6C)
-Date: Thu, 11 Jun 2015 06:23:17 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Anyone tried ath10k AP with 40Mhz operation?
-References: <55789EBF.2060501@candelatech.com> <CA+BoTQmWmrkCjTkq9R9qXZBqq=ynNKdsgn4uLNAucetXy39GRQ@mail.gmail.com>
-In-Reply-To: <CA+BoTQmWmrkCjTkq9R9qXZBqq=ynNKdsgn4uLNAucetXy39GRQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:51895 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932181AbbFIHdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 03:33:11 -0400
+Message-ID: <1433835188.1892.5.camel@sipsolutions.net> (sfid-20150609_093320_660364_1CB3C389)
+Subject: Re: [WEXT]: multiple calls for SIOCGIWSTATS return same value
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gerrit Renker <gerrit@erg.abdn.ac.uk>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 09 Jun 2015 09:33:08 +0200
+In-Reply-To: <20150608195853.239a2622@erg.abdn.ac.uk>
+References: <20150606203721.28791bb3@erg.abdn.ac.uk>
+	 <1433747886.2106.5.camel@sipsolutions.net>
+	 <20150608195853.239a2622@erg.abdn.ac.uk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2015-06-08 at 19:58 -0600, Gerrit Renker wrote:
 
+> I am primarily referring to the signal level. The first call returns a
+> plausible value e.g. -78dB. All subsequent calls return the same value,
+> regardless of receiver position (moving the laptop).
+> 
+> It almost looks like a static value that gets initialized and then 
+> does not change.
+> 
+> There is a similar behaviour for scan results: the signal levels reported
+> for stations remain the same for all subsequent calls. Previously these
+> also changed with time and position of receiver.
 
-On 06/10/2015 11:54 PM, Michal Kazior wrote:
-> On 10 June 2015 at 22:31, Ben Greear <greearb@candelatech.com> wrote:
->> I'm trying this hostapd config file.  Beacons seem OK, and station
->> associates.  Station puts DHCP Discover on the air (using 20Mhz according
->> to wireshark).  AP reads this, and thinks it is sending a DHCP response back,
->> but sniffer never shows DHCP response on the air.
->
-> Is the MSDU carrying DHCP resp completed with "ok" status? Or is it
-> maybe no-ack or discarded?
+You mean BSSes, not stations, right? This is very strange - it seems
+those should be two entirely different code paths in the kernel.
 
-I'll check, and also try stock firmware to see if that makes a difference.
+What driver are you using? But then again, you said nl80211/iw works,
+right? Then the driver shouldn't matter.
 
->> Kernel is 4.0.4+, ath10k firmware is CT firmware, 10.1.467 based.
->>
->> I am curious if anyone else has tried to do this?
->>
->> Thanks,
->> Ben
->>
->> interface=vap50
->> driver=nl80211
->> logger_syslog=-1
->> logger_syslog_level=2
->> logger_stdout=-1
->> logger_stdout_level=2
->> ctrl_interface=/var/run/hostapd
->> ctrl_interface_group=0
->> ssid=ben-ota-2a
-> [...]
->
-> Works for me on c7b39fdeb479a7956a3c41638d527196ce295fdd
-> (github.com/kvalo/ath) with
->   AP: qca988x hw2.0, 10.1.467.2-1
->   STA: qca6174 hw2.2 (its a 2x2),
+Do you think you'd be able to use tracing?
 
-What NIC model is your qca6174?  In case I cannot
-get my setup to work, it would be nice to be able to be able to duplicate
-your configuration...
+trace-cmd report -e cfg80211 -e mac80211
 
+would report the calls to/from the driver and could perhaps shed some
+light. If you can record this, send me the resulting trace.dat file
+(compressed) off-list.
 
-Thanks,
-Ben
+johannes
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
