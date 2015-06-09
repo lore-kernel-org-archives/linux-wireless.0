@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39914 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54714 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558AbbFZHIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 03:08:02 -0400
-Message-ID: <1435302478.2106.2.camel@sipsolutions.net> (sfid-20150626_090806_391094_B1E2E098)
-Subject: Re: [PATCH v3] Add new mac80211 driver mwlwifi.
+	id S1752460AbbFITbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 15:31:19 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Lin <dlin@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
-Date: Fri, 26 Jun 2015 09:07:58 +0200
-In-Reply-To: <9228e2c85d5d4bab9ad2cc859fa6c946@SC-EXCH02.marvell.com>
-References: <909c66d61ee943f5a5ca202040944f2d@SC-EXCH02.marvell.com>
-	 <1435225107.2096.12.camel@sipsolutions.net>
-	 <9228e2c85d5d4bab9ad2cc859fa6c946@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Gerrit Renker <gerrit@erg.abdn.ac.uk>,
+	Alexander Kaltsas <alexkaltsas@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: wext: clear sinfo struct before calling driver
+Date: Tue,  9 Jun 2015 21:31:16 +0200
+Message-Id: <1433878276-5659-1-git-send-email-johannes@sipsolutions.net> (sfid-20150609_213123_047371_C1CBC261)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-06-26 at 01:25 +0000, David Lin wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Both the drivers are operable for the same chip part number 8897 and 
-> its modules (boards) manufactured out there. The PCI Device ID is a 
-> fixed value (by chip/manufacturer) on those modules. As said earlier, 
-> the two drivers are for mac80211 host mac, and firmware mac 
-> respectively. They serve different purposes. Users need to choose 
-> which driver they want to use for the same wifi hardware, and they 
-> cannot use both of them at the same time. The mwifiex is more widely 
-> used now and sta centric. We do not want to break it.
-> 
-> I am not sure but I believe they are also multiple flavors of driver 
-> for some other chips. Any advice how they are handled, considering 
-> that changing the hardware/board is not an option? I guess we want 
-> the community to be better served using the same hardware. Opinion 
-> from others are welcomed.
+Until recently, mac80211 overwrote all the statistics it could
+provide when getting called, but it now relies on the struct
+having been zeroed by the caller. This was always the case in
+nl80211, but wext used a static struct which could even cause
+values from one device leak to another.
 
-Hmm, interesting, I didn't realize it was the same device.
+Using a static struct is OK (as even documented in a comment)
+since the whole usage of this function and its return value is
+always locked under RTNL. Not clearing the struct for calling
+the driver has always been wrong though, since drivers were
+free to only fill values they could report, so calling this
+for one device and then for another would always have leaked
+values from one to the other.
 
-Perhaps it simply shouldn't conflict at build time, and you can
-recommend to blacklist one or the other? Or, in fact, return an error
-from probe if you can't find the correct firmware file, so the other
-driver would be attempted?
+Fix this by initializing the structure in question before the
+driver method call.
 
-> Although "-D__CHECK_ENDIAN__" does not put into Makefile, I had used 
-> "C=2 CF="-D__CHECK_ENDIAN__" to check warnings for endian and remove 
-> these warnings.
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=99691
 
-Ok. Then I guess my issues were mostly due to 64-bit system.
+Cc: stable@vger.kernel.org
+Reported-by: Gerrit Renker <gerrit@erg.abdn.ac.uk>
+Reported-by: Alexander Kaltsas <alexkaltsas@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/wext-compat.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> If you think we need to add this to Makefile and make sure zero 
-> warning messages, we will do that (only for sparser).
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index fff1bef6ed6d..fd682832a0e3 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1333,6 +1333,8 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 	memcpy(bssid, wdev->current_bss->pub.bssid, ETH_ALEN);
+ 	wdev_unlock(wdev);
+ 
++	memset(&sinfo, 0, sizeof(sinfo));
++
+ 	if (rdev_get_station(rdev, dev, bssid, &sinfo))
+ 		return NULL;
+ 
+-- 
+2.1.4
 
-Well it just helps not forget adding CF=-D... to the command line, it's
-equivalent. I just prefer it in a sense since then if people run with
-C=1 or C=2 they get that part for free, and since the driver is clean
-to start with then that's a good thing to do I think.
-
-I'll try to take a closer look later.
-
-johannes
