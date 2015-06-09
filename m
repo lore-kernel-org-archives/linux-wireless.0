@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:36653 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495AbbFMOQs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2015 10:16:48 -0400
-Received: by qcjl8 with SMTP id l8so16764291qcj.3
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2015 07:16:47 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:54614 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754076AbbFIS5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 14:57:49 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Bob Copeland <me@bobcopeland.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] mac80211: enable assoc check for mesh interfaces
-Date: Sat, 13 Jun 2015 10:16:31 -0400
-Message-Id: <1434204991-9579-1-git-send-email-me@bobcopeland.com> (sfid-20150613_161655_040676_550D28E8)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: handle aggregation session timeout on fast-xmit path
+Date: Tue,  9 Jun 2015 20:57:45 +0200
+Message-Id: <1433876265-25557-1-git-send-email-johannes@sipsolutions.net> (sfid-20150609_205804_902930_EAA90338)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We already set a station to be associated when peering completes, both
-in user space and in the kernel.  Thus we should always have an
-associated sta before sending data frames to that station.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Failure to check assoc state can cause crashes in the lower-level driver
-due to transmitting unicast data frames before driver sta structures
-(e.g. ampdu state in ath9k) are initialized.  This occurred when
-forwarding in the presence of fixed mesh paths: frames were transmitted
-to stations with whom we hadn't yet completed peering.
+The conversion to the fast-xmit path lost proper aggregation session
+timeout handling - the last_tx wasn't set on that path and the timer
+would therefore incorrectly tear down the session periodically (with
+those drivers/rate control algorithms that have a timeout.)
 
-Cc: stable@vger.kernel.org
-Reported-by: Alexis Green <agreen@cococorp.com>
-Tested-by: Jesse Jones <jjones@cococorp.com>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+In case of iwlwifi, this was every 5 seconds and caused significant
+throughput degradation.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tx.c | 3 ---
- 1 file changed, 3 deletions(-)
+ net/mac80211/tx.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8410bb3..d580f86 100644
+index 82e1e8484593..8410bb3bf5e8 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -311,9 +311,6 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 	if (tx->sdata->vif.type == NL80211_IFTYPE_WDS)
- 		return TX_CONTINUE;
+@@ -2719,9 +2719,12 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
+ 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+-		if (tid_tx &&
+-		    !test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state))
+-			return false;
++		if (tid_tx) {
++			if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state))
++				return false;
++			if (tid_tx->timeout)
++				tid_tx->last_tx = jiffies;
++		}
+ 	}
  
--	if (tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
--		return TX_CONTINUE;
--
- 	if (tx->flags & IEEE80211_TX_PS_BUFFERED)
- 		return TX_CONTINUE;
- 
+ 	/* after this point (skb is modified) we cannot return false */
 -- 
 2.1.4
 
