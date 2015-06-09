@@ -1,39 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58545 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965153AbbFJOHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 10:07:11 -0400
-Message-ID: <1433945228.3145.11.camel@sipsolutions.net> (sfid-20150610_160719_310759_5EF5285E)
-Subject: Re: pull-request: mac80211-next 2015-06-10
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Jun 2015 16:07:08 +0200
-In-Reply-To: <1433941752.3145.10.camel@sipsolutions.net> (sfid-20150610_150922_643165_9D6C6EF2)
-References: <1433941752.3145.10.camel@sipsolutions.net>
-	 (sfid-20150610_150922_643165_9D6C6EF2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:65104 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932252AbbFIKwy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 06:52:54 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: free wmi mgmt event skb when parsing fails
+References: <1433150613-5662-1-git-send-email-rmani@qti.qualcomm.com>
+Date: Tue, 9 Jun 2015 13:52:47 +0300
+In-Reply-To: <1433150613-5662-1-git-send-email-rmani@qti.qualcomm.com> (Raja
+	Mani's message of "Mon, 1 Jun 2015 14:53:33 +0530")
+Message-ID: <87oakpf91c.fsf@kamboji.qca.qualcomm.com> (sfid-20150609_125259_670011_A6E1BF33)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-10 at 15:09 +0200, Johannes Berg wrote:
+Raja Mani <rmani@qti.qualcomm.com> writes:
 
-> The following changes since commit c3eee1fb1d308564ada5f7ea57bc51efc6130b37:
-> 
->   Merge tag 'batman-adv-for-davem' of git://git.open-mesh.org/linux-merge (2015-06-09 20:23:52 -0700)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-06-10
-> 
-> for you to fetch changes up to 5df03344c5639fdd848cb87553956df7276a8645:
-> 
->   mac80211: convert HW flags to unsigned long bitmap (2015-06-10 13:48:42 +0200)
+> When wmi mgmt event function fails to parse given skb,
+> it should be freed on failure condition to avoid memory
+> leaks. Found this during the code review.
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 
-Oops, fixed a stupid bug in there so that's now commit
-30686bf7f5b3c30831761e188a6e3cb33580fa48. Sorry about that.
+Thanks, applied.
 
-johannes
-
+-- 
+Kalle Valo
