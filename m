@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:55486
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753295AbbFURrs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:65176 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958AbbFIKxg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2015 13:47:48 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH] ath9k_hw: fix device ID check for AR956x
-Date: Sun, 21 Jun 2015 19:47:46 +0200
-Message-Id: <1434908866-99327-1-git-send-email-nbd@openwrt.org> (sfid-20150621_194823_577967_49497318)
+	Tue, 9 Jun 2015 06:53:36 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2] ath10k: remove unused variable 'id' in ath10k_pci_tx_pipe_cleanup()
+References: <1433230455-11644-1-git-send-email-rmani@qti.qualcomm.com>
+Date: Tue, 9 Jun 2015 13:53:31 +0300
+In-Reply-To: <1433230455-11644-1-git-send-email-rmani@qti.qualcomm.com> (Raja
+	Mani's message of "Tue, 2 Jun 2015 13:04:15 +0530")
+Message-ID: <87k2vdf904.fsf@kamboji.qca.qualcomm.com> (sfid-20150609_125339_682446_EF98CC2E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because of the missing return, the macVersion value was being
-overwritten with an invalid register read
+Raja Mani <rmani@qti.qualcomm.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c | 1 +
- 1 file changed, 1 insertion(+)
+> mete_data is extracted from ce descriptor and stored in variable 'id'.
+> later, id is not used anywhere in the same function.
+>
+> Fixes: d84a512dca23 ("ath10k: remove transfer_id from
+> ath10k_hif_cb::tx_completion")
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5e15e8e..a31a680 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -279,6 +279,7 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 		return;
- 	case AR9300_DEVID_QCA956X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9561;
-+		return;
- 	}
- 
- 	val = REG_READ(ah, AR_SREV) & AR_SREV_ID;
+Thanks, applied.
+
 -- 
-2.2.2
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Kalle Valo
