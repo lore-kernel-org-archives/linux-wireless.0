@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59244 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752013AbbFLOA7 (ORCPT
+Received: from mail-yh0-f51.google.com ([209.85.213.51]:33928 "EHLO
+	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752117AbbFITp7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 10:00:59 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: aspriel@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2015 17:00:40 +0300
-Message-Id: <1434117644-3033-1-git-send-email-luca@coelho.fi> (sfid-20150612_160102_754090_19B51F09)
-Subject: [PATCH py80211 0/4] py80211: add support for scheduled scan
+	Tue, 9 Jun 2015 15:45:59 -0400
+Received: by yhid80 with SMTP id d80so11526631yhi.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 12:45:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1433879050.1892.13.camel@sipsolutions.net>
+References: <CAAnMG+MdokAvP4YNHnPX+o+0vi2vDfYB8Bj0x-kSci0yDa+bEg@mail.gmail.com>
+	<1433879050.1892.13.camel@sipsolutions.net>
+Date: Tue, 9 Jun 2015 12:45:58 -0700
+Message-ID: <CAAnMG+N6wUMxAnqKpxKaBJcZrYwEqF7PcDVkRbwj-XJVri1KOQ@mail.gmail.com> (sfid-20150609_214602_575379_E51B3728)
+Subject: Re: [PATCH] mac80211: Always check rates and capabilities in mesh mode
+From: Alexis Green <agreen@cococorp.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jesse Jones <jjones@cococorp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Will resend using a better mail client. Just found out that web-gmail is no-go.
 
-Hi Arend,
-
-Here's a small patchset that adds support for scheduled scans in
-py80211.
-
-I'm not sure this is the right approach, I added separate classes for
-each command, so feel free to ask me to change it completely if you
-want and I may or may not do it. :P
-
-Cheers,
-Luca.
-
-Luciano Coelho (4):
-  py80211: scan: spin base scan classes off scan_request
-  py80211: scan: add sched_scan start class
-  py80211: add sched_scan stop class
-  py80211: scan: add matchsets support for scheduled scans
-
- lib/scan.py | 157 +++++++++++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 119 insertions(+), 38 deletions(-)
-
--- 
-2.1.4
-
+On Tue, Jun 9, 2015 at 12:44 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2015-05-29 at 15:24 -0700, Alexis Green wrote:
+>> In mesh mode there is a race between establishing links and processing rates
+>> and capabilities in beacons. This is very noticeable with slow beacons (e.g.
+>> beacon intervals of 1s) and manifested for us as stations using minstrel when
+>> minstrel_ht should be used. Fixed by changing mesh_sta_info_init so that it
+>> always checks rates and such if it has not already done so.
+>>
+>> Signed-off-by: Alexis Green <agreen@cococorp.com>
+>> CC: Jesse Jones <jjones@cococorp.com>
+>
+> This patch doesn't apply, it's line-broken and whitespace damaged.
+>
+> johannes
+>
