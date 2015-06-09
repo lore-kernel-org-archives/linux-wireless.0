@@ -1,68 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:34798 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754571AbbFTUBh (ORCPT
+Received: from mail-yh0-f51.google.com ([209.85.213.51]:33789 "EHLO
+	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727AbbFIXQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Jun 2015 16:01:37 -0400
-Received: by lbbti3 with SMTP id ti3so88965987lbb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Jun 2015 13:01:36 -0700 (PDT)
+	Tue, 9 Jun 2015 19:16:53 -0400
+Received: by yhpn97 with SMTP id n97so13611931yhp.0
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 16:16:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5585B209.3040406@gmail.com>
-References: <5585B209.3040406@gmail.com>
-Date: Sat, 20 Jun 2015 23:01:36 +0300
-Message-ID: <CANUX_P0DYFVqxVHg6B8ZXLiLv97Gu8JuiXcUEA8rvPMW8+Jb2Q@mail.gmail.com> (sfid-20150620_220143_101639_0EF60217)
-Subject: Re: "No association and the time event is over already..."
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Blue Glacier <blueglacier414@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <3ae0dc14a0cf7a0d8008a49dd6b2376f@mail.gmail.com>
+References: <CAEFj986CCryd1fK6NpoQYOmCiu+KRjq8RsSgvWqQOvLBPvFoeg@mail.gmail.com>
+	<CAEFj987VjaQpwx2VMxYeH7TWcKVvjN6hSRsqTSbSXa1ZammezQ@mail.gmail.com>
+	<3ae0dc14a0cf7a0d8008a49dd6b2376f@mail.gmail.com>
+Date: Tue, 9 Jun 2015 16:16:53 -0700
+Message-ID: <CAAnMG+P8S-gUVZhdaGj2Yyqkmp_EYE8Ce=HOjnwEncfswFORCA@mail.gmail.com> (sfid-20150610_011658_147750_01080972)
+Subject: Re: [PATCH] mac80211: Fix a case of incorrect metric used when
+ forwarding a PREQ
+From: Alexis Green <agreen@cococorp.com>
+To: yeohchunyeow@gmail.com, Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jesse Jones <jjones@cococorp.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 20, 2015 at 9:33 PM, Blue Glacier <blueglacier414@gmail.com> wrote:
-> Hello,
->
-> my Intel Wireless 7265 chip suddenly stopped working. The Network Manager
-> shows that I am connected, but I cannot even ping to my home router. I
-> didn't change anything on my system.
+Resubmitting as v2 due to mangled white spaces.
 
-What is your AP? Can you reproduce consistently? If you disable WiFi
-and re-enable WiFi from the Network Manager, does it help?
-
+On Mon, Jun 8, 2015 at 10:28 AM, Jesse Jones <jjones@cococorp.com> wrote:
+> I took a look at the spec too and also didn't see mention of the MP_F_RF
+> flag. Section 13.10.9.3 for example talks about PREQ handling and in case E2
+> talks about sending replies back. It says to do that if target only is not
+> set which makes sense: MP_F_RF and MP_F_DO are exclusive options so it's
+> silly to use two different flags for them.
 >
-> The output of dmesg looks interesting:
+> But for the purposes of this patch that is a moot issue: the semantics of
+> the function don't change and the original code was both confusing and using
+> the wrong value for metric for the not target only, intermediate station
+> case.
 >
-> [  507.737606] wlan0: Connection to AP c0:25:06:ce:d2:e9 lost
-> [  507.806070] cfg80211: Calling CRDA for country: DE
-> [  508.379770] cfg80211: Calling CRDA for country: DE
-> [  511.332818] wlan0: authenticate with c0:25:06:ce:d2:e9
-> [  511.338625] wlan0: send auth to c0:25:06:ce:d2:e9 (try 1/3)
-> [  511.341600] wlan0: authenticated
-> [  511.343813] wlan0: associate with c0:25:06:ce:d2:e9 (try 1/3)
-> [  511.350128] wlan0: RX AssocResp from c0:25:06:ce:d2:e9 (capab=0x431
-> status=0 aid=8)
-> [  511.353700] wlan0: associated
-> [  511.645582] iwlwifi 0000:03:00.0: No association and the time event is
-> over already...
-> [  511.645642] wlan0: Connection to AP c0:25:06:ce:d2:e9 lost
-> [  511.688174] cfg80211: Calling CRDA to update world regulatory domain
+>   -- Jesse
 >
-> (repeated numerous times)
+> -----Original Message-----
+> From: linux-wireless-owner@vger.kernel.org
+> [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Yeoh Chun-Yeow
+> Sent: Monday, June 08, 2015 1:55 AM
+> To: linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] mac80211: Fix a case of incorrect metric used when
+> forwarding a PREQ
 >
-> I am using Debian 8 Jessie (stable) together with the firmware from your
-> server (iwlwifi-7265-9.ucode). The Kernel Version is 3.16.0-4-amd64.
-
-Can you try a more recent kernel with a more recent firmware?
-You can check https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/core_release
-if you want to update your driver without changing your kernel.
-
+> As mentioned in Section 13.10.9.3 Case E2, the PREQ forwarding should use
+> metric "as received + own metric toward transmitter of received PREQ". So
+> you are right.
 >
-> Any idea how to fix this?
-
-
+> Just MP_F_RF bit is no longer use. After replying with PREP, forwarding the
+> PREQ by setting the IEEE80211_PREQ_TO_FLAG in the per target flags.
 >
-> Jens
+> ---
+> Chun-Yeow
+>
+> On Mon, Jun 8, 2015 at 4:07 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+> wrote:
+>> Hi, Alexis Green
+>>
+>> I just take a look back on the code before implementing the Proactive
+>> PREQ for PREP. For the case of reply and forward (target_flags &
+>> MP_F_RF), the previous metric used is the one which resolved from
+>> mpath->metric.
+>>
+>> Refer here:
+>> https://github.com/o11s/open80211s/blob/o11s-0.4.2/net/mac80211/mesh_h
+>> wmp.c
+>>
+>> But to say that, I cannpt confirm whether this is correct. The
+>> standard 802.11-2012 has no longer specified bit-1 MP_F_RF (Refer
+>> section 8.4.2.115 per target flag). So maybe it is not relevant
+>> anymore. We may need to remove as well.
+>>
+>> ----
+>> Chun-Yeow
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
