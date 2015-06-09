@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58211 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036AbbFKFuQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46826 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753375AbbFILqB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 01:50:16 -0400
-Date: Wed, 10 Jun 2015 22:50:16 -0700 (PDT)
-Message-Id: <20150610.225016.2176334323311549412.davem@davemloft.net> (sfid-20150611_075023_781283_B7417A9C)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2015-06-10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1433945228.3145.11.camel@sipsolutions.net>
-References: <1433941752.3145.10.camel@sipsolutions.net>
-	<1433945228.3145.11.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 9 Jun 2015 07:46:01 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 0/6] wil6210 patches
+References: <1433685391-9026-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Tue, 09 Jun 2015 14:45:55 +0300
+In-Reply-To: <1433685391-9026-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Sun, 7 Jun 2015 16:56:25 +0300")
+Message-ID: <87r3plds0c.fsf@kamboji.qca.qualcomm.com> (sfid-20150609_134605_008949_0C834F88)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 10 Jun 2015 16:07:08 +0200
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-> On Wed, 2015-06-10 at 15:09 +0200, Johannes Berg wrote:
-> 
->> The following changes since commit c3eee1fb1d308564ada5f7ea57bc51efc6130b37:
->> 
->>   Merge tag 'batman-adv-for-davem' of git://git.open-mesh.org/linux-merge (2015-06-09 20:23:52 -0700)
->> 
->> are available in the git repository at:
->> 
->>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-06-10
->> 
->> for you to fetch changes up to 5df03344c5639fdd848cb87553956df7276a8645:
->> 
->>   mac80211: convert HW flags to unsigned long bitmap (2015-06-10 13:48:42 +0200)
-> 
-> Oops, fixed a stupid bug in there so that's now commit
-> 30686bf7f5b3c30831761e188a6e3cb33580fa48. Sorry about that.
+> Small fixes here and there; save for hidden SSID
+>
+> Hamad Kadmany (1):
+>   wil6210: Support hidden SSID
+>
+> Vladimir Kondratiev (5):
+>   wil6210: modparam for bcast ring size
+>   wil6210: add NIC memory region mac_rgf_ext
+>   wil6210: add per-MCS Rx stats
+>   wil6210: platform hooks for modile init/exit
+>   wil6210: reorder init sequence
 
-Pulled, thanks Johannes.
+Thanks, all six applied.
+
+-- 
+Kalle Valo
