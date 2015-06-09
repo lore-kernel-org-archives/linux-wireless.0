@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28590 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128AbbF3JlN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2015 05:41:13 -0400
-Date: Tue, 30 Jun 2015 12:40:52 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Dean Lee <dean.lee@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, nicolas.ferre@atmel.com, johnny.kim@atmel.com
-Subject: Re: [PATCH 6/6] staging: wilc1000: delete unused value.
-Message-ID: <20150630094052.GP28762@mwanda> (sfid-20150630_114117_836710_32F66001)
-References: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
- <1435653278-5168-6-git-send-email-dean.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435653278-5168-6-git-send-email-dean.lee@atmel.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:54832 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752117AbbFITvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 15:51:50 -0400
+Message-ID: <1433879507.1892.18.camel@sipsolutions.net> (sfid-20150609_215152_567519_4CE3F833)
+Subject: Re: [PATCH] mac80211: release channel on auth failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 09 Jun 2015 21:51:47 +0200
+In-Reply-To: <1433313373-28216-1-git-send-email-michal.kazior@tieto.com> (sfid-20150603_083621_837851_819E36BF)
+References: <1433313373-28216-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150603_083621_837851_819E36BF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 30, 2015 at 05:34:38PM +0900, Dean Lee wrote:
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 1b8991a..0772292 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -1946,7 +1946,7 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
->  
->  		wilc_bus_set_max_speed();
->  
-> -		if (g_linux_wlan->oup.wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, 0)) {
-> +		if (g_linux_wlan->oup.wlan_cfg_get(1, WID_FIRMWARE_VERSION, 1, NULL)) {
->  			int size;
->  			char Firmware_ver[20];
->  			size = g_linux_wlan->oup.wlan_cfg_get_value(
+On Wed, 2015-06-03 at 08:36 +0200, Michal Kazior wrote:
+> There were a few rare cases when upon
+> authentication failure channel wasn't released.
+> This could cause stale pointers to remain in
+> chanctx assigned_vifs after interface removal and
+> trigger general protection fault later.
 
-This change is not in the patch description.
+Applied. I've put this on -next, but perhaps it's needed for stable too?
+Maybe we can send it there next week or so ...
 
-regards,
-dan carpenter
+johannes
 
