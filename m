@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:35873 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148AbbFYBly (ORCPT
+Received: from mail-ig0-f193.google.com ([209.85.213.193]:34838 "EHLO
+	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753111AbbFIU3V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2015 21:41:54 -0400
-Received: by wguu7 with SMTP id u7so49936196wgu.3
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2015 18:41:53 -0700 (PDT)
+	Tue, 9 Jun 2015 16:29:21 -0400
+Received: by igdj8 with SMTP id j8so3666308igd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 13:29:20 -0700 (PDT)
 MIME-Version: 1.0
-Date: Thu, 25 Jun 2015 09:41:52 +0800
-Message-ID: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com> (sfid-20150625_034210_685296_EFECC8B2)
-Subject: RE: [PATCH] mac80211: mesh - always do every discovery retry
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1433880520.1892.23.camel@sipsolutions.net>
+References: <1433355732-7604-1-git-send-email-chaitanya.mgit@gmail.com> <1433880520.1892.23.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 10 Jun 2015 01:58:59 +0530
+Message-ID: <CABPxzYJ4zuFL62CPMASqpjCeT2dZMBDQNW5_QNMEP7fPzWoxzg@mail.gmail.com> (sfid-20150609_222937_303554_9A2A85C9)
+Subject: Re: [PATCH V3] mac80211: minstrel_ht: Handle Dynamic SMPS state of
+ the peer.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Instead of stopping path discovery when a path is found continue
-> attempting to find paths until we hit the dot11MeshHWMPmaxPREQretries
-> limit.
+On Wed, Jun 10, 2015 at 1:38 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2015-06-03 at 23:52 +0530, Chaitanya T K wrote:
+>> In case of Dynamic SMPS enable RTS/CTS for all rates.
+>
+>> +     /* Enable RTS/CTS for below cases.
+>> +      * 1) Handle STA's SMPS State, if Nss > 1.
+>> +      *    a. Use RTS_CTS, if STA is in Dynamic SMPS Mode
+>> +      *    b. Mark Nss > 1 as unsupported, if STA is in static SMPS mode
+>> +      * 2) 2nd and 3rd Rates, as 1st Rate Failed.
+>> +      */
+>> +     if ((mi->sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
+>> +          group->streams > 1) ||
+>> +          offset > 0) {
+>
+> Indent still isn't right - the line starting with "offset" should be
+> indented one less. Might also be worthwhile to just reorder the
+> condition to first check for offset > 0?
+Ok, i will fix the indent and also re-order the check.
 
-Let think about that if you have more nodes, you will probably flood
-the networks with more mgmt frame than previous implementation. It
-also increases the latency for data to be sent.
-
-> This is important because path messages are not reliable and it is
-> relatively common to have a short bad path to the destination along with a
-> longer but better path. With the original code rather often a path message
-> along the long path would be lost so we would stick with the bad path.
-> With this change we have a greater chance to get messages over the longer
-> path allowing us to select the long path if it's better.
-
-Try to take a look on the dot11MeshHWMPpreqMinInterval
-(mesh_hwmp_preq_min_interval) and  (mesh_hwmp_active_path_timeout). I
-think that you can probably have more aggressive path selection
-interval by modifying these two values.
-
-I don't think that flooding PREQ for resolved path not necessary a
-good case for all. Thanks
-
-----
-Chun-Yeow
+> I was about to do that and apply this, but it seems the comment doesn't
+> make sense since you're not doing 1b. afaict?
+Yes, the comment is not applicable for this version, will remove.
+Will submit V4, Thanks.
