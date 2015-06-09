@@ -1,34 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46862 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754582AbbFQJBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 05:01:33 -0400
-Message-ID: <1434531691.1884.19.camel@sipsolutions.net> (sfid-20150617_110143_744138_3B56DCA4)
-Subject: Re: [PATCH] mac80211: enable assoc check for mesh interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Date: Wed, 17 Jun 2015 11:01:31 +0200
-In-Reply-To: <1434204991-9579-1-git-send-email-me@bobcopeland.com> (sfid-20150613_161648_437877_9DE6CF3A)
-References: <1434204991-9579-1-git-send-email-me@bobcopeland.com>
-	 (sfid-20150613_161648_437877_9DE6CF3A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:33496 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752812AbbFIFfw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 01:35:52 -0400
+Received: by pdjn11 with SMTP id n11so7189061pdj.0
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 22:35:52 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: fix the beacon csa counter for mesh and ibss
+Date: Tue,  9 Jun 2015 13:35:33 +0800
+Message-Id: <1433828133-6904-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150609_073556_059012_196FB461)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-06-13 at 10:16 -0400, Bob Copeland wrote:
-> We already set a station to be associated when peering completes, both
-> in user space and in the kernel.  Thus we should always have an
-> associated sta before sending data frames to that station.
-> 
-> Failure to check assoc state can cause crashes in the lower-level driver
-> due to transmitting unicast data frames before driver sta structures
-> (e.g. ampdu state in ath9k) are initialized.  This occurred when
-> forwarding in the presence of fixed mesh paths: frames were transmitted
-> to stations with whom we hadn't yet completed peering.
+The csa counter has moved from sdata to beacon/presp but
+it is not updated accordingly for mesh and ibss. Fix this.
 
-Applied.
+This regression is introduced by the following patch:
+mac80211: move csa counters from sdata to beacon/presp
 
-johannes
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/cfg.c  | 1 +
+ net/mac80211/ibss.c | 1 +
+ net/mac80211/mesh.c | 1 +
+ 3 files changed, 3 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index bb9f836..0fdfc20 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3443,6 +3443,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	/* Update CSA counters */
+ 	if (sdata->vif.csa_active &&
+ 	    (sdata->vif.type == NL80211_IFTYPE_AP ||
++	     sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
+ 	     sdata->vif.type == NL80211_IFTYPE_ADHOC) &&
+ 	    params->n_csa_offsets) {
+ 		int i;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 21716af..7f72bc9 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -146,6 +146,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+ 				csa_settings->chandef.chan->center_freq);
+ 		presp->csa_counter_offsets[0] = (pos - presp->head);
+ 		*pos++ = csa_settings->count;
++		presp->csa_current_counter = csa_settings->count;
+ 	}
+ 
+ 	/* put the remaining rates in WLAN_EID_EXT_SUPP_RATES */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index d468424..817098a 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -680,6 +680,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		*pos++ = 0x0;
+ 		*pos++ = ieee80211_frequency_to_channel(
+ 				csa->settings.chandef.chan->center_freq);
++		bcn->csa_current_counter = csa->settings.count;
+ 		bcn->csa_counter_offsets[0] = hdr_len + 6;
+ 		*pos++ = csa->settings.count;
+ 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
+-- 
+2.3.0
 
