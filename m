@@ -1,36 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:36852 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754151AbbFCLXi (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8447 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228AbbFIJTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 07:23:38 -0400
-Date: Wed, 3 Jun 2015 16:53:25 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: "Sharma, Abhishek (A.)" <asharm14@visteon.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: wilc1000: Remove commented variable declerations
-Message-ID: <20150603112325.GA8620@sudip-PC> (sfid-20150603_132401_001830_9B60CAF7)
-References: <20150603095523.GA25864@jarvis.asia.jci.com>
+	Tue, 9 Jun 2015 05:19:33 -0400
+Message-ID: <5576AFA2.9090004@broadcom.com> (sfid-20150609_111936_459350_BB75B5DA)
+Date: Tue, 9 Jun 2015 11:19:30 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150603095523.GA25864@jarvis.asia.jci.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: about .dump_station() callback
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 03, 2015 at 09:56:11AM +0000, Sharma, Abhishek (A.) wrote:
-> Removing the commented static variable declerations.
-> 
-> Signed-off-by: Abhishek Sharma <asharm14@visteon.com>
-Your email header From: name is not matching with Signed-off-by: name.
-If you cannot fix your email client then please send v2 with an
-additional From: line.
+Hi Johannes,
 
-regards
-sudip
+I am looking in get_station() and consequently dump_station() callback 
+for our brcmfmac driver. The latter is called with index. Can I expect 
+this to be starting at 0 and iterate through or can it be requested in 
+any order.
+
+Regards,
+Arend
