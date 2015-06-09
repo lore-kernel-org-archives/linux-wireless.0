@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24748 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759274AbbFBPXy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 11:23:54 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-To: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v3 0/2] 60 GHz rules update
-Date: Tue,  2 Jun 2015 18:23:46 +0300
-Message-Id: <1433258628-7047-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150602_172408_959409_67A961A1)
-In-Reply-To: <20150602144231.GA31648@ubuntu-hedt>
-References: <20150602144231.GA31648@ubuntu-hedt>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:54864 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751934AbbFIUFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 16:05:24 -0400
+Message-ID: <1433880322.1892.22.camel@sipsolutions.net> (sfid-20150609_220527_299418_25E5DEF7)
+Subject: Re: [PATCH v2]: mac80211: Always check rates and capabilities in
+ mesh mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: agreen@cococorp.com
+Cc: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Date: Tue, 09 Jun 2015 22:05:22 +0200
+In-Reply-To: <557745EB.9080907@cococorp.com> (sfid-20150609_220053_201960_F15CC300)
+References: <557745EB.9080907@cococorp.com>
+	 (sfid-20150609_220053_201960_F15CC300)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update for the 60 GHz rules for 2 countries - Japan and Russia.
+On Tue, 2015-06-09 at 13:00 -0700, Alexis Green wrote:
+> In mesh mode there is a race between establishing links and processing
+> rates and capabilities in beacons. This is very noticeable with slow
+> beacons (e.g. beacon intervals of 1s) and manifested for us as stations
+> using minstrel when minstrel_ht should be used. Fixed by changing
+> mesh_sta_info_init so that it always checks rates and such if it has not
+> already done so.
 
-Rebase and re-sending to the right maintainer, thus mark as "v3"
-to avoid mis-interpretation
+Applied.
 
-Vladimir Kondratiev (2):
-  wireless-regdb: Add 60GHz regulatory rules for Japan (JP)
-  wireless-regdb: Add 60GHz regulatory rules for Russia (RU)
-
- db.txt | 5 +++++
- 1 file changed, 5 insertions(+)
-
--- 
-2.1.4
+johannes
 
