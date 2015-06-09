@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54726 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752117AbbFITfs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 15:35:48 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: davem@davemloft.net, Gerrit Renker <gerrit@erg.abdn.ac.uk>,
-	Alexander Kaltsas <alexkaltsas@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4.1] cfg80211: wext: clear sinfo struct before calling driver
-Date: Tue,  9 Jun 2015 21:35:44 +0200
-Message-Id: <1433878544-10749-1-git-send-email-johannes@sipsolutions.net> (sfid-20150609_213556_771439_75095DFE)
+Received: from smtp26.msg.oleane.net ([62.161.4.26]:45618 "EHLO
+	smtp26.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933298AbbFIQ0k convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 12:26:40 -0400
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp26.msg.oleane.net (MTA) with ESMTP id t59GQb2U006351
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Jun 2015 18:26:37 +0200
+Subject: [RFC v2] [resend] ath9k: allow up to 8 access point vifs on DFS channels
+Date: Tue, 9 Jun 2015 18:26:37 +0200
+MIME-Version: 1.0
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901A720F6@sbs2003.acksys.local> (sfid-20150609_182651_487732_CD0F89DD)
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Jean-Pierre TOSONI" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Allow the combination of 8 (AP + mesh) interfaces on radar channels
 
-Until recently, mac80211 overwrote all the statistics it could
-provide when getting called, but it now relies on the struct
-having been zeroed by the caller. This was always the case in
-nl80211, but wext used a static struct which could even cause
-values from one device leak to another.
-
-Using a static struct is OK (as even documented in a comment)
-since the whole usage of this function and its return value is
-always locked under RTNL. Not clearing the struct for calling
-the driver has always been wrong though, since drivers were
-free to only fill values they could report, so calling this
-for one device and then for another would always have leaked
-values from one to the other.
-
-Fix this by initializing the structure in question before the
-driver method call.
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=99691
-
-Cc: stable@vger.kernel.org
-Reported-by: Gerrit Renker <gerrit@erg.abdn.ac.uk>
-Reported-by: Alexander Kaltsas <alexkaltsas@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Tested with hostapd, 2 and 8 BSSIDs, 1 or 2 DFS channels, BW 20 MHz
+TODO: test AP+mesh combination
+TODO: test 40 MHz BW
 ---
-Dave, would you mind applying this patch directly? It seems a
-bit pointless to send a pull request for a single patch again.
----
- net/wireless/wext-compat.c | 2 ++
- 1 file changed, 2 insertions(+)
+This patch was done with quilt on Openwrt against compat-wireless
+2014-11-04
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index fff1bef6ed6d..fd682832a0e3 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1333,6 +1333,8 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	memcpy(bssid, wdev->current_bss->pub.bssid, ETH_ALEN);
- 	wdev_unlock(wdev);
+Any feedback?
+
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -723,6 +723,14 @@ static const struct ieee80211_iface_limi
+ 				 BIT(NL80211_IFTYPE_ADHOC) },
+ };
  
-+	memset(&sinfo, 0, sizeof(sinfo));
++static const struct ieee80211_iface_limit if_dfs_limits_mvap[] = {
++	{ .max = 8,	.types =
++#ifdef CONFIG_MAC80211_MESH
++				 BIT(NL80211_IFTYPE_MESH_POINT) |
++#endif
++				 BIT(NL80211_IFTYPE_AP) },
++};
 +
- 	if (rdev_get_station(rdev, dev, bssid, &sinfo))
- 		return NULL;
- 
+ static const struct ieee80211_iface_combination if_comb[] = {
+ 	{
+ 		.limits = if_limits,
+@@ -746,6 +754,16 @@ static const struct ieee80211_iface_comb
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
+ 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
+|
++					BIT(NL80211_CHAN_WIDTH_20) |
++					BIT(NL80211_CHAN_WIDTH_40),
++	},
++	{
++		.limits = if_dfs_limits_mvap,
++		.n_limits = ARRAY_SIZE(if_dfs_limits_mvap),
++		.max_interfaces = 8,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT)
+|
+ 					BIT(NL80211_CHAN_WIDTH_20) |
+ 					BIT(NL80211_CHAN_WIDTH_40),
+ 	}
 -- 
-2.1.4
+quilt
 
