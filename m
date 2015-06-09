@@ -1,75 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51217 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752537AbbFCHoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:44:30 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: ignore invalid scan RSSI values
-Date: Wed,  3 Jun 2015 10:44:17 +0300
-Message-Id: <1433317457-6311-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_094435_065853_5E20DE2D)
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:36249 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752791AbbFIIAJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 04:00:09 -0400
+Received: by pabqy3 with SMTP id qy3so8543827pab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 01:00:09 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath9k_htc: add support of channel switch
+Date: Tue,  9 Jun 2015 15:59:49 +0800
+Message-Id: <1433836789-5505-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150609_100014_516797_10A68268)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Add the support of channel switching functionality, similar
+to ath9k support.
 
-Channels in 2.4GHz band overlap, this means that if we
-send a probe request on channel 1 and then move to channel
-2, we will hear the probe response on channel 2. In this
-case, the RSSI will be lower than if we had heard it on
-the channel on which it was sent (1 in this case).
+Tested with TP-Link TL-WN722N and TL-WN821N.
 
-The scan result ignores those invalid values and the
-station last signal should not be updated as well.
-
-In case the scan determines the signal to be invalid turn on
-the flag so the station last signal will not be updated with
-the value and thus user space probing for NL80211_STA_INFO_SIGNAL
-and NL80211_STA_INFO_SIGNAL_AVG will not get this invalid RSSI
-value.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- net/mac80211/scan.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/htc.h            |  2 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c | 19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |  3 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   | 17 +++++++++++++++++
+ 4 files changed, 40 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 7bb6a93..f995995 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -6,7 +6,7 @@
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-- * Copyright 2013-2014  Intel Mobile Communications GmbH
-+ * Copyright 2013-2015  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -69,6 +69,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 	int clen, srlen;
- 	enum nl80211_bss_scan_width scan_width;
- 	s32 signal = 0;
-+	bool signal_valid;
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 5dbc617..16dff4b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -531,6 +531,7 @@ struct ath9k_htc_priv {
+ 	struct ath9k_debug debug;
+ #endif
+ 	struct mutex mutex;
++	struct ieee80211_vif *csa_vif;
+ };
  
- 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
- 		signal = rx_status->signal * 100;
-@@ -86,6 +87,11 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 					       GFP_ATOMIC);
- 	if (!cbss)
- 		return NULL;
-+	/* In case the signal is invalid update the status */
-+	signal_valid = abs(channel->center_freq - cbss->channel->center_freq)
-+		<= local->hw.wiphy->max_adj_channel_rssi_comp;
-+	if (!signal_valid)
-+		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
+@@ -584,6 +585,7 @@ void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
+ void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event);
+ void ath9k_tx_failed_tasklet(unsigned long data);
+ void ath9k_htc_tx_cleanup_timer(unsigned long data);
++bool ath9k_htc_csa_is_finished(struct ath9k_htc_priv *priv);
  
- 	bss = (void *)cbss->priv;
+ int ath9k_rx_init(struct ath9k_htc_priv *priv);
+ void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index e8b6ec3..e6bcb4c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -257,6 +257,8 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 	}
  
+ 	spin_unlock_bh(&priv->beacon_lock);
++
++	ath9k_htc_csa_is_finished(priv);
+ }
+ 
+ static int ath9k_htc_choose_bslot(struct ath9k_htc_priv *priv,
+@@ -503,3 +505,20 @@ void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
+ 		return;
+ 	}
+ }
++
++bool ath9k_htc_csa_is_finished(struct ath9k_htc_priv *priv)
++{
++	struct ieee80211_vif *vif;
++
++	vif = priv->csa_vif;
++	if (!vif || !vif->csa_active)
++		return false;
++
++	if (!ieee80211_csa_is_complete(vif))
++		return false;
++
++	ieee80211_csa_finish(vif);
++
++	priv->csa_vif = NULL;
++	return true;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 7468562..9569010 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -744,7 +744,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
+-			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
++			    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index b71f307..dab1323 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1134,6 +1134,9 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+ 	priv->nvifs--;
+ 	priv->vif_slot &= ~(1 << avp->index);
+ 
++	if (priv->csa_vif == vif)
++		priv->csa_vif = NULL;
++
+ 	ath9k_htc_remove_station(priv, vif, NULL);
+ 
+ 	DEC_VIF(priv, vif->type);
+@@ -1841,6 +1844,19 @@ static int ath9k_htc_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant,
+ 	return 0;
+ }
+ 
++static void ath9k_htc_channel_switch_beacon(struct ieee80211_hw *hw,
++					    struct ieee80211_vif *vif,
++					    struct cfg80211_chan_def *chandef)
++{
++	struct ath9k_htc_priv *priv = hw->priv;
++
++	/* mac80211 does not support CSA in multi-if cases (yet) */
++	if (WARN_ON(priv->csa_vif))
++		return;
++
++	priv->csa_vif = vif;
++}
++
+ struct ieee80211_ops ath9k_htc_ops = {
+ 	.tx                 = ath9k_htc_tx,
+ 	.start              = ath9k_htc_start,
+@@ -1867,6 +1883,7 @@ struct ieee80211_ops ath9k_htc_ops = {
+ 	.set_bitrate_mask   = ath9k_htc_set_bitrate_mask,
+ 	.get_stats	    = ath9k_htc_get_stats,
+ 	.get_antenna	    = ath9k_htc_get_antenna,
++	.channel_switch_beacon	= ath9k_htc_channel_switch_beacon,
+ 
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+ 	.get_et_sset_count  = ath9k_htc_get_et_sset_count,
 -- 
-2.1.4
+2.3.0
 
