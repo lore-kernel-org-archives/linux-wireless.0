@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:25612 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754313AbbFJWMb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 18:12:31 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/7] brcmfmac: cfg80211 api rework and p2p device fixes
-Date: Thu, 11 Jun 2015 00:12:16 +0200
-Message-ID: <1433974343-16982-1-git-send-email-arend@broadcom.com> (sfid-20150611_001235_340949_69686A56)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:54894 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753171AbbFIUKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Jun 2015 16:10:32 -0400
+Message-ID: <1433880629.1892.24.camel@sipsolutions.net> (sfid-20150609_221035_034753_49D2D134)
+Subject: Re: [PATCH V2] mac80211: Fix power save state stuck in ACTIVE
+ caused by race between suspend and Tx packet.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 09 Jun 2015 22:10:29 +0200
+In-Reply-To: <CABPxzYLMiX1chbNxUd4gfK2HeKkXxHEw1rjf+5on4mskxce1Gg@mail.gmail.com> (sfid-20150601_233225_467260_D87DD2BF)
+References: <1433178885-8787-1-git-send-email-chaitanya.mgit@gmail.com>
+	 <1433190967.3505.17.camel@sipsolutions.net>
+	 <CABPxzYLMiX1chbNxUd4gfK2HeKkXxHEw1rjf+5on4mskxce1Gg@mail.gmail.com>
+	 (sfid-20150601_233225_467260_D87DD2BF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hope to make the deadline with this series for 4.2 kernel. Here the
-highlights of this series:
+On Tue, 2015-06-02 at 03:02 +0530, Krishna Chaitanya wrote:
 
-* rework .get_station() cfg80211 callback operation.
-* determine interface combinations upon device feature support.
-* fix p2p-device removal upon driver unload.
+> > This isn't what your patch is actually doing though. You need to mention
+> > WoWLAN at the very least in your commit log;
 
-The series applies to the master branch of the wireless-drivers-next
-repository.
+> Yes, WoWLAN is enabled in our testing. Without wowlan the connection
+> will not be intact. So i assumed the check "is_associated" would
+> imply wowlan.
 
-Arend van Spriel (5):
-  brcmfmac: rework .get_station() callback
-  brcmfmac: have sdio return -EIO when device communication is not
-    possible
-  brcmfmac: free ifp for non-netdev interface in p2p module
-  brcmfmac: move p2p attach/detach functions
-  brcmfmac: assure p2pdev is unregistered upon driver unload
+I meant the commit log.
 
-Pontus Fuchs (2):
-  brcmfmac: Check if firmware supports p2p
-  brcmfmac: Build wiphy mode and interface combinations dynamically
+If I read your commit log without the patch, it doesn't make sense at
+all since regular suspend/resume will turn off the device anyway. You
+really need to mention
+ a) the fact that wowlan is used, and
+ b) the fact that you care about powersave state *while in wowlan*
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   1 +
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 314 +++++++++++----------
- drivers/net/wireless/brcm80211/brcmfmac/core.c     |   3 +-
- drivers/net/wireless/brcm80211/brcmfmac/feature.c  |   1 +
- drivers/net/wireless/brcm80211/brcmfmac/feature.h  |   4 +-
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  79 ++++--
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      | 203 ++++++-------
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c     |   6 +
- 8 files changed, 346 insertions(+), 265 deletions(-)
-
--- 
-1.9.1
+johannes
 
