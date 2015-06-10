@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:55848 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbbFLP0z (ORCPT
+Received: from mailrelay110.isp.belgacom.be ([195.238.20.137]:7620 "EHLO
+	mailrelay110.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965977AbbFJQdj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 11:26:55 -0400
-Date: Fri, 12 Jun 2015 08:26:55 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Dean Lee <dean.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com
-Subject: Re: [PATCH v3] staging: wilc1000: remove oswrapper & type file
-Message-ID: <20150612152655.GA26174@kroah.com> (sfid-20150612_172659_227221_1F8B54E2)
-References: <1434104471-5492-1-git-send-email-dean.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434104471-5492-1-git-send-email-dean.lee@atmel.com>
+	Wed, 10 Jun 2015 12:33:39 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	Fabian Frederick <fabf@skynet.be>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 1/1 linux-next] ath5k: use swap() in ath5k_hw_get_median_noise_floor()
+Date: Wed, 10 Jun 2015 18:33:34 +0200
+Message-Id: <1433954015-24872-1-git-send-email-fabf@skynet.be> (sfid-20150610_183542_446730_29208F9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 12, 2015 at 07:21:11PM +0900, Dean Lee wrote:
-> remove OS Wrapper function(wilc_oswrapper.h) is in our plan.
-> i removed OS Wrapper function and it's done.
-> and i found wilc_type.h file is does not used it.
-> so i deleted them and modify #include line in another file.
+Use kernel.h macro definition.
 
-You are also doing other things here that you don't describe:
+Thanks to Julia Lawall for Coccinelle scripting support.
 
->  /* Errors will always get printed */
-> -#define WILC_ERROR(...) do {  WILC_PRINTF("(ERR)(%s:%d) ", __WILC_FUNCTION__, __WILC_LINE__); \
-> -			      WILC_PRINTF(__VA_ARGS__); \
-> -				} while (0)
-> +#define WILC_ERROR(...)							\
-> +do {									\
-> +	WILC_PRINTF("(ERR)(%s:%d)", __WILC_FUNCTION__, __WILC_LINE__);	\
-> +	WILC_PRINTF(__VA_ARGS__);					\
-> +} while (0)
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/net/wireless/ath/ath5k/phy.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-You reformatted this.
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 0fce1c7..ef108a3 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1566,17 +1566,13 @@ static s16
+ ath5k_hw_get_median_noise_floor(struct ath5k_hw *ah)
+ {
+ 	s16 sort[ATH5K_NF_CAL_HIST_MAX];
+-	s16 tmp;
+ 	int i, j;
+ 
+ 	memcpy(sort, ah->ah_nfcal_hist.nfval, sizeof(sort));
+ 	for (i = 0; i < ATH5K_NF_CAL_HIST_MAX - 1; i++) {
+ 		for (j = 1; j < ATH5K_NF_CAL_HIST_MAX - i; j++) {
+-			if (sort[j] > sort[j - 1]) {
+-				tmp = sort[j];
+-				sort[j] = sort[j - 1];
+-				sort[j - 1] = tmp;
+-			}
++			if (sort[j] > sort[j - 1])
++				swap(sort[j], sort[j]);
+ 		}
+ 	}
+ 	for (i = 0; i < ATH5K_NF_CAL_HIST_MAX; i++) {
+-- 
+2.4.2
 
->  #if (WILC_LOG_VERBOSITY_LEVEL > 3)
-> -#define WILC_FN_IN do { WILC_PRINTF("(FIN) (%s:%d) \n", __WILC_FUNCTION__, __WILC_LINE__);  } while (0)
-> -#define WILC_FN_OUT(ret) do { WILC_PRINTF("(FOUT) (%s:%d) %d.\n", __WILC_FUNCTION__, __WILC_LINE__, (ret));  } while (0)
-> +#define WILC_FN_IN		\
-> +	WILC_PRINTF("(FIN)(%s:%d)\n", __WILC_FUNCTION__, __WILC_LINE__)
-> +#define WILC_FN_OUT(ret)	\
-> +	WILC_PRINTF("(FOUT)(%s:%d)%d\n", __WILC_FUNCTION__, __WILC_LINE__, ret)
-
-And changed this for no obvious reason.
-
-Please, only do one thing per patch.  Break this up into logical steps
-and resend it as a series of patches, with the last one being the TODO
-file item removal.
-
-thanks,
-
-greg k-h
