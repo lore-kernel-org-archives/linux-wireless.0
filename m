@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:54220 "EHLO mail.hofr.at"
+Received: from mx1.redhat.com ([209.132.183.28]:43569 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750734AbbFORi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 13:38:28 -0400
-Date: Mon, 15 Jun 2015 19:38:25 +0200
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [BUG ?] delay always evaluates to 0
-Message-ID: <20150615173825.GC31859@opentech.at> (sfid-20150615_193847_635583_F7346CE6)
-References: <20150612165829.GA22474@opentech.at> <CA++WF2NoEAhRKnOXtC_C=JfmvZU=WuPEKZ3Zs2KxdHwBtHhHFg@mail.gmail.com>
+	id S933673AbbFJRyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 13:54:51 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Fabian Frederick <fabf@skynet.be>
+Cc: linux-kernel@vger.kernel.org, Julia Lawall <Julia.Lawall@lip6.fr>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH 1/1 linux-next] staging: rtl8723au: use swap() in WMMOnAssocRsp23a()
+References: <1433953937-23987-1-git-send-email-fabf@skynet.be>
+Date: Wed, 10 Jun 2015 13:54:49 -0400
+In-Reply-To: <1433953937-23987-1-git-send-email-fabf@skynet.be> (Fabian
+	Frederick's message of "Wed, 10 Jun 2015 18:32:17 +0200")
+Message-ID: <wrfjbngnv47q.fsf@carbonite.lan.trained-monkey.org> (sfid-20150610_195511_839908_EA34BE49)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA++WF2NoEAhRKnOXtC_C=JfmvZU=WuPEKZ3Zs2KxdHwBtHhHFg@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 15 Jun 2015, Stanislav Yakovlev wrote:
-
-> Hi Nicholas,
-> 
-> On 12 June 2015 at 20:58, Nicholas Mc Guire <der.herr@hofr.at> wrote:
-> > Hi !
-> >
-> > commit 2c86c275015c ("Add ipw2100 wireless driver.") introduced
-> >
-> > drivers/net/wireless/ipw2100.c - line-numbers are from next-20150511
-> > 1410 static int ipw2100_hw_phy_off(struct ipw2100_priv *priv)
-> > 1411 {
-> > 1412
-> > 1413 #define HW_PHY_OFF_LOOP_DELAY (HZ / 5000)
-> > 1414
-> > ...
-> > 1437
-> > 1438                 schedule_timeout_uninterruptible(HW_PHY_OFF_LOOP_DELAY);
-> > 1439         }
-> >
-> > but (HZ / 5000) will evaluate to 0 for all configurable HZ values - typo ?
-> > and this schedule_timeout_uninterruptible() is probably not doing what
-> > is intended.
-> 
-> Yes, you are right. This is a bug. I think it should be:
-> 
-> -#define HW_PHY_OFF_LOOP_DELAY (HZ / 5000)
-> +#define HW_PHY_OFF_LOOP_DELAY (msecs_to_jiffies(50))
-> 
-> Will you send us a patch?
+Fabian Frederick <fabf@skynet.be> writes:
+> Use kernel.h macro definition.
 >
-just sent it out - thanks!
+> Thanks to Julia Lawall for Coccinelle scripting support.
+>
+> Signed-off-by: Fabian Frederick <fabf@skynet.be>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_wlan_util.c | 12 +++---------
+>  1 file changed, 3 insertions(+), 9 deletions(-)
 
-hofrat 
+Please make sure you base your patches off the staging tree, not off
+linux-next.
+
+Jes
+
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> index 5280338..3c1315fc 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> @@ -573,7 +573,7 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
+>  	inx[0] = 0; inx[1] = 1; inx[2] = 2; inx[3] = 3;
+>  
+>  	if (pregpriv->wifi_spec == 1) {
+> -		u32 j, tmp, change_inx = false;
+> +		u32 j, change_inx = false;
+>  
+>  		/* entry indx: 0->vo, 1->vi, 2->be, 3->bk. */
+>  		for (i = 0; i < 4; i++) {
+> @@ -589,14 +589,8 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
+>  				}
+>  
+>  				if (change_inx) {
+> -					tmp = edca[i];
+> -					edca[i] = edca[j];
+> -					edca[j] = tmp;
+> -
+> -					tmp = inx[i];
+> -					inx[i] = inx[j];
+> -					inx[j] = tmp;
+> -
+> +					swap(edca[i], edca[j]);
+> +					swap(inx[i], inx[j]);
+>  					change_inx = false;
+>  				}
+>  			}
