@@ -1,53 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:34702 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607AbbFBOmf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 10:42:35 -0400
-Received: by oifu123 with SMTP id u123so127207866oif.1
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 07:42:35 -0700 (PDT)
-Date: Tue, 2 Jun 2015 09:42:31 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [wireless-regdb] [PATCH] wireless-regdb: Add 60GHz regulatory
- rules for Russia (RU)
-Message-ID: <20150602144231.GA31648@ubuntu-hedt> (sfid-20150602_164238_773529_7DB371B7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail.neratec.com ([46.140.151.2]:48850 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753512AbbFJLHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 07:07:03 -0400
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: julian.calaby@gmail.com, johannes@sipsolutions.net,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH v3] mac80211: Avoid unnecessary locking on CSA counter update
+Date: Wed, 10 Jun 2015 13:06:53 +0200
+Message-Id: <1433934413-4713-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20150610_130707_736205_EB02D84A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 02, 2015 at 05:04:09PM +0300, Vladimir Kondratiev wrote:
-> Source is document named
-> Changes to NLA 124_Order №129_22042015.pdf
-> 
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> ---
->  db.txt | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/db.txt b/db.txt
-> index f361030..79dac92 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -978,6 +978,8 @@ country RU: DFS-ETSI
->  	(5250 - 5330 @ 80), (20), DFS
->  	(5650 - 5730 @ 80), (30), DFS
->  	(5735 - 5835 @ 80), (30)
-> +	# 60 GHz band channels 1-4, ref: Changes to NLA 124_Order №129_22042015.pdf
-> +	(57000 - 66000 @ 2160), (40)
+v2: Use splitted functions instead of direct counter decrement.
+v3: Changed subject and commit message
 
-It looks like your tree is out of date and missing:
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ net/mac80211/tx.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-  aa1d66d wireless-regdb: Disable VHT80 where 40/80 MHz on 5 GHz is not allowed
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7fe528a..7425803 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3211,6 +3211,16 @@ static void ieee80211_set_csa(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
+ }
+ 
++static u8 __ieee80211_csa_update_counter(struct beacon_data *beacon)
++{
++	beacon->csa_current_counter--;
++
++	/* the counter should never reach 0 */
++	WARN_ON_ONCE(!beacon->csa_current_counter);
++
++	return beacon->csa_current_counter;
++}
++
+ u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+@@ -3229,11 +3239,7 @@ u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
+ 	if (!beacon)
+ 		goto unlock;
+ 
+-	beacon->csa_current_counter--;
+-
+-	/* the counter should never reach 0 */
+-	WARN_ON_ONCE(!beacon->csa_current_counter);
+-	count = beacon->csa_current_counter;
++	count = __ieee80211_csa_update_counter(beacon);
+ 
+ unlock:
+ 	rcu_read_unlock();
+@@ -3333,7 +3339,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 		if (beacon) {
+ 			if (beacon->csa_counter_offsets[0]) {
+ 				if (!is_template)
+-					ieee80211_csa_update_counter(vif);
++					__ieee80211_csa_update_counter(beacon);
+ 
+ 				ieee80211_set_csa(sdata, beacon);
+ 			}
+@@ -3379,7 +3385,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 
+ 		if (beacon->csa_counter_offsets[0]) {
+ 			if (!is_template)
+-				ieee80211_csa_update_counter(vif);
++				__ieee80211_csa_update_counter(beacon);
+ 
+ 			ieee80211_set_csa(sdata, beacon);
+ 		}
+@@ -3409,7 +3415,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+ 				 * for now we leave it consistent with overall
+ 				 * mac80211's behavior.
+ 				 */
+-				ieee80211_csa_update_counter(vif);
++				__ieee80211_csa_update_counter(beacon);
+ 
+ 			ieee80211_set_csa(sdata, beacon);
+ 		}
+-- 
+1.9.1
 
-I see that you directed the patch at John, so I'm guessing that you're
-still using his tree. I took over maintainership of the database in
-December, and you should be using this repo for new work:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git
-
-Thanks,
-Seth
