@@ -1,93 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42883 "EHLO sipsolutions.net"
+Received: from mga11.intel.com ([192.55.52.93]:49874 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752860AbbFPN21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 09:28:27 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.85)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Z4qug-0004S0-4b
-	for linux-wireless@vger.kernel.org; Tue, 16 Jun 2015 15:28:26 +0200
-Message-ID: <1434461305.2337.26.camel@sipsolutions.net> (sfid-20150616_152831_609582_3653D1D9)
-Subject: Re: mac80211 and multiple RX queues (with RSS hashing)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 16 Jun 2015 15:28:25 +0200
-In-Reply-To: <1434097914.2679.37.camel@sipsolutions.net> (sfid-20150612_103201_684238_7222E571)
-References: <1434097914.2679.37.camel@sipsolutions.net>
-	 (sfid-20150612_103201_684238_7222E571)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752492AbbFJQuv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 12:50:51 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "xerofoify@gmail.com" <xerofoify@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Spinadel, David" <david.spinadel@intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"eliad@wizery.com" <eliad@wizery.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi:dvm:Return false if resume command data is not
+ same size as received packet for the function iwl_resume_status_fn
+Date: Wed, 10 Jun 2015 16:50:45 +0000
+Message-ID: <1433955045.20602.2.camel@intel.com> (sfid-20150610_185101_059346_C8346CD5)
+References: <1433954031-7176-1-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1433954031-7176-1-git-send-email-xerofoify@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-06-12 at 10:31 +0200, Johannes Berg wrote:
-
->  * It would only support (non-null) data frames, management frames must
-> not be
->    passed to the new API, but must be passed to the regular
-> ieee80211_rx()
->    function.
-
-Sorry about the line breaking - not sure how that happened.
-
-Let me recap these points:
-> * only real data frames allowed in "MQ RX" API
-> * no _irqsafe variant
-> * no software crypto
-> * no monitor mode (TBD)
-
-This makes no sense, I think I'll leave monitor mode.
-
-> * no defragmentation
-> * no client powersave support
-> * no mesh, perhaps no IBSS
-> * aggregation reorder already done
-> * require NAPI struct (TBD)
-
-Another item we might add:
- * no TDLS ethertype frames
-
-Those are more control than data, so they shouldn't really go here. It
-wouldn't be hard to support them going there, it just introduces race
-conditions.
-
->  b) handling AP/GO powersaving clients
->     With RSS, we can end up with various races - right now we say TX
->     status and RX must be serialized by the driver, but clearly that
->     can no longer be guaranteed with multiple RX queues.
-
-I'm just going to ignore this for now and disallow AP mode unless the HW
-offload is enabled.
-
->     [also need to check if there are *other* things that require
->     serialization]
-
-TBD
-
->  c) aggregation session timeout/reorder timer handling
->     There's a single field/timer (for each of this) per session,
->     obviously it's
->     not a great idea to hit these from multiple CPUs.
-
-The reorder timeout is moot since we require already well-ordered
-frames. Therefore, we can't even have it. Driver developers will have to
-think about how to implement that though.
-
-The aggregation session timeout handling actually doesn't really change,
-just the data structure needs to be 'exploded' into per-queue structures
-instead.
-
-> a2) Alternatively, drivers could tell mac80211 before-hand how many
-> queues they'll use, pass a queue identifier to mac80211 for each packet
-> (e.g. in skb's queue_mapping) and have mac80211 gather per-queue
-> statistics that get combined when read. This means allocating separate
-> statistics/queue arrays for stations etc. in mac80211, and then using
-> u64_stats_update_begin() etc. to get a consistent reading like we do
-> with per-cpu netdev stats already (since my fairly recent patch.)
-
-I'm going to go with this one, but block a few things like 'average
-signal' and require drivers to implement those if needed.
-
-johannes
-
+T24gV2VkLCAyMDE1LTA2LTEwIGF0IDEyOjMzIC0wNDAwLCBOaWNob2xhcyBLcmF1c2Ugd3JvdGU6
+DQo+IFRoaXMgbWFrZXMgdGhlIGZ1bmN0aW9uIGl3bF9yZXN1bWVfc3RhdHVzX2ZuIHJldHVybiBm
+YWxzZSBub3cgaWYNCj4gdGhlIHJlY2VpdmVkIHBhY2tldCBvZiB0eXBlIGl3bF9yeF9wYWNrZXQg
+aXMgbm90IHRoZSBzYW1lIHNpemUNCj4gYXMgdGhlIHN0cnVjdHVyZSBwb2ludGVyLCBpd2xfcmVz
+dW1lX2RhdGEncyBjbWQgZWxlbWVudCBpbiBvcmRlcg0KPiB0byBzaWduYWwgY2FsbGVycyBhYm91
+dCB0aGlzIGVycm9yIGFuZCBhbGxvdyB0aGVtIHRvIGhhbmRsZSBpdA0KPiBvY2N1cnJlbnRseS4N
+Cj4gDQoNCkhtLi4uIERpZCB5b3UgYWN0dWFsbHkgaGl0IHRoaXMgaWY/DQpJIGFtIG5vdCBzdXJl
+IEkgcmVhbGx5IHdhbnQgdG8gd2FpdCBoZXJlICh3aGljaCBpcyB3aGF0IHdpbGwgaGFwcGVuIGlm
+DQp5b3UgcmV0dXJuIGZhbHNlKSB3aGVuIHdlIGdldCBhbiB1bmV4cGVjdGVkIGxlbmd0aD8gSSBk
+byBub3QgZXhwZWN0DQphbnl0aGluZyBiZXNpZGVzIHRoZSByZXNwb25zZSBJIGFtIHdhaXRpbmcg
+Zm9yIHNpbmNlIHRoZSBmaXJtd2FyZSBpcw0KaGFuZGxpbmcgdGhlIEdFVF9TVEFUVVMgKm9ubHkq
+IC0gaXQganVzdCBjYW1lIGJhY2sgZnJvbSBXb1dMQU4uIEJvdHRvbQ0KbGluZSwgdGhpcyBpcyBy
+ZWFsbHkgYW4gZXJyb3IgcGF0aCBhbmQgSSBwcmVmZXIgdG8gZXhpdCBhbmQgbm90IHdhaXQgZm9y
+DQp0aGUgdGltZW91dCBpbiB0aGF0IGNhc2UuDQpCdXQgSSBtaWdodCBiZSBtaXNzaW5nIHNvbWV0
+aGluZz8NCg0KPiBTaWduZWQtb2ZmLWJ5OiBOaWNob2xhcyBLcmF1c2UgPHhlcm9mb2lmeUBnbWFp
+bC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9kdm0vbWFjODAy
+MTEuYyB8IDIgKy0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlv
+bigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvZHZt
+L21hYzgwMjExLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2R2bS9tYWM4MDIxMS5j
+DQo+IGluZGV4IDVhYmQ2MmUuLjIxZTgwOGMgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL2l3bHdpZmkvZHZtL21hYzgwMjExLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvaXdsd2lmaS9kdm0vbWFjODAyMTEuYw0KPiBAQCAtNDA5LDcgKzQwOSw3IEBAIHN0YXRpYyBi
+b29sIGl3bF9yZXN1bWVfc3RhdHVzX2ZuKHN0cnVjdCBpd2xfbm90aWZfd2FpdF9kYXRhICpub3Rp
+Zl93YWl0LA0KPiAgDQo+ICAJaWYgKGl3bF9yeF9wYWNrZXRfcGF5bG9hZF9sZW4ocGt0KSAhPSBz
+aXplb2YoKnJlc3VtZV9kYXRhLT5jbWQpKSB7DQo+ICAJCUlXTF9FUlIocHJpdiwgInJ4IHdyb25n
+IHNpemUgZGF0YVxuIik7DQo+IC0JCXJldHVybiB0cnVlOw0KPiArCQlyZXR1cm4gZmFsc2U7DQo+
+ICAJfQ0KPiAgCW1lbWNweShyZXN1bWVfZGF0YS0+Y21kLCBwa3QtPmRhdGEsIHNpemVvZigqcmVz
+dW1lX2RhdGEtPmNtZCkpOw0KPiAgCXJlc3VtZV9kYXRhLT52YWxpZCA9IHRydWU7DQoNCg==
