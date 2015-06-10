@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33246 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751591AbbFAUgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 16:36:52 -0400
-Message-ID: <1433191009.3505.18.camel@sipsolutions.net> (sfid-20150601_223655_455026_1660D5C0)
-Subject: Re: [PATCH] minstrel_ht: Use RTS_CTS when STA is in DYNAMIC SMPS
- mode for frames sent using Nss>1.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 01 Jun 2015 22:36:49 +0200
-In-Reply-To: <CABPxzYLW955-jJHKHYT+P0U8RM=GWajpCYDa8L-XtjCN71U0kw@mail.gmail.com> (sfid-20150601_201947_721441_892EB760)
-References: <1390373865-6088-1-git-send-email-chaitanya.mgit@gmail.com>
-	 <1390426022.4334.50.camel@jlt4.sipsolutions.net>
-	 <CABPxzYK3pBK4QQh2W_vZbggkfszx+9d-zH+QC_uOXzDxfUMbUQ@mail.gmail.com>
-	 <CABPxzYLW955-jJHKHYT+P0U8RM=GWajpCYDa8L-XtjCN71U0kw@mail.gmail.com>
-	 (sfid-20150601_201947_721441_892EB760)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:40779 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927AbbFJVnp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 17:43:45 -0400
+Message-ID: <5578AF90.5030609@candelatech.com> (sfid-20150610_234347_989140_73DFFFB6)
+Date: Wed, 10 Jun 2015 14:43:44 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Add netdev name to  NL80211_CMD_STOP_AP event?
+References: <5578AA11.2020505@candelatech.com>  (sfid-20150610_232022_833916_9A1896A2) <1433972365.3145.18.camel@sipsolutions.net>
+In-Reply-To: <1433972365.3145.18.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-06-01 at 23:49 +0530, Krishna Chaitanya wrote:
-> On Thu, Jan 30, 2014 at 11:48 PM, Krishna Chaitanya
-> <chaitanya.mgit@gmail.com> wrote:
-> > On Thu, Jan 23, 2014 at 2:57 AM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> >>
-> >> On Wed, 2014-01-22 at 12:27 +0530, Chaitanya T K wrote:
-> >>
-> >> > +             if (sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
-> >> > +                     minstrel_mcs_groups[i].streams > 1) {
-> >> > +                     mi->tx_flags |= IEEE80211_TX_RC_USE_RTS_CTS;
-> >> > +             } else if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
-> >> > +                     minstrel_mcs_groups[i].streams > 1) {
-> >>
-> >> Your indentation is off inside the if statements. I'll have to wait for
-> >> nbd to review the patch itself, I guess.
-> >>
-> > Felix,
-> >
-> >  Any comments other than the indentation? If no, will send in the
-> > v2 with indentation fixed.
+On 06/10/2015 02:39 PM, Johannes Berg wrote:
+> On Wed, 2015-06-10 at 14:20 -0700, Ben Greear wrote:
+>> While trying to make 'iw' able to print out something useful for
+>> the 'stop_ap' event, I notice there is not really any human friendly
+>> info in the message (just phy id (which may not match phy name), ifindex, and some other
+>> wiphy related numeric ID.
+>>
+>> Any reason not to add the netdev name (NL80211_ATTR_IFNAME) to this and
+>> related messages?
 > 
-> Was checking my old submissions. This was marked as "Not Applicable" in
-> patchwork.
-> 
-> Felix/Johannes,
-> 
-> Can you please explain to me the meaning of the status "Not Applicable"?
+> We're not really adding that *anywhere*, and you can trivially look it
+> up based on the ifindex, so why bother?
 
-This patch is *ancient*, before we actually used patchwork properly ...
+I was thinking netdevice might go away before user-space can decode the
+message ( I was assuming that on delete you would stop and very shortly
+after that delete the netdev).
 
-johannes
+It's a small patch to iw and the kernel as far as I can tell...when I
+get it working, I'll post for consideration..if you don't want it,
+I won't complain :)
+
+Thanks,
+Ben
+
+> 
+> johannes
+> 
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
