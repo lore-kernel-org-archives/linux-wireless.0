@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62547 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757038AbbFPKMk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 06:12:40 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Raja Mani <rmani@qti.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: remove unused variable hdr in ath10k_htt_rx_h_undecap()
-References: <1434026927-11698-1-git-send-email-rmani@qti.qualcomm.com>
-Date: Tue, 16 Jun 2015 13:12:35 +0300
-In-Reply-To: <1434026927-11698-1-git-send-email-rmani@qti.qualcomm.com> (Raja
-	Mani's message of "Thu, 11 Jun 2015 18:18:47 +0530")
-Message-ID: <87eglc7yi4.fsf@kamboji.qca.qualcomm.com> (sfid-20150616_121244_144090_C969B9F0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60286 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752144AbbFJVj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 17:39:27 -0400
+Message-ID: <1433972365.3145.18.camel@sipsolutions.net> (sfid-20150610_233931_115832_058BF671)
+Subject: Re: Add netdev name to  NL80211_CMD_STOP_AP event?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 10 Jun 2015 23:39:25 +0200
+In-Reply-To: <5578AA11.2020505@candelatech.com> (sfid-20150610_232022_833916_9A1896A2)
+References: <5578AA11.2020505@candelatech.com>
+	 (sfid-20150610_232022_833916_9A1896A2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Raja Mani <rmani@qti.qualcomm.com> writes:
+On Wed, 2015-06-10 at 14:20 -0700, Ben Greear wrote:
+> While trying to make 'iw' able to print out something useful for
+> the 'stop_ap' event, I notice there is not really any human friendly
+> info in the message (just phy id (which may not match phy name), ifindex, and some other
+> wiphy related numeric ID.
+> 
+> Any reason not to add the netdev name (NL80211_ATTR_IFNAME) to this and
+> related messages?
 
-> Just found this during code review.
->
-> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+We're not really adding that *anywhere*, and you can trivially look it
+up based on the ifindex, so why bother?
 
-Thanks, applied.
+johannes
 
--- 
-Kalle Valo
