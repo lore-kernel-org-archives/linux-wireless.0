@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0122.outbound.protection.outlook.com ([157.55.234.122]:11743
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756034AbbFPJtx convert rfc822-to-8bit (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:25612 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754360AbbFJWMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 05:49:53 -0400
-From: "Abdul, Hussain (H.)" <habdul@visteon.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
-	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
-	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
-	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
-	"dean.lee@atmel.com" <dean.lee@atmel.com>,
-	"chris.park@atmel.com" <chris.park@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] Staging: wilc1000: Assign proper boolean value
-Date: Tue, 16 Jun 2015 09:49:49 +0000
-Message-ID: <1434448109-15017-1-git-send-email-habdul@visteon.com> (sfid-20150616_115017_205745_D02B8E4C)
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 10 Jun 2015 18:12:34 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 5/7] brcmfmac: free ifp for non-netdev interface in p2p module
+Date: Thu, 11 Jun 2015 00:12:21 +0200
+Message-ID: <1433974343-16982-6-git-send-email-arend@broadcom.com> (sfid-20150611_001256_785345_9628387C)
+In-Reply-To: <1433974343-16982-1-git-send-email-arend@broadcom.com>
+References: <1433974343-16982-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abdul Hussain <habdul@visteon.com>
+Making it more clear by freeing the ifp in same place where the
+vif object is freed.
 
-This patch assign proper boolean value to boolean variable.
-
-Signed-off-by: Abdul Hussain <habdul@visteon.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/core.c | 2 --
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c  | 3 +++
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 17ab5cd..be1f6bf 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -7816,7 +7816,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 					pNewJoinBssParam->rsn_cap[1] = pu8IEs[rsnIndex + 1];
- 					rsnIndex += 2;
- 				}
--				pNewJoinBssParam->rsn_found = 1;
-+				pNewJoinBssParam->rsn_found = true;
- 				index += pu8IEs[index + 1] + 2; /* ID,Length bytes and IE body */
- 				continue;
- 			} else
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index f8f47dc..8cf4a1e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -867,8 +867,6 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
+ 		}
+ 		/* unregister will take care of freeing it */
+ 		unregister_netdev(ifp->ndev);
+-	} else {
+-		kfree(ifp);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 710fbe5..abcaa77 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -2238,6 +2238,7 @@ static void brcmf_p2p_delete_p2pdev(struct brcmf_p2p_info *p2p,
+ {
+ 	cfg80211_unregister_wdev(&vif->wdev);
+ 	p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
++	kfree(vif->ifp);
+ 	brcmf_free_vif(vif);
+ }
+ 
+@@ -2364,6 +2365,8 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		break;
+ 
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++		brcmf_p2p_cancel_remain_on_channel(vif->ifp);
++		brcmf_p2p_deinit_discovery(p2p);
+ 		brcmf_p2p_delete_p2pdev(p2p, vif);
+ 		return 0;
+ 	default:
 -- 
 1.9.1
+
