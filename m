@@ -1,62 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:35254 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbbFVEIj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 00:08:39 -0400
-Received: by pdbci14 with SMTP id ci14so71268095pdb.2
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2015 21:08:38 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/5] staging: wilc1000: wilc_wfi_netdevice.c: Insert blank line after declarations
-Date: Mon, 22 Jun 2015 13:08:14 +0900
-Message-Id: <1434946095-26157-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150622_060850_066648_45E7D660)
-In-Reply-To: <1434946095-26157-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1434946095-26157-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58300 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932972AbbFJNJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 09:09:16 -0400
+Message-ID: <1433941752.3145.10.camel@sipsolutions.net> (sfid-20150610_150922_643165_9D6C6EF2)
+Subject: pull-request: mac80211-next 2015-06-10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 10 Jun 2015 15:09:12 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix checkpatch warning found by checkpatch.pl
-WARNING: Missing a blank line after declarations
+Hi Dave,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.c | 3 +++
- 1 file changed, 3 insertions(+)
+For -next, I have another set of changes, mostly small fixes for there
+and a few cleanups. Kalle and I also decided to put in a big API change
+that I'd been planning for a while and that required modifying all the
+drivers, for that I pulled in your net-next tree before (re-)applying
+that patch. Therefore, you shouldn't run into any conflicts now; without
+that at least the new mediatek driver wouldn't have built.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.c b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-index 039e21f..31a796b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-@@ -207,6 +207,7 @@ struct WILC_WFI_packet *WILC_WFI_DequeueBuf(struct net_device *dev)
- static void WILC_WFI_RxInts(struct net_device *dev, int enable)
- {
- 	struct WILC_WFI_priv *priv = netdev_priv(dev);
-+
- 	priv->rx_int_enabled = enable;
- }
- 
-@@ -522,6 +523,7 @@ void WILC_WFI_HwTx(char *buf, int len, struct net_device *dev)
- 
- 	if (0) {  /* enable this conditional to look at the data */
- 		int i;
-+
- 		PRINT_D(RX_DBG, "len is %i", len);
- 		for (i = 14; i < len; i++)
- 			PRINT_D(RX_DBG, "TXdata[%d] %02x\n", i, buf[i] & 0xff);
-@@ -677,6 +679,7 @@ int WILC_WFI_Ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
- struct net_device_stats *WILC_WFI_Stats(struct net_device *dev)
- {
- 	struct WILC_WFI_priv *priv = netdev_priv(dev);
-+
- 	return &priv->stats;
- }
- 
--- 
-1.9.1
+Let me know if there are any issues.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Thanks,
+johannes
+
+The following changes since commit c3eee1fb1d308564ada5f7ea57bc51efc6130b37:
+
+  Merge tag 'batman-adv-for-davem' of git://git.open-mesh.org/linux-merge (2015-06-09 20:23:52 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-06-10
+
+for you to fetch changes up to 5df03344c5639fdd848cb87553956df7276a8645:
+
+  mac80211: convert HW flags to unsigned long bitmap (2015-06-10 13:48:42 +0200)
+
+----------------------------------------------------------------
+For this round we mostly have fixes:
+ * mesh fixes from Alexis Green and Chun-Yeow Yeoh,
+ * a documentation fix from Jakub Kicinski,
+ * a missing channel release (from Michal Kazior),
+ * a fix for a signal strength reporting bug (from Sara Sharon),
+ * handle deauth while associating (myself),
+ * don't report mangled TX SKB back to userspace for status (myself),
+ * handle aggregation session timeouts properly in fast-xmit (myself)
+
+However, there are also a few cleanups and one big change that
+affects all drivers (and that required me to pull in your tree)
+to change the mac80211 HW flags to use an unsigned long bitmap
+so that we can extend them more easily - we're running out of
+flags even with a cleanup to remove the two unused ones.
+
+----------------------------------------------------------------
+Alexis Green (3):
+      mac80211: Fix incorrectly named last_hop_metric variable in mesh_rx_path_sel_frame
+      mac80211: Always check rates and capabilities in mesh mode
+      mac80211: Fix a case of incorrect metric used when forwarding a PREQ
+
+Chun-Yeow Yeoh (1):
+      mac80211: fix the beacon csa counter for mesh and ibss
+
+Jakub Kicinski (1):
+      mac80211: remove obsolete sentence from documentation
+
+Johannes Berg (9):
+      mac80211: act upon and report deauth while associating
+      mac80211: move TX PN to public part of key struct
+      mac80211: copy nl80211 mgmt TX SKB for status
+      mac80211: stop using pointers as userspace cookies
+      mac80211: remove short slot/short preamble incapable flags
+      mac80211: rename single hw-scan flag to follow naming convention
+      mac80211: handle aggregation session timeout on fast-xmit path
+      Merge remote-tracking branch 'net-next/master' into mac80211-next
+      mac80211: convert HW flags to unsigned long bitmap
+
+Michal Kazior (1):
+      mac80211: release channel on auth failure
+
+Sara Sharon (1):
+      mac80211: ignore invalid scan RSSI values
+
+ drivers/net/wireless/adm8211.c                     |   8 +-
+ drivers/net/wireless/at76c50x-usb.c                |   4 +-
+ drivers/net/wireless/ath/ar5523/ar5523.c           |   6 +-
+ drivers/net/wireless/ath/ath10k/mac.c              |  34 ++--
+ drivers/net/wireless/ath/ath5k/base.c              |  12 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c      |  20 +--
+ drivers/net/wireless/ath/ath9k/init.c              |  24 +--
+ drivers/net/wireless/ath/carl9170/fw.c             |   2 +-
+ drivers/net/wireless/ath/carl9170/main.c           |  20 +--
+ drivers/net/wireless/ath/wcn36xx/main.c            |  12 +-
+ drivers/net/wireless/ath/wcn36xx/smd.c             |   4 +-
+ drivers/net/wireless/b43/main.c                    |   4 +-
+ drivers/net/wireless/b43legacy/main.c              |   5 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   7 +-
+ drivers/net/wireless/cw1200/main.c                 |  16 +-
+ drivers/net/wireless/iwlegacy/3945-mac.c           |   6 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c           |  12 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |  26 +--
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c        |   4 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c        |  32 ++--
+ drivers/net/wireless/libertas_tf/main.c            |   2 +-
+ drivers/net/wireless/mac80211_hwsim.c              |  26 +--
+ drivers/net/wireless/mediatek/mt7601u/init.c       |  10 +-
+ drivers/net/wireless/mwl8k.c                       |   9 +-
+ drivers/net/wireless/p54/main.c                    |  12 +-
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c        |   7 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c            |   8 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c            |   8 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c            |   9 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |  16 +-
+ drivers/net/wireless/rt2x00/rt61pci.c              |   9 +-
+ drivers/net/wireless/rt2x00/rt73usb.c              |   9 +-
+ drivers/net/wireless/rtl818x/rtl8180/dev.c         |   9 +-
+ drivers/net/wireless/rtl818x/rtl8187/dev.c         |   6 +-
+ drivers/net/wireless/rtlwifi/base.c                |  22 ++-
+ drivers/net/wireless/ti/wl1251/main.c              |   3 +-
+ drivers/net/wireless/ti/wlcore/main.c              |  26 +--
+ drivers/net/wireless/zd1211rw/zd_mac.c             |   8 +-
+ drivers/staging/vt6655/device_main.c               |   8 +-
+ drivers/staging/vt6656/main_usb.c                  |   8 +-
+ include/net/mac80211.h                             | 106 ++++++------
+ net/mac80211/agg-tx.c                              |   4 +-
+ net/mac80211/cfg.c                                 | 178 ++++++++++++---------
+ net/mac80211/debugfs.c                             | 103 ++++++------
+ net/mac80211/debugfs_key.c                         |  17 +-
+ net/mac80211/driver-ops.h                          |   2 +-
+ net/mac80211/ibss.c                                |   1 +
+ net/mac80211/iface.c                               |  10 +-
+ net/mac80211/key.c                                 |  84 +++-------
+ net/mac80211/key.h                                 |   4 -
+ net/mac80211/main.c                                |  14 +-
+ net/mac80211/mesh.c                                |   1 +
+ net/mac80211/mesh_hwmp.c                           |  35 ++--
+ net/mac80211/mesh_plink.c                          |   7 +-
+ net/mac80211/mlme.c                                | 164 ++++++++++---------
+ net/mac80211/offchannel.c                          |   2 +-
+ net/mac80211/pm.c                                  |   4 +-
+ net/mac80211/rate.c                                |   6 +-
+ net/mac80211/rc80211_minstrel_ht.c                 |   2 +-
+ net/mac80211/rx.c                                  |  26 +--
+ net/mac80211/scan.c                                |  18 ++-
+ net/mac80211/sta_info.c                            |  14 +-
+ net/mac80211/sta_info.h                            |   3 +
+ net/mac80211/status.c                              | 135 +++++++++-------
+ net/mac80211/tdls.c                                |  19 +--
+ net/mac80211/tx.c                                  |  53 +++---
+ net/mac80211/util.c                                |   6 +-
+ net/mac80211/wpa.c                                 |  10 +-
+ 68 files changed, 758 insertions(+), 743 deletions(-)
+
+
