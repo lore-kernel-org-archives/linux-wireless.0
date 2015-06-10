@@ -1,35 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:36317 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbbFLLHs (ORCPT
+Received: from mailrelay110.isp.belgacom.be ([195.238.20.137]:6993 "EHLO
+	mailrelay110.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933947AbbFJQcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 07:07:48 -0400
-Received: by pabqy3 with SMTP id qy3so21183342pab.3
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 04:07:48 -0700 (PDT)
-Date: Fri, 12 Jun 2015 16:37:37 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Dean Lee <dean.lee@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, johnny.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: update TODO list
-Message-ID: <20150612110737.GA5436@sudip-PC> (sfid-20150612_130751_639243_031516DA)
-References: <1434104591-5599-1-git-send-email-dean.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434104591-5599-1-git-send-email-dean.lee@atmel.com>
+	Wed, 10 Jun 2015 12:32:22 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	Fabian Frederick <fabf@skynet.be>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 1/1 linux-next] staging: rtl8723au: use swap() in WMMOnAssocRsp23a()
+Date: Wed, 10 Jun 2015 18:32:17 +0200
+Message-Id: <1433953937-23987-1-git-send-email-fabf@skynet.be> (sfid-20150610_183912_919744_3F0C6450)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 12, 2015 at 07:23:11PM +0900, Dean Lee wrote:
-> remove complete OS wrapper functions.
-just a minor thing. It will be easy if you send your patches in series
-instead of separate patches. your patch "remove oswrapper & type file"
-is dependent on one of the previous patch that you have sent today. If
-for some reason that previous patch is not applied then
-"remove oswrapper & type file" will not apply and then this patch will
-have no meaning.
+Use kernel.h macro definition.
 
-regards
-sudip
+Thanks to Julia Lawall for Coccinelle scripting support.
+
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/staging/rtl8723au/core/rtw_wlan_util.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+index 5280338..3c1315fc 100644
+--- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
++++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+@@ -573,7 +573,7 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
+ 	inx[0] = 0; inx[1] = 1; inx[2] = 2; inx[3] = 3;
+ 
+ 	if (pregpriv->wifi_spec == 1) {
+-		u32 j, tmp, change_inx = false;
++		u32 j, change_inx = false;
+ 
+ 		/* entry indx: 0->vo, 1->vi, 2->be, 3->bk. */
+ 		for (i = 0; i < 4; i++) {
+@@ -589,14 +589,8 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
+ 				}
+ 
+ 				if (change_inx) {
+-					tmp = edca[i];
+-					edca[i] = edca[j];
+-					edca[j] = tmp;
+-
+-					tmp = inx[i];
+-					inx[i] = inx[j];
+-					inx[j] = tmp;
+-
++					swap(edca[i], edca[j]);
++					swap(inx[i], inx[j]);
+ 					change_inx = false;
+ 				}
+ 			}
+-- 
+2.4.2
 
