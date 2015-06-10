@@ -1,39 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35203 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750763AbbFKKBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 06:01:42 -0400
-Message-ID: <1434016900.1915.8.camel@sipsolutions.net> (sfid-20150611_120146_009184_3158A9E9)
-Subject: Re: Exposing enum ieee80211_channel_flags to user
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Jun 2015 12:01:40 +0200
-In-Reply-To: <CACna6ry_VRbUbEQeVXC5j68VzPOkJ-qOsAGzKN8XswhHXnO+tw@mail.gmail.com> (sfid-20150611_120017_614164_3F327AEA)
-References: <CACna6rwHXzGTZ+NS9PpZENJATVzRzm1Wkija0_CrveMoM05d5g@mail.gmail.com>
-	 <1434015922.1915.6.camel@sipsolutions.net>
-	 <1434016002.1915.7.camel@sipsolutions.net>
-	 <CACna6ry_VRbUbEQeVXC5j68VzPOkJ-qOsAGzKN8XswhHXnO+tw@mail.gmail.com>
-	 (sfid-20150611_120017_614164_3F327AEA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:25612 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754332AbbFJWMc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 18:12:32 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Pontus Fuchs <pontusf@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/7] brcmfmac: Check if firmware supports p2p
+Date: Thu, 11 Jun 2015 00:12:17 +0200
+Message-ID: <1433974343-16982-2-git-send-email-arend@broadcom.com> (sfid-20150611_001245_760624_001CCD08)
+In-Reply-To: <1433974343-16982-1-git-send-email-arend@broadcom.com>
+References: <1433974343-16982-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-06-11 at 12:00 +0200, Rafał Miłecki wrote:
+From: Pontus Fuchs <pontusf@broadcom.com>
 
-> > Upon rereading, I think my preference would be to remove much of the
-> > channel list information and add a separate iw command.
-> 
-> Do you mean removing channel list from "iw phy X info"? 
+Add a feature flag to reflect the firmware's p2p capability.
 
-I'm not sure I'd remove it completely - but perhaps remove all the
-detail information like DFS time etc. that's just making it really
-large? I.e. go back to just having a single line of information.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Pontus Fuchs <pontusf@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c | 1 +
+ drivers/net/wireless/brcm80211/brcmfmac/feature.h | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-> Can you suggest the new command name?
-
-"iw phy X channels" would work?
-
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+index 2c5fad3..1e94e94 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+@@ -129,6 +129,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+ 	if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
+ 		brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
++	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
+ 
+ 	/* set chip related quirks */
+ 	switch (drvr->bus_if->chip) {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/brcm80211/brcmfmac/feature.h
+index 5469625..6b381f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.h
+@@ -23,12 +23,14 @@
+  * MCHAN: multi-channel for concurrent P2P.
+  * PNO: preferred network offload.
+  * WOWL: Wake-On-WLAN.
++ * P2P: peer-to-peer
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+ 	BRCMF_FEAT_DEF(MCHAN) \
+ 	BRCMF_FEAT_DEF(PNO) \
+-	BRCMF_FEAT_DEF(WOWL)
++	BRCMF_FEAT_DEF(WOWL) \
++	BRCMF_FEAT_DEF(P2P)
+ /*
+  * Quirks:
+  *
+-- 
+1.9.1
 
