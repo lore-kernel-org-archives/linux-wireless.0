@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35561 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbFPFMp (ORCPT
+Received: from pegasus.erg.abdn.ac.uk ([139.133.204.173]:38123 "EHLO
+	pegasus.erg.abdn.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475AbbFJC0M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:12:45 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH 00/10] Add QCA99X0 support
-Date: Tue, 16 Jun 2015 10:42:12 +0530
-Message-ID: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071300_220343_41F55235)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 9 Jun 2015 22:26:12 -0400
+Date: Tue, 9 Jun 2015 20:25:58 -0600
+From: Gerrit Renker <gerrit@erg.abdn.ac.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [WEXT]: multiple calls for SIOCGIWSTATS return same value
+Message-ID: <20150609202558.208609e7@erg.abdn.ac.uk> (sfid-20150610_042615_542544_B0798F46)
+In-Reply-To: <1433835188.1892.5.camel@sipsolutions.net>
+References: <20150606203721.28791bb3@erg.abdn.ac.uk>
+	<1433747886.2106.5.camel@sipsolutions.net>
+	<20150608195853.239a2622@erg.abdn.ac.uk>
+	<1433835188.1892.5.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set adds changes for QCA99X0 chip in pci probe,
-Copy Engine init and firmware downloads. Since it is still
-work in progress the support for this chip is not yet
-advertised in pci device table.
+On Tue, 09 Jun 2015 09:33:08 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
+> > There is a similar behaviour for scan results: the signal levels reported
+> > for stations remain the same for all subsequent calls. Previously these
+> > also changed with time and position of receiver.  
+> 
+> You mean BSSes, not stations, right? This is very strange - it seems
+> those should be two entirely different code paths in the kernel.
+> 
+> What driver are you using? But then again, you said nl80211/iw works,
+> right? Then the driver shouldn't matter.
+> 
+> Do you think you'd be able to use tracing?
 
-Vasanthakumar Thiagarajan (10):
-  ath10k: Add a table to store hw specific values
-  ath10k: Add new reg_address/mask to hw register table
-  ath10k: Add hw register/values for QCA99X0 chip
-  ath10k: Copy Engine related changes for QCA99X0
-  ath10k: Make target cpu address to CE address conversion chip specific
-  ath10k: Add chip reset sequence for QCA99X0
-  ath10k: Extend CE src desc flags for interrupt indication
-  ath10k: Fix BMI communication timeout for QCA99X0
-  ath10k: Add support for code swap
-  ath10k: Add BMI param value to execute otp to hw_param
+Many thanks for providing the patch. I just tried it and it fixed both problems
+(access point signal level/quality and signal level reported for BSSes in scan
+result). Not sure if trace results are still needed, but I can do that if needed.
 
- drivers/net/wireless/ath/ath10k/Makefile    |   3 +-
- drivers/net/wireless/ath/ath10k/bmi.h       |   2 +-
- drivers/net/wireless/ath/ath10k/ce.c        |   1 +
- drivers/net/wireless/ath/ath10k/ce.h        |  17 ++-
- drivers/net/wireless/ath/ath10k/core.c      |  52 ++++++-
- drivers/net/wireless/ath/ath10k/core.h      |   9 ++
- drivers/net/wireless/ath/ath10k/hw.c        |  86 +++++++++++-
- drivers/net/wireless/ath/ath10k/hw.h        |  61 ++++++--
- drivers/net/wireless/ath/ath10k/pci.c       | 180 ++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/pci.h       |  12 --
- drivers/net/wireless/ath/ath10k/swap.c      | 208 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/swap.h      |  72 ++++++++++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   3 +
- 13 files changed, 659 insertions(+), 47 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/swap.c
- create mode 100644 drivers/net/wireless/ath/ath10k/swap.h
+Will also work on porting wavemon to nl80211 now.
 
--- 
-1.9.1
-
+Thanks again,
+Gerrit
