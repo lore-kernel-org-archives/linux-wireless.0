@@ -1,146 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.polytechnique.org ([129.104.30.34]:44431 "EHLO
-	mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbbF2KYh (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:35425 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861AbbFJFKv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 06:24:37 -0400
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: [PATCH] NFC: st21nfca,st-nci: fix use of uninitialized variables in error path
-Date: Mon, 29 Jun 2015 18:17:54 +0800
-Message-Id: <1435573074-29503-1-git-send-email-nicolas.iooss_linux@m4x.org> (sfid-20150629_122500_259350_6CA0A601)
+	Wed, 10 Jun 2015 01:10:51 -0400
+Received: by wiga1 with SMTP id a1so35700174wig.0
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 22:10:50 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, nbd@openwrt.org, sujith@msujith.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC] ath9k: advertise p2p dev support when chanctx
+Date: Wed, 10 Jun 2015 07:10:34 +0200
+Message-Id: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150610_071054_892118_EE176763)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-st21nfca_hci_load_session() calls kfree_skb() on unitialized variables
-skb_pipe_info and skb_pipe_list if the call to nfc_hci_connect_gate()
-failed.  Reword the error path to not use these variables when they are
-not initialized.  While at it, there seemed to be a memory leak because
-skb_pipe_info was only freed once, after the for-loop, even though
-several ones were created by nfc_hci_send_cmd.
+Add p2p dev support when ath9k loaded with
+use_chanctx=1. This will fix problem, when first
+interface is an AP and next we would like to run
+p2p_find. Before p2p scan failed.
 
-st_nci_hci_load_session() is similar to st21nfca_hci_load_session(), so
-rework this function too.
-
-Fixes: ec03ff1a8f9a ("NFC: st21nfca: Remove skb_pipe_list and skb_pipe_info
-useless allocation")
-
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
+@Felix, Sujith please review. I am not sure if didn't miss some
+case for NL80211_IFTYPE_P2P_DEVICE (special handling required?).
 
-As I haven't got the hardware needed to perform tests, I only compile-tested
-this patch.
+ drivers/net/wireless/ath/ath9k/init.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Moreover I may then have missed something important for example in the way
-the memory is managed (I did not understand why skb_pipe_info was not freed
-in the for loop).
-
- drivers/nfc/st-nci/st-nci_se.c  |  8 ++++----
- drivers/nfc/st21nfca/st21nfca.c | 11 ++++++-----
- 2 files changed, 10 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/nfc/st-nci/st-nci_se.c b/drivers/nfc/st-nci/st-nci_se.c
-index 97addfa96c6f..c742ef65a05a 100644
---- a/drivers/nfc/st-nci/st-nci_se.c
-+++ b/drivers/nfc/st-nci/st-nci_se.c
-@@ -189,14 +189,14 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
- 				ST_NCI_DEVICE_MGNT_GATE,
- 				ST_NCI_DEVICE_MGNT_PIPE);
- 	if (r < 0)
--		goto free_info;
-+		return r;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index f8d11ef..7da1a17 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -736,13 +736,14 @@ static const struct ieee80211_iface_limit if_limits_multi[] = {
+ 				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 				 BIT(NL80211_IFTYPE_P2P_GO) },
+ 	{ .max = 1,	.types = BIT(NL80211_IFTYPE_ADHOC) },
++	{ .max = 1,	.types = BIT(NL80211_IFTYPE_P2P_DEVICE) },
+ };
  
- 	/* Get pipe list */
- 	r = nci_hci_send_cmd(ndev, ST_NCI_DEVICE_MGNT_GATE,
- 			ST_NCI_DM_GETINFO, pipe_list, sizeof(pipe_list),
- 			&skb_pipe_list);
- 	if (r < 0)
--		goto free_info;
-+		return r;
+ static const struct ieee80211_iface_combination if_comb_multi[] = {
+ 	{
+ 		.limits = if_limits_multi,
+ 		.n_limits = ARRAY_SIZE(if_limits_multi),
+-		.max_interfaces = 2,
++		.max_interfaces = 3,
+ 		.num_different_channels = 2,
+ 		.beacon_int_infra_match = true,
+ 	},
+@@ -855,6 +856,9 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			BIT(NL80211_IFTYPE_MESH_POINT) |
+ 			BIT(NL80211_IFTYPE_WDS);
  
- 	/* Complete the existing gate_pipe table */
- 	for (i = 0; i < skb_pipe_list->len; i++) {
-@@ -222,6 +222,7 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
- 		    dm_pipe_info->src_host_id != ST_NCI_ESE_HOST_ID) {
- 			pr_err("Unexpected apdu_reader pipe on host %x\n",
- 			       dm_pipe_info->src_host_id);
-+			kfree_skb(skb_pipe_info);
- 			continue;
- 		}
- 
-@@ -241,13 +242,12 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
- 			ndev->hci_dev->pipes[st_nci_gates[j].pipe].host =
- 						dm_pipe_info->src_host_id;
- 		}
-+		kfree_skb(skb_pipe_info);
++		if (ath9k_is_chanctx_enabled())
++			hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_DEVICE);
++
+ 			hw->wiphy->iface_combinations = if_comb;
+ 			hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
  	}
- 
- 	memcpy(ndev->hci_dev->init_data.gates, st_nci_gates,
- 	       sizeof(st_nci_gates));
- 
--free_info:
--	kfree_skb(skb_pipe_info);
- 	kfree_skb(skb_pipe_list);
- 	return r;
- }
-diff --git a/drivers/nfc/st21nfca/st21nfca.c b/drivers/nfc/st21nfca/st21nfca.c
-index d251f7229c4e..051286562fab 100644
---- a/drivers/nfc/st21nfca/st21nfca.c
-+++ b/drivers/nfc/st21nfca/st21nfca.c
-@@ -148,14 +148,14 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
- 				ST21NFCA_DEVICE_MGNT_GATE,
- 				ST21NFCA_DEVICE_MGNT_PIPE);
- 	if (r < 0)
--		goto free_info;
-+		return r;
- 
- 	/* Get pipe list */
- 	r = nfc_hci_send_cmd(hdev, ST21NFCA_DEVICE_MGNT_GATE,
- 			ST21NFCA_DM_GETINFO, pipe_list, sizeof(pipe_list),
- 			&skb_pipe_list);
- 	if (r < 0)
--		goto free_info;
-+		return r;
- 
- 	/* Complete the existing gate_pipe table */
- 	for (i = 0; i < skb_pipe_list->len; i++) {
-@@ -181,6 +181,7 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
- 			info->src_host_id != ST21NFCA_ESE_HOST_ID) {
- 			pr_err("Unexpected apdu_reader pipe on host %x\n",
- 				info->src_host_id);
-+			kfree_skb(skb_pipe_info);
- 			continue;
- 		}
- 
-@@ -200,6 +201,7 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
- 			hdev->pipes[st21nfca_gates[j].pipe].dest_host =
- 							info->src_host_id;
- 		}
-+		kfree_skb(skb_pipe_info);
- 	}
- 
- 	/*
-@@ -214,13 +216,12 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
- 					st21nfca_gates[i].gate,
- 					st21nfca_gates[i].pipe);
- 			if (r < 0)
--				goto free_info;
-+				goto free_list;
- 		}
- 	}
- 
- 	memcpy(hdev->init_data.gates, st21nfca_gates, sizeof(st21nfca_gates));
--free_info:
--	kfree_skb(skb_pipe_info);
-+free_list:
- 	kfree_skb(skb_pipe_list);
- 	return r;
- }
 -- 
-2.4.4
+1.9.1
 
