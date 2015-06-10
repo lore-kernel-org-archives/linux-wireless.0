@@ -1,83 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36407 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757732AbbFQH3V (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:18823 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754325AbbFJWMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 03:29:21 -0400
-Received: by paceq1 with SMTP id eq1so4581405pac.3
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2015 00:29:21 -0700 (PDT)
-From: Sunghoon Cho <ywhsbliss@gmail.com>
-To: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	chris.park@atmel.com, Rachel.kim@atmel.com, dean.lee@atmel.com
-Cc: Sunghoon Cho <ywhsbliss@gmail.com>
-Subject: [PATCH 4/5] staging: wilc100: align definitions
-Date: Wed, 17 Jun 2015 16:28:54 +0900
-Message-Id: <97d83e0878d977d92f10cb28110e3fb459b1ca45.1434526056.git.ywhsbliss@gmail.com> (sfid-20150617_092924_456551_9418003D)
-In-Reply-To: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
-References: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
-In-Reply-To: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
-References: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
+	Wed, 10 Jun 2015 18:12:31 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 7/7] brcmfmac: assure p2pdev is unregistered upon driver unload
+Date: Thu, 11 Jun 2015 00:12:23 +0200
+Message-ID: <1433974343-16982-8-git-send-email-arend@broadcom.com> (sfid-20150611_001242_964564_6AC03F02)
+In-Reply-To: <1433974343-16982-1-git-send-email-arend@broadcom.com>
+References: <1433974343-16982-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch alignes the lines of #define preprocessors.
+When unloading the driver with a p2pdev interface it resulted in
+a warning upon calling wiphy_unregister() and subsequently a crash
+in the driver. This patch assures the p2pdev is unregistered calling
+unregister_wdev() before doing the wiphy_unregister().
 
-Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_if.h | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 4 +---
+ drivers/net/wireless/brcm80211/brcmfmac/core.c     | 1 +
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      | 6 ++++--
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 438e2db2..11a3b98 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -107,11 +107,10 @@ typedef struct {
- typedef struct {
- 	void (*mac_indicate)(int);
- } wilc_wlan_indicate_func_t;
--#define WILC_MAC_INDICATE_STATUS		0x1
--#define WILC_MAC_STATUS_INIT	-1
--#define WILC_MAC_STATUS_READY 0
--#define WILC_MAC_STATUS_CONNECT 1
--
-+#define WILC_MAC_INDICATE_STATUS	0x1
-+#define WILC_MAC_STATUS_INIT		-1
-+#define WILC_MAC_STATUS_READY		0
-+#define WILC_MAC_STATUS_CONNECT		1
- #define WILC_MAC_INDICATE_SCAN		0x2
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 6e45b40..d86d1f1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -6207,10 +6207,8 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+ 	if (!cfg)
+ 		return;
  
- typedef struct {
-@@ -179,7 +178,7 @@ struct tx_complete_data {
+-	WARN_ON(!list_empty(&cfg->vif_list));
+-	wiphy_unregister(cfg->wiphy);
+ 	brcmf_btcoex_detach(cfg);
+-	brcmf_p2p_detach(&cfg->p2p);
++	wiphy_unregister(cfg->wiphy);
+ 	wl_deinit_priv(cfg);
+ 	brcmf_free_wiphy(cfg->wiphy);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 8cf4a1e..866b818 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -1098,6 +1098,7 @@ void brcmf_detach(struct device *dev)
  
- typedef void (*wilc_tx_complete_func_t)(void *, int);
+ 	/* stop firmware event handling */
+ 	brcmf_fweh_detach(drvr);
++	brcmf_p2p_detach(&drvr->config->p2p);
  
--#define WILC_TX_ERR_NO_BUF (-2)
-+#define WILC_TX_ERR_NO_BUF	(-2)
+ 	brcmf_bus_change_state(bus_if, BRCMF_BUS_DOWN);
  
- typedef struct {
- 	int (*wlan_firmware_download)(const uint8_t *, uint32_t);
-@@ -211,8 +210,7 @@ typedef struct {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 920fcd9..2e1598f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -16,6 +16,7 @@
+ #include <linux/slab.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
++#include <linux/rtnetlink.h>
+ #include <net/cfg80211.h>
  
- #define MAX_SSID_LEN            33
- #define MAX_RATES_SUPPORTED     12
--
--#define INFINITE_SLEEP_TIME		((u32)0xFFFFFFFF)
-+#define INFINITE_SLEEP_TIME	((u32)0xFFFFFFFF)
- 
- #ifdef WILC_PARSE_SCAN_IN_HOST
- typedef enum {
-@@ -266,8 +264,8 @@ typedef enum {
- 	G_AUTO_PREAMBLE  = 2,	/* Auto Preamble Selection */
- } G_PREAMBLE_T;
- 
--#define MAC_CONNECTED    1
--#define MAC_DISCONNECTED 0
-+#define MAC_CONNECTED		1
-+#define MAC_DISCONNECTED	0
- 
- /* bug3819: */
- #define SCAN_DONE		TRUE
+ #include <brcmu_wifi.h>
+@@ -2421,8 +2422,9 @@ void brcmf_p2p_detach(struct brcmf_p2p_info *p2p)
+ 		brcmf_p2p_cancel_remain_on_channel(vif->ifp);
+ 		brcmf_p2p_deinit_discovery(p2p);
+ 		/* remove discovery interface */
+-		brcmf_free_vif(vif);
+-		p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
++		rtnl_lock();
++		brcmf_p2p_delete_p2pdev(p2p, vif);
++		rtnl_unlock();
+ 	}
+ 	/* just set it all to zero */
+ 	memset(p2p, 0, sizeof(*p2p));
 -- 
 1.9.1
 
