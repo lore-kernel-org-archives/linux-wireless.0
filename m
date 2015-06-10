@@ -1,700 +1,351 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:37277 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932951AbbFIMki convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34161 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932271AbbFJWMc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 08:40:38 -0400
-Received: by wifx6 with SMTP id x6so15328893wif.0
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2015 05:40:36 -0700 (PDT)
+	Wed, 10 Jun 2015 18:12:32 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 3/7] brcmfmac: rework .get_station() callback
+Date: Thu, 11 Jun 2015 00:12:19 +0200
+Message-ID: <1433974343-16982-4-git-send-email-arend@broadcom.com> (sfid-20150611_001256_396202_892CB361)
+In-Reply-To: <1433974343-16982-1-git-send-email-arend@broadcom.com>
+References: <1433974343-16982-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1433812382-10287-1-git-send-email-cfliu.tw@gmail.com>
-References: <1433812382-10287-1-git-send-email-cfliu.tw@gmail.com>
-Date: Tue, 9 Jun 2015 14:40:36 +0200
-Message-ID: <CA+BoTQ=fB3_a5gx3x82FyjJZvA+WVF4=F=3958nzV=HQAt+E5g@mail.gmail.com> (sfid-20150609_144045_375064_9DA7EEEB)
-Subject: Re: [PATCH v3] ath10k: add 'cryptmode' param to support raw tx
- injection and software crypto
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "Liu CF/TW" <cfliu.tw@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 June 2015 at 03:13, Liu CF/TW <cfliu.tw@gmail.com> wrote:
-> This change supports hardware crypto engine bypass by enabling raw
-> Rx/Tx encap mode. This enables use cases such as software crypto and raw
-> tx injection. This change introduces a new module param 'cryptmode'.
->
-> cryptmode:
->
->   0: Use hardware crypto engine globally with native Wi-Fi mode TX/RX
->      encapsulation to the firmware. This is the default mode.
->   1: Use sofware crypto engine globally with raw mode TX/RX encapsulation
->      to the firmware.
->   2: Supports both hardware and software crypto with raw mode TX/RX
->      encapsulation to the firmware. By default hardware crypto engine is
->      used. To use software crypto in this mode, set the per ath10k_vif
->      'nohwcrypt' flag value to True.*
->      *) The patch for setting vif specific 'nohwcrypt' flag when
->         cryptmode=2 would be a separate patch to mac80211.
->
-> Possible use case examples:
->
->   - Use software crypto engine in mac80211. (cryptmode=1)
->
->   - Support inject raw unencrypted frame on monitor interface and use
->     hardware crypto to encrypt the injected Tx frames. (cryptmode=2)
->
->   - Support receive raw hardware decrypted frame with encryption header
->     on monitor interface. (cryptmode=2)
->
->   - Support hybrid local & split MAC mode to support tunneling protocols
->     such as CAPWAP: Use hardware crypto for BSS in local mode,
->     and bypass hardware crypto for BSS in split MAC mode.
->     (cryptmode=2, ath10k_vif nohwcrypt=0 for local mode, =1 for split MAC
->      mode)
->
-> Testing:
->
->   Used QCA988x hw 2.0 with firmware-4.bin_10.2.4.48 with
->   backports-20150424.
->
->   All test case tested** with hostapd in both WPA2-PSK-TKIP (11g) and
->   WPA2-PSK-CCMP(11n/ac). Verified ping and http to google.com works.
->
->   **) Need to skip ATH10K_FW_FEATURE_RAW_MODE_SUPPORT check in core.c to
->   test firmware. After all, none of the existing QCA official firmware
->   exports that firmware bit yet.
->
->   Test Case                                        cryptmode value tested
->   ---------------------------------------------    ----------------------
->   1. ath10k hardware crypto can encrypt/decrypt       0: PASS
->      data frames when hostapd config the BSS in       1: Not applicable.
->      WPA2-PSK-TKIP and WPA2-PSK-CCMP modes.           2: PASS
->
->   2. mac80211 software crypto can encrypt/decrypt     0: Not applicable
->      data frames when hostapd config the BSS in       1: PASS
->      WPA2-PSK-TKIP and WPA2-PSK-CCMP modes.           2: PASS, when vif
->                                                          nohwcrypt=1
->
->   3. Monitor interface Tx: User application can       0: Not applicable
->      inject unencrypted raw Tx frames to monitor      1: PASS (mac80211)
->      interface for mac80211 or hardware to encrypt    2: PASS (hardware)
->      the frames.
->
->   4. Monitor interface Rx: mac80211 software crypto   0: Not applicable
->      engine can decrypt received TKIP/CCMP frames.    1: PASS
->      User application see decrypted frames.           2: PASS, when vif
->                                                          nohwcrypt=1
->
->   5. CAPWAP-like local and split MAC datapath         0: Not applicable
->      tunneling: Setup BSS1=Local MAC mode on wlan0,   1: Not applicable
->      BSS2=Split MAC mode on wlan0_monitor interface.  2: PASS
->      Test BSS1 data frames can be encrypted and
->      decrypted by ath10k hardware crypto engine
->      while BSS2 data frames can skip both hardware &
->      kernel mac80211 crypto engines via monitor
->      interface to the user application fot tunneling.
+The .get_station() cfg80211 callback is used in several scenarios. In
+managed mode it can obtain information about the access-point and its
+BSS parameters. In managed mode it can also obtain information about
+TDLS peers. In AP mode it can obtain information about connected
+clients.
 
-I've finally got to run a few tests on your patch.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 174 ++++++++++++---------
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  79 +++++++---
+ 2 files changed, 161 insertions(+), 92 deletions(-)
 
-I've tried qca988x with 10.2.4.48-2 (fw_feature hardcoded in driver).
-
-Here's a short summary of my findings:
-
- - cryptmode=1 can fix 4addr+802.1q VLAN tagging in both AP and STA
-modes (a problem recently reported by Cedric),
- - your patch as-is has AP WEP broken, see below
- - your patch as-is has TCP broken, see below
- - your patch as-is has performance really broken, see below
- - once patched it looks pretty solid.
-
-
-At the end of this email I'm attaching (most likely whitespace
-damaged) patch I've made on top of your patch for reviewing
-convenience.
-
-For testing/merging convenience here's a paste link: http://paste.ee/p/YMFrO
-
-
-Performance:
-
-cryptmode=1
- ap=qca988x sta=killer1525
-  killer1525  ->  qca988x     194.496 mbps [tcp1 ip4]
-  killer1525  ->  qca988x     238.309 mbps [tcp5 ip4]
-  killer1525  ->  qca988x     266.958 mbps [udp1 ip4]
-  killer1525  ->  qca988x     477.468 mbps [udp5 ip4]
-  qca988x     ->  killer1525  301.378 mbps [tcp1 ip4]
-  qca988x     ->  killer1525  297.949 mbps [tcp5 ip4]
-  qca988x     ->  killer1525  331.351 mbps [udp1 ip4]
-  qca988x     ->  killer1525  371.528 mbps [udp5 ip4]
- ap=killer1525 sta=qca988x
-  qca988x     ->  killer1525  331.447 mbps [tcp1 ip4]
-  qca988x     ->  killer1525  328.783 mbps [tcp5 ip4]
-  qca988x     ->  killer1525  375.309 mbps [udp1 ip4]
-  qca988x     ->  killer1525  403.379 mbps [udp5 ip4]
-  killer1525  ->  qca988x     203.689 mbps [tcp1 ip4]
-  killer1525  ->  qca988x     222.339 mbps [tcp5 ip4]
-  killer1525  ->  qca988x     264.199 mbps [udp1 ip4]
-  killer1525  ->  qca988x     479.371 mbps [udp5 ip4]
-
-vanilla
- ap=qca988x sta=killer1525
-  killer1525  ->  qca988x     216.882 mbps [tcp1 ip4]
-  killer1525  ->  qca988x     265.066 mbps [tcp5 ip4]
-  killer1525  ->  qca988x     267.344 mbps [udp1 ip4]
-  killer1525  ->  qca988x     481.762 mbps [udp5 ip4]
-  qca988x     ->  killer1525  209.34  mbps [tcp1 ip4]
-  qca988x     ->  killer1525  231.009 mbps [tcp5 ip4]
-  qca988x     ->  killer1525  385.807 mbps [udp1 ip4]
-  qca988x     ->  killer1525  544.823 mbps [udp5 ip4]
- ap=killer1525 sta=qca988x
-  qca988x     ->  killer1525  198.865 mbps [tcp1 ip4]
-  qca988x     ->  killer1525  232.259 mbps [tcp5 ip4]
-  qca988x     ->  killer1525  369.771 mbps [udp1 ip4]
-  qca988x     ->  killer1525  529.127 mbps [udp5 ip4]
-  killer1525  ->  qca988x     210.846 mbps [tcp1 ip4]
-  killer1525  ->  qca988x     243.255 mbps [tcp5 ip4]
-  killer1525  ->  qca988x     261.926 mbps [udp1 ip4]
-  killer1525  ->  qca988x     485.102 mbps [udp5 ip4]
-
-Note:
- - only open network tested for RAW vs nwifi performance comparison
- - killer1525 (qca6174 hw2.2) is 2x2 device (hence max 866mbps)
- - used iperf
- - OTA, devices a few cm apart from each other, no shielding
- - tcpX/udpX, X - means number of threads used
-
-Overview:
- - relative Tx performance drop is seen but is within reasonable and
-   expected threshold (A-MSDU must be disabled with RAW Tx)
-
-
-Connectivity:
-
-cryptmode=1
- ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br       OK
- ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br       OK
- ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br       OK
- ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br       OK
- ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br1vlan  OK
- ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br1vlan  OK
- ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br1vlan  OK
- ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br1vlan  OK
- ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br1vlan  OK
- ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br1vlan  OK
- ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br1vlan  OK
- ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br1vlan  OK
-
-vanilla
- ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta          OK
- ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta          OK
- ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br       OK
- ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br       OK
- ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br       FAIL*
- ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br       OK
- ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br       OK
- ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br1vlan  FAIL**
- ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br1vlan  FAIL**
- ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br1vlan  FAIL**
- ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br1vlan  FAIL**
- ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br1vlan  FAIL**
- ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br1vlan  FAIL**
- ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br1vlan  FAIL**
- ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br1vlan  FAIL**
-
-* This is a known problem with AP with WEP and 4addr
-** This is another known (recently reported) problem with 802.1q VLAN
-tagging and 4addr
-
-Note:
- - each test takes all possible endpoint pairs and pings
- - each pair-ping flushes arp table
- - ip6 is used
-
-
-Legend:
-
-1ap1sta:
-  [ap] ---- [sta]
-
-  endpoints: ap, sta
-
-1ap1sta2br:
-  [veth0] [ap] ---- [sta] [veth2]
-     |     |          |     |
-  [veth1]  |          \   [veth3]
-      \   /            \  /
-      [br0]            [br1]
-
-  endpoints: veth0, veth2, br0, br1
-  note: STA works in 4addr mode, AP has wds_sta=1
-
-1ap1sta2br1vlan:
-  [veth0] [ap] ---- [sta] [veth2]
-     |     |          |     |
-  [veth1]  |          \   [veth3]
-      \   /            \  /
-    [br0]              [br1]
-      |                  |
-    [vlan0_id2]        [vlan1_id2]
-
-  endpoints: vlan0_id2, vlan1_id2
-  note: STA works in 4addr mode, AP has wds_sta=1
-
-
-[...]
->  static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->         {
-> @@ -991,6 +994,34 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
->                 return -EINVAL;
->         }
->
-> +       ar->wmi.rx_decap_mode = __cpu_to_le32(ATH10K_HW_TXRX_NATIVE_WIFI);
-
-This is incorrect. rx_decap_mode is u32, not __le32. No need for the
-__cpu_to_le32() here.
-
-> +       switch (ath10k_cryptmode_param) {
-> +       case ATH10K_CRYPT_MODE_HW:
-> +               clear_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
-> +               clear_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags);
-> +               break;
-> +       case ATH10K_CRYPT_MODE_SW:
-> +       case ATH10K_CRYPT_MODE_HW_SW:
-> +               if (!test_bit(ATH10K_FW_FEATURE_RAW_MODE_SUPPORT,
-> +                             ar->fw_features)) {
-> +                       ath10k_err(ar, "cryptmode > 0 requires raw mode support from firmware");
-> +                       return -EINVAL;
-> +               }
-> +
-> +               set_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
-> +
-> +               if (ath10k_cryptmode_param == ATH10K_CRYPT_MODE_SW)
-> +                       set_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags);
-> +               break;
-> +       default:
-> +               ath10k_info(ar, "invalid cryptmode: %d\n",
-> +                           ath10k_cryptmode_param);
-> +               return -EINVAL;
-> +       }
-> +
-> +       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-> +               ar->wmi.rx_decap_mode = __cpu_to_le32(ATH10K_HW_TXRX_RAW);
-
-Ditto. This is u32, not __le32.
-
-
-[...]
-> @@ -197,12 +198,22 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
->                 return -EOPNOTSUPP;
->         }
->
-> +       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-> +               key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-> +
-> +       if (arvif->nohwcrypt)
-> +               cmd = DISABLE_KEY;
-> +
->         if (cmd == DISABLE_KEY) {
->                 arg.key_cipher = WMI_CIPHER_NONE;
->                 arg.key_data = NULL;
->         }
->
-> -       return ath10k_wmi_vdev_install_key(arvif->ar, &arg);
-> +       ret = ath10k_wmi_vdev_install_key(arvif->ar, &arg);
-> +
-> +       if (arvif->nohwcrypt && !ret)
-> +               return -EOPNOTSUPP;
-> +       return ret;
-
-This causes 2 problems:
-
- a) Lots of these:
-     [ 5406.702283] ath10k_pci 0000:00:06.0: failed to install key for
-vdev 0 peer 10:0b:a9:0d:c9:e0: -95
-
- b) WEP in AP mode fails because:
-
-     [ 5616.033102] ath10k_pci 0000:00:06.0: failed to install peer
-wep keys for vdev 0: -95
-     [ 5616.038512] ath10k_pci 0000:00:06.0: failed to associate
-station 10:0b:a9:0d:c9:e0 for vdev 0: -95
-
-See my patch how I've dealt with it for now.
-
-
-Michał
-
-----
-
-commit 0fd8c42ad92a83c65450575e348c737917e8210a
-Author: Michal Kazior <michal.kazior@tieto.com>
-Date:   Tue Jun 9 09:57:14 2015 +0200
-
-    ath10k: fix some RAW Tx encap mode cases
-
-    A-MSDU must be disabled for RAW Tx encap mode to
-    perform well when heavy traffic is applied.
-
-    Also key handling was a bit buggy and was:
-     - spamming dmesg with -95 warnings
-     - prevented AP WEP from working
-
-    As a solution return a 1 when using software
-    crypto early in set_key(), and adjust all
-    install_key() call sites to treat 1 as non-fatal
-    retval.
-
-    Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c
-b/drivers/net/wireless/ath/ath10k/core.c
-index 0d5f157bc177..48b6bfc778b9 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1021,9 +1021,24 @@ static int
-ath10k_core_init_firmware_features(struct ath10k *ar)
-                return -EINVAL;
-        }
-
--       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-+       ar->htt.max_num_amsdu = ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT;
-+       ar->htt.max_num_ampdu = ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index a668a35..6e45b40 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -2396,27 +2396,80 @@ brcmf_cfg80211_reconfigure_wep(struct brcmf_if *ifp)
+ 		brcmf_err("set wsec error (%d)\n", err);
+ }
+ 
++static void brcmf_convert_sta_flags(u32 fw_sta_flags, struct station_info *si)
++{
++	struct nl80211_sta_flag_update *sfu;
 +
-+       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-                ar->wmi.rx_decap_mode = ATH10K_HW_TXRX_RAW;
-
-+               /* Workaround:
-+                *
-+                * Firmware A-MSDU aggregation breaks with RAW Tx encap mode
-+                * and causes enormous performance issues (malformed frames,
-+                * etc).
-+                *
-+                * Disabling A-MSDU makes RAW mode stable with heavy traffic
-+                * albeit a bit slower compared to regular operation.
-+                */
-+               ar->htt.max_num_amsdu = 1;
-+       }
++	brcmf_dbg(TRACE, "flags %08x\n", fw_sta_flags);
++	si->filled |= BIT(NL80211_STA_INFO_STA_FLAGS);
++	sfu = &si->sta_flags;
++	sfu->mask = BIT(NL80211_STA_FLAG_WME) |
++		    BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++		    BIT(NL80211_STA_FLAG_ASSOCIATED) |
++		    BIT(NL80211_STA_FLAG_AUTHORIZED);
++	if (fw_sta_flags & BRCMF_STA_WME)
++		sfu->set |= BIT(NL80211_STA_FLAG_WME);
++	if (fw_sta_flags & BRCMF_STA_AUTHE)
++		sfu->set |= BIT(NL80211_STA_FLAG_AUTHENTICATED);
++	if (fw_sta_flags & BRCMF_STA_ASSOC)
++		sfu->set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
++	if (fw_sta_flags & BRCMF_STA_AUTHO)
++		sfu->set |= BIT(NL80211_STA_FLAG_AUTHORIZED);
++}
 +
-        /* Backwards compatibility for firmwares without
-         * ATH10K_FW_IE_WMI_OP_VERSION.
-         */
-diff --git a/drivers/net/wireless/ath/ath10k/core.h
-b/drivers/net/wireless/ath/ath10k/core.h
-index 72bd19ee6f76..e473488639a9 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -393,9 +393,6 @@ struct ath10k_debug {
-        u32 reg_addr;
-        u32 nf_cal_period;
-
--       u8 htt_max_amsdu;
--       u8 htt_max_ampdu;
++static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
++{
++	struct {
++		__le32 len;
++		struct brcmf_bss_info_le bss_le;
++	} *buf;
++	u16 capability;
++	int err;
++
++	buf = kzalloc(WL_BSS_INFO_MAX, GFP_KERNEL);
++	if (!buf)
++		return;
++
++	buf->len = cpu_to_le32(WL_BSS_INFO_MAX);
++	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_BSS_INFO, buf,
++				     WL_BSS_INFO_MAX);
++	if (err) {
++		brcmf_err("Failed to get bss info (%d)\n", err);
++		return;
++	}
++	si->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
++	si->bss_param.beacon_interval = le16_to_cpu(buf->bss_le.beacon_period);
++	si->bss_param.dtim_period = buf->bss_le.dtim_period;
++	capability = le16_to_cpu(buf->bss_le.capability);
++	if (capability & IEEE80211_HT_STBC_PARAM_DUAL_CTS_PROT)
++		si->bss_param.flags |= BSS_PARAM_FLAGS_CTS_PROT;
++	if (capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
++		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_PREAMBLE;
++	if (capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
++		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
++}
++
+ static s32
+ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 			   const u8 *mac, struct station_info *sinfo)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
+-	struct brcmf_scb_val_le scb_val;
+-	int rssi;
+-	s32 rate;
+ 	s32 err = 0;
+-	u8 *bssid = profile->bssid;
+ 	struct brcmf_sta_info_le sta_info_le;
+-	u32 beacon_period;
+-	u32 dtim_period;
++	u32 sta_flags;
++	u32 is_tdls_peer;
+ 
+ 	brcmf_dbg(TRACE, "Enter, MAC %pM\n", mac);
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+-	if (brcmf_is_apmode(ifp->vif)) {
+-		memcpy(&sta_info_le, mac, ETH_ALEN);
++	memset(&sta_info_le, 0, sizeof(sta_info_le));
++	memcpy(&sta_info_le, mac, ETH_ALEN);
++	err = brcmf_fil_iovar_data_get(ifp, "tdls_sta_info",
++				       &sta_info_le,
++				       sizeof(sta_info_le));
++	is_tdls_peer = !err;
++	if (err) {
+ 		err = brcmf_fil_iovar_data_get(ifp, "sta_info",
+ 					       &sta_info_le,
+ 					       sizeof(sta_info_le));
+@@ -2424,73 +2477,48 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+ 			brcmf_err("GET STA INFO failed, %d\n", err);
+ 			goto done;
+ 		}
+-		sinfo->filled = BIT(NL80211_STA_INFO_INACTIVE_TIME);
+-		sinfo->inactive_time = le32_to_cpu(sta_info_le.idle) * 1000;
+-		if (le32_to_cpu(sta_info_le.flags) & BRCMF_STA_ASSOC) {
+-			sinfo->filled |= BIT(NL80211_STA_INFO_CONNECTED_TIME);
+-			sinfo->connected_time = le32_to_cpu(sta_info_le.in);
+-		}
+-		brcmf_dbg(TRACE, "STA idle time : %d ms, connected time :%d sec\n",
+-			  sinfo->inactive_time, sinfo->connected_time);
+-	} else if (ifp->vif->wdev.iftype == NL80211_IFTYPE_STATION) {
+-		if (memcmp(mac, bssid, ETH_ALEN)) {
+-			brcmf_err("Wrong Mac address cfg_mac-%pM wl_bssid-%pM\n",
+-				  mac, bssid);
+-			err = -ENOENT;
+-			goto done;
+-		}
+-		/* Report the current tx rate */
+-		err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_RATE, &rate);
+-		if (err) {
+-			brcmf_err("Could not get rate (%d)\n", err);
+-			goto done;
+-		} else {
++	}
++	brcmf_dbg(TRACE, "version %d\n", le16_to_cpu(sta_info_le.ver));
++	sinfo->filled = BIT(NL80211_STA_INFO_INACTIVE_TIME);
++	sinfo->inactive_time = le32_to_cpu(sta_info_le.idle) * 1000;
++	sta_flags = le32_to_cpu(sta_info_le.flags);
++	brcmf_convert_sta_flags(sta_flags, sinfo);
++	sinfo->sta_flags.mask |= BIT(NL80211_STA_FLAG_TDLS_PEER);
++	if (is_tdls_peer)
++		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
++	else
++		sinfo->sta_flags.set &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
++	if (sta_flags & BRCMF_STA_ASSOC) {
++		sinfo->filled |= BIT(NL80211_STA_INFO_CONNECTED_TIME);
++		sinfo->connected_time = le32_to_cpu(sta_info_le.in);
++		brcmf_fill_bss_param(ifp, sinfo);
++	}
++	if (sta_flags & BRCMF_STA_SCBSTATS) {
++		sinfo->filled |= BIT(NL80211_STA_INFO_TX_FAILED);
++		sinfo->tx_failed = le32_to_cpu(sta_info_le.tx_failures);
++		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
++		sinfo->tx_packets = le32_to_cpu(sta_info_le.tx_pkts);
++		sinfo->tx_packets += le32_to_cpu(sta_info_le.tx_mcast_pkts);
++		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
++		sinfo->rx_packets = le32_to_cpu(sta_info_le.rx_ucast_pkts);
++		sinfo->rx_packets += le32_to_cpu(sta_info_le.rx_mcast_pkts);
++		if (sinfo->tx_packets) {
+ 			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
+-			sinfo->txrate.legacy = rate * 5;
+-			brcmf_dbg(CONN, "Rate %d Mbps\n", rate / 2);
++			sinfo->txrate.legacy = le32_to_cpu(sta_info_le.tx_rate);
++			sinfo->txrate.legacy /= 100;
+ 		}
 -
-        struct ath10k_fw_crash_data *fw_crash_data;
+-		if (test_bit(BRCMF_VIF_STATUS_CONNECTED,
+-			     &ifp->vif->sme_state)) {
+-			memset(&scb_val, 0, sizeof(scb_val));
+-			err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_RSSI,
+-						     &scb_val, sizeof(scb_val));
+-			if (err) {
+-				brcmf_err("Could not get rssi (%d)\n", err);
+-				goto done;
+-			} else {
+-				rssi = le32_to_cpu(scb_val.val);
+-				sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
+-				sinfo->signal = rssi;
+-				brcmf_dbg(CONN, "RSSI %d dBm\n", rssi);
+-			}
+-			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_BCNPRD,
+-						    &beacon_period);
+-			if (err) {
+-				brcmf_err("Could not get beacon period (%d)\n",
+-					  err);
+-				goto done;
+-			} else {
+-				sinfo->bss_param.beacon_interval =
+-					beacon_period;
+-				brcmf_dbg(CONN, "Beacon peroid %d\n",
+-					  beacon_period);
+-			}
+-			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_DTIMPRD,
+-						    &dtim_period);
+-			if (err) {
+-				brcmf_err("Could not get DTIM period (%d)\n",
+-					  err);
+-				goto done;
+-			} else {
+-				sinfo->bss_param.dtim_period = dtim_period;
+-				brcmf_dbg(CONN, "DTIM peroid %d\n",
+-					  dtim_period);
+-			}
+-			sinfo->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
++		if (sinfo->rx_packets) {
++			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
++			sinfo->rxrate.legacy = le32_to_cpu(sta_info_le.rx_rate);
++			sinfo->rxrate.legacy /= 100;
+ 		}
+-	} else
+-		err = -EPERM;
++		if (le16_to_cpu(sta_info_le.ver) >= 4) {
++			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES);
++			sinfo->tx_bytes = le64_to_cpu(sta_info_le.tx_tot_bytes);
++			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES);
++			sinfo->rx_bytes = le64_to_cpu(sta_info_le.rx_tot_bytes);
++		}
++	}
+ done:
+ 	brcmf_dbg(TRACE, "Exit\n");
+ 	return err;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+index 3749209..297911f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+@@ -32,7 +32,11 @@
+ #define	BRCMF_BSS_INFO_VERSION	109 /* curr ver of brcmf_bss_info_le struct */
+ #define BRCMF_BSS_RSSI_ON_CHANNEL	0x0002
+ 
+-#define BRCMF_STA_ASSOC			0x10		/* Associated */
++#define BRCMF_STA_WME              0x00000002      /* WMM association */
++#define BRCMF_STA_AUTHE            0x00000008      /* Authenticated */
++#define BRCMF_STA_ASSOC            0x00000010      /* Associated */
++#define BRCMF_STA_AUTHO            0x00000020      /* Authorized */
++#define BRCMF_STA_SCBSTATS         0x00004000      /* Per STA debug stats */
+ 
+ /* size of brcmf_scan_params not including variable length array */
+ #define BRCMF_SCAN_PARAMS_FIXED_SIZE	64
+@@ -113,6 +117,7 @@
+ #define BRCMF_WOWL_MAXPATTERNSIZE	128
+ 
+ #define BRCMF_COUNTRY_BUF_SZ		4
++#define BRCMF_ANT_MAX			4
+ 
+ /* join preference types for join_pref iovar */
+ enum brcmf_join_pref_types {
+@@ -456,25 +461,61 @@ struct brcmf_channel_info_le {
  };
+ 
+ struct brcmf_sta_info_le {
+-	__le16	ver;		/* version of this struct */
+-	__le16	len;		/* length in bytes of this structure */
+-	__le16	cap;		/* sta's advertised capabilities */
+-	__le32	flags;		/* flags defined below */
+-	__le32	idle;		/* time since data pkt rx'd from sta */
+-	u8	ea[ETH_ALEN];		/* Station address */
+-	__le32	count;			/* # rates in this set */
+-	u8	rates[BRCMF_MAXRATES_IN_SET];	/* rates in 500kbps units */
++	__le16 ver;		/* version of this struct */
++	__le16 len;		/* length in bytes of this structure */
++	__le16 cap;		/* sta's advertised capabilities */
++	__le32 flags;		/* flags defined below */
++	__le32 idle;		/* time since data pkt rx'd from sta */
++	u8 ea[ETH_ALEN];		/* Station address */
++	__le32 count;			/* # rates in this set */
++	u8 rates[BRCMF_MAXRATES_IN_SET];	/* rates in 500kbps units */
+ 						/* w/hi bit set if basic */
+-	__le32	in;		/* seconds elapsed since associated */
+-	__le32	listen_interval_inms; /* Min Listen interval in ms for STA */
+-	__le32	tx_pkts;	/* # of packets transmitted */
+-	__le32	tx_failures;	/* # of packets failed */
+-	__le32	rx_ucast_pkts;	/* # of unicast packets received */
+-	__le32	rx_mcast_pkts;	/* # of multicast packets received */
+-	__le32	tx_rate;	/* Rate of last successful tx frame */
+-	__le32	rx_rate;	/* Rate of last successful rx frame */
+-	__le32	rx_decrypt_succeeds;	/* # of packet decrypted successfully */
+-	__le32	rx_decrypt_failures;	/* # of packet decrypted failed */
++	__le32 in;		/* seconds elapsed since associated */
++	__le32 listen_interval_inms; /* Min Listen interval in ms for STA */
++	__le32 tx_pkts;	/* # of packets transmitted */
++	__le32 tx_failures;	/* # of packets failed */
++	__le32 rx_ucast_pkts;	/* # of unicast packets received */
++	__le32 rx_mcast_pkts;	/* # of multicast packets received */
++	__le32 tx_rate;	/* Rate of last successful tx frame */
++	__le32 rx_rate;	/* Rate of last successful rx frame */
++	__le32 rx_decrypt_succeeds;	/* # of packet decrypted successfully */
++	__le32 rx_decrypt_failures;	/* # of packet decrypted failed */
++	__le32 tx_tot_pkts;    /* # of tx pkts (ucast + mcast) */
++	__le32 rx_tot_pkts;    /* # of data packets recvd (uni + mcast) */
++	__le32 tx_mcast_pkts;  /* # of mcast pkts txed */
++	__le64 tx_tot_bytes;   /* data bytes txed (ucast + mcast) */
++	__le64 rx_tot_bytes;   /* data bytes recvd (ucast + mcast) */
++	__le64 tx_ucast_bytes; /* data bytes txed (ucast) */
++	__le64 tx_mcast_bytes; /* # data bytes txed (mcast) */
++	__le64 rx_ucast_bytes; /* data bytes recvd (ucast) */
++	__le64 rx_mcast_bytes; /* data bytes recvd (mcast) */
++	s8 rssi[BRCMF_ANT_MAX];   /* per antenna rssi */
++	s8 nf[BRCMF_ANT_MAX];     /* per antenna noise floor */
++	__le16 aid;                    /* association ID */
++	__le16 ht_capabilities;        /* advertised ht caps */
++	__le16 vht_flags;              /* converted vht flags */
++	__le32 tx_pkts_retry_cnt;      /* # of frames where a retry was
++					 * exhausted.
++					 */
++	__le32 tx_pkts_retry_exhausted; /* # of user frames where a retry
++					 * was exhausted
++					 */
++	s8 rx_lastpkt_rssi[BRCMF_ANT_MAX]; /* Per antenna RSSI of last
++					    * received data frame.
++					    */
++	/* TX WLAN retry/failure statistics:
++	 * Separated for host requested frames and locally generated frames.
++	 * Include unicast frame only where the retries/failures can be counted.
++	 */
++	__le32 tx_pkts_total;          /* # user frames sent successfully */
++	__le32 tx_pkts_retries;        /* # user frames retries */
++	__le32 tx_pkts_fw_total;       /* # FW generated sent successfully */
++	__le32 tx_pkts_fw_retries;     /* # retries for FW generated frames */
++	__le32 tx_pkts_fw_retry_exhausted;     /* # FW generated where a retry
++						* was exhausted
++						*/
++	__le32 rx_pkts_retried;        /* # rx with retry bit set */
++	__le32 tx_rate_fallback;       /* lowest fallback TX rate */
+ };
+ 
+ struct brcmf_chanspec_list {
+-- 
+1.9.1
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c
-b/drivers/net/wireless/ath/ath10k/debug.c
-index 6ad92845de88..5b263e0dedf5 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1358,11 +1358,8 @@ static ssize_t
-ath10k_read_htt_max_amsdu_ampdu(struct file *file,
-
-        mutex_lock(&ar->conf_mutex);
-
--       if (ar->debug.htt_max_amsdu)
--               amsdu = ar->debug.htt_max_amsdu;
--
--       if (ar->debug.htt_max_ampdu)
--               ampdu = ar->debug.htt_max_ampdu;
-+       amsdu = ar->htt.max_num_amsdu;
-+       ampdu = ar->htt.max_num_ampdu;
-
-        mutex_unlock(&ar->conf_mutex);
-
-@@ -1397,8 +1394,8 @@ static ssize_t
-ath10k_write_htt_max_amsdu_ampdu(struct file *file,
-                goto out;
-
-        res = count;
--       ar->debug.htt_max_amsdu = amsdu;
--       ar->debug.htt_max_ampdu = ampdu;
-+       ar->htt.max_num_amsdu = amsdu;
-+       ar->htt.max_num_ampdu = ampdu;
-
- out:
-        mutex_unlock(&ar->conf_mutex);
-@@ -1900,9 +1897,6 @@ void ath10k_debug_stop(struct ath10k *ar)
-        if (ar->debug.htt_stats_mask != 0)
-                cancel_delayed_work(&ar->debug.htt_stats_dwork);
-
--       ar->debug.htt_max_amsdu = 0;
--       ar->debug.htt_max_ampdu = 0;
--
-        ath10k_wmi_pdev_pktlog_disable(ar);
- }
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c
-b/drivers/net/wireless/ath/ath10k/htt.c
-index 6da6ef26143a..a4e1a1b03413 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -205,8 +205,27 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
-        }
-
-        status = ath10k_htt_verify_version(htt);
--       if (status)
-+       if (status) {
-+               ath10k_warn(ar, "failed to verify htt version: %d\n",
-+                           status);
-                return status;
-+       }
-
--       return ath10k_htt_send_rx_ring_cfg_ll(htt);
-+       status = ath10k_htt_send_rx_ring_cfg_ll(htt);
-+       if (status) {
-+               ath10k_warn(ar, "failed to setup rx ring: %d\n",
-+                           status);
-+               return status;
-+       }
-+
-+       status = ath10k_htt_h2t_aggr_cfg_msg(htt,
-+                                            htt->max_num_ampdu,
-+                                            htt->max_num_amsdu);
-+       if (status) {
-+               ath10k_warn(ar, "failed to setup amsdu/ampdu limit: %d\n",
-+                           status);
-+               return status;
-+       }
-+
-+       return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h
-b/drivers/net/wireless/ath/ath10k/htt.h
-index 7e8a0d835663..58ca5337b4d1 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1325,6 +1325,8 @@ struct ath10k_htt {
-        u8 target_version_minor;
-        struct completion target_version_received;
-        enum ath10k_fw_htt_op_version op_version;
-+       u8 max_num_amsdu;
-+       u8 max_num_ampdu;
-
-        const enum htt_t2h_msg_type *t2h_msg_types;
-        u32 t2h_msg_types_max;
-@@ -1482,6 +1484,12 @@ struct htt_rx_desc {
- #define HTT_LOG2_MAX_CACHE_LINE_SIZE 7 /* 2^7 = 128 */
- #define HTT_MAX_CACHE_LINE_SIZE_MASK ((1 << HTT_LOG2_MAX_CACHE_LINE_SIZE) - 1)
-
-+/* These values are default in most firmware revisions and apparently are a
-+ * sweet spot performance wise.
-+ */
-+#define ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT 3
-+#define ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT 64
-+
- int ath10k_htt_connect(struct ath10k_htt *htt);
- int ath10k_htt_init(struct ath10k *ar);
- int ath10k_htt_setup(struct ath10k_htt *htt);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c
-b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 5758e3d413ce..2a6267ee6978 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2073,6 +2073,8 @@ void ath10k_htt_t2h_msg_handler(struct ath10k
-*ar, struct sk_buff *skb)
-                break;
-        case HTT_T2H_MSG_TYPE_CHAN_CHANGE:
-                break;
-+       case HTT_T2H_MSG_TYPE_AGGR_CONF:
-+               break;
-        default:
-                ath10k_warn(ar, "htt event (%d) not handled\n",
-                            resp->hdr.msg_type);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c
-b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 7099e9181881..7c8156092e32 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -520,7 +520,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct
-sk_buff *msdu)
-
-        flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
-        flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
--       if (msdu->ip_summed == CHECKSUM_PARTIAL) {
-+       if (msdu->ip_summed == CHECKSUM_PARTIAL &&
-+           !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-                flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
-                flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
-        }
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c
-b/drivers/net/wireless/ath/ath10k/mac.c
-index b6685a863e70..ce15f3ccb38d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -172,7 +172,6 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
-                .key_flags = flags,
-                .macaddr = macaddr,
-        };
--       int ret;
-
-        lockdep_assert_held(&arvif->ar->conf_mutex);
-
-@@ -201,19 +200,12 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
-        if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-                key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-
--       if (arvif->nohwcrypt)
--               cmd = DISABLE_KEY;
--
-        if (cmd == DISABLE_KEY) {
-                arg.key_cipher = WMI_CIPHER_NONE;
-                arg.key_data = NULL;
-        }
-
--       ret = ath10k_wmi_vdev_install_key(arvif->ar, &arg);
--
--       if (arvif->nohwcrypt && !ret)
--               return -EOPNOTSUPP;
--       return ret;
-+       return ath10k_wmi_vdev_install_key(arvif->ar, &arg);
- }
-
- static int ath10k_install_key(struct ath10k_vif *arvif,
-@@ -229,6 +221,9 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
-
-        reinit_completion(&ar->install_key_done);
-
-+       if (arvif->nohwcrypt)
-+               return 1;
-+
-        ret = ath10k_send_key(arvif, key, cmd, macaddr, flags);
-        if (ret)
-                return ret;
-@@ -267,7 +262,7 @@ static int ath10k_install_peer_wep_keys(struct
-ath10k_vif *arvif,
-
-                ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
-                                         addr, flags);
--               if (ret)
-+               if (ret < 0)
-                        return ret;
-
-                flags = 0;
-@@ -275,7 +270,7 @@ static int ath10k_install_peer_wep_keys(struct
-ath10k_vif *arvif,
-
-                ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
-                                         addr, flags);
--               if (ret)
-+               if (ret < 0)
-                        return ret;
-
-                spin_lock_bh(&ar->data_lock);
-@@ -333,10 +328,10 @@ static int ath10k_clear_peer_keys(struct
-ath10k_vif *arvif,
-                /* key flags are not required to delete the key */
-                ret = ath10k_install_key(arvif, peer->keys[i],
-                                         DISABLE_KEY, addr, flags);
--               if (ret && first_errno == 0)
-+               if (ret < 0 && first_errno == 0)
-                        first_errno = ret;
-
--               if (ret)
-+               if (ret < 0)
-                        ath10k_warn(ar, "failed to remove peer wep key
-%d: %d\n",
-                                    i, ret);
-
-@@ -409,10 +404,10 @@ static int ath10k_clear_vdev_key(struct ath10k_vif *arvif,
-                        break;
-                /* key flags are not required to delete the key */
-                ret = ath10k_install_key(arvif, key, DISABLE_KEY, addr, flags);
--               if (ret && first_errno == 0)
-+               if (ret < 0 && first_errno == 0)
-                        first_errno = ret;
-
--               if (ret)
-+               if (ret < 0)
-                        ath10k_warn(ar, "failed to remove key for %pM: %d\n",
-                                    addr, ret);
-        }
-@@ -4864,6 +4859,9 @@ static int ath10k_set_key(struct ieee80211_hw
-*hw, enum set_key_cmd cmd,
-        if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-                return 1;
-
-+       if (arvif->nohwcrypt)
-+               return 1;
-+
-        if (key->keyidx > WMI_MAX_KEY_INDEX)
-                return -ENOSPC;
-
-@@ -4933,6 +4931,7 @@ static int ath10k_set_key(struct ieee80211_hw
-*hw, enum set_key_cmd cmd,
-
-        ret = ath10k_install_key(arvif, key, cmd, peer_addr, flags);
-        if (ret) {
-+               WARN_ON(ret > 0);
-                ath10k_warn(ar, "failed to install key for vdev %i
-peer %pM: %d\n",
-                            arvif->vdev_id, peer_addr, ret);
-                goto exit;
-@@ -4948,13 +4947,16 @@ static int ath10k_set_key(struct ieee80211_hw
-*hw, enum set_key_cmd cmd,
-
-                ret = ath10k_install_key(arvif, key, cmd, peer_addr, flags2);
-                if (ret) {
-+                       WARN_ON(ret > 0);
-                        ath10k_warn(ar, "failed to install (ucast) key
-for vdev %i peer %pM: %d\n",
-                                    arvif->vdev_id, peer_addr, ret);
-                        ret2 = ath10k_install_key(arvif, key, DISABLE_KEY,
-                                                  peer_addr, flags);
--                       if (ret2)
-+                       if (ret2) {
-+                               WARN_ON(ret2 > 0);
-                                ath10k_warn(ar, "failed to disable
-(mcast) key for vdev %i peer %pM: %d\n",
-                                            arvif->vdev_id, peer_addr, ret2);
-+                       }
-                        goto exit;
-                }
-        }
-@@ -7033,7 +7035,8 @@ int ath10k_mac_register(struct ath10k *ar)
-                goto err_free;
-        }
-
--       ar->hw->netdev_features = NETIF_F_HW_CSUM;
-+       if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-+               ar->hw->netdev_features = NETIF_F_HW_CSUM;
-
-        if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED)) {
-                /* Init ath dfs pattern detector */
