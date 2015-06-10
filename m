@@ -1,42 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:58658 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754490AbbFQIUb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 04:20:31 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from mga11.intel.com ([192.55.52.93]:13227 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754378AbbFJRKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 13:10:16 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "xerofoify@gmail.com" <xerofoify@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Spinadel, David" <david.spinadel@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"eliad@wizery.com" <eliad@wizery.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi:dvm:Return false if resume command data is not
+ same size as received packet for the function iwl_resume_status_fn
+Date: Wed, 10 Jun 2015 17:10:09 +0000
+Message-ID: <1433956209.20602.5.camel@intel.com> (sfid-20150610_191040_612475_D73CF5CD)
+References: <1433954031-7176-1-git-send-email-xerofoify@gmail.com>
+	 <1433955045.20602.2.camel@intel.com>
+	 <D665C857-C846-422A-A3D9-A9314B000CD6@gmail.com>
+In-Reply-To: <D665C857-C846-422A-A3D9-A9314B000CD6@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21889.11726.101648.552280@gargle.gargle.HOWL> (sfid-20150617_102036_119518_7679B082)
-Date: Wed, 17 Jun 2015 13:50:30 +0530
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: [RFCv2] ath9k: make rxfilter per HW
-In-Reply-To: <1434520009-8824-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1434520009-8824-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic wrote:
-> mac80211 configure rxfilter per HW,
-> so we don't need this per channel.
-> 
-> This fix problem when chanctx used and
-> ath9k allocate new ath_chanctx. Then we loose
-> rxfilter configuration.
-> 
-> Eg. during p2p_find (when use_chanctx=1) during
-> remain on channel, driver create new ath_chanctx
-> with incorrect rxfilter. Then we didn't receive
-> probe requests and fail p2p_find.
-
-The RX filter is calculated based on the operating mode
-of the HW. If we have a concurrent P2P-GO/station
-setup, for example, then the RX filter needs to be different for each
-context, (MYBEACON vs. BEACON etc.). I don't see how
-having a global filter will allow this ?
-
-Sujith
-
-
-
+T24gV2VkLCAyMDE1LTA2LTEwIGF0IDEyOjU4IC0wNDAwLCBOaWNob2xhcyBLcmF1c2Ugd3JvdGU6
+DQo+IA0KPiBPbiBKdW5lIDEwLCAyMDE1IDEyOjUwOjQ1IFBNIEVEVCwgIkdydW1iYWNoLCBFbW1h
+bnVlbCIgPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4gd3JvdGU6DQo+ID5PbiBXZWQsIDIw
+MTUtMDYtMTAgYXQgMTI6MzMgLTA0MDAsIE5pY2hvbGFzIEtyYXVzZSB3cm90ZToNCj4gPj4gVGhp
+cyBtYWtlcyB0aGUgZnVuY3Rpb24gaXdsX3Jlc3VtZV9zdGF0dXNfZm4gcmV0dXJuIGZhbHNlIG5v
+dyBpZg0KPiA+PiB0aGUgcmVjZWl2ZWQgcGFja2V0IG9mIHR5cGUgaXdsX3J4X3BhY2tldCBpcyBu
+b3QgdGhlIHNhbWUgc2l6ZQ0KPiA+PiBhcyB0aGUgc3RydWN0dXJlIHBvaW50ZXIsIGl3bF9yZXN1
+bWVfZGF0YSdzIGNtZCBlbGVtZW50IGluIG9yZGVyDQo+ID4+IHRvIHNpZ25hbCBjYWxsZXJzIGFi
+b3V0IHRoaXMgZXJyb3IgYW5kIGFsbG93IHRoZW0gdG8gaGFuZGxlIGl0DQo+ID4+IG9jY3VycmVu
+dGx5Lg0KPiA+PiANCj4gPg0KPiA+SG0uLi4gRGlkIHlvdSBhY3R1YWxseSBoaXQgdGhpcyBpZj8N
+Cj4gPkkgYW0gbm90IHN1cmUgSSByZWFsbHkgd2FudCB0byB3YWl0IGhlcmUgKHdoaWNoIGlzIHdo
+YXQgd2lsbCBoYXBwZW4gaWYNCj4gPnlvdSByZXR1cm4gZmFsc2UpIHdoZW4gd2UgZ2V0IGFuIHVu
+ZXhwZWN0ZWQgbGVuZ3RoPyBJIGRvIG5vdCBleHBlY3QNCj4gPmFueXRoaW5nIGJlc2lkZXMgdGhl
+IHJlc3BvbnNlIEkgYW0gd2FpdGluZyBmb3Igc2luY2UgdGhlIGZpcm13YXJlIGlzDQo+ID5oYW5k
+bGluZyB0aGUgR0VUX1NUQVRVUyAqb25seSogLSBpdCBqdXN0IGNhbWUgYmFjayBmcm9tIFdvV0xB
+Ti4gQm90dG9tDQo+ID5saW5lLCB0aGlzIGlzIHJlYWxseSBhbiBlcnJvciBwYXRoIGFuZCBJIHBy
+ZWZlciB0byBleGl0IGFuZCBub3Qgd2FpdA0KPiA+Zm9yDQo+ID50aGUgdGltZW91dCBpbiB0aGF0
+IGNhc2UuDQo+ID5CdXQgSSBtaWdodCBiZSBtaXNzaW5nIHNvbWV0aGluZz8NCj4gPg0KPiBXaHkg
+bm90IHdhaXQgZm9yIHRoZSB0aW1lIG91dD8gIFNlZW1zIHRoZXJlIGlzIG5vIHJlYXNvbiBub3Qg
+dG8gYW5kIGluIHRoYXQgY2FzZQ0KPiBpZiB0aGUgZmlybXdhcmUgaGFuZGxlcyB0aGlzDQoNCkkg
+ZG91YnQgaXQgd2lsbC4gVGhpcyBnb2VzIGJhY2sgdG8gbXkgb3JpZ2luYWwgcXVlc3Rpb246IGRp
+ZCB5b3UgcmVhbGx5DQpoaXQgdGhpcyBwYXRoPyBEb2VzIHRoZSBwYXRjaCBzb2x2ZXMgYSByZWFs
+IGJ1ZyB5b3UgZmFjZWQ/DQoNCj4gd2h5IGlzIHRoZSBpZiBzdGF0ZW1lbnQgc3RpbGwgaGVyZS4g
+DQoNClRvIGdldCBhIGRlYnVnIHByaW50PyA6KQ0KDQo+IE5pY2sgDQo+ID4+IFNpZ25lZC1vZmYt
+Ynk6IE5pY2hvbGFzIEtyYXVzZSA8eGVyb2ZvaWZ5QGdtYWlsLmNvbT4NCj4gPj4gLS0tDQo+ID4+
+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2R2bS9tYWM4MDIxMS5jIHwgMiArLQ0KPiA+
+PiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+ID4+IA0K
+PiA+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9kdm0vbWFjODAy
+MTEuYw0KPiA+Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2R2bS9tYWM4MDIxMS5jDQo+
+ID4+IGluZGV4IDVhYmQ2MmUuLjIxZTgwOGMgMTAwNjQ0DQo+ID4+IC0tLSBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2l3bHdpZmkvZHZtL21hYzgwMjExLmMNCj4gPj4gKysrIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaXdsd2lmaS9kdm0vbWFjODAyMTEuYw0KPiA+PiBAQCAtNDA5LDcgKzQwOSw3IEBA
+IHN0YXRpYyBib29sIGl3bF9yZXN1bWVfc3RhdHVzX2ZuKHN0cnVjdA0KPiA+aXdsX25vdGlmX3dh
+aXRfZGF0YSAqbm90aWZfd2FpdCwNCj4gPj4gIA0KPiA+PiAgCWlmIChpd2xfcnhfcGFja2V0X3Bh
+eWxvYWRfbGVuKHBrdCkgIT0gc2l6ZW9mKCpyZXN1bWVfZGF0YS0+Y21kKSkgew0KPiA+PiAgCQlJ
+V0xfRVJSKHByaXYsICJyeCB3cm9uZyBzaXplIGRhdGFcbiIpOw0KPiA+PiAtCQlyZXR1cm4gdHJ1
+ZTsNCj4gPj4gKwkJcmV0dXJuIGZhbHNlOw0KPiA+PiAgCX0NCj4gPj4gIAltZW1jcHkocmVzdW1l
+X2RhdGEtPmNtZCwgcGt0LT5kYXRhLCBzaXplb2YoKnJlc3VtZV9kYXRhLT5jbWQpKTsNCj4gPj4g
+IAlyZXN1bWVfZGF0YS0+dmFsaWQgPSB0cnVlOw0KPiANCg0K
