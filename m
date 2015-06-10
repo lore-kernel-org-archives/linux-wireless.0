@@ -1,351 +1,334 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34161 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932271AbbFJWMc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 18:12:32 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/7] brcmfmac: rework .get_station() callback
-Date: Thu, 11 Jun 2015 00:12:19 +0200
-Message-ID: <1433974343-16982-4-git-send-email-arend@broadcom.com> (sfid-20150611_001256_396202_892CB361)
-In-Reply-To: <1433974343-16982-1-git-send-email-arend@broadcom.com>
-References: <1433974343-16982-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:36216 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751767AbbFJRlc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 13:41:32 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: upgrade BW of TDLS peers when possible
+Date: Wed, 10 Jun 2015 20:41:23 +0300
+Message-Id: <1433958083-27918-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150610_194136_180311_8EBB9ECD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The .get_station() cfg80211 callback is used in several scenarios. In
-managed mode it can obtain information about the access-point and its
-BSS parameters. In managed mode it can also obtain information about
-TDLS peers. In AP mode it can obtain information about connected
-clients.
+From: Arik Nemtsov <arik@wizery.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Define a station chandef, to be used for wider-bw TDLS peers. When both
+peers support the feature, upgrade the channel bandwidth to the maximum
+allowed by both peers and regulatory. Currently widths up to 80MHz are
+supported in the 5GHz band.
+
+When a TDLS peer connects/disconnects recalculate the channel type of the
+current chanctx.
+Make the chanctx width calculation consider wider-bw TDLS peers and
+similarly fix the max_required_bw calculation for the chanctx min_def.
+Since the sta->bandwidth is calculated only later on, take
+bss_conf.chandef.width as the minimal width for station interface.
+
+Set the upgraded channel width in the VHT-operation set during TDLS setup.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 174 ++++++++++++---------
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  79 +++++++---
- 2 files changed, 161 insertions(+), 92 deletions(-)
+ net/mac80211/chan.c        |  31 +++++++++++--
+ net/mac80211/ieee80211_i.h |   3 ++
+ net/mac80211/sta_info.h    |   4 ++
+ net/mac80211/tdls.c        | 105 ++++++++++++++++++++++++++++++++++++++++++---
+ 4 files changed, 132 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index a668a35..6e45b40 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -2396,27 +2396,80 @@ brcmf_cfg80211_reconfigure_wep(struct brcmf_if *ifp)
- 		brcmf_err("set wsec error (%d)\n", err);
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index f01c18a..1d1b9b7 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -190,7 +190,7 @@ ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
+ 	return NULL;
  }
  
-+static void brcmf_convert_sta_flags(u32 fw_sta_flags, struct station_info *si)
-+{
-+	struct nl80211_sta_flag_update *sfu;
-+
-+	brcmf_dbg(TRACE, "flags %08x\n", fw_sta_flags);
-+	si->filled |= BIT(NL80211_STA_INFO_STA_FLAGS);
-+	sfu = &si->sta_flags;
-+	sfu->mask = BIT(NL80211_STA_FLAG_WME) |
-+		    BIT(NL80211_STA_FLAG_AUTHENTICATED) |
-+		    BIT(NL80211_STA_FLAG_ASSOCIATED) |
-+		    BIT(NL80211_STA_FLAG_AUTHORIZED);
-+	if (fw_sta_flags & BRCMF_STA_WME)
-+		sfu->set |= BIT(NL80211_STA_FLAG_WME);
-+	if (fw_sta_flags & BRCMF_STA_AUTHE)
-+		sfu->set |= BIT(NL80211_STA_FLAG_AUTHENTICATED);
-+	if (fw_sta_flags & BRCMF_STA_ASSOC)
-+		sfu->set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
-+	if (fw_sta_flags & BRCMF_STA_AUTHO)
-+		sfu->set |= BIT(NL80211_STA_FLAG_AUTHORIZED);
-+}
-+
-+static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
-+{
-+	struct {
-+		__le32 len;
-+		struct brcmf_bss_info_le bss_le;
-+	} *buf;
-+	u16 capability;
-+	int err;
-+
-+	buf = kzalloc(WL_BSS_INFO_MAX, GFP_KERNEL);
-+	if (!buf)
-+		return;
-+
-+	buf->len = cpu_to_le32(WL_BSS_INFO_MAX);
-+	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_BSS_INFO, buf,
-+				     WL_BSS_INFO_MAX);
-+	if (err) {
-+		brcmf_err("Failed to get bss info (%d)\n", err);
-+		return;
-+	}
-+	si->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
-+	si->bss_param.beacon_interval = le16_to_cpu(buf->bss_le.beacon_period);
-+	si->bss_param.dtim_period = buf->bss_le.dtim_period;
-+	capability = le16_to_cpu(buf->bss_le.capability);
-+	if (capability & IEEE80211_HT_STBC_PARAM_DUAL_CTS_PROT)
-+		si->bss_param.flags |= BSS_PARAM_FLAGS_CTS_PROT;
-+	if (capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
-+		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_PREAMBLE;
-+	if (capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
-+}
-+
- static s32
- brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 			   const u8 *mac, struct station_info *sinfo)
+-static enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
++enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta)
  {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
--	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
--	struct brcmf_scb_val_le scb_val;
--	int rssi;
--	s32 rate;
- 	s32 err = 0;
--	u8 *bssid = profile->bssid;
- 	struct brcmf_sta_info_le sta_info_le;
--	u32 beacon_period;
--	u32 dtim_period;
-+	u32 sta_flags;
-+	u32 is_tdls_peer;
+ 	switch (sta->bandwidth) {
+ 	case IEEE80211_STA_RX_BW_20:
+@@ -264,9 +264,17 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		case NL80211_IFTYPE_AP_VLAN:
+ 			width = ieee80211_get_max_required_bw(sdata);
+ 			break;
++		case NL80211_IFTYPE_STATION:
++			/*
++			 * The ap's sta->bandwidth is not set yet at this
++			 * point, so take the width from the chandef, but
++			 * account also for TDLS peers
++			 */
++			width = max(vif->bss_conf.chandef.width,
++				    ieee80211_get_max_required_bw(sdata));
++			break;
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+ 			continue;
+-		case NL80211_IFTYPE_STATION:
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_WDS:
+ 		case NL80211_IFTYPE_MESH_POINT:
+@@ -554,12 +562,13 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 	kfree_rcu(ctx, rcu_head);
+ }
  
- 	brcmf_dbg(TRACE, "Enter, MAC %pM\n", mac);
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
+-static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
+-					      struct ieee80211_chanctx *ctx)
++void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
++				       struct ieee80211_chanctx *ctx)
+ {
+ 	struct ieee80211_chanctx_conf *conf = &ctx->conf;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	const struct cfg80211_chan_def *compat = NULL;
++	struct sta_info *sta;
  
--	if (brcmf_is_apmode(ifp->vif)) {
--		memcpy(&sta_info_le, mac, ETH_ALEN);
-+	memset(&sta_info_le, 0, sizeof(sta_info_le));
-+	memcpy(&sta_info_le, mac, ETH_ALEN);
-+	err = brcmf_fil_iovar_data_get(ifp, "tdls_sta_info",
-+				       &sta_info_le,
-+				       sizeof(sta_info_le));
-+	is_tdls_peer = !err;
-+	if (err) {
- 		err = brcmf_fil_iovar_data_get(ifp, "sta_info",
- 					       &sta_info_le,
- 					       sizeof(sta_info_le));
-@@ -2424,73 +2477,48 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("GET STA INFO failed, %d\n", err);
- 			goto done;
- 		}
--		sinfo->filled = BIT(NL80211_STA_INFO_INACTIVE_TIME);
--		sinfo->inactive_time = le32_to_cpu(sta_info_le.idle) * 1000;
--		if (le32_to_cpu(sta_info_le.flags) & BRCMF_STA_ASSOC) {
--			sinfo->filled |= BIT(NL80211_STA_INFO_CONNECTED_TIME);
--			sinfo->connected_time = le32_to_cpu(sta_info_le.in);
--		}
--		brcmf_dbg(TRACE, "STA idle time : %d ms, connected time :%d sec\n",
--			  sinfo->inactive_time, sinfo->connected_time);
--	} else if (ifp->vif->wdev.iftype == NL80211_IFTYPE_STATION) {
--		if (memcmp(mac, bssid, ETH_ALEN)) {
--			brcmf_err("Wrong Mac address cfg_mac-%pM wl_bssid-%pM\n",
--				  mac, bssid);
--			err = -ENOENT;
--			goto done;
--		}
--		/* Report the current tx rate */
--		err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_RATE, &rate);
--		if (err) {
--			brcmf_err("Could not get rate (%d)\n", err);
--			goto done;
--		} else {
+ 	lockdep_assert_held(&local->chanctx_mtx);
+ 
+@@ -581,6 +590,20 @@ static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
+ 		if (WARN_ON_ONCE(!compat))
+ 			break;
+ 	}
++
++	/* TDLS peers can sometimes affect the chandef width */
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (!sta->uploaded ||
++		    !test_sta_flag(sta, WLAN_STA_TDLS_WIDER_BW) ||
++		    !test_sta_flag(sta, WLAN_STA_AUTHORIZED) ||
++		    !sta->tdls_chandef.chan)
++			continue;
++
++		compat = cfg80211_chandef_compatible(&sta->tdls_chandef,
++						     compat);
++		if (WARN_ON_ONCE(!compat))
++			break;
 +	}
-+	brcmf_dbg(TRACE, "version %d\n", le16_to_cpu(sta_info_le.ver));
-+	sinfo->filled = BIT(NL80211_STA_INFO_INACTIVE_TIME);
-+	sinfo->inactive_time = le32_to_cpu(sta_info_le.idle) * 1000;
-+	sta_flags = le32_to_cpu(sta_info_le.flags);
-+	brcmf_convert_sta_flags(sta_flags, sinfo);
-+	sinfo->sta_flags.mask |= BIT(NL80211_STA_FLAG_TDLS_PEER);
-+	if (is_tdls_peer)
-+		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
-+	else
-+		sinfo->sta_flags.set &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
-+	if (sta_flags & BRCMF_STA_ASSOC) {
-+		sinfo->filled |= BIT(NL80211_STA_INFO_CONNECTED_TIME);
-+		sinfo->connected_time = le32_to_cpu(sta_info_le.in);
-+		brcmf_fill_bss_param(ifp, sinfo);
-+	}
-+	if (sta_flags & BRCMF_STA_SCBSTATS) {
-+		sinfo->filled |= BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->tx_failed = le32_to_cpu(sta_info_le.tx_failures);
-+		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
-+		sinfo->tx_packets = le32_to_cpu(sta_info_le.tx_pkts);
-+		sinfo->tx_packets += le32_to_cpu(sta_info_le.tx_mcast_pkts);
-+		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
-+		sinfo->rx_packets = le32_to_cpu(sta_info_le.rx_ucast_pkts);
-+		sinfo->rx_packets += le32_to_cpu(sta_info_le.rx_mcast_pkts);
-+		if (sinfo->tx_packets) {
- 			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
--			sinfo->txrate.legacy = rate * 5;
--			brcmf_dbg(CONN, "Rate %d Mbps\n", rate / 2);
-+			sinfo->txrate.legacy = le32_to_cpu(sta_info_le.tx_rate);
-+			sinfo->txrate.legacy /= 100;
- 		}
--
--		if (test_bit(BRCMF_VIF_STATUS_CONNECTED,
--			     &ifp->vif->sme_state)) {
--			memset(&scb_val, 0, sizeof(scb_val));
--			err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_RSSI,
--						     &scb_val, sizeof(scb_val));
--			if (err) {
--				brcmf_err("Could not get rssi (%d)\n", err);
--				goto done;
--			} else {
--				rssi = le32_to_cpu(scb_val.val);
--				sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
--				sinfo->signal = rssi;
--				brcmf_dbg(CONN, "RSSI %d dBm\n", rssi);
--			}
--			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_BCNPRD,
--						    &beacon_period);
--			if (err) {
--				brcmf_err("Could not get beacon period (%d)\n",
--					  err);
--				goto done;
--			} else {
--				sinfo->bss_param.beacon_interval =
--					beacon_period;
--				brcmf_dbg(CONN, "Beacon peroid %d\n",
--					  beacon_period);
--			}
--			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_DTIMPRD,
--						    &dtim_period);
--			if (err) {
--				brcmf_err("Could not get DTIM period (%d)\n",
--					  err);
--				goto done;
--			} else {
--				sinfo->bss_param.dtim_period = dtim_period;
--				brcmf_dbg(CONN, "DTIM peroid %d\n",
--					  dtim_period);
--			}
--			sinfo->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
-+		if (sinfo->rx_packets) {
-+			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
-+			sinfo->rxrate.legacy = le32_to_cpu(sta_info_le.rx_rate);
-+			sinfo->rxrate.legacy /= 100;
- 		}
--	} else
--		err = -EPERM;
-+		if (le16_to_cpu(sta_info_le.ver) >= 4) {
-+			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES);
-+			sinfo->tx_bytes = le64_to_cpu(sta_info_le.tx_tot_bytes);
-+			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES);
-+			sinfo->rx_bytes = le64_to_cpu(sta_info_le.rx_tot_bytes);
-+		}
-+	}
- done:
- 	brcmf_dbg(TRACE, "Exit\n");
- 	return err;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-index 3749209..297911f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-@@ -32,7 +32,11 @@
- #define	BRCMF_BSS_INFO_VERSION	109 /* curr ver of brcmf_bss_info_le struct */
- #define BRCMF_BSS_RSSI_ON_CHANNEL	0x0002
+ 	rcu_read_unlock();
  
--#define BRCMF_STA_ASSOC			0x10		/* Associated */
-+#define BRCMF_STA_WME              0x00000002      /* WMM association */
-+#define BRCMF_STA_AUTHE            0x00000008      /* Authenticated */
-+#define BRCMF_STA_ASSOC            0x00000010      /* Associated */
-+#define BRCMF_STA_AUTHO            0x00000020      /* Authorized */
-+#define BRCMF_STA_SCBSTATS         0x00004000      /* Per STA debug stats */
+ 	if (!compat)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b12f615..9d5e7dd 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2042,6 +2042,9 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 enum ieee80211_chanctx_mode chanmode,
+ 				 u8 radar_detect);
+ int ieee80211_max_num_channels(struct ieee80211_local *local);
++enum nl80211_chan_width ieee80211_get_sta_bw(struct ieee80211_sta *sta);
++void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
++				       struct ieee80211_chanctx *ctx);
  
- /* size of brcmf_scan_params not including variable length array */
- #define BRCMF_SCAN_PARAMS_FIXED_SIZE	64
-@@ -113,6 +117,7 @@
- #define BRCMF_WOWL_MAXPATTERNSIZE	128
+ /* TDLS */
+ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 2cde9d0..5a887f4 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -374,6 +374,8 @@ struct ieee80211_fast_tx {
+  * @fast_tx: TX fastpath information
+  * @processed_beacon: set to true after peer rates and capabilities are
+  *	processed
++ * @tdls_chandef: a TDLS peer can have a wider chandef that is compatible to
++ *	the BSS one.
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -501,6 +503,8 @@ struct sta_info {
  
- #define BRCMF_COUNTRY_BUF_SZ		4
-+#define BRCMF_ANT_MAX			4
+ 	u8 reserved_tid;
  
- /* join preference types for join_pref iovar */
- enum brcmf_join_pref_types {
-@@ -456,25 +461,61 @@ struct brcmf_channel_info_le {
++	struct cfg80211_chan_def tdls_chandef;
++
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
  };
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index fec1b33..fb846cb 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -292,6 +292,60 @@ static void ieee80211_tdls_add_wmm_param_ie(struct ieee80211_sub_if_data *sdata,
+ }
  
- struct brcmf_sta_info_le {
--	__le16	ver;		/* version of this struct */
--	__le16	len;		/* length in bytes of this structure */
--	__le16	cap;		/* sta's advertised capabilities */
--	__le32	flags;		/* flags defined below */
--	__le32	idle;		/* time since data pkt rx'd from sta */
--	u8	ea[ETH_ALEN];		/* Station address */
--	__le32	count;			/* # rates in this set */
--	u8	rates[BRCMF_MAXRATES_IN_SET];	/* rates in 500kbps units */
-+	__le16 ver;		/* version of this struct */
-+	__le16 len;		/* length in bytes of this structure */
-+	__le16 cap;		/* sta's advertised capabilities */
-+	__le32 flags;		/* flags defined below */
-+	__le32 idle;		/* time since data pkt rx'd from sta */
-+	u8 ea[ETH_ALEN];		/* Station address */
-+	__le32 count;			/* # rates in this set */
-+	u8 rates[BRCMF_MAXRATES_IN_SET];	/* rates in 500kbps units */
- 						/* w/hi bit set if basic */
--	__le32	in;		/* seconds elapsed since associated */
--	__le32	listen_interval_inms; /* Min Listen interval in ms for STA */
--	__le32	tx_pkts;	/* # of packets transmitted */
--	__le32	tx_failures;	/* # of packets failed */
--	__le32	rx_ucast_pkts;	/* # of unicast packets received */
--	__le32	rx_mcast_pkts;	/* # of multicast packets received */
--	__le32	tx_rate;	/* Rate of last successful tx frame */
--	__le32	rx_rate;	/* Rate of last successful rx frame */
--	__le32	rx_decrypt_succeeds;	/* # of packet decrypted successfully */
--	__le32	rx_decrypt_failures;	/* # of packet decrypted failed */
-+	__le32 in;		/* seconds elapsed since associated */
-+	__le32 listen_interval_inms; /* Min Listen interval in ms for STA */
-+	__le32 tx_pkts;	/* # of packets transmitted */
-+	__le32 tx_failures;	/* # of packets failed */
-+	__le32 rx_ucast_pkts;	/* # of unicast packets received */
-+	__le32 rx_mcast_pkts;	/* # of multicast packets received */
-+	__le32 tx_rate;	/* Rate of last successful tx frame */
-+	__le32 rx_rate;	/* Rate of last successful rx frame */
-+	__le32 rx_decrypt_succeeds;	/* # of packet decrypted successfully */
-+	__le32 rx_decrypt_failures;	/* # of packet decrypted failed */
-+	__le32 tx_tot_pkts;    /* # of tx pkts (ucast + mcast) */
-+	__le32 rx_tot_pkts;    /* # of data packets recvd (uni + mcast) */
-+	__le32 tx_mcast_pkts;  /* # of mcast pkts txed */
-+	__le64 tx_tot_bytes;   /* data bytes txed (ucast + mcast) */
-+	__le64 rx_tot_bytes;   /* data bytes recvd (ucast + mcast) */
-+	__le64 tx_ucast_bytes; /* data bytes txed (ucast) */
-+	__le64 tx_mcast_bytes; /* # data bytes txed (mcast) */
-+	__le64 rx_ucast_bytes; /* data bytes recvd (ucast) */
-+	__le64 rx_mcast_bytes; /* data bytes recvd (mcast) */
-+	s8 rssi[BRCMF_ANT_MAX];   /* per antenna rssi */
-+	s8 nf[BRCMF_ANT_MAX];     /* per antenna noise floor */
-+	__le16 aid;                    /* association ID */
-+	__le16 ht_capabilities;        /* advertised ht caps */
-+	__le16 vht_flags;              /* converted vht flags */
-+	__le32 tx_pkts_retry_cnt;      /* # of frames where a retry was
-+					 * exhausted.
-+					 */
-+	__le32 tx_pkts_retry_exhausted; /* # of user frames where a retry
-+					 * was exhausted
-+					 */
-+	s8 rx_lastpkt_rssi[BRCMF_ANT_MAX]; /* Per antenna RSSI of last
-+					    * received data frame.
-+					    */
-+	/* TX WLAN retry/failure statistics:
-+	 * Separated for host requested frames and locally generated frames.
-+	 * Include unicast frame only where the retries/failures can be counted.
+ static void
++ieee80211_tdls_chandef_vht_upgrade(struct ieee80211_sub_if_data *sdata,
++				   struct sta_info *sta)
++{
++	/* IEEE802.11ac-2013 Table E-4 */
++	u16 centers_80mhz[] = { 5210, 5290, 5530, 5610, 5690, 5775 };
++	struct cfg80211_chan_def uc = sta->tdls_chandef;
++	enum nl80211_chan_width max_width = ieee80211_get_sta_bw(&sta->sta);
++	int i;
++
++	/* only support upgrading non-narrow channels up to 80Mhz */
++	if (max_width == NL80211_CHAN_WIDTH_5 ||
++	    max_width == NL80211_CHAN_WIDTH_10)
++		return;
++
++	if (max_width > NL80211_CHAN_WIDTH_80)
++		max_width = NL80211_CHAN_WIDTH_80;
++
++	if (uc.width == max_width)
++		return;
++	/*
++	 * Channel usage constrains in the IEEE802.11ac-2013 specification only
++	 * allow expanding a 20MHz channel to 80MHz in a single way. In
++	 * addition, there are no 40MHz allowed channels that are not part of
++	 * the allowed 80MHz range in the 5GHz spectrum (the relevant one here).
 +	 */
-+	__le32 tx_pkts_total;          /* # user frames sent successfully */
-+	__le32 tx_pkts_retries;        /* # user frames retries */
-+	__le32 tx_pkts_fw_total;       /* # FW generated sent successfully */
-+	__le32 tx_pkts_fw_retries;     /* # retries for FW generated frames */
-+	__le32 tx_pkts_fw_retry_exhausted;     /* # FW generated where a retry
-+						* was exhausted
-+						*/
-+	__le32 rx_pkts_retried;        /* # rx with retry bit set */
-+	__le32 tx_rate_fallback;       /* lowest fallback TX rate */
- };
++	for (i = 0; i < ARRAY_SIZE(centers_80mhz); i++)
++		if (abs(uc.chan->center_freq - centers_80mhz[i]) <= 30) {
++			uc.center_freq1 = centers_80mhz[i];
++			uc.width = NL80211_CHAN_WIDTH_80;
++			break;
++		}
++
++	if (!uc.center_freq1)
++		return;
++
++	/* proceed to downgrade the chandef until usable or the same */
++	while (uc.width > max_width &&
++	       !cfg80211_reg_can_beacon(sdata->local->hw.wiphy,
++					&uc, sdata->wdev.iftype))
++		ieee80211_chandef_downgrade(&uc);
++
++	if (!cfg80211_chandef_identical(&uc, &sta->tdls_chandef)) {
++		tdls_dbg(sdata, "TDLS ch width upgraded %d -> %d\n",
++			 sta->tdls_chandef.width, uc.width);
++
++		/*
++		 * the station is not yet authorized when BW upgrade is done,
++		 * locking is not required
++		 */
++		sta->tdls_chandef = uc;
++	}
++}
++
++static void
+ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb, const u8 *peer,
+ 				   u8 action_code, bool initiator,
+@@ -358,15 +412,17 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
+ 		offset = noffset;
+ 	}
  
- struct brcmf_chanspec_list {
+-	rcu_read_lock();
++	mutex_lock(&local->sta_mtx);
+ 
+ 	/* we should have the peer STA if we're already responding */
+ 	if (action_code == WLAN_TDLS_SETUP_RESPONSE) {
+ 		sta = sta_info_get(sdata, peer);
+ 		if (WARN_ON_ONCE(!sta)) {
+-			rcu_read_unlock();
++			mutex_unlock(&local->sta_mtx);
+ 			return;
+ 		}
++
++		sta->tdls_chandef = sdata->vif.bss_conf.chandef;
+ 	}
+ 
+ 	ieee80211_tdls_add_oper_classes(sdata, skb);
+@@ -456,9 +512,16 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
+ 
+ 		pos = skb_put(skb, sizeof(struct ieee80211_vht_cap) + 2);
+ 		ieee80211_ie_build_vht_cap(pos, &vht_cap, vht_cap.cap);
++
++		/*
++		 * if both peers support WIDER_BW, we can expand the chandef to
++		 * a wider compatible one, up to 80MHz
++		 */
++		if (test_sta_flag(sta, WLAN_STA_TDLS_WIDER_BW))
++			ieee80211_tdls_chandef_vht_upgrade(sdata, sta);
+ 	}
+ 
+-	rcu_read_unlock();
++	mutex_unlock(&local->sta_mtx);
+ 
+ 	/* add any remaining IEs */
+ 	if (extra_ies_len) {
+@@ -482,15 +545,17 @@ ieee80211_tdls_add_setup_cfm_ies(struct ieee80211_sub_if_data *sdata,
+ 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
+ 	u8 *pos;
+ 
+-	rcu_read_lock();
++	mutex_lock(&local->sta_mtx);
+ 
+ 	sta = sta_info_get(sdata, peer);
+ 	ap_sta = sta_info_get(sdata, ifmgd->bssid);
+ 	if (WARN_ON_ONCE(!sta || !ap_sta)) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->sta_mtx);
+ 		return;
+ 	}
+ 
++	sta->tdls_chandef = sdata->vif.bss_conf.chandef;
++
+ 	/* add any custom IEs that go before the QoS IE */
+ 	if (extra_ies_len) {
+ 		static const u8 before_qos[] = {
+@@ -538,12 +603,19 @@ ieee80211_tdls_add_setup_cfm_ies(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* only include VHT-operation if not on the 2.4GHz band */
+ 	if (band != IEEE80211_BAND_2GHZ && sta->sta.vht_cap.vht_supported) {
++		/*
++		 * if both peers support WIDER_BW, we can expand the chandef to
++		 * a wider compatible one, up to 80MHz
++		 */
++		if (test_sta_flag(sta, WLAN_STA_TDLS_WIDER_BW))
++			ieee80211_tdls_chandef_vht_upgrade(sdata, sta);
++
+ 		pos = skb_put(skb, 2 + sizeof(struct ieee80211_vht_operation));
+ 		ieee80211_ie_build_vht_oper(pos, &sta->sta.vht_cap,
+-					    &sdata->vif.bss_conf.chandef);
++					    &sta->tdls_chandef);
+ 	}
+ 
+-	rcu_read_unlock();
++	mutex_unlock(&local->sta_mtx);
+ 
+ 	/* add any remaining IEs */
+ 	if (extra_ies_len) {
+@@ -1154,6 +1226,22 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
+ 
++static void iee80211_tdls_recalc_chanctx(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (conf) {
++		ctx = container_of(conf, struct ieee80211_chanctx, conf);
++		ieee80211_recalc_chanctx_chantype(local, ctx);
++	}
++	mutex_unlock(&local->chanctx_mtx);
++}
++
+ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 			const u8 *peer, enum nl80211_tdls_operation oper)
+ {
+@@ -1190,6 +1278,8 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 			break;
+ 		}
+ 
++		iee80211_tdls_recalc_chanctx(sdata);
++
+ 		rcu_read_lock();
+ 		sta = sta_info_get(sdata, peer);
+ 		if (!sta) {
+@@ -1221,6 +1311,7 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 		ieee80211_flush_queues(local, sdata, false);
+ 
+ 		ret = sta_info_destroy_addr(sdata, peer);
++		iee80211_tdls_recalc_chanctx(sdata);
+ 		break;
+ 	default:
+ 		ret = -ENOTSUPP;
 -- 
-1.9.1
+2.1.4
 
