@@ -1,123 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50336 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751768AbbFCGAb (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:39837 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933638AbbFJUcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 02:00:31 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t535xXQD028266
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:00:30 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvggtw-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:00:30 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv5 01/17] mwifiex: verbose logging for association failure messages
-Date: Wed, 3 Jun 2015 16:59:31 +0530
-Message-ID: <1433330987-6808-2-git-send-email-patila@marvell.com> (sfid-20150603_080035_183576_87B77437)
-In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
-References: <1433330987-6808-1-git-send-email-patila@marvell.com>
+	Wed, 10 Jun 2015 16:32:00 -0400
+Message-ID: <55789EBF.2060501@candelatech.com> (sfid-20150610_223206_922532_B64F4946)
+Date: Wed, 10 Jun 2015 13:31:59 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Anyone tried ath10k AP with 40Mhz operation?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds more detailed information about association failures
- - reason and states.
+I'm trying this hostapd config file.  Beacons seem OK, and station
+associates.  Station puts DHCP Discover on the air (using 20Mhz according
+to wireshark).  AP reads this, and thinks it is sending a DHCP response back,
+but sniffer never shows DHCP response on the air.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h   | 15 +++++++++++++--
- drivers/net/wireless/mwifiex/join.c | 30 +++++++++++++++++++++++++++---
- 2 files changed, 40 insertions(+), 5 deletions(-)
+Kernel is 4.0.4+, ath10k firmware is CT firmware, 10.1.467 based.
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index c404390..cf386bc 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -419,8 +419,12 @@ enum P2P_MODES {
- #define HS_CFG_COND_MAC_EVENT		0x00000004
- #define HS_CFG_COND_MULTICAST_DATA	0x00000008
- 
--#define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
--#define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
-+#define CONNECT_ERR_AUTH_ERR_STA_FAILURE	0xFFFB
-+#define CONNECT_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
-+#define CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
-+#define CONNECT_ERR_AUTH_MSG_UNHANDLED		0xFFFE
-+#define CONNECT_ERR_STA_FAILURE			0xFFFF
-+
- 
- #define CMD_F_HOSTCMD           (1 << 0)
- #define CMD_F_CANCELED          (1 << 1)
-@@ -1151,6 +1155,13 @@ enum SNMP_MIB_INDEX {
- 	DOT11H_I = 10,
- };
- 
-+enum mwifiex_assocmd_failurepoint {
-+	MWIFIEX_ASSOC_CMD_SUCCESS = 0,
-+	MWIFIEX_ASSOC_CMD_FAILURE_ASSOC,
-+	MWIFIEX_ASSOC_CMD_FAILURE_AUTH,
-+	MWIFIEX_ASSOC_CMD_FAILURE_JOIN
-+};
-+
- #define MAX_SNMP_BUF_SIZE   128
- 
- struct host_cmd_ds_802_11_snmp_mib {
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 6208ef1..e233b04 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -556,6 +556,23 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
- 	return 0;
- }
- 
-+static const char *assoc_failure_reason_to_str(u16 cap_info)
-+{
-+	switch (cap_info) {
-+	case CONNECT_ERR_AUTH_ERR_STA_FAILURE:
-+		return "CONNECT_ERR_AUTH_ERR_STA_FAILURE";
-+	case CONNECT_ERR_AUTH_MSG_UNHANDLED:
-+		return "CONNECT_ERR_AUTH_MSG_UNHANDLED";
-+	case CONNECT_ERR_ASSOC_ERR_TIMEOUT:
-+		return "CONNECT_ERR_ASSOC_ERR_TIMEOUT";
-+	case CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED:
-+		return "CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED";
-+	case CONNECT_ERR_STA_FAILURE:
-+		return "CONNECT_ERR_STA_FAILURE";
-+	}
-+
-+	return "Unknown connect failure";
-+}
- /*
-  * Association firmware command response handler
-  *
-@@ -656,11 +673,18 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 			    status_code, cap_info,
- 			    le16_to_cpu(assoc_rsp->a_id));
- 
--		if (cap_info == MWIFIEX_TIMEOUT_FOR_AP_RESP) {
--			if (status_code == MWIFIEX_STATUS_CODE_AUTH_TIMEOUT)
-+		mwifiex_dbg(priv->adapter, ERROR, "assoc failure: reason %s\n",
-+			    assoc_failure_reason_to_str(cap_info));
-+		if (cap_info == CONNECT_ERR_ASSOC_ERR_TIMEOUT) {
-+			if (status_code == MWIFIEX_ASSOC_CMD_FAILURE_AUTH) {
- 				ret = WLAN_STATUS_AUTH_TIMEOUT;
--			else
-+				mwifiex_dbg(priv->adapter, ERROR,
-+					    "ASSOC_RESP: AUTH timeout\n");
-+			} else {
- 				ret = WLAN_STATUS_UNSPECIFIED_FAILURE;
-+				mwifiex_dbg(priv->adapter, ERROR,
-+					    "ASSOC_RESP: UNSPECIFIED failure\n");
-+			}
- 		} else {
- 			ret = status_code;
- 		}
+I am curious if anyone else has tried to do this?
+
+Thanks,
+Ben
+
+interface=vap50
+driver=nl80211
+logger_syslog=-1
+logger_syslog_level=2
+logger_stdout=-1
+logger_stdout_level=2
+ctrl_interface=/var/run/hostapd
+ctrl_interface_group=0
+ssid=ben-ota-2a
+bssid=04:f0:21:98:d2:34
+country_code=US
+ieee80211d=0
+ieee80211h=0
+ieee80211w=0
+hw_mode=a
+ieee80211n=1
+ieee80211ac=1
+beacon_int=240
+dtim_period=2
+max_num_sta=2007
+rts_threshold=2347
+fragm_threshold=2346
+preamble=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+# Enable HT modes if you want 300Mbps+ throughput.
+#ht_capab=[HT20][HT40-][HT40+][GF][SHORT-GI-20][SHORT-GI-40]
+#         [TX-STBC][RX-STBC123][MAX-AMSDU-7935][DSSS_CCK-40][PSMP][LSIG-TXOP-PROT]
+ht_capab=[HT20][HT40+][SHORT-GI-40][SHORT-GI-20]
+vht_capab=[MAX-MPDU-11454][RXLDPC][TX-STBC-2BY1][RX-STBC-1][MAX-A-MPDU-LEN-EXP0][RX-ANTENNA-PATTERN][TX-ANTENNA-PATTERN]
+wmm_enabled=1
+wmm_ac_bk_cwmin=4
+wmm_ac_bk_cwmax=10
+wmm_ac_bk_aifs=7
+wmm_ac_bk_txop_limit=0
+wmm_ac_bk_acm=0
+wmm_ac_be_aifs=3
+wmm_ac_be_cwmin=4
+wmm_ac_be_cwmax=10
+wmm_ac_be_txop_limit=0
+wmm_ac_be_acm=0
+wmm_ac_vi_aifs=2
+wmm_ac_vi_cwmin=3
+wmm_ac_vi_cwmax=4
+wmm_ac_vi_txop_limit=94
+wmm_ac_vi_acm=0
+wmm_ac_vo_aifs=2
+wmm_ac_vo_cwmin=2
+wmm_ac_vo_cwmax=3
+wmm_ac_vo_txop_limit=47
+wmm_ac_vo_acm=0
+### TX queue parameters
+tx_queue_data3_aifs=7
+tx_queue_data3_cwmin=15
+tx_queue_data3_cwmax=1023
+tx_queue_data3_burst=0
+tx_queue_data2_aifs=3
+tx_queue_data2_cwmin=15
+tx_queue_data2_cwmax=63
+tx_queue_data2_burst=0
+tx_queue_data1_aifs=1
+tx_queue_data1_cwmin=7
+tx_queue_data1_cwmax=15
+tx_queue_data1_burst=3.0
+tx_queue_data0_aifs=1
+tx_queue_data0_cwmin=3
+tx_queue_data0_cwmax=7
+tx_queue_data0_burst=1.5
+vht_oper_centr_freq_seg0_idx=38
+vht_oper_chwidth=0
+channel=36
+supported_rates=10 20 55 110 60 90 120 180 240 360 480 540
+ieee8021x=0
+eapol_key_index_workaround=0
+eap_server=0
+own_ip_addr=127.0.0.1
+
+# Error emulation settings.
+ignore_probe_probability=0.000000
+ignore_auth_probability=0.000000
+ignore_assoc_probability=0.000000
+ignore_reassoc_probability=0.000000
+corrupt_gtk_rekey_mic_probability=0.000000
+
+
 -- 
-1.8.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
