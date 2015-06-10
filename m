@@ -1,199 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:62591 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752440AbbFAMdU (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:30068 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933418AbbFJIHI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:33:20 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CT3kB017221
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:33:19 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk3w-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:33:19 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 07/17] mwifiex: add cfg80211 get_channel handler
-Date: Mon, 1 Jun 2015 23:32:05 +0530
-Message-ID: <1433181735-15712-8-git-send-email-patila@marvell.com> (sfid-20150601_143323_213759_E84E0191)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
+	Wed, 10 Jun 2015 04:07:08 -0400
+From: Johnny Kim <johnny.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<Rachel.kim@atmel.com>, <dean.lee@atmel.com>, <tony.cho@atmel.com>
+Subject: [PATCH 2/4] staging: wilc1000: add syntax for 64-bit machine
+Date: Wed, 10 Jun 2015 17:06:45 +0900
+Message-ID: <1433923607-20927-3-git-send-email-johnny.kim@atmel.com> (sfid-20150610_100719_319374_ED45E580)
+In-Reply-To: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com>
+References: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+The driver take pointer value to integer value for message packet.
+So, The driver was fixed to save and load the address
+on 64-bit machine.
 
-This patch add cfg80211 get_channel handler for mwifiex.
-The handler will be used to report current channel to upper
-layer utility.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
 ---
- drivers/net/wireless/mwifiex/11h.c      |  2 +-
- drivers/net/wireless/mwifiex/cfg80211.c | 58 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/mwifiex/main.h     |  5 ++-
- drivers/net/wireless/mwifiex/uap_cmd.c  |  5 ++-
- 4 files changed, 66 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++++++++++----
+ drivers/staging/wilc1000/wilc_wlan.c      | 19 +++++++++++++++----
+ drivers/staging/wilc1000/wilc_wlan.h      |  6 +++++-
+ 3 files changed, 40 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
-index bb2ffd9..71a1b58 100644
---- a/drivers/net/wireless/mwifiex/11h.c
-+++ b/drivers/net/wireless/mwifiex/11h.c
-@@ -305,7 +305,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
- 		return;
- 	}
- 
--	mwifiex_uap_set_channel(bss_cfg, priv->dfs_chandef);
-+	mwifiex_uap_set_channel(priv, bss_cfg, priv->dfs_chandef);
- 
- 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index fb93e13..ddeb919 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -67,6 +67,22 @@ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type)
- 	}
- }
- 
-+/* This function maps IEEE HT secondary channel type to NL80211 channel type
-+ */
-+u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset)
-+{
-+	switch (second_chan_offset) {
-+	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
-+		return NL80211_CHAN_HT20;
-+	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+		return NL80211_CHAN_HT40PLUS;
-+	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+		return NL80211_CHAN_HT40MINUS;
-+	default:
-+		return NL80211_CHAN_HT20;
-+	}
-+}
-+
- /*
-  * This function checks whether WEP is set.
-  */
-@@ -1785,7 +1801,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
--	mwifiex_uap_set_channel(bss_cfg, params->chandef);
-+	mwifiex_uap_set_channel(priv, bss_cfg, params->chandef);
- 	mwifiex_set_uap_rates(bss_cfg, params);
- 
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
-@@ -3373,6 +3389,45 @@ mwifiex_cfg80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
-+					struct wireless_dev *wdev,
-+					struct cfg80211_chan_def *chandef)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
-+	struct mwifiex_bssdescriptor *curr_bss;
-+	struct ieee80211_channel *chan;
-+	u8 second_chan_offset;
-+	enum nl80211_channel_type chan_type;
-+	enum ieee80211_band band;
-+	int freq;
-+	int ret = -ENODATA;
-+
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP &&
-+	    cfg80211_chandef_valid(&priv->bss_chandef)) {
-+		*chandef = priv->bss_chandef;
-+		ret = 0;
-+	} else if (priv->media_connected) {
-+		curr_bss = &priv->curr_bss_params.bss_descriptor;
-+		band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
-+		freq = ieee80211_channel_to_frequency(curr_bss->channel, band);
-+		chan = ieee80211_get_channel(wiphy, freq);
-+
-+		if (curr_bss->bcn_ht_oper) {
-+			second_chan_offset = curr_bss->bcn_ht_oper->ht_param &
-+					IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
-+			chan_type = mwifiex_sec_chan_offset_to_chan_type
-+							(second_chan_offset);
-+			cfg80211_chandef_create(chandef, chan, chan_type);
-+		} else {
-+			cfg80211_chandef_create(chandef, chan,
-+						NL80211_CHAN_NO_HT);
-+		}
-+		ret = 0;
-+	}
-+
-+	return ret;
-+}
-+
- static int
- mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
- 				       struct net_device *dev,
-@@ -3478,6 +3533,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.tdls_oper = mwifiex_cfg80211_tdls_oper,
- 	.add_station = mwifiex_cfg80211_add_station,
- 	.change_station = mwifiex_cfg80211_change_station,
-+	.get_channel = mwifiex_cfg80211_get_channel,
- 	.start_radar_detection = mwifiex_cfg80211_start_radar_detection,
- 	.channel_switch = mwifiex_cfg80211_channel_switch,
- };
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 3ac18c6..88d3779 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -642,6 +642,7 @@ struct mwifiex_private {
- 	u8 del_list_idx;
- 	bool hs2_enabled;
- 	struct mwifiex_uap_bss_param bss_cfg;
-+	struct cfg80211_chan_def bss_chandef;
- 	struct station_parameters *sta_params;
- 	struct sk_buff_head tdls_txq;
- 	u8 check_tdls_tx;
-@@ -1382,6 +1383,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- 					struct mwifiex_bssdescriptor *bss_desc);
- 
- u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type);
-+u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset);
- 
- struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 					      const char *name,
-@@ -1399,7 +1401,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 			 struct cfg80211_beacon_data *data);
- int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
- u8 *mwifiex_11d_code_2_region(u8 code);
--void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+void mwifiex_uap_set_channel(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg,
- 			     struct cfg80211_chan_def chandef);
- int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 			     struct mwifiex_uap_bss_param *bss_cfg);
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 56a4768..68fbdf6 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -776,11 +776,14 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 	return 0;
- }
- 
--void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+void mwifiex_uap_set_channel(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg,
- 			     struct cfg80211_chan_def chandef)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index cfe3364..4b005fa 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6918,9 +6918,14 @@ void NetworkInfoReceived(u8 *pu8Buffer, WILC_Uint32 u32Length)
  {
- 	u8 config_bands = 0;
+ 	WILC_Sint32 s32Error = WILC_SUCCESS;
+ 	tstrHostIFmsg strHostIFmsg;
+-	size_t drvHandler;
++	size_t drvHandler = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
  
-+	priv->bss_chandef = chandef;
++#ifdef CONFIG_64BIT
++	drvHandler = ((pu8Buffer[u32Length - 8]) | (pu8Buffer[u32Length - 7] << 8) | (pu8Buffer[u32Length - 6] << 16) | (pu8Buffer[u32Length - 5] << 24));
++	drvHandler <<= 32;
++#endif
 +
- 	bss_cfg->channel = ieee80211_frequency_to_channel(
- 						     chandef.chan->center_freq);
+ 	drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+ 	pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+@@ -6968,13 +6973,18 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, WILC_Uint32 u32Length)
+ {
+ 	WILC_Sint32 s32Error = WILC_SUCCESS;
+ 	tstrHostIFmsg strHostIFmsg;
+-	size_t drvHandler;
++	size_t drvHandler = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
+ 
+ 	/*BugID_5348*/
+ 	down(&hSemHostIntDeinit);
+ 
+-	drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
++#ifdef CONFIG_64BIT
++	drvHandler = ((pu8Buffer[u32Length - 8]) | (pu8Buffer[u32Length - 7] << 8) | (pu8Buffer[u32Length - 6] << 16) | (pu8Buffer[u32Length - 5] << 24));
++	drvHandler <<= 32;
++#endif
++
++	drvHandler |= ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+ 	pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 	PRINT_D(HOSTINF_DBG, "General asynchronous info packet received \n");
+ 
+@@ -7031,8 +7041,14 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, WILC_Uint32 u32Length)
+ {
+ 	WILC_Sint32 s32Error = WILC_SUCCESS;
+ 	tstrHostIFmsg strHostIFmsg;
+-	size_t drvHandler;
++	size_t drvHandler = 0;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
++
++#ifdef CONFIG_64BIT
++	drvHandler = ((pu8Buffer[u32Length - 8]) | (pu8Buffer[u32Length - 7] << 8) | (pu8Buffer[u32Length - 6] << 16) | (pu8Buffer[u32Length - 5] << 24));
++	drvHandler <<= 32;
++#endif
++
+ 	drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+ 	pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 739be55..d20ffe0 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1867,7 +1867,7 @@ static int wilc_wlan_cfg_commit(int type, size_t drvHandler)
+ {
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	wilc_cfg_frame_t *cfg = &p->cfg_frame;
+-	int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
++	int total_len = p->cfg_frame_offset + sizeof(size_t) + DRIVER_HANDLER_SIZE;
+ 	int seq_no = p->cfg_seq_no % 256;
+ 	size_t driver_handler = (size_t)drvHandler;
+ 
+@@ -1883,10 +1883,21 @@ static int wilc_wlan_cfg_commit(int type, size_t drvHandler)
+ 	cfg->wid_header[1] = seq_no;    /* sequence number */
+ 	cfg->wid_header[2] = (uint8_t)total_len;
+ 	cfg->wid_header[3] = (uint8_t)(total_len >> 8);
++#ifdef CONFIG_64BIT
+ 	cfg->wid_header[4] = (uint8_t)driver_handler;
+-	cfg->wid_header[5] = (uint8_t)(driver_handler >> 8);
+-	cfg->wid_header[6] = (uint8_t)(driver_handler >> 16);
+-	cfg->wid_header[7] = (uint8_t)(driver_handler >> 24);
++	cfg->wid_header[5] = (uint8_t)(driver_handler >> 8L);
++	cfg->wid_header[6] = (uint8_t)(driver_handler >> 16L);
++	cfg->wid_header[7] = (uint8_t)(driver_handler >> 24L);
++	cfg->wid_header[8] = (uint8_t)(driver_handler >> 32L);
++	cfg->wid_header[9] = (uint8_t)(driver_handler >> 40L);
++	cfg->wid_header[10] = (uint8_t)(driver_handler >> 48L);
++	cfg->wid_header[11] = (uint8_t)(driver_handler >> 56L);
++#else
++	cfg->wid_header[4] = (uint8_t)driver_handler;
++	cfg->wid_header[5] = (uint8_t)(driver_handler >> 8L);
++	cfg->wid_header[6] = (uint8_t)(driver_handler >> 16L);
++	cfg->wid_header[7] = (uint8_t)(driver_handler >> 24L);
++#endif
+ 	p->cfg_seq_no = seq_no;
+ 
+ 	/**
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 0ba7ec6..e026baf 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -15,7 +15,11 @@
+ #define DRIVER_HANDLER_SIZE 4
+ #define MAX_MAC_HDR_LEN         26 /* QOS_MAC_HDR_LEN */
+ #define SUB_MSDU_HEADER_LENGTH  14
++#ifdef CONFIG_64BIT
++#define SNAP_HDR_LEN            12
++#else
+ #define SNAP_HDR_LEN            8
++#endif
+ #define ETHERNET_HDR_LEN          14
+ #define WORD_ALIGNMENT_PAD        0
+ 
+@@ -297,7 +301,7 @@ typedef struct {
+ 	uint8_t ether_header[14];
+ 	uint8_t ip_header[20];
+ 	uint8_t udp_header[8];
+-	uint8_t wid_header[8];
++	uint8_t wid_header[4+sizeof(uintptr_t)];
+ 	uint8_t frame[MAX_CFG_FRAME_SIZE];
+ } wilc_cfg_frame_t;
  
 -- 
-1.8.1.4
+1.9.1
 
