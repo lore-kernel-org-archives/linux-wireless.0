@@ -1,189 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:36000 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753417AbbFHUyo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 16:54:44 -0400
-From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-To: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, gregkh@linuxfoundation.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-Subject: [PATCH v4 2/2] staging: wilc1000: Align enum members in coreconfigurator
-Date: Mon,  8 Jun 2015 23:54:29 +0300
-Message-Id: <1433796869-2737-2-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20150608_225459_989195_1FB97982)
-In-Reply-To: <1433796869-2737-1-git-send-email-kholmanskikh.s.s@gmail.com>
-References: <1433796869-2737-1-git-send-email-kholmanskikh.s.s@gmail.com>
+Received: from mail.neratec.com ([46.140.151.2]:11137 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751850AbbFKMq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 08:46:27 -0400
+Message-ID: <5579831F.3020304@neratec.com> (sfid-20150611_144630_930444_315CC734)
+Date: Thu, 11 Jun 2015 14:46:23 +0200
+From: Matthias May <matthias.may@neratec.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 1/4] cfg80211: handle minimum bandwidth for quarter
+ and half rates
+References: <1434020791-16291-1-git-send-email-matthias.may@neratec.com>	 <1434020791-16291-2-git-send-email-matthias.may@neratec.com>	 (sfid-20150611_130650_868019_E29B6AA4) <1434023059.1915.12.camel@sipsolutions.net>
+In-Reply-To: <1434023059.1915.12.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Aligned enum members to follow a common style per enum.
+On 11/06/15 13:44, Johannes Berg wrote:
+> On Thu, 2015-06-11 at 13:06 +0200, Matthias May wrote:
+>
+>>   const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+>> -					       u32 center_freq)
+>> +					       u32 center_freq, u32 min_bw)
+>>   {
+>>   	const struct ieee80211_regdomain *regd;
+>> +	const struct ieee80211_reg_rule *rr_tmp = NULL;
+>> +	const struct ieee80211_reg_rule *reg_rule = NULL;
+>> +	u32 bw;
+>>   
+>>   	regd = reg_get_regdomain(wiphy);
+>>   
+>> -	return freq_reg_info_regd(wiphy, center_freq, regd);
+>> +	for(bw=min_bw; bw <= MHZ_TO_KHZ(20); bw=bw*2) {
+>> +		rr_tmp = freq_reg_info_regd(wiphy, center_freq, bw, regd);
+>> +		if(!reg_rule || !IS_ERR(rr_tmp))
+>> +			reg_rule = rr_tmp;
+>> +	}
+>> +
+>> +	return reg_rule;
+> This makes no sense to me.
+>
+> You have the same code below, but why would you care? You can just look
+> at the reg_rule's max_bandwidth, no?
+>
+> johannes
+>
+Using the dummy country code:
+country XS: DFS-UNSET
+     (5170 - 5180 @ 5), (N/A, 14), (N/A)
+     (5175 - 5185 @ 10), (N/A, 17), (N/A)
+     (5170 - 5190 @ 20), (N/A, 20), (N/A)
 
-Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 29 +++++++-------
- drivers/staging/wilc1000/coreconfigurator.h | 62 ++++++++++++++---------------
- 2 files changed, 46 insertions(+), 45 deletions(-)
+For a center freq of 5175
+The first loop finds the first rule. --> we want this.
+The second loop doesn't find anything.
+The third loop doesn't find anything.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 43864dc..c55ed9d 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -40,11 +40,12 @@
- /*****************************************************************************/
- 
- /* Basic Frame Type Codes (2-bit) */
--typedef enum {FRAME_TYPE_CONTROL = 0x04,
--	      FRAME_TYPE_DATA        = 0x08,
--	      FRAME_TYPE_MANAGEMENT            = 0x00,
--	      FRAME_TYPE_RESERVED              = 0x0C,
--	      FRAME_TYPE_FORCE_32BIT  = 0xFFFFFFFF
-+typedef enum {
-+	FRAME_TYPE_CONTROL     = 0x04,
-+	FRAME_TYPE_DATA        = 0x08,
-+	FRAME_TYPE_MANAGEMENT  = 0x00,
-+	FRAME_TYPE_RESERVED    = 0x0C,
-+	FRAME_TYPE_FORCE_32BIT = 0xFFFFFFFF
- } tenuBasicFrmType;
- 
- /* Frame Type and Subtype Codes (6-bit) */
-@@ -188,7 +189,7 @@ static tstrWID gastrWIDs[] = {
- 	{WID_QOS_ENABLE,                WID_CHAR},
- 	{WID_11I_MODE,                  WID_CHAR},
- 	{WID_CURRENT_TX_RATE,           WID_CHAR},
--	{WID_LINKSPEED,           WID_CHAR},
-+	{WID_LINKSPEED,                 WID_CHAR},
- 	{WID_RTS_THRESHOLD,             WID_SHORT},
- 	{WID_FRAG_THRESHOLD,            WID_SHORT},
- 	{WID_SSID,                      WID_STR},
-@@ -223,14 +224,14 @@ static tstrWID gastrWIDs[] = {
- 	{WID_MEMORY_ACCESS_32BIT,       WID_INT},
- 	{WID_MEMORY_ACCESS_16BIT,       WID_SHORT},
- 	{WID_MEMORY_ACCESS_8BIT,        WID_CHAR},
--	{WID_SITE_SURVEY_RESULTS,		WID_STR},
--	{WID_PMKID_INFO,				WID_STR},
--	{WID_ASSOC_RES_INFO,			WID_STR},
--	{WID_MANUFACTURER,				WID_STR}, /* 4 Wids added for the CAPI tool*/
--	{WID_MODEL_NAME,				WID_STR},
--	{WID_MODEL_NUM,					WID_STR},
--	{WID_DEVICE_NAME,				WID_STR},
--	{WID_SSID_PROBE_REQ, WID_STR},
-+	{WID_SITE_SURVEY_RESULTS,       WID_STR},
-+	{WID_PMKID_INFO,                WID_STR},
-+	{WID_ASSOC_RES_INFO,            WID_STR},
-+	{WID_MANUFACTURER,              WID_STR}, /* 4 Wids added for the CAPI tool*/
-+	{WID_MODEL_NAME,                WID_STR},
-+	{WID_MODEL_NUM,                 WID_STR},
-+	{WID_DEVICE_NAME,               WID_STR},
-+	{WID_SSID_PROBE_REQ,            WID_STR},
- 
- #ifdef MAC_802_11N
- 	{WID_11N_ENABLE,                WID_CHAR},
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 73cdbef..b8e5241 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -19,9 +19,9 @@
- /*****************************************************************************/
- /* Number of WID Options Supported */
- #define NUM_BASIC_SWITCHES      45
--#define NUM_FHSS_SWITCHES        0
-+#define NUM_FHSS_SWITCHES       0
- 
--#define NUM_RSSI	5
-+#define NUM_RSSI                5
- 
- #ifdef MAC_802_11N
- #define NUM_11N_BASIC_SWITCHES  25
-@@ -51,14 +51,14 @@ extern WILC_Uint16 g_num_total_switches;
- 
- #define MAX_PACKET_BUFF_SIZE 1596
- 
--#define MAX_STRING_LEN					256
--#define MAX_SURVEY_RESULT_FRAG_SIZE MAX_STRING_LEN
--#define SURVEY_RESULT_LENGTH		44
--#define MAX_ASSOC_RESP_FRAME_SIZE MAX_STRING_LEN
-+#define MAX_STRING_LEN               256
-+#define MAX_SURVEY_RESULT_FRAG_SIZE  MAX_STRING_LEN
-+#define SURVEY_RESULT_LENGTH         44
-+#define MAX_ASSOC_RESP_FRAME_SIZE    MAX_STRING_LEN
- 
--#define STATUS_MSG_LEN			12
--#define MAC_CONNECTED			1
--#define MAC_DISCONNECTED		0
-+#define STATUS_MSG_LEN               12
-+#define MAC_CONNECTED                1
-+#define MAC_DISCONNECTED             0
- 
- 
- 
-@@ -327,10 +327,10 @@ typedef enum {
- 	WID_SUPP_PASSWORD                  = 0x3011,
- 	WID_SITE_SURVEY_RESULTS            = 0x3012,
- 	WID_RX_POWER_LEVEL                 = 0x3013,
--	WID_MANUFACTURER                   = 0x3026,             /*Added for CAPI tool */
--	WID_MODEL_NAME                                         = 0x3027,             /*Added for CAPI tool */
--	WID_MODEL_NUM                      = 0x3028,             /*Added for CAPI tool */
--	WID_DEVICE_NAME                                        = 0x3029,             /*Added for CAPI tool */
-+	WID_MANUFACTURER                   = 0x3026,    /*Added for CAPI tool */
-+	WID_MODEL_NAME                     = 0x3027,    /*Added for CAPI tool */
-+	WID_MODEL_NUM                      = 0x3028,    /*Added for CAPI tool */
-+	WID_DEVICE_NAME                    = 0x3029,    /*Added for CAPI tool */
- 
- 	WID_ASSOC_RES_INFO                 = 0x3020,
- 
-@@ -362,9 +362,9 @@ typedef enum {
- 	WID_HUT_LOG_STATS                  = 0x4083,
- 
- 	/*BugID_3746 WID to add IE to be added in next probe request*/
--	WID_INFO_ELEMENT_PROBE	= 0x4085,
-+	WID_INFO_ELEMENT_PROBE             = 0x4085,
- 	/*BugID_3746 WID to add IE to be added in next associate request*/
--	WID_INFO_ELEMENT_ASSOCIATE	= 0x4086,
-+	WID_INFO_ELEMENT_ASSOCIATE         = 0x4086,
- 
- 	/* Miscellaneous WIDs */
- 	WID_ALL                            = 0x7FFE,
-@@ -374,22 +374,22 @@ typedef enum {
- 
- /* Status Codes for Authentication and Association Frames */
- typedef enum {
--	SUCCESSFUL_STATUSCODE	= 0,
--	UNSPEC_FAIL				  = 1,
--	UNSUP_CAP				  = 10,
--	REASOC_NO_ASOC				  = 11,
--	FAIL_OTHER				  = 12,
--	UNSUPT_ALG				  = 13,
--	AUTH_SEQ_FAIL			  = 14,
--	CHLNG_FAIL				  = 15,
--	AUTH_TIMEOUT			  = 16,
--	AP_FULL					  = 17,
--	UNSUP_RATE				  = 18,
--	SHORT_PREAMBLE_UNSUP	  = 19,
--	PBCC_UNSUP				  = 20,
--	CHANNEL_AGIL_UNSUP	  = 21,
--	SHORT_SLOT_UNSUP		  = 25,
--	OFDM_DSSS_UNSUP			  = 26,
-+	SUCCESSFUL_STATUSCODE    = 0,
-+	UNSPEC_FAIL              = 1,
-+	UNSUP_CAP                = 10,
-+	REASOC_NO_ASOC           = 11,
-+	FAIL_OTHER               = 12,
-+	UNSUPT_ALG               = 13,
-+	AUTH_SEQ_FAIL            = 14,
-+	CHLNG_FAIL               = 15,
-+	AUTH_TIMEOUT             = 16,
-+	AP_FULL                  = 17,
-+	UNSUP_RATE               = 18,
-+	SHORT_PREAMBLE_UNSUP     = 19,
-+	PBCC_UNSUP               = 20,
-+	CHANNEL_AGIL_UNSUP       = 21,
-+	SHORT_SLOT_UNSUP         = 25,
-+	OFDM_DSSS_UNSUP          = 26,
- 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
- } tenuConnectSts;
- 
--- 
-1.9.1
+However for a center freq of 5180
+The first loop find the first rule
+The second loop find the second rule
+The third loop find the third rule. --> We want this
 
+If there are different overlapping rules for the different bandwidths 
+different results can be returned, especially at the border of a 
+frequency range.
+
+A work colleague pointed out that it could be done more efficiently:
+
+  	const struct ieee80211_regdomain *regd;
+	const struct ieee80211_reg_rule *reg_rule = NULL;
+	u32 bw;
+  
+  	regd = reg_get_regdomain(wiphy);
+  
+	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
+		reg_rule = freq_reg_info_regd(wiphy, center_freq, bw, regd);
+		if (!IS_ERR(reg_rule))
+			return reg_rule;
+	}
+
+	return reg_rule;
+
+However after some more discussion we noticed, that this again would 
+allow to start 20MHz wide operation at the border
+This is because when setting the flags we only look at the max_bandwidth 
+of the returned rule.
+I guess we would have to recheck if a certain width fits a center freq 
+when setting this flags.
+
+Will have to think a bit more how to solve this without having to 
+recheck everything again...
+
+Matthias
