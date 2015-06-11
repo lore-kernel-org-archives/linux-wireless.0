@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40601 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764AbbFAG3k (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:36037 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932262AbbFKKAR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 02:29:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-06-01
-Date: Mon, 01 Jun 2015 09:29:32 +0300
-Message-ID: <874mmsvt4j.fsf@kamboji.qca.qualcomm.com> (sfid-20150601_083048_758853_03AC80A9)
+	Thu, 11 Jun 2015 06:00:17 -0400
+Received: by iebps5 with SMTP id ps5so3031873ieb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 03:00:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434016002.1915.7.camel@sipsolutions.net>
+References: <CACna6rwHXzGTZ+NS9PpZENJATVzRzm1Wkija0_CrveMoM05d5g@mail.gmail.com>
+	<1434015922.1915.6.camel@sipsolutions.net>
+	<1434016002.1915.7.camel@sipsolutions.net>
+Date: Thu, 11 Jun 2015 12:00:16 +0200
+Message-ID: <CACna6ry_VRbUbEQeVXC5j68VzPOkJ-qOsAGzKN8XswhHXnO+tw@mail.gmail.com> (sfid-20150611_120023_935861_D6DFF125)
+Subject: Re: Exposing enum ieee80211_channel_flags to user
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 11 June 2015 at 11:46, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2015-06-11 at 11:45 +0200, Johannes Berg wrote:
+>> On Thu, 2015-06-11 at 11:35 +0200, Rafał Miłecki wrote:
+>>
+>> > iw also wasn't helpful:
+>> > Frequencies:
+>> >         * 5180 MHz [36] (30.0 dBm)
+>> >         * 5200 MHz [40] (30.0 dBm)
+>> >         * 5220 MHz [44] (30.0 dBm)
+>> >         * 5240 MHz [48] (30.0 dBm)
+>> >
+>> > After some in-kernel debugging (nl80211_set_wiphy,
+>> > cfg80211_chandef_usable, cfg80211_secondary_chans_ok) I finally
+>> > realized it was because of:
+>> > IEEE80211_CHAN_NO_80MHZ
+>> >
+>> > Do you have any idea how we could handle such cases nicely? To let
+>> > user find out what's going on (wrong)?
+>> >
+>> > Should "iw" be extended to print flag names? Or should hostapd check
+>> > for channels in some smarter way? Any other ideas?
+>>
+>> We already have the flags exposed to iw, it's just not printing them.
+>> There was a patch to print them, but it wasn't complete, and the
+>> submitter kinda went away. You can see the discussion here:
+>>
+>> http://mid.gmane.org/1425452686-28196-1-git-send-email-arnagara@qti.qualcomm.com
+>
+> Upon rereading, I think my preference would be to remove much of the
+> channel list information and add a separate iw command.
 
-here are three more important fixes I'm hoping to get to 4.1 still, I
-hope I'm not too late with these. Please let me know if there are any
-problems.
-
-Kalle
-
-The following changes since commit aefa441b150279dd8d25658e018898a3fe9a6769:
-
-  Merge tag 'iwlwifi-for-kalle-2015-05-21' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-05-22 10:47:02 +0300)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-06-01
-
-for you to fetch changes up to 38fe44e61a894f1c7b3e60b0614030271070ea53:
-
-  Merge tag 'iwlwifi-for-kalle-2015-05-28' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-05-28 16:28:03 +0300)
-
-----------------------------------------------------------------
-
-iwlwifi:
-
-* fix OTP parsing 8260
-* fix powersave handling for 8260
-
-brcmfmac:
-
-* fix null pointer crash
-
-----------------------------------------------------------------
-Arend van Spriel (1):
-      brcmfmac: avoid null pointer access when brcmf_msgbuf_get_pktid() fails
-
-Ilan Peer (1):
-      iwlwifi: pcie: fix tracking of cmd_in_flight
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2015-05-28' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Liad Kaufman (1):
-      iwlwifi: nvm: fix otp parsing in 8000 hw family
-
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c |   12 +++++------
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c     |    2 +-
- drivers/net/wireless/iwlwifi/pcie/internal.h     |    6 +++---
- drivers/net/wireless/iwlwifi/pcie/trans.c        |    4 ++--
- drivers/net/wireless/iwlwifi/pcie/tx.c           |   23 +++++++++-------------
- 5 files changed, 20 insertions(+), 27 deletions(-)
+Do you mean removing channel list from "iw phy X info"? Can you
+suggest the new command name?
 
 -- 
-Kalle Valo
+Rafał
