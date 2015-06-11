@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0108.outbound.protection.outlook.com ([157.55.234.108]:38448
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754644AbbFQNWa convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48271 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbbFKNZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 09:22:30 -0400
-From: "Mutharaju, Prasanna (P.)" <mkarthi3@visteon.com>
-To: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"carlos@cgarcia.org" <carlos@cgarcia.org>,
-	"hamohammed.sa@gmail.com" <hamohammed.sa@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Subject: [PATCH] staging:rtl8723au: Fix return statement reported by
- coccinelle
-Date: Wed, 17 Jun 2015 12:50:14 +0000
-Message-ID: <20150617124933.GA30109@ubuntu> (sfid-20150617_152234_041752_331A736A)
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 11 Jun 2015 09:25:46 -0400
+Message-ID: <55798C58.9020600@candelatech.com> (sfid-20150611_152549_955456_3F76AD17)
+Date: Thu, 11 Jun 2015 06:25:44 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Sangwoo Moon <swmoon@lanada.kaist.ac.kr>
+CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2] ath10k: enable VHT for IBSS
+References: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com>	<911fece613ad9dd7975e53ac808fd495@lanada.kaist.ac.kr>	<CALhHN=qf=frYc2iLQWs5AyJncxACa3fuBeXChE7_K+rTS8w7VQ@mail.gmail.com>	<4e93e535617121ba802385eef13b9ef7@lanada.kaist.ac.kr> <CAFED-jkdYZaKiEY9RWHTh0+MthbsQri8EhmQZ1j-tjcvzjSVdg@mail.gmail.com>
+In-Reply-To: <CAFED-jkdYZaKiEY9RWHTh0+MthbsQri8EhmQZ1j-tjcvzjSVdg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prasanna Karthik <mkarthi3@visteon.com>
 
-Modified return statement and removed local declaration no longer
-needed. No Compiler warnings.
 
-Signed-off-by: Prasanna Karthik <mkarthi3@visteon.com>
----
- drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+On 06/10/2015 11:33 PM, Janusz Dziedzic wrote:
+> 2015-06-11 8:32 GMT+02:00 Sangwoo Moon <swmoon@lanada.kaist.ac.kr>:
+>> Hello,
+>>
+>> I have successfully installed the latest version of ath10k driver from
+>> backports.
+>>
+>> However, I have some difficulties on configuring wpa_supplicant for IBSS VHT
+>> mode.
+>> Looked at wpa_supplicant configuration file, but I couldn't found any option
+>> related to explicit setting VHT (though I've found disable_vht instead)
+>>
+>> Sorry for annoying questions, but can you help this out?
+>> At least you could let me know your configuration of wpa_supplicant.
+>>
+> supplicant by default setup wildest BW, no special parameter required
+> for IBSS VHT
+>
+> network = {
+>      ssid="ibss"
+>      mode=1
+>      key_mgmt=NONE
+>      frequency=5180
+> }
+>
+> Just use latest version of wpa_supplicant.
+> next check you have 80MHz BW
+> iw wlan0 info
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c b/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c
-index 4909835..11d635d 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c
-@@ -500,7 +500,6 @@ phy_RF6052_Config_ParaFile_Fail:
- int PHY_RF6052_Config8723A(struct rtw_adapter *Adapter)
- {
- 	struct hal_data_8723a *pHalData = GET_HAL_DATA(Adapter);
--	int rtStatus = _SUCCESS;
- 
- 	/*  Initialize general global value */
- 	/*  TODO: Extend RF_PATH_C and RF_PATH_D in the future */
-@@ -510,8 +509,7 @@ int PHY_RF6052_Config8723A(struct rtw_adapter *Adapter)
- 		pHalData->NumTotalRFPath = 2;
- 
- 	/*  Config BB and RF */
--	rtStatus = phy_RF6052_Config_ParaFile(Adapter);
--	return rtStatus;
-+	return phy_RF6052_Config_ParaFile(Adapter);
- }
- 
- /* End of HalRf6052.c */
+Make sure you compile supplicant with this option enabled:
+
+CONFIG_IBSS_RSN=y
+
+I think only particular firmware versions are doing to do IBSS as well.
+
+Thanks,
+Ben
+
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
