@@ -1,77 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gosford.compton.nu ([217.169.17.27]:42870 "EHLO
-	gosford.compton.nu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753141AbbF2Iai (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 04:30:38 -0400
-Subject: Re: Null pointer dereference when station associates [introduced by
- 4.0.5?]
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <558EC27A.60804@compton.nu> (sfid-20150627_181129_907073_7F8F41EE)
- <1435565678.2156.9.camel@sipsolutions.net>
-Cc: stable@vger.kernel.org
-From: Tom Hughes <tom@compton.nu>
-Message-ID: <55910222.8020906@compton.nu> (sfid-20150629_103046_185438_7A1E2151)
-Date: Mon, 29 Jun 2015 09:30:26 +0100
+Received: from mailsec105.isp.belgacom.be ([195.238.20.101]:25398 "EHLO
+	mailsec105.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750724AbbFKFGd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 01:06:33 -0400
+Date: Thu, 11 Jun 2015 07:06:31 +0200 (CEST)
+From: Fabian Frederick <fabf@skynet.be>
+Reply-To: Fabian Frederick <fabf@skynet.be>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>,
+	Jiri Slaby <jirislaby@gmail.com>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Message-ID: <1397966187.6193.1433999191450.open-xchange@webmail.nmp.proximus.be> (sfid-20150611_070639_356890_F05B8348)
+In-Reply-To: <alpine.DEB.2.02.1506102228560.1986@localhost6.localdomain6>
+References: <1433954015-24872-1-git-send-email-fabf@skynet.be> <1433965966.32331.25.camel@perches.com> <1121998377.24127.1433966378845.open-xchange@webmail.nmp.proximus.be> <alpine.DEB.2.02.1506102228560.1986@localhost6.localdomain6>
+Subject: Re: [PATCH 1/1 linux-next] ath5k: use swap() in
+ ath5k_hw_get_median_noise_floor()
 MIME-Version: 1.0
-In-Reply-To: <1435565678.2156.9.camel@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29/06/15 09:14, Johannes Berg wrote:
-> On Sat, 2015-06-27 at 16:34 +0100, Tom Hughes wrote:
->>
->> Interestingly from what I can see this is trying to create a file
->> for the station at a path something like:
->>
->> ieee80211/phy0/netdev:XXXX/stations/XXXXXX
-> 
-> indeed.
-> 
->> but in my (currently working) boot under 4.0.4 there is no netdev
->> directory under phy0 in debugfs... but then maybe that is the problem
->> as well if the inode pointer was null?
->>
-> 
-> This is pretty strange - if the dentry pointer (sdata
-> ->debugfs.subdir_stations) was NULL or an ERR_PTR(), the code would
-> return pretty much immediately.
-> 
-> So it looks like that pointer is valid, but it's ->d_inode was NULL?
-> 
-> I'm not really sure how that could happen.
-
-Indeed I'm a bit puzzled... I can't see anything obvious in the kernel
-logs indicating a problem, but here's a listing of the phy0 directory:
-
-[root@gosford]/home/tom# uname -a
-Linux gosford.compton.nu 4.0.4-301.fc22.i686+PAE #1 SMP Thu May 21 13:27:48 UTC 2015 i686 i686 i386 GNU/Linux
-[root@gosford]/home/tom# ls /sys/kernel/debug/ieee80211/phy0 
-ath9k                    keys              rc                 statistics
-fragmentation_threshold  long_retry_limit  reset              total_ps_buffered
-ht40allow_map            power             rts_threshold      user_power
-hwflags                  queues            short_retry_limit  wep_iv
-
-with no netdev directory at all.
-
-Interestingly I just tried a different machine running on more or less
-the same kernel with a USB wireless stick and that did get a netdev
-directory...
-
-> Since 4.0.4 was stable, and 4.0.5 crashes, you'd think there's
-> something wrong between those two kernels and there were no changes to
-> mac80211 related to these code paths in there.
-
-Well 4.0.4 did hit it eventually, but it had been running stably
-for a month first. I then rebooted (because networking is basically
-wedged after this happens) and got 4.0.5 which hit it immediately as
-did several more reboots before I went back to the older kernel.
-
-Tom
 
 
--- 
-Tom Hughes (tom@compton.nu)
-http://compton.nu/
+> On 10 June 2015 at 22:29 Julia Lawall <julia.lawall@lip6.fr> wrote:
+>
+>
+>
+>
+> On Wed, 10 Jun 2015, Fabian Frederick wrote:
+>
+> >
+> >
+> > > On 10 June 2015 at 21:52 Joe Perches <joe@perches.com> wrote:
+> > >
+> > >
+> > > On Wed, 2015-06-10 at 18:33 +0200, Fabian Frederick wrote:
+> > > > Use kernel.h macro definition.
+> > > >
+> > > > Thanks to Julia Lawall for Coccinelle scripting support.
+> > > []
+> > > > diff --git a/drivers/net/wireless/ath/ath5k/phy.c
+> > > > b/drivers/net/wireless/ath/ath5k/phy.c
+> > > []
+> > > > @@ -1566,17 +1566,13 @@ static s16
+> > > >  ath5k_hw_get_median_noise_floor(struct ath5k_hw *ah)
+> > > >  {
+> > > >     s16 sort[ATH5K_NF_CAL_HIST_MAX];
+> > > > -   s16 tmp;
+> > > >     int i, j;
+> > > > 
+> > > >     memcpy(sort, ah->ah_nfcal_hist.nfval, sizeof(sort));
+> > > >     for (i = 0; i < ATH5K_NF_CAL_HIST_MAX - 1; i++) {
+> > > >             for (j = 1; j < ATH5K_NF_CAL_HIST_MAX - i; j++) {
+> > > > -                   if (sort[j] > sort[j - 1]) {
+> > > > -                           tmp = sort[j];
+> > > > -                           sort[j] = sort[j - 1];
+> > > > -                           sort[j - 1] = tmp;
+> > > > -                   }
+> > > > +                   if (sort[j] > sort[j - 1])
+> > > > +                           swap(sort[j], sort[j]);
+> > >
+> > > swap(a, a) doesn't look useful.
+> > Thanks a lot Joe, I'll fix this one :)
+>
+> How did it come out like that?
+>
+> julia
+
+I used script for detection only and made updates manually.
+I guess I was distracted by [j - 1] on line above.
+It was based on linux-next; if maintainers prefer another branch, I'll
+send the right version on top of it.
+
+Regards,
+Fabian
+>
+> >
+> > Regards,
+> > Fabian
+> > >
+> > >
+> >
