@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59257 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753726AbbFLOBD (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:58211 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036AbbFKFuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 10:01:03 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: aspriel@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2015 17:00:44 +0300
-Message-Id: <1434117644-3033-5-git-send-email-luca@coelho.fi> (sfid-20150612_160111_314639_D6AB4FC9)
-In-Reply-To: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-References: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH py80211 4/4] py80211: scan: add matchsets support for scheduled scans
+	Thu, 11 Jun 2015 01:50:16 -0400
+Date: Wed, 10 Jun 2015 22:50:16 -0700 (PDT)
+Message-Id: <20150610.225016.2176334323311549412.davem@davemloft.net> (sfid-20150611_075023_781283_B7417A9C)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2015-06-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1433945228.3145.11.camel@sipsolutions.net>
+References: <1433941752.3145.10.camel@sipsolutions.net>
+	<1433945228.3145.11.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 10 Jun 2015 16:07:08 +0200
 
-Modify the sched_scan_start class so that the caller can pass a list
-of matches to be used in the scheduled scan request.
+> On Wed, 2015-06-10 at 15:09 +0200, Johannes Berg wrote:
+> 
+>> The following changes since commit c3eee1fb1d308564ada5f7ea57bc51efc6130b37:
+>> 
+>>   Merge tag 'batman-adv-for-davem' of git://git.open-mesh.org/linux-merge (2015-06-09 20:23:52 -0700)
+>> 
+>> are available in the git repository at:
+>> 
+>>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-06-10
+>> 
+>> for you to fetch changes up to 5df03344c5639fdd848cb87553956df7276a8645:
+>> 
+>>   mac80211: convert HW flags to unsigned long bitmap (2015-06-10 13:48:42 +0200)
+> 
+> Oops, fixed a stupid bug in there so that's now commit
+> 30686bf7f5b3c30831761e188a6e3cb33580fa48. Sorry about that.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- lib/scan.py | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/lib/scan.py b/lib/scan.py
-index bfaf3d2..b55d148 100644
---- a/lib/scan.py
-+++ b/lib/scan.py
-@@ -192,10 +192,34 @@ class sched_scan_start(scan_start_base):
- 	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
-                 super(sched_scan_start, self).__init__(ifidx, level)
-                 self._nl_cmd = nl80211.CMD_START_SCHED_SCAN
-+                self._matches = None
- 
- 	def set_interval(self, interval):
- 		self._interval = interval
- 
-+        def add_matches(self, matches):
-+                self._matches = matches
-+
-+        def _add_matches_attrs(self):
-+		if self._matches:
-+			i = 0
-+
-+                        matchset = nl.nla_nest_start(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_MATCH)
-+			for match in self._matches:
-+                                nest = nl.nla_nest_start(self._nl_msg._msg, i)
-+                                if 'ssid' in match:
-+                                        nl.nla_put(self._nl_msg._msg, nl80211.SCHED_SCAN_MATCH_ATTR_SSID, match['ssid'])
-+				i += 1
-+                                nl.nla_nest_end(self._nl_msg._msg, nest)
-+
-+                        nl.nla_nest_end(self._nl_msg._msg, matchset)
-+
-+        def send(self):
-+                self._prepare_cmd()
-+                self._add_scan_attrs()
-+                self._add_matches_attrs()
-+                self._send_and_wait()
-+
-         def handle(self, msg, arg):
- 		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
- 
--- 
-2.1.4
-
+Pulled, thanks Johannes.
