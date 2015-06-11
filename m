@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:34325 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbbFZGtI (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:34390 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbbFKDzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 02:49:08 -0400
-Received: by pdbep18 with SMTP id ep18so47431339pdb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 23:49:08 -0700 (PDT)
-From: Sunghoon Cho <ywhsbliss@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, Rachel.kim@atmel.com,
-	dean.lee@atmel.com, ywhsbliss@gmail.com
-Subject: [PATCH 1/3] staging: wilc1000: remove the warnings on the prohibited spaces
-Date: Fri, 26 Jun 2015 15:48:14 +0900
-Message-Id: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com> (sfid-20150626_084915_195817_136CDB15)
+	Wed, 10 Jun 2015 23:55:47 -0400
+Received: by igbhj9 with SMTP id hj9so47804846igb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2015 20:55:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1433944180-17321-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1433944180-17321-1-git-send-email-emmanuel.grumbach@intel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 11 Jun 2015 13:55:26 +1000
+Message-ID: <CAGRGNgX6CGEPJj6UGiryYWZ8FjaC6NHSbRNvL=dAJL9Cvw+bpg@mail.gmail.com> (sfid-20150611_055551_976886_F91D3715)
+Subject: Re: [PATCH] mac80211: Disable U-APSD if connected to a SISO or non-HT AP
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Avri Altman <avri.altman@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the warnings reported by checkpatch.pl regarding
-prohibited spaces between function name and open parenthesis.
+Hi Emmanuel / Avri,
 
-Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Wed, Jun 10, 2015 at 11:49 PM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> From: Avri Altman <avri.altman@intel.com>
+>
+> There are a few APs our there that advertise U-APSD
+> capabilities but don't implement it right which leads to
+> poor traffic. These APs don't support MIMO or don't even
+> support HT. Use this heuristic to detect them and disable
+> U-APSD accordingly.
+>
+> Signed-off-by: Avri Altman <avri.altman@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  net/mac80211/scan.c | 25 +++++++++++++++++++++++++
+>  1 file changed, 25 insertions(+)
+>
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 7bb6a93..3791c8a 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -39,6 +39,28 @@ void ieee80211_rx_bss_put(struct ieee80211_local *local,
+>                          container_of((void *)bss, struct cfg80211_bss, priv));
+>  }
+>
+> +/*
+> + * An incompatible AP workaround:
+> + * if the AP does not advertise MIMO capabilities disable U-APSD.
+> + * iPhones, among others, advertise themselves as U-APSD capable when
+> + * they aren't. Avoid connecting to those devices in U-APSD enabled.
+> + */
+> +static bool broken_uapsd_workarounds(struct ieee802_11_elems *elems)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index d413fa3..22d7b85 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -80,9 +80,9 @@ struct WILC_WFI_stats {
-  * LPC3131 which is important to get the MAC start status when you are blocked inside
-  * linux_wlan_firmware_download() which blocks mac_open().
-  */
--#if defined (NM73131_0_BOARD)
-+#if defined(NM73131_0_BOARD)
-  #define RX_BH_TYPE  RX_BH_KTHREAD
--#elif defined (PANDA_BOARD)
-+#elif defined(PANDA_BOARD)
-  #define RX_BH_TYPE  RX_BH_THREADED_IRQ
- #else
-  #define RX_BH_TYPE  RX_BH_KTHREAD
+Would a better name for this function be something like
+is_uapsd_broken()? We're not actually working around anything here,
+just checking whether it's broken or not.
+
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
