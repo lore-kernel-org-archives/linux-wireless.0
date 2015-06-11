@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ppsa1.llumc.edu ([143.197.222.70]:52468 "EHLO ppsa1.llumc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751511AbbFVWfv convert rfc822-to-8bit (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60075 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602AbbFKAmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 18:35:51 -0400
-Received: from pps.filterd (ppagent4.mc.llumc.edu [127.0.0.1])
-	by ppagent4.mc.llumc.edu (8.15.0.59/8.15.0.59) with SMTP id t5MKVlK7004770
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 14:29:11 -0700
-Received: from excvhtsp01.mc.ad.lluahsc.org (exch3.mc.ad.lluahsc.org [10.192.100.112] (may be forged))
-	by ppagent4.mc.llumc.edu with ESMTP id 1v552mg9bc-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 14:29:11 -0700
-From: "Redkey, Curtis" <CRedkey@llu.edu>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Best Dual Band Linux Drivers
-Date: Mon, 22 Jun 2015 21:29:09 +0000
-Message-ID: <CF6721EFB3C0784A9DB5F6E4EB9160C9DF18D9D4@excvmbsp01.mc.ad.lluahsc.org> (sfid-20150623_003555_239002_DCF79A45)
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 10 Jun 2015 20:42:08 -0400
+Date: Wed, 10 Jun 2015 17:42:08 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Rachel.kim@atmel.com, dean.lee@atmel.com, tony.cho@atmel.com,
+	chris.park@atmel.com
+Subject: Re: [PATCH 3/4] staging: wilc1000: modify printk format
+Message-ID: <20150611004208.GB30902@kroah.com> (sfid-20150611_024212_248324_2E082061)
+References: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com>
+ <1433923607-20927-4-git-send-email-johnny.kim@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433923607-20927-4-git-send-email-johnny.kim@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What linux driver has the ability to set the preference for the 5 GHz over the 2.4 GHz range? The current one I have does not allow it.
+On Wed, Jun 10, 2015 at 05:06:46PM +0900, Johnny Kim wrote:
+> This remove compile warnings about printk format.
+> 
+> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c         | 8 ++++----
+>  drivers/staging/wilc1000/linux_wlan.c             | 2 +-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+>  3 files changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 4b005fa..e4ad07a 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -703,7 +703,7 @@ static WILC_Sint32 Handle_SetOperationMode(void *drvHandler, tstrHostIfSetOperat
+>  	strWID.s32ValueSize = sizeof(WILC_Uint32);
+>  
+>  	/*Sending Cfg*/
+> -	PRINT_INFO(HOSTINF_DBG, "(WILC_Uint32)pstrWFIDrv= %x \n", (WILC_Uint32)pstrWFIDrv);
+> +	PRINT_INFO(HOSTINF_DBG, "(size_t)pstrWFIDrv= %p \n", pstrWFIDrv);
 
-I posted this question online and since the SSID's are the same for the 2.4GHz and 5GHz, it has been difficult to setup the 5 GHz wireless connectivity.
+why is size_t in the printk message, can't that just be dropped?
 
-How do I set a preference for 5GHz over 2.4GHz Wifi in Lubuntu 12.04
-http://askubuntu.com/questions/635358/how-do-i-set-a-preference-for-5ghz-over-2-4ghz-wifi-in-lubuntu-12-04
+I'll take this, but it looks odd...
 
-Any solutions or suggestions would be greatly appreciated.
-
-Thank you,
-
-Curtis Redkey
-Information Services | Systems Administrator | Loma Linda University Medical Center
-Telephone : 909.558.5068 |Email : CRedkey@llu.edu |Pager: CRedkey@my2way.com 
-
-But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control. Against such things there is no law.
-Galatians 5:22-23 (NIV)
-
-CONFIDENTIALITY NOTICE: This e-mail communication and any attachments may contain confidential and privileged information for the use of the designated recipients named above. If you are not the intended recipient, you are hereby notified that you have received this communication in error and that any review, disclosure, dissemination, distribution or copying of it or its contents is prohibited. If you have received this communication in error, please notify me immediately by replying to this message and destroy all copies of this communication and any attachments. Thank you.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
