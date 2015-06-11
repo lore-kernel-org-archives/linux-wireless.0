@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18294 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774AbbFPFqc (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:35697 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956AbbFKN7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:46:32 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 00/10] introduce wmi support for qca99X0
-Date: Tue, 16 Jun 2015 11:15:13 +0530
-Message-ID: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_074636_651710_32B29185)
+	Thu, 11 Jun 2015 09:59:43 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Liu CF/TW <cfliu.tw@gmail.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: add 'cryptmode' param to support raw tx injection and software crypto
+References: <1433812382-10287-1-git-send-email-cfliu.tw@gmail.com>
+Date: Thu, 11 Jun 2015 16:59:31 +0300
+In-Reply-To: <1433812382-10287-1-git-send-email-cfliu.tw@gmail.com> (Liu CF's
+	message of "Mon, 8 Jun 2015 18:13:02 -0700")
+Message-ID: <87vbeubb24.fsf@kamboji.qca.qualcomm.com> (sfid-20150611_155946_922953_5238A6F2)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-qca99X0 uses 10.4 firmware. This patch series adds 10.4 firmware
-specific WMI cmds/events/parsing logic. All these patches tested
-on top of qca99X0 initial bring up patches.
+Liu CF/TW <cfliu.tw@gmail.com> writes:
 
-Raja Mani (10):
-  ath10k: include new wmi op version for 10.4 fw
-  ath10k: add 10.4 fw wmi service bitmap definition
-  ath10k: include 10.4 fw specific wmi cmd and event ids
-  ath10k: set 10.4 fw exclusive wmi cmd as unsupported for other fw
-    versions
-  ath10k: add 10.4 fw wmi vdev cmd ids
-  ath10k: add 10.4 fw wmi pdev cmd ids
-  ath10k: fill 10.4 fw wmi init cmd default values
-  ath10k: handle 10.4 fw wmi mgmt rx event
-  ath10k: adjust default peer limits if qcache enabled in 10.4 fw
-  ath10k: handle 10.4 fw wmi ready event
+> This change supports hardware crypto engine bypass by enabling raw
+> Rx/Tx encap mode. This enables use cases such as software crypto and raw
+> tx injection. This change introduces a new module param 'cryptmode'.
+>
+> cryptmode:
+>
+>   0: Use hardware crypto engine globally with native Wi-Fi mode TX/RX
+>      encapsulation to the firmware. This is the default mode.
+>   1: Use sofware crypto engine globally with raw mode TX/RX encapsulation
+>      to the firmware.
 
- drivers/net/wireless/ath/ath10k/core.c    |   9 +
- drivers/net/wireless/ath/ath10k/core.h    |   2 +
- drivers/net/wireless/ath/ath10k/hw.h      |  61 +++
- drivers/net/wireless/ath/ath10k/mac.c     |   2 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  47 ++
- drivers/net/wireless/ath/ath10k/wmi.c     | 793 +++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h     | 792 ++++++++++++++++++++++++++++-
- 7 files changed, 1700 insertions(+), 6 deletions(-)
+These two values are ok.
+
+>   2: Supports both hardware and software crypto with raw mode TX/RX
+>      encapsulation to the firmware. By default hardware crypto engine is
+>      used. To use software crypto in this mode, set the per ath10k_vif
+>      'nohwcrypt' flag value to True.*
+>      *) The patch for setting vif specific 'nohwcrypt' flag when
+>         cryptmode=2 would be a separate patch to mac80211.
+
+But this the problematic one. I cannot apply something to ath10k until
+Johannes applies the mac80211 part. Didn't I mention this already
+earlier? At least I was supposed to do that.
+
+And most importantly does Johannes even agree with the approach? IIRC he
+was pretty reluctant about configuring the crypto mode via nl80211.
+
+I suggest splitting the patch into two: patch 1 adding support for
+cryptmode values 0 and 1, patch 2 adding support for cryptmode 2. That
+way we can commit patch 1 early and see what we can do with patch 2.
 
 -- 
-1.8.1.2
-
+Kalle Valo
