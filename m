@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4385 "EHLO mga01.intel.com"
+Received: from mail.neratec.com ([46.140.151.2]:6733 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753262AbbFCHb5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:31:57 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S1752990AbbFKLGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 07:06:39 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.neratec.com (Postfix) with ESMTP id C4B9E8E4A8E
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 13:06:36 +0200 (CEST)
+From: Matthias May <matthias.may@neratec.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/15] iwlwifi: mvm: enable IEEE80211_HW_SUPPORT_FAST_XMIT
-Date: Wed,  3 Jun 2015 10:31:29 +0300
-Message-Id: <1433316696-4612-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093205_191521_715CCBA6)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+Cc: matthias.may@neratec.com
+Subject: [PATCHv2 3/4] brcm80211: send minimum bandwidth to handle
+Date: Thu, 11 Jun 2015 13:06:30 +0200
+Message-Id: <1434020791-16291-4-git-send-email-matthias.may@neratec.com> (sfid-20150611_130646_823522_65B64B2B)
+In-Reply-To: <1434020791-16291-1-git-send-email-matthias.may@neratec.com>
+References: <1434020791-16291-1-git-send-email-matthias.may@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+add 20MHz minimum bandwidth to the calls of freq_reg_info()
 
-Since the firmware is responsible for duration calculation, the
-driver can easily support fast-xmit.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Matthias May <matthias.may@neratec.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 9e517e2..57d75d1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -428,6 +428,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		    IEEE80211_HW_TIMING_BEACON_ONLY |
- 		    IEEE80211_HW_CONNECTION_MONITOR |
- 		    IEEE80211_HW_CHANCTX_STA_CSA |
-+		    IEEE80211_HW_SUPPORT_FAST_XMIT |
- 		    IEEE80211_HW_SUPPORTS_CLONED_SKBS;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+index 635ae03..1de5129 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+@@ -680,7 +680,8 @@ brcms_reg_apply_beaconing_flags(struct wiphy *wiphy,
  
- 	hw->queues = mvm->first_agg_queue;
+ 			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+ 				rule = freq_reg_info(wiphy,
+-						     MHZ_TO_KHZ(ch->center_freq));
++						     MHZ_TO_KHZ(ch->center_freq),
++						     MHZ_TO_KHZ(20));
+ 				if (IS_ERR(rule))
+ 					continue;
+ 
 -- 
 2.1.4
 
