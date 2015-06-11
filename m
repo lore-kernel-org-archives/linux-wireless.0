@@ -1,88 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:61708 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754617AbbFOSzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 14:55:47 -0400
-Message-ID: <557F1FA7.5060802@rempel-privat.de> (sfid-20150615_205550_829704_67EB48E2)
-Date: Mon, 15 Jun 2015 20:55:35 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from nasmtp01.atmel.com ([192.199.1.246]:44026 "EHLO
+	DVREDG02.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751622AbbFKFdm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 01:33:42 -0400
+Message-ID: <55791DB3.7080205@atmel.com> (sfid-20150611_073401_903550_C49BCCA0)
+Date: Thu, 11 Jun 2015 14:33:39 +0900
+From: Johnny Kim <johnny.kim@atmel.com>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_htc: introduce support for different fw versions
-References: <1434298342-1620-1-git-send-email-linux@rempel-privat.de> <CAGRGNgUWJ-LDgdxe1TJw2YOroMKaYDj3ehUu7j_zoqX17BxbjQ@mail.gmail.com>
-In-Reply-To: <CAGRGNgUWJ-LDgdxe1TJw2YOroMKaYDj3ehUu7j_zoqX17BxbjQ@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="I2GUXLHBGeqxJKoAabjrEckLqmSQDomR5"
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<Rachel.kim@atmel.com>, <dean.lee@atmel.com>, <tony.cho@atmel.com>,
+	<chris.park@atmel.com>
+Subject: Re: [PATCH 1/4] staging: wilc1000: modify data type
+References: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com> <1433923607-20927-2-git-send-email-johnny.kim@atmel.com> <20150611004059.GA30902@kroah.com>
+In-Reply-To: <20150611004059.GA30902@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---I2GUXLHBGeqxJKoAabjrEckLqmSQDomR5
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-Am 15.06.2015 um 01:27 schrieb Julian Calaby:
-> Hi Oleksij,
->=20
-> On Mon, Jun 15, 2015 at 2:12 AM, Oleksij Rempel <linux@rempel-privat.de=
-> wrote:
->> Current kernel support only one fw name with theoretically only one
->> fw version. By replacing fw with other version we will break compatibi=
-lity
->> with older kernels.
->>
->> To avoid this kind of regression this patch will reuse fw version mode=
-l
->> from iwlwifi driver.
->>
->> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->> ---
->>  drivers/net/wireless/ath/ath9k/hif_usb.c      | 102 +++++++++++++++++=
-+++------
->>  drivers/net/wireless/ath/ath9k/hif_usb.h      |  13 +++-
->>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |   4 +
->>  3 files changed, 95 insertions(+), 24 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wi=
-reless/ath/ath9k/hif_usb.c
->> index 10c02f5..18407f2 100644
->> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
->> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
->> @@ -17,10 +17,6 @@
->>  #include <asm/unaligned.h>
->>  #include "htc.h"
->>
->> -/* identify firmware images */
->> -#define FIRMWARE_AR7010_1_1     "htc_7010.fw"
->> -#define FIRMWARE_AR9271         "htc_9271.fw"
->> -
->>  MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
->>  MODULE_FIRMWARE(FIRMWARE_AR9271);
->=20
-> Shouldn't you declare the versioned firmware names here too?
+On 2015년 06월 11일 09:40, Greg KH wrote:
+> On Wed, Jun 10, 2015 at 05:06:44PM +0900, Johnny Kim wrote:
+>> -static int wilc_wlan_cfg_commit(int type, uint32_t drvHandler)
+>> +static int wilc_wlan_cfg_commit(int type, size_t drvHandler)
+> Shouldn't this just be a void *?  And if so, why not the real function
+> pointer instead?
+>
+> Also, lots of these seem to be just pointers, please use a pointer
+> instead of hiding it in a size_t as that's the most portable, and
+> correct, way to do it.  No need to hide any function pointers here, this
+> isn't Windows :)
+>
+> thanks,
+>
+> greg k-h
 
-Thank you.
+To replace the integer to the pointer as your counsel, I need a lot of
+discussion internally. But I will fix the type and the related things
+like your thinking.
 
+I know there is the build warning for 64-bit machine and this driver stays
+in BROKEN status on linux-next.
+I want to know if the reason is 64bit build warning.
 
---=20
-Regards,
-Oleksij
+Thanks for your help.
 
-
---I2GUXLHBGeqxJKoAabjrEckLqmSQDomR5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlV/H6cACgkQHwImuRkmbWlhrQD+ICNLtcqcYEpwLP4lUM1tXk0n
-ziLzLxjLuPSGx8N8s68A/10sagfrPBc0696tN1EYPV/fW4GSHeLOZOrIgiShiEHx
-=ZNd7
------END PGP SIGNATURE-----
-
---I2GUXLHBGeqxJKoAabjrEckLqmSQDomR5--
+Regards
+Johnny
