@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48085 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:34716 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933572AbbFVL7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 07:59:42 -0400
-Message-ID: <1434974380.19597.10.camel@sipsolutions.net> (sfid-20150622_135945_438849_722C306F)
-Subject: Re: [PATCH 2/3] ath9k: make rxfilter per HW
+	id S1751244AbbFKIGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 04:06:15 -0400
+Message-ID: <1434009970.1915.3.camel@sipsolutions.net> (sfid-20150611_100624_293302_BB196B41)
+Subject: Re: values in /proc/net/wireless are static, doesn't change;
+ iwlwifi, Intel 6205
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	nbd@openwrt.org, sujith@msujith.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Mon, 22 Jun 2015 13:59:40 +0200
-In-Reply-To: <1434974312.19597.9.camel@sipsolutions.net> (sfid-20150622_135841_850054_31462557)
-References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1434973385-15865-3-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150622_134339_744222_8D689257) <1434974312.19597.9.camel@sipsolutions.net>
-	 (sfid-20150622_135841_850054_31462557)
+To: Daniel Lublin <quite@hack.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 11 Jun 2015 10:06:10 +0200
+In-Reply-To: <loom.20150611T094911-428@post.gmane.org> (sfid-20150611_100009_243262_EFBCBBEB)
+References: <loom.20150611T094911-428@post.gmane.org>
+	 (sfid-20150611_100009_243262_EFBCBBEB)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-06-22 at 13:58 +0200, Johannes Berg wrote:
-> On Mon, 2015-06-22 at 13:43 +0200, Janusz Dziedzic wrote:
-> > mac80211 configure rxfilter per HW,
-> > so we don't need this per channel.
+On Thu, 2015-06-11 at 07:55 +0000, Daniel Lublin wrote:
+> I'm on a thinkpad X230 with Intel Advanced-N 6205 card, iwlwifi driver. 
 > 
-> As I said before, I think there's value in mac80211 doing it per chanctx
-> or even per vif, and it should be more efficient to do so.
-> 
-> It's tempting to do it per vif and leave the chanctx work up to the
-> driver, but perhaps with CSA and all that it gets complicated enough
-> that doing it per chanctx in mac80211 would make sense?
+> Reading /proc/net/wireless, I find that the values there does not change. No 
+> matter me moving around, changing distance to my AP. On my old machine (X60), 
+> I was used to sometimes using for example wavemon(1) to find out where I get 
+> the best reception. I this a limitation of my network card, driver, or some 
+> combitation? As designed, or a flaw?
 
-On the other hand, I think our device requires it per vif, so we'd
-probably have to do both.
-
-+Andrei, who was looking into this.
+The fix just went into net.git.
 
 johannes
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
