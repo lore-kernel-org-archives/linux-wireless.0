@@ -1,237 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54658 "EHLO sipsolutions.net"
+Received: from mail.neratec.com ([46.140.151.2]:34359 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932540AbbFWPxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 11:53:48 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	id S1752868AbbFKPMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 11:12:50 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.neratec.com (Postfix) with ESMTP id 7EAC3A06CBB
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 17:12:47 +0200 (CEST)
+From: Matthias May <matthias.may@neratec.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: allow mgmt_frame_register callback to sleep
-Date: Tue, 23 Jun 2015 17:53:45 +0200
-Message-Id: <1435074825-17012-1-git-send-email-johannes@sipsolutions.net> (sfid-20150623_175352_518468_B2973A7F)
+Cc: matthias.may@neratec.com
+Subject: [PATCH v3] cfg80211: Handle minimum bandwidth for quarter and half rates
+Date: Thu, 11 Jun 2015 17:12:33 +0200
+Message-Id: <1434035553-6621-1-git-send-email-matthias.may@neratec.com> (sfid-20150611_171301_187773_8C09D939)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The goal of this patch is to improve regd handling of quarter and half rates.
 
-This callback is currently not allowed to sleep, which makes it more
-difficult to implement proper driver methods in mac80211 than it has
-to be. Instead of doing asynchronous work here in mac80211, make it
-possible for the callback to sleep by doing some asynchronous work
-in cfg80211. This also enables improvements to other drivers, like
-ath6kl, that would like to sleep in this callback.
+The original assumption of 20MHz wide channels is with the introduction of
+quarter and half rates no longer true.
+With this patch we no longer disable all channels that don't fit into the
+20MHz grid, but instead set the appropriate flags to disable operation on
+specific bandwidths.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+v2: Changes based on feedback by Johannes Berg.
+v3: Changes based on feedback by Johannes Berg and Zefir Kurtisi.
+
+Signed-off-by: Matthias May <matthias.may@neratec.com>
 ---
- include/net/cfg80211.h  |  3 +--
- net/wireless/core.c     |  5 ++++
- net/wireless/core.h     |  5 ++++
- net/wireless/mlme.c     | 68 ++++++++++++++++++++++++++++++++++++++++++-------
- net/wireless/rdev-ops.h |  2 ++
- 5 files changed, 72 insertions(+), 11 deletions(-)
+ net/wireless/reg.c | 51 ++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 40 insertions(+), 11 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a741678f24a2..9a529c48f6ca 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2369,8 +2369,7 @@ struct cfg80211_qos_map {
-  *	method returns 0.)
-  *
-  * @mgmt_frame_register: Notify driver that a management frame type was
-- *	registered. Note that this callback may not sleep, and cannot run
-- *	concurrently with itself.
-+ *	registered. The callback is allowed to sleep.
-  *
-  * @set_antenna: Set antenna configuration (tx_ant, rx_ant) on the device.
-  *	Parameters are bitmaps of allowed antennas to use for TX/RX. Drivers may
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 2a0bbd22854b..e8a782a6494b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -409,6 +409,9 @@ use_default_name:
- 	INIT_WORK(&rdev->sched_scan_results_wk, __cfg80211_sched_scan_results);
- 	INIT_DELAYED_WORK(&rdev->dfs_update_channels_wk,
- 			  cfg80211_dfs_channels_update_work);
-+	INIT_LIST_HEAD(&rdev->mlme_unreg);
-+	spin_lock_init(&rdev->mlme_unreg_lock);
-+	INIT_WORK(&rdev->mlme_unreg_wk, cfg80211_mlme_unreg_wk);
- #ifdef CONFIG_CFG80211_WEXT
- 	rdev->wiphy.wext = &cfg80211_wext_handler;
- #endif
-@@ -802,6 +805,7 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
- 	flush_work(&rdev->destroy_work);
- 	flush_work(&rdev->sched_scan_stop_wk);
-+	flush_work(&rdev->mlme_unreg_wk);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index d359e06..4ab1b67 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1004,7 +1004,7 @@ static u32 map_regdom_flags(u32 rd_flags)
  
- #ifdef CONFIG_PM
- 	if (rdev->wiphy.wowlan_config && rdev->ops->set_wakeup)
-@@ -855,6 +859,7 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
- 
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_P2P_DEVICE:
-+		cfg80211_mlme_purge_registrations(wdev);
- 		cfg80211_stop_p2p_device(rdev, wdev);
- 		break;
- 	default:
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 311eef26bf88..b9d5bc8c148d 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -59,6 +59,10 @@ struct cfg80211_registered_device {
- 	struct list_head beacon_registrations;
- 	spinlock_t beacon_registrations_lock;
- 
-+	struct list_head mlme_unreg;
-+	spinlock_t mlme_unreg_lock;
-+	struct work_struct mlme_unreg_wk;
-+
- 	/* protected by RTNL only */
- 	int num_running_ifaces;
- 	int num_running_monitor_ifaces;
-@@ -348,6 +352,7 @@ void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
- int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_pid,
- 				u16 frame_type, const u8 *match_data,
- 				int match_len);
-+void cfg80211_mlme_unreg_wk(struct work_struct *wk);
- void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlpid);
- void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev);
- int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 7aae329e2b4e..0a03eb274ec2 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -389,6 +389,7 @@ void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
- 
- struct cfg80211_mgmt_registration {
- 	struct list_head list;
-+	struct wireless_dev *wdev;
- 
- 	u32 nlportid;
- 
-@@ -399,6 +400,45 @@ struct cfg80211_mgmt_registration {
- 	u8 match[];
- };
- 
-+static void
-+cfg80211_process_mlme_unregistrations(struct cfg80211_registered_device *rdev)
-+{
-+	struct cfg80211_mgmt_registration *reg;
-+
-+	ASSERT_RTNL();
-+
-+	spin_lock_bh(&rdev->mlme_unreg_lock);
-+	while ((reg = list_first_entry_or_null(&rdev->mlme_unreg,
-+					       struct cfg80211_mgmt_registration,
-+					       list))) {
-+		list_del(&reg->list);
-+		spin_unlock_bh(&rdev->mlme_unreg_lock);
-+
-+		if (rdev->ops->mgmt_frame_register) {
-+			u16 frame_type = le16_to_cpu(reg->frame_type);
-+			rdev_mgmt_frame_register(rdev, reg->wdev,
-+						 frame_type, false);
-+		}
-+
-+		kfree(reg);
-+
-+		spin_lock_bh(&rdev->mlme_unreg_lock);
-+	}
-+	spin_unlock_bh(&rdev->mlme_unreg_lock);
-+}
-+
-+void cfg80211_mlme_unreg_wk(struct work_struct *wk)
-+{
-+	struct cfg80211_registered_device *rdev;
-+
-+	rdev = container_of(wk, struct cfg80211_registered_device,
-+			    mlme_unreg_wk);
-+
-+	rtnl_lock();
-+	cfg80211_process_mlme_unregistrations(rdev);
-+	rtnl_unlock();
-+}
-+
- int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 				u16 frame_type, const u8 *match_data,
- 				int match_len)
-@@ -449,11 +489,18 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 	nreg->match_len = match_len;
- 	nreg->nlportid = snd_portid;
- 	nreg->frame_type = cpu_to_le16(frame_type);
-+	nreg->wdev = wdev;
- 	list_add(&nreg->list, &wdev->mgmt_registrations);
-+	spin_unlock_bh(&wdev->mgmt_registrations_lock);
-+
-+	/* process all unregistrations to avoid driver confusion */
-+	cfg80211_process_mlme_unregistrations(rdev);
- 
- 	if (rdev->ops->mgmt_frame_register)
- 		rdev_mgmt_frame_register(rdev, wdev, frame_type, true);
- 
-+	return 0;
-+
-  out:
- 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
- 
-@@ -472,15 +519,12 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
- 		if (reg->nlportid != nlportid)
- 			continue;
- 
--		if (rdev->ops->mgmt_frame_register) {
--			u16 frame_type = le16_to_cpu(reg->frame_type);
--
--			rdev_mgmt_frame_register(rdev, wdev,
--						 frame_type, false);
--		}
--
- 		list_del(&reg->list);
--		kfree(reg);
-+		spin_lock(&rdev->mlme_unreg_lock);
-+		list_add_tail(&reg->list, &rdev->mlme_unreg);
-+		spin_unlock(&rdev->mlme_unreg_lock);
-+
-+		schedule_work(&rdev->mlme_unreg_wk);
- 	}
- 
- 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
-@@ -496,16 +540,22 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
- 
- void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
+ static const struct ieee80211_reg_rule *
+ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+-		   const struct ieee80211_regdomain *regd)
++		   const struct ieee80211_regdomain *regd, u32 bw)
  {
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
- 	struct cfg80211_mgmt_registration *reg, *tmp;
+ 	int i;
+ 	bool band_rule_found = false;
+@@ -1028,7 +1028,7 @@ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+ 		if (!band_rule_found)
+ 			band_rule_found = freq_in_rule_band(fr, center_freq);
  
- 	spin_lock_bh(&wdev->mgmt_registrations_lock);
+-		bw_fits = reg_does_bw_fit(fr, center_freq, MHZ_TO_KHZ(20));
++		bw_fits = reg_does_bw_fit(fr, center_freq, bw);
  
- 	list_for_each_entry_safe(reg, tmp, &wdev->mgmt_registrations, list) {
- 		list_del(&reg->list);
--		kfree(reg);
-+
-+		spin_lock(&rdev->mlme_unreg_lock);
-+		list_add(&reg->list, &rdev->mlme_unreg);
-+		spin_unlock(&rdev->mlme_unreg_lock);
- 	}
- 
- 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
-+
-+	cfg80211_process_mlme_unregistrations(rdev);
+ 		if (band_rule_found && bw_fits)
+ 			return rr;
+@@ -1040,14 +1040,26 @@ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+ 	return ERR_PTR(-EINVAL);
  }
  
- int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index c6e83a7468c0..c23516d0f807 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -733,6 +733,8 @@ static inline void
- rdev_mgmt_frame_register(struct cfg80211_registered_device *rdev,
- 			 struct wireless_dev *wdev, u16 frame_type, bool reg)
+-const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+-					       u32 center_freq)
++const struct ieee80211_reg_rule *__freq_reg_info(struct wiphy *wiphy,
++						 u32 center_freq, u32 min_bw)
  {
-+	might_sleep();
+-	const struct ieee80211_regdomain *regd;
++	const struct ieee80211_regdomain *regd = reg_get_regdomain(wiphy);
++	const struct ieee80211_reg_rule *reg_rule = NULL;
++	u32 bw;
+ 
+-	regd = reg_get_regdomain(wiphy);
++	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
++		reg_rule = freq_reg_info_regd(wiphy, center_freq, regd, bw);
++		if (!IS_ERR(reg_rule))
++			return reg_rule;
++	}
+ 
+-	return freq_reg_info_regd(wiphy, center_freq, regd);
++	return reg_rule;
++}
 +
- 	trace_rdev_mgmt_frame_register(&rdev->wiphy, wdev , frame_type, reg);
- 	rdev->ops->mgmt_frame_register(&rdev->wiphy, wdev , frame_type, reg);
- 	trace_rdev_return_void(&rdev->wiphy);
++const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
++					       u32 center_freq)
++{
++	return __freq_reg_info(wiphy, center_freq, MHZ_TO_KHZ(20));
+ }
+ EXPORT_SYMBOL(freq_reg_info);
+ 
+@@ -1176,8 +1188,14 @@ static void handle_channel(struct wiphy *wiphy,
+ 	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
+ 		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
+ 
++	/* If we get a reg_rule we can assume that at least 5Mhz fitted */
++	if (!reg_does_bw_fit(freq_range, chan->center_freq, 10))
++		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
++	if (!reg_does_bw_fit(freq_range, chan->center_freq, 20))
++		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
++
+ 	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
+-		bw_flags = IEEE80211_CHAN_NO_HT40;
++		bw_flags |= IEEE80211_CHAN_NO_HT40;
+ 	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
+ 		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
+ 	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
+@@ -1695,9 +1713,14 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 	const struct ieee80211_freq_range *freq_range = NULL;
+ 	u32 max_bandwidth_khz;
++	u32 bw;
+ 
+-	reg_rule = freq_reg_info_regd(wiphy, MHZ_TO_KHZ(chan->center_freq),
+-				      regd);
++	for (bw = MHZ_TO_KHZ(20); bw >= MHZ_TO_KHZ(5); bw = bw / 2) {
++		reg_rule = freq_reg_info_regd(wiphy, chan->center_freq,
++					      regd, bw);
++		if (!IS_ERR(reg_rule))
++			break;
++	}
+ 
+ 	if (IS_ERR(reg_rule)) {
+ 		REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+@@ -1721,8 +1744,14 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
+ 		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
+ 
++	/* If we get a reg_rule we can assume that at least 5Mhz fitted */
++	if (!reg_does_bw_fit(freq_range, chan->center_freq, 10))
++		bw_flags |= IEEE80211_CHAN_NO_10MHZ;
++	if (!reg_does_bw_fit(freq_range, chan->center_freq, 20))
++		bw_flags |= IEEE80211_CHAN_NO_20MHZ;
++
+ 	if (max_bandwidth_khz < MHZ_TO_KHZ(40))
+-		bw_flags = IEEE80211_CHAN_NO_HT40;
++		bw_flags |= IEEE80211_CHAN_NO_HT40;
+ 	if (max_bandwidth_khz < MHZ_TO_KHZ(80))
+ 		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
+ 	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
 -- 
 2.1.4
 
