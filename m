@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-am1on0127.outbound.protection.outlook.com ([157.56.112.127]:46556
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752983AbbFBKci convert rfc822-to-8bit (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43873 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752111AbbFKOr6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 06:32:38 -0400
-From: "Dhere, Chaitanya (C.)" <cvijaydh@visteon.com>
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] staging: wilc1000: Modification in code to use ARRAY_SIZE
- macro
-Date: Tue, 2 Jun 2015 09:58:50 +0000
-Message-ID: <20150602095844.GA31971@ubuntu> (sfid-20150602_123242_148647_67C24721)
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 11 Jun 2015 10:47:58 -0400
+Date: Thu, 11 Jun 2015 07:47:58 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Dean.lee" <dean.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com
+Subject: Re: [PATCH] staging: wilc1000: modify odd print message
+Message-ID: <20150611144758.GA3671@kroah.com> (sfid-20150611_164802_194789_4AE6D53A)
+References: <1433994264-26509-1-git-send-email-dean.lee@atmel.com>
+ <20150611035037.GA22550@kroah.com>
+ <5579140C.9070905@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5579140C.9070905@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaitanya Dhere <cvijaydh@visteon.com>
+On Thu, Jun 11, 2015 at 01:52:28PM +0900, Dean.lee wrote:
+> 
+> 
+> On 2015년 06월 11일 12:50, Greg KH wrote:
+> >On Thu, Jun 11, 2015 at 12:44:24PM +0900, Dean Lee wrote:
+> >>This driver has odd message in print string.
+> >>So this patch removes the data type.
+> >>
+> >>Signed-off-by: Dean Lee <dean.lee@atmel.com>
+> >>---
+> >>  drivers/staging/wilc1000/host_interface.c | 3 +--
+> >>  1 file changed, 1 insertion(+), 2 deletions(-)
+> >>
+> >>diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> >>index 1ecb373..9e055c4 100644
+> >>--- a/drivers/staging/wilc1000/host_interface.c
+> >>+++ b/drivers/staging/wilc1000/host_interface.c
+> >>@@ -703,7 +703,7 @@ static WILC_Sint32 Handle_SetOperationMode(void *drvHandler, tstrHostIfSetOperat
+> >>  	strWID.s32ValueSize = sizeof(WILC_Uint32);
+> >>  	/*Sending Cfg*/
+> >>-	PRINT_INFO(HOSTINF_DBG, "(size_t)pstrWFIDrv= %p \n", pstrWFIDrv);
+> >>+	PRINT_INFO(HOSTINF_DBG, "pstrWFIDrv= %p \n", pstrWFIDrv);
+> >Why are you printing a kernel pointer to userspace always?  That's not a
+> >good idea, why not just delete this line, how useful is it?
+> >
+> >thanks,
+> >
+> >greg k-h
+> we need this line for deep level debugging.
+> sometime we need check and compare pointer value.
 
-In this patch, ARRAY_SIZE() macro is used to determine the
-size. This change was detected with the help of coccinelle
-tool.
+Really, even at this stage of development for the code?
 
-Signed-off-by: Chaitanya Dhere <cvijaydh@visteon.com>
----
- drivers/staging/wilc1000/linux_wlan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> but we have plan for rework print message.
+> delete unused & not required print message.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index b033eb8..592b8ae 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1737,7 +1737,7 @@ static int linux_wlan_read_mac_addr(void *vp)
- 	mm_segment_t old_fs;
- 	loff_t pos = 0;
- 	int index;
--	int array_size = sizeof(path_string) / sizeof(path_string[0]);
-+	int array_size = ARRAY_SIZE(path_string);
- 
- 	/* change to KERNEL_DS address limit */
- 	old_fs = get_fs();
--- 
-1.7.9.5
+Good, all of them need to be reworked.
+
+thanks,
+
+greg k-h
