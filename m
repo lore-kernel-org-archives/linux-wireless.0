@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38949 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933490AbbFJT3d (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23161 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752320AbbFKOPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 15:29:33 -0400
-Received: from [192.168.100.236] (unknown [50.251.239.81])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id 466F340A4C5
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2015 12:29:33 -0700 (PDT)
-Message-ID: <5578901C.60502@candelatech.com> (sfid-20150610_212943_327894_FFEA768B)
-Date: Wed, 10 Jun 2015 12:29:32 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 11 Jun 2015 10:15:53 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: enable VHT for IBSS
+References: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Thu, 11 Jun 2015 17:15:42 +0300
+In-Reply-To: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Wed, 10 Jun 2015 07:14:44 +0200")
+Message-ID: <87mw06bab5.fsf@kamboji.qca.qualcomm.com> (sfid-20150611_161627_418216_30688D0F)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Allowing station to over-ride default VHT-oper element?
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to figure out how to make a VHT station with hardware capable
-of 80Mhz width instead force itself to advertise/use just 40Mhz width,
-but still support VHT.
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-Similar to how the VHT-capabilities overrides works, but for
-VHT-operation.
+> Enable VHT support for IBSS, while mac80211/cfg80211 and
+> wpa_supplicant already support this.
+>
+> In my test env, ath10k 2x2 I get:
+> (udp) ath10k-1 >>>> ath10k-2 (server) -  speed: 419 Mbits/sec
+> (tcp) ath10k-1 >>>> ath10k-2 (server) -  speed: 404 Mbits/sec
 
-First, is this even a valid thing to do, or does VHT imply
-that stations are always available to do 80Mhz?
+What hw and firmware version? Do you expect this to work with both
+qca988x and qca6174?
 
-And second, if it is a valid thing to do, any hints on a
-proper way to go about this.  I'm getting a bit tangled in
-the code trying to figure out where to apply any overloads
-properly.
+Oh, we should still add ATH10K_FW_FEATURE_NO_ADHOC so that we can
+disable ad-hoc on 10.x firmwares. Anyone have some spare time to cook up
+a patch?
 
-Possibly in ieee80211_determine_chantype?
+> During tests I used wpa_supplicant (current version)
 
-Thanks,
-Ben
+Better to say "current git version" (if that's what you mean).
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
