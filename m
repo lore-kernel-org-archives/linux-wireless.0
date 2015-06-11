@@ -1,85 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:36223 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751754AbbF3B32 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:8473 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751915AbbFKDpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 21:29:28 -0400
-Received: by ykdr198 with SMTP id r198so130942635ykd.3
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2015 18:29:27 -0700 (PDT)
-Message-ID: <5591F0F4.3010008@lwfinger.net> (sfid-20150630_033008_898576_62E38E96)
-Date: Mon, 29 Jun 2015 20:29:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 10 Jun 2015 23:45:10 -0400
+From: Dean Lee <dean.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <dean.lee@atmel.com>
+Subject: [PATCH] staging: wilc1000: modify odd print message
+Date: Thu, 11 Jun 2015 12:44:24 +0900
+Message-ID: <1433994264-26509-1-git-send-email-dean.lee@atmel.com> (sfid-20150611_054514_092596_E7937EC0)
 MIME-Version: 1.0
-To: Nik Nyby <nikolas@gnu.org>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43: Fix typo in function name
-References: <1435625147-23535-1-git-send-email-nikolas@gnu.org>
-In-Reply-To: <1435625147-23535-1-git-send-email-nikolas@gnu.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/29/2015 07:45 PM, Nik Nyby wrote:
-> This fixes a typo in the "b43_lo_g_maintenance_work" function
-> name.
->
-> Signed-off-by: Nik Nyby <nikolas@gnu.org>
-> ---
->   drivers/net/wireless/b43/lo.c    | 4 ++--
->   drivers/net/wireless/b43/lo.h    | 2 +-
->   drivers/net/wireless/b43/phy_g.c | 2 +-
->   3 files changed, 4 insertions(+), 4 deletions(-)
+This driver has odd message in print string.
+So this patch removes the data type.
 
-This patch is OK; however, can there really be a typo in a function name? How do 
-you ever know that the author did not mean to use a name that looks like a typo?
+Signed-off-by: Dean Lee <dean.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Please be careful with these.
-
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry
-
->
-> diff --git a/drivers/net/wireless/b43/lo.c b/drivers/net/wireless/b43/lo.c
-> index 916123a..a335f94 100644
-> --- a/drivers/net/wireless/b43/lo.c
-> +++ b/drivers/net/wireless/b43/lo.c
-> @@ -929,8 +929,8 @@ void b43_lo_g_adjust_to(struct b43_wldev *dev,
->   	b43_lo_write(dev, &cal->ctl);
->   }
->
-> -/* Periodic LO maintanance work */
-> -void b43_lo_g_maintanance_work(struct b43_wldev *dev)
-> +/* Periodic LO maintenance work */
-> +void b43_lo_g_maintenance_work(struct b43_wldev *dev)
->   {
->   	struct b43_phy *phy = &dev->phy;
->   	struct b43_phy_g *gphy = phy->g;
-> diff --git a/drivers/net/wireless/b43/lo.h b/drivers/net/wireless/b43/lo.h
-> index 3b27e20..7b4df38 100644
-> --- a/drivers/net/wireless/b43/lo.h
-> +++ b/drivers/net/wireless/b43/lo.h
-> @@ -80,7 +80,7 @@ void b43_lo_g_adjust_to(struct b43_wldev *dev,
->
->   void b43_gphy_dc_lt_init(struct b43_wldev *dev, bool update_all);
->
-> -void b43_lo_g_maintanance_work(struct b43_wldev *dev);
-> +void b43_lo_g_maintenance_work(struct b43_wldev *dev);
->   void b43_lo_g_cleanup(struct b43_wldev *dev);
->   void b43_lo_g_init(struct b43_wldev *dev);
->
-> diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
-> index 727ce6e..462310e 100644
-> --- a/drivers/net/wireless/b43/phy_g.c
-> +++ b/drivers/net/wireless/b43/phy_g.c
-> @@ -3004,7 +3004,7 @@ static void b43_gphy_op_pwork_15sec(struct b43_wldev *dev)
->   		   phy->rev == 1) {
->   		//TODO: implement rev1 workaround
->   	}
-> -	b43_lo_g_maintanance_work(dev);
-> +	b43_lo_g_maintenance_work(dev);
->   	b43_mac_enable(dev);
->   }
->
->
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 1ecb373..9e055c4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -703,7 +703,7 @@ static WILC_Sint32 Handle_SetOperationMode(void *drvHandler, tstrHostIfSetOperat
+ 	strWID.s32ValueSize = sizeof(WILC_Uint32);
+ 
+ 	/*Sending Cfg*/
+-	PRINT_INFO(HOSTINF_DBG, "(size_t)pstrWFIDrv= %p \n", pstrWFIDrv);
++	PRINT_INFO(HOSTINF_DBG, "pstrWFIDrv= %p \n", pstrWFIDrv);
+ 
+ 	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, WILC_TRUE, (WILC_Uint32)pstrWFIDrv);
+ 
+@@ -8040,4 +8040,3 @@ WILC_Sint32 host_int_get_ipaddress(WILC_WFIDrvHandle hWFIDrv, u8 *u16ipadd, u8 i
+ 
+ 
+ }
+-
+-- 
+2.4.3
 
