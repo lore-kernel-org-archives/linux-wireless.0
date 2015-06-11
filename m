@@ -1,229 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:28288 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753126AbbFPG3N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 02:29:13 -0400
-From: Dean Lee <dean.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>
-CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <dean.lee@atmel.com>
-Subject: [PATCH] staging: wilc1000: rework include wilc_oswrapper.h
-Date: Tue, 16 Jun 2015 15:28:21 +0900
-Message-ID: <afdd4d0ef9cde80d0106a1878cfc653cb7227e21.1434435971.git.dean.lee@atmel.com> (sfid-20150616_082917_114013_648BC2BF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:34920 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750927AbbFKIjo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 04:39:44 -0400
+Message-ID: <1434011982.1915.4.camel@sipsolutions.net> (sfid-20150611_104055_299345_C40ACD8D)
+Subject: Re: values in /proc/net/wireless are static, doesn't change;
+ iwlwifi, Intel 6205
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Lublin <quite@hack.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 11 Jun 2015 10:39:42 +0200
+In-Reply-To: <loom.20150611T103011-578@post.gmane.org> (sfid-20150611_103051_260554_CB70491A)
+References: <loom.20150611T094911-428@post.gmane.org>
+	  (sfid-20150611_100009_243262_EFBCBBEB) <1434009970.1915.3.camel@sipsolutions.net>
+	 <loom.20150611T103011-578@post.gmane.org>
+	 (sfid-20150611_103051_260554_CB70491A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rework line '#include "wilc_oswrapper.h"'
-it does not used anywhere after change own data type to common data type.
+On Thu, 2015-06-11 at 08:30 +0000, Daniel Lublin wrote:
+> > The fix just went into net.git.
+> 
+> Aha! There you go. Where do I find it? Beginner kernel git diver...
 
-Signed-off-by: Dean Lee <dean.lee@atmel.com>
+https://git.kernel.org/cgit/linux/kernel/git/davem/net.git/commit/?id=9c5a18a31b321f120efda412281bb9f610f84aa0
 
----
-Change Log:
- add rework file 'host_interface.c'
----
- drivers/staging/wilc1000/coreconfigurator.h | 1 -
- drivers/staging/wilc1000/fifo_buffer.c      | 1 -
- drivers/staging/wilc1000/fifo_buffer.h      | 5 ++++-
- drivers/staging/wilc1000/host_interface.c   | 1 -
- drivers/staging/wilc1000/wilc_memory.c      | 2 +-
- drivers/staging/wilc1000/wilc_memory.h      | 4 +++-
- drivers/staging/wilc1000/wilc_msgqueue.c    | 2 +-
- drivers/staging/wilc1000/wilc_msgqueue.h    | 5 +++++
- drivers/staging/wilc1000/wilc_sleep.c       | 2 +-
- drivers/staging/wilc1000/wilc_sleep.h       | 3 +++
- drivers/staging/wilc1000/wilc_strutils.c    | 2 +-
- drivers/staging/wilc1000/wilc_strutils.h    | 4 ++++
- drivers/staging/wilc1000/wilc_timer.c       | 2 +-
- drivers/staging/wilc1000/wilc_timer.h       | 3 +++
- 14 files changed, 27 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 6c1dad1..3ca067e 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -12,7 +12,6 @@
- #ifndef CORECONFIGURATOR_H
- #define CORECONFIGURATOR_H
- 
--#include "wilc_oswrapper.h"
- #include "wilc_wlan_if.h"
- /*****************************************************************************/
- /* Constants                                                                 */
-diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
-index c801406..b6c07cf 100644
---- a/drivers/staging/wilc1000/fifo_buffer.c
-+++ b/drivers/staging/wilc1000/fifo_buffer.c
-@@ -1,6 +1,5 @@
- 
- 
--#include "wilc_oswrapper.h"
- #include "fifo_buffer.h"
- 
- 
-diff --git a/drivers/staging/wilc1000/fifo_buffer.h b/drivers/staging/wilc1000/fifo_buffer.h
-index 57f7732..7b76998 100644
---- a/drivers/staging/wilc1000/fifo_buffer.h
-+++ b/drivers/staging/wilc1000/fifo_buffer.h
-@@ -1,5 +1,8 @@
- 
--#include "wilc_oswrapper.h"
-+#include <linux/types.h>
-+#include <linux/semaphore.h>
-+#include "wilc_memory.h"
-+#include "wilc_strutils.h"
- 
- 
- #define tHANDLE	void *
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e091bbc..3f139ae 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1,5 +1,4 @@
- #include "host_interface.h"
--#include "wilc_oswrapper.h"
- #include "coreconfigurator.h"
- 
- extern s32 TransportInit(void);
-diff --git a/drivers/staging/wilc1000/wilc_memory.c b/drivers/staging/wilc1000/wilc_memory.c
-index 5670b5a..c70707f 100644
---- a/drivers/staging/wilc1000/wilc_memory.c
-+++ b/drivers/staging/wilc1000/wilc_memory.c
-@@ -1,5 +1,5 @@
- 
--#include "wilc_oswrapper.h"
-+#include "wilc_memory.h"
- 
- /*!
-  *  @author	syounan
-diff --git a/drivers/staging/wilc1000/wilc_memory.h b/drivers/staging/wilc1000/wilc_memory.h
-index 1bc4b53..372d705 100644
---- a/drivers/staging/wilc1000/wilc_memory.h
-+++ b/drivers/staging/wilc1000/wilc_memory.h
-@@ -10,6 +10,9 @@
-  *  @version	1.0
-  */
- 
-+#include <linux/types.h>
-+#include <linux/slab.h>
-+
- /*!
-  *  @struct             tstrWILC_MemoryAttrs
-  *  @brief		Memory API options
-@@ -234,4 +237,3 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
- 
- 
- #endif
--
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 04fe5a5..16bcef4 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -1,5 +1,5 @@
- 
--#include "wilc_oswrapper.h"
-+#include "wilc_msgqueue.h"
- #include <linux/spinlock.h>
- 
- /*!
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 2ca02db..35b1001 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -10,6 +10,11 @@
-  *  @version	1.0
-  */
- 
-+#include "wilc_platform.h"
-+#include "wilc_errorsupport.h"
-+#include "wilc_memory.h"
-+#include "wilc_strutils.h"
-+
- /*!
-  *  @struct             tstrWILC_MsgQueueAttrs
-  *  @brief		Message Queue API options
-diff --git a/drivers/staging/wilc1000/wilc_sleep.c b/drivers/staging/wilc1000/wilc_sleep.c
-index 569b833..adab3ca 100644
---- a/drivers/staging/wilc1000/wilc_sleep.c
-+++ b/drivers/staging/wilc1000/wilc_sleep.c
-@@ -1,5 +1,5 @@
- 
--#include "wilc_oswrapper.h"
-+#include "wilc_sleep.h"
- 
- /*
-  *  @author	mdaftedar
-diff --git a/drivers/staging/wilc1000/wilc_sleep.h b/drivers/staging/wilc1000/wilc_sleep.h
-index 261f4ed..cf9047f 100644
---- a/drivers/staging/wilc1000/wilc_sleep.h
-+++ b/drivers/staging/wilc1000/wilc_sleep.h
-@@ -1,6 +1,9 @@
- #ifndef __WILC_SLEEP_H__
- #define __WILC_SLEEP_H__
- 
-+#include <linux/types.h>
-+#include <linux/delay.h>
-+
- /*!
-  *  @brief	forces the current thread to sleep until the given time has elapsed
-  *  @param[in]	u32TimeMilliSec Time to sleep in Milli seconds
-diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
-index ac9bb06..e014595 100644
---- a/drivers/staging/wilc1000/wilc_strutils.c
-+++ b/drivers/staging/wilc1000/wilc_strutils.c
-@@ -1,7 +1,7 @@
- 
- #define _CRT_SECURE_NO_DEPRECATE
- 
--#include "wilc_oswrapper.h"
-+#include "wilc_strutils.h"
- 
- 
- /*!
-diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
-index bb31bea..d144557 100644
---- a/drivers/staging/wilc1000/wilc_strutils.h
-+++ b/drivers/staging/wilc1000/wilc_strutils.h
-@@ -10,6 +10,10 @@
-  *  @version	1.0
-  */
- 
-+#include <linux/types.h>
-+#include <linux/string.h>
-+#include "wilc_errorsupport.h"
-+
- /*!
-  *  @brief	Compares two memory buffers
-  *  @param[in]	pvArg1 pointer to the first memory location
-diff --git a/drivers/staging/wilc1000/wilc_timer.c b/drivers/staging/wilc1000/wilc_timer.c
-index c31bf0c..dc71157 100644
---- a/drivers/staging/wilc1000/wilc_timer.c
-+++ b/drivers/staging/wilc1000/wilc_timer.c
-@@ -1,5 +1,5 @@
- 
--#include "wilc_oswrapper.h"
-+#include "wilc_timer.h"
- 
- WILC_ErrNo WILC_TimerCreate(WILC_TimerHandle *pHandle,
- 	tpfWILC_TimerFunction pfCallback, tstrWILC_TimerAttrs *pstrAttrs)
-diff --git a/drivers/staging/wilc1000/wilc_timer.h b/drivers/staging/wilc1000/wilc_timer.h
-index a0f9154..931269d 100644
---- a/drivers/staging/wilc1000/wilc_timer.h
-+++ b/drivers/staging/wilc1000/wilc_timer.h
-@@ -10,6 +10,9 @@
-  *  @version	1.0
-  */
- 
-+#include "wilc_platform.h"
-+#include "wilc_errorsupport.h"
-+
- typedef void (*tpfWILC_TimerFunction)(void *);
- 
- /*!
--- 
-2.4.3
+johannes
 
