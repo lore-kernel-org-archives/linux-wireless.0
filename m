@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eggs.gnu.org ([208.118.235.92]:38947 "EHLO eggs.gnu.org"
+Received: from mga09.intel.com ([134.134.136.24]:30802 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752353AbbF0ELV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Jun 2015 00:11:21 -0400
-Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
-	(envelope-from <nikolas@gnu.org>)
-	id 1Z8hSa-00064y-9S
-	for linux-wireless@vger.kernel.org; Sat, 27 Jun 2015 00:11:20 -0400
-From: Nik Nyby <nikolas@gnu.org>
-To: kvalo@qca.qualcomm.com, trivial@kernel.org,
-	linux-wireless@vger.kernel.org
-Cc: Nik Nyby <nikolas@gnu.org>
-Subject: [PATCH] Trivial: spell "distribution" correctly in a comment.
-Date: Sat, 27 Jun 2015 00:11:04 -0400
-Message-Id: <1435378264-13873-1-git-send-email-nikolas@gnu.org> (sfid-20150627_061126_796747_4DA476B1)
+	id S1751103AbbFKF3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 01:29:24 -0400
+From: "Altman, Avri" <avri.altman@intel.com>
+To: 'Julian Calaby' <julian.calaby@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: Disable U-APSD if connected to a SISO or
+ non-HT AP
+Date: Thu, 11 Jun 2015 05:29:20 +0000
+Message-ID: <9CFF011E602B7C40B0F8B7D0336B60FC49482EF0@hasmsx108.ger.corp.intel.com> (sfid-20150611_072928_219870_50022DDC)
+References: <1433944180-17321-1-git-send-email-emmanuel.grumbach@intel.com>
+ <CAGRGNgX6CGEPJj6UGiryYWZ8FjaC6NHSbRNvL=dAJL9Cvw+bpg@mail.gmail.com>
+In-Reply-To: <CAGRGNgX6CGEPJj6UGiryYWZ8FjaC6NHSbRNvL=dAJL9Cvw+bpg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Nik Nyby <nikolas@gnu.org>
----
- drivers/net/wireless/ath/ath6kl/htc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 14cab14..112d8a9 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -427,7 +427,7 @@ struct htc_endpoint_credit_dist {
- };
- 
- /*
-- * credit distibution code that is passed into the distrbution function,
-+ * credit distribution code that is passed into the distribution function,
-  * there are mandatory and optional codes that must be handled
-  */
- enum htc_credit_dist_reason {
--- 
-1.9.1
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKdWxpYW4gQ2FsYWJ5IFttYWls
+dG86anVsaWFuLmNhbGFieUBnbWFpbC5jb21dIA0KU2VudDogVGh1cnNkYXksIEp1bmUgMTEsIDIw
+MTUgNjo1NSBBTQ0KVG86IEdydW1iYWNoLCBFbW1hbnVlbA0KQ2M6IEpvaGFubmVzIEJlcmc7IGxp
+bnV4LXdpcmVsZXNzOyBBbHRtYW4sIEF2cmkNClN1YmplY3Q6IFJlOiBbUEFUQ0hdIG1hYzgwMjEx
+OiBEaXNhYmxlIFUtQVBTRCBpZiBjb25uZWN0ZWQgdG8gYSBTSVNPIG9yIG5vbi1IVCBBUA0KDQpI
+aSBFbW1hbnVlbCAvIEF2cmksDQoNCk9uIFdlZCwgSnVuIDEwLCAyMDE1IGF0IDExOjQ5IFBNLCBF
+bW1hbnVlbCBHcnVtYmFjaA0KPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4gd3JvdGU6DQo+
+IEZyb206IEF2cmkgQWx0bWFuIDxhdnJpLmFsdG1hbkBpbnRlbC5jb20+DQo+DQo+IFRoZXJlIGFy
+ZSBhIGZldyBBUHMgb3VyIHRoZXJlIHRoYXQgYWR2ZXJ0aXNlIFUtQVBTRA0KPiBjYXBhYmlsaXRp
+ZXMgYnV0IGRvbid0IGltcGxlbWVudCBpdCByaWdodCB3aGljaCBsZWFkcyB0bw0KPiBwb29yIHRy
+YWZmaWMuIFRoZXNlIEFQcyBkb24ndCBzdXBwb3J0IE1JTU8gb3IgZG9uJ3QgZXZlbg0KPiBzdXBw
+b3J0IEhULiBVc2UgdGhpcyBoZXVyaXN0aWMgdG8gZGV0ZWN0IHRoZW0gYW5kIGRpc2FibGUNCj4g
+VS1BUFNEIGFjY29yZGluZ2x5Lg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBBdnJpIEFsdG1hbiA8YXZy
+aS5hbHRtYW5AaW50ZWwuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBFbW1hbnVlbCBHcnVtYmFjaCA8
+ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiAtLS0NCj4gIG5ldC9tYWM4MDIxMS9zY2Fu
+LmMgfCAyNSArKysrKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMjUg
+aW5zZXJ0aW9ucygrKQ0KPg0KPiBkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3NjYW4uYyBiL25l
+dC9tYWM4MDIxMS9zY2FuLmMNCj4gaW5kZXggN2JiNmE5My4uMzc5MWM4YSAxMDA2NDQNCj4gLS0t
+IGEvbmV0L21hYzgwMjExL3NjYW4uYw0KPiArKysgYi9uZXQvbWFjODAyMTEvc2Nhbi5jDQo+IEBA
+IC0zOSw2ICszOSwyOCBAQCB2b2lkIGllZWU4MDIxMV9yeF9ic3NfcHV0KHN0cnVjdCBpZWVlODAy
+MTFfbG9jYWwgKmxvY2FsLA0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgY29udGFpbmVyX29m
+KCh2b2lkICopYnNzLCBzdHJ1Y3QgY2ZnODAyMTFfYnNzLCBwcml2KSk7DQo+ICB9DQo+DQo+ICsv
+Kg0KPiArICogQW4gaW5jb21wYXRpYmxlIEFQIHdvcmthcm91bmQ6DQo+ICsgKiBpZiB0aGUgQVAg
+ZG9lcyBub3QgYWR2ZXJ0aXNlIE1JTU8gY2FwYWJpbGl0aWVzIGRpc2FibGUgVS1BUFNELg0KPiAr
+ICogaVBob25lcywgYW1vbmcgb3RoZXJzLCBhZHZlcnRpc2UgdGhlbXNlbHZlcyBhcyBVLUFQU0Qg
+Y2FwYWJsZSB3aGVuDQo+ICsgKiB0aGV5IGFyZW4ndC4gQXZvaWQgY29ubmVjdGluZyB0byB0aG9z
+ZSBkZXZpY2VzIGluIFUtQVBTRCBlbmFibGVkLg0KPiArICovDQo+ICtzdGF0aWMgYm9vbCBicm9r
+ZW5fdWFwc2Rfd29ya2Fyb3VuZHMoc3RydWN0IGllZWU4MDJfMTFfZWxlbXMgKmVsZW1zKQ0KDQpX
+b3VsZCBhIGJldHRlciBuYW1lIGZvciB0aGlzIGZ1bmN0aW9uIGJlIHNvbWV0aGluZyBsaWtlDQpp
+c191YXBzZF9icm9rZW4oKT8gV2UncmUgbm90IGFjdHVhbGx5IHdvcmtpbmcgYXJvdW5kIGFueXRo
+aW5nIGhlcmUsDQpqdXN0IGNoZWNraW5nIHdoZXRoZXIgaXQncyBicm9rZW4gb3Igbm90Lg0KDQpb
+QWx0bWFuLCBBdnJpXSBZZWFoIC0gd2VsbCwgb3JpZ2luYWxseSB0aGlzIHdhcyBub3QgdGhlIG5h
+bWUsIGJ1dCBhIHByZXZpb3VzIHJldmlld2VyIGFza2VkIG1lIHRvIGNoYW5nZWQgaXQgdG8gIndv
+cmthcm91bmQgc29tZXRoaW5nLi4uIi4NCkFjdHVhbGx5IGl0IGlzIGEgd29ya2Fyb3VuZCBvZiwg
+YW1vbmcgb3RoZXJzLCB0aGUgaVBob25lIDQvNHMgd2hlbiBTb2Z0QVAsIHRoZXkgZG9uJ3QgcmFp
+c2UgdGhlDQpUSU0gaW4gaXRzIEJlYWNvbiBldmVuIGlmIGl0IGhhcyBkYXRhIGZvciB1cywgdGhl
+cmVmb3JlIHRyYWZmaWMgaXMgc3R1Y2suDQpXZSB3b3VsZCBwcmVmZXIgdG8gaWRlbnRpZnkgdGhv
+c2UgZGV2aWNlcyB2aWEgdGhlaXIgT1VJLCBidXQgY3VycmVudGx5IHRoaXMgaXMgbm90IHdlbGwg
+ZGVmaW5lZC4NCg0KDQoNClRoYW5rcywNCg0KLS0gDQpKdWxpYW4gQ2FsYWJ5DQoNCkVtYWlsOiBq
+dWxpYW4uY2FsYWJ5QGdtYWlsLmNvbQ0KUHJvZmlsZTogaHR0cDovL3d3dy5nb29nbGUuY29tL3By
+b2ZpbGVzL2p1bGlhbi5jYWxhYnkvDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KQSBtZW1iZXIgb2YgdGhlIEludGVs
+IENvcnBvcmF0aW9uIGdyb3VwIG9mIGNvbXBhbmllcwoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRh
+Y2htZW50cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVz
+ZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlv
+bgpieSBvdGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGlu
+dGVuZGVkCnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFs
+bCBjb3BpZXMuCg==
 
