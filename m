@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17747 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017AbbFVOwu (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60065 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbbFKAlC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 10:52:50 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH v2 0/8] add beacon and htt msg support for 10.4 firmware
-Date: Mon, 22 Jun 2015 20:22:19 +0530
-Message-ID: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150622_165254_043972_7E5863F6)
+	Wed, 10 Jun 2015 20:41:02 -0400
+Date: Wed, 10 Jun 2015 17:40:59 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Rachel.kim@atmel.com, dean.lee@atmel.com, tony.cho@atmel.com,
+	chris.park@atmel.com
+Subject: Re: [PATCH 1/4] staging: wilc1000: modify data type
+Message-ID: <20150611004059.GA30902@kroah.com> (sfid-20150611_024106_579493_E566BFE5)
+References: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com>
+ <1433923607-20927-2-git-send-email-johnny.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433923607-20927-2-git-send-email-johnny.kim@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the continuation of earlier patch set posted for adding 10.4 wmi support.
-This patch series covers following items w.r.t 10.4 firmware,
+On Wed, Jun 10, 2015 at 05:06:44PM +0900, Johnny Kim wrote:
+> -static int wilc_wlan_cfg_commit(int type, uint32_t drvHandler)
+> +static int wilc_wlan_cfg_commit(int type, size_t drvHandler)
 
-        - Enhance existing swba event handler to handle variable size tim bitmap
-          and add support to handle 10.4 swba event.
-        - Enable pdev, vdev, peer related wmi operations like create, delete, etc.
-        - Includes scan support.
-        - Add 10.4 specific htt msg.
-        - Advertise 10.4 iface combination to mac80211.
-        - Adjust max ss and initialize continuous frag descriptor memory
+Shouldn't this just be a void *?  And if so, why not the real function
+pointer instead?
 
-v2 changes:
-       - rebased on top of "introduce wmi support for qca99x0" patch series.
-       - updated htt msg definitions as per stable 10.4 firmware.
-       - synced scan related info as per stable 10.4 firmware.
+Also, lots of these seem to be just pointers, please use a pointer
+instead of hiding it in a size_t as that's the most portable, and
+correct, way to do it.  No need to hide any function pointers here, this
+isn't Windows :)
 
-Raja Mani (8):
-  ath10k: enhance swba event handler to adapt different size tim bitmap
-  ath10k: handle 10.4 firmware wmi swba event
-  ath10k: enable vdev and peer related operations for 10.4 fw
-  ath10k: add scan support for 10.4 fw
-  ath10k: add 10.4 fw specific htt msg definitions
-  ath10k: advertise 10.4 fw ap and sta iface combination to mac80211
-  ath10k: set max spatial stream to 4 for 10.4 fw
-  ath10k: configure frag desc memory to target for qca99X0
+thanks,
 
- drivers/net/wireless/ath/ath10k/core.c    |   8 ++
- drivers/net/wireless/ath/ath10k/core.h    |  11 +-
- drivers/net/wireless/ath/ath10k/htt.c     |  45 ++++++
- drivers/net/wireless/ath/ath10k/htt.h     |  47 +++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c  |   4 +
- drivers/net/wireless/ath/ath10k/htt_tx.c  |  76 ++++++++++-
- drivers/net/wireless/ath/ath10k/hw.h      |   2 +
- drivers/net/wireless/ath/ath10k/mac.c     |  30 ++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  18 ++-
- drivers/net/wireless/ath/ath10k/wmi.c     | 220 +++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/wmi.h     |  90 ++++++++++--
- 11 files changed, 519 insertions(+), 32 deletions(-)
-
--- 
-1.8.1.2
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+greg k-h
