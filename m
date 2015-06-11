@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:37556 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753370AbbFWJMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 05:12:17 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Z7KFb-0004wZ-Jy
-	for linux-wireless@vger.kernel.org; Tue, 23 Jun 2015 11:12:15 +0200
-Received: from proxyext.iabg.de ([proxyext.iabg.de])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2015 11:12:10 +0200
-Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2015 11:12:10 +0200
-To: linux-wireless@vger.kernel.org
-From: Joerg <pommnitz@yahoo.com>
-Subject: Runtime configuration of multicast datarate with nl80211/mac80211
-Date: Tue, 23 Jun 2015 09:12:00 +0000 (UTC)
-Message-ID: <loom.20150623T110608-595@post.gmane.org> (sfid-20150623_111220_624704_C70C6156)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from eusmtp01.atmel.com ([212.144.249.243]:7304 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499AbbFKDma (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Jun 2015 23:42:30 -0400
+From: Chris Park <chris.park@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <dean.lee@atmel.com>
+Subject: [PATCH] staging: wilc1000: fix warning while printing
+Date: Thu, 11 Jun 2015 12:42:23 +0900
+Message-ID: <1433994143-23363-1-git-send-email-chris.park@atmel.com> (sfid-20150611_054233_320023_DA12CBC5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-I'm looking for a way to configure the multicast datarate of a 802.11 client
-(e.g. STA mode) and an AP.
-The iw command (I have 3.4) allows to specify a multicast datarate on IBSS
-and MESH joins, but there doesn't seem to be an option that allows the
-setting of the multicast datarate in a way similar to the unicast datarate.
+size_t should print using %zu, but here it was use %lu.
+we were getting warning while printing.
 
-Am I missing something or is this simply not supported?
+Signed-off-by: Chris Park <chris.park@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards
-  Joerg
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 6d854fd..a43dc9b 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -404,7 +404,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz,
+ #undef NUM_DUMMY_BYTES
+ 
+ 	if (len2 > (sizeof(wb) / sizeof(wb[0]))) {
+-		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%lu)\n",
++		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%zu)\n",
+ 			 len2, (sizeof(wb) / sizeof(wb[0])));
+ 		result = N_FAIL;
+ 		return result;
+-- 
+1.9.1
 
