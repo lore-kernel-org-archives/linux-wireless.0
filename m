@@ -1,81 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:33775 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbbFDT7x convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 15:59:53 -0400
-Received: by igbpi8 with SMTP id pi8so154350igb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2015 12:59:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5570688E.8060307@broadcom.com>
-References: <1432813063-30922-1-git-send-email-zajec5@gmail.com>
-	<5570688E.8060307@broadcom.com>
-Date: Thu, 4 Jun 2015 21:59:52 +0200
-Message-ID: <CACna6rxtNdhOgYfEQuKR4j4qkjAvF1nuXjQR=XgorxKgWT1KHQ@mail.gmail.com> (sfid-20150604_215958_345191_D9662BC2)
-Subject: Re: [PATCH] brcmfmac: use direct data pointer in NVRAM parser struct
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:35175 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750738AbbFKJqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 05:46:45 -0400
+Message-ID: <1434016002.1915.7.camel@sipsolutions.net> (sfid-20150611_114648_121723_4E771214)
+Subject: Re: Exposing enum ieee80211_channel_flags to user
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 11 Jun 2015 11:46:42 +0200
+In-Reply-To: <1434015922.1915.6.camel@sipsolutions.net> (sfid-20150611_114527_922690_7AF6C2D9)
+References: <CACna6rwHXzGTZ+NS9PpZENJATVzRzm1Wkija0_CrveMoM05d5g@mail.gmail.com>
+	 (sfid-20150611_113544_857208_070F0480) <1434015922.1915.6.camel@sipsolutions.net>
+	 (sfid-20150611_114527_922690_7AF6C2D9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 June 2015 at 17:02, Arend van Spriel <arend@broadcom.com> wrote:
-> On 05/28/15 13:37, Rafał Miłecki wrote:
->>
->> As we plan to add support for platform NVRAM we should store direct
->> data pointer without the extra struct firmware layer. This will allow
->> us to support other sources with the only requirement being u8 buffer.
->>
->> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
->> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->
->
-> This look a bit contradictory. You mention below you written this from
-> 'scratch' so it seems odd that it is signed off by me and Hante.
->
-> You may add:
->
-> Acked-by: Arend van Spriel <arend@broadcom.com>
+On Thu, 2015-06-11 at 11:45 +0200, Johannes Berg wrote:
+> On Thu, 2015-06-11 at 11:35 +0200, Rafał Miłecki wrote:
+> 
+> > iw also wasn't helpful:
+> > Frequencies:
+> >         * 5180 MHz [36] (30.0 dBm)
+> >         * 5200 MHz [40] (30.0 dBm)
+> >         * 5220 MHz [44] (30.0 dBm)
+> >         * 5240 MHz [48] (30.0 dBm)
+> > 
+> > After some in-kernel debugging (nl80211_set_wiphy,
+> > cfg80211_chandef_usable, cfg80211_secondary_chans_ok) I finally
+> > realized it was because of:
+> > IEEE80211_CHAN_NO_80MHZ
+> > 
+> > Do you have any idea how we could handle such cases nicely? To let
+> > user find out what's going on (wrong)?
+> > 
+> > Should "iw" be extended to print flag names? Or should hostapd check
+> > for channels in some smarter way? Any other ideas?
+> 
+> We already have the flags exposed to iw, it's just not printing them.
+> There was a patch to print them, but it wasn't complete, and the
+> submitter kinda went away. You can see the discussion here:
+> 
+> http://mid.gmane.org/1425452686-28196-1-git-send-email-arnagara@qti.qualcomm.com
 
-Sorry, I wasn't sure how to handle it. Will fix it.
+Upon rereading, I think my preference would be to remove much of the
+channel list information and add a separate iw command.
 
+johannes
 
->> ---
->> Tested on router with BCM43602-s using
->> /lib/firmware/brcm/brcmfmac43602-pcie.txt
->>
->> I've written this patch from scratch, it's inspired by the dropped:
->> [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
->> ---
->>   drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 40
->> +++++++++++-----------
->>   1 file changed, 20 insertions(+), 20 deletions(-)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
->> b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
->> index 7ae6461..b72df87 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
->> @@ -43,7 +43,7 @@ enum nvram_parser_state {
->>    * struct nvram_parser - internal info for parser.
->>    *
->>    * @state: current parser state.
->> - * @fwnv: input buffer being parsed.
->> + * @data: input buffer being parsed.
->
->
-> So you are not adding the data_len to the structure, which means you found
-> it is not needed? Just checking as it is different from the aforementioned
-> patch.
-
-That's right.
-
--- 
-Rafał
