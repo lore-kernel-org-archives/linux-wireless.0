@@ -1,1019 +1,710 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:34386 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754475AbbFQH30 (ORCPT
+Received: from mail-ie0-f193.google.com ([209.85.223.193]:34823 "EHLO
+	mail-ie0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956AbbFKSvO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 03:29:26 -0400
-Received: by pdbki1 with SMTP id ki1so32347941pdb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2015 00:29:26 -0700 (PDT)
-From: Sunghoon Cho <ywhsbliss@gmail.com>
-To: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	chris.park@atmel.com, Rachel.kim@atmel.com, dean.lee@atmel.com
-Cc: Sunghoon Cho <ywhsbliss@gmail.com>
-Subject: [PATCH 5/5] staging: wilc1000: align the line of enum data
-Date: Wed, 17 Jun 2015 16:28:55 +0900
-Message-Id: <56afaa1b2a30190f9f771b11ee99d9b328286972.1434526056.git.ywhsbliss@gmail.com> (sfid-20150617_092930_548124_D44E408B)
-In-Reply-To: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
-References: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
-In-Reply-To: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
-References: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
+	Thu, 11 Jun 2015 14:51:14 -0400
+Received: by iebtr6 with SMTP id tr6so4262312ieb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 11:51:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQ=fB3_a5gx3x82FyjJZvA+WVF4=F=3958nzV=HQAt+E5g@mail.gmail.com>
+References: <1433812382-10287-1-git-send-email-cfliu.tw@gmail.com> <CA+BoTQ=fB3_a5gx3x82FyjJZvA+WVF4=F=3958nzV=HQAt+E5g@mail.gmail.com>
+From: "Liu CF/TW" <cfliu.tw@gmail.com>
+Date: Thu, 11 Jun 2015 11:50:33 -0700
+Message-ID: <CAG5N3qFV-XKGU5f+sBwYYWe21A2ewnB2E3fT_aAQvuKKoekc1Q@mail.gmail.com> (sfid-20150611_205123_148161_6C4295F8)
+Subject: Re: [PATCH v3] ath10k: add 'cryptmode' param to support raw tx
+ injection and software crypto
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch alignes the line of enumeration types.
+Thanks Michal for the tests you did and the additional patch to
+address AMSDU limitation.
+Per our discussions offline, in v4, I will squash your patch and add
+your test results in the commit log.
+I will also put a note that AMSDU be a known limitation when cryptmode!=0.
 
-Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 496 ++++++++++++++++----------------
- 1 file changed, 248 insertions(+), 248 deletions(-)
+Thanks
+David
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 11a3b98..f07c08c 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -214,14 +214,14 @@ typedef struct {
- 
- #ifdef WILC_PARSE_SCAN_IN_HOST
- typedef enum {
--	SUPP_RATES_IE = 1,
--	EXT_SUPP_RATES_IE = 50,
--	HT_CAPABILITY_IE = 45,
--	RSN_IE = 48,
--	WPA_IE = 221,
--	WMM_IE = 221,
-+	SUPP_RATES_IE		= 1,
-+	EXT_SUPP_RATES_IE	= 50,
-+	HT_CAPABILITY_IE	= 45,
-+	RSN_IE			= 48,
-+	WPA_IE			= 221,
-+	WMM_IE			= 221,
- 	#ifdef WILC_P2P
--	P2P_IE = 221,
-+	P2P_IE			= 221,
- 	#endif
- } BEACON_IE;
- #endif
-@@ -232,19 +232,19 @@ typedef enum {
- } BSSTYPE_T;
- 
- typedef enum {
--	RATE_AUTO = 0,
--	RATE_1MB = 1,
--	RATE_2MB = 2,
--	RATE_5MB = 5,
--	RATE_6MB = 6,
--	RATE_9MB = 9,
--	RATE_11MB = 11,
--	RATE_12MB = 12,
--	RATE_18MB = 18,
--	RATE_24MB = 24,
--	RATE_26MB = 36,
--	RATE_48MB = 48,
--	RATE_54MB = 54
-+	RATE_AUTO	= 0,
-+	RATE_1MB	= 1,
-+	RATE_2MB	= 2,
-+	RATE_5MB	= 5,
-+	RATE_6MB	= 6,
-+	RATE_9MB	= 9,
-+	RATE_11MB	= 11,
-+	RATE_12MB	= 12,
-+	RATE_18MB	= 18,
-+	RATE_24MB	= 24,
-+	RATE_26MB	= 36,
-+	RATE_48MB	= 48,
-+	RATE_54MB	= 54
- } TX_RATE_T;
- 
- typedef enum {
-@@ -259,9 +259,9 @@ typedef enum {
- } G_OPERATING_MODE_T;
- 
- typedef enum {
--	G_SHORT_PREAMBLE = 0,	/* Short Preamble */
--	G_LONG_PREAMBLE  = 1,	/* Long Preamble */
--	G_AUTO_PREAMBLE  = 2,	/* Auto Preamble Selection */
-+	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
-+	G_LONG_PREAMBLE		= 1,	/* Long Preamble */
-+	G_AUTO_PREAMBLE		= 2,	/* Auto Preamble Selection */
- } G_PREAMBLE_T;
- 
- #define MAC_CONNECTED		1
-@@ -270,57 +270,57 @@ typedef enum {
- /* bug3819: */
- #define SCAN_DONE		TRUE
- typedef enum {
--	PASSIVE_SCAN = 0,
--	ACTIVE_SCAN  = 1,
-+	PASSIVE_SCAN	= 0,
-+	ACTIVE_SCAN	= 1,
- } SCANTYPE_T;
- 
- typedef enum {
--	NO_POWERSAVE     = 0,
--	MIN_FAST_PS      = 1,
--	MAX_FAST_PS      = 2,
--	MIN_PSPOLL_PS    = 3,
--	MAX_PSPOLL_PS    = 4
-+	NO_POWERSAVE	= 0,
-+	MIN_FAST_PS	= 1,
-+	MAX_FAST_PS	= 2,
-+	MIN_PSPOLL_PS	= 3,
-+	MAX_PSPOLL_PS	= 4
- } USER_PS_MODE_T;
- 
- typedef enum {
--	CHIP_WAKEDUP			= 0,
--	CHIP_SLEEPING_AUTO      = 1,
--	CHIP_SLEEPING_MANUAL  = 2
-+	CHIP_WAKEDUP		= 0,
-+	CHIP_SLEEPING_AUTO	= 1,
-+	CHIP_SLEEPING_MANUAL	= 2
- } CHIP_PS_STATE_T;
- 
- typedef enum {
--	ACQUIRE_ONLY                             = 0,
-+	ACQUIRE_ONLY		= 0,
- 	ACQUIRE_AND_WAKEUP	= 1,
- } BUS_ACQUIRE_T;
- 
- typedef enum {
--	RELEASE_ONLY				= 0,
--	RELEASE_ALLOW_SLEEP		= 1,
-+	RELEASE_ONLY		= 0,
-+	RELEASE_ALLOW_SLEEP	= 1,
- } BUS_RELEASE_T;
- 
- typedef enum {
--	NO_SECURITY = 0,
--	WEP_40 = 0x3,
--	WEP_104 = 0x7,
--	WPA_AES = 0x29,
--	WPA_TKIP = 0x49,
--	WPA_AES_TKIP = 0x69,	/* Aes or Tkip */
--	WPA2_AES = 0x31,
--	WPA2_TKIP = 0x51,
--	WPA2_AES_TKIP = 0x71,	/* Aes or Tkip */
-+	NO_SECURITY	= 0,
-+	WEP_40		= 0x3,
-+	WEP_104		= 0x7,
-+	WPA_AES		= 0x29,
-+	WPA_TKIP	= 0x49,
-+	WPA_AES_TKIP	= 0x69,	/* Aes or Tkip */
-+	WPA2_AES	= 0x31,
-+	WPA2_TKIP	= 0x51,
-+	WPA2_AES_TKIP	= 0x71,	/* Aes or Tkip */
- } SECURITY_T;
- 
- typedef enum {
--	OPEN_SYSTEM     = 1,
--	SHARED_KEY      = 2,
--	ANY				= 3,
--	IEEE8021 = 5
-+	OPEN_SYSTEM	= 1,
-+	SHARED_KEY	= 2,
-+	ANY		= 3,
-+	IEEE8021	= 5
- } AUTHTYPE_T;
- 
- typedef enum {
--	SITE_SURVEY_1CH    = 0,
--	SITE_SURVEY_ALL_CH = 1,
--	SITE_SURVEY_OFF    = 2
-+	SITE_SURVEY_1CH		= 0,
-+	SITE_SURVEY_ALL_CH	= 1,
-+	SITE_SURVEY_OFF		= 2
- } SITE_SURVEY_T;
- 
- typedef enum {
-@@ -329,33 +329,33 @@ typedef enum {
- } ACK_POLICY_T;
- 
- typedef enum {
--	DONT_RESET = 0,
--	DO_RESET   = 1,
--	NO_REQUEST = 2,
-+	DONT_RESET	= 0,
-+	DO_RESET	= 1,
-+	NO_REQUEST	= 2,
- } RESET_REQ_T;
- 
- typedef enum {
--	REKEY_DISABLE = 1,
-+	REKEY_DISABLE	= 1,
- 	REKEY_TIME_BASE,
- 	REKEY_PKT_BASE,
- 	REKEY_TIME_PKT_BASE
- } RSNA_REKEY_POLICY_T;
- 
- typedef enum {
--	FILTER_NO       = 0x00,
--	FILTER_AP_ONLY  = 0x01,
--	FILTER_STA_ONLY = 0x02
-+	FILTER_NO	= 0x00,
-+	FILTER_AP_ONLY	= 0x01,
-+	FILTER_STA_ONLY	= 0x02
- } SCAN_CLASS_FITLER_T;
- 
- typedef enum {
--	PRI_HIGH_RSSI    = 0x00,
--	PRI_LOW_RSSI     = 0x04,
--	PRI_DETECT       = 0x08
-+	PRI_HIGH_RSSI	= 0x00,
-+	PRI_LOW_RSSI	= 0x04,
-+	PRI_DETECT	= 0x08
- } SCAN_PRI_T;
- 
- typedef enum {
--	CH_FILTER_OFF    = 0x00,
--	CH_FILTER_ON     = 0x10
-+	CH_FILTER_OFF	= 0x00,
-+	CH_FILTER_ON	= 0x10
- } CH_FILTER_T;
- 
- typedef enum {
-@@ -378,10 +378,10 @@ typedef enum {
- } N_OPERATING_MODE_T;
- 
- typedef enum {
--	NO_DETECT             = 0,
--	DETECT_ONLY           = 1,
--	DETECT_PROTECT        = 2,
--	DETECT_PROTECT_REPORT = 3,
-+	NO_DETECT		= 0,
-+	DETECT_ONLY		= 1,
-+	DETECT_PROTECT		= 2,
-+	DETECT_PROTECT_REPORT	= 3,
- } N_OBSS_DETECTION_T;
- 
- typedef enum {
-@@ -392,9 +392,9 @@ typedef enum {
- } N_PROTECTION_TYPE_T;
- 
- typedef enum {
--	STATIC_MODE   = 1,
--	DYNAMIC_MODE  = 2,
--	MIMO_MODE     = 3,	/* power save disable */
-+	STATIC_MODE	= 1,
-+	DYNAMIC_MODE	= 2,
-+	MIMO_MODE	= 3,	/* power save disable */
- } N_SMPS_MODE_T;
- 
- typedef enum {
-@@ -407,21 +407,21 @@ typedef enum {
- } TX_ABORT_OPTION_T;
- 
- typedef enum {
--	WID_CHAR     = 0,
--	WID_SHORT    = 1,
--	WID_INT      = 2,
--	WID_STR      = 3,
--	WID_BIN_DATA = 4,
--	WID_BIN   = 5,
--	WID_IP    = 6,
--	WID_ADR   = 7,
--	WID_UNDEF = 8,
--	WID_TYPE_FORCE_32BIT  = 0xFFFFFFFF
-+	WID_CHAR		= 0,
-+	WID_SHORT		= 1,
-+	WID_INT			= 2,
-+	WID_STR			= 3,
-+	WID_BIN_DATA		= 4,
-+	WID_BIN			= 5,
-+	WID_IP			= 6,
-+	WID_ADR			= 7,
-+	WID_UNDEF		= 8,
-+	WID_TYPE_FORCE_32BIT	= 0xFFFFFFFF
- 
- } WID_TYPE_T, tenuWIDtype;
- 
- typedef enum {
--	WID_NIL                            = 0xffff,
-+	WID_NIL				= 0xffff,
- 
- 	/*
- 	 *  BSS Type
-@@ -430,7 +430,7 @@ typedef enum {
- 	 *  Values to set :         0               1            2
- 	 *  --------------------------------------------------------------
- 	 */
--	WID_BSS_TYPE						= 0x0000,
-+	WID_BSS_TYPE			= 0x0000,
- 
- 	/*
- 	 * Transmit Rate
-@@ -439,7 +439,7 @@ typedef enum {
- 	 * Values to set :  1  2  5    11  6  9  12  18  24  36  48  54
- 	 * --------------------------------------------------------------
- 	 */
--	WID_CURRENT_TX_RATE			= 0x0001,
-+	WID_CURRENT_TX_RATE		= 0x0001,
- 
- 	/*
- 	 * Channel
-@@ -448,7 +448,7 @@ typedef enum {
- 	 * Values to set    :  1  2  3  4  5  6  7  8   9   10  11  12  13  14
- 	 * -------------------------------------------------------------------
- 	 */
--	WID_CURRENT_CHANNEL			= 0x0002,
-+	WID_CURRENT_CHANNEL		= 0x0002,
- 
- 	/*
- 	 * Preamble
-@@ -457,7 +457,7 @@ typedef enum {
- 	 * Values to set :       0      1      2
- 	 * --------------------------------------------------------------
- 	 */
--	WID_PREAMBLE						= 0x0003,
-+	WID_PREAMBLE			= 0x0003,
- 
- 	/*
- 	 * 11g operating mode (ignored if 11g not present)
-@@ -466,7 +466,7 @@ typedef enum {
- 	 * Values to set :      1               2               3
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11G_OPERATING_MODE            = 0x0004,
-+	WID_11G_OPERATING_MODE		= 0x0004,
- 
- 	/*
- 	 * Mac status (response only)
-@@ -475,7 +475,7 @@ typedef enum {
- 	 * Values to get :       0          1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_STATUS						= 0x0005,
-+	WID_STATUS			= 0x0005,
- 
- 	/*
- 	 *  Scan type
-@@ -484,7 +484,7 @@ typedef enum {
- 	 * Values to set :                  0                 1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_SCAN_TYPE                      = 0x0007,
-+	WID_SCAN_TYPE			= 0x0007,
- 
- 	/*
- 	 * Key Id (WEP default key Id)
-@@ -493,7 +493,7 @@ typedef enum {
- 	 * Values to set :	Same value. Default is 0
- 	 * --------------------------------------------------------------
- 	 */
--	WID_KEY_ID                         = 0x0009,
-+	WID_KEY_ID			= 0x0009,
- 
- 	/*
- 	 *  QoS Enable
-@@ -502,7 +502,7 @@ typedef enum {
- 	 *  Values to set :   0             1
- 	 *  --------------------------------------------------------------
- 	 */
--	WID_QOS_ENABLE                     = 0x000A,
-+	WID_QOS_ENABLE			= 0x000A,
- 
- 	/*
- 	 *  Power Management
-@@ -511,7 +511,7 @@ typedef enum {
- 	 *  Values to set :   0              1               2
- 	 *  ----------------------------------------------------------------
- 	 */
--	WID_POWER_MANAGEMENT               = 0x000B,
-+	WID_POWER_MANAGEMENT		= 0x000B,
- 
- 	/*
- 	 *  WEP/802 11I Configuration
-@@ -523,7 +523,7 @@ typedef enum {
- 	 *  Values (0x)   :      69          71
- 	 *  ------------------------------------------------------------------
- 	 */
--	WID_11I_MODE                       = 0x000C,
-+	WID_11I_MODE			= 0x000C,
- 
- 	/*
- 	 *  WEP Configuration: Used in BSS STA mode only when WEP is enabled
-@@ -532,7 +532,7 @@ typedef enum {
- 	 *  Values (0x)   :    01             02         03    |      BIT2
- 	 *  ------------------------------------------------------------------
- 	 */
--	WID_AUTH_TYPE                      = 0x000D,
-+	WID_AUTH_TYPE			= 0x000D,
- 
- 	/*
- 	 *  Site Survey Type
-@@ -543,7 +543,7 @@ typedef enum {
- 	 *  Disable Site Survey :  2
- 	 *  --------------------------------------------------------------
- 	 */
--	WID_SITE_SURVEY                    = 0x000E,
-+	WID_SITE_SURVEY			= 0x000E,
- 
- 	/*
- 	 *  Listen Interval
-@@ -552,7 +552,7 @@ typedef enum {
- 	 *  Values to set :   Same value. Default is 3
- 	 *  --------------------------------------------------------------
- 	 */
--	WID_LISTEN_INTERVAL                = 0x000F,
-+	WID_LISTEN_INTERVAL		= 0x000F,
- 
- 	/*
- 	 *  DTIM Period
-@@ -561,7 +561,7 @@ typedef enum {
- 	 *  Values to set :   Same value. Default is 3
- 	 *  --------------------------------------------------------------
- 	 */
--	WID_DTIM_PERIOD                    = 0x0010,
-+	WID_DTIM_PERIOD			= 0x0010,
- 
- 	/*
- 	 * ACK Policy
-@@ -570,7 +570,7 @@ typedef enum {
- 	 * Values to set :       0                   1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_ACK_POLICY                     = 0x0011,
-+	WID_ACK_POLICY			= 0x0011,
- 
- 	/*
- 	 * Reset MAC (Set only)
-@@ -579,7 +579,7 @@ typedef enum {
- 	 * Values to set :       0                   1			2
- 	 * --------------------------------------------------------------
- 	 */
--	WID_RESET                          = 0x0012,
-+	WID_RESET			= 0x0012,
- 
- 	/*
- 	 * Broadcast SSID Option: Setting this will adhere to "" SSID element
-@@ -588,7 +588,7 @@ typedef enum {
- 	 * Values to set :   1                  0
- 	 * ------------------------------------------------------------------
- 	 */
--	WID_BCAST_SSID                     = 0x0015,
-+	WID_BCAST_SSID			= 0x0015,
- 
- 	/*
- 	 * Disconnect (Station)
-@@ -597,7 +597,7 @@ typedef enum {
- 	 * Values to set :   Association ID
- 	 * ------------------------------------------------------------------
- 	 */
--	WID_DISCONNECT                     = 0x0016,
-+	WID_DISCONNECT			= 0x0016,
- 
- 	/*
- 	 * 11a Tx Power Level
-@@ -606,7 +606,7 @@ typedef enum {
- 	 * Values to set : Any value between 0 and 63 (inclusive; Default is 48)
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_TX_POWER_LEVEL_11A             = 0x0018,
-+	WID_TX_POWER_LEVEL_11A		= 0x0018,
- 
- 	/*
- 	 * Group Key Update Policy Selection
-@@ -615,7 +615,7 @@ typedef enum {
- 	 * Values to set :   1            2          3               4
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_REKEY_POLICY                   = 0x0019,
-+	WID_REKEY_POLICY		= 0x0019,
- 
- 	/*
- 	 * Allow Short Slot
-@@ -625,9 +625,9 @@ typedef enum {
- 	 * Values to set :         0                       1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_SHORT_SLOT_ALLOWED             = 0x001A,
-+	WID_SHORT_SLOT_ALLOWED		= 0x001A,
- 
--	WID_PHY_ACTIVE_REG                 = 0x001B,
-+	WID_PHY_ACTIVE_REG		= 0x001B,
- 
- 	/*
- 	 * 11b Tx Power Level
-@@ -636,7 +636,7 @@ typedef enum {
- 	 * Values to set : Any value between 0 and 63 (inclusive; Default is 48)
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_TX_POWER_LEVEL_11B             = 0x001D,
-+	WID_TX_POWER_LEVEL_11B		= 0x001D,
- 
- 	/*
- 	 * Scan Request
-@@ -645,7 +645,7 @@ typedef enum {
- 	 * Values to set : 0
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_START_SCAN_REQ                 = 0x001E,
-+	WID_START_SCAN_REQ		= 0x001E,
- 
- 	/*
- 	 * Rssi (get only)
-@@ -654,7 +654,7 @@ typedef enum {
- 	 * Values to get : Rssi value
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_RSSI                           = 0x001F,
-+	WID_RSSI			= 0x001F,
- 
- 	/*
- 	 * Join Request
-@@ -663,9 +663,9 @@ typedef enum {
- 	 * Values to set : index of scan result
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_JOIN_REQ                       = 0x0020,
-+	WID_JOIN_REQ			= 0x0020,
- 
--	WID_LINKSPEED				= 0x0026,
-+	WID_LINKSPEED			= 0x0026,
- 
- 	/*
- 	 * Enable User Control of TX Power
-@@ -674,9 +674,9 @@ typedef enum {
- 	 * Values to set :    0                       1
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_USER_CONTROL_ON_TX_POWER       = 0x0027,
-+	WID_USER_CONTROL_ON_TX_POWER	= 0x0027,
- 
--	WID_MEMORY_ACCESS_8BIT             = 0x0029,
-+	WID_MEMORY_ACCESS_8BIT		= 0x0029,
- 
- 	/*
- 	 * Enable Auto RX Sensitivity feature
-@@ -685,7 +685,7 @@ typedef enum {
- 	 * Values to set :    0                       1
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_AUTO_RX_SENSITIVITY            = 0x0032,
-+	WID_AUTO_RX_SENSITIVITY		= 0x0032,
- 
- 	/*
- 	 * Receive Buffer Based Ack
-@@ -694,7 +694,7 @@ typedef enum {
- 	 * Values to set :    0                       1
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_DATAFLOW_CONTROL               = 0x0033,
-+	WID_DATAFLOW_CONTROL		= 0x0033,
- 
- 	/*
- 	 * Scan Filter
-@@ -707,7 +707,7 @@ typedef enum {
- 	 * Values to set :               0        0x10
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_SCAN_FILTER                    = 0x0036,
-+	WID_SCAN_FILTER			= 0x0036,
- 
- 	/*
- 	 * Link Loss Threshold (measure in the beacon period)
-@@ -717,13 +717,13 @@ typedef enum {
- 	 * Values to set : Same value. Default is 10
- 	 * --------------------------------------------------------------------
- 	 */
--	WID_LINK_LOSS_THRESHOLD            = 0x0037,
-+	WID_LINK_LOSS_THRESHOLD		= 0x0037,
- 
- 	/* BugID_4978 */
--	WID_ABORT_RUNNING_SCAN = 0x003E,
-+	WID_ABORT_RUNNING_SCAN		= 0x003E,
- 
- 	/* NMAC Character WID list */
--	WID_WPS_START                      = 0x0043,
-+	WID_WPS_START			= 0x0043,
- 
- 	/*
- 	 * Protection mode for MAC
-@@ -732,7 +732,7 @@ typedef enum {
- 	 * Values to set :  0     1              2      3     4
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_PROT_MECH                  = 0x0080,
-+	WID_11N_PROT_MECH		= 0x0080,
- 
- 	/*
- 	 * ERP Protection type for MAC
-@@ -741,7 +741,7 @@ typedef enum {
- 	 * Values to set :  0          1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_ERP_PROT_TYPE              = 0x0081,
-+	WID_11N_ERP_PROT_TYPE		= 0x0081,
- 
- 	/*
- 	 * HT Option Enable
-@@ -750,7 +750,7 @@ typedef enum {
- 	 * Values to set :   1                  0
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_ENABLE                     = 0x0082,
-+	WID_11N_ENABLE			= 0x0082,
- 
- 	/*
- 	 * 11n Operating mode (Note that 11g operating mode will also be
-@@ -760,7 +760,7 @@ typedef enum {
- 	 * Values to set :     1         2               3
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_OPERATING_MODE             = 0x0083,
-+	WID_11N_OPERATING_MODE		= 0x0083,
- 
- 	/*
- 	 * 11n OBSS non-HT STA Detection flag
-@@ -775,7 +775,7 @@ typedef enum {
- 	 * Values to set :  3
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_OBSS_NONHT_DETECTION       = 0x0084,
-+	WID_11N_OBSS_NONHT_DETECTION	= 0x0084,
- 
- 	/*
- 	 * 11n HT Protection Type
-@@ -786,7 +786,7 @@ typedef enum {
- 	 * Values to set :  2         3
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_HT_PROT_TYPE               = 0x0085,
-+	WID_11N_HT_PROT_TYPE		= 0x0085,
- 
- 	/*
- 	 * 11n RIFS Protection Enable Flag
-@@ -795,7 +795,7 @@ typedef enum {
- 	 * Values to set :  0          1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_RIFS_PROT_ENABLE           = 0x0086,
-+	WID_11N_RIFS_PROT_ENABLE	= 0x0086,
- 
- 	/*
- 	 * SMPS Mode
-@@ -804,7 +804,7 @@ typedef enum {
- 	 * Values to set :  1        2         3
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_SMPS_MODE                  = 0x0087,
-+	WID_11N_SMPS_MODE		= 0x0087,
- 
- 	/*
- 	 * Current transmit MCS
-@@ -813,9 +813,9 @@ typedef enum {
- 	 * Values to set :  0 to 7
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_CURRENT_TX_MCS             = 0x0088,
-+	WID_11N_CURRENT_TX_MCS		= 0x0088,
- 
--	WID_11N_PRINT_STATS                = 0x0089,
-+	WID_11N_PRINT_STATS		= 0x0089,
- 
- 	/*
- 	 * 11n Short GI Enable Flag
-@@ -824,7 +824,7 @@ typedef enum {
- 	 * Values to set :  0          1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_SHORT_GI_ENABLE            = 0x008D,
-+	WID_11N_SHORT_GI_ENABLE		= 0x008D,
- 
- 	/*
- 	 * 11n RIFS Enable Flag
-@@ -833,7 +833,7 @@ typedef enum {
- 	 * Values to set :  0          1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_RIFS_MODE                      = 0x0094,
-+	WID_RIFS_MODE			= 0x0094,
- 
- 	/*
- 	 * TX Abort Feature
-@@ -846,15 +846,15 @@ typedef enum {
- 	 * Values to set :             4                                       5
- 	 * --------------------------------------------------------------
- 	 */
--	WID_TX_ABORT_CONFIG                = 0x00A1,
-+	WID_TX_ABORT_CONFIG		= 0x00A1,
- 
--	WID_REG_TSSI_11B_VALUE             = 0x00A6,
--	WID_REG_TSSI_11G_VALUE             = 0x00A7,
--	WID_REG_TSSI_11N_VALUE             = 0x00A8,
--	WID_TX_CALIBRATION                 = 0x00A9,
--	WID_DSCR_TSSI_11B_VALUE            = 0x00AA,
--	WID_DSCR_TSSI_11G_VALUE            = 0x00AB,
--	WID_DSCR_TSSI_11N_VALUE            = 0x00AC,
-+	WID_REG_TSSI_11B_VALUE		= 0x00A6,
-+	WID_REG_TSSI_11G_VALUE		= 0x00A7,
-+	WID_REG_TSSI_11N_VALUE		= 0x00A8,
-+	WID_TX_CALIBRATION		= 0x00A9,
-+	WID_DSCR_TSSI_11B_VALUE		= 0x00AA,
-+	WID_DSCR_TSSI_11G_VALUE		= 0x00AB,
-+	WID_DSCR_TSSI_11N_VALUE		= 0x00AC,
- 
- 	/*
- 	 * Immediate Block-Ack Support
-@@ -863,7 +863,7 @@ typedef enum {
- 	 * Values to set :    0                       1
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_IMMEDIATE_BA_ENABLED       = 0x00AF,
-+	WID_11N_IMMEDIATE_BA_ENABLED	= 0x00AF,
- 
- 	/*
- 	 * TXOP Disable Flag
-@@ -872,21 +872,21 @@ typedef enum {
- 	 * Values to set :    1                        0
- 	 * --------------------------------------------------------------
- 	 */
--	WID_11N_TXOP_PROT_DISABLE          = 0x00B0,
-+	WID_11N_TXOP_PROT_DISABLE	= 0x00B0,
- 
--	WID_TX_POWER_LEVEL_11N             = 0x00B1,
-+	WID_TX_POWER_LEVEL_11N		= 0x00B1,
- 
- 	/* Custom Character WID list */
--	WID_PC_TEST_MODE          = 0x00C8,
-+	WID_PC_TEST_MODE		= 0x00C8,
- 	/* bug3819: */
- 	/* SCAN Complete notification WID */
- 	WID_SCAN_COMPLETE		= 0x00C9,
- 
- #ifdef WILC_AP_EXTERNAL_MLME
--	WID_DEL_BEACON					= 0x00CA,
-+	WID_DEL_BEACON			= 0x00CA,
- #endif
- 
--	WID_LOGTerminal_Switch					= 0x00CD,
-+	WID_LOGTerminal_Switch		= 0x00CD,
- 	/*
- 	 * EMAC Short WID list
- 	 * RTS Threshold
-@@ -895,7 +895,7 @@ typedef enum {
- 	 * Values to set :   Same value. Default is 2347
- 	 * --------------------------------------------------------------
- 	 */
--	WID_RTS_THRESHOLD                  = 0x1000,
-+	WID_RTS_THRESHOLD		= 0x1000,
- 
- 	/*
- 	 *  Fragmentation Threshold
-@@ -904,149 +904,149 @@ typedef enum {
- 	 *  Values to set :   Same value. Default is 2346
- 	 *  --------------------------------------------------------------
- 	 */
--	WID_FRAG_THRESHOLD                 = 0x1001,
--
--	WID_SHORT_RETRY_LIMIT              = 0x1002,
--	WID_LONG_RETRY_LIMIT               = 0x1003,
--	WID_BEACON_INTERVAL                = 0x1006,
--	WID_MEMORY_ACCESS_16BIT            = 0x1008,
--	WID_RX_SENSE                       = 0x100B,
--	WID_ACTIVE_SCAN_TIME               = 0x100C,
--	WID_PASSIVE_SCAN_TIME              = 0x100D,
--
--	WID_SITE_SURVEY_SCAN_TIME          = 0x100E,
--	WID_JOIN_START_TIMEOUT             = 0x100F,
--	WID_AUTH_TIMEOUT                   = 0x1010,
--	WID_ASOC_TIMEOUT                   = 0x1011,
--	WID_11I_PROTOCOL_TIMEOUT           = 0x1012,
--	WID_EAPOL_RESPONSE_TIMEOUT         = 0x1013,
-+	WID_FRAG_THRESHOLD		= 0x1001,
-+
-+	WID_SHORT_RETRY_LIMIT		= 0x1002,
-+	WID_LONG_RETRY_LIMIT		= 0x1003,
-+	WID_BEACON_INTERVAL		= 0x1006,
-+	WID_MEMORY_ACCESS_16BIT		= 0x1008,
-+	WID_RX_SENSE			= 0x100B,
-+	WID_ACTIVE_SCAN_TIME		= 0x100C,
-+	WID_PASSIVE_SCAN_TIME		= 0x100D,
-+
-+	WID_SITE_SURVEY_SCAN_TIME	= 0x100E,
-+	WID_JOIN_START_TIMEOUT		= 0x100F,
-+	WID_AUTH_TIMEOUT		= 0x1010,
-+	WID_ASOC_TIMEOUT		= 0x1011,
-+	WID_11I_PROTOCOL_TIMEOUT	= 0x1012,
-+	WID_EAPOL_RESPONSE_TIMEOUT	= 0x1013,
- 
- 	/* NMAC Short WID list */
--	WID_11N_SIG_QUAL_VAL               = 0x1085,
--	WID_CCA_THRESHOLD                  = 0x1087,
-+	WID_11N_SIG_QUAL_VAL		= 0x1085,
-+	WID_CCA_THRESHOLD		= 0x1087,
- 
- 	/* Custom Short WID list */
- 
- 	/* EMAC Integer WID list */
--	WID_FAILED_COUNT                   = 0x2000,
--	WID_RETRY_COUNT                    = 0x2001,
--	WID_MULTIPLE_RETRY_COUNT           = 0x2002,
--	WID_FRAME_DUPLICATE_COUNT          = 0x2003,
--	WID_ACK_FAILURE_COUNT              = 0x2004,
--	WID_RECEIVED_FRAGMENT_COUNT        = 0x2005,
--	WID_MCAST_RECEIVED_FRAME_COUNT     = 0x2006,
--	WID_FCS_ERROR_COUNT                = 0x2007,
--	WID_SUCCESS_FRAME_COUNT            = 0x2008,
--	WID_HUT_TX_COUNT                   = 0x200A,
--	WID_TX_FRAGMENT_COUNT              = 0x200B,
--	WID_TX_MULTICAST_FRAME_COUNT       = 0x200C,
--	WID_RTS_SUCCESS_COUNT              = 0x200D,
--	WID_RTS_FAILURE_COUNT              = 0x200E,
--	WID_WEP_UNDECRYPTABLE_COUNT        = 0x200F,
--	WID_REKEY_PERIOD                   = 0x2010,
--	WID_REKEY_PACKET_COUNT             = 0x2011,
--	WID_1X_SERV_ADDR                   = 0x2012,
--	WID_STACK_IP_ADDR                  = 0x2013,
--	WID_STACK_NETMASK_ADDR             = 0x2014,
--	WID_HW_RX_COUNT                    = 0x2015,
--	WID_MEMORY_ADDRESS                 = 0x201E,
--	WID_MEMORY_ACCESS_32BIT            = 0x201F,
--	WID_RF_REG_VAL                     = 0x2021,
-+	WID_FAILED_COUNT		= 0x2000,
-+	WID_RETRY_COUNT			= 0x2001,
-+	WID_MULTIPLE_RETRY_COUNT	= 0x2002,
-+	WID_FRAME_DUPLICATE_COUNT	= 0x2003,
-+	WID_ACK_FAILURE_COUNT		= 0x2004,
-+	WID_RECEIVED_FRAGMENT_COUNT	= 0x2005,
-+	WID_MCAST_RECEIVED_FRAME_COUNT	= 0x2006,
-+	WID_FCS_ERROR_COUNT		= 0x2007,
-+	WID_SUCCESS_FRAME_COUNT		= 0x2008,
-+	WID_HUT_TX_COUNT		= 0x200A,
-+	WID_TX_FRAGMENT_COUNT		= 0x200B,
-+	WID_TX_MULTICAST_FRAME_COUNT	= 0x200C,
-+	WID_RTS_SUCCESS_COUNT		= 0x200D,
-+	WID_RTS_FAILURE_COUNT		= 0x200E,
-+	WID_WEP_UNDECRYPTABLE_COUNT	= 0x200F,
-+	WID_REKEY_PERIOD		= 0x2010,
-+	WID_REKEY_PACKET_COUNT		= 0x2011,
-+	WID_1X_SERV_ADDR		= 0x2012,
-+	WID_STACK_IP_ADDR		= 0x2013,
-+	WID_STACK_NETMASK_ADDR		= 0x2014,
-+	WID_HW_RX_COUNT			= 0x2015,
-+	WID_MEMORY_ADDRESS		= 0x201E,
-+	WID_MEMORY_ACCESS_32BIT		= 0x201F,
-+	WID_RF_REG_VAL			= 0x2021,
- 
- 	/* NMAC Integer WID list */
--	WID_11N_PHY_ACTIVE_REG_VAL         = 0x2080,
-+	WID_11N_PHY_ACTIVE_REG_VAL	= 0x2080,
- 
- 	/* Custom Integer WID list */
--	WID_GET_INACTIVE_TIME     = 0x2084,
--	WID_SET_DRV_HANDLER =		 0X2085,
--	WID_SET_OPERATION_MODE =	 0X2086,
-+	WID_GET_INACTIVE_TIME		= 0x2084,
-+	WID_SET_DRV_HANDLER		= 0X2085,
-+	WID_SET_OPERATION_MODE		= 0X2086,
- 	/* EMAC String WID list */
--	WID_SSID                           = 0x3000,
--	WID_FIRMWARE_VERSION               = 0x3001,
--	WID_OPERATIONAL_RATE_SET           = 0x3002,
--	WID_BSSID                          = 0x3003,
--	WID_WEP_KEY_VALUE                  = 0x3004,
--	WID_11I_PSK                        = 0x3008,
--	WID_11E_P_ACTION_REQ               = 0x3009,
--	WID_1X_KEY                         = 0x300A,
--	WID_HARDWARE_VERSION               = 0x300B,
--	WID_MAC_ADDR                       = 0x300C,
--	WID_HUT_DEST_ADDR                  = 0x300D,
--	WID_PHY_VERSION                    = 0x300F,
--	WID_SUPP_USERNAME                  = 0x3010,
--	WID_SUPP_PASSWORD                  = 0x3011,
--	WID_SITE_SURVEY_RESULTS            = 0x3012,
--	WID_RX_POWER_LEVEL                 = 0x3013,
--	WID_DEL_ALL_RX_BA				= 0x3014,
--	WID_SET_STA_MAC_INACTIVE_TIME   = 0x3017,
--	WID_ADD_WEP_KEY                    = 0x3019,
--	WID_REMOVE_WEP_KEY                 = 0x301A,
--	WID_ADD_PTK                        = 0x301B,
--	WID_ADD_RX_GTK                     = 0x301C,
--	WID_ADD_TX_GTK                     = 0x301D,
--	WID_REMOVE_KEY                     = 0x301E,
--	WID_ASSOC_REQ_INFO                 = 0x301F,
--	WID_ASSOC_RES_INFO                 = 0x3020,
--	WID_MANUFACTURER                   = 0x3026, /* Added for CAPI tool */
--	WID_MODEL_NAME                     = 0x3027, /* Added for CAPI tool */
--	WID_MODEL_NUM                      = 0x3028, /* Added for CAPI tool */
--	WID_DEVICE_NAME                    = 0x3029, /* Added for CAPI tool */
-+	WID_SSID			= 0x3000,
-+	WID_FIRMWARE_VERSION		= 0x3001,
-+	WID_OPERATIONAL_RATE_SET	= 0x3002,
-+	WID_BSSID			= 0x3003,
-+	WID_WEP_KEY_VALUE		= 0x3004,
-+	WID_11I_PSK			= 0x3008,
-+	WID_11E_P_ACTION_REQ		= 0x3009,
-+	WID_1X_KEY			= 0x300A,
-+	WID_HARDWARE_VERSION		= 0x300B,
-+	WID_MAC_ADDR			= 0x300C,
-+	WID_HUT_DEST_ADDR		= 0x300D,
-+	WID_PHY_VERSION			= 0x300F,
-+	WID_SUPP_USERNAME		= 0x3010,
-+	WID_SUPP_PASSWORD		= 0x3011,
-+	WID_SITE_SURVEY_RESULTS		= 0x3012,
-+	WID_RX_POWER_LEVEL		= 0x3013,
-+	WID_DEL_ALL_RX_BA		= 0x3014,
-+	WID_SET_STA_MAC_INACTIVE_TIME	= 0x3017,
-+	WID_ADD_WEP_KEY			= 0x3019,
-+	WID_REMOVE_WEP_KEY		= 0x301A,
-+	WID_ADD_PTK			= 0x301B,
-+	WID_ADD_RX_GTK			= 0x301C,
-+	WID_ADD_TX_GTK			= 0x301D,
-+	WID_REMOVE_KEY			= 0x301E,
-+	WID_ASSOC_REQ_INFO		= 0x301F,
-+	WID_ASSOC_RES_INFO		= 0x3020,
-+	WID_MANUFACTURER		= 0x3026, /* Added for CAPI tool */
-+	WID_MODEL_NAME			= 0x3027, /* Added for CAPI tool */
-+	WID_MODEL_NUM			= 0x3028, /* Added for CAPI tool */
-+	WID_DEVICE_NAME			= 0x3029, /* Added for CAPI tool */
- 
- 	/* NMAC String WID list */
--	WID_11N_P_ACTION_REQ               = 0x3080,
--	WID_HUT_TEST_ID                    = 0x3081,
--	WID_PMKID_INFO                     = 0x3082,
--	WID_FIRMWARE_INFO                  = 0x3083,
-+	WID_11N_P_ACTION_REQ		= 0x3080,
-+	WID_HUT_TEST_ID			= 0x3081,
-+	WID_PMKID_INFO			= 0x3082,
-+	WID_FIRMWARE_INFO		= 0x3083,
- 	#ifdef WILC_P2P
--	WID_REGISTER_FRAME                = 0x3084,
-+	WID_REGISTER_FRAME		= 0x3084,
- 	#endif
--	WID_DEL_ALL_STA          = 0x3085,
-+	WID_DEL_ALL_STA			= 0x3085,
- 	 #ifdef WILC_P2P
--	WID_REMAIN_ON_CHAN  = 0x3996,
-+	WID_REMAIN_ON_CHAN		= 0x3996,
- 	#endif
- 	/* BugID_4156 */
--	WID_SSID_PROBE_REQ = 0x3997,
-+	WID_SSID_PROBE_REQ		= 0x3997,
- 	/*
- 	 * BugID_4124 WID to trigger modified Join Request using SSID and
- 	 * BSSID instead of bssListIdx (used by WID_JOIN_REQ)
- 	 */
--	WID_JOIN_REQ_EXTENDED		 = 0x3998,
-+	WID_JOIN_REQ_EXTENDED		= 0x3998,
- 
- 	/* BugID 4951: WID toset IP address in firmware */
--	WID_IP_ADDRESS					= 0x3999,
-+	WID_IP_ADDRESS			= 0x3999,
- 
- 	/* Custom String WID list */
- 
- 	/* EMAC Binary WID list */
--	WID_UAPSD_CONFIG                   = 0x4001,
--	WID_UAPSD_STATUS                   = 0x4002,
--	WID_WMM_AP_AC_PARAMS               = 0x4003,
--	WID_WMM_STA_AC_PARAMS              = 0x4004,
--	WID_NETWORK_INFO                   = 0x4005,
--	WID_STA_JOIN_INFO                  = 0x4006,
--	WID_CONNECTED_STA_LIST             = 0x4007,
-+	WID_UAPSD_CONFIG		= 0x4001,
-+	WID_UAPSD_STATUS		= 0x4002,
-+	WID_WMM_AP_AC_PARAMS		= 0x4003,
-+	WID_WMM_STA_AC_PARAMS		= 0x4004,
-+	WID_NETWORK_INFO		= 0x4005,
-+	WID_STA_JOIN_INFO		= 0x4006,
-+	WID_CONNECTED_STA_LIST		= 0x4007,
- 
- 	/* NMAC Binary WID list */
--	WID_11N_AUTORATE_TABLE             = 0x4080,
-+	WID_11N_AUTORATE_TABLE		= 0x4080,
- 
- 	/* Added here by Amr - BugID 4134 */
--	WID_SCAN_CHANNEL_LIST                      = 0x4084,
-+	WID_SCAN_CHANNEL_LIST		= 0x4084,
- 
- 	/* BugID_3746 WID to add IE to be added in next probe request */
--	WID_INFO_ELEMENT_PROBE	 = 0x4085,
-+	WID_INFO_ELEMENT_PROBE		= 0x4085,
- 	/* BugID_3746 WID to add IE to be added in next associate request */
--	WID_INFO_ELEMENT_ASSOCIATE	 = 0x4086,
--	WID_ADD_STA					 = 0X4087,
--	WID_REMOVE_STA				 = 0X4088,
--	WID_EDIT_STA					 = 0X4089,
--	WID_ADD_BEACON				= 0x408a,
-+	WID_INFO_ELEMENT_ASSOCIATE	= 0x4086,
-+	WID_ADD_STA			= 0X4087,
-+	WID_REMOVE_STA			= 0X4088,
-+	WID_EDIT_STA			= 0X4089,
-+	WID_ADD_BEACON			= 0x408a,
- 
- 	/* BugID 5108 */
- 	WID_SETUP_MULTICAST_FILTER	= 0x408b,
- 
- 	/* Miscellaneous WIDs */
--	WID_ALL                            = 0x7FFE,
--	WID_MAX                            = 0xFFFF
-+	WID_ALL				= 0x7FFE,
-+	WID_MAX				= 0xFFFF
- } WID_T;
- 
- int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup);
--- 
-1.9.1
-
+On Tue, Jun 9, 2015 at 5:40 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 9 June 2015 at 03:13, Liu CF/TW <cfliu.tw@gmail.com> wrote:
+>> This change supports hardware crypto engine bypass by enabling raw
+>> Rx/Tx encap mode. This enables use cases such as software crypto and raw
+>> tx injection. This change introduces a new module param 'cryptmode'.
+>>
+>> cryptmode:
+>>
+>>   0: Use hardware crypto engine globally with native Wi-Fi mode TX/RX
+>>      encapsulation to the firmware. This is the default mode.
+>>   1: Use sofware crypto engine globally with raw mode TX/RX encapsulation
+>>      to the firmware.
+>>   2: Supports both hardware and software crypto with raw mode TX/RX
+>>      encapsulation to the firmware. By default hardware crypto engine is
+>>      used. To use software crypto in this mode, set the per ath10k_vif
+>>      'nohwcrypt' flag value to True.*
+>>      *) The patch for setting vif specific 'nohwcrypt' flag when
+>>         cryptmode=2 would be a separate patch to mac80211.
+>>
+>> Possible use case examples:
+>>
+>>   - Use software crypto engine in mac80211. (cryptmode=1)
+>>
+>>   - Support inject raw unencrypted frame on monitor interface and use
+>>     hardware crypto to encrypt the injected Tx frames. (cryptmode=2)
+>>
+>>   - Support receive raw hardware decrypted frame with encryption header
+>>     on monitor interface. (cryptmode=2)
+>>
+>>   - Support hybrid local & split MAC mode to support tunneling protocols
+>>     such as CAPWAP: Use hardware crypto for BSS in local mode,
+>>     and bypass hardware crypto for BSS in split MAC mode.
+>>     (cryptmode=2, ath10k_vif nohwcrypt=0 for local mode, =1 for split MAC
+>>      mode)
+>>
+>> Testing:
+>>
+>>   Used QCA988x hw 2.0 with firmware-4.bin_10.2.4.48 with
+>>   backports-20150424.
+>>
+>>   All test case tested** with hostapd in both WPA2-PSK-TKIP (11g) and
+>>   WPA2-PSK-CCMP(11n/ac). Verified ping and http to google.com works.
+>>
+>>   **) Need to skip ATH10K_FW_FEATURE_RAW_MODE_SUPPORT check in core.c to
+>>   test firmware. After all, none of the existing QCA official firmware
+>>   exports that firmware bit yet.
+>>
+>>   Test Case                                        cryptmode value tested
+>>   ---------------------------------------------    ----------------------
+>>   1. ath10k hardware crypto can encrypt/decrypt       0: PASS
+>>      data frames when hostapd config the BSS in       1: Not applicable.
+>>      WPA2-PSK-TKIP and WPA2-PSK-CCMP modes.           2: PASS
+>>
+>>   2. mac80211 software crypto can encrypt/decrypt     0: Not applicable
+>>      data frames when hostapd config the BSS in       1: PASS
+>>      WPA2-PSK-TKIP and WPA2-PSK-CCMP modes.           2: PASS, when vif
+>>                                                          nohwcrypt=1
+>>
+>>   3. Monitor interface Tx: User application can       0: Not applicable
+>>      inject unencrypted raw Tx frames to monitor      1: PASS (mac80211)
+>>      interface for mac80211 or hardware to encrypt    2: PASS (hardware)
+>>      the frames.
+>>
+>>   4. Monitor interface Rx: mac80211 software crypto   0: Not applicable
+>>      engine can decrypt received TKIP/CCMP frames.    1: PASS
+>>      User application see decrypted frames.           2: PASS, when vif
+>>                                                          nohwcrypt=1
+>>
+>>   5. CAPWAP-like local and split MAC datapath         0: Not applicable
+>>      tunneling: Setup BSS1=Local MAC mode on wlan0,   1: Not applicable
+>>      BSS2=Split MAC mode on wlan0_monitor interface.  2: PASS
+>>      Test BSS1 data frames can be encrypted and
+>>      decrypted by ath10k hardware crypto engine
+>>      while BSS2 data frames can skip both hardware &
+>>      kernel mac80211 crypto engines via monitor
+>>      interface to the user application fot tunneling.
+>
+> I've finally got to run a few tests on your patch.
+>
+> I've tried qca988x with 10.2.4.48-2 (fw_feature hardcoded in driver).
+>
+> Here's a short summary of my findings:
+>
+>  - cryptmode=1 can fix 4addr+802.1q VLAN tagging in both AP and STA
+> modes (a problem recently reported by Cedric),
+>  - your patch as-is has AP WEP broken, see below
+>  - your patch as-is has TCP broken, see below
+>  - your patch as-is has performance really broken, see below
+>  - once patched it looks pretty solid.
+>
+>
+> At the end of this email I'm attaching (most likely whitespace
+> damaged) patch I've made on top of your patch for reviewing
+> convenience.
+>
+> For testing/merging convenience here's a paste link: http://paste.ee/p/YMFrO
+>
+>
+> Performance:
+>
+> cryptmode=1
+>  ap=qca988x sta=killer1525
+>   killer1525  ->  qca988x     194.496 mbps [tcp1 ip4]
+>   killer1525  ->  qca988x     238.309 mbps [tcp5 ip4]
+>   killer1525  ->  qca988x     266.958 mbps [udp1 ip4]
+>   killer1525  ->  qca988x     477.468 mbps [udp5 ip4]
+>   qca988x     ->  killer1525  301.378 mbps [tcp1 ip4]
+>   qca988x     ->  killer1525  297.949 mbps [tcp5 ip4]
+>   qca988x     ->  killer1525  331.351 mbps [udp1 ip4]
+>   qca988x     ->  killer1525  371.528 mbps [udp5 ip4]
+>  ap=killer1525 sta=qca988x
+>   qca988x     ->  killer1525  331.447 mbps [tcp1 ip4]
+>   qca988x     ->  killer1525  328.783 mbps [tcp5 ip4]
+>   qca988x     ->  killer1525  375.309 mbps [udp1 ip4]
+>   qca988x     ->  killer1525  403.379 mbps [udp5 ip4]
+>   killer1525  ->  qca988x     203.689 mbps [tcp1 ip4]
+>   killer1525  ->  qca988x     222.339 mbps [tcp5 ip4]
+>   killer1525  ->  qca988x     264.199 mbps [udp1 ip4]
+>   killer1525  ->  qca988x     479.371 mbps [udp5 ip4]
+>
+> vanilla
+>  ap=qca988x sta=killer1525
+>   killer1525  ->  qca988x     216.882 mbps [tcp1 ip4]
+>   killer1525  ->  qca988x     265.066 mbps [tcp5 ip4]
+>   killer1525  ->  qca988x     267.344 mbps [udp1 ip4]
+>   killer1525  ->  qca988x     481.762 mbps [udp5 ip4]
+>   qca988x     ->  killer1525  209.34  mbps [tcp1 ip4]
+>   qca988x     ->  killer1525  231.009 mbps [tcp5 ip4]
+>   qca988x     ->  killer1525  385.807 mbps [udp1 ip4]
+>   qca988x     ->  killer1525  544.823 mbps [udp5 ip4]
+>  ap=killer1525 sta=qca988x
+>   qca988x     ->  killer1525  198.865 mbps [tcp1 ip4]
+>   qca988x     ->  killer1525  232.259 mbps [tcp5 ip4]
+>   qca988x     ->  killer1525  369.771 mbps [udp1 ip4]
+>   qca988x     ->  killer1525  529.127 mbps [udp5 ip4]
+>   killer1525  ->  qca988x     210.846 mbps [tcp1 ip4]
+>   killer1525  ->  qca988x     243.255 mbps [tcp5 ip4]
+>   killer1525  ->  qca988x     261.926 mbps [udp1 ip4]
+>   killer1525  ->  qca988x     485.102 mbps [udp5 ip4]
+>
+> Note:
+>  - only open network tested for RAW vs nwifi performance comparison
+>  - killer1525 (qca6174 hw2.2) is 2x2 device (hence max 866mbps)
+>  - used iperf
+>  - OTA, devices a few cm apart from each other, no shielding
+>  - tcpX/udpX, X - means number of threads used
+>
+> Overview:
+>  - relative Tx performance drop is seen but is within reasonable and
+>    expected threshold (A-MSDU must be disabled with RAW Tx)
+>
+>
+> Connectivity:
+>
+> cryptmode=1
+>  ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br       OK
+>  ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br       OK
+>  ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br       OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br       OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br1vlan  OK
+>  ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br1vlan  OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br1vlan  OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br1vlan  OK
+>  ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br1vlan  OK
+>  ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br1vlan  OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br1vlan  OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br1vlan  OK
+>
+> vanilla
+>  ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta          OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta          OK
+>  ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br       OK
+>  ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br       OK
+>  ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br       FAIL*
+>  ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br       OK
+>  ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br       OK
+>  ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br1vlan  FAIL**
+>  ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br1vlan  FAIL**
+>  ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br1vlan  FAIL**
+>  ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br1vlan  FAIL**
+>  ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br1vlan  FAIL**
+>  ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br1vlan  FAIL**
+>  ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br1vlan  FAIL**
+>  ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br1vlan  FAIL**
+>
+> * This is a known problem with AP with WEP and 4addr
+> ** This is another known (recently reported) problem with 802.1q VLAN
+> tagging and 4addr
+>
+> Note:
+>  - each test takes all possible endpoint pairs and pings
+>  - each pair-ping flushes arp table
+>  - ip6 is used
+>
+>
+> Legend:
+>
+> 1ap1sta:
+>   [ap] ---- [sta]
+>
+>   endpoints: ap, sta
+>
+> 1ap1sta2br:
+>   [veth0] [ap] ---- [sta] [veth2]
+>      |     |          |     |
+>   [veth1]  |          \   [veth3]
+>       \   /            \  /
+>       [br0]            [br1]
+>
+>   endpoints: veth0, veth2, br0, br1
+>   note: STA works in 4addr mode, AP has wds_sta=1
+>
+> 1ap1sta2br1vlan:
+>   [veth0] [ap] ---- [sta] [veth2]
+>      |     |          |     |
+>   [veth1]  |          \   [veth3]
+>       \   /            \  /
+>     [br0]              [br1]
+>       |                  |
+>     [vlan0_id2]        [vlan1_id2]
+>
+>   endpoints: vlan0_id2, vlan1_id2
+>   note: STA works in 4addr mode, AP has wds_sta=1
+>
+>
+> [...]
+>>  static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>>         {
+>> @@ -991,6 +994,34 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+>>                 return -EINVAL;
+>>         }
+>>
+>> +       ar->wmi.rx_decap_mode = __cpu_to_le32(ATH10K_HW_TXRX_NATIVE_WIFI);
+>
+> This is incorrect. rx_decap_mode is u32, not __le32. No need for the
+> __cpu_to_le32() here.
+>
+>> +       switch (ath10k_cryptmode_param) {
+>> +       case ATH10K_CRYPT_MODE_HW:
+>> +               clear_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
+>> +               clear_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags);
+>> +               break;
+>> +       case ATH10K_CRYPT_MODE_SW:
+>> +       case ATH10K_CRYPT_MODE_HW_SW:
+>> +               if (!test_bit(ATH10K_FW_FEATURE_RAW_MODE_SUPPORT,
+>> +                             ar->fw_features)) {
+>> +                       ath10k_err(ar, "cryptmode > 0 requires raw mode support from firmware");
+>> +                       return -EINVAL;
+>> +               }
+>> +
+>> +               set_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
+>> +
+>> +               if (ath10k_cryptmode_param == ATH10K_CRYPT_MODE_SW)
+>> +                       set_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags);
+>> +               break;
+>> +       default:
+>> +               ath10k_info(ar, "invalid cryptmode: %d\n",
+>> +                           ath10k_cryptmode_param);
+>> +               return -EINVAL;
+>> +       }
+>> +
+>> +       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+>> +               ar->wmi.rx_decap_mode = __cpu_to_le32(ATH10K_HW_TXRX_RAW);
+>
+> Ditto. This is u32, not __le32.
+>
+>
+> [...]
+>> @@ -197,12 +198,22 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+>>                 return -EOPNOTSUPP;
+>>         }
+>>
+>> +       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+>> +               key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+>> +
+>> +       if (arvif->nohwcrypt)
+>> +               cmd = DISABLE_KEY;
+>> +
+>>         if (cmd == DISABLE_KEY) {
+>>                 arg.key_cipher = WMI_CIPHER_NONE;
+>>                 arg.key_data = NULL;
+>>         }
+>>
+>> -       return ath10k_wmi_vdev_install_key(arvif->ar, &arg);
+>> +       ret = ath10k_wmi_vdev_install_key(arvif->ar, &arg);
+>> +
+>> +       if (arvif->nohwcrypt && !ret)
+>> +               return -EOPNOTSUPP;
+>> +       return ret;
+>
+> This causes 2 problems:
+>
+>  a) Lots of these:
+>      [ 5406.702283] ath10k_pci 0000:00:06.0: failed to install key for
+> vdev 0 peer 10:0b:a9:0d:c9:e0: -95
+>
+>  b) WEP in AP mode fails because:
+>
+>      [ 5616.033102] ath10k_pci 0000:00:06.0: failed to install peer
+> wep keys for vdev 0: -95
+>      [ 5616.038512] ath10k_pci 0000:00:06.0: failed to associate
+> station 10:0b:a9:0d:c9:e0 for vdev 0: -95
+>
+> See my patch how I've dealt with it for now.
+>
+>
+> Michał
+>
+> ----
+>
+> commit 0fd8c42ad92a83c65450575e348c737917e8210a
+> Author: Michal Kazior <michal.kazior@tieto.com>
+> Date:   Tue Jun 9 09:57:14 2015 +0200
+>
+>     ath10k: fix some RAW Tx encap mode cases
+>
+>     A-MSDU must be disabled for RAW Tx encap mode to
+>     perform well when heavy traffic is applied.
+>
+>     Also key handling was a bit buggy and was:
+>      - spamming dmesg with -95 warnings
+>      - prevented AP WEP from working
+>
+>     As a solution return a 1 when using software
+>     crypto early in set_key(), and adjust all
+>     install_key() call sites to treat 1 as non-fatal
+>     retval.
+>
+>     Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c
+> b/drivers/net/wireless/ath/ath10k/core.c
+> index 0d5f157bc177..48b6bfc778b9 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1021,9 +1021,24 @@ static int
+> ath10k_core_init_firmware_features(struct ath10k *ar)
+>                 return -EINVAL;
+>         }
+>
+> -       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+> +       ar->htt.max_num_amsdu = ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT;
+> +       ar->htt.max_num_ampdu = ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT;
+> +
+> +       if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
+>                 ar->wmi.rx_decap_mode = ATH10K_HW_TXRX_RAW;
+>
+> +               /* Workaround:
+> +                *
+> +                * Firmware A-MSDU aggregation breaks with RAW Tx encap mode
+> +                * and causes enormous performance issues (malformed frames,
+> +                * etc).
+> +                *
+> +                * Disabling A-MSDU makes RAW mode stable with heavy traffic
+> +                * albeit a bit slower compared to regular operation.
+> +                */
+> +               ar->htt.max_num_amsdu = 1;
+> +       }
+> +
+>         /* Backwards compatibility for firmwares without
+>          * ATH10K_FW_IE_WMI_OP_VERSION.
+>          */
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h
+> b/drivers/net/wireless/ath/ath10k/core.h
+> index 72bd19ee6f76..e473488639a9 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -393,9 +393,6 @@ struct ath10k_debug {
+>         u32 reg_addr;
+>         u32 nf_cal_period;
+>
+> -       u8 htt_max_amsdu;
+> -       u8 htt_max_ampdu;
+> -
+>         struct ath10k_fw_crash_data *fw_crash_data;
+>  };
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/debug.c
+> b/drivers/net/wireless/ath/ath10k/debug.c
+> index 6ad92845de88..5b263e0dedf5 100644
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -1358,11 +1358,8 @@ static ssize_t
+> ath10k_read_htt_max_amsdu_ampdu(struct file *file,
+>
+>         mutex_lock(&ar->conf_mutex);
+>
+> -       if (ar->debug.htt_max_amsdu)
+> -               amsdu = ar->debug.htt_max_amsdu;
+> -
+> -       if (ar->debug.htt_max_ampdu)
+> -               ampdu = ar->debug.htt_max_ampdu;
+> +       amsdu = ar->htt.max_num_amsdu;
+> +       ampdu = ar->htt.max_num_ampdu;
+>
+>         mutex_unlock(&ar->conf_mutex);
+>
+> @@ -1397,8 +1394,8 @@ static ssize_t
+> ath10k_write_htt_max_amsdu_ampdu(struct file *file,
+>                 goto out;
+>
+>         res = count;
+> -       ar->debug.htt_max_amsdu = amsdu;
+> -       ar->debug.htt_max_ampdu = ampdu;
+> +       ar->htt.max_num_amsdu = amsdu;
+> +       ar->htt.max_num_ampdu = ampdu;
+>
+>  out:
+>         mutex_unlock(&ar->conf_mutex);
+> @@ -1900,9 +1897,6 @@ void ath10k_debug_stop(struct ath10k *ar)
+>         if (ar->debug.htt_stats_mask != 0)
+>                 cancel_delayed_work(&ar->debug.htt_stats_dwork);
+>
+> -       ar->debug.htt_max_amsdu = 0;
+> -       ar->debug.htt_max_ampdu = 0;
+> -
+>         ath10k_wmi_pdev_pktlog_disable(ar);
+>  }
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/htt.c
+> b/drivers/net/wireless/ath/ath10k/htt.c
+> index 6da6ef26143a..a4e1a1b03413 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt.c
+> @@ -205,8 +205,27 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+>         }
+>
+>         status = ath10k_htt_verify_version(htt);
+> -       if (status)
+> +       if (status) {
+> +               ath10k_warn(ar, "failed to verify htt version: %d\n",
+> +                           status);
+>                 return status;
+> +       }
+>
+> -       return ath10k_htt_send_rx_ring_cfg_ll(htt);
+> +       status = ath10k_htt_send_rx_ring_cfg_ll(htt);
+> +       if (status) {
+> +               ath10k_warn(ar, "failed to setup rx ring: %d\n",
+> +                           status);
+> +               return status;
+> +       }
+> +
+> +       status = ath10k_htt_h2t_aggr_cfg_msg(htt,
+> +                                            htt->max_num_ampdu,
+> +                                            htt->max_num_amsdu);
+> +       if (status) {
+> +               ath10k_warn(ar, "failed to setup amsdu/ampdu limit: %d\n",
+> +                           status);
+> +               return status;
+> +       }
+> +
+> +       return 0;
+>  }
+> diff --git a/drivers/net/wireless/ath/ath10k/htt.h
+> b/drivers/net/wireless/ath/ath10k/htt.h
+> index 7e8a0d835663..58ca5337b4d1 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt.h
+> +++ b/drivers/net/wireless/ath/ath10k/htt.h
+> @@ -1325,6 +1325,8 @@ struct ath10k_htt {
+>         u8 target_version_minor;
+>         struct completion target_version_received;
+>         enum ath10k_fw_htt_op_version op_version;
+> +       u8 max_num_amsdu;
+> +       u8 max_num_ampdu;
+>
+>         const enum htt_t2h_msg_type *t2h_msg_types;
+>         u32 t2h_msg_types_max;
+> @@ -1482,6 +1484,12 @@ struct htt_rx_desc {
+>  #define HTT_LOG2_MAX_CACHE_LINE_SIZE 7 /* 2^7 = 128 */
+>  #define HTT_MAX_CACHE_LINE_SIZE_MASK ((1 << HTT_LOG2_MAX_CACHE_LINE_SIZE) - 1)
+>
+> +/* These values are default in most firmware revisions and apparently are a
+> + * sweet spot performance wise.
+> + */
+> +#define ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT 3
+> +#define ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT 64
+> +
+>  int ath10k_htt_connect(struct ath10k_htt *htt);
+>  int ath10k_htt_init(struct ath10k *ar);
+>  int ath10k_htt_setup(struct ath10k_htt *htt);
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> index 5758e3d413ce..2a6267ee6978 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -2073,6 +2073,8 @@ void ath10k_htt_t2h_msg_handler(struct ath10k
+> *ar, struct sk_buff *skb)
+>                 break;
+>         case HTT_T2H_MSG_TYPE_CHAN_CHANGE:
+>                 break;
+> +       case HTT_T2H_MSG_TYPE_AGGR_CONF:
+> +               break;
+>         default:
+>                 ath10k_warn(ar, "htt event (%d) not handled\n",
+>                             resp->hdr.msg_type);
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c
+> b/drivers/net/wireless/ath/ath10k/htt_tx.c
+> index 7099e9181881..7c8156092e32 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+> @@ -520,7 +520,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct
+> sk_buff *msdu)
+>
+>         flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
+>         flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
+> -       if (msdu->ip_summed == CHECKSUM_PARTIAL) {
+> +       if (msdu->ip_summed == CHECKSUM_PARTIAL &&
+> +           !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
+>                 flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
+>                 flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
+>         }
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
+> b/drivers/net/wireless/ath/ath10k/mac.c
+> index b6685a863e70..ce15f3ccb38d 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -172,7 +172,6 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+>                 .key_flags = flags,
+>                 .macaddr = macaddr,
+>         };
+> -       int ret;
+>
+>         lockdep_assert_held(&arvif->ar->conf_mutex);
+>
+> @@ -201,19 +200,12 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+>         if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+>                 key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+>
+> -       if (arvif->nohwcrypt)
+> -               cmd = DISABLE_KEY;
+> -
+>         if (cmd == DISABLE_KEY) {
+>                 arg.key_cipher = WMI_CIPHER_NONE;
+>                 arg.key_data = NULL;
+>         }
+>
+> -       ret = ath10k_wmi_vdev_install_key(arvif->ar, &arg);
+> -
+> -       if (arvif->nohwcrypt && !ret)
+> -               return -EOPNOTSUPP;
+> -       return ret;
+> +       return ath10k_wmi_vdev_install_key(arvif->ar, &arg);
+>  }
+>
+>  static int ath10k_install_key(struct ath10k_vif *arvif,
+> @@ -229,6 +221,9 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
+>
+>         reinit_completion(&ar->install_key_done);
+>
+> +       if (arvif->nohwcrypt)
+> +               return 1;
+> +
+>         ret = ath10k_send_key(arvif, key, cmd, macaddr, flags);
+>         if (ret)
+>                 return ret;
+> @@ -267,7 +262,7 @@ static int ath10k_install_peer_wep_keys(struct
+> ath10k_vif *arvif,
+>
+>                 ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
+>                                          addr, flags);
+> -               if (ret)
+> +               if (ret < 0)
+>                         return ret;
+>
+>                 flags = 0;
+> @@ -275,7 +270,7 @@ static int ath10k_install_peer_wep_keys(struct
+> ath10k_vif *arvif,
+>
+>                 ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
+>                                          addr, flags);
+> -               if (ret)
+> +               if (ret < 0)
+>                         return ret;
+>
+>                 spin_lock_bh(&ar->data_lock);
+> @@ -333,10 +328,10 @@ static int ath10k_clear_peer_keys(struct
+> ath10k_vif *arvif,
+>                 /* key flags are not required to delete the key */
+>                 ret = ath10k_install_key(arvif, peer->keys[i],
+>                                          DISABLE_KEY, addr, flags);
+> -               if (ret && first_errno == 0)
+> +               if (ret < 0 && first_errno == 0)
+>                         first_errno = ret;
+>
+> -               if (ret)
+> +               if (ret < 0)
+>                         ath10k_warn(ar, "failed to remove peer wep key
+> %d: %d\n",
+>                                     i, ret);
+>
+> @@ -409,10 +404,10 @@ static int ath10k_clear_vdev_key(struct ath10k_vif *arvif,
+>                         break;
+>                 /* key flags are not required to delete the key */
+>                 ret = ath10k_install_key(arvif, key, DISABLE_KEY, addr, flags);
+> -               if (ret && first_errno == 0)
+> +               if (ret < 0 && first_errno == 0)
+>                         first_errno = ret;
+>
+> -               if (ret)
+> +               if (ret < 0)
+>                         ath10k_warn(ar, "failed to remove key for %pM: %d\n",
+>                                     addr, ret);
+>         }
+> @@ -4864,6 +4859,9 @@ static int ath10k_set_key(struct ieee80211_hw
+> *hw, enum set_key_cmd cmd,
+>         if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
+>                 return 1;
+>
+> +       if (arvif->nohwcrypt)
+> +               return 1;
+> +
+>         if (key->keyidx > WMI_MAX_KEY_INDEX)
+>                 return -ENOSPC;
+>
+> @@ -4933,6 +4931,7 @@ static int ath10k_set_key(struct ieee80211_hw
+> *hw, enum set_key_cmd cmd,
+>
+>         ret = ath10k_install_key(arvif, key, cmd, peer_addr, flags);
+>         if (ret) {
+> +               WARN_ON(ret > 0);
+>                 ath10k_warn(ar, "failed to install key for vdev %i
+> peer %pM: %d\n",
+>                             arvif->vdev_id, peer_addr, ret);
+>                 goto exit;
+> @@ -4948,13 +4947,16 @@ static int ath10k_set_key(struct ieee80211_hw
+> *hw, enum set_key_cmd cmd,
+>
+>                 ret = ath10k_install_key(arvif, key, cmd, peer_addr, flags2);
+>                 if (ret) {
+> +                       WARN_ON(ret > 0);
+>                         ath10k_warn(ar, "failed to install (ucast) key
+> for vdev %i peer %pM: %d\n",
+>                                     arvif->vdev_id, peer_addr, ret);
+>                         ret2 = ath10k_install_key(arvif, key, DISABLE_KEY,
+>                                                   peer_addr, flags);
+> -                       if (ret2)
+> +                       if (ret2) {
+> +                               WARN_ON(ret2 > 0);
+>                                 ath10k_warn(ar, "failed to disable
+> (mcast) key for vdev %i peer %pM: %d\n",
+>                                             arvif->vdev_id, peer_addr, ret2);
+> +                       }
+>                         goto exit;
+>                 }
+>         }
+> @@ -7033,7 +7035,8 @@ int ath10k_mac_register(struct ath10k *ar)
+>                 goto err_free;
+>         }
+>
+> -       ar->hw->netdev_features = NETIF_F_HW_CSUM;
+> +       if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+> +               ar->hw->netdev_features = NETIF_F_HW_CSUM;
+>
+>         if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED)) {
+>                 /* Init ath dfs pattern detector */
