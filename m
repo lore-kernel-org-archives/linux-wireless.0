@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:34842 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752200AbbFHMij (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 08:38:39 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/4] brcmfmac: remove chipinfo debugfs entry
-Date: Mon, 8 Jun 2015 14:38:33 +0200
-Message-ID: <1433767115-8136-3-git-send-email-arend@broadcom.com> (sfid-20150608_143843_690273_7C6981A5)
-In-Reply-To: <1433767115-8136-1-git-send-email-arend@broadcom.com>
-References: <1433767115-8136-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from www.osadl.org ([62.245.132.105]:44898 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752507AbbFKQ0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Jun 2015 12:26:37 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] ath10k: mac: remove unreachable negative return check
+Date: Thu, 11 Jun 2015 18:17:41 +0200
+Message-Id: <1434039461-24899-1-git-send-email-hofrat@osadl.org> (sfid-20150611_182721_358244_AC124FCC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The information provided by chipinfo is also provided by the
-revinfo debugfs entry. Removing it from debugfs.
+wait_event_timeout(), introduced in 'commit 5e3dd157d7e7 ("ath10k: mac80211
+driver for Qualcomm Atheros 802.11ac CQA98xx devices")' never returns < 0
+so the only failure condition to be checked is ==0 (timeout). Further the
+return type is long not int - an appropriately named variable is added 
+and the assignments fixed up.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/debug.c | 10 ----------
- 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-index 9b473d5..10a9221 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
-@@ -41,15 +41,6 @@ void brcmf_debugfs_exit(void)
- 	root_folder = NULL;
- }
- 
--static int brcmf_debugfs_chipinfo_read(struct seq_file *seq, void *data)
--{
--	struct brcmf_bus *bus = dev_get_drvdata(seq->private);
--
--	seq_printf(seq, "chip: %x(%u) rev %u\n",
--		   bus->chip, bus->chip, bus->chiprev);
--	return 0;
--}
--
- int brcmf_debugfs_attach(struct brcmf_pub *drvr)
+Patch was compile tested with x86_64_defconfig + CONFIG_ATH_CARD=y
+CONFIG_ATH10K=m
+
+Patch is against 4.1-rc7 (localversion-next is -next-20150611)
+
+ drivers/net/wireless/ath/ath10k/mac.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0ed422a..cc67de9 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5643,7 +5643,7 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  {
- 	struct device *dev = drvr->bus_if->dev;
-@@ -58,7 +49,6 @@ int brcmf_debugfs_attach(struct brcmf_pub *drvr)
- 		return -ENODEV;
+ 	struct ath10k *ar = hw->priv;
+ 	bool skip;
+-	int ret;
++	long time_left;
  
- 	drvr->dbgfs_dir = debugfs_create_dir(dev_name(dev), root_folder);
--	brcmf_debugfs_add_entry(drvr, "chipinfo", brcmf_debugfs_chipinfo_read);
+ 	/* mac80211 doesn't care if we really xmit queued frames or not
+ 	 * we'll collect those frames either way if we stop/delete vdevs */
+@@ -5655,7 +5655,7 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (ar->state == ATH10K_STATE_WEDGED)
+ 		goto skip;
  
- 	return PTR_ERR_OR_ZERO(drvr->dbgfs_dir);
- }
+-	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
++	time_left = wait_event_timeout(ar->htt.empty_tx_wq, ({
+ 			bool empty;
+ 
+ 			spin_lock_bh(&ar->htt.tx_lock);
+@@ -5669,9 +5669,9 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			(empty || skip);
+ 		}), ATH10K_FLUSH_TIMEOUT_HZ);
+ 
+-	if (ret <= 0 || skip)
+-		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %i\n",
+-			    skip, ar->state, ret);
++	if (time_left == 0 || skip)
++		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %ld\n",
++			    skip, ar->state, time_left);
+ 
+ skip:
+ 	mutex_unlock(&ar->conf_mutex);
 -- 
-1.9.1
+1.7.10.4
 
