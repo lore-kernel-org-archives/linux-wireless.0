@@ -1,127 +1,307 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38629 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbbFWH25 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 03:28:57 -0400
-Received: by wibdq8 with SMTP id dq8so7532923wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2015 00:28:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYKtt4uKAd-VkEuK9WThGg9au0y_-yYhJ7S7bmXeQzw7nA@mail.gmail.com>
-References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1434973385-15865-2-git-send-email-janusz.dziedzic@tieto.com>
-	<CABPxzYJadyBVPn7yZzqsJpnWQ4Jx_dUoR10FXNze041WDYJp+Q@mail.gmail.com>
-	<CA+BoTQ=Rqq4xh1nXd3RQwuwqR8QT=OgOzfpOeB=QhmJ8Ke=6kw@mail.gmail.com>
-	<CABPxzYKtt4uKAd-VkEuK9WThGg9au0y_-yYhJ7S7bmXeQzw7nA@mail.gmail.com>
-Date: Tue, 23 Jun 2015 09:28:55 +0200
-Message-ID: <CALhHN=ppitfj6goqmXkkf9_AGCmttA781J_O=75EPkebASzMQg@mail.gmail.com> (sfid-20150623_092901_592208_82F6FE01)
-Subject: Re: [PATCH 1/3] ath9k: handle RoC abort correctly
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Sujith Manoharan <sujith@msujith.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:41345 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752430AbbFLMDp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2015 08:03:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: don't store napi struct
+Date: Fri, 12 Jun 2015 14:03:39 +0200
+Message-Id: <1434110619-4949-1-git-send-email-johannes@sipsolutions.net> (sfid-20150612_140349_296044_D52B5A54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 June 2015 at 16:01, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
-> On Mon, Jun 22, 2015 at 6:32 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> On 22 June 2015 at 13:56, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
->>> On Mon, Jun 22, 2015 at 5:13 PM, Janusz Dziedzic
->>> <janusz.dziedzic@tieto.com> wrote:
->>>> In case we will get ROC abort we should not call
->>>> ieee80211_remain_on_channel_expired().
->>>>
->>>> In other case I hit such warning on MIPS and
->>>> p2p negotiation failed (tested with use_chanctx=1).
->>>>
->>>> ath: phy0: Starting RoC period
->>>> ath: phy0: Channel definition created: 2412 MHz
->>>> ath: phy0: Assigned next_chan to 2412 MHz
->>>> ath: phy0: Offchannel duration for chan 2412 MHz : 506632
->>>> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
->>>> ath: phy0: Stopping current chanctx: 2412
->>>> ath: phy0: Flush timeout: 200
->>>> ath: phy0: ath_chanctx_set_next: Set channel 2412 MHz
->>>> ath: phy0: Set channel: 2412 MHz width: 0
->>>> ath: phy0: Reset to 2412 MHz, HT40: 0 fastcc: 0
->>>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_TSF_TIMER, state: ATH_CHANCTX_STATE_IDLE
->>>> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
->>>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
->>>> ath: phy0: Cancel RoC
->>>> ath: phy0: RoC aborted
->>>> ath: phy0: RoC request on vif: 00:03:7f:4e:a0:cd, type: 1 duration: 500
->>>> ath: phy0: Starting RoC period
->>>> ath: phy0: Channel definition created: 2412 MHz
->>>> ath: phy0: Assigned next_chan to 2412 MHz
->>>> ath: phy0: Offchannel duration for chan 2412 MHz : 506705
->>>> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
->>>> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
->>>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
->>>> ------------[ cut here ]------------
->>>> WARNING: CPU: 0 PID: 3312 at drivers/net/wireless/ath/ath9k/main.c:2319
->>>> Modules linked in: ath9k ath9k_common ath9k_hw ath mac80211 cfg80211
->>>>
->>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->>>> ---
->>>>  drivers/net/wireless/ath/ath9k/channel.c | 3 ++-
->>>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
->>>> index 2066650..e211325 100644
->>>> --- a/drivers/net/wireless/ath/ath9k/channel.c
->>>> +++ b/drivers/net/wireless/ath/ath9k/channel.c
->>>> @@ -926,7 +926,8 @@ void ath_roc_complete(struct ath_softc *sc, bool abort)
->>>>
->>>>         sc->offchannel.roc_vif = NULL;
->>>>         sc->offchannel.roc_chan = NULL;
->>>> -       ieee80211_remain_on_channel_expired(sc->hw);
->>>> +       if (!abort)
->>>> +               ieee80211_remain_on_channel_expired(sc->hw);
->>>>         ath_offchannel_next(sc);
->>>>         ath9k_ps_restore(sc);
->>>>  }
->>> If HW aborts RoC in middle, should not we inform mac80211
->>> that RoC is expired?
->>
->> Good point. The ath_roc_complete() can be called with abort=true from
->> ath9k_cancel_pending_offchannel() as well. I guess ath_roc_complete()
->> needs a "reason" argument (instead of "abort") with: expired, aborted,
->> cancelled values. ieee80211_remain_on_channel_expired() should be
->> called whenever reason != cancelled.
-> Agree, make sense.
->> By the way - is ath_roc_complete() lock protected properly? It looks
->> like it isn't from a quick glance. Neither sdata lock nor local->mtx
->> can be implied in all contexts and sc->mutex isn't always held while
->> it's called, hmm.. or am I missing something?
->>
->>> Also the we are clearing roc_vif independent of abort, so the warning
->>> indicates that roc_complete has not come from FW, may be we should
->>> understand that first?
->>
->> There's no FW in ath9k.
->>
->> The problem is the following sequence:
->>  1. mac80211 requests roc A
->>  2. mac80211 cancels roc A
->>    a. ath9k calls expired() and hw_roc_done work is scheduled
->>  3. mac80211 requests roc B
->>  4. mac80211 starts to process the scheduled hw_roc_done
->>  5. mac80211 thinks roc B has expired
->>  6. mac80211 requests roc C
->>  7. ath9k WARN_ON is hit
->>
->> There's a race between (3) and (4). Depending on circumstances (3) and
->> (4) may be reordered so the current code doesn't fail all the time.
-> Ok i understand, but if we get roc_complete for B before 6, then it works
-> fine at least at ath9k level, C will be unblocked.
->
-> Anyways, handling the cancel case should resolve it along with proper locking.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks for comments, will send v2
+When introducing multiple RX queues, a single NAPI struct will not
+be sufficient. Instead of trying to store multiple, simply change
+the API to have the NAPI struct passed to the RX function. This of
+course means that drivers using rx_irqsafe() cannot use NAPI, but
+that seems a reasonable trade-off, particularly since only two of
+all drivers are currently using it at all.
 
-BR
-Janusz
+While at it, we can now remove the IEEE80211_RX_REORDER_TIMER flag
+again since this code path cannot have a napi struct anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/dev.h  |  2 ++
+ drivers/net/wireless/iwlwifi/dvm/main.c |  3 ++-
+ drivers/net/wireless/iwlwifi/dvm/rx.c   |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h  |  1 +
+ drivers/net/wireless/iwlwifi/mvm/ops.c  |  3 ++-
+ drivers/net/wireless/iwlwifi/mvm/rx.c   |  2 +-
+ include/net/mac80211.h                  | 37 +++++++++++++++++++++------------
+ net/mac80211/ieee80211_i.h              |  6 +-----
+ net/mac80211/main.c                     | 12 -----------
+ net/mac80211/rx.c                       | 18 +++++++++-------
+ 10 files changed, 44 insertions(+), 42 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/dev.h b/drivers/net/wireless/iwlwifi/dvm/dev.h
+index 3811878ab9cd..074977ede343 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/dev.h
++++ b/drivers/net/wireless/iwlwifi/dvm/dev.h
+@@ -669,6 +669,8 @@ struct iwl_priv {
+ 	/* ieee device used by generic ieee processing code */
+ 	struct ieee80211_hw *hw;
+ 
++	struct napi_struct *napi;
++
+ 	struct list_head calib_results;
+ 
+ 	struct workqueue_struct *workqueue;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index 234e30f498b2..644819563cf0 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -2037,7 +2037,8 @@ static void iwl_napi_add(struct iwl_op_mode *op_mode,
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 
+-	ieee80211_napi_add(priv->hw, napi, napi_dev, poll, weight);
++	netif_napi_add(napi_dev, napi, poll, weight);
++	priv->napi = napi;
+ }
+ 
+ static const struct iwl_op_mode_ops iwl_dvm_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
+index debec963c610..5a91f5d6b1dc 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+@@ -786,7 +786,7 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 
+ 	memcpy(IEEE80211_SKB_RXCB(skb), stats, sizeof(*stats));
+ 
+-	ieee80211_rx(priv->hw, skb);
++	ieee80211_rx_napi(priv->hw, skb, priv->napi);
+ }
+ 
+ static u32 iwlagn_translate_rx_status(struct iwl_priv *priv, u32 decrypt_in)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 2d4bad5fe825..605f57a2c6be 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -559,6 +559,7 @@ struct iwl_mvm {
+ 	const struct iwl_cfg *cfg;
+ 	struct iwl_phy_db *phy_db;
+ 	struct ieee80211_hw *hw;
++	struct napi_struct *napi;
+ 
+ 	/* for protecting access to iwl_mvm */
+ 	struct mutex mutex;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index e4fa50075ffd..3967df63e0f3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -1316,7 +1316,8 @@ static void iwl_mvm_napi_add(struct iwl_op_mode *op_mode,
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 
+-	ieee80211_napi_add(mvm->hw, napi, napi_dev, poll, weight);
++	netif_napi_add(napi_dev, napi, poll, weight);
++	mvm->napi = napi;
+ }
+ 
+ static const struct iwl_op_mode_ops iwl_mvm_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index 8f1d93b7a13a..9ff0b4321df3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -129,7 +129,7 @@ static void iwl_mvm_pass_packet_to_mac80211(struct iwl_mvm *mvm,
+ 				fraglen, rxb->truesize);
+ 	}
+ 
+-	ieee80211_rx(mvm->hw, skb);
++	ieee80211_rx_napi(mvm->hw, skb, mvm->napi);
+ }
+ 
+ /*
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 6b1077c2a63f..c1c2af0c5b70 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3696,20 +3696,28 @@ void ieee80211_free_hw(struct ieee80211_hw *hw);
+ void ieee80211_restart_hw(struct ieee80211_hw *hw);
+ 
+ /**
+- * ieee80211_napi_add - initialize mac80211 NAPI context
+- * @hw: the hardware to initialize the NAPI context on
+- * @napi: the NAPI context to initialize
+- * @napi_dev: dummy NAPI netdevice, here to not waste the space if the
+- *	driver doesn't use NAPI
+- * @poll: poll function
+- * @weight: default weight
++ * ieee80211_rx_napi - receive frame from NAPI context
+  *
+- * See also netif_napi_add().
++ * Use this function to hand received frames to mac80211. The receive
++ * buffer in @skb must start with an IEEE 802.11 header. In case of a
++ * paged @skb is used, the driver is recommended to put the ieee80211
++ * header of the frame on the linear part of the @skb to avoid memory
++ * allocation and/or memcpy by the stack.
++ *
++ * This function may not be called in IRQ context. Calls to this function
++ * for a single hardware must be synchronized against each other. Calls to
++ * this function, ieee80211_rx_ni() and ieee80211_rx_irqsafe() may not be
++ * mixed for a single hardware. Must not run concurrently with
++ * ieee80211_tx_status() or ieee80211_tx_status_ni().
++ *
++ * This function must be called with BHs disabled.
++ *
++ * @hw: the hardware this frame came in on
++ * @skb: the buffer to receive, owned by mac80211 after this call
++ * @napi: the NAPI context
+  */
+-void ieee80211_napi_add(struct ieee80211_hw *hw, struct napi_struct *napi,
+-			struct net_device *napi_dev,
+-			int (*poll)(struct napi_struct *, int),
+-			int weight);
++void ieee80211_rx_napi(struct ieee80211_hw *hw, struct sk_buff *skb,
++		       struct napi_struct *napi);
+ 
+ /**
+  * ieee80211_rx - receive frame
+@@ -3731,7 +3739,10 @@ void ieee80211_napi_add(struct ieee80211_hw *hw, struct napi_struct *napi,
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+  */
+-void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb);
++static inline void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	ieee80211_rx_napi(hw, skb, NULL);
++}
+ 
+ /**
+  * ieee80211_rx_irqsafe - receive frame
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b12f61507f9f..78073fb17fb3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -202,8 +202,6 @@ enum ieee80211_packet_rx_flags {
+  * @IEEE80211_RX_CMNTR: received on cooked monitor already
+  * @IEEE80211_RX_BEACON_REPORTED: This frame was already reported
+  *	to cfg80211_report_obss_beacon().
+- * @IEEE80211_RX_REORDER_TIMER: this frame is released by the
+- *	reorder buffer timeout timer, not the normal RX path
+  *
+  * These flags are used across handling multiple interfaces
+  * for a single frame.
+@@ -211,10 +209,10 @@ enum ieee80211_packet_rx_flags {
+ enum ieee80211_rx_flags {
+ 	IEEE80211_RX_CMNTR		= BIT(0),
+ 	IEEE80211_RX_BEACON_REPORTED	= BIT(1),
+-	IEEE80211_RX_REORDER_TIMER	= BIT(2),
+ };
+ 
+ struct ieee80211_rx_data {
++	struct napi_struct *napi;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -1348,8 +1346,6 @@ struct ieee80211_local {
+ 
+ 	struct ieee80211_sub_if_data __rcu *p2p_sdata;
+ 
+-	struct napi_struct *napi;
+-
+ 	/* virtual monitor interface */
+ 	struct ieee80211_sub_if_data __rcu *monitor_sdata;
+ 	struct cfg80211_chan_def monitor_chandef;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 3c63468b4dfb..dba0a86dee18 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1132,18 +1132,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL(ieee80211_register_hw);
+ 
+-void ieee80211_napi_add(struct ieee80211_hw *hw, struct napi_struct *napi,
+-			struct net_device *napi_dev,
+-			int (*poll)(struct napi_struct *, int),
+-			int weight)
+-{
+-	struct ieee80211_local *local = hw_to_local(hw);
+-
+-	netif_napi_add(napi_dev, napi, poll, weight);
+-	local->napi = napi;
+-}
+-EXPORT_SYMBOL_GPL(ieee80211_napi_add);
+-
+ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5dae166cb7f5..80dc87f88292 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2108,9 +2108,8 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 		/* deliver to local stack */
+ 		skb->protocol = eth_type_trans(skb, dev);
+ 		memset(skb->cb, 0, sizeof(skb->cb));
+-		if (!(rx->flags & IEEE80211_RX_REORDER_TIMER) &&
+-		    rx->local->napi)
+-			napi_gro_receive(rx->local->napi, skb);
++		if (rx->napi)
++			napi_gro_receive(rx->napi, skb);
+ 		else
+ 			netif_receive_skb(skb);
+ 	}
+@@ -3216,7 +3215,7 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ 		/* This is OK -- must be QoS data frame */
+ 		.security_idx = tid,
+ 		.seqno_idx = tid,
+-		.flags = IEEE80211_RX_REORDER_TIMER,
++		.napi = NULL, /* must be NULL to not have races */
+ 	};
+ 	struct tid_ampdu_rx *tid_agg_rx;
+ 
+@@ -3393,7 +3392,8 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
+  * be called with rcu_read_lock protection.
+  */
+ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+-					 struct sk_buff *skb)
++					 struct sk_buff *skb,
++					 struct napi_struct *napi)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -3409,6 +3409,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	memset(&rx, 0, sizeof(rx));
+ 	rx.skb = skb;
+ 	rx.local = local;
++	rx.napi = napi;
+ 
+ 	if (ieee80211_is_data(fc) || ieee80211_is_mgmt(fc))
+ 		I802_DEBUG_INC(local->dot11ReceivedFragmentCount);
+@@ -3510,7 +3511,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+  * This is the receive path handler. It is called by a low level driver when an
+  * 802.11 MPDU is received from the hardware.
+  */
+-void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
++void ieee80211_rx_napi(struct ieee80211_hw *hw, struct sk_buff *skb,
++		       struct napi_struct *napi)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_rate *rate = NULL;
+@@ -3609,7 +3611,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	ieee80211_tpt_led_trig_rx(local,
+ 			((struct ieee80211_hdr *)skb->data)->frame_control,
+ 			skb->len);
+-	__ieee80211_rx_handle_packet(hw, skb);
++	__ieee80211_rx_handle_packet(hw, skb, napi);
+ 
+ 	rcu_read_unlock();
+ 
+@@ -3617,7 +3619,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+  drop:
+ 	kfree_skb(skb);
+ }
+-EXPORT_SYMBOL(ieee80211_rx);
++EXPORT_SYMBOL(ieee80211_rx_napi);
+ 
+ /* This is a version of the rx handler that can be called from hard irq
+  * context. Post the skb on the queue and schedule the tasklet */
+-- 
+2.1.4
+
