@@ -1,110 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:33161 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751847AbbFBFUG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 01:20:06 -0400
-Received: by wgez8 with SMTP id z8so130387490wge.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 22:20:05 -0700 (PDT)
+Received: from hofr.at ([212.69.189.236]:34237 "EHLO mail.hofr.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751199AbbFLQ6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2015 12:58:32 -0400
+Date: Fri, 12 Jun 2015 18:58:29 +0200
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [BUG ?] delay always evaluates to 0
+Message-ID: <20150612165829.GA22474@opentech.at> (sfid-20150612_190219_773987_E4428141)
 MIME-Version: 1.0
-In-Reply-To: <CAOiWkA8GepFEd2+47g_SfFFk5GuMOGCLkwwyZhj9MxchFgXxbA@mail.gmail.com>
-References: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com>
-	<CA+BoTQnfXGLSvbx+hLfi_2w90-LgC3Uba0ZcO+Pt7J3FcEE9wg@mail.gmail.com>
-	<87vbf7vr3j.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmmm6NA2Lb5TB9rSiXYWWarGLGaE5KFJW0_aaqz1YwR3g@mail.gmail.com>
-	<CAOiWkA8GepFEd2+47g_SfFFk5GuMOGCLkwwyZhj9MxchFgXxbA@mail.gmail.com>
-Date: Tue, 2 Jun 2015 07:20:05 +0200
-Message-ID: <CA+BoTQnDUtpjTJ41xodmrx0eXUny-KBMyF8JiCgeMCUJXegzkg@mail.gmail.com> (sfid-20150602_072042_464866_68167BA7)
-Subject: Re: system hang with backports-20150511/20150525
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Marty Faltesek <mfaltesek@google.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Martin Faltesek <martin.faltesek@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 June 2015 at 21:42, Marty Faltesek <mfaltesek@google.com> wrote:
-> I disabled IEEE80211_HW_SUPPORT_FAST_XMIT before, and still saw the
-> hang. I repeated today to confirm.
+Hi !
 
-Thanks for checking.
+commit 2c86c275015c ("Add ipw2100 wireless driver.") introduced
 
+drivers/net/wireless/ipw2100.c - line-numbers are from next-20150511
+1410 static int ipw2100_hw_phy_off(struct ipw2100_priv *priv)
+1411 {
+1412 
+1413 #define HW_PHY_OFF_LOOP_DELAY (HZ / 5000)                                  
+1414    
+...
+1437 
+1438                 schedule_timeout_uninterruptible(HW_PHY_OFF_LOOP_DELAY);
+1439         }
 
-> I added the extra ath10k debug flags you requested, and it causes a
-> system reset without any messages, very soon after the last hbeat
-> timestamp. I've uploaded  log "crash.6.1.15.13.46" to
-> http://tinyurl.com/dmesg-ftrace.
+but (HZ / 5000) will evaluate to 0 for all configurable HZ values - typo ?
+and this schedule_timeout_uninterruptible() is probably not doing what
+is intended.
 
-I guess serial console gave up which isn't really surprising :( Thanks
-for checking anyway.
-
-
-> Any advice on how to bisect when using backports?
-
-Sure. Generally you'll need to do the bisect on your linux-next tree
-which you use to generate backports:
-
- git clone git://git.kernel.org/pub/scm/linux/kernel/git/backports/backports.git
- git clone git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
- cd linux-next
- git bisect start
- git bisect good a3da0fb6
- git bisect bad f17107c
- # repeat:
- cd ../backports
- ./gentree.py --clean --git-revision HEAD ../linux-next ../backports-output/
- cd ../backports-output
- # configure, make, test
- cd ../linux-next
- git bisect <good|bad> # "good" if problem doesn't reproduce, "bad" if it does
- # goto repeat
-
-
-Michał
-
-
-
-
->
-> On Mon, Jun 1, 2015 at 4:27 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> On 1 June 2015 at 09:13, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>> Michal Kazior <michal.kazior@tieto.com> writes:
->>>
->>>> +ath10k list
->>>>
->>>> On 1 June 2015 at 03:37, Marty Faltesek <mfaltesek@google.com> wrote:
->>>>> Starting with backports-20150511, and continuing with
->>>>> backports-20150525, we see frequent system hangs. backports-20150424
->>>>> had no issue.
->>>>
->>>> I don't see such binary releases on
->>>> https://backports.wiki.kernel.org/index.php/Main_Page
->>>> Hence I don't know what kernel you've backported the drivers from and
->>>> I can't compare anything.
->>>>
->>>> Can you provide more details, please?
->>>
->>> I suspect it's from here:
->>>
->>> https://www.kernel.org/pub/linux/kernel/projects/backports/2015/05/25/
->>>
->>> The backports project pages are a bit confusing and that location is
->>> hard to find.
->>
->> Oh, thanks!
->>
->> Hmm.. There was a ton of changes between 20150424 and 20150511. For
->> one, ath10k started to use chanctx API and FAST_XMIT. But it's not a
->> given these two are to blame.
->>
->> The latter can be easily disabled by removing
->> IEEE80211_HW_SUPPORT_FAST_XMIT from ar->hw->flags in ath10k's mac.c.
->> The former.. not so easy. I'd be awesome if you could do a git bisect.
->> The commit ids are a3da0fb6(good) f17107c(bad) (you need linux-next
->> git repo including its tags for these ids to be resolvable).
->>
->>
->> Michał
+thx!
+hofrat
