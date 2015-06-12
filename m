@@ -1,76 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32432 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932256AbbFVIGe (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34681 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbbFLPWO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 04:06:34 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xr3Y032680
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:33 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1v57pdueys-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:32 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 00/17] mwifiex: multichannel & TDLS channel switch support 
-Date: Mon, 22 Jun 2015 19:06:06 +0530
-Message-ID: <1434980183-2901-1-git-send-email-patila@marvell.com> (sfid-20150622_100640_454000_75AC2FFC)
+	Fri, 12 Jun 2015 11:22:14 -0400
+Message-ID: <557AF925.4000609@candelatech.com> (sfid-20150612_172218_501807_D5099CC1)
+Date: Fri, 12 Jun 2015 08:22:13 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Question on beacon-miss offloading.
+References: <5579F87F.4070601@candelatech.com> <557A1BE9.7070305@candelatech.com> <CA+BoTQkLyaP-2sHiu7Wn-ZzGj2JnZs4qzQKGu7PiTtUy4d9xLQ@mail.gmail.com> <557ADEAB.80504@candelatech.com> <CABPxzYK6LWZW1JWoBBTs_QPWtupU17Pr7w3J-H6=QD1Xd5uLrg@mail.gmail.com>
+In-Reply-To: <CABPxzYK6LWZW1JWoBBTs_QPWtupU17Pr7w3J-H6=QD1Xd5uLrg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds multichannel and TDLS channel switch support to mwifiex.
-Important feature this patchset brings in is TX DATA Pause support wherein
-FW indicates driver about inablity to handle additional data packets(because
-of channel switch) and driver would pause traffic for these RA list or
-interfaces. This in turn enables us to support multichannel operation and 
-TDLS channel switch feature.
+On 06/12/2015 07:10 AM, Krishna Chaitanya wrote:
+> On Fri, Jun 12, 2015 at 6:59 PM, Ben Greear <greearb@candelatech.com> wrote:
+>>
+>>
+>> On 06/11/2015 11:03 PM, Michal Kazior wrote:
+>>>
+>>> On 12 June 2015 at 01:38, Ben Greear <greearb@candelatech.com> wrote:
+>>>>
+>>>> On 06/11/2015 02:07 PM, Ben Greear wrote:
+>>>>>
+>>>>> In my ath10k CT firmware, I am disabling the beacon-miss offloading
+>>>>> to save space and because it will not work with lots of virtual
+>>>>> stations.
+>>>>>
+>>>>> But, it must be that I need some way to tell the stack that this
+>>>>> feature is not enabled, because when suddenly kill my AP, then
+>>>>> the ath10k station connected to it shows endless 'beacon loss' events
+>>>>> in 'iw events' output, but it never actually loses connection.
+>>>>>
+>>>>> Stock firmware works fine, so probably I just need to disable
+>>>>> some feature flag when registering the ath10k hardware
+>>>>> when using CT firmware.
+>>>>>
+>>>>> With stock firmware, I see a quick dissassociation due to inactivity.
+>>>>>
+>>>>> I am having poor luck finding how a driver tells the stack
+>>>>> it has beacon miss offload or not, so, does anyone know how
+>>>>> this is controlled?
+>>>>
+>>>>
+>>>> I still am not sure why stock firmware works, but it appears
+>>>> the reason mine is failing is that the ACK status for mgt frames
+>>>> is always set to TRUE since the ath10k wmi-mgt-tx API is so
+>>>> lame.  So, mac80211 does a probe, ath10k lies and says it was
+>>>> acked, and mac80211 then things all is well for another few
+>>>> seconds.
+>>>
+>>>
+>>> mac80211 shouldn't do a Probe Req to an AP on beacon loss because
+>>> ath10k advertises it supports tx-status report. Hence mac80211 should
+>>> use NullFunc frames which shouldn't go through wmi-mgmt-tx but htt
+>>> tx-frm.
+>>>
+>>> But then again: NullFunc status reporting via htt tx-frm was broken on
+>>> 10.1 if memory serves right. I believe it was fixed in 10.2 or 10.2.4.
+>>>
+>>> This problem has been effectively obscured on stock 10.1 by the
+>>> offloaded beacon miss.
+>>
+>>
+>> For what it's worth, I looked at the 4.0.4 ath10k yesterday, and it appears
+>> it
+>> ignores the message that the 10.1 firmware sends when beacon loss happens
+>> anyway.  Maybe I misread the firmware code..it's a pile of indirection.
+>>
+>> Do you know how the firmware is supposed to signal beacon loss to
+>> the host (from the host's perspective).
+> 
+> Normally driver would advertise IEEE80211_HW_CONNECTION_MONITOR
+> to disable mac80211 from tracking connection. and driver should call
+> ieee80211_beacon_loss up on receiving beacon loss event from FW
+> which triggers disconnection in mac80211.
 
-Avinash Patil (9):
-  mwifiex: add tx data pause support
-  mwifiex: update domain_info upon band change in start_ap
-  mwifiex: support for bypass tx queue
-  mwifiex: enable traffic only when port is open
-  mwifiex: extend tx_data pause to AP interface as well
-  mwifiex: support to set multichannel policy to FW
-  mwifiex: advertise multichannel support to cfg80211
-  mwifiex: separate interface combination for multichannel and DFS
-  mwifiex: handle multichannel event
 
-Xinming Hu (8):
-  mwifiex: block data traffic to tx paused receive address
-  mwifiex: do not increase tx_pkts_queued if receive address tx paused
-  mwifiex: add tdls channel switch status
-  mwifiex: process tdls channel switch event
-  mwifiex: add tdls config command
-  mwifiex: enable tdls channel switch ext_cap
-  mwifiex: enhance tdls link setup condition
-  mwifiex: add cfg80211 tdls channel switch handler
+I do not see any calls to beacon_loss() in the ath10k driver,
+so probably that firmware feature is not just fully wired up
+to the driver.  Just as well since that firmware feature is
+disabled in my (-diet variant) firmware entirely.
 
- drivers/net/wireless/mwifiex/cfg80211.c    | 113 +++++++++++++++-
- drivers/net/wireless/mwifiex/decl.h        |   3 +
- drivers/net/wireless/mwifiex/fw.h          |  87 +++++++++++-
- drivers/net/wireless/mwifiex/init.c        |   3 +-
- drivers/net/wireless/mwifiex/join.c        |   2 +
- drivers/net/wireless/mwifiex/main.c        |  63 ++++++++-
- drivers/net/wireless/mwifiex/main.h        |  38 ++++++
- drivers/net/wireless/mwifiex/sta_cmd.c     |  84 ++++++++++++
- drivers/net/wireless/mwifiex/sta_cmdresp.c |   5 +
- drivers/net/wireless/mwifiex/sta_event.c   | 207 ++++++++++++++++++++++++++++-
- drivers/net/wireless/mwifiex/tdls.c        |  78 ++++++++++-
- drivers/net/wireless/mwifiex/uap_cmd.c     |   7 +-
- drivers/net/wireless/mwifiex/uap_event.c   |  13 ++
- drivers/net/wireless/mwifiex/util.c        |  59 ++++++++
- drivers/net/wireless/mwifiex/wmm.c         | 156 +++++++++++++++++++++-
- drivers/net/wireless/mwifiex/wmm.h         |   8 ++
- 16 files changed, 906 insertions(+), 20 deletions(-)
+Thanks,
+Ben
+
 
 -- 
-1.8.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
