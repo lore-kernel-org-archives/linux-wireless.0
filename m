@@ -1,52 +1,368 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:34734 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbbFLVNS (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:37973 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbbFLJRH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 17:13:18 -0400
-Received: by iebmu5 with SMTP id mu5so31675188ieb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 14:13:17 -0700 (PDT)
-Message-ID: <557B4B65.60001@cococorp.com> (sfid-20150612_231321_656673_C5FF22C0)
-Date: Fri, 12 Jun 2015 14:13:09 -0700
-From: Alexis Green <agreen@cococorp.com>
-Reply-To: agreen@cococorp.com
+	Fri, 12 Jun 2015 05:17:07 -0400
+Received: by wibdq8 with SMTP id dq8so11083253wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 02:17:06 -0700 (PDT)
+Date: Fri, 12 Jun 2015 11:17:02 +0200
+From: Konrad Zapalowicz <bergo.torino@gmail.com>
+To: Dean Lee <dean.lee@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, johnny.kim@atmel.com
+Subject: Re: [PATCH] staging: wilc1000: remove oswrapper & type file
+Message-ID: <20150612091702.GA18158@patagonia> (sfid-20150612_111714_654075_B8403540)
+References: <1434097869-3781-1-git-send-email-dean.lee@atmel.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
-Subject: [PATCH] mac80211: don't invalidate SN on discovery failure
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434097869-3781-1-git-send-email-dean.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jesse Jones <jjones@cococorp.com>
+On 06/12, Dean Lee wrote:
+> remove OS Wrapper & Type files.
+> now does not used os wrapper file.
+> type file is included os wrapper file.
+> so delete files and rework include method.
 
-The 2012 spec mentions that path SNs can be invalid when created (see
-section 13.10.8.4 table 13-9) but AFAICT never talks about invalidating
-SNs. Which makes sense: if we have figured out the path to a target at a
-certain SN then we want to remember that fact. Failing to do so can lead
-to routing loops because if we don't have a valid SN then we have no way
-of knowing whether an incoming path message leads to or away from the
-target.
+I do not understand the commit message and it does not parse well.
 
-However currently when discovery fails we zero out mpath->flags which
-clears MESH_PATH_SN_VALID. This patch fixes that so that only the
-discovery relevant flags are cleared.
+ - konrad
 
-Signed-off-by: Alexis Green <agreen@cococorp.com>
-
----
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 085edc1..1d849be
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1176,7 +1176,8 @@ void mesh_path_timer(unsigned long data)
- 		spin_unlock_bh(&mpath->state_lock);
- 		mesh_queue_preq(mpath, 0);
- 	} else {
--		mpath->flags = 0;
-+		mpath->flags &= ~(MESH_PATH_RESOLVING |
-+			MESH_PATH_RESOLVED | MESH_PATH_REQ_QUEUED);
- 		mpath->exp_time = jiffies;
- 		spin_unlock_bh(&mpath->state_lock);
- 		if (!mpath->is_gate && mesh_gate_num(sdata) > 0) {
+> 
+> Signed-off-by: Dean Lee <dean.lee@atmel.com>
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.h |  1 -
+>  drivers/staging/wilc1000/fifo_buffer.c      |  1 -
+>  drivers/staging/wilc1000/fifo_buffer.h      |  5 +++-
+>  drivers/staging/wilc1000/host_interface.c   |  1 -
+>  drivers/staging/wilc1000/wilc_memory.c      |  2 +-
+>  drivers/staging/wilc1000/wilc_memory.h      |  4 ++-
+>  drivers/staging/wilc1000/wilc_msgqueue.c    |  2 +-
+>  drivers/staging/wilc1000/wilc_msgqueue.h    |  5 ++++
+>  drivers/staging/wilc1000/wilc_oswrapper.h   | 41 -----------------------------
+>  drivers/staging/wilc1000/wilc_sleep.c       |  2 +-
+>  drivers/staging/wilc1000/wilc_sleep.h       |  3 +++
+>  drivers/staging/wilc1000/wilc_strutils.c    |  2 +-
+>  drivers/staging/wilc1000/wilc_strutils.h    |  4 +++
+>  drivers/staging/wilc1000/wilc_timer.c       |  2 +-
+>  drivers/staging/wilc1000/wilc_timer.h       |  3 +++
+>  drivers/staging/wilc1000/wilc_type.h        | 34 ------------------------
+>  drivers/staging/wilc1000/wilc_wlan.h        |  2 +-
+>  drivers/staging/wilc1000/wilc_wlan_if.h     | 10 ++++++-
+>  18 files changed, 37 insertions(+), 87 deletions(-)
+>  delete mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
+>  delete mode 100644 drivers/staging/wilc1000/wilc_type.h
+> 
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+> index 697ceb1..f2f6e64 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.h
+> +++ b/drivers/staging/wilc1000/coreconfigurator.h
+> @@ -12,7 +12,6 @@
+>  #ifndef CORECONFIGURATOR_H
+>  #define CORECONFIGURATOR_H
+>  
+> -#include "wilc_oswrapper.h"
+>  #include "wilc_wlan_if.h"
+>  /*****************************************************************************/
+>  /* Constants                                                                 */
+> diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
+> index c801406..b6c07cf 100644
+> --- a/drivers/staging/wilc1000/fifo_buffer.c
+> +++ b/drivers/staging/wilc1000/fifo_buffer.c
+> @@ -1,6 +1,5 @@
+>  
+>  
+> -#include "wilc_oswrapper.h"
+>  #include "fifo_buffer.h"
+>  
+>  
+> diff --git a/drivers/staging/wilc1000/fifo_buffer.h b/drivers/staging/wilc1000/fifo_buffer.h
+> index 57f7732..7b76998 100644
+> --- a/drivers/staging/wilc1000/fifo_buffer.h
+> +++ b/drivers/staging/wilc1000/fifo_buffer.h
+> @@ -1,5 +1,8 @@
+>  
+> -#include "wilc_oswrapper.h"
+> +#include <linux/types.h>
+> +#include <linux/semaphore.h>
+> +#include "wilc_memory.h"
+> +#include "wilc_strutils.h"
+>  
+>  
+>  #define tHANDLE	void *
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index a1e90a5..60245b1 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -1,5 +1,4 @@
+>  #include "host_interface.h"
+> -#include "wilc_oswrapper.h"
+>  #include "itypes.h"
+>  #include "coreconfigurator.h"
+>  
+> diff --git a/drivers/staging/wilc1000/wilc_memory.c b/drivers/staging/wilc1000/wilc_memory.c
+> index 080fa61..ca6850c7 100644
+> --- a/drivers/staging/wilc1000/wilc_memory.c
+> +++ b/drivers/staging/wilc1000/wilc_memory.c
+> @@ -1,5 +1,5 @@
+>  
+> -#include "wilc_oswrapper.h"
+> +#include "wilc_memory.h"
+>  
+>  /*!
+>   *  @author	syounan
+> diff --git a/drivers/staging/wilc1000/wilc_memory.h b/drivers/staging/wilc1000/wilc_memory.h
+> index 93642d0..a7a80e5 100644
+> --- a/drivers/staging/wilc1000/wilc_memory.h
+> +++ b/drivers/staging/wilc1000/wilc_memory.h
+> @@ -10,6 +10,9 @@
+>   *  @version	1.0
+>   */
+>  
+> +#include <linux/types.h>
+> +#include <linux/slab.h>
+> +
+>  /*!
+>   *  @struct             tstrWILC_MemoryAttrs
+>   *  @brief		Memory API options
+> @@ -234,4 +237,3 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
+>  
+>  
+>  #endif
+> -
+> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> index 04fe5a5..16bcef4 100644
+> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> @@ -1,5 +1,5 @@
+>  
+> -#include "wilc_oswrapper.h"
+> +#include "wilc_msgqueue.h"
+>  #include <linux/spinlock.h>
+>  
+>  /*!
+> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+> index 2ca02db..35b1001 100644
+> --- a/drivers/staging/wilc1000/wilc_msgqueue.h
+> +++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+> @@ -10,6 +10,11 @@
+>   *  @version	1.0
+>   */
+>  
+> +#include "wilc_platform.h"
+> +#include "wilc_errorsupport.h"
+> +#include "wilc_memory.h"
+> +#include "wilc_strutils.h"
+> +
+>  /*!
+>   *  @struct             tstrWILC_MsgQueueAttrs
+>   *  @brief		Message Queue API options
+> diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
+> deleted file mode 100644
+> index e97aa96..0000000
+> --- a/drivers/staging/wilc1000/wilc_oswrapper.h
+> +++ /dev/null
+> @@ -1,41 +0,0 @@
+> -#ifndef __WILC_OSWRAPPER_H__
+> -#define __WILC_OSWRAPPER_H__
+> -
+> -/*!
+> - *  @file	wilc_oswrapper.h
+> - *  @brief	Top level OS Wrapper, include this file and it will include all
+> - *              other files as necessary
+> - *  @author	syounan
+> - *  @date	10 Aug 2010
+> - *  @version	1.0
+> - */
+> -
+> -/* OS Wrapper interface version */
+> -#define WILC_OSW_INTERFACE_VER 2
+> -
+> -/* Os Configuration File */
+> -#include "wilc_osconfig.h"
+> -#include "wilc_platform.h"
+> -
+> -/* Logging Functions */
+> -#include "wilc_log.h"
+> -
+> -/* Error reporting and handling support */
+> -#include "wilc_errorsupport.h"
+> -
+> -/* Sleep support */
+> -#include "wilc_sleep.h"
+> -
+> -/* Timer support */
+> -#include "wilc_timer.h"
+> -
+> -/* Memory support */
+> -#include "wilc_memory.h"
+> -
+> -/* String Utilities */
+> -#include "wilc_strutils.h"
+> -
+> -/* Message Queue */
+> -#include "wilc_msgqueue.h"
+> -
+> -#endif
+> diff --git a/drivers/staging/wilc1000/wilc_sleep.c b/drivers/staging/wilc1000/wilc_sleep.c
+> index 569b833..adab3ca 100644
+> --- a/drivers/staging/wilc1000/wilc_sleep.c
+> +++ b/drivers/staging/wilc1000/wilc_sleep.c
+> @@ -1,5 +1,5 @@
+>  
+> -#include "wilc_oswrapper.h"
+> +#include "wilc_sleep.h"
+>  
+>  /*
+>   *  @author	mdaftedar
+> diff --git a/drivers/staging/wilc1000/wilc_sleep.h b/drivers/staging/wilc1000/wilc_sleep.h
+> index 261f4ed..cf9047f 100644
+> --- a/drivers/staging/wilc1000/wilc_sleep.h
+> +++ b/drivers/staging/wilc1000/wilc_sleep.h
+> @@ -1,6 +1,9 @@
+>  #ifndef __WILC_SLEEP_H__
+>  #define __WILC_SLEEP_H__
+>  
+> +#include <linux/types.h>
+> +#include <linux/delay.h>
+> +
+>  /*!
+>   *  @brief	forces the current thread to sleep until the given time has elapsed
+>   *  @param[in]	u32TimeMilliSec Time to sleep in Milli seconds
+> diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
+> index 19c561b..fa279808 100644
+> --- a/drivers/staging/wilc1000/wilc_strutils.c
+> +++ b/drivers/staging/wilc1000/wilc_strutils.c
+> @@ -1,7 +1,7 @@
+>  
+>  #define _CRT_SECURE_NO_DEPRECATE
+>  
+> -#include "wilc_oswrapper.h"
+> +#include "wilc_strutils.h"
+>  
+>  
+>  /*!
+> diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
+> index 936e8da..1e1be13 100644
+> --- a/drivers/staging/wilc1000/wilc_strutils.h
+> +++ b/drivers/staging/wilc1000/wilc_strutils.h
+> @@ -10,6 +10,10 @@
+>   *  @version	1.0
+>   */
+>  
+> +#include <linux/types.h>
+> +#include <linux/string.h>
+> +#include "wilc_errorsupport.h"
+> +
+>  /*!
+>   *  @brief	Compares two memory buffers
+>   *  @param[in]	pvArg1 pointer to the first memory location
+> diff --git a/drivers/staging/wilc1000/wilc_timer.c b/drivers/staging/wilc1000/wilc_timer.c
+> index c31bf0c..dc71157 100644
+> --- a/drivers/staging/wilc1000/wilc_timer.c
+> +++ b/drivers/staging/wilc1000/wilc_timer.c
+> @@ -1,5 +1,5 @@
+>  
+> -#include "wilc_oswrapper.h"
+> +#include "wilc_timer.h"
+>  
+>  WILC_ErrNo WILC_TimerCreate(WILC_TimerHandle *pHandle,
+>  	tpfWILC_TimerFunction pfCallback, tstrWILC_TimerAttrs *pstrAttrs)
+> diff --git a/drivers/staging/wilc1000/wilc_timer.h b/drivers/staging/wilc1000/wilc_timer.h
+> index a0f9154..931269d 100644
+> --- a/drivers/staging/wilc1000/wilc_timer.h
+> +++ b/drivers/staging/wilc1000/wilc_timer.h
+> @@ -10,6 +10,9 @@
+>   *  @version	1.0
+>   */
+>  
+> +#include "wilc_platform.h"
+> +#include "wilc_errorsupport.h"
+> +
+>  typedef void (*tpfWILC_TimerFunction)(void *);
+>  
+>  /*!
+> diff --git a/drivers/staging/wilc1000/wilc_type.h b/drivers/staging/wilc1000/wilc_type.h
+> deleted file mode 100644
+> index 5f36e7f..0000000
+> --- a/drivers/staging/wilc1000/wilc_type.h
+> +++ /dev/null
+> @@ -1,34 +0,0 @@
+> -/* ////////////////////////////////////////////////////////////////////////// */
+> -/*  */
+> -/* Copyright (c) Atmel Corporation.  All rights reserved. */
+> -/*  */
+> -/* Module Name:  wilc_type.h */
+> -/*  */
+> -/*  */
+> -/* //////////////////////////////////////////////////////////////////////////// */
+> -#ifndef WILC_TYPE_H
+> -#define WILC_TYPE_H
+> -
+> -/********************************************
+> - *
+> - *      Type Defines
+> - *
+> - ********************************************/
+> -#ifdef WIN32
+> -typedef char int8_t;
+> -typedef short int16_t;
+> -typedef long int32_t;
+> -typedef unsigned char uint8_t;
+> -typedef unsigned short uint16_t;
+> -typedef unsigned long uint32_t;
+> -#else
+> -#ifdef _linux_
+> -/*typedef unsigned char         uint8_t;
+> - * typedef unsigned short       uint16_t;
+> - * typedef unsigned long        uint32_t;*/
+> -#include <stdint.h>
+> -#else
+> -#include "wilc_oswrapper.h"
+> -#endif
+> -#endif
+> -#endif
+> diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+> index 0ba7ec6..5c9c4bb 100644
+> --- a/drivers/staging/wilc1000/wilc_wlan.h
+> +++ b/drivers/staging/wilc1000/wilc_wlan.h
+> @@ -1,7 +1,7 @@
+>  #ifndef WILC_WLAN_H
+>  #define WILC_WLAN_H
+>  
+> -#include "wilc_type.h"
+> +#include <linux/types.h>
+>  
+>  
+>  #define ISWILC1000(id)   (((id & 0xfffff000) == 0x100000) ? 1 : 0)
+> diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+> index ea0ec41..d7271b9 100644
+> --- a/drivers/staging/wilc1000/wilc_wlan_if.h
+> +++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+> @@ -20,7 +20,15 @@
+>  /* #define USE_OLD_SPI_SW */
+>  
+>  
+> -#include "wilc_type.h"
+> +#include "wilc_osconfig.h"
+> +#include "wilc_platform.h"
+> +#include "wilc_log.h"
+> +#include "wilc_errorsupport.h"
+> +#include "wilc_sleep.h"
+> +#include "wilc_timer.h"
+> +#include "wilc_memory.h"
+> +#include "wilc_strutils.h"
+> +#include "wilc_msgqueue.h"
+>  #include "linux_wlan_common.h"
+>  
+>  
+> -- 
+> 2.4.3
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
