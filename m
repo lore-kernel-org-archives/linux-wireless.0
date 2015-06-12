@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53726 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753613AbbFHVc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 17:32:29 -0400
-Date: Mon, 8 Jun 2015 23:32:26 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: Re: [char-misc-next] NFC: microread: drop unused variable
-Message-ID: <20150608213226.GF5089@ribalta.mp.intel.com> (sfid-20150608_233417_981973_C0222F4E)
-References: <1431005910-9284-1-git-send-email-tomas.winkler@intel.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:35787 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362AbbFLWdy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2015 18:33:54 -0400
+Received: by iesa3 with SMTP id a3so32447703ies.2
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 15:33:53 -0700 (PDT)
+Date: Fri, 12 Jun 2015 18:33:50 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jesse Jones <jjones@cococorp.com>,
+	Alexis Green <agreen@cococorp.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix a NULL dereference in ath9k (and likely
+ other drivers) when fixed mesh paths are used
+Message-ID: <20150612223350.GA9006@localhost> (sfid-20150613_003358_174483_89777D14)
+References: <CAAnMG+OgtSzFXqLOoZ-JbOr7xnexC3P0+M0fFLWTBtWru=4SKg@mail.gmail.com>
+ <20150525161542.GA14318@localhost>
+ <c305826859e4f12efb163463f7283d5a@mail.gmail.com>
+ <1434139832.2679.38.camel@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431005910-9284-1-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1434139832.2679.38.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
-
-On Thu, May 07, 2015 at 04:38:30PM +0300, Tomas Winkler wrote:
-> In microread_i2c_irq_thread_fn 'client' set but not used
+On Fri, Jun 12, 2015 at 10:10:32PM +0200, Johannes Berg wrote:
+> On Fri, 2015-06-12 at 11:01 -0700, Jesse Jones wrote:
 > 
-> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  drivers/nfc/microread/i2c.c | 3 ---
->  1 file changed, 3 deletions(-)
-Applied to nfc-next, thanks.
+> > I had trouble reproing the reboot caused by ath9k de-referencing NULL
+> > pointers but after a fair amount of work I was able to consistently get
+> > reboots. Your patch *does* fix the problem so I am going to switch our repo
+> > over to your patch instead of what we were using. Thanks for the help.
+> 
+> Great. Bob, if it's no bother I'd appreciate if you'd resend the patch
+> correctly so it gets picked up by patchwork etc.
 
-Cheers,
-Samuel.
+Sure.  Jesse, want me to add your Tested-by?
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
