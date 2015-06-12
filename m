@@ -1,113 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:31597 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753089AbbFAMeC (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:34734 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840AbbFLVNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:34:02 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CSiQk017094
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:34:01 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk5n-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:34:01 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 13/17] mwifiex: drop block-ack action frames
-Date: Mon, 1 Jun 2015 23:32:11 +0530
-Message-ID: <1433181735-15712-14-git-send-email-patila@marvell.com> (sfid-20150601_150351_236189_4FAA0151)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
+	Fri, 12 Jun 2015 17:13:18 -0400
+Received: by iebmu5 with SMTP id mu5so31675188ieb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 14:13:17 -0700 (PDT)
+Message-ID: <557B4B65.60001@cococorp.com> (sfid-20150612_231321_656673_C5FF22C0)
+Date: Fri, 12 Jun 2015 14:13:09 -0700
+From: Alexis Green <agreen@cococorp.com>
+Reply-To: agreen@cococorp.com
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Subject: [PATCH] mac80211: don't invalidate SN on discovery failure
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We often see ADDBA request packets coming to driver because driver
-has registered for action frame subtype. We dont process BA action
-frames in host; drop such frames.
+From: Jesse Jones <jjones@cococorp.com>
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Xinmin Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+The 2012 spec mentions that path SNs can be invalid when created (see
+section 13.10.8.4 table 13-9) but AFAICT never talks about invalidating
+SNs. Which makes sense: if we have figured out the path to a target at a
+certain SN then we want to remember that fact. Failing to do so can lead
+to routing loops because if we don't have a valid SN then we have no way
+of knowing whether an incoming path message leads to or away from the
+target.
+
+However currently when discovery fails we zero out mpath->flags which
+clears MESH_PATH_SN_VALID. This patch fixes that so that only the
+discovery relevant flags are cleared.
+
+Signed-off-by: Alexis Green <agreen@cococorp.com>
+
 ---
- drivers/net/wireless/mwifiex/util.c | 43 +++++++++++++++++++++++++------------
- 1 file changed, 29 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 2e3dc07..790e619 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -329,7 +329,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 			  struct rxpd *rx_pd)
- {
- 	u16 stype;
--	u8 category, action_code;
-+	u8 category, action_code, *addr2;
- 	struct ieee80211_hdr *ieee_hdr = (void *)payload;
- 
- 	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
-@@ -337,21 +337,35 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 	switch (stype) {
- 	case IEEE80211_STYPE_ACTION:
- 		category = *(payload + sizeof(struct ieee80211_hdr));
--		action_code = *(payload + sizeof(struct ieee80211_hdr) + 1);
--		if (category == WLAN_CATEGORY_PUBLIC &&
--		    action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
-+		switch (category) {
-+		case WLAN_CATEGORY_PUBLIC:
-+			action_code = *(payload + sizeof(struct ieee80211_hdr)
-+					+ 1);
-+			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
-+				addr2 = ieee_hdr->addr2;
-+				mwifiex_dbg(priv->adapter, INFO,
-+					    "TDLS discovery response %pM nf=%d, snr=%d\n",
-+					    addr2, rx_pd->nf, rx_pd->snr);
-+				mwifiex_auto_tdls_update_peer_signal(priv,
-+								     addr2,
-+								     rx_pd->snr,
-+								     rx_pd->nf);
-+			}
-+			break;
-+		case WLAN_CATEGORY_BACK:
-+			/*we dont indicate BACK action frames to cfg80211*/
-+			mwifiex_dbg(priv->adapter, INFO,
-+				    "drop BACK action frames");
-+			return -1;
-+		default:
- 			mwifiex_dbg(priv->adapter, INFO,
--				    "TDLS discovery response %pM nf=%d, snr=%d\n",
--				    ieee_hdr->addr2, rx_pd->nf, rx_pd->snr);
--			mwifiex_auto_tdls_update_peer_signal(priv,
--							     ieee_hdr->addr2,
--							     rx_pd->snr,
--							     rx_pd->nf);
-+				    "unknown public action frame category %d\n",
-+				    category);
- 		}
--		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, INFO,
--			    "unknown mgmt frame subtype %#x\n", stype);
-+		    "unknown mgmt frame subtype %#x\n", stype);
-+		return 0;
- 	}
- 
- 	return 0;
-@@ -387,8 +401,9 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 
- 	ieee_hdr = (void *)skb->data;
- 	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
--		mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
--					  pkt_len, rx_pd);
-+		if (mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
-+					      pkt_len, rx_pd))
-+			return -1;
- 	}
- 	/* Remove address4 */
- 	memmove(skb->data + sizeof(struct ieee80211_hdr_3addr),
--- 
-1.8.1.4
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 085edc1..1d849be
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -1176,7 +1176,8 @@ void mesh_path_timer(unsigned long data)
+ 		spin_unlock_bh(&mpath->state_lock);
+ 		mesh_queue_preq(mpath, 0);
+ 	} else {
+-		mpath->flags = 0;
++		mpath->flags &= ~(MESH_PATH_RESOLVING |
++			MESH_PATH_RESOLVED | MESH_PATH_REQ_QUEUED);
+ 		mpath->exp_time = jiffies;
+ 		spin_unlock_bh(&mpath->state_lock);
+ 		if (!mpath->is_gate && mesh_gate_num(sdata) > 0) {
