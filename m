@@ -1,71 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02.posteo.de ([89.146.194.165]:41800 "EHLO mx02.posteo.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40557 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932141AbbFHNrU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 09:47:20 -0400
-Message-ID: <1433771289.28058.24.camel@embedded.rocks> (sfid-20150608_154728_936726_D253384B)
-Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Date: Mon, 08 Jun 2015 15:48:09 +0200
-In-Reply-To: <55758D7E.3000603@broadcom.com>
-References: <1433766944.28058.16.camel@embedded.rocks>
-	 <55758D7E.3000603@broadcom.com>
+	id S1752360AbbFLIb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2015 04:31:56 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.85)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Z3KNW-0006AW-W3
+	for linux-wireless@vger.kernel.org; Fri, 12 Jun 2015 10:31:55 +0200
+Message-ID: <1434097914.2679.37.camel@sipsolutions.net> (sfid-20150612_103201_684238_7222E571)
+Subject: mac80211 and multiple RX queues (with RSS hashing)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 12 Jun 2015 10:31:54 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Hi,
 
-On Mo, 2015-06-08 at 14:41 +0200, Arend van Spriel wrote:
-> On 06/08/15 14:35, Jörg Krause wrote:
-> > Hi,
-> > 
-> > I've trouble creating the p2p interface on a BCM43362 wifi device
-> > running Linux kernel 4.0.4:
-> > 
-> >      # dmesg | grep brcmfmac
-> >      [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: Firmware 
-> > version =
-> >      wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01
-> > -b30a427d
-> >      [    7.158905] brcmfmac: brcmf_cfg80211_reg_notifier: not a 
-> > ISO3166
-> >      code
-> >      [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: timeout 
-> > occurred
-> > 
-> > Trying to add the p2p interface manually:
-> > 
-> >      # iw phy0 interface add p2p0 type __p2pdev
-> >      [  372.042704] brcmfmac: brcmf_link_down: WLC_DISASSOC failed 
-> > (-52)
-> >      [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: timeout 
-> > occurred
-> >      [  373.679377] brcmfmac: brcmf_cfg80211_del_key: invalid key 
-> > index (4)
-> >      [  373.685733] brcmfmac: brcmf_cfg80211_del_key: invalid key 
-> > index (5)
-> > 
-> > Any idea?
-> 
-> Wondering whether it is similar to what Rafal reported. Can you do a 
-> hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
+We're currently investigating how to best add RSS hashing to the
+wireless stack.
 
-I managed to set up the p2p interface by recompiling the kernel with
-CONFIG_BRCMDBG and loading the brcmfmac module with p2pon=1.
+Let's say, for the sake of discussion, that we'll add a function to
+mac80211 called
 
-I had a discussion some month ago with Hante Meulemann about setting up
-the p2p interface. This is one of his replies:
+ieee80211_rx_napi_mq(struct hw *, struct napi_struct *, struct sk_buff
+*);
 
-    "For what I can see from the log is that we don’t get the event from
-    the FW indicating that the p2p interface was created. This probably
-    means that there is a bug in this FW for this device. I need to discuss
-    this to see how much priority we can give this. The best option for you
-    for the moment is to use the legacy method with the 'p2pon=1' command."
+and (depending on the outcome of the design) the driver would have to
+set the skb_queue_mapping to the queue this packet was received on.
 
-Best regards
-Jörg Krause
+For context, there are a few requirements for callers of this function -
+here are the ones I'm planning:
+
+ * It would only support (non-null) data frames, management frames must
+not be
+   passed to the new API, but must be passed to the regular
+ieee80211_rx()
+   function.
+ * I'm not going to support ieee80211_rx_irqsafe() with this API, it
+would be
+   quite pointless (or a lot of code to have per-queue tasklets?)
+ * Won't support software crypto (PN checking can't really work in
+parallel)
+ * Won't support monitor mode, and probably a few other similar things
+(TBD)
+ * Won't support defragmentation (fragmented must anyway either be
+reassembled
+   for hashing or somehow not hashed perhaps)
+ * Won't support client powersave in mac80211 - uh ... just say no to
+that!
+ * For not, I'm not planning to support mesh on this, maybe not even
+IBSS.
+ * Duplicate detection must be handled by hardware/firmware or similar
+   (possibly could be done with HW assist in driver, but clearly that
+cannot be
+   handled generically in mac80211)
+ * RX aggregation reordering done by hardware/firmware or similar
+   (same here)
+ * require a NAPI struct? (not really sure yet how the stack treats
+parallel RX)
+
+Of course these don't really seem fairly natural so far, by the nature
+of using multiple queues.
+
+There are a few other areas that are of more concern:
+ a) Statistics
+    Obviously, we can no longer have single counters. Using atomic
+counters would
+    kill much of the benefit of having multiple queues to start with, so
+in some
+    way we need to have multiple counters.
+ b) handling AP/GO powersaving clients
+    With RSS, we can end up with various races - right now we say TX
+status and
+    RX must be serialized by the driver, but clearly that can no longer
+be
+    guaranteed with multiple RX queues.
+    [also need to check if there are *other* things that require
+serialization]
+ c) aggregation session timeout/reorder timer handling
+    There's a single field/timer (for each of this) per session,
+obviously it's
+    not a great idea to hit these from multiple CPUs.
+
+Let's take these one by one:
+
+a) This is probably the biggest one. We have a LOT of statistics that we
+keep, and they all rely on RX being serialized. For example, per-station
+RX packet and byte counters. Making all of these atomic would be
+correct, but would obviously kill much of the performance benefit of
+RSS.
+
+As a consequence, I see two possible solutions here:
+
+a1) Just make this the driver's concern, change sta_set_sinfo() to not
+provide any (with a few exceptions) mac80211 statistics when multi-queue
+RX is used. This could mean the same kind of statistics code is in each
+driver, if the driver supports the statistics at all - or it could mean
+that we cause a lot of divergence with statistics between drivers.
+
+a2) Alternatively, drivers could tell mac80211 before-hand how many
+queues they'll use, pass a queue identifier to mac80211 for each packet
+(e.g. in skb's queue_mapping) and have mac80211 gather per-queue
+statistics that get combined when read. This means allocating separate
+statistics/queue arrays for stations etc. in mac80211, and then using
+u64_stats_update_begin() etc. to get a consistent reading like we do
+with per-cpu netdev stats already (since my fairly recent patch.)
+
+Clearly this cannot support the "average" values like "average signal
+strength" and the "last packet signal strength" might not always be
+really the very last packet (which doesn't really matter though) so
+those would still have to be excluded and generated by the driver, but
+it could mean a bit more code sharing (if more than our driver ends up
+using this facility) and more consistency. The downside might be that if
+drivers want to do statistics in the firmware or so, they'd waste the
+extra cycles on the host. I don't think we're planning to do that for
+now though.
+
+
+b) I think this one is pretty simple - just require the driver to set
+AP_LINK_PS and if necessary call ieee80211_sta_ps_transition(). However,
+it might require adding more logic for U-APSD support depending on the
+hardware design.
+
+
+c) I'm not really sure about this. I think it really needs hardware
+assist.
+
+
+Does anyone else have any thoughts?
+
+johannes
+
