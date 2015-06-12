@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-am1on0103.outbound.protection.outlook.com ([157.56.112.103]:24016
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750892AbbFRMhE convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:33235 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752818AbbFLNdf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 08:37:04 -0400
-From: "Abdul, Hussain (H.)" <habdul@visteon.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "johnny.kim@atmel.com" <johnny.kim@atmel.com>,
-	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
-	"dean.lee@atmel.com" <dean.lee@atmel.com>,
-	"chris.park@atmel.com" <chris.park@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"mravind@visteon.com" <mravind@visteon.com>,
-	"Dighe, Niranjan (N.)" <ndighe@visteon.com>
-Subject: [PATCH] Staging: wilc1000: NULL check before some freeing functions
- is not needed
-Date: Thu, 18 Jun 2015 12:37:00 +0000
-Message-ID: <1434630935-4526-1-git-send-email-habdul@visteon.com> (sfid-20150618_143708_935387_F8888395)
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 12 Jun 2015 09:33:35 -0400
+Message-ID: <557ADFAD.5080004@candelatech.com> (sfid-20150612_153339_032156_BE034F3F)
+Date: Fri, 12 Jun 2015 06:33:33 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2] ath10k: enable VHT for IBSS
+References: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com> <87mw06bab5.fsf@kamboji.qca.qualcomm.com> <CALhHN=pD+ROqjhYOXsjb7Dc=XGp+YZy6w445ipC4cOGOYUEA3g@mail.gmail.com>
+In-Reply-To: <CALhHN=pD+ROqjhYOXsjb7Dc=XGp+YZy6w445ipC4cOGOYUEA3g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abdul Hussain <habdul@visteon.com>
 
-This patch removes check before freeing the memory 
-since kfree(NULL) is safe
 
-Signed-off-by: Abdul Hussain <habdul@visteon.com>
----
- drivers/staging/wilc1000/linux_wlan_spi.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+On 06/11/2015 10:12 PM, Janusz Dziedzic wrote:
+> On 11 June 2015 at 16:15, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+>>
+>>> Enable VHT support for IBSS, while mac80211/cfg80211 and
+>>> wpa_supplicant already support this.
+>>>
+>>> In my test env, ath10k 2x2 I get:
+>>> (udp) ath10k-1 >>>> ath10k-2 (server) -  speed: 419 Mbits/sec
+>>> (tcp) ath10k-1 >>>> ath10k-2 (server) -  speed: 404 Mbits/sec
+>>
+>> What hw and firmware version? Do you expect this to work with both
+>> qca988x and qca6174?
+>>
+> Results are for qca9888x.
+> But IBSS (VHT IBSS) works correctly also with qca6174 FW.
+>
+>> Oh, we should still add ATH10K_FW_FEATURE_NO_ADHOC so that we can
+>> disable ad-hoc on 10.x firmwares. Anyone have some spare time to cook up
+>> a patch?
+>>
+> I am not sure we need this, while we add
+> ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC)
+> only for main and tlv version. Seems we already cover 10.x case correctly.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 1eee1d5..236669c 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -214,8 +214,7 @@ int linux_spi_write(uint8_t *b, uint32_t len)
- 				PRINT_ER("SPI transaction failed\n");
- 			}
- 		}
--		if (r_buffer)
--			kfree(r_buffer);
-+		kfree(r_buffer);
- 	} else {
- 		PRINT_ER("can't write data with the following length: %d\n", len);
- 		PRINT_ER("FAILED due to NULL buffer or ZERO length check the following length: %d\n", len);
-@@ -377,8 +376,7 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
- 			}
- 		}
- 
--		if (t_buffer)
--			kfree(t_buffer);
-+		kfree(t_buffer);
- 	} else {
- 		PRINT_ER("can't read data with the following length: %ld\n", rlen);
- 		ret = -1;
+If you give me some way to advertise my CT 10.1 firmware supports ADHOC
+mode in the upstream driver then there will be one more firmware
+variant that works with IBSS in stock kernels....
+
+Maybe a feature flag 'ATH10K_FW_FEATURE_SUPPORTS_ADHOC' ?  You can special case
+older firmware that is known to support ADHOC but has no feature
+flag for it.  And new firmware could add the feature flag as needed.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
