@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54832 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752117AbbFITvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 15:51:50 -0400
-Message-ID: <1433879507.1892.18.camel@sipsolutions.net> (sfid-20150609_215152_567519_4CE3F833)
-Subject: Re: [PATCH] mac80211: release channel on auth failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 09 Jun 2015 21:51:47 +0200
-In-Reply-To: <1433313373-28216-1-git-send-email-michal.kazior@tieto.com> (sfid-20150603_083621_837851_819E36BF)
-References: <1433313373-28216-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150603_083621_837851_819E36BF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55848 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848AbbFLP0z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Jun 2015 11:26:55 -0400
+Date: Fri, 12 Jun 2015 08:26:55 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dean Lee <dean.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com
+Subject: Re: [PATCH v3] staging: wilc1000: remove oswrapper & type file
+Message-ID: <20150612152655.GA26174@kroah.com> (sfid-20150612_172659_227221_1F8B54E2)
+References: <1434104471-5492-1-git-send-email-dean.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434104471-5492-1-git-send-email-dean.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-03 at 08:36 +0200, Michal Kazior wrote:
-> There were a few rare cases when upon
-> authentication failure channel wasn't released.
-> This could cause stale pointers to remain in
-> chanctx assigned_vifs after interface removal and
-> trigger general protection fault later.
+On Fri, Jun 12, 2015 at 07:21:11PM +0900, Dean Lee wrote:
+> remove OS Wrapper function(wilc_oswrapper.h) is in our plan.
+> i removed OS Wrapper function and it's done.
+> and i found wilc_type.h file is does not used it.
+> so i deleted them and modify #include line in another file.
 
-Applied. I've put this on -next, but perhaps it's needed for stable too?
-Maybe we can send it there next week or so ...
+You are also doing other things here that you don't describe:
 
-johannes
+>  /* Errors will always get printed */
+> -#define WILC_ERROR(...) do {  WILC_PRINTF("(ERR)(%s:%d) ", __WILC_FUNCTION__, __WILC_LINE__); \
+> -			      WILC_PRINTF(__VA_ARGS__); \
+> -				} while (0)
+> +#define WILC_ERROR(...)							\
+> +do {									\
+> +	WILC_PRINTF("(ERR)(%s:%d)", __WILC_FUNCTION__, __WILC_LINE__);	\
+> +	WILC_PRINTF(__VA_ARGS__);					\
+> +} while (0)
 
+You reformatted this.
+
+>  #if (WILC_LOG_VERBOSITY_LEVEL > 3)
+> -#define WILC_FN_IN do { WILC_PRINTF("(FIN) (%s:%d) \n", __WILC_FUNCTION__, __WILC_LINE__);  } while (0)
+> -#define WILC_FN_OUT(ret) do { WILC_PRINTF("(FOUT) (%s:%d) %d.\n", __WILC_FUNCTION__, __WILC_LINE__, (ret));  } while (0)
+> +#define WILC_FN_IN		\
+> +	WILC_PRINTF("(FIN)(%s:%d)\n", __WILC_FUNCTION__, __WILC_LINE__)
+> +#define WILC_FN_OUT(ret)	\
+> +	WILC_PRINTF("(FOUT)(%s:%d)%d\n", __WILC_FUNCTION__, __WILC_LINE__, ret)
+
+And changed this for no obvious reason.
+
+Please, only do one thing per patch.  Break this up into logical steps
+and resend it as a series of patches, with the last one being the TODO
+file item removal.
+
+thanks,
+
+greg k-h
