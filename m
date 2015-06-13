@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:33875 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940AbbFZPeV (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:33333 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbbFMUNP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 11:34:21 -0400
-Date: Fri, 26 Jun 2015 17:40:25 +0200
-From: Luis de Bethencourt <luis@debethencourt.com>
-To: linux-kernel@vger.kernel.org
-Cc: Joe Perches <joe@perches.com>, Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH 5/4] staging: wilc1000: switch printks to vsprintf IPv4
- extension
-Message-ID: <20150626154022.GA32529@goodgumbo.baconseed.org> (sfid-20150626_173425_254429_C6D89F01)
+	Sat, 13 Jun 2015 16:13:15 -0400
+Received: by lacdj3 with SMTP id dj3so17349791lac.0
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2015 13:13:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <557B1A2F.1010608@mindchasers.com>
+References: <557B1A2F.1010608@mindchasers.com>
+Date: Sat, 13 Jun 2015 23:13:13 +0300
+Message-ID: <CANUX_P1Q9pkHF6xVgUJyAF_-x9n_g4TfaT9cr2dej7jxp+ZXTg@mail.gmail.com> (sfid-20150613_221339_670524_F1C6B6D1)
+Subject: Re: iwlwifi in AP mode is experimental?
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "Robert E. Cochran" <wifi@mindchasers.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Switch printks with IP addresses to use vsprintf extension %pI4.
+Hello Robert,
 
-Suggested-by: Joe Perches <joe@perches.com>
-Signed-off-by: Luis de Bethencourt <luis@debethencourt.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Fri, Jun 12, 2015 at 8:43 PM, Robert E. Cochran <wifi@mindchasers.com> wrote:
+> Hello,
+>
+> On wireless.wiki.kernel.org, iwlwifi is listed as experimental for AP Mode.
+>
+> We have done some basic testing with a 3160 card in AP mode & hostapd
+> without issue.  Now we need to determine if it makes sense to ramp up a
+> rigorous test plan for it.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 1915fc6..483926f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -740,7 +740,7 @@ s32 Handle_set_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
- 	if (pu8IPAddr[0] < 192)
- 		pu8IPAddr[0] = 0;
- 
--	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %d.%d.%d.%d\n", idx, pu8IPAddr[0], pu8IPAddr[1], pu8IPAddr[2], pu8IPAddr[3]);
-+	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n", idx, pu8IPAddr);
- 
- 	WILC_memcpy(gs8SetIP[idx], pu8IPAddr, IP_ALEN);
- 
-@@ -796,7 +796,7 @@ s32 Handle_get_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
- 
- 	s32Error = SendConfigPkt(GET_CFG, &strWID, 1, true, (u32)pstrWFIDrv);
- 
--	PRINT_INFO(HOSTINF_DBG, "%d.%d.%d.%d\n", (u8)(strWID.ps8WidVal[0]), (u8)(strWID.ps8WidVal[1]), (u8)(strWID.ps8WidVal[2]), (u8)(strWID.ps8WidVal[3]));
-+	PRINT_INFO(HOSTINF_DBG, "%pI4\n", strWID.ps8WidVal);
- 
- 	WILC_memcpy(gs8GetIP[idx], strWID.ps8WidVal, IP_ALEN);
- 
-@@ -811,7 +811,7 @@ s32 Handle_get_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
- 		WILC_ERRORREPORT(s32Error, WILC_INVALID_STATE);
- 	} else {
- 		PRINT_INFO(HOSTINF_DBG, "IP address retrieved:: u8IfIdx = %d\n", idx);
--		PRINT_INFO(HOSTINF_DBG, "%d.%d.%d.%d\n", gs8GetIP[idx][0], gs8GetIP[idx][1], gs8GetIP[idx][2], gs8GetIP[idx][3]);
-+		PRINT_INFO(HOSTINF_DBG, "%pI4\n", gs8GetIP[idx]);
- 		PRINT_INFO(HOSTINF_DBG, "\n");
- 	}
- 
--- 
-2.1.4
+3160 should provide decently support AP mode. Basically, I can tell
+that devices driven by iwlmvm are better tested in AP mode. Note that
+the hardware is not designed for AP mode and the AP mode suffers from
+limitations in terms of number of clients etc...
 
-This patch is 5/4 because it is a suggestion made by Joe Perches. Based on top
-of the previous 4 wilc1000 patches.
-https://lkml.org/lkml/2015/6/26/392
+>
+> Is AP mode with iwlwifi basically a "use at your own risk" scenario?  Can I
+> expect AP mode to be supported more fully in the future?  Is there a
+> particular HW module that does AP mode better than others?  Is there a list
+> of missing features?  Are others using iwlwifi for AP mode in a  product?
 
-Thank you Joe :)
+Unless you have a support business agreement, anything from upstream
+is "at your own risk" :) We do provide support and if you have an
+issue, we will try to help. I can't think about anything specific that
+is not supported, but don't expect a full blown commercial AP that can
+support 256 concurrent clients etc...
+I think that we have customers who made an AP with iwlwifi. There is
+no Intel HW that can give you a better support for AP besides the fact
+that 3160 doesn't support MIMO and is definitely the low end of
+Intel's devices. But that's something you are surely aware of.
+
+>
+> Any additional, current information on this will be greatly appreciated.
+>
+> Thank you,
+>
+> Bob
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
