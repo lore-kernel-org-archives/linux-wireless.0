@@ -1,82 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47514 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755670AbbFQLy7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 07:54:59 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, davem@davemloft.net
-Cc: netdev@vger.kernel.org, Michal Kazior <michal.kazior@tieto.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix locking in update_vlan_tailroom_need_count()
-Date: Wed, 17 Jun 2015 13:54:54 +0200
-Message-Id: <1434542094-14247-1-git-send-email-johannes@sipsolutions.net> (sfid-20150617_135508_596251_1565C1DB)
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:36025 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939AbbFMGl0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Jun 2015 02:41:26 -0400
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/2] staging: wilc1000: remove BOOL_T typedef
+Date: Sat, 13 Jun 2015 15:41:18 +0900
+Message-Id: <1434177679-9831-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150613_084131_332168_9391E753)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Remove BOOL_T typedef.
 
-Unfortunately, Michal's change to fix AP_VLAN crypto tailroom
-caused a locking issue that was reported by lockdep, but only
-in a few cases - the issue was a classic ABBA deadlock caused
-by taking the mtx after the key_mtx, where normally they're
-taken the other way around.
-
-As the key mutex protects the field in question (I'm adding a
-few annotations to make that clear) only the iteration needs
-to be protected, but we can also iterate the interface list
-with just RCU protection while holding the key mutex.
-
-Fixes: f9dca80b98ca ("mac80211: fix AP_VLAN crypto tailroom calculation")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
-Dave, if you're planning to send any more patches to Linus before
-the release, please apply this one. Otherwise let me know and I'll
-sort it out with Cc stable after the merge window.
----
- net/mac80211/key.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/itypes.h         | 9 ---------
+ 2 files changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 8abc31ebcf61..b22df3a79a41 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -66,12 +66,15 @@ update_vlan_tailroom_need_count(struct ieee80211_sub_if_data *sdata, int delta)
- 	if (sdata->vif.type != NL80211_IFTYPE_AP)
- 		return;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 17ab5cd..ca59f1b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -7698,7 +7698,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 			/* HT Cap. IE */
+ 			else if (pu8IEs[index] == HT_CAPABILITY_IE) {
+ 				/* if IE found set the flag */
+-				pNewJoinBssParam->ht_capable = BTRUE;
++				pNewJoinBssParam->ht_capable = true;
+ 				index += pu8IEs[index + 1] + 2; /* ID,Length bytes and IE body */
+ 				/* PRINT_D(HOSTINF_DBG,"HT_CAPABALE\n"); */
+ 				continue;
+@@ -7709,11 +7709,11 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 				   ((pu8IEs[index + 6] == 0x00) || (pu8IEs[index + 6] == 0x01)) && /* OUI Sub Type */
+ 				   (pu8IEs[index + 7] == 0x01)) {
+ 				/* Presence of WMM Info/Param element indicates WMM capability */
+-				pNewJoinBssParam->wmm_cap = BTRUE;
++				pNewJoinBssParam->wmm_cap = true;
  
--	mutex_lock(&sdata->local->mtx);
-+	/* crypto_tx_tailroom_needed_cnt is protected by this */
-+	assert_key_lock(sdata->local);
-+
-+	rcu_read_lock();
+ 				/* Check if Bit 7 is set indicating U-APSD capability */
+ 				if (pu8IEs[index + 8] & (1 << 7)) {
+-					pNewJoinBssParam->uapsd_cap = BTRUE;
++					pNewJoinBssParam->uapsd_cap = true;
+ 				}
+ 				index += pu8IEs[index + 1] + 2;
+ 				continue;
+diff --git a/drivers/staging/wilc1000/itypes.h b/drivers/staging/wilc1000/itypes.h
+index 2441853..d64ae35 100644
+--- a/drivers/staging/wilc1000/itypes.h
++++ b/drivers/staging/wilc1000/itypes.h
+@@ -36,13 +36,4 @@
+ #ifndef ITYPES_H
+ #define ITYPES_H
  
--	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+	list_for_each_entry_rcu(vlan, &sdata->u.ap.vlans, u.vlan.list)
- 		vlan->crypto_tx_tailroom_needed_cnt += delta;
- 
--	mutex_unlock(&sdata->local->mtx);
-+	rcu_read_unlock();
- }
- 
- static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
-@@ -95,6 +98,8 @@ static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
- 	 * http://mid.gmane.org/1308590980.4322.19.camel@jlt3.sipsolutions.net
- 	 */
- 
-+	assert_key_lock(sdata->local);
-+
- 	update_vlan_tailroom_need_count(sdata, 1);
- 
- 	if (!sdata->crypto_tx_tailroom_needed_cnt++) {
-@@ -109,6 +114,8 @@ static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
- static void decrease_tailroom_need_count(struct ieee80211_sub_if_data *sdata,
- 					 int delta)
- {
-+	assert_key_lock(sdata->local);
-+
- 	WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt < delta);
- 
- 	update_vlan_tailroom_need_count(sdata, -delta);
+-/*****************************************************************************/
+-/* Enums                                                                     */
+-/*****************************************************************************/
+-
+-typedef enum {
+-	BFALSE = 0,
+-	BTRUE  = 1
+-} BOOL_T;
+-
+ #endif /* ITYPES_H */
 -- 
-2.1.4
+1.9.1
 
