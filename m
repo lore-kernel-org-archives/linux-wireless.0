@@ -1,81 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:35214 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598AbbFBI61 (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:34971 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750798AbbFMSob (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 04:58:27 -0400
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, bergo.torino@gmail.com,
-	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH v2] staging: wilc1000: fix warning while printing
-Date: Tue,  2 Jun 2015 14:28:17 +0530
-Message-Id: <1433235497-5539-1-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20150602_105833_407139_696D715E)
+	Sat, 13 Jun 2015 14:44:31 -0400
+Received: by wgbhy7 with SMTP id hy7so9530808wgb.2
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2015 11:44:30 -0700 (PDT)
+Message-ID: <557C7A0C.5060604@gmail.com> (sfid-20150613_204434_973438_6F040F42)
+Date: Sat, 13 Jun 2015 20:44:28 +0200
+From: Arend van Spriel <aspriel@gmail.com>
+MIME-Version: 1.0
+To: Luca Coelho <luca@coelho.fi>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH py80211 2/4] py80211: scan: add sched_scan start class
+References: <1434117644-3033-1-git-send-email-luca@coelho.fi> <1434117644-3033-3-git-send-email-luca@coelho.fi>
+In-Reply-To: <1434117644-3033-3-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-size_t should print using %zu and unsigned long int should use %lu
-but here it was using %d and hence we were getting warning while
-printing.
 
-Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
----
 
-v2: missed mentioning unsigned long int in commit message.
+On 12-06-15 16:00, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> Add a class to start scheduled scans.
+> 
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 
- drivers/staging/wilc1000/wilc_spi.c               | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Merged in the master branch with following modification:
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index d0e7610..6d854fd 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -404,7 +404,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz,
- #undef NUM_DUMMY_BYTES
- 
- 	if (len2 > (sizeof(wb) / sizeof(wb[0]))) {
--		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%d)\n",
-+		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%lu)\n",
- 			 len2, (sizeof(wb) / sizeof(wb[0])));
- 		result = N_FAIL;
- 		return result;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e9ab2cb..6fdb0d6 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -638,7 +638,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
- 		}
- 
- 
--		PRINT_D(CFG80211_DBG, "Association request info elements length = %d\n", pstrConnectInfo->ReqIEsLen);
-+		PRINT_D(CFG80211_DBG, "Association request info elements length = %zu\n", pstrConnectInfo->ReqIEsLen);
- 
- 		PRINT_D(CFG80211_DBG, "Association response info elements length = %d\n", pstrConnectInfo->u16RespIEsLen);
- 
-@@ -778,7 +778,7 @@ static int WILC_WFI_CfgScan(struct wiphy *wiphy, struct cfg80211_scan_request *r
- 		}
- 
- 		PRINT_D(CFG80211_DBG, "Requested num of scan channel %d\n", request->n_channels);
--		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %d\n", request->ie_len);
-+		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %zu\n", request->ie_len);
- 
- 		PRINT_D(CFG80211_DBG, "Number of SSIDs %d\n", request->n_ssids);
- 
-@@ -3316,7 +3316,7 @@ static int WILC_WFI_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	priv = wiphy_priv(wiphy);
- 	PRINT_D(HOSTAPD_DBG, "Starting ap\n");
- 
--	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %d Tail length = %d\n",
-+	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
- 		settings->beacon_interval, settings->dtim_period, beacon->head_len, beacon->tail_len);
- 
- 	s32Error = WILC_WFI_CfgSetChannel(wiphy, &settings->chandef);
--- 
-1.8.1.2
+    [aspriel@gmail.com: fixed indentation]
+    [aspriel@gmail.com: only use interval member in sched_scan_start]
 
+Regards,
+Arend
+
+> ---
+>  lib/scan.py | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+> 
+> diff --git a/lib/scan.py b/lib/scan.py
+> index 5ccae55..bfaf4da 100644
+> --- a/lib/scan.py
+> +++ b/lib/scan.py
+> @@ -123,6 +123,7 @@ class scan_start_base(scan_cmd_base):
+>  		self._flags = 0
+>  		self._ies = None
+>                  self._nl_cmd = None
+> +                self._interval = None
+
+Deal with interval in sched_scan_start class by overriding _add_scan_attrs.
+
+>          def _add_scan_attrs(self):
+>  		if self._ssids:
+> @@ -144,6 +145,9 @@ class scan_start_base(scan_cmd_base):
+>  		if self._ies:
+>  			nl.nla_put(self._nl_msg._msg, nl80211.ATTR_IE, self._ies)
+>  
+> +                if self._interval != None:
+> +                        nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_INTERVAL, self._interval)
+> +
+>  	def add_ssids(self, ssids):
+>  		if self._ssids == None:
+>  			self._ssids = ssids
+> @@ -183,3 +187,19 @@ class scan_request(scan_start_base):
+>  		if genlh.cmd in [ nl80211.CMD_SCAN_ABORTED, nl80211.CMD_NEW_SCAN_RESULTS ]:
+>  			self.scan_busy = False
+>  		return nl.NL_SKIP
+> +
+> +class sched_scan_start(scan_start_base):
+> +	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
+> +                super(sched_scan_start, self).__init__(ifidx, level)
+> +                self._nl_cmd = nl80211.CMD_START_SCHED_SCAN
+> +
+> +	def set_interval(self, interval):
+> +		self._interval = interval
+> +
+> +        def handle(self, msg, arg):
+> +		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
+> +
+> +                # A schedule scan is complete immediately when it gets started
+> +                if genlh.cmd in [ nl80211.CMD_START_SCHED_SCAN ]:
+> +                        self.scan_busy = False
+> +		return nl.NL_SKIP
+> 
