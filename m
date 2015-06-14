@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pegasus.erg.abdn.ac.uk ([139.133.204.173]:36958 "EHLO
-	pegasus.erg.abdn.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986AbbFGCrQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2015 22:47:16 -0400
-Received: from localhost (S0106001ee52ef802.ed.shawcable.net [50.65.115.34])
-	by pegasus.erg.abdn.ac.uk (Postfix) with ESMTPSA id 029C81B0014F
-	for <linux-wireless@vger.kernel.org>; Sun,  7 Jun 2015 03:37:31 +0100 (BST)
-Date: Sat, 6 Jun 2015 20:37:21 -0600
-From: Gerrit Renker <gerrit@erg.abdn.ac.uk>
-To: linux-wireless@vger.kernel.org
-Subject: [WEXT]: multiple calls for SIOCGIWSTATS return same value
-Message-ID: <20150606203721.28791bb3@erg.abdn.ac.uk> (sfid-20150607_044726_833751_BC9D05B3)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from hofr.at ([212.69.189.236]:46376 "EHLO mail.hofr.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751570AbbFNPqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jun 2015 11:46:44 -0400
+Date: Sun, 14 Jun 2015 17:46:42 +0200
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Masanari Iida <standby24x7@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUG ?] rtlwifi: rtl8723be: condition with no effect
+Message-ID: <20150614154642.GA10048@opentech.at> (sfid-20150614_174652_127938_B0D2BD1E)
+References: <1434192211-5855-1-git-send-email-hofrat@osadl.org> <557D9B09.7020100@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <557D9B09.7020100@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A problem has been found in recent kernels where multiple
-calls using SIOCGIWSTATS return the same, identical value.
+On Sun, 14 Jun 2015, Larry Finger wrote:
 
-This behaviour is observable both using 'iwconfig <dev>'
-and wavemon info screen, where it was reported in [1].
+> On 06/13/2015 05:43 AM, Nicholas Mc Guire wrote:
+>> From: Nicholas Mc Guire <hofrat@osadl.org>
+>>
+>> scanning for trivial bug-patters with coccinelle spatches returned:
+>> ./drivers/net/wireless/rtlwifi/rtl8723be/dm.c:886
+>> 	WARNING: condition with no effect (if branch == else)
+>>
+>> Added in 'commit a619d1abe20c ("rtlwifi: rtl8723be: Add new driver")'
+>>
+>> drivers/net/wireless/rtlwifi/rtl8723be/dm.c - line numbers from 4.1-rc7
+>> 886         if (thermalvalue > rtlefuse->eeprom_thermalmeter)
+>> 887                 rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
+>> 888						 	index_for_channel);
+>> 889         else
+>> 890                 rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
+>> 891							index_for_channel);
+>>
+>> Can't figure out what the intent of this condition is but it currently has
+>> no effect as if == else and this most likely is not the intent.
+>
+> I do not know what the correct code should be here, but I will contact 
+> the Realtek engineers and get their interpretation. In the meantime, 
+> please do not change this code.
+>
+as noted - I have no clue - so no intent to attempt a change
+my mail is only intended as probable bug report.
 
-It looks as if this is a WEXT issue, since on the same 
-system multiple 'iw dev <devname> station dump' calls
-return different signal level values.
-
-I can confirm the behaviour on davem 4.1.0-rc6 net tree
-at commit c46a024ea5, it has been reported on [1] for 
-fedora 21 with kernel-4.0.4-201/2 as well.
-
-That report also stated that the behaviour does not occur
-on kernel-3.19.7-200. Have not had time to bisect yet.
-
-Thanks for any hints that can help resolve this.
-
-[1] https://github.com/uoaerg/wavemon/issues/10
+thx!
+hofrat
