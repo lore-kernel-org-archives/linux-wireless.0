@@ -1,176 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:35327 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753972AbbFJKM6 (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:35435 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748AbbFNXOA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 06:12:58 -0400
-Received: by igbzc4 with SMTP id zc4so31831630igb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2015 03:12:57 -0700 (PDT)
+	Sun, 14 Jun 2015 19:14:00 -0400
+Received: by oihd6 with SMTP id d6so48701686oih.2
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Jun 2015 16:14:00 -0700 (PDT)
+Message-ID: <557E0AB4.2030001@lwfinger.net> (sfid-20150615_011413_230574_5A1EF7BE)
+Date: Sun, 14 Jun 2015 18:13:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1433923607-20927-3-git-send-email-johnny.kim@atmel.com>
-References: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com> <1433923607-20927-3-git-send-email-johnny.kim@atmel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 10 Jun 2015 20:12:37 +1000
-Message-ID: <CAGRGNgUqO9OGDBXsVRW7CksShmH7XcHYhwghxh2ErM6Lz2kWZg@mail.gmail.com> (sfid-20150610_121301_648098_08E8BE02)
-Subject: Re: [PATCH 2/4] staging: wilc1000: add syntax for 64-bit machine
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	chris.park@atmel.com, Rachel.kim@atmel.com, dean.lee@atmel.com,
-	tony.cho@atmel.com
-Content-Type: text/plain; charset=UTF-8
+To: James Cameron <quozl@laptop.org>
+CC: Arnaud LE CAM <arnaud.lecam@yahoo.fr>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Bug ?] 10ec:b723 Realtek RTL8723BE wireless card drops connection
+References: <1434268591.3014.YahooMailBasic@web172003.mail.ir2.yahoo.com> <557D9966.5050209@lwfinger.net> <20150614230456.GE12739@us.netrek.org>
+In-Reply-To: <20150614230456.GE12739@us.netrek.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johnny,
+On 06/14/2015 06:04 PM, James Cameron wrote:
+> On Sun, Jun 14, 2015 at 10:10:30AM -0500, Larry Finger wrote:
+>> To address your problem, power saving does not work correctly on
+>> this device. That is why there are numerous posts on the web telling
+>> people to use ips=0. It seems that Ubuntu people never look at
+>> anything but the Ubuntu literature; however, I'm sure that I posted
+>> this "suggestion" there as well. The Realtek group is currently
+>> rewriting the entire dynamic management code for all their drivers.
+>> When complete, this should improve performance and should help the
+>> power-save condition. No, I do not know when the new code will be
+>> ready, or how much improvement it will make.
+>
+> Thanks for summary.
+>
+> OLPC is also seeing the issue.  Power saving mode impacts battery run
+> time; one of our design goals.  ips=0 seems to solve with 3.19, but
+> not fully with 4.1-rc7; still some periods of packet loss.
+>
+> I offer to test any rtl8723be changes.
 
-On Wed, Jun 10, 2015 at 6:06 PM, Johnny Kim <johnny.kim@atmel.com> wrote:
-> The driver take pointer value to integer value for message packet.
-> So, The driver was fixed to save and load the address
-> on 64-bit machine.
->
-> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++++++++++----
->  drivers/staging/wilc1000/wilc_wlan.c      | 19 +++++++++++++++----
->  drivers/staging/wilc1000/wilc_wlan.h      |  6 +++++-
->  3 files changed, 40 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index cfe3364..4b005fa 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -6918,9 +6918,14 @@ void NetworkInfoReceived(u8 *pu8Buffer, WILC_Uint32 u32Length)
->  {
->         WILC_Sint32 s32Error = WILC_SUCCESS;
->         tstrHostIFmsg strHostIFmsg;
-> -       size_t drvHandler;
-> +       size_t drvHandler = 0;
->         tstrWILC_WFIDrv *pstrWFIDrv = NULL;
->
-> +#ifdef CONFIG_64BIT
-> +       drvHandler = ((pu8Buffer[u32Length - 8]) | (pu8Buffer[u32Length - 7] << 8) | (pu8Buffer[u32Length - 6] << 16) | (pu8Buffer[u32Length - 5] << 24));
-> +       drvHandler <<= 32;
-> +#endif
-> +
+Please do a bisection between 4.1-rc7 and 3.19.
 
-This does nothing as it's overwritten in the next line.
-
->         drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
->         pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
->
-> @@ -6968,13 +6973,18 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, WILC_Uint32 u32Length)
->  {
->         WILC_Sint32 s32Error = WILC_SUCCESS;
->         tstrHostIFmsg strHostIFmsg;
-> -       size_t drvHandler;
-> +       size_t drvHandler = 0;
->         tstrWILC_WFIDrv *pstrWFIDrv = NULL;
->
->         /*BugID_5348*/
->         down(&hSemHostIntDeinit);
->
-> -       drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
-> +#ifdef CONFIG_64BIT
-> +       drvHandler = ((pu8Buffer[u32Length - 8]) | (pu8Buffer[u32Length - 7] << 8) | (pu8Buffer[u32Length - 6] << 16) | (pu8Buffer[u32Length - 5] << 24));
-> +       drvHandler <<= 32;
-> +#endif
-> +
-> +       drvHandler |= ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
->         pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
->         PRINT_D(HOSTINF_DBG, "General asynchronous info packet received \n");
->
-> @@ -7031,8 +7041,14 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, WILC_Uint32 u32Length)
->  {
->         WILC_Sint32 s32Error = WILC_SUCCESS;
->         tstrHostIFmsg strHostIFmsg;
-> -       size_t drvHandler;
-> +       size_t drvHandler = 0;
->         tstrWILC_WFIDrv *pstrWFIDrv = NULL;
-> +
-> +#ifdef CONFIG_64BIT
-> +       drvHandler = ((pu8Buffer[u32Length - 8]) | (pu8Buffer[u32Length - 7] << 8) | (pu8Buffer[u32Length - 6] << 16) | (pu8Buffer[u32Length - 5] << 24));
-> +       drvHandler <<= 32;
-> +#endif
-> +
-
-Same here.
-
->         drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
->         pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
->
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index 739be55..d20ffe0 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -1867,7 +1867,7 @@ static int wilc_wlan_cfg_commit(int type, size_t drvHandler)
->  {
->         wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
->         wilc_cfg_frame_t *cfg = &p->cfg_frame;
-> -       int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
-> +       int total_len = p->cfg_frame_offset + sizeof(size_t) + DRIVER_HANDLER_SIZE;
->         int seq_no = p->cfg_seq_no % 256;
->         size_t driver_handler = (size_t)drvHandler;
->
-> @@ -1883,10 +1883,21 @@ static int wilc_wlan_cfg_commit(int type, size_t drvHandler)
->         cfg->wid_header[1] = seq_no;    /* sequence number */
->         cfg->wid_header[2] = (uint8_t)total_len;
->         cfg->wid_header[3] = (uint8_t)(total_len >> 8);
-> +#ifdef CONFIG_64BIT
->         cfg->wid_header[4] = (uint8_t)driver_handler;
-> -       cfg->wid_header[5] = (uint8_t)(driver_handler >> 8);
-> -       cfg->wid_header[6] = (uint8_t)(driver_handler >> 16);
-> -       cfg->wid_header[7] = (uint8_t)(driver_handler >> 24);
-> +       cfg->wid_header[5] = (uint8_t)(driver_handler >> 8L);
-> +       cfg->wid_header[6] = (uint8_t)(driver_handler >> 16L);
-> +       cfg->wid_header[7] = (uint8_t)(driver_handler >> 24L);
-> +       cfg->wid_header[8] = (uint8_t)(driver_handler >> 32L);
-> +       cfg->wid_header[9] = (uint8_t)(driver_handler >> 40L);
-> +       cfg->wid_header[10] = (uint8_t)(driver_handler >> 48L);
-> +       cfg->wid_header[11] = (uint8_t)(driver_handler >> 56L);
-> +#else
-> +       cfg->wid_header[4] = (uint8_t)driver_handler;
-> +       cfg->wid_header[5] = (uint8_t)(driver_handler >> 8L);
-> +       cfg->wid_header[6] = (uint8_t)(driver_handler >> 16L);
-> +       cfg->wid_header[7] = (uint8_t)(driver_handler >> 24L);
-> +#endif
->         p->cfg_seq_no = seq_no;
->
->         /**
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-> index 0ba7ec6..e026baf 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.h
-> +++ b/drivers/staging/wilc1000/wilc_wlan.h
-> @@ -15,7 +15,11 @@
->  #define DRIVER_HANDLER_SIZE 4
->  #define MAX_MAC_HDR_LEN         26 /* QOS_MAC_HDR_LEN */
->  #define SUB_MSDU_HEADER_LENGTH  14
-> +#ifdef CONFIG_64BIT
-> +#define SNAP_HDR_LEN            12
-> +#else
->  #define SNAP_HDR_LEN            8
-> +#endif
->  #define ETHERNET_HDR_LEN          14
->  #define WORD_ALIGNMENT_PAD        0
->
-> @@ -297,7 +301,7 @@ typedef struct {
->         uint8_t ether_header[14];
->         uint8_t ip_header[20];
->         uint8_t udp_header[8];
-> -       uint8_t wid_header[8];
-> +       uint8_t wid_header[4+sizeof(uintptr_t)];
->         uint8_t frame[MAX_CFG_FRAME_SIZE];
->  } wilc_cfg_frame_t;
-
-How about you turn wid_header into a proper struct with a function
-pointer instead of adding horrible hacks on top of already horrible
-code?
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Larry
