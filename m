@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43875 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755239AbbFQOmJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 10:42:09 -0400
-From: David Lin <dlin@marvell.com>
-To: Dan Williams <dcbw@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>,
-	Chor Teck Law <ctlaw@marvell.com>
-Subject: RE: [PATCH v2] Add new mac80211 driver mwlwifi.
-Date: Wed, 17 Jun 2015 14:42:03 +0000
-Message-ID: <43281b6b6b674448b40c4ecc0385737e@SC-EXCH02.marvell.com> (sfid-20150617_164214_894789_16D734AF)
-References: <2127ea28a2a74cd6a89d45b88caf06cb@SC-EXCH02.marvell.com>
-	 <1434526059.1884.7.camel@sipsolutions.net>
-	 <7e061b3712f4408284917b5a5b4d3813@SC-EXCH02.marvell.com>
-	 <1434529677.1884.9.camel@sipsolutions.net>
-	 <9c9237415bfe49568467f9795dc08111@SC-EXCH02.marvell.com>
- <1434551555.3952.8.camel@redhat.com>
-In-Reply-To: <1434551555.3952.8.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from hofr.at ([212.69.189.236]:43332 "EHLO mail.hofr.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751129AbbFNGTo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jun 2015 02:19:44 -0400
+Date: Sun, 14 Jun 2015 08:19:41 +0200
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
+	Joe Perches <joe@perches.com>,
+	Daniele Alessandrelli <daniele.alessandrelli@gmail.com>,
+	Aleh Suprunovich <br@ahlamon.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUG ?] staging: rtl8723au: condition with no effect
+Message-ID: <20150614061941.GA27959@opentech.at> (sfid-20150614_081958_881243_0624757B)
+References: <1434191497-5611-1-git-send-email-hofrat@osadl.org> <wrfjy4jn1dri.fsf@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wrfjy4jn1dri.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQo+IERhbiBXaWxsaWFtcyB3cm90ZToNCj4gDQo+IE9uIFdlZCwgMjAxNS0wNi0xNyBhdCAwODoz
-NCArMDAwMCwgRGF2aWQgTGluIHdyb3RlOg0KPiA+ID4gSm9oYW5uZXMgQmVyZyB3cm90ZToNCj4g
-PiA+DQo+ID4gPiBPbiBXZWQsIDIwMTUtMDYtMTcgYXQgMDg6MDcgKzAwMDAsIERhdmlkIExpbiB3
-cm90ZToNCj4gPiA+DQo+ID4gPiA+ID4gQWxzbywgeW91IHByb2JhYmx5IHJlYWxseSBzaG91bGQg
-aGF2ZSB0d28gaGVhZGVyIGZpbGVzIC0gb25lIGZvcg0KPiA+ID4gPiA+IHRoZSBmaXJtd2FyZSBz
-dHJ1Y3RzIGFuZCBvbmUgZm9yIHRoZSBkcml2ZXIgc3RydWN0cyAtIGVzcGVjaWFsbHkNCj4gPiA+
-ID4gPiBzaW5jZSB5b3Ugc2VlbSB0byBiZSBjb25mdXNpbmcgdGhlIHR3byENCj4gPiA+ID4gPg0K
-PiA+ID4gPiBBcyBtZW50aW9uZWQgYmVmb3JlLCB0aGlzIGlzIGN1cnJlbnQgaW50ZXJmYWNlIHdp
-dGggRi9XLCBhbmQgdGhpcw0KPiA+ID4gPiBGL1cgaXMgdXNlZCBieSBvdGhlciBtYXJ2ZWxsJ3Mg
-ZHJpdmVycywgSSBjYW4ndCBjaGFuZ2UgaXQuDQo+ID4gPg0KPiA+ID4gWW91J3JlIG1pc3VuZGVy
-c3RhbmRpbmcuIEknbSBub3QgYXNraW5nIHlvdSB0byBjaGFuZ2UgdGhlIGludGVyZmFjZS4NCj4g
-PiA+IEknbSBqdXN0IGFza2luZyB5b3UgdG8gbWFrZSBzdXJlIHlvdSBrbm93IHdoaWNoIHBhcnQg
-aXMgZmlybXdhcmUNCj4gPiA+IGludGVyZmFjZSBhbmQgd2hpY2ggaXNuJ3QuIENsZWFybHksIHBv
-aW50ZXJzICpjYW5ub3QqIGJlIGZpcm13YXJlDQo+ID4gPiBpbnRlcmZhY2UgLSBpZiB0aGVyZSdz
-IHNvbWV0aGluZyAiY29va2llLWxpa2UiIHRoYXQgeW91IHVzZSBhcw0KPiA+ID4gcG9pbnRlcnMg
-eW91IGF0IGxlYXN0IG5lZWQgdG8gbWFrZSBzdXJlIHlvdSBrbm93IGhvdyBsb25nIHRoaXMgZmll
-bGQgaXMgKDMyDQo+IG9yIDY0IGJpdHMpLi4uDQo+ID4gPg0KPiA+IFllcywgd2Uga25vdyB0aGlz
-IGtpbmQgb2YgaXNzdWUuIFdlIHdpbGwgZW5oYW5jZSBpdCBpbiB0aGUgZnV0dXJlLg0KPiA+ID4N
-Cj4gPiA+ID4gQWxsIHN0cnVjdHVyZXMgZGVmaW5lZCBpbiB0aGlzIGZpbGUgYXJlIHJlbGF0ZWQg
-dG8gRi9XIGNvbW1hbmRzLA0KPiA+ID4gPiBpdCBzaG91bGQgYmUgYmV0dGVyIGxldCB0aGVtIGJl
-IGRlZmluZWQgaW4gdGhpcyBmaWxlLg0KPiA+ID4NCj4gPiA+IEdpdmVuIHlvdXIgb3duIGNvbmZ1
-c2lvbiBvbiB3aGF0J3MgZmlybXdhcmUgQVBJIGFuZCB3aGF0IGlzbid0LCBJJ20NCj4gPiA+IG5v
-dCBzbyBzdXJlIGFib3V0IHRoYXQgLi4uDQo+ID4gPg0KPiA+IEkgYW0gc3VyZSBhbGwgc3RydWN0
-dXJlcyBkZWZpbmVkIGluIHRoaXMgZmlsZSBpcyByZWxhdGVkIHRvIGZpcm13YXJlIGNvbW1hbmQu
-DQo+IA0KPiBUaGV5IG1heSB3ZWxsIGJlIHJlbGF0ZWQsIGJ1dCB0aGF0IGRvZXNuJ3QgbmVjZXNz
-YXJpbHkgbWVhbiB0aGF0IHRoZSBkcml2ZXINCj4gc2lkZSBjYW5ub3QgYmUgY2xlYXJlciBhYm91
-dCB3aGF0IGZpZWxkcyBvZiBhIHN0cnVjdCBhcmUgYWN0dWFsbHkgcmVhZCBieSB0aGUNCj4gZmly
-bXdhcmUsIGFuZCB3aGF0IGZpZWxkcyBhcmUgcHJpdmF0ZSB0byB0aGUgaG9zdCBpbXBsZW1lbnRh
-dGlvbiBhcyBhIGRhdGENCj4gc3Rhc2ggKGVnLCAncHJpdictdHlwZSBzdHVmZikuICBSZWRvaW5n
-IHRoZSBzdHJ1Y3RzIGxpa2UgSm9oYW5uZXMgc3VnZ2VzdGVkDQo+IG9yaWdpbmFsbHkgd291bGQg
-bWFrZSB0aGF0IGNyeXN0YWwtY2xlYXIuLi4NCj4gDQo+IERhbg0KDQpZZXMsIHdlIHBsYW4gdG8g
-bW9kaWZ5IHRoZSBjb2RlIGFzIEpvaGFubmVzIHN1Z2dlc3RlZCBhbmQgY29tZSBvdXQgUEFUQ0gg
-djMgZm9yIHJldmlldy4gVGhhbmtzLg0KDQpEYXZpZA0KDQo=
+On Sat, 13 Jun 2015, Jes Sorensen wrote:
+
+> Nicholas Mc Guire <hofrat@osadl.org> writes:
+> > scanning for trivial bug-patters with coccinelle spatches returned:
+> > ./drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:1395
+> > 	WARNING: condition with no effect (if branch == else)
+> >
+> > drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c - line numbers from 4.1-rc7
+> > 1395    if (bWithoutHWSM) {
+> > 1396            /* value16 |= (APDM_HOST | FSM_HSUS |/PFM_ALDN); */
+> > 1397            /*  2010/08/31 According to Filen description, we need to
+> > 1398                use HW to shut down 8051 automatically. */
+> > 1399            /*  Because suspend operation need the asistance of 8051
+> > 1400                to wait for 3ms. */
+> > 1401            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
+> > 1402    } else {
+> > 1403            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
+> > 1404    }
+> > 1405 
+> > 1406    rtl8723au_write16(padapter, REG_APS_FSMCO, value16);    /* 0x4802 */
+> >
+> > Not clear what the intent is but this looks like a typo/bug in the assigment
+> > of value16 as the condition here has no effect.
+> 
+> Doesn't look like a typo, looks like someone at some point had commented
+> out PFM_ALDN in the bWithoutHWSM case. Why they did that and then later
+> overrode it, I have no idea.
+>
+as far as its traceable in git log if == else was in there from the
+very beginning (including that comment) - both the if and else were
+updated in commit cffca68d7b2f ("staging: rtl8723au: _DisableAnalog(): Avoid
+zero-init variables unnecessaril") but without changing PFM_ALDN - as there
+are no comments to the meaning of these bits in the header file there is
+no way to really come up with a resonable patch. anyway its either wrong 
+settings or the condition should be removed.
+
+thx!
+hofrat
