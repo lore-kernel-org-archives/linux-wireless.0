@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.12]:54131 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751380AbbFBTLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 15:11:42 -0400
-From: Jakub Kicinski <moorray3@wp.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH 3/4] mt7601u: don't cleanup device second time after .resume()
-Date: Tue,  2 Jun 2015 21:11:27 +0200
-Message-Id: <1433272288-6450-3-git-send-email-moorray3@wp.pl> (sfid-20150602_211147_137460_06B70566)
-In-Reply-To: <1433272288-6450-1-git-send-email-moorray3@wp.pl>
-References: <1433272288-6450-1-git-send-email-moorray3@wp.pl>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35812 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091AbbFNPRd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Jun 2015 11:17:33 -0400
+Message-ID: <557D9B09.7020100@lwfinger.net> (sfid-20150614_171754_601744_2266CEDE)
+Date: Sun, 14 Jun 2015 10:17:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Nicholas Mc Guire <hofrat@osadl.org>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Masanari Iida <standby24x7@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUG ?] rtlwifi: rtl8723be: condition with no effect
+References: <1434192211-5855-1-git-send-email-hofrat@osadl.org>
+In-Reply-To: <1434192211-5855-1-git-send-email-hofrat@osadl.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+On 06/13/2015 05:43 AM, Nicholas Mc Guire wrote:
+> From: Nicholas Mc Guire <hofrat@osadl.org>
+>
+> scanning for trivial bug-patters with coccinelle spatches returned:
+> ./drivers/net/wireless/rtlwifi/rtl8723be/dm.c:886
+> 	WARNING: condition with no effect (if branch == else)
+>
+> Added in 'commit a619d1abe20c ("rtlwifi: rtl8723be: Add new driver")'
+>
+> drivers/net/wireless/rtlwifi/rtl8723be/dm.c - line numbers from 4.1-rc7
+> 886         if (thermalvalue > rtlefuse->eeprom_thermalmeter)
+> 887                 rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
+> 888						 	index_for_channel);
+> 889         else
+> 890                 rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
+> 891							index_for_channel);
+>
+> Can't figure out what the intent of this condition is but it currently has
+> no effect as if == else and this most likely is not the intent.
 
-Make sure .disconnect() doesn't cleanup the device if
-.resume() failed.  This may happen when device is removed
-during suspend.
+I do not know what the correct code should be here, but I will contact the 
+Realtek engineers and get their interpretation. In the meantime, please do not 
+change this code.
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
----
- drivers/net/wireless/mediatek/mt7601u/init.c | 3 +++
- drivers/net/wireless/mediatek/mt7601u/usb.c  | 9 ++++++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/init.c b/drivers/net/wireless/mediatek/mt7601u/init.c
-index 1fc86e865c8c..45eb0796a2e5 100644
---- a/drivers/net/wireless/mediatek/mt7601u/init.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/init.c
-@@ -427,6 +427,9 @@ err:
- 
- void mt7601u_cleanup(struct mt7601u_dev *dev)
- {
-+	if (!test_and_clear_bit(MT7601U_STATE_INITIALIZED, &dev->state))
-+		return;
-+
- 	mt7601u_stop_hardware(dev);
- 	mt7601u_dma_cleanup(dev);
- 	mt7601u_mcu_cmd_deinit(dev);
-diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
-index 99e2b3997bfa..54dba4001865 100644
---- a/drivers/net/wireless/mediatek/mt7601u/usb.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
-@@ -338,8 +338,15 @@ static int mt7601u_suspend(struct usb_interface *usb_intf, pm_message_t state)
- static int mt7601u_resume(struct usb_interface *usb_intf)
- {
- 	struct mt7601u_dev *dev = usb_get_intfdata(usb_intf);
-+	int ret;
-+
-+	ret = mt7601u_init_hardware(dev);
-+	if (ret)
-+		return ret;
-+
-+	set_bit(MT7601U_STATE_INITIALIZED, &dev->state);
- 
--	return mt7601u_init_hardware(dev);
-+	return 0;
- }
- 
- MODULE_DEVICE_TABLE(usb, mt7601u_device_table);
--- 
-2.1.0
+Larry
+
 
