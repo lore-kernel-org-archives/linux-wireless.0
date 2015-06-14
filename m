@@ -1,72 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:36025 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbbFMGl0 (ORCPT
+Received: from mail-db3on0131.outbound.protection.outlook.com ([157.55.234.131]:9679
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751276AbbFNDQS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2015 02:41:26 -0400
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/2] staging: wilc1000: remove BOOL_T typedef
-Date: Sat, 13 Jun 2015 15:41:18 +0900
-Message-Id: <1434177679-9831-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150613_084131_332168_9391E753)
+	Sat, 13 Jun 2015 23:16:18 -0400
+From: "Joglekar, Tejas (T.)" <tjogleka@visteon.com>
+To: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"johannes.berg@intel.com" <johannes.berg@intel.com>,
+	"joe@perches.com" <joe@perches.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] staging:rtl8723au:ioctl_cfg80211:spaces required around '>'
+Date: Sun, 14 Jun 2015 03:01:06 +0000
+Message-ID: <20150614030059.GA6428@Tejas-asus> (sfid-20150614_051622_601178_804F05B3)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove BOOL_T typedef.
+From: Joglekar Tejas <tjogleka@visteon.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch removes the error given by checkpatch.pl
+" spaces required around that '>' "
+
+Signed-off-by: Joglekar Tejas <tjogleka@visteon.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/itypes.h         | 9 ---------
- 2 files changed, 3 insertions(+), 12 deletions(-)
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 17ab5cd..ca59f1b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -7698,7 +7698,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 			/* HT Cap. IE */
- 			else if (pu8IEs[index] == HT_CAPABILITY_IE) {
- 				/* if IE found set the flag */
--				pNewJoinBssParam->ht_capable = BTRUE;
-+				pNewJoinBssParam->ht_capable = true;
- 				index += pu8IEs[index + 1] + 2; /* ID,Length bytes and IE body */
- 				/* PRINT_D(HOSTINF_DBG,"HT_CAPABALE\n"); */
- 				continue;
-@@ -7709,11 +7709,11 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				   ((pu8IEs[index + 6] == 0x00) || (pu8IEs[index + 6] == 0x01)) && /* OUI Sub Type */
- 				   (pu8IEs[index + 7] == 0x01)) {
- 				/* Presence of WMM Info/Param element indicates WMM capability */
--				pNewJoinBssParam->wmm_cap = BTRUE;
-+				pNewJoinBssParam->wmm_cap = true;
- 
- 				/* Check if Bit 7 is set indicating U-APSD capability */
- 				if (pu8IEs[index + 8] & (1 << 7)) {
--					pNewJoinBssParam->uapsd_cap = BTRUE;
-+					pNewJoinBssParam->uapsd_cap = true;
- 				}
- 				index += pu8IEs[index + 1] + 2;
- 				continue;
-diff --git a/drivers/staging/wilc1000/itypes.h b/drivers/staging/wilc1000/itypes.h
-index 2441853..d64ae35 100644
---- a/drivers/staging/wilc1000/itypes.h
-+++ b/drivers/staging/wilc1000/itypes.h
-@@ -36,13 +36,4 @@
- #ifndef ITYPES_H
- #define ITYPES_H
- 
--/*****************************************************************************/
--/* Enums                                                                     */
--/*****************************************************************************/
--
--typedef enum {
--	BFALSE = 0,
--	BTRUE  = 1
--} BOOL_T;
--
- #endif /* ITYPES_H */
+diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+index bc95ce8..feb5961 100644
+--- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+@@ -1041,7 +1041,7 @@ static u16 rtw_get_cur_max_rate(struct rtw_adapter *adapter)
+ 		while (pcur_bss->SupportedRates[i] != 0 &&
+ 		       pcur_bss->SupportedRates[i] != 0xFF) {
+ 			rate = pcur_bss->SupportedRates[i] & 0x7F;
+-			if (rate>max_rate)
++			if (rate > max_rate)
+ 				max_rate = rate;
+ 			i++;
+ 		}
 -- 
 1.9.1
-
