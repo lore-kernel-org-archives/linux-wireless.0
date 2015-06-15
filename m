@@ -1,61 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43857 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbbFKOqM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52174 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754234AbbFOJqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 10:46:12 -0400
-Date: Thu, 11 Jun 2015 07:46:11 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Rachel.kim@atmel.com, dean.lee@atmel.com, tony.cho@atmel.com,
-	chris.park@atmel.com
-Subject: Re: [PATCH 1/4] staging: wilc1000: modify data type
-Message-ID: <20150611144611.GA3546@kroah.com> (sfid-20150611_164617_790929_65644812)
-References: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com>
- <1433923607-20927-2-git-send-email-johnny.kim@atmel.com>
- <20150611004059.GA30902@kroah.com>
- <55791DB3.7080205@atmel.com>
+	Mon, 15 Jun 2015 05:46:35 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55791DB3.7080205@atmel.com>
+Subject: Re: ath9k_htc: add support of channel switch
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1433836789-5505-1-git-send-email-yeohchunyeow@gmail.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Message-Id: <20150615094634.D3F5C14096D@smtp.codeaurora.org> (sfid-20150615_114638_583981_BCF3F931)
+Date: Mon, 15 Jun 2015 09:46:34 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2015 at 02:33:39PM +0900, Johnny Kim wrote:
+
+> Add the support of channel switching functionality, similar
+> to ath9k support.
 > 
-> On 2015년 06월 11일 09:40, Greg KH wrote:
-> >On Wed, Jun 10, 2015 at 05:06:44PM +0900, Johnny Kim wrote:
-> >>-static int wilc_wlan_cfg_commit(int type, uint32_t drvHandler)
-> >>+static int wilc_wlan_cfg_commit(int type, size_t drvHandler)
-> >Shouldn't this just be a void *?  And if so, why not the real function
-> >pointer instead?
-> >
-> >Also, lots of these seem to be just pointers, please use a pointer
-> >instead of hiding it in a size_t as that's the most portable, and
-> >correct, way to do it.  No need to hide any function pointers here, this
-> >isn't Windows :)
-> >
-> >thanks,
-> >
-> >greg k-h
+> Tested with TP-Link TL-WN722N and TL-WN821N.
 > 
-> To replace the integer to the pointer as your counsel, I need a lot of
-> discussion internally.
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-Why "internally"?  Why not here in the development community?
+Thanks, applied to wireless-drivers-next.git.
 
-> But I will fix the type and the related things like your thinking.
-
-thank you.
-
-> I know there is the build warning for 64-bit machine and this driver stays
-> in BROKEN status on linux-next.
-> I want to know if the reason is 64bit build warning.
-
-Probably, fix them up and then we can see about getting that broken
-status removed.
-
-thanks,
-
-greg k-h
+Kalle Valo
