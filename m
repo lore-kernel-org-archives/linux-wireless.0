@@ -1,80 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55316 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754320AbbFJWMb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50280 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583AbbFOJ3k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 18:12:31 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 4/7] brcmfmac: have sdio return -EIO when device communication is not possible
-Date: Thu, 11 Jun 2015 00:12:20 +0200
-Message-ID: <1433974343-16982-5-git-send-email-arend@broadcom.com> (sfid-20150611_001239_693147_E55B9AFA)
-In-Reply-To: <1433974343-16982-1-git-send-email-arend@broadcom.com>
-References: <1433974343-16982-1-git-send-email-arend@broadcom.com>
+	Mon, 15 Jun 2015 05:29:40 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/3] rtlwifi: rtl8192cu: remove IS_HARDWARE_TYPE_8192CE
+ andIS_HARDWARE_TYPE_8192CU
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1433407416-752-1-git-send-email-ap420073@gmail.com>
+To: Taehee Yoo <ap420073@gmail.com>
+Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
+	linux-wireless@vger.kernel.org
+Message-Id: <20150615092939.EB49E140794@smtp.codeaurora.org> (sfid-20150615_112944_279284_DFD6E987)
+Date: Mon, 15 Jun 2015 09:29:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The bus interface functions txctl and rxctl may be used while the device
-can not be accessed, eg. upon driver .remove() callback. This patch will
-immediately return -EIO when this is the case which speeds up the module
-unload.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 1 +
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c   | 6 ++++++
- 2 files changed, 7 insertions(+)
+> in the rtlwifi/rtl8192cu, IS_HARDWARE_TYPE_8192CE and IS_HARDWARE_TYPE_8192CU
+> is unnecessary. because rtlwifi/rtl8192cu codes aren't shared.
+> 
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 71779b9..410a664 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -988,6 +988,7 @@ static void brcmf_sdiod_freezer_detach(struct brcmf_sdio_dev *sdiodev)
- 
- static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
- {
-+	sdiodev->state = BRCMF_SDIOD_DOWN;
- 	if (sdiodev->bus) {
- 		brcmf_sdio_remove(sdiodev->bus);
- 		sdiodev->bus = NULL;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index bf7a8b1..d36f5f3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -2820,6 +2820,8 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	struct brcmf_sdio *bus = sdiodev->bus;
- 
- 	brcmf_dbg(TRACE, "Enter: pkt: data %p len %d\n", pkt->data, pkt->len);
-+	if (sdiodev->state != BRCMF_SDIOD_DATA)
-+		return -EIO;
- 
- 	/* Add space for the header */
- 	skb_push(pkt, bus->tx_hdrlen);
-@@ -2948,6 +2950,8 @@ brcmf_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 	int ret;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
-+	if (sdiodev->state != BRCMF_SDIOD_DATA)
-+		return -EIO;
- 
- 	/* Send from dpc */
- 	bus->ctrl_frame_buf = msg;
-@@ -3238,6 +3242,8 @@ brcmf_sdio_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- 	struct brcmf_sdio *bus = sdiodev->bus;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
-+	if (sdiodev->state != BRCMF_SDIOD_DATA)
-+		return -EIO;
- 
- 	/* Wait until control frame is available */
- 	timeleft = brcmf_sdio_dcmd_resp_wait(bus, &bus->rxlen, &pending);
--- 
-1.9.1
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
+f5372e940cdb rtlwifi: rtl8192cu: remove IS_HARDWARE_TYPE_8192CE and IS_HARDWARE_TYPE_8192CU
+1d6b2fb1bc80 rtlwifi: rtl8192cu: remove _InitBeaconParameters().
+fbcaee1c6da1 rtlwifi: rtl8192cu: remove INTF_PCI and INTF_USB
+
+Kalle Valo
