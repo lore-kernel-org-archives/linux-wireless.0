@@ -1,121 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5195 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751973AbbFAMeP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:34:15 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CUMQj028418
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:34:15 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1urjjr0nfg-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:34:15 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 15/17] mwifiex: update AP WMM settings from BSS_START event
-Date: Mon, 1 Jun 2015 23:32:13 +0530
-Message-ID: <1433181735-15712-16-git-send-email-patila@marvell.com> (sfid-20150601_150350_935973_2D363682)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.15.18]:59046 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754548AbbFOS5s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Jun 2015 14:57:48 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH] ath9k_htc: introduce support for different fw versions
+Date: Mon, 15 Jun 2015 20:57:28 +0200
+Message-Id: <1434394648-18700-1-git-send-email-linux@rempel-privat.de> (sfid-20150615_205754_598188_FD3CDAD8)
+In-Reply-To: <CAGRGNgUWJ-LDgdxe1TJw2YOroMKaYDj3ehUu7j_zoqX17BxbjQ@mail.gmail.com>
+References: <CAGRGNgUWJ-LDgdxe1TJw2YOroMKaYDj3ehUu7j_zoqX17BxbjQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was missing and would cause issue in WMM handling.
+Current kernel support only one fw name with theoretically only one
+fw version. By replacing fw with other version we will break compatibility
+with older kernels.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+To avoid this kind of regression this patch will reuse fw version model
+from iwlwifi driver.
+
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/mwifiex/uap_event.c | 63 ++++++++++++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
+ drivers/net/wireless/ath/ath9k/hif_usb.c      | 106 ++++++++++++++++++++------
+ drivers/net/wireless/ath/ath9k/hif_usb.h      |  21 ++++-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   4 +
+ 3 files changed, 105 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 06ce3fe..fee05f5 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -21,8 +21,70 @@
- #include "main.h"
- #include "11n.h"
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 10c02f5..165dd20 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -17,12 +17,8 @@
+ #include <asm/unaligned.h>
+ #include "htc.h"
  
-+#define MWIFIEX_BSS_START_EVT_FIX_SIZE    12
+-/* identify firmware images */
+-#define FIRMWARE_AR7010_1_1     "htc_7010.fw"
+-#define FIRMWARE_AR9271         "htc_9271.fw"
+-
+-MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
+-MODULE_FIRMWARE(FIRMWARE_AR9271);
++MODULE_FIRMWARE(HTC_7010_MODULE_FW);
++MODULE_FIRMWARE(HTC_9271_MODULE_FW);
  
-+static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
-+					 struct sk_buff *event)
+ static struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	{ USB_DEVICE(0x0cf3, 0x9271) }, /* Atheros */
+@@ -1080,12 +1076,88 @@ static void ath9k_hif_usb_firmware_fail(struct hif_device_usb *hif_dev)
+ 		device_unlock(parent);
+ }
+ 
++static void ath9k_hif_usb_firmware_cb(const struct firmware *fw, void *context);
++
++/* taken from iwlwifi */
++static int ath9k_hif_request_firmware(struct hif_device_usb *hif_dev,
++				      bool first)
 +{
-+	int evt_len;
-+	u8 *curr;
-+	u16 tlv_len;
-+	struct mwifiex_ie_types_data *tlv_hdr;
-+	struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
-+	int mask = IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK;
++	char index[8], *chip;
++	int ret;
 +
-+	priv->wmm_enabled = false;
-+	skb_pull(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
-+	evt_len = event->len;
-+	curr = event->data;
-+
-+	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
-+			 event->data, event->len);
-+
-+	while ((evt_len >= sizeof(tlv_hdr->header))) {
-+		tlv_hdr = (struct mwifiex_ie_types_data *)curr;
-+		tlv_len = le16_to_cpu(tlv_hdr->header.len);
-+
-+		if (evt_len < tlv_len + sizeof(tlv_hdr->header))
-+			break;
-+
-+		switch (le16_to_cpu(tlv_hdr->header.type)) {
-+		case WLAN_EID_HT_CAPABILITY:
-+			priv->ap_11n_enabled = true;
-+			break;
-+
-+		case WLAN_EID_VHT_CAPABILITY:
-+			priv->ap_11ac_enabled = true;
-+			break;
- 
-+		case WLAN_EID_VENDOR_SPECIFIC:
-+			/* Point the regular IEEE IE 2 bytes into the Marvell IE
-+			 * and setup the IEEE IE type and length byte fields
-+			 */
-+			wmm_param_ie = (void *)(curr + 2);
-+			wmm_param_ie->vend_hdr.len = (u8)tlv_len;
-+			wmm_param_ie->vend_hdr.element_id =
-+						WLAN_EID_VENDOR_SPECIFIC;
-+			mwifiex_dbg(priv->adapter, EVENT,
-+				    "info: check uap capabilities:\t"
-+				    "wmm parameter set count: %d\n",
-+				    wmm_param_ie->qos_info_bitmap & mask);
-+
-+			mwifiex_wmm_setup_ac_downgrade(priv);
-+			priv->wmm_enabled = true;
-+			mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
-+			break;
-+
-+		default:
-+			break;
++	if (first) {
++		if (htc_use_dev_fw) {
++			hif_dev->fw_minor_index = FIRMWARE_MINOR_IDX_MAX + 1;
++			sprintf(index, "%s", "dev");
++		} else {
++			hif_dev->fw_minor_index = FIRMWARE_MINOR_IDX_MAX;
++			sprintf(index, "%d", hif_dev->fw_minor_index);
 +		}
-+
-+		curr += (tlv_len + sizeof(tlv_hdr->header));
-+		evt_len -= (tlv_len + sizeof(tlv_hdr->header));
++	} else {
++		hif_dev->fw_minor_index--;
++		sprintf(index, "%d", hif_dev->fw_minor_index);
 +	}
 +
-+	return 0;
++	/* test for FW 1.3 */
++	if (MAJOR_VERSION_REQ == 1 && hif_dev->fw_minor_index == 3) {
++		const char *filename;
++
++		if (IS_AR7010_DEVICE(hif_dev->usb_device_id->driver_info))
++			filename = FIRMWARE_AR7010_1_1;
++		else
++			filename = FIRMWARE_AR9271;
++
++		/* expected fw locations:
++		 * - htc_9271.fw   (stable version 1.3, depricated)
++		 */
++		snprintf(hif_dev->fw_name, sizeof(hif_dev->fw_name),
++			 "%s", filename);
++
++	} else if (hif_dev->fw_minor_index < FIRMWARE_MINOR_IDX_MIN) {
++		dev_err(&hif_dev->udev->dev, "no suitable firmware found!\n");
++
++		return -ENOENT;
++	} else {
++		if (IS_AR7010_DEVICE(hif_dev->usb_device_id->driver_info))
++			chip = "7010";
++		else
++			chip = "9271";
++
++		/* expected fw locations:
++		 * - ath9k_htc/htc_9271-1.dev.0.fw (development version)
++		 * - ath9k_htc/htc_9271-1.4.0.fw   (stable version)
++		 */
++		snprintf(hif_dev->fw_name, sizeof(hif_dev->fw_name),
++			 "%s/htc_%s-%d.%s.0.fw", HTC_FW_PATH,
++			 chip, MAJOR_VERSION_REQ, index);
++	}
++
++	ret = request_firmware_nowait(THIS_MODULE, true, hif_dev->fw_name,
++				      &hif_dev->udev->dev, GFP_KERNEL,
++				      hif_dev, ath9k_hif_usb_firmware_cb);
++	if (ret) {
++		dev_err(&hif_dev->udev->dev,
++			"ath9k_htc: Async request for firmware %s failed\n",
++			hif_dev->fw_name);
++		return ret;
++	}
++
++	dev_info(&hif_dev->udev->dev, "ath9k_htc: Firmware %s requested\n",
++		 hif_dev->fw_name);
++
++	return ret;
 +}
++
+ static void ath9k_hif_usb_firmware_cb(const struct firmware *fw, void *context)
+ {
+ 	struct hif_device_usb *hif_dev = context;
+ 	int ret;
  
- /*
-  * This function handles AP interface specific events generated by firmware.
-@@ -134,6 +196,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 		       ETH_ALEN);
- 		if (priv->hist_data)
- 			mwifiex_hist_data_reset(priv);
-+		mwifiex_check_uap_capabilties(priv, adapter->event_skb);
- 		break;
- 	case EVENT_UAP_MIC_COUNTERMEASURES:
- 		/* For future development */
+ 	if (!fw) {
++		ret = ath9k_hif_request_firmware(hif_dev, false);
++		if (!ret)
++			return;
++
+ 		dev_err(&hif_dev->udev->dev,
+ 			"ath9k_htc: Failed to get firmware %s\n",
+ 			hif_dev->fw_name);
+@@ -1215,27 +1287,11 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ 
+ 	init_completion(&hif_dev->fw_done);
+ 
+-	/* Find out which firmware to load */
+-
+-	if (IS_AR7010_DEVICE(id->driver_info))
+-		hif_dev->fw_name = FIRMWARE_AR7010_1_1;
+-	else
+-		hif_dev->fw_name = FIRMWARE_AR9271;
+-
+-	ret = request_firmware_nowait(THIS_MODULE, true, hif_dev->fw_name,
+-				      &hif_dev->udev->dev, GFP_KERNEL,
+-				      hif_dev, ath9k_hif_usb_firmware_cb);
+-	if (ret) {
+-		dev_err(&hif_dev->udev->dev,
+-			"ath9k_htc: Async request for firmware %s failed\n",
+-			hif_dev->fw_name);
++	ret = ath9k_hif_request_firmware(hif_dev, true);
++	if (ret)
+ 		goto err_fw_req;
+-	}
+ 
+-	dev_info(&hif_dev->udev->dev, "ath9k_htc: Firmware %s requested\n",
+-		 hif_dev->fw_name);
+-
+-	return 0;
++	return ret;
+ 
+ err_fw_req:
+ 	usb_set_intfdata(interface, NULL);
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 51496e7..7c2ef7e 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -17,8 +17,26 @@
+ #ifndef HTC_USB_H
+ #define HTC_USB_H
+ 
++/* old firmware images */
++#define FIRMWARE_AR7010_1_1     "htc_7010.fw"
++#define FIRMWARE_AR9271         "htc_9271.fw"
++
++/* supported Major FW version */
+ #define MAJOR_VERSION_REQ 1
+ #define MINOR_VERSION_REQ 3
++/* minimal and maximal supported Minor FW version. */
++#define FIRMWARE_MINOR_IDX_MAX  4
++#define FIRMWARE_MINOR_IDX_MIN  3
++#define HTC_FW_PATH	"ath9k_htc"
++
++#define HTC_9271_MODULE_FW  HTC_FW_PATH "/htc_9271-" \
++			__stringify(MAJOR_VERSION_REQ) \
++			"." __stringify(FIRMWARE_MINOR_IDX_MAX) ".0.fw"
++#define HTC_7010_MODULE_FW  HTC_FW_PATH "/htc_7010-" \
++			__stringify(MAJOR_VERSION_REQ) \
++			"." __stringify(FIRMWARE_MINOR_IDX_MAX) ".0.fw"
++
++extern int htc_use_dev_fw;
+ 
+ #define IS_AR7010_DEVICE(_v) (((_v) == AR9280_USB) || ((_v) == AR9287_USB))
+ 
+@@ -101,7 +119,8 @@ struct hif_device_usb {
+ 	struct usb_anchor reg_in_submitted;
+ 	struct usb_anchor mgmt_submitted;
+ 	struct sk_buff *remain_skb;
+-	const char *fw_name;
++	char fw_name[32];
++	int fw_minor_index;
+ 	int rx_remain_len;
+ 	int rx_pkt_len;
+ 	int rx_transfer_len;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 7468562..57ca9b6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -38,6 +38,10 @@ static int ath9k_ps_enable;
+ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+ MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+ 
++int htc_use_dev_fw = 0;
++module_param_named(use_dev_fw, htc_use_dev_fw, int, 0444);
++MODULE_PARM_DESC(use_dev_fw, "Use development FW version");
++
+ #ifdef CONFIG_MAC80211_LEDS
+ int ath9k_htc_led_blink = 1;
+ module_param_named(blink, ath9k_htc_led_blink, int, 0444);
 -- 
-1.8.1.4
+2.1.4
 
