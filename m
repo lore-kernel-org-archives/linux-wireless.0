@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48756 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545AbbFRHBd (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47328 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108AbbFOCeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 03:01:33 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V2 00/10] Add QCA99X0 support
-Date: Thu, 18 Jun 2015 12:31:00 +0530
-Message-ID: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150618_090137_311565_A8A2F19F)
+	Sun, 14 Jun 2015 22:34:13 -0400
+Date: Sun, 14 Jun 2015 19:34:12 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Dean.lee" <dean.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com
+Subject: Re: [PATCH] staging: wilc1000: change WILC_Char to s8
+Message-ID: <20150615023412.GA31318@kroah.com> (sfid-20150615_043416_690253_EBCFD5A8)
+References: <1434087548-11746-1-git-send-email-dean.lee@atmel.com>
+ <20150612152820.GC26174@kroah.com>
+ <557E2088.10008@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <557E2088.10008@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set adds changes for QCA99X0 chip in pci probe,
-Copy Engine init and firmware downloads. Since it is still
-work in progress the support for this chip is not yet
-advertised in pci device table.
+On Mon, Jun 15, 2015 at 09:47:04AM +0900, Dean.lee wrote:
+> 
+> 
+> On 2015년 06월 13일 00:28, Greg KH wrote:
+> >On Fri, Jun 12, 2015 at 02:39:08PM +0900, Dean Lee wrote:
+> >>change own data type(WILC_Char) to common data type(s8)
+> >Why not just 'char'?
+> >
+> >And you are using these in "strings", so why not u8?
+> >
+> >thanks,
+> >
+> >greg k-h
+> i research some documents for change to common data type.
+> that's saying 's8' is 'signed char'.
+> 
+> 'WILC_Char' is redefine 'char'. so i changed 'WILC_Char' to 's8'
 
-Vasanthakumar Thiagarajan (10):
-  ath10k: Add a table to store hw specific values
-  ath10k: Add new reg_address/mask to hw register table
-  ath10k: Add hw register/values for QCA99X0 chip
-  ath10k: Copy Engine related changes for QCA99X0
-  ath10k: Make target cpu address to CE address conversion chip specific
-  ath10k: Add chip reset sequence for QCA99X0
-  ath10k: Extend CE src desc flags for interrupt indication
-  ath10k: Fix BMI communication timeout for QCA99X0
-  ath10k: Add support for code swap
-  ath10k: Add BMI param value to execute otp to hw_param
+Then stick to 'char', don't change the type.
 
----
-V2:
-	- Rebased on the latest master
+thanks,
 
- drivers/net/wireless/ath/ath10k/Makefile    |   3 +-
- drivers/net/wireless/ath/ath10k/bmi.h       |   2 +-
- drivers/net/wireless/ath/ath10k/ce.c        |   1 +
- drivers/net/wireless/ath/ath10k/ce.h        |  17 ++-
- drivers/net/wireless/ath/ath10k/core.c      |  52 ++++++-
- drivers/net/wireless/ath/ath10k/core.h      |   9 ++
- drivers/net/wireless/ath/ath10k/hw.c        |  86 +++++++++++-
- drivers/net/wireless/ath/ath10k/hw.h        |  61 ++++++--
- drivers/net/wireless/ath/ath10k/pci.c       | 180 ++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/pci.h       |  12 --
- drivers/net/wireless/ath/ath10k/swap.c      | 208 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/swap.h      |  72 ++++++++++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   3 +
- 13 files changed, 659 insertions(+), 47 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/swap.c
- create mode 100644 drivers/net/wireless/ath/ath10k/swap.h
-
--- 
-1.9.1
-
+greg k-h
