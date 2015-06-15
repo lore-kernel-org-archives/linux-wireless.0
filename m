@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:35101 "EHLO
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:34631 "EHLO
 	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbbFAI1u convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1750754AbbFOLiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 04:27:50 -0400
-Received: by wicmx19 with SMTP id mx19so67795219wic.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 01:27:49 -0700 (PDT)
+	Mon, 15 Jun 2015 07:38:16 -0400
+Received: by wicnd19 with SMTP id nd19so21733903wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2015 04:38:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87vbf7vr3j.fsf@kamboji.qca.qualcomm.com>
-References: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com>
-	<CA+BoTQnfXGLSvbx+hLfi_2w90-LgC3Uba0ZcO+Pt7J3FcEE9wg@mail.gmail.com>
-	<87vbf7vr3j.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 1 Jun 2015 10:27:49 +0200
-Message-ID: <CA+BoTQmmm6NA2Lb5TB9rSiXYWWarGLGaE5KFJW0_aaqz1YwR3g@mail.gmail.com> (sfid-20150601_102809_033858_3B89CC82)
-Subject: Re: system hang with backports-20150511/20150525
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Marty Faltesek <mfaltesek@google.com>,
-	Martin Faltesek <martin.faltesek@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+In-Reply-To: <21886.43539.833126.629494@gargle.gargle.HOWL>
+References: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com>
+	<21886.43539.833126.629494@gargle.gargle.HOWL>
+Date: Mon, 15 Jun 2015 13:38:14 +0200
+Message-ID: <CALhHN=pUKuXAEb3JEEVTHATEHhvoLe52QDh-pixiS9oUo=6j6Q@mail.gmail.com> (sfid-20150615_133821_432095_50B5B5CD)
+Subject: Re: [RFC] ath9k: advertise p2p dev support when chanctx
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Felix Fietkau <nbd@openwrt.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 June 2015 at 09:13, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> +ath10k list
+On 15 June 2015 at 12:33, Sujith Manoharan <sujith@msujith.org> wrote:
+> Janusz Dziedzic wrote:
+>> Add p2p dev support when ath9k loaded with
+>> use_chanctx=1. This will fix problem, when first
+>> interface is an AP and next we would like to run
+>> p2p_find. Before p2p scan failed.
 >>
->> On 1 June 2015 at 03:37, Marty Faltesek <mfaltesek@google.com> wrote:
->>> Starting with backports-20150511, and continuing with
->>> backports-20150525, we see frequent system hangs. backports-20150424
->>> had no issue.
->>
->> I don't see such binary releases on
->> https://backports.wiki.kernel.org/index.php/Main_Page
->> Hence I don't know what kernel you've backported the drivers from and
->> I can't compare anything.
->>
->> Can you provide more details, please?
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>> ---
+>> @Felix, Sujith please review. I am not sure if didn't miss some
+>> case for NL80211_IFTYPE_P2P_DEVICE (special handling required?).
 >
-> I suspect it's from here:
+> At least the callbacks for adding/removing interfaces need
+> to be handled ?
 >
-> https://www.kernel.org/pub/linux/kernel/projects/backports/2015/05/25/
+Strange, but I didn't hit any problem yet with my simple patch.
+
+> But, can you describe the sequence of commands used that
+> resulted in this issue ?
 >
-> The backports project pages are a bit confusing and that location is
-> hard to find.
+1. load ath9k with use_chanctx=1
+2. run wpa_supplicant using wlan0
+3. connect wlan0 to AP
+4. when we are connected, run p2p_find form wpa_cli
+5. scan will failed with Operation not supported (even I will
+force-ap-scan, while chanctx version using hw_scan callback ...)
+6. p2p_find will fail
 
-Oh, thanks!
-
-Hmm.. There was a ton of changes between 20150424 and 20150511. For
-one, ath10k started to use chanctx API and FAST_XMIT. But it's not a
-given these two are to blame.
-
-The latter can be easily disabled by removing
-IEEE80211_HW_SUPPORT_FAST_XMIT from ar->hw->flags in ath10k's mac.c.
-The former.. not so easy. I'd be awesome if you could do a git bisect.
-The commit ids are a3da0fb6(good) f17107c(bad) (you need linux-next
-git repo including its tags for these ids to be resolvable).
-
-
-Michał
+BR
+Janusz
