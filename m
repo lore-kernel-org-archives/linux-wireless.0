@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50114 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751797AbbFAMeG (ORCPT
+Received: from faui40.informatik.uni-erlangen.de ([131.188.34.40]:45572 "EHLO
+	faui40.informatik.uni-erlangen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754052AbbFONKI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:34:06 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CT8Mu017226
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:34:06 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1upunhwk5x-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:34:05 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 14/17] mwifiex: advertise PS ON by default support to cfg80211
-Date: Mon, 1 Jun 2015 23:32:12 +0530
-Message-ID: <1433181735-15712-15-git-send-email-patila@marvell.com> (sfid-20150601_150350_372076_633C07D5)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 15 Jun 2015 09:10:08 -0400
+From: Andreas Ruprecht <andreas.ruprecht@fau.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Andreas Ruprecht <andreas.ruprecht@fau.de>
+Subject: [PATCH] staging: rtl8723au: core: Remove unneeded #ifdefs
+Date: Mon, 15 Jun 2015 15:03:00 +0200
+Message-Id: <1434373380-8200-1-git-send-email-andreas.ruprecht@fau.de> (sfid-20150615_151024_291162_9224CAE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would enable driver to enter powersave as soon as connected.
+In rtw_mlme_ext.c, nested #ifdef blocks form the following
+structure inside the file:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+ #ifdef CONFIG_8723AU_AP_MODE           (line 1323)
+ [...]
+ #ifdef CONFIG_8723AU_AP_MODE           (line 1720)
+ [...]
+ #endif
+ (2 more ifdef blocks with CONFIG_8723AU_AP_MODE follow)
+ [...]
+ #endif /* CONFIG_8723AU_AP_MODE */     (line 1763)
+
+The inner #ifdefs are unnecessary as they depend on the
+same condition as the outer #ifdef and can thus be removed.
+
+Signed-off-by: Andreas Ruprecht <andreas.ruprecht@fau.de>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index f14cad7..b15e4c7 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -3685,7 +3685,8 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
- 			WIPHY_FLAG_AP_UAPSD |
- 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
--			WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-+			WIPHY_FLAG_HAS_CHANNEL_SWITCH |
-+			WIPHY_FLAG_PS_ON_BY_DEFAULT;
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+index 0d7e921..be9a3d5 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+@@ -1717,7 +1717,6 @@ OnAssocReq23a(struct rtw_adapter *padapter, struct recv_frame *precv_frame)
+ 	/*  now the station is qualified to join our BSS... */
+ 	if (pstat && pstat->state & WIFI_FW_ASSOC_SUCCESS &&
+ 	    status == WLAN_STATUS_SUCCESS) {
+-#ifdef CONFIG_8723AU_AP_MODE
+ 		/* 1 bss_cap_update & sta_info_update23a */
+ 		bss_cap_update_on_sta_join23a(padapter, pstat);
+ 		sta_info_update23a(padapter, pstat);
+@@ -1736,21 +1735,17 @@ OnAssocReq23a(struct rtw_adapter *padapter, struct recv_frame *precv_frame)
  
- 	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
- 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 		/* 3-(1) report sta add event */
+ 		report_add_sta_event23a(padapter, pstat->hwaddr, pstat->aid);
+-#endif
+ 	}
+ 
+ 	return _SUCCESS;
+ 
+ asoc_class2_error:
+ 
+-#ifdef CONFIG_8723AU_AP_MODE
+ 	issue_deauth23a(padapter, mgmt->sa, status);
+-#endif
+ 	return _FAIL;
+ 
+ OnAssocReq23aFail:
+ 
+-#ifdef CONFIG_8723AU_AP_MODE
+ 	pstat->aid = 0;
+ 	if (ieee80211_is_assoc_req(mgmt->frame_control))
+ 		issue_assocrsp(padapter, status, pstat,
+@@ -1758,7 +1753,6 @@ OnAssocReq23aFail:
+ 	else
+ 		issue_assocrsp(padapter, status, pstat,
+ 			       IEEE80211_STYPE_REASSOC_RESP);
+-#endif
+ 
+ #endif /* CONFIG_8723AU_AP_MODE */
+ 
 -- 
-1.8.1.4
+1.9.1
 
