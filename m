@@ -1,109 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vn0-f47.google.com ([209.85.216.47]:38601 "EHLO
-	mail-vn0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbbFLSBj convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43331 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932167AbbFOTpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 14:01:39 -0400
-Received: by vnbf1 with SMTP id f1so126149vnb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 11:01:38 -0700 (PDT)
-From: Jesse Jones <jjones@cococorp.com>
-References: <CAAnMG+OgtSzFXqLOoZ-JbOr7xnexC3P0+M0fFLWTBtWru=4SKg@mail.gmail.com>
- <20150525161542.GA14318@localhost>
-In-Reply-To: <20150525161542.GA14318@localhost>
+	Mon, 15 Jun 2015 15:45:08 -0400
+Message-ID: <557F2B43.8060409@candelatech.com> (sfid-20150615_214512_716274_4FF8707B)
+Date: Mon, 15 Jun 2015 12:45:07 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Date: Fri, 12 Jun 2015 11:01:38 -0700
-Message-ID: <c305826859e4f12efb163463f7283d5a@mail.gmail.com> (sfid-20150612_200143_174877_09BF6A23)
-Subject: RE: [PATCH] mac80211: fix a NULL dereference in ath9k (and likely
- other drivers) when fixed mesh paths are used
-To: Bob Copeland <me@bobcopeland.com>,
-	Alexis Green <agreen@cococorp.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Question on beacon-miss offloading.
+References: <5579F87F.4070601@candelatech.com> <557A1BE9.7070305@candelatech.com> <CA+BoTQkLyaP-2sHiu7Wn-ZzGj2JnZs4qzQKGu7PiTtUy4d9xLQ@mail.gmail.com> <557AFC9D.3020109@candelatech.com> <CA+BoTQkn+Ro1+=PPe=1aHT519jW3BtF+Mmspy+kQftufpUiTPA@mail.gmail.com> <557EF0B0.7070008@candelatech.com>
+In-Reply-To: <557EF0B0.7070008@candelatech.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bob Copeland [mailto:me@bobcopeland.com]
-> Sent: Monday, May 25, 2015 9:16 AM
-> To: Alexis Green
-> Cc: Johannes Berg; linux-wireless; Jesse Jones
-> Subject: Re: [PATCH] mac80211: fix a NULL dereference in ath9k (and likely
-> other drivers) when fixed mesh paths are used
->
-> On Thu, May 21, 2015 at 06:05:13PM -0700, Alexis Green wrote:
-> > This patch fixes a NULL dereference in ath9k (and likely other
-> > drivers) when fixed mesh paths are used. The problem is that when a
-> > station comes up sta_info_alloc allocates ath_node implicitly via
-> > hw->sta_data_size. When it does that the ath_node is zeroed out. The
-> > ath_node isn’t actually initialized until the station becomes associated
-> > and
-> ath9k_sta_state is called.
->
-> Good catch.
->
-> I wonder if we should instead remove the mesh special case in
-> ieee80211_tx_h_check_assoc() -- given that we require an assoc station in
-> peering before we send data frames to that RA, and userspace should also
-> be setting assoc flag after MPM completes, I can't think of a reason
-> offhand
-> why we'd need to bail out there.
->
-> Does this also fix the problem for you?  It passed the wpa_supplicant test
-> cases at least (but we aren't fixing mpaths in any of those...)
->
-> From 246febaa51d555fda437cc8064798db06c5f4d6e Mon Sep 17 00:00:00
-> 2001
-> From: Bob Copeland <me@bobcopeland.com>
-> Date: Mon, 25 May 2015 12:01:52 -0400
-> Subject: [PATCH] mac80211: enable assoc check for mesh interfaces
->
-> We already set a station to be associated when peering completes, both in
-> user space and in the kernel.  Thus we should always have an associated
-> sta
-> before sending data frames to that station.
->
-> Failure to do this can cause crashes in the lower-level driver due to
-> transmitting unicast data frames before driver sta structures (e.g. ampdu
-> state in ath9k) are initialized.  This could have happened if fixing
-> mpaths,
-> which could then allow TX to stations with whom we haven't yet completed
-> peering.
->
-> Reported-by: Alexis Green <agreen@cococorp.com>
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  net/mac80211/tx.c | 3 ---
->  1 file changed, 3 deletions(-)
->
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c index
-> 667111ee6a20..5787f15a3a12 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -301,9 +301,6 @@ ieee80211_tx_h_check_assoc(struct
-> ieee80211_tx_data *tx)
->  	if (tx->sdata->vif.type == NL80211_IFTYPE_WDS)
->  		return TX_CONTINUE;
->
-> -	if (tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-> -		return TX_CONTINUE;
-> -
->  	if (tx->flags & IEEE80211_TX_PS_BUFFERED)
->  		return TX_CONTINUE;
->
-> --
-> 2.1.4
->
->
->
-> --
-> Bob Copeland %% http://bobcopeland.com/
+On 06/15/2015 08:35 AM, Ben Greear wrote:
+> On 06/14/2015 10:36 PM, Michal Kazior wrote:
+>> On 12 June 2015 at 17:37, Ben Greear <greearb@candelatech.com> wrote:
+>>> On 06/11/2015 11:03 PM, Michal Kazior wrote:
+>>>> On 12 June 2015 at 01:38, Ben Greear <greearb@candelatech.com> wrote:
+>>>>> On 06/11/2015 02:07 PM, Ben Greear wrote:
+>>>>>> In my ath10k CT firmware, I am disabling the beacon-miss offloading
+>>>>>> to save space and because it will not work with lots of virtual
+>>>>>> stations.
+>>>>>>
+>>>>>> But, it must be that I need some way to tell the stack that this
+>>>>>> feature is not enabled, because when suddenly kill my AP, then
+>>>>>> the ath10k station connected to it shows endless 'beacon loss' events
+>>>>>> in 'iw events' output, but it never actually loses connection.
+>>>>>>
+>>>>>> Stock firmware works fine, so probably I just need to disable
+>>>>>> some feature flag when registering the ath10k hardware
+>>>>>> when using CT firmware.
+>>>>>>
+>>>>>> With stock firmware, I see a quick dissassociation due to inactivity.
+>>>>>>
+>>>>>> I am having poor luck finding how a driver tells the stack
+>>>>>> it has beacon miss offload or not, so, does anyone know how
+>>>>>> this is controlled?
+>>>>>
+>>>>> I still am not sure why stock firmware works, but it appears
+>>>>> the reason mine is failing is that the ACK status for mgt frames
+>>>>> is always set to TRUE since the ath10k wmi-mgt-tx API is so
+>>>>> lame.  So, mac80211 does a probe, ath10k lies and says it was
+>>>>> acked, and mac80211 then things all is well for another few
+>>>>> seconds.
+>>>>
+>>>> mac80211 shouldn't do a Probe Req to an AP on beacon loss because
+>>>> ath10k advertises it supports tx-status report. Hence mac80211 should
+>>>> use NullFunc frames which shouldn't go through wmi-mgmt-tx but htt
+>>>> tx-frm.
+>>>>
+>>>> But then again: NullFunc status reporting via htt tx-frm was broken on
+>>>> 10.1 if memory serves right. I believe it was fixed in 10.2 or 10.2.4.
+>>>>
+>>>> This problem has been effectively obscured on stock 10.1 by the
+>>>> offloaded beacon miss.
+>>>
+>>> Thanks for the hint.  I was able to fix my firmware to properly
+>>> return htt tx status, and now it appears to work properly.
+>>>
+>>> A quick throughput test works as well, so hopefully no regressions.
+>>>
+>>> I guess the NulFunc related comment is incorrect for 10.1 stock firmware?
+>>>
+>>> Maybe some others?
+>>>
+>>> static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
+>>> {
+>>>         struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+>>>         int ret = 0;
+>>>
+>>>         if (ar->htt.target_version_major >= 3) {
+>>>                 /* Since HTT 3.0 there is no separate mgmt tx command */
+>>>                 ret = ath10k_htt_tx(&ar->htt, skb);
+>>>                 goto exit;
+>>>         }
+>>>
+>>>         if (ieee80211_is_mgmt(hdr->frame_control)) {
+>>>                 if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+>>>                              ar->fw_features)) {
+>>>                         if (skb_queue_len(&ar->wmi_mgmt_tx_queue) >=
+>>>                             ATH10K_MAX_NUM_MGMT_PENDING) {
+>>>                                 ath10k_warn(ar, "reached WMI management transmit queue limit\n");
+>>>                                 ret = -EBUSY;
+>>>                                 goto exit;
+>>>                         }
+>>>
+>>>                         skb_queue_tail(&ar->wmi_mgmt_tx_queue, skb);
+>>>                         ieee80211_queue_work(ar->hw, &ar->wmi_mgmt_tx_work);
+>>>                 } else {
+>>>                         ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+>>>                 }
+>>>         } else if (!test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+>>>                              ar->fw_features) &&
+>>>                    ieee80211_is_nullfunc(hdr->frame_control)) {
+>>>                 /* FW does not report tx status properly for NullFunc frames
+>>>                  * unless they are sent through mgmt tx path. mac80211 sends
+>>>                  * those frames when it detects link/beacon loss and depends
+>>>                  * on the tx status to be correct. */
+>>>                 ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+>>>         } else {
+>>>                 ret = ath10k_htt_tx(&ar->htt, skb);
+>>>         }
+>>
+>> The NullFunc workaround was originally done for 999.999.0.636 but
+>> should be true for 10.1 as well with the sole exception the latter
+>> doesn't have htt-mgmt-tx to workaround the problem.
+> 
+> Is it correct to say that this logic is completely broken for stock 10.1 firmware
+> because null-func frames are not management frames, so the packet goes out the
+> ath10k_htt_mgmt_tx call, and stock 10.1 does not properly do tx status
+> for htt-tx frames?
+> 
+> 
+> And slightly different question:  Once I put in proper htt ACK reporting into
+> my firmware, I notice that stations often loose connectivity when they are
+> idle.  I captured a sniff, and it appears the null-func packets are sent,
+> but the header is not requesting an explicit ACK, and the AP does not ACK it,
+> so connection is lost.
+> 
+> I guess that the null-func frames should be requesting explicit ACK?
 
-Sorry for the delay in responding to this...
+This patch below (with firmware fix to make it actually pay attention
+to this special TID in station mode), fixes the null-func to be non-qos
+frames and get immediate ack.  This in turn seems to fix the disconnect
+issue I was facing, though I need to test some more to be sure.
 
-I had trouble reproing the reboot caused by ath9k de-referencing NULL
-pointers but after a fair amount of work I was able to consistently get
-reboots. Your patch *does* fix the problem so I am going to switch our repo
-over to your patch instead of what we were using. Thanks for the help.
+This seem reasonable, maybe even for upstream?
 
-  -- Jesse
+[greearb@ben-dt2 ath10k]$ git diff
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 6ca48e3..610447e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2213,6 +2213,9 @@ static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
+        if (ieee80211_is_mgmt(hdr->frame_control))
+                return HTT_DATA_TX_EXT_TID_MGMT;
+
++       if (ieee80211_is_nullfunc(hdr->frame_control))
++               return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++
+        if (!ieee80211_is_data_qos(hdr->frame_control))
+                return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+
+
+Thanks,
+Ben
+
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
