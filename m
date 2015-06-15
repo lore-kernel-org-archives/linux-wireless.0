@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:36770 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751821AbbFQUcy (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:48461 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754232AbbFOKtY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 16:32:54 -0400
-Received: by igbiq7 with SMTP id iq7so76461940igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2015 13:32:54 -0700 (PDT)
+	Mon, 15 Jun 2015 06:49:24 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+Message-ID: <21886.43539.833126.629494@gargle.gargle.HOWL> (sfid-20150615_124940_118070_C16D236E)
+Date: Mon, 15 Jun 2015 16:03:55 +0530
 MIME-Version: 1.0
-In-Reply-To: <1434568011.1884.42.camel@sipsolutions.net>
-References: <5581BEBA.1080500@broadcom.com>
-	<1434568011.1884.42.camel@sipsolutions.net>
-Date: Wed, 17 Jun 2015 22:32:53 +0200
-Message-ID: <CACna6rwq6VB+mg2tLetmMQTA0xexbDwi=JdoBgHRxDB4EgeUeA@mail.gmail.com> (sfid-20150617_223259_245269_557A779D)
-Subject: Re: creating ap interface
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	nbd@openwrt.org
+Subject: Re: [RFC] ath9k: advertise p2p dev support when chanctx
+In-Reply-To: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 June 2015 at 21:06, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-06-17 at 20:38 +0200, Arend van Spriel wrote:
->> Hi Dan,
->>
->> When I create an AP interface using iw, it is followed by a change
->> interface back to managed mode. I added a WARN_ON to see where it came
->> from and it turns out to be the NetworkManager. However, I had disabled
->> wifi as you suggested on the mailing list once. What is your take on
->> this: bug or intentional?
->
-> You shouldn't really have a WARN_ON() on a path that can be hit by
-> userspace like that :)
+Janusz Dziedzic wrote:
+> Add p2p dev support when ath9k loaded with
+> use_chanctx=1. This will fix problem, when first
+> interface is an AP and next we would like to run
+> p2p_find. Before p2p scan failed.
+> 
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> ---
+> @Felix, Sujith please review. I am not sure if didn't miss some
+> case for NL80211_IFTYPE_P2P_DEVICE (special handling required?).
 
-I'm pretty sure it was for debugging purposes.
+At least the callbacks for adding/removing interfaces need
+to be handled ?
+
+But, can you describe the sequence of commands used that
+resulted in this issue ?
+
+Sujith
