@@ -1,83 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:25164 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754648AbbFWMIg (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:36600 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993AbbFOD7j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 08:08:36 -0400
-Message-ID: <55894C40.1070108@broadcom.com> (sfid-20150623_140840_174700_1FCEE350)
-Date: Tue, 23 Jun 2015 14:08:32 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <joerg.krause@embedded.rocks>
-CC: Arend van Spriel <aspriel@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcmfmac: Failed to create interface p2p-dev-p2p0: -28 (No space
- left on device)
-References: <1433766944.28058.16.camel@embedded.rocks>						 <55758D7E.3000603@broadcom.com>				 <1433771289.28058.24.camel@embedded.rocks>				 <5575C6FA.6030104@broadcom.com>				 <1433794640.28058.26.camel@embedded.rocks>		 <557605CC.6070907@broadcom.com>	 <1434448766.21949.9.camel@embedded.rocks>		 <55803214.2030204@broadcom.com> <1434608018.5481.4.camel@embedded.rocks>		 <55828106.7060004@broadcom.com> <1434658050.2532.6.camel@embedded.rocks>	 <55872A3C.7030704@gmail.com> <1435059083.4765.2.camel@embedded.rocks>
-In-Reply-To: <1435059083.4765.2.camel@embedded.rocks>
-Content-Type: multipart/mixed;
-	boundary="------------000504030908070102010005"
+	Sun, 14 Jun 2015 23:59:39 -0400
+Received: by pabqy3 with SMTP id qy3so56924890pab.3
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Jun 2015 20:59:38 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: process the target only subfield for mesh hwmp accordingly
+Date: Mon, 15 Jun 2015 11:58:53 +0800
+Message-Id: <1434340733-10972-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150615_055943_160100_3D413C8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------000504030908070102010005
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+This patch does the following:
+- Remove unnecessary flags field used by PERR element.
+- Use the per target flags defined in ./include/linux/ieee80211.h.
+- Process the target only subfield based on case E2 of sec 13.10.9.3
+  of IEEE 802.11-2012.
 
-On 06/23/15 13:31, Jörg Krause wrote:
-> Hi Arend,
->
-> On So, 2015-06-21 at 23:18 +0200, Arend van Spriel wrote:
->>
->> My bad. The patch removes p2pdev from interface modes, but it is
->> still
->> listed in the interface combinations and cfg80211 will complain about
->> it. Have to extend the patch. I better do that after a good nights
->> sleep.
->
-> Never mind! Did you had a good night sleep already :-) ?
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c | 32 ++++++++------------------------
+ 1 file changed, 8 insertions(+), 24 deletions(-)
 
-Several ;-) Did not get to this earlier. Thanks for the reminder.
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 085edc1..5573e21 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -19,15 +19,6 @@
+ 
+ #define MAX_PREQ_QUEUE_LEN	64
+ 
+-/* Destination only */
+-#define MP_F_DO	0x1
+-/* Reply and forward */
+-#define MP_F_RF	0x2
+-/* Unknown Sequence Number */
+-#define MP_F_USN    0x01
+-/* Reason code Present */
+-#define MP_F_RCODE  0x02
+-
+ static void mesh_queue_preq(struct mesh_path *, u8);
+ 
+ static inline u32 u32_field_get(const u8 *preq_elem, int offset, bool ae)
+@@ -279,15 +270,10 @@ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
+ 	*pos++ = ttl;
+ 	/* number of destinations */
+ 	*pos++ = 1;
+-	/*
+-	 * flags bit, bit 1 is unset if we know the sequence number and
+-	 * bit 2 is set if we have a reason code
++	/* Flags field has AE bit only as defined in
++	 * sec 8.4.2.117 IEEE802.11-2012
+ 	 */
+ 	*pos = 0;
+-	if (!target_sn)
+-		*pos |= MP_F_USN;
+-	if (target_rcode)
+-		*pos |= MP_F_RCODE;
+ 	pos++;
+ 	memcpy(pos, target, ETH_ALEN);
+ 	pos += ETH_ALEN;
+@@ -570,15 +556,13 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 					SN_LT(mpath->sn, target_sn)) {
+ 				mpath->sn = target_sn;
+ 				mpath->flags |= MESH_PATH_SN_VALID;
+-			} else if ((!(target_flags & MP_F_DO)) &&
++			} else if ((!(target_flags & IEEE80211_PREQ_TO_FLAG)) &&
+ 					(mpath->flags & MESH_PATH_ACTIVE)) {
+ 				reply = true;
+ 				target_metric = mpath->metric;
+ 				target_sn = mpath->sn;
+-				if (target_flags & MP_F_RF)
+-					target_flags |= MP_F_DO;
+-				else
+-					forward = false;
++				/* Case E2 of sec 13.10.9.3 IEEE 802.11-2012*/
++				target_flags |= IEEE80211_PREQ_TO_FLAG;
+ 			}
+ 		}
+ 		rcu_read_unlock();
+@@ -974,7 +958,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_preq_queue *preq_node;
+ 	struct mesh_path *mpath;
+-	u8 ttl, target_flags;
++	u8 ttl, target_flags = 0;
+ 	const u8 *da;
+ 	u32 lifetime;
+ 
+@@ -1033,9 +1017,9 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+ 	}
+ 
+ 	if (preq_node->flags & PREQ_Q_F_REFRESH)
+-		target_flags = MP_F_DO;
++		target_flags |= IEEE80211_PREQ_TO_FLAG;
+ 	else
+-		target_flags = MP_F_RF;
++		target_flags &= ~IEEE80211_PREQ_TO_FLAG;
+ 
+ 	spin_unlock_bh(&mpath->state_lock);
+ 	da = (mpath->is_root) ? mpath->rann_snd_addr : broadcast_addr;
+-- 
+2.3.0
 
-Had a closer look at wiphy_verify_combinations() and I am hopeful the 
-attached patch will fix the wiphy_register() failure.
-
-Regards,
-Arend
-
-> Best regards
-> Jörg Krause
-
-
---------------000504030908070102010005
-Content-Type: text/plain;
-	name="0001-brcmfmac-no-p2pdev-limit-needed-when-p2pon-1-is-used.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename*0="0001-brcmfmac-no-p2pdev-limit-needed-when-p2pon-1-is-used.pa";
-	filename*1="tch"
-
-RnJvbSBmNDkwYTdjZGIyYTc1NGFjNzlhZjlkOTA4MmI4NTI2ODEyMTY0ZDRmIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBBcmVuZCB2YW4gU3ByaWVsIDxhcmVuZEBicm9hZGNv
-bS5jb20+CkRhdGU6IFR1ZSwgMjMgSnVuIDIwMTUgMTM6NTk6MjMgKzAyMDAKU3ViamVjdDog
-W1BBVENIXSBicmNtZm1hYzogbm8gcDJwZGV2IGxpbWl0IG5lZWRlZCB3aGVuIHAycG9uPTEg
-aXMgdXNlZAoKQXZvaWQgZmFpbHVyZSB1cG9uIHdpcGh5X3JlZ2lzdGVyKCkgYnkgbm90IHBy
-b3ZpZGluZyB0aGUgbGltaXQKZm9yIGlmdHlwZSBQMlBfREVWSUNFLgoKU2lnbmVkLW9mZi1i
-eTogQXJlbmQgdmFuIFNwcmllbCA8YXJlbmRAYnJvYWRjb20uY29tPgotLS0KIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtZm1hYy9jZmc4MDIxMS5jIHwgNCArKysrCiAx
-IGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExLmMgYi9kcml2ZXJzL25l
-dC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZtYWMvY2ZnODAyMTEuYwppbmRleCAxMGVhYWJm
-Li5mZmE5YWNhIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEv
-YnJjbWZtYWMvY2ZnODAyMTEuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAy
-MTEvYnJjbWZtYWMvY2ZnODAyMTEuYwpAQCAtNTgwMiw2ICs1ODAyLDEwIEBAIHN0YXRpYyBp
-bnQgYnJjbWZfc2V0dXBfd2lwaHkoc3RydWN0IHdpcGh5ICp3aXBoeSwgc3RydWN0IGJyY21m
-X2lmICppZnApCiAJCWlmY19jb21iby5uX2xpbWl0cyA9IEFSUkFZX1NJWkUoYnJjbWZfaWZh
-Y2VfbGltaXRzX21ic3MpLAogCQlpZmNfY29tYm8ubGltaXRzID0gYnJjbWZfaWZhY2VfbGlt
-aXRzX21ic3M7CiAJfQorCS8qIGRvbid0IGdpdmUgcDJwZGV2IGxpbWl0IHdoZW4gcDJwb24g
-aXMgc2V0ICovCisJaWYgKGlmcC0+ZHJ2ci0+aWZsaXN0WzFdKQorCQlpZmNfY29tYm8ubGlt
-aXRzLS07CisKIAl3aXBoeS0+aWZhY2VfY29tYmluYXRpb25zID0ga21lbWR1cCgmaWZjX2Nv
-bWJvLAogCQkJCQkgICAgc2l6ZW9mKGlmY19jb21ibyksCiAJCQkJCSAgICBHRlBfS0VSTkVM
-KTsKLS0gCjEuOS4xCgo=
---------------000504030908070102010005--
