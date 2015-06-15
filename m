@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:32852 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932487AbbFCTEM convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14692 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753329AbbFOLET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 15:04:12 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Willy Tarreau <w@1wt.eu>
-Cc: Scott Branden <sbranden@broadcom.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stable <stable@vger.kernel.org>, Andrew Kurn <kurn@sfu.ca>
-Subject: Re: New USB ID 2001:3c25
-References: <556E6000.90402@lwfinger.net>
-	<6A6FBA3BBCB70741B2E7FD80BFDD32DB2B33CF50@SJEXCHMB10.corp.ad.broadcom.com>
-	<20150603175412.GA7362@1wt.eu>
-Date: Wed, 03 Jun 2015 21:01:09 +0200
-In-Reply-To: <20150603175412.GA7362@1wt.eu> (Willy Tarreau's message of "Wed,
-	3 Jun 2015 19:54:12 +0200")
-Message-ID: <877frkfwga.fsf@nemi.mork.no> (sfid-20150603_210416_887703_4D4A2A86)
+	Mon, 15 Jun 2015 07:04:19 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t5FB03mX024596
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2015 04:04:18 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1v042959k5-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Jun 2015 04:04:18 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: add missing break statement in switch case
+Date: Mon, 15 Jun 2015 04:03:35 -0700
+Message-ID: <1434366215-1107-1-git-send-email-akarwar@marvell.com> (sfid-20150615_130423_009309_60822EF7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Willy Tarreau <w@1wt.eu> writes:
-> On Wed, Jun 03, 2015 at 05:50:49PM +0000, Scott Branden wrote:
->> Hi Larry,
->> 
->> There is no problem applying this patch to the stable tree.
->> I didn't know it was my responsibility to inform the stable mailing list every time a patch is accepted
->> in the latest kernel that could be applied to the stable tree?
->
-> Just adding a Cc: stable@... in the commit message is enough to get it
-> automatically queued once applied. Please check SubmittingPatches and
-> stable_kernel_rules.txt for more information.
+This patch adds missing break statement at the end of
+EVENT_BT_COEX_WLAN_PARA_CHANGE switch section.
 
-It isn't absolutely clear to me that those rules applies to "wireless",
-being a sub-subsystem of "net".  Quoting from stable_kernel_rules.txt :
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_event.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-"- If the patch covers files in net/ or drivers/net please follow netdev stable
-   submission guidelines as described in
-   Documentation/networking/netdev-FAQ.txt"
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index ac229ef..848de26 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -592,6 +592,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 		dev_dbg(adapter->dev, "EVENT: BT coex wlan param update\n");
+ 		mwifiex_bt_coex_wlan_param_update_event(priv,
+ 							adapter->event_skb);
++		break;
+ 	default:
+ 		mwifiex_dbg(adapter, ERROR, "event: unknown event id: %#x\n",
+ 			    eventcause);
+-- 
+1.8.1.4
 
-And the netdev-FAQ.txt goes into great detail describing the procedure,
-which basically is "Give davem a hint that the patch should go to
-stable".  (and I'd like to note that this works very well in practice).
-
-But I have noticed that some stable patches seem to flow more directly
-into stable from "wireless" than from the rest of "net". I just don't
-think the current _written_ docs support that procedure.  Those docs
-are possibly wrong?  You should probably know much better than me :)
-
-
-Bjørn
