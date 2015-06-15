@@ -1,49 +1,319 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0131.outbound.protection.outlook.com ([157.55.234.131]:9679
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751276AbbFNDQS convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9440 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754671AbbFOOmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2015 23:16:18 -0400
-From: "Joglekar, Tejas (T.)" <tjogleka@visteon.com>
-To: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"johannes.berg@intel.com" <johannes.berg@intel.com>,
-	"joe@perches.com" <joe@perches.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] staging:rtl8723au:ioctl_cfg80211:spaces required around '>'
-Date: Sun, 14 Jun 2015 03:01:06 +0000
-Message-ID: <20150614030059.GA6428@Tejas-asus> (sfid-20150614_051622_601178_804F05B3)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 15 Jun 2015 10:42:46 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Dedy Lansky <qca_dlansky@qualcomm.com>,
+	Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] wil6210: restart AP upon change in privacy settings
+Date: Mon, 15 Jun 2015 17:42:32 +0300
+Message-Id: <1434379352-14084-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150615_164259_911646_9DED13E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joglekar Tejas <tjogleka@visteon.com>
+privacy settings might change while AP is running.
+Inside wil_cfg80211_change_beacon(), detect change
+in privacy settings and handle it by stopping and
+re-starting the AP.
+Firmware cannot handle on-the-fly privacy settings
+change and so AP restart is required.
 
-This patch removes the error given by checkpatch.pl
-" spaces required around that '>' "
-
-Signed-off-by: Joglekar Tejas <tjogleka@visteon.com>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 217 +++++++++++++++++-----------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |   2 +
+ 2 files changed, 135 insertions(+), 84 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-index bc95ce8..feb5961 100644
---- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-+++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-@@ -1041,7 +1041,7 @@ static u16 rtw_get_cur_max_rate(struct rtw_adapter *adapter)
- 		while (pcur_bss->SupportedRates[i] != 0 &&
- 		       pcur_bss->SupportedRates[i] != 0xFF) {
- 			rate = pcur_bss->SupportedRates[i] & 0x7F;
--			if (rate>max_rate)
-+			if (rate > max_rate)
- 				max_rate = rate;
- 			i++;
- 		}
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index c79cfe0..e4be2d9 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -736,6 +736,92 @@ static int wil_fix_bcon(struct wil6210_priv *wil,
+ 	return rc;
+ }
+ 
++/* internal functions for device reset and starting AP */
++static int _wil_cfg80211_set_ies(struct wiphy *wiphy,
++				 size_t probe_ies_len, const u8 *probe_ies,
++				 size_t assoc_ies_len, const u8 *assoc_ies)
++
++{
++	int rc;
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++
++	/* FW do not form regular beacon, so bcon IE's are not set
++	 * For the DMG bcon, when it will be supported, bcon IE's will
++	 * be reused; add something like:
++	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
++	 * bcon->beacon_ies);
++	 */
++	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, probe_ies_len, probe_ies);
++	if (rc) {
++		wil_err(wil, "set_ie(PROBE_RESP) failed\n");
++		return rc;
++	}
++
++	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, assoc_ies_len, assoc_ies);
++	if (rc) {
++		wil_err(wil, "set_ie(ASSOC_RESP) failed\n");
++		return rc;
++	}
++
++	return 0;
++}
++
++static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
++				  struct net_device *ndev,
++				  const u8 *ssid, size_t ssid_len, u32 privacy,
++				  int bi, u8 chan,
++				  size_t probe_ies_len, const u8 *probe_ies,
++				  size_t assoc_ies_len, const u8 *assoc_ies,
++				  u8 hidden_ssid)
++{
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	int rc;
++	struct wireless_dev *wdev = ndev->ieee80211_ptr;
++	u8 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
++
++	wil_set_recovery_state(wil, fw_recovery_idle);
++
++	mutex_lock(&wil->mutex);
++
++	__wil_down(wil);
++	rc = __wil_up(wil);
++	if (rc)
++		goto out;
++
++	rc = wmi_set_ssid(wil, ssid_len, ssid);
++	if (rc)
++		goto out;
++
++	rc = _wil_cfg80211_set_ies(wiphy, probe_ies_len, probe_ies,
++				   assoc_ies_len, assoc_ies);
++	if (rc)
++		goto out;
++
++	wil->privacy = privacy;
++	wil->channel = chan;
++	wil->hidden_ssid = hidden_ssid;
++
++	netif_carrier_on(ndev);
++
++	rc = wmi_pcp_start(wil, bi, wmi_nettype, chan, hidden_ssid);
++	if (rc)
++		goto err_pcp_start;
++
++	rc = wil_bcast_init(wil);
++	if (rc)
++		goto err_bcast;
++
++	goto out; /* success */
++
++err_bcast:
++	wmi_pcp_stop(wil);
++err_pcp_start:
++	netif_carrier_off(ndev);
++out:
++	mutex_unlock(&wil->mutex);
++	return rc;
++}
++
+ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 				      struct net_device *ndev,
+ 				      struct cfg80211_beacon_data *bcon)
+@@ -746,6 +832,7 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 	const u8 *pr_ies = NULL;
+ 	size_t pr_ies_len = 0;
+ 	int rc;
++	u32 privacy = 0;
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 	wil_print_bcon_data(bcon);
+@@ -760,40 +847,41 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 		wil_print_bcon_data(bcon);
+ 	}
+ 
+-	/* FW do not form regular beacon, so bcon IE's are not set
+-	 * For the DMG bcon, when it will be supported, bcon IE's will
+-	 * be reused; add something like:
+-	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+-	 * bcon->beacon_ies);
+-	 */
+-	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
+-	if (rc) {
+-		wil_err(wil, "set_ie(PROBE_RESP) failed\n");
+-		return rc;
+-	}
++	if (pr_ies && cfg80211_find_ie(WLAN_EID_RSN, pr_ies, pr_ies_len))
++		privacy = 1;
+ 
+-	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP,
+-			bcon->assocresp_ies_len,
+-			bcon->assocresp_ies);
+-	if (rc) {
+-		wil_err(wil, "set_ie(ASSOC_RESP) failed\n");
+-		return rc;
++	/* in case privacy has changed, need to restart the AP */
++	if (wil->privacy != privacy) {
++		struct wireless_dev *wdev = ndev->ieee80211_ptr;
++
++		wil_dbg_misc(wil, "privacy changed %d=>%d. Restarting AP\n",
++			     wil->privacy, privacy);
++
++		rc = _wil_cfg80211_start_ap(wiphy, ndev, wdev->ssid,
++					    wdev->ssid_len, privacy,
++					    wdev->beacon_interval,
++					    wil->channel, pr_ies_len, pr_ies,
++					    bcon->assocresp_ies_len,
++					    bcon->assocresp_ies,
++					    wil->hidden_ssid);
++	} else {
++		rc = _wil_cfg80211_set_ies(wiphy, pr_ies_len, pr_ies,
++					   bcon->assocresp_ies_len,
++					   bcon->assocresp_ies);
+ 	}
+ 
+-	return 0;
++	return rc;
+ }
+ 
+ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 				 struct net_device *ndev,
+ 				 struct cfg80211_ap_settings *info)
+ {
+-	int rc = 0;
++	int rc;
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+-	struct wireless_dev *wdev = ndev->ieee80211_ptr;
+ 	struct ieee80211_channel *channel = info->chandef.chan;
+ 	struct cfg80211_beacon_data *bcon = &info->beacon;
+ 	struct cfg80211_crypto_settings *crypto = &info->crypto;
+-	u8 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
+ 	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
+ 	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
+ 	const u8 *pr_ies = NULL;
+@@ -807,6 +895,23 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
+ 
++	switch (info->hidden_ssid) {
++	case NL80211_HIDDEN_SSID_NOT_IN_USE:
++		hidden_ssid = WMI_HIDDEN_SSID_DISABLED;
++		break;
++
++	case NL80211_HIDDEN_SSID_ZERO_LEN:
++		hidden_ssid = WMI_HIDDEN_SSID_SEND_EMPTY;
++		break;
++
++	case NL80211_HIDDEN_SSID_ZERO_CONTENTS:
++		hidden_ssid = WMI_HIDDEN_SSID_CLEAR;
++		break;
++
++	default:
++		wil_err(wil, "AP: Invalid hidden SSID %d\n", info->hidden_ssid);
++		return -EOPNOTSUPP;
++	}
+ 	wil_dbg_misc(wil, "AP on Channel %d %d MHz, %s\n", channel->hw_value,
+ 		     channel->center_freq, info->privacy ? "secure" : "open");
+ 	wil_dbg_misc(wil, "Privacy: %d auth_type %d\n",
+@@ -830,70 +935,14 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 		wil_print_bcon_data(bcon);
+ 	}
+ 
+-	wil_set_recovery_state(wil, fw_recovery_idle);
+-
+-	mutex_lock(&wil->mutex);
+-
+-	__wil_down(wil);
+-	rc = __wil_up(wil);
+-	if (rc)
+-		goto out;
+-
+-	rc = wmi_set_ssid(wil, info->ssid_len, info->ssid);
+-	if (rc)
+-		goto out;
+-
+-	/* IE's */
+-	/* bcon 'head IE's are not relevant for 60g band */
+-	/*
+-	 * FW do not form regular beacon, so bcon IE's are not set
+-	 * For the DMG bcon, when it will be supported, bcon IE's will
+-	 * be reused; add something like:
+-	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+-	 * bcon->beacon_ies);
+-	 */
+-	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, pr_ies_len, pr_ies);
+-	wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
+-		   bcon->assocresp_ies);
+-
+-	wil->privacy = info->privacy;
+-
+-	switch (info->hidden_ssid) {
+-	case NL80211_HIDDEN_SSID_NOT_IN_USE:
+-		hidden_ssid = WMI_HIDDEN_SSID_DISABLED;
+-		break;
+-
+-	case NL80211_HIDDEN_SSID_ZERO_LEN:
+-		hidden_ssid = WMI_HIDDEN_SSID_SEND_EMPTY;
+-		break;
+-
+-	case NL80211_HIDDEN_SSID_ZERO_CONTENTS:
+-		hidden_ssid = WMI_HIDDEN_SSID_CLEAR;
+-		break;
+-
+-	default:
+-		rc = -EOPNOTSUPP;
+-		goto out;
+-	}
+-
+-	netif_carrier_on(ndev);
+-
+-	rc = wmi_pcp_start(wil, info->beacon_interval, wmi_nettype,
+-			   channel->hw_value, hidden_ssid);
+-	if (rc)
+-		goto err_pcp_start;
++	rc = _wil_cfg80211_start_ap(wiphy, ndev,
++				    info->ssid, info->ssid_len, info->privacy,
++				    info->beacon_interval, channel->hw_value,
++				    pr_ies_len, pr_ies,
++				    bcon->assocresp_ies_len,
++				    bcon->assocresp_ies,
++				    hidden_ssid);
+ 
+-	rc = wil_bcast_init(wil);
+-	if (rc)
+-		goto err_bcast;
+-
+-	goto out; /* success */
+-err_bcast:
+-	wmi_pcp_stop(wil);
+-err_pcp_start:
+-	netif_carrier_off(ndev);
+-out:
+-	mutex_unlock(&wil->mutex);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 275355d..c63e4a3 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -559,6 +559,8 @@ struct wil6210_priv {
+ 	/* profile */
+ 	u32 monitor_flags;
+ 	u32 privacy; /* secure connection? */
++	u8 hidden_ssid; /* relevant in AP mode */
++	u16 channel; /* relevant in AP mode */
+ 	int sinfo_gen;
+ 	u32 ap_isolate; /* no intra-BSS communication */
+ 	/* interrupt moderation */
 -- 
-1.9.1
+2.1.4
+
