@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:35761 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752102AbbFDLxP (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35472 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090AbbFPLLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 07:53:15 -0400
+	Tue, 16 Jun 2015 07:11:25 -0400
+Date: Tue, 16 Jun 2015 16:41:11 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: "Abdul, Hussain (H.)" <habdul@visteon.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>
+Subject: Re: [PATCH] Staging: wilc1000: Boolean tests don't need comparisons
+Message-ID: <20150616111111.GA15479@sudip-PC> (sfid-20150616_131131_531449_002788D5)
+References: <1434439941-6369-1-git-send-email-habdul@visteon.com>
+ <20150616080955.GA1007@sudip-PC>
+ <DB5PR06MB1112E576BF6FFE240CB124C0DFA70@DB5PR06MB1112.eurprd06.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
-References: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
-Date: Thu, 4 Jun 2015 15:53:12 +0400
-Message-ID: <CA++WF2Ne88btDrWHVoLNfiqMPc9sR73zifZ50JVGHP8_h1R9OA@mail.gmail.com> (sfid-20150604_135322_256686_08A9CA2F)
-Subject: Re: [PATCH] treewide: Fix typo compatability -> compatibility
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-metag@vger.kernel.org,
-	kvm-ppc@vger.kernel.org, wireless <linux-wireless@vger.kernel.org>,
-	sparclinux@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <DB5PR06MB1112E576BF6FFE240CB124C0DFA70@DB5PR06MB1112.eurprd06.prod.outlook.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 May 2015 at 16:05, Laurent Pinchart
-<laurent.pinchart@ideasonboard.com> wrote:
-> Even though 'compatability' has a dedicated entry in the Wiktionary,
-> it's listed as 'Mispelling of compatibility'. Fix it.
->
-> Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> ---
->  drivers/net/wireless/ipw2x00/ipw2100.h   | 2 +-
->
+On Tue, Jun 16, 2015 at 08:55:13AM +0000, Abdul, Hussain (H.) wrote:
+> On Tuesday 16 June 2015 01:40 PM, Sudip Mukherjee wrote:
+> > On Tue, Jun 16, 2015 at 07:33:42AM +0000, Abdul, Hussain (H.) wrote:
+> >> From: Abdul Hussain <habdul@visteon.com>
+> >
+> > regards
+> > sudip
+> >
+> Sudip,
+> 
+> Yes that is an assignment to the boolean variable. Do i need to modify the commit message or to send separate patch?
+if that assignment is related to the change in boolean test then it should
+be in the same patch. But in any case commit message should mention that
+change and the reason.
 
-Acked-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+regards
+sudip
 
-for ipw2100 part.
-
-Stanislav.
