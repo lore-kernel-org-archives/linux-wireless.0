@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36545 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbbFVEIa (ORCPT
+Received: from mail-db3on0128.outbound.protection.outlook.com ([157.55.234.128]:42384
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751120AbbFPMYi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 00:08:30 -0400
-Received: by paceq1 with SMTP id eq1so100527804pac.3
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2015 21:08:30 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/5] staging: wilc1000: wilc_wfi_netdevice.c: remove prohibited space before semicolon
-Date: Mon, 22 Jun 2015 13:08:11 +0900
-Message-Id: <1434946095-26157-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150622_060848_353728_B66E3A22)
+	Tue, 16 Jun 2015 08:24:38 -0400
+From: "Abdul, Hussain (H.)" <habdul@visteon.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>
+Subject: Re: [PATCH] Staging: wilc1000: Boolean tests don't need comparisons
+Date: Tue, 16 Jun 2015 12:24:35 +0000
+Message-ID: <DB5PR06MB1112DA3F0299B8678674BCE9DFA70@DB5PR06MB1112.eurprd06.prod.outlook.com> (sfid-20150616_142458_936799_F485C4C3)
+References: <1434439941-6369-1-git-send-email-habdul@visteon.com>
+ <20150616080955.GA1007@sudip-PC>
+ <DB5PR06MB1112E576BF6FFE240CB124C0DFA70@DB5PR06MB1112.eurprd06.prod.outlook.com>
+ <20150616111111.GA15479@sudip-PC>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix checkpatch warning found by checkpatch.pl
-WARNING: space prohibited before semicolon
+On Tuesday 16 June 2015 04:41 PM, Sudip Mukherjee wrote:
+> On Tue, Jun 16, 2015 at 08:55:13AM +0000, Abdul, Hussain (H.) wrote:
+>> On Tuesday 16 June 2015 01:40 PM, Sudip Mukherjee wrote:
+>>> On Tue, Jun 16, 2015 at 07:33:42AM +0000, Abdul, Hussain (H.) wrote:
+>>>> From: Abdul Hussain <habdul@visteon.com>
+>>> regards
+>>> sudip
+>>>
+>> Sudip,
+>>
+>> Yes that is an assignment to the boolean variable. Do i need to modify the commit message or to send separate patch?
+> if that assignment is related to the change in boolean test then it should
+> be in the same patch. But in any case commit message should mention that
+> change and the reason.
+>
+> regards
+> sudip
+>
+>
+I have sent separate patch for this change.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.c b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-index ab66ce4..01542f4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
-@@ -31,7 +31,7 @@ module_param(timeout, int, 0);
- /*
-  * Do we run in NAPI mode?
-  */
--static int use_napi ;
-+static int use_napi;
- module_param(use_napi, int, 0);
- 
- 
--- 
-1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Thanks,
+Abdul
