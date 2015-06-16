@@ -1,111 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34086 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751946AbbFAMeU (ORCPT
+Received: from mail-am1on0138.outbound.protection.outlook.com ([157.56.112.138]:11584
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754504AbbFPJ6X convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:34:20 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t51CUXMZ028487
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Jun 2015 05:34:19 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1urjjr0nfq-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:34:19 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv4 16/17] mwifiex: using right tid for addressing ra_list
-Date: Mon, 1 Jun 2015 23:32:14 +0530
-Message-ID: <1433181735-15712-17-git-send-email-patila@marvell.com> (sfid-20150601_150350_804507_ED15DFAC)
-In-Reply-To: <1433181735-15712-1-git-send-email-patila@marvell.com>
-References: <1433181735-15712-1-git-send-email-patila@marvell.com>
+	Tue, 16 Jun 2015 05:58:23 -0400
+From: "Abdul, Hussain (H.)" <habdul@visteon.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
+	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
+	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] Staging: wilc1000: Boolean tests don't need comparisons
+Date: Tue, 16 Jun 2015 09:44:06 +0000
+Message-ID: <1434447763-14752-1-git-send-email-habdul@visteon.com> (sfid-20150616_115830_307277_C57CB65E)
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Abdul Hussain <habdul@visteon.com>
 
-This patch fixes issue with the accessing correct ra_list by
-downgrading corresponding tid number.
+This patch removes unwanted true and false from boolean tests.
 
-Alternatively, ra lists are created in mwifiex_wmm_add_buf_txqueue
-using downgraded tid number.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Abdul Hussain <habdul@visteon.com>
 ---
- drivers/net/wireless/mwifiex/11n.c           | 11 ++++++++---
- drivers/net/wireless/mwifiex/11n_rxreorder.c |  5 ++++-
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c       | 8 ++++----
+ drivers/staging/wilc1000/linux_mon.c              | 2 +-
+ drivers/staging/wilc1000/linux_wlan.c             | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c              | 4 ++--
+ 5 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 8422986..4d8ef49 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -156,7 +156,7 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
- int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 			      struct host_cmd_ds_command *resp)
- {
--	int tid;
-+	int tid, tid_down;
- 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
- 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
- 	struct mwifiex_ra_list_tbl *ra_list;
-@@ -167,7 +167,9 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 
- 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
- 	       >> BLOCKACKPARAM_TID_POS;
--	ra_list = mwifiex_wmm_get_ralist_node(priv, tid, add_ba_rsp->
-+
-+	tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+	ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, add_ba_rsp->
- 		peer_mac_addr);
- 	if (le16_to_cpu(add_ba_rsp->status_code) != BA_RESULT_SUCCESS) {
- 		if (ra_list) {
-@@ -530,13 +532,16 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
- 	struct mwifiex_tx_ba_stream_tbl *new_node;
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
- 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
- 				   GFP_ATOMIC);
- 		if (!new_node)
- 			return;
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, ra);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, ra);
- 		if (ra_list) {
- 			ra_list->ba_status = ba_status;
- 			ra_list->amsdu_in_ampdu = false;
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 39d7a95..64401a7 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -663,6 +663,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	u8 cleanup_rx_reorder_tbl;
- 	unsigned long flags;
-+	int tid_down;
- 
- 	if (type == TYPE_DELBA_RECEIVE)
- 		cleanup_rx_reorder_tbl = (initiator) ? true : false;
-@@ -688,7 +689,9 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 				    "event: TID, RA not found in table\n");
- 			return;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 9abc73d..616cf6d 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -1717,7 +1717,7 @@ s32 ParseResponse(u8 *resp, tstrWID *pstrWIDcfgResult)
+ 			idx++;
  		}
--		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, peer_mac);
-+
-+		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, peer_mac);
- 		if (ra_list) {
- 			ra_list->amsdu_in_ampdu = false;
- 			ra_list->ba_status = BA_SETUP_NONE;
+ 		idx += 3;
+-		if ((u16WIDid == g_wid_num) && (num_wid_processed == false)) {
++		if ((u16WIDid == g_wid_num) && (!num_wid_processed)) {
+ 			num_wid_processed = true;
+ 
+ 			if (-2 == further_process_response(&resp[idx], u16WIDid, cfg_len, true, 0, &pstrWIDcfgResult[ResCnt])) {
+@@ -1923,7 +1923,7 @@ s32 ConfigWaitResponse(WILC_Char *pcRespBuffer, s32 s32MaxRespBuffLen, s32 *ps32
+ 	 * gstrConfigPktInfo.bRespRequired = bRespRequired;*/
+ 
+ 
+-	if (gstrConfigPktInfo.bRespRequired == true) {
++	if (gstrConfigPktInfo.bRespRequired) {
+ 		down(&SemHandlePktResp);
+ 
+ 		*ps32BytesRead = gstrConfigPktInfo.s32BytesRead;
+@@ -1984,7 +1984,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+ 	ConfigWaitResponse(gps8ConfigPacket, MAX_PACKET_BUFF_SIZE, &s32RcvdRespLen, bRespRequired);
+ 
+ 
+-	if (bRespRequired == true)	{
++	if (bRespRequired)	{
+ 		/* If the operating Mode is GET, then we expect a response frame from */
+ 		/* the driver. Hence start listening to the port for response         */
+ 		if (g_oper_mode == GET_CFG) {
+@@ -2021,7 +2021,7 @@ s32 ConfigProvideResponse(WILC_Char *pcRespBuffer, s32 s32RespLen)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 
+-	if (gstrConfigPktInfo.bRespRequired == true) {
++	if (gstrConfigPktInfo.bRespRequired) {
+ 		if (s32RespLen <= gstrConfigPktInfo.s32MaxRespBuffLen) {
+ 			WILC_memcpy(gstrConfigPktInfo.pcRespBuffer, pcRespBuffer, s32RespLen);
+ 			gstrConfigPktInfo.s32BytesRead = s32RespLen;
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 8cba13c..30d1c76 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -452,7 +452,7 @@ void WILC_mgm_HOSTAPD_ACK(void *priv, bool bStatus)
+ 		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
+ 
+ 
+-		if (true == bStatus) {
++		if (bStatus) {
+ 			/* success */
+ 			cb_hdr->tx_flags = IEEE80211_RADIOTAP_F_TX_RTS;
+ 		} else {
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index c1e9272..c1cf5be 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -309,7 +309,7 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+ 
+ 
+ 
+-		if (bEnablePS	 == true)
++		if (bEnablePS)
+ 			host_int_set_power_mgmt((WILC_WFIDrvHandle)pstrWFIDrv, 1, 0);
+ 
+ 		PRINT_D(GENERIC_DBG, "[%s] Up IP\n", dev_iface->ifa_label);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 9861476..db0b782 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -624,7 +624,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+ 				}
+ 			}
+ 
+-			if (bNeedScanRefresh == true) {
++			if (bNeedScanRefresh) {
+ 				/*BugID_5418*/
+ 				/*Also, refrsh DIRECT- results if */
+ 				refresh_scan(priv, 1, true);
+@@ -2817,7 +2817,7 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EIO;
+ 	}
+ 
+-	if (bEnablePS	 == true)
++	if (bEnablePS)
+ 		host_int_set_power_mgmt(priv->hWILCWFIDrv, enabled, timeout);
+ 
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 762470c..db9e717 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -559,7 +559,7 @@ static int wilc_wlan_txq_add_net_pkt(void *priv, uint8_t *buffer, uint32_t buffe
+ #ifdef TCP_ACK_FILTER
+ 	tqe->tcp_PendingAck_index = NOT_TCP_ACK;
+ #ifdef TCP_ENHANCEMENTS
+-	if (is_TCP_ACK_Filter_Enabled() == true)
++	if (is_TCP_ACK_Filter_Enabled())
+ #endif
+ 	tcp_process(tqe);
+ #endif
+@@ -2337,7 +2337,7 @@ u16 Set_machw_change_vir_if(bool bValue)
+ 		PRINT_ER("Error while Reading reg WILC_CHANGING_VIR_IF\n");
+ 	}
+ 
+-	if (bValue == true) {
++	if (bValue) {
+ 		reg |= (BIT31);
+ 	} else {
+ 		reg &= ~(BIT31);
 -- 
-1.8.1.4
-
+1.9.1
