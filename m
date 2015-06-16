@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:32869 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbbFZGt1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60015 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752699AbbFPFsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 02:49:27 -0400
-Received: by pdjn11 with SMTP id n11so69308810pdj.0
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 23:49:27 -0700 (PDT)
-From: Sunghoon Cho <ywhsbliss@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, Rachel.kim@atmel.com,
-	dean.lee@atmel.com, ywhsbliss@gmail.com
-Subject: [PATCH 3/3] staging: wilc1000: remove the warnings on the line over 80 characters
-Date: Fri, 26 Jun 2015 15:48:16 +0900
-Message-Id: <2337e747eb6df9df5287e1866ef26ddc41dcbedb.1435300603.git.ywhsbliss@gmail.com> (sfid-20150626_084931_014088_31C89A52)
-In-Reply-To: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
-References: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
-In-Reply-To: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
-References: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
+	Tue, 16 Jun 2015 01:48:36 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 10/10] ath10k: handle 10.4 fw wmi ready event
+Date: Tue, 16 Jun 2015 11:15:23 +0530
+Message-ID: <1434433523-8357-11-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_080350_635463_E8D43A01)
+In-Reply-To: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the warnings reported by checkpatch.pl on the line
-over 80 characters.
+Reuse existing function ath10k_wmi_op_pull_rdy_ev()
+to parse WMI_10_4_READY_EVENTID and handle the same
+event in ath10k_wmi_10_4_op_rx().
 
-Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 8102ef0..0dfe108 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -77,8 +77,8 @@ struct WILC_WFI_stats {
- #define num_reg_frame 2
- /*
-  * If you use RX_BH_WORK_QUEUE on LPC3131: You may lose the first interrupt on
-- * LPC3131 which is important to get the MAC start status when you are blocked inside
-- * linux_wlan_firmware_download() which blocks mac_open().
-+ * LPC3131 which is important to get the MAC start status when you are blocked
-+ * inside linux_wlan_firmware_download() which blocks mac_open().
-  */
- #if defined(NM73131_0_BOARD)
-  #define RX_BH_TYPE  RX_BH_KTHREAD
-@@ -151,7 +151,8 @@ struct WILC_WFI_priv {
- 	u8 WILC_WFI_wep_default;
- 	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
- 	u8 WILC_WFI_wep_key_len[4];
--	struct net_device *real_ndev;   /* The real interface that the monitor is on */
-+	/* The real interface that the monitor is on */
-+	struct net_device *real_ndev;
- 	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
- 	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
- 	u8 wilc_groupkey;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index e5d948e..8d4ff3e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4252,6 +4252,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_wmi_event_mgmt_rx(ar, skb);
+ 		/* mgmt_rx() owns the skb now! */
+ 		return;
++	case WMI_10_4_READY_EVENTID:
++		ath10k_wmi_event_ready(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
+ 		break;
+@@ -6184,6 +6187,7 @@ static const struct wmi_ops wmi_10_4_ops = {
+ 	.map_svc = wmi_10_4_svc_map,
+ 	.pull_mgmt_rx = ath10k_wmi_10_4_op_pull_mgmt_rx_ev,
+ 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
++	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+ 	.gen_init = ath10k_wmi_10_4_op_gen_init,
+ };
+ 
 -- 
-1.9.1
+1.8.1.2
 
