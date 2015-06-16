@@ -1,87 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:33656 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbbFASae (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3921 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbbFPFrC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 14:30:34 -0400
-Received: by igbpi8 with SMTP id pi8so68108179igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 11:30:33 -0700 (PDT)
+	Tue, 16 Jun 2015 01:47:02 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 04/10] ath10k: set 10.4 fw exclusive wmi cmd as unsupported for other fw versions
+Date: Tue, 16 Jun 2015 11:15:17 +0530
+Message-ID: <1434433523-8357-5-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_074705_679859_C96148BA)
+In-Reply-To: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYKPhgW6-ugi8kaO8sDvTKm-ScAOOXWavuTNo4w4+WS+6g@mail.gmail.com>
-References: <CABPxzYKPhgW6-ugi8kaO8sDvTKm-ScAOOXWavuTNo4w4+WS+6g@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 2 Jun 2015 00:00:13 +0530
-Message-ID: <CABPxzY+QEQNA7T+bNqeamM4B8YEwCJx+_kivGQ+3w_UnRNb--Q@mail.gmail.com> (sfid-20150601_203038_778446_F2F96621)
-Subject: Re: cfg80211: Beacon hints for DFS channels
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2015 at 1:37 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> Hi,
->
-> In the Regulatory and DFS wiki it is mentioned that
-> beacon hints are not processed for DFS channels.
-> But i could not find the related piece of code which
-> does this.
->
-> So in DFS channels can we process beacon hints?
-> Assuming that if AP is beaconing then there is no
-> RADAR in that channel. But how do we handle
-> channel switch (if we dont disconnect) then that
-> channel is enabled for active scan?
->       (or)
-> should be we have something like this:
->
-> ---
->
->  net/wireless/reg.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 8c6cf52..25b3173 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -1384,7 +1384,8 @@ static void handle_reg_beacon(struct wiphy
-> *wiphy, unsigned int chan_idx,
->         chan_before.center_freq = chan->center_freq;
->         chan_before.flags = chan->flags;
->
-> -       if (chan->flags & IEEE80211_CHAN_NO_IR) {
-> +       if (!(chan->flags & IEEE80211_CHAN_RADAR) &&
-> +             (chan->flags & IEEE80211_CHAN_NO_IR)) {
->                 chan->flags &= ~IEEE80211_CHAN_NO_IR;
->                 channel_changed = true;
->         }
->
-Luis,
+In fact, explicit assigned to ZERO for unsupported wmi commands
+are not really needed. Global static variable will have ZERO by
+default. However, just for better readability setting all wmi cmds
+in non 10.4 firmware wmi mapping table as unsupported for wmi cmd
+which are exclusively available only in 10.4 firmware.
 
-Any comments on this? We are seeing the below behavior:
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 128 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 128 insertions(+)
 
-Channel 60 in US:
-     Initially marked as NO_IR
-     found a beacon: channel changed to ~NO_IR.
-     AP found a radar, issued CSA and move to other channel.
-     STA disconnected and does active scan in channel 60..
-Now,
-
-a) we can disable beacons hints for DFS channels as per wiki,
-so all DFS channels will be marked as NO_IR.
-
-b) up on receiving the ECSA/CSA mark the channel as NO_IR.
-
-Let me know your thoughts.
-
-Regards,
-Chaitanya T K.
-
-
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d3a5d46..51b5d3c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -148,6 +148,38 @@ static struct wmi_cmd_map wmi_cmd_map = {
+ 	.gpio_config_cmdid = WMI_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
++	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_add_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_evict_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_restore_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_print_all_peers_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_update_wds_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_add_proxy_sta_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.rtt_keepalive_cmdid = WMI_CMD_UNSUPPORTED,
++	.oem_req_cmdid = WMI_CMD_UNSUPPORTED,
++	.nan_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_ratemask_cmdid = WMI_CMD_UNSUPPORTED,
++	.qboost_cfg_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_enable_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_set_rx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_tx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_train_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_node_config_ops_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_antenna_switch_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_ctl_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_mimogain_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_chainmsk_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_fips_cmdid = WMI_CMD_UNSUPPORTED,
++	.tt_set_conf_cmdid = WMI_CMD_UNSUPPORTED,
++	.fwtest_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_cck_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_ofdm_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_reserve_ast_entry_cmdid = WMI_CMD_UNSUPPORTED,
+ };
+ 
+ /* 10.X WMI cmd track */
+@@ -271,6 +303,38 @@ static struct wmi_cmd_map wmi_10x_cmd_map = {
+ 	.gpio_config_cmdid = WMI_10X_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_10X_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
++	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_add_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_evict_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_restore_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_print_all_peers_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_update_wds_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_add_proxy_sta_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.rtt_keepalive_cmdid = WMI_CMD_UNSUPPORTED,
++	.oem_req_cmdid = WMI_CMD_UNSUPPORTED,
++	.nan_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_ratemask_cmdid = WMI_CMD_UNSUPPORTED,
++	.qboost_cfg_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_enable_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_set_rx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_tx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_train_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_node_config_ops_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_antenna_switch_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_ctl_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_mimogain_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_chainmsk_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_fips_cmdid = WMI_CMD_UNSUPPORTED,
++	.tt_set_conf_cmdid = WMI_CMD_UNSUPPORTED,
++	.fwtest_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_cck_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_ofdm_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_reserve_ast_entry_cmdid = WMI_CMD_UNSUPPORTED,
+ };
+ 
+ /* 10.2.4 WMI cmd track */
+@@ -393,6 +457,38 @@ static struct wmi_cmd_map wmi_10_2_4_cmd_map = {
+ 	.gpio_config_cmdid = WMI_10_2_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_10_2_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_10_2_PDEV_GET_TEMPERATURE_CMDID,
++	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_add_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_evict_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_restore_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_print_all_peers_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_update_wds_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_add_proxy_sta_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.rtt_keepalive_cmdid = WMI_CMD_UNSUPPORTED,
++	.oem_req_cmdid = WMI_CMD_UNSUPPORTED,
++	.nan_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_ratemask_cmdid = WMI_CMD_UNSUPPORTED,
++	.qboost_cfg_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_enable_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_set_rx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_tx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_train_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_node_config_ops_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_antenna_switch_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_ctl_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_mimogain_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_chainmsk_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_fips_cmdid = WMI_CMD_UNSUPPORTED,
++	.tt_set_conf_cmdid = WMI_CMD_UNSUPPORTED,
++	.fwtest_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_cck_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_ofdm_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_reserve_ast_entry_cmdid = WMI_CMD_UNSUPPORTED,
+ };
+ 
+ /* 10.4 WMI cmd track */
+@@ -1020,6 +1116,38 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
+ 	.gpio_config_cmdid = WMI_10_2_GPIO_CONFIG_CMDID,
+ 	.gpio_output_cmdid = WMI_10_2_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
++	.scan_update_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_standby_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_resume_response_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_add_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_evict_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_restore_peer_cmdid = WMI_CMD_UNSUPPORTED,
++	.wlan_peer_caching_print_all_peers_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_update_wds_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_add_proxy_sta_entry_cmdid = WMI_CMD_UNSUPPORTED,
++	.rtt_keepalive_cmdid = WMI_CMD_UNSUPPORTED,
++	.oem_req_cmdid = WMI_CMD_UNSUPPORTED,
++	.nan_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_ratemask_cmdid = WMI_CMD_UNSUPPORTED,
++	.qboost_cfg_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_enable_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_smart_ant_set_rx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_tx_antenna_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_train_info_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_smart_ant_set_node_config_ops_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_antenna_switch_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_ctl_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_set_mimogain_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_ratepwr_chainmsk_table_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_fips_cmdid = WMI_CMD_UNSUPPORTED,
++	.tt_set_conf_cmdid = WMI_CMD_UNSUPPORTED,
++	.fwtest_cmdid = WMI_CMD_UNSUPPORTED,
++	.vdev_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.peer_atf_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_cck_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_get_ani_ofdm_config_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_reserve_ast_entry_cmdid = WMI_CMD_UNSUPPORTED,
+ };
+ 
+ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
+1.8.1.2
+
