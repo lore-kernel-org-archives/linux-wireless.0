@@ -1,178 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:33088 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754811AbbFBHRa convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40578 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbbFPFOq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 03:17:30 -0400
-Received: by wiwd19 with SMTP id d19so9624723wiw.0
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 00:17:29 -0700 (PDT)
+	Tue, 16 Jun 2015 01:14:46 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 08/10] ath10k: Fix BMI communication timeout for QCA99X0
+Date: Tue, 16 Jun 2015 10:42:20 +0530
+Message-ID: <1434431542-14724-9-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071449_198237_2AEDBBAB)
+In-Reply-To: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1433187843-20698-1-git-send-email-cfliu.tw@gmail.com>
-References: <1433187843-20698-1-git-send-email-cfliu.tw@gmail.com>
-Date: Tue, 2 Jun 2015 09:17:29 +0200
-Message-ID: <CA+BoTQmhEUegGBLHv6-CZHAhAQdJUUVSRXs6S5kTW82fLFA5hQ@mail.gmail.com> (sfid-20150602_091747_815265_7E64694A)
-Subject: Re: [PATCH 1/2] ath10k: add cryptmode param to support sw crypto and
- raw tx injection.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: David Liu <cfliu.tw@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 June 2015 at 21:44, David Liu <cfliu.tw@gmail.com> wrote:
-[...]
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -91,6 +91,7 @@ struct ath10k_skb_cb {
->                 u8 tid;
->                 u16 freq;
->                 bool is_offchan;
-> +               bool nohwcrypt;
->                 struct ath10k_htt_txbuf *txbuf;
->                 u32 txbuf_paddr;
->         } __packed htt;
-> @@ -349,6 +350,7 @@ struct ath10k_vif {
->         } u;
->
->         bool use_cts_prot;
-> +       bool nohwcrypt;
+There is more than 1 sec delay in getting response from target
+through BMI in QCA99X0. Increase the BMI communication timeout
+to 2*HZ to fix BMI failures.
 
-So this is a bit confusing. This is used only for tx policy only,
-right? It should be named accordingly then. The other nohwcrypt in
-skb_cb pretty much implies Tx already.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/bmi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
+index 31a9906..df7c761 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.h
++++ b/drivers/net/wireless/ath/ath10k/bmi.h
+@@ -178,7 +178,7 @@ struct bmi_target_info {
+ };
+ 
+ /* in msec */
+-#define BMI_COMMUNICATION_TIMEOUT_HZ (1*HZ)
++#define BMI_COMMUNICATION_TIMEOUT_HZ (2 * HZ)
+ 
+ #define BMI_CE_NUM_TO_TARG 0
+ #define BMI_CE_NUM_TO_HOST 1
+-- 
+1.9.1
 
-[...]
-> @@ -484,6 +491,12 @@ enum ath10k_dev_flags {
->          * waiters should immediately cancel instead of waiting for a time out.
->          */
->         ATH10K_FLAG_CRASH_FLUSH,
-> +
-> +       /* Use Raw mode for Tx and Rx */
-> +       ATH10K_RAW_MODE,
-> +
-> +       /* Disable HW crypto engine */
-> +       ATH10K_HW_CRYPTO_DISABLED,
-
-You're missing the _FLAG prefix. Also this isn't documented well
-enough. RAW_MODE implies sw crypto rx, no? Perhaps a more fine grained
-approach would be better:
-
- ATH10K_FLAG_RAW_TX,
- ATH10K_FLAG_RAW_RX,
- ATH10K_FLAG_SW_TX_CRYPTO,
- ATH10K_FLAG_SW_RX_CRYPTO,
-
-Obviously not all combinations are valid/doable but I think this will
-make the code look more obvious.
-
-
->  };
->
->  enum ath10k_cal_mode {
-> @@ -492,6 +505,15 @@ enum ath10k_cal_mode {
->         ATH10K_CAL_MODE_DT,
->  };
->
-> +enum ath10k_crypt_mode {
-> +       /* Use HW crypto engine only */
-> +       ATH10K_CRYPT_MODE_HW,
-> +       /* HW SW crypto engine only (ie. HW crypto engine disabled) */
-> +       ATH10K_CRYPT_MODE_SW,
-> +       /* Both SW & HW crypto engine supported */
-> +       ATH10K_CRYPT_MODE_HW_SW,
-
-I don't think this is clear enough (and the comments don't help at all):
-
- ATH10K_CRYPT_MODE_HW,
- ATH10K_CRYPT_MODE_SW,
- ATH10K_CRYPT_MODE_SW_RX_HW_TX,
-
-It would also be nice to have some sort of indication in driver
-logs/dmesg (without any debug_masks) as to what crypto mode driver
-uses so that if someone reports a bug we can quickly see their base
-configuration. Having it completely configurable during runtime is a
-bit of a pain in this regard though.. but most people will likely just
-set cryptmode in modprobe.conf or something. Thoughts?
-
-
-> +};
-> +
->  static inline const char *ath10k_cal_mode_str(enum ath10k_cal_mode mode)
->  {
->         switch (mode) {
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index 89eb16b..a7df05d 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -1018,8 +1018,7 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
->
->         /* In most cases this will be true for sniffed frames. It makes sense
->          * to deliver them as-is without stripping the crypto param. This would
-> -        * also make sense for software based decryption (which is not
-> -        * implemented in ath10k).
-> +        * also make sense for software based decryption.
-
-I guess you should update the comment even more. The "would" doesn't
-fit anymore. Instead: "This is necessary for software crypto too. "
-
-Nonetheless kudos for taking care to update comments.
-
-
-[...]
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-> index 85cca29..37fd2f83 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -296,7 +296,7 @@ enum ath10k_hw_rate_cck {
->  #define TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
->  #define TARGET_10X_VOW_CONFIG                  0
->  #define TARGET_10X_NUM_MSDU_DESC               (1024 + 400)
-> -#define TARGET_10X_MAX_FRAG_ENTRIES            0
-> +#define TARGET_10X_MAX_FRAG_ENTRIES            10
-
-This is probably enough at "2" (ath10k doesn't send more than 2 tx
-fragments now). I assume fw crashes with raw tx if this isn't fixed,
-correct?
-
-Sidenote: I guess TARGET_MAX_FRAG_ENTRIES could be fixed as well. It
-might make sense for QCA61X4 hw2.1 which still uses the old Rx
-indication event and might be able to do raw txrx + swcrypto. But I'm
-a bit reluctant to change this without any testing.
-
-
-[...]
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 77220b0..1202150 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -508,7 +508,7 @@ static struct wmi_vdev_param_map wmi_10x_vdev_param_map = {
->         .txbf = WMI_VDEV_PARAM_UNSUPPORTED,
->         .packet_powersave = WMI_VDEV_PARAM_UNSUPPORTED,
->         .drop_unencry = WMI_VDEV_PARAM_UNSUPPORTED,
-> -       .tx_encap_type = WMI_VDEV_PARAM_UNSUPPORTED,
-> +       .tx_encap_type = WMI_10X_VDEV_PARAM_TX_ENCAP_TYPE,
-
-Hmm..
-
-Technically this isn't correct because 10.1 doesn't support this vdev
-parameter. Practically this might not matter since 10.1 won't ever
-have the appropriate fw_feature set
-(ATH10K_FW_FEATURE_RAW_MODE_SUPPORT).. unless Ben implements it in his
-10.1 CT fork.
-
-Ideally you should create wmi_10_2_vdev_param_map and use it for the
-10.2 op_version. Also you should probably update
-wmi_10_2_4_vdev_param_map as well - if 10.2 works then 10.2.4 will
-mostly like do too.
-
-I would actually even suggest for this tx_encap_type to be done in a
-separate patch as it'll change ath10k behaviour on its own. It'll be
-easier to bisect the driver later in case something will have gone
-wrong.
-
-
-Michał
