@@ -1,67 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37774 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932919AbbFVIGx (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:60740 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbbFPFPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 04:06:53 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xsZq032685
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:53 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1v57pduf0e-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:53 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 03/17] mwifiex: do not increase tx_pkts_queued if receive address tx paused
-Date: Mon, 22 Jun 2015 19:06:09 +0530
-Message-ID: <1434980183-2901-4-git-send-email-patila@marvell.com> (sfid-20150622_100657_302419_318D31A7)
-In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
-References: <1434980183-2901-1-git-send-email-patila@marvell.com>
+	Tue, 16 Jun 2015 01:15:18 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 10/10] ath10k: Add BMI param value to execute otp to hw_param
+Date: Tue, 16 Jun 2015 10:42:22 +0530
+Message-ID: <1434431542-14724-11-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071521_658413_8E089D4E)
+In-Reply-To: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+BMI parameter value to execute downloaded otp binary
+is different for QCA99X0. Have a member in hw_params
+to hold hw specific BMI param.
 
-If tx_pkts_queued is increased for tx paused receive address, tx process
-will be triggered for this packet. But since RA list was tx paused,
-there will be an infinite loop in mwifiex_wmm_process_tx waiting for the
-event(tx pause, tdls cs) to cancel tx pause. This will be an dead loop,
-since main_process was locked at this time, there will be no opportunity
-to process event.
-
-So do not increase tx_pkts_queued if receive address tx paused,
-this will be restored RA list is unpaused.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/wmm.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.c | 8 +++++++-
+ drivers/net/wireless/ath/ath10k/core.h | 1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 8a4dd24..8e343b3 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -803,7 +803,10 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 		atomic_set(&priv->wmm.highest_queued_prio,
- 			   priv->tos_to_tid_inv[tid_down]);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 6346711..c6a39eeb 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -49,6 +49,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
+ 		.has_shifted_cc_wraparound = true,
++		.otp_exe_param = 0,
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+@@ -63,6 +64,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.name = "qca6174 hw2.1",
+ 		.patch_load_addr = QCA6174_HW_2_1_PATCH_LOAD_ADDR,
+ 		.uart_pin = 6,
++		.otp_exe_param = 0,
+ 		.fw = {
+ 			.dir = QCA6174_HW_2_1_FW_DIR,
+ 			.fw = QCA6174_HW_2_1_FW_FILE,
+@@ -77,6 +79,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.name = "qca6174 hw3.0",
+ 		.patch_load_addr = QCA6174_HW_3_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 6,
++		.otp_exe_param = 0,
+ 		.fw = {
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+ 			.fw = QCA6174_HW_3_0_FW_FILE,
+@@ -91,6 +94,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.name = "qca6174 hw3.2",
+ 		.patch_load_addr = QCA6174_HW_3_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 6,
++		.otp_exe_param = 0,
+ 		.fw = {
+ 			/* uses same binaries as hw3.0 */
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+@@ -106,6 +110,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.name = "qca99x0 hw2.0",
+ 		.patch_load_addr = QCA99X0_HW_2_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
++		.otp_exe_param = 0x00000700,
+ 		.fw = {
+ 			.dir = QCA99X0_HW_2_0_FW_DIR,
+ 			.fw = QCA99X0_HW_2_0_FW_FILE,
+@@ -369,6 +374,7 @@ out:
+ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ {
+ 	u32 result, address = ar->hw_params.patch_load_addr;
++	u32 bmi_otp_exe_param = ar->hw_params.otp_exe_param;
+ 	int ret;
  
--	atomic_inc(&priv->wmm.tx_pkts_queued);
-+	if (ra_list->tx_paused)
-+		priv->wmm.pkts_paused[tid_down]++;
-+	else
-+		atomic_inc(&priv->wmm.tx_pkts_queued);
+ 	ret = ath10k_download_board_data(ar, ar->board_data, ar->board_len);
+@@ -394,7 +400,7 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ 		return ret;
+ 	}
  
- 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
- }
+-	ret = ath10k_bmi_execute(ar, address, 0, &result);
++	ret = ath10k_bmi_execute(ar, address, bmi_otp_exe_param, &result);
+ 	if (ret) {
+ 		ath10k_err(ar, "could not execute otp (%d)\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 335b2fc..e9bf28e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -572,6 +572,7 @@ struct ath10k {
+ 		const char *name;
+ 		u32 patch_load_addr;
+ 		int uart_pin;
++		u32 otp_exe_param;
+ 
+ 		/* This is true if given HW chip has a quirky Cycle Counter
+ 		 * wraparound which resets to 0x7fffffff instead of 0. All
 -- 
-1.8.1.4
+1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
