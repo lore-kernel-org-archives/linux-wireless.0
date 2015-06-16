@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:25629 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932289AbbFPIkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 04:40:22 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: poh@qca.qualcomm.com, ath9k-devel@venema.h4ckr.net,
-	ath10k@lists.infradead.org,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH] ath: DFS - limit number of potential PRI sequences
-Date: Tue, 16 Jun 2015 10:34:03 +0200
-Message-Id: <1434443643-28477-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20150616_104059_350772_BEE69A5E)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:35288 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754424AbbFPKLq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 06:11:46 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: prevent debugfs mmio access crash kernel
+References: <1434008594-6726-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 16 Jun 2015 13:11:41 +0300
+In-Reply-To: <1434008594-6726-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 11 Jun 2015 09:43:14 +0200")
+Message-ID: <87ioao7yjm.fsf@kamboji.qca.qualcomm.com> (sfid-20150616_121150_447953_FADE0A38)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the PRI detector, after the current radar pulse
-has been checked agains existing PRI sequences, it
-is considered as part of a new potential sequence.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Previously, the condition to accept a new sequence
-was to have at least the same number of pulses as
-the longest matching sequence. This was wrong,
-since it led to duplicates of PRI sequences.
+> It was possible to force an out of bounds MMIO
+> read/write via debugfs. E.g. on QCA988X this could
+> be triggered with:
+>
+>  echo 0x2080e0 | tee /sys/kernel/debug/ieee80211/*/ath10k/reg_addr
+>  cat /sys/kernel/debug/ieee80211/*/ath10k/reg_value
+>
+>  BUG: unable to handle kernel paging request at ffffc90001e080e0
+>  IP: [<ffffffff8135c860>] ioread32+0x40/0x50
+>  ...
+>  Call Trace:
+>   [<ffffffffa00d0c7f>] ? ath10k_pci_read32+0x4f/0x70 [ath10k_pci]
+>   [<ffffffffa0080f50>] ath10k_reg_value_read+0x90/0xf0 [ath10k_core]
+>   [<ffffffff8115c2c1>] ? handle_mm_fault+0xa91/0x1050
+>   [<ffffffff81189758>] __vfs_read+0x28/0xe0
+>   [<ffffffff812e4694>] ? security_file_permission+0x84/0xa0
+>   [<ffffffff81189ce3>] ? rw_verify_area+0x53/0x100
+>   [<ffffffff81189e1a>] vfs_read+0x8a/0x140
+>   [<ffffffff8118acb9>] SyS_read+0x49/0xb0
+>   [<ffffffff8104e39c>] ? trace_do_page_fault+0x3c/0xc0
+>   [<ffffffff8196596e>] system_call_fastpath+0x12/0x71
+>
+> Reported-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-This patch changes the acceptance criteria for new
-potential sequences from 'at least' to 'more than'
-the longest existing.
+Thanks, applied.
 
-Detection performance remains unaffected, while
-the number of PRI sequences accounted at runtime
-(and with it CPU load) is reduced by up to 50%.
-
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- drivers/net/wireless/ath/dfs_pri_detector.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/dfs_pri_detector.c b/drivers/net/wireless/ath/dfs_pri_detector.c
-index 1b5ad19..cc5c592 100644
---- a/drivers/net/wireless/ath/dfs_pri_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pri_detector.c
-@@ -273,7 +273,7 @@ static bool pseq_handler_create_sequences(struct pri_detector *pde,
- 				tmp_false_count++;
- 			}
- 		}
--		if (ps.count < min_count)
-+		if (ps.count <= min_count)
- 			/* did not reach minimum count, drop sequence */
- 			continue;
- 
 -- 
-1.9.1
-
+Kalle Valo
