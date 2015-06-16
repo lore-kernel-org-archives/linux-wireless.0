@@ -1,65 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32470 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752582AbbF2LVN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12969 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460AbbFPFOS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 07:21:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 09/10] ath10k: Add support for code swap
-References: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
-	<1434610870-5505-10-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Mon, 29 Jun 2015 14:21:03 +0300
-In-Reply-To: <1434610870-5505-10-git-send-email-vthiagar@qti.qualcomm.com>
-	(Vasanthakumar Thiagarajan's message of "Thu, 18 Jun 2015 12:31:09
-	+0530")
-Message-ID: <87egku3gm8.fsf@kamboji.qca.qualcomm.com> (sfid-20150629_132117_670687_2119043B)
+	Tue, 16 Jun 2015 01:14:18 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 06/10] ath10k: Add chip reset sequence for QCA99X0
+Date: Tue, 16 Jun 2015 10:42:18 +0530
+Message-ID: <1434431542-14724-7-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071420_797493_52B3BCC1)
+In-Reply-To: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+QCA99X0 supports only cold reset. Also, made
+ath10k_pci_irq_msi_fw_mask() and ath10k_pci_irq_msi_fw_unmask()
+non-99X0 specific till we get proper register configuration
+to mask/unmask irq/MSI.
 
-> Code swap is a mechanism to use host memory to store
-> some fw binary code segment. Ath10k host driver allocates
-> and loads the code swap binary into the host memory and
-> configures the target with the host allocated memory
-> information at the address taken from code swap binary.
-> This patch adds code swap support for firmware binary.
-> Code swap binary for firmware bin is available in
-> ATH10K_FW_IE_FW_CODE_SWAP_IMAGE.
->
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 81 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 71 insertions(+), 10 deletions(-)
 
-[...]
-
-> +static struct ath10k_swap_code_seg_info *
-> +ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
-> +{
-> +	struct ath10k_swap_code_seg_info *seg_info;
-> +	void *virt_addr;
-> +	dma_addr_t paddr;
-> +
-> +	swap_bin_len = roundup(swap_bin_len, 2);
-> +	if (swap_bin_len > ATH10K_SWAP_CODE_SEG_BIN_LEN_MAX) {
-> +		ath10k_err(ar, "refusing code swap bin because it is too big %zd > %d\n",
-> +			   swap_bin_len, ATH10K_SWAP_CODE_SEG_BIN_LEN_MAX);
-
-kbuild found a bug here, I fixed it with the patch below. Please review:
-
---- a/drivers/net/wireless/ath/ath10k/swap.c
-+++ b/drivers/net/wireless/ath/ath10k/swap.c
-@@ -106,7 +106,7 @@ ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 422232c..fe41b61 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -82,7 +82,7 @@ static const struct ath10k_pci_supp_chip ath10k_pci_supp_chips[] = {
  
-        swap_bin_len = roundup(swap_bin_len, 2);
-        if (swap_bin_len > ATH10K_SWAP_CODE_SEG_BIN_LEN_MAX) {
--               ath10k_err(ar, "refusing code swap bin because it is too big %zd > %d\n",
-+               ath10k_err(ar, "refusing code swap bin because it is too big %zu > %d\n",
-                           swap_bin_len, ATH10K_SWAP_CODE_SEG_BIN_LEN_MAX);
-                return NULL;
-        }
-
+ static void ath10k_pci_buffer_cleanup(struct ath10k *ar);
+ static int ath10k_pci_cold_reset(struct ath10k *ar);
+-static int ath10k_pci_warm_reset(struct ath10k *ar);
++static int ath10k_pci_safe_chip_reset(struct ath10k *ar);
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
+ static int ath10k_pci_init_irq(struct ath10k *ar);
+ static int ath10k_pci_deinit_irq(struct ath10k *ar);
+@@ -91,6 +91,7 @@ static void ath10k_pci_free_irq(struct ath10k *ar);
+ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
+ 			       struct ath10k_ce_pipe *rx_pipe,
+ 			       struct bmi_xfer *xfer);
++static int ath10k_pci_qca99x0_chip_reset(struct ath10k *ar);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -1415,20 +1416,42 @@ static void ath10k_pci_irq_msi_fw_mask(struct ath10k *ar)
+ {
+ 	u32 val;
+ 
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS);
+-	val &= ~CORE_CTRL_PCIE_REG_31_MASK;
+-
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS, val);
++	switch (ar->hw_rev) {
++	case ATH10K_HW_QCA988X:
++	case ATH10K_HW_QCA6174:
++		val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
++					CORE_CTRL_ADDRESS);
++		val &= ~CORE_CTRL_PCIE_REG_31_MASK;
++		ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
++				   CORE_CTRL_ADDRESS, val);
++		break;
++	case ATH10K_HW_QCA99X0:
++		/* TODO: Find appropriate register configuration for QCA99X0
++		 *  to mask irq/MSI.
++		 */
++		 break;
++	}
+ }
+ 
+ static void ath10k_pci_irq_msi_fw_unmask(struct ath10k *ar)
+ {
+ 	u32 val;
+ 
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS);
+-	val |= CORE_CTRL_PCIE_REG_31_MASK;
+-
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS, val);
++	switch (ar->hw_rev) {
++	case ATH10K_HW_QCA988X:
++	case ATH10K_HW_QCA6174:
++		val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
++					CORE_CTRL_ADDRESS);
++		val |= CORE_CTRL_PCIE_REG_31_MASK;
++		ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
++				   CORE_CTRL_ADDRESS, val);
++		break;
++	case ATH10K_HW_QCA99X0:
++		/* TODO: Find appropriate register configuration for QCA99X0
++		 *  to unmask irq/MSI.
++		 */
++		break;
++	}
+ }
+ 
+ static void ath10k_pci_irq_disable(struct ath10k *ar)
+@@ -1590,7 +1613,7 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	 * masked. To prevent the device from asserting the interrupt reset it
+ 	 * before proceeding with cleanup.
+ 	 */
+-	ath10k_pci_warm_reset(ar);
++	ath10k_pci_safe_chip_reset(ar);
+ 
+ 	ath10k_pci_irq_disable(ar);
+ 	ath10k_pci_irq_sync(ar);
+@@ -2102,6 +2125,18 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static int ath10k_pci_safe_chip_reset(struct ath10k *ar)
++{
++	if (QCA_REV_988X(ar) || QCA_REV_6174(ar)) {
++		return ath10k_pci_warm_reset(ar);
++	} else if (QCA_REV_99X0(ar)) {
++		ath10k_pci_irq_disable(ar);
++		return ath10k_pci_qca99x0_chip_reset(ar);
++	} else {
++		return -ENOTSUPP;
++	}
++}
++
+ static int ath10k_pci_qca988x_chip_reset(struct ath10k *ar)
+ {
+ 	int i, ret;
+@@ -2208,12 +2243,38 @@ static int ath10k_pci_qca6174_chip_reset(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static int ath10k_pci_qca99x0_chip_reset(struct ath10k *ar)
++{
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot qca99x0 chip reset\n");
++
++	ret = ath10k_pci_cold_reset(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to cold reset: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath10k_pci_wait_for_target_init(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to wait for target after cold reset: %d\n",
++			    ret);
++		return ret;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot qca99x0 chip reset complete (cold)\n");
++
++	return 0;
++}
++
+ static int ath10k_pci_chip_reset(struct ath10k *ar)
+ {
+ 	if (QCA_REV_988X(ar))
+ 		return ath10k_pci_qca988x_chip_reset(ar);
+ 	else if (QCA_REV_6174(ar))
+ 		return ath10k_pci_qca6174_chip_reset(ar);
++	else if (QCA_REV_99X0(ar))
++		return ath10k_pci_qca99x0_chip_reset(ar);
+ 	else
+ 		return -ENOTSUPP;
+ }
 -- 
-Kalle Valo
+1.9.1
+
