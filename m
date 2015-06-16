@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-out1.inet.fi ([62.71.2.203]:47011 "EHLO
-	johanna3.rokki.sonera.fi" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752245AbbFDTcq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 15:32:46 -0400
-Date: Thu, 4 Jun 2015 22:32:34 +0300
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: [BUG 4.1.0-rc6] iwlwifi: "Error sending REPLY_TXFIFO_FLUSH: time
- out after 2000ms"
-Message-ID: <20150604193234.GA1795@node.dhcp.inet.fi> (sfid-20150604_213250_277306_1354A704)
-References: <20150604173710.GA1188@node.dhcp.inet.fi>
- <1433441600.17813.0.camel@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433441600.17813.0.camel@intel.com>
+Received: from mail.neratec.com ([46.140.151.2]:25629 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932289AbbFPIkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 04:40:22 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: poh@qca.qualcomm.com, ath9k-devel@venema.h4ckr.net,
+	ath10k@lists.infradead.org,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath: DFS - limit number of potential PRI sequences
+Date: Tue, 16 Jun 2015 10:34:03 +0200
+Message-Id: <1434443643-28477-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20150616_104059_350772_BEE69A5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 04, 2015 at 06:13:22PM +0000, Grumbach, Emmanuel wrote:
-> On Thu, 2015-06-04 at 20:37 +0300, Kirill A. Shutemov wrote:
-> > Hi,
-> > 
-> > I've trigered the bug few times after several suspend/resume cycles.
-> > Hardware is Thinkpad X1 2013 with Intel Corporation Centrino Advanced-N
-> > 6205 (8086:0085) (rev 96).
-> > 
-> 
-> This really looks like the platform problem people have been hitting.
-> The device is no longer accessible.
-> Unfortunately, I really don't know what we can do in that case.
+In the PRI detector, after the current radar pulse
+has been checked agains existing PRI sequences, it
+is considered as part of a new potential sequence.
 
-Is there anything I can do to provide info you need?
+Previously, the condition to accept a new sequence
+was to have at least the same number of pulses as
+the longest matching sequence. This was wrong,
+since it led to duplicates of PRI sequences.
 
+This patch changes the acceptance criteria for new
+potential sequences from 'at least' to 'more than'
+the longest existing.
+
+Detection performance remains unaffected, while
+the number of PRI sequences accounted at runtime
+(and with it CPU load) is reduced by up to 50%.
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+---
+ drivers/net/wireless/ath/dfs_pri_detector.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/dfs_pri_detector.c b/drivers/net/wireless/ath/dfs_pri_detector.c
+index 1b5ad19..cc5c592 100644
+--- a/drivers/net/wireless/ath/dfs_pri_detector.c
++++ b/drivers/net/wireless/ath/dfs_pri_detector.c
+@@ -273,7 +273,7 @@ static bool pseq_handler_create_sequences(struct pri_detector *pde,
+ 				tmp_false_count++;
+ 			}
+ 		}
+-		if (ps.count < min_count)
++		if (ps.count <= min_count)
+ 			/* did not reach minimum count, drop sequence */
+ 			continue;
+ 
 -- 
- Kirill A. Shutemov
+1.9.1
+
