@@ -1,140 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13470 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753113AbbFCHbu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:31:50 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/15] iwlwifi: mvm: add inactive state to ebs status
-Date: Wed,  3 Jun 2015 10:31:25 +0300
-Message-Id: <1433316696-4612-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093154_584975_8105105D)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:33937 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755514AbbFPXGg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 19:06:36 -0400
+Message-ID: <5580ABFB.4090309@candelatech.com> (sfid-20150617_010641_155955_AF3A2C02)
+Date: Tue, 16 Jun 2015 16:06:35 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: Re: Question on beacon-miss offloading.
+References: <5579F87F.4070601@candelatech.com> <557A1BE9.7070305@candelatech.com> <CA+BoTQkLyaP-2sHiu7Wn-ZzGj2JnZs4qzQKGu7PiTtUy4d9xLQ@mail.gmail.com> <557AFC9D.3020109@candelatech.com> <CA+BoTQkn+Ro1+=PPe=1aHT519jW3BtF+Mmspy+kQftufpUiTPA@mail.gmail.com> <557EF0B0.7070008@candelatech.com> <557F2B43.8060409@candelatech.com> <CA+BoTQ=jYu2BV1rkaLwF_d5ZdDgsiws0TrWE7NGXmRsz8hMFVA@mail.gmail.com> <55809B3E.10300@candelatech.com>
+In-Reply-To: <55809B3E.10300@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+On 06/16/2015 02:55 PM, Ben Greear wrote:
+> On 06/15/2015 10:29 PM, Michal Kazior wrote:
+> 
+>>> This patch below (with firmware fix to make it actually pay attention
+>>> to this special TID in station mode), fixes the null-func to be non-qos
+>>> frames and get immediate ack.  This in turn seems to fix the disconnect
+>>> issue I was facing, though I need to test some more to be sure.
+>>>
+>>> This seem reasonable, maybe even for upstream?
+>>>
+>>> [greearb@ben-dt2 ath10k]$ git diff
+>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>> index 6ca48e3..610447e 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>> @@ -2213,6 +2213,9 @@ static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
+>>>         if (ieee80211_is_mgmt(hdr->frame_control))
+>>>                 return HTT_DATA_TX_EXT_TID_MGMT;
+>>>
+>>> +       if (ieee80211_is_nullfunc(hdr->frame_control))
+>>> +               return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+>>> +
+>>
+>> That's weird.. QoS NullFunc frames are already converted to non-QoS
+>> frames, see ath10k_tx_h_nwifi():
+> 
+> True, but the 4.0.4 kernel sends down non-qos null-func frames as far
+> as I can tell, at least when doing connection probing.
+> 
+> In my case, my kernel was sending non-qos nullfunc frame to firmware, but then
+> firmware stuck it on BE queue and made it QoS.
 
-Currently EBS status in scan complete notifications is set to
-success if EBS wasn't activated. FW will add a special return
-value for cases when EBS wasn't activated and we add a print
-of this status.
+Stock 4.0.4 and stock firmware-2.bin have the same 'nullfunc sent as qos and no immediate ack' bug,
+so it must be something that was fixed or changed between 4.0.4 and the 4.1.x ath tree.
 
-This change is needed for debug only, no behavior changes.
+Thanks,
+Ben
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |  1 +
- drivers/net/wireless/iwlwifi/mvm/scan.c        | 33 +++++++++++++++++++-------
- 2 files changed, 25 insertions(+), 9 deletions(-)
+>>         /* Some firmware revisions don't handle sending QoS NullFunc well.
+>>          * These frames are mainly used for CQM purposes so it doesn't really
+>>          * matter whether QoS NullFunc or NullFunc are sent.
+>>          */
+>>         hdr = (void *)skb->data;
+>>         if (ieee80211_is_qos_nullfunc(hdr->frame_control))
+>>                 cb->htt.tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+>>
+>> Or is it that ath10k_tx_h_get_tid() has a bug that ends up assigning
+>> an invalid tid for non-QoS NullFunc frames? If so I guess your patch
+>> would be okay with some comments/commit-log explaining why/what was
+>> wrong.
+> 
+> I tried very recent upstream ath kernel, and stock firmware-2.bin, and it
+> seems to generate null-func frames fine.  I'll go back at look at my
+> recent FW and kernel changes in more detail now that I understand the problem
+> better and see if I can figure out what is going on...
+> 
+> Thanks,
+> Ben
+> 
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-index f34cf00..5e4cbdb 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-@@ -294,6 +294,7 @@ enum iwl_scan_ebs_status {
- 	IWL_SCAN_EBS_SUCCESS,
- 	IWL_SCAN_EBS_FAILED,
- 	IWL_SCAN_EBS_CHAN_NOT_FOUND,
-+	IWL_SCAN_EBS_INACTIVE,
- };
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 4f4570d..9409237 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -352,6 +352,20 @@ int iwl_mvm_rx_scan_match_found(struct iwl_mvm *mvm,
- 	return 0;
- }
- 
-+static const char *iwl_mvm_ebs_status_str(enum iwl_scan_ebs_status status)
-+{
-+	switch (status) {
-+	case IWL_SCAN_EBS_SUCCESS:
-+		return "successful";
-+	case IWL_SCAN_EBS_INACTIVE:
-+		return "inactive";
-+	case IWL_SCAN_EBS_FAILED:
-+	case IWL_SCAN_EBS_CHAN_NOT_FOUND:
-+	default:
-+		return "failed";
-+	}
-+}
-+
- int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 					struct iwl_rx_cmd_buffer *rxb,
- 					struct iwl_device_cmd *cmd)
-@@ -359,7 +373,6 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_periodic_scan_complete *scan_notif = (void *)pkt->data;
- 	bool aborted = (scan_notif->status == IWL_SCAN_OFFLOAD_ABORTED);
--	bool ebs_successful = (scan_notif->ebs_status == IWL_SCAN_EBS_SUCCESS);
- 
- 	/* scan status must be locked for proper checking */
- 	lockdep_assert_held(&mvm->mutex);
-@@ -379,13 +392,13 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 
- 		IWL_DEBUG_SCAN(mvm, "Scheduled scan %s, EBS status %s\n",
- 			       aborted ? "aborted" : "completed",
--			       ebs_successful ? "successful" : "failed");
-+			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
- 
- 		mvm->scan_status &= ~IWL_MVM_SCAN_STOPPING_SCHED;
- 	} else if (mvm->scan_status & IWL_MVM_SCAN_STOPPING_REGULAR) {
- 		IWL_DEBUG_SCAN(mvm, "Regular scan %s, EBS status %s\n",
- 			       aborted ? "aborted" : "completed",
--			       ebs_successful ? "successful" : "failed");
-+			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
- 
- 		mvm->scan_status &= ~IWL_MVM_SCAN_STOPPING_REGULAR;
- 	} else if (mvm->scan_status & IWL_MVM_SCAN_SCHED) {
-@@ -393,14 +406,14 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 
- 		IWL_DEBUG_SCAN(mvm, "Scheduled scan %s, EBS status %s (FW)\n",
- 			       aborted ? "aborted" : "completed",
--			       ebs_successful ? "successful" : "failed");
-+			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
- 
- 		mvm->scan_status &= ~IWL_MVM_SCAN_SCHED;
- 		ieee80211_sched_scan_stopped(mvm->hw);
- 	} else if (mvm->scan_status & IWL_MVM_SCAN_REGULAR) {
- 		IWL_DEBUG_SCAN(mvm, "Regular scan %s, EBS status %s (FW)\n",
- 			       aborted ? "aborted" : "completed",
--			       ebs_successful ? "successful" : "failed");
-+			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
- 
- 		mvm->scan_status &= ~IWL_MVM_SCAN_REGULAR;
- 		ieee80211_scan_completed(mvm->hw,
-@@ -408,7 +421,9 @@ int iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- 	}
- 
--	mvm->last_ebs_successful = ebs_successful;
-+	mvm->last_ebs_successful =
-+			scan_notif->ebs_status == IWL_SCAN_EBS_SUCCESS ||
-+			scan_notif->ebs_status == IWL_SCAN_EBS_INACTIVE;
- 
- 	return 0;
- }
-@@ -1376,10 +1391,10 @@ int iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- 		       uid, mvm->scan_uid_status[uid],
- 		       notif->status == IWL_SCAN_OFFLOAD_COMPLETED ?
- 				"completed" : "aborted",
--		       notif->ebs_status == IWL_SCAN_EBS_SUCCESS ?
--				"success" : "failed");
-+		       iwl_mvm_ebs_status_str(notif->ebs_status));
- 
--	if (notif->ebs_status)
-+	if (notif->ebs_status != IWL_SCAN_EBS_SUCCESS &&
-+	    notif->ebs_status != IWL_SCAN_EBS_INACTIVE)
- 		mvm->last_ebs_successful = false;
- 
- 	mvm->scan_uid_status[uid] = 0;
+
 -- 
-2.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
