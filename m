@@ -1,206 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32058 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429AbbFVOxV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 10:53:21 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH v2 2/8] ath10k: handle 10.4 firmware wmi swba event
-Date: Mon, 22 Jun 2015 20:22:21 +0530
-Message-ID: <1434984747-24294-3-git-send-email-rmani@qti.qualcomm.com> (sfid-20150622_165332_322802_0F43D3EB)
-In-Reply-To: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:39772 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752622AbbFPHIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 03:08:50 -0400
+Message-ID: <1434438520.2337.7.camel@sipsolutions.net> (sfid-20150616_090855_559764_2F331F69)
+Subject: Re: [RFC] ath9k: advertise p2p dev support when chanctx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>
+Date: Tue, 16 Jun 2015 09:08:40 +0200
+In-Reply-To: <CALhHN=rEf0cR211Vizkb2xcbxSseda_6w1Uibs3DVD0GSXAq2w@mail.gmail.com> (sfid-20150616_083056_853720_6BA9919F)
+References: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <21886.43539.833126.629494@gargle.gargle.HOWL>
+	 <CALhHN=pUKuXAEb3JEEVTHATEHhvoLe52QDh-pixiS9oUo=6j6Q@mail.gmail.com>
+	 <21886.62363.946771.345441@gargle.gargle.HOWL>
+	 <557F1716.3040204@broadcom.com>
+	 <21887.31486.302760.504336@gargle.gargle.HOWL>
+	 <CALhHN=rEf0cR211Vizkb2xcbxSseda_6w1Uibs3DVD0GSXAq2w@mail.gmail.com>
+	 (sfid-20150616_083056_853720_6BA9919F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.4 firmware swba event payload has space to accommodate upto
-512 client traffic indication info & one p2p noa descriptor.
-It's is not matching with exiting swba event format defined for
-non 10.4 firmware. Non 10.4 firmware swba event format is designed
-to support only upto only 128 client and four p2p notice of absence
-descriptor.
+On Tue, 2015-06-16 at 08:30 +0200, Janusz Dziedzic wrote:
 
-following changes are done in this patch to enable ath10k to handle
-10.4 firmware swba event,
+> Other fix I can image is change wpa_supplicant and add
+> NL80211_SCAN_FLAG_AP to p2p_find, and set in ath9k driver
+> wiphy->features |= NL80211_FEATURE_AP_SCAN;
+> 
+> NL80211_FEATURE_AP_SCAN is not set when use_chanctx=1
+> 
+> I am not sure which is better. First one required only fix in ath9k,
+> second one also required changes in wpa_supplicant.
 
- - link generic ath10k_wmi_event_host_swba() to handle 10.4 swba
-   event in 10.4 wmi rx handler.
+It would be unfortunate if a driver change required wpa_s changes. It
+doesn't seem so bad to add p2p-device support to the driver, after all,
+there isn't much it needs to do for that.
 
- - add 10.4 specific swba event structure wmi_10_4_host_swba_event.
+This seems like a strange quirk though - you can normally not do any p2p
+operation when already operating as soft-AP (without P2P-device), no?
 
- - new function ath10k_wmi_10_4_op_pull_swba_ev() to parse
-   10.4 swba event.
+johannes
 
- - increase tim_bitmap[] size in ath10k_vif to 64 to hold 512 station
-   power save state.
-
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h |  4 +--
- drivers/net/wireless/ath/ath10k/wmi.c  | 61 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h  | 41 +++++++++++++++++++++++
- 3 files changed, 104 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 58b02ae..86c4015 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -328,8 +328,8 @@ struct ath10k_vif {
- 			u32 uapsd;
- 		} sta;
- 		struct {
--			/* 127 stations; wmi limit */
--			u8 tim_bitmap[16];
-+			/* 512 stations */
-+			u8 tim_bitmap[64];
- 			u8 tim_len;
- 			u32 ssid_len;
- 			u8 ssid[IEEE80211_MAX_SSID_LEN];
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d6a3ff2..48ea442 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3030,6 +3030,63 @@ static int ath10k_wmi_op_pull_swba_ev(struct ath10k *ar, struct sk_buff *skb,
- 	return 0;
- }
- 
-+static int ath10k_wmi_10_4_op_pull_swba_ev(struct ath10k *ar,
-+					   struct sk_buff *skb,
-+					   struct wmi_swba_ev_arg *arg)
-+{
-+	struct wmi_10_4_host_swba_event *ev = (void *)skb->data;
-+	u32 map, tim_len;
-+	size_t i;
-+
-+	if (skb->len < sizeof(*ev))
-+		return -EPROTO;
-+
-+	skb_pull(skb, sizeof(*ev));
-+	arg->vdev_map = ev->vdev_map;
-+
-+	for (i = 0, map = __le32_to_cpu(ev->vdev_map); map; map >>= 1) {
-+		if (!(map & BIT(0)))
-+			continue;
-+
-+		/* If this happens there were some changes in firmware and
-+		 * ath10k should update the max size of tim_info array.
-+		 */
-+		if (WARN_ON_ONCE(i == ARRAY_SIZE(arg->tim_info)))
-+			break;
-+
-+		if (__le32_to_cpu(ev->bcn_info[i].tim_info.tim_len) >
-+		      sizeof(ev->bcn_info[i].tim_info.tim_bitmap)) {
-+			ath10k_warn(ar, "refusing to parse invalid swba structure\n");
-+			return -EPROTO;
-+		}
-+
-+		tim_len = __le32_to_cpu(ev->bcn_info[i].tim_info.tim_len);
-+		if (tim_len) {
-+			/* Exclude 4 byte guard length */
-+			tim_len -= 4;
-+			arg->tim_info[i].tim_len = __cpu_to_le32(tim_len);
-+		} else {
-+			arg->tim_info[i].tim_len = 0;
-+		}
-+
-+		arg->tim_info[i].tim_mcast = ev->bcn_info[i].tim_info.tim_mcast;
-+		arg->tim_info[i].tim_bitmap =
-+				ev->bcn_info[i].tim_info.tim_bitmap;
-+		arg->tim_info[i].tim_changed =
-+				ev->bcn_info[i].tim_info.tim_changed;
-+		arg->tim_info[i].tim_num_ps_pending =
-+				ev->bcn_info[i].tim_info.tim_num_ps_pending;
-+
-+		/* 10.4 firmware doesn't have p2p support. notice of absence
-+		 * info can be ignored for now.
-+		 */
-+
-+		i++;
-+	}
-+
-+	return 0;
-+}
-+
- void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_swba_ev_arg arg = {};
-@@ -4364,6 +4421,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_4_READY_EVENTID:
- 		ath10k_wmi_event_ready(ar, skb);
- 		break;
-+	case WMI_10_4_HOST_SWBA_EVENTID:
-+		ath10k_wmi_event_host_swba(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -6295,6 +6355,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.rx = ath10k_wmi_10_4_op_rx,
- 	.map_svc = wmi_10_4_svc_map,
- 	.pull_mgmt_rx = ath10k_wmi_10_4_op_pull_mgmt_rx_ev,
-+	.pull_swba = ath10k_wmi_10_4_op_pull_swba_ev,
- 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
- 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
- 	.gen_init = ath10k_wmi_10_4_op_gen_init,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 7c4a15f..395742d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -5199,6 +5199,47 @@ struct wmi_host_swba_event {
- 	struct wmi_bcn_info bcn_info[0];
- } __packed;
- 
-+/* 16 words = 512 client + 1 word = for guard */
-+#define WMI_10_4_TIM_BITMAP_ARRAY_SIZE 17
-+
-+struct wmi_10_4_tim_info {
-+	__le32 tim_len;
-+	__le32 tim_mcast;
-+	__le32 tim_bitmap[WMI_10_4_TIM_BITMAP_ARRAY_SIZE];
-+	__le32 tim_changed;
-+	__le32 tim_num_ps_pending;
-+} __packed;
-+
-+#define WMI_10_4_P2P_MAX_NOA_DESCRIPTORS 1
-+
-+struct wmi_10_4_p2p_noa_info {
-+	/* Bit 0 - Flag to indicate an update in NOA schedule
-+	 * Bits 7-1 - Reserved
-+	 */
-+	u8 changed;
-+	/* NOA index */
-+	u8 index;
-+	/* Bit 0 - Opp PS state of the AP
-+	 * Bits 1-7 - Ctwindow in TUs
-+	 */
-+	u8 ctwindow_oppps;
-+	/* Number of NOA descriptors */
-+	u8 num_descriptors;
-+
-+	struct wmi_p2p_noa_descriptor
-+		noa_descriptors[WMI_10_4_P2P_MAX_NOA_DESCRIPTORS];
-+} __packed;
-+
-+struct wmi_10_4_bcn_info {
-+	struct wmi_10_4_tim_info tim_info;
-+	struct wmi_10_4_p2p_noa_info p2p_noa_info;
-+} __packed;
-+
-+struct wmi_10_4_host_swba_event {
-+	__le32 vdev_map;
-+	struct wmi_10_4_bcn_info bcn_info[0];
-+} __packed;
-+
- #define WMI_MAX_AP_VDEV 16
- 
- struct wmi_tbtt_offset_event {
--- 
-1.8.1.2
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
