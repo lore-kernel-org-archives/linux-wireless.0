@@ -1,366 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59221 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbbFAOfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 10:35:32 -0400
-Message-ID: <1433169326.3505.12.camel@sipsolutions.net> (sfid-20150601_163544_410747_F26A9F2B)
-Subject: Re: [PATCH 7/7] mac80211: Switch to new AEAD interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Steffen Klassert <steffen.klassert@secunet.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 01 Jun 2015 16:35:26 +0200
-In-Reply-To: <1433167519.3505.11.camel@sipsolutions.net>
-References: <20150521103938.GA23035@gondor.apana.org.au>
-	 <1706098.2opyZ2hT8S@tachyon.chronox.de>
-	 <1433166161.3505.7.camel@sipsolutions.net> <2141601.IbD2v8KjaT@tauon>
-	 <1433167519.3505.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:28288 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753126AbbFPG3N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 02:29:13 -0400
+From: Dean Lee <dean.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <dean.lee@atmel.com>
+Subject: [PATCH] staging: wilc1000: rework include wilc_oswrapper.h
+Date: Tue, 16 Jun 2015 15:28:21 +0900
+Message-ID: <afdd4d0ef9cde80d0106a1878cfc653cb7227e21.1434435971.git.dean.lee@atmel.com> (sfid-20150616_082917_114013_648BC2BF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-06-01 at 16:05 +0200, Johannes Berg wrote:
+rework line '#include "wilc_oswrapper.h"'
+it does not used anywhere after change own data type to common data type.
 
-> Ok - here the length is kinda passed a part of the AAD buffer, but this
-> is really just some arcane code that should be fixed to use a proper
-> struct. The value there, even though it is __be16 and looks like it came
-> from the data, is actually created locally, see ccmp_special_blocks()
-> and gcmp_special_blocks().
+Signed-off-by: Dean Lee <dean.lee@atmel.com>
 
-IOW, I think something like this would make sense:
-
-(but I'll hold it until after Herbert's patches I guess)
-
->From 20bd0e92ab0d7ef545687da762228622bcdabeec Mon Sep 17 00:00:00 2001
-From: Johannes Berg <johannes.berg@intel.com>
-Date: Mon, 1 Jun 2015 16:33:11 +0200
-Subject: [PATCH] mac80211: move AAD length out of AAD buffer
-
-The code currently passes the AAD buffer as a __be16 with the
-length, followed by the actual data, but doesn't use a struct
-or make this explicit in any other way, so it's confusing.
-
-Change the code to pass the AAD length explicity outside of
-the buffer.
-
-Reported-by: Stephan Mueller <smueller@chronox.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/aes_ccm.c | 18 +++++++-------
- net/mac80211/aes_ccm.h | 14 ++++++-----
- net/mac80211/aes_gcm.c | 10 ++++----
- net/mac80211/aes_gcm.h |  6 +++--
- net/mac80211/wpa.c     | 64 +++++++++++++++++++++++++++-----------------------
- 5 files changed, 62 insertions(+), 50 deletions(-)
+Change Log:
+ add rework file 'host_interface.c'
+---
+ drivers/staging/wilc1000/coreconfigurator.h | 1 -
+ drivers/staging/wilc1000/fifo_buffer.c      | 1 -
+ drivers/staging/wilc1000/fifo_buffer.h      | 5 ++++-
+ drivers/staging/wilc1000/host_interface.c   | 1 -
+ drivers/staging/wilc1000/wilc_memory.c      | 2 +-
+ drivers/staging/wilc1000/wilc_memory.h      | 4 +++-
+ drivers/staging/wilc1000/wilc_msgqueue.c    | 2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.h    | 5 +++++
+ drivers/staging/wilc1000/wilc_sleep.c       | 2 +-
+ drivers/staging/wilc1000/wilc_sleep.h       | 3 +++
+ drivers/staging/wilc1000/wilc_strutils.c    | 2 +-
+ drivers/staging/wilc1000/wilc_strutils.h    | 4 ++++
+ drivers/staging/wilc1000/wilc_timer.c       | 2 +-
+ drivers/staging/wilc1000/wilc_timer.h       | 3 +++
+ 14 files changed, 27 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-index 208df7c0b6ea..b6e2f096127a 100644
---- a/net/mac80211/aes_ccm.c
-+++ b/net/mac80211/aes_ccm.c
-@@ -19,9 +19,10 @@
- #include "key.h"
- #include "aes_ccm.h"
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 6c1dad1..3ca067e 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -12,7 +12,6 @@
+ #ifndef CORECONFIGURATOR_H
+ #define CORECONFIGURATOR_H
  
--void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
--			       u8 *data, size_t data_len, u8 *mic,
--			       size_t mic_len)
-+void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0,
-+			       u8 *aad, size_t aad_len,
-+			       u8 *data, size_t data_len,
-+			       u8 *mic, size_t mic_len)
- {
- 	struct scatterlist assoc, pt, ct[2];
- 
-@@ -33,7 +34,7 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 	memset(aead_req, 0, sizeof(aead_req_data));
- 
- 	sg_init_one(&pt, data, data_len);
--	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
-+	sg_init_one(&assoc, aad, aad_len);
- 	sg_init_table(ct, 2);
- 	sg_set_buf(&ct[0], data, data_len);
- 	sg_set_buf(&ct[1], mic, mic_len);
-@@ -45,9 +46,10 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 	crypto_aead_encrypt(aead_req);
- }
- 
--int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
--			      u8 *data, size_t data_len, u8 *mic,
--			      size_t mic_len)
-+int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0,
-+			      u8 *aad, size_t aad_len,
-+			      u8 *data, size_t data_len,
-+			      u8 *mic, size_t mic_len)
- {
- 	struct scatterlist assoc, pt, ct[2];
- 	char aead_req_data[sizeof(struct aead_request) +
-@@ -61,7 +63,7 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 	memset(aead_req, 0, sizeof(aead_req_data));
- 
- 	sg_init_one(&pt, data, data_len);
--	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
-+	sg_init_one(&assoc, aad, aad_len);
- 	sg_init_table(ct, 2);
- 	sg_set_buf(&ct[0], data, data_len);
- 	sg_set_buf(&ct[1], mic, mic_len);
-diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
-index 6a73d1e4d186..bfe355e4a680 100644
---- a/net/mac80211/aes_ccm.h
-+++ b/net/mac80211/aes_ccm.h
-@@ -15,12 +15,14 @@
- struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
- 						    size_t key_len,
- 						    size_t mic_len);
--void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
--			       u8 *data, size_t data_len, u8 *mic,
--			       size_t mic_len);
--int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
--			      u8 *data, size_t data_len, u8 *mic,
--			      size_t mic_len);
-+void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0,
-+			       u8 *aad, size_t aad_len,
-+			       u8 *data, size_t data_len,
-+			       u8 *mic, size_t mic_len);
-+int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0,
-+			      u8 *aad, size_t aad_len,
-+			      u8 *data, size_t data_len,
-+			      u8 *mic, size_t mic_len);
- void ieee80211_aes_key_free(struct crypto_aead *tfm);
- 
- #endif /* AES_CCM_H */
-diff --git a/net/mac80211/aes_gcm.c b/net/mac80211/aes_gcm.c
-index fd278bbe1b0d..fb6823c5e381 100644
---- a/net/mac80211/aes_gcm.c
-+++ b/net/mac80211/aes_gcm.c
-@@ -16,7 +16,8 @@
- #include "key.h"
- #include "aes_gcm.h"
- 
--void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-+void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0,
-+			       u8 *aad, size_t aad_len,
- 			       u8 *data, size_t data_len, u8 *mic)
- {
- 	struct scatterlist assoc, pt, ct[2];
-@@ -29,7 +30,7 @@ void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
- 	memset(aead_req, 0, sizeof(aead_req_data));
- 
- 	sg_init_one(&pt, data, data_len);
--	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
-+	sg_init_one(&assoc, aad, aad_len);
- 	sg_init_table(ct, 2);
- 	sg_set_buf(&ct[0], data, data_len);
- 	sg_set_buf(&ct[1], mic, IEEE80211_GCMP_MIC_LEN);
-@@ -41,7 +42,8 @@ void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
- 	crypto_aead_encrypt(aead_req);
- }
- 
--int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-+int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0,
-+			      u8 *aad, size_t aad_len,
- 			      u8 *data, size_t data_len, u8 *mic)
- {
- 	struct scatterlist assoc, pt, ct[2];
-@@ -56,7 +58,7 @@ int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
- 	memset(aead_req, 0, sizeof(aead_req_data));
- 
- 	sg_init_one(&pt, data, data_len);
--	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
-+	sg_init_one(&assoc, aad, aad_len);
- 	sg_init_table(ct, 2);
- 	sg_set_buf(&ct[0], data, data_len);
- 	sg_set_buf(&ct[1], mic, IEEE80211_GCMP_MIC_LEN);
-diff --git a/net/mac80211/aes_gcm.h b/net/mac80211/aes_gcm.h
-index 1347fda6b76a..67ca10e3e7a4 100644
---- a/net/mac80211/aes_gcm.h
-+++ b/net/mac80211/aes_gcm.h
-@@ -11,9 +11,11 @@
- 
- #include <linux/crypto.h>
- 
--void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-+void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0,
-+			       u8 *aad, size_t aad_len,
- 			       u8 *data, size_t data_len, u8 *mic);
--int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-+int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0,
-+			      u8 *aad, size_t aad_len,
- 			      u8 *data, size_t data_len, u8 *mic);
- struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
- 							size_t key_len);
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 9d63d93c836e..b32c043b48b1 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -304,7 +304,7 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
- }
+-#include "wilc_oswrapper.h"
+ #include "wilc_wlan_if.h"
+ /*****************************************************************************/
+ /* Constants                                                                 */
+diff --git a/drivers/staging/wilc1000/fifo_buffer.c b/drivers/staging/wilc1000/fifo_buffer.c
+index c801406..b6c07cf 100644
+--- a/drivers/staging/wilc1000/fifo_buffer.c
++++ b/drivers/staging/wilc1000/fifo_buffer.c
+@@ -1,6 +1,5 @@
  
  
--static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
-+static u16 ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
- {
- 	__le16 mask_fc;
- 	int a4_included, mgmt;
-@@ -352,22 +352,23 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
+-#include "wilc_oswrapper.h"
+ #include "fifo_buffer.h"
  
- 	/* AAD (extra authenticate-only data) / masked 802.11 header
- 	 * FC | A1 | A2 | A3 | SC | [A4] | [QC] */
--	put_unaligned_be16(len_a, &aad[0]);
--	put_unaligned(mask_fc, (__le16 *)&aad[2]);
--	memcpy(&aad[4], &hdr->addr1, 3 * ETH_ALEN);
-+	put_unaligned(mask_fc, (__le16 *)aad);
-+	memcpy(&aad[2], &hdr->addr1, 3 * ETH_ALEN);
  
- 	/* Mask Seq#, leave Frag# */
--	aad[22] = *((u8 *) &hdr->seq_ctrl) & 0x0f;
--	aad[23] = 0;
-+	aad[20] = *((u8 *) &hdr->seq_ctrl) & 0x0f;
-+	aad[21] = 0;
+diff --git a/drivers/staging/wilc1000/fifo_buffer.h b/drivers/staging/wilc1000/fifo_buffer.h
+index 57f7732..7b76998 100644
+--- a/drivers/staging/wilc1000/fifo_buffer.h
++++ b/drivers/staging/wilc1000/fifo_buffer.h
+@@ -1,5 +1,8 @@
  
- 	if (a4_included) {
--		memcpy(&aad[24], hdr->addr4, ETH_ALEN);
--		aad[30] = qos_tid;
--		aad[31] = 0;
-+		memcpy(&aad[22], hdr->addr4, ETH_ALEN);
-+		aad[28] = qos_tid;
-+		aad[29] = 0;
- 	} else {
--		memset(&aad[24], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
--		aad[24] = qos_tid;
-+		memset(&aad[22], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
-+		aad[22] = qos_tid;
- 	}
+-#include "wilc_oswrapper.h"
++#include <linux/types.h>
++#include <linux/semaphore.h>
++#include "wilc_memory.h"
++#include "wilc_strutils.h"
+ 
+ 
+ #define tHANDLE	void *
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index e091bbc..3f139ae 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1,5 +1,4 @@
+ #include "host_interface.h"
+-#include "wilc_oswrapper.h"
+ #include "coreconfigurator.h"
+ 
+ extern s32 TransportInit(void);
+diff --git a/drivers/staging/wilc1000/wilc_memory.c b/drivers/staging/wilc1000/wilc_memory.c
+index 5670b5a..c70707f 100644
+--- a/drivers/staging/wilc1000/wilc_memory.c
++++ b/drivers/staging/wilc1000/wilc_memory.c
+@@ -1,5 +1,5 @@
+ 
+-#include "wilc_oswrapper.h"
++#include "wilc_memory.h"
+ 
+ /*!
+  *  @author	syounan
+diff --git a/drivers/staging/wilc1000/wilc_memory.h b/drivers/staging/wilc1000/wilc_memory.h
+index 1bc4b53..372d705 100644
+--- a/drivers/staging/wilc1000/wilc_memory.h
++++ b/drivers/staging/wilc1000/wilc_memory.h
+@@ -10,6 +10,9 @@
+  *  @version	1.0
+  */
+ 
++#include <linux/types.h>
++#include <linux/slab.h>
 +
-+	return len_a;
- }
+ /*!
+  *  @struct             tstrWILC_MemoryAttrs
+  *  @brief		Memory API options
+@@ -234,4 +237,3 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
  
  
-@@ -407,6 +408,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 	u64 pn64;
- 	u8 aad[2 * AES_BLOCK_SIZE];
- 	u8 b_0[AES_BLOCK_SIZE];
-+	size_t aad_len;
+ #endif
+-
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 04fe5a5..16bcef4 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -1,5 +1,5 @@
  
- 	if (info->control.hw_key &&
- 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
-@@ -460,8 +462,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 		return 0;
+-#include "wilc_oswrapper.h"
++#include "wilc_msgqueue.h"
+ #include <linux/spinlock.h>
  
- 	pos += IEEE80211_CCMP_HDR_LEN;
--	ccmp_special_blocks(skb, pn, b_0, aad);
--	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
-+	aad_len = ccmp_special_blocks(skb, pn, b_0, aad);
-+	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, aad_len, pos, len,
- 				  skb_put(skb, mic_len), mic_len);
+ /*!
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 2ca02db..35b1001 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -10,6 +10,11 @@
+  *  @version	1.0
+  */
  
- 	return 0;
-@@ -529,10 +531,10 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
- 		u8 aad[2 * AES_BLOCK_SIZE];
- 		u8 b_0[AES_BLOCK_SIZE];
- 		/* hardware didn't decrypt/verify MIC */
--		ccmp_special_blocks(skb, pn, b_0, aad);
-+		size_t aad_len = ccmp_special_blocks(skb, pn, b_0, aad);
- 
- 		if (ieee80211_aes_ccm_decrypt(
--			    key->u.ccmp.tfm, b_0, aad,
-+			    key->u.ccmp.tfm, b_0, aad, aad_len,
- 			    skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
- 			    data_len,
- 			    skb->data + skb->len - mic_len, mic_len))
-@@ -550,7 +552,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
- 	return RX_CONTINUE;
- }
- 
--static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
-+static u16 gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
- {
- 	__le16 mask_fc;
- 	u8 qos_tid;
-@@ -565,7 +567,6 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
- 	/* AAD (extra authenticate-only data) / masked 802.11 header
- 	 * FC | A1 | A2 | A3 | SC | [A4] | [QC]
- 	 */
--	put_unaligned_be16(ieee80211_hdrlen(hdr->frame_control) - 2, &aad[0]);
- 	/* Mask FC: zero subtype b4 b5 b6 (if not mgmt)
- 	 * Retry, PwrMgt, MoreData; set Protected
- 	 */
-@@ -576,12 +577,12 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
- 		mask_fc &= ~cpu_to_le16(0x0070);
- 	mask_fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
- 
--	put_unaligned(mask_fc, (__le16 *)&aad[2]);
--	memcpy(&aad[4], &hdr->addr1, 3 * ETH_ALEN);
-+	put_unaligned(mask_fc, (__le16 *)aad);
-+	memcpy(&aad[2], &hdr->addr1, 3 * ETH_ALEN);
- 
- 	/* Mask Seq#, leave Frag# */
--	aad[22] = *((u8 *)&hdr->seq_ctrl) & 0x0f;
--	aad[23] = 0;
-+	aad[20] = *((u8 *)&hdr->seq_ctrl) & 0x0f;
-+	aad[21] = 0;
- 
- 	if (ieee80211_is_data_qos(hdr->frame_control))
- 		qos_tid = *ieee80211_get_qos_ctl(hdr) &
-@@ -590,13 +591,15 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
- 		qos_tid = 0;
- 
- 	if (ieee80211_has_a4(hdr->frame_control)) {
--		memcpy(&aad[24], hdr->addr4, ETH_ALEN);
--		aad[30] = qos_tid;
--		aad[31] = 0;
-+		memcpy(&aad[22], hdr->addr4, ETH_ALEN);
-+		aad[28] = qos_tid;
-+		aad[29] = 0;
- 	} else {
--		memset(&aad[24], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
--		aad[24] = qos_tid;
-+		memset(&aad[22], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
-+		aad[22] = qos_tid;
- 	}
++#include "wilc_platform.h"
++#include "wilc_errorsupport.h"
++#include "wilc_memory.h"
++#include "wilc_strutils.h"
 +
-+	return ieee80211_hdrlen(hdr->frame_control) - 2;
- }
+ /*!
+  *  @struct             tstrWILC_MsgQueueAttrs
+  *  @brief		Message Queue API options
+diff --git a/drivers/staging/wilc1000/wilc_sleep.c b/drivers/staging/wilc1000/wilc_sleep.c
+index 569b833..adab3ca 100644
+--- a/drivers/staging/wilc1000/wilc_sleep.c
++++ b/drivers/staging/wilc1000/wilc_sleep.c
+@@ -1,5 +1,5 @@
  
- static inline void gcmp_pn2hdr(u8 *hdr, const u8 *pn, int key_id)
-@@ -632,6 +635,7 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	u64 pn64;
- 	u8 aad[2 * AES_BLOCK_SIZE];
- 	u8 j_0[AES_BLOCK_SIZE];
-+	size_t aad_len;
+-#include "wilc_oswrapper.h"
++#include "wilc_sleep.h"
  
- 	if (info->control.hw_key &&
- 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
-@@ -686,8 +690,8 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		return 0;
+ /*
+  *  @author	mdaftedar
+diff --git a/drivers/staging/wilc1000/wilc_sleep.h b/drivers/staging/wilc1000/wilc_sleep.h
+index 261f4ed..cf9047f 100644
+--- a/drivers/staging/wilc1000/wilc_sleep.h
++++ b/drivers/staging/wilc1000/wilc_sleep.h
+@@ -1,6 +1,9 @@
+ #ifndef __WILC_SLEEP_H__
+ #define __WILC_SLEEP_H__
  
- 	pos += IEEE80211_GCMP_HDR_LEN;
--	gcmp_special_blocks(skb, pn, j_0, aad);
--	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
-+	aad_len = gcmp_special_blocks(skb, pn, j_0, aad);
-+	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, aad_len, pos, len,
- 				  skb_put(skb, IEEE80211_GCMP_MIC_LEN));
++#include <linux/types.h>
++#include <linux/delay.h>
++
+ /*!
+  *  @brief	forces the current thread to sleep until the given time has elapsed
+  *  @param[in]	u32TimeMilliSec Time to sleep in Milli seconds
+diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
+index ac9bb06..e014595 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.c
++++ b/drivers/staging/wilc1000/wilc_strutils.c
+@@ -1,7 +1,7 @@
  
- 	return 0;
-@@ -752,10 +756,10 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
- 		u8 aad[2 * AES_BLOCK_SIZE];
- 		u8 j_0[AES_BLOCK_SIZE];
- 		/* hardware didn't decrypt/verify MIC */
--		gcmp_special_blocks(skb, pn, j_0, aad);
-+		size_t aad_len = gcmp_special_blocks(skb, pn, j_0, aad);
+ #define _CRT_SECURE_NO_DEPRECATE
  
- 		if (ieee80211_aes_gcm_decrypt(
--			    key->u.gcmp.tfm, j_0, aad,
-+			    key->u.gcmp.tfm, j_0, aad, aad_len,
- 			    skb->data + hdrlen + IEEE80211_GCMP_HDR_LEN,
- 			    data_len,
- 			    skb->data + skb->len - IEEE80211_GCMP_MIC_LEN))
+-#include "wilc_oswrapper.h"
++#include "wilc_strutils.h"
+ 
+ 
+ /*!
+diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
+index bb31bea..d144557 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.h
++++ b/drivers/staging/wilc1000/wilc_strutils.h
+@@ -10,6 +10,10 @@
+  *  @version	1.0
+  */
+ 
++#include <linux/types.h>
++#include <linux/string.h>
++#include "wilc_errorsupport.h"
++
+ /*!
+  *  @brief	Compares two memory buffers
+  *  @param[in]	pvArg1 pointer to the first memory location
+diff --git a/drivers/staging/wilc1000/wilc_timer.c b/drivers/staging/wilc1000/wilc_timer.c
+index c31bf0c..dc71157 100644
+--- a/drivers/staging/wilc1000/wilc_timer.c
++++ b/drivers/staging/wilc1000/wilc_timer.c
+@@ -1,5 +1,5 @@
+ 
+-#include "wilc_oswrapper.h"
++#include "wilc_timer.h"
+ 
+ WILC_ErrNo WILC_TimerCreate(WILC_TimerHandle *pHandle,
+ 	tpfWILC_TimerFunction pfCallback, tstrWILC_TimerAttrs *pstrAttrs)
+diff --git a/drivers/staging/wilc1000/wilc_timer.h b/drivers/staging/wilc1000/wilc_timer.h
+index a0f9154..931269d 100644
+--- a/drivers/staging/wilc1000/wilc_timer.h
++++ b/drivers/staging/wilc1000/wilc_timer.h
+@@ -10,6 +10,9 @@
+  *  @version	1.0
+  */
+ 
++#include "wilc_platform.h"
++#include "wilc_errorsupport.h"
++
+ typedef void (*tpfWILC_TimerFunction)(void *);
+ 
+ /*!
 -- 
-2.1.4
-
-
+2.4.3
 
