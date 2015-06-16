@@ -1,132 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16711 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950AbbFVOxf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5640 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbbFPFNr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 10:53:35 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
+	Tue, 16 Jun 2015 01:13:47 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 To: <ath10k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH v2 3/8] ath10k: enable vdev and peer related operations for 10.4 fw
-Date: Mon, 22 Jun 2015 20:22:22 +0530
-Message-ID: <1434984747-24294-4-git-send-email-rmani@qti.qualcomm.com> (sfid-20150622_165338_976970_B891452D)
-In-Reply-To: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 04/10] ath10k: Copy Engine related changes for QCA99X0
+Date: Tue, 16 Jun 2015 10:42:16 +0530
+Message-ID: <1434431542-14724-5-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071352_108083_A0383AAB)
+In-Reply-To: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most of existing vdev and peer related functions (vdev create,
-vdev delete, vdev start, peer create, peer delete, peer flush, etc)
-are reusable for 10.4 firmware. Link those general vdev and peer
-functions to 10.4 wmi function table.
+QCA99X0 supports upto 12 Copy engines. Host and target
+CE configuration table is updated to support new copy engine
+pipes. This also fixes the assumption of diagnostic CE by making
+CE_7 as the one instead of CE_COUNT - 1.
 
-Existing general pktlog enable/disable, dbglog configuration functions
-are reusable for 10.4 and add them also in wmi function table.
-
-Also handle few wmi events (sevice rdy, echo, dbg msg, tbtt offset
-update, dbg print) in ath10k_wmi_10_4_op_rx(). wow event is not
-applicable in 10.4 firmware, have it under not implemented print.
-
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 62 +++++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
+ drivers/net/wireless/ath/ath10k/ce.h  |  2 +-
+ drivers/net/wireless/ath/ath10k/hw.h  |  3 ++
+ drivers/net/wireless/ath/ath10k/pci.c | 69 ++++++++++++++++++++++++++++++++++-
+ 3 files changed, 71 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 48ea442..c4d777d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4418,12 +4418,40 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_wmi_event_mgmt_rx(ar, skb);
- 		/* mgmt_rx() owns the skb now! */
- 		return;
-+	case WMI_10_4_ECHO_EVENTID:
-+		ath10k_wmi_event_echo(ar, skb);
-+		break;
-+	case WMI_10_4_DEBUG_MESG_EVENTID:
-+		ath10k_wmi_event_debug_mesg(ar, skb);
-+		break;
-+	case WMI_10_4_SERVICE_READY_EVENTID:
-+		ath10k_wmi_event_service_ready(ar, skb);
-+		break;
- 	case WMI_10_4_READY_EVENTID:
- 		ath10k_wmi_event_ready(ar, skb);
- 		break;
-+	case WMI_10_4_PEER_STA_KICKOUT_EVENTID:
-+		ath10k_wmi_event_peer_sta_kickout(ar, skb);
-+		break;
- 	case WMI_10_4_HOST_SWBA_EVENTID:
- 		ath10k_wmi_event_host_swba(ar, skb);
- 		break;
-+	case WMI_10_4_TBTTOFFSET_UPDATE_EVENTID:
-+		ath10k_wmi_event_tbttoffset_update(ar, skb);
-+		break;
-+	case WMI_10_4_DEBUG_PRINT_EVENTID:
-+		ath10k_wmi_event_debug_print(ar, skb);
-+		break;
-+	case WMI_10_4_VDEV_START_RESP_EVENTID:
-+		ath10k_wmi_event_vdev_start_resp(ar, skb);
-+		break;
-+	case WMI_10_4_VDEV_STOPPED_EVENTID:
-+		ath10k_wmi_event_vdev_stopped(ar, skb);
-+		break;
-+	case WMI_10_4_WOW_WAKEUP_HOST_EVENTID:
-+		ath10k_dbg(ar, ATH10K_DBG_WMI,
-+			   "received event id %d not implemented\n", id);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -6355,10 +6383,44 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.rx = ath10k_wmi_10_4_op_rx,
- 	.map_svc = wmi_10_4_svc_map,
- 	.pull_mgmt_rx = ath10k_wmi_10_4_op_pull_mgmt_rx_ev,
-+	.pull_vdev_start = ath10k_wmi_op_pull_vdev_start_ev,
-+	.pull_peer_kick = ath10k_wmi_op_pull_peer_kick_ev,
- 	.pull_swba = ath10k_wmi_10_4_op_pull_swba_ev,
- 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
- 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 93939de..bb4b8f3 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -21,7 +21,7 @@
+ #include "hif.h"
+ 
+ /* Maximum number of Copy Engine's supported */
+-#define CE_COUNT_MAX 8
++#define CE_COUNT_MAX 12
+ #define CE_HTT_H2T_MSG_SRC_NENTRIES 4096
+ 
+ /* Descriptor rings must be aligned to this boundary */
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 76caeab..5819659 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -343,6 +343,9 @@ enum ath10k_hw_rate_cck {
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
+ #define TARGET_TLV_NUM_WOW_PATTERNS		22
+ 
++/* Diagnostic Window */
++#define CE_DIAG_PIPE	7
 +
-+	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
-+	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
-+	.gen_pdev_set_rd = ath10k_wmi_10x_op_gen_pdev_set_rd,
-+	.gen_pdev_set_param = ath10k_wmi_op_gen_pdev_set_param,
- 	.gen_init = ath10k_wmi_10_4_op_gen_init,
-+	.gen_vdev_create = ath10k_wmi_op_gen_vdev_create,
-+	.gen_vdev_delete = ath10k_wmi_op_gen_vdev_delete,
-+	.gen_vdev_start = ath10k_wmi_op_gen_vdev_start,
-+	.gen_vdev_stop = ath10k_wmi_op_gen_vdev_stop,
-+	.gen_vdev_up = ath10k_wmi_op_gen_vdev_up,
-+	.gen_vdev_down = ath10k_wmi_op_gen_vdev_down,
-+	.gen_vdev_set_param = ath10k_wmi_op_gen_vdev_set_param,
-+	.gen_vdev_install_key = ath10k_wmi_op_gen_vdev_install_key,
-+	.gen_peer_create = ath10k_wmi_op_gen_peer_create,
-+	.gen_peer_delete = ath10k_wmi_op_gen_peer_delete,
-+	.gen_peer_flush = ath10k_wmi_op_gen_peer_flush,
-+	.gen_peer_set_param = ath10k_wmi_op_gen_peer_set_param,
-+	.gen_set_psmode = ath10k_wmi_op_gen_set_psmode,
-+	.gen_set_sta_ps = ath10k_wmi_op_gen_set_sta_ps,
-+	.gen_set_ap_ps = ath10k_wmi_op_gen_set_ap_ps,
-+	.gen_scan_chan_list = ath10k_wmi_op_gen_scan_chan_list,
-+	.gen_beacon_dma = ath10k_wmi_op_gen_beacon_dma,
-+	.gen_pdev_set_wmm = ath10k_wmi_op_gen_pdev_set_wmm,
-+	.gen_force_fw_hang = ath10k_wmi_op_gen_force_fw_hang,
-+	.gen_mgmt_tx = ath10k_wmi_op_gen_mgmt_tx,
-+	.gen_dbglog_cfg = ath10k_wmi_op_gen_dbglog_cfg,
-+	.gen_pktlog_enable = ath10k_wmi_op_gen_pktlog_enable,
-+	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
-+	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ #define NUM_TARGET_CE_CONFIG_WLAN ar->hw_values->num_target_ce_config_wlan
+ 
+ /* Number of Copy Engines supported */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 190f7f3..980390a 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -156,6 +156,38 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.src_sz_max = DIAG_TRANSFER_LIMIT,
+ 		.dest_nentries = 2,
+ 	},
 +
-+	/* shared with 10.2 */
-+	.gen_peer_assoc = ath10k_wmi_10_2_op_gen_peer_assoc,
++	/* CE8: target->host pktlog */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 2048,
++		.dest_nentries = 128,
++	},
++
++	/* CE9 target autonomous qcache memcpy */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 0,
++		.dest_nentries = 0,
++	},
++
++	/* CE10: target autonomous hif memcpy */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 0,
++		.dest_nentries = 0,
++	},
++
++	/* CE11: target autonomous hif memcpy */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 0,
++		.dest_nentries = 0,
++	},
  };
  
- int ath10k_wmi_attach(struct ath10k *ar)
+ /* Target firmware's Copy Engine configuration. */
+@@ -233,6 +265,38 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
+ 	},
+ 
+ 	/* CE7 used only by Host */
++	{
++		.pipenum = __cpu_to_le32(7),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(0),
++		.nbytes_max = __cpu_to_le32(0),
++		.flags = __cpu_to_le32(0),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE8 target->host packtlog */
++	{
++		.pipenum = __cpu_to_le32(8),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(64),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE9 target autonomous qcache memcpy */
++	{
++		.pipenum = __cpu_to_le32(9),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* It not necessary to send target wlan configuration for CE10 & CE11
++	 * as these CEs are not actively used in target.
++	 */
+ };
+ 
+ /*
+@@ -1759,7 +1823,8 @@ static int ath10k_pci_init_config(struct ath10k *ar)
+ 
+ 	ret = ath10k_pci_diag_write_mem(ar, pipe_cfg_targ_addr,
+ 					target_ce_config_wlan,
+-					sizeof(target_ce_config_wlan));
++					sizeof(struct ce_pipe_config) *
++					NUM_TARGET_CE_CONFIG_WLAN);
+ 
+ 	if (ret != 0) {
+ 		ath10k_err(ar, "Failed to write pipe cfg: %d\n", ret);
+@@ -1873,7 +1938,7 @@ static int ath10k_pci_alloc_pipes(struct ath10k *ar)
+ 		}
+ 
+ 		/* Last CE is Diagnostic Window */
+-		if (i == CE_COUNT - 1) {
++		if (i == CE_DIAG_PIPE) {
+ 			ar_pci->ce_diag = pipe->ce_hdl;
+ 			continue;
+ 		}
 -- 
-1.8.1.2
+1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
