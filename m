@@ -1,107 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:33148 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756005AbbFRPeP (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39065 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753720AbbFPFzm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 11:34:15 -0400
-Received: by wgez8 with SMTP id z8so67094791wge.0
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 08:34:13 -0700 (PDT)
+	Tue, 16 Jun 2015 01:55:42 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 7/8] ath10k: set max spatial stream to 4 for 10.4 fw
+Date: Tue, 16 Jun 2015 11:23:14 +0530
+Message-ID: <1434433995-8451-8-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_075545_268255_3699F30B)
+In-Reply-To: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFtRNNy009MVbOpHOWVZMuDAaJzmLed+nhBwgybgSS+hbjU=tQ@mail.gmail.com>
-References: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com>
-	<CAFtRNNxvBC8SD3P5u=bEZPofA-A8YfHYuZnfA4Y07W7Wx4keAQ@mail.gmail.com>
-	<55829F18.9050807@neratec.com>
-	<CAFtRNNy009MVbOpHOWVZMuDAaJzmLed+nhBwgybgSS+hbjU=tQ@mail.gmail.com>
-Date: Thu, 18 Jun 2015 17:34:13 +0200
-Message-ID: <CAFtRNNxnwTGXa8FS2n_chRZPrRffPtGrpZ96t7zFCDo2C7b8sw@mail.gmail.com> (sfid-20150618_173424_098926_A812965F)
-Subject: Re: [PATCH] ath9k: spectral - simplify max_index calculation
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-06-18 16:13 GMT+02:00 Nick Kossifidis <mickflemm@gmail.com>:
-> 2015-06-18 12:36 GMT+02:00 Zefir Kurtisi <zefir.kurtisi@neratec.com>:
->> On 06/18/2015 10:43 AM, Nick Kossifidis wrote:
->>> max_index is a 6bit signed integer in both cases (sorry for the 5bit
->>> typo in the comments), so the current function handles it correctly
->>> for both HT20 and dynamic HT20/40 modes (I've tested it extensively).
->>> Also you don't handle the negative indices we get from the hardware
->>> (you just remove the sign). Have you tested this and if you did on
->>> which hardware did you do the test ?
->>>
->>> 2015-06-16 11:21 GMT+02:00 Zefir Kurtisi <zefir.kurtisi@neratec.com>:
->>>> [...]
->>>> +/* return the max magnitude from the all/upper/lower bins
->>>> + *
->>>> + * in HT20: 6-bit signed number of range -28 to +27
->>>> + * in HT40: 6-bit unsigned number of range 0 to +63
->>>> + *          (upper sub-channel index 0 is DC)
->>>> + *
->>>> + * Correct interpretation of the value has to be done at caller
->>>> + */
->>
->> The comment above is taken from developer NDA documents and should be correct.
->> With that, in HT40 mode the max_index value has to be taken as is, while in HT20
->> it needs to be shifted to the unsigned range.
->>
->
-> I have NDA documents as well stating that the indices are from -64 to
-> 63 (-64 to -1, 1 to 63 and 0 is DC), you can check out for yourself
-> that we get 128bins on dynamic HT20/40, see the header files too:
->
-> #define SPECTRAL_HT20_40_NUM_BINS               128
->
-> and/or the received packet length. Maybe you are talking about
-> "static" HT40 (I don't see anything about that on the documents I
-> have) or something else.
->
+10.4 fw supports upto 4 spatial stream. Limit max spatial
+stream to 4 for 10.4 firmware and to 3 for non 10.4 firmware.
 
-To clarify this a bit: It's 0 - 63 for lower bins and 0 - 64 (not 63)
-for upper bins and since we want an array index of 0 - 128 we add the
-index of 0 to the upper max_idx (on the caller). You are right that
-the current comment there is wrong (it even mentions 5bit ints) so
-feel free to fix that but the code works as expected and it's much
-more readable than doing "^ 0x20 - 4" on the caller (plus it handles
-both signed and unsigned cases so no problem there).
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 4 ++++
+ drivers/net/wireless/ath/ath10k/core.h | 1 +
+ drivers/net/wireless/ath/ath10k/wmi.c  | 6 +++---
+ drivers/net/wireless/ath/ath10k/wmi.h  | 3 ++-
+ 4 files changed, 10 insertions(+), 4 deletions(-)
 
->> I used the proposed method with the chirp detector for FFTs provided for long
->> radar pulses on an AR9590 (patch posted the same day). Max bin index is used there
->> the same way as with spectral, but now I realize my mistake: for chirp detection,
->> the relative max_index is sufficient, while for spectral the absolute value is needed.
->>
->> Toggling the MSB in HT20 shifts the signed values by 32 and leaves the index with
->> an offset of 4, therefore the correct operation should be:
->> ht20_max_index_absolute = (ht20_max_index ^ 0x20) - 4
->>
->
-> Have in mind that on earlier chips (I did the testing on an AR9820) we
-> get corrupted frames sometimes so we also need the sanity check I put
-> there or else we can end up reading data out of bounds which is pretty
-> dangerous so please leave the current implementation there as is.
->
-
-A bit more infos here:
-
-On AR9280 there are various issues (check out spectral.c to get an
-idea) but I guess they got fixed on later chips so you probably won't
-see "shifted" indices etc on AR9590. However both the spectral scan
-and your work on chirp detection should work on earlier chips too.
-Unfortunately I can't test AR9280's radar detection code because I
-have a USB card (so it's ath9k_htc) and there is no DFS support there
-yet, but I suggest you test it on an older card to verify that you
-won't get any corruption. The good thing is that because you get only
-one report (if I remember correctly) in case of radar detection (so
-not software triggered spectral scan) you can easily fix that in your
-case by checking the packet's length (check out spectral.c  for
-ath_cmn_copy_fft_frame). Since the format is pretty much the same
-(only the magnitude calculation is different), maybe we could handle
-the two cases with common code instead (and fix any corruption there).
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 23e855c..e9f2bf9f 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1292,6 +1292,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
+ 		ar->fw_stats_req_mask = WMI_STAT_PDEV | WMI_STAT_VDEV |
+ 			WMI_STAT_PEER;
++		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_1:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+@@ -1301,6 +1302,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
+ 		ar->fw_stats_req_mask = WMI_STAT_PEER;
++		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_TLV:
+ 		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
+@@ -1311,6 +1313,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->wow.max_num_patterns = TARGET_TLV_NUM_WOW_PATTERNS;
+ 		ar->fw_stats_req_mask = WMI_STAT_PDEV | WMI_STAT_VDEV |
+ 			WMI_STAT_PEER;
++		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
+ 		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
+@@ -1320,6 +1323,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->num_tids = TARGET_10_4_TGT_NUM_TIDS;
+ 		ar->htt.max_num_pending_tx = TARGET_10_4_NUM_MSDU_DESC;
+ 		ar->fw_stats_req_mask = WMI_STAT_PEER;
++		ar->max_spatial_stream = WMI_10_4_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7721548..8647ca3 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -578,6 +578,7 @@ struct ath10k {
+ 	u32 ht_cap_info;
+ 	u32 vht_cap_info;
+ 	u32 num_rf_chains;
++	u32 max_spatial_stream;
+ 	/* protected by conf_mutex */
+ 	bool ani_enabled;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 00201eb..2f81ff2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3818,10 +3818,10 @@ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb)
+ 	if (ar->fw_api == 1 && ar->fw_version_build > 636)
+ 		set_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features);
+ 
+-	if (ar->num_rf_chains > WMI_MAX_SPATIAL_STREAM) {
++	if (ar->num_rf_chains > ar->max_spatial_stream) {
+ 		ath10k_warn(ar, "hardware advertises support for more spatial streams than it should (%d > %d)\n",
+-			    ar->num_rf_chains, WMI_MAX_SPATIAL_STREAM);
+-		ar->num_rf_chains = WMI_MAX_SPATIAL_STREAM;
++			    ar->num_rf_chains, ar->max_spatial_stream);
++		ar->num_rf_chains = ar->max_spatial_stream;
+ 	}
+ 
+ 	ar->supp_tx_chainmask = (1 << ar->num_rf_chains) - 1;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 90c872c..aa9b313 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1702,7 +1702,8 @@ enum wmi_channel_change_cause {
+ /* Indicate reason for channel switch */
+ #define WMI_CHANNEL_CHANGE_CAUSE_CSA (1 << 13)
+ 
+-#define WMI_MAX_SPATIAL_STREAM   3
++#define WMI_MAX_SPATIAL_STREAM        3 /* default max ss */
++#define WMI_10_4_MAX_SPATIAL_STREAM   4
+ 
+ /* HT Capabilities*/
+ #define WMI_HT_CAP_ENABLED                0x0001   /* HT Enabled/ disabled */
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.8.1.2
+
