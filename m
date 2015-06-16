@@ -1,222 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34161 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754300AbbFJWMb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 18:12:31 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Pontus Fuchs <pontusf@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/7] brcmfmac: Build wiphy mode and interface combinations dynamically
-Date: Thu, 11 Jun 2015 00:12:18 +0200
-Message-ID: <1433974343-16982-3-git-send-email-arend@broadcom.com> (sfid-20150611_001238_150791_227658D2)
-In-Reply-To: <1433974343-16982-1-git-send-email-arend@broadcom.com>
-References: <1433974343-16982-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.neratec.com ([46.140.151.2]:39195 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756974AbbFPJWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 05:22:01 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	ath9k-devel@venema.h4ckr.net,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath9k: spectral - simplify max_index calculation
+Date: Tue, 16 Jun 2015 11:21:32 +0200
+Message-Id: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20150616_112229_924991_F4108F93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontusf@broadcom.com>
+The max_index value provided in the spectral data set
+has to be interpreted differently for HT20 and HT40.
 
-Switch from using semi hard coded interface combinations. This makes
-it easier to announce what the firmware actually supports. This fixes
-the case where brcmfmac announces p2p but the firmware doesn't
-support it.
+The spectral module initially supported HT20 only
+and the spectral_max_index() function handled the
+conversion from signed to unsigned.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Pontus Fuchs <pontusf@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+In HT40, the max_index is an unsigned value and does
+not need to be fixed. When HT40 support was added,
+the function was exteded to handle the conversion
+for HT20 based on the provided num_bins parameter.
+
+This is misleading and complex. Instead this patch
+shifts the correction of the value to the caller,
+which in effect reduces it to a singel bit-operation
+for HT20 data.
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 136 ++++++++++-----------
- 1 file changed, 68 insertions(+), 68 deletions(-)
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 20 ++++++-------
+ drivers/net/wireless/ath/ath9k/common-spectral.h | 36 +++++++-----------------
+ 2 files changed, 18 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 5cecd67..a668a35 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -52,8 +52,6 @@
- #define BRCMF_PNO_SCAN_COMPLETE		1
- #define BRCMF_PNO_SCAN_INCOMPLETE	0
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index a876271..e4bae40 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -59,8 +59,8 @@ ath_cmn_max_idx_verify_ht20_fft(u8 *sample_end, int bytes_read)
  
--#define BRCMF_IFACE_MAX_CNT		3
--
- #define WPA_OUI				"\x00\x50\xF2"	/* WPA OUI */
- #define WPA_OUI_TYPE			1
- #define RSN_OUI				"\x00\x0F\xAC"	/* RSN OUI */
-@@ -5640,53 +5638,6 @@ static int brcmf_setup_wiphybands(struct wiphy *wiphy)
- 	return 0;
+ 	sample = sample_end - SPECTRAL_HT20_SAMPLE_LEN + 1;
+ 
+-	max_index = spectral_max_index(mag_info->all_bins,
+-				       SPECTRAL_HT20_NUM_BINS);
++	/* in ht20, this is a 6-bit signed number => shift it to 0 */
++	max_index = spectral_max_index(mag_info->all_bins) ^ 0x20;
+ 	max_magnitude = spectral_max_magnitude(mag_info->all_bins);
+ 
+ 	max_exp = mag_info->max_exp & 0xf;
+@@ -100,12 +100,10 @@ ath_cmn_max_idx_verify_ht20_40_fft(u8 *sample_end, int bytes_read)
+ 	sample = sample_end - SPECTRAL_HT20_40_SAMPLE_LEN + 1;
+ 
+ 	lower_mag = spectral_max_magnitude(mag_info->lower_bins);
+-	lower_max_index = spectral_max_index(mag_info->lower_bins,
+-					     SPECTRAL_HT20_40_NUM_BINS);
++	lower_max_index = spectral_max_index(mag_info->lower_bins);
+ 
+ 	upper_mag = spectral_max_magnitude(mag_info->upper_bins);
+-	upper_max_index = spectral_max_index(mag_info->upper_bins,
+-					     SPECTRAL_HT20_40_NUM_BINS);
++	upper_max_index = spectral_max_index(mag_info->upper_bins);
+ 
+ 	max_exp = mag_info->max_exp & 0xf;
+ 
+@@ -169,8 +167,8 @@ ath_cmn_process_ht20_fft(struct ath_rx_status *rs,
+ 	magnitude = spectral_max_magnitude(mag_info->all_bins);
+ 	fft_sample_20.max_magnitude = __cpu_to_be16(magnitude);
+ 
+-	max_index = spectral_max_index(mag_info->all_bins,
+-					SPECTRAL_HT20_NUM_BINS);
++	/* in ht20, this is a 6-bit signed number => shift it to 0 */
++	max_index = spectral_max_index(mag_info->all_bins) ^ 0x20;
+ 	fft_sample_20.max_index = max_index;
+ 
+ 	bitmap_w = spectral_bitmap_weight(mag_info->all_bins);
+@@ -302,12 +300,10 @@ ath_cmn_process_ht20_40_fft(struct ath_rx_status *rs,
+ 	upper_mag = spectral_max_magnitude(mag_info->upper_bins);
+ 	fft_sample_40.upper_max_magnitude = __cpu_to_be16(upper_mag);
+ 
+-	lower_max_index = spectral_max_index(mag_info->lower_bins,
+-					SPECTRAL_HT20_40_NUM_BINS);
++	lower_max_index = spectral_max_index(mag_info->lower_bins);
+ 	fft_sample_40.lower_max_index = lower_max_index;
+ 
+-	upper_max_index = spectral_max_index(mag_info->upper_bins,
+-					SPECTRAL_HT20_40_NUM_BINS);
++	upper_max_index = spectral_max_index(mag_info->upper_bins);
+ 	fft_sample_40.upper_max_index = upper_max_index;
+ 
+ 	lower_bitmap_w = spectral_bitmap_weight(mag_info->lower_bins);
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.h b/drivers/net/wireless/ath/ath9k/common-spectral.h
+index 998743b..4cc5a6c 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.h
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.h
+@@ -116,33 +116,17 @@ static inline u16 spectral_max_magnitude(u8 *bins)
+ 	       (bins[2] & 0x03) << 10;
  }
  
--static const struct ieee80211_iface_limit brcmf_iface_limits_mbss[] = {
--	{
--		.max = 1,
--		.types = BIT(NL80211_IFTYPE_STATION) |
--			 BIT(NL80211_IFTYPE_ADHOC)
--	},
--	{
--		.max = 4,
--		.types = BIT(NL80211_IFTYPE_AP)
--	},
--	{
--		.max = 1,
--		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
--			 BIT(NL80211_IFTYPE_P2P_GO)
--	},
--	{
--		.max = 1,
--		.types = BIT(NL80211_IFTYPE_P2P_DEVICE)
--	}
--};
--
--static const struct ieee80211_iface_limit brcmf_iface_limits_sbss[] = {
--	{
--		.max = 2,
--		.types = BIT(NL80211_IFTYPE_STATION) |
--			 BIT(NL80211_IFTYPE_ADHOC) |
--			 BIT(NL80211_IFTYPE_AP)
--	},
--	{
--		.max = 1,
--		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
--			 BIT(NL80211_IFTYPE_P2P_GO)
--	},
--	{
--		.max = 1,
--		.types = BIT(NL80211_IFTYPE_P2P_DEVICE)
--	}
--};
--static struct ieee80211_iface_combination brcmf_iface_combos[] = {
--	{
--		 .max_interfaces = BRCMF_IFACE_MAX_CNT,
--		 .num_different_channels = 1,
--		 .n_limits = ARRAY_SIZE(brcmf_iface_limits_sbss),
--		 .limits = brcmf_iface_limits_sbss,
--	}
--};
--
- static const struct ieee80211_txrx_stypes
- brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
- 	[NL80211_IFTYPE_STATION] = {
-@@ -5716,6 +5667,67 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
- 	}
- };
- 
-+static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
-+{
-+	struct ieee80211_iface_combination *combo = NULL;
-+	struct ieee80211_iface_limit *limits = NULL;
-+	int i = 0, max_iface_cnt;
-+
-+	combo = kzalloc(sizeof(*combo), GFP_KERNEL);
-+	if (!combo)
-+		goto err;
-+
-+	limits = kzalloc(sizeof(*limits) * 4, GFP_KERNEL);
-+	if (!limits)
-+		goto err;
-+
-+	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_ADHOC) |
-+				 BIT(NL80211_IFTYPE_AP);
-+
-+	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
-+		combo->num_different_channels = 2;
-+	else
-+		combo->num_different_channels = 1;
-+
-+	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) {
-+		limits[i].max = 1;
-+		limits[i++].types = BIT(NL80211_IFTYPE_STATION);
-+		limits[i].max = 4;
-+		limits[i++].types = BIT(NL80211_IFTYPE_AP);
-+		max_iface_cnt = 5;
-+	} else {
-+		limits[i].max = 2;
-+		limits[i++].types = BIT(NL80211_IFTYPE_STATION) |
-+				    BIT(NL80211_IFTYPE_AP);
-+		max_iface_cnt = 2;
-+	}
-+
-+	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P)) {
-+		wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+					  BIT(NL80211_IFTYPE_P2P_GO) |
-+					  BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		limits[i].max = 1;
-+		limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				    BIT(NL80211_IFTYPE_P2P_GO);
-+		limits[i].max = 1;
-+		limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		max_iface_cnt += 2;
-+	}
-+	combo->max_interfaces = max_iface_cnt;
-+	combo->limits = limits;
-+	combo->n_limits = i;
-+
-+	wiphy->iface_combinations = combo;
-+	wiphy->n_iface_combinations = 1;
-+	return 0;
-+
-+err:
-+	kfree(limits);
-+	kfree(combo);
-+	return -ENOMEM;
-+}
-+
- static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
+-/* return the max magnitude from the all/upper/lower bins */
+-static inline u8 spectral_max_index(u8 *bins, int num_bins)
++/* return the max magnitude from the all/upper/lower bins
++ *
++ * in HT20: 6-bit signed number of range -28 to +27
++ * in HT40: 6-bit unsigned number of range 0 to +63
++ *          (upper sub-channel index 0 is DC)
++ *
++ * Correct interpretation of the value has to be done at caller
++ */
++static inline u8 spectral_max_index(u8 *bins)
  {
- 	/* scheduled scan settings */
-@@ -5746,7 +5758,6 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy)
- static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
- 	struct ieee80211_supported_band *band;
--	struct ieee80211_iface_combination ifc_combo;
- 	__le32 bandlist[3];
- 	u32 n_bands;
- 	int err, i;
-@@ -5754,24 +5765,11 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	wiphy->max_scan_ssids = WL_NUM_SCAN_MAX;
- 	wiphy->max_scan_ie_len = BRCMF_SCAN_IE_LEN_MAX;
- 	wiphy->max_num_pmkids = WL_NUM_PMKIDS_MAX;
--	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--				 BIT(NL80211_IFTYPE_ADHOC) |
--				 BIT(NL80211_IFTYPE_AP) |
--				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
--				 BIT(NL80211_IFTYPE_P2P_GO) |
--				 BIT(NL80211_IFTYPE_P2P_DEVICE);
--	/* need VSDB firmware feature for concurrent channels */
--	ifc_combo = brcmf_iface_combos[0];
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
--		ifc_combo.num_different_channels = 2;
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) {
--		ifc_combo.n_limits = ARRAY_SIZE(brcmf_iface_limits_mbss),
--		ifc_combo.limits = brcmf_iface_limits_mbss;
+-	s8 m = (bins[2] & 0xfc) >> 2;
+-	u8 zero_idx = num_bins / 2;
+-
+-	/* It's a 5 bit signed int, remove its sign and use one's
+-	 * complement interpretation to add the sign back to the 8
+-	 * bit int
+-	 */
+-	if (m & 0x20) {
+-		m &= ~0x20;
+-		m |= 0xe0;
 -	}
--	wiphy->iface_combinations = kmemdup(&ifc_combo,
--					    sizeof(ifc_combo),
--					    GFP_KERNEL);
--	wiphy->n_iface_combinations = ARRAY_SIZE(brcmf_iface_combos);
-+
-+	err = brcmf_setup_ifmodes(wiphy, ifp);
-+	if (err)
-+		return err;
-+
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	wiphy->cipher_suites = __wl_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
-@@ -6036,6 +6034,8 @@ static void brcmf_free_wiphy(struct wiphy *wiphy)
- 	if (!wiphy)
- 		return;
+-
+-	/* Bring the zero point to the beginning
+-	 * instead of the middle so that we can use
+-	 * it for array lookup and that we don't deal
+-	 * with negative values later
+-	 */
+-	m += zero_idx;
+-
+-	/* Sanity check to make sure index is within bounds */
+-	if (m < 0 || m > num_bins - 1)
+-		m = 0;
+-
+-	return m;
++	return (bins[2] & 0xfc) >> 2;
+ }
  
-+	if (wiphy->iface_combinations)
-+		kfree(wiphy->iface_combinations->limits);
- 	kfree(wiphy->iface_combinations);
- 	if (wiphy->bands[IEEE80211_BAND_2GHZ]) {
- 		kfree(wiphy->bands[IEEE80211_BAND_2GHZ]->channels);
+ /* return the bitmap weight from the all/upper/lower bins */
 -- 
 1.9.1
 
