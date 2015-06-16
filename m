@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:38903 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbbFBJB7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18294 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751774AbbFPFqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 05:01:59 -0400
-From: kholmanskikh.s.s@gmail.com
-Date: Tue, 2 Jun 2015 13:01:46 +0400
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>,
-	johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] staging: wilc1000: Fix some compile time warnings
-Message-ID: <20150602090146.GA13228@ubuntu-pc> (sfid-20150602_110225_565363_48A32466)
-References: <1433184981-6077-1-git-send-email-kholmanskikh.s.s@gmail.com>
- <20150602045520.GA17524@kroah.com>
+	Tue, 16 Jun 2015 01:46:32 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 00/10] introduce wmi support for qca99X0
+Date: Tue, 16 Jun 2015 11:15:13 +0530
+Message-ID: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_074636_651710_32B29185)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150602045520.GA17524@kroah.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 02, 2015 at 01:55:20PM +0900, Greg KH wrote:
-> On Mon, Jun 01, 2015 at 09:56:18PM +0300, Stanislav Kholmanskikh wrote:
-> > Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-> > ---
-> > Changes since V1:
-> > 
-> > Split the V1 series into more logically unrelated patches
-> > and updated patch descriptions accordingly.
-> 
-> This series doesn't apply on my tree due to other changes from someone
-> else that I just took.  Can you rebase it and resend?
+qca99X0 uses 10.4 firmware. This patch series adds 10.4 firmware
+specific WMI cmds/events/parsing logic. All these patches tested
+on top of qca99X0 initial bring up patches.
 
-Sure. Done.
+Raja Mani (10):
+  ath10k: include new wmi op version for 10.4 fw
+  ath10k: add 10.4 fw wmi service bitmap definition
+  ath10k: include 10.4 fw specific wmi cmd and event ids
+  ath10k: set 10.4 fw exclusive wmi cmd as unsupported for other fw
+    versions
+  ath10k: add 10.4 fw wmi vdev cmd ids
+  ath10k: add 10.4 fw wmi pdev cmd ids
+  ath10k: fill 10.4 fw wmi init cmd default values
+  ath10k: handle 10.4 fw wmi mgmt rx event
+  ath10k: adjust default peer limits if qcache enabled in 10.4 fw
+  ath10k: handle 10.4 fw wmi ready event
 
-I cut off the first two patches, because they are redundant now.
+ drivers/net/wireless/ath/ath10k/core.c    |   9 +
+ drivers/net/wireless/ath/ath10k/core.h    |   2 +
+ drivers/net/wireless/ath/ath10k/hw.h      |  61 +++
+ drivers/net/wireless/ath/ath10k/mac.c     |   2 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  47 ++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 793 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h     | 792 ++++++++++++++++++++++++++++-
+ 7 files changed, 1700 insertions(+), 6 deletions(-)
 
-Thanks.
+-- 
+1.8.1.2
 
-> 
-> thanks,
-> 
-> greg k-h
