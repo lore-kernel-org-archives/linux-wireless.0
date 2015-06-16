@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48066 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753004AbbFVL6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 07:58:36 -0400
-Message-ID: <1434974312.19597.9.camel@sipsolutions.net> (sfid-20150622_135841_850054_31462557)
-Subject: Re: [PATCH 2/3] ath9k: make rxfilter per HW
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	nbd@openwrt.org, sujith@msujith.org
-Date: Mon, 22 Jun 2015 13:58:32 +0200
-In-Reply-To: <1434973385-15865-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150622_134339_744222_8D689257)
-References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1434973385-15865-3-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150622_134339_744222_8D689257)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:34606 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752518AbbFPIhE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 04:37:04 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/2] brcmfmac: fix double free of p2pdev interface
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1434401319-16136-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20150616083704.2A173140558@smtp.codeaurora.org> (sfid-20150616_103709_665684_414B16A9)
+Date: Tue, 16 Jun 2015 08:37:04 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-06-22 at 13:43 +0200, Janusz Dziedzic wrote:
-> mac80211 configure rxfilter per HW,
-> so we don't need this per channel.
 
-As I said before, I think there's value in mac80211 doing it per chanctx
-or even per vif, and it should be more efficient to do so.
+> When freeing the driver ifp pointer it should also be removed from
+> the driver interface list, which is what brcmf_remove_interface()
+> does. Otherwise, the ifp pointer will be freed twice triggering
+> a kernel oops.
+> 
+> Fixes: f37d69a4babc ("brcmfmac: free ifp for non-netdev interface in p2p module")
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-It's tempting to do it per vif and leave the chanctx work up to the
-driver, but perhaps with CSA and all that it gets complicated enough
-that doing it per chanctx in mac80211 would make sense?
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
-johannes
+cb700df8c8a6 brcmfmac: fix double free of p2pdev interface
+40b503c76481 brcmfmac: make brcmf_p2p_detach() call conditional
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Kalle Valo
