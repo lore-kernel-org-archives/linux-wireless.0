@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:46718 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756052AbbFUQ5z (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3737 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756455AbbFPKQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2015 12:57:55 -0400
-Date: Sun, 21 Jun 2015 10:09:41 -0700 (PDT)
-Message-Id: <20150621.100941.461361514395666445.davem@davemloft.net> (sfid-20150621_185820_978257_7A1EFD30)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	michal.kazior@tieto.com, johannes.berg@intel.com
-Subject: Re: [PATCH] mac80211: fix locking in
- update_vlan_tailroom_need_count()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1434542094-14247-1-git-send-email-johannes@sipsolutions.net>
-References: <1434542094-14247-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 16 Jun 2015 06:16:29 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: txrx: remove unreachable negative return check and fixup type
+References: <1434039489-24934-1-git-send-email-hofrat@osadl.org>
+Date: Tue, 16 Jun 2015 13:16:23 +0300
+In-Reply-To: <1434039489-24934-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
+	Guire's message of "Thu, 11 Jun 2015 18:18:09 +0200")
+Message-ID: <87616o7ybs.fsf@kamboji.qca.qualcomm.com> (sfid-20150616_121653_751791_5F1D7135)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 17 Jun 2015 13:54:54 +0200
+Nicholas Mc Guire <hofrat@osadl.org> writes:
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Unfortunately, Michal's change to fix AP_VLAN crypto tailroom
-> caused a locking issue that was reported by lockdep, but only
-> in a few cases - the issue was a classic ABBA deadlock caused
-> by taking the mtx after the key_mtx, where normally they're
-> taken the other way around.
-> 
-> As the key mutex protects the field in question (I'm adding a
-> few annotations to make that clear) only the iteration needs
-> to be protected, but we can also iterate the interface list
-> with just RCU protection while holding the key mutex.
-> 
-> Fixes: f9dca80b98ca ("mac80211: fix AP_VLAN crypto tailroom calculation")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> Dave, if you're planning to send any more patches to Linus before
-> the release, please apply this one. Otherwise let me know and I'll
-> sort it out with Cc stable after the merge window.
+> wait_event_timeout(), introduced in 'commit 5e3dd157d7e7 ("ath10k: mac80211
+> driver for Qualcomm Atheros 802.11ac CQA98xx devices")' never returns < 0
+> so the only failure condition to be checked is == 0 (timeout). Further the
+> return type is long not int - an appropriately named variable is added
+> and the assignments fixed up.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-Applied.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Thanks, applied.
+
+-- 
+Kalle Valo
