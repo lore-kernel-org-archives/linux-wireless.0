@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41845 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332AbbFALis (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 07:38:48 -0400
-Message-ID: <556C4444.4070808@suse.de> (sfid-20150601_133913_044150_4E541030)
-Date: Mon, 01 Jun 2015 13:38:44 +0200
-From: Alexander Graf <agraf@suse.de>
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:33942 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbbFPIKJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 04:10:09 -0400
+Date: Tue, 16 Jun 2015 13:39:55 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: "Abdul, Hussain (H.)" <habdul@visteon.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>
+Subject: Re: [PATCH] Staging: wilc1000: Boolean tests don't need comparisons
+Message-ID: <20150616080955.GA1007@sudip-PC> (sfid-20150616_101028_265593_823FB687)
+References: <1434439941-6369-1-git-send-email-habdul@visteon.com>
 MIME-Version: 1.0
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	linux-kernel@vger.kernel.org
-CC: linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-metag@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: Re: [PATCH] treewide: Fix typo compatability -> compatibility
-References: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
-In-Reply-To: <1432728342-32748-1-git-send-email-laurent.pinchart@ideasonboard.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434439941-6369-1-git-send-email-habdul@visteon.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 27.05.15 14:05, Laurent Pinchart wrote:
-> Even though 'compatability' has a dedicated entry in the Wiktionary,
-> it's listed as 'Mispelling of compatibility'. Fix it.
+On Tue, Jun 16, 2015 at 07:33:42AM +0000, Abdul, Hussain (H.) wrote:
+> From: Abdul Hussain <habdul@visteon.com>
 > 
-> Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> This patch removes unwanted true and false from boolean tests.
+> 
+> Signed-off-by: Abdul Hussain <habdul@visteon.com>
 > ---
->  arch/metag/include/asm/elf.h             | 2 +-
+<snip>
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 17ab5cd..be1f6bf 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -7816,7 +7816,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+>  					pNewJoinBssParam->rsn_cap[1] = pu8IEs[rsnIndex + 1];
+>  					rsnIndex += 2;
+>  				}
+> -				pNewJoinBssParam->rsn_found = 1;
+> +				pNewJoinBssParam->rsn_found = true;
+But this is not a boolean test, this is an assignement.
 
-
->  arch/powerpc/kvm/book3s.c                | 2 +-
-
-Acked-by: Alexander Graf <agraf@suse.de>
-
-for the PPC KVM bit.
-
-
-Alex
+regards
+sudip
