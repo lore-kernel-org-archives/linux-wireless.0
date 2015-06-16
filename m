@@ -1,156 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2676 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbbFPFs0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:48:26 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 08/10] ath10k: handle 10.4 fw wmi mgmt rx event
-Date: Tue, 16 Jun 2015 11:15:21 +0530
-Message-ID: <1434433523-8357-9-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_074830_047091_C2613166)
-In-Reply-To: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:42883 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752860AbbFPN21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 09:28:27 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.85)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Z4qug-0004S0-4b
+	for linux-wireless@vger.kernel.org; Tue, 16 Jun 2015 15:28:26 +0200
+Message-ID: <1434461305.2337.26.camel@sipsolutions.net> (sfid-20150616_152831_609582_3653D1D9)
+Subject: Re: mac80211 and multiple RX queues (with RSS hashing)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 16 Jun 2015 15:28:25 +0200
+In-Reply-To: <1434097914.2679.37.camel@sipsolutions.net> (sfid-20150612_103201_684238_7222E571)
+References: <1434097914.2679.37.camel@sipsolutions.net>
+	 (sfid-20150612_103201_684238_7222E571)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.4 firmware wmi mgmt rx event format differs from non 10.4
-firmware and changing existing wmi mgmt rx event parsing function
-ath10k_wmi_op_pull_mgmt_rx_ev() for 10.4 would add more complex.
+On Fri, 2015-06-12 at 10:31 +0200, Johannes Berg wrote:
 
-This patch adds new function to receive any wmi rx event from
-10.4 firmware and also introduce new function to parse wmi mgmt
-rx event.
+>  * It would only support (non-null) data frames, management frames must
+> not be
+>    passed to the new API, but must be passed to the regular
+> ieee80211_rx()
+>    function.
 
-In addition, fw main branch service rdy event parsing function
-is linked in wmi ops table.
+Sorry about the line breaking - not sure how that happened.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 64 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h | 15 ++++++++
- 2 files changed, 79 insertions(+)
+Let me recap these points:
+> * only real data frames allowed in "MQ RX" API
+> * no _irqsafe variant
+> * no software crypto
+> * no monitor mode (TBD)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 3f6a582..07231c2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2038,6 +2038,40 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
- 	return 0;
- }
- 
-+static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
-+					      struct sk_buff *skb,
-+					      struct wmi_mgmt_rx_ev_arg *arg)
-+{
-+	struct wmi_10_4_mgmt_rx_event *ev;
-+	struct wmi_10_4_mgmt_rx_hdr *ev_hdr;
-+	size_t pull_len;
-+	u32 msdu_len;
-+
-+	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
-+	ev_hdr = &ev->hdr;
-+	pull_len = sizeof(*ev);
-+
-+	if (skb->len < pull_len)
-+		return -EPROTO;
-+
-+	skb_pull(skb, pull_len);
-+	arg->channel = ev_hdr->channel;
-+	arg->buf_len = ev_hdr->buf_len;
-+	arg->status = ev_hdr->status;
-+	arg->snr = ev_hdr->snr;
-+	arg->phy_mode = ev_hdr->phy_mode;
-+	arg->rate = ev_hdr->rate;
-+
-+	msdu_len = __le32_to_cpu(arg->buf_len);
-+	if (skb->len < msdu_len)
-+		return -EPROTO;
-+
-+	/* Make sure bytes added for padding are removed. */
-+	skb_trim(skb, msdu_len);
-+
-+	return 0;
-+}
-+
- int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_mgmt_rx_ev_arg arg = {};
-@@ -4181,6 +4215,33 @@ out:
- 	dev_kfree_skb(skb);
- }
- 
-+static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	struct wmi_cmd_hdr *cmd_hdr;
-+	enum wmi_10_4_event_id id;
-+
-+	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
-+	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-+
-+	if (!skb_pull(skb, sizeof(struct wmi_cmd_hdr)))
-+		goto out;
-+
-+	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
-+
-+	switch (id) {
-+	case WMI_10_4_MGMT_RX_EVENTID:
-+		ath10k_wmi_event_mgmt_rx(ar, skb);
-+		/* mgmt_rx() owns the skb now! */
-+		return;
-+	default:
-+		ath10k_warn(ar, "Unknown eventid: %d\n", id);
-+		break;
-+	}
-+
-+out:
-+	dev_kfree_skb(skb);
-+}
-+
- static void ath10k_wmi_process_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	int ret;
-@@ -6100,7 +6161,10 @@ static const struct wmi_ops wmi_10_2_4_ops = {
- };
- 
- static const struct wmi_ops wmi_10_4_ops = {
-+	.rx = ath10k_wmi_10_4_op_rx,
- 	.map_svc = wmi_10_4_svc_map,
-+	.pull_mgmt_rx = ath10k_wmi_10_4_op_pull_mgmt_rx_ev,
-+	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
- 	.gen_init = ath10k_wmi_10_4_op_gen_init,
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 4d15f11..5e67c27 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2902,6 +2902,21 @@ struct wmi_mgmt_rx_event_v2 {
- 	u8 buf[0];
- } __packed;
- 
-+struct wmi_10_4_mgmt_rx_hdr {
-+	__le32 channel;
-+	__le32 snr;
-+	    u8 rssi_ctl[4];
-+	__le32 rate;
-+	__le32 phy_mode;
-+	__le32 buf_len;
-+	__le32 status;
-+} __packed;
-+
-+struct wmi_10_4_mgmt_rx_event {
-+	struct wmi_10_4_mgmt_rx_hdr hdr;
-+	u8 buf[0];
-+} __packed;
-+
- #define WMI_RX_STATUS_OK			0x00
- #define WMI_RX_STATUS_ERR_CRC			0x01
- #define WMI_RX_STATUS_ERR_DECRYPT		0x08
--- 
-1.8.1.2
+This makes no sense, I think I'll leave monitor mode.
+
+> * no defragmentation
+> * no client powersave support
+> * no mesh, perhaps no IBSS
+> * aggregation reorder already done
+> * require NAPI struct (TBD)
+
+Another item we might add:
+ * no TDLS ethertype frames
+
+Those are more control than data, so they shouldn't really go here. It
+wouldn't be hard to support them going there, it just introduces race
+conditions.
+
+>  b) handling AP/GO powersaving clients
+>     With RSS, we can end up with various races - right now we say TX
+>     status and RX must be serialized by the driver, but clearly that
+>     can no longer be guaranteed with multiple RX queues.
+
+I'm just going to ignore this for now and disallow AP mode unless the HW
+offload is enabled.
+
+>     [also need to check if there are *other* things that require
+>     serialization]
+
+TBD
+
+>  c) aggregation session timeout/reorder timer handling
+>     There's a single field/timer (for each of this) per session,
+>     obviously it's
+>     not a great idea to hit these from multiple CPUs.
+
+The reorder timeout is moot since we require already well-ordered
+frames. Therefore, we can't even have it. Driver developers will have to
+think about how to implement that though.
+
+The aggregation session timeout handling actually doesn't really change,
+just the data structure needs to be 'exploded' into per-queue structures
+instead.
+
+> a2) Alternatively, drivers could tell mac80211 before-hand how many
+> queues they'll use, pass a queue identifier to mac80211 for each packet
+> (e.g. in skb's queue_mapping) and have mac80211 gather per-queue
+> statistics that get combined when read. This means allocating separate
+> statistics/queue arrays for stations etc. in mac80211, and then using
+> u64_stats_update_begin() etc. to get a consistent reading like we do
+> with per-cpu netdev stats already (since my fairly recent patch.)
+
+I'm going to go with this one, but block a few things like 'average
+signal' and require drivers to implement those if needed.
+
+johannes
 
