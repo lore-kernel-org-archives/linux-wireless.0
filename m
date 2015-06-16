@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0127.outbound.protection.outlook.com ([157.55.234.127]:39387
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751572AbbFCKXi convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13931 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756417AbbFPKI5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 06:23:38 -0400
-From: "Sharma, Abhishek (A.)" <asharm14@visteon.com>
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	"Dean Lee" <dean.lee@atmel.com>, Chris Park <chris.park@atmel.com>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Subject: [PATCH v2] staging: wilc1000: Remove commented variable declerations
-Date: Wed, 3 Jun 2015 10:09:16 +0000
-Message-ID: <20150603100909.GA26017@jarvis.asia.jci.com> (sfid-20150603_122341_754725_DD637F62)
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 16 Jun 2015 06:08:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: dump fw features during probing
+References: <1433765734-646-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 16 Jun 2015 13:08:50 +0300
+In-Reply-To: <1433765734-646-1-git-send-email-michal.kazior@tieto.com> (Michal
+	Kazior's message of "Mon, 8 Jun 2015 14:15:33 +0200")
+Message-ID: <87r3pc7yod.fsf@kamboji.qca.qualcomm.com> (sfid-20150616_120900_812316_9336569F)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhishek Sharma <asharm14@visteon.com> 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Removing the commented static variable declerations.
+> This should help when analysing problems from
+> users and spot fw api blob problems easier.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Abhishek Sharma <asharm14@visteon.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 4 ----
- 1 file changed, 4 deletions(-)
+Thanks, both patches applied.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index e63788f..e1d9755 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -29,10 +29,6 @@ int sdio_xfer_cnt(void);
- uint32_t wilc_get_chipid(uint8_t update);
- WILC_Uint16 Set_machw_change_vir_if(WILC_Bool bValue);
- 
--/* static uint32_t vmm_table[WILC_VMM_TBL_SIZE]; */
--/* static uint32_t vmm_table_rbk[WILC_VMM_TBL_SIZE]; */
--
--/* static uint32_t vmm_table_rbk[WILC_VMM_TBL_SIZE]; */
- 
- 
- typedef struct {
 -- 
-2.1.4
+Kalle Valo
