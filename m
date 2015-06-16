@@ -1,137 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40557 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752360AbbFLIb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 04:31:56 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.85)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Z3KNW-0006AW-W3
-	for linux-wireless@vger.kernel.org; Fri, 12 Jun 2015 10:31:55 +0200
-Message-ID: <1434097914.2679.37.camel@sipsolutions.net> (sfid-20150612_103201_684238_7222E571)
-Subject: mac80211 and multiple RX queues (with RSS hashing)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 12 Jun 2015 10:31:54 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18294 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbbFPFqd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 01:46:33 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 02/10] ath10k: add 10.4 fw wmi service bitmap definition
+Date: Tue, 16 Jun 2015 11:15:15 +0530
+Message-ID: <1434433523-8357-3-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_074638_589410_5CCE70F8)
+In-Reply-To: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Include new enum to define wmi service bitmap definitions for
+10.4 firmware and a function wmi_10_4_svc_map() to remap 10.4
+firmware wmi service bitmap definitions to ath10k generic wmi
+services.
 
-We're currently investigating how to best add RSS hashing to the
-wireless stack.
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |   5 ++
+ drivers/net/wireless/ath/ath10k/wmi.h | 128 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 133 insertions(+)
 
-Let's say, for the sake of discussion, that we'll add a function to
-mac80211 called
-
-ieee80211_rx_napi_mq(struct hw *, struct napi_struct *, struct sk_buff
-*);
-
-and (depending on the outcome of the design) the driver would have to
-set the skb_queue_mapping to the queue this packet was received on.
-
-For context, there are a few requirements for callers of this function -
-here are the ones I'm planning:
-
- * It would only support (non-null) data frames, management frames must
-not be
-   passed to the new API, but must be passed to the regular
-ieee80211_rx()
-   function.
- * I'm not going to support ieee80211_rx_irqsafe() with this API, it
-would be
-   quite pointless (or a lot of code to have per-queue tasklets?)
- * Won't support software crypto (PN checking can't really work in
-parallel)
- * Won't support monitor mode, and probably a few other similar things
-(TBD)
- * Won't support defragmentation (fragmented must anyway either be
-reassembled
-   for hashing or somehow not hashed perhaps)
- * Won't support client powersave in mac80211 - uh ... just say no to
-that!
- * For not, I'm not planning to support mesh on this, maybe not even
-IBSS.
- * Duplicate detection must be handled by hardware/firmware or similar
-   (possibly could be done with HW assist in driver, but clearly that
-cannot be
-   handled generically in mac80211)
- * RX aggregation reordering done by hardware/firmware or similar
-   (same here)
- * require a NAPI struct? (not really sure yet how the stack treats
-parallel RX)
-
-Of course these don't really seem fairly natural so far, by the nature
-of using multiple queues.
-
-There are a few other areas that are of more concern:
- a) Statistics
-    Obviously, we can no longer have single counters. Using atomic
-counters would
-    kill much of the benefit of having multiple queues to start with, so
-in some
-    way we need to have multiple counters.
- b) handling AP/GO powersaving clients
-    With RSS, we can end up with various races - right now we say TX
-status and
-    RX must be serialized by the driver, but clearly that can no longer
-be
-    guaranteed with multiple RX queues.
-    [also need to check if there are *other* things that require
-serialization]
- c) aggregation session timeout/reorder timer handling
-    There's a single field/timer (for each of this) per session,
-obviously it's
-    not a great idea to hit these from multiple CPUs.
-
-Let's take these one by one:
-
-a) This is probably the biggest one. We have a LOT of statistics that we
-keep, and they all rely on RX being serialized. For example, per-station
-RX packet and byte counters. Making all of these atomic would be
-correct, but would obviously kill much of the performance benefit of
-RSS.
-
-As a consequence, I see two possible solutions here:
-
-a1) Just make this the driver's concern, change sta_set_sinfo() to not
-provide any (with a few exceptions) mac80211 statistics when multi-queue
-RX is used. This could mean the same kind of statistics code is in each
-driver, if the driver supports the statistics at all - or it could mean
-that we cause a lot of divergence with statistics between drivers.
-
-a2) Alternatively, drivers could tell mac80211 before-hand how many
-queues they'll use, pass a queue identifier to mac80211 for each packet
-(e.g. in skb's queue_mapping) and have mac80211 gather per-queue
-statistics that get combined when read. This means allocating separate
-statistics/queue arrays for stations etc. in mac80211, and then using
-u64_stats_update_begin() etc. to get a consistent reading like we do
-with per-cpu netdev stats already (since my fairly recent patch.)
-
-Clearly this cannot support the "average" values like "average signal
-strength" and the "last packet signal strength" might not always be
-really the very last packet (which doesn't really matter though) so
-those would still have to be excluded and generated by the driver, but
-it could mean a bit more code sharing (if more than our driver ends up
-using this facility) and more consistency. The downside might be that if
-drivers want to do statistics in the firmware or so, they'd waste the
-extra cycles on the host. I don't think we're planning to do that for
-now though.
-
-
-b) I think this one is pretty simple - just require the driver to set
-AP_LINK_PS and if necessary call ieee80211_sta_ps_transition(). However,
-it might require adding more logic for U-APSD support depending on the
-hardware design.
-
-
-c) I'm not really sure about this. I think it really needs hardware
-assist.
-
-
-Does anyone else have any thoughts?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index b32bb68..52493d1 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5412,10 +5412,15 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	/* .gen_adaptive_qcs not implemented */
+ };
+ 
++static const struct wmi_ops wmi_10_4_ops = {
++	.map_svc = wmi_10_4_svc_map,
++};
++
+ int ath10k_wmi_attach(struct ath10k *ar)
+ {
+ 	switch (ar->wmi.op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
++		ar->wmi.ops = &wmi_10_4_ops;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+ 		ar->wmi.cmd = &wmi_10_2_4_cmd_map;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index cf44a3d..95b7c89 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -150,6 +150,9 @@ enum wmi_service {
+ 	WMI_SERVICE_SAP_AUTH_OFFLOAD,
+ 	WMI_SERVICE_ATF,
+ 	WMI_SERVICE_COEX_GPIO,
++	WMI_SERVICE_ENHANCED_PROXY_STA,
++	WMI_SERVICE_TT,
++	WMI_SERVICE_PEER_CACHING,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -218,6 +221,47 @@ enum wmi_main_service {
+ 	WMI_MAIN_SERVICE_TX_ENCAP,
+ };
+ 
++enum wmi_10_4_service {
++	WMI_10_4_SERVICE_BEACON_OFFLOAD = 0,
++	WMI_10_4_SERVICE_SCAN_OFFLOAD,
++	WMI_10_4_SERVICE_ROAM_OFFLOAD,
++	WMI_10_4_SERVICE_BCN_MISS_OFFLOAD,
++	WMI_10_4_SERVICE_STA_PWRSAVE,
++	WMI_10_4_SERVICE_STA_ADVANCED_PWRSAVE,
++	WMI_10_4_SERVICE_AP_UAPSD,
++	WMI_10_4_SERVICE_AP_DFS,
++	WMI_10_4_SERVICE_11AC,
++	WMI_10_4_SERVICE_BLOCKACK,
++	WMI_10_4_SERVICE_PHYERR,
++	WMI_10_4_SERVICE_BCN_FILTER,
++	WMI_10_4_SERVICE_RTT,
++	WMI_10_4_SERVICE_RATECTRL,
++	WMI_10_4_SERVICE_WOW,
++	WMI_10_4_SERVICE_RATECTRL_CACHE,
++	WMI_10_4_SERVICE_IRAM_TIDS,
++	WMI_10_4_SERVICE_BURST,
++	WMI_10_4_SERVICE_SMART_ANTENNA_SW_SUPPORT,
++	WMI_10_4_SERVICE_GTK_OFFLOAD,
++	WMI_10_4_SERVICE_SCAN_SCH,
++	WMI_10_4_SERVICE_CSA_OFFLOAD,
++	WMI_10_4_SERVICE_CHATTER,
++	WMI_10_4_SERVICE_COEX_FREQAVOID,
++	WMI_10_4_SERVICE_PACKET_POWER_SAVE,
++	WMI_10_4_SERVICE_FORCE_FW_HANG,
++	WMI_10_4_SERVICE_SMART_ANTENNA_HW_SUPPORT,
++	WMI_10_4_SERVICE_GPIO,
++	WMI_10_4_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG,
++	WMI_10_4_SERVICE_STA_UAPSD_VAR_AUTO_TRIG,
++	WMI_10_4_SERVICE_STA_KEEP_ALIVE,
++	WMI_10_4_SERVICE_TX_ENCAP,
++	WMI_10_4_SERVICE_AP_PS_DETECT_OUT_OF_SYNC,
++	WMI_10_4_SERVICE_EARLY_RX,
++	WMI_10_4_SERVICE_ENHANCED_PROXY_STA,
++	WMI_10_4_SERVICE_TT,
++	WMI_10_4_SERVICE_ATF,
++	WMI_10_4_SERVICE_PEER_CACHING,
++};
++
+ static inline char *wmi_service_name(int service_id)
+ {
+ #define SVCSTR(x) case x: return #x
+@@ -299,6 +343,9 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_SAP_AUTH_OFFLOAD);
+ 	SVCSTR(WMI_SERVICE_ATF);
+ 	SVCSTR(WMI_SERVICE_COEX_GPIO);
++	SVCSTR(WMI_SERVICE_ENHANCED_PROXY_STA);
++	SVCSTR(WMI_SERVICE_TT);
++	SVCSTR(WMI_SERVICE_PEER_CACHING);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -437,6 +484,87 @@ static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_TX_ENCAP, len);
+ }
+ 
++static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
++				    size_t len)
++{
++	SVCMAP(WMI_10_4_SERVICE_BEACON_OFFLOAD,
++	       WMI_SERVICE_BEACON_OFFLOAD, len);
++	SVCMAP(WMI_10_4_SERVICE_SCAN_OFFLOAD,
++	       WMI_SERVICE_SCAN_OFFLOAD, len);
++	SVCMAP(WMI_10_4_SERVICE_ROAM_OFFLOAD,
++	       WMI_SERVICE_ROAM_OFFLOAD, len);
++	SVCMAP(WMI_10_4_SERVICE_BCN_MISS_OFFLOAD,
++	       WMI_SERVICE_BCN_MISS_OFFLOAD, len);
++	SVCMAP(WMI_10_4_SERVICE_STA_PWRSAVE,
++	       WMI_SERVICE_STA_PWRSAVE, len);
++	SVCMAP(WMI_10_4_SERVICE_STA_ADVANCED_PWRSAVE,
++	       WMI_SERVICE_STA_ADVANCED_PWRSAVE, len);
++	SVCMAP(WMI_10_4_SERVICE_AP_UAPSD,
++	       WMI_SERVICE_AP_UAPSD, len);
++	SVCMAP(WMI_10_4_SERVICE_AP_DFS,
++	       WMI_SERVICE_AP_DFS, len);
++	SVCMAP(WMI_10_4_SERVICE_11AC,
++	       WMI_SERVICE_11AC, len);
++	SVCMAP(WMI_10_4_SERVICE_BLOCKACK,
++	       WMI_SERVICE_BLOCKACK, len);
++	SVCMAP(WMI_10_4_SERVICE_PHYERR,
++	       WMI_SERVICE_PHYERR, len);
++	SVCMAP(WMI_10_4_SERVICE_BCN_FILTER,
++	       WMI_SERVICE_BCN_FILTER, len);
++	SVCMAP(WMI_10_4_SERVICE_RTT,
++	       WMI_SERVICE_RTT, len);
++	SVCMAP(WMI_10_4_SERVICE_RATECTRL,
++	       WMI_SERVICE_RATECTRL, len);
++	SVCMAP(WMI_10_4_SERVICE_WOW,
++	       WMI_SERVICE_WOW, len);
++	SVCMAP(WMI_10_4_SERVICE_RATECTRL_CACHE,
++	       WMI_SERVICE_RATECTRL_CACHE, len);
++	SVCMAP(WMI_10_4_SERVICE_IRAM_TIDS,
++	       WMI_SERVICE_IRAM_TIDS, len);
++	SVCMAP(WMI_10_4_SERVICE_BURST,
++	       WMI_SERVICE_BURST, len);
++	SVCMAP(WMI_10_4_SERVICE_SMART_ANTENNA_SW_SUPPORT,
++	       WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_GTK_OFFLOAD,
++	       WMI_SERVICE_GTK_OFFLOAD, len);
++	SVCMAP(WMI_10_4_SERVICE_SCAN_SCH,
++	       WMI_SERVICE_SCAN_SCH, len);
++	SVCMAP(WMI_10_4_SERVICE_CSA_OFFLOAD,
++	       WMI_SERVICE_CSA_OFFLOAD, len);
++	SVCMAP(WMI_10_4_SERVICE_CHATTER,
++	       WMI_SERVICE_CHATTER, len);
++	SVCMAP(WMI_10_4_SERVICE_COEX_FREQAVOID,
++	       WMI_SERVICE_COEX_FREQAVOID, len);
++	SVCMAP(WMI_10_4_SERVICE_PACKET_POWER_SAVE,
++	       WMI_SERVICE_PACKET_POWER_SAVE, len);
++	SVCMAP(WMI_10_4_SERVICE_FORCE_FW_HANG,
++	       WMI_SERVICE_FORCE_FW_HANG, len);
++	SVCMAP(WMI_10_4_SERVICE_SMART_ANTENNA_HW_SUPPORT,
++	       WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_GPIO,
++	       WMI_SERVICE_GPIO, len);
++	SVCMAP(WMI_10_4_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG,
++	       WMI_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG, len);
++	SVCMAP(WMI_10_4_SERVICE_STA_UAPSD_VAR_AUTO_TRIG,
++	       WMI_SERVICE_STA_UAPSD_VAR_AUTO_TRIG, len);
++	SVCMAP(WMI_10_4_SERVICE_STA_KEEP_ALIVE,
++	       WMI_SERVICE_STA_KEEP_ALIVE, len);
++	SVCMAP(WMI_10_4_SERVICE_TX_ENCAP,
++	       WMI_SERVICE_TX_ENCAP, len);
++	SVCMAP(WMI_10_4_SERVICE_AP_PS_DETECT_OUT_OF_SYNC,
++	       WMI_SERVICE_AP_PS_DETECT_OUT_OF_SYNC, len);
++	SVCMAP(WMI_10_4_SERVICE_EARLY_RX,
++	       WMI_SERVICE_EARLY_RX, len);
++	SVCMAP(WMI_10_4_SERVICE_ENHANCED_PROXY_STA,
++	       WMI_SERVICE_ENHANCED_PROXY_STA, len);
++	SVCMAP(WMI_10_4_SERVICE_TT,
++	       WMI_SERVICE_TT, len);
++	SVCMAP(WMI_10_4_SERVICE_ATF,
++	       WMI_SERVICE_ATF, len);
++	SVCMAP(WMI_10_4_SERVICE_PEER_CACHING,
++	       WMI_SERVICE_PEER_CACHING, len);
++}
++
+ #undef SVCMAP
+ 
+ /* 2 word representation of MAC addr */
+-- 
+1.8.1.2
 
