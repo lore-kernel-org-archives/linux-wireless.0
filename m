@@ -1,29 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:44388 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459AbbFDGqR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35561 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbbFPFMp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 02:46:17 -0400
-Date: Wed, 03 Jun 2015 23:46:15 -0700 (PDT)
-Message-Id: <20150603.234615.1661393741259779017.davem@davemloft.net> (sfid-20150604_084626_408536_EA0374FA)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2015-06-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87bngwtv1o.fsf@kamboji.qca.qualcomm.com>
-References: <87bngwtv1o.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 16 Jun 2015 01:12:45 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 00/10] Add QCA99X0 support
+Date: Tue, 16 Jun 2015 10:42:12 +0530
+Message-ID: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071300_220343_41F55235)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Wed, 03 Jun 2015 23:07:47 +0300
+This patch set adds changes for QCA99X0 chip in pci probe,
+Copy Engine init and firmware downloads. Since it is still
+work in progress the support for this chip is not yet
+advertised in pci device table.
 
-> here's a pull request for 4.2. Most notable change here is a new driver
-> mt7601u for a Mediatek USB Wi-Fi device, for other driver more
-> information in the signed tag. There's a trivial conflict in iwlwifi
-> Kconfig help text but otherwise I'm not expecting any issues. But please
-> let me know if you have any problems.
+Vasanthakumar Thiagarajan (10):
+  ath10k: Add a table to store hw specific values
+  ath10k: Add new reg_address/mask to hw register table
+  ath10k: Add hw register/values for QCA99X0 chip
+  ath10k: Copy Engine related changes for QCA99X0
+  ath10k: Make target cpu address to CE address conversion chip specific
+  ath10k: Add chip reset sequence for QCA99X0
+  ath10k: Extend CE src desc flags for interrupt indication
+  ath10k: Fix BMI communication timeout for QCA99X0
+  ath10k: Add support for code swap
+  ath10k: Add BMI param value to execute otp to hw_param
 
-Pulled, thanks for the heads up about the trivial conflict.
+ drivers/net/wireless/ath/ath10k/Makefile    |   3 +-
+ drivers/net/wireless/ath/ath10k/bmi.h       |   2 +-
+ drivers/net/wireless/ath/ath10k/ce.c        |   1 +
+ drivers/net/wireless/ath/ath10k/ce.h        |  17 ++-
+ drivers/net/wireless/ath/ath10k/core.c      |  52 ++++++-
+ drivers/net/wireless/ath/ath10k/core.h      |   9 ++
+ drivers/net/wireless/ath/ath10k/hw.c        |  86 +++++++++++-
+ drivers/net/wireless/ath/ath10k/hw.h        |  61 ++++++--
+ drivers/net/wireless/ath/ath10k/pci.c       | 180 ++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/pci.h       |  12 --
+ drivers/net/wireless/ath/ath10k/swap.c      | 208 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/swap.h      |  72 ++++++++++
+ drivers/net/wireless/ath/ath10k/targaddrs.h |   3 +
+ 13 files changed, 659 insertions(+), 47 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/swap.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/swap.h
+
+-- 
+1.9.1
+
