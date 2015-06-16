@@ -1,38 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46826 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753375AbbFILqB (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:15716 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754491AbbFPFj0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 07:46:01 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 0/6] wil6210 patches
-References: <1433685391-9026-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Tue, 09 Jun 2015 14:45:55 +0300
-In-Reply-To: <1433685391-9026-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Sun, 7 Jun 2015 16:56:25 +0300")
-Message-ID: <87r3plds0c.fsf@kamboji.qca.qualcomm.com> (sfid-20150609_134605_008949_0C834F88)
+	Tue, 16 Jun 2015 01:39:26 -0400
+From: Dean Lee <dean.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <dean.lee@atmel.com>
+Subject: [PATCH 3/3] staging: wilc1000: delete unused files (wilc_oswrapper.h wilc_type.h)
+Date: Tue, 16 Jun 2015 14:38:22 +0900
+Message-ID: <182d845608c3b6a8df0a205e21044ee338451313.1434432989.git.dean.lee@atmel.com> (sfid-20150616_073930_795137_968FB84C)
+In-Reply-To: <adf4906fecff029d52e8c8e0e1537dd7f9ef568c.1434432989.git.dean.lee@atmel.com>
+References: <adf4906fecff029d52e8c8e0e1537dd7f9ef568c.1434432989.git.dean.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+delete unsued files
 
-> Small fixes here and there; save for hidden SSID
->
-> Hamad Kadmany (1):
->   wil6210: Support hidden SSID
->
-> Vladimir Kondratiev (5):
->   wil6210: modparam for bcast ring size
->   wil6210: add NIC memory region mac_rgf_ext
->   wil6210: add per-MCS Rx stats
->   wil6210: platform hooks for modile init/exit
->   wil6210: reorder init sequence
+Signed-off-by: Dean Lee <dean.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_oswrapper.h | 41 -------------------------------
+ drivers/staging/wilc1000/wilc_type.h      | 34 -------------------------
+ 2 files changed, 75 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/wilc_oswrapper.h
+ delete mode 100644 drivers/staging/wilc1000/wilc_type.h
 
-Thanks, all six applied.
-
+diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
+deleted file mode 100644
+index e97aa96..0000000
+--- a/drivers/staging/wilc1000/wilc_oswrapper.h
++++ /dev/null
+@@ -1,41 +0,0 @@
+-#ifndef __WILC_OSWRAPPER_H__
+-#define __WILC_OSWRAPPER_H__
+-
+-/*!
+- *  @file	wilc_oswrapper.h
+- *  @brief	Top level OS Wrapper, include this file and it will include all
+- *              other files as necessary
+- *  @author	syounan
+- *  @date	10 Aug 2010
+- *  @version	1.0
+- */
+-
+-/* OS Wrapper interface version */
+-#define WILC_OSW_INTERFACE_VER 2
+-
+-/* Os Configuration File */
+-#include "wilc_osconfig.h"
+-#include "wilc_platform.h"
+-
+-/* Logging Functions */
+-#include "wilc_log.h"
+-
+-/* Error reporting and handling support */
+-#include "wilc_errorsupport.h"
+-
+-/* Sleep support */
+-#include "wilc_sleep.h"
+-
+-/* Timer support */
+-#include "wilc_timer.h"
+-
+-/* Memory support */
+-#include "wilc_memory.h"
+-
+-/* String Utilities */
+-#include "wilc_strutils.h"
+-
+-/* Message Queue */
+-#include "wilc_msgqueue.h"
+-
+-#endif
+diff --git a/drivers/staging/wilc1000/wilc_type.h b/drivers/staging/wilc1000/wilc_type.h
+deleted file mode 100644
+index 5f36e7f..0000000
+--- a/drivers/staging/wilc1000/wilc_type.h
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/* ////////////////////////////////////////////////////////////////////////// */
+-/*  */
+-/* Copyright (c) Atmel Corporation.  All rights reserved. */
+-/*  */
+-/* Module Name:  wilc_type.h */
+-/*  */
+-/*  */
+-/* //////////////////////////////////////////////////////////////////////////// */
+-#ifndef WILC_TYPE_H
+-#define WILC_TYPE_H
+-
+-/********************************************
+- *
+- *      Type Defines
+- *
+- ********************************************/
+-#ifdef WIN32
+-typedef char int8_t;
+-typedef short int16_t;
+-typedef long int32_t;
+-typedef unsigned char uint8_t;
+-typedef unsigned short uint16_t;
+-typedef unsigned long uint32_t;
+-#else
+-#ifdef _linux_
+-/*typedef unsigned char         uint8_t;
+- * typedef unsigned short       uint16_t;
+- * typedef unsigned long        uint32_t;*/
+-#include <stdint.h>
+-#else
+-#include "wilc_oswrapper.h"
+-#endif
+-#endif
+-#endif
 -- 
-Kalle Valo
+2.4.3
+
