@@ -1,74 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13470 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752511AbbFCHbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:31:46 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/15] iwlwifi: wrt: add mipi type to debug types
-Date: Wed,  3 Jun 2015 10:31:23 +0300
-Message-Id: <1433316696-4612-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093150_306604_8BFCB4BD)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9167 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753646AbbFPFz0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 01:55:26 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 6/8] ath10k: advertise 10.4 fw ap and sta iface combination to mac80211
+Date: Tue, 16 Jun 2015 11:23:13 +0530
+Message-ID: <1434433995-8451-7-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_075530_373936_3962F2EA)
+In-Reply-To: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+10.4 fw supports upto 16 interface in ap mode and 1 interface
+in station mode, overall total interfaces supported are 16
+interfaces. Populate this limit in wiphy->iface_combinations.
 
-This adds the MIPI mode type to the types declared supported
-by the driver. Without this patch, when using MIPI mode and
-looking at the logs the user would see the debug destination
-"UNKNOWN".
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-file.h | 2 ++
- drivers/net/wireless/iwlwifi/iwl-fw.h      | 4 +++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index a8d0b64..5b7c0ae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -427,11 +427,13 @@ struct iwl_fw_dbg_reg_op {
-  * @SMEM_MODE: monitor stores the data in SMEM
-  * @EXTERNAL_MODE: monitor stores the data in allocated DRAM
-  * @MARBH_MODE: monitor stores the data in MARBH buffer
-+ * @MIPI_MODE: monitor outputs the data through the MIPI interface
-  */
- enum iwl_fw_dbg_monitor_mode {
- 	SMEM_MODE = 0,
- 	EXTERNAL_MODE = 1,
- 	MARBH_MODE = 2,
-+	MIPI_MODE = 3,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 187e524..3c5d2b0 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6620,6 +6620,33 @@ static struct ieee80211_iface_combination ath10k_tlv_qcs_if_comb[] = {
+ 	},
  };
  
- /**
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index cf75baf..cdc7f1e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -205,6 +205,8 @@ static inline const char *get_fw_dbg_mode_string(int mode)
- 		return "EXTERNAL_DRAM";
- 	case MARBH_MODE:
- 		return "MARBH";
-+	case MIPI_MODE:
-+		return "MIPI";
- 	default:
- 		return "UNKNOWN";
- 	}
++static const struct ieee80211_iface_limit ath10k_10_4_if_limits[] = {
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_STATION),
++	},
++	{
++		.max	= 16,
++		.types	= BIT(NL80211_IFTYPE_AP)
++	},
++};
++
++static const struct ieee80211_iface_combination ath10k_10_4_if_comb[] = {
++	{
++		.limits = ath10k_10_4_if_limits,
++		.n_limits = ARRAY_SIZE(ath10k_10_4_if_limits),
++		.max_interfaces = 16,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++#ifdef CONFIG_ATH10K_DFS_CERTIFIED
++		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++					BIT(NL80211_CHAN_WIDTH_20) |
++					BIT(NL80211_CHAN_WIDTH_40) |
++					BIT(NL80211_CHAN_WIDTH_80),
++#endif
++	},
++};
++
+ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ {
+ 	struct ieee80211_sta_vht_cap vht_cap = {0};
+@@ -6942,6 +6969,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			ARRAY_SIZE(ath10k_10x_if_comb);
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
++		ar->hw->wiphy->iface_combinations = ath10k_10_4_if_comb;
++		ar->hw->wiphy->n_iface_combinations =
++			ARRAY_SIZE(ath10k_10_4_if_comb);
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
 -- 
-2.1.4
+1.8.1.2
 
