@@ -1,121 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:55310 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752984AbbFCGCH (ORCPT
+Received: from mail-db3on0133.outbound.protection.outlook.com ([157.55.234.133]:63381
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751556AbbFPHYX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 02:02:07 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t536149O014720
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:02:06 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1usq1cgmc8-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:02:06 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv5 15/17] mwifiex: update AP WMM settings from BSS_START event
-Date: Wed, 3 Jun 2015 16:59:45 +0530
-Message-ID: <1433330987-6808-16-git-send-email-patila@marvell.com> (sfid-20150603_080350_832432_424ACC95)
-In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
-References: <1433330987-6808-1-git-send-email-patila@marvell.com>
+	Tue, 16 Jun 2015 03:24:23 -0400
+From: "Abdul, Hussain (H.)" <habdul@visteon.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
+	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
+	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] Staging: wilc1000: Remove casting the values returned by
+ kmalloc()
+Date: Tue, 16 Jun 2015 07:09:56 +0000
+Message-ID: <1434438514-5247-1-git-send-email-habdul@visteon.com> (sfid-20150616_092426_650750_8885E53A)
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was missing and would cause issue in WMM handling.
+From: Abdul Hussain <habdul@visteon.com>
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+This patch removes casting the values returned by memory allocation functions.
+
+Signed-off-by: Abdul Hussain <habdul@visteon.com>
 ---
- drivers/net/wireless/mwifiex/uap_event.c | 63 ++++++++++++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
+ drivers/staging/wilc1000/linux_mon.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 06ce3fe..fee05f5 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -21,8 +21,70 @@
- #include "main.h"
- #include "11n.h"
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index d5860ce..8cba13c 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -247,7 +247,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 	nic = netdev_priv(dev);
  
-+#define MWIFIEX_BSS_START_EVT_FIX_SIZE    12
+ 	netif_stop_queue(dev);
+-	mgmt_tx = (struct tx_complete_mon_data *)kmalloc(sizeof(struct tx_complete_mon_data), GFP_ATOMIC);
++	mgmt_tx = kmalloc(sizeof(struct tx_complete_mon_data), GFP_ATOMIC);
+ 	if (mgmt_tx == NULL) {
+ 		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
+ 		return WILC_FAIL;
+@@ -258,7 +258,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 	len += sizeof(struct tx_complete_mon_data *);
+ 	#endif
  
-+static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
-+					 struct sk_buff *event)
-+{
-+	int evt_len;
-+	u8 *curr;
-+	u16 tlv_len;
-+	struct mwifiex_ie_types_data *tlv_hdr;
-+	struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
-+	int mask = IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK;
-+
-+	priv->wmm_enabled = false;
-+	skb_pull(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
-+	evt_len = event->len;
-+	curr = event->data;
-+
-+	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
-+			 event->data, event->len);
-+
-+	while ((evt_len >= sizeof(tlv_hdr->header))) {
-+		tlv_hdr = (struct mwifiex_ie_types_data *)curr;
-+		tlv_len = le16_to_cpu(tlv_hdr->header.len);
-+
-+		if (evt_len < tlv_len + sizeof(tlv_hdr->header))
-+			break;
-+
-+		switch (le16_to_cpu(tlv_hdr->header.type)) {
-+		case WLAN_EID_HT_CAPABILITY:
-+			priv->ap_11n_enabled = true;
-+			break;
-+
-+		case WLAN_EID_VHT_CAPABILITY:
-+			priv->ap_11ac_enabled = true;
-+			break;
- 
-+		case WLAN_EID_VENDOR_SPECIFIC:
-+			/* Point the regular IEEE IE 2 bytes into the Marvell IE
-+			 * and setup the IEEE IE type and length byte fields
-+			 */
-+			wmm_param_ie = (void *)(curr + 2);
-+			wmm_param_ie->vend_hdr.len = (u8)tlv_len;
-+			wmm_param_ie->vend_hdr.element_id =
-+						WLAN_EID_VENDOR_SPECIFIC;
-+			mwifiex_dbg(priv->adapter, EVENT,
-+				    "info: check uap capabilities:\t"
-+				    "wmm parameter set count: %d\n",
-+				    wmm_param_ie->qos_info_bitmap & mask);
-+
-+			mwifiex_wmm_setup_ac_downgrade(priv);
-+			priv->wmm_enabled = true;
-+			mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
-+			break;
-+
-+		default:
-+			break;
-+		}
-+
-+		curr += (tlv_len + sizeof(tlv_hdr->header));
-+		evt_len -= (tlv_len + sizeof(tlv_hdr->header));
-+	}
-+
-+	return 0;
-+}
- 
- /*
-  * This function handles AP interface specific events generated by firmware.
-@@ -134,6 +196,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 		       ETH_ALEN);
- 		if (priv->hist_data)
- 			mwifiex_hist_data_reset(priv);
-+		mwifiex_check_uap_capabilties(priv, adapter->event_skb);
- 		break;
- 	case EVENT_UAP_MIC_COUNTERMEASURES:
- 		/* For future development */
+-	mgmt_tx->buff = (char *)kmalloc(len, GFP_ATOMIC);
++	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
+ 	if (mgmt_tx->buff == NULL) {
+ 		PRINT_ER("Failed to allocate memory for mgmt_tx buff\n");
+ 		return WILC_FAIL;
 -- 
-1.8.1.4
-
+1.9.1
