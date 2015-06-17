@@ -1,116 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22047 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbbFPFsV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:48:21 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 09/10] ath10k: adjust default peer limits if qcache enabled in 10.4 fw
-Date: Tue, 16 Jun 2015 11:15:22 +0530
-Message-ID: <1434433523-8357-10-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_074824_538036_A1F96042)
-In-Reply-To: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434433523-8357-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:46741 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751873AbbFQIlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 04:41:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 05/14] mac80211: move ieee80211_get_bssid into RX file
+Date: Wed, 17 Jun 2015 10:41:06 +0200
+Message-Id: <1434530475-3553-6-git-send-email-johannes@sipsolutions.net> (sfid-20150617_104136_142888_9B5E9A1D)
+In-Reply-To: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
+References: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.4 firmware supports upto 512 clients when qcache feature is enabled.
-Make adjustment on default max peer count, active peers, number of tid in
-such case to meet qcache requirement. 10.4 fw has extra unit info flag
-NUM_UNITS_IS_NUM_ACTIVE_PEERS which is also handled in this patch.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+This function is only used in the RX code, so moving it into
+that file gives the compiler better optimisation possibilities
+and also allows us to remove the check for short frames (which
+in the RX path cannot happen, but as a generic utility needed
+to be checked.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/hw.h  |  6 ++++++
- drivers/net/wireless/ath/ath10k/wmi.c | 27 +++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/wmi.h |  5 +++--
- 3 files changed, 32 insertions(+), 6 deletions(-)
+ net/mac80211/ieee80211_i.h |  2 --
+ net/mac80211/rx.c          | 45 ++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/util.c        | 49 ----------------------------------------------
+ 3 files changed, 45 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index d76b52a..799ab8a 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -361,6 +361,12 @@ enum ath10k_hw_rate_cck {
- #define TARGET_10_4_NUM_PEERS			((TARGET_10_4_NUM_STATIONS) + \
- 						 (TARGET_10_4_NUM_VDEVS))
- #define TARGET_10_4_ACTIVE_PEERS		0
-+
-+/* TODO: increase qcache max client limit to 512 after
-+ * testing with 512 client.
-+ */
-+#define TARGET_10_4_NUM_QCACHE_PEERS_MAX	256
-+#define TARGET_10_4_QCACHE_ACTIVE_PEERS		50
- #define TARGET_10_4_NUM_OFFLOAD_PEERS		0
- #define TARGET_10_4_NUM_OFFLOAD_REORDER_BUFFS	0
- #define TARGET_10_4_NUM_PEER_KEYS		2
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 07231c2..e5d948e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3740,20 +3740,39 @@ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb)
- 		return;
- 	}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index eb91102e4809..361bb3ca335c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1762,8 +1762,6 @@ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
  
-+	if (test_bit(WMI_SERVICE_PEER_CACHING, ar->wmi.svc_map)) {
-+		ar->max_num_peers = TARGET_10_4_NUM_QCACHE_PEERS_MAX +
-+				    TARGET_10_4_NUM_VDEVS;
-+		ar->num_active_peers = TARGET_10_4_QCACHE_ACTIVE_PEERS +
-+				       TARGET_10_4_NUM_VDEVS;
-+		ar->num_tids = ar->num_active_peers * 2;
-+		ar->max_num_stations = TARGET_10_4_NUM_QCACHE_PEERS_MAX;
+ /* utility functions/constants */
+ extern const void *const mac80211_wiphy_privid; /* for wiphy privid */
+-u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+-			enum nl80211_iftype type);
+ int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
+ 			     int rate, int erp, int short_preamble,
+ 			     int shift);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index aa57a2ab8245..dd6bb2a54d45 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -42,6 +42,51 @@ static inline void ieee80211_rx_stats(struct net_device *dev, u32 len)
+ 	u64_stats_update_end(&tstats->syncp);
+ }
+ 
++static u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
++			       enum nl80211_iftype type)
++{
++	__le16 fc = hdr->frame_control;
++
++	if (ieee80211_is_data(fc)) {
++		if (len < 24) /* drop incorrect hdr len (data) */
++			return NULL;
++
++		if (ieee80211_has_a4(fc))
++			return NULL;
++		if (ieee80211_has_tods(fc))
++			return hdr->addr1;
++		if (ieee80211_has_fromds(fc))
++			return hdr->addr2;
++
++		return hdr->addr3;
 +	}
 +
-+	/* TODO: Adjust max peer count for cases like WMI_SERVICE_RATECTRL_CACHE
-+	 * and WMI_SERVICE_IRAM_TIDS, etc.
-+	 */
++	if (ieee80211_is_mgmt(fc)) {
++		if (len < 24) /* drop incorrect hdr len (mgmt) */
++			return NULL;
++		return hdr->addr3;
++	}
 +
- 	for (i = 0; i < num_mem_reqs; ++i) {
- 		req_id = __le32_to_cpu(arg.mem_reqs[i]->req_id);
- 		num_units = __le32_to_cpu(arg.mem_reqs[i]->num_units);
- 		unit_size = __le32_to_cpu(arg.mem_reqs[i]->unit_size);
- 		num_unit_info = __le32_to_cpu(arg.mem_reqs[i]->num_unit_info);
- 
--		if (num_unit_info & NUM_UNITS_IS_NUM_PEERS)
-+		if (num_unit_info & NUM_UNITS_IS_NUM_ACTIVE_PEERS) {
-+			if (ar->num_active_peers)
-+				num_units = ar->num_active_peers + 1;
-+			else
-+				num_units = ar->max_num_peers + 1;
-+		} else if (num_unit_info & NUM_UNITS_IS_NUM_PEERS) {
- 			/* number of units to allocate is number of
- 			 * peers, 1 extra for self peer on target */
- 			/* this needs to be tied, host and target
- 			 * can get out of sync */
--			num_units = TARGET_10X_NUM_PEERS + 1;
--		else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
--			num_units = TARGET_10X_NUM_VDEVS + 1;
-+			num_units = ar->max_num_peers + 1;
-+		} else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS) {
-+			num_units = ar->max_num_vdevs + 1;
++	if (ieee80211_is_ctl(fc)) {
++		if (ieee80211_is_pspoll(fc))
++			return hdr->addr1;
++
++		if (ieee80211_is_back_req(fc)) {
++			switch (type) {
++			case NL80211_IFTYPE_STATION:
++				return hdr->addr2;
++			case NL80211_IFTYPE_AP:
++			case NL80211_IFTYPE_AP_VLAN:
++				return hdr->addr1;
++			default:
++				break; /* fall through to the return */
++			}
 +		}
++	}
++
++	return NULL;
++}
++
+ /*
+  * monitor mode reception
+  *
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 43e5aadd7a89..7fb2c7bacc8c 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -47,55 +47,6 @@ struct ieee80211_hw *wiphy_to_ieee80211_hw(struct wiphy *wiphy)
+ }
+ EXPORT_SYMBOL(wiphy_to_ieee80211_hw);
  
- 		ath10k_dbg(ar, ATH10K_DBG_WMI,
- 			   "wmi mem_req_id %d num_units %d num_unit_info %d unit size %d actual units %d\n",
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 5e67c27..1371c8a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2332,8 +2332,9 @@ struct wmi_resource_config_10_2 {
- 	__le32 feature_mask;
- } __packed;
- 
--#define NUM_UNITS_IS_NUM_VDEVS   0x1
--#define NUM_UNITS_IS_NUM_PEERS   0x2
-+#define NUM_UNITS_IS_NUM_VDEVS         BIT(0)
-+#define NUM_UNITS_IS_NUM_PEERS         BIT(1)
-+#define NUM_UNITS_IS_NUM_ACTIVE_PEERS  BIT(2)
- 
- struct wmi_resource_config_10_4 {
- 	/* Number of virtual devices (VAPs) to support */
+-u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+-			enum nl80211_iftype type)
+-{
+-	__le16 fc = hdr->frame_control;
+-
+-	 /* drop ACK/CTS frames and incorrect hdr len (ctrl) */
+-	if (len < 16)
+-		return NULL;
+-
+-	if (ieee80211_is_data(fc)) {
+-		if (len < 24) /* drop incorrect hdr len (data) */
+-			return NULL;
+-
+-		if (ieee80211_has_a4(fc))
+-			return NULL;
+-		if (ieee80211_has_tods(fc))
+-			return hdr->addr1;
+-		if (ieee80211_has_fromds(fc))
+-			return hdr->addr2;
+-
+-		return hdr->addr3;
+-	}
+-
+-	if (ieee80211_is_mgmt(fc)) {
+-		if (len < 24) /* drop incorrect hdr len (mgmt) */
+-			return NULL;
+-		return hdr->addr3;
+-	}
+-
+-	if (ieee80211_is_ctl(fc)) {
+-		if (ieee80211_is_pspoll(fc))
+-			return hdr->addr1;
+-
+-		if (ieee80211_is_back_req(fc)) {
+-			switch (type) {
+-			case NL80211_IFTYPE_STATION:
+-				return hdr->addr2;
+-			case NL80211_IFTYPE_AP:
+-			case NL80211_IFTYPE_AP_VLAN:
+-				return hdr->addr1;
+-			default:
+-				break; /* fall through to the return */
+-			}
+-		}
+-	}
+-
+-	return NULL;
+-}
+-
+ void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx)
+ {
+ 	struct sk_buff *skb;
 -- 
-1.8.1.2
+2.1.4
 
