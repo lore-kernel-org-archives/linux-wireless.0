@@ -1,75 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp29.msg.oleane.net ([62.161.4.29]:40899 "EHLO
-	smtp29.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542AbbFEKrR convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37020 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752448AbbFQFrG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 06:47:17 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Michal Kazior'" <michal.kazior@tieto.com>
-Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-References: <01eb01d09f64$fd522730$f7f67590$@acksys.fr>	<CA+BoTQnehkYETptdaw4VsqKmhAampJ9_Zm_bNfH6PwGX7SqRww@mail.gmail.com>	<01f701d09f71$47ae9910$d70bcb30$@acksys.fr> <CA+BoTQkQyTbgctPOTSvLH76+YKkjvYySJSYtGszJ3TT35-uXQQ@mail.gmail.com>
-In-Reply-To: <CA+BoTQkQyTbgctPOTSvLH76+YKkjvYySJSYtGszJ3TT35-uXQQ@mail.gmail.com>
-Subject: RE: ATH10K and VLAN : Frame with VLAN tag are not sent
-Date: Fri, 5 Jun 2015 12:46:11 +0200
-Message-ID: <01fb01d09f7c$d6bdfa00$8439ee00$@acksys.fr> (sfid-20150605_124721_057398_36BD862C)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
+	Wed, 17 Jun 2015 01:47:06 -0400
+Received: by wifx6 with SMTP id x6so40287307wif.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2015 22:47:05 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, sujith@msujith.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFCv2] ath9k: make rxfilter per HW
+Date: Wed, 17 Jun 2015 07:46:49 +0200
+Message-Id: <1434520009-8824-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150617_074710_696775_D2D743F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] De la part de Michal Kazior
-> Envoyé : vendredi 5 juin 2015 11:46
-> À : voncken
-> Cc : linux-wireless; ath10k@lists.infradead.org
-> Objet : Re: ATH10K and VLAN : Frame with VLAN tag are not sent
-> 
-> [...]
-> >> I see no reason why this should fail. The dot1q encapsulation
-> >> shouldn't influence how firmware behaves.. but maybe I'm wrong.
-> >>
-> >> It's still unclear to me what your topology looks like. Perhaps
-> >> you're having problem with environmental configuration itself? Did
-> >> you try other Wi-Fi device (e.g. ath9k) instead of ath10k?
-> > Yes I tested with ath9k wireless card, the same configuration works.
-> >
-> > I did an interesting test. With ostinato software I generate an ICMP
-> frame without vlan tag. I changed the ethertype in the frame.
-> > I tried with the ethertype 0x800 (IP), 0x801, 0x8892 (PROFINET), 0x8100
-> (dot1q), 0x0600. All frames are sent except when the ethertype is set to
-> 0x8100. It seems the firmware do not accept the ethertype 0x8100.
-> 
-> Interesting. This may suggest firmware actually doesn't handle dot1q VLAN
-> tagging properly in NWifi Tx encap mode. Can you try changing it to 802.3
-> encap and re-test, please?
-> 
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -3172,7 +3172,7 @@ ath10k_tx_h_get_txmode(struct ath10k *ar, struct
-> ieee80211_vif *vif,
->         if (ieee80211_is_data_present(fc) && sta && sta->tdls)
->                 return ATH10K_HW_TXRX_ETHERNET;
-> 
-> -       return ATH10K_HW_TXRX_NATIVE_WIFI;
-> +       return ATH10K_HW_TXRX_ETHERNET;
->  }
-> 
-> Note: Your backports may not have the necessary code.. In which case
-> it'll be difficult to do this the easy way. If that's the case I suggest
-> you get latest backports or generate them yourself from the latest
-> kvalo/ath master.
-I will try to change my backport. But it is not easy, because I need to use a cross-compiler. From openwrt website I can download a backport 2015-05-08. I will try to integrate it.
+mac80211 configure rxfilter per HW,
+so we don't need this per channel.
 
-Do you know how I can generate a tar file for openwrt from kale git hub?
-Cedric
+This fix problem when chanctx used and
+ath9k allocate new ath_chanctx. Then we loose
+rxfilter configuration.
 
-> 
-> 
-> Michał
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to majordomo@vger.kernel.org More majordomo info
-> at  http://vger.kernel.org/majordomo-info.html
+Eg. during p2p_find (when use_chanctx=1) during
+remain on channel, driver create new ath_chanctx
+with incorrect rxfilter. Then we didn't receive
+probe requests and fail p2p_find.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+@Sujith, Felix please review
+
+ drivers/net/wireless/ath/ath9k/ath9k.h |  3 ++-
+ drivers/net/wireless/ath/ath9k/main.c  |  2 +-
+ drivers/net/wireless/ath/ath9k/recv.c  | 12 ++++++------
+ 3 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a7a81b3..030fd0f 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -356,7 +356,6 @@ struct ath_chanctx {
+ 
+ 	short nvifs;
+ 	short nvifs_assigned;
+-	unsigned int rxfilter;
+ };
+ 
+ enum ath_chanctx_event {
+@@ -1001,8 +1000,10 @@ struct ath_softc {
+ 	struct cfg80211_chan_def cur_chandef;
+ 	struct ath_chanctx chanctx[ATH9K_NUM_CHANCTX];
+ 	struct ath_chanctx *cur_chan;
++	unsigned int rxfilter;
+ 	spinlock_t chan_lock;
+ 
++
+ #ifdef CONFIG_MAC80211_LEDS
+ 	bool led_registered;
+ 	char led_name[32];
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index d285e3a..945f002 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1463,7 +1463,7 @@ static void ath9k_configure_filter(struct ieee80211_hw *hw,
+ 	*total_flags &= SUPPORTED_FILTERS;
+ 
+ 	spin_lock_bh(&sc->chan_lock);
+-	sc->cur_chan->rxfilter = *total_flags;
++	sc->rxfilter = *total_flags;
+ 	spin_unlock_bh(&sc->chan_lock);
+ 
+ 	ath9k_ps_wakeup(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 6c75fb1..5f72c65 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -389,31 +389,31 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 
+ 	spin_lock_bh(&sc->chan_lock);
+ 
+-	if (sc->cur_chan->rxfilter & FIF_PROBE_REQ)
++	if (sc->rxfilter & FIF_PROBE_REQ)
+ 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
+ 
+ 	if (sc->sc_ah->is_monitoring)
+ 		rfilt |= ATH9K_RX_FILTER_PROM;
+ 
+-	if ((sc->cur_chan->rxfilter & FIF_CONTROL) ||
++	if ((sc->rxfilter & FIF_CONTROL) ||
+ 	    sc->sc_ah->dynack.enabled)
+ 		rfilt |= ATH9K_RX_FILTER_CONTROL;
+ 
+ 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
+ 	    (sc->cur_chan->nvifs <= 1) &&
+-	    !(sc->cur_chan->rxfilter & FIF_BCN_PRBRESP_PROMISC))
++	    !(sc->rxfilter & FIF_BCN_PRBRESP_PROMISC))
+ 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
+ 	else
+ 		rfilt |= ATH9K_RX_FILTER_BEACON;
+ 
+ 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
+-	    (sc->cur_chan->rxfilter & FIF_PSPOLL))
++	    (sc->rxfilter & FIF_PSPOLL))
+ 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+ 
+ 	if (sc->cur_chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
+ 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
+ 
+-	if (sc->cur_chan->nvifs > 1 || (sc->cur_chan->rxfilter & FIF_OTHER_BSS)) {
++	if (sc->cur_chan->nvifs > 1 || (sc->rxfilter & FIF_OTHER_BSS)) {
+ 		/* This is needed for older chips */
+ 		if (sc->sc_ah->hw_version.macVersion <= AR_SREV_VERSION_9160)
+ 			rfilt |= ATH9K_RX_FILTER_PROM;
+@@ -878,7 +878,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	 */
+ 	spin_lock_bh(&sc->chan_lock);
+ 	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error,
+-				 sc->cur_chan->rxfilter)) {
++				 sc->rxfilter)) {
+ 		spin_unlock_bh(&sc->chan_lock);
+ 		return -EINVAL;
+ 	}
+-- 
+1.9.1
 
