@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4166 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753333AbbF3Men (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35600 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757565AbbFQFmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2015 08:34:43 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
-	<ath10k@lists.infradead.org>, <poh@qca.qualcomm.com>
-Subject: Re: [PATCH] ath: DFS - limit number of potential PRI sequences
-References: <1434443643-28477-1-git-send-email-zefir.kurtisi@neratec.com>
-Date: Tue, 30 Jun 2015 15:34:34 +0300
-In-Reply-To: <1434443643-28477-1-git-send-email-zefir.kurtisi@neratec.com>
-	(Zefir Kurtisi's message of "Tue, 16 Jun 2015 10:34:03 +0200")
-Message-ID: <87si991ijp.fsf@kamboji.qca.qualcomm.com> (sfid-20150630_143451_051779_F366D4F2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 17 Jun 2015 01:42:55 -0400
+Received: by pacyx8 with SMTP id yx8so27157878pac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2015 22:42:55 -0700 (PDT)
+From: Sunghoon Cho <ywhsbliss@gmail.com>
+To: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	chris.park@atmel.com, Rachel.kim@atmel.com, dean.lee@atmel.com
+Cc: Sunghoon Cho <ywhsbliss@gmail.com>
+Subject: [PATCH 2/5] staging: wilc1000: remove unnecessary blank line.
+Date: Wed, 17 Jun 2015 14:42:33 +0900
+Message-Id: <16fc5e141ea7886195226b60953672a48025ae33.1434519635.git.ywhsbliss@gmail.com> (sfid-20150617_074302_401462_2DCFE0AF)
+In-Reply-To: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+References: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+In-Reply-To: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+References: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
+This patch removes blank line which is not necesssary after an open
+brace.
 
-> In the PRI detector, after the current radar pulse
-> has been checked agains existing PRI sequences, it
-> is considered as part of a new potential sequence.
->
-> Previously, the condition to accept a new sequence
-> was to have at least the same number of pulses as
-> the longest matching sequence. This was wrong,
-> since it led to duplicates of PRI sequences.
->
-> This patch changes the acceptance criteria for new
-> potential sequences from 'at least' to 'more than'
-> the longest existing.
->
-> Detection performance remains unaffected, while
-> the number of PRI sequences accounted at runtime
-> (and with it CPU load) is reduced by up to 50%.
->
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks, applied to ath.git.
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index a8b1501..7f58551 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -57,7 +57,6 @@ enum stats_flags {
+ };
+ 
+ struct WILC_WFI_stats {
+-
+ 	unsigned long rx_packets;
+ 	unsigned long tx_packets;
+ 	unsigned long rx_bytes;
 -- 
-Kalle Valo
+1.9.1
+
