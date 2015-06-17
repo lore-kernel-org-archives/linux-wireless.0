@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:35062 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbbFHPCX (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33726 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757565AbbFQFnD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 11:02:23 -0400
-Received: by wiga1 with SMTP id a1so89702597wig.0
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 08:02:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOFH_kGD8nt8H6ZxA94cX0yrdXeBwT5Nuw380Kyb_UXz7ATMAg@mail.gmail.com>
-References: <CAOFH_kGD8nt8H6ZxA94cX0yrdXeBwT5Nuw380Kyb_UXz7ATMAg@mail.gmail.com>
-Date: Mon, 8 Jun 2015 17:02:22 +0200
-Message-ID: <CAOFH_kF=iHOyvv1WrB0pwHmYniYJf7WM52k1Nrksc+pmY8h4AQ@mail.gmail.com> (sfid-20150608_170226_977427_89F13EBA)
-Subject: Fwd: TX99 rate control
-From: Mathieu Slabbinck <matty.slabbinck@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Jun 2015 01:43:03 -0400
+Received: by padev16 with SMTP id ev16so27152745pad.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2015 22:43:03 -0700 (PDT)
+From: Sunghoon Cho <ywhsbliss@gmail.com>
+To: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	chris.park@atmel.com, Rachel.kim@atmel.com, dean.lee@atmel.com
+Cc: Sunghoon Cho <ywhsbliss@gmail.com>
+Subject: [PATCH 4/5] staging: wilc1000: remove prohibited spaces.
+Date: Wed, 17 Jun 2015 14:42:35 +0900
+Message-Id: <0d07f1a77b401c709fb8ae4be248f5e27b20e688.1434519635.git.ywhsbliss@gmail.com> (sfid-20150617_074307_335503_2A56B110)
+In-Reply-To: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+References: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+In-Reply-To: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+References: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+This patch removes the warnings on the prohibited spaces between
+function name and open parenthesis.
 
-I'm trying to figure out how to get rate control working in TX99.
-Currently it's forced in code to rate = &tx_info->control.rates[0];
+Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Every time I force/try anything besides "0" (which is the value of
-tx_info->control.rates[0]) the module won't start radiating.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 96e4d5c..3307439 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -80,9 +80,9 @@ struct WILC_WFI_stats {
+  * LPC3131 which is important to get the MAC start status when you are blocked
+  * inside linux_wlan_firmware_download() which blocks mac_open().
+  */
+-#if defined (NM73131_0_BOARD)
++#if defined(NM73131_0_BOARD)
+  #define RX_BH_TYPE  RX_BH_KTHREAD
+-#elif defined (PANDA_BOARD)
++#elif defined(PANDA_BOARD)
+  #define RX_BH_TYPE  RX_BH_THREADED_IRQ
+ #else
+  #define RX_BH_TYPE  RX_BH_KTHREAD
+-- 
+1.9.1
 
-Can anyone provide any help with this subject?
-
-Kind regards
-
-Mathieu
