@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32834 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751799AbbFXNHr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2015 09:07:47 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: RE: [PATCH] mwifiex: do not short circuit exit from
- mwifiex_set_mgmt_ies
-Date: Wed, 24 Jun 2015 13:07:19 +0000
-Message-ID: <25050cfd0593480e9c9023f5af1e4159@SC-EXCH04.marvell.com> (sfid-20150624_150749_881740_A29EC094)
-References: <1435086243-10433-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1435086243-10433-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.linuxfoundation.org ([140.211.169.12]:40463 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753506AbbFQCSx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Jun 2015 22:18:53 -0400
+Date: Tue, 16 Jun 2015 19:18:52 -0700
+From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+To: "Abdul, Hussain (H.)" <habdul@visteon.com>
+Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Dighe, Niranjan (N.)" <ndighe@visteon.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"Ravindran, Madhusudhanan (M.)" <mravindr@visteon.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>
+Subject: Re: [PATCH] Staging: wilc1000: Remove casting the values returned by
+ kmalloc()
+Message-ID: <20150617021852.GB18383@kroah.com> (sfid-20150617_041913_195257_E4B5D1B3)
+References: <1434438549-5340-1-git-send-email-habdul@visteon.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434438549-5340-1-git-send-email-habdul@visteon.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-> From: John W. Linville [mailto:linville@tuxdriver.com]
-> Sent: Wednesday, June 24, 2015 12:34 AM
-> To: linux-wireless@vger.kernel.org
-> Cc: Amitkumar Karwar; Avinash Patil; Kalle Valo; John W. Linville
-> Subject: [PATCH] mwifiex: do not short circuit exit from
-> mwifiex_set_mgmt_ies
+On Tue, Jun 16, 2015 at 07:10:28AM +0000, Abdul, Hussain (H.) wrote:
+> From: Abdul Hussain <habdul@visteon.com>
 > 
-> Without this change, the code simply exits after calling
-> mwifiex_uap_set_head_tail_ies, leving the call to
-> mwifiex_set_mgmt_beacon_data_ies as dead code.
+> This patch removes casting the values returned by memory allocation functions.
 > 
-> Coverity CID #1271292
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> Signed-off-by: Abdul Hussain <habdul@visteon.com>
+> ---
+>  drivers/staging/wilc1000/linux_wlan.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
-
-Thanks,
-Amitkumar
+Does not apply :(
