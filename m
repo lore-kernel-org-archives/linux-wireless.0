@@ -1,148 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:36745 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752214AbbFHUyl (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36407 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757732AbbFQH3V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 16:54:41 -0400
-From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-To: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, gregkh@linuxfoundation.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-Subject: [PATCH v4 1/2] staging: wilc1000: Cleanup to coreconfigurator
-Date: Mon,  8 Jun 2015 23:54:28 +0300
-Message-Id: <1433796869-2737-1-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20150608_225528_392506_BA4F6394)
+	Wed, 17 Jun 2015 03:29:21 -0400
+Received: by paceq1 with SMTP id eq1so4581405pac.3
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2015 00:29:21 -0700 (PDT)
+From: Sunghoon Cho <ywhsbliss@gmail.com>
+To: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	chris.park@atmel.com, Rachel.kim@atmel.com, dean.lee@atmel.com
+Cc: Sunghoon Cho <ywhsbliss@gmail.com>
+Subject: [PATCH 4/5] staging: wilc100: align definitions
+Date: Wed, 17 Jun 2015 16:28:54 +0900
+Message-Id: <97d83e0878d977d92f10cb28110e3fb459b1ca45.1434526056.git.ywhsbliss@gmail.com> (sfid-20150617_092924_456551_9418003D)
+In-Reply-To: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
+References: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
+In-Reply-To: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
+References: <eed9181385a22bfe580dbe1a0cca17d9bb694209.1434526056.git.ywhsbliss@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed the following issues found with checkpatch.pl:
+This patch alignes the lines of #define preprocessors.
 
-* Multiple debug strings contained " \n". Changed
-  it to "\n".
-
-* Changed 'return(X)' to 'return X'.
-
-* Aligned TAG_PARAM_OFFSET to fit 80 columns
-
-Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
+Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
 ---
-Changes since v3:
- * Put a more detailed explanation what I do in patch 1/2.
+ drivers/staging/wilc1000/wilc_wlan_if.h | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-
- drivers/staging/wilc1000/coreconfigurator.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index e3e3f20..43864dc 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -28,7 +28,7 @@
- #define INVALID         255
- #define MAC_ADDR_LEN    6
- #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
--							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
-+				 BEACON_INTERVAL_LEN + CAP_INFO_LEN)
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 438e2db2..11a3b98 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -107,11 +107,10 @@ typedef struct {
+ typedef struct {
+ 	void (*mac_indicate)(int);
+ } wilc_wlan_indicate_func_t;
+-#define WILC_MAC_INDICATE_STATUS		0x1
+-#define WILC_MAC_STATUS_INIT	-1
+-#define WILC_MAC_STATUS_READY 0
+-#define WILC_MAC_STATUS_CONNECT 1
+-
++#define WILC_MAC_INDICATE_STATUS	0x1
++#define WILC_MAC_STATUS_INIT		-1
++#define WILC_MAC_STATUS_READY		0
++#define WILC_MAC_STATUS_CONNECT		1
+ #define WILC_MAC_INDICATE_SCAN		0x2
  
- /*****************************************************************************/
- /* Function Macros                                                           */
-@@ -672,14 +672,14 @@ INLINE WILC_Uint16 get_asoc_id(u8 *data)
- WILC_Sint32 CoreConfiguratorInit(void)
- {
- 	WILC_Sint32 s32Error = WILC_SUCCESS;
--	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorInit() \n");
-+	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorInit()\n");
+ typedef struct {
+@@ -179,7 +178,7 @@ struct tx_complete_data {
  
- 	sema_init(&SemHandleSendPkt, 1);
- 	sema_init(&SemHandlePktResp, 0);
+ typedef void (*wilc_tx_complete_func_t)(void *, int);
  
- 	gps8ConfigPacket = (WILC_Sint8 *)WILC_MALLOC(MAX_PACKET_BUFF_SIZE);
- 	if (gps8ConfigPacket == NULL) {
--		PRINT_ER("failed in gps8ConfigPacket allocation \n");
-+		PRINT_ER("failed in gps8ConfigPacket allocation\n");
- 		s32Error = WILC_NO_MEM;
- 		goto _fail_;
- 	}
-@@ -710,13 +710,13 @@ u8 *get_tim_elm(u8 *pu8msa, WILC_Uint16 u16RxLen, WILC_Uint16 u16TagParamOffset)
- 	/* Search for the TIM Element Field and return if the element is found */
- 	while (u16index < (u16RxLen - FCS_LEN)) {
- 		if (pu8msa[u16index] == ITIM) {
--			return(&pu8msa[u16index]);
-+			return &pu8msa[u16index];
- 		} else {
- 			u16index += (IE_HDR_LEN + pu8msa[u16index + 1]);
- 		}
- 	}
+-#define WILC_TX_ERR_NO_BUF (-2)
++#define WILC_TX_ERR_NO_BUF	(-2)
  
--	return(0);
-+	return 0;
- }
+ typedef struct {
+ 	int (*wlan_firmware_download)(const uint8_t *, uint32_t);
+@@ -211,8 +210,7 @@ typedef struct {
  
- /* This function gets the current channel information from
-@@ -728,7 +728,7 @@ u8 get_current_channel_802_11n(u8 *pu8msa, WILC_Uint16 u16RxLen)
- 	index = TAG_PARAM_OFFSET;
- 	while (index < (u16RxLen - FCS_LEN)) {
- 		if (pu8msa[index] == IDSPARMS)
--			return (pu8msa[index + 2]);
-+			return pu8msa[index + 2];
- 		else
- 			/* Increment index by length information and header */
- 			index += pu8msa[index + 1] + IE_HDR_LEN;
-@@ -750,7 +750,7 @@ u8 get_current_channel(u8 *pu8msa, WILC_Uint16 u16RxLen)
- #else /* FIVE_GHZ_BAND */
- 	/* Extract current channel information from */
- 	/* the beacon/probe response frame          */
--	return (get_current_channel_802_11n(pu8msa, u16RxLen));
-+	return get_current_channel_802_11n(pu8msa, u16RxLen);
- #endif /* FIVE_GHZ_BAND */
- #else
- 	return 0;
-@@ -1444,7 +1444,7 @@ void ProcessAdrWid(WILC_Char *pcPacket, WILC_Sint32 *ps32PktLen,
- void ProcessBinWid(WILC_Char *pcPacket, WILC_Sint32 *ps32PktLen,
- 		   tstrWID *pstrWID, u8 *pu8val, WILC_Sint32 s32ValueSize)
- {
--	/* WILC_ERROR("processing Binary WIDs is not supported \n"); */
-+	/* WILC_ERROR("processing Binary WIDs is not supported\n"); */
+ #define MAX_SSID_LEN            33
+ #define MAX_RATES_SUPPORTED     12
+-
+-#define INFINITE_SLEEP_TIME		((u32)0xFFFFFFFF)
++#define INFINITE_SLEEP_TIME	((u32)0xFFFFFFFF)
  
- 	WILC_Uint16 u16MsgLen = 0;
- 	WILC_Uint16 idx    = 0;
-@@ -1583,7 +1583,7 @@ WILC_Sint32 further_process_response(u8 *resp,
- 			WILC_memcpy(pstrWIDresult->ps8WidVal, cfg_str, cfg_len); /* mostafa: no need currently for the extra NULL byte */
- 			pstrWIDresult->s32ValueSize = cfg_len;
- 		} else {
--			PRINT_ER("allocated WID buffer length is smaller than the received WID Length \n");
-+			PRINT_ER("allocated WID buffer length is smaller than the received WID Length\n");
- 			retval = -2;
- 		}
+ #ifdef WILC_PARSE_SCAN_IN_HOST
+ typedef enum {
+@@ -266,8 +264,8 @@ typedef enum {
+ 	G_AUTO_PREAMBLE  = 2,	/* Auto Preamble Selection */
+ } G_PREAMBLE_T;
  
-@@ -2027,7 +2027,7 @@ WILC_Sint32 ConfigProvideResponse(WILC_Char *pcRespBuffer, WILC_Sint32 s32RespLe
- 		} else {
- 			WILC_memcpy(gstrConfigPktInfo.pcRespBuffer, pcRespBuffer, gstrConfigPktInfo.s32MaxRespBuffLen);
- 			gstrConfigPktInfo.s32BytesRead = gstrConfigPktInfo.s32MaxRespBuffLen;
--			PRINT_ER("BusProvideResponse() Response greater than the prepared Buffer Size \n");
-+			PRINT_ER("BusProvideResponse() Response greater than the prepared Buffer Size\n");
- 		}
+-#define MAC_CONNECTED    1
+-#define MAC_DISCONNECTED 0
++#define MAC_CONNECTED		1
++#define MAC_DISCONNECTED	0
  
- 		up(&SemHandlePktResp);
-@@ -2076,7 +2076,7 @@ WILC_Sint32 ConfigPktReceived(u8 *pu8RxPacket, WILC_Sint32 s32RxPacketLen)
- 		break;
- 
- 	default:
--		PRINT_ER("ConfigPktReceived(): invalid received msg type at the Core Configurator \n");
-+		PRINT_ER("ConfigPktReceived(): invalid received msg type at the Core Configurator\n");
- 		break;
- 	}
- 
-@@ -2097,7 +2097,7 @@ WILC_Sint32 CoreConfiguratorDeInit(void)
- {
- 	WILC_Sint32 s32Error = WILC_SUCCESS;
- 
--	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorDeInit() \n");
-+	PRINT_D(CORECONFIG_DBG, "CoreConfiguratorDeInit()\n");
- 
- 	if (gps8ConfigPacket != NULL) {
- 
+ /* bug3819: */
+ #define SCAN_DONE		TRUE
 -- 
 1.9.1
 
