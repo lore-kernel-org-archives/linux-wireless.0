@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0139.outbound.protection.outlook.com ([157.55.234.139]:16096
+Received: from mail-db3on0108.outbound.protection.outlook.com ([157.55.234.108]:38448
 	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751063AbbFQEs0 convert rfc822-to-8bit (ORCPT
+	id S1754644AbbFQNWa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 00:48:26 -0400
-From: "Abdul, Hussain (H.)" <habdul@visteon.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "johnny.kim@atmel.com" <johnny.kim@atmel.com>,
-	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
-	"dean.lee@atmel.com" <dean.lee@atmel.com>,
-	"chris.park@atmel.com" <chris.park@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] Staging: wilc1000: Remove casting the values returned by
- kmalloc()
-Date: Wed, 17 Jun 2015 04:48:23 +0000
-Message-ID: <1434516421-26313-1-git-send-email-habdul@visteon.com> (sfid-20150617_064845_724837_40579B8F)
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 17 Jun 2015 09:22:30 -0400
+From: "Mutharaju, Prasanna (P.)" <mkarthi3@visteon.com>
+To: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"carlos@cgarcia.org" <carlos@cgarcia.org>,
+	"hamohammed.sa@gmail.com" <hamohammed.sa@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: [PATCH] staging:rtl8723au: Fix return statement reported by
+ coccinelle
+Date: Wed, 17 Jun 2015 12:50:14 +0000
+Message-ID: <20150617124933.GA30109@ubuntu> (sfid-20150617_152234_041752_331A736A)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abdul Hussain <habdul@visteon.com>
+From: Prasanna Karthik <mkarthi3@visteon.com>
 
-This patch removes casting the values returned by memory allocation functions.
+Modified return statement and removed local declaration no longer
+needed. No Compiler warnings.
 
-Signed-off-by: Abdul Hussain <habdul@visteon.com>
+Signed-off-by: Prasanna Karthik <mkarthi3@visteon.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index bc7feb4..8cba13c 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -247,7 +247,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- 	nic = netdev_priv(dev);
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c b/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c
+index 4909835..11d635d 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_rf6052.c
+@@ -500,7 +500,6 @@ phy_RF6052_Config_ParaFile_Fail:
+ int PHY_RF6052_Config8723A(struct rtw_adapter *Adapter)
+ {
+ 	struct hal_data_8723a *pHalData = GET_HAL_DATA(Adapter);
+-	int rtStatus = _SUCCESS;
  
- 	netif_stop_queue(dev);
--	mgmt_tx = (struct tx_complete_mon_data *)kmalloc(sizeof(struct tx_complete_mon_data), GFP_ATOMIC);
-+	mgmt_tx = kmalloc(sizeof(struct tx_complete_mon_data), GFP_ATOMIC);
- 	if (mgmt_tx == NULL) {
- 		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
- 		return WILC_FAIL;
+ 	/*  Initialize general global value */
+ 	/*  TODO: Extend RF_PATH_C and RF_PATH_D in the future */
+@@ -510,8 +509,7 @@ int PHY_RF6052_Config8723A(struct rtw_adapter *Adapter)
+ 		pHalData->NumTotalRFPath = 2;
+ 
+ 	/*  Config BB and RF */
+-	rtStatus = phy_RF6052_Config_ParaFile(Adapter);
+-	return rtStatus;
++	return phy_RF6052_Config_ParaFile(Adapter);
+ }
+ 
+ /* End of HalRf6052.c */
 -- 
-1.9.1
+1.7.0.4
