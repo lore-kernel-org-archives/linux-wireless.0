@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:33622 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422727AbbFEOBv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 10:01:51 -0400
-Received: by pdjn11 with SMTP id n11so16312632pdj.0
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 07:01:51 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] rtlwifi: rtl8192cu: debug message change "RTL8192CE" to "RTL8192CU"
-Date: Fri,  5 Jun 2015 23:01:37 +0900
-Message-Id: <1433512898-30137-2-git-send-email-ap420073@gmail.com> (sfid-20150605_160200_471143_57299792)
-In-Reply-To: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
-References: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:54804 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751101AbbFQI3F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 04:29:05 -0400
+Message-ID: <55812FB5.1070005@openwrt.org> (sfid-20150617_102909_783218_18ECE6F9)
+Date: Wed, 17 Jun 2015 10:28:37 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFCv2] ath9k: make rxfilter per HW
+References: <1434520009-8824-1-git-send-email-janusz.dziedzic@tieto.com> <21889.11726.101648.552280@gargle.gargle.HOWL>
+In-Reply-To: <21889.11726.101648.552280@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the rtlwifi/rtl8192cu, I change debug message "RTL8192CE" to
-"RTL8192CU".
+On 2015-06-17 10:20, Sujith Manoharan wrote:
+> Janusz Dziedzic wrote:
+>> mac80211 configure rxfilter per HW,
+>> so we don't need this per channel.
+>> 
+>> This fix problem when chanctx used and
+>> ath9k allocate new ath_chanctx. Then we loose
+>> rxfilter configuration.
+>> 
+>> Eg. during p2p_find (when use_chanctx=1) during
+>> remain on channel, driver create new ath_chanctx
+>> with incorrect rxfilter. Then we didn't receive
+>> probe requests and fail p2p_find.
+> 
+> The RX filter is calculated based on the operating mode
+> of the HW. If we have a concurrent P2P-GO/station
+> setup, for example, then the RX filter needs to be different for each
+> context, (MYBEACON vs. BEACON etc.). I don't see how
+> having a global filter will allow this ?
+mac80211 calculates the filter per hw, not per channel context or per
+vif. Setting it for the current channel context only would mean it might
+be applied to the wrong context. This patch fixes that issue.
+I agree that it might be a useful optimization to selectively apply
+filters per channel context, but mac80211 does not provide an API to do
+that right now.
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/phy.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-index 12f6d47..5534dad 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-@@ -162,7 +162,7 @@ bool _rtl92cu_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl819XMACPHY_Array\n");
- 	arraylength =  rtlphy->hwparam_tables[MAC_REG].length ;
- 	ptrarray = rtlphy->hwparam_tables[MAC_REG].pdata;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Img:RTL8192CEMAC_2T_ARRAY\n");
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Img:RTL8192CUMAC_2T_ARRAY\n");
- 	for (i = 0; i < arraylength; i = i + 2)
- 		rtl_write_byte(rtlpriv, ptrarray[i], (u8) ptrarray[i + 1]);
- 	return true;
-@@ -259,18 +259,18 @@ bool rtl92cu_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		radiob_arraylen = rtlphy->hwparam_tables[RADIOB_2T].length;
- 		radiob_array_table = rtlphy->hwparam_tables[RADIOB_2T].pdata;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_A:RTL8192CERADIOA_2TARRAY\n");
-+			 "Radio_A:RTL8192CURADIOA_2TARRAY\n");
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_B:RTL8192CE_RADIOB_2TARRAY\n");
-+			 "Radio_B:RTL8192CU_RADIOB_2TARRAY\n");
- 	} else {
- 		radioa_arraylen = rtlphy->hwparam_tables[RADIOA_1T].length;
- 		radioa_array_table = rtlphy->hwparam_tables[RADIOA_1T].pdata;
- 		radiob_arraylen = rtlphy->hwparam_tables[RADIOB_1T].length;
- 		radiob_array_table = rtlphy->hwparam_tables[RADIOB_1T].pdata;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_A:RTL8192CE_RADIOA_1TARRAY\n");
-+			 "Radio_A:RTL8192CU_RADIOA_1TARRAY\n");
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_B:RTL8192CE_RADIOB_1TARRAY\n");
-+			 "Radio_B:RTL8192CU_RADIOB_1TARRAY\n");
- 	}
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Radio No %x\n", rfpath);
- 	switch (rfpath) {
--- 
-2.1.4
-
+- Felix
