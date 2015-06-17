@@ -1,33 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60286 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49314 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752144AbbFJVj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 17:39:27 -0400
-Message-ID: <1433972365.3145.18.camel@sipsolutions.net> (sfid-20150610_233931_115832_058BF671)
-Subject: Re: Add netdev name to  NL80211_CMD_STOP_AP event?
+	id S1752334AbbFQTHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 15:07:00 -0400
+Message-ID: <1434568011.1884.42.camel@sipsolutions.net> (sfid-20150617_210705_231908_20E2CDA3)
+Subject: Re: creating ap interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Jun 2015 23:39:25 +0200
-In-Reply-To: <5578AA11.2020505@candelatech.com> (sfid-20150610_232022_833916_9A1896A2)
-References: <5578AA11.2020505@candelatech.com>
-	 (sfid-20150610_232022_833916_9A1896A2)
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Jun 2015 21:06:51 +0200
+In-Reply-To: <5581BEBA.1080500@broadcom.com> (sfid-20150617_203859_250299_EDE6A7D7)
+References: <5581BEBA.1080500@broadcom.com>
+	 (sfid-20150617_203859_250299_EDE6A7D7)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-10 at 14:20 -0700, Ben Greear wrote:
-> While trying to make 'iw' able to print out something useful for
-> the 'stop_ap' event, I notice there is not really any human friendly
-> info in the message (just phy id (which may not match phy name), ifindex, and some other
-> wiphy related numeric ID.
+On Wed, 2015-06-17 at 20:38 +0200, Arend van Spriel wrote:
+> Hi Dan,
 > 
-> Any reason not to add the netdev name (NL80211_ATTR_IFNAME) to this and
-> related messages?
+> When I create an AP interface using iw, it is followed by a change 
+> interface back to managed mode. I added a WARN_ON to see where it came 
+> from and it turns out to be the NetworkManager. However, I had disabled 
+> wifi as you suggested on the mailing list once. What is your take on 
+> this: bug or intentional?
 
-We're not really adding that *anywhere*, and you can trivially look it
-up based on the ifindex, so why bother?
+You shouldn't really have a WARN_ON() on a path that can be hit by
+userspace like that :)
 
 johannes
 
