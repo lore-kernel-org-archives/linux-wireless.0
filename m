@@ -1,207 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:35430 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbbFNNxw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2015 09:53:52 -0400
-Received: by wiga1 with SMTP id a1so53555175wig.0
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Jun 2015 06:53:50 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: TDLS: correctly configure SMPS state
-Date: Sun, 14 Jun 2015 16:53:46 +0300
-Message-Id: <1434290026-10158-1-git-send-email-arik@wizery.com> (sfid-20150614_155356_136092_E4A488AE)
+Received: from mx1.redhat.com ([209.132.183.28]:57030 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757118AbbFQOat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 10:30:49 -0400
+Message-ID: <1434551447.3952.6.camel@redhat.com> (sfid-20150617_163057_029841_ED848241)
+Subject: Re: [PATCH v2] Add new mac80211 driver mwlwifi.
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Lin <dlin@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>,
+	Chor Teck Law <ctlaw@marvell.com>
+Date: Wed, 17 Jun 2015 09:30:47 -0500
+In-Reply-To: <1434526059.1884.7.camel@sipsolutions.net>
+References: <2127ea28a2a74cd6a89d45b88caf06cb@SC-EXCH02.marvell.com>
+	 <1434526059.1884.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IEEE802.11-2012 specification is vague regarding SMPS operation during
-TDLS. It does not define a clear way to transition between SMPS states.
+On Wed, 2015-06-17 at 09:27 +0200, Johannes Berg wrote:
+> On Wed, 2015-06-17 at 06:06 +0000, David Lin wrote:
+> 
+> (not really reading all of this right now, just two small comments)
+> 
+> > +struct mwl_tx_desc {
+> > +	u8 data_rate;
+> > +	u8 tx_priority;
+> > +	__le16 qos_ctrl;
+> > +	__le32 pkt_ptr;
+> > +	__le16 pkt_len;
+> > +	u8 dest_addr[ETH_ALEN];
+> > +	__le32 pphys_next;
+> > +	__le32 sap_pkt_info;
+> > +	__le32 rate_info;
+> > +	u8 type;
+> > +	u8 xmit_control;     /* bit 0: use rateinfo, bit 1: disable ampdu */
+> > +	__le16 reserved;
+> > +	__le32 tcpack_sn;
+> > +	__le32 tcpack_src_dst;
+> > +	struct sk_buff *psk_buff;
+> > +	struct mwl_tx_desc *pnext;
+> > +	u8 reserved1[2];
+> > +	u8 packet_info;
+> > +	u8 packet_id;
+> > +	__le16 packet_len_and_retry;
+> > +	__le16 packet_rate_info;
+> > +	u8 *sta_info;
+> > +	__le32 status;
+> > +} __packed;
+> 
+> This ... cannot be right. You can't have a pointer in a structure that's
+> used by firmware, and the __leXX and __packed indicates that it's used
+> by firmware. But pointer size is variable, so *clearly* this cannot be
+> correct.
 
-To avoid interop issues, set SMPS to off when TDLS peers are connected.
-Accomplish this by extending the definition of the AUTOMATIC state. If the
-driver forces a state other than OFF, disconnect all TDLS peers.
+I can't see anywhere that mwl_tx_desc->sta_info actually gets read by
+the driver; it only appears to be written by mwl_tx_skb().  So (even if
+it was intended to be) it's clearly not a stashed pointer for later.
 
-While at it, avoid changing the SMPS state of the peer STA. We have no
-way to control it, so try and behave correctly towards it.
+Like you say it's size also needs to be specified, since won't it be 64
+bits or 32 depending on the architecture?  I can't imagine the firmware
+would like that much.
 
-Move the TDLS peer-teardown function to where the rest of the TDLS code
-resides.
+At the very least, this member and its usage in mwl_tx_skb() deserves a
+code comment about what's going on and why a host pointer is getting
+stuffed into a field that the firmware is reading...
 
-Also update Intel copyright to 2015.
+Dan
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         | 21 ++++++++++++++++++---
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 18 ------------------
- net/mac80211/tdls.c        | 36 ++++++++++++++++++++++++++++++++----
- 4 files changed, 51 insertions(+), 25 deletions(-)
+> > +struct mwl_rx_desc {
+> > +	__le16 pkt_len;              /* total length of received data      */
+> > +	__le16 rate;                 /* receive rate information           */
+> > +	__le32 pphys_buff_data;      /* physical address of payload data   */
+> > +	__le32 pphys_next;           /* physical address of next RX desc   */
+> > +	__le16 qos_ctrl;             /* received QosCtrl field variable    */
+> > +	__le16 ht_sig2;              /* like name states                   */
+> > +	__le32 hw_rssi_info;
+> > +	__le32 hw_noise_floor_info;
+> > +	u8 noise_floor;
+> > +	u8 reserved[3];
+> > +	u8 rssi;                     /* received signal strengt indication */
+> > +	u8 status;                   /* status field containing USED bit   */
+> > +	u8 channel;                  /* channel this pkt was received on   */
+> > +	u8 rx_control;               /* the control element of the desc    */
+> > +	/* above are 32bits aligned and is same as FW, RxControl put at end
+> > +	 * for sync
+> > +	 */
+> > +	struct sk_buff *psk_buff;    /* associated sk_buff for Linux       */
+> > +	void *pbuff_data;            /* virtual address of payload data    */
+> > +	struct mwl_rx_desc *pnext;   /* virtual address of next RX desc    */
+> > +} __packed;
+> 
+> Same here. If you really need to have a firmware and driver struct as
+> indicated by the comment, you should probably have
+> 
+> struct mwl_rx_info {
+> 	/* firmware info */
+> } __packed;
+> 
+> struct mwl_rx_desc {
+> 	struct mwl_rx_info info;
+> 	/* driver info */
+> };
+> 
+> (note the lack of __packed also, __packed often makes accesses far less
+> efficient)
+> 
+> > +struct mwl_desc_data {
+> > +	dma_addr_t pphys_tx_ring;          /* ptr to first TX desc (phys.)    */
+> > +	struct mwl_tx_desc *ptx_ring;      /* ptr to first TX desc (virt.)    */
+> > +	struct mwl_tx_desc *pnext_tx_desc; /* next TX desc that can be used   */
+> > +	struct mwl_tx_desc *pstale_tx_desc;/* the staled TX descriptor        */
+> > +	dma_addr_t pphys_rx_ring;          /* ptr to first RX desc (phys.)    */
+> > +	struct mwl_rx_desc *prx_ring;      /* ptr to first RX desc (virt.)    */
+> > +	struct mwl_rx_desc *pnext_rx_desc; /* next RX desc that can be used   */
+> > +	unsigned int wcb_base;             /* FW base offset for registers    */
+> > +	unsigned int rx_desc_write;        /* FW descriptor write position    */
+> > +	unsigned int rx_desc_read;         /* FW descriptor read position     */
+> > +	unsigned int rx_buf_size;          /* length of the RX buffers        */
+> > +} __packed;
+> 
+> ditto - don't pack driver structs
+> 
+> Also, you probably really should have two header files - one for the
+> firmware structs and one for the driver structs - especially since you
+> seem to be confusing the two!
+> 
+> > +++ b/drivers/net/wireless/mwlwifi/fwcmd.c
+> 
+> There are a lot of struct definitions here that you could move to the
+> same header file.
+> 
+> > +#if SYSADPT_NUM_OF_DESC_DATA > 3
+> 
+> how does that get set?
+> 
+> > +/* Description:  This file implements main functions of this module.
+> > + */
+> 
+> You still have a pretty strange comment style.
+> 
+> > +	hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+> 
+> This was really what I was looking for :)
+> 
+> Note that I changed this entirely in the mac80211-next tree. I don't
+> know how Kalle wants to handle this, but given that your driver isn't
+> going to make the cut for 4.2 anyway, you should probably rebase it on
+> mac80211-next, and then Kalle can pick it up after he merges that back
+> from net-next, or perhaps after the merge window closes.
+> 
+> [snip rest]
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index bf7023f..c17f91f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2358,6 +2358,8 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 	const u8 *ap;
- 	enum ieee80211_smps_mode old_req;
- 	int err;
-+	struct sta_info *sta;
-+	bool tdls_peer_found = false;
- 
- 	lockdep_assert_held(&sdata->wdev.mtx);
- 
-@@ -2382,11 +2384,22 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 
- 	ap = sdata->u.mgd.associated->bssid;
- 
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
-+		if (!sta->sta.tdls || sta->sdata != sdata || !sta->uploaded ||
-+		    !test_sta_flag(sta, WLAN_STA_AUTHORIZED))
-+			continue;
-+
-+		tdls_peer_found = true;
-+		break;
-+	}
-+	rcu_read_unlock();
-+
- 	if (smps_mode == IEEE80211_SMPS_AUTOMATIC) {
--		if (sdata->u.mgd.powersave)
--			smps_mode = IEEE80211_SMPS_DYNAMIC;
--		else
-+		if (tdls_peer_found || !sdata->u.mgd.powersave)
- 			smps_mode = IEEE80211_SMPS_OFF;
-+		else
-+			smps_mode = IEEE80211_SMPS_DYNAMIC;
- 	}
- 
- 	/* send SM PS frame to AP */
-@@ -2394,6 +2407,8 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 					 ap, ap);
- 	if (err)
- 		sdata->u.mgd.req_smps = old_req;
-+	else if (smps_mode != IEEE80211_SMPS_OFF && tdls_peer_found)
-+		ieee80211_teardown_tdls_peers(sdata);
- 
- 	return err;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b12f615..a5081e6 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2060,6 +2060,7 @@ void ieee80211_tdls_cancel_channel_switch(struct wiphy *wiphy,
- 					  const u8 *addr);
- void ieee80211_process_tdls_channel_switch(struct ieee80211_sub_if_data *sdata,
- 					   struct sk_buff *skb);
-+void ieee80211_teardown_tdls_peers(struct ieee80211_sub_if_data *sdata);
- 
- extern const struct ethtool_ops ieee80211_ethtool_ops;
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9b2cc27..60dd6151 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1096,24 +1096,6 @@ static void ieee80211_chswitch_timer(unsigned long data)
- 	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
- }
- 
--static void ieee80211_teardown_tdls_peers(struct ieee80211_sub_if_data *sdata)
--{
--	struct sta_info *sta;
--	u16 reason = WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED;
--
--	rcu_read_lock();
--	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
--		if (!sta->sta.tdls || sta->sdata != sdata || !sta->uploaded ||
--		    !test_sta_flag(sta, WLAN_STA_AUTHORIZED))
--			continue;
--
--		ieee80211_tdls_oper_request(&sdata->vif, sta->sta.addr,
--					    NL80211_TDLS_TEARDOWN, reason,
--					    GFP_ATOMIC);
--	}
--	rcu_read_unlock();
--}
--
- static void
- ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 				 u64 timestamp, u32 device_timestamp,
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index ad31b2d..b074c85 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -4,6 +4,7 @@
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2014, Intel Corporation
-  * Copyright 2014  Intel Mobile Communications GmbH
-+ * Copyright 2015  Intel Deutschland GmbH
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-@@ -384,10 +385,6 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_ie_build_ht_cap(pos, &ht_cap, ht_cap.cap);
- 	} else if (action_code == WLAN_TDLS_SETUP_RESPONSE &&
- 		   ht_cap.ht_supported && sta->sta.ht_cap.ht_supported) {
--		/* disable SMPS in TDLS responder */
--		sta->sta.ht_cap.cap |= WLAN_HT_CAP_SM_PS_DISABLED
--					<< IEEE80211_HT_CAP_SM_PS_SHIFT;
--
- 		/* the peer caps are already intersected with our own */
- 		memcpy(&ht_cap, &sta->sta.ht_cap, sizeof(ht_cap));
- 
-@@ -983,8 +980,17 @@ ieee80211_tdls_mgmt_setup(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-+	enum ieee80211_smps_mode smps_mode = sdata->u.mgd.driver_smps_mode;
- 	int ret;
- 
-+	/* don't support setup with forced SMPS mode that's not off */
-+	if (smps_mode != IEEE80211_SMPS_AUTOMATIC &&
-+	    smps_mode != IEEE80211_SMPS_OFF) {
-+		tdls_dbg(sdata, "Aborting TDLS setup due to SMPS mode %d\n",
-+			 smps_mode);
-+		return -ENOTSUPP;
-+	}
-+
- 	mutex_lock(&local->mtx);
- 
- 	/* we don't support concurrent TDLS peer setups */
-@@ -1224,6 +1230,10 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
- 		eth_zero_addr(sdata->u.mgd.tdls_peer);
- 	}
- 
-+	if (ret == 0)
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &sdata->u.mgd.request_smps_work);
-+
- 	mutex_unlock(&local->mtx);
- 	return ret;
- }
-@@ -1720,3 +1730,21 @@ void ieee80211_process_tdls_channel_switch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- }
-+
-+void ieee80211_teardown_tdls_peers(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct sta_info *sta;
-+	u16 reason = WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
-+		if (!sta->sta.tdls || sta->sdata != sdata || !sta->uploaded ||
-+		    !test_sta_flag(sta, WLAN_STA_AUTHORIZED))
-+			continue;
-+
-+		ieee80211_tdls_oper_request(&sdata->vif, sta->sta.addr,
-+					    NL80211_TDLS_TEARDOWN, reason,
-+					    GFP_ATOMIC);
-+	}
-+	rcu_read_unlock();
-+}
--- 
-2.1.4
 
