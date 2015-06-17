@@ -1,86 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52847 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750805AbbFDE4E convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 00:56:04 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t544svsB010945
-	for <linux-wireless@vger.kernel.org>; Wed, 3 Jun 2015 21:56:01 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvkjkx-1
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 21:56:01 -0700
-From: David Lin <dlin@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Pete Hsieh <peteh@marvell.com>, Chor Teck Law <ctlaw@marvell.com>
-Subject: [PATCH] mwlwifi: Initial submission of wireless driver to mainline
-Date: Thu, 4 Jun 2015 04:55:59 +0000
-Message-ID: <141c66f2950e4832a2bd99064db75970@SC-EXCH02.marvell.com> (sfid-20150604_065613_821632_75C8A27E)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:46844 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754698AbbFQI4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 04:56:31 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 14/14] mac80211: move mesh STA parameters code to own function
+Date: Wed, 17 Jun 2015 10:41:15 +0200
+Message-Id: <1434530475-3553-15-git-send-email-johannes@sipsolutions.net> (sfid-20150617_105636_517125_C78F6429)
+In-Reply-To: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
+References: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Johannes Berg <johannes.berg@intel.com>
 
-	Herewith, I am submitting the Linux driver for WRT1900AC. The work
-was initially developed as part of openwrt effort and maintained on
-https://github.com/kaloz/mwlwifi, thanks to the host where it is
-nurtured.
+The code was always a bit awkward due to the 80-col restriction
+and got worse in the previous patch. Refactor it a bit into its
+own function to make it read nicer.
 
-	Recently, I have also patched it to pass checkpatch.pl so that it
-can be qualified for mainline.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c | 117 ++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 61 insertions(+), 56 deletions(-)
 
-	This is still work in progress, with 8864 chipset more mature and
-tested, while 8897 for the similar use case is added recently. We
-will continue to maintain and enhance it.
-
-We hope the community will welcome this initial submission!
-
-Regards,
-
-David Lin (1):
-  Add new mac80211 driver mwlwifi.
-
- drivers/net/wireless/Kconfig                |    1 +
- drivers/net/wireless/Makefile               |    2 +
- drivers/net/wireless/mwlwifi/Kconfig        |   17 +
- drivers/net/wireless/mwlwifi/Makefile       |    9 +
- drivers/net/wireless/mwlwifi/mwl_debug.c    |  207 ++
- drivers/net/wireless/mwlwifi/mwl_debug.h    |  118 +
- drivers/net/wireless/mwlwifi/mwl_dev.h      |  465 ++++
- drivers/net/wireless/mwlwifi/mwl_fwcmd.c    | 3615 +++++++++++++++++++++++++++
- drivers/net/wireless/mwlwifi/mwl_fwcmd.h    |  184 ++
- drivers/net/wireless/mwlwifi/mwl_fwdl.c     |  218 ++
- drivers/net/wireless/mwlwifi/mwl_fwdl.h     |   29 +
- drivers/net/wireless/mwlwifi/mwl_mac80211.c |  877 +++++++
- drivers/net/wireless/mwlwifi/mwl_mac80211.h |   32 +
- drivers/net/wireless/mwlwifi/mwl_main.c     | 1095 ++++++++
- drivers/net/wireless/mwlwifi/mwl_rx.c       |  589 +++++
- drivers/net/wireless/mwlwifi/mwl_rx.h       |   30 +
- drivers/net/wireless/mwlwifi/mwl_sysadpt.h  |   64 +
- drivers/net/wireless/mwlwifi/mwl_tx.c       |  892 +++++++
- drivers/net/wireless/mwlwifi/mwl_tx.h       |   34 +
- 19 files changed, 8478 insertions(+)
- create mode 100644 drivers/net/wireless/mwlwifi/Kconfig
- create mode 100644 drivers/net/wireless/mwlwifi/Makefile
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_debug.c
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_debug.h
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_dev.h
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwcmd.c
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwcmd.h
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwdl.c
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_fwdl.h
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_mac80211.c
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_mac80211.h
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_main.c
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_rx.c
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_rx.h
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_sysadpt.h
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_tx.c
- create mode 100644 drivers/net/wireless/mwlwifi/mwl_tx.h
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c9f8f34ac728..b145942a7624 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1019,6 +1019,65 @@ static int sta_apply_auth_flags(struct ieee80211_local *local,
+ 	return 0;
+ }
+ 
++static void sta_apply_mesh_params(struct ieee80211_local *local,
++				  struct sta_info *sta,
++				  struct station_parameters *params)
++{
++#ifdef CONFIG_MAC80211_MESH
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u32 changed = 0;
++
++	if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE) {
++		switch (params->plink_state) {
++		case NL80211_PLINK_ESTAB:
++			if (sta->mesh->plink_state != NL80211_PLINK_ESTAB)
++				changed = mesh_plink_inc_estab_count(sdata);
++			sta->mesh->plink_state = params->plink_state;
++
++			ieee80211_mps_sta_status_update(sta);
++			changed |= ieee80211_mps_set_sta_local_pm(sta,
++				      sdata->u.mesh.mshcfg.power_mode);
++			break;
++		case NL80211_PLINK_LISTEN:
++		case NL80211_PLINK_BLOCKED:
++		case NL80211_PLINK_OPN_SNT:
++		case NL80211_PLINK_OPN_RCVD:
++		case NL80211_PLINK_CNF_RCVD:
++		case NL80211_PLINK_HOLDING:
++			if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
++				changed = mesh_plink_dec_estab_count(sdata);
++			sta->mesh->plink_state = params->plink_state;
++
++			ieee80211_mps_sta_status_update(sta);
++			changed |= ieee80211_mps_set_sta_local_pm(sta,
++					NL80211_MESH_POWER_UNKNOWN);
++			break;
++		default:
++			/*  nothing  */
++			break;
++		}
++	}
++
++	switch (params->plink_action) {
++	case NL80211_PLINK_ACTION_NO_ACTION:
++		/* nothing */
++		break;
++	case NL80211_PLINK_ACTION_OPEN:
++		changed |= mesh_plink_open(sta);
++		break;
++	case NL80211_PLINK_ACTION_BLOCK:
++		changed |= mesh_plink_block(sta);
++		break;
++	}
++
++	if (params->local_pm)
++		changed |= ieee80211_mps_set_sta_local_pm(sta,
++							  params->local_pm);
++
++	ieee80211_mbss_info_change_notify(sdata, changed);
++#endif
++}
++
+ static int sta_apply_parameters(struct ieee80211_local *local,
+ 				struct sta_info *sta,
+ 				struct station_parameters *params)
+@@ -1143,62 +1202,8 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 					      band, false);
+ 	}
+ 
+-	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+-#ifdef CONFIG_MAC80211_MESH
+-		u32 changed = 0;
+-
+-		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE) {
+-			switch (params->plink_state) {
+-			case NL80211_PLINK_ESTAB:
+-				if (sta->mesh->plink_state != NL80211_PLINK_ESTAB)
+-					changed = mesh_plink_inc_estab_count(
+-							sdata);
+-				sta->mesh->plink_state = params->plink_state;
+-
+-				ieee80211_mps_sta_status_update(sta);
+-				changed |= ieee80211_mps_set_sta_local_pm(sta,
+-					      sdata->u.mesh.mshcfg.power_mode);
+-				break;
+-			case NL80211_PLINK_LISTEN:
+-			case NL80211_PLINK_BLOCKED:
+-			case NL80211_PLINK_OPN_SNT:
+-			case NL80211_PLINK_OPN_RCVD:
+-			case NL80211_PLINK_CNF_RCVD:
+-			case NL80211_PLINK_HOLDING:
+-				if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
+-					changed = mesh_plink_dec_estab_count(
+-							sdata);
+-				sta->mesh->plink_state = params->plink_state;
+-
+-				ieee80211_mps_sta_status_update(sta);
+-				changed |= ieee80211_mps_set_sta_local_pm(sta,
+-						NL80211_MESH_POWER_UNKNOWN);
+-				break;
+-			default:
+-				/*  nothing  */
+-				break;
+-			}
+-		}
+-
+-		switch (params->plink_action) {
+-		case NL80211_PLINK_ACTION_NO_ACTION:
+-			/* nothing */
+-			break;
+-		case NL80211_PLINK_ACTION_OPEN:
+-			changed |= mesh_plink_open(sta);
+-			break;
+-		case NL80211_PLINK_ACTION_BLOCK:
+-			changed |= mesh_plink_block(sta);
+-			break;
+-		}
+-
+-		if (params->local_pm)
+-			changed |=
+-			      ieee80211_mps_set_sta_local_pm(sta,
+-							     params->local_pm);
+-		ieee80211_mbss_info_change_notify(sdata, changed);
+-#endif
+-	}
++	if (ieee80211_vif_is_mesh(&sdata->vif))
++		sta_apply_mesh_params(local, sta, params);
+ 
+ 	/* set the STA state after all sta info from usermode has been set */
+ 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
 -- 
-1.9.1
+2.1.4
 
