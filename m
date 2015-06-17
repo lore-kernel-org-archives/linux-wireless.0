@@ -1,74 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:35324 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbbFETop (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 15:44:45 -0400
-Received: by igbzc4 with SMTP id zc4so23719664igb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 12:44:45 -0700 (PDT)
-Message-ID: <5571FBFA.9060902@cococorp.com> (sfid-20150605_214449_177319_757996A5)
-Date: Fri, 05 Jun 2015 12:43:54 -0700
-From: Alexis Green <agreen@cococorp.com>
-Reply-To: agreen@cococorp.com
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
-Subject: [PATCH] mac80211: Fix incorrectly named last_hop_metric variable
- in mesh_rx_path_sel_frame
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:46737 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751722AbbFQIlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 04:41:19 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 03/14] mac80211: remove sta_info.gtk_idx
+Date: Wed, 17 Jun 2015 10:41:04 +0200
+Message-Id: <1434530475-3553-4-git-send-email-johannes@sipsolutions.net> (sfid-20150617_104131_273312_FF174ED8)
+In-Reply-To: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
+References: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The last hop metric should refer to link cost (this is how
-hwmp_route_info_get uses it for example). But in mesh_rx_path_sel_frame
-we are not dealing with link cost but with the total cost to the origin
-of a PREQ or PREP.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Alexis Green <agreen@cococorp.com>
-CC: Jesse Jones <jjones@cococorp.com>
+This struct member is only assigned, never used otherwise;
+remove it.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ net/mac80211/key.c      | 1 -
+ net/mac80211/sta_info.h | 2 --
+ 2 files changed, 3 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 214e63b..be33e41 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -854,7 +854,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee802_11_elems elems;
- 	size_t baselen;
--	u32 last_hop_metric;
-+	u32 path_metric;
- 	struct sta_info *sta;
- 
- 	/* need action_code */
-@@ -877,21 +877,21 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 		if (elems.preq_len != 37)
- 			/* Right now we support just 1 destination and no AE */
- 			return;
--		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.preq,
--						      MPATH_PREQ);
--		if (last_hop_metric)
-+		path_metric = hwmp_route_info_get(sdata, mgmt, elems.preq,
-+						  MPATH_PREQ);
-+		if (path_metric)
- 			hwmp_preq_frame_process(sdata, mgmt, elems.preq,
--						last_hop_metric);
-+						path_metric);
- 	}
- 	if (elems.prep) {
- 		if (elems.prep_len != 31)
- 			/* Right now we support no AE */
- 			return;
--		last_hop_metric = hwmp_route_info_get(sdata, mgmt, elems.prep,
--						      MPATH_PREP);
--		if (last_hop_metric)
-+		path_metric = hwmp_route_info_get(sdata, mgmt, elems.prep,
-+						  MPATH_PREP);
-+		if (path_metric)
- 			hwmp_prep_frame_process(sdata, mgmt, elems.prep,
--						last_hop_metric);
-+						path_metric);
- 	}
- 	if (elems.perr) {
- 		if (elems.perr_len != 15)
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 8abc31ebcf61..bde049e128db 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -329,7 +329,6 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 			ieee80211_check_fast_xmit(sta);
+ 		} else {
+ 			rcu_assign_pointer(sta->gtk[idx], new);
+-			sta->gtk_idx = idx;
+ 		}
+ 	} else {
+ 		defunikey = old &&
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 226f8ca47ad6..147464dbc455 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -283,7 +283,6 @@ struct ieee80211_fast_tx {
+  * @ptk: peer keys negotiated with this station, if any
+  * @ptk_idx: last installed peer key index
+  * @gtk: group keys negotiated with this station, if any
+- * @gtk_idx: last installed group key index
+  * @rate_ctrl: rate control algorithm reference
+  * @rate_ctrl_lock: spinlock used to protect rate control data
+  *	(data inside the algorithm, so serializes calls there)
+@@ -381,7 +380,6 @@ struct sta_info {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
+ 	struct ieee80211_key __rcu *ptk[NUM_DEFAULT_KEYS];
+-	u8 gtk_idx;
+ 	u8 ptk_idx;
+ 	struct rate_control_ref *rate_ctrl;
+ 	void *rate_ctrl_priv;
+-- 
+2.1.4
+
