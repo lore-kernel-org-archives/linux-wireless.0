@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:33852 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753114AbbFGMEK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2015 08:04:10 -0400
-Received: by pdbki1 with SMTP id ki1so82353575pdb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 05:04:10 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH V2 2/3] rtlwifi: rtl8192cu: debug message change "RTL8192CE" to "RTL8192CU"
-Date: Sun,  7 Jun 2015 21:03:56 +0900
-Message-Id: <1433678637-7718-1-git-send-email-ap420073@gmail.com> (sfid-20150607_140441_130574_628B2EA9)
+Received: from s3.sipsolutions.net ([5.9.151.49]:46735 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751266AbbFQIlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 04:41:19 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/14] mac80211: rename 'sta_inf' variable to more common 'sta'
+Date: Wed, 17 Jun 2015 10:41:03 +0200
+Message-Id: <1434530475-3553-3-git-send-email-johannes@sipsolutions.net> (sfid-20150617_104127_325741_51FD0AE3)
+In-Reply-To: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
+References: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the rtlwifi/rtl8192cu, I change debug message "RTL8192CE" to
-"RTL8192CU".
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+We typically use 'sta' for the station info struct, and if needed
+'pubsta' for the public (driver-visible) portion thereof. Do this
+in the ieee80211_sta_ps_transition() function.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/phy.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ net/mac80211/rx.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-index 12f6d47..5534dad 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-@@ -162,7 +162,7 @@ bool _rtl92cu_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read Rtl819XMACPHY_Array\n");
- 	arraylength =  rtlphy->hwparam_tables[MAC_REG].length ;
- 	ptrarray = rtlphy->hwparam_tables[MAC_REG].pdata;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Img:RTL8192CEMAC_2T_ARRAY\n");
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Img:RTL8192CUMAC_2T_ARRAY\n");
- 	for (i = 0; i < arraylength; i = i + 2)
- 		rtl_write_byte(rtlpriv, ptrarray[i], (u8) ptrarray[i + 1]);
- 	return true;
-@@ -259,18 +259,18 @@ bool rtl92cu_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		radiob_arraylen = rtlphy->hwparam_tables[RADIOB_2T].length;
- 		radiob_array_table = rtlphy->hwparam_tables[RADIOB_2T].pdata;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_A:RTL8192CERADIOA_2TARRAY\n");
-+			 "Radio_A:RTL8192CURADIOA_2TARRAY\n");
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_B:RTL8192CE_RADIOB_2TARRAY\n");
-+			 "Radio_B:RTL8192CU_RADIOB_2TARRAY\n");
- 	} else {
- 		radioa_arraylen = rtlphy->hwparam_tables[RADIOA_1T].length;
- 		radioa_array_table = rtlphy->hwparam_tables[RADIOA_1T].pdata;
- 		radiob_arraylen = rtlphy->hwparam_tables[RADIOB_1T].length;
- 		radiob_array_table = rtlphy->hwparam_tables[RADIOB_1T].pdata;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_A:RTL8192CE_RADIOA_1TARRAY\n");
-+			 "Radio_A:RTL8192CU_RADIOA_1TARRAY\n");
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--			 "Radio_B:RTL8192CE_RADIOB_1TARRAY\n");
-+			 "Radio_B:RTL8192CU_RADIOB_1TARRAY\n");
- 	}
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Radio No %x\n", rfpath);
- 	switch (rfpath) {
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5dae166cb7f5..9fb8ce982c2d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1240,22 +1240,22 @@ static void sta_ps_end(struct sta_info *sta)
+ 	ieee80211_sta_ps_deliver_wakeup(sta);
+ }
+ 
+-int ieee80211_sta_ps_transition(struct ieee80211_sta *sta, bool start)
++int ieee80211_sta_ps_transition(struct ieee80211_sta *pubsta, bool start)
+ {
+-	struct sta_info *sta_inf = container_of(sta, struct sta_info, sta);
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	bool in_ps;
+ 
+-	WARN_ON(!ieee80211_hw_check(&sta_inf->local->hw, AP_LINK_PS));
++	WARN_ON(!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS));
+ 
+ 	/* Don't let the same PS state be set twice */
+-	in_ps = test_sta_flag(sta_inf, WLAN_STA_PS_STA);
++	in_ps = test_sta_flag(sta, WLAN_STA_PS_STA);
+ 	if ((start && in_ps) || (!start && !in_ps))
+ 		return -EINVAL;
+ 
+ 	if (start)
+-		sta_ps_start(sta_inf);
++		sta_ps_start(sta);
+ 	else
+-		sta_ps_end(sta_inf);
++		sta_ps_end(sta);
+ 
+ 	return 0;
+ }
 -- 
 2.1.4
 
