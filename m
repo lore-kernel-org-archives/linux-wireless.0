@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43593 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756410AbbFPKPO (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:34876 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757611AbbFQFnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 06:15:14 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: mac: remove unreachable negative return check
-References: <1434039461-24899-1-git-send-email-hofrat@osadl.org>
-Date: Tue, 16 Jun 2015 13:14:46 +0300
-In-Reply-To: <1434039461-24899-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
-	Guire's message of "Thu, 11 Jun 2015 18:17:41 +0200")
-Message-ID: <87a8w07yeh.fsf@kamboji.qca.qualcomm.com> (sfid-20150616_121538_576087_1E2A0D24)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 17 Jun 2015 01:43:07 -0400
+Received: by pdbnf5 with SMTP id nf5so30496300pdb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2015 22:43:07 -0700 (PDT)
+From: Sunghoon Cho <ywhsbliss@gmail.com>
+To: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	chris.park@atmel.com, Rachel.kim@atmel.com, dean.lee@atmel.com
+Cc: Sunghoon Cho <ywhsbliss@gmail.com>
+Subject: [PATCH 5/5] staging: wilc1000: add a blank line
+Date: Wed, 17 Jun 2015 14:42:36 +0900
+Message-Id: <3cb3b7fecf4d28c038b80b07d9375c9839b4b924.1434519635.git.ywhsbliss@gmail.com> (sfid-20150617_074310_595821_BD79A7E3)
+In-Reply-To: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+References: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+In-Reply-To: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+References: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <hofrat@osadl.org> writes:
+This adds a blank line after struct declaration, WILC_WFI_mon_priv.
 
-> wait_event_timeout(), introduced in 'commit 5e3dd157d7e7 ("ath10k: mac80211
-> driver for Qualcomm Atheros 802.11ac CQA98xx devices")' never returns < 0
-> so the only failure condition to be checked is ==0 (timeout). Further the
-> return type is long not int - an appropriately named variable is added 
-> and the assignments fixed up.
->
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks, applied.
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3307439..42a017a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -249,6 +249,7 @@ typedef struct {
+ struct WILC_WFI_mon_priv {
+ 	struct net_device *real_ndev;
+ };
++
+ extern struct net_device *WILC_WFI_devs[];
+ 
+ #endif
 -- 
-Kalle Valo
+1.9.1
+
