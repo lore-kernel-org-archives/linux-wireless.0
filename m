@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:58170 "EHLO mail.neratec.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:56515 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756758AbbFPJqz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 05:46:55 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: poh@qca.qualcomm.com, ath9k-devel@venema.h4ckr.net,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH] ath9k: DFS - consider ext_channel pulses only in HT40 mode
-Date: Tue, 16 Jun 2015 11:46:42 +0200
-Message-Id: <1434448002-4409-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20150616_114728_929855_1CA4A468)
+	id S1754956AbbFQJmj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 05:42:39 -0400
+Message-ID: <55814109.7030100@openwrt.org> (sfid-20150617_114251_641123_637D2FB2)
+Date: Wed, 17 Jun 2015 11:42:33 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFCv2] ath9k: make rxfilter per HW
+References: <1434520009-8824-1-git-send-email-janusz.dziedzic@tieto.com>	<21889.11726.101648.552280@gargle.gargle.HOWL>	<55812FB5.1070005@openwrt.org>	<21889.14109.54454.563245@gargle.gargle.HOWL>	<CALhHN=ro4K6mALLHqgVRGm50UGg5hh9mnSSAnNHwZdZ5ywOk-Q@mail.gmail.com> <21889.16487.258289.588207@gargle.gargle.HOWL>
+In-Reply-To: <21889.16487.258289.588207@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chip reports radar pulses on extension channel
-even if operating in HT20 mode. This patch adds a
-sanity check for HT40 mode before it feeds pulses
-on extension channel to the pattern detector.
+On 2015-06-17 11:39, Sujith Manoharan wrote:
+> Janusz Dziedzic wrote:
+>> This is what I have with use_chanctx=1
+>> Jun 17 06:57:54 dell6430 kernel: [53297.753256] xxx ath_calcrxfilter
+>> filter: 0x207
+>> 
+>> 0x000000080 is for probe_req
+> 
+> Ok, so the probe_req filter is set before actually initiating
+> RoC - this appears to be the current design in wpa_s.
+> 
+> I am not sure if using a global filter that disregards
+> the opmode of a context is the right approach, though...
+The filter is intended to be global in the mac80211 API.
+Treating it as per channel-context inside the driver is a bug.
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- drivers/net/wireless/ath/ath9k/dfs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-index e98a9ea..5025a4e 100644
---- a/drivers/net/wireless/ath/ath9k/dfs.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs.c
-@@ -198,7 +198,8 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
- 	sc->dfs_prev_pulse_ts = pe.ts;
- 	if (ard.pulse_bw_info & PRI_CH_RADAR_FOUND)
- 		ath9k_dfs_process_radar_pulse(sc, &pe);
--	if (ard.pulse_bw_info & EXT_CH_RADAR_FOUND) {
-+	if (IS_CHAN_HT40(ah->curchan) &&
-+	    ard.pulse_bw_info & EXT_CH_RADAR_FOUND) {
- 		pe.freq += IS_CHAN_HT40PLUS(ah->curchan) ? 20 : -20;
- 		ath9k_dfs_process_radar_pulse(sc, &pe);
- 	}
--- 
-1.9.1
-
+- Felix
