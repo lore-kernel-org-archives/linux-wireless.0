@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:35212 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbbFARHL (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43875 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755239AbbFQOmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 13:07:11 -0400
-Received: by lbbuc2 with SMTP id uc2so88788580lbb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 10:07:09 -0700 (PDT)
+	Wed, 17 Jun 2015 10:42:09 -0400
+From: David Lin <dlin@marvell.com>
+To: Dan Williams <dcbw@redhat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>,
+	Chor Teck Law <ctlaw@marvell.com>
+Subject: RE: [PATCH v2] Add new mac80211 driver mwlwifi.
+Date: Wed, 17 Jun 2015 14:42:03 +0000
+Message-ID: <43281b6b6b674448b40c4ecc0385737e@SC-EXCH02.marvell.com> (sfid-20150617_164214_894789_16D734AF)
+References: <2127ea28a2a74cd6a89d45b88caf06cb@SC-EXCH02.marvell.com>
+	 <1434526059.1884.7.camel@sipsolutions.net>
+	 <7e061b3712f4408284917b5a5b4d3813@SC-EXCH02.marvell.com>
+	 <1434529677.1884.9.camel@sipsolutions.net>
+	 <9c9237415bfe49568467f9795dc08111@SC-EXCH02.marvell.com>
+ <1434551555.3952.8.camel@redhat.com>
+In-Reply-To: <1434551555.3952.8.camel@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <16916.1433173823@warthog.procyon.org.uk>
-References: <20150528154605.1259.42518.stgit@warthog.procyon.org.uk>
- <20150528154834.1259.22434.stgit@warthog.procyon.org.uk> <5567C131.8050005@kernel.org>
- <29091.1432903229@warthog.procyon.org.uk> <CALCETrUG7utqU7uKeC6q1rchBYL08V7peP1Ont95ZpBTiV7J9A@mail.gmail.com>
- <16916.1433173823@warthog.procyon.org.uk>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Mon, 1 Jun 2015 10:06:49 -0700
-Message-ID: <CALCETrX0kSAW4FvYKmZK8pVzi5XTJs3RtQxqYbyC_KTHeDhMjA@mail.gmail.com> (sfid-20150601_190718_276560_EF16B0F1)
-Subject: Re: [PATCH 16/20] PKCS#7: Add an optional authenticated attribute to
- hold firmware name [ver #5]
-To: David Howells <dhowells@redhat.com>
-Cc: Andy Lutomirski <luto@kernel.org>,
-	Luis Rodriguez <mcgrof@suse.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>, keyrings@linux-nfs.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kyle McMartin <kyle@kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	LSM List <linux-security-module@vger.kernel.org>,
-	Mimi Zohar <zohar@us.ibm.com>,
-	David Woodhouse <dwmw2@infradead.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 1, 2015 at 8:50 AM, David Howells <dhowells@redhat.com> wrote:
-> Andy Lutomirski <luto@amacapital.net> wrote:
->
->> > You can also fudge the signature (or a hash) by adding extra data to or
->> > modifying the data blob and by switching signature values between signature
->> > blobs.
->>
->> So there's another design error in PKCS#7?  Great!
->
-> No.  This applies to *all* signatures where you're signing a hash.
-
-What kind of fudging are you talking about here?  I don't see what
-not-intentionally-signed message can be generically fudged to look
-like it's signed.
-
---Andy
+DQo+IERhbiBXaWxsaWFtcyB3cm90ZToNCj4gDQo+IE9uIFdlZCwgMjAxNS0wNi0xNyBhdCAwODoz
+NCArMDAwMCwgRGF2aWQgTGluIHdyb3RlOg0KPiA+ID4gSm9oYW5uZXMgQmVyZyB3cm90ZToNCj4g
+PiA+DQo+ID4gPiBPbiBXZWQsIDIwMTUtMDYtMTcgYXQgMDg6MDcgKzAwMDAsIERhdmlkIExpbiB3
+cm90ZToNCj4gPiA+DQo+ID4gPiA+ID4gQWxzbywgeW91IHByb2JhYmx5IHJlYWxseSBzaG91bGQg
+aGF2ZSB0d28gaGVhZGVyIGZpbGVzIC0gb25lIGZvcg0KPiA+ID4gPiA+IHRoZSBmaXJtd2FyZSBz
+dHJ1Y3RzIGFuZCBvbmUgZm9yIHRoZSBkcml2ZXIgc3RydWN0cyAtIGVzcGVjaWFsbHkNCj4gPiA+
+ID4gPiBzaW5jZSB5b3Ugc2VlbSB0byBiZSBjb25mdXNpbmcgdGhlIHR3byENCj4gPiA+ID4gPg0K
+PiA+ID4gPiBBcyBtZW50aW9uZWQgYmVmb3JlLCB0aGlzIGlzIGN1cnJlbnQgaW50ZXJmYWNlIHdp
+dGggRi9XLCBhbmQgdGhpcw0KPiA+ID4gPiBGL1cgaXMgdXNlZCBieSBvdGhlciBtYXJ2ZWxsJ3Mg
+ZHJpdmVycywgSSBjYW4ndCBjaGFuZ2UgaXQuDQo+ID4gPg0KPiA+ID4gWW91J3JlIG1pc3VuZGVy
+c3RhbmRpbmcuIEknbSBub3QgYXNraW5nIHlvdSB0byBjaGFuZ2UgdGhlIGludGVyZmFjZS4NCj4g
+PiA+IEknbSBqdXN0IGFza2luZyB5b3UgdG8gbWFrZSBzdXJlIHlvdSBrbm93IHdoaWNoIHBhcnQg
+aXMgZmlybXdhcmUNCj4gPiA+IGludGVyZmFjZSBhbmQgd2hpY2ggaXNuJ3QuIENsZWFybHksIHBv
+aW50ZXJzICpjYW5ub3QqIGJlIGZpcm13YXJlDQo+ID4gPiBpbnRlcmZhY2UgLSBpZiB0aGVyZSdz
+IHNvbWV0aGluZyAiY29va2llLWxpa2UiIHRoYXQgeW91IHVzZSBhcw0KPiA+ID4gcG9pbnRlcnMg
+eW91IGF0IGxlYXN0IG5lZWQgdG8gbWFrZSBzdXJlIHlvdSBrbm93IGhvdyBsb25nIHRoaXMgZmll
+bGQgaXMgKDMyDQo+IG9yIDY0IGJpdHMpLi4uDQo+ID4gPg0KPiA+IFllcywgd2Uga25vdyB0aGlz
+IGtpbmQgb2YgaXNzdWUuIFdlIHdpbGwgZW5oYW5jZSBpdCBpbiB0aGUgZnV0dXJlLg0KPiA+ID4N
+Cj4gPiA+ID4gQWxsIHN0cnVjdHVyZXMgZGVmaW5lZCBpbiB0aGlzIGZpbGUgYXJlIHJlbGF0ZWQg
+dG8gRi9XIGNvbW1hbmRzLA0KPiA+ID4gPiBpdCBzaG91bGQgYmUgYmV0dGVyIGxldCB0aGVtIGJl
+IGRlZmluZWQgaW4gdGhpcyBmaWxlLg0KPiA+ID4NCj4gPiA+IEdpdmVuIHlvdXIgb3duIGNvbmZ1
+c2lvbiBvbiB3aGF0J3MgZmlybXdhcmUgQVBJIGFuZCB3aGF0IGlzbid0LCBJJ20NCj4gPiA+IG5v
+dCBzbyBzdXJlIGFib3V0IHRoYXQgLi4uDQo+ID4gPg0KPiA+IEkgYW0gc3VyZSBhbGwgc3RydWN0
+dXJlcyBkZWZpbmVkIGluIHRoaXMgZmlsZSBpcyByZWxhdGVkIHRvIGZpcm13YXJlIGNvbW1hbmQu
+DQo+IA0KPiBUaGV5IG1heSB3ZWxsIGJlIHJlbGF0ZWQsIGJ1dCB0aGF0IGRvZXNuJ3QgbmVjZXNz
+YXJpbHkgbWVhbiB0aGF0IHRoZSBkcml2ZXINCj4gc2lkZSBjYW5ub3QgYmUgY2xlYXJlciBhYm91
+dCB3aGF0IGZpZWxkcyBvZiBhIHN0cnVjdCBhcmUgYWN0dWFsbHkgcmVhZCBieSB0aGUNCj4gZmly
+bXdhcmUsIGFuZCB3aGF0IGZpZWxkcyBhcmUgcHJpdmF0ZSB0byB0aGUgaG9zdCBpbXBsZW1lbnRh
+dGlvbiBhcyBhIGRhdGENCj4gc3Rhc2ggKGVnLCAncHJpdictdHlwZSBzdHVmZikuICBSZWRvaW5n
+IHRoZSBzdHJ1Y3RzIGxpa2UgSm9oYW5uZXMgc3VnZ2VzdGVkDQo+IG9yaWdpbmFsbHkgd291bGQg
+bWFrZSB0aGF0IGNyeXN0YWwtY2xlYXIuLi4NCj4gDQo+IERhbg0KDQpZZXMsIHdlIHBsYW4gdG8g
+bW9kaWZ5IHRoZSBjb2RlIGFzIEpvaGFubmVzIHN1Z2dlc3RlZCBhbmQgY29tZSBvdXQgUEFUQ0gg
+djMgZm9yIHJldmlldy4gVGhhbmtzLg0KDQpEYXZpZA0KDQo=
