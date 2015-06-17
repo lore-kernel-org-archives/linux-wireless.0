@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:36711 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752878AbbFAMca convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 08:32:30 -0400
-Received: by igbpi8 with SMTP id pi8so59756774igb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 05:32:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <556C490E.90509@broadcom.com>
-References: <1432815561-6639-1-git-send-email-zajec5@gmail.com>
-	<556C490E.90509@broadcom.com>
-Date: Mon, 1 Jun 2015 14:32:29 +0200
-Message-ID: <CACna6rzYYwm-bSxGGUofB9pVC=9dtVtuTfotGpFiwsVfxh=Wew@mail.gmail.com> (sfid-20150601_143233_836782_5C205912)
-Subject: Re: [PATCH] brcmfmac: support NVRAMs containing pci devpaths (instead
- of pcie)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:46860 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754783AbbFQJAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 05:00:49 -0400
+Message-ID: <1434531646.1884.18.camel@sipsolutions.net> (sfid-20150617_110103_391057_9D3AF0F1)
+Subject: Re: [PATCH] mac80211: Check SN for deactivated mpaths
+From: Johannes Berg <johannes@sipsolutions.net>
+To: agreen@cococorp.com
+Cc: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Date: Wed, 17 Jun 2015 11:00:46 +0200
+In-Reply-To: <557B5F4F.1060703@cococorp.com> (sfid-20150613_003822_322805_8822167A)
+References: <557B5F4F.1060703@cococorp.com>
+	 (sfid-20150613_003822_322805_8822167A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 June 2015 at 13:59, Arend van Spriel <arend@broadcom.com> wrote:
-> On 05/28/15 14:19, Rafał Miłecki wrote:
->>
->> Recently Broadcom added support for NVRAMs with entries for multiple
->> PCIe devices. One of the supported formats is based on prefixes defined
->> like: devpath0=pcie/1/4/ and entries like 0:foo=bar 0:baz=qux etc.
->>
->> Unfortunately there are also a bit older devices using different way of
->> defining prefixes, e.g. SmartRG SR400ac (2 x BCM43602) with entries:
->> devpath0=pci/1/1/
->> devpath1=pci/2/1
->> Broadcom stated this old format will never be used/supported by brcmfmac
->> but given the simplicity of this patch I'll insist on supporting it.
->
->
-> Well, if you insist :-p
->
-> Acked-by: Arend van Spriel <arend@broadcom.com>
+On Fri, 2015-06-12 at 15:38 -0700, Alexis Green wrote:
+> From: Jesse Jones <jjones@cococorp.com>
+> 
+> When processing a PREQ or PREP it's critical to use the incoming SN. If
+> that is improperly done routing loops and other types of badness can
+> happen. But the code was always processing path messages for deactivated
+> paths. This path fixes that so that if we have a valid SN then we use it
+> to verify that it is a message we can accept. For reference the relevant
+> section of the standard is 13.10.8.4 which doesn't address the deactivated
+> path case at all.
+> 
+> I also included a special case for when our peer reboots or restarts
+> networking. This is an important case because without it there can be a
+> very long delay before we accept path messages from that peer. It's also a
+> simple case and intimately associated with processing messages for
+> deactivated paths so I used one patch instead of two.
 
-Haha, thanks :) This will make SR400ac my primary home router for
-sure. A great piece of hardware :)
+Applied.
 
--- 
-Rafał
+johannes
+
