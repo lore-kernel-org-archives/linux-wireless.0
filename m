@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:49768 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753235AbbFRHDB (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:40472 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613AbbFQCVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 03:03:01 -0400
-Date: Thu, 18 Jun 2015 12:32:35 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/10] Add QCA99X0 support
-Message-ID: <20150618070231.GA4033@qca.qualcomm.com> (sfid-20150618_090309_615740_EAD227CF)
-References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
- <87wpz17d18.fsf@kamboji.qca.qualcomm.com>
+	Tue, 16 Jun 2015 22:21:35 -0400
+Date: Tue, 16 Jun 2015 19:21:35 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dean Lee <dean.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, johnny.kim@atmel.com
+Subject: Re: [PATCH 2/2] staging: wilc1000: modify uninitialized warning
+Message-ID: <20150617022135.GA18464@kroah.com> (sfid-20150617_042138_782871_5BF35B7B)
+References: <1434438685-24336-1-git-send-email-dean.lee@atmel.com>
+ <1434438685-24336-2-git-send-email-dean.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87wpz17d18.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434438685-24336-2-git-send-email-dean.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 09:20:51AM +0300, Kalle Valo wrote:
-> Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+On Tue, Jun 16, 2015 at 04:11:25PM +0900, Dean Lee wrote:
+> initialize it.
 > 
-> > This patch set adds changes for QCA99X0 chip in pci probe,
-> > Copy Engine init and firmware downloads. Since it is still
-> > work in progress the support for this chip is not yet
-> > advertised in pci device table.
-> >
-> > Vasanthakumar Thiagarajan (10):
-> >   ath10k: Add a table to store hw specific values
-> >   ath10k: Add new reg_address/mask to hw register table
-> >   ath10k: Add hw register/values for QCA99X0 chip
-> >   ath10k: Copy Engine related changes for QCA99X0
-> >   ath10k: Make target cpu address to CE address conversion chip specific
-> >   ath10k: Add chip reset sequence for QCA99X0
-> >   ath10k: Extend CE src desc flags for interrupt indication
-> >   ath10k: Fix BMI communication timeout for QCA99X0
-> >   ath10k: Add support for code swap
-> >   ath10k: Add BMI param value to execute otp to hw_param
+> Signed-off-by: Dean Lee <dean.lee@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> These patches don't apply and don't have proper sha1 ids. Please rebase.
-> And remember always to use ath.git master branch as the baseline, don't
-> apply any custom patches because that will break 3-way merge.
-> 
-> Applying: ath10k: Add a table to store hw specific values
-> Applying: ath10k: Add new reg_address/mask to hw register table
-> Applying: ath10k: Add hw register/values for QCA99X0 chip
-> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/core.c).
-> Repository lacks necessary blobs to fall back on 3-way merge.
-> Cannot fall back to three-way merge.
-> Patch failed at 0003 ath10k: Add hw register/values for QCA99X0 chip
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 358283f..03e6bc5 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -7241,7 +7241,7 @@ s32 host_int_add_beacon(WILC_WFIDrvHandle hWFIDrv, u32 u32Interval,
+>  	s32 s32Error = WILC_SUCCESS;
+>  	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+>  	tstrHostIFmsg strHostIFmsg;
+> -	tstrHostIFSetBeacon *pstrSetBeaconParam = &strHostIFmsg.uniHostIFmsgBody.strHostIFSetBeacon;
+> +	tstrHostIFSetBeacon *pstrSetBeaconParam = NULL;
 
-Sorry about this. Im sending the rebased patches on top of ath.git master tot
+This isn't fixing an "unitialized pointer" warning, the code is just
+fine.
 
-Vasanth
+Well, it's really odd, but it is correct, there's nothing really wrong
+here that I can see.
+
+thanks,
+
+greg k-h
