@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28302 "EHLO mga01.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:46698 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753304AbbFCHb6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:31:58 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/15] iwlwifi: dvm: enable IEEE80211_HW_SUPPORT_FAST_XMIT
-Date: Wed,  3 Jun 2015 10:31:30 +0300
-Message-Id: <1433316696-4612-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093208_194870_38CA7C8C)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+	id S1752655AbbFQI2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 04:28:00 -0400
+Message-ID: <1434529677.1884.9.camel@sipsolutions.net> (sfid-20150617_102805_500443_26E51E96)
+Subject: Re: [PATCH v2] Add new mac80211 driver mwlwifi.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lin <dlin@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>,
+	Chor Teck Law <ctlaw@marvell.com>
+Date: Wed, 17 Jun 2015 10:27:57 +0200
+In-Reply-To: <7e061b3712f4408284917b5a5b4d3813@SC-EXCH02.marvell.com>
+References: <2127ea28a2a74cd6a89d45b88caf06cb@SC-EXCH02.marvell.com>
+	 <1434526059.1884.7.camel@sipsolutions.net>
+	 <7e061b3712f4408284917b5a5b4d3813@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2015-06-17 at 08:07 +0000, David Lin wrote:
 
-Since the firmware is responsible for duration calculation, the
-driver can easily support fast-xmit.
+> > Also, you probably really should have two header files - one for the firmware
+> > structs and one for the driver structs - especially since you seem to be
+> > confusing the two!
+> >
+> As mentioned before, this is current interface with F/W, and this F/W
+> is used by other marvell's drivers, I can't change it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+You're misunderstanding. I'm not asking you to change the interface. I'm
+just asking you to make sure you know which part is firmware interface
+and which isn't. Clearly, pointers *cannot* be firmware interface - if
+there's something "cookie-like" that you use as pointers you at least
+need to make sure you know how long this field is (32 or 64 bits)...
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index ba7fc42..852461f 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -112,6 +112,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 		    IEEE80211_HW_QUEUE_CONTROL |
- 		    IEEE80211_HW_SUPPORTS_PS |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
-+		    IEEE80211_HW_SUPPORT_FAST_XMIT |
- 		    IEEE80211_HW_WANT_MONITOR_VIF;
- 
- 	hw->offchannel_tx_hw_queue = IWL_AUX_QUEUE;
--- 
-2.1.4
+> All structures defined in this file are related to F/W commands, it
+> should be better let them be defined in this file.
+
+Given your own confusion on what's firmware API and what isn't, I'm not
+so sure about that ...
+
+johannes
 
