@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:36190 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbbFAONr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 10:13:47 -0400
-Received: by igbpi8 with SMTP id pi8so62252658igb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 07:13:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1433166856-3285-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1433166856-3285-1-git-send-email-Wojciech.Dubowik@neratec.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 2 Jun 2015 00:13:25 +1000
-Message-ID: <CAGRGNgW=qy2TuojGt5CDE0sATkKeMTHCtBJnFQOjJ=3pP7Kzzw@mail.gmail.com> (sfid-20150601_161455_772652_A8F38FB1)
-Subject: Re: [PATCH] mac80211: Fix double locking on CSA counter update
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:46734 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750838AbbFQIlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Jun 2015 04:41:19 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 01/14] mac80211: remove exposing 'mfp' to drivers
+Date: Wed, 17 Jun 2015 10:41:02 +0200
+Message-Id: <1434530475-3553-2-git-send-email-johannes@sipsolutions.net> (sfid-20150617_104124_818601_42BC8F22)
+In-Reply-To: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
+References: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wojciech,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Mon, Jun 1, 2015 at 11:54 PM, Wojciech Dubowik
-<Wojciech.Dubowik@neratec.com> wrote:
-> We call rcu locked ieee80211_csa_update_counter from
-> already locked section. Fix it by decrementing counter
-> directly instead of calling ieee80211_csa_update_counter.
+There's no driver using this, so remove it.
 
-Stupid question: wouldn't it be better to split the work from
-ieee80211_csa_update_counter() into a separate function without
-locking and call that instead?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 1 -
+ net/mac80211/cfg.c     | 1 -
+ net/mac80211/mlme.c    | 6 +-----
+ 3 files changed, 1 insertion(+), 7 deletions(-)
 
-Thanks,
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 6b1077c2a63f..fb220b9c5ed1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1693,7 +1693,6 @@ struct ieee80211_sta {
+ 	struct ieee80211_sta_rates __rcu *rates;
+ 	bool tdls;
+ 	bool tdls_initiator;
+-	bool mfp;
+ 
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
+ 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index bf7023f6c327..5fc7788e2ff2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1076,7 +1076,6 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 	}
+ 
+ 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
+-		sta->sta.mfp = !!(set & BIT(NL80211_STA_FLAG_MFP));
+ 		if (set & BIT(NL80211_STA_FLAG_MFP))
+ 			set_sta_flag(sta, WLAN_STA_MFP);
+ 		else
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9b2cc278ac2a..ae5d6c48272d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3034,12 +3034,8 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 
+ 	rate_control_rate_init(sta);
+ 
+-	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED) {
++	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
+ 		set_sta_flag(sta, WLAN_STA_MFP);
+-		sta->sta.mfp = true;
+-	} else {
+-		sta->sta.mfp = false;
+-	}
+ 
+ 	sta->sta.wme = elems.wmm_param && local->hw.queues >= IEEE80211_NUM_ACS;
+ 
 -- 
-Julian Calaby
+2.1.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
