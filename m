@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21285 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932500AbbFWNHc (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:34764 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369AbbFRIGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 09:07:32 -0400
-Date: Tue, 23 Jun 2015 16:07:04 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: mgreer@animalcreek.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: NFC: trf7970a: Handle extra byte in response to Type 5 RMB
- commands
-Message-ID: <20150623130703.GA27051@mwanda> (sfid-20150623_150735_660587_E3412ED2)
+	Thu, 18 Jun 2015 04:06:22 -0400
+Received: by wicnd19 with SMTP id nd19so14486419wic.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 01:06:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Thu, 18 Jun 2015 10:06:20 +0200
+Message-ID: <CALhHN=o5b7rZUW9Wr4K0P2d3XreCO2hcf5t8+0eArwAVfWSUKQ@mail.gmail.com> (sfid-20150618_100635_431547_CF0724AB)
+Subject: ath9k: multicast don't work when: two STA (sta + p2p_client) + hwcrypt
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Sujith Manoharan <sujith@msujith.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Mark A. Greer,
+STA iface:
+ath: phy0: Set HW Key 0 (pairwise) vif: 2c:d0:5a:d3:f1:e9 sta:
+f4:b7:e2:38:83:f3 - idx: 4
+ath: phy0: Set HW Key 0 (group) vif: 2c:d0:5a:d3:f1:e9 sta:
+(null) - idx: 1
 
-This is a semi-automatic email about new static checker warnings.
+P2P_CLIENT iface:
+ath: phy0: Set HW Key 0 (pairwise) vif: 2e:d0:5a:d3:f1:e9 sta:
+0c:8b:fd:1e:58:9f - idx: 68
+ath: phy0: Set HW Key 0 (group) vif: 2e:d0:5a:d3:f1:e9 sta:
+(null) - idx: 1
 
-The patch ab714817d7e8: "NFC: trf7970a: Handle extra byte in response 
-to Type 5 RMB commands" from Apr 24, 2015, leads to the following 
-Smatch complaint:
+Seems we overwrite multicast hw key - both idx = 1
 
-	drivers/nfc/trf7970a.c:632 trf7970a_send_upstream()
-	 error: we previously assumed 'trf->rx_skb' could be null (see line 613)
+1) First patch I made:
 
-drivers/nfc/trf7970a.c
-   612	
-   613		if (trf->rx_skb && !IS_ERR(trf->rx_skb) && !trf->aborting)
-                    ^^^^^^^^^^^
-Check for NULL.
+diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
+index 1816b4e..b15873b 100644
+--- a/drivers/net/wireless/ath/key.c
++++ b/drivers/net/wireless/ath/key.c
+@@ -507,6 +507,15 @@ int ath_key_config(struct ath_common *common,
 
-   614			print_hex_dump_debug("trf7970a rx data: ", DUMP_PREFIX_NONE,
-   615					16, 1, trf->rx_skb->data, trf->rx_skb->len,
-   616					false);
-   617	
-   618		trf->state = TRF7970A_ST_IDLE;
-   619	
-   620		if (trf->aborting) {
-   621			dev_dbg(trf->dev, "Abort process complete\n");
-   622	
-   623			if (!IS_ERR(trf->rx_skb)) {
-   624				kfree_skb(trf->rx_skb);
-   625				trf->rx_skb = ERR_PTR(-ECANCELED);
-   626			}
-   627	
-   628			trf->aborting = false;
-   629		}
-   630	
-   631		if (trf->adjust_resp_len) {
-   632			skb_trim(trf->rx_skb, trf->rx_skb->len - 1);
-                                 ^^^^^^^^^^^
-Patch introduces unchecked dereference inside skb_trim().
+        if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+                switch (vif->type) {
++               case NL80211_IFTYPE_STATION:
++                       idx = key->keyidx;
++                       if (vif->bss_conf.bssid) {
++                               ether_addr_copy(gmac, bssid);
++                               gmac[0] |= 0x01;
++                               mac = gmac;
++                               idx =
+ath_reserve_key_cache_slot(common, key->cipher);
++                       }
++                       break;
+                case NL80211_IFTYPE_AP:
+                        memcpy(gmac, vif->addr, ETH_ALEN);
+                        gmac[0] |= 0x01;
 
-   633			trf->adjust_resp_len = false;
-   634		}
+Multicast works fine for STA/P2P_CLIENT but multicast rekeying don't
+work correctly, while we have 2 multicast keys installed for the same
+bssid (eg. idx 6, 68) after rekey. Seem hw choose always key with
+lowest idx - hw decrypt mcast packects correctly every second rekey
+:-)
 
-regards,
-dan carpenter
+BTW, this needs attention to be sure hw decrypt frames correctly - I
+am checking RX_FLAG_DECRYPTED flag, while often HW send crypted
+packets and mac80211 decrypt them correctly (every second rekey for
+example). So, some mixture of hwcrypt and swcrypt is seen :)
+
+2) works perfectly when ath9k loaded with nohwcrypt=1
+
+Any ideas how to solve this correctly (is it possible with hwcrypt at all)?
+
+BR
+Janusz
