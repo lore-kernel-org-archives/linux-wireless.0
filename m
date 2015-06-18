@@ -1,374 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:34368 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932101AbbFDRrl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49598 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763AbbFRFt6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 13:47:41 -0400
-Received: by igbhj9 with SMTP id hj9so21214255igb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2015 10:47:40 -0700 (PDT)
-From: Liu CF/TW <cfliu.tw@gmail.com>
-To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Liu CF/TW <cfliu.tw@gmail.com>
-Subject: [PATCH V2] ath10k: add 'cryptmode' param to support raw tx injection and sw crypto.
-Date: Thu,  4 Jun 2015 10:47:13 -0700
-Message-Id: <1433440033-49570-1-git-send-email-cfliu.tw@gmail.com> (sfid-20150604_194746_296077_88F82AD8)
+	Thu, 18 Jun 2015 01:49:58 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull-request: wireless-drivers-next 2015-06-18
+Date: Thu, 18 Jun 2015 08:49:50 +0300
+Message-ID: <871th98t1d.fsf@kamboji.qca.qualcomm.com> (sfid-20150618_075003_144329_64E03611)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change supports bypassing HW crypto engine by enabling raw Rx/Tx mode.
-This will enable use cases such as sw crypto and raw tx injection.
-This change introduces a new module param 'cryptmode'.
+Hi Dave,
 
-cryptmode:
+here's one more pull request I would like to get to 4.2 if possible.
+Nothing major this time, just small stuff all over. Please let me know
+if you have any problems.
 
- 0    Use HW crypto engine. Use native WiFi mode Tx/Rx encap
+Kalle
 
- 1    Use SW crypto engine. Use raw mode Tx/Rx encap
+The following changes since commit c39c4c6abb89d24454b63798ccbae12b538206a5:
 
- 2    Supports both SW & HW crypto engine. Use raw mode Tx/Rx encap.
+  tcp: double default TSQ output bytes limit (2015-06-04 01:09:36 -0700)
 
-Testing: used QCA988x hw 2.0 with firmware-4.bin_10.2.4.48 with backports-20150424
-(Skipped ATH10K_FW_FEATURE_RAW_MODE_SUPPORT check in core.c within this patch. 
- Since none of the existing QCA official firmware has the feature bit set yet)
+are available in the git repository at:
 
- ath10k
- cryptmode
- param      Testing Status
- -------    ---------------------------------
-    0       HW CCMP/TKIP tested ok.
-            Note: HW crypto bypass not supported by ath10k hw in native WiFi
-            mode.
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2015-06-18
 
-    1       - mac80211 SW crypto tested ok.
-            - raw Tx frame injection tested ok.
+for you to fetch changes up to 40b503c76481aecf811a29a14a80c13b429b5e14:
 
-    2       HW CCMP/TKIP tested ok.
-            SW CCMP/TKIP tested ok.
-            Tested raw Tx encrypted frame injection ok.
+  brcmfmac: make brcmf_p2p_detach() call conditional (2015-06-16 11:35:10 +0300)
 
-Signed-off-by: Liu CF/TW <cfliu.tw@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.c   | 29 +++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h   | 29 +++++++++++++++--
- drivers/net/wireless/ath/ath10k/htt_rx.c |  5 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  9 +++++-
- drivers/net/wireless/ath/ath10k/mac.c    | 53 +++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/wmi.c    |  4 ++-
- 6 files changed, 114 insertions(+), 15 deletions(-)
+----------------------------------------------------------------
+Major changes:
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 59496a9..a81c7a7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -31,16 +31,19 @@
- #include "wmi-ops.h"
- 
- unsigned int ath10k_debug_mask;
-+unsigned int ath10k_cryptmode_param;
- static bool uart_print;
- static bool skip_otp;
- 
- module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
-+module_param_named(cryptmode, ath10k_cryptmode_param, uint, 0644);
- module_param(uart_print, bool, 0644);
- module_param(skip_otp, bool, 0644);
- 
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- MODULE_PARM_DESC(uart_print, "Uart target debugging");
- MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
-+MODULE_PARM_DESC(cryptmode, "Crypto mode - 0: HW only, 1: SW only, 2:Both");
- 
- static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 	{
-@@ -991,6 +994,32 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		return -EINVAL;
- 	}
- 
-+	switch (ath10k_cryptmode_param) {
-+	case ATH10K_CRYPT_MODE_HW:
-+		clear_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
-+		clear_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags);
-+		break;
-+	case ATH10K_CRYPT_MODE_SW:
-+	case ATH10K_CRYPT_MODE_HW_SW:
-+		if (!test_bit(ATH10K_FW_FEATURE_RAW_MODE_SUPPORT,
-+			      ar->fw_features)) {
-+			ath10k_err(ar, "cryptmode > 0 requires raw mode support from firmware");
-+			return -EINVAL;
-+		}
-+
-+		set_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
-+
-+		if (ath10k_cryptmode_param == ATH10K_CRYPT_MODE_SW) {
-+			set_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags);
-+		}
-+		break;
-+	default:
-+		ath10k_info(ar, "invalid cryptmode: %d\n",
-+			    ath10k_cryptmode_param);
-+		return -EINVAL;
-+	}
-+	ath10k_info(ar, "cryptmode: %d\n", ath10k_cryptmode_param);
-+
- 	/* Backwards compatibility for firmwares without
- 	 * ATH10K_FW_IE_WMI_OP_VERSION.
- 	 */
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 45f9603..38606e7 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -91,6 +91,7 @@ struct ath10k_skb_cb {
- 		u8 tid;
- 		u16 freq;
- 		bool is_offchan;
-+		bool nohwcrypt;
- 		struct ath10k_htt_txbuf *txbuf;
- 		u32 txbuf_paddr;
- 	} __packed htt;
-@@ -349,6 +350,7 @@ struct ath10k_vif {
- 	} u;
- 
- 	bool use_cts_prot;
-+	bool nohwcrypt;
- 	int num_legacy_stations;
- 	int txpower;
- 	struct wmi_wmm_params_all_arg wmm_params;
-@@ -461,16 +463,21 @@ enum ath10k_fw_features {
- 	ATH10K_FW_FEATURE_WOWLAN_SUPPORT = 6,
- 
- 	/* Don't trust error code from otp.bin */
--	ATH10K_FW_FEATURE_IGNORE_OTP_RESULT,
-+	ATH10K_FW_FEATURE_IGNORE_OTP_RESULT = 7,
- 
- 	/* Some firmware revisions pad 4th hw address to 4 byte boundary making
- 	 * it 8 bytes long in Native Wifi Rx decap.
- 	 */
--	ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDING,
-+	ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDING = 8,
- 
- 	/* Firmware supports bypassing PLL setting on init. */
- 	ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT = 9,
- 
-+	/* Raw mode support. If supported, FW supports receiving and trasmitting
-+	 * frames in raw mode
-+	 */
-+	ATH10K_FW_FEATURE_RAW_MODE_SUPPORT = 10,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
-@@ -484,6 +491,15 @@ enum ath10k_dev_flags {
- 	 * waiters should immediately cancel instead of waiting for a time out.
- 	 */
- 	ATH10K_FLAG_CRASH_FLUSH,
-+
-+	/* Use Raw mode instead of native WiFi Tx/Rx encap mode.
-+	 * Raw mode supports both HW and SW crypto. Native WiFi only
-+	 * supports HW crypto.
-+	 */
-+	ATH10K_FLAG_RAW_MODE,
-+
-+	/* Disable HW crypto engine */
-+	ATH10K_FLAG_HW_CRYPTO_DISABLED,
- };
- 
- enum ath10k_cal_mode {
-@@ -492,6 +508,15 @@ enum ath10k_cal_mode {
- 	ATH10K_CAL_MODE_DT,
- };
- 
-+enum ath10k_crypt_mode {
-+	/* Use HW crypto engine only */
-+	ATH10K_CRYPT_MODE_HW,
-+	/* HW SW crypto engine only (ie. HW crypto engine disabled) */
-+	ATH10K_CRYPT_MODE_SW,
-+	/* Both SW & HW crypto engine supported */
-+	ATH10K_CRYPT_MODE_HW_SW,
-+};
-+
- static inline const char *ath10k_cal_mode_str(enum ath10k_cal_mode mode)
- {
- 	switch (mode) {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 89eb16b..7e738da 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1017,9 +1017,8 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
- 	skb_trim(msdu, msdu->len - FCS_LEN);
- 
- 	/* In most cases this will be true for sniffed frames. It makes sense
--	 * to deliver them as-is without stripping the crypto param. This would
--	 * also make sense for software based decryption (which is not
--	 * implemented in ath10k).
-+	 * to deliver them as-is without stripping the crypto param. This is
-+	 * neccessary for software based decryption.
- 	 *
- 	 * If there's no error then the frame is decrypted. At least that is
- 	 * the case for frames that come in via fragmented rx indication.
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index a60ef7d..7099e91 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -450,8 +450,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	if ((ieee80211_is_action(hdr->frame_control) ||
- 	     ieee80211_is_deauth(hdr->frame_control) ||
- 	     ieee80211_is_disassoc(hdr->frame_control)) &&
--	     ieee80211_has_protected(hdr->frame_control))
-+	     ieee80211_has_protected(hdr->frame_control)) {
- 		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	} else if (!skb_cb->htt.nohwcrypt &&
-+		   skb_cb->txmode == ATH10K_HW_TXRX_RAW) {
-+		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	}
- 
- 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
- 				       DMA_TO_DEVICE);
-@@ -508,6 +512,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 			prefetch_len);
- 	skb_cb->htt.txbuf->htc_hdr.flags = 0;
- 
-+	if (skb_cb->htt.nohwcrypt)
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
-+
- 	if (!skb_cb->is_protected)
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f4de717..6a3a361 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -172,6 +172,7 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 		.key_flags = flags,
- 		.macaddr = macaddr,
- 	};
-+	int ret;
- 
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
-@@ -197,12 +198,23 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 		return -EOPNOTSUPP;
- 	}
- 
-+	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+	}
-+
-+	if (arvif->nohwcrypt)
-+		cmd = DISABLE_KEY;
-+
- 	if (cmd == DISABLE_KEY) {
- 		arg.key_cipher = WMI_CIPHER_NONE;
- 		arg.key_data = NULL;
- 	}
- 
--	return ath10k_wmi_vdev_install_key(arvif->ar, &arg);
-+	ret = ath10k_wmi_vdev_install_key(arvif->ar, &arg);
-+
-+	if (arvif->nohwcrypt && !ret)
-+		return -EOPNOTSUPP;
-+	return ret;
- }
- 
- static int ath10k_install_key(struct ath10k_vif *arvif,
-@@ -3172,9 +3184,24 @@ ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
- 	if (ieee80211_is_data_present(fc) && sta && sta->tdls)
- 		return ATH10K_HW_TXRX_ETHERNET;
- 
-+	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-+		return ATH10K_HW_TXRX_RAW;
-+
- 	return ATH10K_HW_TXRX_NATIVE_WIFI;
- }
- 
-+static bool ath10k_tx_h_use_hwcrypto(struct ieee80211_vif *vif,
-+				     struct sk_buff *skb) {
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	const u32 mask = IEEE80211_TX_INTFL_DONT_ENCRYPT |
-+			 IEEE80211_TX_CTL_INJECTED;
-+	if ((info->flags & mask) == mask)
-+		return false;
-+	if (vif)
-+		return !ath10k_vif_to_arvif(vif)->nohwcrypt;
-+	return true;
-+}
-+
- /* HTT Tx uses Native Wifi tx mode which expects 802.11 frames without QoS
-  * Control in the header.
-  */
-@@ -3620,6 +3647,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
- 	ATH10K_SKB_CB(skb)->htt.freq = 0;
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
-+	ATH10K_SKB_CB(skb)->htt.nohwcrypt = !ath10k_tx_h_use_hwcrypto(vif, skb);
- 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
- 	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, sta, skb);
- 	ATH10K_SKB_CB(skb)->is_protected = ieee80211_has_protected(fc);
-@@ -3635,12 +3663,11 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		ath10k_tx_h_8023(skb);
- 		break;
- 	case ATH10K_HW_TXRX_RAW:
--		/* FIXME: Packet injection isn't implemented. It should be
--		 * doable with firmware 10.2 on qca988x.
--		 */
--		WARN_ON_ONCE(1);
--		ieee80211_free_txskb(hw, skb);
--		return;
-+		if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+			WARN_ON_ONCE(1);
-+			ieee80211_free_txskb(hw, skb);
-+			return;
-+		}
- 	}
- 
- 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
-@@ -4236,6 +4263,14 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 			goto err;
- 		}
- 	}
-+	if (test_bit(ATH10K_FLAG_HW_CRYPTO_DISABLED, &ar->dev_flags))
-+		arvif->nohwcrypt = true;
-+
-+	if (arvif->nohwcrypt &&
-+	    !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+		ath10k_warn(ar, "cryptmode module param needed for sw crypto\n");
-+		goto err;
-+	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vdev create %d (add interface) type %d subtype %d bcnmode %s\n",
- 		   arvif->vdev_id, arvif->vdev_type, arvif->vdev_subtype,
-@@ -6890,7 +6925,6 @@ int ath10k_mac_register(struct ath10k *ar)
- 			IEEE80211_HW_HAS_RATE_CONTROL |
- 			IEEE80211_HW_AP_LINK_PS |
- 			IEEE80211_HW_SPECTRUM_MGMT |
--			IEEE80211_HW_SW_CRYPTO_CONTROL |
- 			IEEE80211_HW_CONNECTION_MONITOR |
- 			IEEE80211_HW_SUPPORTS_PER_STA_GTK |
- 			IEEE80211_HW_WANT_MONITOR_VIF |
-@@ -6898,6 +6932,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 			IEEE80211_HW_QUEUE_CONTROL |
- 			IEEE80211_HW_SUPPORT_FAST_XMIT;
- 
-+	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-+		ar->hw->flags |= IEEE80211_HW_SW_CRYPTO_CONTROL;
-+
- 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 77220b0..64b31f1 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3894,7 +3894,9 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
- 	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
- 	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
- 	config.rx_timeout_pri_bk = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_HI_PRI);
--	config.rx_decap_mode = __cpu_to_le32(TARGET_10X_RX_DECAP_MODE);
-+	config.rx_decap_mode = __cpu_to_le32(ATH10K_HW_TXRX_NATIVE_WIFI);
-+	if (test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-+		config.rx_decap_mode = __cpu_to_le32(ATH10K_HW_TXRX_RAW);
- 
- 	config.scan_max_pending_reqs =
- 		__cpu_to_le32(TARGET_10X_SCAN_MAX_PENDING_REQS);
+mwifiex:
+
+* enhancements for AP mode: support verbose information in station
+  dump command and also information about AP link.
+* enable power save by default
+
+brcmfmac:
+
+* fix module reload issue for PCIe
+* improving msgbuf protocol for PCIe devices
+* rework .get_station() cfg80211 callback operation
+* determine interface combinations upon device feature support
+
+ath9k:
+
+* ath9k_htc: add support of channel switch
+
+wil6210:
+
+* add modparam for bcast ring size
+* support hidden SSID
+* add per-MCS Rx stats
+
+----------------------------------------------------------------
+Amitkumar Karwar (1):
+      mwifiex: add missing break statement in switch case
+
+Arend van Spriel (10):
+      brcmfmac: remove chipinfo debugfs entry
+      brcmfmac: remove watchdog reset from brcmf_pcie_buscoreprep()
+      brcmfmac: use debugfs_create_devm_seqfile() helper function
+      brcmfmac: rework .get_station() callback
+      brcmfmac: have sdio return -EIO when device communication is not possible
+      brcmfmac: free ifp for non-netdev interface in p2p module
+      brcmfmac: move p2p attach/detach functions
+      brcmfmac: assure p2pdev is unregistered upon driver unload
+      brcmfmac: fix double free of p2pdev interface
+      brcmfmac: make brcmf_p2p_detach() call conditional
+
+Avinash Patil (12):
+      mwifiex: verbose logging for association failure messages
+      mwifiex: correct bss_type assignment
+      mwifiex: support AP reset after bss_stop
+      mwifiex: enable 11d after bss reset
+      mwifiex: reset 11h active flag when chandef does not require dfs
+      mwifiex: disable CAC upon radar detection event
+      mwifiex: parse power constraint IE from Tail
+      mwifiex: support downloading IEs from tail
+      mwifiex: drop block-ack action frames
+      mwifiex: advertise PS ON by default support to cfg80211
+      mwifiex: update AP WMM settings from BSS_START event
+      mwifiex: update current config_band info in start_ap
+
+Brent Taylor (1):
+      ath6kl: Fix multiple clients associating in AP mode
+
+Chun-Yeow Yeoh (1):
+      ath9k_htc: add support of channel switch
+
+Chunfan Chen (1):
+      mwifiex: handle BT coex event to adjust Rx BA window size
+
+Felix Fietkau (1):
+      ath9k: fix DMA stop sequence for AR9003+
+
+Hamad Kadmany (1):
+      wil6210: Support hidden SSID
+
+Hans Ulli Kroll (1):
+      rtlwifi: fix tm_trigger usage
+
+Hante Meuleman (1):
+      brcmfmac: Update msgbuf read pointer quicker.
+
+Jakub Kicinski (5):
+      mt7601u: unify paged and non-paged RX dma paths
+      mt7601u: watch out for invalid-length frames
+      mt7601u: don't cleanup device second time after .resume()
+      mt7601u: set promiscous mode based on FIF_OTHER_BSS
+      mt7601u: don't warn about devices without per-rate power table
+
+Julia Lawall (1):
+      wl1251: drop unneeded goto
+
+Kalle Valo (1):
+      Merge ath-next from ath.git
+
+Michal Kazior (9):
+      ath10k: move cycle_count macro
+      ath10k: handle cycle counter wraparound
+      ath10k: fix inconsistent survey reports
+      ath10k: add missing firmware declarations
+      ath10k: fix possible ps sleep crash
+      ath10k: fix ar->rx_channel updating logic
+      ath10k: remove ath10k_chanctx struct
+      ath10k: fix channel switching
+      ath10k: prevent memory leak in wmi rx ops
+
+Pontus Fuchs (2):
+      brcmfmac: Check if firmware supports p2p
+      brcmfmac: Build wiphy mode and interface combinations dynamically
+
+Rafał Miłecki (6):
+      brcmfmac: support NVRAMs containing pci devpaths (instead of pcie)
+      brcmfmac: set wiphy perm_addr to hardware MAC address
+      brcmfmac: use direct data pointer in NVRAM parser struct
+      b43: fix support for 14e4:4321 PCI dev with BCM4321 chipset
+      bcma: make calls to PCI hostmode functions config-safe
+      bcma: lower dependency of BCMA_DRIVER_PCI_HOSTMODE
+
+Raja Mani (2):
+      ath10k: free wmi mgmt event skb when parsing fails
+      ath10k: remove unused variable 'id' in ath10k_pci_tx_pipe_cleanup()
+
+Rajkumar Manoharan (1):
+      ath10k: bypass PLL setting on target init for QCA9888
+
+Stanislaw Gruszka (2):
+      MAINTAINERS: remove rt2x00.serialmonkey.com list and web page
+      rt2800: fix assigning same WCID for different stations
+
+Taehee Yoo (8):
+      rtlwifi: rtl8192cu: Fix performance issue.
+      rtlwifi: rtl8192cu: remove IS_HARDWARE_TYPE_8192CE and IS_HARDWARE_TYPE_8192CU
+      rtlwifi: rtl8192cu: remove _InitBeaconParameters().
+      rtlwifi: rtl8192cu: remove INTF_PCI and INTF_USB
+      rtlwifi: rtl8192cu: remove duplicated routine in _rtl92c_phy_rf6052_config_parafile
+      rtlwifi: rtl8192cu: debug message change "RTL8192CE" to "RTL8192CU"
+      rtlwifi: rtl8192cu: Fix variable isfirst_ampdu
+      rtlwifi: rtl8192c: Add init codes for "fw_version" and "fw_subversion".
+
+Vladimir Kondratiev (5):
+      wil6210: modparam for bcast ring size
+      wil6210: add NIC memory region mac_rgf_ext
+      wil6210: add per-MCS Rx stats
+      wil6210: platform hooks for modile init/exit
+      wil6210: reorder init sequence
+
+Xinming Hu (6):
+      mwifiex: add cfg80211 get_channel handler
+      mwifiex: maintain station statistic in uap mode
+      mwifiex: add sta_list firmware command
+      mwifiex: dump station support in uap mode
+      mwifiex: using right tid for addressing ra_list
+      mwifiex: do not decrease tx_pending for AMSDU packet once more
+
+Zhaoyang Liu (1):
+      mwifiex: change debug dump issue since skb maybe null
+
+ MAINTAINERS                                        |    2 -
+ drivers/bcma/Kconfig                               |   12 +-
+ drivers/net/wireless/ath/ath10k/core.c             |   17 ++
+ drivers/net/wireless/ath/ath10k/core.h             |   27 +-
+ drivers/net/wireless/ath/ath10k/hw.c               |   21 ++
+ drivers/net/wireless/ath/ath10k/hw.h               |    6 +
+ drivers/net/wireless/ath/ath10k/mac.c              |  211 +++++--------
+ drivers/net/wireless/ath/ath10k/pci.c              |    6 +-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c          |    3 +-
+ drivers/net/wireless/ath/ath10k/wmi.c              |   40 +--
+ drivers/net/wireless/ath/ath10k/wmi.h              |    1 -
+ drivers/net/wireless/ath/ath6kl/wmi.h              |    2 +-
+ drivers/net/wireless/ath/ath9k/htc.h               |    2 +
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c    |   19 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c      |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   17 ++
+ drivers/net/wireless/ath/ath9k/main.c              |   12 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |   46 ++-
+ drivers/net/wireless/ath/wil6210/debugfs.c         |    8 +-
+ drivers/net/wireless/ath/wil6210/main.c            |    2 +
+ drivers/net/wireless/ath/wil6210/netdev.c          |    3 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c        |   99 +++---
+ drivers/net/wireless/ath/wil6210/txrx.c            |    2 +
+ drivers/net/wireless/ath/wil6210/wil6210.h         |    9 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.c    |   14 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.h    |    3 +
+ drivers/net/wireless/ath/wil6210/wmi.c             |    5 +-
+ drivers/net/wireless/ath/wil6210/wmi.h             |   10 +-
+ drivers/net/wireless/b43/main.c                    |    4 +
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    1 +
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  315 +++++++++++---------
+ .../net/wireless/brcm80211/brcmfmac/commonring.c   |   19 +-
+ .../net/wireless/brcm80211/brcmfmac/commonring.h   |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/core.c     |    4 +-
+ drivers/net/wireless/brcm80211/brcmfmac/debug.c    |   50 +---
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c  |    1 +
+ drivers/net/wireless/brcm80211/brcmfmac/feature.h  |    4 +-
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c |   50 ++--
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |   79 +++--
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   |   12 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  203 +++++++------
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c     |   16 +-
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c     |    6 +
+ drivers/net/wireless/mediatek/mt7601u/dma.c        |   74 ++---
+ drivers/net/wireless/mediatek/mt7601u/eeprom.c     |    4 +
+ drivers/net/wireless/mediatek/mt7601u/init.c       |    3 +
+ drivers/net/wireless/mediatek/mt7601u/mac.c        |    8 +-
+ drivers/net/wireless/mediatek/mt7601u/main.c       |    1 +
+ drivers/net/wireless/mediatek/mt7601u/usb.c        |    9 +-
+ drivers/net/wireless/mwifiex/11h.c                 |   32 +-
+ drivers/net/wireless/mwifiex/11n.c                 |  104 ++++++-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c       |   85 +++++-
+ drivers/net/wireless/mwifiex/cfg80211.c            |  130 +++++++-
+ drivers/net/wireless/mwifiex/cmdevt.c              |    5 +-
+ drivers/net/wireless/mwifiex/decl.h                |    7 +-
+ drivers/net/wireless/mwifiex/fw.h                  |   62 +++-
+ drivers/net/wireless/mwifiex/ie.c                  |  102 ++++---
+ drivers/net/wireless/mwifiex/ioctl.h               |    1 +
+ drivers/net/wireless/mwifiex/join.c                |   30 +-
+ drivers/net/wireless/mwifiex/main.h                |   37 ++-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c         |   26 ++
+ drivers/net/wireless/mwifiex/sta_event.c           |   62 ++++
+ drivers/net/wireless/mwifiex/txrx.c                |   21 +-
+ drivers/net/wireless/mwifiex/uap_cmd.c             |   57 +++-
+ drivers/net/wireless/mwifiex/uap_event.c           |   68 +++++
+ drivers/net/wireless/mwifiex/uap_txrx.c            |   18 +-
+ drivers/net/wireless/mwifiex/util.c                |   56 +++-
+ drivers/net/wireless/rt2x00/rt2800.h               |   10 +
+ drivers/net/wireless/rt2x00/rt2800lib.c            |   57 ++--
+ drivers/net/wireless/rt2x00/rt2x00mac.c            |   16 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   51 ++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |   15 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.h       |    3 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |   28 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |   22 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c        |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c        |   14 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |    1 +
+ drivers/net/wireless/ti/wl1251/acx.c               |    3 -
+ include/linux/bcma/bcma_driver_pci.h               |   11 +
+ 86 files changed, 1740 insertions(+), 902 deletions(-)
+
 -- 
-2.1.4
-
+Kalle Valo
