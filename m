@@ -1,51 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33371 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756276AbbFPHxs (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41042 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752946AbbFRHCr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 03:53:48 -0400
-Received: by padev16 with SMTP id ev16so7869056pad.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jun 2015 00:53:48 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 18 Jun 2015 03:02:47 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V2 04/10] ath10k: Copy Engine related changes for QCA99X0
+Date: Thu, 18 Jun 2015 12:31:04 +0530
+Message-ID: <1434610870-5505-5-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150618_090309_023077_733F898D)
+In-Reply-To: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21887.54766.992305.532815@gargle.gargle.HOWL> (sfid-20150616_095402_705359_CEC0BE9F)
-Date: Tue, 16 Jun 2015 13:23:18 +0530
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>
-Subject: Re: [RFC] ath9k: advertise p2p dev support when chanctx
-In-Reply-To: <CALhHN=rEf0cR211Vizkb2xcbxSseda_6w1Uibs3DVD0GSXAq2w@mail.gmail.com>
-References: <1433913034-17801-1-git-send-email-janusz.dziedzic@tieto.com>
-	<21886.43539.833126.629494@gargle.gargle.HOWL>
-	<CALhHN=pUKuXAEb3JEEVTHATEHhvoLe52QDh-pixiS9oUo=6j6Q@mail.gmail.com>
-	<21886.62363.946771.345441@gargle.gargle.HOWL>
-	<557F1716.3040204@broadcom.com>
-	<21887.31486.302760.504336@gargle.gargle.HOWL>
-	<CALhHN=rEf0cR211Vizkb2xcbxSseda_6w1Uibs3DVD0GSXAq2w@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic wrote:
-> Works except case I described.
-> p2p_find is combination of scan and ROC, and scan don't work when we
-> have configured AP from wpa_supplicant.
-> In case of adding p2p-device AP + P2P_FIND works perfectly, also AP +
-> P2P_CLIENT/P2P_GO works OK when use_chanctx.
-> 
-> Other fix I can image is change wpa_supplicant and add
-> NL80211_SCAN_FLAG_AP to p2p_find, and set in ath9k driver
-> wiphy->features |= NL80211_FEATURE_AP_SCAN;
-> 
-> NL80211_FEATURE_AP_SCAN is not set when use_chanctx=1
-> 
-> I am not sure which is better. First one required only fix in ath9k,
-> second one also required changes in wpa_supplicant.
+QCA99X0 supports upto 12 Copy engines. Host and target
+CE configuration table is updated to support new copy engine
+pipes. This also fixes the assumption of diagnostic CE by making
+CE_7 as the one instead of CE_COUNT - 1.
 
-As Johannes mentioned in his email, adding p2p-device support
-in ath9k is the simpler solution, without adding driver-specific
-hacks to wpa_s. So this patch seems okay...
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.h  |  2 +-
+ drivers/net/wireless/ath/ath10k/hw.h  |  3 ++
+ drivers/net/wireless/ath/ath10k/pci.c | 69 ++++++++++++++++++++++++++++++++++-
+ 3 files changed, 71 insertions(+), 3 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 93939de..bb4b8f3 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -21,7 +21,7 @@
+ #include "hif.h"
+ 
+ /* Maximum number of Copy Engine's supported */
+-#define CE_COUNT_MAX 8
++#define CE_COUNT_MAX 12
+ #define CE_HTT_H2T_MSG_SRC_NENTRIES 4096
+ 
+ /* Descriptor rings must be aligned to this boundary */
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 76caeab..5819659 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -343,6 +343,9 @@ enum ath10k_hw_rate_cck {
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
+ #define TARGET_TLV_NUM_WOW_PATTERNS		22
+ 
++/* Diagnostic Window */
++#define CE_DIAG_PIPE	7
++
+ #define NUM_TARGET_CE_CONFIG_WLAN ar->hw_values->num_target_ce_config_wlan
+ 
+ /* Number of Copy Engines supported */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 0007e70..c2aecfe 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -156,6 +156,38 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.src_sz_max = DIAG_TRANSFER_LIMIT,
+ 		.dest_nentries = 2,
+ 	},
++
++	/* CE8: target->host pktlog */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 2048,
++		.dest_nentries = 128,
++	},
++
++	/* CE9 target autonomous qcache memcpy */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 0,
++		.dest_nentries = 0,
++	},
++
++	/* CE10: target autonomous hif memcpy */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 0,
++		.dest_nentries = 0,
++	},
++
++	/* CE11: target autonomous hif memcpy */
++	{
++		.flags = CE_ATTR_FLAGS,
++		.src_nentries = 0,
++		.src_sz_max = 0,
++		.dest_nentries = 0,
++	},
+ };
+ 
+ /* Target firmware's Copy Engine configuration. */
+@@ -233,6 +265,38 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
+ 	},
+ 
+ 	/* CE7 used only by Host */
++	{
++		.pipenum = __cpu_to_le32(7),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(0),
++		.nbytes_max = __cpu_to_le32(0),
++		.flags = __cpu_to_le32(0),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE8 target->host packtlog */
++	{
++		.pipenum = __cpu_to_le32(8),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(64),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE9 target autonomous qcache memcpy */
++	{
++		.pipenum = __cpu_to_le32(9),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* It not necessary to send target wlan configuration for CE10 & CE11
++	 * as these CEs are not actively used in target.
++	 */
+ };
+ 
+ /*
+@@ -1771,7 +1835,8 @@ static int ath10k_pci_init_config(struct ath10k *ar)
+ 
+ 	ret = ath10k_pci_diag_write_mem(ar, pipe_cfg_targ_addr,
+ 					target_ce_config_wlan,
+-					sizeof(target_ce_config_wlan));
++					sizeof(struct ce_pipe_config) *
++					NUM_TARGET_CE_CONFIG_WLAN);
+ 
+ 	if (ret != 0) {
+ 		ath10k_err(ar, "Failed to write pipe cfg: %d\n", ret);
+@@ -1885,7 +1950,7 @@ static int ath10k_pci_alloc_pipes(struct ath10k *ar)
+ 		}
+ 
+ 		/* Last CE is Diagnostic Window */
+-		if (i == CE_COUNT - 1) {
++		if (i == CE_DIAG_PIPE) {
+ 			ar_pci->ce_diag = pipe->ce_hdl;
+ 			continue;
+ 		}
+-- 
+1.9.1
+
