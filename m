@@ -1,159 +1,452 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58300 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932972AbbFJNJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 09:09:16 -0400
-Message-ID: <1433941752.3145.10.camel@sipsolutions.net> (sfid-20150610_150922_643165_9D6C6EF2)
-Subject: pull-request: mac80211-next 2015-06-10
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Jun 2015 15:09:12 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25095 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752409AbbFRHEQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 03:04:16 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V2 09/10] ath10k: Add support for code swap
+Date: Thu, 18 Jun 2015 12:31:09 +0530
+Message-ID: <1434610870-5505-10-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150618_090420_368106_8B1A70F0)
+In-Reply-To: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Code swap is a mechanism to use host memory to store
+some fw binary code segment. Ath10k host driver allocates
+and loads the code swap binary into the host memory and
+configures the target with the host allocated memory
+information at the address taken from code swap binary.
+This patch adds code swap support for firmware binary.
+Code swap binary for firmware bin is available in
+ATH10K_FW_IE_FW_CODE_SWAP_IMAGE.
 
-For -next, I have another set of changes, mostly small fixes for there
-and a few cleanups. Kalle and I also decided to put in a big API change
-that I'd been planning for a while and that required modifying all the
-drivers, for that I pulled in your net-next tree before (re-)applying
-that patch. Therefore, you shouldn't run into any conflicts now; without
-that at least the new mediatek driver wouldn't have built.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/Makefile |   3 +-
+ drivers/net/wireless/ath/ath10k/core.c   |  24 ++++
+ drivers/net/wireless/ath/ath10k/core.h   |   7 ++
+ drivers/net/wireless/ath/ath10k/hw.h     |   3 +
+ drivers/net/wireless/ath/ath10k/swap.c   | 208 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/swap.h   |  72 +++++++++++
+ 6 files changed, 316 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/swap.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/swap.h
 
-Let me know if there are any issues.
-
-Thanks,
-johannes
-
-The following changes since commit c3eee1fb1d308564ada5f7ea57bc51efc6130b37:
-
-  Merge tag 'batman-adv-for-davem' of git://git.open-mesh.org/linux-merge (2015-06-09 20:23:52 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-06-10
-
-for you to fetch changes up to 5df03344c5639fdd848cb87553956df7276a8645:
-
-  mac80211: convert HW flags to unsigned long bitmap (2015-06-10 13:48:42 +0200)
-
-----------------------------------------------------------------
-For this round we mostly have fixes:
- * mesh fixes from Alexis Green and Chun-Yeow Yeoh,
- * a documentation fix from Jakub Kicinski,
- * a missing channel release (from Michal Kazior),
- * a fix for a signal strength reporting bug (from Sara Sharon),
- * handle deauth while associating (myself),
- * don't report mangled TX SKB back to userspace for status (myself),
- * handle aggregation session timeouts properly in fast-xmit (myself)
-
-However, there are also a few cleanups and one big change that
-affects all drivers (and that required me to pull in your tree)
-to change the mac80211 HW flags to use an unsigned long bitmap
-so that we can extend them more easily - we're running out of
-flags even with a cleanup to remove the two unused ones.
-
-----------------------------------------------------------------
-Alexis Green (3):
-      mac80211: Fix incorrectly named last_hop_metric variable in mesh_rx_path_sel_frame
-      mac80211: Always check rates and capabilities in mesh mode
-      mac80211: Fix a case of incorrect metric used when forwarding a PREQ
-
-Chun-Yeow Yeoh (1):
-      mac80211: fix the beacon csa counter for mesh and ibss
-
-Jakub Kicinski (1):
-      mac80211: remove obsolete sentence from documentation
-
-Johannes Berg (9):
-      mac80211: act upon and report deauth while associating
-      mac80211: move TX PN to public part of key struct
-      mac80211: copy nl80211 mgmt TX SKB for status
-      mac80211: stop using pointers as userspace cookies
-      mac80211: remove short slot/short preamble incapable flags
-      mac80211: rename single hw-scan flag to follow naming convention
-      mac80211: handle aggregation session timeout on fast-xmit path
-      Merge remote-tracking branch 'net-next/master' into mac80211-next
-      mac80211: convert HW flags to unsigned long bitmap
-
-Michal Kazior (1):
-      mac80211: release channel on auth failure
-
-Sara Sharon (1):
-      mac80211: ignore invalid scan RSSI values
-
- drivers/net/wireless/adm8211.c                     |   8 +-
- drivers/net/wireless/at76c50x-usb.c                |   4 +-
- drivers/net/wireless/ath/ar5523/ar5523.c           |   6 +-
- drivers/net/wireless/ath/ath10k/mac.c              |  34 ++--
- drivers/net/wireless/ath/ath5k/base.c              |  12 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c      |  20 +--
- drivers/net/wireless/ath/ath9k/init.c              |  24 +--
- drivers/net/wireless/ath/carl9170/fw.c             |   2 +-
- drivers/net/wireless/ath/carl9170/main.c           |  20 +--
- drivers/net/wireless/ath/wcn36xx/main.c            |  12 +-
- drivers/net/wireless/ath/wcn36xx/smd.c             |   4 +-
- drivers/net/wireless/b43/main.c                    |   4 +-
- drivers/net/wireless/b43legacy/main.c              |   5 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   7 +-
- drivers/net/wireless/cw1200/main.c                 |  16 +-
- drivers/net/wireless/iwlegacy/3945-mac.c           |   6 +-
- drivers/net/wireless/iwlegacy/4965-mac.c           |  12 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c        |  26 +--
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c        |   4 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c        |  32 ++--
- drivers/net/wireless/libertas_tf/main.c            |   2 +-
- drivers/net/wireless/mac80211_hwsim.c              |  26 +--
- drivers/net/wireless/mediatek/mt7601u/init.c       |  10 +-
- drivers/net/wireless/mwl8k.c                       |   9 +-
- drivers/net/wireless/p54/main.c                    |  12 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c        |   7 +-
- drivers/net/wireless/rt2x00/rt2400pci.c            |   8 +-
- drivers/net/wireless/rt2x00/rt2500pci.c            |   8 +-
- drivers/net/wireless/rt2x00/rt2500usb.c            |   9 +-
- drivers/net/wireless/rt2x00/rt2800lib.c            |  16 +-
- drivers/net/wireless/rt2x00/rt61pci.c              |   9 +-
- drivers/net/wireless/rt2x00/rt73usb.c              |   9 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c         |   9 +-
- drivers/net/wireless/rtl818x/rtl8187/dev.c         |   6 +-
- drivers/net/wireless/rtlwifi/base.c                |  22 ++-
- drivers/net/wireless/ti/wl1251/main.c              |   3 +-
- drivers/net/wireless/ti/wlcore/main.c              |  26 +--
- drivers/net/wireless/zd1211rw/zd_mac.c             |   8 +-
- drivers/staging/vt6655/device_main.c               |   8 +-
- drivers/staging/vt6656/main_usb.c                  |   8 +-
- include/net/mac80211.h                             | 106 ++++++------
- net/mac80211/agg-tx.c                              |   4 +-
- net/mac80211/cfg.c                                 | 178 ++++++++++++---------
- net/mac80211/debugfs.c                             | 103 ++++++------
- net/mac80211/debugfs_key.c                         |  17 +-
- net/mac80211/driver-ops.h                          |   2 +-
- net/mac80211/ibss.c                                |   1 +
- net/mac80211/iface.c                               |  10 +-
- net/mac80211/key.c                                 |  84 +++-------
- net/mac80211/key.h                                 |   4 -
- net/mac80211/main.c                                |  14 +-
- net/mac80211/mesh.c                                |   1 +
- net/mac80211/mesh_hwmp.c                           |  35 ++--
- net/mac80211/mesh_plink.c                          |   7 +-
- net/mac80211/mlme.c                                | 164 ++++++++++---------
- net/mac80211/offchannel.c                          |   2 +-
- net/mac80211/pm.c                                  |   4 +-
- net/mac80211/rate.c                                |   6 +-
- net/mac80211/rc80211_minstrel_ht.c                 |   2 +-
- net/mac80211/rx.c                                  |  26 +--
- net/mac80211/scan.c                                |  18 ++-
- net/mac80211/sta_info.c                            |  14 +-
- net/mac80211/sta_info.h                            |   3 +
- net/mac80211/status.c                              | 135 +++++++++-------
- net/mac80211/tdls.c                                |  19 +--
- net/mac80211/tx.c                                  |  53 +++---
- net/mac80211/util.c                                |   6 +-
- net/mac80211/wpa.c                                 |  10 +-
- 68 files changed, 758 insertions(+), 743 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
+index 9729e69..c04fb00 100644
+--- a/drivers/net/wireless/ath/ath10k/Makefile
++++ b/drivers/net/wireless/ath/ath10k/Makefile
+@@ -11,7 +11,8 @@ ath10k_core-y += mac.o \
+ 		 wmi-tlv.o \
+ 		 bmi.o \
+ 		 hw.o \
+-		 p2p.o
++		 p2p.o \
++		 swap.o
+ 
+ ath10k_core-$(CONFIG_ATH10K_DEBUGFS) += spectral.o
+ ath10k_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index f239e96..c5f5d16 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -470,6 +470,13 @@ static int ath10k_download_fw(struct ath10k *ar, enum ath10k_firmware_mode mode)
+ 		data = ar->firmware_data;
+ 		data_len = ar->firmware_len;
+ 		mode_name = "normal";
++		ret = ath10k_swap_code_seg_configure(ar,
++				ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW);
++		if (ret) {
++			ath10k_err(ar, "failed to configure fw code swap: %d\n",
++				   ret);
++			return ret;
++		}
+ 		break;
+ 	case ATH10K_FIRMWARE_MODE_UTF:
+ 		data = ar->testmode.utf->data;
+@@ -509,6 +516,8 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 	if (!IS_ERR(ar->cal_file))
+ 		release_firmware(ar->cal_file);
+ 
++	ath10k_swap_code_seg_release(ar);
++
+ 	ar->board = NULL;
+ 	ar->board_data = NULL;
+ 	ar->board_len = 0;
+@@ -522,6 +531,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 	ar->firmware_len = 0;
+ 
+ 	ar->cal_file = NULL;
++
+ }
+ 
+ static int ath10k_fetch_cal_file(struct ath10k *ar)
+@@ -795,6 +805,13 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 			ath10k_dbg(ar, ATH10K_DBG_BOOT, "found fw ie htt op version %d\n",
+ 				   ar->htt.op_version);
+ 			break;
++		case ATH10K_FW_IE_FW_CODE_SWAP_IMAGE:
++			ath10k_dbg(ar, ATH10K_DBG_BOOT,
++				   "found fw code swap image ie (%zd B)\n",
++				   ie_len);
++			ar->swap.firmware_codeswap_data = data;
++			ar->swap.firmware_codeswap_len = ie_len;
++			break;
+ 		default:
+ 			ath10k_warn(ar, "Unknown FW IE: %u\n",
+ 				    le32_to_cpu(hdr->id));
+@@ -1388,6 +1405,13 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_free_firmware_files;
+ 	}
+ 
++	ret = ath10k_swap_code_seg_init(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to initialize code swap segment: %d\n",
++			   ret);
++		goto err_free_firmware_files;
++	}
++
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	ret = ath10k_core_start(ar, ATH10K_FIRMWARE_MODE_NORMAL);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 993cd36..b9145f5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -36,6 +36,7 @@
+ #include "spectral.h"
+ #include "thermal.h"
+ #include "wow.h"
++#include "swap.h"
+ 
+ #define MS(_v, _f) (((_v) & _f##_MASK) >> _f##_LSB)
+ #define SM(_v, _f) (((_v) << _f##_LSB) & _f##_MASK)
+@@ -603,6 +604,12 @@ struct ath10k {
+ 
+ 	const struct firmware *cal_file;
+ 
++	struct {
++		const void *firmware_codeswap_data;
++		size_t firmware_codeswap_len;
++		struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
++	} swap;
++
+ 	char spec_board_id[100];
+ 	bool spec_board_loaded;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 35cd8ca..3e27781 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -124,6 +124,9 @@ enum ath10k_fw_ie_type {
+ 	 * FW API 5 and above.
+ 	 */
+ 	ATH10K_FW_IE_HTT_OP_VERSION = 6,
++
++	/* Code swap image for firmware binary */
++	ATH10K_FW_IE_FW_CODE_SWAP_IMAGE = 7,
+ };
+ 
+ enum ath10k_fw_wmi_op_version {
+diff --git a/drivers/net/wireless/ath/ath10k/swap.c b/drivers/net/wireless/ath/ath10k/swap.c
+new file mode 100644
+index 0000000..a6d2f34
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/swap.c
+@@ -0,0 +1,208 @@
++/*
++ * Copyright (c) 2015 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++/* This file has implementation for code swap logic. With code swap feature,
++ * target can run the fw binary with even smaller IRAM size by using host
++ * memory to store some of the code segments.
++ */
++
++#include "core.h"
++#include "bmi.h"
++#include "debug.h"
++
++static int ath10k_swap_code_seg_fill(struct ath10k *ar,
++				     struct ath10k_swap_code_seg_info *seg_info,
++				     const void *data, size_t data_len)
++{
++	u8 *virt_addr = seg_info->virt_address[0];
++	u8 swap_magic[ATH10K_SWAP_CODE_SEG_MAGIC_BYTES_SZ] = {};
++	const u8 *fw_data = data;
++	union ath10k_swap_code_seg_item *swap_item;
++	u32 length = 0;
++	u32 payload_len;
++	u32 total_payload_len = 0;
++	u32 size_left = data_len;
++
++	/* Parse swap bin and copy the content to host allocated memory.
++	 * The format is Address, length and value. The last 4-bytes is
++	 * target write address. Currently address field is not used.
++	 */
++	seg_info->target_addr = -1;
++	while (size_left >= sizeof(*swap_item)) {
++		swap_item = (union ath10k_swap_code_seg_item *)fw_data;
++		payload_len = __le32_to_cpu(swap_item->tlv.length);
++		if ((payload_len > size_left) ||
++		    (payload_len == 0 &&
++		     size_left != sizeof(struct ath10k_swap_code_seg_tail))) {
++			ath10k_err(ar, "refusing to parse invalid tlv length %d\n",
++				   payload_len);
++			return -EINVAL;
++		}
++
++		if (payload_len == 0) {
++			if (memcmp(swap_item->tail.magic_signature, swap_magic,
++				   ATH10K_SWAP_CODE_SEG_MAGIC_BYTES_SZ)) {
++				ath10k_err(ar, "refusing an invalid swap file\n");
++				return -EINVAL;
++			}
++			seg_info->target_addr =
++				__le32_to_cpu(swap_item->tail.bmi_write_addr);
++			break;
++		}
++
++		memcpy(virt_addr, swap_item->tlv.data, payload_len);
++		virt_addr += payload_len;
++		length = payload_len +  sizeof(struct ath10k_swap_code_seg_tlv);
++		size_left -= length;
++		fw_data += length;
++		total_payload_len += payload_len;
++	}
++
++	if (seg_info->target_addr == -1) {
++		ath10k_err(ar, "failed to parse invalid swap file\n");
++		return -EINVAL;
++	}
++	seg_info->seg_hw_info.swap_size = __cpu_to_le32(total_payload_len);
++
++	return 0;
++}
++
++static void
++ath10k_swap_code_seg_free(struct ath10k *ar,
++			  struct ath10k_swap_code_seg_info *seg_info)
++{
++	u32 seg_size;
++
++	if (!seg_info)
++		return;
++
++	if (!seg_info->virt_address[0])
++		return;
++
++	seg_size = __le32_to_cpu(seg_info->seg_hw_info.size);
++	dma_free_coherent(ar->dev, seg_size, seg_info->virt_address[0],
++			  seg_info->paddr[0]);
++}
++
++static struct ath10k_swap_code_seg_info *
++ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
++{
++	struct ath10k_swap_code_seg_info *seg_info;
++	void *virt_addr;
++	dma_addr_t paddr;
++
++	swap_bin_len = roundup(swap_bin_len, 2);
++	if (swap_bin_len > ATH10K_SWAP_CODE_SEG_BIN_LEN_MAX) {
++		ath10k_err(ar, "refusing code swap bin because it is too big %zd > %d\n",
++			   swap_bin_len, ATH10K_SWAP_CODE_SEG_BIN_LEN_MAX);
++		return NULL;
++	}
++
++	seg_info = devm_kzalloc(ar->dev, sizeof(*seg_info), GFP_KERNEL);
++	if (!seg_info)
++		return NULL;
++
++	virt_addr = dma_alloc_coherent(ar->dev, swap_bin_len, &paddr,
++				       GFP_KERNEL);
++	if (!virt_addr) {
++		ath10k_err(ar, "failed to allocate dma coherent memory\n");
++		return NULL;
++	}
++
++	seg_info->seg_hw_info.bus_addr[0] = __cpu_to_le32(paddr);
++	seg_info->seg_hw_info.size = __cpu_to_le32(swap_bin_len);
++	seg_info->seg_hw_info.swap_size = __cpu_to_le32(swap_bin_len);
++	seg_info->seg_hw_info.num_segs =
++			__cpu_to_le32(ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED);
++	seg_info->seg_hw_info.size_log2 = __cpu_to_le32(ilog2(swap_bin_len));
++	seg_info->virt_address[0] = virt_addr;
++	seg_info->paddr[0] = paddr;
++
++	return seg_info;
++}
++
++int ath10k_swap_code_seg_configure(struct ath10k *ar,
++				   enum ath10k_swap_code_seg_bin_type type)
++{
++	int ret;
++	struct ath10k_swap_code_seg_info *seg_info = NULL;
++
++	switch (type) {
++	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW:
++		if (!ar->swap.firmware_swap_code_seg_info)
++			return 0;
++
++		ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
++		seg_info = ar->swap.firmware_swap_code_seg_info;
++		break;
++	default:
++	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_OTP:
++	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_UTF:
++		ath10k_warn(ar, "ignoring unknown code swap binary type %d\n",
++			    type);
++		return 0;
++	}
++
++	ret = ath10k_bmi_write_memory(ar, seg_info->target_addr,
++				      &seg_info->seg_hw_info,
++				      sizeof(seg_info->seg_hw_info));
++	if (ret) {
++		ath10k_err(ar, "failed to write Code swap segment information (%d)\n",
++			   ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++void ath10k_swap_code_seg_release(struct ath10k *ar)
++{
++	ath10k_swap_code_seg_free(ar, ar->swap.firmware_swap_code_seg_info);
++	ar->swap.firmware_codeswap_data = NULL;
++	ar->swap.firmware_codeswap_len = 0;
++	ar->swap.firmware_swap_code_seg_info = NULL;
++}
++
++int ath10k_swap_code_seg_init(struct ath10k *ar)
++{
++	int ret;
++	struct ath10k_swap_code_seg_info *seg_info;
++
++	if (!ar->swap.firmware_codeswap_len || !ar->swap.firmware_codeswap_data)
++		return 0;
++
++	seg_info = ath10k_swap_code_seg_alloc(ar,
++					      ar->swap.firmware_codeswap_len);
++	if (!seg_info) {
++		ath10k_err(ar, "failed to allocate fw code swap segment\n");
++		return -ENOMEM;
++	}
++
++	ret = ath10k_swap_code_seg_fill(ar, seg_info,
++					ar->swap.firmware_codeswap_data,
++					ar->swap.firmware_codeswap_len);
++
++	if (ret) {
++		ath10k_warn(ar, "failed to initialize fw code swap segment: %d\n",
++			    ret);
++		ath10k_swap_code_seg_free(ar, seg_info);
++		return ret;
++	}
++
++	ar->swap.firmware_swap_code_seg_info = seg_info;
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/ath/ath10k/swap.h b/drivers/net/wireless/ath/ath10k/swap.h
+new file mode 100644
+index 0000000..5c89952
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/swap.h
+@@ -0,0 +1,72 @@
++/*
++ * Copyright (c) 2015 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _SWAP_H_
++#define _SWAP_H_
++
++#define ATH10K_SWAP_CODE_SEG_BIN_LEN_MAX	(512 * 1024)
++#define ATH10K_SWAP_CODE_SEG_MAGIC_BYTES_SZ	12
++#define ATH10K_SWAP_CODE_SEG_NUM_MAX		16
++/* Currently only one swap segment is supported */
++#define ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED	1
++
++struct ath10k_swap_code_seg_tlv {
++	__le32 address;
++	__le32 length;
++	u8 data[0];
++} __packed;
++
++struct ath10k_swap_code_seg_tail {
++	u8 magic_signature[ATH10K_SWAP_CODE_SEG_MAGIC_BYTES_SZ];
++	__le32 bmi_write_addr;
++} __packed;
++
++union ath10k_swap_code_seg_item {
++	struct ath10k_swap_code_seg_tlv tlv;
++	struct ath10k_swap_code_seg_tail tail;
++} __packed;
++
++enum ath10k_swap_code_seg_bin_type {
++	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_OTP,
++	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW,
++	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_UTF,
++};
++
++struct ath10k_swap_code_seg_hw_info {
++	/* Swap binary image size */
++	__le32 swap_size;
++	__le32 num_segs;
++
++	/* Swap data size */
++	__le32 size;
++	__le32 size_log2;
++	__le32 bus_addr[ATH10K_SWAP_CODE_SEG_NUM_MAX];
++	__le64 reserved[ATH10K_SWAP_CODE_SEG_NUM_MAX];
++} __packed;
++
++struct ath10k_swap_code_seg_info {
++	struct ath10k_swap_code_seg_hw_info seg_hw_info;
++	void *virt_address[ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED];
++	u32 target_addr;
++	dma_addr_t paddr[ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED];
++};
++
++int ath10k_swap_code_seg_configure(struct ath10k *ar,
++				   enum ath10k_swap_code_seg_bin_type type);
++void ath10k_swap_code_seg_release(struct ath10k *ar);
++int ath10k_swap_code_seg_init(struct ath10k *ar);
++
++#endif
+-- 
+1.9.1
 
