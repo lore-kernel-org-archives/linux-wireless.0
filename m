@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35175 "EHLO sipsolutions.net"
+Received: from mail.neratec.com ([46.140.151.2]:61680 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750738AbbFKJqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 05:46:45 -0400
-Message-ID: <1434016002.1915.7.camel@sipsolutions.net> (sfid-20150611_114648_121723_4E771214)
-Subject: Re: Exposing enum ieee80211_channel_flags to user
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Jun 2015 11:46:42 +0200
-In-Reply-To: <1434015922.1915.6.camel@sipsolutions.net> (sfid-20150611_114527_922690_7AF6C2D9)
-References: <CACna6rwHXzGTZ+NS9PpZENJATVzRzm1Wkija0_CrveMoM05d5g@mail.gmail.com>
-	 (sfid-20150611_113544_857208_070F0480) <1434015922.1915.6.camel@sipsolutions.net>
-	 (sfid-20150611_114527_922690_7AF6C2D9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752700AbbFRQkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 12:40:47 -0400
+Message-ID: <5582F48C.4000502@neratec.com> (sfid-20150618_184051_512783_C527799E)
+Date: Thu, 18 Jun 2015 18:40:44 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: spectral - simplify max_index calculation
+References: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com>	<CAFtRNNxvBC8SD3P5u=bEZPofA-A8YfHYuZnfA4Y07W7Wx4keAQ@mail.gmail.com>	<55829F18.9050807@neratec.com>	<CAFtRNNy009MVbOpHOWVZMuDAaJzmLed+nhBwgybgSS+hbjU=tQ@mail.gmail.com>	<CAFtRNNxnwTGXa8FS2n_chRZPrRffPtGrpZ96t7zFCDo2C7b8sw@mail.gmail.com> <CAFtRNNzzmPGr8UBzULvvgcGFrUqY8nvi1sBAQx8zkfo2tuLg=Q@mail.gmail.com>
+In-Reply-To: <CAFtRNNzzmPGr8UBzULvvgcGFrUqY8nvi1sBAQx8zkfo2tuLg=Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-06-11 at 11:45 +0200, Johannes Berg wrote:
-> On Thu, 2015-06-11 at 11:35 +0200, Rafał Miłecki wrote:
+On 06/18/2015 05:46 PM, Nick Kossifidis wrote:
+> 2015-06-18 17:34 GMT+02:00 Nick Kossifidis <mickflemm@gmail.com>:
+>> To clarify this a bit: It's 0 - 63 for lower bins and 0 - 64 (not 63)
+>> for upper bins and since we want an array index of 0 - 128 we add the
+>> index of 0 to the upper max_idx (on the caller). You are right that
+>> the current comment there is wrong (it even mentions 5bit ints) so
+>> feel free to fix that but the code works as expected and it's much
+>> more readable than doing "^ 0x20 - 4" on the caller (plus it handles
+>> both signed and unsigned cases so no problem there).
+>>
 > 
-> > iw also wasn't helpful:
-> > Frequencies:
-> >         * 5180 MHz [36] (30.0 dBm)
-> >         * 5200 MHz [40] (30.0 dBm)
-> >         * 5220 MHz [44] (30.0 dBm)
-> >         * 5240 MHz [48] (30.0 dBm)
-> > 
-> > After some in-kernel debugging (nl80211_set_wiphy,
-> > cfg80211_chandef_usable, cfg80211_secondary_chans_ok) I finally
-> > realized it was because of:
-> > IEEE80211_CHAN_NO_80MHZ
-> > 
-> > Do you have any idea how we could handle such cases nicely? To let
-> > user find out what's going on (wrong)?
-> > 
-> > Should "iw" be extended to print flag names? Or should hostapd check
-> > for channels in some smarter way? Any other ideas?
+> Arghh, I need to sleep asap :P
 > 
-> We already have the flags exposed to iw, it's just not printing them.
-> There was a patch to print them, but it wasn't complete, and the
-> submitter kinda went away. You can see the discussion here:
+> 0 - 64 for lower bins and 0 - 63 for upper bins...
 > 
-> http://mid.gmane.org/1425452686-28196-1-git-send-email-arnagara@qti.qualcomm.com
 
-Upon rereading, I think my preference would be to remove much of the
-channel list information and add a separate iw command.
+You sure? This would make 129 bins, no ;)
 
-johannes
+
+As for your other point:
+> A bit more infos here:
+> 
+> On AR9280 there are various issues (check out spectral.c to get an
+> idea) but I guess they got fixed on later chips so you probably won't
+> see "shifted" indices etc on AR9590. However both the spectral scan
+> and your work on chirp detection should work on earlier chips too.
+> Unfortunately I can't test AR9280's radar detection code because I
+> have a USB card (so it's ath9k_htc) and there is no DFS support there
+> yet, but I suggest you test it on an older card to verify that you
+> won't get any corruption. The good thing is that because you get only
+> one report (if I remember correctly) in case of radar detection (so
+> not software triggered spectral scan) you can easily fix that in your
+> case by checking the packet's length (check out spectral.c  for
+> ath_cmn_copy_fft_frame). Since the format is pretty much the same
+> (only the magnitude calculation is different), maybe we could handle
+> the two cases with common code instead (and fix any corruption there).
+
+There is an important difference between the FFT data provided for spectral and
+that for long radar pulses: with the former you always get complete samples, while
+the latter can be truncated if the pulse goes away before the analysis is done.
+With that, the corrective measures you can perform on spectral data based on the
+expected data length and the known bugs causing an invalid length of {-1, +2,
+combination thereof} can not be applied for the radar FFT data.
+
+In the patch I posted there is a correction for cases when chip adds 2 extra bytes
+before the FFT data (which we observed rarely on AR9590), but I might consider
+removing it since it collides with cases where 2 bytes are appended to the data as
+part of incomplete sample.
+
+
+If there is enough interest and people able to test, I agree it would make sense
+to generalize and share the code.
+
+
+Good Night
 
