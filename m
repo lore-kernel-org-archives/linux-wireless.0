@@ -1,137 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4314 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753396AbbFCHcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:32:05 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/15] iwlwifi: mvm: Add DC2DC_CONFIG_CMD (0x83) cmd & TLV
-Date: Wed,  3 Jun 2015 10:31:34 +0300
-Message-Id: <1433316696-4612-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093350_555713_E4D2C840)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40985 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708AbbFRHCL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 03:02:11 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V2 02/10] ath10k: Add new reg_address/mask to hw register table
+Date: Thu, 18 Jun 2015 12:31:02 +0530
+Message-ID: <1434610870-5505-3-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150618_090215_572503_D06C36D2)
+In-Reply-To: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+Add more register address and mask which can be different
+for newer chip to hw_reg table.
 
-Add DC2DC_CONFIG_CMD (0x83) cmd.
-
-Add IWL_UCODE_TLV_CAPA_DC2DC_CONFIG_SUPPORT tlv.
-
-The command allows the driver get & set the DCDC's frequency tune.
-(freq_tune is the divider that is used to calculate the actual DCDC's
-clock rate)
-The command always returns the current/updated frequency tune values of
-the DCDC.
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-file.h |  2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api.h  | 46 ++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/ops.c     |  1 +
- 3 files changed, 49 insertions(+)
+ drivers/net/wireless/ath/ath10k/ce.h |  6 ++++--
+ drivers/net/wireless/ath/ath10k/hw.c | 22 ++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/hw.h | 17 ++++++++++++-----
+ 3 files changed, 34 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 7efd629..a9b5ae4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -297,6 +297,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  *	which also implies support for the scheduler configuration command
-  * @IWL_UCODE_TLV_CAPA_TDLS_CHANNEL_SWITCH: supports TDLS channel switching
-  * @IWL_UCODE_TLV_CAPA_HOTSPOT_SUPPORT: supports Hot Spot Command
-+ * @IWL_UCODE_TLV_CAPA_DC2DC_SUPPORT: supports DC2DC Command
-  * @IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS: support radio and beacon statistics
-  * @IWL_UCODE_TLV_CAPA_BT_COEX_PLCR: enabled BT Coex packet level co-running
-  * @IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC: ucode supports LAR updates with different
-@@ -318,6 +319,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_DQA_SUPPORT			= (__force iwl_ucode_tlv_capa_t)12,
- 	IWL_UCODE_TLV_CAPA_TDLS_CHANNEL_SWITCH		= (__force iwl_ucode_tlv_capa_t)13,
- 	IWL_UCODE_TLV_CAPA_HOTSPOT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)18,
-+	IWL_UCODE_TLV_CAPA_DC2DC_CONFIG_SUPPORT		= (__force iwl_ucode_tlv_capa_t)19,
- 	IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS		= (__force iwl_ucode_tlv_capa_t)22,
- 	IWL_UCODE_TLV_CAPA_BT_COEX_PLCR			= (__force iwl_ucode_tlv_capa_t)28,
- 	IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC		= (__force iwl_ucode_tlv_capa_t)29,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 7128379..16e9ef4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -171,6 +171,9 @@ enum {
- 	/* Thermal Throttling*/
- 	REPLY_THERMAL_MNG_BACKOFF = 0x7e,
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 0eddb20..93939de 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -423,8 +423,10 @@ static inline u32 ath10k_ce_base_address(struct ath10k *ar, unsigned int ce_id)
  
-+	/* Set/Get DC2DC frequency tune */
-+	DC2DC_CONFIG_CMD = 0x83,
-+
- 	/* NVM */
- 	NVM_ACCESS_CMD = 0x88,
+ #define CE_RING_IDX_INCR(nentries_mask, idx) (((idx) + 1) & (nentries_mask))
  
-@@ -1389,6 +1392,49 @@ struct iwl_mvm_marker {
- 	__le32 metadata[0];
- } __packed; /* MARKER_API_S_VER_1 */
+-#define CE_WRAPPER_INTERRUPT_SUMMARY_HOST_MSI_LSB		8
+-#define CE_WRAPPER_INTERRUPT_SUMMARY_HOST_MSI_MASK		0x0000ff00
++#define CE_WRAPPER_INTERRUPT_SUMMARY_HOST_MSI_LSB \
++				ar->regs->ce_wrap_intr_sum_host_msi_lsb
++#define CE_WRAPPER_INTERRUPT_SUMMARY_HOST_MSI_MASK \
++				ar->regs->ce_wrap_intr_sum_host_msi_mask
+ #define CE_WRAPPER_INTERRUPT_SUMMARY_HOST_MSI_GET(x) \
+ 	(((x) & CE_WRAPPER_INTERRUPT_SUMMARY_HOST_MSI_MASK) >> \
+ 		CE_WRAPPER_INTERRUPT_SUMMARY_HOST_MSI_LSB)
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index 48bcd2c..cb09867 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -34,8 +34,15 @@ const struct ath10k_hw_regs qca988x_regs = {
+ 	.ce7_base_address		= 0x00059000,
+ 	.soc_reset_control_si0_rst_mask	= 0x00000001,
+ 	.soc_reset_control_ce_rst_mask	= 0x00040000,
+-	.soc_chip_id_address		= 0x00ec,
+-	.scratch_3_address		= 0x0030,
++	.soc_chip_id_address		= 0x000000ec,
++	.scratch_3_address		= 0x00000030,
++	.fw_indicator_address		= 0x00009030,
++	.pcie_local_base_address	= 0x00080000,
++	.ce_wrap_intr_sum_host_msi_lsb	= 0x00000008,
++	.ce_wrap_intr_sum_host_msi_mask	= 0x0000ff00,
++	.pcie_intr_fw_mask		= 0x00000400,
++	.pcie_intr_ce_mask_all		= 0x0007f800,
++	.pcie_intr_clr_address		= 0x00000014,
+ };
  
-+/*
-+ * enum iwl_dc2dc_config_id - flag ids
-+ *
-+ * Ids of dc2dc configuration flags
-+ */
-+enum iwl_dc2dc_config_id {
-+	DCDC_LOW_POWER_MODE_MSK_SET  = 0x1, /* not used */
-+	DCDC_FREQ_TUNE_SET = 0x2,
-+}; /* MARKER_ID_API_E_VER_1 */
-+
-+/**
-+ * struct iwl_dc2dc_config_cmd - configure dc2dc values
-+ *
-+ * (DC2DC_CONFIG_CMD = 0x83)
-+ *
-+ * Set/Get & configure dc2dc values.
-+ * The command always returns the current dc2dc values.
-+ *
-+ * @flags: set/get dc2dc
-+ * @enable_low_power_mode: not used.
-+ * @dc2dc_freq_tune0: frequency divider - digital domain
-+ * @dc2dc_freq_tune1: frequency divider - analog domain
-+ */
-+struct iwl_dc2dc_config_cmd {
-+	__le32 flags;
-+	__le32 enable_low_power_mode; /* not used */
-+	__le32 dc2dc_freq_tune0;
-+	__le32 dc2dc_freq_tune1;
-+} __packed; /* DC2DC_CONFIG_CMD_API_S_VER_1 */
-+
-+/**
-+ * struct iwl_dc2dc_config_resp - response for iwl_dc2dc_config_cmd
-+ *
-+ * Current dc2dc values returned by the FW.
-+ *
-+ * @dc2dc_freq_tune0: frequency divider - digital domain
-+ * @dc2dc_freq_tune1: frequency divider - analog domain
-+ */
-+struct iwl_dc2dc_config_resp {
-+	__le32 dc2dc_freq_tune0;
-+	__le32 dc2dc_freq_tune1;
-+} __packed; /* DC2DC_CONFIG_RESP_API_S_VER_1 */
-+
- /***********************************
-  * Smart Fifo API
-  ***********************************/
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 2801f97..e4fa500 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -281,6 +281,7 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(BINDING_CONTEXT_CMD),
- 	CMD(TIME_QUOTA_CMD),
- 	CMD(NON_QOS_TX_COUNTER_CMD),
-+	CMD(DC2DC_CONFIG_CMD),
- 	CMD(NVM_ACCESS_CMD),
- 	CMD(PHY_CONFIGURATION_CMD),
- 	CMD(CALIB_RES_NOTIF_PHY_DB),
+ const struct ath10k_hw_regs qca6174_regs = {
+@@ -54,8 +61,15 @@ const struct ath10k_hw_regs qca6174_regs = {
+ 	.ce7_base_address			= 0x00036000,
+ 	.soc_reset_control_si0_rst_mask		= 0x00000000,
+ 	.soc_reset_control_ce_rst_mask		= 0x00000001,
+-	.soc_chip_id_address			= 0x000f0,
+-	.scratch_3_address			= 0x0028,
++	.soc_chip_id_address			= 0x000000f0,
++	.scratch_3_address			= 0x00000028,
++	.fw_indicator_address			= 0x00009028,
++	.pcie_local_base_address		= 0x00080000,
++	.ce_wrap_intr_sum_host_msi_lsb		= 0x00000008,
++	.ce_wrap_intr_sum_host_msi_mask		= 0x0000ff00,
++	.pcie_intr_fw_mask			= 0x00000400,
++	.pcie_intr_ce_mask_all			= 0x0007f800,
++	.pcie_intr_clr_address			= 0x00000014,
+ };
+ 
+ const struct ath10k_hw_values qca988x_values = {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index b218388..5d04317 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -164,6 +164,13 @@ struct ath10k_hw_regs {
+ 	u32 soc_reset_control_ce_rst_mask;
+ 	u32 soc_chip_id_address;
+ 	u32 scratch_3_address;
++	u32 fw_indicator_address;
++	u32 pcie_local_base_address;
++	u32 ce_wrap_intr_sum_host_msi_lsb;
++	u32 ce_wrap_intr_sum_host_msi_mask;
++	u32 pcie_intr_fw_mask;
++	u32 pcie_intr_ce_mask_all;
++	u32 pcie_intr_clr_address;
+ };
+ 
+ extern const struct ath10k_hw_regs qca988x_regs;
+@@ -386,7 +393,7 @@ enum ath10k_hw_rate_cck {
+ #define CE7_BASE_ADDRESS			ar->regs->ce7_base_address
+ #define DBI_BASE_ADDRESS			0x00060000
+ #define WLAN_ANALOG_INTF_PCIE_BASE_ADDRESS	0x0006c000
+-#define PCIE_LOCAL_BASE_ADDRESS			0x00080000
++#define PCIE_LOCAL_BASE_ADDRESS		ar->regs->pcie_local_base_address
+ 
+ #define SOC_RESET_CONTROL_ADDRESS		0x00000000
+ #define SOC_RESET_CONTROL_OFFSET		0x00000000
+@@ -460,7 +467,7 @@ enum ath10k_hw_rate_cck {
+ #define CORE_CTRL_ADDRESS			0x0000
+ #define PCIE_INTR_ENABLE_ADDRESS		0x0008
+ #define PCIE_INTR_CAUSE_ADDRESS			0x000c
+-#define PCIE_INTR_CLR_ADDRESS			0x0014
++#define PCIE_INTR_CLR_ADDRESS			ar->regs->pcie_intr_clr_address
+ #define SCRATCH_3_ADDRESS			ar->regs->scratch_3_address
+ #define CPU_INTR_ADDRESS			0x0010
+ 
+@@ -468,13 +475,13 @@ enum ath10k_hw_rate_cck {
+ #define CCNT_TO_MSEC(x) ((x) / 88000)
+ 
+ /* Firmware indications to the Host via SCRATCH_3 register. */
+-#define FW_INDICATOR_ADDRESS	(SOC_CORE_BASE_ADDRESS + SCRATCH_3_ADDRESS)
++#define FW_INDICATOR_ADDRESS			ar->regs->fw_indicator_address
+ #define FW_IND_EVENT_PENDING			1
+ #define FW_IND_INITIALIZED			2
+ 
+ /* HOST_REG interrupt from firmware */
+-#define PCIE_INTR_FIRMWARE_MASK			0x00000400
+-#define PCIE_INTR_CE_MASK_ALL			0x0007f800
++#define PCIE_INTR_FIRMWARE_MASK			ar->regs->pcie_intr_fw_mask
++#define PCIE_INTR_CE_MASK_ALL			ar->regs->pcie_intr_ce_mask_all
+ 
+ #define DRAM_BASE_ADDRESS			0x00400000
+ 
 -- 
-2.1.4
+1.9.1
 
