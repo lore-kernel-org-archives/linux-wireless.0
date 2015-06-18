@@ -1,150 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:34948 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751389AbbFDIoK (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49235 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbbFROmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 04:44:10 -0400
-Received: by padjw17 with SMTP id jw17so25261892pad.2
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jun 2015 01:44:10 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] rtlwifi: rtl8192cu: remove _InitBeaconParameters().
-Date: Thu,  4 Jun 2015 17:43:36 +0900
-Message-Id: <1433407416-752-3-git-send-email-ap420073@gmail.com> (sfid-20150604_104414_326292_559ED05C)
-In-Reply-To: <1433407416-752-1-git-send-email-ap420073@gmail.com>
-References: <1433407416-752-1-git-send-email-ap420073@gmail.com>
+	Thu, 18 Jun 2015 10:42:39 -0400
+Date: Thu, 18 Jun 2015 07:42:38 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: =?utf-8?B?7KGw7ISx7ZuI?= <ywhsbliss@gmail.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, Rachel.kim@atmel.com,
+	dean.lee@atmel.com
+Subject: Re: [PATCH 4/5] staging: wilc1000: remove prohibited spaces.
+Message-ID: <20150618144238.GB8830@kroah.com> (sfid-20150618_164243_415062_D033E181)
+References: <99c95a41549a43582fd1c679c34723d54771cbcc.1434519635.git.ywhsbliss@gmail.com>
+ <0d07f1a77b401c709fb8ae4be248f5e27b20e688.1434519635.git.ywhsbliss@gmail.com>
+ <20150618041802.GA10617@kroah.com>
+ <CAAYiv+Yx-KzqE9UKeEO2NHJbzy8XL2z3YH5BbkXiBgXLHRhK7Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAAYiv+Yx-KzqE9UKeEO2NHJbzy8XL2z3YH5BbkXiBgXLHRhK7Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-_InitBeaconParameters() and rtl92cu_init_beacon_parameters() is
-same routine. I remove both functions. then i add
-_rtl92cu_init_beacon_parameters() in the hw.c.
-_rtl92cu_init_beacon_parameters() is same routine with
-_InitBeaconParameters().
+On Thu, Jun 18, 2015 at 01:51:15PM +0900, 조성훈 wrote:
+> Hi Greg,
+> I want to make sure one thing before going further. I cloned the
+> staging-testing and then made the first patch. There was no problem when I sent
+> the first path to you.
+> Afterwards, I also pulled the repository to update my local tree before making
+> the second patch. So, I thought I made this second patch based on top of the
+> latest commits.
+> 
+> I am confused why you said I need rebase. Do you mean I have to make my branch
+> (for example, staging-wilc1000) from staging-testing and then rebase my commits
+> to staging-testing branch before making patch files with git format-patch?
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  | 43 ++++++++++++++--------------
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 15 ----------
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.h |  3 --
- 3 files changed, 22 insertions(+), 39 deletions(-)
+You made the patches correctly, I just accepted patches that were sent
+before yours to the tree, which then conflicted with your patches.
+That's what happens with a fast-moving tree and a driver that lots of
+people are all trying to clean up at the same time.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 1898596..8a54468 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -840,6 +840,26 @@ static void _rtl92cu_init_wmac_setting(struct ieee80211_hw *hw)
- 	rtl92c_set_data_filter(hw, value16);
- }
- 
-+static void _rtl92cu_init_beacon_parameters(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+
-+	rtl_write_word(rtlpriv, REG_BCN_CTRL, 0x1010);
-+
-+	/* TODO: Remove these magic number */
-+	rtl_write_word(rtlpriv, REG_TBTT_PROHIBIT, 0x6404);
-+	rtl_write_byte(rtlpriv, REG_DRVERLYINT, DRIVER_EARLY_INT_TIME);
-+	rtl_write_byte(rtlpriv, REG_BCNDMATIM, BCN_DMA_ATIME_INT_TIME);
-+	/* Change beacon AIFS to the largest number
-+	 * beacause test chip does not contension before sending beacon.
-+	 */
-+	if (IS_NORMAL_CHIP(rtlhal->version))
-+		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x660F);
-+	else
-+		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x66FF);
-+}
-+
- static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -887,7 +907,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- 	_rtl92cu_init_usb_aggregation(hw);
- 	rtlpriv->cfg->ops->set_bw_mode(hw, NL80211_CHAN_HT20);
- 	rtl92c_set_min_space(hw, IS_92C_SERIAL(rtlhal->version));
--	rtl92c_init_beacon_parameters(hw, rtlhal->version);
-+	_rtl92cu_init_beacon_parameters(hw);
- 	rtl92c_init_ampdu_aggregation(hw);
- 	rtl92c_init_beacon_max_error(hw);
- 	return err;
-@@ -1451,25 +1471,6 @@ int rtl92cu_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type)
- 	return 0;
- }
- 
--static void _InitBeaconParameters(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
--
--	rtl_write_word(rtlpriv, REG_BCN_CTRL, 0x1010);
--
--	/* TODO: Remove these magic number */
--	rtl_write_word(rtlpriv, REG_TBTT_PROHIBIT, 0x6404);
--	rtl_write_byte(rtlpriv, REG_DRVERLYINT, DRIVER_EARLY_INT_TIME);
--	rtl_write_byte(rtlpriv, REG_BCNDMATIM, BCN_DMA_ATIME_INT_TIME);
--	/* Change beacon AIFS to the largest number
--	 * beacause test chip does not contension before sending beacon. */
--	if (IS_NORMAL_CHIP(rtlhal->version))
--		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x660F);
--	else
--		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x66FF);
--}
--
- static void _beacon_function_enable(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -1490,7 +1491,7 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
- 	atim_window = 2;	/*FIX MERGE */
- 	rtl_write_word(rtlpriv, REG_ATIMWND, atim_window);
- 	rtl_write_word(rtlpriv, REG_BCN_INTERVAL, bcn_interval);
--	_InitBeaconParameters(hw);
-+	_rtl92cu_init_beacon_parameters(hw);
- 	rtl_write_byte(rtlpriv, REG_SLOT, 0x09);
- 	/*
- 	 * Force beacon frame transmission even after receiving beacon frame
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-index f3db6bc..490a7cf 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-@@ -641,21 +641,6 @@ void rtl92c_init_retry_function(struct ieee80211_hw *hw)
- 	rtl_write_byte(rtlpriv, REG_ACKTO, 0x40);
- }
- 
--void rtl92c_init_beacon_parameters(struct ieee80211_hw *hw,
--				   enum version_8192c version)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
--
--	rtl_write_word(rtlpriv, REG_TBTT_PROHIBIT, 0x6404);/* ms */
--	rtl_write_byte(rtlpriv, REG_DRVERLYINT, DRIVER_EARLY_INT_TIME);/*ms*/
--	rtl_write_byte(rtlpriv, REG_BCNDMATIM, BCN_DMA_ATIME_INT_TIME);
--	if (IS_NORMAL_CHIP(rtlhal->version))
--		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x660F);
--	else
--		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x66FF);
--}
--
- void rtl92c_disable_fast_edca(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
-index 58548e8..e34f0f1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
-@@ -70,9 +70,6 @@ void rtl92c_init_beacon_max_error(struct ieee80211_hw *hw);
- void rtl92c_init_rdg_setting(struct ieee80211_hw *hw);
- void rtl92c_init_retry_function(struct ieee80211_hw *hw);
- 
--void rtl92c_init_beacon_parameters(struct ieee80211_hw *hw,
--				   enum version_8192c version);
--
- void rtl92c_disable_fast_edca(struct ieee80211_hw *hw);
- void rtl92c_set_min_space(struct ieee80211_hw *hw, bool is2T);
- 
--- 
-2.1.4
+So rebase on staging-testing again and resend and you should be fine.
 
+thanks,
+
+greg k-h
