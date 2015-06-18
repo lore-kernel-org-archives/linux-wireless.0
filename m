@@ -1,75 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:36709 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808AbbFKGy0 convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55859 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810AbbFRHD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 02:54:26 -0400
-Received: by wigg3 with SMTP id g3so66593755wig.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2015 23:54:25 -0700 (PDT)
+	Thu, 18 Jun 2015 03:03:29 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V2 06/10] ath10k: Add chip reset sequence for QCA99X0
+Date: Thu, 18 Jun 2015 12:31:06 +0530
+Message-ID: <1434610870-5505-7-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150618_090332_614065_3C09CA97)
+In-Reply-To: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <55789EBF.2060501@candelatech.com>
-References: <55789EBF.2060501@candelatech.com>
-Date: Thu, 11 Jun 2015 08:54:25 +0200
-Message-ID: <CA+BoTQmWmrkCjTkq9R9qXZBqq=ynNKdsgn4uLNAucetXy39GRQ@mail.gmail.com> (sfid-20150611_085430_396141_051F3666)
-Subject: Re: Anyone tried ath10k AP with 40Mhz operation?
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 June 2015 at 22:31, Ben Greear <greearb@candelatech.com> wrote:
-> I'm trying this hostapd config file.  Beacons seem OK, and station
-> associates.  Station puts DHCP Discover on the air (using 20Mhz according
-> to wireshark).  AP reads this, and thinks it is sending a DHCP response back,
-> but sniffer never shows DHCP response on the air.
+QCA99X0 supports only cold reset. Also, made
+ath10k_pci_irq_msi_fw_mask() and ath10k_pci_irq_msi_fw_unmask()
+non-99X0 specific till we get proper register configuration
+to mask/unmask irq/MSI.
 
-Is the MSDU carrying DHCP resp completed with "ok" status? Or is it
-maybe no-ack or discarded?
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 81 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 71 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index df7d74e..1b4634a 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -82,7 +82,7 @@ static const struct ath10k_pci_supp_chip ath10k_pci_supp_chips[] = {
+ 
+ static void ath10k_pci_buffer_cleanup(struct ath10k *ar);
+ static int ath10k_pci_cold_reset(struct ath10k *ar);
+-static int ath10k_pci_warm_reset(struct ath10k *ar);
++static int ath10k_pci_safe_chip_reset(struct ath10k *ar);
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
+ static int ath10k_pci_init_irq(struct ath10k *ar);
+ static int ath10k_pci_deinit_irq(struct ath10k *ar);
+@@ -91,6 +91,7 @@ static void ath10k_pci_free_irq(struct ath10k *ar);
+ static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
+ 			       struct ath10k_ce_pipe *rx_pipe,
+ 			       struct bmi_xfer *xfer);
++static int ath10k_pci_qca99x0_chip_reset(struct ath10k *ar);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -1427,20 +1428,42 @@ static void ath10k_pci_irq_msi_fw_mask(struct ath10k *ar)
+ {
+ 	u32 val;
+ 
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS);
+-	val &= ~CORE_CTRL_PCIE_REG_31_MASK;
+-
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS, val);
++	switch (ar->hw_rev) {
++	case ATH10K_HW_QCA988X:
++	case ATH10K_HW_QCA6174:
++		val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
++					CORE_CTRL_ADDRESS);
++		val &= ~CORE_CTRL_PCIE_REG_31_MASK;
++		ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
++				   CORE_CTRL_ADDRESS, val);
++		break;
++	case ATH10K_HW_QCA99X0:
++		/* TODO: Find appropriate register configuration for QCA99X0
++		 *  to mask irq/MSI.
++		 */
++		 break;
++	}
+ }
+ 
+ static void ath10k_pci_irq_msi_fw_unmask(struct ath10k *ar)
+ {
+ 	u32 val;
+ 
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS);
+-	val |= CORE_CTRL_PCIE_REG_31_MASK;
+-
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS, val);
++	switch (ar->hw_rev) {
++	case ATH10K_HW_QCA988X:
++	case ATH10K_HW_QCA6174:
++		val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
++					CORE_CTRL_ADDRESS);
++		val |= CORE_CTRL_PCIE_REG_31_MASK;
++		ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
++				   CORE_CTRL_ADDRESS, val);
++		break;
++	case ATH10K_HW_QCA99X0:
++		/* TODO: Find appropriate register configuration for QCA99X0
++		 *  to unmask irq/MSI.
++		 */
++		break;
++	}
+ }
+ 
+ static void ath10k_pci_irq_disable(struct ath10k *ar)
+@@ -1602,7 +1625,7 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	 * masked. To prevent the device from asserting the interrupt reset it
+ 	 * before proceeding with cleanup.
+ 	 */
+-	ath10k_pci_warm_reset(ar);
++	ath10k_pci_safe_chip_reset(ar);
+ 
+ 	ath10k_pci_irq_disable(ar);
+ 	ath10k_pci_irq_sync(ar);
+@@ -2114,6 +2137,18 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static int ath10k_pci_safe_chip_reset(struct ath10k *ar)
++{
++	if (QCA_REV_988X(ar) || QCA_REV_6174(ar)) {
++		return ath10k_pci_warm_reset(ar);
++	} else if (QCA_REV_99X0(ar)) {
++		ath10k_pci_irq_disable(ar);
++		return ath10k_pci_qca99x0_chip_reset(ar);
++	} else {
++		return -ENOTSUPP;
++	}
++}
++
+ static int ath10k_pci_qca988x_chip_reset(struct ath10k *ar)
+ {
+ 	int i, ret;
+@@ -2220,12 +2255,38 @@ static int ath10k_pci_qca6174_chip_reset(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static int ath10k_pci_qca99x0_chip_reset(struct ath10k *ar)
++{
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot qca99x0 chip reset\n");
++
++	ret = ath10k_pci_cold_reset(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to cold reset: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath10k_pci_wait_for_target_init(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to wait for target after cold reset: %d\n",
++			    ret);
++		return ret;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot qca99x0 chip reset complete (cold)\n");
++
++	return 0;
++}
++
+ static int ath10k_pci_chip_reset(struct ath10k *ar)
+ {
+ 	if (QCA_REV_988X(ar))
+ 		return ath10k_pci_qca988x_chip_reset(ar);
+ 	else if (QCA_REV_6174(ar))
+ 		return ath10k_pci_qca6174_chip_reset(ar);
++	else if (QCA_REV_99X0(ar))
++		return ath10k_pci_qca99x0_chip_reset(ar);
+ 	else
+ 		return -ENOTSUPP;
+ }
+-- 
+1.9.1
 
-> Kernel is 4.0.4+, ath10k firmware is CT firmware, 10.1.467 based.
->
-> I am curious if anyone else has tried to do this?
->
-> Thanks,
-> Ben
->
-> interface=vap50
-> driver=nl80211
-> logger_syslog=-1
-> logger_syslog_level=2
-> logger_stdout=-1
-> logger_stdout_level=2
-> ctrl_interface=/var/run/hostapd
-> ctrl_interface_group=0
-> ssid=ben-ota-2a
-[...]
-
-Works for me on c7b39fdeb479a7956a3c41638d527196ce295fdd
-(github.com/kvalo/ath) with
- AP: qca988x hw2.0, 10.1.467.2-1
- STA: qca6174 hw2.2 (its a 2x2),
-
-I test by using ip6 ping on each possible endpoint pair (ap->sta,
-sta->ap). I flush arp/neigh tables on all endpoints before each ping
-so both multicast and unicast is tested.
-
-Within the same quick-n-dirty OTA env I get the following UDP (iperf -P5):
-
- HT40 (ieee80211ac=0):
-  qca6174 -> qca988x  228.383 mbps
-  qca988x -> qca6174  238.528 mbps
-
- VHT40 (your config):
-  qca6174 -> qca988x  234.64  mbps
-  qca988x -> qca6174  298.723 mbps
-
- VHT80 (vht_oper_centr_freq_seg0_idx=44, vht_oper_chwidth=1)
-  qca6174 -> qca988x  377.092 mbps
-  qca988x -> qca6174  483.287 mbps
-
-
-Michał
