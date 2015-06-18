@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:50512 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753594AbbFBJPs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 05:15:48 -0400
-Date: Tue, 2 Jun 2015 12:15:43 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Steffen Klassert <steffen.klassert@secunet.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 7/7] mac80211: Switch to new AEAD interface
-Message-ID: <20150602091543.GA3140@w1.fi> (sfid-20150602_111552_807528_7A2165DB)
-References: <20150521103938.GA23035@gondor.apana.org.au>
- <1433167519.3505.11.camel@sipsolutions.net>
- <1433169326.3505.12.camel@sipsolutions.net>
- <2613062.1qx4rgqk9F@tauon>
+Received: from mail.neratec.com ([46.140.151.2]:19733 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752262AbbFRPLu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 11:11:50 -0400
+Message-ID: <5582DFB2.7060308@neratec.com> (sfid-20150618_171154_384514_EC388632)
+Date: Thu, 18 Jun 2015 17:11:46 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2613062.1qx4rgqk9F@tauon>
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: spectral - simplify max_index calculation
+References: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com>	<CAFtRNNxvBC8SD3P5u=bEZPofA-A8YfHYuZnfA4Y07W7Wx4keAQ@mail.gmail.com>	<55829F18.9050807@neratec.com> <CAFtRNNy009MVbOpHOWVZMuDAaJzmLed+nhBwgybgSS+hbjU=tQ@mail.gmail.com>
+In-Reply-To: <CAFtRNNy009MVbOpHOWVZMuDAaJzmLed+nhBwgybgSS+hbjU=tQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 01, 2015 at 05:36:58PM +0200, Stephan Mueller wrote:
-> Am Montag, 1. Juni 2015, 16:35:26 schrieb Johannes Berg:
-> >IOW, I think something like this would make sense:
+On 06/18/2015 04:13 PM, Nick Kossifidis wrote:
+> [...]
+> I have NDA documents as well stating that the indices are from -64 to
+> 63 (-64 to -1, 1 to 63 and 0 is DC), you can check out for yourself
+> that we get 128bins on dynamic HT20/40, see the header files too:
 > 
-> That looks definitely cleaner :-)
+> #define SPECTRAL_HT20_40_NUM_BINS               128
+> 
+Right, there are 128 in total, combined from 2 individual 64-bin sets. That's why
+you need to swap upper and lower when operating in HT40MINUS, since chip always
+puts primary channel to lower bin set.
 
-Indeed.. That AAD length-in-the-buffer design came from the over ten
-year old code that was optimized to cover the CCM construction with the
-same buffer and that was not cleaned up when this was converted to use
-cryptoapi couple of years ago.
+> and/or the received packet length. Maybe you are talking about
+> "static" HT40 (I don't see anything about that on the documents I
+> have) or something else.
+> 
+Yes, maybe different documents. Mine says that interpretation of upper/lower bin
+values (max_magnitude, bitmap_weight, max_index) is the same in static and dynamic
+modes - only the bin values differ.
 
-> Though, my main concern was just to ensure that the aad length value is not 
-> zero.
+>> I used the proposed method with the chirp detector for FFTs provided for long
+>> radar pulses on an AR9590 (patch posted the same day). Max bin index is used there
+>> the same way as with spectral, but now I realize my mistake: for chirp detection,
+>> the relative max_index is sufficient, while for spectral the absolute value is needed.
+>>
+>> Toggling the MSB in HT20 shifts the signed values by 32 and leaves the index with
+>> an offset of 4, therefore the correct operation should be:
+>> ht20_max_index_absolute = (ht20_max_index ^ 0x20) - 4
+>>
+> 
+> Have in mind that on earlier chips (I did the testing on an AR9820) we
+> get corrupted frames sometimes so we also need the sanity check I put
+> there or else we can end up reading data out of bounds which is pretty
+> dangerous so please leave the current implementation there as is.
+> 
+> 
+The sanity checks / fixes are done before you look at the bin attributes and,
+which therefore is not relevant for interpreting them.
 
-It won't be in IEEE 802.11 use cases. The exact length depends on the
-IEEE 802.11 frame type, but AAD is constructed in a way that it is
-normally a bit over 20 octets while allowing CCM to fit the related
-operations into two AES blocks.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+But never mind - as said before, I proposed this to use the 3 functions for DFS
+chirp detection. I'm fine not touching the running system and instead keep a local
+copy of those.
+
+
+Thanks,
+Zefir
