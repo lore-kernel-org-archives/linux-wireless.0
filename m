@@ -1,60 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34346 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbbFWIu6 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:37619 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752954AbbFRInV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 04:50:58 -0400
-Received: by wicnd19 with SMTP id nd19so99009877wic.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2015 01:50:57 -0700 (PDT)
+	Thu, 18 Jun 2015 04:43:21 -0400
+Received: by wicgi11 with SMTP id gi11so6268866wic.0
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 01:43:19 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 23 Jun 2015 10:50:57 +0200
-Message-ID: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com> (sfid-20150623_105103_567349_85064CF1)
-Subject: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT - direct
- probe issue
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Peer, Ilan" <ilan.peer@intel.com>
+In-Reply-To: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com>
+Date: Thu, 18 Jun 2015 10:43:19 +0200
+Message-ID: <CAFtRNNxvBC8SD3P5u=bEZPofA-A8YfHYuZnfA4Y07W7Wx4keAQ@mail.gmail.com> (sfid-20150618_104326_408479_48663277)
+Subject: Re: [PATCH] ath9k: spectral - simplify max_index calculation
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+max_index is a 6bit signed integer in both cases (sorry for the 5bit
+typo in the comments), so the current function handles it correctly
+for both HT20 and dynamic HT20/40 modes (I've tested it extensively).
+Also you don't handle the negative indices we get from the hardware
+(you just remove the sign). Have you tested this and if you did on
+which hardware did you do the test ?
 
-This is my setup:
-t1-ath9k:
-- AP (2412)
-- P2P_GO - go_intent=15 (2462)
+2015-06-16 11:21 GMT+02:00 Zefir Kurtisi <zefir.kurtisi@neratec.com>:
+> The max_index value provided in the spectral data set
+> has to be interpreted differently for HT20 and HT40.
+>
+> The spectral module initially supported HT20 only
+> and the spectral_max_index() function handled the
+> conversion from signed to unsigned.
+>
+> In HT40, the max_index is an unsigned value and does
+> not need to be fixed. When HT40 support was added,
+> the function was exteded to handle the conversion
+> for HT20 based on the provided num_bins parameter.
+>
+> This is misleading and complex. Instead this patch
+> shifts the correction of the value to the caller,
+> which in effect reduces it to a singel bit-operation
+> for HT20 data.
+>
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/common-spectral.c | 20 ++++++-------
+>  drivers/net/wireless/ath/ath9k/common-spectral.h | 36 +++++++-----------------
+>  2 files changed, 18 insertions(+), 38 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+> index a876271..e4bae40 100644
+> --- a/drivers/net/wireless/ath/ath9k/common-spectral.c
+> +++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+> @@ -59,8 +59,8 @@ ath_cmn_max_idx_verify_ht20_fft(u8 *sample_end, int bytes_read)
+>
+>         sample = sample_end - SPECTRAL_HT20_SAMPLE_LEN + 1;
+>
+> -       max_index = spectral_max_index(mag_info->all_bins,
+> -                                      SPECTRAL_HT20_NUM_BINS);
+> +       /* in ht20, this is a 6-bit signed number => shift it to 0 */
+> +       max_index = spectral_max_index(mag_info->all_bins) ^ 0x20;
+>         max_magnitude = spectral_max_magnitude(mag_info->all_bins);
+>
+>         max_exp = mag_info->max_exp & 0xf;
+> @@ -100,12 +100,10 @@ ath_cmn_max_idx_verify_ht20_40_fft(u8 *sample_end, int bytes_read)
+>         sample = sample_end - SPECTRAL_HT20_40_SAMPLE_LEN + 1;
+>
+>         lower_mag = spectral_max_magnitude(mag_info->lower_bins);
+> -       lower_max_index = spectral_max_index(mag_info->lower_bins,
+> -                                            SPECTRAL_HT20_40_NUM_BINS);
+> +       lower_max_index = spectral_max_index(mag_info->lower_bins);
+>
+>         upper_mag = spectral_max_magnitude(mag_info->upper_bins);
+> -       upper_max_index = spectral_max_index(mag_info->upper_bins,
+> -                                            SPECTRAL_HT20_40_NUM_BINS);
+> +       upper_max_index = spectral_max_index(mag_info->upper_bins);
+>
+>         max_exp = mag_info->max_exp & 0xf;
+>
+> @@ -169,8 +167,8 @@ ath_cmn_process_ht20_fft(struct ath_rx_status *rs,
+>         magnitude = spectral_max_magnitude(mag_info->all_bins);
+>         fft_sample_20.max_magnitude = __cpu_to_be16(magnitude);
+>
+> -       max_index = spectral_max_index(mag_info->all_bins,
+> -                                       SPECTRAL_HT20_NUM_BINS);
+> +       /* in ht20, this is a 6-bit signed number => shift it to 0 */
+> +       max_index = spectral_max_index(mag_info->all_bins) ^ 0x20;
+>         fft_sample_20.max_index = max_index;
+>
+>         bitmap_w = spectral_bitmap_weight(mag_info->all_bins);
+> @@ -302,12 +300,10 @@ ath_cmn_process_ht20_40_fft(struct ath_rx_status *rs,
+>         upper_mag = spectral_max_magnitude(mag_info->upper_bins);
+>         fft_sample_40.upper_max_magnitude = __cpu_to_be16(upper_mag);
+>
+> -       lower_max_index = spectral_max_index(mag_info->lower_bins,
+> -                                       SPECTRAL_HT20_40_NUM_BINS);
+> +       lower_max_index = spectral_max_index(mag_info->lower_bins);
+>         fft_sample_40.lower_max_index = lower_max_index;
+>
+> -       upper_max_index = spectral_max_index(mag_info->upper_bins,
+> -                                       SPECTRAL_HT20_40_NUM_BINS);
+> +       upper_max_index = spectral_max_index(mag_info->upper_bins);
+>         fft_sample_40.upper_max_index = upper_max_index;
+>
+>         lower_bitmap_w = spectral_bitmap_weight(mag_info->lower_bins);
+> diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.h b/drivers/net/wireless/ath/ath9k/common-spectral.h
+> index 998743b..4cc5a6c 100644
+> --- a/drivers/net/wireless/ath/ath9k/common-spectral.h
+> +++ b/drivers/net/wireless/ath/ath9k/common-spectral.h
+> @@ -116,33 +116,17 @@ static inline u16 spectral_max_magnitude(u8 *bins)
+>                (bins[2] & 0x03) << 10;
+>  }
+>
+> -/* return the max magnitude from the all/upper/lower bins */
+> -static inline u8 spectral_max_index(u8 *bins, int num_bins)
+> +/* return the max magnitude from the all/upper/lower bins
+> + *
+> + * in HT20: 6-bit signed number of range -28 to +27
+> + * in HT40: 6-bit unsigned number of range 0 to +63
+> + *          (upper sub-channel index 0 is DC)
+> + *
+> + * Correct interpretation of the value has to be done at caller
+> + */
+> +static inline u8 spectral_max_index(u8 *bins)
+>  {
+> -       s8 m = (bins[2] & 0xfc) >> 2;
+> -       u8 zero_idx = num_bins / 2;
+> -
+> -       /* It's a 5 bit signed int, remove its sign and use one's
+> -        * complement interpretation to add the sign back to the 8
+> -        * bit int
+> -        */
+> -       if (m & 0x20) {
+> -               m &= ~0x20;
+> -               m |= 0xe0;
+> -       }
+> -
+> -       /* Bring the zero point to the beginning
+> -        * instead of the middle so that we can use
+> -        * it for array lookup and that we don't deal
+> -        * with negative values later
+> -        */
+> -       m += zero_idx;
+> -
+> -       /* Sanity check to make sure index is within bounds */
+> -       if (m < 0 || m > num_bins - 1)
+> -               m = 0;
+> -
+> -       return m;
+> +       return (bins[2] & 0xfc) >> 2;
+>  }
+>
+>  /* return the bitmap weight from the all/upper/lower bins */
+> --
+> 1.9.1
+>
 
-ref P2P - intel 7260
-ref STA - t2-ath9k
 
-Scenario:
-1. setup AP t1-ath9k
-2. connect STA (t2-ath9k) to AP
-3. run ping STA->AP
-4. t1-ath9k - p2p_connect <intel7260> go_intent=15
-5. intel7260 - p2p_connect <t1-ath9k>
-6. go_negotiation success
-7. connect failed ...
-8. ...
 
-Sometimes I see such fail on intel7260:
-
-[533519.009978] p2p-wlan3-0: authenticate with 02:03:7f:4e:a0:cd
-[533519.009999] p2p-wlan3-0: Allocated STA 02:03:7f:4e:a0:cd
-[533519.013667] p2p-wlan3-0: Inserted STA 02:03:7f:4e:a0:cd
-[533519.014128] p2p-wlan3-0: direct probe to 02:03:7f:4e:a0:cd (try 1/3)
-[533519.217270] p2p-wlan3-0: direct probe to 02:03:7f:4e:a0:cd (try 2/3)
-[533519.421349] p2p-wlan3-0: direct probe to 02:03:7f:4e:a0:cd (try 3/3)
-[533519.624329] p2p-wlan3-0: authentication with 02:03:7f:4e:a0:cd timed out
-[533519.633084] p2p-wlan3-0: Removed STA 02:03:7f:4e:a0:cd
-[533519.633325] p2p-wlan3-0: Destroyed STA 02:03:7f:4e:a0:cd
-
-I suspect this is because of P2P_GO NoA?
-Who should care about this direct probes tx when GO is not present?
-
-In case we didn't send direct probes - there is no problem and TC
-works correctly
-
-BR
-Janusz
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
