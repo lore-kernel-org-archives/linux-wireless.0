@@ -1,86 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailsec105.isp.belgacom.be ([195.238.20.101]:25398 "EHLO
-	mailsec105.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750724AbbFKFGd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 01:06:33 -0400
-Date: Thu, 11 Jun 2015 07:06:31 +0200 (CEST)
-From: Fabian Frederick <fabf@skynet.be>
-Reply-To: Fabian Frederick <fabf@skynet.be>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>,
-	Jiri Slaby <jirislaby@gmail.com>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Message-ID: <1397966187.6193.1433999191450.open-xchange@webmail.nmp.proximus.be> (sfid-20150611_070639_356890_F05B8348)
-In-Reply-To: <alpine.DEB.2.02.1506102228560.1986@localhost6.localdomain6>
-References: <1433954015-24872-1-git-send-email-fabf@skynet.be> <1433965966.32331.25.camel@perches.com> <1121998377.24127.1433966378845.open-xchange@webmail.nmp.proximus.be> <alpine.DEB.2.02.1506102228560.1986@localhost6.localdomain6>
-Subject: Re: [PATCH 1/1 linux-next] ath5k: use swap() in
- ath5k_hw_get_median_noise_floor()
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:36637 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051AbbFRP7T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 11:59:19 -0400
+Received: by wgzl5 with SMTP id l5so67801898wgz.3
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 08:59:18 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <5582DFB2.7060308@neratec.com>
+References: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com>
+	<CAFtRNNxvBC8SD3P5u=bEZPofA-A8YfHYuZnfA4Y07W7Wx4keAQ@mail.gmail.com>
+	<55829F18.9050807@neratec.com>
+	<CAFtRNNy009MVbOpHOWVZMuDAaJzmLed+nhBwgybgSS+hbjU=tQ@mail.gmail.com>
+	<5582DFB2.7060308@neratec.com>
+Date: Thu, 18 Jun 2015 17:59:18 +0200
+Message-ID: <CAFtRNNyP+q=J7N6Z9hKT0yHTZq_rMWdJLtxuqB82h9Qvavw_RA@mail.gmail.com> (sfid-20150618_175922_278632_8B6D5494)
+Subject: Re: [PATCH] ath9k: spectral - simplify max_index calculation
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2015-06-18 17:11 GMT+02:00 Zefir Kurtisi <zefir.kurtisi@neratec.com>:
+> On 06/18/2015 04:13 PM, Nick Kossifidis wrote:
+>> [...]
+>> I have NDA documents as well stating that the indices are from -64 to
+>> 63 (-64 to -1, 1 to 63 and 0 is DC), you can check out for yourself
+>> that we get 128bins on dynamic HT20/40, see the header files too:
+>>
+>> #define SPECTRAL_HT20_40_NUM_BINS               128
+>>
+> Right, there are 128 in total, combined from 2 individual 64-bin sets. That's why
+> you need to swap upper and lower when operating in HT40MINUS, since chip always
+> puts primary channel to lower bin set.
+>
+>> and/or the received packet length. Maybe you are talking about
+>> "static" HT40 (I don't see anything about that on the documents I
+>> have) or something else.
+>>
+> Yes, maybe different documents. Mine says that interpretation of upper/lower bin
+> values (max_magnitude, bitmap_weight, max_index) is the same in static and dynamic
+> modes - only the bin values differ.
+>
+>>> I used the proposed method with the chirp detector for FFTs provided for long
+>>> radar pulses on an AR9590 (patch posted the same day). Max bin index is used there
+>>> the same way as with spectral, but now I realize my mistake: for chirp detection,
+>>> the relative max_index is sufficient, while for spectral the absolute value is needed.
+>>>
+>>> Toggling the MSB in HT20 shifts the signed values by 32 and leaves the index with
+>>> an offset of 4, therefore the correct operation should be:
+>>> ht20_max_index_absolute = (ht20_max_index ^ 0x20) - 4
+>>>
+>>
+>> Have in mind that on earlier chips (I did the testing on an AR9820) we
+>> get corrupted frames sometimes so we also need the sanity check I put
+>> there or else we can end up reading data out of bounds which is pretty
+>> dangerous so please leave the current implementation there as is.
+>>
+>>
+> The sanity checks / fixes are done before you look at the bin attributes and,
+> which therefore is not relevant for interpreting them.
+>
+
+Only the lower boundary is checked (in case we are missing a byte -and
+we assume it's the first sample-), if we get a corrupted max_idx
+that's higher than 64 or 128 and we don't do the check on
+spectral_max_index, we 'll have issues when accessing the samples
+array to do the magnitude verification.
 
 
-> On 10 June 2015 at 22:29 Julia Lawall <julia.lawall@lip6.fr> wrote:
->
->
->
->
-> On Wed, 10 Jun 2015, Fabian Frederick wrote:
->
-> >
-> >
-> > > On 10 June 2015 at 21:52 Joe Perches <joe@perches.com> wrote:
-> > >
-> > >
-> > > On Wed, 2015-06-10 at 18:33 +0200, Fabian Frederick wrote:
-> > > > Use kernel.h macro definition.
-> > > >
-> > > > Thanks to Julia Lawall for Coccinelle scripting support.
-> > > []
-> > > > diff --git a/drivers/net/wireless/ath/ath5k/phy.c
-> > > > b/drivers/net/wireless/ath/ath5k/phy.c
-> > > []
-> > > > @@ -1566,17 +1566,13 @@ static s16
-> > > >  ath5k_hw_get_median_noise_floor(struct ath5k_hw *ah)
-> > > >  {
-> > > >     s16 sort[ATH5K_NF_CAL_HIST_MAX];
-> > > > -   s16 tmp;
-> > > >     int i, j;
-> > > > 
-> > > >     memcpy(sort, ah->ah_nfcal_hist.nfval, sizeof(sort));
-> > > >     for (i = 0; i < ATH5K_NF_CAL_HIST_MAX - 1; i++) {
-> > > >             for (j = 1; j < ATH5K_NF_CAL_HIST_MAX - i; j++) {
-> > > > -                   if (sort[j] > sort[j - 1]) {
-> > > > -                           tmp = sort[j];
-> > > > -                           sort[j] = sort[j - 1];
-> > > > -                           sort[j - 1] = tmp;
-> > > > -                   }
-> > > > +                   if (sort[j] > sort[j - 1])
-> > > > +                           swap(sort[j], sort[j]);
-> > >
-> > > swap(a, a) doesn't look useful.
-> > Thanks a lot Joe, I'll fix this one :)
->
-> How did it come out like that?
->
-> julia
 
-I used script for detection only and made updates manually.
-I guess I was distracted by [j - 1] on line above.
-It was based on linux-next; if maintainers prefer another branch, I'll
-send the right version on top of it.
 
-Regards,
-Fabian
->
-> >
-> > Regards,
-> > Fabian
-> > >
-> > >
-> >
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
