@@ -1,121 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:36258 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbbFVOB5 (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:35443 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752150AbbFRNJC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 10:01:57 -0400
-Received: by igbiq7 with SMTP id iq7so53806341igb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 07:01:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQ=Rqq4xh1nXd3RQwuwqR8QT=OgOzfpOeB=QhmJ8Ke=6kw@mail.gmail.com>
-References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
- <1434973385-15865-2-git-send-email-janusz.dziedzic@tieto.com>
- <CABPxzYJadyBVPn7yZzqsJpnWQ4Jx_dUoR10FXNze041WDYJp+Q@mail.gmail.com> <CA+BoTQ=Rqq4xh1nXd3RQwuwqR8QT=OgOzfpOeB=QhmJ8Ke=6kw@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 22 Jun 2015 19:31:37 +0530
-Message-ID: <CABPxzYKtt4uKAd-VkEuK9WThGg9au0y_-yYhJ7S7bmXeQzw7nA@mail.gmail.com> (sfid-20150622_160201_130624_8D4C802E)
-Subject: Re: [PATCH 1/3] ath9k: handle RoC abort correctly
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Sujith Manoharan <sujith@msujith.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 18 Jun 2015 09:09:02 -0400
+Received: by pdbci14 with SMTP id ci14so7971913pdb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 06:09:02 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/2] staging: wilc1000: align #define macro
+Date: Thu, 18 Jun 2015 22:08:50 +0900
+Message-Id: <1434632931-16909-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150618_150914_957990_10689452)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 22, 2015 at 6:32 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 22 June 2015 at 13:56, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
->> On Mon, Jun 22, 2015 at 5:13 PM, Janusz Dziedzic
->> <janusz.dziedzic@tieto.com> wrote:
->>> In case we will get ROC abort we should not call
->>> ieee80211_remain_on_channel_expired().
->>>
->>> In other case I hit such warning on MIPS and
->>> p2p negotiation failed (tested with use_chanctx=1).
->>>
->>> ath: phy0: Starting RoC period
->>> ath: phy0: Channel definition created: 2412 MHz
->>> ath: phy0: Assigned next_chan to 2412 MHz
->>> ath: phy0: Offchannel duration for chan 2412 MHz : 506632
->>> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
->>> ath: phy0: Stopping current chanctx: 2412
->>> ath: phy0: Flush timeout: 200
->>> ath: phy0: ath_chanctx_set_next: Set channel 2412 MHz
->>> ath: phy0: Set channel: 2412 MHz width: 0
->>> ath: phy0: Reset to 2412 MHz, HT40: 0 fastcc: 0
->>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_TSF_TIMER, state: ATH_CHANCTX_STATE_IDLE
->>> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
->>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
->>> ath: phy0: Cancel RoC
->>> ath: phy0: RoC aborted
->>> ath: phy0: RoC request on vif: 00:03:7f:4e:a0:cd, type: 1 duration: 500
->>> ath: phy0: Starting RoC period
->>> ath: phy0: Channel definition created: 2412 MHz
->>> ath: phy0: Assigned next_chan to 2412 MHz
->>> ath: phy0: Offchannel duration for chan 2412 MHz : 506705
->>> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
->>> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
->>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
->>> ------------[ cut here ]------------
->>> WARNING: CPU: 0 PID: 3312 at drivers/net/wireless/ath/ath9k/main.c:2319
->>> Modules linked in: ath9k ath9k_common ath9k_hw ath mac80211 cfg80211
->>>
->>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->>> ---
->>>  drivers/net/wireless/ath/ath9k/channel.c | 3 ++-
->>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
->>> index 2066650..e211325 100644
->>> --- a/drivers/net/wireless/ath/ath9k/channel.c
->>> +++ b/drivers/net/wireless/ath/ath9k/channel.c
->>> @@ -926,7 +926,8 @@ void ath_roc_complete(struct ath_softc *sc, bool abort)
->>>
->>>         sc->offchannel.roc_vif = NULL;
->>>         sc->offchannel.roc_chan = NULL;
->>> -       ieee80211_remain_on_channel_expired(sc->hw);
->>> +       if (!abort)
->>> +               ieee80211_remain_on_channel_expired(sc->hw);
->>>         ath_offchannel_next(sc);
->>>         ath9k_ps_restore(sc);
->>>  }
->> If HW aborts RoC in middle, should not we inform mac80211
->> that RoC is expired?
->
-> Good point. The ath_roc_complete() can be called with abort=true from
-> ath9k_cancel_pending_offchannel() as well. I guess ath_roc_complete()
-> needs a "reason" argument (instead of "abort") with: expired, aborted,
-> cancelled values. ieee80211_remain_on_channel_expired() should be
-> called whenever reason != cancelled.
-Agree, make sense.
-> By the way - is ath_roc_complete() lock protected properly? It looks
-> like it isn't from a quick glance. Neither sdata lock nor local->mtx
-> can be implied in all contexts and sc->mutex isn't always held while
-> it's called, hmm.. or am I missing something?
->
->> Also the we are clearing roc_vif independent of abort, so the warning
->> indicates that roc_complete has not come from FW, may be we should
->> understand that first?
->
-> There's no FW in ath9k.
->
-> The problem is the following sequence:
->  1. mac80211 requests roc A
->  2. mac80211 cancels roc A
->    a. ath9k calls expired() and hw_roc_done work is scheduled
->  3. mac80211 requests roc B
->  4. mac80211 starts to process the scheduled hw_roc_done
->  5. mac80211 thinks roc B has expired
->  6. mac80211 requests roc C
->  7. ath9k WARN_ON is hit
->
-> There's a race between (3) and (4). Depending on circumstances (3) and
-> (4) may be reordered so the current code doesn't fail all the time.
-Ok i understand, but if we get roc_complete for B before 6, then it works
-fine at least at ath9k level, C will be unblocked.
+Align #define macro.
 
-Anyways, handling the cancel case should resolve it along with proper locking.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 93 +++++++++++++++----------------
+ 1 file changed, 46 insertions(+), 47 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3228824..2cb2607 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -17,53 +17,52 @@ extern u8 g_wilc_initialized;
+ /*****************************************************************************/
+ 
+ /* Message types of the Host IF Message Queue*/
+-#define HOST_IF_MSG_SCAN					((u16)0)
+-#define HOST_IF_MSG_CONNECT					((u16)1)
+-#define HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO	((u16)2)
+-#define HOST_IF_MSG_KEY						((u16)3)
+-#define HOST_IF_MSG_RCVD_NTWRK_INFO			((u16)4)
+-#define HOST_IF_MSG_RCVD_SCAN_COMPLETE		((u16)5)
+-#define HOST_IF_MSG_CFG_PARAMS				((u16)6)
+-#define HOST_IF_MSG_SET_CHANNEL				((u16)7)
+-#define HOST_IF_MSG_DISCONNECT				((u16)8)
+-#define HOST_IF_MSG_GET_RSSI				((u16)9)
+-#define HOST_IF_MSG_GET_CHNL				((u16)10)
+-#define HOST_IF_MSG_ADD_BEACON				((u16)11)
+-#define HOST_IF_MSG_DEL_BEACON				((u16)12)
+-#define HOST_IF_MSG_ADD_STATION				((u16)13)
+-#define HOST_IF_MSG_DEL_STATION				((u16)14)
+-#define HOST_IF_MSG_EDIT_STATION			((u16)15)
+-#define HOST_IF_MSG_SCAN_TIMER_FIRED			((u16)16)
+-#define HOST_IF_MSG_CONNECT_TIMER_FIRED		((u16)17)
+-#define HOST_IF_MSG_POWER_MGMT				((u16)18)
+-#define HOST_IF_MSG_GET_INACTIVETIME			((u16)19)
+-#define HOST_IF_MSG_REMAIN_ON_CHAN			((u16)20)
+-#define  HOST_IF_MSG_REGISTER_FRAME			((u16)21)
+-#define HOST_IF_MSG_LISTEN_TIMER_FIRED     ((u16)22)
+-#define HOST_IF_MSG_GET_LINKSPEED				((u16)23)
+-#define HOST_IF_MSG_SET_WFIDRV_HANDLER		((u16)24)
+-#define HOST_IF_MSG_SET_MAC_ADDRESS		((u16)25)
+-#define HOST_IF_MSG_GET_MAC_ADDRESS		((u16)26)
+-#define HOST_IF_MSG_SET_OPERATION_MODE		((u16)27)
+-#define HOST_IF_MSG_SET_IPADDRESS			((u16)28)
+-#define HOST_IF_MSG_GET_IPADDRESS			((u16)29)
+-#define HOST_IF_MSG_FLUSH_CONNECT			((u16)30)
+-#define HOST_IF_MSG_GET_STATISTICS				((u16)31)
+-#define HOST_IF_MSG_SET_MULTICAST_FILTER		((u16)32)
+-#define HOST_IF_MSG_ADD_BA_SESSION		((u16)33)
+-#define HOST_IF_MSG_DEL_BA_SESSION		((u16)34)
+-#define HOST_IF_MSG_Q_IDLE		((u16)35)
+-#define HOST_IF_MSG_DEL_ALL_STA  ((u16)36)
+-#define HOST_IF_MSG_DEL_ALL_RX_BA_SESSIONS		((u16)34)
+-
+-#define HOST_IF_MSG_EXIT					((u16)100)
+-
+-#define HOST_IF_SCAN_TIMEOUT		4000
+-#define HOST_IF_CONNECT_TIMEOUT	9500
+-
+-#define BA_SESSION_DEFAULT_BUFFER_SIZE	16
+-#define BA_SESSION_DEFAULT_TIMEOUT		1000
+-#define BLOCK_ACK_REQ_SIZE 0x14
++#define HOST_IF_MSG_SCAN                        ((u16)0)
++#define HOST_IF_MSG_CONNECT                     ((u16)1)
++#define HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO        ((u16)2)
++#define HOST_IF_MSG_KEY                         ((u16)3)
++#define HOST_IF_MSG_RCVD_NTWRK_INFO             ((u16)4)
++#define HOST_IF_MSG_RCVD_SCAN_COMPLETE          ((u16)5)
++#define HOST_IF_MSG_CFG_PARAMS                  ((u16)6)
++#define HOST_IF_MSG_SET_CHANNEL                 ((u16)7)
++#define HOST_IF_MSG_DISCONNECT                  ((u16)8)
++#define HOST_IF_MSG_GET_RSSI                    ((u16)9)
++#define HOST_IF_MSG_GET_CHNL                    ((u16)10)
++#define HOST_IF_MSG_ADD_BEACON                  ((u16)11)
++#define HOST_IF_MSG_DEL_BEACON                  ((u16)12)
++#define HOST_IF_MSG_ADD_STATION                 ((u16)13)
++#define HOST_IF_MSG_DEL_STATION                 ((u16)14)
++#define HOST_IF_MSG_EDIT_STATION                ((u16)15)
++#define HOST_IF_MSG_SCAN_TIMER_FIRED            ((u16)16)
++#define HOST_IF_MSG_CONNECT_TIMER_FIRED         ((u16)17)
++#define HOST_IF_MSG_POWER_MGMT                  ((u16)18)
++#define HOST_IF_MSG_GET_INACTIVETIME            ((u16)19)
++#define HOST_IF_MSG_REMAIN_ON_CHAN              ((u16)20)
++#define HOST_IF_MSG_REGISTER_FRAME              ((u16)21)
++#define HOST_IF_MSG_LISTEN_TIMER_FIRED          ((u16)22)
++#define HOST_IF_MSG_GET_LINKSPEED               ((u16)23)
++#define HOST_IF_MSG_SET_WFIDRV_HANDLER          ((u16)24)
++#define HOST_IF_MSG_SET_MAC_ADDRESS             ((u16)25)
++#define HOST_IF_MSG_GET_MAC_ADDRESS             ((u16)26)
++#define HOST_IF_MSG_SET_OPERATION_MODE          ((u16)27)
++#define HOST_IF_MSG_SET_IPADDRESS               ((u16)28)
++#define HOST_IF_MSG_GET_IPADDRESS               ((u16)29)
++#define HOST_IF_MSG_FLUSH_CONNECT               ((u16)30)
++#define HOST_IF_MSG_GET_STATISTICS              ((u16)31)
++#define HOST_IF_MSG_SET_MULTICAST_FILTER        ((u16)32)
++#define HOST_IF_MSG_ADD_BA_SESSION              ((u16)33)
++#define HOST_IF_MSG_DEL_BA_SESSION              ((u16)34)
++#define HOST_IF_MSG_Q_IDLE                      ((u16)35)
++#define HOST_IF_MSG_DEL_ALL_STA                 ((u16)36)
++#define HOST_IF_MSG_DEL_ALL_RX_BA_SESSIONS      ((u16)34)
++#define HOST_IF_MSG_EXIT                        ((u16)100)
++
++#define HOST_IF_SCAN_TIMEOUT                    4000
++#define HOST_IF_CONNECT_TIMEOUT                 9500
++
++#define BA_SESSION_DEFAULT_BUFFER_SIZE          16
++#define BA_SESSION_DEFAULT_TIMEOUT              1000
++#define BLOCK_ACK_REQ_SIZE                      0x14
+ /*****************************************************************************/
+ /*								Type Definitions							 */
+ /*****************************************************************************/
+-- 
+1.9.1
+
