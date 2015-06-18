@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38264 "EHLO mx1.redhat.com"
+Received: from mx02.posteo.de ([89.146.194.165]:57351 "EHLO mx02.posteo.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751615AbbFNOvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2015 10:51:50 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Nicholas Mc Guire <der.herr@hofr.at>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	Daniele Alessandrelli <daniele.alessandrelli@gmail.com>,
-	Aleh Suprunovich <br@ahlamon.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUG ?] staging: rtl8723au: condition with no effect
-References: <1434191497-5611-1-git-send-email-hofrat@osadl.org>
-	<wrfjy4jn1dri.fsf@redhat.com> <20150614061941.GA27959@opentech.at>
-Date: Sun, 14 Jun 2015 10:51:46 -0400
-In-Reply-To: <20150614061941.GA27959@opentech.at> (Nicholas Mc Guire's message
-	of "Sun, 14 Jun 2015 08:19:41 +0200")
-Message-ID: <wrfjd20y1gxp.fsf@redhat.com> (sfid-20150614_165156_648936_68C96F1B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751085AbbFRGNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 02:13:42 -0400
+Message-ID: <1434608018.5481.4.camel@embedded.rocks> (sfid-20150618_081519_414649_D54E729B)
+Subject: Re: brcmfmac: Failed to create interface p2p-dev-p2p0: -28 (No
+ space left on device)
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Date: Thu, 18 Jun 2015 08:13:38 +0200
+In-Reply-To: <55803214.2030204@broadcom.com>
+References: <1433766944.28058.16.camel@embedded.rocks>
+				 <55758D7E.3000603@broadcom.com>
+		 <1433771289.28058.24.camel@embedded.rocks>
+		 <5575C6FA.6030104@broadcom.com>
+		 <1433794640.28058.26.camel@embedded.rocks> <557605CC.6070907@broadcom.com>
+	 <1434448766.21949.9.camel@embedded.rocks> <55803214.2030204@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <der.herr@hofr.at> writes:
-> On Sat, 13 Jun 2015, Jes Sorensen wrote:
->
->> Nicholas Mc Guire <hofrat@osadl.org> writes:
->> > scanning for trivial bug-patters with coccinelle spatches returned:
->> > ./drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:1395
->> > 	WARNING: condition with no effect (if branch == else)
->> >
->> > drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c - line numbers
->> > from 4.1-rc7
->> > 1395    if (bWithoutHWSM) {
->> > 1396            /* value16 |= (APDM_HOST | FSM_HSUS |/PFM_ALDN); */
->> > 1397            /*  2010/08/31 According to Filen description, we need to
->> > 1398                use HW to shut down 8051 automatically. */
->> > 1399            /*  Because suspend operation need the asistance of 8051
->> > 1400                to wait for 3ms. */
->> > 1401            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
->> > 1402    } else {
->> > 1403            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
->> > 1404    }
->> > 1405 
->> > 1406    rtl8723au_write16(padapter, REG_APS_FSMCO, value16);    /* 0x4802 */
->> >
->> > Not clear what the intent is but this looks like a typo/bug in the assigment
->> > of value16 as the condition here has no effect.
->> 
->> Doesn't look like a typo, looks like someone at some point had commented
->> out PFM_ALDN in the bWithoutHWSM case. Why they did that and then later
->> overrode it, I have no idea.
->>
-> as far as its traceable in git log if == else was in there from the
-> very beginning (including that comment) - both the if and else were
-> updated in commit cffca68d7b2f ("staging: rtl8723au: _DisableAnalog(): Avoid
-> zero-init variables unnecessaril") but without changing PFM_ALDN - as there
-> are no comments to the meaning of these bits in the header file there is
-> no way to really come up with a resonable patch. anyway its either wrong 
-> settings or the condition should be removed.
+Hi Arend,
 
-There's a much longer history of this code going back to the vendor
-origin - it shouldn't be removed unless we can get clarification from
-them why that was.
+On Di, 2015-06-16 at 16:26 +0200, Arend van Spriel wrote:
+> On 06/16/15 11:59, Jörg Krause wrote:
+> > Hi Arend,
+> > 
+> > as I wrote in my previous mail ("brcmfmac: brcmf_p2p_create_p2pdev:
+> > timeout occurred") I get a p2p0 interface when loading the brcmfmac
+> > module with p2pon=1 (Linux kernel 4.0.5, BCM43362).
+> > 
+> > Unfortunatly, if I try to use the p2p0 interface with 
+> > wpa_supplicant
+> > 2.4 I get an error:
+> > 
+> >      Failed to create interface p2p-dev-p2p0: -28 (No space left on
+> >      device)
+> >      nl80211: Failed to create a P2P Device interface p2p-dev-p2p0
+> >      P2P: Failed to enable P2P Device interface
+> 
+> Using p2pon=1 is old-school p2p, ie. it creates a regular netdev for 
+> doing p2p management stuff. Problem is that brcmfmac also indicates 
+> p2p 
+> device support. We can remove p2pon parameter or not indicate p2p dev 
+> 
+> support when p2pon=1.
 
-Jes
+I used p2pon because the p2p0 interface is not created without it. It
+fails with the error message "brcmf_p2p_create_p2pdev: timeout
+occurred" as written in my previous mails. I would prefer not to use
+it, so maybe we can find a solution how to get it working without it.
+
+> 
+> Can you patch brcmfmac and give it a try. Need to start 
+> wpa_supplicant 
+> for two interface and if I recall correctly p2p0 must be specified 
+> first.
+
+Can you give me a hint where to patch brcmfmac. Many thanks!
+
+Best regards
+Jörg Krause
