@@ -1,76 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33171 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818AbbFLN3Q (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52537 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753367AbbFRHDw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 09:29:16 -0400
-Message-ID: <557ADEAB.80504@candelatech.com> (sfid-20150612_152920_075928_12967DE3)
-Date: Fri, 12 Jun 2015 06:29:15 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 18 Jun 2015 03:03:52 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V2 07/10] ath10k: Extend CE src desc flags for interrupt indication
+Date: Thu, 18 Jun 2015 12:31:07 +0530
+Message-ID: <1434610870-5505-8-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150618_090357_444669_704B882B)
+In-Reply-To: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1434610870-5505-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Question on beacon-miss offloading.
-References: <5579F87F.4070601@candelatech.com>	<557A1BE9.7070305@candelatech.com> <CA+BoTQkLyaP-2sHiu7Wn-ZzGj2JnZs4qzQKGu7PiTtUy4d9xLQ@mail.gmail.com>
-In-Reply-To: <CA+BoTQkLyaP-2sHiu7Wn-ZzGj2JnZs4qzQKGu7PiTtUy4d9xLQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+QCA99X0 uses two new copy engine src desc flags for interrupt
+indication. Bit_2 is to mark if host interrupt is disabled after
+processing the current desc and bit_3 is to mark if target interrupt
+is diabled after the processing of current descriptor.
+CE_DESC_FLAGS_META_DATA_MASK and CE_DESC_FLAGS_META_DATA_LSB are based
+on the target type.
 
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c | 1 +
+ drivers/net/wireless/ath/ath10k/ce.h | 9 +++++++--
+ drivers/net/wireless/ath/ath10k/hw.c | 6 ++++++
+ drivers/net/wireless/ath/ath10k/hw.h | 2 ++
+ 4 files changed, 16 insertions(+), 2 deletions(-)
 
-On 06/11/2015 11:03 PM, Michal Kazior wrote:
-> On 12 June 2015 at 01:38, Ben Greear <greearb@candelatech.com> wrote:
->> On 06/11/2015 02:07 PM, Ben Greear wrote:
->>> In my ath10k CT firmware, I am disabling the beacon-miss offloading
->>> to save space and because it will not work with lots of virtual
->>> stations.
->>>
->>> But, it must be that I need some way to tell the stack that this
->>> feature is not enabled, because when suddenly kill my AP, then
->>> the ath10k station connected to it shows endless 'beacon loss' events
->>> in 'iw events' output, but it never actually loses connection.
->>>
->>> Stock firmware works fine, so probably I just need to disable
->>> some feature flag when registering the ath10k hardware
->>> when using CT firmware.
->>>
->>> With stock firmware, I see a quick dissassociation due to inactivity.
->>>
->>> I am having poor luck finding how a driver tells the stack
->>> it has beacon miss offload or not, so, does anyone know how
->>> this is controlled?
->>
->> I still am not sure why stock firmware works, but it appears
->> the reason mine is failing is that the ACK status for mgt frames
->> is always set to TRUE since the ath10k wmi-mgt-tx API is so
->> lame.  So, mac80211 does a probe, ath10k lies and says it was
->> acked, and mac80211 then things all is well for another few
->> seconds.
->
-> mac80211 shouldn't do a Probe Req to an AP on beacon loss because
-> ath10k advertises it supports tx-status report. Hence mac80211 should
-> use NullFunc frames which shouldn't go through wmi-mgmt-tx but htt
-> tx-frm.
->
-> But then again: NullFunc status reporting via htt tx-frm was broken on
-> 10.1 if memory serves right. I believe it was fixed in 10.2 or 10.2.4.
->
-> This problem has been effectively obscured on stock 10.1 by the
-> offloaded beacon miss.
-
-For what it's worth, I looked at the 4.0.4 ath10k yesterday, and it appears it
-ignores the message that the 10.1 firmware sends when beacon loss happens
-anyway.  Maybe I misread the firmware code..it's a pile of indirection.
-
-Do you know how the firmware is supposed to signal beacon loss to
-the host (from the host's perspective).
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index e508c65..cf28fbe 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -452,6 +452,7 @@ int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
+ {
+ 	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
+ 	unsigned int nentries_mask = dest_ring->nentries_mask;
++	struct ath10k *ar = ce_state->ar;
+ 	unsigned int sw_index = dest_ring->sw_index;
+ 
+ 	struct ce_desc *base = dest_ring->base_addr_owner_space;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index bb4b8f3..5c903e15 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -38,8 +38,13 @@ struct ath10k_ce_pipe;
+ 
+ #define CE_DESC_FLAGS_GATHER         (1 << 0)
+ #define CE_DESC_FLAGS_BYTE_SWAP      (1 << 1)
+-#define CE_DESC_FLAGS_META_DATA_MASK 0xFFFC
+-#define CE_DESC_FLAGS_META_DATA_LSB  2
++
++/* Following desc flags are used in QCA99X0 */
++#define CE_DESC_FLAGS_HOST_INT_DIS	(1 << 2)
++#define CE_DESC_FLAGS_TGT_INT_DIS	(1 << 3)
++
++#define CE_DESC_FLAGS_META_DATA_MASK ar->hw_values->ce_desc_meta_data_mask
++#define CE_DESC_FLAGS_META_DATA_LSB  ar->hw_values->ce_desc_meta_data_lsb
+ 
+ struct ce_desc {
+ 	__le32 addr;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index e5fe33d9..1414e1f 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -114,6 +114,8 @@ const struct ath10k_hw_values qca988x_values = {
+ 	.ce_count			= 8,
+ 	.msi_assign_ce_max		= 7,
+ 	.num_target_ce_config_wlan	= 7,
++	.ce_desc_meta_data_mask		= 0xFFFC,
++	.ce_desc_meta_data_lsb		= 2,
+ };
+ 
+ const struct ath10k_hw_values qca6174_values = {
+@@ -121,6 +123,8 @@ const struct ath10k_hw_values qca6174_values = {
+ 	.ce_count			= 8,
+ 	.msi_assign_ce_max		= 7,
+ 	.num_target_ce_config_wlan	= 7,
++	.ce_desc_meta_data_mask		= 0xFFFC,
++	.ce_desc_meta_data_lsb		= 2,
+ };
+ 
+ const struct ath10k_hw_values qca99x0_values = {
+@@ -128,6 +132,8 @@ const struct ath10k_hw_values qca99x0_values = {
+ 	.ce_count			= 12,
+ 	.msi_assign_ce_max		= 12,
+ 	.num_target_ce_config_wlan	= 10,
++	.ce_desc_meta_data_mask		= 0xFFF0,
++	.ce_desc_meta_data_lsb		= 4,
+ };
+ 
+ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 5819659..35cd8ca 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -195,6 +195,8 @@ struct ath10k_hw_values {
+ 	u8 ce_count;
+ 	u8 msi_assign_ce_max;
+ 	u8 num_target_ce_config_wlan;
++	u16 ce_desc_meta_data_mask;
++	u8 ce_desc_meta_data_lsb;
+ };
+ 
+ extern const struct ath10k_hw_values qca988x_values;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
+
