@@ -1,93 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:12115 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933078AbbFVIIV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 04:08:21 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xp6F015529
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:08:20 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1v55hgut9w-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:08:20 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 16/17] mwifiex: separate interface combination for multichannel and DFS
-Date: Mon, 22 Jun 2015 19:06:22 +0530
-Message-ID: <1434980183-2901-17-git-send-email-patila@marvell.com> (sfid-20150622_103351_210877_C0C6F967)
-In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
-References: <1434980183-2901-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:54260 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752029AbbFROVG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 10:21:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: mesh: move fail_avg into mesh struct
+Date: Thu, 18 Jun 2015 16:21:02 +0200
+Message-Id: <1434637262-23604-1-git-send-email-johannes@sipsolutions.net> (sfid-20150618_162109_664682_A08908AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Multichannel and DFS cannot be supported at same time. So when multichannel
-operation is enabled by module parameter, we enable number of channel as 2
-while registering wiphy. For all other cases we advertise DFS support to
-cfg80211. Patch also adds support for radar detect widths parameter.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+This value is only used in mesh, so move it into the new mesh
+sub-struct of the station info.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+ net/mac80211/mesh_hwmp.c | 9 +++++----
+ net/mac80211/sta_info.h  | 7 ++++---
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index bc863e9..93e40d0 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -35,16 +35,33 @@ static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
- 	},
- };
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index be635341c802..d80e0a4c16cf 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -308,8 +308,9 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
  
--static const struct ieee80211_iface_combination mwifiex_iface_comb_ap_sta = {
-+static const struct ieee80211_iface_combination
-+mwifiex_iface_comb_ap_sta = {
- 	.limits = mwifiex_ap_sta_limits,
- 	.num_different_channels = 1,
- 	.n_limits = ARRAY_SIZE(mwifiex_ap_sta_limits),
- 	.max_interfaces = MWIFIEX_MAX_BSS_NUM,
- 	.beacon_int_infra_match = true,
-+	.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+				BIT(NL80211_CHAN_WIDTH_20) |
-+				BIT(NL80211_CHAN_WIDTH_40),
-+};
+ 	/* moving average, scaled to 100 */
+-	sta->fail_avg = ((80 * sta->fail_avg + 5) / 100 + 20 * failed);
+-	if (sta->fail_avg > 95)
++	sta->mesh->fail_avg =
++		((80 * sta->mesh->fail_avg + 5) / 100 + 20 * failed);
++	if (sta->mesh->fail_avg > 95)
+ 		mesh_plink_broken(sta);
+ }
+ 
+@@ -325,7 +326,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	u32 tx_time, estimated_retx;
+ 	u64 result;
+ 
+-	if (sta->fail_avg >= 100)
++	if (sta->mesh->fail_avg >= 100)
+ 		return MAX_METRIC;
+ 
+ 	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
+@@ -333,7 +334,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	if (WARN_ON(!rate))
+ 		return MAX_METRIC;
+ 
+-	err = (sta->fail_avg << ARITH_SHIFT) / 100;
++	err = (sta->mesh->fail_avg << ARITH_SHIFT) / 100;
+ 
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 4f4f32f08a90..013fa5ac36e2 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -291,6 +291,7 @@ struct ieee80211_fast_tx {
+  * @nonpeer_pm: STA power save mode towards non-peer neighbors
+  * @processed_beacon: set to true after peer rates and capabilities are
+  *	processed
++ * @fail_avg: moving percentage of failed MSDUs
+  */
+ struct mesh_sta {
+ 	struct timer_list plink_timer;
+@@ -313,6 +314,9 @@ struct mesh_sta {
+ 	enum nl80211_mesh_power_mode local_pm;
+ 	enum nl80211_mesh_power_mode peer_pm;
+ 	enum nl80211_mesh_power_mode nonpeer_pm;
 +
-+static const struct ieee80211_iface_combination
-+mwifiex_iface_comb_ap_sta_vht = {
-+	.limits = mwifiex_ap_sta_limits,
-+	.num_different_channels = 1,
-+	.n_limits = ARRAY_SIZE(mwifiex_ap_sta_limits),
-+	.max_interfaces = MWIFIEX_MAX_BSS_NUM,
-+	.beacon_int_infra_match = true,
-+	.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+				BIT(NL80211_CHAN_WIDTH_20) |
-+				BIT(NL80211_CHAN_WIDTH_40) |
-+				BIT(NL80211_CHAN_WIDTH_80),
++	/* moving percentage of failed MSDUs */
++	unsigned int fail_avg;
  };
  
- static const struct
--ieee80211_iface_combination mwifiex_drcs_iface_comb_ap_sta = {
-+ieee80211_iface_combination mwifiex_iface_comb_ap_sta_drcs = {
- 	.limits = mwifiex_ap_sta_limits,
- 	.num_different_channels = 2,
- 	.n_limits = ARRAY_SIZE(mwifiex_ap_sta_limits),
-@@ -3755,7 +3772,9 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 		wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
+ /**
+@@ -370,7 +374,6 @@ struct mesh_sta {
+  * @tx_filtered_count: number of frames the hardware filtered for this STA
+  * @tx_retry_failed: number of frames that failed retry
+  * @tx_retry_count: total number of retries for frames to this STA
+- * @fail_avg: moving percentage of failed MSDUs
+  * @tx_packets: number of RX/TX MSDUs
+  * @tx_bytes: number of bytes transmitted to this STA
+  * @tid_seq: per-TID sequence numbers for sending to this STA
+@@ -474,8 +477,6 @@ struct sta_info {
+ 	/* Updated from TX status path only, no locking requirements */
+ 	unsigned long tx_filtered_count;
+ 	unsigned long tx_retry_failed, tx_retry_count;
+-	/* moving percentage of failed MSDUs */
+-	unsigned int fail_avg;
  
- 	if (adapter->drcs_enabled && ISSUPP_DRCS_ENABLED(adapter->fw_cap_info))
--		wiphy->iface_combinations = &mwifiex_drcs_iface_comb_ap_sta;
-+		wiphy->iface_combinations = &mwifiex_iface_comb_ap_sta_drcs;
-+	else if (adapter->is_hw_11ac_capable)
-+		wiphy->iface_combinations = &mwifiex_iface_comb_ap_sta_vht;
- 	else
- 		wiphy->iface_combinations = &mwifiex_iface_comb_ap_sta;
- 	wiphy->n_iface_combinations = 1;
+ 	struct u64_stats_sync status_sync;
+ 	u64 tx_msdu_retries[IEEE80211_NUM_TIDS + 1];
 -- 
-1.8.1.4
+2.1.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
