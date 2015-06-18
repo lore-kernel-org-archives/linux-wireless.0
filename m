@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:38337 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610AbbFUKGT (ORCPT
+Received: from mail-am1on0103.outbound.protection.outlook.com ([157.56.112.103]:24016
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750892AbbFRMhE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Jun 2015 06:06:19 -0400
-Received: by wibdq8 with SMTP id dq8so51126893wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2015 03:06:18 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/3] staging: vt6655: Fix missing power saving support
-Date: Sun, 21 Jun 2015 11:05:53 +0100
-Message-Id: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com> (sfid-20150621_120623_541718_1C705015)
+	Thu, 18 Jun 2015 08:37:04 -0400
+From: "Abdul, Hussain (H.)" <habdul@visteon.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"mravind@visteon.com" <mravind@visteon.com>,
+	"Dighe, Niranjan (N.)" <ndighe@visteon.com>
+Subject: [PATCH] Staging: wilc1000: NULL check before some freeing functions
+ is not needed
+Date: Thu, 18 Jun 2015 12:37:00 +0000
+Message-ID: <1434630935-4526-1-git-send-email-habdul@visteon.com> (sfid-20150618_143708_935387_F8888395)
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add IEEE80211_HW_SUPPORTS_PS to ieee80211_hw flags
-enabling this feature.
+From: Abdul Hussain <habdul@visteon.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+This patch removes check before freeing the memory 
+since kfree(NULL) is safe
+
+Signed-off-by: Abdul Hussain <habdul@visteon.com>
 ---
- drivers/staging/vt6655/device_main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan_spi.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 0bfc939..b1357af 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1819,7 +1819,8 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		IEEE80211_HW_SIGNAL_DBM |
--		IEEE80211_HW_TIMING_BEACON_ONLY;
-+		IEEE80211_HW_TIMING_BEACON_ONLY |
-+		IEEE80211_HW_SUPPORTS_PS;
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 1eee1d5..236669c 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -214,8 +214,7 @@ int linux_spi_write(uint8_t *b, uint32_t len)
+ 				PRINT_ER("SPI transaction failed\n");
+ 			}
+ 		}
+-		if (r_buffer)
+-			kfree(r_buffer);
++		kfree(r_buffer);
+ 	} else {
+ 		PRINT_ER("can't write data with the following length: %d\n", len);
+ 		PRINT_ER("FAILED due to NULL buffer or ZERO length check the following length: %d\n", len);
+@@ -377,8 +376,7 @@ int linux_spi_read(unsigned char *rb, unsigned long rlen)
+ 			}
+ 		}
  
- 	priv->hw->max_signal = 100;
- 
+-		if (t_buffer)
+-			kfree(t_buffer);
++		kfree(t_buffer);
+ 	} else {
+ 		PRINT_ER("can't read data with the following length: %ld\n", rlen);
+ 		ret = -1;
 -- 
-2.1.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+1.9.1
