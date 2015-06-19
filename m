@@ -1,105 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13487 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753145AbbFCHb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:31:56 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/15] iwlwifi: pcie: re-enable interrupts on resume
-Date: Wed,  3 Jun 2015 10:31:27 +0300
-Message-Id: <1433316696-4612-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093203_480103_8EA38ED6)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:34732 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734AbbFSAGh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Jun 2015 20:06:37 -0400
+Received: by pdbki1 with SMTP id ki1so77193807pdb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 17:06:36 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH] staging: wilc1000: fix checkpatch warning
+Date: Fri, 19 Jun 2015 09:06:28 +0900
+Message-Id: <1434672388-4074-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150619_020640_431486_3E52C53F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Fix warning founded by checkpatch.pl.
+WARNING: __func__ should be used instead of gcc specific __FUNCTION__
 
-On resume, all the interrupts are masked (CSR_INT_MASK is 0),
-and ict is disabled.
-
-Re-configure them both.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h |  2 ++
- drivers/net/wireless/iwlwifi/mvm/d3.c    |  3 ++-
- drivers/net/wireless/iwlwifi/pcie/drv.c  | 17 ++++++++++++++---
- 3 files changed, 18 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c        |  2 +-
+ drivers/staging/wilc1000/linux_wlan_common.h | 16 ++++++++--------
+ drivers/staging/wilc1000/wilc_platform.h     |  2 +-
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index eb34b94..87a230a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -641,6 +641,8 @@ struct iwl_trans {
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8ecbb2d..fb875c2 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -2425,7 +2425,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 				snprintf(buff, size, "rssi %d", rssi);
  
- 	enum iwl_d0i3_mode d0i3_mode;
+ 				if (copy_to_user(wrq->u.data.pointer, buff, size)) {
+-					PRINT_ER("%s: failed to copy data to user buffer\n", __FUNCTION__);
++					PRINT_ER("%s: failed to copy data to user buffer\n", __func__);
+ 					s32Error = -EFAULT;
+ 					goto done;
+ 				}
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 830d96a..2476bfd 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -54,7 +54,7 @@ extern atomic_t DEBUG_LEVEL;
+ 	do {								\
+ 		if ((atomic_read(&DEBUG_LEVEL) & DEBUG) &&		\
+ 		   ((atomic_read(&REGION)) & (region))) {		\
+-			printk("DBG [%s: %d]", __FUNCTION__, __LINE__);	\
++			printk("DBG [%s: %d]", __func__, __LINE__);	\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+ 	} while (0)
+@@ -63,7 +63,7 @@ extern atomic_t DEBUG_LEVEL;
+ 	do {								\
+ 		if ((atomic_read(&DEBUG_LEVEL) & INFO) &&		\
+ 		   ((atomic_read(&REGION)) & (region))) {		\
+-			printk("INFO [%s]", __FUNCTION__);		\
++			printk("INFO [%s]", __func__);			\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+ 	} while (0)
+@@ -72,7 +72,7 @@ extern atomic_t DEBUG_LEVEL;
+ 	do {								\
+ 		if ((atomic_read(&DEBUG_LEVEL) & WRN) &&		\
+ 		   ((atomic_read(&REGION)) & (region))) {		\
+-			printk("WRN [%s: %d]", __FUNCTION__, __LINE__);	\
++			printk("WRN [%s: %d]", __func__, __LINE__);	\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+ 	} while (0)
+@@ -80,7 +80,7 @@ extern atomic_t DEBUG_LEVEL;
+ #define PRINT_ER(...)							\
+ 	do {								\
+ 		if ((atomic_read(&DEBUG_LEVEL) & ERR)) {		\
+-			printk("ERR [%s: %d]", __FUNCTION__, __LINE__);	\
++			printk("ERR [%s: %d]", __func__, __LINE__);	\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+ 	} while (0)
+@@ -96,7 +96,7 @@ extern atomic_t DEBUG_LEVEL;
+ #define PRINT_D(region, ...)						\
+ 	do {								\
+ 		if (DEBUG == 1 && ((REGION)&(region))) {		\
+-			printk("DBG [%s: %d]", __FUNCTION__, __LINE__); \
++			printk("DBG [%s: %d]", __func__, __LINE__);	\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+ 	} while (0)
+@@ -104,7 +104,7 @@ extern atomic_t DEBUG_LEVEL;
+ #define PRINT_INFO(region, ...)						\
+ 	do {								\
+ 		if (INFO == 1 && ((REGION)&(region))) {			\
+-			printk("INFO [%s]", __FUNCTION__);		\
++			printk("INFO [%s]", __func__);			\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+ 	} while (0)
+@@ -112,14 +112,14 @@ extern atomic_t DEBUG_LEVEL;
+ #define PRINT_WRN(region, ...)						\
+ 	do {								\
+ 		if (WRN == 1 && ((REGION)&(region))) {			\
+-			printk("WRN [%s: %d]", __FUNCTION__, __LINE__); \
++			printk("WRN [%s: %d]", __func__, __LINE__);	\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+ 	} while (0)
  
-+	bool wowlan_d0i3;
-+
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
- 	char trans_specific[0] __aligned(sizeof(void *));
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 423c519..4165d10 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1170,7 +1170,8 @@ int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ #define PRINT_ER(...)							\
+ 	do {								\
+-		printk("ERR [%s: %d]", __FUNCTION__, __LINE__);		\
++		printk("ERR [%s: %d]", __func__, __LINE__);		\
+ 		printk(__VA_ARGS__);					\
+ 	} while (0)
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
+index 7ddea83..d03532c 100644
+--- a/drivers/staging/wilc1000/wilc_platform.h
++++ b/drivers/staging/wilc1000/wilc_platform.h
+@@ -47,6 +47,6 @@ typedef time_t WILC_Time;
  
- 	iwl_trans_suspend(mvm->trans);
--	if (wowlan->any) {
-+	mvm->trans->wowlan_d0i3 = wowlan->any;
-+	if (mvm->trans->wowlan_d0i3) {
- 		/* 'any' trigger means d0i3 usage */
- 		if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND) {
- 			int ret = iwl_mvm_enter_d0i3_sync(mvm);
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index b185697..2ed1e4d 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -32,7 +32,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -629,7 +629,18 @@ static int iwl_pci_resume(struct device *device)
- 	if (!trans->op_mode)
- 		return 0;
- 
--	iwl_enable_rfkill_int(trans);
-+	/*
-+	 * On suspend, ict is disabled, and the interrupt mask
-+	 * gets cleared. Reconfigure them both in case of d0i3
-+	 * image. Otherwise, only enable rfkill interrupt (in
-+	 * order to keep track of the rfkill status)
-+	 */
-+	if (trans->wowlan_d0i3) {
-+		iwl_pcie_reset_ict(trans);
-+		iwl_enable_interrupts(trans);
-+	} else {
-+		iwl_enable_rfkill_int(trans);
-+	}
- 
- 	hw_rfkill = iwl_is_rfkill_set(trans);
- 	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
+ /* Generic printf function */
+ #define __WILC_FILE__		__FILE__
+-#define __WILC_FUNCTION__	__FUNCTION__
++#define __WILC_FUNCTION__	__func__
+ #define __WILC_LINE__		__LINE__
+ #endif
 -- 
-2.1.4
+1.9.1
 
