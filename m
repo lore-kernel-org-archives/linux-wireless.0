@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:32797 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750802AbbFMSph (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:37118 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787AbbFSIHR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2015 14:45:37 -0400
-Received: by wgez8 with SMTP id z8so42774675wge.0
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Jun 2015 11:45:36 -0700 (PDT)
-Message-ID: <557C7A4E.9030008@gmail.com> (sfid-20150613_204540_105106_DF711CAC)
-Date: Sat, 13 Jun 2015 20:45:34 +0200
-From: Arend van Spriel <aspriel@gmail.com>
+	Fri, 19 Jun 2015 04:07:17 -0400
+Message-ID: <5583CDB2.3040306@broadcom.com> (sfid-20150619_100728_624629_7DEA9303)
+Date: Fri, 19 Jun 2015 10:07:14 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
 To: Luca Coelho <luca@coelho.fi>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH py80211 3/4] py80211: add sched_scan stop class
-References: <1434117644-3033-1-git-send-email-luca@coelho.fi> <1434117644-3033-4-git-send-email-luca@coelho.fi>
-In-Reply-To: <1434117644-3033-4-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset=windows-1252
+CC: <aspriel@gmail.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH py80211] py80211: scan: fix call to _add_scan_attrs()
+ in the sched_scan_start class
+References: <1434439958-9447-1-git-send-email-luca@coelho.fi>
+In-Reply-To: <1434439958-9447-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 06/16/15 09:32, Luca Coelho wrote:
+> From: Luciano Coelho<luciano.coelho@intel.com>
+>
+> We should not pass self explicitly when calling the superclass's
+> _add_scan_attrs() in the sched_scan_start class.  Fix it.
 
+Sloppy maintainer at work ;-) My python knowledge need a refresh. I like 
+the super() concept, but did not do the training yet. :-)
 
-On 12-06-15 16:00, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> Add a class to stop scheduled scans.
-> 
-> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-
-Merged in master branch after indentation cleanup.
+Thanks for the fix. Applied to py80211 master branch.
 
 Regards,
 Arend
 
+> Signed-off-by: Luciano Coelho<luciano.coelho@intel.com>
 > ---
->  lib/scan.py | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
+>   lib/scan.py | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
 > diff --git a/lib/scan.py b/lib/scan.py
-> index bfaf4da..bfaf3d2 100644
+> index 32cb68b..3ce242e 100644
 > --- a/lib/scan.py
 > +++ b/lib/scan.py
-> @@ -203,3 +203,18 @@ class sched_scan_start(scan_start_base):
->                  if genlh.cmd in [ nl80211.CMD_START_SCHED_SCAN ]:
->                          self.scan_busy = False
->  		return nl.NL_SKIP
-> +
-> +class sched_scan_stop(scan_cmd_base):
-> +	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
-> +                super(sched_scan_stop, self).__init__(ifidx, level)
-> +                self._nl_cmd = nl80211.CMD_STOP_SCHED_SCAN
-> +
-> +        def send(self):
-> +                self._prepare_cmd()
-> +                self._send_and_wait()
-> +
-> +        def handle(self, msg, arg):
-> +		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
-> +                if genlh.cmd in [ nl80211.CMD_SCHED_SCAN_STOPPED ]:
-> +                        self.scan_busy = False
-> +		return nl.NL_SKIP
-> 
+> @@ -191,7 +191,7 @@ class sched_scan_start(scan_start_base):
+>   		self._matches = None
+>
+>   	def _add_scan_attrs(self):
+> -		super(sched_scan_start, self)._add_scan_attrs(self)
+> +		super(sched_scan_start, self)._add_scan_attrs()
+>   		if self._interval != None:
+>   			nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_INTERVAL, self._interval)
+>
+
