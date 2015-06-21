@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24748 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759223AbbFBPX5 (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:55486
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753295AbbFURrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 11:23:57 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-To: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v3 1/2] wireless-regdb: Add 60GHz regulatory rules for Japan (JP)
-Date: Tue,  2 Jun 2015 18:23:47 +0300
-Message-Id: <1433258628-7047-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150602_172409_560020_B4CC133A)
-In-Reply-To: <1433258628-7047-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <20150602144231.GA31648@ubuntu-hedt>
- <1433258628-7047-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sun, 21 Jun 2015 13:47:48 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH] ath9k_hw: fix device ID check for AR956x
+Date: Sun, 21 Jun 2015 19:47:46 +0200
+Message-Id: <1434908866-99327-1-git-send-email-nbd@openwrt.org> (sfid-20150621_194823_577967_49497318)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is ARIB STD-T74, available at:
-http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
+Because of the missing return, the macVersion value was being
+overwritten with an invalid register read
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- db.txt | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath9k/hw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/db.txt b/db.txt
-index 37b6c39..af3aaca 100644
---- a/db.txt
-+++ b/db.txt
-@@ -590,6 +590,9 @@ country JP: DFS-JP
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (23), DFS
-+	# 60 GHz band channels 2-4 at 10mW,
-+	# ref: http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
-+	(59000 - 66000 @ 2160), (10 mW)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5e15e8e..a31a680 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -279,6 +279,7 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ 		return;
+ 	case AR9300_DEVID_QCA956X:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9561;
++		return;
+ 	}
  
- country KE: DFS-JP
- 	(2402 - 2482 @ 40), (20)
+ 	val = REG_READ(ah, AR_SREV) & AR_SREV_ID;
 -- 
-2.1.4
+2.2.2
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
