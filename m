@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-am1on0142.outbound.protection.outlook.com ([157.56.112.142]:53120
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753570AbbFCLfQ convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:34337 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752610AbbFUKGX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 07:35:16 -0400
-From: "Sharma, Abhishek (A.)" <asharm14@visteon.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-CC: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	"Dean Lee" <dean.lee@atmel.com>, Chris Park <chris.park@atmel.com>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] staging: wilc1000: Remove commented variable declerations
-Date: Wed, 3 Jun 2015 11:35:12 +0000
-Message-ID: <DB4PR06MB016E3A38F95897E4AD2BE5DC8B40@DB4PR06MB016.eurprd06.prod.outlook.com> (sfid-20150603_133545_667837_833C8077)
-References: <20150603095523.GA25864@jarvis.asia.jci.com>
- <20150603112325.GA8620@sudip-PC>
-In-Reply-To: <20150603112325.GA8620@sudip-PC>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Sun, 21 Jun 2015 06:06:23 -0400
+Received: by wicnd19 with SMTP id nd19so52395271wic.1
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2015 03:06:22 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/3] staging: vt6655: Correct listen interval TBTT wake up
+Date: Sun, 21 Jun 2015 11:05:55 +0100
+Message-Id: <1434881155-3464-3-git-send-email-tvboxspy@gmail.com> (sfid-20150621_120627_406535_EA34547A)
+In-Reply-To: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
+References: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudip, I have already submitted the patch V2 with additional From: line.
+PSbIsNextTBTTWakeUp is called at beacon intervals.
 
-Regards
-Abhishek
+The should listen to next beacon on count down of wake_up_count == 1.
 
------Original Message-----
-From: Sudip Mukherjee [mailto:sudipm.mukherjee@gmail.com] 
-Sent: Wednesday, June 03, 2015 4:53 PM
-To: Sharma, Abhishek (A.)
-Cc: Johnny Kim; Rachel Kim; Dean Lee; Chris Park; Greg Kroah-Hartman; linux-wireless@vger.kernel.org; devel@driverdev.osuosl.org; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: Remove commented variable declerations
+This restores this back to vendors code but modified for mac80211.
 
-On Wed, Jun 03, 2015 at 09:56:11AM +0000, Sharma, Abhishek (A.) wrote:
-> Removing the commented static variable declerations.
-> 
-> Signed-off-by: Abhishek Sharma <asharm14@visteon.com>
-Your email header From: name is not matching with Signed-off-by: name.
-If you cannot fix your email client then please send v2 with an additional From: line.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device.h |  1 +
+ drivers/staging/vt6655/power.c  | 16 ++++++++++++----
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-regards
-sudip
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 5cf1b33..6aebb49 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -403,6 +403,7 @@ struct vnt_private {
+ 	unsigned char abyEEPROM[EEP_MAX_CONTEXT_SIZE]; /* unsigned long alignment */
+ 
+ 	unsigned short wBeaconInterval;
++	u16 wake_up_count;
+ 
+ 	struct work_struct interrupt_work;
+ 
+diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
+index be3c4e9..06e6b9d 100644
+--- a/drivers/staging/vt6655/power.c
++++ b/drivers/staging/vt6655/power.c
+@@ -157,10 +157,18 @@ PSbIsNextTBTTWakeUp(
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	bool bWakeUp = false;
+ 
+-	if (conf->listen_interval == 1) {
+-		/* Turn on wake up to listen next beacon */
+-		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
+-		bWakeUp = true;
++	if (conf->listen_interval > 1) {
++		if (!pDevice->wake_up_count)
++			pDevice->wake_up_count = conf->listen_interval;
++
++		--pDevice->wake_up_count;
++
++		if (pDevice->wake_up_count == 1) {
++			/* Turn on wake up to listen next beacon */
++			MACvRegBitsOn(pDevice->PortOffset,
++				      MAC_REG_PSCTL, PSCTL_LNBCN);
++			bWakeUp = true;
++		}
+ 	}
+ 
+ 	return bWakeUp;
+-- 
+2.1.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
