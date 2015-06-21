@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:30009 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933410AbbFJIGu (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:46718 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756052AbbFUQ5z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 04:06:50 -0400
-From: Johnny Kim <johnny.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>
-CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<Rachel.kim@atmel.com>, <dean.lee@atmel.com>, <tony.cho@atmel.com>
-Subject: [PATCH 0/4] staging: wilc1000: fix compile warnings and clean other
-Date: Wed, 10 Jun 2015 17:06:43 +0900
-Message-ID: <1433923607-20927-1-git-send-email-johnny.kim@atmel.com> (sfid-20150610_100654_881477_46F7BD84)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 21 Jun 2015 12:57:55 -0400
+Date: Sun, 21 Jun 2015 10:09:41 -0700 (PDT)
+Message-Id: <20150621.100941.461361514395666445.davem@davemloft.net> (sfid-20150621_185820_978257_7A1EFD30)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	michal.kazior@tieto.com, johannes.berg@intel.com
+Subject: Re: [PATCH] mac80211: fix locking in
+ update_vlan_tailroom_need_count()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1434542094-14247-1-git-send-email-johannes@sipsolutions.net>
+References: <1434542094-14247-1-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Greg.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 17 Jun 2015 13:54:54 +0200
 
-I have rebased on the lastest staging-testing and fixed compile warnings
-This patches is prepared to fix the compatibilty issue for 64bit machine
-and wrong casting.
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Unfortunately, Michal's change to fix AP_VLAN crypto tailroom
+> caused a locking issue that was reported by lockdep, but only
+> in a few cases - the issue was a classic ABBA deadlock caused
+> by taking the mtx after the key_mtx, where normally they're
+> taken the other way around.
+> 
+> As the key mutex protects the field in question (I'm adding a
+> few annotations to make that clear) only the iteration needs
+> to be protected, but we can also iterate the interface list
+> with just RCU protection while holding the key mutex.
+> 
+> Fixes: f9dca80b98ca ("mac80211: fix AP_VLAN crypto tailroom calculation")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> Dave, if you're planning to send any more patches to Linus before
+> the release, please apply this one. Otherwise let me know and I'll
+> sort it out with Cc stable after the merge window.
 
-I am aware that the others should be patched additonally.
-However I need internally to discuss on the other patch. Then, the others
-will be sent soon.
-
-  Johnny.
-
-Johnny Kim (4):
-  staging: wilc1000: modify data type
-  staging: wilc1000: add syntax for 64-bit machine
-  staging: wilc1000: modify printk format
-  staging: wilc1000: remove uninitialized warnings
-
- drivers/staging/wilc1000/coreconfigurator.c       |   4 +-
- drivers/staging/wilc1000/coreconfigurator.h       |   2 +-
- drivers/staging/wilc1000/host_interface.c         | 158 ++++++++++++----------
- drivers/staging/wilc1000/host_interface.h         |   6 +-
- drivers/staging/wilc1000/linux_wlan.c             |  14 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  18 +--
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   2 +-
- drivers/staging/wilc1000/wilc_wlan.c              |  27 ++--
- drivers/staging/wilc1000/wilc_wlan.h              |   6 +-
- drivers/staging/wilc1000/wilc_wlan_if.h           |   4 +-
- 10 files changed, 136 insertions(+), 105 deletions(-)
-
--- 
-1.9.1
-
+Applied.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
