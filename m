@@ -1,70 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:33496 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752812AbbFIFfw (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:51736 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbbFVJ3v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 01:35:52 -0400
-Received: by pdjn11 with SMTP id n11so7189061pdj.0
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jun 2015 22:35:52 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: fix the beacon csa counter for mesh and ibss
-Date: Tue,  9 Jun 2015 13:35:33 +0800
-Message-Id: <1433828133-6904-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150609_073556_059012_196FB461)
+	Mon, 22 Jun 2015 05:29:51 -0400
+Date: Mon, 22 Jun 2015 12:29:37 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Dean Lee <dean.lee@atmel.com>, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com
+Subject: Re: [PATCH 1/2] staging: wilc1000: modify type casting warning
+Message-ID: <20150622092937.GX28762@mwanda> (sfid-20150622_112954_920310_4DDBE41D)
+References: <1434438685-24336-1-git-send-email-dean.lee@atmel.com>
+ <20150616130643.GB11143@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150616130643.GB11143@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The csa counter has moved from sdata to beacon/presp but
-it is not updated accordingly for mesh and ibss. Fix this.
+On Tue, Jun 16, 2015 at 06:06:43AM -0700, Greg KH wrote:
+> This shows you are doing something really wrong here, why not just fix
+> the function type to be a real pointer to a real structure?
 
-This regression is introduced by the following patch:
-mac80211: move csa counters from sdata to beacon/presp
+You are right, of course.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- net/mac80211/cfg.c  | 1 +
- net/mac80211/ibss.c | 1 +
- net/mac80211/mesh.c | 1 +
- 3 files changed, 3 insertions(+)
+> Or even better, just remove the parameter as I don't think they are
+> even used.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index bb9f836..0fdfc20 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3443,6 +3443,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	/* Update CSA counters */
- 	if (sdata->vif.csa_active &&
- 	    (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	     sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
- 	     sdata->vif.type == NL80211_IFTYPE_ADHOC) &&
- 	    params->n_csa_offsets) {
- 		int i;
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 21716af..7f72bc9 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -146,6 +146,7 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
- 				csa_settings->chandef.chan->center_freq);
- 		presp->csa_counter_offsets[0] = (pos - presp->head);
- 		*pos++ = csa_settings->count;
-+		presp->csa_current_counter = csa_settings->count;
- 	}
- 
- 	/* put the remaining rates in WLAN_EID_EXT_SUPP_RATES */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index d468424..817098a 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -680,6 +680,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 		*pos++ = 0x0;
- 		*pos++ = ieee80211_frequency_to_channel(
- 				csa->settings.chandef.chan->center_freq);
-+		bcn->csa_current_counter = csa->settings.count;
- 		bcn->csa_counter_offsets[0] = hdr_len + 6;
- 		*pos++ = csa->settings.count;
- 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
--- 
-2.3.0
+I don't know how far you traced the code, you may be right.  It
+eventually becomes driver_handler[] in wilc_wlan_cfg_commit() and we
+do this:
 
+drivers/staging/wilc1000/wilc_wlan.c
+  1883          cfg->wid_header[1] = seq_no;    /* sequence number */
+  1884          cfg->wid_header[2] = (uint8_t)total_len;
+  1885          cfg->wid_header[3] = (uint8_t)(total_len >> 8);
+  1886          cfg->wid_header[4] = (uint8_t)driver_handler;
+  1887          cfg->wid_header[5] = (uint8_t)(driver_handler >> 8);
+  1888          cfg->wid_header[6] = (uint8_t)(driver_handler >> 16);
+  1889          cfg->wid_header[7] = (uint8_t)(driver_handler >> 24);
+
+We put it in the header.
+
+  1890          p->cfg_seq_no = seq_no;
+  1891  
+  1892          /**
+  1893           *      Add to TX queue
+  1894           **/
+  1895  
+  1896          /*Edited by Amr - BugID_4720*/
+  1897          if (!wilc_wlan_txq_add_cfg_pkt(&cfg->wid_header[0], total_len))
+
+And I don't know what we do with it after this.
+
+  1898                  return -1;
+  1899  
+  1900          return 0;
+  1901  }
+
+regards,
+dan carpenter
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
