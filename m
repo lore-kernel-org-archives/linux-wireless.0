@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0131.hostedemail.com ([216.40.44.131]:40043 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752787AbbF3DQh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 23:16:37 -0400
-Message-ID: <1435634193.9587.64.camel@perches.com> (sfid-20150630_051640_906395_9AC555A7)
-Subject: Re: [PATCH v4] Add new mac80211 driver mwlwifi.
-From: Joe Perches <joe@perches.com>
-To: David Lin <dlin@marvell.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
-Date: Mon, 29 Jun 2015 20:16:33 -0700
-In-Reply-To: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
-References: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48085 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933572AbbFVL7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2015 07:59:42 -0400
+Message-ID: <1434974380.19597.10.camel@sipsolutions.net> (sfid-20150622_135945_438849_722C306F)
+Subject: Re: [PATCH 2/3] ath9k: make rxfilter per HW
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	nbd@openwrt.org, sujith@msujith.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Mon, 22 Jun 2015 13:59:40 +0200
+In-Reply-To: <1434974312.19597.9.camel@sipsolutions.net> (sfid-20150622_135841_850054_31462557)
+References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1434973385-15865-3-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150622_134339_744222_8D689257) <1434974312.19597.9.camel@sipsolutions.net>
+	 (sfid-20150622_135841_850054_31462557)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-06-30 at 01:49 +0000, David Lin wrote:
-> The Linux driver for WRT1900AC. The work was initially developed as part of
-> openwrt effort and maintained on https://github.com/kaloz/mwlwifi.
+On Mon, 2015-06-22 at 13:58 +0200, Johannes Berg wrote:
+> On Mon, 2015-06-22 at 13:43 +0200, Janusz Dziedzic wrote:
+> > mac80211 configure rxfilter per HW,
+> > so we don't need this per channel.
+> 
+> As I said before, I think there's value in mac80211 doing it per chanctx
+> or even per vif, and it should be more efficient to do so.
+> 
+> It's tempting to do it per vif and leave the chanctx work up to the
+> driver, but perhaps with CSA and all that it gets complicated enough
+> that doing it per chanctx in mac80211 would make sense?
 
-trivia:
+On the other hand, I think our device requires it per vif, so we'd
+probably have to do both.
 
-Please add terminating newlines to logging messages.
-This prevents interleaving output from multiple threads.
++Andrei, who was looking into this.
 
-> diff --git a/drivers/net/wireless/mwlwifi/fwcmd.c b/drivers/net/wireless/mwlwifi/fwcmd.c
-[]
-> +static bool mwl_fwcmd_chk_adapter(struct mwl_priv *priv)
-> +{
-[]
-> +	if (regval == 0xffffffff) {
-> +		wiphy_err(priv->hw->wiphy, "adapter is not existed");
+johannes
 
-		wiphy_err(priv->hw->wiphy, "adapter is not existed\n");
-
-> +static int mwl_fwcmd_wait_complete(struct mwl_priv *priv, unsigned short cmd)
-> +{
-[]
-> +	if (curr_iteration == 0) {
-> +		wiphy_err(priv->hw->wiphy, "cmd 0x%04x=%s timed out",
-
-		wiphy_err(priv->hw->wiphy, "cmd 0x%04x=%s timed out\n",
-
-etc...
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
