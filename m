@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59251 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753542AbbFLOBB (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:36212 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751555AbbFVEIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 10:01:01 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: aspriel@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2015 17:00:42 +0300
-Message-Id: <1434117644-3033-3-git-send-email-luca@coelho.fi> (sfid-20150612_160106_830286_C4405808)
-In-Reply-To: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-References: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH py80211 2/4] py80211: scan: add sched_scan start class
+	Mon, 22 Jun 2015 00:08:42 -0400
+Received: by pdcu2 with SMTP id u2so3524567pdc.3
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2015 21:08:41 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 5/5] staging: wilc1000: wilc_wfi_netdevice.c: move statement after declarations
+Date: Mon, 22 Jun 2015 13:08:15 +0900
+Message-Id: <1434946095-26157-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20150622_060850_637316_BC93BAE8)
+In-Reply-To: <1434946095-26157-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1434946095-26157-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Fix checkpatch warning found by checkpatch.pl
+WARNING: Missing a blank line after declarations
 
-Add a class to start scheduled scans.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- lib/scan.py | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/lib/scan.py b/lib/scan.py
-index 5ccae55..bfaf4da 100644
---- a/lib/scan.py
-+++ b/lib/scan.py
-@@ -123,6 +123,7 @@ class scan_start_base(scan_cmd_base):
- 		self._flags = 0
- 		self._ies = None
-                 self._nl_cmd = None
-+                self._interval = None
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.c b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
+index 31a796b..170ca65 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.c
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
+@@ -886,9 +886,10 @@ int WILC_WFI_InitModule(void)
+ 	int result, i, ret = -ENOMEM;
+ 	struct WILC_WFI_priv *priv[2], *netpriv;
+ 	struct wireless_dev *wdev;
+-	WILC_WFI_Interrupt = use_napi ? WILC_WFI_NapiInterrupt : WILC_WFI_RegularInterrupt;
+ 	char buf[IFNAMSIZ];
  
-         def _add_scan_attrs(self):
- 		if self._ssids:
-@@ -144,6 +145,9 @@ class scan_start_base(scan_cmd_base):
- 		if self._ies:
- 			nl.nla_put(self._nl_msg._msg, nl80211.ATTR_IE, self._ies)
++	WILC_WFI_Interrupt = use_napi ? WILC_WFI_NapiInterrupt : WILC_WFI_RegularInterrupt;
++
+ 	for (i = 0; i < 2; i++)	{
  
-+                if self._interval != None:
-+                        nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_INTERVAL, self._interval)
-+
- 	def add_ssids(self, ssids):
- 		if self._ssids == None:
- 			self._ssids = ssids
-@@ -183,3 +187,19 @@ class scan_request(scan_start_base):
- 		if genlh.cmd in [ nl80211.CMD_SCAN_ABORTED, nl80211.CMD_NEW_SCAN_RESULTS ]:
- 			self.scan_busy = False
- 		return nl.NL_SKIP
-+
-+class sched_scan_start(scan_start_base):
-+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
-+                super(sched_scan_start, self).__init__(ifidx, level)
-+                self._nl_cmd = nl80211.CMD_START_SCHED_SCAN
-+
-+	def set_interval(self, interval):
-+		self._interval = interval
-+
-+        def handle(self, msg, arg):
-+		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
-+
-+                # A schedule scan is complete immediately when it gets started
-+                if genlh.cmd in [ nl80211.CMD_START_SCHED_SCAN ]:
-+                        self.scan_busy = False
-+		return nl.NL_SKIP
+ 		/* Allocate the net devices */
 -- 
-2.1.4
+1.9.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
