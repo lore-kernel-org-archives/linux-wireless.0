@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:36235 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651AbbFFPTm (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37774 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932919AbbFVIGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2015 11:19:42 -0400
-Received: by pabqy3 with SMTP id qy3so67108022pab.3
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Jun 2015 08:19:42 -0700 (PDT)
+	Mon, 22 Jun 2015 04:06:53 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xsZq032685
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:53 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1v57pduf0e-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:06:53 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 03/17] mwifiex: do not increase tx_pkts_queued if receive address tx paused
+Date: Mon, 22 Jun 2015 19:06:09 +0530
+Message-ID: <1434980183-2901-4-git-send-email-patila@marvell.com> (sfid-20150622_100657_302419_318D31A7)
+In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
+References: <1434980183-2901-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87bngtnf00.fsf@kamboji.qca.qualcomm.com>
-References: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com>
- <87bngtnf00.fsf@kamboji.qca.qualcomm.com>
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Sat, 6 Jun 2015 17:19:21 +0200
-Message-ID: <CAGm1_ku=YSQw5W11=NJA79pgPN8ptfE4iv8CCuXR1DTz=9JLAQ@mail.gmail.com> (sfid-20150606_172301_818212_C07F1DD6)
-Subject: Re: wl18xx: wlconf kernel compatibility
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Machani, Yaniv" <yanivma@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Marc Kleine-Budde <mkl@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Xinming Hu <huxm@marvell.com>
 
-On Sat, Jun 6, 2015 at 3:27 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Yegor Yefremov <yegorslists@googlemail.com> writes:
->
->> How do I know, which wlconf version is compatible with which kernel
->> version? I have following problem:
->>
->> I have *.INI file for my particular WLAN chip. This file will be used
->> to produce wl18xx-conf.bin. The size of this file will be check during
->> device initialization. Depending on which kernel version is used the
->> size of the required file differs. For example kernel 3.18 requires
->> wl18xx-conf.bin to have 1221 bytes, 4.1 expects 1226 bytes. Recent
->> wlconf (git://git.ti.com/wilink8-wlan/18xx-ti-utils.git) produces 1229
->> bytes files.
->>
->> How should I determine correct wlconf version?
->
-> I also complained about something along these lines earlier, this is not
-> how upstream drivers are supposed to work. Users should not be forced to
-> find correct files from somewhere, instead everything should just work
-> out of box.
->
-> Can anyone help Yegor to solve his problem? But in the long run wl18xx
-> really should manage this better.
+If tx_pkts_queued is increased for tx paused receive address, tx process
+will be triggered for this packet. But since RA list was tx paused,
+there will be an infinite loop in mwifiex_wmm_process_tx waiting for the
+event(tx pause, tdls cs) to cancel tx pause. This will be an dead loop,
+since main_process was locked at this time, there will be no opportunity
+to process event.
 
-I could solve the problem, though for the future it should be clear,
-what wlconf version to use.
+So do not increase tx_pkts_queued if receive address tx paused,
+this will be restored RA list is unpaused.
 
-See my post here:
-http://e2e.ti.com/support/wireless_connectivity/f/307/p/426229/1523235#1523235
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/wmm.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Yegor
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 8a4dd24..8e343b3 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -803,7 +803,10 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 		atomic_set(&priv->wmm.highest_queued_prio,
+ 			   priv->tos_to_tid_inv[tid_down]);
+ 
+-	atomic_inc(&priv->wmm.tx_pkts_queued);
++	if (ra_list->tx_paused)
++		priv->wmm.pkts_paused[tid_down]++;
++	else
++		atomic_inc(&priv->wmm.tx_pkts_queued);
+ 
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
+ }
+-- 
+1.8.1.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
