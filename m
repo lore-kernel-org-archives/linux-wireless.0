@@ -1,218 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:38817 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303AbbFCKRS (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55231 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933078AbbFVII1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 06:17:18 -0400
-Received: by wibdt2 with SMTP id dt2so6720817wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2015 03:17:17 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/3] ath10k: fix channel switching
-Date: Wed,  3 Jun 2015 12:16:56 +0200
-Message-Id: <1433326616-23279-3-git-send-email-michal.kazior@tieto.com> (sfid-20150603_121723_829466_BF0A11F1)
-In-Reply-To: <1433326616-23279-1-git-send-email-michal.kazior@tieto.com>
-References: <1433326616-23279-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 22 Jun 2015 04:08:27 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M80NBO000563
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:08:27 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1v57pduf4r-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:08:26 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 17/17] mwifiex: handle multichannel event
+Date: Mon, 22 Jun 2015 19:06:23 +0530
+Message-ID: <1434980183-2901-18-git-send-email-patila@marvell.com> (sfid-20150622_103355_147671_7FB191C7)
+In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
+References: <1434980183-2901-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the midst of chanctx patch review channel
-switching became broken which I failed to notice
-until now.
+This patch adds support to handle multichannel event from FW.
 
-Function ath10k_mac_vif_chan() reports current
-chandef which isn't updated until after
-switch_vif_chanctx() is returned from.
-Consequently the driver just restarted operation
-on channels it was residing already instead of
-switching to the new ones.
-
-Fixes: 500ff9f9389d ("ath10k: implement chanctx API")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 142 +++++++++++++++-------------------
- 1 file changed, 62 insertions(+), 80 deletions(-)
+ drivers/net/wireless/mwifiex/fw.h        |  8 ++++++++
+ drivers/net/wireless/mwifiex/main.h      |  2 ++
+ drivers/net/wireless/mwifiex/sta_event.c | 30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/uap_event.c |  6 ++++++
+ 4 files changed, 46 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b60369f78940..e834a9d2fffd 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3949,83 +3949,6 @@ static int ath10k_config_ps(struct ath10k *ar)
- 	return ret;
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 976b585..98269bf 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -172,6 +172,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define TLV_TYPE_TX_PAUSE           (PROPRIETARY_TLV_BASE_ID + 148)
+ #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
+ #define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
++#define TLV_TYPE_MULTI_CHAN_INFO    (PROPRIETARY_TLV_BASE_ID + 183)
+ #define TLV_TYPE_TDLS_IDLE_TIMEOUT  (PROPRIETARY_TLV_BASE_ID + 194)
+ #define TLV_TYPE_SCAN_CHANNEL_GAP   (PROPRIETARY_TLV_BASE_ID + 197)
+ #define TLV_TYPE_API_REV            (PROPRIETARY_TLV_BASE_ID + 199)
+@@ -516,6 +517,7 @@ enum P2P_MODES {
+ #define EVENT_TX_DATA_PAUSE             0x00000055
+ #define EVENT_EXT_SCAN_REPORT           0x00000058
+ #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
++#define EVENT_MULTI_CHAN_INFO           0x0000006a
+ #define EVENT_TX_STATUS_REPORT		0x00000074
+ #define EVENT_BT_COEX_WLAN_PARA_CHANGE	0X00000076
+ 
+@@ -1970,6 +1972,12 @@ struct mwifiex_radar_det_event {
+ 	__le32 passed;
+ } __packed;
+ 
++struct mwifiex_ie_types_multi_chan_info {
++	struct mwifiex_ie_types_header header;
++	__le16 status;
++	u8 tlv_buffer[0];
++} __packed;
++
+ struct meas_rpt_map {
+ 	u8 rssi:3;
+ 	u8 unmeasured:1;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index f3264f2..face747 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1557,6 +1557,8 @@ void mwifiex_11n_delba(struct mwifiex_private *priv, int tid);
+ int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy);
+ void mwifiex_process_tx_pause_event(struct mwifiex_private *priv,
+ 				    struct sk_buff *event);
++void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
++				      struct sk_buff *event_skb);
+ 
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index a2777d1..3d18c58 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -309,6 +309,31 @@ static void mwifiex_process_sta_tx_pause(struct mwifiex_private *priv,
+ 	}
  }
  
--static void ath10k_mac_chan_reconfigure(struct ath10k *ar)
--{
--	struct ath10k_vif *arvif;
--	struct cfg80211_chan_def def;
--	int ret;
--
--	lockdep_assert_held(&ar->conf_mutex);
--
--	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac chan reconfigure\n");
--
--	/* First stop monitor interface. Some FW versions crash if there's a
--	 * lone monitor interface. */
--	if (ar->monitor_started)
--		ath10k_monitor_stop(ar);
--
--	list_for_each_entry(arvif, &ar->arvifs, list) {
--		if (!arvif->is_started)
--			continue;
--
--		if (!arvif->is_up)
--			continue;
--
--		if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
--			continue;
--
--		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
--		if (ret) {
--			ath10k_warn(ar, "failed to down vdev %d: %d\n",
--				    arvif->vdev_id, ret);
--			continue;
--		}
--	}
--
--	/* all vdevs are downed now - attempt to restart and re-up them */
--
--	list_for_each_entry(arvif, &ar->arvifs, list) {
--		if (!arvif->is_started)
--			continue;
--
--		if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
--			continue;
--
--		ret = ath10k_mac_setup_bcn_tmpl(arvif);
--		if (ret)
--			ath10k_warn(ar, "failed to update bcn tmpl during csa: %d\n",
--				    ret);
--
--		ret = ath10k_mac_setup_prb_tmpl(arvif);
--		if (ret)
--			ath10k_warn(ar, "failed to update prb tmpl during csa: %d\n",
--				    ret);
--
--		if (WARN_ON(ath10k_mac_vif_chan(arvif->vif, &def)))
--			continue;
--
--		ret = ath10k_vdev_restart(arvif, &def);
--		if (ret) {
--			ath10k_warn(ar, "failed to restart vdev %d: %d\n",
--				    arvif->vdev_id, ret);
--			continue;
--		}
--
--		if (!arvif->is_up)
--			continue;
--
--		ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
--					 arvif->bssid);
--		if (ret) {
--			ath10k_warn(ar, "failed to bring vdev up %d: %d\n",
--				    arvif->vdev_id, ret);
--			continue;
--		}
--	}
--
--	ath10k_monitor_recalc(ar);
--}
--
- static int ath10k_mac_txpower_setup(struct ath10k *ar, int txpower)
- {
- 	int ret;
-@@ -6365,6 +6288,7 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
- {
- 	struct ath10k *ar = hw->priv;
- 	struct ath10k_vif *arvif;
-+	int ret;
- 	int i;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -6373,7 +6297,12 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
- 		   "mac chanctx switch n_vifs %d mode %d\n",
- 		   n_vifs, mode);
- 
--	spin_lock_bh(&ar->data_lock);
-+	/* First stop monitor interface. Some FW versions crash if there's a
-+	 * lone monitor interface.
-+	 */
-+	if (ar->monitor_started)
-+		ath10k_monitor_stop(ar);
++void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
++				      struct sk_buff *event_skb)
++{
++	struct mwifiex_ie_types_multi_chan_info *chan_info;
++	u16 status;
 +
- 	for (i = 0; i < n_vifs; i++) {
- 		arvif = ath10k_vif_to_arvif(vifs[i].vif);
- 
-@@ -6384,12 +6313,65 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
- 			   vifs[i].new_ctx->def.chan->center_freq,
- 			   vifs[i].old_ctx->def.width,
- 			   vifs[i].new_ctx->def.width);
++	chan_info = (void *)event_skb->data + sizeof(u32);
 +
-+		if (WARN_ON(!arvif->is_started))
-+			continue;
-+
-+		if (WARN_ON(!arvif->is_up))
-+			continue;
-+
-+		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to down vdev %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
- 	}
-+
-+	/* All relevant vdevs are downed and associated channel resources
-+	 * should be available for the channel switch now.
-+	 */
-+
-+	spin_lock_bh(&ar->data_lock);
- 	ath10k_mac_update_rx_channel(ar, NULL, vifs, n_vifs);
- 	spin_unlock_bh(&ar->data_lock);
- 
--	/* FIXME: Reconfigure only affected vifs */
--	ath10k_mac_chan_reconfigure(ar);
-+	for (i = 0; i < n_vifs; i++) {
-+		arvif = ath10k_vif_to_arvif(vifs[i].vif);
-+
-+		if (WARN_ON(!arvif->is_started))
-+			continue;
-+
-+		if (WARN_ON(!arvif->is_up))
-+			continue;
-+
-+		ret = ath10k_mac_setup_bcn_tmpl(arvif);
-+		if (ret)
-+			ath10k_warn(ar, "failed to update bcn tmpl during csa: %d\n",
-+				    ret);
-+
-+		ret = ath10k_mac_setup_prb_tmpl(arvif);
-+		if (ret)
-+			ath10k_warn(ar, "failed to update prb tmpl during csa: %d\n",
-+				    ret);
-+
-+		ret = ath10k_vdev_restart(arvif, &vifs[i].new_ctx->def);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to restart vdev %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
-+
-+		ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
-+					 arvif->bssid);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to bring vdev up %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
++	if (le16_to_cpu(chan_info->header.type) != TLV_TYPE_MULTI_CHAN_INFO) {
++		mwifiex_dbg(priv->adapter, ERROR,
++			    "unknown TLV in chan_info event\n");
++		return;
 +	}
 +
-+	ath10k_monitor_recalc(ar);
++	status = le16_to_cpu(chan_info->status);
++
++	if (status) {
++		mwifiex_dbg(priv->adapter, EVENT,
++			    "multi-channel operation started\n");
++	} else {
++		mwifiex_dbg(priv->adapter, EVENT,
++			    "multi-channel operation over\n");
++	}
++}
++
+ void mwifiex_process_tx_pause_event(struct mwifiex_private *priv,
+ 				    struct sk_buff *event_skb)
+ {
+@@ -748,6 +773,11 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 		mwifiex_process_tx_pause_event(priv, adapter->event_skb);
+ 		break;
  
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
++	case EVENT_MULTI_CHAN_INFO:
++		mwifiex_dbg(adapter, EVENT, "event: multi-chan info\n");
++		mwifiex_process_multi_chan_event(priv, adapter->event_skb);
++		break;
++
+ 	case EVENT_TX_STATUS_REPORT:
+ 		mwifiex_dbg(adapter, EVENT, "event: TX_STATUS Report\n");
+ 		mwifiex_parse_tx_status_event(priv, adapter->event_body);
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index a9d34c6..492a8b3 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -304,6 +304,12 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		mwifiex_dbg(adapter, EVENT, "event: TX DATA PAUSE\n");
+ 		mwifiex_process_tx_pause_event(priv, adapter->event_skb);
+ 		break;
++
++	case EVENT_MULTI_CHAN_INFO:
++		mwifiex_dbg(adapter, EVENT, "event: multi-chan info\n");
++		mwifiex_process_multi_chan_event(priv, adapter->event_skb);
++		break;
++
+ 	default:
+ 		mwifiex_dbg(adapter, EVENT,
+ 			    "event: unknown event id: %#x\n", eventcause);
 -- 
-2.1.4
+1.8.1.4
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
