@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36702 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148AbbFFLCd (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:50442 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754219AbbFVIUF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2015 07:02:33 -0400
-Received: by pabqy3 with SMTP id qy3so65063442pab.3
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Jun 2015 04:02:33 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192c: Add init codes for "fw_version" and "fw_subversion".
-Date: Sat,  6 Jun 2015 20:02:17 +0900
-Message-Id: <1433588537-27853-1-git-send-email-ap420073@gmail.com> (sfid-20150606_130240_879710_7AAEE1CA)
+	Mon, 22 Jun 2015 04:20:05 -0400
+Message-ID: <5587C532.3050901@broadcom.com> (sfid-20150622_102009_956789_B9304850)
+Date: Mon, 22 Jun 2015 10:20:02 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Subject: Re: brcmfmac: one faulty "iw interface add" command breaks in-firmware
+ BSS state
+References: <CACna6rzr35hM-VLxgvxtGPnnxSMPx6TM18Qfc8E1Obm7iVPG4A@mail.gmail.com>	 <5587BDA9.5000107@broadcom.com> (sfid-20150622_094800_795721_2E996996) <1434960206.19597.6.camel@sipsolutions.net>
+In-Reply-To: <1434960206.19597.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable "fw_version" is used in the _ResetDigitalProcedure1().
-but It is not initialized. so I add init codes for "fw_version" and
-"fw_subversion".
+On 06/22/15 10:03, Johannes Berg wrote:
+> On Mon, 2015-06-22 at 09:47 +0200, Arend van Spriel wrote:
+>
+>>> # iw phy phy0 interface add wlan0 type __ap
+>>
+>> Now this is a pretty silly scenario as there already is a wlan0
+>> interface. Admittedly, this should be rejected as such. This clearly is
+>> a user mistake (not sure why you quoted that :-p ) and it might be good
+>> to catch this in cfg80211 as it probably applies to other drivers as
+>> well. This probably explains why register_netdev fails.
+>
+> I don't think that's easy to catch - but the driver really should just
+> see that register_netdev fails and do nothing (except for reporting the
+> error back), no?
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c | 2 ++
- 1 file changed, 2 insertions(+)
+Indeed there is an issue with error handling here, but as this was a 
+user fault I was looking for early detection. If as you say that will 
+not be easy from cfg80211 we will need to rework brcmfmac code. 
+Currently, we create interface in firmware and upon receiving 'ifc 
+created' event we do the register_netdev. I think we do that to avoid 
+getting start_xmit calls as we do not use netif carrier calls.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-index 29983bc..9b5ce28 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -233,6 +233,8 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
- 	pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
- 	pfwdata = (u8 *)rtlhal->pfirmware;
- 	fwsize = rtlhal->fwsize;
-+	rtlhal->fw_version = pfwheader->version;
-+	rtlhal->fw_subversion = pfwheader->subversion;
- 
- 	if (IS_FW_HEADER_EXIST(pfwheader)) {
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
--- 
-2.1.4
-
+Regards,
+Arend
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
