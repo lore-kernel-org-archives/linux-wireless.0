@@ -1,246 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40943 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752726AbbFCHYS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:24:18 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi-next 2015-06-03
-Date: Wed, 3 Jun 2015 07:24:12 +0000
-Message-ID: <1433316253.25661.3.camel@intel.com> (sfid-20150603_092422_258876_2A95DEBC)
-References: <1432667798.26624.3.camel@intel.com>
-	 <1432811748.26741.3.camel@intel.com>
-	 <87zj4htglg.fsf@kamboji.qca.qualcomm.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB31B762261@hasmsx107.ger.corp.intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B762261@hasmsx107.ger.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="=-ZEidSTHQ5mLku2dXTz2e"
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38705 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932256AbbFVIHH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2015 04:07:07 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M80NBF000563
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:06 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1v57pduf10-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:06 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 05/17] mwifiex: process tdls channel switch event
+Date: Mon, 22 Jun 2015 19:06:11 +0530
+Message-ID: <1434980183-2901-6-git-send-email-patila@marvell.com> (sfid-20150622_100711_285131_6CEBBC47)
+In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
+References: <1434980183-2901-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-ZEidSTHQ5mLku2dXTz2e
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Xinming Hu <huxm@marvell.com>
 
-Hi Kalle,
+This patch add support for tdls channel switch event process.
+We block TX queues for particular RA list depending upon channel
+switch state. If channel switch state is moving to base channel,
+we unblock RA lists for AP. If channel switch state is moving to off
+channel, we unblock TDLS peer RA lists.
 
-As promised, here is the enlarged pull request for 4.2. I double checked
-that the tag is signed this time.
-I also signed this email, just in case...
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h        | 17 +++++++++-
+ drivers/net/wireless/mwifiex/sta_event.c | 54 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/wmm.c       | 45 ++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/wmm.h       |  2 ++
+ 4 files changed, 117 insertions(+), 1 deletion(-)
 
-I'll reply to this pull request with the diff between the previous one
-and this one. All the other patches have been sent to the ML already.
-The good thing with this new pull request is that it allows us to jump
-to -15.ucode which is starting validation right now. I hope its first
-version will be available in 3 weeks-ish.=09
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 8ab0d81..0785e64 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -547,7 +547,14 @@ enum P2P_MODES {
+ #define ACT_TDLS_DELETE            0x00
+ #define ACT_TDLS_CREATE            0x01
+ #define ACT_TDLS_CONFIG            0x02
+-#define TDLS_EVENT_LINK_TEAR_DOWN  3
++
++#define TDLS_EVENT_LINK_TEAR_DOWN      3
++#define TDLS_EVENT_CHAN_SWITCH_RESULT  7
++#define TDLS_EVENT_START_CHAN_SWITCH   8
++#define TDLS_EVENT_CHAN_SWITCH_STOPPED 9
++
++#define TDLS_BASE_CHANNEL	       0
++#define TDLS_OFF_CHANNEL	       1
+ 
+ #define MWIFIEX_FW_V15		   15
+ 
+@@ -1936,10 +1943,18 @@ struct host_cmd_ds_802_11_subsc_evt {
+ 	__le16 events;
+ } __packed;
+ 
++struct chan_switch_result {
++	u8 cur_chan;
++	u8 status;
++	u8 reason;
++} __packed;
++
+ struct mwifiex_tdls_generic_event {
+ 	__le16 type;
+ 	u8 peer_mac[ETH_ALEN];
+ 	union {
++		struct chan_switch_result switch_result;
++		u8 cs_stop_reason;
+ 		__le16 reason_code;
+ 		__le16 reserved;
+ 	} u;
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 0a80814..0529b9a 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -153,6 +153,7 @@ static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
+ 	struct mwifiex_sta_node *sta_ptr;
+ 	struct mwifiex_tdls_generic_event *tdls_evt =
+ 			(void *)event_skb->data + sizeof(adapter->event_cause);
++	u8 *mac = tdls_evt->peer_mac;
+ 
+ 	/* reserved 2 bytes are not mandatory in tdls event */
+ 	if (event_skb->len < (sizeof(struct mwifiex_tdls_generic_event) -
+@@ -175,6 +176,59 @@ static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
+ 					   le16_to_cpu(tdls_evt->u.reason_code),
+ 					   GFP_KERNEL);
+ 		break;
++	case TDLS_EVENT_CHAN_SWITCH_RESULT:
++		mwifiex_dbg(adapter, EVENT, "tdls channel switch result :\n");
++		mwifiex_dbg(adapter, EVENT,
++			    "status=0x%x, reason=0x%x cur_chan=%d\n",
++			    tdls_evt->u.switch_result.status,
++			    tdls_evt->u.switch_result.reason,
++			    tdls_evt->u.switch_result.cur_chan);
++
++		/* tdls channel switch failed */
++		if (tdls_evt->u.switch_result.status != 0) {
++			switch (tdls_evt->u.switch_result.cur_chan) {
++			case TDLS_BASE_CHANNEL:
++				sta_ptr->tdls_status = TDLS_IN_BASE_CHAN;
++				break;
++			case TDLS_OFF_CHANNEL:
++				sta_ptr->tdls_status = TDLS_IN_OFF_CHAN;
++				break;
++			default:
++				break;
++			}
++			return ret;
++		}
++
++		/* tdls channel switch success */
++		switch (tdls_evt->u.switch_result.cur_chan) {
++		case TDLS_BASE_CHANNEL:
++			if (sta_ptr->tdls_status == TDLS_IN_BASE_CHAN)
++				break;
++			mwifiex_update_ralist_tx_pause_in_tdls_cs(priv, mac,
++								  false);
++			sta_ptr->tdls_status = TDLS_IN_BASE_CHAN;
++			break;
++		case TDLS_OFF_CHANNEL:
++			if (sta_ptr->tdls_status == TDLS_IN_OFF_CHAN)
++				break;
++			mwifiex_update_ralist_tx_pause_in_tdls_cs(priv, mac,
++								  true);
++			sta_ptr->tdls_status = TDLS_IN_OFF_CHAN;
++			break;
++		default:
++			break;
++		}
++
++		break;
++	case TDLS_EVENT_START_CHAN_SWITCH:
++		mwifiex_dbg(adapter, EVENT, "tdls start channel switch...\n");
++		sta_ptr->tdls_status = TDLS_CHAN_SWITCHING;
++		break;
++	case TDLS_EVENT_CHAN_SWITCH_STOPPED:
++		mwifiex_dbg(adapter, EVENT,
++			    "tdls chan switch stopped, reason=%d\n",
++			    tdls_evt->u.cs_stop_reason);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 8e343b3..21712cd 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -641,6 +641,51 @@ void mwifiex_update_ralist_tx_pause(struct mwifiex_private *priv, u8 *mac,
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
+ }
+ 
++/* This function update non-tdls peer ralist tx_pause while
++ * tdls channel swithing
++ */
++void mwifiex_update_ralist_tx_pause_in_tdls_cs(struct mwifiex_private *priv,
++					       u8 *mac, u8 tx_pause)
++{
++	struct mwifiex_ra_list_tbl *ra_list;
++	u32 pkt_cnt = 0, tx_pkts_queued;
++	unsigned long flags;
++	int i;
++
++	spin_lock_irqsave(&priv->wmm.ra_list_spinlock, flags);
++
++	for (i = 0; i < MAX_NUM_TID; ++i) {
++		list_for_each_entry(ra_list, &priv->wmm.tid_tbl_ptr[i].ra_list,
++				    list) {
++			if (!memcmp(ra_list->ra, mac, ETH_ALEN))
++				continue;
++
++			if (ra_list && ra_list->tx_paused != tx_pause) {
++				pkt_cnt += ra_list->total_pkt_count;
++				ra_list->tx_paused = tx_pause;
++				if (tx_pause)
++					priv->wmm.pkts_paused[i] +=
++						ra_list->total_pkt_count;
++				else
++					priv->wmm.pkts_paused[i] -=
++						ra_list->total_pkt_count;
++			}
++		}
++	}
++
++	if (pkt_cnt) {
++		tx_pkts_queued = atomic_read(&priv->wmm.tx_pkts_queued);
++		if (tx_pause)
++			tx_pkts_queued -= pkt_cnt;
++		else
++			tx_pkts_queued += pkt_cnt;
++
++		atomic_set(&priv->wmm.tx_pkts_queued, tx_pkts_queued);
++		atomic_set(&priv->wmm.highest_queued_prio, HIGH_PRIO_TID);
++	}
++	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
++}
++
+ /*
+  * This function retrieves an RA list node for a given TID and
+  * RA address pair.
+diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
+index 90edb8f..c12dd0e 100644
+--- a/drivers/net/wireless/mwifiex/wmm.h
++++ b/drivers/net/wireless/mwifiex/wmm.h
+@@ -128,6 +128,8 @@ mwifiex_wmm_get_queue_raptr(struct mwifiex_private *priv, u8 tid,
+ u8 mwifiex_wmm_downgrade_tid(struct mwifiex_private *priv, u32 tid);
+ void mwifiex_update_ralist_tx_pause(struct mwifiex_private *priv, u8 *mac,
+ 				    u8 tx_pause);
++void mwifiex_update_ralist_tx_pause_in_tdls_cs(struct mwifiex_private *priv,
++					       u8 *mac, u8 tx_pause);
+ 
+ struct mwifiex_ra_list_tbl *mwifiex_wmm_get_ralist_node(struct mwifiex_private
+ 					*priv, u8 tid, const u8 *ra_addr);
+-- 
+1.8.1.4
 
-Let me know if you have issues with this.
-
-Thank you.
-
-The following changes since commit bbbe8c8c596b3784a2ed08772900e827f8ba72c5=
-:
-
-  mac80211: add missing documentation for rate_ctrl_lock (2015-05-06 16:00:=
-32 +0200)
-
-are available in the git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
-tags/iwlwifi-for-kalle-2015-06-03
-
-for you to fetch changes up to 5f4c02e2b8c9251c827abf87c4ead4496c67492a:
-
-  iwlwifi: mvm: advertise only HW-supported ciphers (2015-06-03 10:12:26 +0=
-300)
-
-----------------------------------------------------------------
-* a few fixes (re-enablement of interrupts for certain new
-  platforms that have special power states)
-* Rework completely the RBD allocation model towards new
-  multi RX hardware.
-* cleanups
-* scan reworks continuation (Luca)
-
-----------------------------------------------------------------
-Andrei Otcheretianski (1):
-      iwlwifi: mvm: Configure agg. queue before assigning it to STA
-
-Arik Nemtsov (1):
-      iwlwifi: mvm: clean interfaces on drv_stop
-
-Avraham Stern (3):
-      iwlwifi: mvm: print scanned channel list on scan iteration complete n=
-otification
-      iwlwifi: mvm: add UMAC scan iteration complete notification
-      iwlwifi: mvm: add support for 8 level scan priority API
-
-Avri Altman (3):
-      iwlwifi: pcie: don't disable the busmaster DMA clock for family 8000
-      iwlwifi: pcie: Remove redundant check for family type
-      iwlwifi: pcie: Control access to the NIC's PM registers via iwl_cfg
-
-David Spinadel (2):
-      iwlwifi: mvm: add inactive state to ebs status
-      iwlwifi: mvm: don't use EBS for P2P find
-
-Eliad Peller (4):
-      iwlwifi: mvm: avoid use-after-free on iwl_mvm_d0i3_enable_tx()
-      iwlwifi: mvm: fix ROC reference accounting
-      iwlwifi: tracing: add rx cmd header fields
-      iwlwifi: pcie: re-enable interrupts on resume
-
-Emmanuel Grumbach (13):
-      iwlwifi: mvm: forbid MIMO on devices that don't support it
-      iwlwifi: 7000: modify the firmware name for 3165
-      iwlwifi: mvm: fix MLME trigger
-      iwlwifi: mvm: BT Coex - duplicate the command if sent ASYNC
-      Merge remote-tracking branch 'iwlwifi-fixes/master' into iwlwifi-next
-      iwlwifi: bump API to 14
-      iwlwifi: pcie: simplify return value
-      iwlwifi: mvm: BT Coex - remove useless code
-      iwlwifi: mvm: BT Coex - allocate a short command on the stack
-      iwlwifi: mvm: BT Coex - fix shared antenna check with new API
-      Merge tag 'mac80211-next-for-davem-2015-05-06' into iwlwifi-next
-      iwlwifi: mvm: implement the BlockAck related debug triggers
-      iwlwifi: bump the iwlmvm API number to 15
-
-Eran Harary (1):
-      iwlwifi: 8000: fallback to default NVM file
-
-Eyal Shapira (1):
-      iwlwifi: mvm: rs: pass rate directly to column checks
-
-Haim Dreyfuss (1):
-      iwlwifi: mvm: Free fw_status after use to avoid memory leak
-
-Ido Yariv (1):
-      iwlwifi: update thermal throttling values for 8000 devices
-
-Johannes Berg (8):
-      iwlwifi: refactor common transport alloc/init code
-      iwlwifi: mvm: advertise randomised netdetect MAC address
-      iwlwifi: mvm: handle device start failure correctly
-      iwlwifi: mvm: enable IEEE80211_HW_SUPPORT_FAST_XMIT
-      iwlwifi: dvm: enable IEEE80211_HW_SUPPORT_FAST_XMIT
-      iwlwifi: mvm: simplify iwl_mvm_stop_roc()
-      iwlwifi: prepare for higher API/CAPA bits
-      iwlwifi: mvm: advertise only HW-supported ciphers
-
-Liad Kaufman (2):
-      iwlwifi: nvm: force mac from otp in case nvm mac is reserved
-      iwlwifi: wrt: add mipi type to debug types
-
-Luciano Coelho (18):
-      iwlwifi: mvm: take the UCODE_DOWN reference when resuming
-      iwlwifi: mvm: clean net-detect info if device was reset during suspen=
-d
-      iwlwifi: pcie: don't call set_pwr functions for family 8000
-      iwlwifi: mvm: small fix in a comment about UMAC scan schedules
-      iwlwifi: mvm: remove the UMAC specific scan types
-      iwlwifi: mvm: fix the net-detect SSIDs report order
-      iwlwifi: mvm: make iwl_mvm_config_sched_scan_profiles() static
-      iwlwifi: mvm: reorganize scan stopping functions
-      iwlwifi: mvm: don't stop regular scans when going out of idle state
-      iwlwifi: mvm: combine part of the scan stop flows
-      iwlwifi: mvm: rename umac scan stop function
-      iwlwifi: mvm: rename some LMAC-specific scan functions
-      iwlwifi: mvm: refactor UMAC scan UID handling
-      iwlwifi: mvm: remove code that stops multiple UMAC scans of a type
-      iwlwifi: mvm: combine UMAC and LMAC scan_stop functions
-      iwlwifi: mvm: combine regular and sched scan stop functions
-      iwlwifi: mvm: make UMAC scans use the stopping scan status
-      iwlwifi: mvm: treat scan races also on UMAC scans
-
-Matti Gottlieb (3):
-      iwlwifi: mvm: Add debugfs entry for Tx power limit
-      iwlwifi: mvm: Remove old scan commands
-      iwlwifi: mvm: Add DC2DC_CONFIG_CMD (0x83) cmd & TLV
-
-Nicholas Krause (1):
-      iwlwifi: Remove use of the deprecacted PTR_RET
-
-Sara Sharon (1):
-      iwlwifi: pcie: New RBD allocation model
-
- drivers/net/wireless/iwlwifi/Kconfig                |   13 +-
- drivers/net/wireless/iwlwifi/Makefile               |    1 +
- drivers/net/wireless/iwlwifi/dvm/mac80211.c         |    1 +
- drivers/net/wireless/iwlwifi/iwl-7000.c             |   41 ++++-
- drivers/net/wireless/iwlwifi/iwl-8000.c             |   71 +++++---
- drivers/net/wireless/iwlwifi/iwl-config.h           |   45 +++++
- drivers/net/wireless/iwlwifi/iwl-devtrace-iwlwifi.h |   15 +-
- drivers/net/wireless/iwlwifi/iwl-drv.c              |   32 +++-
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c     |    5 +
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h     |    3 +
- drivers/net/wireless/iwlwifi/iwl-fh.h               |    6 -
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h    |    6 +-
- drivers/net/wireless/iwlwifi/iwl-fw-file.h          |  107 +++++++----
- drivers/net/wireless/iwlwifi/iwl-fw.h               |   24 ++-
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c        |   30 +++-
- drivers/net/wireless/iwlwifi/iwl-prph.h             |    3 +
- drivers/net/wireless/iwlwifi/iwl-trans.c            |  113 ++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.h            |   63 ++++---
- drivers/net/wireless/iwlwifi/mvm/coex.c             |  103 +++--------
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c      |    2 +-
- drivers/net/wireless/iwlwifi/mvm/d3.c               |   46 +++--
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c      |   21 ++-
- drivers/net/wireless/iwlwifi/mvm/debugfs.c          |   14 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h     |   34 ++++
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h      |  135 ++++++--------
- drivers/net/wireless/iwlwifi/mvm/fw-api.h           |   76 +++++---
- drivers/net/wireless/iwlwifi/mvm/fw.c               |   71 +++-----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c         |  440 +++++++++++++++=
-++++++++++++------------------
- drivers/net/wireless/iwlwifi/mvm/mvm.h              |  163 +++++++--------=
 --
- drivers/net/wireless/iwlwifi/mvm/nvm.c              |   16 +-
- drivers/net/wireless/iwlwifi/mvm/ops.c              |   53 +++---
- drivers/net/wireless/iwlwifi/mvm/rs.c               |   47 ++---
- drivers/net/wireless/iwlwifi/mvm/rs.h               |    2 -
- drivers/net/wireless/iwlwifi/mvm/rx.c               |    9 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c             | 1420 +++++++++++++++=
-++++++++++++++++++++++++++++++++++++++++++++++++++++-----------------------=
-------------------------------------------------------
- drivers/net/wireless/iwlwifi/mvm/sta.c              |   14 +-
- drivers/net/wireless/iwlwifi/mvm/time-event.c       |   33 ++--
- drivers/net/wireless/iwlwifi/mvm/tt.c               |   40 +----
- drivers/net/wireless/iwlwifi/mvm/tx.c               |   35 +++-
- drivers/net/wireless/iwlwifi/mvm/utils.c            |    2 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c             |   17 +-
- drivers/net/wireless/iwlwifi/pcie/internal.h        |   51 +++++-
- drivers/net/wireless/iwlwifi/pcie/rx.c              |  415 +++++++++++++++=
-++++++++++++++++++---------
- drivers/net/wireless/iwlwifi/pcie/trans.c           |  158 +++++++++------=
--
- drivers/net/wireless/iwlwifi/pcie/tx.c              |    2 -
- 45 files changed, 2287 insertions(+), 1711 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans.c
-
-
---=-ZEidSTHQ5mLku2dXTz2e
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAABAgAGBQJVbqudAAoJEC0Llv5uNjIBNaoP/2n59gOeBEksBJ9rz7buMl22
-SbJYEZlqxLPNHSdNEMjJJfJav6PTGn8oUbZcUcjK55ghC+gi7hmn9gXbi1rZSkXV
-BPNAlYH1CmB6giN5lcXa9EcK9+eqhuqpWgDJNHzunE5V3y/k0kz6omnEDX4R1s85
-MXmrnr+Y9QlirB/6l7Wmh09l7JT4Tdj758AZ2KI7phhko0xt3jBOPRFpjAB1vSjo
-r4WXAZ3eFeHr0jtjZ0qbg3Z2Xj19BSw1MAw12YTWmwYWviAjBMrQj3f5OspfYGci
-G4bFmmTlRqY94hYaJN6nn9K2WwwIL9ga1z3nyN4QaT01lL/pGTRuSnSscEvShrBD
-SID4gPHQf6+igSMNfxZc0uVp1tJUqRZCoNo8tzZJ1FOHLXIkqAqtmlKoJEO5eNNn
-lGd7DfAcjFyQmg56T+Muv4BPvLDKuSFEkl9vFVVL5snZacsYqNDH7RyQdeQka541
-ybKDL9oxJOVutmvbmpuW06gYwkwy3CbRcCJv9WmH0s/TC8yEd2d2gB3XDVL4qSVg
-fYiYMuH5jLjz66xgx7Ft1B8QDnJt+RYCQx/p6HbWCqjpP8mC5nRGdCj/xGzTVGaF
-JVt21TREuAcX4iPm0wGlHrg+f3Txv/HZgbMVMoBnnSI8VFoeSbE0IJ0h/3i3k0Pt
-cn/KrzZPeEFs0O2GiZQp
-=Pims
------END PGP SIGNATURE-----
-
---=-ZEidSTHQ5mLku2dXTz2e--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
