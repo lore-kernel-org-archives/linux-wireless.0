@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02.posteo.de ([89.146.194.165]:37840 "EHLO mx02.posteo.de"
+Received: from ppsa1.llumc.edu ([143.197.222.70]:52468 "EHLO ppsa1.llumc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753540AbbFWLb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 07:31:27 -0400
-Message-ID: <1435059083.4765.2.camel@embedded.rocks> (sfid-20150623_133130_675313_B738F86E)
-Subject: Re: brcmfmac: Failed to create interface p2p-dev-p2p0: -28 (No
- space left on device)
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: Arend van Spriel <aspriel@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Date: Tue, 23 Jun 2015 13:31:23 +0200
-In-Reply-To: <55872A3C.7030704@gmail.com>
-References: <1433766944.28058.16.camel@embedded.rocks>
-						 <55758D7E.3000603@broadcom.com>
-				 <1433771289.28058.24.camel@embedded.rocks>
-				 <5575C6FA.6030104@broadcom.com>
-				 <1433794640.28058.26.camel@embedded.rocks>
-		 <557605CC.6070907@broadcom.com>	 <1434448766.21949.9.camel@embedded.rocks>
-		 <55803214.2030204@broadcom.com> <1434608018.5481.4.camel@embedded.rocks>
-		 <55828106.7060004@broadcom.com> <1434658050.2532.6.camel@embedded.rocks>
-	 <55872A3C.7030704@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751511AbbFVWfv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2015 18:35:51 -0400
+Received: from pps.filterd (ppagent4.mc.llumc.edu [127.0.0.1])
+	by ppagent4.mc.llumc.edu (8.15.0.59/8.15.0.59) with SMTP id t5MKVlK7004770
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 14:29:11 -0700
+Received: from excvhtsp01.mc.ad.lluahsc.org (exch3.mc.ad.lluahsc.org [10.192.100.112] (may be forged))
+	by ppagent4.mc.llumc.edu with ESMTP id 1v552mg9bc-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 14:29:11 -0700
+From: "Redkey, Curtis" <CRedkey@llu.edu>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Best Dual Band Linux Drivers
+Date: Mon, 22 Jun 2015 21:29:09 +0000
+Message-ID: <CF6721EFB3C0784A9DB5F6E4EB9160C9DF18D9D4@excvmbsp01.mc.ad.lluahsc.org> (sfid-20150623_003555_239002_DCF79A45)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+What linux driver has the ability to set the preference for the 5 GHz over the 2.4 GHz range? The current one I have does not allow it.
 
-On So, 2015-06-21 at 23:18 +0200, Arend van Spriel wrote:
-> 
-> My bad. The patch removes p2pdev from interface modes, but it is 
-> still
-> listed in the interface combinations and cfg80211 will complain about
-> it. Have to extend the patch. I better do that after a good nights 
-> sleep.
+I posted this question online and since the SSID's are the same for the 2.4GHz and 5GHz, it has been difficult to setup the 5 GHz wireless connectivity.
 
-Never mind! Did you had a good night sleep already :-) ?
+How do I set a preference for 5GHz over 2.4GHz Wifi in Lubuntu 12.04
+http://askubuntu.com/questions/635358/how-do-i-set-a-preference-for-5ghz-over-2-4ghz-wifi-in-lubuntu-12-04
 
-Best regards
-Jörg Krause
+Any solutions or suggestions would be greatly appreciated.
+
+Thank you,
+
+Curtis Redkey
+Information Services | Systems Administrator | Loma Linda University Medical Center
+Telephone : 909.558.5068 |Email : CRedkey@llu.edu |Pager: CRedkey@my2way.com 
+
+But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control. Against such things there is no law.
+Galatians 5:22-23 (NIV)
+
+CONFIDENTIALITY NOTICE: This e-mail communication and any attachments may contain confidential and privileged information for the use of the designated recipients named above. If you are not the intended recipient, you are hereby notified that you have received this communication in error and that any review, disclosure, dissemination, distribution or copying of it or its contents is prohibited. If you have received this communication in error, please notify me immediately by replying to this message and destroy all copies of this communication and any attachments. Thank you.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
