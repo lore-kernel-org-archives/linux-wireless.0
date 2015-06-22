@@ -1,88 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vn0-f45.google.com ([209.85.216.45]:41814 "EHLO
-	mail-vn0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbbFLDAh (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:24395 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933049AbbFVIHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 23:00:37 -0400
-Received: by vnbg190 with SMTP id g190so3863532vnb.8
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 20:00:37 -0700 (PDT)
+	Mon, 22 Jun 2015 04:07:31 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xp6B015529
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:31 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1v55hgut80-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:31 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 09/17] mwifiex: add cfg80211 tdls channel switch handler
+Date: Mon, 22 Jun 2015 19:06:15 +0530
+Message-ID: <1434980183-2901-10-git-send-email-patila@marvell.com> (sfid-20150622_103354_999439_8CDC848B)
+In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
+References: <1434980183-2901-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Date: Thu, 11 Jun 2015 23:00:37 -0400
-Message-ID: <CAD56B7ctwp2tjYqSd0+nHx3ru_sy7pjUd1mxj=a++hTZ0VdJyA@mail.gmail.com> (sfid-20150612_050041_254360_AD829529)
-Subject: r8188eu deadlock
-From: Paul Thomas <pthomas8589@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I just got a TP-LINK TL-WN725N adapter (VID 0bda, PID 8179)
+From: Xinming Hu <huxm@marvell.com>
 
-The driver in the staging area seems to be working fine, but I get
-this on startup. I'm using this with a BeagleBone Black. I did a fresh
-git pull today, so it is with kernel 4.1.0-rc7-00063-gcff100f, I
-haven't tried it with the wireless-testing branch.
+This patch add cfg80211 tdls_chan_switch and tdls_cancel_chan_switch
+handler.
+With this handlers, mwifiex would support TDLS channel switch feature.
 
-Anyway, thought someone might be interested.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 72 +++++++++++++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
 
-thanks,
-Paul
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index b15e4c7..ecc8278 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -19,6 +19,7 @@
+ 
+ #include "cfg80211.h"
+ #include "main.h"
++#include "11n.h"
+ 
+ static char *reg_alpha2;
+ module_param(reg_alpha2, charp, 0);
+@@ -3360,6 +3361,72 @@ mwifiex_cfg80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ }
+ 
+ static int
++mwifiex_cfg80211_tdls_chan_switch(struct wiphy *wiphy, struct net_device *dev,
++				  const u8 *addr, u8 oper_class,
++				  struct cfg80211_chan_def *chandef)
++{
++	struct mwifiex_sta_node *sta_ptr;
++	unsigned long flags;
++	u16 chan;
++	u8 second_chan_offset, band;
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++
++	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
++	sta_ptr = mwifiex_get_sta_entry(priv, addr);
++	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
++
++	if (!sta_ptr) {
++		wiphy_err(wiphy, "%s: Invalid TDLS peer %pM\n",
++			  __func__, addr);
++		return -ENOENT;
++	}
++
++	if (!(sta_ptr->tdls_cap.extcap.ext_capab[3] &
++	      WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH)) {
++		wiphy_err(wiphy, "%pM do not support tdls cs\n", addr);
++		return -ENOENT;
++	}
++
++	if (sta_ptr->tdls_status == TDLS_CHAN_SWITCHING ||
++	    sta_ptr->tdls_status == TDLS_IN_OFF_CHAN) {
++		wiphy_err(wiphy, "channel switch is running, abort request\n");
++		return -EALREADY;
++	}
++
++	chan = chandef->chan->hw_value;
++	second_chan_offset = mwifiex_get_sec_chan_offset(chan);
++	band = chandef->chan->band;
++	mwifiex_start_tdls_cs(priv, addr, chan, second_chan_offset, band);
++
++	return 0;
++}
++
++static void
++mwifiex_cfg80211_tdls_cancel_chan_switch(struct wiphy *wiphy,
++					 struct net_device *dev,
++					 const u8 *addr)
++{
++	struct mwifiex_sta_node *sta_ptr;
++	unsigned long flags;
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++
++	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
++	sta_ptr = mwifiex_get_sta_entry(priv, addr);
++	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
++
++	if (!sta_ptr) {
++		wiphy_err(wiphy, "%s: Invalid TDLS peer %pM\n",
++			  __func__, addr);
++	} else if (!(sta_ptr->tdls_status == TDLS_CHAN_SWITCHING ||
++		     sta_ptr->tdls_status == TDLS_IN_BASE_CHAN ||
++		     sta_ptr->tdls_status == TDLS_IN_OFF_CHAN)) {
++		wiphy_err(wiphy, "tdls chan switch not initialize by %pM\n",
++			  addr);
++	} else
++		mwifiex_stop_tdls_cs(priv, addr);
++}
++
++static int
+ mwifiex_cfg80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 			     const u8 *mac, struct station_parameters *params)
+ {
+@@ -3575,6 +3642,8 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.set_coalesce = mwifiex_cfg80211_set_coalesce,
+ 	.tdls_mgmt = mwifiex_cfg80211_tdls_mgmt,
+ 	.tdls_oper = mwifiex_cfg80211_tdls_oper,
++	.tdls_channel_switch = mwifiex_cfg80211_tdls_chan_switch,
++	.tdls_cancel_channel_switch = mwifiex_cfg80211_tdls_cancel_chan_switch,
+ 	.add_station = mwifiex_cfg80211_add_station,
+ 	.change_station = mwifiex_cfg80211_change_station,
+ 	.get_channel = mwifiex_cfg80211_get_channel,
+@@ -3709,6 +3778,9 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 			   NL80211_FEATURE_INACTIVITY_TIMER |
+ 			   NL80211_FEATURE_NEED_OBSS_SCAN;
+ 
++	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
++		wiphy->features |= NL80211_FEATURE_TDLS_CHANNEL_SWITCH;
++
+ 	if (adapter->fw_api_ver == MWIFIEX_FW_V15)
+ 		wiphy->features |= NL80211_FEATURE_SK_TX_STATUS;
+ 
+-- 
+1.8.1.4
 
-[   22.489564] =============================================
-[   22.495221] [ INFO: possible recursive locking detected ]
-[   22.500883] 4.1.0-rc7-00063-gcff100f #3 Tainted: G         C
-[   22.507266] ---------------------------------------------
-[   22.512921] RTW_CMD_THREAD/554 is trying to acquire lock:
-[   22.518577]  (&(&(pqueue->lock))->rlock){+.-...}, at: [<bf0f4e68>]
-_rtw_alloc_network+0x14/0xc4 [r8188eu]
-[   22.528847]
-[   22.528847] but task is already holding lock:
-[   22.534969]  (&(&(pqueue->lock))->rlock){+.-...}, at: [<bf0f54ec>]
-rtw_update_scanned_network+0x18/0x234 [r8188eu]
-[   22.545910]
-[   22.545910] other info that might help us debug this:
-[   22.552759]  Possible unsafe locking scenario:
-[   22.552759]
-[   22.558969]        CPU0
-[   22.561534]        ----
-[   22.564097]   lock(&(&(pqueue->lock))->rlock);
-[   22.568765]   lock(&(&(pqueue->lock))->rlock);
-[   22.573433]
-[   22.573433]  *** DEADLOCK ***
-[   22.573433]
-[   22.579654]  May be due to missing lock nesting notation
-[   22.579654]
-[   22.586775] 2 locks held by RTW_CMD_THREAD/554:
-[   22.591520]  #0:  (&(&(pmlmepriv->lock))->rlock){+.....}, at:
-[<bf0f57c8>] rtw_survey_event_callback+0x7c/0x1c4 [r8188eu]
-[   22.603094]  #1:  (&(&(pqueue->lock))->rlock){+.-...}, at:
-[<bf0f54ec>] rtw_update_scanned_network+0x18/0x234 [r8188eu]
-[   22.614481]
-[   22.614481] stack backtrace:
-[   22.619064] CPU: 0 PID: 554 Comm: RTW_CMD_THREAD Tainted: G
-C      4.1.0-rc7-00063-gcff100f #3
-[   22.628817] Hardware name: Generic AM33XX (Flattened Device Tree)
-[   22.635227] [<c0016b14>] (unwind_backtrace) from [<c0013084>]
-(show_stack+0x10/0x14)
-[   22.643355] [<c0013084>] (show_stack) from [<c05e4184>]
-(dump_stack+0x84/0x9c)
-[   22.650944] [<c05e4184>] (dump_stack) from [<c008eb00>]
-(__lock_acquire+0x1a44/0x1edc)
-[   22.659253] [<c008eb00>] (__lock_acquire) from [<c008f8a0>]
-(lock_acquire+0xa8/0x124)
-[   22.667473] [<c008f8a0>] (lock_acquire) from [<c05ea9fc>]
-(_raw_spin_lock_bh+0x44/0x54)
-[   22.675926] [<c05ea9fc>] (_raw_spin_lock_bh) from [<bf0f4e68>]
-(_rtw_alloc_network+0x14/0xc4 [r8188eu])
-[   22.685883] [<bf0f4e68>] (_rtw_alloc_network [r8188eu]) from
-[<bf0f55c0>] (rtw_update_scanned_network+0xec/0x234 [r8188eu])
-[   22.697654] [<bf0f55c0>] (rtw_update_scanned_network [r8188eu])
-from [<bf0f5844>] (rtw_survey_event_callback+0xf8/0x1c4 [r8188eu])
-[   22.710069] [<bf0f5844>] (rtw_survey_event_callback [r8188eu]) from
-[<bf100f08>] (mlme_evt_hdl+0x5c/0xe8 [r8188eu])
-[   22.721110] [<bf100f08>] (mlme_evt_hdl [r8188eu]) from [<bf0ebc24>]
-(rtw_cmd_thread+0xac/0x2a8 [r8188eu])
-[   22.731191] [<bf0ebc24>] (rtw_cmd_thread [r8188eu]) from
-[<c005e268>] (kthread+0xd4/0xf0)
-[   22.739780] [<c005e268>] (kthread) from [<c000f5b8>]
-(ret_from_fork+0x14/0x3c)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
