@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47328 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108AbbFOCeN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Jun 2015 22:34:13 -0400
-Date: Sun, 14 Jun 2015 19:34:12 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Dean.lee" <dean.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: change WILC_Char to s8
-Message-ID: <20150615023412.GA31318@kroah.com> (sfid-20150615_043416_690253_EBCFD5A8)
-References: <1434087548-11746-1-git-send-email-dean.lee@atmel.com>
- <20150612152820.GC26174@kroah.com>
- <557E2088.10008@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <557E2088.10008@atmel.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47216 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933168AbbFVIXt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2015 04:23:49 -0400
+Message-ID: <1434961425.19597.7.camel@sipsolutions.net> (sfid-20150622_102352_798701_AFFC6137)
+Subject: Re: brcmfmac: one faulty "iw interface add" command breaks
+ in-firmware BSS state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Date: Mon, 22 Jun 2015 10:23:45 +0200
+In-Reply-To: <5587C532.3050901@broadcom.com>
+References: <CACna6rzr35hM-VLxgvxtGPnnxSMPx6TM18Qfc8E1Obm7iVPG4A@mail.gmail.com>
+		 <5587BDA9.5000107@broadcom.com>
+	 (sfid-20150622_094800_795721_2E996996) <1434960206.19597.6.camel@sipsolutions.net>
+	 <5587C532.3050901@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 15, 2015 at 09:47:04AM +0900, Dean.lee wrote:
-> 
-> 
-> On 2015년 06월 13일 00:28, Greg KH wrote:
-> >On Fri, Jun 12, 2015 at 02:39:08PM +0900, Dean Lee wrote:
-> >>change own data type(WILC_Char) to common data type(s8)
-> >Why not just 'char'?
-> >
-> >And you are using these in "strings", so why not u8?
-> >
-> >thanks,
-> >
-> >greg k-h
-> i research some documents for change to common data type.
-> that's saying 's8' is 'signed char'.
-> 
-> 'WILC_Char' is redefine 'char'. so i changed 'WILC_Char' to 's8'
+On Mon, 2015-06-22 at 10:20 +0200, Arend van Spriel wrote:
 
-Then stick to 'char', don't change the type.
+> >>> # iw phy phy0 interface add wlan0 type __ap
 
-thanks,
+> Indeed there is an issue with error handling here, but as this was a 
+> user fault I was looking for early detection. If as you say that will 
+> not be easy from cfg80211 we will need to rework brcmfmac code. 
+> Currently, we create interface in firmware and upon receiving 'ifc 
+> created' event we do the register_netdev. I think we do that to avoid 
+> getting start_xmit calls as we do not use netif carrier calls.
 
-greg k-h
+We could possibly check for duplicate names, but surely there are other
+failure modes that we can't easily pre-check, so it seems better to fix
+the driver (and, in fact, use the duplicate name issue as a convenient
+way of testing the error path)
+
+johannes
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
