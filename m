@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:36139 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725AbbFMG0k (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55094 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbbFVOk4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2015 02:26:40 -0400
-Received: by wgzl5 with SMTP id l5so10866119wgz.3
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2015 23:26:38 -0700 (PDT)
-Message-ID: <557BCD1C.5010408@gmail.com> (sfid-20150613_082657_386296_86548732)
-Date: Sat, 13 Jun 2015 08:26:36 +0200
-From: Arend van Spriel <aspriel@gmail.com>
+	Mon, 22 Jun 2015 10:40:56 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH v2 00/10] introduce wmi support for qca99X0
+Date: Mon, 22 Jun 2015 20:10:08 +0530
+Message-ID: <1434984018-24057-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150622_164100_414019_641C8CBC)
 MIME-Version: 1.0
-To: Luca Coelho <luca@coelho.fi>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH py80211 0/4] py80211: add support for scheduled scan
-References: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-In-Reply-To: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-06-15 16:00, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> Hi Arend,
-> 
-> Here's a small patchset that adds support for scheduled scans in
-> py80211.
+qca99X0 uses 10.4 firmware. This patch series adds 10.4 firmware
+specific WMI cmds/events/parsing logic. All these patches tested
+on top of qca99X0 initial bring up patches.
 
-Thanks! One general remark. It seems you are using soft-tabs where I
-stick to true tabs. Python is pretty anal about that so better stick to
-true tabs.
+v2 changes:
+   - Synced wmi service/cmd/event/pdev/vdev ids to most
+     stable 10.4 firmware.
 
-> I'm not sure this is the right approach, I added separate classes for
-> each command, so feel free to ask me to change it completely if you
-> want and I may or may not do it. :P
+Raja Mani (10):
+  ath10k: include new wmi op version for 10.4 fw
+  ath10k: add 10.4 fw wmi service bitmap definition
+  ath10k: include 10.4 fw specific wmi cmd and event ids
+  ath10k: set 10.4 fw exclusive wmi cmd as unsupported for other fw
+    versions
+  ath10k: add 10.4 fw wmi vdev cmd ids
+  ath10k: add 10.4 fw wmi pdev cmd ids
+  ath10k: fill 10.4 fw wmi init cmd default values
+  ath10k: handle 10.4 fw wmi mgmt rx event
+  ath10k: adjust default peer limits if qcache enabled in 10.4 fw
+  ath10k: handle 10.4 fw wmi ready event
 
-Me neither, but it may be a bit too classy ;-) So I would prefer to have
-a scheduled scan class with start and stop operation.
+ drivers/net/wireless/ath/ath10k/core.c    |   9 +
+ drivers/net/wireless/ath/ath10k/core.h    |   2 +
+ drivers/net/wireless/ath/ath10k/hw.h      |  61 +++
+ drivers/net/wireless/ath/ath10k/mac.c     |   2 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  90 +++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 879 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h     | 859 ++++++++++++++++++++++++++++-
+ 7 files changed, 1896 insertions(+), 6 deletions(-)
 
-Good to see you are using '_' consistently for class private members and
-functions. I need to clean it up in other files. I recently added Pyro
-support allowing remote access to py80211 objects and it only exposes
-public members and functions.
+-- 
+1.8.1.2
 
-Thanks again,
-Arend
-
-> Cheers,
-> Luca.
-> 
-> Luciano Coelho (4):
->   py80211: scan: spin base scan classes off scan_request
->   py80211: scan: add sched_scan start class
->   py80211: add sched_scan stop class
->   py80211: scan: add matchsets support for scheduled scans
-> 
->  lib/scan.py | 157 +++++++++++++++++++++++++++++++++++++++++++++---------------
->  1 file changed, 119 insertions(+), 38 deletions(-)
-> 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
