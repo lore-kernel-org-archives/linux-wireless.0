@@ -1,67 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:28348 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756115AbbFPG3T (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28111 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933042AbbFVIHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 02:29:19 -0400
-From: Dean Lee <dean.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>
-CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <dean.lee@atmel.com>
-Subject: [PATCH 2/3] staging: wilc1000: rework include wilc_type.h
-Date: Tue, 16 Jun 2015 15:28:22 +0900
-Message-ID: <78f832bdca88f58160bce4efef9ef338472cd40e.1434432989.git.dean.lee@atmel.com> (sfid-20150616_082933_575574_39C1B20D)
-In-Reply-To: <adf4906fecff029d52e8c8e0e1537dd7f9ef568c.1434432989.git.dean.lee@atmel.com>
-References: <adf4906fecff029d52e8c8e0e1537dd7f9ef568c.1434432989.git.dean.lee@atmel.com>
+	Mon, 22 Jun 2015 04:07:41 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M80NBJ000563
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:40 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1v57pduf2m-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:40 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 10/17] mwifiex: update domain_info upon band change in start_ap
+Date: Mon, 22 Jun 2015 19:06:16 +0530
+Message-ID: <1434980183-2901-11-git-send-email-patila@marvell.com> (sfid-20150622_103355_305002_3B294962)
+In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
+References: <1434980183-2901-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rework line '#include "wilc_type.h"'
-it does not require after rework include wilc_oswrapper.h
+It was observed that AP beacons would not reflect correct regulatory
+information upon starting AP in A band. This was because of missing
+AP config band update in set_channel of start_ap. Also we configure 11D
+settings info FW only for specific band. So we need to download domain
+info to FW even if domain remains unchanged but band is changed.
 
-Signed-off-by: Dean Lee <dean.lee@atmel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.h    |  2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 10 +++++++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
+ drivers/net/wireless/mwifiex/main.h     | 2 ++
+ drivers/net/wireless/mwifiex/uap_cmd.c  | 7 ++++++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 0ba7ec6..5c9c4bb 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -1,7 +1,7 @@
- #ifndef WILC_WLAN_H
- #define WILC_WLAN_H
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ecc8278..1d445cb 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -442,7 +442,7 @@ mwifiex_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
+  *      - Country codes
+  *      - Sub bands (first channel, number of channels, maximum Tx power)
+  */
+-static int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy)
++int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy)
+ {
+ 	u8 no_of_triplet = 0;
+ 	struct ieee80211_country_ie_triplet *t;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 0e6ebc9..d74ef2d 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1550,6 +1550,8 @@ void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
+ void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
+ void mwifiex_coex_ampdu_rxwinsize(struct mwifiex_adapter *adapter);
+ void mwifiex_11n_delba(struct mwifiex_private *priv, int tid);
++int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy);
++
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+ void mwifiex_debugfs_remove(void);
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index b749300..4d5a6e3 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -808,7 +808,7 @@ void mwifiex_uap_set_channel(struct mwifiex_private *priv,
+ 			     struct mwifiex_uap_bss_param *bss_cfg,
+ 			     struct cfg80211_chan_def chandef)
+ {
+-	u8 config_bands = 0;
++	u8 config_bands = 0, old_bands = priv->adapter->config_bands;
  
--#include "wilc_type.h"
-+#include <linux/types.h>
+ 	priv->bss_chandef = chandef;
  
+@@ -834,6 +834,11 @@ void mwifiex_uap_set_channel(struct mwifiex_private *priv,
+ 	}
  
- #define ISWILC1000(id)   (((id & 0xfffff000) == 0x100000) ? 1 : 0)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index ea0ec41..d7271b9 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -20,7 +20,15 @@
- /* #define USE_OLD_SPI_SW */
+ 	priv->adapter->config_bands = config_bands;
++
++	if (old_bands != config_bands) {
++		mwifiex_send_domain_info_cmd_fw(priv->adapter->wiphy);
++		mwifiex_dnld_txpwr_table(priv);
++	}
+ }
  
- 
--#include "wilc_type.h"
-+#include "wilc_osconfig.h"
-+#include "wilc_platform.h"
-+#include "wilc_log.h"
-+#include "wilc_errorsupport.h"
-+#include "wilc_sleep.h"
-+#include "wilc_timer.h"
-+#include "wilc_memory.h"
-+#include "wilc_strutils.h"
-+#include "wilc_msgqueue.h"
- #include "linux_wlan_common.h"
- 
- 
+ int mwifiex_config_start_uap(struct mwifiex_private *priv,
 -- 
-2.4.3
+1.8.1.4
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
