@@ -1,204 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23462 "EHLO
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57076 "EHLO
 	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbbFPFy1 (ORCPT
+	with ESMTP id S1750772AbbFVOnD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:54:27 -0400
+	Mon, 22 Jun 2015 10:43:03 -0400
 From: Raja Mani <rmani@qti.qualcomm.com>
 To: <ath10k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
 	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 2/8] ath10k: handle 10.4 firmware wmi swba event
-Date: Tue, 16 Jun 2015 11:23:09 +0530
-Message-ID: <1434433995-8451-3-git-send-email-rmani@qti.qualcomm.com> (sfid-20150616_075432_468990_6E8FEBD0)
-In-Reply-To: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1434433995-8451-1-git-send-email-rmani@qti.qualcomm.com>
+Subject: [PATCH v2 09/10] ath10k: adjust default peer limits if qcache enabled in 10.4 fw
+Date: Mon, 22 Jun 2015 20:10:17 +0530
+Message-ID: <1434984018-24057-10-git-send-email-rmani@qti.qualcomm.com> (sfid-20150622_164307_374879_BB38E0E9)
+In-Reply-To: <1434984018-24057-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1434984018-24057-1-git-send-email-rmani@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.4 firmware swba event payload has space to accommodate upto
-512 client traffic indication info & one p2p noa descriptor.
-It's is not matching with exiting swba event format defined for
-non 10.4 firmware. Non 10.4 firmware swba event format is designed
-to support only upto only 128 client and four p2p notice of absence
-descriptor.
-
-following changes are done in this patch to enable ath10k to handle
-10.4 firmware swba event,
-
- - link generic ath10k_wmi_event_host_swba() to handle 10.4 swba
-   event in 10.4 wmi rx handler.
-
- - add 10.4 specific swba event structure wmi_10_4_host_swba_event.
-
- - new function ath10k_wmi_10_4_op_pull_swba_ev() to parse
-   10.4 swba event.
-
- - increase tim_bitmap[] size in ath10k_vif to 64 to hold 512 station
-   power save state.
+10.4 firmware supports upto 512 clients when qcache feature is enabled.
+Make adjustment on default max peer count, active peers, number of tid in
+such case to meet qcache requirement. 10.4 fw has extra unit info flag
+NUM_UNITS_IS_NUM_ACTIVE_PEERS which is also handled in this patch.
 
 Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  4 +--
- drivers/net/wireless/ath/ath10k/wmi.c  | 61 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h  | 41 +++++++++++++++++++++++
- 3 files changed, 104 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/hw.h  |  6 ++++++
+ drivers/net/wireless/ath/ath10k/wmi.c | 27 +++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi.h |  5 +++--
+ 3 files changed, 32 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7c2ffb3..7721548 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -360,8 +360,8 @@ struct ath10k_vif {
- 			u32 uapsd;
- 		} sta;
- 		struct {
--			/* 127 stations; wmi limit */
--			u8 tim_bitmap[16];
-+			/* 512 stations */
-+			u8 tim_bitmap[64];
- 			u8 tim_len;
- 			u32 ssid_len;
- 			u8 ssid[IEEE80211_MAX_SSID_LEN];
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 52fc024..568c5ea5 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -360,6 +360,12 @@ enum ath10k_hw_rate_cck {
+ #define TARGET_10_4_NUM_PEERS			((TARGET_10_4_NUM_STATIONS) + \
+ 						 (TARGET_10_4_NUM_VDEVS))
+ #define TARGET_10_4_ACTIVE_PEERS		0
++
++/* TODO: increase qcache max client limit to 512 after
++ * testing with 512 client.
++ */
++#define TARGET_10_4_NUM_QCACHE_PEERS_MAX	256
++#define TARGET_10_4_QCACHE_ACTIVE_PEERS		50
+ #define TARGET_10_4_NUM_OFFLOAD_PEERS		0
+ #define TARGET_10_4_NUM_OFFLOAD_REORDER_BUFFS	0
+ #define TARGET_10_4_NUM_PEER_KEYS		2
 diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 793d7c21..bbcc943 100644
+index 9502032..62ea0bc 100644
 --- a/drivers/net/wireless/ath/ath10k/wmi.c
 +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2944,6 +2944,63 @@ static int ath10k_wmi_op_pull_swba_ev(struct ath10k *ar, struct sk_buff *skb,
- 	return 0;
- }
+@@ -3826,20 +3826,39 @@ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb)
+ 		return;
+ 	}
  
-+static int ath10k_wmi_10_4_op_pull_swba_ev(struct ath10k *ar,
-+					   struct sk_buff *skb,
-+					   struct wmi_swba_ev_arg *arg)
-+{
-+	struct wmi_10_4_host_swba_event *ev = (void *)skb->data;
-+	u32 map, tim_len;
-+	size_t i;
-+
-+	if (skb->len < sizeof(*ev))
-+		return -EPROTO;
-+
-+	skb_pull(skb, sizeof(*ev));
-+	arg->vdev_map = ev->vdev_map;
-+
-+	for (i = 0, map = __le32_to_cpu(ev->vdev_map); map; map >>= 1) {
-+		if (!(map & BIT(0)))
-+			continue;
-+
-+		/* If this happens there were some changes in firmware and
-+		 * ath10k should update the max size of tim_info array.
-+		 */
-+		if (WARN_ON_ONCE(i == ARRAY_SIZE(arg->tim_info)))
-+			break;
-+
-+		if (__le32_to_cpu(ev->bcn_info[i].tim_info.tim_len) >
-+		      sizeof(ev->bcn_info[i].tim_info.tim_bitmap)) {
-+			ath10k_warn(ar, "refusing to parse invalid swba structure\n");
-+			return -EPROTO;
-+		}
-+
-+		tim_len = __le32_to_cpu(ev->bcn_info[i].tim_info.tim_len);
-+		if (tim_len) {
-+			/* Exclude 4 byte guard length */
-+			tim_len -= 4;
-+			arg->tim_info[i].tim_len = __cpu_to_le32(tim_len);
-+		} else {
-+			arg->tim_info[i].tim_len = 0;
-+		}
-+
-+		arg->tim_info[i].tim_mcast = ev->bcn_info[i].tim_info.tim_mcast;
-+		arg->tim_info[i].tim_bitmap =
-+				ev->bcn_info[i].tim_info.tim_bitmap;
-+		arg->tim_info[i].tim_changed =
-+				ev->bcn_info[i].tim_info.tim_changed;
-+		arg->tim_info[i].tim_num_ps_pending =
-+				ev->bcn_info[i].tim_info.tim_num_ps_pending;
-+
-+		/* 10.4 firmware doesn't have p2p support. notice of absence
-+		 * info can be ignored for now.
-+		 */
-+
-+		i++;
++	if (test_bit(WMI_SERVICE_PEER_CACHING, ar->wmi.svc_map)) {
++		ar->max_num_peers = TARGET_10_4_NUM_QCACHE_PEERS_MAX +
++				    TARGET_10_4_NUM_VDEVS;
++		ar->num_active_peers = TARGET_10_4_QCACHE_ACTIVE_PEERS +
++				       TARGET_10_4_NUM_VDEVS;
++		ar->num_tids = ar->num_active_peers * 2;
++		ar->max_num_stations = TARGET_10_4_NUM_QCACHE_PEERS_MAX;
 +	}
 +
-+	return 0;
-+}
++	/* TODO: Adjust max peer count for cases like WMI_SERVICE_RATECTRL_CACHE
++	 * and WMI_SERVICE_IRAM_TIDS, etc.
++	 */
 +
- void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_swba_ev_arg arg = {};
-@@ -4278,6 +4335,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_4_READY_EVENTID:
- 		ath10k_wmi_event_ready(ar, skb);
- 		break;
-+	case WMI_10_4_HOST_SWBA_EVENTID:
-+		ath10k_wmi_event_host_swba(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -6209,6 +6269,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.rx = ath10k_wmi_10_4_op_rx,
- 	.map_svc = wmi_10_4_svc_map,
- 	.pull_mgmt_rx = ath10k_wmi_10_4_op_pull_mgmt_rx_ev,
-+	.pull_swba = ath10k_wmi_10_4_op_pull_swba_ev,
- 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
- 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
- 	.gen_init = ath10k_wmi_10_4_op_gen_init,
+ 	for (i = 0; i < num_mem_reqs; ++i) {
+ 		req_id = __le32_to_cpu(arg.mem_reqs[i]->req_id);
+ 		num_units = __le32_to_cpu(arg.mem_reqs[i]->num_units);
+ 		unit_size = __le32_to_cpu(arg.mem_reqs[i]->unit_size);
+ 		num_unit_info = __le32_to_cpu(arg.mem_reqs[i]->num_unit_info);
+ 
+-		if (num_unit_info & NUM_UNITS_IS_NUM_PEERS)
++		if (num_unit_info & NUM_UNITS_IS_NUM_ACTIVE_PEERS) {
++			if (ar->num_active_peers)
++				num_units = ar->num_active_peers + 1;
++			else
++				num_units = ar->max_num_peers + 1;
++		} else if (num_unit_info & NUM_UNITS_IS_NUM_PEERS) {
+ 			/* number of units to allocate is number of
+ 			 * peers, 1 extra for self peer on target */
+ 			/* this needs to be tied, host and target
+ 			 * can get out of sync */
+-			num_units = TARGET_10X_NUM_PEERS + 1;
+-		else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
+-			num_units = TARGET_10X_NUM_VDEVS + 1;
++			num_units = ar->max_num_peers + 1;
++		} else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS) {
++			num_units = ar->max_num_vdevs + 1;
++		}
+ 
+ 		ath10k_dbg(ar, ATH10K_DBG_WMI,
+ 			   "wmi mem_req_id %d num_units %d num_unit_info %d unit size %d actual units %d\n",
 diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index e63f68c..df66581 100644
+index b1bec03..b1e4932 100644
 --- a/drivers/net/wireless/ath/ath10k/wmi.h
 +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -5132,6 +5132,47 @@ struct wmi_host_swba_event {
- 	struct wmi_bcn_info bcn_info[0];
+@@ -2377,8 +2377,9 @@ struct wmi_resource_config_10_2 {
+ 	__le32 feature_mask;
  } __packed;
  
-+/* 16 words = 512 client + 1 word = for guard */
-+#define WMI_10_4_TIM_BITMAP_ARRAY_SIZE 17
-+
-+struct wmi_10_4_tim_info {
-+	__le32 tim_len;
-+	__le32 tim_mcast;
-+	__le32 tim_bitmap[WMI_10_4_TIM_BITMAP_ARRAY_SIZE];
-+	__le32 tim_changed;
-+	__le32 tim_num_ps_pending;
-+} __packed;
-+
-+#define WMI_10_4_P2P_MAX_NOA_DESCRIPTORS 1
-+
-+struct wmi_10_4_p2p_noa_info {
-+	/* Bit 0 - Flag to indicate an update in NOA schedule
-+	 * Bits 7-1 - Reserved
-+	 */
-+	u8 changed;
-+	/* NOA index */
-+	u8 index;
-+	/* Bit 0 - Opp PS state of the AP
-+	 * Bits 1-7 - Ctwindow in TUs
-+	 */
-+	u8 ctwindow_oppps;
-+	/* Number of NOA descriptors */
-+	u8 num_descriptors;
-+
-+	struct wmi_p2p_noa_descriptor
-+		noa_descriptors[WMI_10_4_P2P_MAX_NOA_DESCRIPTORS];
-+} __packed;
-+
-+struct wmi_10_4_bcn_info {
-+	struct wmi_10_4_tim_info tim_info;
-+	struct wmi_10_4_p2p_noa_info p2p_noa_info;
-+} __packed;
-+
-+struct wmi_10_4_host_swba_event {
-+	__le32 vdev_map;
-+	struct wmi_10_4_bcn_info bcn_info[0];
-+} __packed;
-+
- #define WMI_MAX_AP_VDEV 16
+-#define NUM_UNITS_IS_NUM_VDEVS   0x1
+-#define NUM_UNITS_IS_NUM_PEERS   0x2
++#define NUM_UNITS_IS_NUM_VDEVS         BIT(0)
++#define NUM_UNITS_IS_NUM_PEERS         BIT(1)
++#define NUM_UNITS_IS_NUM_ACTIVE_PEERS  BIT(2)
  
- struct wmi_tbtt_offset_event {
+ struct wmi_resource_config_10_4 {
+ 	/* Number of virtual devices (VAPs) to support */
 -- 
 1.8.1.2
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
