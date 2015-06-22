@@ -1,128 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:33945 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754252AbbFVLnf (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:33932 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754331AbbFVLnd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Jun 2015 07:43:35 -0400
-Received: by lbnk3 with SMTP id k3so782935lbn.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 04:43:33 -0700 (PDT)
+	Mon, 22 Jun 2015 07:43:33 -0400
+Received: by lbnk3 with SMTP id k3so782547lbn.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 04:43:32 -0700 (PDT)
 From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
 Cc: ath9k-devel@venema.h4ckr.net, nbd@openwrt.org, sujith@msujith.org,
 	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/3] ath9k: make rxfilter per HW
-Date: Mon, 22 Jun 2015 13:43:04 +0200
-Message-Id: <1434973385-15865-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150622_134339_744222_8D689257)
+Subject: [PATCH 1/3] ath9k: handle RoC abort correctly
+Date: Mon, 22 Jun 2015 13:43:03 +0200
+Message-Id: <1434973385-15865-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150622_134337_747034_54C3727A)
 In-Reply-To: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
 References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 configure rxfilter per HW,
-so we don't need this per channel.
+In case we will get ROC abort we should not call
+ieee80211_remain_on_channel_expired().
 
-This fix problem when chanctx used and ath9k
-allocate new internal ath_chanctx (eg. when
-offchannel) and we loose rxfilter configuration.
+In other case I hit such warning on MIPS and
+p2p negotiation failed (tested with use_chanctx=1).
 
-Eg. when p2p_find (with use_chanctx=1), during
-remain on channel, driver create new ath_chanctx
-with incorrect rxfilter. Then we didn't receive
-probe requests and fail p2p_find.
+ath: phy0: Starting RoC period
+ath: phy0: Channel definition created: 2412 MHz
+ath: phy0: Assigned next_chan to 2412 MHz
+ath: phy0: Offchannel duration for chan 2412 MHz : 506632
+ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+ath: phy0: Stopping current chanctx: 2412
+ath: phy0: Flush timeout: 200
+ath: phy0: ath_chanctx_set_next: Set channel 2412 MHz
+ath: phy0: Set channel: 2412 MHz width: 0
+ath: phy0: Reset to 2412 MHz, HT40: 0 fastcc: 0
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_TSF_TIMER, state: ATH_CHANCTX_STATE_IDLE
+ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+ath: phy0: Cancel RoC
+ath: phy0: RoC aborted
+ath: phy0: RoC request on vif: 00:03:7f:4e:a0:cd, type: 1 duration: 500
+ath: phy0: Starting RoC period
+ath: phy0: Channel definition created: 2412 MHz
+ath: phy0: Assigned next_chan to 2412 MHz
+ath: phy0: Offchannel duration for chan 2412 MHz : 506705
+ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 3312 at drivers/net/wireless/ath/ath9k/main.c:2319
+Modules linked in: ath9k ath9k_common ath9k_hw ath mac80211 cfg80211
 
 Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  3 ++-
- drivers/net/wireless/ath/ath9k/main.c  |  2 +-
- drivers/net/wireless/ath/ath9k/recv.c  | 12 ++++++------
- 3 files changed, 9 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/channel.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a7a81b3..030fd0f 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -356,7 +356,6 @@ struct ath_chanctx {
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 2066650..e211325 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -926,7 +926,8 @@ void ath_roc_complete(struct ath_softc *sc, bool abort)
  
- 	short nvifs;
- 	short nvifs_assigned;
--	unsigned int rxfilter;
- };
- 
- enum ath_chanctx_event {
-@@ -1001,8 +1000,10 @@ struct ath_softc {
- 	struct cfg80211_chan_def cur_chandef;
- 	struct ath_chanctx chanctx[ATH9K_NUM_CHANCTX];
- 	struct ath_chanctx *cur_chan;
-+	unsigned int rxfilter;
- 	spinlock_t chan_lock;
- 
-+
- #ifdef CONFIG_MAC80211_LEDS
- 	bool led_registered;
- 	char led_name[32];
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d285e3a..945f002 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1463,7 +1463,7 @@ static void ath9k_configure_filter(struct ieee80211_hw *hw,
- 	*total_flags &= SUPPORTED_FILTERS;
- 
- 	spin_lock_bh(&sc->chan_lock);
--	sc->cur_chan->rxfilter = *total_flags;
-+	sc->rxfilter = *total_flags;
- 	spin_unlock_bh(&sc->chan_lock);
- 
- 	ath9k_ps_wakeup(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6c75fb1..5f72c65 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -389,31 +389,31 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 
- 	spin_lock_bh(&sc->chan_lock);
- 
--	if (sc->cur_chan->rxfilter & FIF_PROBE_REQ)
-+	if (sc->rxfilter & FIF_PROBE_REQ)
- 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
- 
- 	if (sc->sc_ah->is_monitoring)
- 		rfilt |= ATH9K_RX_FILTER_PROM;
- 
--	if ((sc->cur_chan->rxfilter & FIF_CONTROL) ||
-+	if ((sc->rxfilter & FIF_CONTROL) ||
- 	    sc->sc_ah->dynack.enabled)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
- 	    (sc->cur_chan->nvifs <= 1) &&
--	    !(sc->cur_chan->rxfilter & FIF_BCN_PRBRESP_PROMISC))
-+	    !(sc->rxfilter & FIF_BCN_PRBRESP_PROMISC))
- 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
- 	else
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
--	    (sc->cur_chan->rxfilter & FIF_PSPOLL))
-+	    (sc->rxfilter & FIF_PSPOLL))
- 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
- 
- 	if (sc->cur_chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
- 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
- 
--	if (sc->cur_chan->nvifs > 1 || (sc->cur_chan->rxfilter & FIF_OTHER_BSS)) {
-+	if (sc->cur_chan->nvifs > 1 || (sc->rxfilter & FIF_OTHER_BSS)) {
- 		/* This is needed for older chips */
- 		if (sc->sc_ah->hw_version.macVersion <= AR_SREV_VERSION_9160)
- 			rfilt |= ATH9K_RX_FILTER_PROM;
-@@ -878,7 +878,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	 */
- 	spin_lock_bh(&sc->chan_lock);
- 	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error,
--				 sc->cur_chan->rxfilter)) {
-+				 sc->rxfilter)) {
- 		spin_unlock_bh(&sc->chan_lock);
- 		return -EINVAL;
- 	}
+ 	sc->offchannel.roc_vif = NULL;
+ 	sc->offchannel.roc_chan = NULL;
+-	ieee80211_remain_on_channel_expired(sc->hw);
++	if (!abort)
++		ieee80211_remain_on_channel_expired(sc->hw);
+ 	ath_offchannel_next(sc);
+ 	ath9k_ps_restore(sc);
+ }
 -- 
 1.9.1
 
