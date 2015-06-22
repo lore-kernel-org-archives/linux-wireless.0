@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52755 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791AbbFWTPR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 15:15:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mwifiex: do not short circuit exit from mwifiex_set_mgmt_ies
-Date: Tue, 23 Jun 2015 15:04:03 -0400
-Message-Id: <1435086243-10433-1-git-send-email-linville@tuxdriver.com> (sfid-20150623_211523_323296_BCED9BF6)
+Received: from s3.sipsolutions.net ([5.9.151.49]:48066 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753004AbbFVL6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2015 07:58:36 -0400
+Message-ID: <1434974312.19597.9.camel@sipsolutions.net> (sfid-20150622_135841_850054_31462557)
+Subject: Re: [PATCH 2/3] ath9k: make rxfilter per HW
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	nbd@openwrt.org, sujith@msujith.org
+Date: Mon, 22 Jun 2015 13:58:32 +0200
+In-Reply-To: <1434973385-15865-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150622_134339_744222_8D689257)
+References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1434973385-15865-3-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150622_134339_744222_8D689257)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this change, the code simply exits after calling
-mwifiex_uap_set_head_tail_ies, leving the call to
-mwifiex_set_mgmt_beacon_data_ies as dead code.
+On Mon, 2015-06-22 at 13:43 +0200, Janusz Dziedzic wrote:
+> mac80211 configure rxfilter per HW,
+> so we don't need this per channel.
 
-Coverity CID #1271292
+As I said before, I think there's value in mac80211 doing it per chanctx
+or even per vif, and it should be more efficient to do so.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/mwifiex/ie.c | 2 ++
- 1 file changed, 2 insertions(+)
+It's tempting to do it per vif and leave the chanctx work up to the
+driver, but perhaps with CSA and all that it gets complicated enough
+that doing it per chanctx in mac80211 would make sense?
 
-diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
-index 0ba894509413..23e368c77c08 100644
---- a/drivers/net/wireless/mwifiex/ie.c
-+++ b/drivers/net/wireless/mwifiex/ie.c
-@@ -409,6 +409,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 	int ret;
- 
- 	ret = mwifiex_uap_parse_tail_ies(priv, info);
-+
-+	if (ret)
- 		return ret;
- 
- 	return mwifiex_set_mgmt_beacon_data_ies(priv, info);
--- 
-2.1.0
+johannes
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
