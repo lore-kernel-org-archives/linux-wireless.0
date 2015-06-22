@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:33913 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752405AbbFXPe4 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56463 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933010AbbFVIHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Jun 2015 11:34:56 -0400
-Received: by ykfy125 with SMTP id y125so25843096ykf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2015 08:34:55 -0700 (PDT)
-Message-ID: <558ACE1C.4020004@lwfinger.net> (sfid-20150624_173459_899622_7E1B99D0)
-Date: Wed, 24 Jun 2015 10:34:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 22 Jun 2015 04:07:20 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xsAR015567
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:20 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1v55hgut7p-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:19 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 07/17] mwifiex: enable tdls channel switch ext_cap
+Date: Mon, 22 Jun 2015 19:06:13 +0530
+Message-ID: <1434980183-2901-8-git-send-email-patila@marvell.com> (sfid-20150622_100723_540854_4950CF02)
+In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
+References: <1434980183-2901-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Cedric <starke.c@duerr.de>, linux-wireless@vger.kernel.org
-Subject: Re: RTL8192cu: not work on linux-2.6.35
-References: <54EEFD4D.3060009@byterg.ru> <loom.20150624T100850-505@post.gmane.org>
-In-Reply-To: <loom.20150624T100850-505@post.gmane.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/24/2015 03:14 AM, Cedric wrote:
-> Do you found any solution for this problem right now. I have totally the
-> same Problem and didn't find anything.
->
-> This Problem happens with a Netgear WNA1000M and only with some of this
-> WLAN-Sticks (I tested more then 1000).
->
->
-> Best regards
-> Cedric
+From: Xinming Hu <huxm@marvell.com>
 
-That driver was not added to the kernel until 2.6.37, thus I would not expect it 
-to work with 2.6.35. If you cannot upgrade to a newer kernel, then you should be 
-able to get one from Realtek.com, or from 
-http://github.com/lwfinger/rtl8192cu.git. Note that the latter driver is 
-directly from Realtek, and is provided only as a service. I take no 
-responsibility for any bugs or failures to build.
+This patch enable tdls channel switch ext capability in tdls action
+frame, and also configure basic tdls channel switch parameters while
+tdls setup completed and tdls link is enabled..
 
-Larry
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/tdls.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index 03eabd7..f862ca6 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -355,6 +355,7 @@ static void mwifiex_tdls_add_ext_capab(struct mwifiex_private *priv,
+ 	extcap->ieee_hdr.len = 8;
+ 	memset(extcap->ext_capab, 0, 8);
+ 	extcap->ext_capab[4] |= WLAN_EXT_CAPA5_TDLS_ENABLED;
++	extcap->ext_capab[3] |= WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH;
+ 
+ 	if (priv->adapter->is_hw_11ac_capable)
+ 		extcap->ext_capab[7] |= WLAN_EXT_CAPA8_TDLS_WIDE_BW_ENABLED;
+@@ -1071,6 +1072,11 @@ mwifiex_tdls_process_enable_link(struct mwifiex_private *priv, const u8 *peer)
+ 			for (i = 0; i < MAX_NUM_TID; i++)
+ 				sta_ptr->ampdu_sta[i] = BA_STREAM_NOT_ALLOWED;
+ 		}
++		if (sta_ptr->tdls_cap.extcap.ext_capab[3] &
++		    WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH) {
++			mwifiex_config_tdls_enable(priv);
++			mwifiex_config_tdls_cs_params(priv);
++		}
+ 
+ 		memset(sta_ptr->rx_seq, 0xff, sizeof(sta_ptr->rx_seq));
+ 		mwifiex_restore_tdls_packets(priv, peer, TDLS_SETUP_COMPLETE);
+-- 
+1.8.1.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
