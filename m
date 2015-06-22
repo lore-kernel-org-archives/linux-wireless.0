@@ -1,94 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46749 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752493AbbFQIlV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 04:41:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:34624 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752765AbbFVKiH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Jun 2015 06:38:07 -0400
+Received: by pabvl15 with SMTP id vl15so85399585pab.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 03:38:07 -0700 (PDT)
+Received: from [10.244.11.15] ([196.12.45.164])
+        by mx.google.com with ESMTPSA id ho10sm19390347pbc.27.2015.06.22.03.38.05
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 22 Jun 2015 03:38:06 -0700 (PDT)
+Message-ID: <5587E598.1050805@gmail.com> (sfid-20150622_123811_517649_B3DB4CFF)
+Date: Mon, 22 Jun 2015 16:08:16 +0530
+From: Raghavendra Rao <raghav3276@gmail.com>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 09/14] mac80211: remove key TX/RX counter
-Date: Wed, 17 Jun 2015 10:41:10 +0200
-Message-Id: <1434530475-3553-10-git-send-email-johannes@sipsolutions.net> (sfid-20150617_104142_436500_C1175329)
-In-Reply-To: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
-References: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
+Subject: IEEE1609.4 support for Linux
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello,
 
-This counter is inherently racy (since it can be incremented by RX
-as well as by concurrent TX) and only available in debugfs. Instead
-of fixing it to be per-CPU or similar, remove it for now. If needed
-it should be added without races and with proper nl80211, perhaps
-even addressing the threshold reporting TODO item that's been there
-since the code was originally added.
+We are developing IEEE1609.4 [1] protocol as a part of Wireless Access in
+Vehicular Environment (WAVE) stack for the Linux Kernel.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/debugfs_key.c | 2 --
- net/mac80211/key.h         | 3 ---
- net/mac80211/rx.c          | 1 -
- net/mac80211/tx.c          | 1 -
- 4 files changed, 7 deletions(-)
+The responsibilities of the protocol are as follows :
+-- Channel Co-ordination and synchronization
+-- Channel Routing
 
-diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
-index e82bf1e9d7a8..702ca122c498 100644
---- a/net/mac80211/debugfs_key.c
-+++ b/net/mac80211/debugfs_key.c
-@@ -57,7 +57,6 @@ KEY_CONF_FILE(keylen, D);
- KEY_CONF_FILE(keyidx, D);
- KEY_CONF_FILE(hw_key_idx, D);
- KEY_FILE(flags, X);
--KEY_FILE(tx_rx_count, D);
- KEY_READ(ifindex, sdata->name, "%s\n");
- KEY_OPS(ifindex);
- 
-@@ -310,7 +309,6 @@ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
- 	DEBUGFS_ADD(flags);
- 	DEBUGFS_ADD(keyidx);
- 	DEBUGFS_ADD(hw_key_idx);
--	DEBUGFS_ADD(tx_rx_count);
- 	DEBUGFS_ADD(algorithm);
- 	DEBUGFS_ADD(tx_spec);
- 	DEBUGFS_ADD(rx_spec);
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 3f4f9eaac140..9951ef06323e 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -115,9 +115,6 @@ struct ieee80211_key {
- 		} gen;
- 	} u;
- 
--	/* number of times this key has been used */
--	int tx_rx_count;
--
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct {
- 		struct dentry *stalink;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9d95cb8e8e95..3037bd152ffa 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1682,7 +1682,6 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		if (unlikely(rx->key->flags & KEY_FLAG_TAINTED))
- 			return RX_DROP_MONITOR;
- 
--		rx->key->tx_rx_count++;
- 		/* TODO: add threshold stuff again */
- 	} else {
- 		return RX_DROP_MONITOR;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8410bb3bf5e8..87b9b4e27d22 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -610,7 +610,6 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 	if (tx->key) {
- 		bool skip_hw = false;
- 
--		tx->key->tx_rx_count++;
- 		/* TODO: add threshold stuff again */
- 
- 		switch (tx->key->conf.cipher) {
--- 
-2.1.4
+The protocol generally holds two kinds of channels: Service Channel (SCH)
+and Control Channel (CCH). SCH is mainly used to send the data packets,
+while the CCH is used to send control as well as data packets. The radio
+switches between these two channels as configured.
 
+Channel Co-ordination and synchronization
+==========================
+The switching between SCH and CCH can be achieved in many
+modes (Continuous CCH, SCH, Alternating, Immediate SCH). Each of the
+channel slot is given 50 ms of time slice, where in which, the first 4 
+ms is
+generally used as a guard band for changing the channel. The end objective
+is such that, two or more communicating devices should be synchronized
+at the same channel for the exchange of data. This is where the concept
+of channel synchronization and coordination comes.
+
+Problem :
+As mentioned earlier, a guard band of 4ms is introduced to switch the 
+channels.
+But, few of the devices might complete it in 2.5ms (say) and few in 
+3.5ms (say),
+depending on the load of the system. Now, to achieve the 
+synchronization, we need
+to make sure that no device is transmitting the data during this 4ms, 
+even though
+it has switched the channel before 4ms. Thus, we need to switch off the 
+transmitter
+some how for these 4ms. The other side of the story is, we need to keep 
+the Tx
+packet queuing, and also the Rx ON during these period.
+
+So, the queries are as follows :
+How this can be achieved?
+How to disable the transmitter?
+Will it be driver specific?
+
+Any help is appreciated.
+
+Thanks and Regards,
+Raghavendra
+
+[1] : http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=5712767
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
