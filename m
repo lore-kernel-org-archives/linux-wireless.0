@@ -1,114 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47276 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbbFPFOc (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:31221 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753262AbbFVOyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 01:14:32 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+	Mon, 22 Jun 2015 10:54:51 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
 To: <ath10k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH 07/10] ath10k: Extend CE src desc flags for interrupt indication
-Date: Tue, 16 Jun 2015 10:42:19 +0530
-Message-ID: <1434431542-14724-8-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150616_071434_921281_66696F35)
-In-Reply-To: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1434431542-14724-1-git-send-email-vthiagar@qti.qualcomm.com>
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH v2 8/8] ath10k: configure frag desc memory to target for qca99X0
+Date: Mon, 22 Jun 2015 20:22:27 +0530
+Message-ID: <1434984747-24294-9-git-send-email-rmani@qti.qualcomm.com> (sfid-20150622_165509_963377_9D2A079F)
+In-Reply-To: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QCA99X0 uses two new copy engine src desc flags for interrupt
-indication. Bit_2 is to mark if host interrupt is disabled after
-processing the current desc and bit_3 is to mark if target interrupt
-is diabled after the processing of current descriptor.
-CE_DESC_FLAGS_META_DATA_MASK and CE_DESC_FLAGS_META_DATA_LSB are based
-on the target type.
+Pre qca99X0 chipsets follows the model where dynamically allocate
+memory for frag desc on getting new skb for TX. But, this is not
+going to be the case in qca99X0. It expects frag desc memory to be
+allocated at boot time and let the driver to reuse allocated memory
+after every TX completion. So there won't be any dynamic frag memory
+memory allocation in qca99X0 during data transmission.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+qca99X0 hardware doesn't need fragment desc address to be programmed
+in msdu descriptor for every data transaction. It needs to know only
+starting address of fragment descriptor at the time of the boot.
+During data transmission, qca99X0 hardware can retrieve corresponding
+frag addr by adding programmed frag desc base addr + msdu id.
+
+Allocate continuous fragment descriptor memory (same size as number of
+descriptor) at the time of target initialization and configure allocated
+dma address to the target via HTT_H2T_MSG_TYPE_FRAG_DESC_BANK_CFG.
+
+How this is allocated continuous memory is going to be used is not
+covered in this patch. It just allocates memory and hand over to firmware.
+If we don't do it at init time, qca99X0 will stall when firmware tries
+to do TX.
+
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c | 1 +
- drivers/net/wireless/ath/ath10k/ce.h | 9 +++++++--
- drivers/net/wireless/ath/ath10k/hw.c | 6 ++++++
- drivers/net/wireless/ath/ath10k/hw.h | 2 ++
- 4 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c   |  1 +
+ drivers/net/wireless/ath/ath10k/core.h   |  6 +++
+ drivers/net/wireless/ath/ath10k/htt.c    |  4 ++
+ drivers/net/wireless/ath/ath10k/htt.h    | 11 +++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 76 +++++++++++++++++++++++++++++++-
+ 5 files changed, 96 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index e508c65..cf28fbe 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -452,6 +452,7 @@ int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 3c8d5c5..be5f01c 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -111,6 +111,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.patch_load_addr = QCA99X0_HW_2_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
+ 		.otp_exe_param = 0x00000700,
++		.continuous_frag_desc = true,
+ 		.fw = {
+ 			.dir = QCA99X0_HW_2_0_FW_DIR,
+ 			.fw = QCA99X0_HW_2_0_FW_FILE,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index f0811d0..2e5c935 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -582,6 +582,12 @@ struct ath10k {
+ 		 */
+ 		bool has_shifted_cc_wraparound;
+ 
++		/* Some of chip expects fragment descriptor to be continuous
++		 * memory for any TX operation. Set continuous_frag_desc flag
++		 * for the hardware which have such requirement.
++		 */
++		bool continuous_frag_desc;
++
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+ 			const char *fw;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 6f71f94..4474c3e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -249,5 +249,9 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 	if (status)
+ 		return status;
+ 
++	status = ath10k_htt_send_frag_desc_bank_cfg(htt);
++	if (status)
++		return status;
++
+ 	return ath10k_htt_send_rx_ring_cfg_ll(htt);
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 8e64ace..8bdf1e7 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -87,6 +87,11 @@ struct htt_data_tx_desc_frag {
+ 	__le32 len;
+ } __packed;
+ 
++struct htt_msdu_ext_desc {
++	__le32 tso_flag[4];
++	struct htt_data_tx_desc_frag frags[6];
++};
++
+ enum htt_data_tx_desc_flags0 {
+ 	HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT = 1 << 0,
+ 	HTT_DATA_TX_DESC_FLAGS0_NO_AGGR         = 1 << 1,
+@@ -1466,6 +1471,11 @@ struct ath10k_htt {
+ 
+ 	/* rx_status template */
+ 	struct ieee80211_rx_status rx_status;
++
++	struct {
++		dma_addr_t paddr;
++		struct htt_msdu_ext_desc *vaddr;
++	} frag_desc;
+ };
+ 
+ #define RX_HTT_HDR_STATUS_LEN 64
+@@ -1533,6 +1543,7 @@ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
++int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
+ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index a60ef7d..148d5b6 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -84,6 +84,7 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
+ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
  {
- 	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
- 	unsigned int nentries_mask = dest_ring->nentries_mask;
-+	struct ath10k *ar = ce_state->ar;
- 	unsigned int sw_index = dest_ring->sw_index;
+ 	struct ath10k *ar = htt->ar;
++	int ret, size;
  
- 	struct ce_desc *base = dest_ring->base_addr_owner_space;
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index bb4b8f3..5c903e15 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -38,8 +38,13 @@ struct ath10k_ce_pipe;
- 
- #define CE_DESC_FLAGS_GATHER         (1 << 0)
- #define CE_DESC_FLAGS_BYTE_SWAP      (1 << 1)
--#define CE_DESC_FLAGS_META_DATA_MASK 0xFFFC
--#define CE_DESC_FLAGS_META_DATA_LSB  2
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
+ 		   htt->max_num_pending_tx);
+@@ -94,11 +95,31 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 	htt->tx_pool = dma_pool_create("ath10k htt tx pool", htt->ar->dev,
+ 				       sizeof(struct ath10k_htt_txbuf), 4, 0);
+ 	if (!htt->tx_pool) {
+-		idr_destroy(&htt->pending_tx);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto free_idr_pending_tx;
++	}
 +
-+/* Following desc flags are used in QCA99X0 */
-+#define CE_DESC_FLAGS_HOST_INT_DIS	(1 << 2)
-+#define CE_DESC_FLAGS_TGT_INT_DIS	(1 << 3)
++	if (!ar->hw_params.continuous_frag_desc)
++		goto skip_frag_desc_alloc;
 +
-+#define CE_DESC_FLAGS_META_DATA_MASK ar->hw_values->ce_desc_meta_data_mask
-+#define CE_DESC_FLAGS_META_DATA_LSB  ar->hw_values->ce_desc_meta_data_lsb
++	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
++	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
++						  &htt->frag_desc.paddr,
++						  GFP_DMA);
++	if (!htt->frag_desc.vaddr) {
++		ath10k_warn(ar, "failed to alloc fragment desc memory\n");
++		ret = -ENOMEM;
++		goto free_tx_pool;
+ 	}
  
- struct ce_desc {
- 	__le32 addr;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index e5fe33d9..1414e1f 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -114,6 +114,8 @@ const struct ath10k_hw_values qca988x_values = {
- 	.ce_count			= 8,
- 	.msi_assign_ce_max		= 7,
- 	.num_target_ce_config_wlan	= 7,
-+	.ce_desc_meta_data_mask		= 0xFFFC,
-+	.ce_desc_meta_data_lsb		= 2,
- };
++skip_frag_desc_alloc:
+ 	return 0;
++
++free_tx_pool:
++	dma_pool_destroy(htt->tx_pool);
++free_idr_pending_tx:
++	idr_destroy(&htt->pending_tx);
++	return ret;
+ }
  
- const struct ath10k_hw_values qca6174_values = {
-@@ -121,6 +123,8 @@ const struct ath10k_hw_values qca6174_values = {
- 	.ce_count			= 8,
- 	.msi_assign_ce_max		= 7,
- 	.num_target_ce_config_wlan	= 7,
-+	.ce_desc_meta_data_mask		= 0xFFFC,
-+	.ce_desc_meta_data_lsb		= 2,
- };
+ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
+@@ -121,9 +142,18 @@ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
  
- const struct ath10k_hw_values qca99x0_values = {
-@@ -128,6 +132,8 @@ const struct ath10k_hw_values qca99x0_values = {
- 	.ce_count			= 12,
- 	.msi_assign_ce_max		= 12,
- 	.num_target_ce_config_wlan	= 10,
-+	.ce_desc_meta_data_mask		= 0xFFF0,
-+	.ce_desc_meta_data_lsb		= 4,
- };
+ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ {
++	int size;
++
+ 	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
+ 	idr_destroy(&htt->pending_tx);
+ 	dma_pool_destroy(htt->tx_pool);
++
++	if (htt->frag_desc.vaddr) {
++		size = htt->max_num_pending_tx *
++				  sizeof(struct htt_msdu_ext_desc);
++		dma_free_coherent(htt->ar->dev, size, htt->frag_desc.vaddr,
++				  htt->frag_desc.paddr);
++	}
+ }
  
- void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 5819659..35cd8ca 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -195,6 +195,8 @@ struct ath10k_hw_values {
- 	u8 ce_count;
- 	u8 msi_assign_ce_max;
- 	u8 num_target_ce_config_wlan;
-+	u16 ce_desc_meta_data_mask;
-+	u8 ce_desc_meta_data_lsb;
- };
+ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+@@ -201,6 +231,48 @@ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie)
+ 	return 0;
+ }
  
- extern const struct ath10k_hw_values qca988x_values;
++int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	struct sk_buff *skb;
++	struct htt_cmd *cmd;
++	int ret, size;
++
++	if (!ar->hw_params.continuous_frag_desc)
++		return 0;
++
++	if (!htt->frag_desc.paddr) {
++		ath10k_warn(ar, "invalid frag desc memory\n");
++		return -EINVAL;
++	}
++
++	size = sizeof(cmd->hdr) + sizeof(cmd->frag_desc_bank_cfg);
++	skb = ath10k_htc_alloc_skb(ar, size);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, size);
++	cmd = (struct htt_cmd *)skb->data;
++	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_FRAG_DESC_BANK_CFG;
++	cmd->frag_desc_bank_cfg.info = 0;
++	cmd->frag_desc_bank_cfg.num_banks = 1;
++	cmd->frag_desc_bank_cfg.desc_size = sizeof(struct htt_msdu_ext_desc);
++	cmd->frag_desc_bank_cfg.bank_base_addrs[0] =
++				__cpu_to_le32(htt->frag_desc.paddr);
++	cmd->frag_desc_bank_cfg.bank_id[0].bank_max_id =
++				__cpu_to_le16(htt->max_num_pending_tx - 1);
++
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	if (ret) {
++		ath10k_warn(ar, "failed to send frag desc bank cfg request: %d\n",
++			    ret);
++		dev_kfree_skb_any(skb);
++		return ret;
++	}
++
++	return 0;
++}
++
+ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
 -- 
-1.9.1
+1.8.1.2
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
