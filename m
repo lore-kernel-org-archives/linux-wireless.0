@@ -1,102 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vn0-f49.google.com ([209.85.216.49]:38359 "EHLO
-	mail-vn0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752238AbbFZUFJ (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41605 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933061AbbFVIH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 16:05:09 -0400
-Received: by vnbf129 with SMTP id f129so2475425vnb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2015 13:05:08 -0700 (PDT)
-From: Jesse Jones <jjones@cococorp.com>
-References: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
-	<4bd697c41f2bb66593c849246bde7b00@mail.gmail.com>	<CAEFj9878gNnDViLYh+TW6GPUvJBbSn4Y=tDBmdp3NwBHymqxRg@mail.gmail.com>
-	<b193de6c0b11af0193414a217f0ea56b@mail.gmail.com> <CAEFj986Jt-1rymgARCvDe+2Tb1R0PqsDfSELC7WbAXfkC+9xPw@mail.gmail.com>
-In-Reply-To: <CAEFj986Jt-1rymgARCvDe+2Tb1R0PqsDfSELC7WbAXfkC+9xPw@mail.gmail.com>
+	Mon, 22 Jun 2015 04:07:26 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t5M7xp0i015532
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:26 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1v55hgut7v-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 01:07:26 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 08/17] mwifiex: enhance tdls link setup condition
+Date: Mon, 22 Jun 2015 19:06:14 +0530
+Message-ID: <1434980183-2901-9-git-send-email-patila@marvell.com> (sfid-20150622_100730_321434_3CF5332D)
+In-Reply-To: <1434980183-2901-1-git-send-email-patila@marvell.com>
+References: <1434980183-2901-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Date: Fri, 26 Jun 2015 13:05:06 -0700
-Message-ID: <fff70f4adca53a929cda056a21f4d3ad@mail.gmail.com> (sfid-20150626_220515_026304_67575A52)
-Subject: RE: [PATCH] mac80211: mesh - always do every discovery retry
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Bad path would be bad, but again re-attempt whenever a path is already
-> established seems not a good idea. Why not wait till next path refresh?
+From: Xinming Hu <huxm@marvell.com>
 
-Because 30s is an awfully long time to stick with a bad path. And if we do
-one attempt per discovery then the next refresh has an equal chance to
-discover the same bad path.
+TDLS link status - channel switching, off channel or base channel itself
+indicates that TDLS link is setup.
 
-> > How is looking at the PHY going to help?. Originally you said the
-> > patch would cause additional latency and I don't think that's true.
->
-> Did you do some "ping" latency test before and after patching your patch?
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.h      | 15 +++++++++++++++
+ drivers/net/wireless/mwifiex/sta_event.c |  2 +-
+ drivers/net/wireless/mwifiex/tdls.c      |  8 ++++----
+ drivers/net/wireless/mwifiex/wmm.c       |  7 +++++--
+ 4 files changed, 25 insertions(+), 7 deletions(-)
 
-We did high rate pings though we mostly focused on loss. There was a clear
-improvement post-patch.
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index da227522..0e6ebc9 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1333,6 +1333,21 @@ static inline u8 mwifiex_is_any_intf_active(struct mwifiex_private *priv)
+ 	return 0;
+ }
+ 
++static inline u8 mwifiex_is_tdls_link_setup(u8 status)
++{
++	switch (status) {
++	case TDLS_SETUP_COMPLETE:
++	case TDLS_CHAN_SWITCHING:
++	case TDLS_IN_BASE_CHAN:
++	case TDLS_IN_OFF_CHAN:
++		return true;
++	default:
++		break;
++	}
++
++	return false;
++}
++
+ int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
+ 			     u32 func_init_shutdown);
+ int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8);
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 0529b9a..f1045d4 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -273,7 +273,7 @@ mwifiex_process_sta_tx_pause_event(struct mwifiex_private *priv,
+ 				    tp_tlv->pkt_cnt);
+ 			status = mwifiex_get_tdls_link_status
+ 					(priv,	tp_tlv->peermac);
+-			if (status == TDLS_SETUP_COMPLETE) {
++			if (mwifiex_is_tdls_link_setup(status)) {
+ 				spin_lock_irqsave(&priv->sta_list_spinlock,
+ 						  flags);
+ 				sta_ptr = mwifiex_get_sta_entry
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index f862ca6..aa3d3c5 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -49,7 +49,7 @@ static void mwifiex_restore_tdls_packets(struct mwifiex_private *priv,
+ 		tid = skb->priority;
+ 		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
+ 
+-		if (status == TDLS_SETUP_COMPLETE) {
++		if (mwifiex_is_tdls_link_setup(status)) {
+ 			ra_list = mwifiex_wmm_get_queue_raptr(priv, tid, mac);
+ 			ra_list->tdls_link = true;
+ 			tx_info->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
+@@ -1147,7 +1147,7 @@ int mwifiex_get_tdls_list(struct mwifiex_private *priv,
+ 
+ 	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+ 	list_for_each_entry(sta_ptr, &priv->sta_list, list) {
+-		if (sta_ptr->tdls_status == TDLS_SETUP_COMPLETE) {
++		if (mwifiex_is_tdls_link_setup(sta_ptr->tdls_status)) {
+ 			ether_addr_copy(peer->peer_addr, sta_ptr->mac_addr);
+ 			peer++;
+ 			count++;
+@@ -1301,7 +1301,7 @@ void mwifiex_auto_tdls_update_peer_status(struct mwifiex_private *priv,
+ 			if ((link_status == TDLS_NOT_SETUP) &&
+ 			    (peer->tdls_status == TDLS_SETUP_INPROGRESS))
+ 				peer->failure_count++;
+-			else if (link_status == TDLS_SETUP_COMPLETE)
++			else if (mwifiex_is_tdls_link_setup(link_status))
+ 				peer->failure_count = 0;
+ 
+ 			peer->tdls_status = link_status;
+@@ -1373,7 +1373,7 @@ void mwifiex_check_auto_tdls(unsigned long context)
+ 
+ 		if (((tdls_peer->rssi >= MWIFIEX_TDLS_RSSI_LOW) ||
+ 		     !tdls_peer->rssi) &&
+-		    tdls_peer->tdls_status == TDLS_SETUP_COMPLETE) {
++		    mwifiex_is_tdls_link_setup(tdls_peer->tdls_status)) {
+ 			tdls_peer->tdls_status = TDLS_LINK_TEARDOWN;
+ 			mwifiex_dbg(priv->adapter, MSG,
+ 				    "teardown TDLS link,peer=%pM rssi=%d\n",
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 21712cd..6196daa 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -162,8 +162,8 @@ void mwifiex_ralist_add(struct mwifiex_private *priv, const u8 *ra)
+ 		ra_list->amsdu_in_ampdu = false;
+ 		ra_list->tx_paused = false;
+ 		if (!mwifiex_queuing_ra_based(priv)) {
+-			if (mwifiex_get_tdls_link_status(priv, ra) ==
+-			    TDLS_SETUP_COMPLETE) {
++			if (mwifiex_is_tdls_link_setup
++				(mwifiex_get_tdls_link_status(priv, ra))) {
+ 				ra_list->tdls_link = true;
+ 				ra_list->is_11n_enabled =
+ 					mwifiex_tdls_peer_11n_enabled(priv, ra);
+@@ -806,6 +806,9 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 	    !mwifiex_is_skb_mgmt_frame(skb)) {
+ 		switch (tdls_status) {
+ 		case TDLS_SETUP_COMPLETE:
++		case TDLS_CHAN_SWITCHING:
++		case TDLS_IN_BASE_CHAN:
++		case TDLS_IN_OFF_CHAN:
+ 			ra_list = mwifiex_wmm_get_queue_raptr(priv, tid_down,
+ 							      ra);
+ 			tx_info->flags |= MWIFIEX_BUF_FLAG_TDLS_PKT;
+-- 
+1.8.1.4
 
-If you're thinking of latency caused by more hops that will likely be the
-case of course. But if you think latency should be factored into pathing
-then the place to do that is when computing link metrics.
-
-> > No I mean the expiry time. Every 30s or so paths are refreshed.
-> > Lowering dot11MeshHWMPactivePathTimeout won't do much other than
-> give
-> > you more path refreshes, each of which will have the same chance to
-> select badly.
->
-> I don't get it. You intention to resend PREQ until max_preq_retries
-> (resend
-> the same mgmt frame 4 times) is to find the best path. So it is same with
-> path
-> refresh?
-
-Yes
-
-> > Whether the path is already established or not is immaterial. In
-> > either case there is the potential for selecting a bad path when the
-> > first PREQ is sent out. In either case you have to balance the cost of
-> > sending additional path messages out with the cost of selecting the
-> > wrong
-> path.
-> >
->
-> Ya, you are right.
->
-> > Your big worry seems to be that flooding 4x as many PREQs is too
-> expensive.
-> > I don't think that's the case. The PREQs are broadcast so they'll go
-> > one hop. And when they are received they will only be re-broadcast if
-> > they arrived on a better path. This is not any worse than something
-> > like site local multicast and we would only be flooding an additional
-> > *three*
-> packets.
->
-> Yes, you are right. But now whenever each nodes initial the transmission
-> on
-> path discovery, each will send 4 times the same PREQ frame. I think that
-> this
-> patch seems to compensate the metric calculation that maybe inaccurate.
-
-In general each node will send out a PREQ four or more times now (can be
-more than four because a node may hear from progressively better peers). I
-don't understand your metric comment.
-
-> > My big worry is that we will select bad paths. And this *will* happen.
-> > I've seen it many times. And if it does happen the effects are not
-> > theoretical; they are by definition bad. We *have* selected a bad path
-> > after all. And when we select a bad path it will be very apparent to
-> > end users. Bandwidth will be lower than it should be and loss may go up
-> > as
-> well.
->
-> Agreed with your point. How about adding nl80211 command for this?
-
-I'm not keen on the idea. I still think it's the right thing to do and I
-don't much like the idea of having to turn it on. And it will become an even
-better idea if we don't refresh as often (eventually I'll send a patch for
-that though I think I may have to massage what we're using now).
-
-  -- Jesse
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
