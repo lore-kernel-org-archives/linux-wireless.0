@@ -1,59 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:11252 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751411AbbF1Iga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Jun 2015 04:36:30 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: RE: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-Date: Sun, 28 Jun 2015 08:36:24 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DAE7B8C@HASMSX110.ger.corp.intel.com> (sfid-20150628_103638_580340_CE1A97F9)
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
-	<CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
-	<CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
-	<CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
-	<CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
-	<1435082418.2777.11.camel@ipeer-box>
-	<CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com>
- <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
-In-Reply-To: <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:38629 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbbFWH25 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2015 03:28:57 -0400
+Received: by wibdq8 with SMTP id dq8so7532923wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2015 00:28:56 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CABPxzYKtt4uKAd-VkEuK9WThGg9au0y_-yYhJ7S7bmXeQzw7nA@mail.gmail.com>
+References: <1434973385-15865-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1434973385-15865-2-git-send-email-janusz.dziedzic@tieto.com>
+	<CABPxzYJadyBVPn7yZzqsJpnWQ4Jx_dUoR10FXNze041WDYJp+Q@mail.gmail.com>
+	<CA+BoTQ=Rqq4xh1nXd3RQwuwqR8QT=OgOzfpOeB=QhmJ8Ke=6kw@mail.gmail.com>
+	<CABPxzYKtt4uKAd-VkEuK9WThGg9au0y_-yYhJ7S7bmXeQzw7nA@mail.gmail.com>
+Date: Tue, 23 Jun 2015 09:28:55 +0200
+Message-ID: <CALhHN=ppitfj6goqmXkkf9_AGCmttA781J_O=75EPkebASzMQg@mail.gmail.com> (sfid-20150623_092901_592208_82F6FE01)
+Subject: Re: [PATCH 1/3] ath9k: handle RoC abort correctly
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Sujith Manoharan <sujith@msujith.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSmFudXN6LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4
-LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0K
-PiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBKYW51c3ogRHppZWR6aWMNCj4g
-U2VudDogU3VuZGF5LCBKdW5lIDI4LCAyMDE1IDAwOjQ5DQo+IFRvOiBQZWVyLCBJbGFuDQo+IENj
-OiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGNoYWl0YW55YS5tZ2l0QGdtYWlsLmNv
-bTsgSm9oYW5uZXMNCj4gQmVyZw0KPiBTdWJqZWN0OiBSZTogQVAgKyBQMlBfR08gbXVsdGljaGFu
-IHRlc3RzIHdpdGggaW50ZWw3MjYwIGFzIGEgUDJQX0NMSUVOVCAtDQo+IGRpcmVjdCBwcm9iZSBp
-c3N1ZQ0KPiANCj4gT24gMjQgSnVuZSAyMDE1IGF0IDE0OjIwLCBQZWVyLCBJbGFuIDxpbGFuLnBl
-ZXJAaW50ZWwuY29tPiB3cm90ZToNCj4gPiBIaSBKYW51c3osDQo+ID4NCj4gPiBBbnkgY2hhbmNl
-IHlvdSBjYW4gY2hlY2sgaWYgdGhlIGF0dGFjaGVkIHBhdGNoIGZpeGVzIHRoZSBpc3N1ZSB5b3UN
-Cj4gcmVwb3J0ZWQ/DQo+ID4NCj4gPiBUaGFua3MgaW4gYWR2YW5jZSwNCj4gPg0KPiBJIGp1c3Qg
-Y2hlY2sgdGhlIG1hYzgwMjExL2NmZzgwMjExIGNvZGUsIGFuZCBJIGFtIG5vdCBzdXJlIHRoaXMg
-ZGlyZWN0IHByb2JlDQo+IGNvdWxkIHdvcmsgY29ycmVjdGx5Lg0KPiANCj4gRnVuY3Rpb24gaWVl
-ZTgwMjExX3J4X21nbXRfcHJvYmVfcmVzcCgpIGlzIGludGVyZXN0aW5nLg0KPiBTZWVtcyB3ZSBj
-YWxsDQo+IGllZWU4MDIxMV9yeF9ic3NfaW5mbygpIC0+IGllZWU4MDIxMV9ic3NfaW5mb191cGRh
-dGUgLT4NCj4gY2ZnODAyMTFfaW5mb3JtX2Jzc193aWR0aF9mcmFtZSgpIC0+IGNmZzgwMjExX2Jz
-c191cGRhdGUoKSAtPiB0aGlzIGNvdWxkDQo+IHNldCBic3MtPnByb2JlcmVzcF9pZXMgYW5kIGFm
-dGVyIHRoYXQgY2hlY2s6DQo+IA0KPiAgICAgICAgIGlmIChpZm1nZC0+YXV0aF9kYXRhICYmICFp
-Zm1nZC0+YXV0aF9kYXRhLT5ic3MtPnByb2JlcmVzcF9pZXMgJiYNCj4gICAgICAgICAgICAgZXRo
-ZXJfYWRkcl9lcXVhbChtZ210LT5ic3NpZCwgaWZtZ2QtPmF1dGhfZGF0YS0+YnNzLT5ic3NpZCkp
-IHsNCj4gICAgICAgICAgICAgICAgIC8qIGdvdCBwcm9iZSByZXNwb25zZSwgY29udGludWUgd2l0
-aCBhdXRoICovDQo+ICAgICAgICAgICAgICAgICBzZGF0YV9pbmZvKHNkYXRhLCAiZGlyZWN0IHBy
-b2JlIHJlc3BvbmRlZFxuIik7DQo+IA0KPiBTbywgaWZtZ2QtPmF1dGhfZGF0YS0+YnNzLT5wcm9i
-ZXJlc3BfaWVzIGNvdWxkIGJlIHNldCBiZWZvcmUgY2hlY2s/DQo+IA0KPiBCVFcsIER1cmluZyBt
-eSB0ZXN0cyAobm8gbWF0dGVyIHdoaWNoIGNhcmQgdXNlZCkgSSBuZXZlciBzYXcgdGhpcyBtc2c6
-DQo+IHNkYXRhX2luZm8oc2RhdGEsICJkaXJlY3QgcHJvYmUgcmVzcG9uZGVkXG4iKTsgQW5kIGFs
-d2F5cyBzYXcgMyBmYWlsZWQgZGlyZWN0DQo+IHByb2Jlcy4NCj4gDQoNCkkgdGhpbmsgdGhhdCB5
-b3UgaGF2ZSBhIHBvaW50IGhlcmUuDQoNClJlZ2FyZGxlc3MsIGV2ZW4gd2l0aG91dCB0aGlzLCB0
-aGUgYXV0aCB0aW1lciB3b3VsZCBleHBpcmUgYW5kIHdlIHNob3VsZCBiZSBhYmxlIHRvIGNvbnRp
-bnVlIHRoZSBhdXRoIGZsb3cgYXMgd2Ugc2hvdWxkIGhhdmUgdGhlIHByb2JlIG5vdy4NCg0KSWxh
-bi4NCg0K
+On 22 June 2015 at 16:01, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
+> On Mon, Jun 22, 2015 at 6:32 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> On 22 June 2015 at 13:56, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
+>>> On Mon, Jun 22, 2015 at 5:13 PM, Janusz Dziedzic
+>>> <janusz.dziedzic@tieto.com> wrote:
+>>>> In case we will get ROC abort we should not call
+>>>> ieee80211_remain_on_channel_expired().
+>>>>
+>>>> In other case I hit such warning on MIPS and
+>>>> p2p negotiation failed (tested with use_chanctx=1).
+>>>>
+>>>> ath: phy0: Starting RoC period
+>>>> ath: phy0: Channel definition created: 2412 MHz
+>>>> ath: phy0: Assigned next_chan to 2412 MHz
+>>>> ath: phy0: Offchannel duration for chan 2412 MHz : 506632
+>>>> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+>>>> ath: phy0: Stopping current chanctx: 2412
+>>>> ath: phy0: Flush timeout: 200
+>>>> ath: phy0: ath_chanctx_set_next: Set channel 2412 MHz
+>>>> ath: phy0: Set channel: 2412 MHz width: 0
+>>>> ath: phy0: Reset to 2412 MHz, HT40: 0 fastcc: 0
+>>>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_TSF_TIMER, state: ATH_CHANCTX_STATE_IDLE
+>>>> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+>>>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+>>>> ath: phy0: Cancel RoC
+>>>> ath: phy0: RoC aborted
+>>>> ath: phy0: RoC request on vif: 00:03:7f:4e:a0:cd, type: 1 duration: 500
+>>>> ath: phy0: Starting RoC period
+>>>> ath: phy0: Channel definition created: 2412 MHz
+>>>> ath: phy0: Assigned next_chan to 2412 MHz
+>>>> ath: phy0: Offchannel duration for chan 2412 MHz : 506705
+>>>> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+>>>> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+>>>> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+>>>> ------------[ cut here ]------------
+>>>> WARNING: CPU: 0 PID: 3312 at drivers/net/wireless/ath/ath9k/main.c:2319
+>>>> Modules linked in: ath9k ath9k_common ath9k_hw ath mac80211 cfg80211
+>>>>
+>>>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>>> ---
+>>>>  drivers/net/wireless/ath/ath9k/channel.c | 3 ++-
+>>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+>>>> index 2066650..e211325 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/channel.c
+>>>> +++ b/drivers/net/wireless/ath/ath9k/channel.c
+>>>> @@ -926,7 +926,8 @@ void ath_roc_complete(struct ath_softc *sc, bool abort)
+>>>>
+>>>>         sc->offchannel.roc_vif = NULL;
+>>>>         sc->offchannel.roc_chan = NULL;
+>>>> -       ieee80211_remain_on_channel_expired(sc->hw);
+>>>> +       if (!abort)
+>>>> +               ieee80211_remain_on_channel_expired(sc->hw);
+>>>>         ath_offchannel_next(sc);
+>>>>         ath9k_ps_restore(sc);
+>>>>  }
+>>> If HW aborts RoC in middle, should not we inform mac80211
+>>> that RoC is expired?
+>>
+>> Good point. The ath_roc_complete() can be called with abort=true from
+>> ath9k_cancel_pending_offchannel() as well. I guess ath_roc_complete()
+>> needs a "reason" argument (instead of "abort") with: expired, aborted,
+>> cancelled values. ieee80211_remain_on_channel_expired() should be
+>> called whenever reason != cancelled.
+> Agree, make sense.
+>> By the way - is ath_roc_complete() lock protected properly? It looks
+>> like it isn't from a quick glance. Neither sdata lock nor local->mtx
+>> can be implied in all contexts and sc->mutex isn't always held while
+>> it's called, hmm.. or am I missing something?
+>>
+>>> Also the we are clearing roc_vif independent of abort, so the warning
+>>> indicates that roc_complete has not come from FW, may be we should
+>>> understand that first?
+>>
+>> There's no FW in ath9k.
+>>
+>> The problem is the following sequence:
+>>  1. mac80211 requests roc A
+>>  2. mac80211 cancels roc A
+>>    a. ath9k calls expired() and hw_roc_done work is scheduled
+>>  3. mac80211 requests roc B
+>>  4. mac80211 starts to process the scheduled hw_roc_done
+>>  5. mac80211 thinks roc B has expired
+>>  6. mac80211 requests roc C
+>>  7. ath9k WARN_ON is hit
+>>
+>> There's a race between (3) and (4). Depending on circumstances (3) and
+>> (4) may be reordered so the current code doesn't fail all the time.
+> Ok i understand, but if we get roc_complete for B before 6, then it works
+> fine at least at ath9k level, C will be unblocked.
+>
+> Anyways, handling the cancel case should resolve it along with proper locking.
+
+Thanks for comments, will send v2
+
+BR
+Janusz
