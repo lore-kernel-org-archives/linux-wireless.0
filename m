@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:37818 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbbFZBcT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52577 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933497AbbFWTAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Jun 2015 21:32:19 -0400
-Received: by wicgi11 with SMTP id gi11so4707331wic.0
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 18:32:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAEFj986kwfLXqPm+qN6pbB+_Pe3m2-9PLNZXf6+pH_fCeQqZ8A@mail.gmail.com>
-References: <CAEFj986kwfLXqPm+qN6pbB+_Pe3m2-9PLNZXf6+pH_fCeQqZ8A@mail.gmail.com>
-Date: Fri, 26 Jun 2015 09:32:18 +0800
-Message-ID: <CAEFj984fG7oidP_u2vnH6p+VigjX_NF29JOfFWeAara8GCaiCg@mail.gmail.com> (sfid-20150626_033224_402012_F7E8D1D4)
-Subject: Re: [PATCH] mac80211: mesh - don't special case routing to transmitter
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jesse Jones <jjones@cococorp.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 23 Jun 2015 15:00:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mwifiex: avoid freeing improper pointer in mwifiex_set_wowlan_mef_entry
+Date: Tue, 23 Jun 2015 14:45:45 -0400
+Message-Id: <1435085145-9668-1-git-send-email-linville@tuxdriver.com> (sfid-20150623_210026_732080_3795332F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 25, 2015 at 9:55 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->> Updating the path to the transmitter of a path message is optional
->> according to section 13.10.8.4 of the standard. Doing so can lead to
->> better performance since we can adjust the route to the transmitter based
->> on the freshest possible information. However it can also cause routing
->> loops with more than four or five nodes.
->
-> Do you have the test scenario on how routing loops happen in this case?
->
+mwifiex_set_wowlan_mef_entry attempts to free a passed-in pointer in
+case of an error.  The only caller (mwifiex_set_mef_filter) passes that
+pointer as an offset into allocated memory, so any attempt to free that
+will not be the actual allocated pointer.
 
-Sorry, I don't see the "optional" work in section 13.10.8.4. Please
-note that this maybe useful for most of the cases.
+Address this by changing mwifiex_set_wowlan_mef_entry to not do any
+free, and to cause mwifiex_set_mef_filter to do the appropriate free if
+the call to mwifiex_set_wowlan_mef_entry fails.
 
-I would recommend to add nl80211 command for doing so. So, others
-still can enjoy freshest possible information. What do you think?
+Coverity CID #1295879
 
-----
-Chun-Yeow
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index b15e4c7acbec..3f6762dfc947 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2954,7 +2954,6 @@ static int mwifiex_set_wowlan_mef_entry(struct mwifiex_private *priv,
+ 					MWIFIEX_MEF_MAX_BYTESEQ)) {
+ 			mwifiex_dbg(priv->adapter, ERROR,
+ 				    "Pattern not supported\n");
+-			kfree(mef_entry);
+ 			return -EOPNOTSUPP;
+ 		}
+ 
+@@ -3036,9 +3035,12 @@ static int mwifiex_set_mef_filter(struct mwifiex_private *priv,
+ 
+ 	mwifiex_set_auto_arp_mef_entry(priv, &mef_entry[0]);
+ 
+-	if (wowlan->n_patterns || wowlan->magic_pkt)
++	if (wowlan->n_patterns || wowlan->magic_pkt) {
+ 		ret = mwifiex_set_wowlan_mef_entry(priv, &mef_cfg,
+ 						   &mef_entry[1], wowlan);
++		if (ret)
++			goto err;
++	}
+ 
+ 	if (!mef_cfg.criteria)
+ 		mef_cfg.criteria = MWIFIEX_CRITERIA_BROADCAST |
+@@ -3048,6 +3050,8 @@ static int mwifiex_set_mef_filter(struct mwifiex_private *priv,
+ 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_MEF_CFG,
+ 			HostCmd_ACT_GEN_SET, 0,
+ 			&mef_cfg, true);
++
++err:
+ 	kfree(mef_entry);
+ 	return ret;
+ }
+-- 
+2.1.0
+
