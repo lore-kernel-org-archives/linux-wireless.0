@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:4533 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754322AbbFOSWC (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:21285 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932500AbbFWNHc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 14:22:02 -0400
-Message-ID: <557F17BF.9060601@broadcom.com> (sfid-20150615_202206_782174_F62D3DB6)
-Date: Mon, 15 Jun 2015 20:21:51 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 23 Jun 2015 09:07:32 -0400
+Date: Tue, 23 Jun 2015 16:07:04 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: mgreer@animalcreek.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: NFC: trf7970a: Handle extra byte in response to Type 5 RMB
+ commands
+Message-ID: <20150623130703.GA27051@mwanda> (sfid-20150623_150735_660587_E3412ED2)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Pontus Fuchs <pontusf@broadcom.com>
-Subject: Re: [1/7] brcmfmac: Check if firmware supports p2p
-References: <20150615101022.23F92140C1F@smtp.codeaurora.org>
-In-Reply-To: <20150615101022.23F92140C1F@smtp.codeaurora.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/15 12:10, Kalle Valo wrote:
->
->> From: Pontus Fuchs<pontusf@broadcom.com>
->>
->> Add a feature flag to reflect the firmware's p2p capability.
->>
->> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
->> Reviewed-by: Hante Meuleman<meuleman@broadcom.com>
->> Reviewed-by: Arend Van Spriel<arend@broadcom.com>
->> Signed-off-by: Pontus Fuchs<pontusf@broadcom.com>
->> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->
-> Thanks, 7 patches applied to wireless-drivers-next.git:
->
-> 2b560d7148eb brcmfmac: Check if firmware supports p2p
-> 2e5f66fe9593 brcmfmac: Build wiphy mode and interface combinations dynamically
-> 1f0dc59a6de9 brcmfmac: rework .get_station() callback
-> 5768f31e4e75 brcmfmac: have sdio return -EIO when device communication is not possible
-> f37d69a4babc brcmfmac: free ifp for non-netdev interface in p2p module
-> 55479df8840d brcmfmac: move p2p attach/detach functions
-> f7a40873d2fa brcmfmac: assure p2pdev is unregistered upon driver unload
+Hello Mark A. Greer,
 
-Hi Kalle,
+This is a semi-automatic email about new static checker warnings.
 
-As it turns out two patches in this series introduced a new issue (I had 
-one of those days :-( ). I have fixes for them. Should I send them now 
-or can it wait until 4.2-rc1 has landed.
+The patch ab714817d7e8: "NFC: trf7970a: Handle extra byte in response 
+to Type 5 RMB commands" from Apr 24, 2015, leads to the following 
+Smatch complaint:
 
-Regards,
-Arend
+	drivers/nfc/trf7970a.c:632 trf7970a_send_upstream()
+	 error: we previously assumed 'trf->rx_skb' could be null (see line 613)
 
-> Kalle Valo
+drivers/nfc/trf7970a.c
+   612	
+   613		if (trf->rx_skb && !IS_ERR(trf->rx_skb) && !trf->aborting)
+                    ^^^^^^^^^^^
+Check for NULL.
 
+   614			print_hex_dump_debug("trf7970a rx data: ", DUMP_PREFIX_NONE,
+   615					16, 1, trf->rx_skb->data, trf->rx_skb->len,
+   616					false);
+   617	
+   618		trf->state = TRF7970A_ST_IDLE;
+   619	
+   620		if (trf->aborting) {
+   621			dev_dbg(trf->dev, "Abort process complete\n");
+   622	
+   623			if (!IS_ERR(trf->rx_skb)) {
+   624				kfree_skb(trf->rx_skb);
+   625				trf->rx_skb = ERR_PTR(-ECANCELED);
+   626			}
+   627	
+   628			trf->aborting = false;
+   629		}
+   630	
+   631		if (trf->adjust_resp_len) {
+   632			skb_trim(trf->rx_skb, trf->rx_skb->len - 1);
+                                 ^^^^^^^^^^^
+Patch introduces unchecked dereference inside skb_trim().
+
+   633			trf->adjust_resp_len = false;
+   634		}
+
+regards,
+dan carpenter
