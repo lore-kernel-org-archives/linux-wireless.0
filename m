@@ -1,63 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:34619 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752321AbbF3VzD (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:36692 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751370AbbFWASZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2015 17:55:03 -0400
-Received: by wgqq4 with SMTP id q4so20986248wgq.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2015 14:55:01 -0700 (PDT)
-Date: Tue, 30 Jun 2015 23:54:59 +0200
-From: Michel von Czettritz <michel.von.czettritz@gmail.com>
-To: gregkh@linux.com
-Cc: Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] staging: rtl8723au: function no longer discards return
- value
-Message-ID: <f1f04f73db3d925d4a790a07fc56154ba98871fc.1435700714.git.michel.von.czettritz@gmail.com> (sfid-20150630_235506_771870_23BAE255)
-References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1435700714.git.michel.von.czettritz@gmail.com>
+	Mon, 22 Jun 2015 20:18:25 -0400
+Received: by pdcu2 with SMTP id u2so22414575pdc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2015 17:18:25 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/4] staging: wilc1000: wilc_wfi_netdevice.c: remove commented codes
+Date: Tue, 23 Jun 2015 09:17:44 +0900
+Message-Id: <1435018667-12507-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150623_021836_768499_B874A088)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of FillH2CCmd in rtl8723a_set_rssi_cmd and
-rtl8723a_set_raid_cmd is never checked. Both functions always return
-_SUCCESS.
+Remove commented codes.
 
-Both functions now return the return value of FillH2CCmd.
-
-Signed-off-by: Michel von Czettritz <michel.von.czettritz@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.c | 21 ---------------------
+ 1 file changed, 21 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-index a5e6726..72924a78 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-@@ -118,9 +118,7 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
- 	__le32 param_le;
- 	param_le = cpu_to_le32(*(param));
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.c b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
+index 170ca65..478cd2b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.c
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.c
+@@ -325,7 +325,6 @@ void WILC_WFI_Rx(struct net_device *dev, struct WILC_WFI_packet *pkt)
+ 		PRINT_INFO(RX_DBG, "In monitor device name %s\n", dev->name);
+ 		priv = wiphy_priv(priv->dev->ieee80211_ptr->wiphy);
+ 		PRINT_D(RX_DBG, "VALUE PASSED IN OF HRWD %p\n", priv->hWILCWFIDrv);
+-		/* host_int_get_rssi(priv->hWILCWFIDrv, &(rssi)); */
+ 		if (INFO) {
+ 			for (i = 14; i < skb->len; i++)
+ 				PRINT_INFO(RX_DBG, "RXdata[%d] %02x\n", i, skb->data[i]);
+@@ -600,12 +599,6 @@ int WILC_WFI_Tx(struct sk_buff *skb, struct net_device *dev)
+ 	char *data, shortpkt[ETH_ZLEN];
+ 	struct WILC_WFI_priv *priv = netdev_priv(dev);
  
--	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&param_le);
+-	/* priv = wiphy_priv(priv->dev->ieee80211_ptr->wiphy); */
 -
--	return _SUCCESS;
-+	return FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&param_le);
- }
- 
- int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
-@@ -133,9 +131,7 @@ int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
- 	memcpy(buf, &mask_le, 4);
- 	buf[4]  = arg;
- 
--	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
+-	/*  if(priv->monitor_flag) */
+-	/*	 mac80211_hwsim_monitor_rx(skb); */
 -
--	return _SUCCESS;
-+	return FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
- }
+-
+ 	data = skb->data;
+ 	len = skb->len;
  
- /* bitmap[0:27] = tx_rate_bitmap */
+@@ -836,12 +829,6 @@ void WILC_WFI_Cleanup(void)
+ 	int i;
+ 	struct WILC_WFI_priv *priv[2];
+ 
+-	/*if(hwsim_mon!=NULL)
+-	 * {
+-	 *      PRINT_D(RX_DBG, "Freeing monitor interface\n");
+-	 *      unregister_netdev(hwsim_mon);
+-	 *      free_netdev(hwsim_mon);
+-	 * }*/
+ 	for (i = 0; i < 2; i++) {
+ 		priv[i] = netdev_priv(WILC_WFI_devs[i]);
+ 
+@@ -897,7 +884,6 @@ int WILC_WFI_InitModule(void)
+ 						WILC_WFI_Init);
+ 		if (WILC_WFI_devs[i] == NULL)
+ 			goto out;
+-		/* priv[i] = netdev_priv(WILC_WFI_devs[i]); */
+ 
+ 		wdev = WILC_WFI_WiphyRegister(WILC_WFI_devs[i]);
+ 		WILC_WFI_devs[i]->ieee80211_ptr = wdev;
+@@ -921,9 +907,6 @@ int WILC_WFI_InitModule(void)
+ 	priv[1] = netdev_priv(WILC_WFI_devs[1]);
+ 
+ 	if (priv[1]->dev->ieee80211_ptr->wiphy->interface_modes && BIT(NL80211_IFTYPE_MONITOR))	{
+-		/* snprintf(buf, IFNAMSIZ, "mon.%s",  priv[1]->dev->name); */
+-		/*	WILC_WFI_init_mon_interface(); */
+-		/*	priv[1]->monitor_flag = 1; */
+ 
+ 	}
+ 	priv[0]->bCfgScanning = false;
+@@ -931,10 +914,6 @@ int WILC_WFI_InitModule(void)
+ 
+ 	WILC_memset(priv[0]->au8AssociatedBss, 0xFF, ETH_ALEN);
+ 
+-
+-	/* ret = host_int_init(&priv[0]->hWILCWFIDrv); */
+-	/*copy handle to the other driver*/
+-	/* priv[1]->hWILCWFIDrv = priv[0]->hWILCWFIDrv; */
+ 	if (ret)
+ 		PRINT_ER("Error Init Driver\n");
+ 
 -- 
-2.4.5
+1.9.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
