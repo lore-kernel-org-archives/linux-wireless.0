@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-outd.mail.t-online.hu ([195.228.240.69]:58575 "EHLO
-	mail-outd.mail.t-online.hu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759199AbbFCMwS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 08:52:18 -0400
-From: Robert Hodaszi <robert.hodaszi@digi.com>
-To: davem@davemloft.net
-Cc: johannes.berg@intel.com, royujjal@gmail.com,
-	linux-wireless@vger.kernel.org,
-	Robert Hodaszi <robert.hodaszi@digi.com>
-Subject: [PATCH] cfg80211: modify lower retry limit to 0
-Date: Wed,  3 Jun 2015 14:46:00 +0200
-Message-Id: <1433335560-17985-1-git-send-email-robert.hodaszi@digi.com> (sfid-20150603_145244_934464_B91AF765)
+Received: from mga01.intel.com ([192.55.52.88]:40491 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754528AbbFWL4A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2015 07:56:00 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
+ direct probe issue
+Date: Tue, 23 Jun 2015 11:55:56 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com> (sfid-20150623_135605_009399_C4AB45BA)
+References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+ <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
+ <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
+In-Reply-To: <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Robert Hodaszi <robert.hodaszi@digi.com>
-
-To disable the transmit retries on RT28xx driver, the retry limit should
-be set to 0. The current lower limit (1) prevents it.
-
-Signed-off-by: Robert Hodaszi <robert.hodaszi@digi.com>
----
- net/wireless/wext-compat.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index fff1bef..6e38320 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -370,7 +370,7 @@ static int cfg80211_wext_siwretry(struct net_device *dev,
- 	u8 oshort = wdev->wiphy->retry_short;
- 	int err;
- 
--	if (retry->disabled || retry->value < 1 || retry->value > 255 ||
-+	if (retry->disabled || retry->value < 0 || retry->value > 255 ||
- 	    (retry->flags & IW_RETRY_TYPE) != IW_RETRY_LIMIT)
- 		return -EINVAL;
- 
+PiA+Pg0KPiA+PiBJIHN1c3BlY3QgdGhpcyBpcyBiZWNhdXNlIG9mIFAyUF9HTyBOb0E/DQo+ID4+
+IFdobyBzaG91bGQgY2FyZSBhYm91dCB0aGlzIGRpcmVjdCBwcm9iZXMgdHggd2hlbiBHTyBpcyBu
+b3QgcHJlc2VudD8NCj4gPj4NCj4gPj4gSW4gY2FzZSB3ZSBkaWRuJ3Qgc2VuZCBkaXJlY3QgcHJv
+YmVzIC0gdGhlcmUgaXMgbm8gcHJvYmxlbSBhbmQgVEMNCj4gPj4gd29ya3MgY29ycmVjdGx5DQo+
+ID4+DQo+ID4NCj4gPiBJbnRlcmVzdGluZyA6KQ0KPiA+DQo+ID4gQW55IGNoYW5jZSB5b3UgY2Fu
+IHByb3ZpZGUgdHJhY2UtY21kIGFuZCBzbmlmZmVyIGNhcHR1cmU/DQo+ID4NCj4gPiBOb3JtYWxs
+eSwgaWYgd2UgcHJvdmlkZWQgdGhlIEZXIHdpdGggdGhlIEJTU0lEIGluZm9ybWF0aW9uIGFuZCBU
+U0YNCj4gPiBpbmZvcm1hdGlvbiBmb3Igc3luY2luZywgb25jZSB0aGUgRlcgaGVhcnMgdGhlIDFz
+dCBiZWFjb24gd2l0aCB0aGUgTm9BDQo+ID4gaXQgc2hvdWxkIHN5bmMgb24gaXQgYW5kIG5vdCB0
+cnkgdG8gYXR0ZW1wdCB0byB0cmFuc21pdCBhbnkgZnJhbWVzIGFzDQo+ID4gbG9uZyBhcyB0aGUg
+QVAgaXMgYWJzZW50LiBJdCBtaWdodCBhbHNvIGJlIHJlbGF0ZWQgdG8gdGhlIGZhY3QgdGhhdA0K
+PiA+IHRoZSBwcm9iZSByZXF1ZXN0cyBhcmUgc2VudCB0byBicm9hZGNhc3QgYWRkcmVzcywgYnV0
+IEkgbmVlZCB0bw0KPiA+IGZ1cnRoZXIgY2hlY2tzIHRoaXMuIEFueXdheSwgaGF2aW5nIHNvbWUg
+ZGF0YSB3b3VsZCBoZWxwIDspDQo+ID4NCj4gVGhhdHMgZXhhY3RseSB0aGUgcG9pbnQsIGlmIEdP
+IGlzIGluIE5vQSBGVyB3aWxsIG5vdCB0cmFuc21pdCBidXQgbWFjODAyMTENCj4gdGltZWQtb3V0
+IGZvciBkaXJlY3QgcHJvYmUuDQo+IA0KPiBTbyB0aGUgcXVlc3Rpb24gaXMgc2hvdWxkIG1hYzgw
+MjExIGV2ZW4gc2VuZCB0aGUgZGlyZWN0IHByb2JlIGluIHRoaXMgY2FzZQ0KPiB3aGVuIEdPIGlz
+IGluIE5vQT8NCg0KSSB0aGluayB0aGF0IHRoaXMgc2hvdWxkIGJlIHRoZSBkcml2ZXIncy9GVyBy
+ZXNwb25zaWJpbGl0eSwgYXMgYXQgdGhpcyBzdGFnZSBtYWM4MDIxMSBhbHJlYWR5IGNvbmZpZ3Vy
+ZWQgYWxsIHRoZSBpbmZvcm1hdGlvbiBuZWVkZWQgZm9yIHRoZSBkcml2ZXIgdG8gc3luYyAoYXNz
+dW1pbmcgaXQgaGVhcmQgYSBiZWFjb24vcHJvYmUpIGFuZCBpbiBhZGRpdGlvbiBtZ2RfcHJlcGFy
+ZV90eCgpIGlzIGNhbGxlZCB0byBoYXZlIHRoZSBkcml2ZXIvRlcgcHJlcGFyZSBmb3IgYSB0cmFu
+c21pc3Npb24gb2YgdGhlIG1nbXQuIGZyYW1lLCBpbmNsdWRpbmcgc3luY2hyb25pemF0aW9uIHdp
+dGggdGhlIFAyUCBHTyBwb3dlciBzdGF0ZS4NCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
