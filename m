@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:54061 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753838AbbFWMay (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 08:30:54 -0400
-Date: Tue, 23 Jun 2015 14:30:44 +0200
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
-	<u.kleine-koenig@pengutronix.de>
-To: Oleg Zhurakivskyy <oleg.zhurakivskyy@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Charles Gorand <charles.gorand@effinnov.com>
-Cc: linux-nfc@ml01.01.org, linux-wireless@vger.kernel.org,
-	kernel@pengutronix.de
-Subject: Re: [PATCH] NFC: nxp-nci_i2c: use flags argument of
- devm_gpiod_get_index
-Message-ID: <20150623123044.GH13739@pengutronix.de> (sfid-20150623_143057_647839_0F8ECF68)
-References: <1434532252-29485-1-git-send-email-u.kleine-koenig@pengutronix.de>
+Received: from mga09.intel.com ([134.134.136.24]:10465 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754910AbbFWSAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2015 14:00:30 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>
+Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
+ direct probe issue
+Date: Tue, 23 Jun 2015 18:00:20 +0000
+Message-ID: <1435082418.2777.11.camel@ipeer-box> (sfid-20150623_200110_022633_0C88CA13)
+References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
+In-Reply-To: <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1434532252-29485-1-git-send-email-u.kleine-koenig@pengutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-On Wed, Jun 17, 2015 at 11:10:52AM +0200, Uwe Kleine-König wrote:
-> Since 39b2bbe3d715 (gpio: add flags argument to gpiod_get*() functions)
-> which appeared in v3.17-rc1, the gpiod_get* functions take an additional
-> parameter that allows to specify direction and initial value for output.
-> 
-> Simplify driver accordingly which even make error checking more correct
-I did s/make/makes/ in my tree.
-
-> because gpiod_direction_{in,out}put might fail. Furthermore this is one
-> caller less that stops us making the flags argument to gpiod_get*()
-> mandatory.
-> 
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
-> ---
-> Hello,
-> 
-> I intend to make the flags parameter to gpiod_get* mandatory once
-> 4.2-rc1 arrives. So unless this patch makes it in, I'd like to get an
-> Ack to take it via the gpio tree together with the change to gpiod_get.
-> 
-> Note this patch depends on 
-> 551e306905ef (NFC: nxp-nci_i2c: Add support for enumerating through ACPI)
-> which only appeared in today's next.
-This still applies. So an ack would be very welcome.
-
-Best regards
-Uwe
-
--- 
-Pengutronix e.K.                           | Uwe Kleine-König            |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEtyaXNobmEgQ2hhaXRhbnlhIDxjaGFp
+dGFueWEubWdpdEBnbWFpbC5jb208bWFpbHRvOktyaXNobmElMjBDaGFpdGFueWElMjAlM2NjaGFp
+dGFueWEubWdpdEBnbWFpbC5jb20lM2U+Pg0KVG86ICJQZWVyLCBJbGFuIiA8aWxhbi5wZWVyQGlu
+dGVsLmNvbTxtYWlsdG86JTIyUGVlciwlMjBJbGFuJTIyJTIwJTNjaWxhbi5wZWVyQGludGVsLmNv
+bSUzZT4+DQpDYzogSmFudXN6IER6aWVkemljIDxqYW51c3ouZHppZWR6aWNAdGlldG8uY29tPG1h
+aWx0bzpKYW51c3olMjBEemllZHppYyUyMCUzY2phbnVzei5kemllZHppY0B0aWV0by5jb20lM2U+
+PiwgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnIDxsaW51eC13aXJlbGVzc0B2Z2VyLmtl
+cm5lbC5vcmc8bWFpbHRvOiUyMmxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyUyMiUyMCUz
+Y2xpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyUzZT4+DQpTdWJqZWN0OiBSZTogQVAgKyBQ
+MlBfR08gbXVsdGljaGFuIHRlc3RzIHdpdGggaW50ZWw3MjYwIGFzIGEgUDJQX0NMSUVOVCAtIGRp
+cmVjdCBwcm9iZSBpc3N1ZQ0KRGF0ZTogVHVlLCAyMyBKdW4gMjAxNSAxNzozNDo1OSArMDUzMA0K
+DQoNCg0KT24gVHVlLCBKdW4gMjMsIDIwMTUgYXQgNToyNSBQTSwgUGVlciwgSWxhbiA8aWxhbi5w
+ZWVyQGludGVsLmNvbTxtYWlsdG86aWxhbi5wZWVyQGludGVsLmNvbT4+IHdyb3RlOg0KPj4gPj4N
+Cj4+ID4+IEkgc3VzcGVjdCB0aGlzIGlzIGJlY2F1c2Ugb2YgUDJQX0dPIE5vQT8NCj4+ID4+IFdo
+byBzaG91bGQgY2FyZSBhYm91dCB0aGlzIGRpcmVjdCBwcm9iZXMgdHggd2hlbiBHTyBpcyBub3Qg
+cHJlc2VudD8NCj4+ID4+DQo+PiA+PiBJbiBjYXNlIHdlIGRpZG4ndCBzZW5kIGRpcmVjdCBwcm9i
+ZXMgLSB0aGVyZSBpcyBubyBwcm9ibGVtIGFuZCBUQw0KPj4gPj4gd29ya3MgY29ycmVjdGx5DQo+
+PiA+Pg0KPj4gPg0KPj4gPiBJbnRlcmVzdGluZyA6KQ0KPj4gPg0KPj4gPiBBbnkgY2hhbmNlIHlv
+dSBjYW4gcHJvdmlkZSB0cmFjZS1jbWQgYW5kIHNuaWZmZXIgY2FwdHVyZT8NCj4+ID4NCj4+ID4g
+Tm9ybWFsbHksIGlmIHdlIHByb3ZpZGVkIHRoZSBGVyB3aXRoIHRoZSBCU1NJRCBpbmZvcm1hdGlv
+biBhbmQgVFNGDQo+PiA+IGluZm9ybWF0aW9uIGZvciBzeW5jaW5nLCBvbmNlIHRoZSBGVyBoZWFy
+cyB0aGUgMXN0IGJlYWNvbiB3aXRoIHRoZSBOb0ENCj4+ID4gaXQgc2hvdWxkIHN5bmMgb24gaXQg
+YW5kIG5vdCB0cnkgdG8gYXR0ZW1wdCB0byB0cmFuc21pdCBhbnkgZnJhbWVzIGFzDQo+PiA+IGxv
+bmcgYXMgdGhlIEFQIGlzIGFic2VudC4gSXQgbWlnaHQgYWxzbyBiZSByZWxhdGVkIHRvIHRoZSBm
+YWN0IHRoYXQNCj4+ID4gdGhlIHByb2JlIHJlcXVlc3RzIGFyZSBzZW50IHRvIGJyb2FkY2FzdCBh
+ZGRyZXNzLCBidXQgSSBuZWVkIHRvDQo+PiA+IGZ1cnRoZXIgY2hlY2tzIHRoaXMuIEFueXdheSwg
+aGF2aW5nIHNvbWUgZGF0YSB3b3VsZCBoZWxwIDspDQo+PiA+DQo+PiBUaGF0cyBleGFjdGx5IHRo
+ZSBwb2ludCwgaWYgR08gaXMgaW4gTm9BIEZXIHdpbGwgbm90IHRyYW5zbWl0IGJ1dCBtYWM4MDIx
+MQ0KPj4gdGltZWQtb3V0IGZvciBkaXJlY3QgcHJvYmUuDQo+Pg0KPj4gU28gdGhlIHF1ZXN0aW9u
+IGlzIHNob3VsZCBtYWM4MDIxMSBldmVuIHNlbmQgdGhlIGRpcmVjdCBwcm9iZSBpbiB0aGlzIGNh
+c2UNCj4+IHdoZW4gR08gaXMgaW4gTm9BPw0KPg0KPiBJIHRoaW5rIHRoYXQgdGhpcyBzaG91bGQg
+YmUgdGhlIGRyaXZlcidzL0ZXIHJlc3BvbnNpYmlsaXR5LCBhcyBhdCB0aGlzIHN0YWdlIG1hYzgw
+MjExIGFscmVhZHkgY29uZmlndXJlZCBhbGwgdGhlIGluZm9ybWF0aW9uIG5lZWRlZCBmb3IgdGhl
+IGRyaXZlciB0byBzeW5jIChhc3N1bWluZyBpdCBoZWFyZCBhIGJlYWNvbi9wcm9iZSkgYW5kIGlu
+IGFkZGl0aW9uIG1nZF9wcmVwYXJlX3R4KCkgaXMgY2FsbGVkIHRvIGhhdmUgdGhlIGRyaXZlci9G
+VyBwcmVwYXJlIGZvciBhIHRyYW5zbWlzc2lvbiBvZiB0aGUgbWdtdC4gZnJhbWUsIGluY2x1ZGlu
+ZyBzeW5jaHJvbml6YXRpb24gd2l0aCB0aGUgUDJQIEdPIHBvd2VyIHN0YXRlLg0KQWdyZWUsIHRo
+ZSBhY3R1YWwgdHJhbnNtaXNzaW9uIHNob3VsZCBkZWZpbml0ZWx5IGJlIGluIGRyaXZlci9GVw0K
+YnV0IHRoZSB0aW1lb3V0IGZvciBzdWNoIGZyYW1lcyBhcmUgc3RpbGwgYXQgbWFjODAyMTEsIHNv
+IHVubGVzcyBzdQ0KaXQgc3luY2hyb25pemVzIHRoZSB0aW1lb3V0cyB0byBHTyBOb0EgcGVyaW9k
+IHRoaXMgImNhbiIgZmFpbA0KZGVwZW5kaW5nIG9uIHRoZSBhYnNlbmNlIHBlcmlvZCBvZiBHTy4g
+RGVmYXVsdCBhdXRoX3RpbWVvdXQgaXMgMjAwbXMuDQoNCg0KSSBkbyBub3QgdGhpbmsgdGhhdCBt
+YWM4MDIxMSBzaG91bGQgaGFuZGxlIHRoZSBzeW5jaHJvbml6YXRpb24sIG1vc3RseSBzaW5jZSBp
+dCBkb2VzIG5vdCAgZ2V0IHRoZSBiZWFjb25zIGZyb20gdGhlIEFQIHdlIGFyZSBhc3NvY2lhdGVk
+IHdpdGguICBBcyBJIGV4cGxhaW5lZCBhYm92ZSwgdGhpcyBzaG91bGQgYmUgdGhlIGRyaXZlcnMv
+RlcgcmVzcG9uc2liaWxpdHkgb25jZSB0aGV5IGhhdmUgYWxsIHRoZSBpbmZvcm1hdGlvbiB0aGV5
+IHJlcXVpcmUuIEFzIHN1Y2gsIEkgdGhpbmsgdGhhdCBpcyBleHBlY3RlZCBmcm9tIHRoZSBkcml2
+ZXIvRlcgdG8gb25seSBzZW5kIHRoZSBmcmFtZXMgd2hlbiB0aGUgUDJQIEdPL0FQIGlzIG9uIHRo
+ZSBjaGFubmVsLg0KDQpSZWdhcmRzLA0KDQpJbGFuLg0KDQoNCg0K
