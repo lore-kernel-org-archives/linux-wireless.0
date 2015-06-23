@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57187 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751376AbbF2H4f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 03:56:35 -0400
-Message-ID: <1435564593.2156.5.camel@sipsolutions.net> (sfid-20150629_095638_779931_13C274A8)
-Subject: Re: [PATCH] mac80211: remove compilation warning on mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 29 Jun 2015 09:56:33 +0200
-In-Reply-To: <CAEFj987fG9NrxWUfqtf3UVD8uWzAB-TeYAJvTDDoyH0JxUHKhA@mail.gmail.com> (sfid-20150629_094111_166190_7B4A97CF)
-References: <1435549847-18680-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1435562850.2156.4.camel@sipsolutions.net>
-	 <CAEFj987fG9NrxWUfqtf3UVD8uWzAB-TeYAJvTDDoyH0JxUHKhA@mail.gmail.com>
-	 (sfid-20150629_094111_166190_7B4A97CF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37862 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932344AbbFWOxa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2015 10:53:30 -0400
+From: Antonio Borneo <borneo.antonio@gmail.com>
+To: Solomon Peachy <pizza@shaftnet.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Antonio Borneo <borneo.antonio@gmail.com>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 5/6] wireless: cw1200: Remove redundant spi driver bus initialization
+Date: Tue, 23 Jun 2015 22:53:05 +0800
+Message-Id: <1435071185-24586-1-git-send-email-borneo.antonio@gmail.com> (sfid-20150623_165417_611957_B6136EC2)
+In-Reply-To: <1435070714-24174-1-git-send-email-borneo.antonio@gmail.com>
+References: <1435070714-24174-1-git-send-email-borneo.antonio@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-06-29 at 15:41 +0800, Yeoh Chun-Yeow wrote:
-> On Mon, Jun 29, 2015 at 3:27 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Mon, 2015-06-29 at 11:50 +0800, Chun-Yeow Yeoh wrote:
-> > > Remove the warning on the following:
-> > > mesh_hwmp.c: warning: ‘target_metric’ may be used
-> > > uninitialized in this function [-Wmaybe-uninitialized]
-> > > 
-> > I don't see any such warning, and would prefer not to have a 
-> > blanket
-> > initialization that might in the future suppress a valid warning.
-> > 
-> 
-> Ok, noted.
-> 
-> FYI, I have compiled backports-20150626 and observed this warning
-> 
+In ancient times it was necessary to manually initialize the bus
+field of an spi_driver to spi_bus_type. These days this is done in
+spi_register_driver(), so we can drop the manual assignment.
 
-It probably depends on the compiler version?
+Signed-off-by: Antonio Borneo <borneo.antonio@gmail.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/net/wireless/cw1200/cw1200_spi.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
+index 7603546..29185ae 100644
+--- a/drivers/net/wireless/cw1200/cw1200_spi.c
++++ b/drivers/net/wireless/cw1200/cw1200_spi.c
+@@ -467,7 +467,6 @@ static struct spi_driver spi_driver = {
+ 	.remove		= cw1200_spi_disconnect,
+ 	.driver = {
+ 		.name		= "cw1200_wlan_spi",
+-		.bus            = &spi_bus_type,
+ 		.owner          = THIS_MODULE,
+ #ifdef CONFIG_PM
+ 		.pm		= &cw1200_pm_ops,
+-- 
+2.4.4
+
