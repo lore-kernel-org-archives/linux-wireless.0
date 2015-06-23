@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:33340 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754266AbbFJNmq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 09:42:46 -0400
-Received: by wiwd19 with SMTP id d19so48941824wiw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jun 2015 06:42:45 -0700 (PDT)
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [PATCH V3] mac80211: wowlan: suspend: Fix power save state stuck in ACTIVE caused by race between suspend and Tx packet.
-Date: Wed, 10 Jun 2015 19:12:31 +0530
-Message-Id: <1433943751-11221-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20150610_154547_668010_C396A7A8)
+Received: from mga03.intel.com ([134.134.136.65]:4317 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754348AbbFWLLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2015 07:11:10 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
+ direct probe issue
+Date: Tue, 23 Jun 2015 11:11:05 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com> (sfid-20150623_131114_278190_562E5509)
+References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+In-Reply-To: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
-
-Background: When wowlan is enabled, the chipset stays in low
-power state maintaining the connection as per the
-mac80211 power save state.
-
-If suspended during TX in progress, there can be 
-race where the driver is put of of power-save due
-to TX and during suspend dynamic_ps_time is cancelled
-and TX packet is flushed, leaving the driver in ACTIVE
-even after resuming until dynamic_ps_time puts 
-driver back in DOZE. (Which only happens if there
-is another TX).
-
-This can lead to high power consumption of chipset 
-during (or) after resuming.
-
-Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
----
-V2: Updated Comment and Commit log.
----
- net/mac80211/pm.c |   16 +++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index ac6ad62..8149a3d 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -76,6 +76,22 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 				continue;
- 			ieee80211_mgd_quiesce(sdata);
-+			/* If suspended during TX in progress, and wowlan
-+			 * is enabled (connection will be active) there
-+			 * can be a race where the driver is put out
-+			 * of power-save due to TX and during suspend
-+			 * dynamic_ps_timer is cancelled and TX packet
-+			 * is flushed, leaving the driver in ACTIVE even
-+			 * after resuming until dynamic_ps_timer puts
-+			 * driver back in DOZE.
-+			 */
-+			if (sdata->u.mgd.associated &&
-+			    sdata->u.mgd.powersave &&
-+			     !(local->hw.conf.flags & IEEE80211_CONF_PS)) {
-+				local->hw.conf.flags |= IEEE80211_CONF_PS;
-+				ieee80211_hw_config(local,
-+						    IEEE80211_CONF_CHANGE_PS);
-+			}
- 		}
- 
- 		err = drv_suspend(local, wowlan);
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZn
+ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEphbnVzeiBEemllZHppYw0KPiBTZW50OiBUdWVz
+ZGF5LCBKdW5lIDIzLCAyMDE1IDExOjUxDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
+bC5vcmcNCj4gQ2M6IFBlZXIsIElsYW4NCj4gU3ViamVjdDogQVAgKyBQMlBfR08gbXVsdGljaGFu
+IHRlc3RzIHdpdGggaW50ZWw3MjYwIGFzIGEgUDJQX0NMSUVOVCAtIGRpcmVjdA0KPiBwcm9iZSBp
+c3N1ZQ0KPiANCj4gSGVsbG8sDQo+IA0KPiBUaGlzIGlzIG15IHNldHVwOg0KPiB0MS1hdGg5azoN
+Cj4gLSBBUCAoMjQxMikNCj4gLSBQMlBfR08gLSBnb19pbnRlbnQ9MTUgKDI0NjIpDQo+IA0KPiBy
+ZWYgUDJQIC0gaW50ZWwgNzI2MA0KPiByZWYgU1RBIC0gdDItYXRoOWsNCj4gDQo+IFNjZW5hcmlv
+Og0KPiAxLiBzZXR1cCBBUCB0MS1hdGg5aw0KPiAyLiBjb25uZWN0IFNUQSAodDItYXRoOWspIHRv
+IEFQDQo+IDMuIHJ1biBwaW5nIFNUQS0+QVANCj4gNC4gdDEtYXRoOWsgLSBwMnBfY29ubmVjdCA8
+aW50ZWw3MjYwPiBnb19pbnRlbnQ9MTUgNS4gaW50ZWw3MjYwIC0NCj4gcDJwX2Nvbm5lY3QgPHQx
+LWF0aDlrPiA2LiBnb19uZWdvdGlhdGlvbiBzdWNjZXNzIDcuIGNvbm5lY3QgZmFpbGVkIC4uLg0K
+PiA4LiAuLi4NCj4gDQo+IFNvbWV0aW1lcyBJIHNlZSBzdWNoIGZhaWwgb24gaW50ZWw3MjYwOg0K
+PiANCj4gWzUzMzUxOS4wMDk5NzhdIHAycC13bGFuMy0wOiBhdXRoZW50aWNhdGUgd2l0aCAwMjow
+Mzo3Zjo0ZTphMDpjZA0KPiBbNTMzNTE5LjAwOTk5OV0gcDJwLXdsYW4zLTA6IEFsbG9jYXRlZCBT
+VEEgMDI6MDM6N2Y6NGU6YTA6Y2QNCj4gWzUzMzUxOS4wMTM2NjddIHAycC13bGFuMy0wOiBJbnNl
+cnRlZCBTVEEgMDI6MDM6N2Y6NGU6YTA6Y2QNCj4gWzUzMzUxOS4wMTQxMjhdIHAycC13bGFuMy0w
+OiBkaXJlY3QgcHJvYmUgdG8gMDI6MDM6N2Y6NGU6YTA6Y2QgKHRyeSAxLzMpDQo+IFs1MzM1MTku
+MjE3MjcwXSBwMnAtd2xhbjMtMDogZGlyZWN0IHByb2JlIHRvIDAyOjAzOjdmOjRlOmEwOmNkICh0
+cnkgMi8zKQ0KPiBbNTMzNTE5LjQyMTM0OV0gcDJwLXdsYW4zLTA6IGRpcmVjdCBwcm9iZSB0byAw
+MjowMzo3Zjo0ZTphMDpjZCAodHJ5IDMvMykNCj4gWzUzMzUxOS42MjQzMjldIHAycC13bGFuMy0w
+OiBhdXRoZW50aWNhdGlvbiB3aXRoIDAyOjAzOjdmOjRlOmEwOmNkIHRpbWVkDQo+IG91dCBbNTMz
+NTE5LjYzMzA4NF0gcDJwLXdsYW4zLTA6IFJlbW92ZWQgU1RBIDAyOjAzOjdmOjRlOmEwOmNkDQo+
+IFs1MzM1MTkuNjMzMzI1XSBwMnAtd2xhbjMtMDogRGVzdHJveWVkIFNUQSAwMjowMzo3Zjo0ZTph
+MDpjZA0KPiANCj4gSSBzdXNwZWN0IHRoaXMgaXMgYmVjYXVzZSBvZiBQMlBfR08gTm9BPw0KPiBX
+aG8gc2hvdWxkIGNhcmUgYWJvdXQgdGhpcyBkaXJlY3QgcHJvYmVzIHR4IHdoZW4gR08gaXMgbm90
+IHByZXNlbnQ/DQo+IA0KPiBJbiBjYXNlIHdlIGRpZG4ndCBzZW5kIGRpcmVjdCBwcm9iZXMgLSB0
+aGVyZSBpcyBubyBwcm9ibGVtIGFuZCBUQyB3b3Jrcw0KPiBjb3JyZWN0bHkNCj4gDQoNCkludGVy
+ZXN0aW5nIDopDQoNCkFueSBjaGFuY2UgeW91IGNhbiBwcm92aWRlIHRyYWNlLWNtZCBhbmQgc25p
+ZmZlciBjYXB0dXJlPw0KDQpOb3JtYWxseSwgaWYgd2UgcHJvdmlkZWQgdGhlIEZXIHdpdGggdGhl
+IEJTU0lEIGluZm9ybWF0aW9uIGFuZCBUU0YgaW5mb3JtYXRpb24gZm9yIHN5bmNpbmcsIG9uY2Ug
+dGhlIEZXIGhlYXJzIHRoZSAxc3QgYmVhY29uIHdpdGggdGhlIE5vQSBpdCBzaG91bGQgc3luYyBv
+biBpdCBhbmQgbm90IHRyeSB0byBhdHRlbXB0IHRvIHRyYW5zbWl0IGFueSBmcmFtZXMgYXMgbG9u
+ZyBhcyB0aGUgQVAgaXMgYWJzZW50LiBJdCBtaWdodCBhbHNvIGJlIHJlbGF0ZWQgdG8gdGhlIGZh
+Y3QgdGhhdCB0aGUgcHJvYmUgcmVxdWVzdHMgYXJlIHNlbnQgdG8gYnJvYWRjYXN0IGFkZHJlc3Ms
+IGJ1dCBJIG5lZWQgdG8gZnVydGhlciBjaGVja3MgdGhpcy4gQW55d2F5LCBoYXZpbmcgc29tZSBk
+YXRhIHdvdWxkIGhlbHAgOykNCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
