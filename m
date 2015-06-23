@@ -1,60 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42769 "EHLO comal.ext.ti.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54677 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920AbbFGHac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2015 03:30:32 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Yegor Yefremov <yegorslists@googlemail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Eliad Peller" <eliad@wizery.com>,
-	Marc Kleine-Budde <mkl@pengutronix.de>
-Subject: RE: wl18xx: wlconf kernel compatibility
-Date: Sun, 7 Jun 2015 07:30:18 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101266353E4@DFRE01.ent.ti.com> (sfid-20150607_093038_274901_B4F3E453)
-References: <CAGm1_kt1FfO=juFvwRP6CQU7_YTf2WQcQEgHfNAVkW=PSKMAzQ@mail.gmail.com>
- <87bngtnf00.fsf@kamboji.qca.qualcomm.com>
- <CAGm1_ku=YSQw5W11=NJA79pgPN8ptfE4iv8CCuXR1DTz=9JLAQ@mail.gmail.com>
-In-Reply-To: <CAGm1_ku=YSQw5W11=NJA79pgPN8ptfE4iv8CCuXR1DTz=9JLAQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1753479AbbFWP7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Jun 2015 11:59:05 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] cfg80211: allow mgmt_frame_register callback to sleep
+Date: Tue, 23 Jun 2015 17:59:01 +0200
+Message-Id: <1435075141-18303-1-git-send-email-johannes@sipsolutions.net> (sfid-20150623_175909_279390_4E41F177)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQpBcyB0aGUgY29uZmlndXJhdGlvbiBmaWxlIGlzIEhXIGRlcGVuZGVkIGl0IHNob3VsZCBi
-ZSBjcmVhdGVkIHBlciBwbGF0Zm9ybSwNCndlIGhhdmUgc2V0IHRoaXMgd2lraSBwYWdlIGFuZCBz
-Y3JpcHQgdG8gaGVscCB3aXRoIGluaXRpYWwgc2V0dXAgOg0KaHR0cDovL3Byb2Nlc3NvcnMud2lr
-aS50aS5jb20vaW5kZXgucGhwL09wZW5fU291cmNlX1dpcmVsZXNzX0Nvbm5lY3Rpdml0eV93bGNv
-bmYNCg0KV2UgaGF2ZSBhbHNvIHB1c2hlZCBhIHBhdGNoIHRoYXQgbWFrZXMgc3VyZSB0aGUgZHJp
-dmVyIHdpbGwgbm90IGNyYXNoIGlmIHRoZXJlIGlzIGEgZmlsZSBzaXplIG1pc21hdGNoLCANCmFu
-ZCB3aWxsIGZhbGwgYmFjayB0byBkZWZhdWx0Lg0KDQpSZWdhcmRzLA0KWWFuaXYNCg0KPiAtLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBZZWdvciBZZWZyZW1vdiBbbWFpbHRvOnll
-Z29yc2xpc3RzQGdvb2dsZW1haWwuY29tXQ0KPiBTZW50OiBTYXR1cmRheSwgSnVuZSAwNiwgMjAx
-NSA2OjE5IFBNDQo+IFRvOiBLYWxsZSBWYWxvDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
-cm5lbC5vcmc7IE1hY2hhbmksIFlhbml2OyBFbGlhZCBQZWxsZXI7IE1hcmMgS2xlaW5lLQ0KPiBC
-dWRkZQ0KPiBTdWJqZWN0OiBSZTogd2wxOHh4OiB3bGNvbmYga2VybmVsIGNvbXBhdGliaWxpdHkN
-Cj4gDQo+IEhpIEthbGxlLA0KPiANCj4gT24gU2F0LCBKdW4gNiwgMjAxNSBhdCAzOjI3IFBNLCBL
-YWxsZSBWYWxvIDxrdmFsb0Bjb2RlYXVyb3JhLm9yZz4gd3JvdGU6DQo+ID4gWWVnb3IgWWVmcmVt
-b3YgPHllZ29yc2xpc3RzQGdvb2dsZW1haWwuY29tPiB3cml0ZXM6DQo+ID4NCj4gPj4gSG93IGRv
-IEkga25vdywgd2hpY2ggd2xjb25mIHZlcnNpb24gaXMgY29tcGF0aWJsZSB3aXRoIHdoaWNoIGtl
-cm5lbA0KPiA+PiB2ZXJzaW9uPyBJIGhhdmUgZm9sbG93aW5nIHByb2JsZW06DQo+ID4+DQo+ID4+
-IEkgaGF2ZSAqLklOSSBmaWxlIGZvciBteSBwYXJ0aWN1bGFyIFdMQU4gY2hpcC4gVGhpcyBmaWxl
-IHdpbGwgYmUgdXNlZA0KPiA+PiB0byBwcm9kdWNlIHdsMTh4eC1jb25mLmJpbi4gVGhlIHNpemUg
-b2YgdGhpcyBmaWxlIHdpbGwgYmUgY2hlY2sNCj4gPj4gZHVyaW5nIGRldmljZSBpbml0aWFsaXph
-dGlvbi4gRGVwZW5kaW5nIG9uIHdoaWNoIGtlcm5lbCB2ZXJzaW9uIGlzDQo+ID4+IHVzZWQgdGhl
-IHNpemUgb2YgdGhlIHJlcXVpcmVkIGZpbGUgZGlmZmVycy4gRm9yIGV4YW1wbGUga2VybmVsIDMu
-MTgNCj4gPj4gcmVxdWlyZXMgd2wxOHh4LWNvbmYuYmluIHRvIGhhdmUgMTIyMSBieXRlcywgNC4x
-IGV4cGVjdHMgMTIyNiBieXRlcy4NCj4gPj4gUmVjZW50IHdsY29uZiAoZ2l0Oi8vZ2l0LnRpLmNv
-bS93aWxpbms4LXdsYW4vMTh4eC10aS11dGlscy5naXQpDQo+ID4+IHByb2R1Y2VzIDEyMjkgYnl0
-ZXMgZmlsZXMuDQo+ID4+DQo+ID4+IEhvdyBzaG91bGQgSSBkZXRlcm1pbmUgY29ycmVjdCB3bGNv
-bmYgdmVyc2lvbj8NCj4gPg0KPiA+IEkgYWxzbyBjb21wbGFpbmVkIGFib3V0IHNvbWV0aGluZyBh
-bG9uZyB0aGVzZSBsaW5lcyBlYXJsaWVyLCB0aGlzIGlzDQo+ID4gbm90IGhvdyB1cHN0cmVhbSBk
-cml2ZXJzIGFyZSBzdXBwb3NlZCB0byB3b3JrLiBVc2VycyBzaG91bGQgbm90IGJlDQo+ID4gZm9y
-Y2VkIHRvIGZpbmQgY29ycmVjdCBmaWxlcyBmcm9tIHNvbWV3aGVyZSwgaW5zdGVhZCBldmVyeXRo
-aW5nIHNob3VsZA0KPiA+IGp1c3Qgd29yayBvdXQgb2YgYm94Lg0KPiA+DQo+ID4gQ2FuIGFueW9u
-ZSBoZWxwIFllZ29yIHRvIHNvbHZlIGhpcyBwcm9ibGVtPyBCdXQgaW4gdGhlIGxvbmcgcnVuIHds
-MTh4eA0KPiA+IHJlYWxseSBzaG91bGQgbWFuYWdlIHRoaXMgYmV0dGVyLg0KPiANCj4gSSBjb3Vs
-ZCBzb2x2ZSB0aGUgcHJvYmxlbSwgdGhvdWdoIGZvciB0aGUgZnV0dXJlIGl0IHNob3VsZCBiZSBj
-bGVhciwgd2hhdCB3bGNvbmYNCj4gdmVyc2lvbiB0byB1c2UuDQo+IA0KPiBTZWUgbXkgcG9zdCBo
-ZXJlOg0KPiBodHRwOi8vZTJlLnRpLmNvbS9zdXBwb3J0L3dpcmVsZXNzX2Nvbm5lY3Rpdml0eS9m
-LzMwNy9wLzQyNjIyOS8xNTIzMjM1IzE1Mg0KPiAzMjM1DQo+IA0KPiBZZWdvcg0K
+From: Johannes Berg <johannes.berg@intel.com>
+
+This callback is currently not allowed to sleep, which makes it more
+difficult to implement proper driver methods in mac80211 than it has
+to be. Instead of doing asynchronous work here in mac80211, make it
+possible for the callback to sleep by doing some asynchronous work
+in cfg80211. This also enables improvements to other drivers, like
+ath6kl, that would like to sleep in this callback.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h  |  3 +--
+ net/wireless/core.c     |  5 ++++
+ net/wireless/core.h     |  5 ++++
+ net/wireless/mlme.c     | 68 ++++++++++++++++++++++++++++++++++++++++++-------
+ net/wireless/rdev-ops.h |  2 ++
+ 5 files changed, 72 insertions(+), 11 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a741678f24a2..9a529c48f6ca 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2369,8 +2369,7 @@ struct cfg80211_qos_map {
+  *	method returns 0.)
+  *
+  * @mgmt_frame_register: Notify driver that a management frame type was
+- *	registered. Note that this callback may not sleep, and cannot run
+- *	concurrently with itself.
++ *	registered. The callback is allowed to sleep.
+  *
+  * @set_antenna: Set antenna configuration (tx_ant, rx_ant) on the device.
+  *	Parameters are bitmaps of allowed antennas to use for TX/RX. Drivers may
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 2a0bbd22854b..3893409dee95 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -407,6 +407,9 @@ use_default_name:
+ 	INIT_LIST_HEAD(&rdev->bss_list);
+ 	INIT_WORK(&rdev->scan_done_wk, __cfg80211_scan_done);
+ 	INIT_WORK(&rdev->sched_scan_results_wk, __cfg80211_sched_scan_results);
++	INIT_LIST_HEAD(&rdev->mlme_unreg);
++	spin_lock_init(&rdev->mlme_unreg_lock);
++	INIT_WORK(&rdev->mlme_unreg_wk, cfg80211_mlme_unreg_wk);
+ 	INIT_DELAYED_WORK(&rdev->dfs_update_channels_wk,
+ 			  cfg80211_dfs_channels_update_work);
+ #ifdef CONFIG_CFG80211_WEXT
+@@ -802,6 +805,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
+ 	flush_work(&rdev->destroy_work);
+ 	flush_work(&rdev->sched_scan_stop_wk);
++	flush_work(&rdev->mlme_unreg_wk);
+ 
+ #ifdef CONFIG_PM
+ 	if (rdev->wiphy.wowlan_config && rdev->ops->set_wakeup)
+@@ -855,6 +859,7 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
+ 
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++		cfg80211_mlme_purge_registrations(wdev);
+ 		cfg80211_stop_p2p_device(rdev, wdev);
+ 		break;
+ 	default:
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 311eef26bf88..b9d5bc8c148d 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -59,6 +59,10 @@ struct cfg80211_registered_device {
+ 	struct list_head beacon_registrations;
+ 	spinlock_t beacon_registrations_lock;
+ 
++	struct list_head mlme_unreg;
++	spinlock_t mlme_unreg_lock;
++	struct work_struct mlme_unreg_wk;
++
+ 	/* protected by RTNL only */
+ 	int num_running_ifaces;
+ 	int num_running_monitor_ifaces;
+@@ -348,6 +352,7 @@ void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
+ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_pid,
+ 				u16 frame_type, const u8 *match_data,
+ 				int match_len);
++void cfg80211_mlme_unreg_wk(struct work_struct *wk);
+ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlpid);
+ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev);
+ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 7aae329e2b4e..0a03eb274ec2 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -389,6 +389,7 @@ void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
+ 
+ struct cfg80211_mgmt_registration {
+ 	struct list_head list;
++	struct wireless_dev *wdev;
+ 
+ 	u32 nlportid;
+ 
+@@ -399,6 +400,45 @@ struct cfg80211_mgmt_registration {
+ 	u8 match[];
+ };
+ 
++static void
++cfg80211_process_mlme_unregistrations(struct cfg80211_registered_device *rdev)
++{
++	struct cfg80211_mgmt_registration *reg;
++
++	ASSERT_RTNL();
++
++	spin_lock_bh(&rdev->mlme_unreg_lock);
++	while ((reg = list_first_entry_or_null(&rdev->mlme_unreg,
++					       struct cfg80211_mgmt_registration,
++					       list))) {
++		list_del(&reg->list);
++		spin_unlock_bh(&rdev->mlme_unreg_lock);
++
++		if (rdev->ops->mgmt_frame_register) {
++			u16 frame_type = le16_to_cpu(reg->frame_type);
++			rdev_mgmt_frame_register(rdev, reg->wdev,
++						 frame_type, false);
++		}
++
++		kfree(reg);
++
++		spin_lock_bh(&rdev->mlme_unreg_lock);
++	}
++	spin_unlock_bh(&rdev->mlme_unreg_lock);
++}
++
++void cfg80211_mlme_unreg_wk(struct work_struct *wk)
++{
++	struct cfg80211_registered_device *rdev;
++
++	rdev = container_of(wk, struct cfg80211_registered_device,
++			    mlme_unreg_wk);
++
++	rtnl_lock();
++	cfg80211_process_mlme_unregistrations(rdev);
++	rtnl_unlock();
++}
++
+ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
+ 				u16 frame_type, const u8 *match_data,
+ 				int match_len)
+@@ -449,11 +489,18 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
+ 	nreg->match_len = match_len;
+ 	nreg->nlportid = snd_portid;
+ 	nreg->frame_type = cpu_to_le16(frame_type);
++	nreg->wdev = wdev;
+ 	list_add(&nreg->list, &wdev->mgmt_registrations);
++	spin_unlock_bh(&wdev->mgmt_registrations_lock);
++
++	/* process all unregistrations to avoid driver confusion */
++	cfg80211_process_mlme_unregistrations(rdev);
+ 
+ 	if (rdev->ops->mgmt_frame_register)
+ 		rdev_mgmt_frame_register(rdev, wdev, frame_type, true);
+ 
++	return 0;
++
+  out:
+ 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
+ 
+@@ -472,15 +519,12 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
+ 		if (reg->nlportid != nlportid)
+ 			continue;
+ 
+-		if (rdev->ops->mgmt_frame_register) {
+-			u16 frame_type = le16_to_cpu(reg->frame_type);
+-
+-			rdev_mgmt_frame_register(rdev, wdev,
+-						 frame_type, false);
+-		}
+-
+ 		list_del(&reg->list);
+-		kfree(reg);
++		spin_lock(&rdev->mlme_unreg_lock);
++		list_add_tail(&reg->list, &rdev->mlme_unreg);
++		spin_unlock(&rdev->mlme_unreg_lock);
++
++		schedule_work(&rdev->mlme_unreg_wk);
+ 	}
+ 
+ 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
+@@ -496,16 +540,22 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
+ 
+ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
+ {
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+ 	struct cfg80211_mgmt_registration *reg, *tmp;
+ 
+ 	spin_lock_bh(&wdev->mgmt_registrations_lock);
+ 
+ 	list_for_each_entry_safe(reg, tmp, &wdev->mgmt_registrations, list) {
+ 		list_del(&reg->list);
+-		kfree(reg);
++
++		spin_lock(&rdev->mlme_unreg_lock);
++		list_add(&reg->list, &rdev->mlme_unreg);
++		spin_unlock(&rdev->mlme_unreg_lock);
+ 	}
+ 
+ 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
++
++	cfg80211_process_mlme_unregistrations(rdev);
+ }
+ 
+ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index c6e83a7468c0..c23516d0f807 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -733,6 +733,8 @@ static inline void
+ rdev_mgmt_frame_register(struct cfg80211_registered_device *rdev,
+ 			 struct wireless_dev *wdev, u16 frame_type, bool reg)
+ {
++	might_sleep();
++
+ 	trace_rdev_mgmt_frame_register(&rdev->wiphy, wdev , frame_type, reg);
+ 	rdev->ops->mgmt_frame_register(&rdev->wiphy, wdev , frame_type, reg);
+ 	trace_rdev_return_void(&rdev->wiphy);
+-- 
+2.1.4
+
