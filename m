@@ -1,167 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59247 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753338AbbFLOA7 (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:33037 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120AbbFWIyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 10:00:59 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: aspriel@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2015 17:00:41 +0300
-Message-Id: <1434117644-3033-2-git-send-email-luca@coelho.fi> (sfid-20150612_160109_458547_999E3DA1)
-In-Reply-To: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-References: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH py80211 1/4] py80211: scan: spin base scan classes off scan_request
+	Tue, 23 Jun 2015 04:54:51 -0400
+Received: by laka10 with SMTP id a10so2233941lak.0
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Jun 2015 01:54:49 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, nbd@openwrt.org, sujith@msujith.org,
+	chaitanya.mgit@gmail.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 1/3 v2] ath9k: handle RoC cancel correctly
+Date: Tue, 23 Jun 2015 10:54:22 +0200
+Message-Id: <1435049662-20477-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150623_105456_774306_2C93A0EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+In case we will get ROC cancel from mac80211 we
+should not call ieee80211_remain_on_channel_expired().
 
-Most of the scan_request code can be reused for scheduled scan, so
-spin the common part off the regular scan class.
+In other case I hit such warning on MIPS and
+p2p negotiation failed (tested with use_chanctx=1).
 
-Additionally, add one extra class that is able to send scan commands
-(for sched_scan stop, for instance) without adding any scan
-attributes.
+ath: phy0: Starting RoC period
+ath: phy0: Channel definition created: 2412 MHz
+ath: phy0: Assigned next_chan to 2412 MHz
+ath: phy0: Offchannel duration for chan 2412 MHz : 506632
+ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+ath: phy0: Stopping current chanctx: 2412
+ath: phy0: Flush timeout: 200
+ath: phy0: ath_chanctx_set_next: Set channel 2412 MHz
+ath: phy0: Set channel: 2412 MHz width: 0
+ath: phy0: Reset to 2412 MHz, HT40: 0 fastcc: 0
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_TSF_TIMER, state: ATH_CHANCTX_STATE_IDLE
+ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+ath: phy0: Cancel RoC
+ath: phy0: RoC aborted
+ath: phy0: RoC request on vif: 00:03:7f:4e:a0:cd, type: 1 duration: 500
+ath: phy0: Starting RoC period
+ath: phy0: Channel definition created: 2412 MHz
+ath: phy0: Assigned next_chan to 2412 MHz
+ath: phy0: Offchannel duration for chan 2412 MHz : 506705
+ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 3312 at drivers/net/wireless/ath/ath9k/main.c:2319
+Modules linked in: ath9k ath9k_common ath9k_hw ath mac80211 cfg80211
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- lib/scan.py | 106 ++++++++++++++++++++++++++++++++++++------------------------
- 1 file changed, 64 insertions(+), 42 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  8 +++++++-
+ drivers/net/wireless/ath/ath9k/channel.c | 23 ++++++++++++++++-------
+ drivers/net/wireless/ath/ath9k/main.c    |  4 ++--
+ 3 files changed, 25 insertions(+), 10 deletions(-)
 
-diff --git a/lib/scan.py b/lib/scan.py
-index 491c0b7..5ccae55 100644
---- a/lib/scan.py
-+++ b/lib/scan.py
-@@ -84,14 +84,65 @@ class bss_list(custom_handler):
- 			traceback.print_tb(tb)
- 		return nl.NL_SKIP
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 030fd0f..7d41c8f 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -409,6 +409,12 @@ enum ath_offchannel_state {
+ 	ATH_OFFCHANNEL_ROC_DONE,
+ };
  
--class scan_request(custom_handler):
-+class scan_cmd_base(custom_handler):
- 	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
--		self._ifidx = ifidx
- 		self._access = access80211(level)
-+                self._nl_cmd = None
-+		self._ifidx = ifidx
++enum ath_roc_complete_reason {
++	ATH_ROC_COMPLETE_EXPIRE,
++	ATH_ROC_COMPLETE_ABORT,
++	ATH_ROC_COMPLETE_CANCEL,
++};
 +
-+	def _wait_for_completion(self):
-+		while self.scan_busy:
-+			self._access._sock.recvmsgs(self._access._rx_cb)
-+
-+	def _prepare_cmd(self):
-+                if self._nl_cmd == None:
-+                        raise Exception("sub-class must set _nl_cmd")
-+
-+		flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK
-+		self._nl_msg = self._access.alloc_genlmsg(self._nl_cmd, flags)
-+		nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_IFINDEX, self._ifidx)
-+
-+        def _send_and_wait(self):
-+		self.scan_busy = True
-+		self._access.disable_seq_check()
-+		mcid = self._access.subscribe_multicast('scan')
-+		ret = self._access.send(self._nl_msg, self)
-+		if ret < 0:
-+			self.scan_busy = False
-+			return ret
-+
-+		self._wait_for_completion()
-+		self._access.drop_multicast(mcid)
-+		return 0
-+
-+class scan_start_base(scan_cmd_base):
-+        def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
-+                super(scan_start_base, self).__init__(ifidx, level)
- 		self._ssids = None
- 		self._freqs = None
- 		self._flags = 0
- 		self._ies = None
-+                self._nl_cmd = None
-+
-+        def _add_scan_attrs(self):
-+		if self._ssids:
-+			i = 0
-+			nest = nl.nla_nest_start(self._nl_msg._msg, nl80211.ATTR_SCAN_SSIDS)
-+			for ssid in self._ssids:
-+				nl.nla_put(self._nl_msg._msg, i, ssid)
-+				i += 1
-+			nl.nla_nest_end(self._nl_msg._msg, nest)
-+		if self._freqs:
-+			i = 0
-+			nest = nl.nla_nest_start(self._nl_msg._msg, nl80211.ATTR_SCAN_FREQUENCIES)
-+			for freq in self._freqs:
-+				nl.nla_put_u32(self._nl_msg._msg, i, freq)
-+				i += 1
-+			nl.nla_nest_end(self._nl_msg._msg, nest)
-+		if self._flags != 0:
-+			nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCAN_FLAGS, self._flags)
-+		if self._ies:
-+			nl.nla_put(self._nl_msg._msg, nl80211.ATTR_IE, self._ies)
+ struct ath_offchannel {
+ 	struct ath_chanctx chan;
+ 	struct timer_list timer;
+@@ -470,7 +476,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ void ath_chanctx_set_next(struct ath_softc *sc, bool force);
+ void ath_offchannel_next(struct ath_softc *sc);
+ void ath_scan_complete(struct ath_softc *sc, bool abort);
+-void ath_roc_complete(struct ath_softc *sc, bool abort);
++void ath_roc_complete(struct ath_softc *sc, enum ath_roc_complete_reason reason);
+ struct ath_chanctx* ath_is_go_chanctx_present(struct ath_softc *sc);
  
- 	def add_ssids(self, ssids):
- 		if self._ssids == None:
-@@ -115,49 +166,20 @@ class scan_request(custom_handler):
- 	def set_flags(self, flags):
- 		self._flags = flags
+ #else
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 2066650..35cfcd0 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -915,18 +915,27 @@ void ath_offchannel_next(struct ath_softc *sc)
+ 	}
+ }
  
--	def wait_for_scan_completion(self):
--		while self.scan_busy:
--			self._access._sock.recvmsgs(self._access._rx_cb)
--
--	def send(self):
--		flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK
--		m = self._access.alloc_genlmsg(nl80211.CMD_TRIGGER_SCAN, flags)
--		nl.nla_put_u32(m._msg, nl80211.ATTR_IFINDEX, self._ifidx)
-+        def send(self):
-+                self._prepare_cmd()
-+                self._add_scan_attrs()
-+                self._send_and_wait()
+-void ath_roc_complete(struct ath_softc *sc, bool abort)
++void ath_roc_complete(struct ath_softc *sc, enum ath_roc_complete_reason reason)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
  
--		if self._ssids:
--			i = 0
--			nest = nl.nla_nest_start(m._msg, nl80211.ATTR_SCAN_SSIDS)
--			for ssid in self._ssids:
--				nl.nla_put(m._msg, i, ssid)
--				i += 1
--			nl.nla_nest_end(m._msg, nest)
--		if self._freqs:
--			i = 0
--			nest = nl.nla_nest_start(m._msg, nl80211.ATTR_SCAN_FREQUENCIES)
--			for freq in self._freqs:
--				nl.nla_put_u32(m._msg, i, freq)
--				i += 1
--			nl.nla_nest_end(m._msg, nest)
--		if self._flags != 0:
--			nl.nla_put_u32(m._msg, nl80211.ATTR_SCAN_FLAGS, self._flags)
--		if self._ies:
--			nl.nla_put(m._msg, nl80211.ATTR_IE, self._ies)
--
--		self.scan_busy = True
--		self._access.disable_seq_check()
--		mcid = self._access.subscribe_multicast('scan')
--		ret = self._access.send(m, self)
--		if ret < 0:
--			self.scan_busy = False
--			return ret
--
--		self.wait_for_scan_completion()
--		self._access.drop_multicast(mcid)
--		return 0
-+class scan_request(scan_start_base):
-+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
-+                super(scan_request, self).__init__(ifidx, level)
-+                self._nl_cmd = nl80211.CMD_TRIGGER_SCAN
- 
--	def handle(self, msg, arg):
-+        def handle(self, msg, arg):
- 		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
+-	if (abort)
++	sc->offchannel.roc_vif = NULL;
++	sc->offchannel.roc_chan = NULL;
 +
-+                # A regular scan is complete when we get scan results
- 		if genlh.cmd in [ nl80211.CMD_SCAN_ABORTED, nl80211.CMD_NEW_SCAN_RESULTS ]:
- 			self.scan_busy = False
- 		return nl.NL_SKIP
--
++	switch(reason) {
++	case ATH_ROC_COMPLETE_ABORT:
+ 		ath_dbg(common, CHAN_CTX, "RoC aborted\n");
+-	else
++		ieee80211_remain_on_channel_expired(sc->hw);
++		break;
++	case ATH_ROC_COMPLETE_EXPIRE:
+ 		ath_dbg(common, CHAN_CTX, "RoC expired\n");
++		ieee80211_remain_on_channel_expired(sc->hw);
++		break;
++	case ATH_ROC_COMPLETE_CANCEL:
++		ath_dbg(common, CHAN_CTX, "RoC canceled\n");
++		break;
++	}
+ 
+-	sc->offchannel.roc_vif = NULL;
+-	sc->offchannel.roc_chan = NULL;
+-	ieee80211_remain_on_channel_expired(sc->hw);
+ 	ath_offchannel_next(sc);
+ 	ath9k_ps_restore(sc);
+ }
+@@ -1058,7 +1067,7 @@ static void ath_offchannel_timer(unsigned long data)
+ 	case ATH_OFFCHANNEL_ROC_START:
+ 	case ATH_OFFCHANNEL_ROC_WAIT:
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_DONE;
+-		ath_roc_complete(sc, false);
++		ath_roc_complete(sc, ATH_ROC_COMPLETE_EXPIRE);
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 945f002..2277e09 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2244,7 +2244,7 @@ static void ath9k_cancel_pending_offchannel(struct ath_softc *sc)
+ 
+ 		del_timer_sync(&sc->offchannel.timer);
+ 		if (sc->offchannel.state >= ATH_OFFCHANNEL_ROC_START)
+-			ath_roc_complete(sc, true);
++			ath_roc_complete(sc, ATH_ROC_COMPLETE_ABORT);
+ 	}
+ 
+ 	if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
+@@ -2353,7 +2353,7 @@ static int ath9k_cancel_remain_on_channel(struct ieee80211_hw *hw)
+ 
+ 	if (sc->offchannel.roc_vif) {
+ 		if (sc->offchannel.state >= ATH_OFFCHANNEL_ROC_START)
+-			ath_roc_complete(sc, true);
++			ath_roc_complete(sc, ATH_ROC_COMPLETE_CANCEL);
+ 	}
+ 
+ 	mutex_unlock(&sc->mutex);
 -- 
-2.1.4
+1.9.1
 
