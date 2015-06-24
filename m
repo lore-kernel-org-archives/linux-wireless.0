@@ -1,78 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:35576 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755326AbbFRONU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Jun 2015 10:13:20 -0400
-Received: by wgbhy7 with SMTP id hy7so65024802wgb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2015 07:13:19 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:60818 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752536AbbFXMVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Jun 2015 08:21:04 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
+Subject: RE: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
+ direct probe issue
+Date: Wed, 24 Jun 2015 12:20:58 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com> (sfid-20150624_142115_447516_281D3121)
+References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
+ <1435082418.2777.11.camel@ipeer-box>
+In-Reply-To: <1435082418.2777.11.camel@ipeer-box>
+Content-Type: multipart/mixed;
+	boundary="_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_"
 MIME-Version: 1.0
-In-Reply-To: <55829F18.9050807@neratec.com>
-References: <1434446492-4127-1-git-send-email-zefir.kurtisi@neratec.com>
-	<CAFtRNNxvBC8SD3P5u=bEZPofA-A8YfHYuZnfA4Y07W7Wx4keAQ@mail.gmail.com>
-	<55829F18.9050807@neratec.com>
-Date: Thu, 18 Jun 2015 16:13:18 +0200
-Message-ID: <CAFtRNNy009MVbOpHOWVZMuDAaJzmLed+nhBwgybgSS+hbjU=tQ@mail.gmail.com> (sfid-20150618_161329_626749_10B6E7D5)
-Subject: Re: [PATCH] ath9k: spectral - simplify max_index calculation
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-06-18 12:36 GMT+02:00 Zefir Kurtisi <zefir.kurtisi@neratec.com>:
-> On 06/18/2015 10:43 AM, Nick Kossifidis wrote:
->> max_index is a 6bit signed integer in both cases (sorry for the 5bit
->> typo in the comments), so the current function handles it correctly
->> for both HT20 and dynamic HT20/40 modes (I've tested it extensively).
->> Also you don't handle the negative indices we get from the hardware
->> (you just remove the sign). Have you tested this and if you did on
->> which hardware did you do the test ?
->>
->> 2015-06-16 11:21 GMT+02:00 Zefir Kurtisi <zefir.kurtisi@neratec.com>:
->>> [...]
->>> +/* return the max magnitude from the all/upper/lower bins
->>> + *
->>> + * in HT20: 6-bit signed number of range -28 to +27
->>> + * in HT40: 6-bit unsigned number of range 0 to +63
->>> + *          (upper sub-channel index 0 is DC)
->>> + *
->>> + * Correct interpretation of the value has to be done at caller
->>> + */
->
-> The comment above is taken from developer NDA documents and should be correct.
-> With that, in HT40 mode the max_index value has to be taken as is, while in HT20
-> it needs to be shifted to the unsigned range.
->
+--_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 
-I have NDA documents as well stating that the indices are from -64 to
-63 (-64 to -1, 1 to 63 and 0 is DC), you can check out for yourself
-that we get 128bins on dynamic HT20/40, see the header files too:
+SGkgSmFudXN6LA0KDQpBbnkgY2hhbmNlIHlvdSBjYW4gY2hlY2sgaWYgdGhlIGF0dGFjaGVkIHBh
+dGNoIGZpeGVzIHRoZSBpc3N1ZSB5b3UgcmVwb3J0ZWQ/IA0KDQpUaGFua3MgaW4gYWR2YW5jZSwN
+Cg0KSWxhbi4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC13
+aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4g
+b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUGVlciwgSWxhbg0KPiBTZW50OiBU
+dWVzZGF5LCBKdW5lIDIzLCAyMDE1IDIxOjAwDQo+IFRvOiBjaGFpdGFueWEubWdpdEBnbWFpbC5j
+b20NCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgamFudXN6LmR6aWVkemlj
+QHRpZXRvLmNvbQ0KPiBTdWJqZWN0OiBSZTogQVAgKyBQMlBfR08gbXVsdGljaGFuIHRlc3RzIHdp
+dGggaW50ZWw3MjYwIGFzIGEgUDJQX0NMSUVOVCAtDQo+IGRpcmVjdCBwcm9iZSBpc3N1ZQ0KPiAN
+Cj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS3Jpc2huYSBDaGFpdGFueWEN
+Cj4gPGNoYWl0YW55YS5tZ2l0QGdtYWlsLmNvbTxtYWlsdG86S3Jpc2huYSUyMENoYWl0YW55YSUy
+MCUzY2NoYWl0YW55YS5tDQo+IGdpdEBnbWFpbC5jb20lM2U+Pg0KPiBUbzogIlBlZXIsIElsYW4i
+DQo+IDxpbGFuLnBlZXJAaW50ZWwuY29tPG1haWx0bzolMjJQZWVyLCUyMElsYW4lMjIlMjAlM2Np
+bGFuLnBlZXJAaW50ZWwuYw0KPiBvbSUzZT4+DQo+IENjOiBKYW51c3ogRHppZWR6aWMNCj4gPGph
+bnVzei5kemllZHppY0B0aWV0by5jb208bWFpbHRvOkphbnVzeiUyMER6aWVkemljJTIwJTNjamFu
+dXN6LmR6aWVkemljDQo+IEB0aWV0by5jb20lM2U+PiwgbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnIDxsaW51eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPG1haWx0bzolMjJsaW51
+eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnJTIyJTIwJTNjbGludXgtd2lyZWxlc3NAdmdl
+ci5rZXJuZWwub3JnJTNlPj4NCj4gU3ViamVjdDogUmU6IEFQICsgUDJQX0dPIG11bHRpY2hhbiB0
+ZXN0cyB3aXRoIGludGVsNzI2MCBhcyBhIFAyUF9DTElFTlQgLQ0KPiBkaXJlY3QgcHJvYmUgaXNz
+dWUNCj4gRGF0ZTogVHVlLCAyMyBKdW4gMjAxNSAxNzozNDo1OSArMDUzMA0KPiANCj4gDQo+IA0K
+PiBPbiBUdWUsIEp1biAyMywgMjAxNSBhdCA1OjI1IFBNLCBQZWVyLCBJbGFuDQo+IDxpbGFuLnBl
+ZXJAaW50ZWwuY29tPG1haWx0bzppbGFuLnBlZXJAaW50ZWwuY29tPj4gd3JvdGU6DQo+ID4+ID4+
+DQo+ID4+ID4+IEkgc3VzcGVjdCB0aGlzIGlzIGJlY2F1c2Ugb2YgUDJQX0dPIE5vQT8NCj4gPj4g
+Pj4gV2hvIHNob3VsZCBjYXJlIGFib3V0IHRoaXMgZGlyZWN0IHByb2JlcyB0eCB3aGVuIEdPIGlz
+IG5vdCBwcmVzZW50Pw0KPiA+PiA+Pg0KPiA+PiA+PiBJbiBjYXNlIHdlIGRpZG4ndCBzZW5kIGRp
+cmVjdCBwcm9iZXMgLSB0aGVyZSBpcyBubyBwcm9ibGVtIGFuZCBUQw0KPiA+PiA+PiB3b3JrcyBj
+b3JyZWN0bHkNCj4gPj4gPj4NCj4gPj4gPg0KPiA+PiA+IEludGVyZXN0aW5nIDopDQo+ID4+ID4N
+Cj4gPj4gPiBBbnkgY2hhbmNlIHlvdSBjYW4gcHJvdmlkZSB0cmFjZS1jbWQgYW5kIHNuaWZmZXIg
+Y2FwdHVyZT8NCj4gPj4gPg0KPiA+PiA+IE5vcm1hbGx5LCBpZiB3ZSBwcm92aWRlZCB0aGUgRlcg
+d2l0aCB0aGUgQlNTSUQgaW5mb3JtYXRpb24gYW5kIFRTRg0KPiA+PiA+IGluZm9ybWF0aW9uIGZv
+ciBzeW5jaW5nLCBvbmNlIHRoZSBGVyBoZWFycyB0aGUgMXN0IGJlYWNvbiB3aXRoIHRoZQ0KPiA+
+PiA+IE5vQSBpdCBzaG91bGQgc3luYyBvbiBpdCBhbmQgbm90IHRyeSB0byBhdHRlbXB0IHRvIHRy
+YW5zbWl0IGFueQ0KPiA+PiA+IGZyYW1lcyBhcyBsb25nIGFzIHRoZSBBUCBpcyBhYnNlbnQuIEl0
+IG1pZ2h0IGFsc28gYmUgcmVsYXRlZCB0byB0aGUNCj4gPj4gPiBmYWN0IHRoYXQgdGhlIHByb2Jl
+IHJlcXVlc3RzIGFyZSBzZW50IHRvIGJyb2FkY2FzdCBhZGRyZXNzLCBidXQgSQ0KPiA+PiA+IG5l
+ZWQgdG8gZnVydGhlciBjaGVja3MgdGhpcy4gQW55d2F5LCBoYXZpbmcgc29tZSBkYXRhIHdvdWxk
+IGhlbHAgOykNCj4gPj4gPg0KPiA+PiBUaGF0cyBleGFjdGx5IHRoZSBwb2ludCwgaWYgR08gaXMg
+aW4gTm9BIEZXIHdpbGwgbm90IHRyYW5zbWl0IGJ1dA0KPiA+PiBtYWM4MDIxMSB0aW1lZC1vdXQg
+Zm9yIGRpcmVjdCBwcm9iZS4NCj4gPj4NCj4gPj4gU28gdGhlIHF1ZXN0aW9uIGlzIHNob3VsZCBt
+YWM4MDIxMSBldmVuIHNlbmQgdGhlIGRpcmVjdCBwcm9iZSBpbiB0aGlzDQo+ID4+IGNhc2Ugd2hl
+biBHTyBpcyBpbiBOb0E/DQo+ID4NCj4gPiBJIHRoaW5rIHRoYXQgdGhpcyBzaG91bGQgYmUgdGhl
+IGRyaXZlcidzL0ZXIHJlc3BvbnNpYmlsaXR5LCBhcyBhdCB0aGlzIHN0YWdlDQo+IG1hYzgwMjEx
+IGFscmVhZHkgY29uZmlndXJlZCBhbGwgdGhlIGluZm9ybWF0aW9uIG5lZWRlZCBmb3IgdGhlIGRy
+aXZlciB0bw0KPiBzeW5jIChhc3N1bWluZyBpdCBoZWFyZCBhIGJlYWNvbi9wcm9iZSkgYW5kIGlu
+IGFkZGl0aW9uIG1nZF9wcmVwYXJlX3R4KCkgaXMNCj4gY2FsbGVkIHRvIGhhdmUgdGhlIGRyaXZl
+ci9GVyBwcmVwYXJlIGZvciBhIHRyYW5zbWlzc2lvbiBvZiB0aGUgbWdtdC4gZnJhbWUsDQo+IGlu
+Y2x1ZGluZyBzeW5jaHJvbml6YXRpb24gd2l0aCB0aGUgUDJQIEdPIHBvd2VyIHN0YXRlLg0KPiBB
+Z3JlZSwgdGhlIGFjdHVhbCB0cmFuc21pc3Npb24gc2hvdWxkIGRlZmluaXRlbHkgYmUgaW4gZHJp
+dmVyL0ZXIGJ1dCB0aGUNCj4gdGltZW91dCBmb3Igc3VjaCBmcmFtZXMgYXJlIHN0aWxsIGF0IG1h
+YzgwMjExLCBzbyB1bmxlc3Mgc3UgaXQgc3luY2hyb25pemVzIHRoZQ0KPiB0aW1lb3V0cyB0byBH
+TyBOb0EgcGVyaW9kIHRoaXMgImNhbiIgZmFpbCBkZXBlbmRpbmcgb24gdGhlIGFic2VuY2UgcGVy
+aW9kIG9mDQo+IEdPLiBEZWZhdWx0IGF1dGhfdGltZW91dCBpcyAyMDBtcy4NCj4gDQo+IA0KPiBJ
+IGRvIG5vdCB0aGluayB0aGF0IG1hYzgwMjExIHNob3VsZCBoYW5kbGUgdGhlIHN5bmNocm9uaXph
+dGlvbiwgbW9zdGx5IHNpbmNlDQo+IGl0IGRvZXMgbm90ICBnZXQgdGhlIGJlYWNvbnMgZnJvbSB0
+aGUgQVAgd2UgYXJlIGFzc29jaWF0ZWQgd2l0aC4gIEFzIEkNCj4gZXhwbGFpbmVkIGFib3ZlLCB0
+aGlzIHNob3VsZCBiZSB0aGUgZHJpdmVycy9GVyByZXNwb25zaWJpbGl0eSBvbmNlIHRoZXkgaGF2
+ZQ0KPiBhbGwgdGhlIGluZm9ybWF0aW9uIHRoZXkgcmVxdWlyZS4gQXMgc3VjaCwgSSB0aGluayB0
+aGF0IGlzIGV4cGVjdGVkIGZyb20gdGhlDQo+IGRyaXZlci9GVyB0byBvbmx5IHNlbmQgdGhlIGZy
+YW1lcyB3aGVuIHRoZSBQMlAgR08vQVAgaXMgb24gdGhlIGNoYW5uZWwuDQo+IA0KPiBSZWdhcmRz
+LA0KPiANCj4gSWxhbi4NCj4gDQo+IA0KPiANCj4gTiAgICAgciAgeSAgIGIgWCAgx6d2IF4gKd66
+ey5uICsgICAgeyAgKt6VICwge2F5IB3Kh9qZICxqICAgZiAgIGggICB6IB4gdyAgICAgICBqOit2
+ICAgdyBqIG0gICAgICAgICB6WisNCj4g3aJqIiAgISBpDQo=
 
-#define SPECTRAL_HT20_40_NUM_BINS               128
+--_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_
+Content-Type: application/octet-stream;
+	name="0001-iwlwifi-mvm-Use-the-AP-station-for-non_sta-transmit.patch"
+Content-Description: 0001-iwlwifi-mvm-Use-the-AP-station-for-non_sta-transmit.patch
+Content-Disposition: attachment;
+	filename="0001-iwlwifi-mvm-Use-the-AP-station-for-non_sta-transmit.patch";
+	size=2293; creation-date="Wed, 24 Jun 2015 12:15:52 GMT";
+	modification-date="Wed, 24 Jun 2015 12:15:52 GMT"
+Content-Transfer-Encoding: base64
 
-and/or the received packet length. Maybe you are talking about
-"static" HT40 (I don't see anything about that on the documents I
-have) or something else.
+RnJvbSAxMjVkNzQ2MDlmNmY1YTU4ZDliMTFiMjE2ZDZkNjI2MGRlM2JhNTllIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBJbGFuIFBlZXIgPGlsYW4ucGVlckBpbnRlbC5jb20+CkRhdGU6
+IFdlZCwgMjQgSnVuIDIwMTUgMDk6MjM6MDEgKzAzMDAKU3ViamVjdDogW1BBVENIXSBpd2x3aWZp
+OiBtdm06IFVzZSB0aGUgQVAgc3RhdGlvbiBmb3Igbm9uX3N0YSB0cmFuc21pdAoKSW4gaXdsX212
+bV90eF9za2Jfbm9uX3N0YSgpLCBpbiBjYXNlIG9mIG1hbmFnZWQgaW50ZXJmYWNlLAp1c2UgdGhl
+IEFQIHN0YXRpb24gaW5zdGVhZCBvZiB0aGUgYXV4aWxpYXJ5IHN0YXRpb24gYXMKb3RoZXJ3aXNl
+LCB0aGUgZnJhbWVzIGNhbiBiZSBzZW50IHRvIGFuIGFic2VudCBQMlAgR08gYXMKdGhlIEZXIGRv
+ZXMgbm90IGJsb2NrIHRyYW5zbWlzc2lvbnMgZm9yIHRoZSBhdXhpbGlhcnkgc3RhdGlvbgpzaW5j
+ZSBpdCBpcyBub3QgYXNzb2NpYXRlZCB3aXRoIHRoZSBzdGF0aW9uIE1BQyBjb250ZXh0LgoKQ2hh
+bmdlLUlkOiBJMWFhMTU1NmU4ZmI4YzUxOTVjZDdiZmUxNjA2NTIxZjhkMjVmMTc1OQpTaWduZWQt
+b2ZmLWJ5OiBJbGFuIFBlZXIgPGlsYW4ucGVlckBpbnRlbC5jb20+Ci0tLQogZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaXdsd2lmaS9tdm0vdHguYyB8IDI0ICsrKysrKysrKysrKysrKystLS0tLS0tLQog
+MSBmaWxlIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCgpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vdHguYyBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3R4LmMKaW5kZXggN2JhN2ExMTguLmVhYzUxNDIgMTAwNjQ0
+Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3R4LmMKKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vdHguYwpAQCAtMzY2LDE4ICszNjYsMjYgQEAgaW50
+IGl3bF9tdm1fdHhfc2tiX25vbl9zdGEoc3RydWN0IGl3bF9tdm0gKm12bSwgc3RydWN0IHNrX2J1
+ZmYgKnNrYikKIAkJSUVFRTgwMjExX1NLQl9DQihza2IpLT5od19xdWV1ZSA9IG12bS0+YXV4X3F1
+ZXVlOwogCiAJLyoKLQkgKiBJZiB0aGUgaW50ZXJmYWNlIG9uIHdoaWNoIGZyYW1lIGlzIHNlbnQg
+aXMgdGhlIFAyUF9ERVZJQ0UKKwkgKiBJZiB0aGUgaW50ZXJmYWNlIG9uIHdoaWNoIHRoZSBmcmFt
+ZSBpcyBzZW50IGlzIHRoZSBQMlBfREVWSUNFCiAJICogb3IgYW4gQVAvR08gaW50ZXJmYWNlIHVz
+ZSB0aGUgYnJvYWRjYXN0IHN0YXRpb24gYXNzb2NpYXRlZAotCSAqIHdpdGggaXQ7IG90aGVyd2lz
+ZSB1c2UgdGhlIEFVWCBzdGF0aW9uLgorCSAqIHdpdGggaXQ7IG90aGVyd2lzZSBpZiB0aGUgaW50
+ZXJmYWNlIGlzIGEgbWFuYWdlZCBpbnRlcmZhY2UKKwkgKiB1c2UgdGhlIEFQIHN0YXRpb24gYXNz
+b2NpYXRlZCB3aXRoIGl0OyBvdGhlcndpc2UgdXNlIHRoZSBBVVgKKwkgKiBzdGF0aW9uLgogCSAq
+LwotCWlmIChpbmZvLT5jb250cm9sLnZpZiAmJgotCSAgICAoaW5mby0+Y29udHJvbC52aWYtPnR5
+cGUgPT0gTkw4MDIxMV9JRlRZUEVfUDJQX0RFVklDRSB8fAotCSAgICAgaW5mby0+Y29udHJvbC52
+aWYtPnR5cGUgPT0gTkw4MDIxMV9JRlRZUEVfQVApKSB7CisJc3RhX2lkID0gbXZtLT5hdXhfc3Rh
+LnN0YV9pZDsKKwlpZiAoaW5mby0+Y29udHJvbC52aWYpIHsKIAkJc3RydWN0IGl3bF9tdm1fdmlm
+ICptdm12aWYgPQogCQkJaXdsX212bV92aWZfZnJvbV9tYWM4MDIxMShpbmZvLT5jb250cm9sLnZp
+Zik7Ci0JCXN0YV9pZCA9IG12bXZpZi0+YmNhc3Rfc3RhLnN0YV9pZDsKLQl9IGVsc2UgewotCQlz
+dGFfaWQgPSBtdm0tPmF1eF9zdGEuc3RhX2lkOworCisJCWlmIChpbmZvLT5jb250cm9sLnZpZi0+
+dHlwZSA9PSBOTDgwMjExX0lGVFlQRV9QMlBfREVWSUNFIHx8CisJCSAgICBpbmZvLT5jb250cm9s
+LnZpZi0+dHlwZSA9PSBOTDgwMjExX0lGVFlQRV9BUCkKKwkJCXN0YV9pZCA9IG12bXZpZi0+YmNh
+c3Rfc3RhLnN0YV9pZDsKKwkJZWxzZSBpZiAoaW5mby0+Y29udHJvbC52aWYtPnR5cGUgPT0gTkw4
+MDIxMV9JRlRZUEVfU1RBVElPTikgeworCQkJdTggYXBfc3RhX2lkID0gQUNDRVNTX09OQ0UobXZt
+dmlmLT5hcF9zdGFfaWQpOworCisJCQlpZiAoYXBfc3RhX2lkICE9IElXTF9NVk1fU1RBVElPTl9D
+T1VOVCkKKwkJCQlzdGFfaWQgPSBhcF9zdGFfaWQ7CisJCX0KIAl9CiAKIAlJV0xfREVCVUdfVFgo
+bXZtLCAic3RhdGlvbiBJZCAlZCwgcXVldWU9JWRcbiIsIHN0YV9pZCwgaW5mby0+aHdfcXVldWUp
+OwotLSAKMS45LjEKCg==
 
-> I used the proposed method with the chirp detector for FFTs provided for long
-> radar pulses on an AR9590 (patch posted the same day). Max bin index is used there
-> the same way as with spectral, but now I realize my mistake: for chirp detection,
-> the relative max_index is sufficient, while for spectral the absolute value is needed.
->
-> Toggling the MSB in HT20 shifts the signed values by 32 and leaves the index with
-> an offset of 4, therefore the correct operation should be:
-> ht20_max_index_absolute = (ht20_max_index ^ 0x20) - 4
->
-
-Have in mind that on earlier chips (I did the testing on an AR9820) we
-get corrupted frames sometimes so we also need the sanity check I put
-there or else we can end up reading data out of bounds which is pretty
-dangerous so please leave the current implementation there as is.
-
-
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--_002_CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088HASMSX110gercor_--
