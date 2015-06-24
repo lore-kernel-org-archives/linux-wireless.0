@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57029 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbbFHL0U convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:33099 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991AbbFXX1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 07:26:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH] brcmfmac: support NVRAMs containing pci devpaths (instead of pcie)
-References: <1432815561-6639-1-git-send-email-zajec5@gmail.com>
-Date: Mon, 08 Jun 2015 14:26:14 +0300
-In-Reply-To: <1432815561-6639-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Thu, 28 May 2015
- 14:19:21 +0200")
-Message-ID: <878ubul9ux.fsf@kamboji.qca.qualcomm.com> (sfid-20150608_132624_351075_0A4A444E)
+	Wed, 24 Jun 2015 19:27:31 -0400
+Received: by ieqy10 with SMTP id y10so43727874ieq.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2015 16:27:31 -0700 (PDT)
+Message-ID: <558B3CD9.8020106@cococorp.com> (sfid-20150625_012735_924493_C58862EA)
+Date: Wed, 24 Jun 2015 16:27:21 -0700
+From: Alexis Green <agreen@cococorp.com>
+Reply-To: agreen@cococorp.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
+Subject: [PATCH] mac80211: mesh - always do every discovery retry
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+From: Jesse Jones <jjones@cococorp.com>
 
-> Recently Broadcom added support for NVRAMs with entries for multiple
-> PCIe devices. One of the supported formats is based on prefixes defined
-> like: devpath0=pcie/1/4/ and entries like 0:foo=bar 0:baz=qux etc.
->
-> Unfortunately there are also a bit older devices using different way of
-> defining prefixes, e.g. SmartRG SR400ac (2 x BCM43602) with entries:
-> devpath0=pci/1/1/
-> devpath1=pci/2/1
-> Broadcom stated this old format will never be used/supported by brcmfmac
-> but given the simplicity of this patch I'll insist on supporting it.
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Instead of stopping path discovery when a path is found continue
+attempting to find paths until we hit the dot11MeshHWMPmaxPREQretries
+limit.
 
-Thanks, applied manually.
+This is important because path messages are not reliable and it is
+relatively common to have a short bad path to the destination along with a
+longer but better path. With the original code rather often a path message
+along the long path would be lost so we would stick with the bad path.
+With this change we have a greater chance to get messages over the longer
+path allowing us to select the long path if it's better.
 
--- 
-Kalle Valo
+The standard doesn't seem to address this issue. All it says (13.10.8.5)
+is that discovery should be limited to dot11MeshHWMPmaxPREQretries.
+
+Signed-off-by: Alexis Green <agreen@cococorp.com>
+
+---
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index d80e0a4..3eec501 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -1179,16 +1179,20 @@ void mesh_path_timer(unsigned long data)
+ 		return;
+ 
+ 	spin_lock_bh(&mpath->state_lock);
+-	if (mpath->flags & MESH_PATH_RESOLVED ||
+-			(!(mpath->flags & MESH_PATH_RESOLVING))) {
+-		mpath->flags &= ~(MESH_PATH_RESOLVING | MESH_PATH_RESOLVED);
+-		spin_unlock_bh(&mpath->state_lock);
+-	} else if (mpath->discovery_retries < max_preq_retries(sdata)) {
++
++	if (mpath->discovery_retries < max_preq_retries(sdata)) {
+ 		++mpath->discovery_retries;
+ 		mpath->discovery_timeout *= 2;
+ 		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 		spin_unlock_bh(&mpath->state_lock);
+ 		mesh_queue_preq(mpath, 0);
++
++	} else if (
++		mpath->flags & MESH_PATH_RESOLVED ||
++			(!(mpath->flags & MESH_PATH_RESOLVING))) {
++		mpath->flags &= ~(MESH_PATH_RESOLVING | MESH_PATH_RESOLVED);
++		spin_unlock_bh(&mpath->state_lock);
++
+ 	} else {
+ 		mpath->flags &= ~(MESH_PATH_RESOLVING |
+ 				  MESH_PATH_RESOLVED |
