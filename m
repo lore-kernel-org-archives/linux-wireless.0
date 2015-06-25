@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:35516 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663AbbFFSZy (ORCPT
+Received: from mail-vn0-f44.google.com ([209.85.216.44]:40721 "EHLO
+	mail-vn0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbbFYTfK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2015 14:25:54 -0400
-Received: by oihd6 with SMTP id d6so72220562oih.2
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Jun 2015 11:25:54 -0700 (PDT)
-Message-ID: <55733B2F.9090807@lwfinger.net> (sfid-20150606_202558_867813_DE778C5C)
-Date: Sat, 06 Jun 2015 13:25:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 25 Jun 2015 15:35:10 -0400
+Received: by vnbf7 with SMTP id f7so12582604vnb.7
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 12:35:09 -0700 (PDT)
+From: Jesse Jones <jjones@cococorp.com>
+References: <CAEFj986kwfLXqPm+qN6pbB+_Pe3m2-9PLNZXf6+pH_fCeQqZ8A@mail.gmail.com>
+In-Reply-To: <CAEFj986kwfLXqPm+qN6pbB+_Pe3m2-9PLNZXf6+pH_fCeQqZ8A@mail.gmail.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>, Severn <severn@xephris.net>,
-	Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi NULL pointer dereference
-References: <5570FB00.3040108@xephris.net> <87fv65nfcn.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fv65nfcn.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Date: Thu, 25 Jun 2015 12:35:09 -0700
+Message-ID: <875882b849168899bd0012dc40da7b79@mail.gmail.com> (sfid-20150625_213515_205174_6774C769)
+Subject: RE: [PATCH] mac80211: mesh - don't special case routing to transmitter
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2015 08:20 AM, Kalle Valo wrote:
-> Severn <severn@xephris.net> writes:
+> > Updating the path to the transmitter of a path message is optional
+> > according to section 13.10.8.4 of the standard. Doing so can lead to
+> > better performance since we can adjust the route to the transmitter
+> > based on the freshest possible information. However it can also cause
+> > routing loops with more than four or five nodes.
 >
->> I've been hitting this NULL pointer deref with an rtl8188ee PCIE card.
->> It happens 100% of the time when I bring up a WPA2-PSK AP with hostapd
->> 2.4.
->>
->> If I revert 33511b157bbcebaef853cc1811992b664a2e5862, everything seems
->> to work properly.
->>
->> Below is my hostapd.conf and the crash log. This is mainline 4.0.4
->> with no patches.
+> Do you have the test scenario on how routing loops happen in this case?
 >
-> Below is the changelog for the commit. Larry & Taehee, what should we
-> do?
+> Thanks
 >
-> commit 33511b157bbcebaef853cc1811992b664a2e5862
-> Author: Taehee Yoo <ap420073@gmail.com>
-> Date:   Wed Jan 21 16:58:19 2015 +0900
->
->      rtlwifi: add support to send beacon frame.
->
->      In AP mode, beacon frame is necessary to keep connection.
->      this patch adds a sending beacon frame routine in initialization routine.
->
->      Signed-off-by: Taehee Yoo <ap420073@gmail.com>
->      Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
->      Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> ----
+> Chun-Yeow
 
-Kalle,
+We did this over a year ago and I don't think we saw routing loops though
+iirc we saw better performance when we made the change. Most likely because
+of the other problem with the original code: it creates a path to the ta if
+none exists but does not go through discovery to do so. So if the direct hop
+is not the best path you're going to be stuck with a crappy path until the
+next refresh.
 
-I'm trying to find the missing setup step when the new interface is added to the 
-driver. Whatever it is is causing mac80211 to issue the warning at 
-net/mac80211/driver-ops.h:12. That problem appears to cascade to the NULL 
-pointer dereference. Any help would be appreciated.
+In any case updating metrics without doing an SN feasibility check is highly
+suspect. I'm not 100% sure this instance will cause routing loops but I do
+know that every time I have tried to be clever and optimize routing without
+looking at both the SN and metric I have wound up with routing loops.
 
-Reversion of the above commit may be necessary, but I would like to see if we 
-can get a better "fix" as that commit is necessary for proper beaconing.
-
-Larry
-
+  -- Jesse
