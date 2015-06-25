@@ -1,126 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57393 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752511AbbFCGAm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 02:00:42 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t5360F9k028812
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:00:41 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvggu8-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:00:41 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv5 03/17] mwifiex: support AP reset after bss_stop
-Date: Wed, 3 Jun 2015 16:59:33 +0530
-Message-ID: <1433330987-6808-4-git-send-email-patila@marvell.com> (sfid-20150603_080046_178979_5545529B)
-In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
-References: <1433330987-6808-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:37631 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750777AbbFYSK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jun 2015 14:10:57 -0400
+Message-ID: <1435255854.2096.18.camel@sipsolutions.net> (sfid-20150625_201108_596462_9F5E9712)
+Subject: Re: iw and non-ASCII SSIDs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joerg <pommnitz@yahoo.com>, linux-wireless@vger.kernel.org
+Date: Thu, 25 Jun 2015 20:10:54 +0200
+In-Reply-To: <loom.20150625T181029-814@post.gmane.org> (sfid-20150625_181310_521075_380CF492)
+References: <loom.20150625T181029-814@post.gmane.org>
+	 (sfid-20150625_181310_521075_380CF492)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would enable clearing of FW bss data structures when AP
-operations are stopped.
+On Thu, 2015-06-25 at 16:12 +0000, Joerg wrote:
+> Hello all,
+> is there a way to submit a non-ASCII SSID with iw? One that contains 
+> 0 as in an octet with value zero?
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c    |  7 +++++++
- drivers/net/wireless/mwifiex/cmdevt.c      |  1 +
- drivers/net/wireless/mwifiex/fw.h          |  1 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 ++
- drivers/net/wireless/mwifiex/uap_cmd.c     | 10 ++++++++--
- 5 files changed, 19 insertions(+), 2 deletions(-)
+No, that doesn't seem to be possible in the code.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 3a14d3a..d47799a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1725,6 +1725,13 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		return -1;
- 	}
- 
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "Failed to reset BSS\n");
-+		return -1;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index a1de83f..b5033d1 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -574,6 +574,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		case HostCmd_CMD_UAP_BSS_START:
- 		case HostCmd_CMD_UAP_BSS_STOP:
- 		case HostCmd_CMD_UAP_STA_DEAUTH:
-+		case HOST_CMD_APCMD_SYS_RESET:
- 			ret = mwifiex_uap_prepare_cmd(priv, cmd_no, cmd_action,
- 						      cmd_oid, data_buf,
- 						      cmd_ptr);
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index cf386bc..45822a8 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -330,6 +330,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_RSSI_INFO                         0x00a4
- #define HostCmd_CMD_FUNC_INIT                         0x00a9
- #define HostCmd_CMD_FUNC_SHUTDOWN                     0x00aa
-+#define HOST_CMD_APCMD_SYS_RESET                      0x00af
- #define HostCmd_CMD_UAP_SYS_CONFIG                    0x00b0
- #define HostCmd_CMD_UAP_BSS_START                     0x00b1
- #define HostCmd_CMD_UAP_BSS_STOP                      0x00b2
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index aa5b9a3..f20a09e 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -1159,6 +1159,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 		break;
- 	case HostCmd_CMD_UAP_STA_DEAUTH:
- 		break;
-+	case HOST_CMD_APCMD_SYS_RESET:
-+		break;
- 	case HostCmd_CMD_MEF_CFG:
- 		break;
- 	case HostCmd_CMD_COALESCE_CFG:
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index a4ae283..0a3297e 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -754,6 +754,7 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 		break;
- 	case HostCmd_CMD_UAP_BSS_START:
- 	case HostCmd_CMD_UAP_BSS_STOP:
-+	case HOST_CMD_APCMD_SYS_RESET:
- 		cmd->command = cpu_to_le16(cmd_no);
- 		cmd->size = cpu_to_le16(S_DS_GEN);
- 		break;
-@@ -811,8 +812,13 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--		mwifiex_dbg(priv->adapter, ERROR,
--			    "Failed to stop the BSS\n");
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to stop the BSS\n");
-+		return -1;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, HOST_CMD_APCMD_SYS_RESET,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		mwifiex_dbg(priv->adapter, ERROR, "Failed to reset BSS\n");
- 		return -1;
- 	}
- 
--- 
-1.8.1.4
+But it's certainly possible in wp_supplicant config file, which you
+should probably be using anyway?
 
+johannes
