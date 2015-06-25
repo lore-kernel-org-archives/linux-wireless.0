@@ -1,187 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:46114 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751878AbbFDPCm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 11:02:42 -0400
-Message-ID: <5570688E.8060307@broadcom.com> (sfid-20150604_170245_587708_D77B89FF)
-Date: Thu, 4 Jun 2015 17:02:38 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	<brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: use direct data pointer in NVRAM parser struct
-References: <1432813063-30922-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1432813063-30922-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:35667 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751821AbbFYJid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Jun 2015 05:38:33 -0400
+Message-ID: <1435225107.2096.12.camel@sipsolutions.net> (sfid-20150625_113837_354741_E807AA05)
+Subject: Re: [PATCH v3] Add new mac80211 driver mwlwifi.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lin <dlin@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Date: Thu, 25 Jun 2015 11:38:27 +0200
+In-Reply-To: <909c66d61ee943f5a5ca202040944f2d@SC-EXCH02.marvell.com>
+References: <909c66d61ee943f5a5ca202040944f2d@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/28/15 13:37, Rafał Miłecki wrote:
-> As we plan to add support for platform NVRAM we should store direct
-> data pointer without the extra struct firmware layer. This will allow
-> us to support other sources with the only requirement being u8 buffer.
->
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+On Thu, 2015-06-25 at 03:48 +0000, David Lin wrote:
+> Signed-off-by: David Lin <dlin@marvell.com>
 
-This look a bit contradictory. You mention below you written this from 
-'scratch' so it seems odd that it is signed off by me and Hante.
+This really needs a commit message, like saying what chips it supports,
+perhaps where to find them, and similar.
 
-You may add:
+>  drivers/net/wireless/Kconfig            |    1 +
+>  drivers/net/wireless/Makefile           |    2 +
+>  drivers/net/wireless/mwlwifi/Kconfig    |   17 +
+>  drivers/net/wireless/mwlwifi/Makefile   |    9 +
+>  drivers/net/wireless/mwlwifi/dev.h      |  435 ++++++
+>  drivers/net/wireless/mwlwifi/fwcmd.c    | 2328 +++++++++++++++++++++++++++++++
+>  drivers/net/wireless/mwlwifi/fwcmd.h    |  175 +++
+>  drivers/net/wireless/mwlwifi/fwdl.c     |  183 +++
+>  drivers/net/wireless/mwlwifi/fwdl.h     |   27 +
+>  drivers/net/wireless/mwlwifi/hostcmd.h  |  753 ++++++++++
+>  drivers/net/wireless/mwlwifi/isr.c      |  148 ++
+>  drivers/net/wireless/mwlwifi/isr.h      |   26 +
+>  drivers/net/wireless/mwlwifi/mac80211.c |  743 ++++++++++
+>  drivers/net/wireless/mwlwifi/mac80211.h |   25 +
+>  drivers/net/wireless/mwlwifi/main.c     |  858 ++++++++++++
+>  drivers/net/wireless/mwlwifi/rx.c       |  523 +++++++
+>  drivers/net/wireless/mwlwifi/rx.h       |   25 +
+>  drivers/net/wireless/mwlwifi/sysadpt.h  |   67 +
+>  drivers/net/wireless/mwlwifi/tx.c       |  836 +++++++++++
+>  drivers/net/wireless/mwlwifi/tx.h       |   28 +
+>  20 files changed, 7209 insertions(+)
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Tested on router with BCM43602-s using /lib/firmware/brcm/brcmfmac43602-pcie.txt
->
-> I've written this patch from scratch, it's inspired by the dropped:
-> [PATCH 6/6] brcmfmac: Add support for host platform NVRAM loading.
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 40 +++++++++++-----------
->   1 file changed, 20 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> index 7ae6461..b72df87 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-> @@ -43,7 +43,7 @@ enum nvram_parser_state {
->    * struct nvram_parser - internal info for parser.
->    *
->    * @state: current parser state.
-> - * @fwnv: input buffer being parsed.
-> + * @data: input buffer being parsed.
+You're missing a MAINTAINERS entry.
 
-So you are not adding the data_len to the structure, which means you 
-found it is not needed? Just checking as it is different from the 
-aforementioned patch.
+> +++ b/drivers/net/wireless/mwlwifi/Kconfig
+> @@ -0,0 +1,17 @@
+> +config MWLWIFI
+> +	tristate "Marvell Wireless WiFi driver (mwlwifi)"
+> +	depends on PCI && MAC80211 && MWIFIEX_PCIE=n
 
-Regards,
-Arend
+Uh, what's with the exclusion of MWIFIEX_PCIE? Couldn't use a different
+PCI ID? I really think you need to get rid of this, otherwise people
+can't even *build-test* their wifi changes fully.
 
->    * @nvram: output buffer with parse result.
->    * @nvram_len: lenght of parse result.
->    * @line: current line.
-> @@ -55,7 +55,7 @@ enum nvram_parser_state {
->    */
->   struct nvram_parser {
->   	enum nvram_parser_state state;
-> -	const struct firmware *fwnv;
-> +	const u8 *data;
->   	u8 *nvram;
->   	u32 nvram_len;
->   	u32 line;
-> @@ -91,7 +91,7 @@ static enum nvram_parser_state brcmf_nvram_handle_idle(struct nvram_parser *nvp)
->   {
->   	char c;
->
-> -	c = nvp->fwnv->data[nvp->pos];
-> +	c = nvp->data[nvp->pos];
->   	if (c == '\n')
->   		return COMMENT;
->   	if (is_whitespace(c))
-> @@ -115,16 +115,16 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
->   	enum nvram_parser_state st = nvp->state;
->   	char c;
->
-> -	c = nvp->fwnv->data[nvp->pos];
-> +	c = nvp->data[nvp->pos];
->   	if (c == '=') {
->   		/* ignore RAW1 by treating as comment */
-> -		if (strncmp(&nvp->fwnv->data[nvp->entry], "RAW1", 4) == 0)
-> +		if (strncmp(&nvp->data[nvp->entry], "RAW1", 4) == 0)
->   			st = COMMENT;
->   		else
->   			st = VALUE;
-> -		if (strncmp(&nvp->fwnv->data[nvp->entry], "devpath", 7) == 0)
-> +		if (strncmp(&nvp->data[nvp->entry], "devpath", 7) == 0)
->   			nvp->multi_dev_v1 = true;
-> -		if (strncmp(&nvp->fwnv->data[nvp->entry], "pcie/", 5) == 0)
-> +		if (strncmp(&nvp->data[nvp->entry], "pcie/", 5) == 0)
->   			nvp->multi_dev_v2 = true;
->   	} else if (!is_nvram_char(c) || c == ' ') {
->   		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
-> @@ -145,11 +145,11 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
->   	char *ekv;
->   	u32 cplen;
->
-> -	c = nvp->fwnv->data[nvp->pos];
-> +	c = nvp->data[nvp->pos];
->   	if (!is_nvram_char(c)) {
->   		/* key,value pair complete */
-> -		ekv = (u8 *)&nvp->fwnv->data[nvp->pos];
-> -		skv = (u8 *)&nvp->fwnv->data[nvp->entry];
-> +		ekv = (u8 *)&nvp->data[nvp->pos];
-> +		skv = (u8 *)&nvp->data[nvp->entry];
->   		cplen = ekv - skv;
->   		if (nvp->nvram_len + cplen + 1>= BRCMF_FW_MAX_NVRAM_SIZE)
->   			return END;
-> @@ -170,7 +170,7 @@ brcmf_nvram_handle_comment(struct nvram_parser *nvp)
->   {
->   	char *eoc, *sol;
->
-> -	sol = (char *)&nvp->fwnv->data[nvp->pos];
-> +	sol = (char *)&nvp->data[nvp->pos];
->   	eoc = strchr(sol, '\n');
->   	if (!eoc) {
->   		eoc = strchr(sol, '\0');
-> @@ -201,17 +201,17 @@ static enum nvram_parser_state
->   };
->
->   static int brcmf_init_nvram_parser(struct nvram_parser *nvp,
-> -				   const struct firmware *nv)
-> +				   const u8 *data, size_t data_len)
->   {
->   	size_t size;
->
->   	memset(nvp, 0, sizeof(*nvp));
-> -	nvp->fwnv = nv;
-> +	nvp->data = data;
->   	/* Limit size to MAX_NVRAM_SIZE, some files contain lot of comment */
-> -	if (nv->size>  BRCMF_FW_MAX_NVRAM_SIZE)
-> +	if (data_len>  BRCMF_FW_MAX_NVRAM_SIZE)
->   		size = BRCMF_FW_MAX_NVRAM_SIZE;
->   	else
-> -		size = nv->size;
-> +		size = data_len;
->   	/* Alloc for extra 0 byte + roundup by 4 + length field */
->   	size += 1 + 3 + sizeof(u32);
->   	nvp->nvram = kzalloc(size, GFP_KERNEL);
-> @@ -356,18 +356,18 @@ fail:
->    * and converts newlines to NULs. Shortens buffer as needed and pads with NULs.
->    * End of buffer is completed with token identifying length of buffer.
->    */
-> -static void *brcmf_fw_nvram_strip(const struct firmware *nv, u32 *new_length,
-> -				  u16 domain_nr, u16 bus_nr)
-> +static void *brcmf_fw_nvram_strip(const u8 *data, size_t data_len,
-> +				  u32 *new_length, u16 domain_nr, u16 bus_nr)
->   {
->   	struct nvram_parser nvp;
->   	u32 pad;
->   	u32 token;
->   	__le32 token_le;
->
-> -	if (brcmf_init_nvram_parser(&nvp, nv)<  0)
-> +	if (brcmf_init_nvram_parser(&nvp, data, data_len)<  0)
->   		return NULL;
->
-> -	while (nvp.pos<  nv->size) {
-> +	while (nvp.pos<  data_len) {
->   		nvp.state = nv_parser_states[nvp.state](&nvp);
->   		if (nvp.state == END)
->   			break;
-> @@ -426,7 +426,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->   		goto fail;
->
->   	if (fw) {
-> -		nvram = brcmf_fw_nvram_strip(fw,&nvram_length,
-> +		nvram = brcmf_fw_nvram_strip(fw->data, fw->size,&nvram_length,
->   					     fwctx->domain_nr, fwctx->bus_nr);
->   		release_firmware(fw);
->   		if (!nvram&&  !(fwctx->flags&  BRCMF_FW_REQ_NV_OPTIONAL))
+> +++ b/drivers/net/wireless/mwlwifi/Makefile
+> @@ -0,0 +1,9 @@
+> +obj-$(CONFIG_MWLWIFI)	+= mwlwifi.o
+> +
+> +mwlwifi-objs		+= main.o
+> +mwlwifi-objs		+= mac80211.o
+> +mwlwifi-objs		+= fwdl.o
+> +mwlwifi-objs		+= fwcmd.o
+> +mwlwifi-objs		+= tx.o
+> +mwlwifi-objs		+= rx.o
+> +mwlwifi-objs		+= isr.o
 
+Please add
+
+ccflags-y += -D__CHECK_ENDIAN__
+
+to this file to always flag sparse errors. You have checked with
+sparse, right?
+
+Ok ... you clearly haven't. Please add the line above, and fix up the
+results. Also, you really need to try building this driver on 64-bit,
+it reports a good number of warnings.
+
+If you're up to it, also try running smatch on it, it reports a number
+of more warnings that sparse misses, like this one:
+
+
+mwl_rx_ring_init() warn: variable dereferenced before check 'rx_hndl->psk_buff' (see line 108)
+
+
+This is going to be only a very superficial review until the driver
+builds cleanly. I do think the firmware API stuff I was concerned about
+earlier looks better now though
+
+I think you went a bit overbaord with wiphy_info(), a number of those
+(like the beacon info one) surely are more debug messages than
+operational messages that should be shown all the time.
+
+
+> +> 	> /* Info for debugging
+> +> 	> */
+> +> 	> wiphy_info(hw->wiphy, "%s ...", __func__);
+> +> 	> wiphy_info(hw->wiphy, "  -->pPhysTxRing[0] = %x",
+> +> 	> 	>    priv->desc_data[0].pphys_tx_ring);
+> +> 	> wiphy_info(hw->wiphy, "  -->pPhysTxRing[1] = %x",
+> +> 	> 	>    priv->desc_data[1].pphys_tx_ring);
+> +> 	> wiphy_info(hw->wiphy, "  -->pPhysTxRing[2] = %x",
+> +> 	> 	>    priv->desc_data[2].pphys_tx_ring);
+> +> 	> wiphy_info(hw->wiphy, "  -->pPhysTxRing[3] = %x",
+> +> 	> 	>    priv->desc_data[3].pphys_tx_ring);
+> +> 	> wiphy_info(hw->wiphy, "  -->pPhysRxRing    = %x",
+> +> 	> 	>    priv->desc_data[0].pphys_rx_ring);
+> +> 	> wiphy_info(hw->wiphy, "  -->numtxq %d wcbperq %d totalrxwcb %d",
+> +> 	> 	>    SYSADPT_NUM_OF_DESC_DATA,
+> +> 	> 	>    SYSADPT_MAX_NUM_TX_DESC,
+> +> 	> 	>    SYSADPT_MAX_NUM_RX_DESC);
+
+Like that ... I've even read the comment :)
+
+
+> +> 	> spin_lock_irqsave(&priv->fwcmd_lock, flags)
+> 
+
+You really only need _irqsave on the stream_lock, the others aren't
+used in IRQ context so don't need to disable IRQs. Perhaps BHs, haven't
+checked.
+
+johannes
