@@ -1,81 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:36061 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbbFHQq4 (ORCPT
+Received: from mail-vn0-f49.google.com ([209.85.216.49]:37602 "EHLO
+	mail-vn0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252AbbFYTIz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 12:46:56 -0400
-Message-ID: <5575C6FA.6030104@broadcom.com> (sfid-20150608_184700_425869_10B876CC)
-Date: Mon, 8 Jun 2015 18:46:50 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 25 Jun 2015 15:08:55 -0400
+Received: by vnbf129 with SMTP id f129so12482040vnb.4
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 12:08:54 -0700 (PDT)
+From: Jesse Jones <jjones@cococorp.com>
+References: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
+In-Reply-To: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <joerg.krause@embedded.rocks>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcmfmac: brcmf_p2p_create_p2pdev: timeout occurred
-References: <1433766944.28058.16.camel@embedded.rocks>	 <55758D7E.3000603@broadcom.com> <1433771289.28058.24.camel@embedded.rocks>
-In-Reply-To: <1433771289.28058.24.camel@embedded.rocks>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Date: Thu, 25 Jun 2015 12:08:53 -0700
+Message-ID: <bf8dddcd2564399d6f0f70db7960e19e@mail.gmail.com> (sfid-20150625_210858_535817_376F072A)
+Subject: RE: [PATCH] mac80211: mesh - always do every discovery retry
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/15 15:48, Jörg Krause wrote:
-> Hi Arend,
+> > Instead of stopping path discovery when a path is found continue
+> > attempting to find paths until we hit the
+> > dot11MeshHWMPmaxPREQretries limit.
 >
-> On Mo, 2015-06-08 at 14:41 +0200, Arend van Spriel wrote:
->> On 06/08/15 14:35, Jörg Krause wrote:
->>> Hi,
->>>
->>> I've trouble creating the p2p interface on a BCM43362 wifi device
->>> running Linux kernel 4.0.4:
->>>
->>>       # dmesg | grep brcmfmac
->>>       [    7.010870] brcmfmac: brcmf_c_preinit_dcmds: Firmware
->>> version =
->>>       wl0: Apr 22 2013 14:50:00 version 5.90.195.89.6 FWID 01
->>> -b30a427d
->>>       [    7.158905] brcmfmac: brcmf_cfg80211_reg_notifier: not a
->>> ISO3166
->>>       code
->>>       [   11.007164] brcmfmac: brcmf_p2p_create_p2pdev: timeout
->>> occurred
->>>
->>> Trying to add the p2p interface manually:
->>>
->>>       # iw phy0 interface add p2p0 type __p2pdev
->>>       [  372.042704] brcmfmac: brcmf_link_down: WLC_DISASSOC failed
->>> (-52)
->>>       [  373.637263] brcmfmac: brcmf_p2p_create_p2pdev: timeout
->>> occurred
->>>       [  373.679377] brcmfmac: brcmf_cfg80211_del_key: invalid key
->>> index (4)
->>>       [  373.685733] brcmfmac: brcmf_cfg80211_del_key: invalid key
->>> index (5)
->>>
->>> Any idea?
->>
->> Wondering whether it is similar to what Rafal reported. Can you do a
->> hexdump, ie. hexdump -C brcmfmac43362-sdio.bin | tail -30
+> Let think about that if you have more nodes, you will probably flood
+> the networks with more mgmt frame than previous implementation. It
+> also increases the latency for data to be sent.
+
+Yes, it will cause more management packets to be sent. PREQs will flood out
+dot11MeshHWMPmaxPREQretries times and PREPs will be sent back but only along
+the best path.
+
+No it will not cause additional latency. Imagine a classic challenging
+topology for mesh routing: four or more nodes arranged into a U where we
+want to route from one end of the U to the other end. But the short direct
+hop is very bad and the links along the U are all excellent.
+
+Before what would happen is that we would first hear a PREP from the direct
+hop (because the packets don't have to travel as far). We'd then select that
+route because it has newer information than what we had previously. If we
+got a PREP from the long path we'd then switch to that because it is just as
+new and a better metric. But the longer that path the greater the chance
+that we'll lose either a PREQ or a PREP. And because the PHY doesn't
+retransmit management packets this happens rather often in practice. And if
+we periodically refresh paths as currently happens we have even more
+opportunities to select the wrong path.
+
+Of course using multiple hops sucks but it sucks even more to use a 5 Mbps
+link when 50 Mbps links are available.
+
+> > This is important because path messages are not reliable and it is
+> > relatively common to have a short bad path to the destination along
+> > with a longer but better path. With the original code rather often a
+> > path message along the long path would be lost so we would stick
+> > with the
+> bad path.
+> > With this change we have a greater chance to get messages over the
+> > longer path allowing us to select the long path if it's better.
 >
-> I managed to set up the p2p interface by recompiling the kernel with
-> CONFIG_BRCMDBG and loading the brcmfmac module with p2pon=1.
->
-> I had a discussion some month ago with Hante Meulemann about setting up
-> the p2p interface. This is one of his replies:
->
->      "For what I can see from the log is that we don’t get the event from
->      the FW indicating that the p2p interface was created. This probably
->      means that there is a bug in this FW for this device. I need to discuss
->      this to see how much priority we can give this. The best option for you
->      for the moment is to use the legacy method with the 'p2pon=1' command."
+> Try to take a look on the dot11MeshHWMPpreqMinInterval
+> (mesh_hwmp_preq_min_interval) and
+> (mesh_hwmp_active_path_timeout). I think that you can probably have
+> more aggressive path selection interval by modifying these two values.
 
-Thanks for digging your email archive as we clearly forgot about this 
-entirely. The timeout in your log indeed indicates it is missing a 
-notification from firmware. I assume your primary interface is in 
-managed mode when trying to create the p2p_dev interface. Is that correct?
+Not entirely sure what you mean about being more aggressive. If you mean
+sending out the PREQs more rapidly that is something I have gone back and
+forth on.  My current thinking is to do a few attempts quickly to try and
+get a good path immediately and then lengthen the delay to try to compensate
+for noise bursts.
 
-Regards,
-Arend
+> I don't think that flooding PREQ for resolved path not necessary a good
+> case>
+> for all. Thanks
 
-> Best regards
-> Jörg Krause
+It's just as important to do multiple discoveries for an established path as
+for a brand new path. In either case if we send one PREQ out we'll often
+fail to choose the right path.
 
+> Chun-Yeow
+
+  -- Jesse
