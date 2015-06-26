@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:57721 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753504AbbF0OgU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Jun 2015 10:36:20 -0400
-Message-ID: <558EB4DE.3080406@users.sourceforge.net> (sfid-20150627_163644_117105_658C554B)
-Date: Sat, 27 Jun 2015 16:36:14 +0200
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-MIME-Version: 1.0
-To: Chris Park <chris.park@atmel.com>, Dean Lee <dean.lee@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH 1/2] staging: wilc1000: Delete unnecessary checks before two
- function calls
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
-In-Reply-To: <558EB32E.6090003@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+Received: from mailout4.samsung.com ([203.254.224.34]:50329 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752246AbbFZJOZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jun 2015 05:14:25 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NQJ01LNXOBZ1V20@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Fri, 26 Jun 2015 18:14:23 +0900 (KST)
+Date: Fri, 26 Jun 2015 09:14:23 +0000 (GMT)
+From: Amit Khatri <amit.khatri@samsung.com>
+Subject: [PATCH 4/4] iw:In case of memory allocation failure by nlmsg_alloc()
+ cqm will pass to NLA_PUT_U32. it should not happen.
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
+	Nitin Jhanwar <nitin.j@samsung.com>
+Reply-to: amit.khatri@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <490671727.309651435310062683.JavaMail.weblogic@ep2mlwas06c> (sfid-20150626_111437_260250_D15B3184)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 27 Jun 2015 15:56:57 +0200
+DQpIaSBKb2hhbm5lcywNCg0KU3ViamVjdDogW1BBVENIIDQvNF0gaXc6SW4gY2FzZSBvZiBtZW1v
+cnkgYWxsb2NhdGlvbiBmYWlsdXJlIGJ5IG5sbXNnX2FsbG9jKCkNCiBjcW0gd2lsbCBwYXNzIHRv
+IE5MQV9QVVRfVTMyLiBpdCBzaG91bGQgbm90IGhhcHBlbi4NCg0KU2lnbmVkLW9mZi1ieTogQW1p
+dCBLaGF0cmkgPGFtaXQua2hhdHJpQHNhbXN1bmcuY29tPg0KU2lnbmVkLW9mZi1ieTogUmFodWwg
+SmFpbiA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4NCi0tLQ0KIGNxbS5jIHwgMiArKw0KIDEgZmls
+ZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2NxbS5jIGIvY3FtLmMN
+CmluZGV4IDY1ODc2YWYuLmJmNjA0MDEgMTAwNjQ0DQotLS0gYS9jcW0uYw0KKysrIGIvY3FtLmMN
+CkBAIC0zNCw2ICszNCw4IEBAIHN0YXRpYyBpbnQgaXdfY3FtX3Jzc2koc3RydWN0IG5sODAyMTFf
+c3RhdGUgKnN0YXRlLCBzdHJ1Y3QgbmxfY2IgKmNiLA0KIA0KIAkvKiBjb25uZWN0aW9uIHF1YWxp
+dHkgbW9uaXRvciBhdHRyaWJ1dGVzICovDQogCWNxbSA9IG5sbXNnX2FsbG9jKCk7DQorCWlmKCFj
+cW0pDQorCQlyZXR1cm4gLUVOT01FTTsNCiANCiAJTkxBX1BVVF9VMzIoY3FtLCBOTDgwMjExX0FU
+VFJfQ1FNX1JTU0lfVEhPTEQsIHRob2xkKTsNCiAJTkxBX1BVVF9VMzIoY3FtLCBOTDgwMjExX0FU
+VFJfQ1FNX1JTU0lfSFlTVCwgaHlzdCk7DQotLSANCjEuOS4xDQo=
 
-The functions kfree() and release_firmware() test whether their argument
-is NULL and then return immediately.
-Thus the test around the calls is not needed.
-
-This issue was detected by using the Coccinelle software.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/staging/wilc1000/linux_wlan.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index b352c50..2aa8d9b 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2421,11 +2421,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
- 	}
- 
- done:
--
--	if (buff != NULL) {
--		kfree(buff);
--	}
--
-+	kfree(buff);
- 	return s32Error;
- }
- 
-@@ -2707,8 +2703,7 @@ static void __exit exit_wilc_driver(void)
- 		}
- 	}
- 
--
--	if ((g_linux_wlan != NULL) && g_linux_wlan->wilc_firmware != NULL) {
-+	if (g_linux_wlan) {
- 		release_firmware(g_linux_wlan->wilc_firmware);
- 		g_linux_wlan->wilc_firmware = NULL;
- 	}
--- 
-2.4.4
 
