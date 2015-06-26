@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f194.google.com ([209.85.223.194]:34432 "EHLO
-	mail-ie0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbbFQMPZ (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:37732 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714AbbFZOlX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 08:15:25 -0400
-Received: by iebtr6 with SMTP id tr6so2011953ieb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2015 05:15:25 -0700 (PDT)
+	Fri, 26 Jun 2015 10:41:23 -0400
+Date: Fri, 26 Jun 2015 16:47:28 +0200
+From: Luis de Bethencourt <luis@debethencourt.com>
+To: linux-kernel@vger.kernel.org
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 4/4] staging: wilc1000: fix typos in PRINT_ERR()
+Message-ID: <20150626144724.GA30106@goodgumbo.baconseed.org> (sfid-20150626_164128_338093_BF0D87B4)
 MIME-Version: 1.0
-In-Reply-To: <1434541047.1884.41.camel@sipsolutions.net>
-References: <1433943751-11221-1-git-send-email-chaitanya.mgit@gmail.com>
- <1434530870.1884.12.camel@sipsolutions.net> <CABPxzYL0rnht72K1fLcpyjC=eOM4nHxzHQRpD47iE6J=J-3sOg@mail.gmail.com>
- <1434538909.1884.39.camel@sipsolutions.net> <CABPxzY+Nz+wOCtot-4ROZJ6SR-a1gV625ak8qmLHtjvR=JadGQ@mail.gmail.com>
- <1434541047.1884.41.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 17 Jun 2015 17:45:04 +0530
-Message-ID: <CABPxzYKmsGyhmM_5e11N2sgw8c-ARyJJ_rPkfjwCcZ6+hfqHgg@mail.gmail.com> (sfid-20150617_141529_176015_EC9C03BF)
-Subject: Re: [PATCH V3] mac80211: wowlan: suspend: Fix power save state stuck
- in ACTIVE caused by race between suspend and Tx packet.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 17, 2015 at 5:07 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2015-06-17 at 17:05 +0530, Krishna Chaitanya wrote:
->
->> > Then again, you're talking about WoWLAN, but then ...
->> In wowlan, we simply call drv_resume and only if it fails
->> then we will go through full resume. And without wowlan
->> connection will not be there so this code will not be hit.
->
-> Right, but then the important part still is that we're enabling
-> powersave when going to sleep, no? I mean ... anyway it doesn't matter
-> much. I'll come up with some better comment/description I guess.
-Yes, we are forcing it to go in to power-save.
->
-> I really hate this whole powersave code btw - we really should refactor
-> that into its own little library module or so...
-Yes, that sounds good.
+Fix typo "packe" to "packet".
+
+Signed-off-by: Luis de Bethencourt <luis@debethencourt.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 79b7c2a..1915fc6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3688,7 +3688,7 @@ static void Handle_DelAllSta(void *drvHandler, tstrHostIFDelAllSta *pstrDelAllSt
+ 	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, (u32)pstrWFIDrv);
+ 	if (s32Error) {
+ 
+-		PRINT_ER("Failed to send add station config packe\n");
++		PRINT_ER("Failed to send add station config packet\n");
+ 		WILC_ERRORREPORT(s32Error, WILC_FAIL);
+ 	}
+ 
+@@ -3735,7 +3735,7 @@ static void Handle_DelStation(void *drvHandler, tstrHostIFDelSta *pstrDelStaPara
+ 	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, false, (u32)pstrWFIDrv);
+ 	if (s32Error) {
+ 
+-		PRINT_ER("Failed to send add station config packe\n");
++		PRINT_ER("Failed to send add station config packet\n");
+ 		WILC_ERRORREPORT(s32Error, WILC_FAIL);
+ 	}
+ 
+-- 
+2.1.4
+
