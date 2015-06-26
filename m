@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45626 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753006AbbFCGB5 (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:50505 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767AbbFZJad (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 02:01:57 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t5361R6Q030098
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Jun 2015 23:01:56 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1usqkvgh0a-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2015 23:01:56 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv5 14/17] mwifiex: advertise PS ON by default support to cfg80211
-Date: Wed, 3 Jun 2015 16:59:44 +0530
-Message-ID: <1433330987-6808-15-git-send-email-patila@marvell.com> (sfid-20150603_080351_180313_6045A942)
-In-Reply-To: <1433330987-6808-1-git-send-email-patila@marvell.com>
-References: <1433330987-6808-1-git-send-email-patila@marvell.com>
+	Fri, 26 Jun 2015 05:30:33 -0400
+Date: Fri, 26 Jun 2015 12:30:18 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: NFC: netlink: Implement vendor command support
+Message-ID: <20150626093018.GA28810@mwanda> (sfid-20150626_113316_694575_0B8DE5F6)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would enable driver to enter powersave as soon as connected.
+Hello Samuel Ortiz,
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The patch 9e58095f9660: "NFC: netlink: Implement vendor command
+support" from Oct 14, 2014, leads to the following static checker
+warning:
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index f14cad7..b15e4c7 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -3685,7 +3685,8 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
- 			WIPHY_FLAG_AP_UAPSD |
- 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
--			WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-+			WIPHY_FLAG_HAS_CHANNEL_SWITCH |
-+			WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
- 	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
- 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
--- 
-1.8.1.4
+	net/nfc/netlink.c:1522 nfc_genl_vendor_cmd()
+	warn: can 'data' even be NULL?
 
+net/nfc/netlink.c
+  1498  static int nfc_genl_vendor_cmd(struct sk_buff *skb,
+  1499                                 struct genl_info *info)
+  1500  {
+  1501          struct nfc_dev *dev;
+  1502          struct nfc_vendor_cmd *cmd;
+  1503          u32 dev_idx, vid, subcmd;
+  1504          u8 *data;
+  1505          size_t data_len;
+  1506          int i;
+  1507  
+  1508          if (!info->attrs[NFC_ATTR_DEVICE_INDEX] ||
+  1509              !info->attrs[NFC_ATTR_VENDOR_ID] ||
+  1510              !info->attrs[NFC_ATTR_VENDOR_SUBCMD])
+  1511                  return -EINVAL;
+  1512  
+  1513          dev_idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
+  1514          vid = nla_get_u32(info->attrs[NFC_ATTR_VENDOR_ID]);
+  1515          subcmd = nla_get_u32(info->attrs[NFC_ATTR_VENDOR_SUBCMD]);
+  1516  
+  1517          dev = nfc_get_device(dev_idx);
+  1518          if (!dev || !dev->vendor_cmds || !dev->n_vendor_cmds)
+  1519                  return -ENODEV;
+  1520  
+  1521          data = nla_data(info->attrs[NFC_ATTR_VENDOR_DATA]);
+  1522          if (data) {
+  1523                  data_len = nla_len(info->attrs[NFC_ATTR_VENDOR_DATA]);
+  1524                  if (data_len == 0)
+  1525                          return -EINVAL;
+  1526          } else {
+  1527                  data_len = 0;
+  1528          }
+
+nla_data() never returns NULL.  The test should probably be:
+
+		if (info->attrs[NFC_ATTR_VENDOR_DATA]) {
+
+Why is specifying data_len == 0 invalid?
+
+  1529  
+  1530          for (i = 0; i < dev->n_vendor_cmds; i++) {
+  1531                  cmd = &dev->vendor_cmds[i];
+  1532  
+  1533                  if (cmd->vendor_id != vid || cmd->subcmd != subcmd)
+  1534                          continue;
+  1535  
+  1536                  return cmd->doit(dev, data, data_len);
+  1537          }
+  1538  
+  1539          return -EOPNOTSUPP;
+  1540  }
+
+regards,
+dan carpenter
