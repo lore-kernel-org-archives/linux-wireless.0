@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33278 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbbFKDui (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:42504 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751876AbbFZJMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 23:50:38 -0400
-Date: Wed, 10 Jun 2015 20:50:37 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Dean Lee <dean.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, johnny.kim@atmel.com
-Subject: Re: [PATCH] staging: wilc1000: modify odd print message
-Message-ID: <20150611035037.GA22550@kroah.com> (sfid-20150611_055041_341252_6B446F61)
-References: <1433994264-26509-1-git-send-email-dean.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433994264-26509-1-git-send-email-dean.lee@atmel.com>
+	Fri, 26 Jun 2015 05:12:34 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NQJ01SLAO8XES80@mailout3.samsung.com> for
+ linux-wireless@vger.kernel.org; Fri, 26 Jun 2015 18:12:33 +0900 (KST)
+Date: Fri, 26 Jun 2015 09:12:33 +0000 (GMT)
+From: Amit Khatri <amit.khatri@samsung.com>
+Subject: [PATCH 3/4] iw: Static analyser report that attr may be NULL so either
+ we can remove condition check statement or add goto at end of this function.
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
+	Nitin Jhanwar <nitin.j@samsung.com>
+Reply-to: amit.khatri@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <1851474397.309551435309952587.JavaMail.weblogic@ep2mlwas06c> (sfid-20150626_111240_658875_6B1806EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2015 at 12:44:24PM +0900, Dean Lee wrote:
-> This driver has odd message in print string.
-> So this patch removes the data type.
-> 
-> Signed-off-by: Dean Lee <dean.lee@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 1ecb373..9e055c4 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -703,7 +703,7 @@ static WILC_Sint32 Handle_SetOperationMode(void *drvHandler, tstrHostIfSetOperat
->  	strWID.s32ValueSize = sizeof(WILC_Uint32);
->  
->  	/*Sending Cfg*/
-> -	PRINT_INFO(HOSTINF_DBG, "(size_t)pstrWFIDrv= %p \n", pstrWFIDrv);
-> +	PRINT_INFO(HOSTINF_DBG, "pstrWFIDrv= %p \n", pstrWFIDrv);
+DQpIaSBKb2hhbm5lcywNCg0KU3ViamVjdDogW1BBVENIIDMvNF0gaXc6IFN0YXRpYyBhbmFseXNl
+ciByZXBvcnQgdGhhdCBhdHRyIG1heSBiZSBOVUxMIHNvDQogZWl0aGVyIHdlIGNhbiByZW1vdmUg
+Y29uZGl0aW9uIGNoZWNrIHN0YXRlbWVudCBvciBhZGQgZ290byBhdCBlbmQgb2YgdGhpcw0KIGZ1
+bmN0aW9uLg0KDQpTaWduZWQtb2ZmLWJ5OiBBbWl0IEtoYXRyaSA8YW1pdC5raGF0cmlAc2Ftc3Vu
+Zy5jb20+DQpTaWduZWQtb2ZmLWJ5OiBSYWh1bCBKYWluIDxyYWh1bC5qYWluQHNhbXN1bmcuY29t
+Pg0KLS0tDQogZXZlbnQuYyB8IDYgKysrKystDQogMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9u
+cygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZXZlbnQuYyBiL2V2ZW50LmMNCmlu
+ZGV4IGY3M2UwNzguLjA2ZDIzNmIgMTAwNjQ0DQotLS0gYS9ldmVudC5jDQorKysgYi9ldmVudC5j
+DQpAQCAtNDksOCArNDksMTAgQEAgc3RhdGljIHZvaWQgcHJpbnRfZnJhbWUoc3RydWN0IHByaW50
+X2V2ZW50X2FyZ3MgKmFyZ3MsIHN0cnVjdCBubGF0dHIgKmF0dHIpDQogCWNoYXIgbWFjYnVmWzYq
+M107DQogCXVpbnQxNl90IHRtcDsNCiANCi0JaWYgKCFhdHRyKQ0KKwlpZiAoIWF0dHIpIHsNCiAJ
+CXByaW50ZigiIFtubyBmcmFtZV0iKTsNCisJCWdvdG8gb3V0Ow0KKwl9DQogDQogCWZyYW1lID0g
+bmxhX2RhdGEoYXR0cik7DQogCWxlbiA9IG5sYV9sZW4oYXR0cik7DQpAQCAtOTcsNiArOTksOCBA
+QCBzdGF0aWMgdm9pZCBwcmludF9mcmFtZShzdHJ1Y3QgcHJpbnRfZXZlbnRfYXJncyAqYXJncywg
+c3RydWN0IG5sYXR0ciAqYXR0cikNCiAJZm9yIChpID0gMDsgaSA8IGxlbjsgaSsrKQ0KIAkJcHJp
+bnRmKCIgJS4wMngiLCBmcmFtZVtpXSk7DQogCXByaW50ZigiXSIpOw0KKyBvdXQ6DQorCTsgIC8q
+ZW1wdHkgc3RhdGVtZW50IHRvIGF2b2lkIGNvbXBpbGVyIGVycm9yICovDQogfQ0KIA0KIHN0YXRp
+YyB2b2lkIHBhcnNlX2NxbV9ldmVudChzdHJ1Y3QgbmxhdHRyICoqYXR0cnMpDQotLSANCjEuOS4x
 
-Why are you printing a kernel pointer to userspace always?  That's not a
-good idea, why not just delete this line, how useful is it?
 
-thanks,
-
-greg k-h
