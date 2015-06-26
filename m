@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46737 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722AbbFQIlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 04:41:19 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/14] mac80211: remove sta_info.gtk_idx
-Date: Wed, 17 Jun 2015 10:41:04 +0200
-Message-Id: <1434530475-3553-4-git-send-email-johannes@sipsolutions.net> (sfid-20150617_104131_273312_FF174ED8)
-In-Reply-To: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
-References: <1434530475-3553-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:32869 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379AbbFZGt1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jun 2015 02:49:27 -0400
+Received: by pdjn11 with SMTP id n11so69308810pdj.0
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 23:49:27 -0700 (PDT)
+From: Sunghoon Cho <ywhsbliss@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, Rachel.kim@atmel.com,
+	dean.lee@atmel.com, ywhsbliss@gmail.com
+Subject: [PATCH 3/3] staging: wilc1000: remove the warnings on the line over 80 characters
+Date: Fri, 26 Jun 2015 15:48:16 +0900
+Message-Id: <2337e747eb6df9df5287e1866ef26ddc41dcbedb.1435300603.git.ywhsbliss@gmail.com> (sfid-20150626_084931_014088_31C89A52)
+In-Reply-To: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
+References: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
+In-Reply-To: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
+References: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch removes the warnings reported by checkpatch.pl on the line
+over 80 characters.
 
-This struct member is only assigned, never used otherwise;
-remove it.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
 ---
- net/mac80211/key.c      | 1 -
- net/mac80211/sta_info.h | 2 --
- 2 files changed, 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 8abc31ebcf61..bde049e128db 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -329,7 +329,6 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 			ieee80211_check_fast_xmit(sta);
- 		} else {
- 			rcu_assign_pointer(sta->gtk[idx], new);
--			sta->gtk_idx = idx;
- 		}
- 	} else {
- 		defunikey = old &&
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 226f8ca47ad6..147464dbc455 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -283,7 +283,6 @@ struct ieee80211_fast_tx {
-  * @ptk: peer keys negotiated with this station, if any
-  * @ptk_idx: last installed peer key index
-  * @gtk: group keys negotiated with this station, if any
-- * @gtk_idx: last installed group key index
-  * @rate_ctrl: rate control algorithm reference
-  * @rate_ctrl_lock: spinlock used to protect rate control data
-  *	(data inside the algorithm, so serializes calls there)
-@@ -381,7 +380,6 @@ struct sta_info {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
- 	struct ieee80211_key __rcu *ptk[NUM_DEFAULT_KEYS];
--	u8 gtk_idx;
- 	u8 ptk_idx;
- 	struct rate_control_ref *rate_ctrl;
- 	void *rate_ctrl_priv;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8102ef0..0dfe108 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -77,8 +77,8 @@ struct WILC_WFI_stats {
+ #define num_reg_frame 2
+ /*
+  * If you use RX_BH_WORK_QUEUE on LPC3131: You may lose the first interrupt on
+- * LPC3131 which is important to get the MAC start status when you are blocked inside
+- * linux_wlan_firmware_download() which blocks mac_open().
++ * LPC3131 which is important to get the MAC start status when you are blocked
++ * inside linux_wlan_firmware_download() which blocks mac_open().
+  */
+ #if defined(NM73131_0_BOARD)
+  #define RX_BH_TYPE  RX_BH_KTHREAD
+@@ -151,7 +151,8 @@ struct WILC_WFI_priv {
+ 	u8 WILC_WFI_wep_default;
+ 	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
+ 	u8 WILC_WFI_wep_key_len[4];
+-	struct net_device *real_ndev;   /* The real interface that the monitor is on */
++	/* The real interface that the monitor is on */
++	struct net_device *real_ndev;
+ 	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
+ 	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
+ 	u8 wilc_groupkey;
 -- 
-2.1.4
+1.9.1
 
