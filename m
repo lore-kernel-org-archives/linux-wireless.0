@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:55825 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932165AbbFWSsU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 14:48:20 -0400
-Date: Tue, 23 Jun 2015 21:48:16 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] wireless: remove superfluous if statement in regulatory
- code
-Message-ID: <20150623184816.GA26319@w1.fi> (sfid-20150623_204823_385727_8560E1D6)
-References: <1435083066-6750-1-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435083066-6750-1-git-send-email-linville@tuxdriver.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:40370 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751568AbbFZI7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jun 2015 04:59:12 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] mac80211: shrink struct ieee80211_fragment_entry
+Date: Fri, 26 Jun 2015 10:59:09 +0200
+Message-Id: <1435309149-8912-1-git-send-email-johannes@sipsolutions.net> (sfid-20150626_105915_463238_B97B914C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 23, 2015 at 02:11:06PM -0400, John W. Linville wrote:
-> In reg_process_hint, the test of "treatment == REG_REQ_IGNORE ||
-> treatment == REG_REQ_ALREADY_SET" is superfluous because the code in the
-> if-then branch is identical to the code after the if statement.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This was introduced (or well, left behind) by commit
-eeca9fce1d71a4955855ceb0c3b13c1eb9db27c1 ('cfg80211: Schedule timeout
-for all CRDA calls'). It could be useful to mention that commit in the
-commit message since the resulting code from this new patch looks pretty
-strange and that triggered me to take a closer look at what happened
-here (looked like this is fine now).
+Most of the fields in this struct use too wide types, change
+that to shrink the struct from 64 to 48 bytes (on 64-bit.)
 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> @@ -2080,9 +2080,6 @@ static void reg_process_hint(struct regulatory_request *reg_request)
->  		return;
->  	case NL80211_REGDOM_SET_BY_USER:
->  		treatment = reg_process_hint_user(reg_request);
-> -		if (treatment == REG_REQ_IGNORE ||
-> -		    treatment == REG_REQ_ALREADY_SET)
-> -			return;
->  		return;
+This results in a total saving of 64 bytes for each interface.
 
-That assignment of 'treatment' is now write-only and you might as well
-remove that while cleaning this up. This being the only caller of
-reg_process_hint_user(), even more cleanup could be done by removing
-return value from there, but I'm not sure whether that would be of
-sufficient benefit.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index dd131e9b41d7..52930e91c0fd 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -84,13 +84,13 @@ struct ieee80211_local;
+ #define IEEE80211_DEAUTH_FRAME_LEN	(24 /* hdr */ + 2 /* reason */)
+ 
+ struct ieee80211_fragment_entry {
+-	unsigned long first_frag_time;
+-	unsigned int seq;
+-	unsigned int rx_queue;
+-	unsigned int last_frag;
+-	unsigned int extra_len;
+ 	struct sk_buff_head skb_list;
+-	int ccmp; /* Whether fragments were encrypted with CCMP */
++	unsigned long first_frag_time;
++	u16 seq;
++	u16 extra_len;
++	u16 last_frag;
++	u8 rx_queue;
++	bool ccmp; /* Whether fragments were encrypted with CCMP */
+ 	u8 last_pn[6]; /* PN of the last fragment if CCMP was used */
+ };
  
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.1.4
+
