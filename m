@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:32929 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246AbbFAS4i (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:33068 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752043AbbFZPFj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 14:56:38 -0400
-From: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-To: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
-Subject: [PATCH v2 2/4] staging: wilc1000: Change the prototype of WILC_WFI_init_mon_interface
-Date: Mon,  1 Jun 2015 21:56:19 +0300
-Message-Id: <1433184981-6077-2-git-send-email-kholmanskikh.s.s@gmail.com> (sfid-20150601_205708_026760_5DEDCC4E)
-In-Reply-To: <1433184981-6077-1-git-send-email-kholmanskikh.s.s@gmail.com>
-References: <1433184981-6077-1-git-send-email-kholmanskikh.s.s@gmail.com>
+	Fri, 26 Jun 2015 11:05:39 -0400
+Date: Fri, 26 Jun 2015 17:11:44 +0200
+From: Luis de Bethencourt <luis@debethencourt.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH 3/4] staging: wilc1000: remove whitespaces before quoted
+ newlines
+Message-ID: <20150626151141.GA31177@goodgumbo.baconseed.org> (sfid-20150626_170545_049029_73052926)
+References: <20150626144555.GA30031@goodgumbo.baconseed.org>
+ <1435330172.9377.52.camel@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435330172.9377.52.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WILC_WFI_init_mon_interface() should be declared with 'const char *name',
-not simply 'char *name', because this 'name' argument is only passed
-as is to alloc_netdev(), and alloc_netdev(), in turn,
-expects 'const char *'.
+On Fri, Jun 26, 2015 at 07:49:32AM -0700, Joe Perches wrote:
+> On Fri, 2015-06-26 at 16:45 +0200, Luis de Bethencourt wrote:
+> > Fix all checkpatch.pl warnings:
+> > WARNING: unnecessary whitespace before a quoted newline
+> 
+> Unassociated but:
+> 
+> > diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> []
+> > @@ -740,7 +740,7 @@ s32 Handle_set_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
+> >  	if (pu8IPAddr[0] < 192)
+> >  		pu8IPAddr[0] = 0;
+> >  
+> > -	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %d.%d.%d.%d \n", idx, pu8IPAddr[0], pu8IPAddr[1], pu8IPAddr[2], pu8IPAddr[3]);
+> > +	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %d.%d.%d.%d\n", idx, pu8IPAddr[0], pu8IPAddr[1], pu8IPAddr[2], pu8IPAddr[3]);
+> 
+> These printks with ip addresses could use vsprintf extension %pI4
+> 
+> 	PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n",
+> 		   idx, pu8IPAddr);
+> 
+> 
 
-Signed-off-by: Stanislav Kholmanskikh <kholmanskikh.s.s@gmail.com>
----
- drivers/staging/wilc1000/linux_mon.c              | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Hi Joe,
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index a19be45..f0a20a9 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -522,7 +522,7 @@ static void WILC_WFI_mon_setup(struct net_device *dev)
-  *  @date	12 JUL 2012
-  *  @version	1.0
-  */
--struct net_device *WILC_WFI_init_mon_interface(char *name, struct net_device *real_dev)
-+struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev)
- {
- 
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index 9eb8f37..b63c746 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -123,7 +123,7 @@ int WILC_WFI_DeInitHostInt(struct net_device *net);
- int WILC_WFI_InitHostInt(struct net_device *net);
- void WILC_WFI_monitor_rx(uint8_t *buff, uint32_t size);
- int WILC_WFI_deinit_mon_interface(void);
--struct net_device *WILC_WFI_init_mon_interface(char *name, struct net_device *real_dev);
-+struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
- 
- #ifdef TCP_ENHANCEMENTS
- #define TCP_ACK_FILTER_LINK_SPEED_THRESH 54
--- 
-1.9.1
+I could send this as a 5th patch in the series if you'd like, and set you as
+author.
 
+-   PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %d.%d.%d.%d\n", idx, pu8IPAddr[0], pu8IPAddr[1], pu8    IPAddr[2], pu8IPAddr[3]);
++   PRINT_INFO(HOSTINF_DBG, "Indx = %d, Handling set  IP = %pI4\n", idx, pu8IPAddr);
+
+Thanks,
+Luis
