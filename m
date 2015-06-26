@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47884 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbbFDPun (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Jun 2015 11:50:43 -0400
-Message-ID: <557073D2.4080704@candelatech.com> (sfid-20150604_175047_209498_25CC70D9)
-Date: Thu, 04 Jun 2015 08:50:42 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mga01.intel.com ([192.55.52.88]:59479 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751858AbbFZIWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jun 2015 04:22:07 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "akarwar@marvell.com" <akarwar@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 0/5] cfg80211 / mac80211: add support for Neighbor
+ Awareness Networking
+Date: Fri, 26 Jun 2015 08:22:02 +0000
+Message-ID: <1435306922.3083.6.camel@intel.com> (sfid-20150626_102219_439339_3AB05232)
+References: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <CAEhWJFmknndcDTGQqBDYt=E_gvidKaDskvZUH1n1Hjce34akeg@mail.gmail.com>
+	 <3436b448ddbc42b497e221870a96542d@SC-EXCH04.marvell.com>
+	 <f32f47395b524017b58306d770b020a6@SC-EXCH04.marvell.com>
+In-Reply-To: <f32f47395b524017b58306d770b020a6@SC-EXCH04.marvell.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: David Lin <dlin@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>,
-	Chor Teck Law <ctlaw@marvell.com>
-Subject: Re: [PATCH] mwlwifi: Initial submission of wireless driver to mainline
-References: <141c66f2950e4832a2bd99064db75970@SC-EXCH02.marvell.com>
-In-Reply-To: <141c66f2950e4832a2bd99064db75970@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/03/2015 09:55 PM, David Lin wrote:
-> Hi all,
-> 
-> 	Herewith, I am submitting the Linux driver for WRT1900AC. The work
-> was initially developed as part of openwrt effort and maintained on
-> https://github.com/kaloz/mwlwifi, thanks to the host where it is
-> nurtured.
-> 
-> 	Recently, I have also patched it to pass checkpatch.pl so that it
-> can be qualified for mainline.
-> 
-> 	This is still work in progress, with 8864 chipset more mature and
-> tested, while 8897 for the similar use case is added recently. We
-> will continue to maintain and enhance it.
-> 
-> We hope the community will welcome this initial submission!
-
-Do you have any notes on what features this driver/NIC provides?
-
-Does it require firmware, and if so, is source available?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+T24gRnJpLCAyMDE1LTA2LTI2IGF0IDA2OjA2ICswMDAwLCBBbWl0a3VtYXIgS2Fyd2FyIHdyb3Rl
+Og0KPiBIaSBFbW1hbnVlbCwNCj4gDQo+ID4gRnJvbTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFu
+dWVsLmdydW1iYWNoQGludGVsLmNvbT4NCj4gPiBEYXRlOiBNb24sIE1hciAzMCwgMjAxNSBhdCA3
+OjQ0IFBNDQo+ID4gU3ViamVjdDogW1JGQyAwLzVdIGNmZzgwMjExIC8gbWFjODAyMTE6IGFkZCBz
+dXBwb3J0IGZvciBOZWlnaGJvcg0KPiA+IEF3YXJlbmVzcyBOZXR3b3JraW5nDQo+ID4gVG86IGxp
+bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiA+IENjOiBFbW1hbnVlbCBHcnVtYmFjaCA8
+ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiA+IA0KPiA+IA0KPiA+IFRoaXMgcGF0Y2gg
+c2VyaWVzIGFkZCBzdXBwb3J0cyBmb3IgYSBuZXcgV2lGaSBmZWF0dXJlIGNhbGxlZA0KPiA+IE5l
+aWdoYm9yIEF3YXJlbmVzcyBOZXR3b3JraW5nIGEuay5hLiBOQU4uDQo+ID4gSXQgaXMgYnVpbHQg
+ZnJvbSB0aGUgZm9sbG93aW5nIGxheWVyczoNCj4gPiAgKiBUaW1lIHN5bmNocm9uaXphdGlvbg0K
+PiA+ICAqIERpc2NvdmVyeSBFbmdpbmUgKERFKQ0KPiA+IA0KPiANCj4gV2Ugd2VyZSBpbnRlcmVz
+dGVkIGluIHN1cHBvcnRpbmcgTkFOIGZlYXR1cmUgaW4gb3VyIFdMQU4gZHJpdmVyLiBJIGNhbWUg
+YWNyb3NzIHRoaXMgUkZDIHBhdGNoIHNlcmllcyBwb3N0ZWQgY291cGxlIG9mIG1vbnRocyBiYWNr
+LiBEbyB5b3UgaGF2ZSBhbnkgcGxhbiB0byBzdWJtaXQgdGhlIHVwZGF0ZWQgdmVyc2lvbj8gTGV0
+IHVzIGtub3cgaWYgd2UgY2FuIGNvbnRyaWJ1dGUgdG8gaXQgaW4gYW55IHdheS4NCg0KT2sgLSBu
+b3cgdGhhdCB0aGUgdGVjaG5vbG9neSBoYXMgYWxtb3N0IGxhdW5jaGVkLCBJIGd1ZXNzIHdlIHdp
+bGwgc2VlDQptb3JlIGludGVyZXN0LiBJIGd1ZXNzIHdlIGNhbiByZXN1Ym1pdCBpdCwgYnV0IHdl
+IG5lZWQgdG8gdGhpbmsNCmNhcmVmdWxseSBhYm91dCBob3cgdGhlIEFQSSBzaG91bGQgbG9vayBs
+aWtlLiBUaGlzIHBhcnQgaXNuJ3QgdHJpdmlhbCBhdA0KYWxsIHNpbmNlIHRoZSBlY29zeXN0ZW0g
+aXNuJ3Qgd2VsbCBkZWZpbmVkICh0byBzYXkgdGhlIGxlYXN0KS4gU28gSSBhbQ0Ka2luZGEgYWZy
+YWlkIHRoYXQgd2Ugd2lsbCBkZWZpbmUgc29tZXRoaW5nIHRoYXQgd2lsbCBub3Qgc3VpdCBvdXIg
+bmVlZHMNCndoZW4gdGhlIHVzZXJzcGFjZSB3aWxsIGJlZ2luIHRvIGhhdmUgY2xlYXJlciByZXF1
+aXJlbWVudHMuDQpJIHdvbid0IHN0YW5kIGluIHRoZSB3YXkgaWYgeW91IHdhbnQgdG8gcmV2aXZl
+IHRoaXMgcGF0Y2ggc2VyaWVzIHRob3VnaC4NCg==
