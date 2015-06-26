@@ -1,75 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4314 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753371AbbFCHcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:32:00 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/15] iwlwifi: mvm: simplify iwl_mvm_stop_roc()
-Date: Wed,  3 Jun 2015 10:31:31 +0300
-Message-Id: <1433316696-4612-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150603_093350_428780_B0098DE3)
-In-Reply-To: <1433316253.25661.3.camel@intel.com>
-References: <1433316253.25661.3.camel@intel.com>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:34325 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379AbbFZGtI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jun 2015 02:49:08 -0400
+Received: by pdbep18 with SMTP id ep18so47431339pdb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 23:49:08 -0700 (PDT)
+From: Sunghoon Cho <ywhsbliss@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, chris.park@atmel.com, Rachel.kim@atmel.com,
+	dean.lee@atmel.com, ywhsbliss@gmail.com
+Subject: [PATCH 1/3] staging: wilc1000: remove the warnings on the prohibited spaces
+Date: Fri, 26 Jun 2015 15:48:14 +0900
+Message-Id: <41da67d312f5ddf70e2a401814df494d71c8a945.1435300603.git.ywhsbliss@gmail.com> (sfid-20150626_084915_195817_136CDB15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch removes the warnings reported by checkpatch.pl regarding
+prohibited spaces between function name and open parenthesis.
 
-As pointed out by smatch, there's no need for a loop that always
-immediately terminates. Use an if statement instead and while at
-it clean up the mvmvif initialization.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sunghoon Cho <ywhsbliss@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/time-event.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-index a7448cf..d24b6a8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-@@ -797,13 +797,12 @@ int iwl_mvm_start_p2p_roc(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- void iwl_mvm_stop_roc(struct iwl_mvm *mvm)
- {
--	struct iwl_mvm_vif *mvmvif;
-+	struct iwl_mvm_vif *mvmvif = NULL;
- 	struct iwl_mvm_time_event_data *te_data;
- 	bool is_p2p = false;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	mvmvif = NULL;
- 	spin_lock_bh(&mvm->time_event_lock);
- 
- 	/*
-@@ -821,17 +820,14 @@ void iwl_mvm_stop_roc(struct iwl_mvm *mvm)
- 		}
- 	}
- 
--	/*
--	 * Iterate over the list of aux roc time events and find the time
--	 * event that is associated with a BSS interface.
--	 * This assumes that a BSS interface can have only a single time
--	 * event at any given time and this time event corresponds to a ROC
--	 * request
-+	/* There can only be at most one AUX ROC time event, we just use the
-+	 * list to simplify/unify code. Remove it if it exists.
- 	 */
--	list_for_each_entry(te_data, &mvm->aux_roc_te_list, list) {
-+	te_data = list_first_entry_or_null(&mvm->aux_roc_te_list,
-+					   struct iwl_mvm_time_event_data,
-+					   list);
-+	if (te_data)
- 		mvmvif = iwl_mvm_vif_from_mac80211(te_data->vif);
--		goto remove_te;
--	}
- 
- remove_te:
- 	spin_unlock_bh(&mvm->time_event_lock);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index d413fa3..22d7b85 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -80,9 +80,9 @@ struct WILC_WFI_stats {
+  * LPC3131 which is important to get the MAC start status when you are blocked inside
+  * linux_wlan_firmware_download() which blocks mac_open().
+  */
+-#if defined (NM73131_0_BOARD)
++#if defined(NM73131_0_BOARD)
+  #define RX_BH_TYPE  RX_BH_KTHREAD
+-#elif defined (PANDA_BOARD)
++#elif defined(PANDA_BOARD)
+  #define RX_BH_TYPE  RX_BH_THREADED_IRQ
+ #else
+  #define RX_BH_TYPE  RX_BH_KTHREAD
 -- 
-2.1.4
+1.9.1
 
