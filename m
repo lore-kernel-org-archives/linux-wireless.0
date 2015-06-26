@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:4317 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754348AbbFWLLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 07:11:10 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-Date: Tue, 23 Jun 2015 11:11:05 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com> (sfid-20150623_131114_278190_562E5509)
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
-In-Reply-To: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mailout2.samsung.com ([203.254.224.25]:44299 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbbFZJKj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jun 2015 05:10:39 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NQJ02HZ0O5PXX00@mailout2.samsung.com> for
+ linux-wireless@vger.kernel.org; Fri, 26 Jun 2015 18:10:37 +0900 (KST)
+Date: Fri, 26 Jun 2015 09:10:37 +0000 (GMT)
+From: Amit Khatri <amit.khatri@samsung.com>
+Subject: [PATCH 2/4] iw: Avoid possible memory leak for cb. cb got memory from
+ nl_cb_alloc() but not doing free
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
+	Nitin Jhanwar <nitin.j@samsung.com>
+Reply-to: amit.khatri@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <2034214352.309341435309836730.JavaMail.weblogic@ep2mlwas06c> (sfid-20150626_111045_907460_4AE4D623)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZn
-ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEphbnVzeiBEemllZHppYw0KPiBTZW50OiBUdWVz
-ZGF5LCBKdW5lIDIzLCAyMDE1IDExOjUxDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
-bC5vcmcNCj4gQ2M6IFBlZXIsIElsYW4NCj4gU3ViamVjdDogQVAgKyBQMlBfR08gbXVsdGljaGFu
-IHRlc3RzIHdpdGggaW50ZWw3MjYwIGFzIGEgUDJQX0NMSUVOVCAtIGRpcmVjdA0KPiBwcm9iZSBp
-c3N1ZQ0KPiANCj4gSGVsbG8sDQo+IA0KPiBUaGlzIGlzIG15IHNldHVwOg0KPiB0MS1hdGg5azoN
-Cj4gLSBBUCAoMjQxMikNCj4gLSBQMlBfR08gLSBnb19pbnRlbnQ9MTUgKDI0NjIpDQo+IA0KPiBy
-ZWYgUDJQIC0gaW50ZWwgNzI2MA0KPiByZWYgU1RBIC0gdDItYXRoOWsNCj4gDQo+IFNjZW5hcmlv
-Og0KPiAxLiBzZXR1cCBBUCB0MS1hdGg5aw0KPiAyLiBjb25uZWN0IFNUQSAodDItYXRoOWspIHRv
-IEFQDQo+IDMuIHJ1biBwaW5nIFNUQS0+QVANCj4gNC4gdDEtYXRoOWsgLSBwMnBfY29ubmVjdCA8
-aW50ZWw3MjYwPiBnb19pbnRlbnQ9MTUgNS4gaW50ZWw3MjYwIC0NCj4gcDJwX2Nvbm5lY3QgPHQx
-LWF0aDlrPiA2LiBnb19uZWdvdGlhdGlvbiBzdWNjZXNzIDcuIGNvbm5lY3QgZmFpbGVkIC4uLg0K
-PiA4LiAuLi4NCj4gDQo+IFNvbWV0aW1lcyBJIHNlZSBzdWNoIGZhaWwgb24gaW50ZWw3MjYwOg0K
-PiANCj4gWzUzMzUxOS4wMDk5NzhdIHAycC13bGFuMy0wOiBhdXRoZW50aWNhdGUgd2l0aCAwMjow
-Mzo3Zjo0ZTphMDpjZA0KPiBbNTMzNTE5LjAwOTk5OV0gcDJwLXdsYW4zLTA6IEFsbG9jYXRlZCBT
-VEEgMDI6MDM6N2Y6NGU6YTA6Y2QNCj4gWzUzMzUxOS4wMTM2NjddIHAycC13bGFuMy0wOiBJbnNl
-cnRlZCBTVEEgMDI6MDM6N2Y6NGU6YTA6Y2QNCj4gWzUzMzUxOS4wMTQxMjhdIHAycC13bGFuMy0w
-OiBkaXJlY3QgcHJvYmUgdG8gMDI6MDM6N2Y6NGU6YTA6Y2QgKHRyeSAxLzMpDQo+IFs1MzM1MTku
-MjE3MjcwXSBwMnAtd2xhbjMtMDogZGlyZWN0IHByb2JlIHRvIDAyOjAzOjdmOjRlOmEwOmNkICh0
-cnkgMi8zKQ0KPiBbNTMzNTE5LjQyMTM0OV0gcDJwLXdsYW4zLTA6IGRpcmVjdCBwcm9iZSB0byAw
-MjowMzo3Zjo0ZTphMDpjZCAodHJ5IDMvMykNCj4gWzUzMzUxOS42MjQzMjldIHAycC13bGFuMy0w
-OiBhdXRoZW50aWNhdGlvbiB3aXRoIDAyOjAzOjdmOjRlOmEwOmNkIHRpbWVkDQo+IG91dCBbNTMz
-NTE5LjYzMzA4NF0gcDJwLXdsYW4zLTA6IFJlbW92ZWQgU1RBIDAyOjAzOjdmOjRlOmEwOmNkDQo+
-IFs1MzM1MTkuNjMzMzI1XSBwMnAtd2xhbjMtMDogRGVzdHJveWVkIFNUQSAwMjowMzo3Zjo0ZTph
-MDpjZA0KPiANCj4gSSBzdXNwZWN0IHRoaXMgaXMgYmVjYXVzZSBvZiBQMlBfR08gTm9BPw0KPiBX
-aG8gc2hvdWxkIGNhcmUgYWJvdXQgdGhpcyBkaXJlY3QgcHJvYmVzIHR4IHdoZW4gR08gaXMgbm90
-IHByZXNlbnQ/DQo+IA0KPiBJbiBjYXNlIHdlIGRpZG4ndCBzZW5kIGRpcmVjdCBwcm9iZXMgLSB0
-aGVyZSBpcyBubyBwcm9ibGVtIGFuZCBUQyB3b3Jrcw0KPiBjb3JyZWN0bHkNCj4gDQoNCkludGVy
-ZXN0aW5nIDopDQoNCkFueSBjaGFuY2UgeW91IGNhbiBwcm92aWRlIHRyYWNlLWNtZCBhbmQgc25p
-ZmZlciBjYXB0dXJlPw0KDQpOb3JtYWxseSwgaWYgd2UgcHJvdmlkZWQgdGhlIEZXIHdpdGggdGhl
-IEJTU0lEIGluZm9ybWF0aW9uIGFuZCBUU0YgaW5mb3JtYXRpb24gZm9yIHN5bmNpbmcsIG9uY2Ug
-dGhlIEZXIGhlYXJzIHRoZSAxc3QgYmVhY29uIHdpdGggdGhlIE5vQSBpdCBzaG91bGQgc3luYyBv
-biBpdCBhbmQgbm90IHRyeSB0byBhdHRlbXB0IHRvIHRyYW5zbWl0IGFueSBmcmFtZXMgYXMgbG9u
-ZyBhcyB0aGUgQVAgaXMgYWJzZW50LiBJdCBtaWdodCBhbHNvIGJlIHJlbGF0ZWQgdG8gdGhlIGZh
-Y3QgdGhhdCB0aGUgcHJvYmUgcmVxdWVzdHMgYXJlIHNlbnQgdG8gYnJvYWRjYXN0IGFkZHJlc3Ms
-IGJ1dCBJIG5lZWQgdG8gZnVydGhlciBjaGVja3MgdGhpcy4gQW55d2F5LCBoYXZpbmcgc29tZSBk
-YXRhIHdvdWxkIGhlbHAgOykNCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
+SGkgSm9oYW5uZXMsDQoNClN1YmplY3Q6IFtQQVRDSCAyLzRdIGl3OiBBdm9pZCBwb3NzaWJsZSBt
+ZW1vcnkgbGVhayBmb3IgY2IuIGNiIGdvdCBtZW1vcnkgZnJvbQ0KIG5sX2NiX2FsbG9jKCkgYnV0
+IG5vdCBkb2luZyBmcmVlDQoNClNpZ25lZC1vZmYtYnk6IEFtaXQgS2hhdHJpIDxhbWl0LmtoYXRy
+aUBzYW1zdW5nLmNvbT4NClNpZ25lZC1vZmYtYnk6IFJhaHVsIEphaW4gPHJhaHVsLmphaW5Ac2Ft
+c3VuZy5jb20+DQotLS0NCiBpdy5jIHwgMiArLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlv
+bigrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvaXcuYyBiL2l3LmMNCmluZGV4IGRj
+OTk1NjYuLjFlOTEzYjYgMTAwNjQ0DQotLS0gYS9pdy5jDQorKysgYi9pdy5jDQpAQCAtNDc3LDgg
+KzQ3Nyw4IEBAIHN0YXRpYyBpbnQgX19oYW5kbGVfY21kKHN0cnVjdCBubDgwMjExX3N0YXRlICpz
+dGF0ZSwgZW51bSBpZF9pbnB1dCBpZGJ5LA0KIAl3aGlsZSAoZXJyID4gMCkNCiAJCW5sX3JlY3Zt
+c2dzKHN0YXRlLT5ubF9zb2NrLCBjYik7DQogIG91dDoNCi0JbmxfY2JfcHV0KGNiKTsNCiAgb3V0
+X2ZyZWVfbXNnOg0KKwlubF9jYl9wdXQoY2IpOw0KIAlubG1zZ19mcmVlKG1zZyk7DQogCXJldHVy
+biBlcnI7DQogIG5sYV9wdXRfZmFpbHVyZToNCi0tIA0KMS45LjE=
+
+
