@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f45.google.com ([209.85.213.45]:34895 "EHLO
-	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488AbbFATmu convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:34661 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbbFZBwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 15:42:50 -0400
-Received: by yhda23 with SMTP id a23so36145118yhd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Jun 2015 12:42:49 -0700 (PDT)
+	Thu, 25 Jun 2015 21:52:51 -0400
+Received: by wicnd19 with SMTP id nd19so32800633wic.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2015 18:52:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQmmm6NA2Lb5TB9rSiXYWWarGLGaE5KFJW0_aaqz1YwR3g@mail.gmail.com>
-References: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com>
-	<CA+BoTQnfXGLSvbx+hLfi_2w90-LgC3Uba0ZcO+Pt7J3FcEE9wg@mail.gmail.com>
-	<87vbf7vr3j.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmmm6NA2Lb5TB9rSiXYWWarGLGaE5KFJW0_aaqz1YwR3g@mail.gmail.com>
-Date: Mon, 1 Jun 2015 15:42:49 -0400
-Message-ID: <CAOiWkA8GepFEd2+47g_SfFFk5GuMOGCLkwwyZhj9MxchFgXxbA@mail.gmail.com> (sfid-20150601_214253_930037_9AEBA3A4)
-Subject: Re: system hang with backports-20150511/20150525
-From: Marty Faltesek <mfaltesek@google.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Martin Faltesek <martin.faltesek@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+In-Reply-To: <CAEFj984fG7oidP_u2vnH6p+VigjX_NF29JOfFWeAara8GCaiCg@mail.gmail.com>
+References: <CAEFj986kwfLXqPm+qN6pbB+_Pe3m2-9PLNZXf6+pH_fCeQqZ8A@mail.gmail.com>
+	<CAEFj984fG7oidP_u2vnH6p+VigjX_NF29JOfFWeAara8GCaiCg@mail.gmail.com>
+Date: Fri, 26 Jun 2015 09:52:50 +0800
+Message-ID: <CAEFj986=3t=9B5d_2JP1Yo2fSOEvb7wgRfgMWdyw4DnutrGANQ@mail.gmail.com> (sfid-20150626_035255_266470_51544D9E)
+Subject: Re: [PATCH] mac80211: mesh - don't special case routing to transmitter
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jesse Jones <jjones@cococorp.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I disabled IEEE80211_HW_SUPPORT_FAST_XMIT before, and still saw the
-hang. I repeated today to confirm.
+Sorry I miss out your previous email.
 
-I added the extra ath10k debug flags you requested, and it causes a
-system reset without any messages, very soon after the last hbeat
-timestamp. I've uploaded  log "crash.6.1.15.13.46" to
-http://tinyurl.com/dmesg-ftrace.
+> We did this over a year ago and I don't think we saw routing loops though
+> iirc we saw better performance when we made the change. Most likely because
+> of the other problem with the original code: it creates a path to the ta if
+> none exists but does not go through discovery to do so.
 
-Any advice on how to bisect when using backports?
+Yes, it is a direct hop towards the mgmt->sa,
 
-On Mon, Jun 1, 2015 at 4:27 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 1 June 2015 at 09:13, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> +ath10k list
->>>
->>> On 1 June 2015 at 03:37, Marty Faltesek <mfaltesek@google.com> wrote:
->>>> Starting with backports-20150511, and continuing with
->>>> backports-20150525, we see frequent system hangs. backports-20150424
->>>> had no issue.
->>>
->>> I don't see such binary releases on
->>> https://backports.wiki.kernel.org/index.php/Main_Page
->>> Hence I don't know what kernel you've backported the drivers from and
->>> I can't compare anything.
->>>
->>> Can you provide more details, please?
->>
->> I suspect it's from here:
->>
->> https://www.kernel.org/pub/linux/kernel/projects/backports/2015/05/25/
->>
->> The backports project pages are a bit confusing and that location is
->> hard to find.
->
-> Oh, thanks!
->
-> Hmm.. There was a ton of changes between 20150424 and 20150511. For
-> one, ath10k started to use chanctx API and FAST_XMIT. But it's not a
-> given these two are to blame.
->
-> The latter can be easily disabled by removing
-> IEEE80211_HW_SUPPORT_FAST_XMIT from ar->hw->flags in ath10k's mac.c.
-> The former.. not so easy. I'd be awesome if you could do a git bisect.
-> The commit ids are a3da0fb6(good) f17107c(bad) (you need linux-next
-> git repo including its tags for these ids to be resolvable).
->
->
-> Michał
+> So if the direct hop
+> is not the best path you're going to be stuck with a crappy path until the
+> next refresh.
+
+But hey, the code has already compared the path metric, right? Next
+refresh, so if you reduce the active path timeout
+(dot11MeshHWMPactivePathTimeout), you solve the problem, right?
+
+> In any case updating metrics without doing an SN feasibility check is highly
+> suspect.
+
+As cited in section 13.10.8.4, "the mesh STA may create or update its
+forwarding information to the transmitter of the element if the path
+metric improves." So it is correctly implemented.
+
+> I'm not 100% sure this instance will cause routing loops but I do
+> know that every time I have tried to be clever and optimize routing without
+> looking at both the SN and metric I have wound up with routing loops.
+
+I would recommend to add nl80211 command to disable this. After all,
+it may change other people's network behavior.
+
+Also, you may post you patch to o11s mailing list and your test
+scenario. Maybe others can verify as well to be 100% sure.
+
+Thanks
+
+---
+Chun-Yeow
