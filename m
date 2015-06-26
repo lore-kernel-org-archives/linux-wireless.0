@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f48.google.com ([209.85.213.48]:33235 "EHLO
-	mail-yh0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704AbbFABhm (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:9498 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751568AbbFZH4W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 21:37:42 -0400
-Received: by yhpn97 with SMTP id n97so29435016yhp.0
-        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2015 18:37:41 -0700 (PDT)
+	Fri, 26 Jun 2015 03:56:22 -0400
+From: David Lin <dlin@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v3] Add new mac80211 driver mwlwifi.
+Date: Fri, 26 Jun 2015 07:56:17 +0000
+Message-ID: <c66878048afb40d2ac6ec17e3a861c3b@SC-EXCH02.marvell.com> (sfid-20150626_095627_585229_42AD6EF5)
+References: <909c66d61ee943f5a5ca202040944f2d@SC-EXCH02.marvell.com>
+	 <1435225107.2096.12.camel@sipsolutions.net>
+	 <9228e2c85d5d4bab9ad2cc859fa6c946@SC-EXCH02.marvell.com>
+ <1435302478.2106.2.camel@sipsolutions.net>
+In-Reply-To: <1435302478.2106.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Date: Sun, 31 May 2015 21:37:41 -0400
-Message-ID: <CAOiWkA_i8mSx_DtW-Z8mdSiqMZcUXJp0nwCrZGkEZDWBUb3cVg@mail.gmail.com> (sfid-20150601_033746_931329_E7BDD2C6)
-Subject: system hang with backports-20150511/20150525
-From: Marty Faltesek <mfaltesek@google.com>
-To: linux-wireless@vger.kernel.org
-Cc: Martin Faltesek <martin.faltesek@gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Starting with backports-20150511, and continuing with
-backports-20150525, we see frequent system hangs. backports-20150424
-had no issue.
-
-After the freeze, the console is non-responsive, as well as the
-network stack (ssh/ping does not work). Using sysrq, I can see log
-messages continuing from ath10k_pci after the freeze, along with some
-other threads as well.
-
-mac80211/ath10k/cfg80211 are the only modules in use from backports,
-so it seems like a deadlock  could possibly be with mac80211 or
-ath10k.
-
-LOCKDEP didn't reveal anything.
-
-Using a 3.2.26 kernel on ARM. AP mode. No encryption.
-
-I've collected ftrace events for sched mac80211 net napi cfg80211
-workqueue, which are included in the dmesg you can find here because
-of its size:
-
-http://tinyurl.com/dmesg-ftrace
-
-In the logs, the last timestamp that my test script wrote is:
-
-[ 1021.291495] hbeat0352
-
-I've captured  ftrace events before and after 1021.291495.
-
-Thanks,
-Marty Faltesek
-Google Fiber
+PiBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiANCj4gT24gRnJpLCAyMDE1LTA2LTI2IGF0IDAxOjI1
+ICswMDAwLCBEYXZpZCBMaW4gd3JvdGU6DQo+IA0KPiA+IEJvdGggdGhlIGRyaXZlcnMgYXJlIG9w
+ZXJhYmxlIGZvciB0aGUgc2FtZSBjaGlwIHBhcnQgbnVtYmVyIDg4OTcgYW5kDQo+ID4gaXRzIG1v
+ZHVsZXMgKGJvYXJkcykgbWFudWZhY3R1cmVkIG91dCB0aGVyZS4gVGhlIFBDSSBEZXZpY2UgSUQg
+aXMgYQ0KPiA+IGZpeGVkIHZhbHVlIChieSBjaGlwL21hbnVmYWN0dXJlcikgb24gdGhvc2UgbW9k
+dWxlcy4gQXMgc2FpZCBlYXJsaWVyLA0KPiA+IHRoZSB0d28gZHJpdmVycyBhcmUgZm9yIG1hYzgw
+MjExIGhvc3QgbWFjLCBhbmQgZmlybXdhcmUgbWFjDQo+ID4gcmVzcGVjdGl2ZWx5LiBUaGV5IHNl
+cnZlIGRpZmZlcmVudCBwdXJwb3Nlcy4gVXNlcnMgbmVlZCB0byBjaG9vc2UNCj4gPiB3aGljaCBk
+cml2ZXIgdGhleSB3YW50IHRvIHVzZSBmb3IgdGhlIHNhbWUgd2lmaSBoYXJkd2FyZSwgYW5kIHRo
+ZXkNCj4gPiBjYW5ub3QgdXNlIGJvdGggb2YgdGhlbSBhdCB0aGUgc2FtZSB0aW1lLiBUaGUgbXdp
+ZmlleCBpcyBtb3JlIHdpZGVseQ0KPiA+IHVzZWQgbm93IGFuZCBzdGEgY2VudHJpYy4gV2UgZG8g
+bm90IHdhbnQgdG8gYnJlYWsgaXQuDQo+ID4NCj4gPiBJIGFtIG5vdCBzdXJlIGJ1dCBJIGJlbGll
+dmUgdGhleSBhcmUgYWxzbyBtdWx0aXBsZSBmbGF2b3JzIG9mIGRyaXZlcg0KPiA+IGZvciBzb21l
+IG90aGVyIGNoaXBzLiBBbnkgYWR2aWNlIGhvdyB0aGV5IGFyZSBoYW5kbGVkLCBjb25zaWRlcmlu
+Zw0KPiA+IHRoYXQgY2hhbmdpbmcgdGhlIGhhcmR3YXJlL2JvYXJkIGlzIG5vdCBhbiBvcHRpb24/
+IEkgZ3Vlc3Mgd2Ugd2FudCB0aGUNCj4gPiBjb21tdW5pdHkgdG8gYmUgYmV0dGVyIHNlcnZlZCB1
+c2luZyB0aGUgc2FtZSBoYXJkd2FyZS4gT3BpbmlvbiBmcm9tDQo+ID4gb3RoZXJzIGFyZSB3ZWxj
+b21lZC4NCj4gDQo+IEhtbSwgaW50ZXJlc3RpbmcsIEkgZGlkbid0IHJlYWxpemUgaXQgd2FzIHRo
+ZSBzYW1lIGRldmljZS4NCj4gDQo+IFBlcmhhcHMgaXQgc2ltcGx5IHNob3VsZG4ndCBjb25mbGlj
+dCBhdCBidWlsZCB0aW1lLCBhbmQgeW91IGNhbiByZWNvbW1lbmQgdG8NCj4gYmxhY2tsaXN0IG9u
+ZSBvciB0aGUgb3RoZXI/IE9yLCBpbiBmYWN0LCByZXR1cm4gYW4gZXJyb3IgZnJvbSBwcm9iZSBp
+ZiB5b3UgY2FuJ3QNCj4gZmluZCB0aGUgY29ycmVjdCBmaXJtd2FyZSBmaWxlLCBzbyB0aGUgb3Ro
+ZXIgZHJpdmVyIHdvdWxkIGJlIGF0dGVtcHRlZD8NCj4NClllcywgY3VycmVudCBzZXR0aW5nIHdp
+bGwgb25seSBhbGxvdyB1c2VyIHRvIGNob29zZSBvbmUgb2YgdGhlc2UgdHdvIGRyaXZlcnMgYXQg
+YnVpbGQgdGltZS4gDQo+DQo+ID4gQWx0aG91Z2ggIi1EX19DSEVDS19FTkRJQU5fXyIgZG9lcyBu
+b3QgcHV0IGludG8gTWFrZWZpbGUsIEkgaGFkIHVzZWQNCj4gPiAiQz0yIENGPSItRF9fQ0hFQ0tf
+RU5ESUFOX18iIHRvIGNoZWNrIHdhcm5pbmdzIGZvciBlbmRpYW4gYW5kIHJlbW92ZQ0KPiA+IHRo
+ZXNlIHdhcm5pbmdzLg0KPiANCj4gT2suIFRoZW4gSSBndWVzcyBteSBpc3N1ZXMgd2VyZSBtb3N0
+bHkgZHVlIHRvIDY0LWJpdCBzeXN0ZW0uDQo+DQpJIHdpbGwgdHJ5IHRvIGJ1aWxkIHRoZSBkcml2
+ZXIgdW5kZXIgNjQtYml0IHN5c3RlbS4NCj4NCj4gPiBJZiB5b3UgdGhpbmsgd2UgbmVlZCB0byBh
+ZGQgdGhpcyB0byBNYWtlZmlsZSBhbmQgbWFrZSBzdXJlIHplcm8NCj4gPiB3YXJuaW5nIG1lc3Nh
+Z2VzLCB3ZSB3aWxsIGRvIHRoYXQgKG9ubHkgZm9yIHNwYXJzZXIpLg0KPiANCj4gV2VsbCBpdCBq
+dXN0IGhlbHBzIG5vdCBmb3JnZXQgYWRkaW5nIENGPS1ELi4uIHRvIHRoZSBjb21tYW5kIGxpbmUs
+IGl0J3MNCj4gZXF1aXZhbGVudC4gSSBqdXN0IHByZWZlciBpdCBpbiBhIHNlbnNlIHNpbmNlIHRo
+ZW4gaWYgcGVvcGxlIHJ1biB3aXRoDQo+IEM9MSBvciBDPTIgdGhleSBnZXQgdGhhdCBwYXJ0IGZv
+ciBmcmVlLCBhbmQgc2luY2UgdGhlIGRyaXZlciBpcyBjbGVhbiB0byBzdGFydA0KPiB3aXRoIHRo
+ZW4gdGhhdCdzIGEgZ29vZCB0aGluZyB0byBkbyBJIHRoaW5rLg0KPg0KR290IGl0Lg0KPiANCj4g
+SSdsbCB0cnkgdG8gdGFrZSBhIGNsb3NlciBsb29rIGxhdGVyLg0KPiANCj4gSm9oYW5uZXMNCj4N
+CkRhdmlkLA0KVGhhbmtzDQo=
