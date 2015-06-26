@@ -1,73 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f195.google.com ([209.85.223.195]:34575 "EHLO
-	mail-ie0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718AbbFKSoi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 14:44:38 -0400
-Received: by iebtr6 with SMTP id tr6so4217866ieb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2015 11:44:35 -0700 (PDT)
+Received: from s1.neomailbox.net ([5.148.176.57]:29098 "EHLO s1.neomailbox.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751812AbbFZL6f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Jun 2015 07:58:35 -0400
+Message-ID: <558D3729.8080400@meshcoding.com> (sfid-20150626_135855_304895_DDC38968)
+Date: Fri, 26 Jun 2015 13:27:37 +0200
+From: Antonio Quartulli <antonio@meshcoding.com>
 MIME-Version: 1.0
-In-Reply-To: <87vbeubb24.fsf@kamboji.qca.qualcomm.com>
-References: <1433812382-10287-1-git-send-email-cfliu.tw@gmail.com> <87vbeubb24.fsf@kamboji.qca.qualcomm.com>
-From: "Liu CF/TW" <cfliu.tw@gmail.com>
-Date: Thu, 11 Jun 2015 11:43:55 -0700
-Message-ID: <CAG5N3qEfcFegKo_hc+oDxA85igEJqv9E42BEPd63iRksJw7b5Q@mail.gmail.com> (sfid-20150611_204441_973616_22984EC6)
-Subject: Re: [PATCH v3] ath10k: add 'cryptmode' param to support raw tx
- injection and software crypto
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Joerg <pommnitz@yahoo.com>, linux-wireless@vger.kernel.org
+Subject: Re: iw and non-ASCII SSIDs
+References: <loom.20150625T181029-814@post.gmane.org>	  (sfid-20150625_181310_521075_380CF492) <1435255854.2096.18.camel@sipsolutions.net>	 <loom.20150625T224327-49@post.gmane.org>	 (sfid-20150625_225037_608129_0D468D05) <1435308646.2106.4.camel@sipsolutions.net>
+In-Reply-To: <1435308646.2106.4.camel@sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="2pTbg9lmJbjbXlXA0GfJmIeUfFXKjAP7X"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 11, 2015 at 6:59 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Liu CF/TW <cfliu.tw@gmail.com> writes:
->
->> This change supports hardware crypto engine bypass by enabling raw
->> Rx/Tx encap mode. This enables use cases such as software crypto and raw
->> tx injection. This change introduces a new module param 'cryptmode'.
->>
->> cryptmode:
->>
->>   0: Use hardware crypto engine globally with native Wi-Fi mode TX/RX
->>      encapsulation to the firmware. This is the default mode.
->>   1: Use sofware crypto engine globally with raw mode TX/RX encapsulation
->>      to the firmware.
->
-> These two values are ok.
->
->>   2: Supports both hardware and software crypto with raw mode TX/RX
->>      encapsulation to the firmware. By default hardware crypto engine is
->>      used. To use software crypto in this mode, set the per ath10k_vif
->>      'nohwcrypt' flag value to True.*
->>      *) The patch for setting vif specific 'nohwcrypt' flag when
->>         cryptmode=2 would be a separate patch to mac80211.
->
-> But this the problematic one. I cannot apply something to ath10k until
-> Johannes applies the mac80211 part. Didn't I mention this already
-> earlier? At least I was supposed to do that.
->
-
-Yes I already removed those mac80211 dependent changes in v3. So this
-patch doesn't really depend on any mac80211 change.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--2pTbg9lmJbjbXlXA0GfJmIeUfFXKjAP7X
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
 
-> And most importantly does Johannes even agree with the approach? IIRC he
-> was pretty reluctant about configuring the crypto mode via nl80211.
->
-> I suggest splitting the patch into two: patch 1 adding support for
-> cryptmode values 0 and 1, patch 2 adding support for cryptmode 2. That
-> way we can commit patch 1 early and see what we can do with patch 2.
 
-Thanks. Will do in v4.
-Removing cryptmode=2 is just a enum change. No additional changes in
-the business logic required.
+On 26/06/15 10:50, Johannes Berg wrote:
+>=20
+> OTOH, what choice do we really have - the only other option would be to=
 
-After your review of v1, I have implemented knobs in both mac80211's
-debugfs and nl80211. I will send an RFC to mac80211 ML to see which
-one they prefer.
+> add a command line flag indicating that this behaviour is desired?
 
->
-> --
-> Kalle Valo
+Why not just using wpa_supplicant with key_mgmt=3DNONE ? It can handle th=
+e
+case where no encryption is required.
+
+=46rom your previous email I understood that it already supports hex
+SSIDs, therefore this should probably work, I guess. Has somebody tried
+this ?
+
+This way there is no need to break/extend any other tool.
+
+Cheers,
+
+
+--=20
+Antonio Quartulli
+
+
+--2pTbg9lmJbjbXlXA0GfJmIeUfFXKjAP7X
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJVjTcsAAoJEOb/4TMchkvfb3QQAJnLfXAx3F8IV1fNW/Zyui5B
+oJACrVx6jX1NiFYoscEJGW4iY7LP9UuZl8afvc3OpYCzjfF3JmXQYtoz1RDJhK8y
+cDhfKzsfxbolO80l7/6f95Jp7+jCXPRQY2j0fcaPlL1skYno6fq8efT47FLjkjzw
+kGmkudJRfkXy1h2WELLsMfXnwyXrN8sTnm3W6YNzFlvRLAlyF5xHC3qQbgUhM1GP
+EjSotehyYKuR/43H1iYa0Jw6XCurlhMenhruN5t1q6t/407AzNanphTf1ktcZoc8
+qQlyjPm/Jz98/jD96v86nC/WnLAtUol6U1doCTBNJStceGGAQjyhH/rmMDc06lN6
+YSHKZp9f3sm1eh3cCULgIaSg92vmhFWLqmCou1ZbpphMVL0gL6CbHexit7cLEZuC
+UNFjRS+yi8Kiji+W8ZI4Oej/O2xoMl96sgxXETwLJJnsBPF5JMeO6Vjd3msD8l5w
+qzgPXQYB9g07Iw2kzoFT3K+Ly8GGtxpKiiZh3RjzeQ+fL7qIK9/2GeBvhbqHp1/e
+LD/9LmP+ZomMgO3Srb5NE+hDLoW+TFPaazYsHYJcOF+E8r29zHgocmfsVw31v5hs
+vfSy8lxnfMkZ0183/PTlnMC81L3IAoohmMOK6UJc0HEm6xCX1HZCKDyT2QiR4E/Z
+CwCokhniMyuO9NnIIViU
+=6uQ+
+-----END PGP SIGNATURE-----
+
+--2pTbg9lmJbjbXlXA0GfJmIeUfFXKjAP7X--
