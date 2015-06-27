@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:22860 "EHLO mga09.intel.com"
+Received: from eggs.gnu.org ([208.118.235.92]:38947 "EHLO eggs.gnu.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754423AbbFJRT7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 13:19:59 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: clear local->in_reconfig on reconfig error
-Date: Wed, 10 Jun 2015 20:19:37 +0300
-Message-Id: <1433956777-23072-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150610_192002_716314_CAAA79DE)
+	id S1752353AbbF0ELV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Jun 2015 00:11:21 -0400
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+	(envelope-from <nikolas@gnu.org>)
+	id 1Z8hSa-00064y-9S
+	for linux-wireless@vger.kernel.org; Sat, 27 Jun 2015 00:11:20 -0400
+From: Nik Nyby <nikolas@gnu.org>
+To: kvalo@qca.qualcomm.com, trivial@kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: Nik Nyby <nikolas@gnu.org>
+Subject: [PATCH] Trivial: spell "distribution" correctly in a comment.
+Date: Sat, 27 Jun 2015 00:11:04 -0400
+Message-Id: <1435378264-13873-1-git-send-email-nikolas@gnu.org> (sfid-20150627_061126_796747_4DA476B1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
-
-If reconfiguration fails, local->in_reconfig is never
-cleaned, resulting in rx frames being dropped next
-time the device is started.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Nik Nyby <nikolas@gnu.org>
 ---
- net/mac80211/util.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath6kl/htc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 28858b4..f425754 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1714,6 +1714,7 @@ static void ieee80211_handle_reconfig_failure(struct ieee80211_local *local)
- 	local->resuming = false;
- 	local->suspended = false;
- 	local->started = false;
-+	local->in_reconfig = false;
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 14cab14..112d8a9 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -427,7 +427,7 @@ struct htc_endpoint_credit_dist {
+ };
  
- 	/* scheduled scan clearly can't be running any more, but tell
- 	 * cfg80211 and clear local state
+ /*
+- * credit distibution code that is passed into the distrbution function,
++ * credit distribution code that is passed into the distribution function,
+  * there are mandatory and optional codes that must be handled
+  */
+ enum htc_credit_dist_reason {
 -- 
-2.1.4
+1.9.1
 
