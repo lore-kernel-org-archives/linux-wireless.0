@@ -1,115 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:23882 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753530AbbFQIIA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 04:08:00 -0400
-From: David Lin <dlin@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Pete Hsieh" <peteh@marvell.com>, Chor Teck Law <ctlaw@marvell.com>
-Subject: RE: [PATCH v2] Add new mac80211 driver mwlwifi.
-Date: Wed, 17 Jun 2015 08:07:55 +0000
-Message-ID: <7e061b3712f4408284917b5a5b4d3813@SC-EXCH02.marvell.com> (sfid-20150617_100823_205462_4F0AF53E)
-References: <2127ea28a2a74cd6a89d45b88caf06cb@SC-EXCH02.marvell.com>
- <1434526059.1884.7.camel@sipsolutions.net>
-In-Reply-To: <1434526059.1884.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mout.web.de ([212.227.17.12]:64553 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754126AbbF0Ohg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Jun 2015 10:37:36 -0400
+Message-ID: <558EB524.1050609@users.sourceforge.net> (sfid-20150627_163755_283960_5B6F0A4F)
+Date: Sat, 27 Jun 2015 16:37:24 +0200
+From: SF Markus Elfring <elfring@users.sourceforge.net>
 MIME-Version: 1.0
+To: Chris Park <chris.park@atmel.com>, Dean Lee <dean.lee@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+CC: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH 2/2] staging: wilc1000: One function call less in mac_ioctl()
+ after error detection
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+In-Reply-To: <558EB32E.6090003@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBXZWQsIDIwMTUtMDYtMTcgYXQgMzoyOCBQTSBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiAN
-Cj4gT24gV2VkLCAyMDE1LTA2LTE3IGF0IDA2OjA2ICswMDAwLCBEYXZpZCBMaW4gd3JvdGU6DQo+
-IA0KPiAobm90IHJlYWxseSByZWFkaW5nIGFsbCBvZiB0aGlzIHJpZ2h0IG5vdywganVzdCB0d28g
-c21hbGwgY29tbWVudHMpDQo+IA0KPiA+ICtzdHJ1Y3QgbXdsX3R4X2Rlc2Mgew0KPiA+ICsJdTgg
-ZGF0YV9yYXRlOw0KPiA+ICsJdTggdHhfcHJpb3JpdHk7DQo+ID4gKwlfX2xlMTYgcW9zX2N0cmw7
-DQo+ID4gKwlfX2xlMzIgcGt0X3B0cjsNCj4gPiArCV9fbGUxNiBwa3RfbGVuOw0KPiA+ICsJdTgg
-ZGVzdF9hZGRyW0VUSF9BTEVOXTsNCj4gPiArCV9fbGUzMiBwcGh5c19uZXh0Ow0KPiA+ICsJX19s
-ZTMyIHNhcF9wa3RfaW5mbzsNCj4gPiArCV9fbGUzMiByYXRlX2luZm87DQo+ID4gKwl1OCB0eXBl
-Ow0KPiA+ICsJdTggeG1pdF9jb250cm9sOyAgICAgLyogYml0IDA6IHVzZSByYXRlaW5mbywgYml0
-IDE6IGRpc2FibGUgYW1wZHUgKi8NCj4gPiArCV9fbGUxNiByZXNlcnZlZDsNCj4gPiArCV9fbGUz
-MiB0Y3BhY2tfc247DQo+ID4gKwlfX2xlMzIgdGNwYWNrX3NyY19kc3Q7DQo+ID4gKwlzdHJ1Y3Qg
-c2tfYnVmZiAqcHNrX2J1ZmY7DQo+ID4gKwlzdHJ1Y3QgbXdsX3R4X2Rlc2MgKnBuZXh0Ow0KPiA+
-ICsJdTggcmVzZXJ2ZWQxWzJdOw0KPiA+ICsJdTggcGFja2V0X2luZm87DQo+ID4gKwl1OCBwYWNr
-ZXRfaWQ7DQo+ID4gKwlfX2xlMTYgcGFja2V0X2xlbl9hbmRfcmV0cnk7DQo+ID4gKwlfX2xlMTYg
-cGFja2V0X3JhdGVfaW5mbzsNCj4gPiArCXU4ICpzdGFfaW5mbzsNCj4gPiArCV9fbGUzMiBzdGF0
-dXM7DQo+ID4gK30gX19wYWNrZWQ7DQo+IA0KPiBUaGlzIC4uLiBjYW5ub3QgYmUgcmlnaHQuIFlv
-dSBjYW4ndCBoYXZlIGEgcG9pbnRlciBpbiBhIHN0cnVjdHVyZSB0aGF0J3MgdXNlZCBieQ0KPiBm
-aXJtd2FyZSwgYW5kIHRoZSBfX2xlWFggYW5kIF9fcGFja2VkIGluZGljYXRlcyB0aGF0IGl0J3Mg
-dXNlZCBieSBmaXJtd2FyZS4NCj4gQnV0IHBvaW50ZXIgc2l6ZSBpcyB2YXJpYWJsZSwgc28gKmNs
-ZWFybHkqIHRoaXMgY2Fubm90IGJlIGNvcnJlY3QuDQo+Pg0KPiA+ICtzdHJ1Y3QgbXdsX3J4X2Rl
-c2Mgew0KPiA+ICsJX19sZTE2IHBrdF9sZW47ICAgICAgICAgICAgICAvKiB0b3RhbCBsZW5ndGgg
-b2YgcmVjZWl2ZWQgZGF0YSAgICAgICovDQo+ID4gKwlfX2xlMTYgcmF0ZTsgICAgICAgICAgICAg
-ICAgIC8qIHJlY2VpdmUgcmF0ZSBpbmZvcm1hdGlvbg0KPiAqLw0KPiA+ICsJX19sZTMyIHBwaHlz
-X2J1ZmZfZGF0YTsgICAgICAvKiBwaHlzaWNhbCBhZGRyZXNzIG9mIHBheWxvYWQgZGF0YSAgICov
-DQo+ID4gKwlfX2xlMzIgcHBoeXNfbmV4dDsgICAgICAgICAgIC8qIHBoeXNpY2FsIGFkZHJlc3Mg
-b2YgbmV4dCBSWCBkZXNjICAgKi8NCj4gPiArCV9fbGUxNiBxb3NfY3RybDsgICAgICAgICAgICAg
-LyogcmVjZWl2ZWQgUW9zQ3RybCBmaWVsZCB2YXJpYWJsZSAgICAqLw0KPiA+ICsJX19sZTE2IGh0
-X3NpZzI7ICAgICAgICAgICAgICAvKiBsaWtlIG5hbWUgc3RhdGVzDQo+ICovDQo+ID4gKwlfX2xl
-MzIgaHdfcnNzaV9pbmZvOw0KPiA+ICsJX19sZTMyIGh3X25vaXNlX2Zsb29yX2luZm87DQo+ID4g
-Kwl1OCBub2lzZV9mbG9vcjsNCj4gPiArCXU4IHJlc2VydmVkWzNdOw0KPiA+ICsJdTggcnNzaTsg
-ICAgICAgICAgICAgICAgICAgICAvKiByZWNlaXZlZCBzaWduYWwgc3RyZW5ndCBpbmRpY2F0aW9u
-ICovDQo+ID4gKwl1OCBzdGF0dXM7ICAgICAgICAgICAgICAgICAgIC8qIHN0YXR1cyBmaWVsZCBj
-b250YWluaW5nIFVTRUQgYml0ICAgKi8NCj4gPiArCXU4IGNoYW5uZWw7ICAgICAgICAgICAgICAg
-ICAgLyogY2hhbm5lbCB0aGlzIHBrdCB3YXMgcmVjZWl2ZWQgb24NCj4gKi8NCj4gPiArCXU4IHJ4
-X2NvbnRyb2w7ICAgICAgICAgICAgICAgLyogdGhlIGNvbnRyb2wgZWxlbWVudCBvZiB0aGUgZGVz
-YyAgICAqLw0KPiA+ICsJLyogYWJvdmUgYXJlIDMyYml0cyBhbGlnbmVkIGFuZCBpcyBzYW1lIGFz
-IEZXLCBSeENvbnRyb2wgcHV0IGF0IGVuZA0KPiA+ICsJICogZm9yIHN5bmMNCj4gPiArCSAqLw0K
-PiA+ICsJc3RydWN0IHNrX2J1ZmYgKnBza19idWZmOyAgICAvKiBhc3NvY2lhdGVkIHNrX2J1ZmYg
-Zm9yIExpbnV4ICAgICAgICovDQo+ID4gKwl2b2lkICpwYnVmZl9kYXRhOyAgICAgICAgICAgIC8q
-IHZpcnR1YWwgYWRkcmVzcyBvZiBwYXlsb2FkIGRhdGEgICAgKi8NCj4gPiArCXN0cnVjdCBtd2xf
-cnhfZGVzYyAqcG5leHQ7ICAgLyogdmlydHVhbCBhZGRyZXNzIG9mIG5leHQgUlggZGVzYyAgICAq
-Lw0KPiA+ICt9IF9fcGFja2VkOw0KPiANCj4gU2FtZSBoZXJlLiBJZiB5b3UgcmVhbGx5IG5lZWQg
-dG8gaGF2ZSBhIGZpcm13YXJlIGFuZCBkcml2ZXIgc3RydWN0IGFzDQo+IGluZGljYXRlZCBieSB0
-aGUgY29tbWVudCwgeW91IHNob3VsZCBwcm9iYWJseSBoYXZlDQo+DQo+DQo+IHN0cnVjdCBtd2xf
-cnhfaW5mbyB7DQo+IAkvKiBmaXJtd2FyZSBpbmZvICovDQo+IH0gX19wYWNrZWQ7DQo+IA0KPiBz
-dHJ1Y3QgbXdsX3J4X2Rlc2Mgew0KPiAJc3RydWN0IG13bF9yeF9pbmZvIGluZm87DQo+IAkvKiBk
-cml2ZXIgaW5mbyAqLw0KPiB9Ow0KPiANCj4gKG5vdGUgdGhlIGxhY2sgb2YgX19wYWNrZWQgYWxz
-bywgX19wYWNrZWQgb2Z0ZW4gbWFrZXMgYWNjZXNzZXMgZmFyIGxlc3MNCj4gZWZmaWNpZW50KQ0K
-PiANCj4gPiArc3RydWN0IG13bF9kZXNjX2RhdGEgew0KPiA+ICsJZG1hX2FkZHJfdCBwcGh5c190
-eF9yaW5nOyAgICAgICAgICAvKiBwdHIgdG8gZmlyc3QgVFggZGVzYyAocGh5cy4pDQo+ICovDQo+
-ID4gKwlzdHJ1Y3QgbXdsX3R4X2Rlc2MgKnB0eF9yaW5nOyAgICAgIC8qIHB0ciB0byBmaXJzdCBU
-WCBkZXNjICh2aXJ0LikgICAgKi8NCj4gPiArCXN0cnVjdCBtd2xfdHhfZGVzYyAqcG5leHRfdHhf
-ZGVzYzsgLyogbmV4dCBUWCBkZXNjIHRoYXQgY2FuIGJlIHVzZWQNCj4gKi8NCj4gPiArCXN0cnVj
-dCBtd2xfdHhfZGVzYyAqcHN0YWxlX3R4X2Rlc2M7LyogdGhlIHN0YWxlZCBUWCBkZXNjcmlwdG9y
-DQo+ICovDQo+ID4gKwlkbWFfYWRkcl90IHBwaHlzX3J4X3Jpbmc7ICAgICAgICAgIC8qIHB0ciB0
-byBmaXJzdCBSWCBkZXNjIChwaHlzLikNCj4gKi8NCj4gPiArCXN0cnVjdCBtd2xfcnhfZGVzYyAq
-cHJ4X3Jpbmc7ICAgICAgLyogcHRyIHRvIGZpcnN0IFJYIGRlc2MgKHZpcnQuKSAgICAqLw0KPiA+
-ICsJc3RydWN0IG13bF9yeF9kZXNjICpwbmV4dF9yeF9kZXNjOyAvKiBuZXh0IFJYIGRlc2MgdGhh
-dCBjYW4gYmUgdXNlZA0KPiAqLw0KPiA+ICsJdW5zaWduZWQgaW50IHdjYl9iYXNlOyAgICAgICAg
-ICAgICAvKiBGVyBiYXNlIG9mZnNldCBmb3IgcmVnaXN0ZXJzDQo+ICovDQo+ID4gKwl1bnNpZ25l
-ZCBpbnQgcnhfZGVzY193cml0ZTsgICAgICAgIC8qIEZXIGRlc2NyaXB0b3Igd3JpdGUgcG9zaXRp
-b24NCj4gKi8NCj4gPiArCXVuc2lnbmVkIGludCByeF9kZXNjX3JlYWQ7ICAgICAgICAgLyogRlcg
-ZGVzY3JpcHRvciByZWFkIHBvc2l0aW9uDQo+ICovDQo+ID4gKwl1bnNpZ25lZCBpbnQgcnhfYnVm
-X3NpemU7ICAgICAgICAgIC8qIGxlbmd0aCBvZiB0aGUgUlggYnVmZmVycw0KPiAqLw0KPiA+ICt9
-IF9fcGFja2VkOw0KPiANCj4gZGl0dG8gLSBkb24ndCBwYWNrIGRyaXZlciBzdHJ1Y3RzDQo+IA0K
-PiBBbHNvLCB5b3UgcHJvYmFibHkgcmVhbGx5IHNob3VsZCBoYXZlIHR3byBoZWFkZXIgZmlsZXMg
-LSBvbmUgZm9yIHRoZSBmaXJtd2FyZQ0KPiBzdHJ1Y3RzIGFuZCBvbmUgZm9yIHRoZSBkcml2ZXIg
-c3RydWN0cyAtIGVzcGVjaWFsbHkgc2luY2UgeW91IHNlZW0gdG8gYmUNCj4gY29uZnVzaW5nIHRo
-ZSB0d28hDQo+DQpBcyBtZW50aW9uZWQgYmVmb3JlLCB0aGlzIGlzIGN1cnJlbnQgaW50ZXJmYWNl
-IHdpdGggRi9XLCBhbmQgdGhpcyBGL1cgaXMgdXNlZCBieSBvdGhlciBtYXJ2ZWxsJ3MgZHJpdmVy
-cywgSSBjYW4ndCBjaGFuZ2UgaXQuDQo+IA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L213bHdpZmkvZndjbWQuYw0KPiANCj4gVGhlcmUgYXJlIGEgbG90IG9mIHN0cnVjdCBkZWZpbml0
-aW9ucyBoZXJlIHRoYXQgeW91IGNvdWxkIG1vdmUgdG8gdGhlIHNhbWUNCj4gaGVhZGVyIGZpbGUu
-DQo+DQpBbGwgc3RydWN0dXJlcyBkZWZpbmVkIGluIHRoaXMgZmlsZSBhcmUgcmVsYXRlZCB0byBG
-L1cgY29tbWFuZHMsIGl0IHNob3VsZCBiZSBiZXR0ZXIgbGV0IHRoZW0gYmUgZGVmaW5lZCBpbiB0
-aGlzIGZpbGUuDQo+IA0KPiA+ICsjaWYgU1lTQURQVF9OVU1fT0ZfREVTQ19EQVRBID4gMw0KPiAN
-Cj4gaG93IGRvZXMgdGhhdCBnZXQgc2V0Pw0KPg0KU1lTQURQVF9OVU1fT0ZfREVTQ19EQVRBIGlz
-IGRlZmluZSBpbiBzeXNhZHB0LmguDQo+IA0KPiA+ICsvKiBEZXNjcmlwdGlvbjogIFRoaXMgZmls
-ZSBpbXBsZW1lbnRzIG1haW4gZnVuY3Rpb25zIG9mIHRoaXMgbW9kdWxlLg0KPiA+ICsgKi8NCj4N
-Ckkgc2hvdWxkIG1vZGlmeSBpdCBhbmQgY29tZSBvdXQgUEFUQ0ggdjM/DQo+DQo+IFlvdSBzdGls
-bCBoYXZlIGEgcHJldHR5IHN0cmFuZ2UgY29tbWVudCBzdHlsZS4NCj4gDQo+ID4gKwlody0+Zmxh
-Z3MgfD0gSUVFRTgwMjExX0hXX0FNUERVX0FHR1JFR0FUSU9OOw0KPiANCj4gVGhpcyB3YXMgcmVh
-bGx5IHdoYXQgSSB3YXMgbG9va2luZyBmb3IgOikNCj4gDQo+IE5vdGUgdGhhdCBJIGNoYW5nZWQg
-dGhpcyBlbnRpcmVseSBpbiB0aGUgbWFjODAyMTEtbmV4dCB0cmVlLiBJIGRvbid0IGtub3cgaG93
-DQo+IEthbGxlIHdhbnRzIHRvIGhhbmRsZSB0aGlzLCBidXQgZ2l2ZW4gdGhhdCB5b3VyIGRyaXZl
-ciBpc24ndCBnb2luZyB0byBtYWtlIHRoZQ0KPiBjdXQgZm9yIDQuMiBhbnl3YXksIHlvdSBzaG91
-bGQgcHJvYmFibHkgcmViYXNlIGl0IG9uIG1hYzgwMjExLW5leHQsIGFuZCB0aGVuDQo+IEthbGxl
-IGNhbiBwaWNrIGl0IHVwIGFmdGVyIGhlIG1lcmdlcyB0aGF0IGJhY2sgZnJvbSBuZXQtbmV4dCwg
-b3IgcGVyaGFwcyBhZnRlcg0KPiB0aGUgbWVyZ2Ugd2luZG93IGNsb3Nlcy4NCj4NClNvIEkgc2hv
-dWxkIGNvbWUgb3V0IFBBVENIIHYzIGJhc2VkIG9uIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9z
-Y20vbGludXgva2VybmVsL2dpdC9qYmVyZy9tYWM4MDIxMS1uZXh0LmdpdCwgcmlnaHQ/DQoNCkkg
-d29uZGVyIGlmIEkgY2FuJ3QgbW9kaWZ5IHRoZSBpbnRlcmZhY2Ugd2l0aCBGL1csIHRoZSBvbmx5
-IHRoaW5nIHRoYXQgSSBzaG91bGQgbW9kaWZ5IGZvciBQQVRDSCB2MyB3b3VsZCBiZSBvbmUgbGlu
-ZSBjb21tZW50Pw0KPg0KPiBbc25pcCByZXN0XQ0KPiANCj4gam9oYW5uZXMNCg0K
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 27 Jun 2015 16:00:59 +0200
+
+The kfree() function was called in two cases by the mac_ioctl() function
+during error handling even if the passed variable did not contain a pointer
+for a valid data item.
+
+* This implementation detail could be improved by the introduction
+  of another jump label.
+
+* Drop an unnecessary initialisation for the variable "buff" then.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2aa8d9b..f492310 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -2351,16 +2351,13 @@ int mac_close(struct net_device *ndev)
+ 
+ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ {
+-
+-	u8 *buff = NULL;
++	u8 *buff;
+ 	s8 rssi;
+ 	u32 size = 0, length = 0;
+ 	perInterface_wlan_t *nic;
+ 	struct WILC_WFI_priv *priv;
+ 	s32 s32Error = WILC_SUCCESS;
+ 
+-
+-
+ 	/* struct iwreq *wrq = (struct iwreq *) req;	// tony moved to case SIOCSIWPRIV */
+ 	#ifdef USE_WIRELESS
+ 	nic = netdev_priv(ndev);
+@@ -2405,7 +2402,7 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 				if (copy_to_user(wrq->u.data.pointer, buff, size)) {
+ 					PRINT_ER("%s: failed to copy data to user buffer\n", __func__);
+ 					s32Error = -EFAULT;
+-					goto done;
++					goto free_buffer;
+ 				}
+ 			}
+ 		}
+@@ -2420,8 +2417,9 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 	}
+ 	}
+ 
+-done:
++free_buffer:
+ 	kfree(buff);
++done:
+ 	return s32Error;
+ }
+ 
+-- 
+2.4.4
+
