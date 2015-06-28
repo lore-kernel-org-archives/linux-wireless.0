@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42935 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752652AbbFCHCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 03:02:54 -0400
-Message-ID: <1433314971.2274.1.camel@sipsolutions.net> (sfid-20150603_090257_231962_76735686)
-Subject: Re: [RFC] mac80211: convert HW flags to unsigned long bitmap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	gregory.greenman@intel.com
-Date: Wed, 03 Jun 2015 09:02:51 +0200
-In-Reply-To: <CAGRGNgV_4axC8Cq5AYkd7RQdJOnrT_9L85qisrrZnKYHyUEczQ@mail.gmail.com> (sfid-20150603_025745_650833_28A1FD99)
-References: <1433273994-14430-1-git-send-email-johannes@sipsolutions.net>
-	 <CAGRGNgV_4axC8Cq5AYkd7RQdJOnrT_9L85qisrrZnKYHyUEczQ@mail.gmail.com>
-	 (sfid-20150603_025745_650833_28A1FD99)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:37394 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752389AbbF1Reb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Jun 2015 13:34:31 -0400
+Received: by wicgi11 with SMTP id gi11so54023494wic.0
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Jun 2015 10:34:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <fff70f4adca53a929cda056a21f4d3ad@mail.gmail.com>
+References: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
+	<4bd697c41f2bb66593c849246bde7b00@mail.gmail.com>
+	<CAEFj9878gNnDViLYh+TW6GPUvJBbSn4Y=tDBmdp3NwBHymqxRg@mail.gmail.com>
+	<b193de6c0b11af0193414a217f0ea56b@mail.gmail.com>
+	<CAEFj986Jt-1rymgARCvDe+2Tb1R0PqsDfSELC7WbAXfkC+9xPw@mail.gmail.com>
+	<fff70f4adca53a929cda056a21f4d3ad@mail.gmail.com>
+Date: Mon, 29 Jun 2015 01:34:30 +0800
+Message-ID: <CAEFj987riY6NKta+aYuN3bV9R9yQ3FdLLJGcdry98t++E2ZHvQ@mail.gmail.com> (sfid-20150628_193441_623539_135ABFF3)
+Subject: Re: [PATCH] mac80211: mesh - always do every discovery retry
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Jesse Jones <jjones@cococorp.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-06-03 at 10:57 +1000, Julian Calaby wrote:
+>
+> I'm not keen on the idea. I still think it's the right thing to do and I
+> don't much like the idea of having to turn it on. And it will become an even
+> better idea if we don't refresh as often (eventually I'll send a patch for
+> that though I think I may have to massage what we're using now).
+>
 
-> Why not add a ieee80211_hw_clear() function? Yes, it'd only be used in
-> 3 places, but it'd look neater.
+Since you have make up your mind, I have no further comment on this.
 
-Well, this was actually intentional.
+But I would suggest you to fix the MESH_MAX_PREQ_RETRIES to default 1.
 
-Drivers are not *supposed* to be doing this, the hardware flags are
-supposed to be constant hardware description flags. The three drivers
-clearing this specific but currently work OK due to the way this
-particular flag is treated, but that wouldn't necessarily the case for
-all of the flags; adding a _clear() function would seem to imply that
-it's OK to do this, when it's really not.
-
-johannes
-
+---
+Chun-Yeow
