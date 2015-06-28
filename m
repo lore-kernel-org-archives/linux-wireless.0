@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52577 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933497AbbFWTAR (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:35540 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbbF1PRX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 15:00:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mwifiex: avoid freeing improper pointer in mwifiex_set_wowlan_mef_entry
-Date: Tue, 23 Jun 2015 14:45:45 -0400
-Message-Id: <1435085145-9668-1-git-send-email-linville@tuxdriver.com> (sfid-20150623_210026_732080_3795332F)
+	Sun, 28 Jun 2015 11:17:23 -0400
+Received: by lagh6 with SMTP id h6so28408234lag.2
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Jun 2015 08:17:22 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: populate bus DT subnodes as platform_device-s
+Date: Sun, 28 Jun 2015 17:17:13 +0200
+Message-Id: <1435504633-20831-1-git-send-email-zajec5@gmail.com> (sfid-20150628_171728_455332_F478A2B3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mwifiex_set_wowlan_mef_entry attempts to free a passed-in pointer in
-case of an error.  The only caller (mwifiex_set_mef_filter) passes that
-pointer as an offset into allocated memory, so any attempt to free that
-will not be the actual allocated pointer.
+Our bus should allow defining children nodes as we may want to specify
+devices attached to the bus. This is required e.g. to specify NAND or
+ChipCommon cores and use bus's address and IRQ mappings.
 
-Address this by changing mwifiex_set_wowlan_mef_entry to not do any
-free, and to cause mwifiex_set_mef_filter to do the appropriate free if
-the call to mwifiex_set_wowlan_mef_entry fails.
-
-Coverity CID #1295879
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/bcma/main.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index b15e4c7acbec..3f6762dfc947 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2954,7 +2954,6 @@ static int mwifiex_set_wowlan_mef_entry(struct mwifiex_private *priv,
- 					MWIFIEX_MEF_MAX_BYTESEQ)) {
- 			mwifiex_dbg(priv->adapter, ERROR,
- 				    "Pattern not supported\n");
--			kfree(mef_entry);
- 			return -EOPNOTSUPP;
- 		}
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 9635f10..5912847 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -12,6 +12,7 @@
+ #include <linux/slab.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
++#include <linux/of_platform.h>
  
-@@ -3036,9 +3035,12 @@ static int mwifiex_set_mef_filter(struct mwifiex_private *priv,
+ MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
+ MODULE_LICENSE("GPL");
+@@ -409,6 +410,13 @@ int bcma_bus_register(struct bcma_bus *bus)
+ 		bcma_core_pci_early_init(&bus->drv_pci[0]);
+ 	}
  
- 	mwifiex_set_auto_arp_mef_entry(priv, &mef_entry[0]);
- 
--	if (wowlan->n_patterns || wowlan->magic_pkt)
-+	if (wowlan->n_patterns || wowlan->magic_pkt) {
- 		ret = mwifiex_set_wowlan_mef_entry(priv, &mef_cfg,
- 						   &mef_entry[1], wowlan);
-+		if (ret)
-+			goto err;
-+	}
- 
- 	if (!mef_cfg.criteria)
- 		mef_cfg.criteria = MWIFIEX_CRITERIA_BROADCAST |
-@@ -3048,6 +3050,8 @@ static int mwifiex_set_mef_filter(struct mwifiex_private *priv,
- 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_MEF_CFG,
- 			HostCmd_ACT_GEN_SET, 0,
- 			&mef_cfg, true);
++	if (bus->host_pdev) {
++		struct device *dev = &bus->host_pdev->dev;
 +
-+err:
- 	kfree(mef_entry);
- 	return ret;
- }
++		of_platform_populate(dev->of_node, of_default_bus_match_table,
++				     NULL, dev);
++	}
++
+ 	/* Cores providing flash access go before SPROM init */
+ 	list_for_each_entry(core, &bus->cores, list) {
+ 		if (bcma_is_core_needed_early(core->id.id))
 -- 
-2.1.0
+1.8.4.5
 
