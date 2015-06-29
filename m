@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33957 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751150AbbFMVsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Jun 2015 17:48:03 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	Daniele Alessandrelli <daniele.alessandrelli@gmail.com>,
-	Aleh Suprunovich <br@ahlamon.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUG ?] staging: rtl8723au: condition with no effect
-References: <1434191497-5611-1-git-send-email-hofrat@osadl.org>
-Date: Sat, 13 Jun 2015 17:48:01 -0400
-In-Reply-To: <1434191497-5611-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
-	Guire's message of "Sat, 13 Jun 2015 12:31:37 +0200")
-Message-ID: <wrfjy4jn1dri.fsf@redhat.com> (sfid-20150613_234811_800177_C1B4F54C)
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:35933 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752602AbbF2DvD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Jun 2015 23:51:03 -0400
+Received: by pdcu2 with SMTP id u2so108794177pdc.3
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Jun 2015 20:51:02 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: remove compilation warning on mesh
+Date: Mon, 29 Jun 2015 11:50:47 +0800
+Message-Id: <1435549847-18680-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150629_055118_943437_2BC05771)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <hofrat@osadl.org> writes:
-> scanning for trivial bug-patters with coccinelle spatches returned:
-> ./drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:1395
-> 	WARNING: condition with no effect (if branch == else)
->
-> drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c - line numbers from 4.1-rc7
-> 1395    if (bWithoutHWSM) {
-> 1396            /* value16 |= (APDM_HOST | FSM_HSUS |/PFM_ALDN); */
-> 1397            /*  2010/08/31 According to Filen description, we need to
-> 1398                use HW to shut down 8051 automatically. */
-> 1399            /*  Because suspend operation need the asistance of 8051
-> 1400                to wait for 3ms. */
-> 1401            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
-> 1402    } else {
-> 1403            value16 = APDM_HOST | AFSM_HSUS | PFM_ALDN;
-> 1404    }
-> 1405 
-> 1406    rtl8723au_write16(padapter, REG_APS_FSMCO, value16);    /* 0x4802 */
->
-> Not clear what the intent is but this looks like a typo/bug in the assigment
-> of value16 as the condition here has no effect.
+Remove the warning on the following:
+mesh_hwmp.c: warning: ‘target_metric’ may be used
+uninitialized in this function [-Wmaybe-uninitialized]
 
-Doesn't look like a typo, looks like someone at some point had commented
-out PFM_ALDN in the bWithoutHWSM case. Why they did that and then later
-overrode it, I have no idea.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Jes
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index d80e0a4..1a1f652 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -530,7 +530,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	const u8 *target_addr, *orig_addr;
+ 	const u8 *da;
+ 	u8 target_flags, ttl, flags;
+-	u32 orig_sn, target_sn, lifetime, target_metric;
++	u32 orig_sn, target_sn, lifetime, target_metric = 0;
+ 	bool reply = false;
+ 	bool forward = true;
+ 	bool root_is_gate;
+@@ -551,7 +551,6 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		mhwmp_dbg(sdata, "PREQ is for us\n");
+ 		forward = false;
+ 		reply = true;
+-		target_metric = 0;
+ 		if (time_after(jiffies, ifmsh->last_sn_update +
+ 					net_traversal_jiffies(sdata)) ||
+ 		    time_before(jiffies, ifmsh->last_sn_update)) {
+@@ -568,7 +567,6 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				reply = true;
+ 				target_addr = sdata->vif.addr;
+ 				target_sn = ++ifmsh->sn;
+-				target_metric = 0;
+ 				ifmsh->last_sn_update = jiffies;
+ 			}
+ 			if (root_is_gate)
+-- 
+2.3.0
 
