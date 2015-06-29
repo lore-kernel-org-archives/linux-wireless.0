@@ -1,44 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13991 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbbFIKu2 (ORCPT
+Received: from gosford.compton.nu ([217.169.17.27]:42968 "EHLO
+	gosford.compton.nu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320AbbF2JUO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Jun 2015 06:50:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: fix ar->rx_channel updating logic
-References: <1433326616-23279-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 9 Jun 2015 13:50:21 +0300
-In-Reply-To: <1433326616-23279-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 3 Jun 2015 12:16:54 +0200")
-Message-ID: <87wpzdf95e.fsf@kamboji.qca.qualcomm.com> (sfid-20150609_125032_247689_774CDF13)
+	Mon, 29 Jun 2015 05:20:14 -0400
+Subject: Re: Null pointer dereference when station associates [introduced by
+ 4.0.5?]
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <558EC27A.60804@compton.nu> (sfid-20150627_181129_907073_7F8F41EE)
+ <1435565678.2156.9.camel@sipsolutions.net> <55910222.8020906@compton.nu>
+Cc: stable@vger.kernel.org
+From: Tom Hughes <tom@compton.nu>
+Message-ID: <55910DC8.9040700@compton.nu> (sfid-20150629_112019_079235_734AF1AE)
+Date: Mon, 29 Jun 2015 10:20:08 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <55910222.8020906@compton.nu>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 29/06/15 09:30, Tom Hughes wrote:
+> On 29/06/15 09:14, Johannes Berg wrote:
+>> On Sat, 2015-06-27 at 16:34 +0100, Tom Hughes wrote:
+>>>
+>>> Interestingly from what I can see this is trying to create a file
+>>> for the station at a path something like:
+>>>
+>>> ieee80211/phy0/netdev:XXXX/stations/XXXXXX
+>>
+>> indeed.
+>>
+>>> but in my (currently working) boot under 4.0.4 there is no netdev
+>>> directory under phy0 in debugfs... but then maybe that is the problem
+>>> as well if the inode pointer was null?
+>>>
+>>
+>> This is pretty strange - if the dentry pointer (sdata
+>> ->debugfs.subdir_stations) was NULL or an ERR_PTR(), the code would
+>> return pretty much immediately.
+>>
+>> So it looks like that pointer is valid, but it's ->d_inode was NULL?
+>>
+>> I'm not really sure how that could happen.
+> 
+> Indeed I'm a bit puzzled... 
 
-> Channel contexts aren't iterable until after
-> they've been added to the driver. The code assumed
-> otherwise.
->
-> This problem could result in:
->
->  * rx_channel being NULL and forcing Rx path to go
->    the slow way to get channel on QCA988X,
->
->  * report incorrect channel when running
->    multi-channel on QCA61X4 hw2.1,
->
->  * report incorrect channel after AP channel
->    switch.
->
-> Fixes: 500ff9f9389d ("ath10k: implement chanctx API")
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+It looks like hostapd has something to do with it... If I stop hostapd and
+remove ath9k and then reprobe it then the netdev dir appears:
 
-Thanks, all three patches applied.
+gosford [~] % sudo modprobe ath9k                     
+gosford [~] % sudo ls /sys/kernel/debug/ieee80211/phy1
+ath9k			 long_retry_limit  reset	      user_power
+fragmentation_threshold  netdev:wlp2s0	   rts_threshold      wep_iv
+ht40allow_map		 power		   short_retry_limit
+hwflags			 queues		   statistics
+keys			 rc		   total_ps_buffered
+
+Then I start hostapd and it vanishes:
+
+gosford [~] % sudo systemctl start hostapd
+gosford [~] % sudo ls /sys/kernel/debug/ieee80211/phy1
+ath9k			 keys		   rc		      statistics
+fragmentation_threshold  long_retry_limit  reset	      total_ps_buffered
+ht40allow_map		 power		   rts_threshold      user_power
+hwflags			 queues		   short_retry_limit  wep_iv
+
+Tom
 
 -- 
-Kalle Valo
+Tom Hughes (tom@compton.nu)
+http://compton.nu/
