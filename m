@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52316 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755546AbbFQODO (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:36487 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbbF2HlK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 10:03:14 -0400
-Date: Wed, 17 Jun 2015 07:03:13 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: remove WILC_WFIDrvHandle
-Message-ID: <20150617140313.GA17337@kroah.com> (sfid-20150617_160318_786459_DF0A0109)
-References: <1434546980-19094-1-git-send-email-sudipm.mukherjee@gmail.com>
+	Mon, 29 Jun 2015 03:41:10 -0400
+Received: by obzt3 with SMTP id t3so8507307obz.3
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jun 2015 00:41:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434546980-19094-1-git-send-email-sudipm.mukherjee@gmail.com>
+In-Reply-To: <1435562850.2156.4.camel@sipsolutions.net>
+References: <1435549847-18680-1-git-send-email-yeohchunyeow@gmail.com>
+	<1435562850.2156.4.camel@sipsolutions.net>
+Date: Mon, 29 Jun 2015 15:41:09 +0800
+Message-ID: <CAEFj987fG9NrxWUfqtf3UVD8uWzAB-TeYAJvTDDoyH0JxUHKhA@mail.gmail.com> (sfid-20150629_094113_927026_4177E6D1)
+Subject: Re: [PATCH] mac80211: remove compilation warning on mesh
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 17, 2015 at 06:46:20PM +0530, Sudip Mukherjee wrote:
-> WILC_WFIDrvHandle was:
-> 
-> typedef struct {
->        s32 s32Dummy;
-> } *WILC_WFIDrvHandle;
-> 
-> which basically meant a pointer to an integer.
-> so removed the typedef and replaced all WILC_WFIDrvHandle with int *
-> 
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> ---
-> 
-> replacement was done by using sed, just manually removed the typedef.
-> build ok, before this change total 77 build warning, after this patch
-> same number of warnings.
+On Mon, Jun 29, 2015 at 3:27 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2015-06-29 at 11:50 +0800, Chun-Yeow Yeoh wrote:
+>> Remove the warning on the following:
+>> mesh_hwmp.c: warning: ‘target_metric’ may be used
+>> uninitialized in this function [-Wmaybe-uninitialized]
+>>
+> I don't see any such warning, and would prefer not to have a blanket
+> initialization that might in the future suppress a valid warning.
+>
 
-Which means this is not the correct fix for this :)
+Ok, noted.
 
-The driver is obviously broken for 64bit systems, and these warnings are
-showing that, let's fix this "correctly" please.
+FYI, I have compiled backports-20150626 and observed this warning.
 
-sorry, I'm not going to take this patch.
-
-greg k-h
+----
+Chun-Yeow
