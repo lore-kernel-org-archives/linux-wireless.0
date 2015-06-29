@@ -1,68 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43569 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57115 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933673AbbFJRyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Jun 2015 13:54:51 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Fabian Frederick <fabf@skynet.be>
-Cc: linux-kernel@vger.kernel.org, Julia Lawall <Julia.Lawall@lip6.fr>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH 1/1 linux-next] staging: rtl8723au: use swap() in WMMOnAssocRsp23a()
-References: <1433953937-23987-1-git-send-email-fabf@skynet.be>
-Date: Wed, 10 Jun 2015 13:54:49 -0400
-In-Reply-To: <1433953937-23987-1-git-send-email-fabf@skynet.be> (Fabian
-	Frederick's message of "Wed, 10 Jun 2015 18:32:17 +0200")
-Message-ID: <wrfjbngnv47q.fsf@carbonite.lan.trained-monkey.org> (sfid-20150610_195511_839908_EA34BE49)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1750823AbbF2H1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2015 03:27:32 -0400
+Message-ID: <1435562850.2156.4.camel@sipsolutions.net> (sfid-20150629_092736_741861_751DC351)
+Subject: Re: [PATCH] mac80211: remove compilation warning on mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 29 Jun 2015 09:27:30 +0200
+In-Reply-To: <1435549847-18680-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150629_055104_499604_FF60252A)
+References: <1435549847-18680-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20150629_055104_499604_FF60252A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fabian Frederick <fabf@skynet.be> writes:
-> Use kernel.h macro definition.
->
-> Thanks to Julia Lawall for Coccinelle scripting support.
->
-> Signed-off-by: Fabian Frederick <fabf@skynet.be>
-> ---
->  drivers/staging/rtl8723au/core/rtw_wlan_util.c | 12 +++---------
->  1 file changed, 3 insertions(+), 9 deletions(-)
+On Mon, 2015-06-29 at 11:50 +0800, Chun-Yeow Yeoh wrote:
+> Remove the warning on the following:
+> mesh_hwmp.c: warning: ‘target_metric’ may be used
+> uninitialized in this function [-Wmaybe-uninitialized]
+> 
+I don't see any such warning, and would prefer not to have a blanket
+initialization that might in the future suppress a valid warning.
 
-Please make sure you base your patches off the staging tree, not off
-linux-next.
-
-Jes
-
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-> index 5280338..3c1315fc 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-> @@ -573,7 +573,7 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
->  	inx[0] = 0; inx[1] = 1; inx[2] = 2; inx[3] = 3;
->  
->  	if (pregpriv->wifi_spec == 1) {
-> -		u32 j, tmp, change_inx = false;
-> +		u32 j, change_inx = false;
->  
->  		/* entry indx: 0->vo, 1->vi, 2->be, 3->bk. */
->  		for (i = 0; i < 4; i++) {
-> @@ -589,14 +589,8 @@ void WMMOnAssocRsp23a(struct rtw_adapter *padapter)
->  				}
->  
->  				if (change_inx) {
-> -					tmp = edca[i];
-> -					edca[i] = edca[j];
-> -					edca[j] = tmp;
-> -
-> -					tmp = inx[i];
-> -					inx[i] = inx[j];
-> -					inx[j] = tmp;
-> -
-> +					swap(edca[i], edca[j]);
-> +					swap(inx[i], inx[j]);
->  					change_inx = false;
->  				}
->  			}
+johannes
