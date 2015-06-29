@@ -1,89 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40443 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796AbbFFEp0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Jun 2015 00:45:26 -0400
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Subject: Re: Interaction issue of intel wifi and broadcom bluetooth - it appears that nobody feels responsible for doing something
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <55715DD0.4080802@broadcom.com>
-Date: Sat, 6 Jun 2015 06:45:23 +0200
-Cc: Jonas Thiem <jonasthiem@googlemail.com>,
-	Jeremiah Mahler <jmmahler@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Message-Id: <080F4D26-FD33-43C0-A82F-ACFC07DFE932@holtmann.org> (sfid-20150606_064548_238695_65C8F71B)
-References: <CAD7Z2ho6KbK3VfO1rJdEX0RN5-trK0=ufYtma_7tMpYKUSq9UQ@mail.gmail.com> <20150605044527.GA16107@hudson.localdomain> <55712FC7.5030603@googlemail.com> <55715DD0.4080802@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
+Received: from eggs.gnu.org ([208.118.235.92]:47804 "EHLO eggs.gnu.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753048AbbF2RbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2015 13:31:09 -0400
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+	(envelope-from <nikolas@gnu.org>)
+	id 1Z9ctc-0000gP-VR
+	for linux-wireless@vger.kernel.org; Mon, 29 Jun 2015 13:31:09 -0400
+From: Nik Nyby <nikolas@gnu.org>
+To: linux-wireless@vger.kernel.org, trivial@kernel.org
+Cc: Nik Nyby <nikolas@gnu.org>
+Subject: [PATCH v2] ath6kl: Trivial: spell "distribution" correctly in a comment.
+Date: Mon, 29 Jun 2015 13:30:37 -0400
+Message-Id: <1435599037-1369-1-git-send-email-nikolas@gnu.org> (sfid-20150629_193113_886807_F2946C18)
+In-Reply-To: <1435378264-13873-1-git-send-email-nikolas@gnu.org>
+References: <1435378264-13873-1-git-send-email-nikolas@gnu.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+This fixes two misspellings of "distribution" in a comment.
 
->> thanks for responding!
->> 
->> I did have my mobile phone very nearby also connected to the bluetooth
->> headphones while my laptop was still using 11n wifi. I didn't have any
->> noticeable issues with bluetooth there.
->> 
->> But I got the feeling that my phone's android drivers + hardware for
->> bluetooth are tuned better than the laptop ones, so maybe that just
->> means the phone is just better at jumping frequencies to avoid.
->> 
->> I guess the best test would be the same laptop model in direct
->> proximity, but sadly I only own that laptop once. ;)
->> 
->> I hope wireless interference wouldn't rule out that some driver work
->> would be considered to make it work better - after all, both chips are
->> in the same laptop and as per the intel comment, bluetooth is supposed
->> to work despite of wifi activity.
->> 
->> Regards,
->> Jonas Thiem
->> 
->> On 06/05/2015 06:45 AM, Jeremiah Mahler wrote:
->>> Jonas,
->>> 
->>> On Fri, Jun 05, 2015 at 01:00:32AM +0200, Jonas Thiem wrote:
->>>> Hi *,
->>>> 
->>>> this is my first post to this mailing list, sorry if it's not supposed
->>>> to go here. (also CC in responses would be nice since I'm not
->>>> subscribed)
->>>> 
->>>> I filed a bug about an intel centrino wifi interaction with broadcom's BCM2045B:
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=97101
->>>> 
->>> Those are some unhelpful replies :-(
-> 
-> Indeed. Now my reply maybe of a similar nature as my knowledge of the bluetooth part is next to nil.
-> 
->>>> In short, the two seem to kinda fight over the wireless spectrum and
->>>> both drop connections all the time - unless the 'iwlwifi' module is
->>>> loaded with 11n_disabled=1.
->>>> 
-> 
-> I guess you don't have a choice about the channel your access point is operating on. If you can you might move wifi channel to 5GHz although that will likely affect your range.
-> 
-> To get more info on your setup here a couple of questions.
-> 
-> What type of device are we talking about here?
-> Bugzilla mentions Thinkpad X220, is that correct?
-> Is your AP setup for 40MHz bandwidth?
-> 
-> I suppose both wifi and bt have their own antennas. When sharing antennas it needs to be coordinated who is using the antennas. This is called bt-coex. As said I don't think this is the case for your device, but if so I think there is still major development task needed as I saw email from Marcel about plans to develop a bt-coex subsystem in the kernel. Not sure if that also covers the case where bt and wifi do not share antennas.
+Signed-off-by: Nik Nyby <nikolas@gnu.org>
+---
+ drivers/net/wireless/ath/ath6kl/htc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-from the report, we have to make the assumption that in this design it is two independent antennas. Meaning Bluetooth is going to win the spectrum war. It should play nice due to AFH support in almost every 4.0 device in the market, but there are limits. If your spectrum is busy, then it becomes really hard for AFH to function properly.
-
-So in the case of two independent antennas, the rfres subsystem I am proposing would help indeed. We could tell the Bluetooth controller to block out the frequency that the WiFi chip is currently operating on.
-
-Main problem is that these design are so rare these days that nobody actually cared enough to add this subsystem. If Bluetooth and WiFi are sharing the same antenna, the coex issue is solved by a direct connection between both chips.
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 14cab14..112d8a9 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -427,7 +427,7 @@ struct htc_endpoint_credit_dist {
+ };
+ 
+ /*
+- * credit distibution code that is passed into the distrbution function,
++ * credit distribution code that is passed into the distribution function,
+  * there are mandatory and optional codes that must be handled
+  */
+ enum htc_credit_dist_reason {
+-- 
+2.1.4
 
