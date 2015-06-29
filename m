@@ -1,73 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:36736 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752406AbbFEVAu (ORCPT
+Received: from gosford.compton.nu ([217.169.17.27]:54094 "EHLO
+	gosford.compton.nu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753620AbbF2Slz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 17:00:50 -0400
-Received: by oihb142 with SMTP id b142so61717363oih.3
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 14:00:49 -0700 (PDT)
+	Mon, 29 Jun 2015 14:41:55 -0400
+Subject: [PATCH] Clear subdir_stations when stations directory is removed (was
+ Re: Null pointer dereference when station associates [introduced by 4.0.5?])
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <558EC27A.60804@compton.nu> (sfid-20150627_181129_907073_7F8F41EE)
+ <1435565678.2156.9.camel@sipsolutions.net> <55910222.8020906@compton.nu>
+ <55910DC8.9040700@compton.nu> <55911375.3070003@compton.nu>
+ <55911CEA.7010103@compton.nu> <55911DD1.20606@compton.nu>
+Cc: stable@vger.kernel.org
+From: Tom Hughes <tom@compton.nu>
+Message-ID: <5591916D.2080707@compton.nu> (sfid-20150629_204213_513728_A58AD780)
+Date: Mon, 29 Jun 2015 19:41:49 +0100
 MIME-Version: 1.0
-In-Reply-To: <55720425.2050604@candelatech.com>
-References: <1430829048-22549-1-git-send-email-vthiagar@qti.qualcomm.com>
-	<5571D903.7060203@candelatech.com>
-	<CAFuUQkjP18E6fjvgZMayJYiEQtpjVUAKb+_zDmS3yBfi-QF8Cg@mail.gmail.com>
-	<5571F70D.4020101@candelatech.com>
-	<55720425.2050604@candelatech.com>
-Date: Fri, 5 Jun 2015 14:00:49 -0700
-Message-ID: <CAFuUQkgeCY2wS1NJoA1qS4NTJuvwZuiMAp=dZx=kErc6N-Da_Q@mail.gmail.com> (sfid-20150605_230056_105810_59BDF078)
-Subject: Re: [PATCH] ath10k: Fix survey information reporting
-From: YanBo <dreamfly281@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <55911DD1.20606@compton.nu>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 5, 2015 at 1:18 PM, Ben Greear <greearb@candelatech.com> wrote:
-> I think the wrapping might be even more weird that previously suspected.  Here is output from my
-> system.
->
-> It looks to me that when cycle count overflows, it right-shifts all of these
-> counters one bit.  Clever, I guess, but surely a pain in the ass to deal with!
->
->
-> while true; do cat /debug/ieee80211/wiphy0/ath10k/fw_stats|head -10|tail -4; date; echo;sleep 1; done
-> ....
->                 TX frame count  131810463
->                 RX frame count 2326362883
->                 RX clear count 2542947851
->                    Cycle count 4180338939
-> Fri Jun  5 13:13:48 PDT 2015
->
->                 TX frame count  134407497
->                 RX frame count 2374518035
->                 RX clear count 2595337341
->                    Cycle count 4269010333
-> Fri Jun  5 13:13:49 PDT 2015
->
->                 TX frame count   69523007
->                 RX frame count 1229973316
->                 RX clear count 1344131636
->                    Cycle count 2210412416
-> Fri Jun  5 13:13:50 PDT 2015
->
->                 TX frame count   72305753
->                 RX frame count 1280184579
->                 RX clear count 1398937635
->                    Cycle count 2299234941
-> Fri Jun  5 13:13:51 PDT 2015
->
->                 TX frame count   75050021
->                 RX frame count 1330205664
->                 RX clear count 1453548082
->                    Cycle count 2387901854
-> Fri Jun  5 13:13:52 PDT 2015
->
->
-The scan count is 32 bits hence, it will wrap rapidly with 24 seconds
-cycle, the new WMI interface will
-supply these count in 64 bits to avoid such issue.
+On 29/06/15 11:28, Tom Hughes wrote:
+> On 29/06/15 11:24, Tom Hughes wrote:
+> 
+>> So I think this happens when hostapd switches the interface
+>> to AP mode, which causes the netdev to be torn down and then
+>> recreated, and the debugfs directory along with it.
+>>
+>> Except that if the netlink message to change the mode was
+>> sent from a daemon whose selinux context prevents searching
+>> debugfs the recreation somehow fails and leaves an invalid
+>> state that later causes the null pointer deref.
+> 
+> Think I have it...
+> 
+> The teardown runs ieee80211_debugfs_remove_netdev
+> which clears sdata->vif.debugfs_dir but does not clear 
+> sdata->debugfs.subdir_stations so that when ieee80211_debugfs_add_netdev 
+> later fails to create the top level
+> netdev directory we are left with a bogus pointer for the stations 
+> directory.
+> 
+> Then when we try and add an entry to the stations directory things blow up.
 
-BR /Yanbo
+Here's a proposed patch. I have booted 4.0.6 with this applied and so far
+it hasn't failed even with selinux in enforcing mode.
+
+commit 30624496e9f411081d7ea1a407deabe0e32d0c62
+Author: Tom Hughes <tom@compton.nu>
+Date:   Mon Jun 29 11:31:04 2015 +0100
+
+    Clear subdir_stations when stations directory is removed
+    
+    If we don't do this, and we then fail to recreate the debugfs
+    directory during a mode change, then we will fail later trying
+    to add stations to this now bogus directory:
+    
+    BUG: unable to handle kernel NULL pointer dereference at 0000006c
+    IP: [<c0a92202>] mutex_lock+0x12/0x30
+    Call Trace:
+    [<c0678ab4>] start_creating+0x44/0xc0
+    [<c0679203>] debugfs_create_dir+0x13/0xf0
+    [<f8a938ae>] ieee80211_sta_debugfs_add+0x6e/0x490 [mac80211]
+    
+    Signed-off-by: Tom Hughes <tom@compton.nu>
+
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 29236e8..c09c013 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -723,6 +723,7 @@ void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata)
+ 
+        debugfs_remove_recursive(sdata->vif.debugfs_dir);
+        sdata->vif.debugfs_dir = NULL;
++       sdata->debugfs.subdir_stations = NULL;
+ }
+ 
+ void ieee80211_debugfs_rename_netdev(struct ieee80211_sub_if_data *sdata)
+
+Tom
+
+-- 
+Tom Hughes (tom@compton.nu)
+http://compton.nu/
