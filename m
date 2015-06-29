@@ -1,54 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:49881 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754315AbbFOLrF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Jun 2015 07:47:05 -0400
-Message-ID: <557EBB2F.8000503@openwrt.org> (sfid-20150615_134708_568091_8756F4B9)
-Date: Mon, 15 Jun 2015 13:46:55 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-CC: ath9k-devel@venema.h4ckr.net, c_manoha@qca.qualcomm.com
-Subject: Re: [RFC] ath9k: allow to receive probe request when offchannel
-References: <1433912583-15918-1-git-send-email-janusz.dziedzic@tieto.com>
-In-Reply-To: <1433912583-15918-1-git-send-email-janusz.dziedzic@tieto.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:36041 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752396AbbF2BHz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Jun 2015 21:07:55 -0400
+From: Reyad Attiyat <reyad.attiyat@gmail.com>
+To: akarwar@marvell.com, patila@marvell.com, kvalo@codeaurora.org,
+	bzhao@marvell.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Reyad Attiyat <reyad.attiyat@gmail.com>
+Subject: [PATCH] mwifiex: usb: Fix double add error when submitting rx urb
+Date: Sun, 28 Jun 2015 20:07:38 -0500
+Message-Id: <1435540058-11922-1-git-send-email-reyad.attiyat@gmail.com> (sfid-20150629_030819_535223_289EE6EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-06-10 07:03, Janusz Dziedzic wrote:
-> This fix problem that p2p group negotiation didn't work
-> correctly when chanctx used, because we didn't receive
-> probe requests when offchannel and use_chanctx=1
-> 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
-> @Felix, Sujith could you review? I am not sure I put this in correct place.
-> 
->  drivers/net/wireless/ath/ath9k/channel.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-> index 2066650..6301d44 100644
-> --- a/drivers/net/wireless/ath/ath9k/channel.c
-> +++ b/drivers/net/wireless/ath/ath9k/channel.c
-> @@ -1157,6 +1157,7 @@ static bool ath_chanctx_defer_switch(struct ath_softc *sc)
->  static void ath_offchannel_channel_change(struct ath_softc *sc)
->  {
->  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-> +	u32 rfilt;
->  
->  	ath_dbg(common, CHAN_CTX, "%s: offchannel state: %s\n",
->  		__func__, offchannel_state_string(sc->offchannel.state));
-> @@ -1179,6 +1180,11 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
->  		ath_scan_complete(sc, false);
->  		break;
->  	case ATH_OFFCHANNEL_ROC_START:
-> +		/* Allow to receive probe requests */
-> +		rfilt = ath_calcrxfilter(sc);
-> +		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
-I think ath_calcrxfilter should set this, otherwise it might be
-overwritten, e.g. on BB watchdog reset.
+There is an error that can occur where the driver adds the same URB to USB submission list twice.
+This happens since mwifiex_usb_submit_rem_rx can submit packets at same time as an rx urb complete callback.
+This causes list corruption and is fixed by not setting the skb to NULL when submitting an rx packet.
 
-- Felix
+[   84.461242] WARNING: CPU: 1 PID: 748 at lib/list_debug.c:36 __list_add+0xcb/0xd0()
+[   84.461245] list_add double add: new=ffff8800c92b0c50, prev=ffff8800c92b0c50, next=ffff8800ced6c430.
+[   84.461247] Modules linked in: rfcomm fuse cmac nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 xt_conntrack ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack bnep iptable_mangle iptable_security iptable_raw btusb btintel bluetooth mwifiex_usb mwifiex x86_pkg_temp_thermal cfg80211 coretemp r8712u(C) kvm_intel kvm hid_sensor_als hid_sensor_incl_3d hid_sensor_rotation hid_sensor_magn_3d hid_sensor_accel_3d hid_sensor_gyro_3d hid_sensor_trigger hid_sensor_iio_common industrialio_triggered_buffer kfifo_buf rfkill iTCO_wdt industrialio iTCO_vendor_support
+[   84.461316]  crc32_pclmul crc32c_intel ghash_clmulni_intel microcode snd_hda_codec_realtek vfat snd_hda_codec_generic fat snd_hda_codec_hdmi snd_hda_intel snd_hda_controller uvcvideo snd_hda_codec videobuf2_vmalloc videobuf2_memops snd_hwdep videobuf2_core snd_hda_core joydev v4l2_common videodev hid_sensor_hub snd_seq hid_multitouch media snd_seq_device snd_pcm snd_timer mei_me snd i2c_i801 lpc_ich mei soundcore tpm_infineon tpm_tis tpm i2c_hid i2c_designware_platform i2c_designware_core nfsd auth_rpcgss nfs_acl lockd grace sunrpc sch_fq_codel i915 i2c_algo_bit drm_kms_helper drm xhci_pci xhci_hcd ehci_pci sd_mod ehci_hcd video
+[   84.461383] CPU: 1 PID: 748 Comm: kworker/u9:0 Tainted: G         C      4.1.0-rc5+ #163
+[   84.461386] Hardware name: Microsoft Corporation Surface Pro 2/Surface Pro 2, BIOS 2.05.0250 04/10/2015
+[   84.461396] Workqueue: MWIFIEX_RX_WORK_QUEUE mwifiex_rx_work_queue [mwifiex]
+[   84.461399]  ffffffff81a8150e ffff8801174cf8e8 ffffffff817df830 0000000000000000
+[   84.461405]  ffff8801174cf938 ffff8801174cf928 ffffffff810a54ba ffff8800c86bd750
+[   84.461410]  ffff8800c92b0c50 ffff8800c92b0c50 ffff8800ced6c430 ffff88010c057178
+[   84.461416] Call Trace:
+[   84.461421]  [<ffffffff817df830>] dump_stack+0x4f/0x7b
+[   84.461428]  [<ffffffff810a54ba>] warn_slowpath_common+0x8a/0xc0
+[   84.461432]  [<ffffffff810a5536>] warn_slowpath_fmt+0x46/0x50
+[   84.461436]  [<ffffffff814109fb>] __list_add+0xcb/0xd0
+[   84.461442]  [<ffffffff815c551a>] ? usb_hcd_link_urb_to_ep+0x2a/0xa0
+[   84.461446]  [<ffffffff815c5570>] usb_hcd_link_urb_to_ep+0x80/0xa0
+[   84.461459]  [<ffffffffa004318a>] prepare_transfer+0xaa/0x130 [xhci_hcd]
+[   84.461470]  [<ffffffffa0044cf7>] xhci_queue_bulk_tx+0xb7/0x7a0 [xhci_hcd]
+[   84.461480]  [<ffffffffa003b67f>] ? xhci_urb_enqueue+0x50f/0x660 [xhci_hcd]
+[   84.461489]  [<ffffffffa003b67f>] ? xhci_urb_enqueue+0x50f/0x660 [xhci_hcd]
+[   84.461498]  [<ffffffffa003b735>] xhci_urb_enqueue+0x5c5/0x660 [xhci_hcd]
+[   84.461503]  [<ffffffff815c7ad3>] usb_hcd_submit_urb+0x93/0xa70
+[   84.461507]  [<ffffffff8168dde8>] ? __alloc_skb+0x78/0x1f0
+[   84.461511]  [<ffffffff8168d301>] ? __kmalloc_reserve.isra.26+0x31/0x90
+[   84.461515]  [<ffffffff8168ddbc>] ? __alloc_skb+0x4c/0x1f0
+[   84.461519]  [<ffffffff8168ddfc>] ? __alloc_skb+0x8c/0x1f0
+[   84.461523]  [<ffffffff8168badd>] ? skb_dequeue+0x5d/0x80
+[   84.461527]  [<ffffffff815c987e>] usb_submit_urb+0x42e/0x5f0
+[   84.461531]  [<ffffffff816931d9>] ? __alloc_rx_skb+0x39/0x100
+[   84.461536]  [<ffffffffa05aa372>] mwifiex_usb_submit_rx_urb+0xb2/0x170 [mwifiex_usb]
+[   84.461542]  [<ffffffffa05aa5f5>] mwifiex_usb_submit_rem_rx_urbs+0x45/0x50 [mwifiex_usb]
+[   84.461550]  [<ffffffffa07094be>] mwifiex_rx_work_queue+0x10e/0x140 [mwifiex]
+[   84.461556]  [<ffffffff810c4429>] process_one_work+0x229/0x890
+[   84.461559]  [<ffffffff810c438c>] ? process_one_work+0x18c/0x890
+[   84.461565]  [<ffffffff810c4ae3>] worker_thread+0x53/0x470
+[   84.461569]  [<ffffffff810c4a90>] ? process_one_work+0x890/0x890
+[   84.461572]  [<ffffffff810cb162>] kthread+0xf2/0x110
+[   84.461577]  [<ffffffff811031ad>] ? trace_hardirqs_on+0xd/0x10
+[   84.461581]  [<ffffffff810cb070>] ? kthread_create_on_node+0x230/0x230
+[   84.461586]  [<ffffffff817e9662>] ret_from_fork+0x42/0x70
+[   84.461590]  [<ffffffff810cb070>] ? kthread_create_on_node+0x230/0x230
+[   84.461593] ---[ end trace 65103af5e6fb3444 ]---
+
+Signed-off-by: Reyad Attiyat <reyad.attiyat@gmail.com>
+---
+ drivers/net/wireless/mwifiex/usb.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index fd8027f..cd3ba76 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -235,9 +235,11 @@ setup_for_next:
+ 	if (card->rx_cmd_ep == context->ep) {
+ 		mwifiex_usb_submit_rx_urb(context, size);
+ 	} else {
+-		context->skb = NULL;
+-		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING)
++		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
+ 			mwifiex_usb_submit_rx_urb(context, size);
++		}else{
++			context->skb = NULL;
++		}
+ 	}
+ 
+ 	return;
+-- 
+2.4.3
+
