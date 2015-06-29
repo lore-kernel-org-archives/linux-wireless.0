@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:9498 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751568AbbFZH4W (ORCPT
+Received: from gosford.compton.nu ([217.169.17.27]:42870 "EHLO
+	gosford.compton.nu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753141AbbF2Iai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Jun 2015 03:56:22 -0400
-From: David Lin <dlin@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v3] Add new mac80211 driver mwlwifi.
-Date: Fri, 26 Jun 2015 07:56:17 +0000
-Message-ID: <c66878048afb40d2ac6ec17e3a861c3b@SC-EXCH02.marvell.com> (sfid-20150626_095627_585229_42AD6EF5)
-References: <909c66d61ee943f5a5ca202040944f2d@SC-EXCH02.marvell.com>
-	 <1435225107.2096.12.camel@sipsolutions.net>
-	 <9228e2c85d5d4bab9ad2cc859fa6c946@SC-EXCH02.marvell.com>
- <1435302478.2106.2.camel@sipsolutions.net>
-In-Reply-To: <1435302478.2106.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 29 Jun 2015 04:30:38 -0400
+Subject: Re: Null pointer dereference when station associates [introduced by
+ 4.0.5?]
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <558EC27A.60804@compton.nu> (sfid-20150627_181129_907073_7F8F41EE)
+ <1435565678.2156.9.camel@sipsolutions.net>
+Cc: stable@vger.kernel.org
+From: Tom Hughes <tom@compton.nu>
+Message-ID: <55910222.8020906@compton.nu> (sfid-20150629_103046_185438_7A1E2151)
+Date: Mon, 29 Jun 2015 09:30:26 +0100
 MIME-Version: 1.0
+In-Reply-To: <1435565678.2156.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiANCj4gT24gRnJpLCAyMDE1LTA2LTI2IGF0IDAxOjI1
-ICswMDAwLCBEYXZpZCBMaW4gd3JvdGU6DQo+IA0KPiA+IEJvdGggdGhlIGRyaXZlcnMgYXJlIG9w
-ZXJhYmxlIGZvciB0aGUgc2FtZSBjaGlwIHBhcnQgbnVtYmVyIDg4OTcgYW5kDQo+ID4gaXRzIG1v
-ZHVsZXMgKGJvYXJkcykgbWFudWZhY3R1cmVkIG91dCB0aGVyZS4gVGhlIFBDSSBEZXZpY2UgSUQg
-aXMgYQ0KPiA+IGZpeGVkIHZhbHVlIChieSBjaGlwL21hbnVmYWN0dXJlcikgb24gdGhvc2UgbW9k
-dWxlcy4gQXMgc2FpZCBlYXJsaWVyLA0KPiA+IHRoZSB0d28gZHJpdmVycyBhcmUgZm9yIG1hYzgw
-MjExIGhvc3QgbWFjLCBhbmQgZmlybXdhcmUgbWFjDQo+ID4gcmVzcGVjdGl2ZWx5LiBUaGV5IHNl
-cnZlIGRpZmZlcmVudCBwdXJwb3Nlcy4gVXNlcnMgbmVlZCB0byBjaG9vc2UNCj4gPiB3aGljaCBk
-cml2ZXIgdGhleSB3YW50IHRvIHVzZSBmb3IgdGhlIHNhbWUgd2lmaSBoYXJkd2FyZSwgYW5kIHRo
-ZXkNCj4gPiBjYW5ub3QgdXNlIGJvdGggb2YgdGhlbSBhdCB0aGUgc2FtZSB0aW1lLiBUaGUgbXdp
-ZmlleCBpcyBtb3JlIHdpZGVseQ0KPiA+IHVzZWQgbm93IGFuZCBzdGEgY2VudHJpYy4gV2UgZG8g
-bm90IHdhbnQgdG8gYnJlYWsgaXQuDQo+ID4NCj4gPiBJIGFtIG5vdCBzdXJlIGJ1dCBJIGJlbGll
-dmUgdGhleSBhcmUgYWxzbyBtdWx0aXBsZSBmbGF2b3JzIG9mIGRyaXZlcg0KPiA+IGZvciBzb21l
-IG90aGVyIGNoaXBzLiBBbnkgYWR2aWNlIGhvdyB0aGV5IGFyZSBoYW5kbGVkLCBjb25zaWRlcmlu
-Zw0KPiA+IHRoYXQgY2hhbmdpbmcgdGhlIGhhcmR3YXJlL2JvYXJkIGlzIG5vdCBhbiBvcHRpb24/
-IEkgZ3Vlc3Mgd2Ugd2FudCB0aGUNCj4gPiBjb21tdW5pdHkgdG8gYmUgYmV0dGVyIHNlcnZlZCB1
-c2luZyB0aGUgc2FtZSBoYXJkd2FyZS4gT3BpbmlvbiBmcm9tDQo+ID4gb3RoZXJzIGFyZSB3ZWxj
-b21lZC4NCj4gDQo+IEhtbSwgaW50ZXJlc3RpbmcsIEkgZGlkbid0IHJlYWxpemUgaXQgd2FzIHRo
-ZSBzYW1lIGRldmljZS4NCj4gDQo+IFBlcmhhcHMgaXQgc2ltcGx5IHNob3VsZG4ndCBjb25mbGlj
-dCBhdCBidWlsZCB0aW1lLCBhbmQgeW91IGNhbiByZWNvbW1lbmQgdG8NCj4gYmxhY2tsaXN0IG9u
-ZSBvciB0aGUgb3RoZXI/IE9yLCBpbiBmYWN0LCByZXR1cm4gYW4gZXJyb3IgZnJvbSBwcm9iZSBp
-ZiB5b3UgY2FuJ3QNCj4gZmluZCB0aGUgY29ycmVjdCBmaXJtd2FyZSBmaWxlLCBzbyB0aGUgb3Ro
-ZXIgZHJpdmVyIHdvdWxkIGJlIGF0dGVtcHRlZD8NCj4NClllcywgY3VycmVudCBzZXR0aW5nIHdp
-bGwgb25seSBhbGxvdyB1c2VyIHRvIGNob29zZSBvbmUgb2YgdGhlc2UgdHdvIGRyaXZlcnMgYXQg
-YnVpbGQgdGltZS4gDQo+DQo+ID4gQWx0aG91Z2ggIi1EX19DSEVDS19FTkRJQU5fXyIgZG9lcyBu
-b3QgcHV0IGludG8gTWFrZWZpbGUsIEkgaGFkIHVzZWQNCj4gPiAiQz0yIENGPSItRF9fQ0hFQ0tf
-RU5ESUFOX18iIHRvIGNoZWNrIHdhcm5pbmdzIGZvciBlbmRpYW4gYW5kIHJlbW92ZQ0KPiA+IHRo
-ZXNlIHdhcm5pbmdzLg0KPiANCj4gT2suIFRoZW4gSSBndWVzcyBteSBpc3N1ZXMgd2VyZSBtb3N0
-bHkgZHVlIHRvIDY0LWJpdCBzeXN0ZW0uDQo+DQpJIHdpbGwgdHJ5IHRvIGJ1aWxkIHRoZSBkcml2
-ZXIgdW5kZXIgNjQtYml0IHN5c3RlbS4NCj4NCj4gPiBJZiB5b3UgdGhpbmsgd2UgbmVlZCB0byBh
-ZGQgdGhpcyB0byBNYWtlZmlsZSBhbmQgbWFrZSBzdXJlIHplcm8NCj4gPiB3YXJuaW5nIG1lc3Nh
-Z2VzLCB3ZSB3aWxsIGRvIHRoYXQgKG9ubHkgZm9yIHNwYXJzZXIpLg0KPiANCj4gV2VsbCBpdCBq
-dXN0IGhlbHBzIG5vdCBmb3JnZXQgYWRkaW5nIENGPS1ELi4uIHRvIHRoZSBjb21tYW5kIGxpbmUs
-IGl0J3MNCj4gZXF1aXZhbGVudC4gSSBqdXN0IHByZWZlciBpdCBpbiBhIHNlbnNlIHNpbmNlIHRo
-ZW4gaWYgcGVvcGxlIHJ1biB3aXRoDQo+IEM9MSBvciBDPTIgdGhleSBnZXQgdGhhdCBwYXJ0IGZv
-ciBmcmVlLCBhbmQgc2luY2UgdGhlIGRyaXZlciBpcyBjbGVhbiB0byBzdGFydA0KPiB3aXRoIHRo
-ZW4gdGhhdCdzIGEgZ29vZCB0aGluZyB0byBkbyBJIHRoaW5rLg0KPg0KR290IGl0Lg0KPiANCj4g
-SSdsbCB0cnkgdG8gdGFrZSBhIGNsb3NlciBsb29rIGxhdGVyLg0KPiANCj4gSm9oYW5uZXMNCj4N
-CkRhdmlkLA0KVGhhbmtzDQo=
+On 29/06/15 09:14, Johannes Berg wrote:
+> On Sat, 2015-06-27 at 16:34 +0100, Tom Hughes wrote:
+>>
+>> Interestingly from what I can see this is trying to create a file
+>> for the station at a path something like:
+>>
+>> ieee80211/phy0/netdev:XXXX/stations/XXXXXX
+> 
+> indeed.
+> 
+>> but in my (currently working) boot under 4.0.4 there is no netdev
+>> directory under phy0 in debugfs... but then maybe that is the problem
+>> as well if the inode pointer was null?
+>>
+> 
+> This is pretty strange - if the dentry pointer (sdata
+> ->debugfs.subdir_stations) was NULL or an ERR_PTR(), the code would
+> return pretty much immediately.
+> 
+> So it looks like that pointer is valid, but it's ->d_inode was NULL?
+> 
+> I'm not really sure how that could happen.
+
+Indeed I'm a bit puzzled... I can't see anything obvious in the kernel
+logs indicating a problem, but here's a listing of the phy0 directory:
+
+[root@gosford]/home/tom# uname -a
+Linux gosford.compton.nu 4.0.4-301.fc22.i686+PAE #1 SMP Thu May 21 13:27:48 UTC 2015 i686 i686 i386 GNU/Linux
+[root@gosford]/home/tom# ls /sys/kernel/debug/ieee80211/phy0 
+ath9k                    keys              rc                 statistics
+fragmentation_threshold  long_retry_limit  reset              total_ps_buffered
+ht40allow_map            power             rts_threshold      user_power
+hwflags                  queues            short_retry_limit  wep_iv
+
+with no netdev directory at all.
+
+Interestingly I just tried a different machine running on more or less
+the same kernel with a USB wireless stick and that did get a netdev
+directory...
+
+> Since 4.0.4 was stable, and 4.0.5 crashes, you'd think there's
+> something wrong between those two kernels and there were no changes to
+> mac80211 related to these code paths in there.
+
+Well 4.0.4 did hit it eventually, but it had been running stably
+for a month first. I then rebooted (because networking is basically
+wedged after this happens) and got 4.0.5 which hit it immediately as
+did several more reboots before I went back to the older kernel.
+
+Tom
+
+
+-- 
+Tom Hughes (tom@compton.nu)
+http://compton.nu/
