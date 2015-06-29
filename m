@@ -1,69 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:28956 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932390AbbFCLqW (ORCPT
+Received: from gosford.compton.nu ([217.169.17.27]:43056 "EHLO
+	gosford.compton.nu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883AbbF2KYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Jun 2015 07:46:22 -0400
-Message-ID: <556EE90A.9000607@broadcom.com> (sfid-20150603_134756_017754_BD78C7DB)
-Date: Wed, 3 Jun 2015 13:46:18 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 29 Jun 2015 06:24:49 -0400
+Subject: Re: Null pointer dereference when station associates [introduced by
+ 4.0.5?]
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <558EC27A.60804@compton.nu> (sfid-20150627_181129_907073_7F8F41EE)
+ <1435565678.2156.9.camel@sipsolutions.net> <55910222.8020906@compton.nu>
+ <55910DC8.9040700@compton.nu> <55911375.3070003@compton.nu>
+Cc: stable@vger.kernel.org
+From: Tom Hughes <tom@compton.nu>
+Message-ID: <55911CEA.7010103@compton.nu> (sfid-20150629_122457_755723_9A8416F6)
+Date: Mon, 29 Jun 2015 11:24:42 +0100
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcmfmac: error creating p2p
-References: <CACna6rx7WRhsie6EX8MGrUAAdFGEV4+qtzBhM7BAe-RuLkQBFA@mail.gmail.com>
-In-Reply-To: <CACna6rx7WRhsie6EX8MGrUAAdFGEV4+qtzBhM7BAe-RuLkQBFA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <55911375.3070003@compton.nu>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/02/15 07:39, Rafał Miłecki wrote:
-> Hi,
+On 29/06/15 10:44, Tom Hughes wrote:
+> On 29/06/15 10:20, Tom Hughes wrote:
+>> On 29/06/15 09:30, Tom Hughes wrote:
+>>> On 29/06/15 09:14, Johannes Berg wrote:
+>>>> On Sat, 2015-06-27 at 16:34 +0100, Tom Hughes wrote:
+>>>>>
+>>>>> Interestingly from what I can see this is trying to create a file
+>>>>> for the station at a path something like:
+>>>>>
+>>>>> ieee80211/phy0/netdev:XXXX/stations/XXXXXX
+>>>>
+>>>> indeed.
+>>>>
+>>>>> but in my (currently working) boot under 4.0.4 there is no netdev
+>>>>> directory under phy0 in debugfs... but then maybe that is the problem
+>>>>> as well if the inode pointer was null?
+>>>>>
+>>>>
+>>>> This is pretty strange - if the dentry pointer (sdata
+>>>> ->debugfs.subdir_stations) was NULL or an ERR_PTR(), the code would
+>>>> return pretty much immediately.
+>>>>
+>>>> So it looks like that pointer is valid, but it's ->d_inode was NULL?
+>>>>
+>>>> I'm not really sure how that could happen.
+>>>
+>>> Indeed I'm a bit puzzled...
+>>
+>> It looks like hostapd has something to do with it... If I stop hostapd and
+>> remove ath9k and then reprobe it then the netdev dir appears:
+>>
+>> gosford [~] % sudo modprobe ath9k
+>> gosford [~] % sudo ls /sys/kernel/debug/ieee80211/phy1
+>> ath9k			 long_retry_limit  reset	      user_power
+>> fragmentation_threshold  netdev:wlp2s0	   rts_threshold      wep_iv
+>> ht40allow_map		 power		   short_retry_limit
+>> hwflags			 queues		   statistics
+>> keys			 rc		   total_ps_buffered
+>>
+>> Then I start hostapd and it vanishes:
 >
-> I think brcmfmac may have some problems with mixing various
-> interfaces, so just for some test I decided to try p2p interface. I'm
-> using BCM43602 and it seems to support p2p:
-> # iw phy phy0 info | tail
->          valid interface combinations:
->                   * #{ IBSS, managed }<= 1, #{ AP }<= 4, #{
-> P2P-client, P2P-GO }<= 1, #{ P2P-device }<= 1,
->                     total<= 3, #channels<= 1
+> ...and you also need to have selinux in enforcing mode.
 >
-> But I can't create p2p interface:
-> # iw phy phy0 interface add p2p0 type __p2pdev
-> brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
-> brcmfmac: brcmf_add_if: ignore IF event
-> brcmfmac: brcmf_p2p_set_firmware: failed to update device address ret -52
-> brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
-> command failed: Invalid exchange (-52)
+> It appears hostapd is trying to do something with debugfs and is
+> being denied directory search access:
 
-This looked familiar so digging the log I think you need the following 
-commit:
+So I think this happens when hostapd switches the interface
+to AP mode, which causes the netdev to be torn down and then
+recreated, and the debugfs directory along with it.
 
-commit f48556e1b6a60f1b394a6c4b0a7b8cacba3eb107
-Author: Arend van Spriel <arend@broadcom.com>
-Date:   Tue Sep 30 10:23:16 2014 +0200
+Except that if the netlink message to change the mode was
+sent from a daemon whose selinux context prevents searching
+debugfs the recreation somehow fails and leaves an invalid
+state that later causes the null pointer deref.
 
-     brcmfmac: assure P2P discovery is disabled when setting P2P_DEVICE 
-mac addre
+Tom
 
-     In order to provision the P2P_DEVICE mac address using 
-p2p_da_override iovar
-     the discovery interface must be disabled. On some targets setting 
-the mac
-     address failed so disable the discovery interface to be certain.
-
-     Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-     Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-     Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-     Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-     Signed-off-by: Arend van Spriel <arend@broadcom.com>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Not sure what kernel and/or brcmfmac you are seeing this so hopefully 
-this commit will help.
-
-Regards,
-Arend
-
+-- 
+Tom Hughes (tom@compton.nu)
+http://compton.nu/
