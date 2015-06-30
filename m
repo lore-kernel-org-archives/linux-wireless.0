@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:34203 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422727AbbFEOBz (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:40394 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753172AbbF3MRR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Jun 2015 10:01:55 -0400
-Received: by pdbki1 with SMTP id ki1so54128782pdb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Jun 2015 07:01:54 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] rtlwifi: rtl8192cu: Fix variable isfirst_ampdu
-Date: Fri,  5 Jun 2015 23:01:38 +0900
-Message-Id: <1433512898-30137-3-git-send-email-ap420073@gmail.com> (sfid-20150605_160201_080796_EF915D9D)
-In-Reply-To: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
-References: <1433512898-30137-1-git-send-email-ap420073@gmail.com>
+	Tue, 30 Jun 2015 08:17:17 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NQR027QSBGRCQD0@mailout3.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 30 Jun 2015 21:17:15 +0900 (KST)
+Date: Tue, 30 Jun 2015 12:17:15 +0000 (GMT)
+From: Amit Khatri <amit.khatri@samsung.com>
+Subject: [PATCH] iw: Static analyser fixes
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>
+Reply-to: amit.khatri@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <1838270231.63341435666635059.JavaMail.weblogic@ep2mlwas06c> (sfid-20150630_141759_295170_652A872B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl92cu_rx_query_desc set a isampdu twice.
-but second code is related to isfirst_ampdu.
-so i change it.
+SGkgSm9oYW5uZXMsDQoNClN1YmplY3Q6IFtQQVRDSF0gaXc6IFN0YXRpYyBhbmFseXNlciBmaXhl
+cw0KDQpTaWduZWQtb2ZmLWJ5OiBBbWl0IEtoYXRyaSA8YW1pdC5raGF0cmlAc2Ftc3VuZy5jb20+
+DQpTaWduZWQtb2ZmLWJ5OiBSYWh1bCBKYWluIDxyYWh1bC5qYWluQHNhbXN1bmcuY29tPg0KLS0t
+DQogY3FtLmMgICB8IDIgKysNCiBldmVudC5jIHwgNiArKysrKy0NCiBpdy5jICAgIHwgMiArLQ0K
+IHNjYW4uYyAgfCAyICsrDQogNCBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCAyIGRl
+bGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvY3FtLmMgYi9jcW0uYw0KaW5kZXggNjU4NzZhZi4u
+YmY2MDQwMSAxMDA2NDQNCi0tLSBhL2NxbS5jDQorKysgYi9jcW0uYw0KQEAgLTM0LDYgKzM0LDgg
+QEAgc3RhdGljIGludCBpd19jcW1fcnNzaShzdHJ1Y3Qgbmw4MDIxMV9zdGF0ZSAqc3RhdGUsIHN0
+cnVjdCBubF9jYiAqY2IsDQogDQogCS8qIGNvbm5lY3Rpb24gcXVhbGl0eSBtb25pdG9yIGF0dHJp
+YnV0ZXMgKi8NCiAJY3FtID0gbmxtc2dfYWxsb2MoKTsNCisJaWYoIWNxbSkNCisJCXJldHVybiAt
+RU5PTUVNOw0KIA0KIAlOTEFfUFVUX1UzMihjcW0sIE5MODAyMTFfQVRUUl9DUU1fUlNTSV9USE9M
+RCwgdGhvbGQpOw0KIAlOTEFfUFVUX1UzMihjcW0sIE5MODAyMTFfQVRUUl9DUU1fUlNTSV9IWVNU
+LCBoeXN0KTsNCmRpZmYgLS1naXQgYS9ldmVudC5jIGIvZXZlbnQuYw0KaW5kZXggZjczZTA3OC4u
+MDZkMjM2YiAxMDA2NDQNCi0tLSBhL2V2ZW50LmMNCisrKyBiL2V2ZW50LmMNCkBAIC00OSw4ICs0
+OSwxMCBAQCBzdGF0aWMgdm9pZCBwcmludF9mcmFtZShzdHJ1Y3QgcHJpbnRfZXZlbnRfYXJncyAq
+YXJncywgc3RydWN0IG5sYXR0ciAqYXR0cikNCiAJY2hhciBtYWNidWZbNiozXTsNCiAJdWludDE2
+X3QgdG1wOw0KIA0KLQlpZiAoIWF0dHIpDQorCWlmICghYXR0cikgew0KIAkJcHJpbnRmKCIgW25v
+IGZyYW1lXSIpOw0KKwkJZ290byBvdXQ7DQorCX0NCiANCiAJZnJhbWUgPSBubGFfZGF0YShhdHRy
+KTsNCiAJbGVuID0gbmxhX2xlbihhdHRyKTsNCkBAIC05Nyw2ICs5OSw4IEBAIHN0YXRpYyB2b2lk
+IHByaW50X2ZyYW1lKHN0cnVjdCBwcmludF9ldmVudF9hcmdzICphcmdzLCBzdHJ1Y3QgbmxhdHRy
+ICphdHRyKQ0KIAlmb3IgKGkgPSAwOyBpIDwgbGVuOyBpKyspDQogCQlwcmludGYoIiAlLjAyeCIs
+IGZyYW1lW2ldKTsNCiAJcHJpbnRmKCJdIik7DQorIG91dDoNCisJOyAgLyplbXB0eSBzdGF0ZW1l
+bnQgdG8gYXZvaWQgY29tcGlsZXIgZXJyb3IgKi8NCiB9DQogDQogc3RhdGljIHZvaWQgcGFyc2Vf
+Y3FtX2V2ZW50KHN0cnVjdCBubGF0dHIgKiphdHRycykNCmRpZmYgLS1naXQgYS9pdy5jIGIvaXcu
+Yw0KaW5kZXggZGM5OTU2Ni4uMWU5MTNiNiAxMDA2NDQNCi0tLSBhL2l3LmMNCisrKyBiL2l3LmMN
+CkBAIC00NzcsOCArNDc3LDggQEAgc3RhdGljIGludCBfX2hhbmRsZV9jbWQoc3RydWN0IG5sODAy
+MTFfc3RhdGUgKnN0YXRlLCBlbnVtIGlkX2lucHV0IGlkYnksDQogCXdoaWxlIChlcnIgPiAwKQ0K
+IAkJbmxfcmVjdm1zZ3Moc3RhdGUtPm5sX3NvY2ssIGNiKTsNCiAgb3V0Og0KLQlubF9jYl9wdXQo
+Y2IpOw0KICBvdXRfZnJlZV9tc2c6DQorCW5sX2NiX3B1dChjYik7DQogCW5sbXNnX2ZyZWUobXNn
+KTsNCiAJcmV0dXJuIGVycjsNCiAgbmxhX3B1dF9mYWlsdXJlOg0KZGlmZiAtLWdpdCBhL3NjYW4u
+YyBiL3NjYW4uYw0KaW5kZXggYmYzOWYzNC4uNTQ4M2MxZCAxMDA2NDQNCi0tLSBhL3NjYW4uYw0K
+KysrIGIvc2Nhbi5jDQpAQCAtNDA5LDYgKzQwOSw4IEBAIHN0YXRpYyBpbnQgaGFuZGxlX3NjYW4o
+c3RydWN0IG5sODAyMTFfc3RhdGUgKnN0YXRlLA0KIAkJCQlicmVhazsNCiAJCQl9DQogCQljYXNl
+IERPTkU6DQorCQkJbmxtc2dfZnJlZShzc2lkcyk7DQorCQkJbmxtc2dfZnJlZShmcmVxcyk7DQog
+CQkJcmV0dXJuIDE7DQogCQljYXNlIEZSRVE6DQogCQkJZnJlcSA9IHN0cnRvdWwoYXJndltpXSwg
+JmVwdHIsIDEwKTsNCi0tIA0KMS45LjE=
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index cbead00..95880fe 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -321,7 +321,7 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
- 	stats->rate = (u8) GET_RX_DESC_RX_MCS(pdesc);
- 	stats->shortpreamble = (u16) GET_RX_DESC_SPLCP(pdesc);
- 	stats->isampdu = (bool) (GET_RX_DESC_PAGGR(pdesc) == 1);
--	stats->isampdu = (bool) ((GET_RX_DESC_PAGGR(pdesc) == 1)
-+	stats->isfirst_ampdu = (bool)((GET_RX_DESC_PAGGR(pdesc) == 1)
- 				   && (GET_RX_DESC_FAGGR(pdesc) == 1));
- 	stats->timestamp_low = GET_RX_DESC_TSFL(pdesc);
- 	stats->rx_is40Mhzpacket = (bool) GET_RX_DESC_BW(pdesc);
--- 
-2.1.4
 
