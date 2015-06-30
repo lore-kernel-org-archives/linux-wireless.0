@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:34981 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbbF0JQZ convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:37492 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374AbbF3VwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Jun 2015 05:16:25 -0400
-Received: by wgjx7 with SMTP id x7so31882174wgj.2
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jun 2015 02:16:24 -0700 (PDT)
-Received: from linux-suse.hu (catv-80-99-252-194.catv.broadband.hu. [80.99.252.194])
-        by mx.google.com with ESMTPSA id m2sm2156630wiy.7.2015.06.27.02.16.22
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 27 Jun 2015 02:16:22 -0700 (PDT)
-From: =?utf-8?B?U3rFkXRzIMOBa29z?= <szotsaki@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Realtek RTL8191SU really slow with =?UTF-8?B?4oCeTuKAnQ==?= mode enabled
-Date: Sat, 27 Jun 2015 11:16:21 +0200
-Message-ID: <37780383.GGTrC2kAY2@linux-suse.hu> (sfid-20150627_111630_220103_984E756E)
+	Tue, 30 Jun 2015 17:52:09 -0400
+Received: by wicgi11 with SMTP id gi11so28978736wic.0
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2015 14:52:08 -0700 (PDT)
+Date: Tue, 30 Jun 2015 23:52:05 +0200
+From: Michel von Czettritz <michel.von.czettritz@gmail.com>
+To: gregkh@linux.com
+Cc: Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] staging: rtl8723au: fix/clean up two functions
+Message-ID: <cover.1435700714.git.michel.von.czettritz@gmail.com> (sfid-20150630_235214_638672_7E761ED9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear list members,
+Initialy fixing a sparse warning, resulted in 3 small patches cleaning
+rtl8723a_set_rssi_cmd an rtl8723a_set_raid_cmd up a bit.
 
-I have a "0bda:8172 Realtek RTL8191SU 802.11n WLAN Adapter” working
-- previously with kernel v4.0 staging driver r8712u,
-- and now with wireless kernel v4.1 driver rtl8192su (from 
-https://github.com/chunkeey/rtl8192su).
+Both functions now avoid implicit casts, return actual values, and
+rtl8723a_set_rssi_cmd cannot write in unallocated memory any more.
 
-My problem is when, by default, the 802.11n mode is enabled, the USB dongle's 
-connection speed is only around 1 Mb/s (with both drivers). When I turn it off 
-with "options rtl8192su ht_enable=0" in its config file, I get my full internet 
-speed, about 30 Mb/s.
+Michel von Czettritz (3):
+  staging: rtl8723au: adjust function param, u8* to u32*
+  staging: rtl8723au: fix "incorrect type in assignment"
+  staging: rtl8723au: function no longer discards return value
 
-I'm asking whether it's a problem in the firmware or somewhere in the driver 
-code? If it's the latter case and you're interested in, I would like to help 
-debugging the problem and help you to fix this issue.
+ drivers/staging/rtl8723au/hal/odm.c              |  2 +-
+ drivers/staging/rtl8723au/hal/rtl8723a_cmd.c     | 18 ++++++++----------
+ drivers/staging/rtl8723au/include/rtl8723a_cmd.h |  2 +-
+ 3 files changed, 10 insertions(+), 12 deletions(-)
 
-Thank you very much.
+-- 
+2.4.5
 
-All the best,
-
-Ákos
