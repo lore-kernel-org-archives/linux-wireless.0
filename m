@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53454 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932469AbbFWJu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Jun 2015 05:50:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: account TX MSDUs properly with segmentation offload
-Date: Tue, 23 Jun 2015 11:50:52 +0200
-Message-Id: <1435053052-29661-1-git-send-email-johannes@sipsolutions.net> (sfid-20150623_115108_659292_46AA2495)
+Received: from smtp.codeaurora.org ([198.145.29.96]:38195 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753043AbbF3MhI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2015 08:37:08 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Dedy Lansky <qca_dlansky@qualcomm.com>,
+	Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>
+Subject: Re: [PATCH] wil6210: restart AP upon change in privacy settings
+References: <1434379352-14084-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Tue, 30 Jun 2015 15:37:00 +0300
+In-Reply-To: <1434379352-14084-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Mon, 15 Jun 2015 17:42:32 +0300")
+Message-ID: <87lhf11ifn.fsf@kamboji.qca.qualcomm.com> (sfid-20150630_143925_012113_CEB0D486)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-If an SKB will be segmented by the driver, count it for multiple
-MSDUs that are being transmitted rather than just a single.
+> privacy settings might change while AP is running.
+> Inside wil_cfg80211_change_beacon(), detect change
+> in privacy settings and handle it by stopping and
+> re-starting the AP.
+> Firmware cannot handle on-the-fly privacy settings
+> change and so AP restart is required.
+>
+> Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Thanks, applied to ath.git.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 9489b5da5a46..53d462c84977 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2810,7 +2810,11 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 	u64_stats_update_begin(&sta->tx_sync);
- 	sta->tx_bytes[skb_get_queue_mapping(skb)] += skb->len;
- 	sta->tx_packets[skb_get_queue_mapping(skb)]++;
--	sta->tx_msdu[tid]++;
-+	if (skb_shinfo(skb)->gso_size)
-+		sta->tx_msdu[tid] +=
-+			DIV_ROUND_UP(skb->len, skb_shinfo(skb)->gso_size);
-+	else
-+		sta->tx_msdu[tid]++;
- 	u64_stats_update_end(&sta->tx_sync);
- 
- 	if (fast_tx->pn_offs) {
 -- 
-2.1.4
-
+Kalle Valo
