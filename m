@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:35686 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbbFACvr (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:46079 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752637AbbF3QmF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 May 2015 22:51:47 -0400
-Message-ID: <556BC8BF.4010109@infradead.org> (sfid-20150601_045151_929990_F251A793)
-Date: Sun, 31 May 2015 19:51:43 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
+	Tue, 30 Jun 2015 12:42:05 -0400
+Date: Tue, 30 Jun 2015 09:42:04 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dean Lee <dean.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	rachel.kim@atmel.com, chris.park@atmel.com,
+	nicolas.ferre@atmel.com, johnny.kim@atmel.com
+Subject: Re: [PATCH 4/6] staging: wilc1000: rework address value.
+Message-ID: <20150630164204.GA32144@kroah.com> (sfid-20150630_184210_259687_A2DD7667)
+References: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
+ <1435653278-5168-4-git-send-email-dean.lee@atmel.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Ben Hutchings <ben@decadent.org.uk>
-CC: andrey.konovalov@linaro.org, emmanuel.grumbach@intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix kernel-doc comments in mac80211.h
-References: <555a4e12.e323700a.26a6.ffff9e65@mx.google.com>	 (sfid-20150518_223947_537367_CC6BC263) <1432127031.19214.9.camel@sipsolutions.net>	 <1432769411.6319.36.camel@decadent.org.uk>	 <1432796432.2459.0.camel@sipsolutions.net>	 <1432816470.6319.41.camel@decadent.org.uk> <1432816609.2459.3.camel@sipsolutions.net>
-In-Reply-To: <1432816609.2459.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435653278-5168-4-git-send-email-dean.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/28/15 05:36, Johannes Berg wrote:
-> On Thu, 2015-05-28 at 13:34 +0100, Ben Hutchings wrote:
-> 
->> It's a build failure so it should go upstream now.
-> 
-> Ok, I was under the impression it's a warning.
-> 
-> I guess I'll just have to send a copy of the commit to 4.1 then - git
-> will sort out getting it twice I suppose.
-> 
-> johannes
-> 
-> --
+On Tue, Jun 30, 2015 at 05:34:36PM +0900, Dean Lee wrote:
+> change type to pointer.
 
-Still getting this build failure.  Please get the fix merged soon.
+that describes _what_ you did, which is obvious from the patch, but not
+_why_ you did it.  You need to describe this much better before I can
+take it.
 
+One comment on the code:
 
--- 
-~Randy
+> Signed-off-by: Dean Lee <dean.lee@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 22 +++++++++-------------
+>  drivers/staging/wilc1000/host_interface.h |  4 ++--
+>  2 files changed, 11 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 1d59f41..1e40dca 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -640,26 +640,24 @@ static s32 Handle_SetChannel(void *drvHandler, tstrHostIFSetChan *pstrHostIFSetC
+>   *  @date
+>   *  @version	1.0
+>   */
+> -static s32 Handle_SetWfiDrvHandler(tstrHostIfSetDrvHandler *pstrHostIfSetDrvHandler)
+> +static s32 Handle_SetWfiDrvHandler(void *drvHandler, tstrHostIfSetDrvHandler *pstrHostIfSetDrvHandler)
+
+A void pointer?  No, you have full control over your driver, and the
+structures involved, use a pointer to the real structure, and don't use
+CamelCase variables for new variables, as you will have to go back and
+change it again in the future.
+
+thanks,
+
+greg k-h
