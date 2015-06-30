@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1178 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbbFAOVf (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:33140 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104AbbF3M3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Jun 2015 10:21:35 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] wireless-regdb: Add 60GHz regulatory rules for Japan (JP)
-Date: Mon,  1 Jun 2015 17:21:28 +0300
-Message-Id: <1433168488-3893-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150601_162139_279863_9BA1A6C8)
+	Tue, 30 Jun 2015 08:29:38 -0400
+Received: by ieqy10 with SMTP id y10so10986354ieq.0
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2015 05:29:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1838270231.63341435666635059.JavaMail.weblogic@ep2mlwas06c>
+References: <1838270231.63341435666635059.JavaMail.weblogic@ep2mlwas06c>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 30 Jun 2015 22:29:18 +1000
+Message-ID: <CAGRGNgVvugS6G19E-_B01+WQS4t9SzcYpudH6kiw1tXLPus41A@mail.gmail.com> (sfid-20150630_142941_889532_5E048F0A)
+Subject: Re: [PATCH] iw: Static analyser fixes
+To: amit.khatri@samsung.com
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is ARIB STD-T74, available at:
-http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
+Hi Amit,
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- db.txt | 3 +++
- 1 file changed, 3 insertions(+)
+On Tue, Jun 30, 2015 at 10:17 PM, Amit Khatri <amit.khatri@samsung.com> wrote:
+> Hi Johannes,
+>
+> Subject: [PATCH] iw: Static analyser fixes
+>
+> Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
+> Signed-off-by: Rahul Jain <rahul.jain@samsung.com>
+> ---
+>  cqm.c   | 2 ++
+>  event.c | 6 +++++-
+>  iw.c    | 2 +-
+>  scan.c  | 2 ++
+>  4 files changed, 10 insertions(+), 2 deletions(-)
+>
+> diff --git a/event.c b/event.c
+> index f73e078..06d236b 100644
+> --- a/event.c
+> +++ b/event.c
+> @@ -49,8 +49,10 @@ static void print_frame(struct print_event_args *args, struct nlattr *attr)
+>         char macbuf[6*3];
+>         uint16_t tmp;
+>
+> -       if (!attr)
+> +       if (!attr) {
+>                 printf(" [no frame]");
+> +               goto out;
+> +       }
+>
+>         frame = nla_data(attr);
+>         len = nla_len(attr);
+> @@ -97,6 +99,8 @@ static void print_frame(struct print_event_args *args, struct nlattr *attr)
+>         for (i = 0; i < len; i++)
+>                 printf(" %.02x", frame[i]);
+>         printf("]");
+> + out:
+> +       ;  /*empty statement to avoid compiler error */
 
-diff --git a/db.txt b/db.txt
-index df7f7b1..f361030 100644
---- a/db.txt
-+++ b/db.txt
-@@ -584,6 +584,9 @@ country JP: DFS-JP
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (23), DFS
-+	# 60 GHz band channels 2-4 at 10mW,
-+	# ref: http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
-+	(59000 - 66000 @ 2160), (10 mW)
- 
- country KE: DFS-JP
- 	(2402 - 2482 @ 40), (20)
+Er, why not just return in the if (!attr) block?
+
+Thanks,
+
 -- 
-2.1.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
