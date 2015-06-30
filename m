@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23161 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320AbbFKOPx (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:38457 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194AbbF3Ifj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Jun 2015 10:15:53 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: enable VHT for IBSS
-References: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Thu, 11 Jun 2015 17:15:42 +0300
-In-Reply-To: <1433913284-18444-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Wed, 10 Jun 2015 07:14:44 +0200")
-Message-ID: <87mw06bab5.fsf@kamboji.qca.qualcomm.com> (sfid-20150611_161627_418216_30688D0F)
+	Tue, 30 Jun 2015 04:35:39 -0400
+From: Dean Lee <dean.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <dean.lee@atmel.com>,
+	<nicolas.ferre@atmel.com>
+Subject: [PATCH 1/6] staging: wilc1000: modify build error
+Date: Tue, 30 Jun 2015 17:34:33 +0900
+Message-ID: <1435653278-5168-1-git-send-email-dean.lee@atmel.com> (sfid-20150630_103551_091347_948892E8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+this function needs more arguments.
 
-> Enable VHT support for IBSS, while mac80211/cfg80211 and
-> wpa_supplicant already support this.
->
-> In my test env, ath10k 2x2 I get:
-> (udp) ath10k-1 >>>> ath10k-2 (server) -  speed: 419 Mbits/sec
-> (tcp) ath10k-1 >>>> ath10k-2 (server) -  speed: 404 Mbits/sec
+Signed-off-by: Dean Lee <dean.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-What hw and firmware version? Do you expect this to work with both
-qca988x and qca6174?
-
-Oh, we should still add ATH10K_FW_FEATURE_NO_ADHOC so that we can
-disable ad-hoc on 10.x firmwares. Anyone have some spare time to cook up
-a patch?
-
-> During tests I used wpa_supplicant (current version)
-
-Better to say "current git version" (if that's what you mean).
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 92064db..a8974c2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -675,7 +675,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+ 			pstrDisconnectNotifInfo->u16reason = 1;
+ 		}
+ 		cfg80211_disconnected(dev, pstrDisconnectNotifInfo->u16reason, pstrDisconnectNotifInfo->ie,
+-				      pstrDisconnectNotifInfo->ie_len, GFP_KERNEL);
++				      pstrDisconnectNotifInfo->ie_len, true, GFP_KERNEL);
+ 
+ 	}
+ 
 -- 
-Kalle Valo
+2.4.4
+
