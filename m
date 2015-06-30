@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34606 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518AbbFPIhE (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:18226 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752602AbbF3JcH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Jun 2015 04:37:04 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 30 Jun 2015 05:32:07 -0400
+Date: Tue, 30 Jun 2015 12:31:47 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Dean Lee <dean.lee@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, nicolas.ferre@atmel.com, johnny.kim@atmel.com
+Subject: Re: [PATCH 4/6] staging: wilc1000: rework address value.
+Message-ID: <20150630093147.GN28762@mwanda> (sfid-20150630_113212_301821_53D76CD8)
+References: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
+ <1435653278-5168-4-git-send-email-dean.lee@atmel.com>
 MIME-Version: 1.0
-Subject: Re: [1/2] brcmfmac: fix double free of p2pdev interface
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1434401319-16136-2-git-send-email-arend@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Message-Id: <20150616083704.2A173140558@smtp.codeaurora.org> (sfid-20150616_103709_665684_414B16A9)
-Date: Tue, 16 Jun 2015 08:37:04 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435653278-5168-4-git-send-email-dean.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> -	if ((pstrHostIfSetDrvHandler->u32Address) == (u32)NULL) {
+> +	if (pstrHostIfSetDrvHandler->pAddress == NULL) {
 
-> When freeing the driver ifp pointer it should also be removed from
-> the driver interface list, which is what brcmf_remove_interface()
-> does. Otherwise, the ifp pointer will be freed twice triggering
-> a kernel oops.
-> 
-> Fixes: f37d69a4babc ("brcmfmac: free ifp for non-netdev interface in p2p module")
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+In the linux kernel we do not like using 'p' to stand for pointer.  This
+new name uses CamelCase.  Use scripts/checkpatch.pl to find obvious
+mistakes like this.
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+The name "address" is too generic.  Use a meaningful name.
 
-cb700df8c8a6 brcmfmac: fix double free of p2pdev interface
-40b503c76481 brcmfmac: make brcmf_p2p_detach() call conditional
+regards,
+dan carpenter
 
-Kalle Valo
