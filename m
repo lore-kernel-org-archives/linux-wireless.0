@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59254 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753667AbbFLOBB (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:24714 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781AbbF3IuV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Jun 2015 10:01:01 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: aspriel@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Jun 2015 17:00:43 +0300
-Message-Id: <1434117644-3033-4-git-send-email-luca@coelho.fi> (sfid-20150612_160105_422872_905FBB57)
-In-Reply-To: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-References: <1434117644-3033-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH py80211 3/4] py80211: add sched_scan stop class
+	Tue, 30 Jun 2015 04:50:21 -0400
+Date: Tue, 30 Jun 2015 11:50:07 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Dean Lee <dean.lee@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, nicolas.ferre@atmel.com, johnny.kim@atmel.com
+Subject: Re: [PATCH 1/6] staging: wilc1000: modify build error
+Message-ID: <20150630085007.GK28762@mwanda> (sfid-20150630_105028_301543_292134A7)
+References: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, Jun 30, 2015 at 05:34:33PM +0900, Dean Lee wrote:
+> this function needs more arguments.
+> 
 
-Add a class to stop scheduled scans.
+Sudip sent a patch for this but he passed false instead of true.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- lib/scan.py | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+We are disconnecting because we got CONN_DISCONN_EVENT_DISCONN_NOTIF as
+a response which seems like not locally generated.  I think false is
+correct here.
 
-diff --git a/lib/scan.py b/lib/scan.py
-index bfaf4da..bfaf3d2 100644
---- a/lib/scan.py
-+++ b/lib/scan.py
-@@ -203,3 +203,18 @@ class sched_scan_start(scan_start_base):
-                 if genlh.cmd in [ nl80211.CMD_START_SCHED_SCAN ]:
-                         self.scan_busy = False
- 		return nl.NL_SKIP
-+
-+class sched_scan_stop(scan_cmd_base):
-+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
-+                super(sched_scan_stop, self).__init__(ifidx, level)
-+                self._nl_cmd = nl80211.CMD_STOP_SCHED_SCAN
-+
-+        def send(self):
-+                self._prepare_cmd()
-+                self._send_and_wait()
-+
-+        def handle(self, msg, arg):
-+		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
-+                if genlh.cmd in [ nl80211.CMD_SCHED_SCAN_STOPPED ]:
-+                        self.scan_busy = False
-+		return nl.NL_SKIP
--- 
-2.1.4
+regards,
+dan carpenter
 
