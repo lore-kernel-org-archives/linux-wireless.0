@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37182 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbFHGQP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Jun 2015 02:16:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Xavier Roche <roche@httrack.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Trivial Patch Monkey <trivial@kernel.org>
-Subject: Re: [PATCH] rtl8723au: replaced asm/atomic.h by linux/atomic.h
-References: <1432791571-17262-1-git-send-email-roche@httrack.com>
-Date: Mon, 08 Jun 2015 09:16:08 +0300
-In-Reply-To: <1432791571-17262-1-git-send-email-roche@httrack.com> (Xavier
-	Roche's message of "Thu, 28 May 2015 07:39:31 +0200")
-Message-ID: <87oakqlo7r.fsf@kamboji.qca.qualcomm.com> (sfid-20150608_081633_059286_02EAF9F5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from eggs.gnu.org ([208.118.235.92]:44583 "EHLO eggs.gnu.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752080AbbF3Auf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2015 20:50:35 -0400
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+	(envelope-from <nikolas@gnu.org>)
+	id 1Z9jks-0007yc-0B
+	for linux-wireless@vger.kernel.org; Mon, 29 Jun 2015 20:50:34 -0400
+From: Nik Nyby <nikolas@gnu.org>
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Cc: Nik Nyby <nikolas@gnu.org>
+Subject: [PATCH] b43: Fix typo in function name
+Date: Mon, 29 Jun 2015 20:45:47 -0400
+Message-Id: <1435625147-23535-1-git-send-email-nikolas@gnu.org> (sfid-20150630_025039_836868_4A1DD046)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xavier Roche <roche@httrack.com> writes:
+This fixes a typo in the "b43_lo_g_maintenance_work" function
+name.
 
-> Minor additional checkpatch.pl fix for include/rtw_io.h
->
-> Signed-off-by: Xavier Roche <roche@httrack.com>
-> ---
->  drivers/staging/rtl8723au/include/rtw_io.h | 2 +-
+Signed-off-by: Nik Nyby <nikolas@gnu.org>
+---
+ drivers/net/wireless/b43/lo.c    | 4 ++--
+ drivers/net/wireless/b43/lo.h    | 2 +-
+ drivers/net/wireless/b43/phy_g.c | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-For staging patches please prefix the title "staging: " so that people
-will realise that this a patch for a driver in staging. So this should
-be renamed to "staging: rtl8723au: replaced asm/atomic.h by
-linux/atomic.h".
-
-Here's a tip how you can check what commit title you should use:
-
-git log --oneline drivers/staging/rtl8723au/include/rtw_io.h
-
+diff --git a/drivers/net/wireless/b43/lo.c b/drivers/net/wireless/b43/lo.c
+index 916123a..a335f94 100644
+--- a/drivers/net/wireless/b43/lo.c
++++ b/drivers/net/wireless/b43/lo.c
+@@ -929,8 +929,8 @@ void b43_lo_g_adjust_to(struct b43_wldev *dev,
+ 	b43_lo_write(dev, &cal->ctl);
+ }
+ 
+-/* Periodic LO maintanance work */
+-void b43_lo_g_maintanance_work(struct b43_wldev *dev)
++/* Periodic LO maintenance work */
++void b43_lo_g_maintenance_work(struct b43_wldev *dev)
+ {
+ 	struct b43_phy *phy = &dev->phy;
+ 	struct b43_phy_g *gphy = phy->g;
+diff --git a/drivers/net/wireless/b43/lo.h b/drivers/net/wireless/b43/lo.h
+index 3b27e20..7b4df38 100644
+--- a/drivers/net/wireless/b43/lo.h
++++ b/drivers/net/wireless/b43/lo.h
+@@ -80,7 +80,7 @@ void b43_lo_g_adjust_to(struct b43_wldev *dev,
+ 
+ void b43_gphy_dc_lt_init(struct b43_wldev *dev, bool update_all);
+ 
+-void b43_lo_g_maintanance_work(struct b43_wldev *dev);
++void b43_lo_g_maintenance_work(struct b43_wldev *dev);
+ void b43_lo_g_cleanup(struct b43_wldev *dev);
+ void b43_lo_g_init(struct b43_wldev *dev);
+ 
+diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
+index 727ce6e..462310e 100644
+--- a/drivers/net/wireless/b43/phy_g.c
++++ b/drivers/net/wireless/b43/phy_g.c
+@@ -3004,7 +3004,7 @@ static void b43_gphy_op_pwork_15sec(struct b43_wldev *dev)
+ 		   phy->rev == 1) {
+ 		//TODO: implement rev1 workaround
+ 	}
+-	b43_lo_g_maintanance_work(dev);
++	b43_lo_g_maintenance_work(dev);
+ 	b43_mac_enable(dev);
+ }
+ 
 -- 
-Kalle Valo
+2.1.4
+
