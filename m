@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46852 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753169AbbFQI7A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Jun 2015 04:59:00 -0400
-Message-ID: <1434531537.1884.17.camel@sipsolutions.net> (sfid-20150617_105909_922195_0C0DA1B1)
-Subject: Re: [PATCH] mac80211: don't invalidate SN on discovery failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: agreen@cococorp.com
-Cc: linux-wireless@vger.kernel.org, Jesse Jones <jjones@cococorp.com>
-Date: Wed, 17 Jun 2015 10:58:57 +0200
-In-Reply-To: <557B4B65.60001@cococorp.com> (sfid-20150612_231319_185504_F3077021)
-References: <557B4B65.60001@cococorp.com>
-	 (sfid-20150612_231319_185504_F3077021)
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0131.hostedemail.com ([216.40.44.131]:40043 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752787AbbF3DQh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Jun 2015 23:16:37 -0400
+Message-ID: <1435634193.9587.64.camel@perches.com> (sfid-20150630_051640_906395_9AC555A7)
+Subject: Re: [PATCH v4] Add new mac80211 driver mwlwifi.
+From: Joe Perches <joe@perches.com>
+To: David Lin <dlin@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Date: Mon, 29 Jun 2015 20:16:33 -0700
+In-Reply-To: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
+References: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-06-12 at 14:13 -0700, Alexis Green wrote:
-> From: Jesse Jones <jjones@cococorp.com>
-> 
-> The 2012 spec mentions that path SNs can be invalid when created (see
-> section 13.10.8.4 table 13-9) but AFAICT never talks about invalidating
-> SNs. Which makes sense: if we have figured out the path to a target at a
-> certain SN then we want to remember that fact. Failing to do so can lead
-> to routing loops because if we don't have a valid SN then we have no way
-> of knowing whether an incoming path message leads to or away from the
-> target.
-> 
-> However currently when discovery fails we zero out mpath->flags which
-> clears MESH_PATH_SN_VALID. This patch fixes that so that only the
-> discovery relevant flags are cleared.
+On Tue, 2015-06-30 at 01:49 +0000, David Lin wrote:
+> The Linux driver for WRT1900AC. The work was initially developed as part of
+> openwrt effort and maintained on https://github.com/kaloz/mwlwifi.
 
-Applied; I fixed the indentation a bit.
+trivia:
 
-Also, please mention "mesh" in the future in the subject of your
-patches, it makes it easier to pick out.
+Please add terminating newlines to logging messages.
+This prevents interleaving output from multiple threads.
 
-johannes
+> diff --git a/drivers/net/wireless/mwlwifi/fwcmd.c b/drivers/net/wireless/mwlwifi/fwcmd.c
+[]
+> +static bool mwl_fwcmd_chk_adapter(struct mwl_priv *priv)
+> +{
+[]
+> +	if (regval == 0xffffffff) {
+> +		wiphy_err(priv->hw->wiphy, "adapter is not existed");
+
+		wiphy_err(priv->hw->wiphy, "adapter is not existed\n");
+
+> +static int mwl_fwcmd_wait_complete(struct mwl_priv *priv, unsigned short cmd)
+> +{
+[]
+> +	if (curr_iteration == 0) {
+> +		wiphy_err(priv->hw->wiphy, "cmd 0x%04x=%s timed out",
+
+		wiphy_err(priv->hw->wiphy, "cmd 0x%04x=%s timed out\n",
+
+etc...
 
 
