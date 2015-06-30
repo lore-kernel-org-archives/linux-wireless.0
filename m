@@ -1,81 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33939 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455AbbFBH5F (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:36711 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753351AbbF3VyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Jun 2015 03:57:05 -0400
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH] staging: wilc1000: fix warning while printing
-Date: Tue,  2 Jun 2015 13:26:54 +0530
-Message-Id: <1433231814-4204-1-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20150602_095711_685961_E21C77F1)
+	Tue, 30 Jun 2015 17:54:06 -0400
+Received: by wguu7 with SMTP id u7so20924674wgu.3
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2015 14:54:04 -0700 (PDT)
+Date: Tue, 30 Jun 2015 23:54:02 +0200
+From: Michel von Czettritz <michel.von.czettritz@gmail.com>
+To: gregkh@linux.com
+Cc: Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] staging: rtl8723au: fix "incorrect type in assignment"
+Message-ID: <d7c0812eedadab3697323bd53aeadba48ecf6d89.1435700714.git.michel.von.czettritz@gmail.com> (sfid-20150630_235409_848753_B88E91A1)
+References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1435700714.git.michel.von.czettritz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-size_t should print using %zu, but here it was using %d and hence we
-were getting warning while printing.
+Writing the output of cpu_to_le32 to an u32 or *(u32*) is an implicit
+cast and results in an sparse warning.
 
-Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+Since param and mask won't be changed, the implicit cast can be avoided
+by creating local variables.
+
+Signed-off-by: Michel von Czettritz <michel.von.czettritz@gmail.com>
 ---
+ drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-I think it will be easy to remove the other warnings if all the typedefs
-are removed first.
-
- drivers/staging/wilc1000/wilc_spi.c               | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index d0e7610..6d854fd 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -404,7 +404,7 @@ static int spi_cmd_complete(uint8_t cmd, uint32_t adr, uint8_t *b, uint32_t sz,
- #undef NUM_DUMMY_BYTES
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+index 1003365..a5e6726 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+@@ -115,9 +115,10 @@ exit:
  
- 	if (len2 > (sizeof(wb) / sizeof(wb[0]))) {
--		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%d)\n",
-+		PRINT_ER("[wilc spi]: spi buffer size too small (%d) (%lu)\n",
- 			 len2, (sizeof(wb) / sizeof(wb[0])));
- 		result = N_FAIL;
- 		return result;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e9ab2cb..6fdb0d6 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -638,7 +638,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
- 		}
+ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
+ {
+-	*((u32 *)param) = cpu_to_le32(*(param));
++	__le32 param_le;
++	param_le = cpu_to_le32(*(param));
  
+-	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)param);
++	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&param_le);
  
--		PRINT_D(CFG80211_DBG, "Association request info elements length = %d\n", pstrConnectInfo->ReqIEsLen);
-+		PRINT_D(CFG80211_DBG, "Association request info elements length = %zu\n", pstrConnectInfo->ReqIEsLen);
+ 	return _SUCCESS;
+ }
+@@ -125,10 +126,11 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
+ int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
+ {
+ 	u8 buf[5];
++	__le32 mask_le;
  
- 		PRINT_D(CFG80211_DBG, "Association response info elements length = %d\n", pstrConnectInfo->u16RespIEsLen);
+ 	memset(buf, 0, 5);
+-	mask = cpu_to_le32(mask);
+-	memcpy(buf, &mask, 4);
++	mask_le = cpu_to_le32(mask);
++	memcpy(buf, &mask_le, 4);
+ 	buf[4]  = arg;
  
-@@ -778,7 +778,7 @@ static int WILC_WFI_CfgScan(struct wiphy *wiphy, struct cfg80211_scan_request *r
- 		}
- 
- 		PRINT_D(CFG80211_DBG, "Requested num of scan channel %d\n", request->n_channels);
--		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %d\n", request->ie_len);
-+		PRINT_D(CFG80211_DBG, "Scan Request IE len =  %zu\n", request->ie_len);
- 
- 		PRINT_D(CFG80211_DBG, "Number of SSIDs %d\n", request->n_ssids);
- 
-@@ -3316,7 +3316,7 @@ static int WILC_WFI_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	priv = wiphy_priv(wiphy);
- 	PRINT_D(HOSTAPD_DBG, "Starting ap\n");
- 
--	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %d Tail length = %d\n",
-+	PRINT_D(HOSTAPD_DBG, "Interval = %d \n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
- 		settings->beacon_interval, settings->dtim_period, beacon->head_len, beacon->tail_len);
- 
- 	s32Error = WILC_WFI_CfgSetChannel(wiphy, &settings->chandef);
+ 	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
 -- 
-1.8.1.2
+2.4.5
 
