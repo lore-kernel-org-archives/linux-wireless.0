@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57271 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751376AbbF2IOl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 04:14:41 -0400
-Message-ID: <1435565678.2156.9.camel@sipsolutions.net> (sfid-20150629_101447_360817_E4688716)
-Subject: Re: Null pointer dereference when station associates [introduced by
- 4.0.5?]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tom Hughes <tom@compton.nu>, linux-wireless@vger.kernel.org
-Cc: stable@vger.kernel.org
-Date: Mon, 29 Jun 2015 10:14:38 +0200
-In-Reply-To: <558EC27A.60804@compton.nu> (sfid-20150627_181129_907073_7F8F41EE)
-References: <558EC27A.60804@compton.nu>
-	 (sfid-20150627_181129_907073_7F8F41EE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:38680 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753114AbbF3IgZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2015 04:36:25 -0400
+From: Dean Lee <dean.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>
+CC: <johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <dean.lee@atmel.com>,
+	<nicolas.ferre@atmel.com>
+Subject: [PATCH 5/6] staging: wilc1000: fix initialize warning issue.
+Date: Tue, 30 Jun 2015 17:34:37 +0900
+Message-ID: <1435653278-5168-5-git-send-email-dean.lee@atmel.com> (sfid-20150630_103629_817235_4D112DD8)
+In-Reply-To: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
+References: <1435653278-5168-1-git-send-email-dean.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-06-27 at 16:34 +0100, Tom Hughes wrote:
-> 
-> Interestingly from what I can see this is trying to create a file
-> for the station at a path something like:
-> 
-> ieee80211/phy0/netdev:XXXX/stations/XXXXXX
+modify it
 
-indeed.
+Signed-off-by: Dean Lee <dean.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 3 ++-
+ drivers/staging/wilc1000/linux_wlan.c     | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-> but in my (currently working) boot under 4.0.4 there is no netdev
-> directory under phy0 in debugfs... but then maybe that is the problem
-> as well if the inode pointer was null?
-> 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 1e40dca..a2e9b6d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -7162,7 +7162,7 @@ s32 host_int_add_beacon(void *hWFIDrv, u32 u32Interval,
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+ 	tstrHostIFmsg strHostIFmsg;
+-	tstrHostIFSetBeacon *pstrSetBeaconParam = &strHostIFmsg.uniHostIFmsgBody.strHostIFSetBeacon;
++	tstrHostIFSetBeacon *pstrSetBeaconParam = NULL;
+ 
+ 	if (hWFIDrv == NULL) {
+ 		WILC_ERRORREPORT(s32Error, WILC_INVALID_ARGUMENT);
+@@ -7172,6 +7172,7 @@ s32 host_int_add_beacon(void *hWFIDrv, u32 u32Interval,
+ 
+ 	PRINT_D(HOSTINF_DBG, "Setting adding beacon message queue params\n");
+ 
++	pstrSetBeaconParam = &strHostIFmsg.uniHostIFmsgBody.strHostIFSetBeacon;
+ 
+ 	/* prepare the WiphyParams Message */
+ 	strHostIFmsg.u16MsgId = HOST_IF_MSG_ADD_BEACON;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 659b70a..1b8991a 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -2463,7 +2463,7 @@ void frmw_to_linux(uint8_t *buff, uint32_t size, uint32_t pkt_offset)
+ 			return;
+ 		}
+ 
+-		skb_reserve(skb, (unsigned int)skb->data & 0x3);
++		skb_reserve(skb, (uintptr_t)skb->data & 0x3);
+ 
+ 		if (g_linux_wlan == NULL || wilc_netdev == NULL) {
+ 			PRINT_ER("wilc_netdev in g_linux_wlan is NULL");
+-- 
+2.4.4
 
-This is pretty strange - if the dentry pointer (sdata
-->debugfs.subdir_stations) was NULL or an ERR_PTR(), the code would
-return pretty much immediately.
-
-So it looks like that pointer is valid, but it's ->d_inode was NULL?
-
-I'm not really sure how that could happen.
-
-Since 4.0.4 was stable, and 4.0.5 crashes, you'd think there's
-something wrong between those two kernels and there were no changes to
-mac80211 related to these code paths in there.
-
-johannes
