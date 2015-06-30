@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eggs.gnu.org ([208.118.235.92]:47804 "EHLO eggs.gnu.org"
+Received: from hauke-m.de ([5.39.93.123]:49922 "EHLO hauke-m.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753048AbbF2RbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Jun 2015 13:31:09 -0400
-Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
-	(envelope-from <nikolas@gnu.org>)
-	id 1Z9ctc-0000gP-VR
-	for linux-wireless@vger.kernel.org; Mon, 29 Jun 2015 13:31:09 -0400
-From: Nik Nyby <nikolas@gnu.org>
-To: linux-wireless@vger.kernel.org, trivial@kernel.org
-Cc: Nik Nyby <nikolas@gnu.org>
-Subject: [PATCH v2] ath6kl: Trivial: spell "distribution" correctly in a comment.
-Date: Mon, 29 Jun 2015 13:30:37 -0400
-Message-Id: <1435599037-1369-1-git-send-email-nikolas@gnu.org> (sfid-20150629_193113_886807_F2946C18)
-In-Reply-To: <1435378264-13873-1-git-send-email-nikolas@gnu.org>
-References: <1435378264-13873-1-git-send-email-nikolas@gnu.org>
+	id S1752016AbbF3Vpk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Jun 2015 17:45:40 -0400
+Message-ID: <55930E01.6070909@hauke-m.de> (sfid-20150630_234652_716053_E3B159A8)
+Date: Tue, 30 Jun 2015 23:45:37 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org
+CC: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
+References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes two misspellings of "distribution" in a comment.
+On 06/28/2015 05:17 PM, Rafał Miłecki wrote:
+> Our bus should allow defining children nodes as we may want to specify
+> devices attached to the bus. This is required e.g. to specify NAND or
+> ChipCommon cores and use bus's address and IRQ mappings.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/bcma/main.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 
-Signed-off-by: Nik Nyby <nikolas@gnu.org>
----
- drivers/net/wireless/ath/ath6kl/htc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 14cab14..112d8a9 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -427,7 +427,7 @@ struct htc_endpoint_credit_dist {
- };
- 
- /*
-- * credit distibution code that is passed into the distrbution function,
-+ * credit distribution code that is passed into the distribution function,
-  * there are mandatory and optional codes that must be handled
-  */
- enum htc_credit_dist_reason {
--- 
-2.1.4
+Rafał have you solved the IRQ problem? Is it possible to assign all the
+sub devices the same IRQ number as the chipcommon core?
 
