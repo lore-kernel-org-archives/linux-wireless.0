@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:35577 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756171AbbGTIFY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2015 04:05:24 -0400
-Received: by wgav7 with SMTP id v7so58576287wga.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2015 01:05:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87wpxvti9r.fsf@kamboji.qca.qualcomm.com>
-References: <87wpxvti9r.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 20 Jul 2015 10:05:22 +0200
-Message-ID: <CAMQd7mZEE8hZPrHKVfBGFyGD56ovaCe37+wnGJk=eUQgeGqpVQ@mail.gmail.com> (sfid-20150720_100534_945681_339E1623)
-Subject: Re: ath10k list: problems with gmail
-From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:40794 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754113AbbGAO5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2015 10:57:18 -0400
+Message-ID: <1435762626.2168.1.camel@sipsolutions.net> (sfid-20150701_165721_325691_E2386591)
+Subject: Re: [PATCH v4] Add new mac80211 driver mwlwifi.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lin <dlin@marvell.com>,
+	"quozl@laptop.org" <quozl@laptop.org>,
+	Dan Williams <dcbw@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Date: Wed, 01 Jul 2015 16:57:06 +0200
+In-Reply-To: <019032ba6cc14a4293b670496dd2bb1e@SC-EXCH02.marvell.com>
+References: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
+	 <1435652491.2082.5.camel@sipsolutions.net>
+	 <1435673924.9390.4.camel@redhat.com> <20150630222610.GB30901@us.netrek.org>
+	 <019032ba6cc14a4293b670496dd2bb1e@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I can confirm this, I got this email one month ago
+On Wed, 2015-07-01 at 14:42 +0000, David Lin wrote:
+> > We can leave both selectable by developer testing as per your
+> suggestion, and assume users/integrators will know how to put the 
+> driver they want in their system. We were warned about causing 
+> confusion hence the conditioning in CONFIG. Do you feel there's no 
+> concern leaving both driver in, not checking each other's presence? 
+> We can comply either way.
 
-Your membership in the mailing list ath10k has been disabled due to
-excessive bounces The last bounce received from you was dated
-23-Jun-2015.  You will not get any more messages from this list until
-you re-enable your membership.
+I think you should just leave both selectable.
 
-I think google anti spam service is going a little bit creative, I
-found quite a few false positive and not only from kernel related
-mailing lists recently.
+> > > > This looks OK, though I get a very strange dependency loop 
+> > > > warning
+> > > > from Kconfig here.
+> 
+> For the next patch, we will modify the code to still work even though 
+> the target does not support DTS. So we can remove "select OF" from 
+> Kconfig file.
 
-On 20 July 2015 at 09:12, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Hi,
->
-> I noticed that on Tue, 14 Jul 2015 09:00:04 -0700 for some reason lots
-> of gmail users got suddenly unsubcribed from the ath10k list, maybe due
-> to a problem with gmail servers? So if you use gmail better to check
-> your subcription status.
->
-> --
-> Kalle Valo
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+If the driver needs OF don't bother - the dependency loop is very long
+and the warning is rather strange.
+
+> > > > > writew(0x00, (void __iomem *)&priv->pcmd_buf[1]);
+> > > > 
+> > > > cannot be right. This memory isn't __iomem, it's 
+> > > > dma_alloc_coherent,
+> > > > so a simple write should be done.
+> > > > 
+> 
+> Without this casting, C=2 will cause a warning message like this: 
+> "Warning: incorrect type in argument 2 (different address spaces)"
+
+Yes, but the warning is correct and the cast is wrong. This isn't
+__iomem, it's simply mapped, so you should just do a
+	(u32 *)pcmd_buf[1] = 0;
+
+or something like that. The writev() to such a pointer cannot be right.
+
+> johannes
