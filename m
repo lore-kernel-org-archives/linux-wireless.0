@@ -1,125 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:58088 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169AbbG3JLH (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:49553 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751862AbbGAD5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 05:11:07 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 5/5] staging: wilc1000: remove unused functions
-Date: Thu, 30 Jul 2015 18:10:14 +0900
-Message-ID: <1438247414-19708-6-git-send-email-tony.cho@atmel.com> (sfid-20150730_111111_742363_A1CB6DF1)
-In-Reply-To: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
-References: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 30 Jun 2015 23:57:35 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NQS02PASIZXTVB0@mailout1.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 01 Jul 2015 12:57:33 +0900 (KST)
+Date: Wed, 01 Jul 2015 03:57:33 +0000 (GMT)
+From: Amit Khatri <amit.khatri@samsung.com>
+Subject: Re: Re: [PATCH] iw: Static analyser fixes
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Rahul Jain <rahul.jain@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>
+Reply-to: amit.khatri@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0
+Message-id: <571872053.94931435723052622.JavaMail.weblogic@ep2mlwas04a> (sfid-20150701_055740_364290_A8F518D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the dead functions which are not used anymore.
-	- sdio_check_bs
-	- sdio_xfer_cnt
+aGkgSnVsaWFuLA0KDQpJIGhhdmUgbW9kaWZpZWQgcGF0Y2ggYWNjb3JkaW5nIHRvIHlvdXIgc3Vn
+Z2VzdGlvbi4gDQoNClN1YmplY3Q6IFtQQVRDSF0gaXc6IFN0YXRpYyBhbmFseXNlciBmaXhlcw0K
+DQpTaWduZWQtb2ZmLWJ5OiBBbWl0IEtoYXRyaSA8YW1pdC5raGF0cmlAc2Ftc3VuZy5jb20+DQpT
+aWduZWQtb2ZmLWJ5OiBSYWh1bCBKYWluIDxyYWh1bC5qYWluQHNhbXN1bmcuY29tPg0KLS0tDQog
+Y3FtLmMgICB8IDIgKysNCiBldmVudC5jIHwgNCArKystDQogaXcuYyAgICB8IDIgKy0NCiBzY2Fu
+LmMgIHwgMiArKw0KIDQgZmlsZXMgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9u
+cygtKQ0KDQpkaWZmIC0tZ2l0IGEvY3FtLmMgYi9jcW0uYw0KaW5kZXggNjU4NzZhZi4uYmY2MDQw
+MSAxMDA2NDQNCi0tLSBhL2NxbS5jDQorKysgYi9jcW0uYw0KQEAgLTM0LDYgKzM0LDggQEAgc3Rh
+dGljIGludCBpd19jcW1fcnNzaShzdHJ1Y3Qgbmw4MDIxMV9zdGF0ZSAqc3RhdGUsIHN0cnVjdCBu
+bF9jYiAqY2IsDQogDQogCS8qIGNvbm5lY3Rpb24gcXVhbGl0eSBtb25pdG9yIGF0dHJpYnV0ZXMg
+Ki8NCiAJY3FtID0gbmxtc2dfYWxsb2MoKTsNCisJaWYoIWNxbSkNCisJCXJldHVybiAtRU5PTUVN
+Ow0KIA0KIAlOTEFfUFVUX1UzMihjcW0sIE5MODAyMTFfQVRUUl9DUU1fUlNTSV9USE9MRCwgdGhv
+bGQpOw0KIAlOTEFfUFVUX1UzMihjcW0sIE5MODAyMTFfQVRUUl9DUU1fUlNTSV9IWVNULCBoeXN0
+KTsNCmRpZmYgLS1naXQgYS9ldmVudC5jIGIvZXZlbnQuYw0KaW5kZXggZjczZTA3OC4uNTBiM2Ix
+NyAxMDA2NDQNCi0tLSBhL2V2ZW50LmMNCisrKyBiL2V2ZW50LmMNCkBAIC00OSw4ICs0OSwxMCBA
+QCBzdGF0aWMgdm9pZCBwcmludF9mcmFtZShzdHJ1Y3QgcHJpbnRfZXZlbnRfYXJncyAqYXJncywg
+c3RydWN0IG5sYXR0ciAqYXR0cikNCiAJY2hhciBtYWNidWZbNiozXTsNCiAJdWludDE2X3QgdG1w
+Ow0KIA0KLQlpZiAoIWF0dHIpDQorCWlmICghYXR0cikgew0KIAkJcHJpbnRmKCIgW25vIGZyYW1l
+XSIpOw0KKwkJcmV0dXJuOw0KKwl9DQogDQogCWZyYW1lID0gbmxhX2RhdGEoYXR0cik7DQogCWxl
+biA9IG5sYV9sZW4oYXR0cik7DQpkaWZmIC0tZ2l0IGEvaXcuYyBiL2l3LmMNCmluZGV4IGRjOTk1
+NjYuLjFlOTEzYjYgMTAwNjQ0DQotLS0gYS9pdy5jDQorKysgYi9pdy5jDQpAQCAtNDc3LDggKzQ3
+Nyw4IEBAIHN0YXRpYyBpbnQgX19oYW5kbGVfY21kKHN0cnVjdCBubDgwMjExX3N0YXRlICpzdGF0
+ZSwgZW51bSBpZF9pbnB1dCBpZGJ5LA0KIAl3aGlsZSAoZXJyID4gMCkNCiAJCW5sX3JlY3Ztc2dz
+KHN0YXRlLT5ubF9zb2NrLCBjYik7DQogIG91dDoNCi0JbmxfY2JfcHV0KGNiKTsNCiAgb3V0X2Zy
+ZWVfbXNnOg0KKwlubF9jYl9wdXQoY2IpOw0KIAlubG1zZ19mcmVlKG1zZyk7DQogCXJldHVybiBl
+cnI7DQogIG5sYV9wdXRfZmFpbHVyZToNCmRpZmYgLS1naXQgYS9zY2FuLmMgYi9zY2FuLmMNCmlu
+ZGV4IGJmMzlmMzQuLjU0ODNjMWQgMTAwNjQ0DQotLS0gYS9zY2FuLmMNCisrKyBiL3NjYW4uYw0K
+QEAgLTQwOSw2ICs0MDksOCBAQCBzdGF0aWMgaW50IGhhbmRsZV9zY2FuKHN0cnVjdCBubDgwMjEx
+X3N0YXRlICpzdGF0ZSwNCiAJCQkJYnJlYWs7DQogCQkJfQ0KIAkJY2FzZSBET05FOg0KKwkJCW5s
+bXNnX2ZyZWUoc3NpZHMpOw0KKwkJCW5sbXNnX2ZyZWUoZnJlcXMpOw0KIAkJCXJldHVybiAxOw0K
+IAkJY2FzZSBGUkVROg0KIAkJCWZyZXEgPSBzdHJ0b3VsKGFyZ3ZbaV0sICZlcHRyLCAxMCk7DQot
+LSANCjEuOS4xDQoNCg0KLS0tLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tLS0NClNlbmRlciA6
+IEp1bGlhbiBDYWxhYnk8anVsaWFuLmNhbGFieUBnbWFpbC5jb20+IA0KRGF0ZSAgIDogSnVuIDMw
+LCAyMDE1IDE3OjU5IChHTVQrMDU6MzApDQpUaXRsZSAgOiBSZTogW1BBVENIXSBpdzogU3RhdGlj
+IGFuYWx5c2VyIGZpeGVzDQoNCkhpIEFtaXQsDQoNCk9uIFR1ZSwgSnVuIDMwLCAyMDE1IGF0IDEw
+OjE3IFBNLCBBbWl0IEtoYXRyaSA8YW1pdC5raGF0cmlAc2Ftc3VuZy5jb20+IHdyb3RlOg0KPiBI
+aSBKb2hhbm5lcywNCj4NCj4gU3ViamVjdDogW1BBVENIXSBpdzogU3RhdGljIGFuYWx5c2VyIGZp
+eGVzDQo+DQo+IFNpZ25lZC1vZmYtYnk6IEFtaXQgS2hhdHJpIDxhbWl0LmtoYXRyaUBzYW1zdW5n
+LmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogUmFodWwgSmFpbiA8cmFodWwuamFpbkBzYW1zdW5nLmNv
+bT4NCj4gLS0tDQo+ICBjcW0uYyAgIHwgMiArKw0KPiAgZXZlbnQuYyB8IDYgKysrKystDQo+ICBp
+dy5jICAgIHwgMiArLQ0KPiAgc2Nhbi5jICB8IDIgKysNCj4gIDQgZmlsZXMgY2hhbmdlZCwgMTAg
+aW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2V2ZW50LmMg
+Yi9ldmVudC5jDQo+IGluZGV4IGY3M2UwNzguLjA2ZDIzNmIgMTAwNjQ0DQo+IC0tLSBhL2V2ZW50
+LmMNCj4gKysrIGIvZXZlbnQuYw0KPiBAQCAtNDksOCArNDksMTAgQEAgc3RhdGljIHZvaWQgcHJp
+bnRfZnJhbWUoc3RydWN0IHByaW50X2V2ZW50X2FyZ3MgKmFyZ3MsIHN0cnVjdCBubGF0dHIgKmF0
+dHIpDQo+ICAgICAgICAgY2hhciBtYWNidWZbNiozXTsNCj4gICAgICAgICB1aW50MTZfdCB0bXA7
+DQo+DQo+IC0gICAgICAgaWYgKCFhdHRyKQ0KPiArICAgICAgIGlmICghYXR0cikgew0KPiAgICAg
+ICAgICAgICAgICAgcHJpbnRmKCIgW25vIGZyYW1lXSIpOw0KPiArICAgICAgICAgICAgICAgZ290
+byBvdXQ7DQo+ICsgICAgICAgfQ0KPg0KPiAgICAgICAgIGZyYW1lID0gbmxhX2RhdGEoYXR0cik7
+DQo+ICAgICAgICAgbGVuID0gbmxhX2xlbihhdHRyKTsNCj4gQEAgLTk3LDYgKzk5LDggQEAgc3Rh
+dGljIHZvaWQgcHJpbnRfZnJhbWUoc3RydWN0IHByaW50X2V2ZW50X2FyZ3MgKmFyZ3MsIHN0cnVj
+dCBubGF0dHIgKmF0dHIpDQo+ICAgICAgICAgZm9yIChpID0gMDsgaSA8IGxlbjsgaSsrKQ0KPiAg
+ICAgICAgICAgICAgICAgcHJpbnRmKCIgJS4wMngiLCBmcmFtZVtpXSk7DQo+ICAgICAgICAgcHJp
+bnRmKCJdIik7DQo+ICsgb3V0Og0KPiArICAgICAgIDsgIC8qZW1wdHkgc3RhdGVtZW50IHRvIGF2
+b2lkIGNvbXBpbGVyIGVycm9yICovDQoNCkVyLCB3aHkgbm90IGp1c3QgcmV0dXJuIGluIHRoZSBp
+ZiAoIWF0dHIpIGJsb2NrPw0KDQpUaGFua3MsDQoNCi0tIA0KSnVsaWFuIENhbGFieQ0KDQpFbWFp
+bDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NClByb2ZpbGU6IGh0dHA6Ly93d3cuZ29vZ2xlLmNv
+bS9wcm9maWxlcy9qdWxpYW4uY2FsYWJ5Lw0KPHA+Jm5ic3A7PC9wPjxwPiZuYnNwOzwvcD4=
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
-V2: This patch doesn't have any difference with the first patch becasue
-this patch just removes unnecessary functions. However, it is resent
-because it's not accepted with the 9th patch which has a problem.
----
- drivers/staging/wilc1000/wilc_sdio.c | 56 ------------------------------------
- drivers/staging/wilc1000/wilc_wlan.c |  1 -
- 2 files changed, 57 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index c52044a..44421d0 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -186,67 +186,11 @@ static int sdio_clear_int(void)
- }
- #endif /* WILC_SDIO_IRQ_GPIO */
- 
--uint32_t sdio_xfer_cnt(void)
--{
--	uint32_t cnt = 0;
--	sdio_cmd52_t cmd;
--
--	cmd.read_write = 0;
--	cmd.function = 1;
--	cmd.raw = 0;
--	cmd.address = 0x1C;
--	cmd.data = 0;
--	g_sdio.sdio_cmd52(&cmd);
--	cnt = cmd.data;
--
--	cmd.read_write = 0;
--	cmd.function = 1;
--	cmd.raw = 0;
--	cmd.address = 0x1D;
--	cmd.data = 0;
--	g_sdio.sdio_cmd52(&cmd);
--	cnt |= (cmd.data << 8);
--
--	cmd.read_write = 0;
--	cmd.function = 1;
--	cmd.raw = 0;
--	cmd.address = 0x1E;
--	cmd.data = 0;
--	g_sdio.sdio_cmd52(&cmd);
--	cnt |= (cmd.data << 16);
--
--	return cnt;
--}
--
- /********************************************
-  *
-  *      Sdio interfaces
-  *
-  ********************************************/
--int sdio_check_bs(void)
--{
--	sdio_cmd52_t cmd;
--
--	/**
--	 *      poll until BS is 0
--	 **/
--	cmd.read_write = 0;
--	cmd.function = 0;
--	cmd.raw = 0;
--	cmd.address = 0xc;
--	cmd.data = 0;
--	if (!g_sdio.sdio_cmd52(&cmd)) {
--		g_sdio.dPrint(N_ERR, "[wilc sdio]: Fail cmd 52, get BS register...\n");
--		goto _fail_;
--	}
--
--	return 1;
--
--_fail_:
--
--	return 0;
--}
--
- static int sdio_write_reg(uint32_t addr, uint32_t data)
- {
- #ifdef BIG_ENDIAN
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index def72fd..68c38ec 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -25,7 +25,6 @@ extern u8 g_wilc_initialized; /* AMR : 0422 RK3026 Crash issue */
- #endif
- extern void WILC_WFI_mgmt_rx(uint8_t *buff, uint32_t size);
- extern void frmw_to_linux(uint8_t *buff, uint32_t size);
--int sdio_xfer_cnt(void);
- uint32_t wilc_get_chipid(uint8_t update);
- u16 Set_machw_change_vir_if(bool bValue);
- 
--- 
-1.9.1
 
