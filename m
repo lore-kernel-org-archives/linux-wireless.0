@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44659 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216AbbGaHmB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49690 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814AbbGAKjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:42:01 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 28/28] staging: wilc1000: change data type of variable
-Date: Fri, 31 Jul 2015 16:38:36 +0900
-Message-ID: <1438328316-30197-29-git-send-email-tony.cho@atmel.com> (sfid-20150731_094205_584706_5E3B5499)
-In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+	Wed, 1 Jul 2015 06:39:07 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 5/8] ath10k: add 10.4 fw specific htt msg definitions
+References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
+	<1434984747-24294-6-git-send-email-rmani@qti.qualcomm.com>
+Date: Wed, 1 Jul 2015 13:38:58 +0300
+In-Reply-To: <1434984747-24294-6-git-send-email-rmani@qti.qualcomm.com> (Raja
+	Mani's message of "Mon, 22 Jun 2015 20:22:24 +0530")
+Message-ID: <878ub0xiv1.fsf@kamboji.qca.qualcomm.com> (sfid-20150701_123912_660935_F4F57CD0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: glen lee <glen.lee@atmel.com>
+Raja Mani <rmani@qti.qualcomm.com> writes:
 
-drvHandler of u32 type is used to handle integer type pointer operation which
-cause build warnings.
-To use integer type varialbe as pointer, drvHandler data type need to be changed
-with uintptr_t type.
+> New htt event table is added for 10.4 firmware. Following new htt
+> events are available only 10.4. adding this to generic htt event
+> table,
+> 	HTT_T2H_MSG_TYPE_EN_STATS,
+> 	HTT_T2H_MSG_TYPE_TX_FETCH_IND,
+> 	HTT_T2H_MSG_TYPE_TX_FETCH_CONF,
+> 	HTT_T2H_MSG_TYPE_TX_LOW_LATENCY_IND
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 
-drivers/staging/wilc1000/host_interface.c: In function ‘NetworkInfoReceived’:
-drivers/staging/wilc1000/host_interface.c:6767:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
-  pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
-               ^
-drivers/staging/wilc1000/host_interface.c: In function ‘GnrlAsyncInfoReceived’:
-drivers/staging/wilc1000/host_interface.c:6819:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
-  pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
-               ^
-drivers/staging/wilc1000/host_interface.c: In function ‘host_int_ScanCompleteReceived’:
-drivers/staging/wilc1000/host_interface.c:6878:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
-  pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+[...]
 
-Signed-off-by: glen lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> @@ -1146,6 +1147,8 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+>  			ar->htt.op_version = ATH10K_FW_HTT_OP_VERSION_TLV;
+>  			break;
+>  		case ATH10K_FW_WMI_OP_VERSION_10_4:
+> +			ar->htt.op_version = ATH10K_FW_HTT_OP_VERSION_10_4;
+> +			break;
+>  		case ATH10K_FW_WMI_OP_VERSION_UNSET:
+>  		case ATH10K_FW_WMI_OP_VERSION_MAX:
+>  			WARN_ON(1);
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b36f98c..668e47e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6760,7 +6760,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrHostIFmsg strHostIFmsg;
--	u32 drvHandler;
-+	uintptr_t drvHandler;
- 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
- 
- 	drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
-@@ -6809,7 +6809,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrHostIFmsg strHostIFmsg;
--	u32 drvHandler;
-+	uintptr_t drvHandler;
- 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
- 
- 	/*BugID_5348*/
-@@ -6871,7 +6871,7 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrHostIFmsg strHostIFmsg;
--	u32 drvHandler;
-+	uintptr_t drvHandler;
- 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
- 
- 	drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+So this switch block is only to support older firmware versions which do
+not have ATH10K_FW_IE_HTT_OP_VERSION yet. 10.4 firmware will always have
+it set so we don't need to have any backwards compatibility code for
+10.4. I changed this part with the diff below. Please review.
+
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1147,8 +1147,6 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+                        ar->htt.op_version = ATH10K_FW_HTT_OP_VERSION_TLV;
+                        break;
+                case ATH10K_FW_WMI_OP_VERSION_10_4:
+-                       ar->htt.op_version = ATH10K_FW_HTT_OP_VERSION_10_4;
+-                       break;
+                case ATH10K_FW_WMI_OP_VERSION_UNSET:
+                case ATH10K_FW_WMI_OP_VERSION_MAX:
+                        WARN_ON(1);
+
 -- 
-1.9.1
-
+Kalle Valo
