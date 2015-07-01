@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56267 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750800AbbG2JaT convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34257 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753020AbbGAXYG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 05:30:19 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Enrico Tagliavini <enrico.tagliavini@gmail.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: QCA6174 hw2.1 irq_mode=0 broken on 4.2-rc3, working on 4.1.2
-References: <CAMQd7mbWC7rj8-eU7Jv21ehT8KrpC=L=xWxzDQxHEU_ePNSdUg@mail.gmail.com>
-	<CA+BoTQmd0Uoi=2MNMsDXYe1yKsYa3P8uvVzWwXoMynQGtjeD4w@mail.gmail.com>
-	<CAMQd7maioLviTaLHp+f03HafABijKD_d92K_SRO8XS51poKGqg@mail.gmail.com>
-	<CA+BoTQkA0k1RBwzKFchcWebuWUmdoaqvaAq4BRz2o3C-GGUCog@mail.gmail.com>
-	<CAMQd7ma7hehYLBf-5hUD0sViUwWGX8vy7ENXuBi8Q49F88A45Q@mail.gmail.com>
-	<CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
-	<871tfr8ne9.fsf@kamboji.qca.qualcomm.com>
-	<CAMQd7mY+upL+t9q0yJ0uL_jw_STEKL+hhe1PF_D5yPwfTkcgZg@mail.gmail.com>
-Date: Wed, 29 Jul 2015 12:30:07 +0300
-In-Reply-To: <CAMQd7mY+upL+t9q0yJ0uL_jw_STEKL+hhe1PF_D5yPwfTkcgZg@mail.gmail.com>
-	(Enrico Tagliavini's message of "Wed, 29 Jul 2015 11:02:40 +0200")
-Message-ID: <874mkn71ls.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_113025_170723_97E4DEB2)
-MIME-Version: 1.0
+	Wed, 1 Jul 2015 19:24:06 -0400
+From: David Lin <dlin@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"quozl@laptop.org" <quozl@laptop.org>,
+	Dan Williams <dcbw@redhat.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v4] Add new mac80211 driver mwlwifi.
+Date: Wed, 1 Jul 2015 23:23:40 +0000
+Message-ID: <33ed6d508911424ca6ac6e3ef7c95fa8@SC-EXCH02.marvell.com> (sfid-20150702_012412_994667_49844837)
+References: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
+	 <1435652491.2082.5.camel@sipsolutions.net>
+	 <1435673924.9390.4.camel@redhat.com> <20150630222610.GB30901@us.netrek.org>
+	 <019032ba6cc14a4293b670496dd2bb1e@SC-EXCH02.marvell.com>
+ <1435762626.2168.1.camel@sipsolutions.net>
+In-Reply-To: <1435762626.2168.1.camel@sipsolutions.net>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enrico Tagliavini <enrico.tagliavini@gmail.com> writes:
-
-> Yeah that's what I meant. My idea was to first bisect only the ath10k
-> directory, so restricting the bisect on the commits touching stuff
-> there. I guess if the issue is more broad it will come up somewhere
-> else as well, so this is a good starting point, I hope. Thank you for
-> pointing it out though, this will actually be the first time I do a
-> proper bisect.
-
-And remember to always to mention if you have restricted the bisect
-somehow, that's important information. And better if you provide 'git
-bisect log' output as well.
-
-> Also do you want me to bisect Kalle's sources or Linus' master? By
-> what Michał said I guess Kalle's but I ask to be sure.
->
-> Also to be clear: I'm using Linus' sources at the moment, as provided
-> by Fedora rawhide.
->
-> For me it's the same, so let me know what you prefer and is more
-> useful to solve this issue.
-
-Good that you brought this up. As ath.git master branch gets rebased
-every rc1 release you really cannot use that for bisect. Either you
-should use ath.git ath-next branch or Linus' tree. To be on the safe
-side I always recommend to use Linus' tree if at all possible.
-
--- 
-Kalle Valo
+PiBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiBPbiBXZWQsIDIwMTUtMDctMDEgYXQgMTQ6NDIgKzAw
+MDAsIERhdmlkIExpbiB3cm90ZToNCj4gPiA+IFdlIGNhbiBsZWF2ZSBib3RoIHNlbGVjdGFibGUg
+YnkgZGV2ZWxvcGVyIHRlc3RpbmcgYXMgcGVyIHlvdXINCj4gPiBzdWdnZXN0aW9uLCBhbmQgYXNz
+dW1lIHVzZXJzL2ludGVncmF0b3JzIHdpbGwga25vdyBob3cgdG8gcHV0IHRoZQ0KPiA+IGRyaXZl
+ciB0aGV5IHdhbnQgaW4gdGhlaXIgc3lzdGVtLiBXZSB3ZXJlIHdhcm5lZCBhYm91dCBjYXVzaW5n
+DQo+ID4gY29uZnVzaW9uIGhlbmNlIHRoZSBjb25kaXRpb25pbmcgaW4gQ09ORklHLiBEbyB5b3Ug
+ZmVlbCB0aGVyZSdzIG5vDQo+ID4gY29uY2VybiBsZWF2aW5nIGJvdGggZHJpdmVyIGluLCBub3Qg
+Y2hlY2tpbmcgZWFjaCBvdGhlcidzIHByZXNlbmNlPw0KPiA+IFdlIGNhbiBjb21wbHkgZWl0aGVy
+IHdheS4NCj4gDQo+IEkgdGhpbmsgeW91IHNob3VsZCBqdXN0IGxlYXZlIGJvdGggc2VsZWN0YWJs
+ZS4NCj4NCg0KT0ssIHdlIHdpbGwgbGVhdmUgYm90aCBvZiB0aGVtIHNlbGVjdGFibGUsIGFuZCBw
+cm92aWRlIGFkZGl0aW9uYWwg4oCcTk9UReKAnSAod2FybmluZykgaW4gdGhlIEtjb25maWcgSEVM
+UCBtZXNzYWdlLg0KDQo+IA0KPiA+ID4gPiA+IFRoaXMgbG9va3MgT0ssIHRob3VnaCBJIGdldCBh
+IHZlcnkgc3RyYW5nZSBkZXBlbmRlbmN5IGxvb3ANCj4gPiA+ID4gPiB3YXJuaW5nIGZyb20gS2Nv
+bmZpZyBoZXJlLg0KPiA+DQo+ID4gRm9yIHRoZSBuZXh0IHBhdGNoLCB3ZSB3aWxsIG1vZGlmeSB0
+aGUgY29kZSB0byBzdGlsbCB3b3JrIGV2ZW4gdGhvdWdoDQo+ID4gdGhlIHRhcmdldCBkb2VzIG5v
+dCBzdXBwb3J0IERUUy4gU28gd2UgY2FuIHJlbW92ZSAic2VsZWN0IE9GIiBmcm9tDQo+ID4gS2Nv
+bmZpZyBmaWxlLg0KPiANCj4gSWYgdGhlIGRyaXZlciBuZWVkcyBPRiBkb24ndCBib3RoZXIgLSB0
+aGUgZGVwZW5kZW5jeSBsb29wIGlzIHZlcnkgbG9uZyBhbmQgdGhlDQo+IHdhcm5pbmcgaXMgcmF0
+aGVyIHN0cmFuZ2UuDQo+IA0KPiA+ID4gPiA+ID4gd3JpdGV3KDB4MDAsICh2b2lkIF9faW9tZW0g
+KikmcHJpdi0+cGNtZF9idWZbMV0pOw0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gY2Fubm90IGJlIHJp
+Z2h0LiBUaGlzIG1lbW9yeSBpc24ndCBfX2lvbWVtLCBpdCdzDQo+ID4gPiA+ID4gZG1hX2FsbG9j
+X2NvaGVyZW50LCBzbyBhIHNpbXBsZSB3cml0ZSBzaG91bGQgYmUgZG9uZS4NCj4gPiA+ID4gPg0K
+PiA+DQo+ID4gV2l0aG91dCB0aGlzIGNhc3RpbmcsIEM9MiB3aWxsIGNhdXNlIGEgd2FybmluZyBt
+ZXNzYWdlIGxpa2UgdGhpczoNCj4gPiAiV2FybmluZzogaW5jb3JyZWN0IHR5cGUgaW4gYXJndW1l
+bnQgMiAoZGlmZmVyZW50IGFkZHJlc3Mgc3BhY2VzKSINCj4gDQo+IFllcywgYnV0IHRoZSB3YXJu
+aW5nIGlzIGNvcnJlY3QgYW5kIHRoZSBjYXN0IGlzIHdyb25nLiBUaGlzIGlzbid0IF9faW9tZW0s
+IGl0J3MNCj4gc2ltcGx5IG1hcHBlZCwgc28geW91IHNob3VsZCBqdXN0IGRvIGENCj4gCSh1MzIg
+KilwY21kX2J1ZlsxXSA9IDA7DQo+IA0KPiBvciBzb21ldGhpbmcgbGlrZSB0aGF0LiBUaGUgd3Jp
+dGV2KCkgdG8gc3VjaCBhIHBvaW50ZXIgY2Fubm90IGJlIHJpZ2h0Lg0KPg0KDQpVbmRlcnN0b29k
+LiBUaGFua3MuIFdpbGwgbWFrZSBjaGFuZ2VzIGFjY29yZGluZ2x5Lg0KDQo+DQo+ID4gSm9oYW5u
+ZXMNCg0KVGhhbmtzLA0KRGF2aWQNCg==
