@@ -1,101 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atl4mhfb03.myregisteredsite.com ([209.17.115.61]:39130 "EHLO
-	atl4mhfb03.myregisteredsite.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753353AbbG0FoG (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:34204 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbbGAHGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 01:44:06 -0400
-Received: from atl4mhob06.myregisteredsite.com (atl4mhob06.myregisteredsite.com [209.17.115.44])
-	by atl4mhfb03.myregisteredsite.com (8.14.4/8.14.4) with ESMTP id t6R5i5ja012622
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 01:44:05 -0400
-Received: from mailpod.hostingplatform.com ([10.30.71.204])
-	by atl4mhob06.myregisteredsite.com (8.14.4/8.14.4) with ESMTP id t6R5hhfK005990
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 01:43:43 -0400
-From: Mike Looijmans <mike.looijmans@topic.nl>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, khoroshilov@ispras.ru,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Mike Looijmans <mike.looijmans@topic.nl>,
-	stable@vger.kernel.org
-Subject: [PATCH] rsi: Fix failure to load firmware after memory leak fix and fix the leak
-Date: Mon, 27 Jul 2015 07:43:33 +0200
-Message-Id: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl> (sfid-20150727_074412_843484_4618F446)
+	Wed, 1 Jul 2015 03:06:08 -0400
+Received: by pabvl15 with SMTP id vl15so18480065pab.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2015 00:06:08 -0700 (PDT)
+Date: Wed, 1 Jul 2015 12:36:01 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Michel von Czettritz <michel.von.czettritz@gmail.com>
+Cc: gregkh@linux.com, devel@driverdev.osuosl.org,
+	Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 2/3] staging: rtl8723au: fix "incorrect type in
+ assignment"
+Message-ID: <20150701070601.GB2411@sudip-PC> (sfid-20150701_090613_355562_E4D3F587)
+References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
+ <d7c0812eedadab3697323bd53aeadba48ecf6d89.1435700714.git.michel.von.czettritz@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d7c0812eedadab3697323bd53aeadba48ecf6d89.1435700714.git.michel.von.czettritz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes commit eae79b4f3e82ca63a53478a161b190a0d38fe526 ("rsi: fix memory leak
-in rsi_load_ta_instructions()") which stopped the driver from functioning.
+On Tue, Jun 30, 2015 at 11:54:02PM +0200, Michel von Czettritz wrote:
+> Writing the output of cpu_to_le32 to an u32 or *(u32*) is an implicit
+> cast and results in an sparse warning.
+> 
+> Since param and mask won't be changed, the implicit cast can be avoided
+> by creating local variables.
+> 
+> Signed-off-by: Michel von Czettritz <michel.von.czettritz@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> index 1003365..a5e6726 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+> @@ -115,9 +115,10 @@ exit:
+>  
+>  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
+>  {
+> -	*((u32 *)param) = cpu_to_le32(*(param));
+> +	__le32 param_le;
+checkpatch warns about "Missing a blank line after declarations"
 
-Firmware data has been allocated using vmalloc(), resulting in memory
-that cannot be used for DMA. Hence the firmware was first copied to a
-buffer allocated with kmalloc() in the original code. This patch reverts
-the commit and only calls "kfree()" to release the buffer after sending
-the data. This fixes the memory leak without breaking the driver.
-
-Add a comment to the kmemdup() calls to explain why this is done.
-
-Tested on a Topic Miami-Florida board which contains the rsi SDIO chip.
-
-Also added the same kfree() call to the USB glue driver. This was not
-tested on actual hardware though, as I only have the SDIO version.
-
-Signed-off-by: Mike Looijmans <mike.looijmans@topic.nl>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 6 +++++-
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 2 ++
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index b6cc9ff..5c37a71 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -172,6 +172,7 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
- 	u32 len;
- 	u32 num_blocks;
-+	const u8 *fw;
- 	const struct firmware *fw_entry = NULL;
- 	u32 block_size = dev->tx_blk_size;
- 	int status = 0;
-@@ -200,6 +201,8 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 		return status;
- 	}
- 
-+	/* Copy firmware into DMA-accessible memory */
-+	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
- 	len = fw_entry->size;
- 
- 	if (len % 4)
-@@ -210,7 +213,8 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
- 	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
- 
--	status = rsi_copy_to_card(common, fw_entry->data, len, num_blocks);
-+	status = rsi_copy_to_card(common, fw, len, num_blocks);
-+	kfree(fw);
- 	release_firmware(fw_entry);
- 	return status;
- }
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-index 1106ce7..088e28e 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-@@ -146,6 +146,7 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 		return status;
- 	}
- 
-+	/* Copy firmware into DMA-accessible memory */
- 	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
- 	len = fw_entry->size;
- 
-@@ -158,6 +159,7 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
- 
- 	status = rsi_copy_to_card(common, fw, len, num_blocks);
-+	kfree(fw);
- 	release_firmware(fw_entry);
- 	return status;
- }
--- 
-1.9.1
-
+regards
+sudip
