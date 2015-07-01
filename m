@@ -1,113 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:40680
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933841AbbGVLGS (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:35474 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640AbbGAQuY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 07:06:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 3/3] ath9k: remove the sched field in struct ath_atx_tid
-Date: Wed, 22 Jul 2015 13:06:14 +0200
-Message-Id: <1437563174-94761-3-git-send-email-nbd@openwrt.org> (sfid-20150722_130621_903145_055642EC)
-In-Reply-To: <1437563174-94761-1-git-send-email-nbd@openwrt.org>
-References: <1437563174-94761-1-git-send-email-nbd@openwrt.org>
+	Wed, 1 Jul 2015 12:50:24 -0400
+Received: by wgjx7 with SMTP id x7so41889943wgj.2
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2015 09:50:23 -0700 (PDT)
+Subject: Re: [PATCH 3/3] staging: rtl8723au: function no longer discards
+ return value
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
+ <f1f04f73db3d925d4a790a07fc56154ba98871fc.1435700714.git.michel.von.czettritz@gmail.com>
+ <20150701071224.GC2411@sudip-PC> <20150701075042.GT28762@mwanda>
+ <20150701080827.GE2411@sudip-PC>
+Cc: devel@driverdev.osuosl.org, gregkh@linux.com,
+	Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	Jes.Sorensen@redhat.com
+From: Michel von Czettritz <michel.von.czettritz@gmail.com>
+Message-ID: <55941A4B.3060406@gmail.com> (sfid-20150701_185027_882070_C2C84242)
+Date: Wed, 1 Jul 2015 18:50:19 +0200
+MIME-Version: 1.0
+In-Reply-To: <20150701080827.GE2411@sudip-PC>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use list_empty(&tid->list) instead
+On 07/01/2015 10:08 AM, Sudip Mukherjee wrote:
+> On Wed, Jul 01, 2015 at 10:50:42AM +0300, Dan Carpenter wrote:
+>> On Wed, Jul 01, 2015 at 12:42:24PM +0530, Sudip Mukherjee wrote:
+>>> On Tue, Jun 30, 2015 at 11:54:59PM +0200, Michel von Czettritz wrote:
+>>>> The return value of FillH2CCmd in rtl8723a_set_rssi_cmd and
+>>>> rtl8723a_set_raid_cmd is never checked. Both functions always return
+>>>> _SUCCESS.
+>>>>
+>>>> Both functions now return the return value of FillH2CCmd.
+>>> If they are never checked then why do we need to return some value?
+>>> why not make them void?
+>>
+>> They probably *should* be checked eventually?
+> yes, they should check the sucess/failure of the commands. If that plan
+> is there to check the values afterwards then the patch is correct.
+Both functions are currently only called by void functions, which don't check on the return values of the functions. 
+Nonetheless I think rtl8723a_set_rssi_cmd and rtl8723a_set_raid_cmd should return correct values and another patch should take on the calling void functions error handling.
+As I'm not fully familiar with the inner workings of the driver, I'd leave the error handling for somebody else to implement, or would take it on later.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 -
- drivers/net/wireless/ath/ath9k/xmit.c  | 23 ++++++++---------------
- 2 files changed, 8 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 14e0ecc..7ef1be6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -245,7 +245,6 @@ struct ath_atx_tid {
- 	int baw_tail;   /* next unused tx buffer slot */
- 
- 	s8 bar_index;
--	bool sched;
- 	bool active;
- 	bool clear_ps_filter;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index f7d6a85..3e3dac3 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -113,12 +113,9 @@ static void ath_tx_queue_tid(struct ath_softc *sc, struct ath_txq *txq,
- 	if (!ctx)
- 		return;
- 
--	if (tid->sched)
--		return;
--
--	tid->sched = true;
- 	list = &ctx->acq[TID_TO_WME_AC(tid->tidno)];
--	list_add_tail(&tid->list, list);
-+	if (list_empty(&tid->list))
-+		list_add_tail(&tid->list, list);
- }
- 
- static struct ath_frame_info *get_frame_info(struct sk_buff *skb)
-@@ -1541,15 +1538,14 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
- 
- 		ath_txq_lock(sc, txq);
- 
--		if (!tid->sched) {
-+		if (list_empty(&tid->list)) {
- 			ath_txq_unlock(sc, txq);
- 			continue;
- 		}
- 
- 		buffered = ath_tid_has_buffered(tid);
- 
--		tid->sched = false;
--		list_del(&tid->list);
-+		list_del_init(&tid->list);
- 
- 		ath_txq_unlock(sc, txq);
- 
-@@ -1929,8 +1925,7 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 			break;
- 
- 		tid = list_first_entry(tid_list, struct ath_atx_tid, list);
--		list_del(&tid->list);
--		tid->sched = false;
-+		list_del_init(&tid->list);
- 
- 		if (ath_tx_sched_aggr(sc, txq, tid, &stop))
- 			sent = true;
-@@ -2848,11 +2843,11 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
- 		tid->seq_start = tid->seq_next = 0;
- 		tid->baw_size  = WME_MAX_BA;
- 		tid->baw_head  = tid->baw_tail = 0;
--		tid->sched     = false;
- 		tid->active	   = false;
- 		tid->clear_ps_filter = true;
- 		__skb_queue_head_init(&tid->buf_q);
- 		__skb_queue_head_init(&tid->retry_q);
-+		INIT_LIST_HEAD(&tid->list);
- 		acno = TID_TO_WME_AC(tidno);
- 		tid->txq = sc->tx.txq_map[acno];
- 	}
-@@ -2871,10 +2866,8 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 
- 		ath_txq_lock(sc, txq);
- 
--		if (tid->sched) {
--			list_del(&tid->list);
--			tid->sched = false;
--		}
-+		if (!list_empty(&tid->list))
-+			list_del_init(&tid->list);
- 
- 		ath_tid_drain(sc, txq, tid);
- 		tid->active = false;
--- 
-2.2.2
+regards Michel
 
