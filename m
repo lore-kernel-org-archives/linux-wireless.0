@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:59417 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753493AbbGPMmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2015 08:42:19 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 2/2] iwlegacy: convert hex_dump_to_buffer() to %*ph
-Date: Thu, 16 Jul 2015 15:42:15 +0300
-Message-Id: <1437050535-22858-2-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20150716_144251_101447_4B318068)
-In-Reply-To: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11296 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814AbbGAK24 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2015 06:28:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 1/8] ath10k: enhance swba event handler to adapt different size tim bitmap
+References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
+	<1434984747-24294-2-git-send-email-rmani@qti.qualcomm.com>
+	<87h9poxjvs.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 1 Jul 2015 13:28:47 +0300
+In-Reply-To: <87h9poxjvs.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Wed, 1 Jul 2015 13:16:55 +0300")
+Message-ID: <87d20cxjc0.fsf@kamboji.qca.qualcomm.com> (sfid-20150701_122900_598638_29290547)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to use hex_dump_to_buffer() in the cases like this:
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-	hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);	/* len <= 16 */
-	sprintf("%s\n", outbuf);
+>>  	/* if next SWBA has no tim_changed the tim_bitmap is garbage.
+>>  	 * we must copy the bitmap upon change and reuse it later */
+>>  	if (__le32_to_cpu(tim_info->tim_changed)) {
+>>  		int i;
+>>  
+>> -		BUILD_BUG_ON(sizeof(arvif->u.ap.tim_bitmap) !=
+>> -			     sizeof(tim_info->tim_bitmap));
+>> +		WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
+>
+> I'm worried that this WARN_ON() spams too much so I changed it to:
+>
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -2893,7 +2893,7 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
+>         if (__le32_to_cpu(tim_info->tim_changed)) {
+>                 int i;
+>  
+> -               WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
+> +               WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
+>  
+>                 for (i = 0; i < tim_len; i++) {
+>                         t = tim_info->tim_bitmap[i / 4];
 
-since it maybe easily converted to simple:
+Actually I got more worried about this. If tim_len >
+sizeof(arvif->u.ap.tim_bitmap) don't we read out of bounds? So we should
+actually add return for that case or am I missing something?
 
-	sprintf("%*ph\n", len, buf);
+Full code:
 
-Note: it seems in the case the output is groupped by 2 bytes and looks like a
-typo. Thus, patch changes that to plain byte stream.
+		WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c | 2 +-
- drivers/net/wireless/iwlegacy/debug.c    | 8 ++------
- 2 files changed, 3 insertions(+), 7 deletions(-)
+		for (i = 0; i < tim_len; i++) {
+			t = tim_info->tim_bitmap[i / 4];
+			v = __le32_to_cpu(t);
+			arvif->u.ap.tim_bitmap[i] = (v >> ((i % 4) * 8)) & 0xFF;
+		}
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 7f4cb69..af1b3e6 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3259,7 +3259,7 @@ il3945_show_measurement(struct device *d, struct device_attribute *attr,
- 
- 	while (size && PAGE_SIZE - len) {
- 		hex_dump_to_buffer(data + ofs, size, 16, 1, buf + len,
--				   PAGE_SIZE - len, 1);
-+				   PAGE_SIZE - len, true);
- 		len = strlen(buf);
- 		if (PAGE_SIZE - len)
- 			buf[len++] = '\n';
-diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
-index 3440101..908b9f4 100644
---- a/drivers/net/wireless/iwlegacy/debug.c
-+++ b/drivers/net/wireless/iwlegacy/debug.c
-@@ -515,12 +515,8 @@ il_dbgfs_nvm_read(struct file *file, char __user *user_buf, size_t count,
- 	    scnprintf(buf + pos, buf_size - pos, "EEPROM " "version: 0x%x\n",
- 		      eeprom_ver);
- 	for (ofs = 0; ofs < eeprom_len; ofs += 16) {
--		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x ", ofs);
--		hex_dump_to_buffer(ptr + ofs, 16, 16, 2, buf + pos,
--				   buf_size - pos, 0);
--		pos += strlen(buf + pos);
--		if (buf_size - pos > 0)
--			buf[pos++] = '\n';
-+		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x %16ph\n",
-+				 ofs, ptr + ofs);
- 	}
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
 -- 
-2.1.4
-
+Kalle Valo
