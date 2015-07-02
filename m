@@ -1,131 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:56232 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751629AbbG3TvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 15:51:17 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <yanivma@ti.com>, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 1/2] ARM: dts: am335x-evm: add wilink8 wlan support
-Date: Thu, 30 Jul 2015 22:39:28 +0300
-Message-ID: <1438285169-338-1-git-send-email-yanivma@ti.com> (sfid-20150730_215120_436815_3D4EC1F8)
+Received: from mail-yk0-f181.google.com ([209.85.160.181]:34801 "EHLO
+	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290AbbGBOVb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2015 10:21:31 -0400
+Received: by ykfy125 with SMTP id y125so69478500ykf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 07:21:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150702134801.GA40677@ubuntu-hedt>
+References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
+	<20150702134801.GA40677@ubuntu-hedt>
+Date: Thu, 2 Jul 2015 07:21:30 -0700
+Message-ID: <CAHr=Vqn8LzpsbAk=V2yC3Q0Xd5DHqfuSCW4G6vs1vZqBG-VSMw@mail.gmail.com> (sfid-20150702_162204_622413_B9987A1D)
+Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
+From: Wei Zhong <wzhong@google.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Thanks for the reply. I'll fix the format and re-submit.
 
-   * enable mmc3 used for wlan
-   * configure the gpios used for wlan
-   * add fixed voltage regulator used for wlan power control
+On Thu, Jul 2, 2015 at 6:48 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> On Wed, Jul 01, 2015 at 10:44:09PM -0700, Wei Zhong wrote:
+>> commit 2fef4cad8a1bd9cbbf178e59a1b3ca672b057095
+>> Author: Wei Zhong <wzhong@google.com>
+>> Date:   Wed Jul 1 22:39:09 2015 -0700
+>>
+>>     wireless-regdb: update CA rules for 5600 - 5650 mHz
+>>
+>>     Related regulation:
+>>     http://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/sf10971.html#s6.2.3
+>>
+>>     Frequency Bands 5470-5600 MHz and 5650-5725 MHz
+>>     Until further notice, devices subject to this section [i.e. Wifi device
+>>     supporting 5 GHz bands] shall not be capable of transmitting in the band
+>>     5600-5650 MHz. This restriction is for the protection of Environment
+>>     Canada’s weather radars operating in this band.
+>
+> Thanks for the patch. There are a couple of issues though, plus a
+> question.
+>
+> First, this project requires that you add a Signed-off-by tag to the
+> commit message to acknowledge your agreement to the Developer
+> Certificate of Origin. Please see the CONTRIBUTING file for more
+> information.
+>
+> Second, the patch is not in the correct format. It looks like to me you
+> pasted the output from git-show, which resulted in mangled white space
+> and other issues. Please use git-format-patch to create the patch, then
+> send it using git-send-email or else send the patch as an attachment.
+>
+>> diff --git a/db.txt b/db.txt
+>> index 809cd3c..da0cfad 100644
+>> --- a/db.txt
+>> +++ b/db.txt
+>> @@ -216,7 +216,8 @@ country CA: DFS-FCC
+>>         (2402 - 2472 @ 40), (30)
+>>         (5170 - 5250 @ 80), (17), AUTO-BW
+>>         (5250 - 5330 @ 80), (24), DFS, AUTO-BW
+>> -       (5490 - 5730 @ 160), (24), DFS
+>> +       (5490 - 5600 @ 80), (24), DFS
+>> +       (5650 - 5730 @ 40), (24), DFS
+>
+> Why isn't 80MHz channel bandwidth allowed in the 5650-5730 range?
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Yaniv Machani <yanivma@ti.com>
----
- arch/arm/boot/dts/am335x-evm.dts |   68 ++++++++++++++++++++++++++++++++++++++
- 1 files changed, 68 insertions(+), 0 deletions(-)
+It could. But since the entire band is only 80 MHz, in practice, not a single
+center_freq, channel 136 or140 for example, can utilities 80 MHz, right?
 
-diff --git a/arch/arm/boot/dts/am335x-evm.dts b/arch/arm/boot/dts/am335x-evm.dts
-index dd03a2b..b690674 100644
---- a/arch/arm/boot/dts/am335x-evm.dts
-+++ b/arch/arm/boot/dts/am335x-evm.dts
-@@ -8,6 +8,7 @@
- /dts-v1/;
- 
- #include "am33xx.dtsi"
-+#include <dt-bindings/interrupt-controller/irq.h>
- 
- / {
- 	model = "TI AM335x EVM";
-@@ -38,6 +39,20 @@
- 		regulator-boot-on;
- 	};
- 
-+	wlan_en_reg: fixedregulator@2 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "wlan-en-regulator";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+
-+		/* WLAN_EN GPIO for this board - Bank3, pin16 */
-+		gpio = <&gpio1 16 0>;
-+
-+		/* WLAN card specific delay */
-+		startup-delay-us = <70000>;
-+		enable-active-high;
-+	};
-+
- 	matrix_keypad: matrix_keypad@0 {
- 		compatible = "gpio-matrix-keypad";
- 		debounce-delay-ms = <5>;
-@@ -266,6 +281,27 @@
- 		>;
- 	};
- 
-+	/* wl12xx/wl18xx card on mmc3 */
-+	mmc3_pins: pinmux_mmc3_pins {
-+		pinctrl-single,pins = <
-+			0x44 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_a1.mmc2_dat0, INPUT_PULLUP | MODE3 */
-+			0x48 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_a2.mmc2_dat1, INPUT_PULLUP | MODE3 */
-+			0x4C (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_a3.mmc2_dat2, INPUT_PULLUP | MODE3 */
-+			0x78 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_ben1.mmc2_dat3, INPUT_PULLUP | MODE3 */
-+			0x88 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_csn3.mmc2_cmd, INPUT_PULLUP | MODE3 */
-+			0x8C (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_clk.mmc2_clk, INPUT_PULLUP | MODE3 */
-+		>;
-+	};
-+
-+	/* wl12xx/wl18xx card enable/irq GPIOs. */
-+	wlan_pins: pinmux_wlan_pins {
-+		pinctrl-single,pins = <
-+			0x40 (PIN_OUTPUT_PULLDOWN | MUX_MODE7)	/* gpmc_a0.gpio1_16 */
-+			0x19C (PIN_INPUT | MUX_MODE7)		/* mcasp0_ahclkr.gpio3_17 */
-+			0x1AC (PIN_OUTPUT_PULLDOWN | MUX_MODE7)	/* mcasp0_ahclkx.gpio3_21 */
-+		>;
-+	};
-+
- 	lcd_pins_s0: lcd_pins_s0 {
- 		pinctrl-single,pins = <
- 			0x20 (PIN_OUTPUT | MUX_MODE1)		/* gpmc_ad8.lcd_data23 */
-@@ -665,6 +701,38 @@
- 	cd-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
- };
- 
-+&mmc3 {
-+	/* these are on the crossbar and are outlined in the
-+	   xbar-event-map element */
-+	dmas = <&edma 12
-+		&edma 13>;
-+	dma-names = "tx", "rx";
-+	status = "okay";
-+	vmmc-supply = <&wlan_en_reg>;
-+	bus-width = <4>;
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&mmc3_pins &wlan_pins>;
-+	ti,non-removable;
-+	ti,needs-special-hs-handling;
-+	cap-power-off-card;
-+	keep-power-in-suspend;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	wlcore: wlcore@2 {
-+		compatible = "ti,wl1835";
-+		reg = <2>;
-+		interrupt-parent = <&gpio3>;
-+		interrupts = <17 IRQ_TYPE_LEVEL_HIGH>;
-+		ref-clock-frequency = <38400000>;
-+	};
-+};
-+
-+&edma {
-+	ti,edma-xbar-event-map = /bits/ 16 <1 12
-+					    2 13>;
-+};
-+
- &sham {
- 	status = "okay";
- };
--- 
-1.7.9
-
+>
+> Thanks,
+> Seth
