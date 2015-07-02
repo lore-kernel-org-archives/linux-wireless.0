@@ -1,61 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:34097 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbbGJFUO convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:33672 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbbGBN25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 01:20:14 -0400
-Received: by wgov12 with SMTP id v12so55222681wgo.1
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 22:20:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <559F0BEF.4000808@candelatech.com>
-References: <559F0BEF.4000808@candelatech.com>
-Date: Fri, 10 Jul 2015 07:20:13 +0200
-Message-ID: <CA+BoTQm-e__mFFPBpr+Lphe3BGs+m3EaLZkn1DE2nz8EkKHT6Q@mail.gmail.com> (sfid-20150710_072018_726064_F770B7C1)
-Subject: Re: How is AP supposed to handle power-save packets from peer?
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 2 Jul 2015 09:28:57 -0400
+Received: by ieqy10 with SMTP id y10so56555815ieq.0
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 06:28:56 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] mac80211: select an AID when creating new mesh STAs
+Date: Thu,  2 Jul 2015 09:28:10 -0400
+Message-Id: <1435843690-2856-4-git-send-email-me@bobcopeland.com> (sfid-20150702_152914_161178_94BB7A6E)
+In-Reply-To: <1435843690-2856-1-git-send-email-me@bobcopeland.com>
+References: <1435843690-2856-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 July 2015 at 02:03, Ben Greear <greearb@candelatech.com> wrote:
-> Suppose one is doing heavy download (AP -> peer traffic), and there are lots of frames in the
-> NIC's tx buffers (ath10k firmware, in this case).
->
-> Then, peer sends a power-save pkt telling AP it is going off-channel or otherwise
-> will be unavailable.
+Instead of using peer link id for AID, generate a new
+AID when creating mesh STAs in the kernel peering manager.
+This enables smaller TIM elements and more closely follows
+the standard, and it also enables mesh to work on drivers
+that require a valid AID when the STA is inserted (ath10k
+firmware has this requirement, for example).
 
-I assume you're exploring the worst-case scenario when all tx buffers
-are consumed and peer goes to sleep, am I correct?
+In the case of userspace-managed stations, we use the AID
+from NL80211_CMD_NEW_STATION.
 
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ net/mac80211/cfg.c         |  3 +++
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mesh.c        |  7 +++++++
+ net/mac80211/mesh_plink.c  | 30 ++++++++++++++++++++++++------
+ 4 files changed, 35 insertions(+), 6 deletions(-)
 
->
-> What is the appropriate behaviour from the AP?  Can the firmware just drop all those tx frames to
-> make room to handle other stations?  Maybe report ACK failure and hope the upper level stacks
-> retransmit as appropriate?
->
-> Or, is the host supposed to flush the peer's packets to clear out the frames?
->
-> Or, is firmware somehow supposed to keep all the frames for when the peer comes back?
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5789d8353505..25f0ff84900e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1027,6 +1027,9 @@ static void sta_apply_mesh_params(struct ieee80211_local *local,
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	u32 changed = 0;
+ 
++	if (params->aid)
++		set_bit(params->aid, sdata->u.mesh.aid_map);
++
+ 	if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE) {
+ 		switch (params->plink_state) {
+ 		case NL80211_PLINK_ESTAB:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 52930e91c0fd..d691515259a7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -689,6 +689,7 @@ struct ieee80211_if_mesh {
+ 	int ps_peers_light_sleep;
+ 	int ps_peers_deep_sleep;
+ 	struct ps_data ps;
++	DECLARE_BITMAP(aid_map, IEEE80211_MAX_AID + 1);
+ 	/* Channel Switching Support */
+ 	struct mesh_csa_settings __rcu *csa;
+ 	enum {
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e06a5ca7c9a9..f26df5fc29c9 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -150,6 +150,9 @@ void mesh_sta_cleanup(struct sta_info *sta)
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	u32 changed;
+ 
++	if (sta->sta.aid)
++		clear_bit(sta->sta.aid, sdata->u.mesh.aid_map);
++
+ 	/*
+ 	 * maybe userspace handles peer allocation and peering, but in either
+ 	 * case the beacon is still generated by the kernel and we might need
+@@ -1323,6 +1326,10 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 	ifmsh->accepting_plinks = true;
+ 	atomic_set(&ifmsh->mpaths, 0);
+ 	mesh_rmc_init(sdata);
++
++	/* reserve aid 0 used for mcast indication */
++	set_bit(0, ifmsh->aid_map);
++
+ 	ifmsh->last_preq = jiffies;
+ 	ifmsh->next_perr = jiffies;
+ 	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 9dca16bd3eb9..deab8be39627 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -421,20 +421,43 @@ out:
+ 	spin_unlock_bh(&sta->mesh->plink_lock);
+ }
+ 
++static int mesh_allocate_aid(struct ieee80211_sub_if_data *sdata)
++{
++	int aid;
++
++	/* mark first empty bit as used in aid_map and return it */
++	do {
++		aid = find_first_zero_bit(sdata->u.mesh.aid_map,
++					  IEEE80211_MAX_AID + 1);
++	} while (aid <= IEEE80211_MAX_AID &&
++		 test_and_set_bit(aid, sdata->u.mesh.aid_map));
++
++	if (aid > IEEE80211_MAX_AID)
++		return -ENOBUFS;
++
++	return aid;
++}
++
+ static struct sta_info *
+ __mesh_sta_info_alloc(struct ieee80211_sub_if_data *sdata, u8 *hw_addr)
+ {
+ 	struct sta_info *sta;
++	int aid;
+ 
+ 	if (sdata->local->num_sta >= MESH_MAX_PLINKS)
+ 		return NULL;
+ 
++	aid = mesh_allocate_aid(sdata);
++	if (aid < 0)
++		return NULL;
++
+ 	sta = sta_info_alloc(sdata, hw_addr, GFP_KERNEL);
+ 	if (!sta)
+ 		return NULL;
+ 
+ 	sta->mesh->plink_state = NL80211_PLINK_LISTEN;
+ 	sta->sta.wme = true;
++	sta->sta.aid = aid;
+ 
+ 	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+ 	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
+@@ -658,8 +681,6 @@ static u16 mesh_get_new_llid(struct ieee80211_sub_if_data *sdata)
+ 
+ 	do {
+ 		get_random_bytes(&llid, sizeof(llid));
+-		/* for mesh PS we still only have the AID range for TIM bits */
+-		llid = (llid % IEEE80211_MAX_AID) + 1;
+ 	} while (llid_in_use(sdata, llid));
+ 
+ 	return llid;
+@@ -1068,7 +1089,6 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 			goto unlock_rcu;
+ 		}
+ 		sta->mesh->plid = plid;
+-		sta->sta.aid = plid;
+ 	} else if (!sta && event == OPN_RJCT) {
+ 		mesh_plink_frame_tx(sdata, NULL, WLAN_SP_MESH_PEERING_CLOSE,
+ 				    mgmt->sa, 0, plid,
+@@ -1080,10 +1100,8 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	/* 802.11-2012 13.3.7.2 - update plid on CNF if not set */
+-	if (!sta->mesh->plid && event == CNF_ACPT) {
++	if (!sta->mesh->plid && event == CNF_ACPT)
+ 		sta->mesh->plid = plid;
+-		sta->sta.aid = sta->mesh->plid;
+-	}
+ 
+ 	changed |= mesh_plink_fsm(sdata, sta, event);
+ 
+-- 
+2.1.4
 
-Firmware will keep frames buffered until station wakes up again.
-
-There's a timeout to detect stale stations as far as I'm aware and the
-default value is 10s (sounds familiar? this goes back to mgmt tx/
-credit starvation). This makes to handle stations that go to sleep and
-then out of range/away. AP doesn't need to keep frames buffered till
-the end of time. Once the timeout is hit firmware stops caring about
-station's last seen sleep state transition and marks it as awake and
-just sends frames to it (with tons of retransmits if it's really not
-there anymore since there'd be noone to ACK) - in which case you'll
-get no_ack=1 in tx status.
-
-See: WMI_10X_VDEV_PARAM_AP_DETECT_OUT_OF_SYNC_SLEEPING_STA_TIME_SECS
-
-Ideally there should be little to no buffer bloat but it's difficult
-to do that considering aggregation sizes of 11ac..
-
-
-Michał
