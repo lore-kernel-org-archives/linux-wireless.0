@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:38489 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723AbbG1R0w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 13:26:52 -0400
-Received: by iggf3 with SMTP id f3so130935727igg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 10:26:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7DA09A@hasmsx107.ger.corp.intel.com>
-References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
- <1437421384-19884-3-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYKKCLDaoAyE0VR66ynAxnm9Ob5m6T0ADbH415J6-i=6WA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32E7D9B01@hasmsx107.ger.corp.intel.com> <0BA3FCBA62E2DC44AF3030971E174FB32E7DA09A@hasmsx107.ger.corp.intel.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 28 Jul 2015 22:56:33 +0530
-Message-ID: <CABPxzYKAdM95FFrUb-z620eX5+m9HDBXHABsb-x1AvChB0awgg@mail.gmail.com> (sfid-20150728_192656_143397_555FF6DF)
-Subject: Re: [RFC 02/10] mac80211: allow to transmit A-MSDU within A-MPDU
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:44988 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751333AbbGBH1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2015 03:27:18 -0400
+Message-ID: <1435822032.2285.2.camel@sipsolutions.net> (sfid-20150702_092722_997599_0FF54812)
+Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
+ direct probe issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"Peer, Ilan" <ilan.peer@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
+Date: Thu, 02 Jul 2015 09:27:12 +0200
+In-Reply-To: <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com> (sfid-20150627_234919_920334_D8F4F928)
+References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
+	 <1435082418.2777.11.camel@ipeer-box>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com>
+	 <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
+	 (sfid-20150627_234919_920334_D8F4F928)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 10:42 PM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->
->
-> On 07/28/2015 02:35 PM, Grumbach, Emmanuel wrote:
->>> On Tue, Jul 21, 2015 at 1:12 AM, Emmanuel Grumbach
->>> <emmanuel.grumbach@intel.com> wrote:
->>>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c index
->>>> c8ba2e7..a758eb84 100644
->>>> --- a/net/mac80211/agg-tx.c
->>>> +++ b/net/mac80211/agg-tx.c
->>>> @@ -97,7 +97,8 @@ static void ieee80211_send_addba_request(struct
->>> ieee80211_sub_if_data *sdata,
->>>>         mgmt->u.action.u.addba_req.action_code =
->>>> WLAN_ACTION_ADDBA_REQ;
->>>>
->>>>         mgmt->u.action.u.addba_req.dialog_token = dialog_token;
->>>> -       capab = (u16)(1 << 1);          /* bit 1 aggregation policy */
->>>> +       capab = (u16)(1 << 0);          /* bit 0 A-MSDU support */
->>> Shouldn't this be based on HW capability? We can add couple of more _HW_
->>> flags for TX and RX and populate this based on that?
->> Why?
->> What will happen if we ask for A-MSDU inside A-MPDU and we won't do A-MSDU?
->> Worst case, the AP will deny this and will clear that bit in its response.
->
-> I feel that my response was accurate, but the wording wasn't precise enough.
-> We have two possibilities:
-> 1) the AP does support A-MSDU in A-MPDU
-> 2) the AP does not support A-MSDU in A-MPDU
->
-> In the first case, the AP will reply with that bit set and the client
-> can choose to send A-MSDU or not. I don't think that the AP needs to
-> allocate anything special to support A-MSDU in A-MPDU, so it is free to ask.
-AP needs to allocate large RX buffers to accomodate AMSDU + AMPDU, no?
-> In the second case, the AP will reply with that same bit clear in the
-> AddBA response, and mac0211 / driver will know not to send A-MSDU in
-> A-MPDU (which the driver doesn't support in the case you were describing
-> - so this is a no-op).
-> The only concern you may have is about APs that would decline the AddBA
-> request because of that bit. That doesn't seem to happen since a lot of
-> vendors use A-MSDU in A-MPDU.
+On Sat, 2015-06-27 at 23:49 +0200, Janusz Dziedzic wrote:
+> 
+> I just check the mac80211/cfg80211 code, and I am not sure this 
+> direct probe could work correctly.
+> 
+> Function ieee80211_rx_mgmt_probe_resp() is interesting.
+> Seems we call
+> ieee80211_rx_bss_info() -> ieee80211_bss_info_update ->
+> cfg80211_inform_bss_width_frame() -> cfg80211_bss_update() -> this
+> could set bss->proberesp_ies
+> and after that check:
+> 
+>         if (ifmgd->auth_data && !ifmgd->auth_data->bss->proberesp_ies 
+> &&
+>             ether_addr_equal(mgmt->bssid, ifmgd->auth_data->bss
+> ->bssid)) {
+>                 /* got probe response, continue with auth */
+>                 sdata_info(sdata, "direct probe responded\n");
+> 
+> So, ifmgd->auth_data->bss->proberesp_ies could be set before check?
+> 
+> BTW, During my tests (no matter which card used) I never saw this 
+> msg:
+> sdata_info(sdata, "direct probe responded\n");
+> And always saw 3 failed direct probes.
+> 
+> @Johannes: Is that possible or I miss something.
+> 
 
-I understand from AP point of view, but what about the local HW? Don't we need
-HW support to handle this A-MSDU in AMPDU? (or) the driver should handle this
-support in ampdu_action based on the amsdu flag?
+I agree that this looks like a bug, but I'm not sure it's really all
+that relevant?
+
+After all, ieee80211_probe_auth() takes ->proberesp_ies as its only
+condition, so even if it doesn't get triggered immediately by the
+"direct probe responded", it should send an auth frame the next round,
+just the rounds counter wouldn't restart at 0 again.
+
+Perhaps though the changes in cfg80211's BSS management broke this
+whole logic? Then again, that's quite a while ago.
+
+The issue above can probably easily fixed by doing the BSS update after
+the "direct probe responded" though, no? Like this: 
+https://p.sipsolutions.net/67f9212f0f9f3642.txt
+
+johannes
