@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:33460 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752490AbbGWKDP convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:33918 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753448AbbGBMpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 06:03:15 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by arrakis.dune.hu (Postfix) with ESMTP id EB7B928BDBA
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 12:02:42 +0200 (CEST)
-Received: from mail-qg0-f46.google.com (mail-qg0-f46.google.com [209.85.192.46])
-	by arrakis.dune.hu (Postfix) with ESMTPSA id 43609283C2A
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 12:02:40 +0200 (CEST)
-Received: by qgii95 with SMTP id i95so83918042qgi.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 03:03:06 -0700 (PDT)
+	Thu, 2 Jul 2015 08:45:05 -0400
+Received: by iebmu5 with SMTP id mu5so55393228ieb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 05:45:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1437633104-23373-1-git-send-email-kvalo@codeaurora.org>
-References: <1437633104-23373-1-git-send-email-kvalo@codeaurora.org>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Thu, 23 Jul 2015 12:02:47 +0200
-Message-ID: <CAOiHx=k=p=0HJewHcVoKaypyrpbpyswes20jX6t3tha+OMf9aQ@mail.gmail.com> (sfid-20150723_120318_794748_855312CB)
-Subject: Re: [PATCH] bcma: fix linking problem with of_default_bus_match_table
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CA+BoTQkbmJxS32BwKZSbMxVruKzzRjOSpsTa39ySSownqLAcQg@mail.gmail.com>
+References: <CA+BoTQm==AM3F2Fxq6T_+uY+jq0yXc9JHFT0iwpe2XJrmxkSsg@mail.gmail.com>
+	<1435826335.2285.6.camel@sipsolutions.net>
+	<CAB3XZEf4jC6-au4KQ7SrBtUAyq1LmOqFrT_PLrDZ8ER8ZpR1SA@mail.gmail.com>
+	<CA+BoTQkbmJxS32BwKZSbMxVruKzzRjOSpsTa39ySSownqLAcQg@mail.gmail.com>
+Date: Thu, 2 Jul 2015 15:45:04 +0300
+Message-ID: <CAB3XZEcsA16aWbMazdz0hCKqkfbj45+6366m_u913bfkO-Ti7Q@mail.gmail.com> (sfid-20150702_144509_307819_05D3644B)
+Subject: Re: Association race when acting as AP?
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Jul 2, 2015 at 1:39 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 2 July 2015 at 10:43, Eliad Peller <eliad@wizery.com> wrote:
+>> On Thu, Jul 2, 2015 at 11:38 AM, Johannes Berg <johannes@sipsolutions.net>
+>> wrote:
+>>>
+>>> [please try to send w/o html if you're CC'ing the linux-wireless list]
+>>>
+>>> > To me this looks like a race in hostapd. The station should be
+>>> > installed to driver _before_ sending Assoc Resp frame, not after. My
+>>> > quick-n-dirty hack seems to help:
+>>> >
+>>> [...]
+>>> > Is anyone aware of this problem already? Anyone working on it? Any
+>>> > gotchas I should be aware of before I go into fixing this in a proper
+>>> > way? Or am I missing something and this isn't actually a problem?
+>>>
+>>> The TI folks had a similar patch that broke open networks, not sure
+>>> what was wrong there.
+>>>
+>> there was some implementation error. it was fixed later on.
+>>
+>> also, take a look at this thread:
+>> http://thread.gmane.org/gmane.linux.kernel.wireless.general/88421
+>
+> Thanks! Looks like you guys hit this with EAPOL frames. I'll look into it more.
+>
+> Is there any particular reason why these TI-OpenLink patches weren't
+> submitted/merged to hostap?
+>
+nothing particular, AFAIR.
+they needed further review/cleanup before upstream, and we just didn't
+get to it.
 
-On Thu, Jul 23, 2015 at 8:31 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Stephen reported a build problem caused by commit cae761b5a6bd ("bcma: populate
-> bus DT subnodes as platform_device-s"):
->
-> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
->
-> Rafał Miłecki suggested as a quick fix to use IS_BUILTIN() to workaround the
-> issue. The downside is that this won't work when BCMA is compiled as a module,
-> but we can live with that for now just to unblock the breakage.
->
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Fixes: cae761b5a6bd ("bcma: populate bus DT subnodes as platform_device-s")
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> ---
->  drivers/bcma/main.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index 59128478a90f..6b7d54622058 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -410,7 +410,7 @@ int bcma_bus_register(struct bcma_bus *bus)
->                 bcma_core_pci_early_init(&bus->drv_pci[0]);
->         }
->
-> -       if (bus->host_pdev) {
-> +       if (IS_BUILTIN(CONFIG_BCMA) && bus->host_pdev) {
->                 struct device *dev = &bus->host_pdev->dev;
->
->                 of_platform_populate(dev->of_node, of_default_bus_match_table,
-
-I think this isn't enough, AFAICT this needs IS_BUILTIN(CONFIG_BCMA)
-&& IS_ENABLED(CONFIG_OF), else it will break with OF=n and BCMA=y, as
-of_default_bus_match_table is only defined/built-in when OF=y.
-
-
-Jonas
+Eliad.
