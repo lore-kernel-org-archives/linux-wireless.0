@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36818 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752763AbbGaGKr convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:34950 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753226AbbGBRmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 02:10:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: fix extpa_gain check for 2GHz
-References: <1438205790-17629-1-git-send-email-hauke@hauke-m.de>
-	<8738065hkb.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rySwFsFhSjRgyw_oVk3BX9sSHu81rPTusmGujOveehbiA@mail.gmail.com>
-	<55BA6024.4000307@hauke-m.de>
-Date: Fri, 31 Jul 2015 09:10:39 +0300
-In-Reply-To: <55BA6024.4000307@hauke-m.de> (Hauke Mehrtens's message of "Thu,
-	30 Jul 2015 19:34:28 +0200")
-Message-ID: <87egjo3li8.fsf@kamboji.qca.qualcomm.com> (sfid-20150731_081059_924589_71CBBD9B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Thu, 2 Jul 2015 13:42:46 -0400
+Received: by iecuq6 with SMTP id uq6so61548759iec.2
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 10:42:46 -0700 (PDT)
+From: Wei Zhong <wzhong@google.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Wei Zhong <wzhong@google.com>
+Subject: [PATCH] wireless: regulatory: save user-specified alpha2 when request is dropped
+Date: Thu,  2 Jul 2015 10:42:37 -0700
+Message-Id: <1435858957-7527-1-git-send-email-wzhong@google.com> (sfid-20150702_194252_129618_3C7F5D43)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke Mehrtens <hauke@hauke-m.de> writes:
+In the case that user-initiated request is dropped because it has the
+same alpha2 as last request, which could be from driver, save
+user_alpah2[2], so that correct user_alpha2 can be restored in the
+case of disassociation.
 
-> On 07/30/2015 08:54 AM, Rafał Miłecki wrote:
->> On 30 July 2015 at 07:40, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Hauke Mehrtens <hauke@hauke-m.de> writes:
->>>
->>>> On the 2GHz and and on the 5GHZ band only the extpa_gain setting from
->>>> the 5GHz band was checked. this patch makes it check the property from
->>>> the correct band.
->>>>
->>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>>
->>> Is this a regression? If yes, please add a Fixes line.
->>>
->>> Should this go to 4.2?
->> 
->> Not a regression. It's like this for a loooong time.
->> 
->> AFAIK PCI(e) cards don't have external power amplifier, so this code
->> is most likely used for some fancy SoCs only. There are 3 known SoCs
->> with N-PHY rev 5 or 6: BCM4717A1, BCM4718A1 & BCM4716B0.
->> 
->> So we may consider taking it for 4.2 without any "Fixes: " line but I
->> wouldn't care too much about Cc-ing stable.
->> 
->> Hauke: do you agree?
->
-> Yes, I do not have a device I know of which is affected by this error, I
-> just saw this while looking at code close by. Just put this into the
-> next Linux version and not to stable.
+Signed-off-by: Wei Zhong <wzhong@google.com>
+---
+ net/wireless/reg.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Ok, I'll send this to 4.2.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 91ef82b..9019617 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1534,6 +1534,11 @@ static int __regulatory_hint(struct wiphy *wiphy,
+ 		}
+ 		intersect = true;
+ 	} else if (r) {
++		/* Save alpha2 if initiated from user in case the request is dropped. */
++		if (pending_request->initiator == NL80211_REGDOM_SET_BY_USER) {
++			user_alpha2[0] = pending_request->alpha2[0];
++			user_alpha2[1] = pending_request->alpha2[1];
++		}
+ 		/*
+ 		 * If the regulatory domain being requested by the
+ 		 * driver has already been set just copy it to the
 -- 
-Kalle Valo
+2.4.3.573.g4eafbef
+
