@@ -1,127 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:35140 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933949AbbGHHgt (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:37554 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440AbbGBN24 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 03:36:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <559CCC9D.8050606@users.sourceforge.net>
-References: <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
- <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
- <559B6FF8.9010704@users.sourceforge.net> <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
- <559B85CD.6040200@users.sourceforge.net> <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
- <559BBDD6.7040808@users.sourceforge.net> <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
- <559BFB19.2080700@users.sourceforge.net> <CAGRGNgXTN8AxBNNfie4KvvErOXm3LUyL_QLLWQ6TN_wJgJkD-A@mail.gmail.com>
- <559CCC9D.8050606@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 8 Jul 2015 17:36:29 +1000
-Message-ID: <CAGRGNgWcHxwjx07A45No8vArXR12JGKcfif1Rvi30PQbJs4SGQ@mail.gmail.com> (sfid-20150708_095814_092076_46801B74)
-Subject: Re: Clarification for the use of additional fields in the message body
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Frans Klaver <fransklaver@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Chris Park <chris.park@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 2 Jul 2015 09:28:56 -0400
+Received: by igblr2 with SMTP id lr2so56592078igb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 06:28:55 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/3] mac80211: reorder mesh_plink to remove forward decl
+Date: Thu,  2 Jul 2015 09:28:08 -0400
+Message-Id: <1435843690-2856-2-git-send-email-me@bobcopeland.com> (sfid-20150702_152902_030924_03619752)
+In-Reply-To: <1435843690-2856-1-git-send-email-me@bobcopeland.com>
+References: <1435843690-2856-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Markus,
+Move mesh_plink_frame_tx() above the first caller to remove
+the forward declaration.
 
-On Wed, Jul 8, 2015 at 5:09 PM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
->> There's a file in the documentation directory of the kernel
->> tree describing submitting patches and email client setup.
->> Read them both,
->
-> I read this information several times.
->
->
->> do what they say without anything extra.
->
-> Do you see any special consequences if a bit of "extra" functionality
-> is already provided by the Git software for a while?
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ net/mac80211/mesh_plink.c | 109 ++++++++++++++++++++++------------------------
+ 1 file changed, 52 insertions(+), 57 deletions(-)
 
-If it's harmless, then no, but in this case, people are questioning
-why you're adding it as it adds no value to anyone and makes it look
-like you don't know what you're doing.
-
->> Your attempts to "improve" on the system are unnecessary
->
-> It seems that my approach does not need improvements for the current
-> command "git am".
-> Would a few extensions for the available documentation help to clarify
-> the situation?
-
-The issue is that the headers you're adding, From: and Date: are unnecessary.
-
-The From: header you add is unnecessary as your email's From: header
-has the exact same information. The reason it's there is because
-sometimes people forward patches on from other people, e.g. if I were
-to resend one of your patches, I'd add a From: header to the body of
-the email so it'd be credited to you.
-
-The Date: header you add is unnecessary as git-format-patch sets the
-date header in the email it produces to the author date stored in the
-commit. (see below) So if you're sending your patches in emails
-produced by git-format-patch, there's absolutely no reason to include
-it.
-
-> Do items like "commit mail address" and "commit timestamp"
-> belong together for the data structure "author" by design
-> in this content management system?
-
-The information stored for a commit is:
-
-= = = = = =
-
-tree 09496defc9eb793c665a7b80aa22f24c7bd5f204
-parent 63c07589832bfe5ec49f2523ddb0e94a20af0f31
-author Julian Calaby <julian.calaby@gmail.com> 1435196810 +1000
-committer Julian Calaby <julian.calaby@gmail.com> 1436322540 +1000
-
-= = = = = =
-
-Then the subject and commit message.
-
-The numbers after the email addresses are the timestamps. They are
-both almost completely irrelevant for most workflows as people are
-less interested in when a commit was made and more interested in what
-release it's in, how it was merged, etc. All of which should be
-determined without using the timestamp.
-
-To be honest, I've only ever used that timestamp for reporting
-purposes at work, and I'd be surprised if anyone was doing anything
-other than that with them.
-
-In short, nobody cares, and nobody's going to be upset if the actual
-time you authored a patch is different to the time recorded upstream.
-
->> and annoying people.
->
-> I understand that various update suggestions can be surprising.
-> It is also usual that corresponding acceptance might take
-> a bit longer than what some contributors would prefer.
-
-How would you feel if someone came in to your place of work and told
-you to change how you do the job you've been doing for years without a
-good reason?
-
-Thanks,
-
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 1a7d98398626..7b071e36e55e 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -53,11 +53,6 @@ static const char * const mplevents[] = {
+ 	[CLS_IGNR] = "CLS_IGNR"
+ };
+ 
+-static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+-			       enum ieee80211_self_protected_actioncode action,
+-			       u8 *da, u16 llid, u16 plid, u16 reason);
+-
+-
+ /* We only need a valid sta if user configured a minimum rssi_threshold. */
+ static bool rssi_threshold_check(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta)
+@@ -204,58 +199,6 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
+ 	return BSS_CHANGED_HT;
+ }
+ 
+-/**
+- * __mesh_plink_deactivate - deactivate mesh peer link
+- *
+- * @sta: mesh peer link to deactivate
+- *
+- * All mesh paths with this peer as next hop will be flushed
+- * Returns beacon changed flag if the beacon content changed.
+- *
+- * Locking: the caller must hold sta->mesh->plink_lock
+- */
+-static u32 __mesh_plink_deactivate(struct sta_info *sta)
+-{
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	u32 changed = 0;
+-
+-	lockdep_assert_held(&sta->mesh->plink_lock);
+-
+-	if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
+-		changed = mesh_plink_dec_estab_count(sdata);
+-	sta->mesh->plink_state = NL80211_PLINK_BLOCKED;
+-	mesh_path_flush_by_nexthop(sta);
+-
+-	ieee80211_mps_sta_status_update(sta);
+-	changed |= ieee80211_mps_set_sta_local_pm(sta,
+-			NL80211_MESH_POWER_UNKNOWN);
+-
+-	return changed;
+-}
+-
+-/**
+- * mesh_plink_deactivate - deactivate mesh peer link
+- *
+- * @sta: mesh peer link to deactivate
+- *
+- * All mesh paths with this peer as next hop will be flushed
+- */
+-u32 mesh_plink_deactivate(struct sta_info *sta)
+-{
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	u32 changed;
+-
+-	spin_lock_bh(&sta->mesh->plink_lock);
+-	changed = __mesh_plink_deactivate(sta);
+-	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
+-	mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
+-			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
+-			    sta->mesh->reason);
+-	spin_unlock_bh(&sta->mesh->plink_lock);
+-
+-	return changed;
+-}
+-
+ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			       enum ieee80211_self_protected_actioncode action,
+ 			       u8 *da, u16 llid, u16 plid, u16 reason)
+@@ -375,6 +318,58 @@ free:
+ 	return err;
+ }
+ 
++/**
++ * __mesh_plink_deactivate - deactivate mesh peer link
++ *
++ * @sta: mesh peer link to deactivate
++ *
++ * All mesh paths with this peer as next hop will be flushed
++ * Returns beacon changed flag if the beacon content changed.
++ *
++ * Locking: the caller must hold sta->mesh->plink_lock
++ */
++static u32 __mesh_plink_deactivate(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u32 changed = 0;
++
++	lockdep_assert_held(&sta->mesh->plink_lock);
++
++	if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
++		changed = mesh_plink_dec_estab_count(sdata);
++	sta->mesh->plink_state = NL80211_PLINK_BLOCKED;
++	mesh_path_flush_by_nexthop(sta);
++
++	ieee80211_mps_sta_status_update(sta);
++	changed |= ieee80211_mps_set_sta_local_pm(sta,
++			NL80211_MESH_POWER_UNKNOWN);
++
++	return changed;
++}
++
++/**
++ * mesh_plink_deactivate - deactivate mesh peer link
++ *
++ * @sta: mesh peer link to deactivate
++ *
++ * All mesh paths with this peer as next hop will be flushed
++ */
++u32 mesh_plink_deactivate(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u32 changed;
++
++	spin_lock_bh(&sta->mesh->plink_lock);
++	changed = __mesh_plink_deactivate(sta);
++	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
++	mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
++			    sta->mesh->reason);
++	spin_unlock_bh(&sta->mesh->plink_lock);
++
++	return changed;
++}
++
+ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 			       struct sta_info *sta,
+ 			       struct ieee802_11_elems *elems, bool insert)
 -- 
-Julian Calaby
+2.1.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
