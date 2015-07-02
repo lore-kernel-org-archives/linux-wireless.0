@@ -1,38 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:35188 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220AbbF3X5h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2015 19:57:37 -0400
-Received: by lagh6 with SMTP id h6so30124038lag.2
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2015 16:57:34 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 30 Jun 2015 16:57:34 -0700
-Message-ID: <CAPA_7hazB4hKyNOMd892riL1p4-pqDQEAP=UTS2AofGJy3_21A@mail.gmail.com> (sfid-20150701_015743_034906_DB35FE7C)
-Subject: Dual mode operation
-From: Stark Pister <stark@cirrent.co>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47203 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753460AbbGBOZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2015 10:25:00 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 4/4] mac80211: remove direct probe step before authentication
+Date: Thu,  2 Jul 2015 16:24:56 +0200
+Message-Id: <1435847096-5750-4-git-send-email-johannes@sipsolutions.net> (sfid-20150702_162512_006091_9EB19ADD)
+In-Reply-To: <1435847096-5750-1-git-send-email-johannes@sipsolutions.net>
+References: <1435847096-5750-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am trying to figure out how to use virtual interfaces to run my wifi
-module in both AP mode and station mode simultaneously. From the
-description on this page
-(https://wireless.wiki.kernel.org/en/users/documentation/iw/vif) it
-would seem this is possible on devices using the mac80211 subsystem,
-but from what I have read online it only works with madwifi drivers
-which is outdated and abandoned.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Are there other drivers that tap into this capability of mac80211 or
-is no one else interested in this? Is the generic nl80211 driver
-capable of using this functionality and if so, how do I go about using
-it (note that the "AP" and "Station" sections of the above
-documentation page are blank)? If not, what would I have to change to
-enable the use of this dual mode capability?
+The direct probe step before authentication was done mostly for
+two reasons:
+ 1) the BSS data could be stale
+ 2) the beacon might not have included all IEs
 
+The concern (1) doesn't really seem to be relevant any more as
+we time out BSS information after about 30 seconds, and in fact
+the original patch only did the direct probe if the data was
+older than the BSS timeout to begin with. This condition got
+(likely inadvertedly) removed later though.
+
+Analysing this in more detail shows that since we mostly use
+data from the association response, the only real reason for
+needing the probe response was that the code validates the WMM
+parameters, and those are optional in beacons. As the previous
+patches removed that behaviour, we can now remove the direct
+probe step entirely.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 82 +++++++++++++++--------------------------------------
+ 1 file changed, 23 insertions(+), 59 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 72e1579d1226..9bd85dafbb8d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3274,16 +3274,6 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 	if (ifmgd->associated &&
+ 	    ether_addr_equal(mgmt->bssid, ifmgd->associated->bssid))
+ 		ieee80211_reset_ap_probe(sdata);
+-
+-	if (ifmgd->auth_data && !ifmgd->auth_data->bss->proberesp_ies &&
+-	    ether_addr_equal(mgmt->bssid, ifmgd->auth_data->bss->bssid)) {
+-		/* got probe response, continue with auth */
+-		sdata_info(sdata, "direct probe responded\n");
+-		ifmgd->auth_data->tries = 0;
+-		ifmgd->auth_data->timeout = jiffies;
+-		ifmgd->auth_data->timeout_started = true;
+-		run_again(sdata, ifmgd->auth_data->timeout);
+-	}
+ }
+ 
+ /*
+@@ -3729,12 +3719,14 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 				    reason);
+ }
+ 
+-static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
++static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_mgd_auth_data *auth_data = ifmgd->auth_data;
+ 	u32 tx_flags = 0;
++	u16 trans = 1;
++	u16 status = 0;
+ 
+ 	sdata_assert_lock(sdata);
+ 
+@@ -3758,54 +3750,27 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
+ 
+ 	drv_mgd_prepare_tx(local, sdata);
+ 
+-	if (auth_data->bss->proberesp_ies) {
+-		u16 trans = 1;
+-		u16 status = 0;
+-
+-		sdata_info(sdata, "send auth to %pM (try %d/%d)\n",
+-			   auth_data->bss->bssid, auth_data->tries,
+-			   IEEE80211_AUTH_MAX_TRIES);
+-
+-		auth_data->expected_transaction = 2;
++	sdata_info(sdata, "send auth to %pM (try %d/%d)\n",
++		   auth_data->bss->bssid, auth_data->tries,
++		   IEEE80211_AUTH_MAX_TRIES);
+ 
+-		if (auth_data->algorithm == WLAN_AUTH_SAE) {
+-			trans = auth_data->sae_trans;
+-			status = auth_data->sae_status;
+-			auth_data->expected_transaction = trans;
+-		}
++	auth_data->expected_transaction = 2;
+ 
+-		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
+-			tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
+-				   IEEE80211_TX_INTFL_MLME_CONN_TX;
+-
+-		ieee80211_send_auth(sdata, trans, auth_data->algorithm, status,
+-				    auth_data->data, auth_data->data_len,
+-				    auth_data->bss->bssid,
+-				    auth_data->bss->bssid, NULL, 0, 0,
+-				    tx_flags);
+-	} else {
+-		const u8 *ssidie;
++	if (auth_data->algorithm == WLAN_AUTH_SAE) {
++		trans = auth_data->sae_trans;
++		status = auth_data->sae_status;
++		auth_data->expected_transaction = trans;
++	}
+ 
+-		sdata_info(sdata, "direct probe to %pM (try %d/%i)\n",
+-			   auth_data->bss->bssid, auth_data->tries,
+-			   IEEE80211_AUTH_MAX_TRIES);
++	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++		tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
++			   IEEE80211_TX_INTFL_MLME_CONN_TX;
+ 
+-		rcu_read_lock();
+-		ssidie = ieee80211_bss_get_ie(auth_data->bss, WLAN_EID_SSID);
+-		if (!ssidie) {
+-			rcu_read_unlock();
+-			return -EINVAL;
+-		}
+-		/*
+-		 * Direct probe is sent to broadcast address as some APs
+-		 * will not answer to direct packet in unassociated state.
+-		 */
+-		ieee80211_send_probe_req(sdata, sdata->vif.addr, NULL,
+-					 ssidie + 2, ssidie[1],
+-					 NULL, 0, (u32) -1, true, 0,
+-					 auth_data->bss->channel, false);
+-		rcu_read_unlock();
+-	}
++	ieee80211_send_auth(sdata, trans, auth_data->algorithm, status,
++			    auth_data->data, auth_data->data_len,
++			    auth_data->bss->bssid,
++			    auth_data->bss->bssid, NULL, 0, 0,
++			    tx_flags);
+ 
+ 	if (tx_flags == 0) {
+ 		auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
+@@ -3886,8 +3851,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 		bool status_acked = ifmgd->status_acked;
+ 
+ 		ifmgd->status_received = false;
+-		if (ifmgd->auth_data &&
+-		    (ieee80211_is_probe_req(fc) || ieee80211_is_auth(fc))) {
++		if (ifmgd->auth_data && ieee80211_is_auth(fc)) {
+ 			if (status_acked) {
+ 				ifmgd->auth_data->timeout =
+ 					jiffies + IEEE80211_AUTH_TIMEOUT_SHORT;
+@@ -3918,7 +3882,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			 * so let's just kill the auth data
+ 			 */
+ 			ieee80211_destroy_auth_data(sdata, false);
+-		} else if (ieee80211_probe_auth(sdata)) {
++		} else if (ieee80211_auth(sdata)) {
+ 			u8 bssid[ETH_ALEN];
+ 			struct ieee80211_event event = {
+ 				.type = MLME_EVENT,
+@@ -4609,7 +4573,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	if (err)
+ 		goto err_clear;
+ 
+-	err = ieee80211_probe_auth(sdata);
++	err = ieee80211_auth(sdata);
+ 	if (err) {
+ 		sta_info_destroy_addr(sdata, req->bss->bssid);
+ 		goto err_clear;
 -- 
-Stark Pister
-Software Developer
-Cirrent.co
-(925) 818-1813
+2.1.4
+
