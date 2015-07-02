@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:34727 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752514AbbGVFVg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 01:21:36 -0400
-Received: by obre1 with SMTP id e1so128297272obr.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 22:21:36 -0700 (PDT)
-Received: from localhost.localdomain (50-24-3-101.bcstcmtk01.res.dyn.suddenlink.net. [50.24.3.101])
-        by smtp.gmail.com with ESMTPSA id oy11sm222891oeb.3.2015.07.21.22.21.35
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Tue, 21 Jul 2015 22:21:35 -0700 (PDT)
-From: ahmed.taahir@gmail.com
-To: linux-wireless@vger.kernel.org
-Subject: Support Python 3 in the crda build system (Take 2)
-Date: Wed, 22 Jul 2015 00:21:22 -0500
-Message-Id: <1437542484-23409-1-git-send-email-ahmed.taahir@gmail.com> (sfid-20150722_072140_179152_2A291310)
+Received: from s3.sipsolutions.net ([5.9.151.49]:46521 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751524AbbGBLit (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2015 07:38:49 -0400
+Message-ID: <1435837125.2285.7.camel@sipsolutions.net> (sfid-20150702_133852_283618_740392F1)
+Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
+ direct probe issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 02 Jul 2015 13:38:45 +0200
+In-Reply-To: <CABPxzYLVDUsFu3WwCFzYjE-sZtARiDSM6iGRu6RSFxeJ7k=rOw@mail.gmail.com> (sfid-20150702_110308_268288_A41D6D36)
+References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
+	 <1435082418.2777.11.camel@ipeer-box>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com>
+	 <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
+	 <1435822032.2285.2.camel@sipsolutions.net>
+	 <CABPxzYLVDUsFu3WwCFzYjE-sZtARiDSM6iGRu6RSFxeJ7k=rOw@mail.gmail.com>
+	 (sfid-20150702_110308_268288_A41D6D36)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Updated Intro:
+On Thu, 2015-07-02 at 14:32 +0530, Krishna Chaitanya wrote:
+> 
+> We have also found another issue with direct probe.
+> Some of the AP's are not setting sequence number in the probe 
+> responses
+> so in case of a retry they are dropped as duplicate by rx_h_check
+> causing direct probe to fail.
 
-This patchset takes into account helpful comments by Stefan.  The user
-can now set the make variable BUILD_PYTHON to select which interpreter
-runs key2pub.py.
+I don't quite see how that can be an issue, since the RETRY bit
+shouldn't be set??
 
-key2pub.py is further simplified as well.
-
-Original Intro:
-
-crda's build system is one of the last packages with a hard dep on
-python-2.7 on my Gentoo system.  This patchset adapts the utility
-script 'key2pub.py' so that it will run under either Python 2.7 or
-Python 3.x.  The main change is a switch from using M2Crypto to
-PyCrypto, specifically for Python 3.x support.
-
-In addition, Gentoo had a small collection of bugfix patches that were
-applied every time someone installed crda.  I've included those that
-seemed to have general applicability, as described in Patch 2.
-
+johannes
