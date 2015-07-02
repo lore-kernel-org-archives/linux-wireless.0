@@ -1,315 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48876 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:46768 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752969AbbGQQP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 12:15:28 -0400
-Subject: [PATCH 02/27] X.509: Support X.509 lookup by Issuer+Serial form
- AuthorityKeyIdentifier
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Fri, 17 Jul 2015 17:15:21 +0100
-Message-ID: <20150717161521.2578.5016.stgit@warthog.procyon.org.uk> (sfid-20150717_182427_995618_BF99D19C)
-In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
-References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1753207AbbGBMhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jul 2015 08:37:21 -0400
+Message-ID: <1435840637.2285.23.camel@sipsolutions.net> (sfid-20150702_143729_286393_0EC82FB0)
+Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
+ direct probe issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 02 Jul 2015 14:37:17 +0200
+In-Reply-To: <CABPxzYLgYqL1M6tKx5fo7eJ_=_DJPNS0ttDvUpC3BKH+SyAEiA@mail.gmail.com> (sfid-20150702_141353_923615_65038BD0)
+References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
+	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
+	 <1435082418.2777.11.camel@ipeer-box>
+	 <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com>
+	 <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
+	 <1435822032.2285.2.camel@sipsolutions.net>
+	 <CALhHN=ojLBA1AFGz=atjJhv+fJAr-Rkhd0cgYpma_4Rx+HYOaw@mail.gmail.com>
+	 <1435837168.2285.8.camel@sipsolutions.net>
+	 <CABPxzY+P+p18gVG-o9WhuQy_VVvR3QaS-CQMr8RuiD_2iSTFgw@mail.gmail.com>
+	 <1435838499.2285.14.camel@sipsolutions.net>
+	 <CABPxzYLgYqL1M6tKx5fo7eJ_=_DJPNS0ttDvUpC3BKH+SyAEiA@mail.gmail.com>
+	 (sfid-20150702_141353_923615_65038BD0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If an X.509 certificate has an AuthorityKeyIdentifier extension that provides
-an issuer and serialNumber, then make it so that these are used in preference
-to the keyIdentifier field also held therein for searching for the signing
-certificate.
+On Thu, 2015-07-02 at 17:43 +0530, Krishna Chaitanya wrote:
+> 
+> Thismight still be relevant, if you remember our discussion
+> (
+> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/135533
+> )
+> a while ago, in a passive scan environment beacon might have
+> the latest information than probe response but we end up using
+> probe response, so in those cases direct probe helps to
+> get the right capabilities.
+> 
+> But i remember your argument about changing AP config is not
+> much of a use case :-)
 
-If both the issuer+serialNumber and the keyIdentifier are supplied, then the
-certificate is looked up by the former but the latter is checked as well.  If
-the latter doesn't match the subjectKeyIdentifier of the parent certificate,
-EKEYREJECTED is returned.
+Yeah I still don't think this is much of an issue.
 
-This makes it possible to chain X.509 certificates based on the issuer and
-serialNumber fields rather than on subjectKeyIdentifier.  This is necessary as
-we are having to deal with keys that are represented by X.509 certificates
-that lack a subjectKeyIdentifier.
+> In an environment where AP config is changed this might be helpful
+> else not needed. Given the enterprise wifi deployments using 
+> controllers auto-changing of AP config based on the environemnt may 
+> not be far away
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Tested-by: Vivek Goyal <vgoyal@redhat.com>
----
+I can see the HT/VHT operation changing, and perhaps even channel
+jumping, but staying on the channel and changing parameters that can't
+actually be updated on the fly seems a bit strange. I'm not even sure
+what parameters those would be.
 
- crypto/asymmetric_keys/pkcs7_trust.c     |   10 +++-
- crypto/asymmetric_keys/pkcs7_verify.c    |   47 +++++++++++++----
- crypto/asymmetric_keys/x509_public_key.c |   84 +++++++++++++++++++++---------
- include/crypto/public_key.h              |    3 +
- 4 files changed, 103 insertions(+), 41 deletions(-)
+That said, I found at least one issue with removing the direct probe:
+If the beacon only has WMM info and not WMM parameters (as permitted by
+the WMM spec) then we would disable WMM in ieee80211_mgd_assoc() if we
+don't have a probe response. We'd thus have to move validation to after
+having received the association response, but at that point it's not
+clear to me what we should do if we don't receive good WMM parameters,
+then we can't connect without WMM any more.
 
-diff --git a/crypto/asymmetric_keys/pkcs7_trust.c b/crypto/asymmetric_keys/pkcs7_trust.c
-index 0f6463b6692b..90d6d47965b0 100644
---- a/crypto/asymmetric_keys/pkcs7_trust.c
-+++ b/crypto/asymmetric_keys/pkcs7_trust.c
-@@ -54,7 +54,8 @@ static int pkcs7_validate_trust_one(struct pkcs7_message *pkcs7,
- 		/* Look to see if this certificate is present in the trusted
- 		 * keys.
- 		 */
--		key = x509_request_asymmetric_key(trust_keyring, x509->id,
-+		key = x509_request_asymmetric_key(trust_keyring,
-+						  x509->id, x509->skid,
- 						  false);
- 		if (!IS_ERR(key)) {
- 			/* One of the X.509 certificates in the PKCS#7 message
-@@ -85,8 +86,10 @@ static int pkcs7_validate_trust_one(struct pkcs7_message *pkcs7,
- 	/* No match - see if the root certificate has a signer amongst the
- 	 * trusted keys.
- 	 */
--	if (last && last->akid_skid) {
--		key = x509_request_asymmetric_key(trust_keyring, last->akid_skid,
-+	if (last && (last->akid_id || last->akid_skid)) {
-+		key = x509_request_asymmetric_key(trust_keyring,
-+						  last->akid_id,
-+						  last->akid_skid,
- 						  false);
- 		if (!IS_ERR(key)) {
- 			x509 = last;
-@@ -103,6 +106,7 @@ static int pkcs7_validate_trust_one(struct pkcs7_message *pkcs7,
- 	 */
- 	key = x509_request_asymmetric_key(trust_keyring,
- 					  sinfo->signing_cert_id,
-+					  NULL,
- 					  false);
- 	if (!IS_ERR(key)) {
- 		pr_devel("sinfo %u: Direct signer is key %x\n",
-diff --git a/crypto/asymmetric_keys/pkcs7_verify.c b/crypto/asymmetric_keys/pkcs7_verify.c
-index a4d083f7e9e1..42bfc9de0d79 100644
---- a/crypto/asymmetric_keys/pkcs7_verify.c
-+++ b/crypto/asymmetric_keys/pkcs7_verify.c
-@@ -170,6 +170,7 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
- 				  struct pkcs7_signed_info *sinfo)
- {
- 	struct x509_certificate *x509 = sinfo->signer, *p;
-+	struct asymmetric_key_id *auth;
- 	int ret;
- 
- 	kenter("");
-@@ -187,11 +188,14 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
- 			goto maybe_missing_crypto_in_x509;
- 
- 		pr_debug("- issuer %s\n", x509->issuer);
-+		if (x509->akid_id)
-+			pr_debug("- authkeyid.id %*phN\n",
-+				 x509->akid_id->len, x509->akid_id->data);
- 		if (x509->akid_skid)
--			pr_debug("- authkeyid %*phN\n",
-+			pr_debug("- authkeyid.skid %*phN\n",
- 				 x509->akid_skid->len, x509->akid_skid->data);
- 
--		if (!x509->akid_skid ||
-+		if ((!x509->akid_id && !x509->akid_skid) ||
- 		    strcmp(x509->subject, x509->issuer) == 0) {
- 			/* If there's no authority certificate specified, then
- 			 * the certificate must be self-signed and is the root
-@@ -215,21 +219,42 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
- 		/* Look through the X.509 certificates in the PKCS#7 message's
- 		 * list to see if the next one is there.
- 		 */
--		pr_debug("- want %*phN\n",
--			 x509->akid_skid->len, x509->akid_skid->data);
--		for (p = pkcs7->certs; p; p = p->next) {
--			if (!p->skid)
--				continue;
--			pr_debug("- cmp [%u] %*phN\n",
--				 p->index, p->skid->len, p->skid->data);
--			if (asymmetric_key_id_same(p->skid, x509->akid_skid))
--				goto found_issuer;
-+		auth = x509->akid_id;
-+		if (auth) {
-+			pr_debug("- want %*phN\n", auth->len, auth->data);
-+			for (p = pkcs7->certs; p; p = p->next) {
-+				pr_debug("- cmp [%u] %*phN\n",
-+					 p->index, p->id->len, p->id->data);
-+				if (asymmetric_key_id_same(p->id, auth))
-+					goto found_issuer_check_skid;
-+			}
-+		} else {
-+			auth = x509->akid_skid;
-+			pr_debug("- want %*phN\n", auth->len, auth->data);
-+			for (p = pkcs7->certs; p; p = p->next) {
-+				if (!p->skid)
-+					continue;
-+				pr_debug("- cmp [%u] %*phN\n",
-+					 p->index, p->skid->len, p->skid->data);
-+				if (asymmetric_key_id_same(p->skid, auth))
-+					goto found_issuer;
-+			}
- 		}
- 
- 		/* We didn't find the root of this chain */
- 		pr_debug("- top\n");
- 		return 0;
- 
-+	found_issuer_check_skid:
-+		/* We matched issuer + serialNumber, but if there's an
-+		 * authKeyId.keyId, that must match the CA subjKeyId also.
-+		 */
-+		if (x509->akid_skid &&
-+		    !asymmetric_key_id_same(p->skid, x509->akid_skid)) {
-+			pr_warn("Sig %u: X.509 chain contains auth-skid nonmatch (%u->%u)\n",
-+				sinfo->index, x509->index, p->index);
-+			return -EKEYREJECTED;
-+		}
- 	found_issuer:
- 		pr_debug("- subject %s\n", p->subject);
- 		if (p->seen) {
-diff --git a/crypto/asymmetric_keys/x509_public_key.c b/crypto/asymmetric_keys/x509_public_key.c
-index bb55d6074d5f..6b060b290e77 100644
---- a/crypto/asymmetric_keys/x509_public_key.c
-+++ b/crypto/asymmetric_keys/x509_public_key.c
-@@ -65,23 +65,37 @@ __setup("ca_keys=", ca_keys_setup);
- /**
-  * x509_request_asymmetric_key - Request a key by X.509 certificate params.
-  * @keyring: The keys to search.
-- * @kid: The key ID.
-+ * @id: The issuer & serialNumber to look for or NULL.
-+ * @skid: The subjectKeyIdentifier to look for or NULL.
-  * @partial: Use partial match if true, exact if false.
-  *
-- * Find a key in the given keyring by subject name and key ID.  These might,
-- * for instance, be the issuer name and the authority key ID of an X.509
-- * certificate that needs to be verified.
-+ * Find a key in the given keyring by identifier.  The preferred identifier is
-+ * the issuer + serialNumber and the fallback identifier is the
-+ * subjectKeyIdentifier.  If both are given, the lookup is by the former, but
-+ * the latter must also match.
-  */
- struct key *x509_request_asymmetric_key(struct key *keyring,
--					const struct asymmetric_key_id *kid,
-+					const struct asymmetric_key_id *id,
-+					const struct asymmetric_key_id *skid,
- 					bool partial)
- {
--	key_ref_t key;
--	char *id, *p;
--
-+	struct key *key;
-+	key_ref_t ref;
-+	const char *lookup;
-+	char *req, *p;
-+	int len;
-+
-+	if (id) {
-+		lookup = id->data;
-+		len = id->len;
-+	} else {
-+		lookup = skid->data;
-+		len = skid->len;
-+	}
-+	
- 	/* Construct an identifier "id:<keyid>". */
--	p = id = kmalloc(2 + 1 + kid->len * 2 + 1, GFP_KERNEL);
--	if (!id)
-+	p = req = kmalloc(2 + 1 + len * 2 + 1, GFP_KERNEL);
-+	if (!req)
- 		return ERR_PTR(-ENOMEM);
- 
- 	if (partial) {
-@@ -92,32 +106,48 @@ struct key *x509_request_asymmetric_key(struct key *keyring,
- 		*p++ = 'x';
- 	}
- 	*p++ = ':';
--	p = bin2hex(p, kid->data, kid->len);
-+	p = bin2hex(p, lookup, len);
- 	*p = 0;
- 
--	pr_debug("Look up: \"%s\"\n", id);
-+	pr_debug("Look up: \"%s\"\n", req);
- 
--	key = keyring_search(make_key_ref(keyring, 1),
--			     &key_type_asymmetric, id);
--	if (IS_ERR(key))
--		pr_debug("Request for key '%s' err %ld\n", id, PTR_ERR(key));
--	kfree(id);
-+	ref = keyring_search(make_key_ref(keyring, 1),
-+			     &key_type_asymmetric, req);
-+	if (IS_ERR(ref))
-+		pr_debug("Request for key '%s' err %ld\n", req, PTR_ERR(ref));
-+	kfree(req);
- 
--	if (IS_ERR(key)) {
--		switch (PTR_ERR(key)) {
-+	if (IS_ERR(ref)) {
-+		switch (PTR_ERR(ref)) {
- 			/* Hide some search errors */
- 		case -EACCES:
- 		case -ENOTDIR:
- 		case -EAGAIN:
- 			return ERR_PTR(-ENOKEY);
- 		default:
--			return ERR_CAST(key);
-+			return ERR_CAST(ref);
-+		}
-+	}
-+
-+	key = key_ref_to_ptr(ref);
-+	if (id && skid) {
-+		const struct asymmetric_key_ids *kids = asymmetric_key_ids(key);
-+		if (!kids->id[1]) {
-+			pr_debug("issuer+serial match, but expected SKID missing\n");
-+			goto reject;
-+		}
-+		if (!asymmetric_key_id_same(skid, kids->id[1])) {
-+			pr_debug("issuer+serial match, but SKID does not\n");
-+			goto reject;
- 		}
- 	}
-+	
-+	pr_devel("<==%s() = 0 [%x]\n", __func__, key_serial(key));
-+	return key;
- 
--	pr_devel("<==%s() = 0 [%x]\n", __func__,
--		 key_serial(key_ref_to_ptr(key)));
--	return key_ref_to_ptr(key);
-+reject:
-+	key_put(key);
-+	return ERR_PTR(-EKEYREJECTED);
- }
- EXPORT_SYMBOL_GPL(x509_request_asymmetric_key);
- 
-@@ -230,7 +260,8 @@ static int x509_validate_trust(struct x509_certificate *cert,
- 	if (ca_keyid && !asymmetric_key_id_partial(cert->akid_skid, ca_keyid))
- 		return -EPERM;
- 
--	key = x509_request_asymmetric_key(trust_keyring, cert->akid_skid,
-+	key = x509_request_asymmetric_key(trust_keyring,
-+					  cert->akid_id, cert->akid_skid,
- 					  false);
- 	if (!IS_ERR(key))  {
- 		if (!use_builtin_keys
-@@ -287,8 +318,9 @@ static int x509_key_preparse(struct key_preparsed_payload *prep)
- 	cert->pub->id_type = PKEY_ID_X509;
- 
- 	/* Check the signature on the key if it appears to be self-signed */
--	if (!cert->akid_skid ||
--	    asymmetric_key_id_same(cert->skid, cert->akid_skid)) {
-+	if ((!cert->akid_skid && !cert->akid_id) ||
-+	    asymmetric_key_id_same(cert->skid, cert->akid_skid) ||
-+	    asymmetric_key_id_same(cert->id, cert->akid_id)) {
- 		ret = x509_check_signature(cert->pub, cert); /* self-signed */
- 		if (ret < 0)
- 			goto error_free_cert;
-diff --git a/include/crypto/public_key.h b/include/crypto/public_key.h
-index 54add2069901..b6f27a240856 100644
---- a/include/crypto/public_key.h
-+++ b/include/crypto/public_key.h
-@@ -101,7 +101,8 @@ extern int verify_signature(const struct key *key,
- 
- struct asymmetric_key_id;
- extern struct key *x509_request_asymmetric_key(struct key *keyring,
--					       const struct asymmetric_key_id *kid,
-+					       const struct asymmetric_key_id *id,
-+					       const struct asymmetric_key_id *skid,
- 					       bool partial);
- 
- #endif /* _LINUX_PUBLIC_KEY_H */
-
+johannes
