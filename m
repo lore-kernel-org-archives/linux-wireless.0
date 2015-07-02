@@ -1,34 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:34939 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47052 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932923AbbGHQmE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 12:42:04 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Nicholas Krause <xerofoify@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [linuxwifi] [PATCH] iwlwifi:Make various functions void in the
- file rs.c
-Date: Wed, 8 Jul 2015 16:41:58 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E7A24CF@hasmsx107.ger.corp.intel.com> (sfid-20150708_184221_834837_C64DE6C1)
-References: <1436367735-27148-1-git-send-email-xerofoify@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1754293AbbGBCAz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jul 2015 22:00:55 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Michel von Czettritz <michel.von.czettritz@gmail.com>
+Cc: gregkh@linux.com, Larry.Finger@lwfinger.net,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] staging: rtl8723au: fix "incorrect type in assignment"
+References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
+	<d7c0812eedadab3697323bd53aeadba48ecf6d89.1435700714.git.michel.von.czettritz@gmail.com>
+	<wrfj7fqj62mh.fsf@redhat.com> <5594797A.3010609@gmail.com>
+Date: Wed, 01 Jul 2015 22:00:53 -0400
+In-Reply-To: <5594797A.3010609@gmail.com> (Michel von Czettritz's message of
+	"Thu, 2 Jul 2015 01:36:26 +0200")
+Message-ID: <wrfjmvzf2u96.fsf@redhat.com> (sfid-20150702_040059_131885_51CB31AB)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Michel von Czettritz <michel.von.czettritz@gmail.com> writes:
+> On 07/01/2015 10:31 PM, Jes Sorensen wrote:
+>> Michel von Czettritz <michel.von.czettritz@gmail.com> writes:
+>>> Writing the output of cpu_to_le32 to an u32 or *(u32*) is an implicit
+>>> cast and results in an sparse warning.
+>>>
+>>> Since param and mask won't be changed, the implicit cast can be avoided
+>>> by creating local variables.
+>>>
+>>> Signed-off-by: Michel von Czettritz <michel.von.czettritz@gmail.com>
+>>> ---
+>>>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 10 ++++++----
+>>>  1 file changed, 6 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+>>> index 1003365..a5e6726 100644
+>>> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+>>> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+>>> @@ -115,9 +115,10 @@ exit:
+>>>  
+>>>  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
+>>>  {
+>>> -	*((u32 *)param) = cpu_to_le32(*(param));
+>>> +	__le32 param_le;
+>>> +	param_le = cpu_to_le32(*(param));
+>>>  
+>>> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)param);
+>>> +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&param_le);
+>>>  
+>>>  	return _SUCCESS;
+>>>  }
+>>> @@ -125,10 +126,11 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
+>>>  int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
+>>>  {
+>>>  	u8 buf[5];
+>>> +	__le32 mask_le;
+>>>  
+>>>  	memset(buf, 0, 5);
+>>> -	mask = cpu_to_le32(mask);
+>>> -	memcpy(buf, &mask, 4);
+>>> +	mask_le = cpu_to_le32(mask);
+>>> +	memcpy(buf, &mask_le, 4);
+>> 
+>> cpu_to_le32() + memcpy() is ugly - put_unaligned_le32() would make more
+>> sense.
+>> 
+>> Jes
+> I'm not sure if the fold, changing u32* to u32, and changing this, is
+> a bit much.
+> Should this be a second patch? Or maybe a patch for each function?
 
-On 07/08/2015 06:03 PM, Nicholas Krause wrote:
-> This makes various functions in the file rs.c void due to these
-> functions never returning a error code to signal to their callers
-> if and how they have failed to complete their intended work.
-> 
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+I would change the u32 * in one patch and the conversion and memcpy in
+another.
 
-I picked it up in our internal repository.
-Thanks.
+Cheers,
+Jes
+
