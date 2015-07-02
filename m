@@ -1,111 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:36037 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbbGHXsD (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12347 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753239AbbGBNJG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 19:48:03 -0400
+	Thu, 2 Jul 2015 09:09:06 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t62D4UTH028555
+	for <linux-wireless@vger.kernel.org>; Thu, 2 Jul 2015 06:09:05 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1vbggrqgaq-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 06:09:05 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Aniket Nagarnaik <aniketn@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: fix for p2p broken link
+Date: Thu, 2 Jul 2015 06:07:02 -0700
+Message-ID: <1435842422-15608-1-git-send-email-akarwar@marvell.com> (sfid-20150702_150917_796180_51548D9C)
 MIME-Version: 1.0
-In-Reply-To: <559D29B9.2080408@users.sourceforge.net>
-References: <alpine.DEB.2.10.1402251014170.2080@hadrien> <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
- <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
- <559B6FF8.9010704@users.sourceforge.net> <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
- <559B85CD.6040200@users.sourceforge.net> <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
- <559BBDD6.7040808@users.sourceforge.net> <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
- <559BFB19.2080700@users.sourceforge.net> <CAGRGNgXTN8AxBNNfie4KvvErOXm3LUyL_QLLWQ6TN_wJgJkD-A@mail.gmail.com>
- <559CCC9D.8050606@users.sourceforge.net> <CAGRGNgWcHxwjx07A45No8vArXR12JGKcfif1Rvi30PQbJs4SGQ@mail.gmail.com>
- <559CED4C.1080402@users.sourceforge.net> <CAGRGNgU1SSUw-97aS0nhFObcMpLPdP3ej9WWNVwN77Fd=ws-bQ@mail.gmail.com>
- <559D29B9.2080408@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 Jul 2015 09:47:43 +1000
-Message-ID: <CAGRGNgU+1xsdXe9aTYCVvowbo-w9s7chcaNphzzdB2xsuXOBxA@mail.gmail.com> (sfid-20150709_014809_635876_8F08D485)
-Subject: Re: Clarification for the use of additional fields in the message body
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Frans Klaver <fransklaver@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Chris Park <chris.park@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Markus,
+From: Aniket Nagarnaik <aniketn@marvell.com>
 
-On Wed, Jul 8, 2015 at 11:46 PM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
->> Is there truly no way to simplify that process?
->
-> I see some software development possibilities which could improve
-> the communication with high volume mailing lists.
+This patch fixes following issues in p2p code paths.
 
-You shouldn't need any software development, most people's processes are:
+1) bss role, bss type and connection type was not set correctly
+for p2p GO and p2p client at couple of places.
+2) Driver appends a proprietary header to management frames
+which will be parsed by our firmware. Later while informing
+TX status to cfg80211, modified frame buffer was passed to
+cfg80211_mgmt_tx_status() instead of original one.
 
-1. Make changes
-2. git add <files>
-3. git commit
-4. Repeat 1-3 for all changes they want to make
-5. git-format-patch
-6. git-send-email through some SMTP server to the list and appropriate
-other people
+Signed-off-by: Aniket Nagarnaik <aniketn@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |  5 ++++-
+ drivers/net/wireless/mwifiex/sta_cmd.c  |  6 ++++--
+ drivers/net/wireless/mwifiex/txrx.c     | 22 +++++++++++++++++++++-
+ 3 files changed, 29 insertions(+), 4 deletions(-)
 
->From what I've read, you appear to have some semi-automatic tool for
-steps 1 through 4. I'd strongly recommend changing your patch
-submission process to use git-format-patch and git-send-email. If
-Sourceforge's email system doesn't let you send emails with SMTP
-directly, then you might want to try sending emails through your ISP's
-mail server.
-
-Maintainers use a very similar process, however they collect and
-review patches in some personal repository in addition to making
-changes and committing them. Tools like patchwork are simply fancy
-methods of accumulating patches into git trees. Most people are using
-git-format-patch and git-send-email, possibly with some scripting
-around them, to format and send patches.
-
->> You should be sending the patches directly with SMTP using git-send-email,
->
-> This tool is also fine for the publishing of a lot of patches.
-
-git-send-email or some other tool?
-
->> if you're not, then you're making things overly complicated for yourself.
->
-> But I prefer a graphical user interface for my mail handling so far.
-
-I send my patches using git-send-email through gmail's servers then
-deal with literally everything else through gmail's web interface or
-Android app. Using git-send-email doesn't mean you can't use a
-graphical mail interface.
-
-I used to send patches through a carefully configured instance of
-Thunderbird, however this required too many steps and it loved to
-mangle patches in ways that annoyed people.
-
->> Having a feature doesn't mean that it should be used.
->
-> Does any of the "questionable functionality" get occasionally overlooked
-> a bit too often?
-
-It's not "questionable functionality", it's functionality we don't see
-a need for.
-
-If I wanted to, I could insert a patch at any point in the history of
-Linux in my own repository, however any attempt to push that upstream
-would cause enormous amounts of pain and annoyance, to everyone who
-attempted to deal with it, so I don't.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 93e40d0..3cac40d 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -831,10 +831,13 @@ mwifiex_init_new_priv_params(struct mwifiex_private *priv,
+ 		priv->bss_type = MWIFIEX_BSS_TYPE_STA;
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-	case NL80211_IFTYPE_P2P_GO:
+ 		priv->bss_role =  MWIFIEX_BSS_ROLE_STA;
+ 		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
+ 		break;
++	case NL80211_IFTYPE_P2P_GO:
++		priv->bss_role =  MWIFIEX_BSS_ROLE_UAP;
++		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
++		break;
+ 	case NL80211_IFTYPE_AP:
+ 		priv->bss_type = MWIFIEX_BSS_TYPE_UAP;
+ 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 36cb6bd..a49a80d 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1997,10 +1997,12 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 		if (priv->bss_mode == NL80211_IFTYPE_ADHOC)
+ 			cmd_ptr->params.bss_mode.con_type =
+ 				CONNECTION_TYPE_ADHOC;
+-		else if (priv->bss_mode == NL80211_IFTYPE_STATION)
++		else if (priv->bss_mode == NL80211_IFTYPE_STATION ||
++			 priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT)
+ 			cmd_ptr->params.bss_mode.con_type =
+ 				CONNECTION_TYPE_INFRA;
+-		else if (priv->bss_mode == NL80211_IFTYPE_AP)
++		else if (priv->bss_mode == NL80211_IFTYPE_AP ||
++			 priv->bss_mode == NL80211_IFTYPE_P2P_GO)
+ 			cmd_ptr->params.bss_mode.con_type = CONNECTION_TYPE_AP;
+ 		cmd_ptr->size = cpu_to_le16(sizeof(struct
+ 				host_cmd_ds_set_bss_mode) + S_DS_GEN);
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 5ed9b79..8b1e5b5 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -370,8 +370,28 @@ void mwifiex_parse_tx_status_event(struct mwifiex_private *priv,
+ 			/* consumes ack_skb */
+ 			skb_complete_wifi_ack(ack_skb, !tx_status->status);
+ 		} else {
++			/* Remove broadcast address which was added by driver */
++			memmove(ack_skb->data +
++				sizeof(struct ieee80211_hdr_3addr) +
++				MWIFIEX_MGMT_FRAME_HEADER_SIZE + sizeof(u16),
++				ack_skb->data +
++				sizeof(struct ieee80211_hdr_3addr) +
++				MWIFIEX_MGMT_FRAME_HEADER_SIZE + sizeof(u16) +
++				ETH_ALEN, ack_skb->len -
++				(sizeof(struct ieee80211_hdr_3addr) +
++				MWIFIEX_MGMT_FRAME_HEADER_SIZE + sizeof(u16) +
++				ETH_ALEN));
++			ack_skb->len = ack_skb->len - ETH_ALEN;
++			/* Remove driver's proprietary header including 2 bytes
++			 * of packet length and pass actual management frame buffer
++			 * to cfg80211.
++			 */
+ 			cfg80211_mgmt_tx_status(&priv->wdev, tx_info->cookie,
+-						ack_skb->data, ack_skb->len,
++						ack_skb->data +
++						MWIFIEX_MGMT_FRAME_HEADER_SIZE +
++						sizeof(u16), ack_skb->len -
++						(MWIFIEX_MGMT_FRAME_HEADER_SIZE
++						 + sizeof(u16)),
+ 						!tx_status->status, GFP_ATOMIC);
+ 			dev_kfree_skb_any(ack_skb);
+ 		}
 -- 
-Julian Calaby
+1.8.1.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
