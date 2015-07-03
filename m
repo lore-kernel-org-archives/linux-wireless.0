@@ -1,47 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-am1on0135.outbound.protection.outlook.com ([157.56.112.135]:47719
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752871AbbGZIOw convert rfc822-to-8bit (ORCPT
+Received: from mail.neratec.com ([46.140.151.2]:2375 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755262AbbGCPB1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2015 04:14:52 -0400
-From: "Joglekar, Tejas (T.)" <tjogleka@visteon.com>
-To: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] staging:rtl8723au:core:rtw_sreset.c:Fix for space related
- error
-Date: Sun, 26 Jul 2015 07:40:51 +0000
-Message-ID: <20150726074009.GA14066@tejas-asus.domain.name> (sfid-20150726_101528_372359_1E984A7A)
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 3 Jul 2015 11:01:27 -0400
+Message-ID: <5596A3C0.6020303@neratec.com> (sfid-20150703_170141_198558_93FCF32E)
+Date: Fri, 03 Jul 2015 17:01:20 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
+To: Wei Zhong <wzhong@google.com>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
+References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>	<55966D1B.1040603@neratec.com> <CAHr=VqnpJ_+ovmB3gqm+X9WX98ZeVuO8VZ2cq6OFPcdjy8Rkgg@mail.gmail.com>
+In-Reply-To: <CAHr=VqnpJ_+ovmB3gqm+X9WX98ZeVuO8VZ2cq6OFPcdjy8Rkgg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joglekar Tejas <tjogleka@visteon.com>
+On 07/03/2015 04:20 PM, Wei Zhong wrote:
+> On Fri, Jul 3, 2015 at 4:08 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>>
+>> On 07/02/2015 07:44 AM, Wei Zhong wrote:
+>>> commit 2fef4cad8a1bd9cbbf178e59a1b3ca672b057095
+>>> Author: Wei Zhong <wzhong@google.com>
+>>> Date:   Wed Jul 1 22:39:09 2015 -0700
+>>>
+>>>     wireless-regdb: update CA rules for 5600 - 5650 mHz
+>>>
+>>>     Related regulation:
+>>>     http://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/sf10971.html#s6.2.3
+>>>
+>>>     Frequency Bands 5470-5600 MHz and 5650-5725 MHz
+>>>     Until further notice, devices subject to this section [i.e. Wifi device
+>>>     supporting 5 GHz bands] shall not be capable of transmitting in the band
+>>>     5600-5650 MHz. This restriction is for the protection of Environment
+>>>     Canada’s weather radars operating in this band.
+>>>
+>>> diff --git a/db.txt b/db.txt
+>>> index 809cd3c..da0cfad 100644
+>>> --- a/db.txt
+>>> +++ b/db.txt
+>>> @@ -216,7 +216,8 @@ country CA: DFS-FCC
+>>>         (2402 - 2472 @ 40), (30)
+>>>         (5170 - 5250 @ 80), (17), AUTO-BW
+>>>         (5250 - 5330 @ 80), (24), DFS, AUTO-BW
+>>> -       (5490 - 5730 @ 160), (24), DFS
+>>> +       (5490 - 5600 @ 80), (24), DFS
+>>> +       (5650 - 5730 @ 40), (24), DFS
+>>>         (5735 - 5835 @ 80), (30)
+>>>
+>>>  # Source:
+>>> --
+>>
+>> I believe this could also be interpreted differently. If the change is only about
+>> removing the weather radar band (5600-5650), the change should be
+>>
+>>  -       (5490 - 5730 @ 160), (24), DFS
+>>  +       (5490 - 5570 @ 80), (24), DFS
+>>  +       (5570 - 5590 @ 20), (24), DFS
+>>  +       (5650 - 5730 @ 80), (24), DFS
+>>
+>> The second rule explicitly states that channel 116 remains available for HT20. If
+>> this level of strict correctness is not needed, rule 1 and 2 combined would be
+>>
+>>  -       (5490 - 5730 @ 160), (24), DFS
+>>  +       (5490 - 5590 @ 80), (24), DFS
+> 
+> I agree. 5590 is more strict than 5600.
+> 
+>>
+>>  +       (5650 - 5730 @ 80), (24), DFS
+> 
+> 5690 MHz is not a channel can be used, is it still necessary to mark
+> this band as 80MHz while in practice it is not possible to fully
+> unitize the entire band?
+> 
 
-This patch fixes the error given by checkpatch.pl
+I must be missing something here, where does the restriction for 5690 come from?
+The document handles the band 5650-5725 as available, I don't see any further
+restrictions for 5690.
 
-Signed-off-by: Joglekar Tejas <tjogleka@visteon.com>
----
- drivers/staging/rtl8723au/core/rtw_sreset.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_sreset.c b/drivers/staging/rtl8723au/core/rtw_sreset.c
-index 29a29d9..48b7723 100644
---- a/drivers/staging/rtl8723au/core/rtw_sreset.c
-+++ b/drivers/staging/rtl8723au/core/rtw_sreset.c
-@@ -71,7 +71,7 @@ static void sreset_restore_security_station(struct rtw_adapter *padapter)
- 			/* pairwise key */
- 			rtw_setstakey_cmd23a(padapter, (unsigned char *)psta, true);
- 			/* group key */
--			rtw_set_key23a(padapter,&padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
-+			rtw_set_key23a(padapter, &padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
- 		}
- 	}
- }
--- 
-1.9.1
+>From your other post:
+>>     >
+>>     >  -       (5490 - 5730 @ 160), (24), DFS
+>>     >  +       (5490 - 5590 @ 80), (24), DFS
+>> 
+>>     I agree. 5590 is more strict than 5600.
+>> 
+>>  
+>> On a second thought,  5590 implies channel 116 can't have 40MHz. I think that is
+>> still allowed per regulation.
+>> 
+>> 
+
+No, channel 116 is not usable for HT40 if weather radar channels are disabled,
+since it can only be combined with channel 120 and that one partially falls into
+the restricted range.
+
+I found the FCC channel plans (which CA conforms to) in [1] very helpful when
+checking the restrictions.
+
+
+[1] https://apps.fcc.gov/kdb/GetAttachment.html?id=lp4w3WTVG9PReWNFG0ckTg%3D%3D
+
+
