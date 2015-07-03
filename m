@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:34276 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311AbbG3VrS (ORCPT
+Received: from mail.neratec.com ([46.140.151.2]:21142 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754904AbbGCLIQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 17:47:18 -0400
-Received: by pdbbh15 with SMTP id bh15so30540748pdb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2015 14:47:18 -0700 (PDT)
-From: Filipe Brandenburger <filbranden@google.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Arik Nemtsov <arik@wizery.com>, Elliott Hughes <enh@google.com>
-Cc: linux-wireless@vger.kernel.org,
-	Christopher Wiley <wiley@google.com>,
-	Filipe Brandenburger <filbranden@google.com>
-Subject: [PATCH v2 1/2] iw: fix references to libnl in Android.mk
-Date: Thu, 30 Jul 2015 14:47:08 -0700
-Message-Id: <1438292828-13583-1-git-send-email-filbranden@google.com> (sfid-20150730_234721_817668_70E60D6D)
-In-Reply-To: <CAJgzZoq4iqe_DQVNbDBjJkdpD15LrQY8aApJco5hbr0W-soA6A@mail.gmail.com>
-References: <CAJgzZoq4iqe_DQVNbDBjJkdpD15LrQY8aApJco5hbr0W-soA6A@mail.gmail.com>
+	Fri, 3 Jul 2015 07:08:16 -0400
+Message-ID: <55966D1B.1040603@neratec.com> (sfid-20150703_130821_535048_F32F7BF3)
+Date: Fri, 03 Jul 2015 13:08:11 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Wei Zhong <wzhong@google.com>, seth.forshee@canonical.com
+CC: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
+References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
+In-Reply-To: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The latest AOSP refers to that library as libnl and not libnl_2.
+On 07/02/2015 07:44 AM, Wei Zhong wrote:
+> commit 2fef4cad8a1bd9cbbf178e59a1b3ca672b057095
+> Author: Wei Zhong <wzhong@google.com>
+> Date:   Wed Jul 1 22:39:09 2015 -0700
+> 
+>     wireless-regdb: update CA rules for 5600 - 5650 mHz
+> 
+>     Related regulation:
+>     http://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/sf10971.html#s6.2.3
+> 
+>     Frequency Bands 5470-5600 MHz and 5650-5725 MHz
+>     Until further notice, devices subject to this section [i.e. Wifi device
+>     supporting 5 GHz bands] shall not be capable of transmitting in the band
+>     5600-5650 MHz. This restriction is for the protection of Environment
+>     Canada’s weather radars operating in this band.
+> 
+> diff --git a/db.txt b/db.txt
+> index 809cd3c..da0cfad 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -216,7 +216,8 @@ country CA: DFS-FCC
+>         (2402 - 2472 @ 40), (30)
+>         (5170 - 5250 @ 80), (17), AUTO-BW
+>         (5250 - 5330 @ 80), (24), DFS, AUTO-BW
+> -       (5490 - 5730 @ 160), (24), DFS
+> +       (5490 - 5600 @ 80), (24), DFS
+> +       (5650 - 5730 @ 40), (24), DFS
+>         (5735 - 5835 @ 80), (30)
+> 
+>  # Source:
+> --
 
-TEST=Built AOSP tree with this patchset, tested the generated iw binary.
+I believe this could also be interpreted differently. If the change is only about
+removing the weather radar band (5600-5650), the change should be
 
-Signed-off-by: Filipe Brandenburger <filbranden@google.com>
----
-v2: Removed now redundant LOCAL_C_INCLUDES as suggested by Elliott.
-    Retested to confirm it still builds and works as intended.
+ -       (5490 - 5730 @ 160), (24), DFS
+ +       (5490 - 5570 @ 80), (24), DFS
+ +       (5570 - 5590 @ 20), (24), DFS
+ +       (5650 - 5730 @ 80), (24), DFS
 
- Android.mk | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+The second rule explicitly states that channel 116 remains available for HT20. If
+this level of strict correctness is not needed, rule 1 and 2 combined would be
 
-diff --git a/Android.mk b/Android.mk
-index 735b236809ef..03bcc3e93d4d 100644
---- a/Android.mk
-+++ b/Android.mk
-@@ -9,15 +9,11 @@ include $(LOCAL_PATH)/Makefile
- 
- LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS)) android-nl.c
- 
--LOCAL_C_INCLUDES := \
--	$(LOCAL_PATH) \
--	external/libnl-headers/
--
- LOCAL_CFLAGS += -DCONFIG_LIBNL20
- LOCAL_LDFLAGS := -Wl,--no-gc-sections
- #LOCAL_MODULE_TAGS := optional
- LOCAL_MODULE_TAGS := eng
--LOCAL_STATIC_LIBRARIES := libnl_2
-+LOCAL_STATIC_LIBRARIES := libnl
- LOCAL_MODULE := iw
- 
- $(IW_SOURCE_DIR)/version.c:
--- 
-2.5.0.rc2.392.g76e840b
+ -       (5490 - 5730 @ 160), (24), DFS
+ +       (5490 - 5590 @ 80), (24), DFS
+ +       (5650 - 5730 @ 80), (24), DFS
 
+
+Cheers
+Zefir
