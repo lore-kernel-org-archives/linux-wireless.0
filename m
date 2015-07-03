@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2683 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753066AbbGAKWQ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:60743 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754646AbbGCGQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 06:22:16 -0400
-Message-ID: <5593BF46.8010108@qti.qualcomm.com> (sfid-20150701_122220_626665_9DA514FC)
-Date: Wed, 1 Jul 2015 15:51:58 +0530
-From: rmani <rmani@qti.qualcomm.com>
+	Fri, 3 Jul 2015 02:16:05 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Delay device access after cold reset
+Date: Fri, 3 Jul 2015 11:45:42 +0530
+Message-ID: <1435904142-30295-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150703_081610_836790_2DD4AB96)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/8] ath10k: enhance swba event handler to adapt different
- size tim bitmap
-References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com> <1434984747-24294-2-git-send-email-rmani@qti.qualcomm.com> <87h9poxjvs.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87h9poxjvs.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/01/2015 03:46 PM, Kalle Valo wrote:
-> Raja Mani <rmani@qti.qualcomm.com> writes:
->
->> Due to 512 client support in 10.4 firmware, size of tim ie is going
->> to be slightly higher than non 10.4 firmware. So, size of tim_bitmap
->> what is carried in swba event from 10.4 firmware is bit higher.
->>
->> The only bottle neck to reuse existing swba handler
->> ath10k_wmi_event_host_swba() for 10.4 is that code designed to deal
->> with fixed size tim bitmap(ie, tim_info[].tim_bitmap in wmi_swba_ev_arg).
->> This patch removes such size limitation and makes it more suitable
->> to handle swba event which has different size tim bitmap.
->>
->> All existing swba event parsing functions are changed to adapt this
->> change. Actual support to handle 10.4 swba event is added in next patch.
->> Only preparation is made in this patch.
->>
->> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
->
-[..]
->> -		BUILD_BUG_ON(sizeof(arvif->u.ap.tim_bitmap) !=
->> -			     sizeof(tim_info->tim_bitmap));
->> +		WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->
-> I'm worried that this WARN_ON() spams too much so I changed it to:
->
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -2893,7 +2893,7 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
->          if (__le32_to_cpu(tim_info->tim_changed)) {
->                  int i;
->
-> -               WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
-> +               WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->
->                  for (i = 0; i < tim_len; i++) {
->                          t = tim_info->tim_bitmap[i / 4];
->
->
+It is observed that during cold reset pcie access right
+after a write operation to SOC_GLOBAL_RESET_ADDRESS causes
+Data Bus Error and system hard lockup. The reason
+for bus error is that pcie needs some time to get
+back to stable state for any transaction during cold reset. Add
+delay of 20 msecs after write of SOC_GLOBAL_RESET_ADDRESS
+to fix this issue.
 
-The change looks good to me.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 20 +++++++-------------
+ 1 file changed, 7 insertions(+), 13 deletions(-)
 
---
-Raja
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 1b4634a..130746b 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2761,7 +2761,6 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 
+ static int ath10k_pci_cold_reset(struct ath10k *ar)
+ {
+-	int i;
+ 	u32 val;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot cold reset\n");
+@@ -2777,23 +2776,18 @@ static int ath10k_pci_cold_reset(struct ath10k *ar)
+ 	val |= 1;
+ 	ath10k_pci_reg_write32(ar, SOC_GLOBAL_RESET_ADDRESS, val);
+ 
+-	for (i = 0; i < ATH_PCI_RESET_WAIT_MAX; i++) {
+-		if (ath10k_pci_reg_read32(ar, RTC_STATE_ADDRESS) &
+-					  RTC_STATE_COLD_RESET_MASK)
+-			break;
+-		msleep(1);
+-	}
++	/* After writing into SOC_GLOBAL_RESET to put device into
++	 * reset and pulling out of reset pcie may not be stable
++	 * for any immediate pcie register access and cause bus error,
++	 * add delay before any pcie access request to fix this issue.
++	 */
++	msleep(20);
+ 
+ 	/* Pull Target, including PCIe, out of RESET. */
+ 	val &= ~1;
+ 	ath10k_pci_reg_write32(ar, SOC_GLOBAL_RESET_ADDRESS, val);
+ 
+-	for (i = 0; i < ATH_PCI_RESET_WAIT_MAX; i++) {
+-		if (!(ath10k_pci_reg_read32(ar, RTC_STATE_ADDRESS) &
+-					    RTC_STATE_COLD_RESET_MASK))
+-			break;
+-		msleep(1);
+-	}
++	msleep(20);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot cold reset complete\n");
+ 
+-- 
+1.9.1
 
