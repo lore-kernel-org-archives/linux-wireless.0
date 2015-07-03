@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43643 "EHLO mx1.redhat.com"
+Received: from mail.neratec.com ([46.140.151.2]:51274 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752928AbbGAOxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 10:53:46 -0400
-Message-ID: <1435762425.7441.8.camel@redhat.com> (sfid-20150701_165350_230377_B5C7767F)
-Subject: Re: Dual mode operation
-From: Dan Williams <dcbw@redhat.com>
-To: Stark Pister <stark@cirrent.co>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 01 Jul 2015 09:53:45 -0500
-In-Reply-To: <CAPA_7hazB4hKyNOMd892riL1p4-pqDQEAP=UTS2AofGJy3_21A@mail.gmail.com>
-References: <CAPA_7hazB4hKyNOMd892riL1p4-pqDQEAP=UTS2AofGJy3_21A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751845AbbGCQv7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jul 2015 12:51:59 -0400
+Message-ID: <5596BDAB.4020001@neratec.com> (sfid-20150703_185230_221212_0356E94E)
+Date: Fri, 03 Jul 2015 18:51:55 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>
+Subject: Q: iw - how to scan for a specific ssid / AP mode scan
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-06-30 at 16:57 -0700, Stark Pister wrote:
-> I am trying to figure out how to use virtual interfaces to run my wifi
-> module in both AP mode and station mode simultaneously. From the
-> description on this page
-> (https://wireless.wiki.kernel.org/en/users/documentation/iw/vif) it
-> would seem this is possible on devices using the mac80211 subsystem,
-> but from what I have read online it only works with madwifi drivers
-> which is outdated and abandoned.
+Folks,
 
-Most of the common mac80211-based devices allow this.  You can see what
-modes your driver supports by doing:
+I have difficulties using iw for a specific use case or fail to understand the
+documentation correctly.
 
-$ iw phy phy0 info
-...
-  software interface modes (can always be added):
-  	 * AP/VLAN
-  	 * monitor
-  valid interface combinations:
-  	 * #{ managed } <= 1, #{ AP, P2P-client, P2P-GO } <= 1,
-#{ P2P-device } <= 1,
-  	   total <= 3, #channels <= 2
-...
+My platform is a recent OpenWRT, running ath9k.
 
-This is for an Intel 7265 card, and you can see that this device
-supports simultaneous STA and AP modes, but only one interface of each.
+First use case is scanning for a given ssid in managed mode. According do iw's
+documentation (and the attribute description in nl80211.h), issuing
 
-> Are there other drivers that tap into this capability of mac80211 or
-> is no one else interested in this? Is the generic nl80211 driver
-> capable of using this functionality and if so, how do I go about using
-> it (note that the "AP" and "Station" sections of the above
-> documentation page are blank)? If not, what would I have to change to
-> enable the use of this dual mode capability?
+iw dev wlan0 scan flush ssid <SSID>
 
-Whether your device has this capability highly depends on the hardware,
-firmware, and driver.  The 'iw' command I posted above will show what
-your combination supports.
-
-Dan
+should do exactly this, but I keep receiving a full list of visible APs. I double
+checked that NL80211_SCAN_FLAG_FLUSH and NL80211_ATTR_SCAN_SSIDS are set
+correctly, so am puzzled whether there is some bug left or I miss some detail.
 
 
+The second issue is about scanning in AP mode. Where I want to go is having two
+APs operating on arbitrary DFS channels with periodic scans to discover each
+other. What I observe is
+a) passive scanning: iw dev wlan0 scan flush ap-force passive
+   => does not work - no scan results are provided
+b) active scanning: iw dev wlan0 scan flush ap-force
+  * finds only a subset of APs compared to a scan in managed mode
+  * finds only APs on non-DFS channels
+
+Again, I might be missing some relevant documentation, but to me the observed
+results look rather like 'not yet implemented' than inherent limitations.
+
+
+Any hint / feedback is appreciated.
+
+Thanks,
+Zefir
