@@ -1,91 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44330 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbbGaHkL (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:35175 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755388AbbGCNeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:40:11 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 11/28] staging: wilc1000: fix incompatible type in assignment warning
-Date: Fri, 31 Jul 2015 16:38:19 +0900
-Message-ID: <1438328316-30197-12-git-send-email-tony.cho@atmel.com> (sfid-20150731_100716_436356_238AC665)
-In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 3 Jul 2015 09:34:01 -0400
+Received: by lagh6 with SMTP id h6so85449156lag.2
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jul 2015 06:33:59 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: fix QCA61X4 boot up
+Date: Fri,  3 Jul 2015 15:33:49 +0200
+Message-Id: <1435930429-3970-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20150703_153407_634876_5E71B8A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: glen lee <glen.lee@atmel.com>
+commit "a521ee983d312db7 ath10k: Add new reg_address/mask to hw register
+table" commit has broken the QCA61x4 support, by providing wrong
+fw_indicator_address, which shall be 0x0003a028 instead of 0x00009028.
 
-Cast type to WILC_WFIDrvHandle before assignment from incompatible pointer type
-to fix the following warning.
+User experience was a failing boot up sequence (crashing device during
+initialization)
 
-drivers/staging/wilc1000/host_interface.c:6916:27: warning: assignment from
-incompatible pointer type [enabled by default]
-   strHostIFmsg.drvHandler = pstrWFIDrv;
+[  181.663874] ath10k_pci 0000:02:00.0: enabling device (0000 -> 0002)
+[  181.664787] ath10k_pci 0000:02:00.0: pci irq msi-x interrupts 8 irq_mode 0 reset_mode 0
+[  181.688886] ath10k_pci 0000:02:00.0: device has crashed during init
+[  181.688897] ath10k_pci 0000:02:00.0: failed to wait for target after cold reset: -70
+[  181.688902] ath10k_pci 0000:02:00.0: failed to reset chip: -70
+[  181.689774] ath10k_pci: probe of 0000:02:00.0 failed with error -70
 
-Signed-off-by: glen lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Fix it by updating the address with correct value.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 66565f6..e9cd77d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3981,7 +3981,7 @@ static void ListenTimerCB(void *pvArg)
- 	/* prepare the Timer Callback message */
- 	WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
- 	strHostIFmsg.u16MsgId = HOST_IF_MSG_LISTEN_TIMER_FIRED;
--	strHostIFmsg.drvHandler = pstrWFIDrv;
-+	strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
- 	strHostIFmsg.uniHostIFmsgBody.strHostIfRemainOnChan.u32ListenSessionID = pstrWFIDrv->strHostIfRemainOnChan.u32ListenSessionID;
- 
- 	/* send the message */
-@@ -6425,7 +6425,7 @@ void GetPeriodicRSSI(void *pvArg)
- 		WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
- 
- 		strHostIFmsg.u16MsgId = HOST_IF_MSG_GET_RSSI;
--		strHostIFmsg.drvHandler = pstrWFIDrv;
-+		strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
- 
- 		/* send the message */
- 		s32Error =	WILC_MsgQueueSend(&gMsgQHostIF, &strHostIFmsg, sizeof(tstrHostIFmsg), NULL);
-@@ -6779,7 +6779,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 	WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
- 
- 	strHostIFmsg.u16MsgId = HOST_IF_MSG_RCVD_NTWRK_INFO;
--	strHostIFmsg.drvHandler = pstrWFIDrv;
-+	strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
- 
- 	strHostIFmsg.uniHostIFmsgBody.strRcvdNetworkInfo.u32Length = u32Length;
- 	strHostIFmsg.uniHostIFmsgBody.strRcvdNetworkInfo.pu8Buffer = (u8 *)WILC_MALLOC(u32Length); /* will be deallocated by the receiving thread */
-@@ -6841,7 +6841,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
- 
- 
- 	strHostIFmsg.u16MsgId = HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO;
--	strHostIFmsg.drvHandler = pstrWFIDrv;
-+	strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
- 
- 
- 	strHostIFmsg.uniHostIFmsgBody.strRcvdGnrlAsyncInfo.u32Length = u32Length;
-@@ -6890,7 +6890,7 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
- 		WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
- 
- 		strHostIFmsg.u16MsgId = HOST_IF_MSG_RCVD_SCAN_COMPLETE;
--		strHostIFmsg.drvHandler = pstrWFIDrv;
-+		strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
- 
- 
- 		/* will be deallocated by the receiving thread */
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index 1414e1f3c7ac..fef7ccf6e185 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -63,7 +63,7 @@ const struct ath10k_hw_regs qca6174_regs = {
+ 	.soc_reset_control_ce_rst_mask		= 0x00000001,
+ 	.soc_chip_id_address			= 0x000000f0,
+ 	.scratch_3_address			= 0x00000028,
+-	.fw_indicator_address			= 0x00009028,
++	.fw_indicator_address			= 0x0003a028,
+ 	.pcie_local_base_address		= 0x00080000,
+ 	.ce_wrap_intr_sum_host_msi_lsb		= 0x00000008,
+ 	.ce_wrap_intr_sum_host_msi_mask		= 0x0000ff00,
 -- 
-1.9.1
+2.1.2
 
