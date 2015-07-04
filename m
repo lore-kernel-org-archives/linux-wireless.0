@@ -1,76 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58269 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778AbbGUNvH (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:36507 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708AbbGEJMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 09:51:07 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 5 Jul 2015 05:12:21 -0400
+Message-ID: <55980E84.1070800@gmail.com> (sfid-20150705_111225_248365_FA4918E4)
+Date: Sat, 04 Jul 2015 18:49:08 +0200
+From: "christophe.ricard" <christophe.ricard@gmail.com>
 MIME-Version: 1.0
-Subject: Re: mwifiex: usb: Fix double add error when submitting rx urb
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1435540058-11922-1-git-send-email-reyad.attiyat@gmail.com>
-To: Reyad Attiyat <reyad.attiyat@gmail.com>
-Cc: akarwar@marvell.com, patila@marvell.com, bzhao@marvell.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Reyad Attiyat <reyad.attiyat@gmail.com>
-Message-Id: <20150721135105.B4DCB1410D3@smtp.codeaurora.org> (sfid-20150721_155130_603511_A0394AA4)
-Date: Tue, 21 Jul 2015 13:51:05 +0000 (UTC)
+To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] NFC: st21nfca,st-nci: fix use of uninitialized variables
+ in error path
+References: <1435573074-29503-1-git-send-email-nicolas.iooss_linux@m4x.org>
+In-Reply-To: <1435573074-29503-1-git-send-email-nicolas.iooss_linux@m4x.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Nicolas,
 
-> There is an error that can occur where the driver adds the same URB to USB submission list twice.
-> This happens since mwifiex_usb_submit_rem_rx can submit packets at same time as an rx urb complete callback.
-> This causes list corruption and is fixed by not setting the skb to NULL when submitting an rx packet.
-> 
-> [   84.461242] WARNING: CPU: 1 PID: 748 at lib/list_debug.c:36 __list_add+0xcb/0xd0()
-> [   84.461245] list_add double add: new=ffff8800c92b0c50, prev=ffff8800c92b0c50, next=ffff8800ced6c430.
-> [   84.461247] Modules linked in: rfcomm fuse cmac nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 xt_conntrack ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack bnep iptable_mangle iptable_security iptable_raw btusb btintel bluetooth mwifiex_usb mwifiex x86_pkg_temp_thermal cfg80211 coretemp r8712u(C) kvm_intel kvm hid_sensor_als hid_sensor_incl_3d hid_sensor_rotation hid_sensor_magn_3d hid_sensor_accel_3d hid_sensor_gyro_3d hid_sensor_trigger hid_sensor_iio_common industrialio_triggered_buffer kfifo_buf rfkill iTCO_wdt industrialio iTCO_vendor_support
-> [   84.461316]  crc32_pclmul crc32c_intel ghash_clmulni_intel microcode snd_hda_codec_realtek vfat snd_hda_codec_generic fat snd_hda_codec_hdmi snd_hda_intel snd_hda_controller uvcvideo snd_hda_codec videobuf2_vmalloc videobuf2_memops snd_hwdep videobuf2_core snd_hda_core joydev v4l2_common videodev hid_sensor_hub snd_seq hid_multitouch media snd_seq_device snd_pcm snd_timer mei_me snd i2c_i801 lpc_ich mei soundcore tpm_infineon tpm_tis tpm i2c_hid i2c_designware_platform i2c_designware_core nfsd auth_rpcgss nfs_acl lockd grace sunrpc sch_fq_codel i915 i2c_algo_bit drm_kms_helper drm xhci_pci xhci_hcd ehci_pci sd_mod ehci_hcd video
-> [   84.461383] CPU: 1 PID: 748 Comm: kworker/u9:0 Tainted: G         C      4.1.0-rc5+ #163
-> [   84.461386] Hardware name: Microsoft Corporation Surface Pro 2/Surface Pro 2, BIOS 2.05.0250 04/10/2015
-> [   84.461396] Workqueue: MWIFIEX_RX_WORK_QUEUE mwifiex_rx_work_queue [mwifiex]
-> [   84.461399]  ffffffff81a8150e ffff8801174cf8e8 ffffffff817df830 0000000000000000
-> [   84.461405]  ffff8801174cf938 ffff8801174cf928 ffffffff810a54ba ffff8800c86bd750
-> [   84.461410]  ffff8800c92b0c50 ffff8800c92b0c50 ffff8800ced6c430 ffff88010c057178
-> [   84.461416] Call Trace:
-> [   84.461421]  [<ffffffff817df830>] dump_stack+0x4f/0x7b
-> [   84.461428]  [<ffffffff810a54ba>] warn_slowpath_common+0x8a/0xc0
-> [   84.461432]  [<ffffffff810a5536>] warn_slowpath_fmt+0x46/0x50
-> [   84.461436]  [<ffffffff814109fb>] __list_add+0xcb/0xd0
-> [   84.461442]  [<ffffffff815c551a>] ? usb_hcd_link_urb_to_ep+0x2a/0xa0
-> [   84.461446]  [<ffffffff815c5570>] usb_hcd_link_urb_to_ep+0x80/0xa0
-> [   84.461459]  [<ffffffffa004318a>] prepare_transfer+0xaa/0x130 [xhci_hcd]
-> [   84.461470]  [<ffffffffa0044cf7>] xhci_queue_bulk_tx+0xb7/0x7a0 [xhci_hcd]
-> [   84.461480]  [<ffffffffa003b67f>] ? xhci_urb_enqueue+0x50f/0x660 [xhci_hcd]
-> [   84.461489]  [<ffffffffa003b67f>] ? xhci_urb_enqueue+0x50f/0x660 [xhci_hcd]
-> [   84.461498]  [<ffffffffa003b735>] xhci_urb_enqueue+0x5c5/0x660 [xhci_hcd]
-> [   84.461503]  [<ffffffff815c7ad3>] usb_hcd_submit_urb+0x93/0xa70
-> [   84.461507]  [<ffffffff8168dde8>] ? __alloc_skb+0x78/0x1f0
-> [   84.461511]  [<ffffffff8168d301>] ? __kmalloc_reserve.isra.26+0x31/0x90
-> [   84.461515]  [<ffffffff8168ddbc>] ? __alloc_skb+0x4c/0x1f0
-> [   84.461519]  [<ffffffff8168ddfc>] ? __alloc_skb+0x8c/0x1f0
-> [   84.461523]  [<ffffffff8168badd>] ? skb_dequeue+0x5d/0x80
-> [   84.461527]  [<ffffffff815c987e>] usb_submit_urb+0x42e/0x5f0
-> [   84.461531]  [<ffffffff816931d9>] ? __alloc_rx_skb+0x39/0x100
-> [   84.461536]  [<ffffffffa05aa372>] mwifiex_usb_submit_rx_urb+0xb2/0x170 [mwifiex_usb]
-> [   84.461542]  [<ffffffffa05aa5f5>] mwifiex_usb_submit_rem_rx_urbs+0x45/0x50 [mwifiex_usb]
-> [   84.461550]  [<ffffffffa07094be>] mwifiex_rx_work_queue+0x10e/0x140 [mwifiex]
-> [   84.461556]  [<ffffffff810c4429>] process_one_work+0x229/0x890
-> [   84.461559]  [<ffffffff810c438c>] ? process_one_work+0x18c/0x890
-> [   84.461565]  [<ffffffff810c4ae3>] worker_thread+0x53/0x470
-> [   84.461569]  [<ffffffff810c4a90>] ? process_one_work+0x890/0x890
-> [   84.461572]  [<ffffffff810cb162>] kthread+0xf2/0x110
-> [   84.461577]  [<ffffffff811031ad>] ? trace_hardirqs_on+0xd/0x10
-> [   84.461581]  [<ffffffff810cb070>] ? kthread_create_on_node+0x230/0x230
-> [   84.461586]  [<ffffffff817e9662>] ret_from_fork+0x42/0x70
-> [   84.461590]  [<ffffffff810cb070>] ? kthread_create_on_node+0x230/0x230
-> [   84.461593] ---[ end trace 65103af5e6fb3444 ]---
-> 
-> Signed-off-by: Reyad Attiyat <reyad.attiyat@gmail.com>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Thanks for your fix.
+I have slit your patch for st21nfca and st-nci in order to propagate 
+them in earlier kernel revision through stable@vger.kernel.org.
+I will rework st-nci patch for kernel revision < 4.2
 
-Thanks, applied to wireless-drivers-next.git.
+Best Regards
+Christophe
 
-Kalle Valo
+On 29/06/2015 12:17, Nicolas Iooss wrote:
+> st21nfca_hci_load_session() calls kfree_skb() on unitialized variables
+> skb_pipe_info and skb_pipe_list if the call to nfc_hci_connect_gate()
+> failed.  Reword the error path to not use these variables when they are
+> not initialized.  While at it, there seemed to be a memory leak because
+> skb_pipe_info was only freed once, after the for-loop, even though
+> several ones were created by nfc_hci_send_cmd.
+>
+> st_nci_hci_load_session() is similar to st21nfca_hci_load_session(), so
+> rework this function too.
+>
+> Fixes: ec03ff1a8f9a ("NFC: st21nfca: Remove skb_pipe_list and skb_pipe_info
+> useless allocation")
+>
+> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+> ---
+>
+> As I haven't got the hardware needed to perform tests, I only compile-tested
+> this patch.
+>
+> Moreover I may then have missed something important for example in the way
+> the memory is managed (I did not understand why skb_pipe_info was not freed
+> in the for loop).
+>
+>   drivers/nfc/st-nci/st-nci_se.c  |  8 ++++----
+>   drivers/nfc/st21nfca/st21nfca.c | 11 ++++++-----
+>   2 files changed, 10 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/nfc/st-nci/st-nci_se.c b/drivers/nfc/st-nci/st-nci_se.c
+> index 97addfa96c6f..c742ef65a05a 100644
+> --- a/drivers/nfc/st-nci/st-nci_se.c
+> +++ b/drivers/nfc/st-nci/st-nci_se.c
+> @@ -189,14 +189,14 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
+>   				ST_NCI_DEVICE_MGNT_GATE,
+>   				ST_NCI_DEVICE_MGNT_PIPE);
+>   	if (r < 0)
+> -		goto free_info;
+> +		return r;
+>   
+>   	/* Get pipe list */
+>   	r = nci_hci_send_cmd(ndev, ST_NCI_DEVICE_MGNT_GATE,
+>   			ST_NCI_DM_GETINFO, pipe_list, sizeof(pipe_list),
+>   			&skb_pipe_list);
+>   	if (r < 0)
+> -		goto free_info;
+> +		return r;
+>   
+>   	/* Complete the existing gate_pipe table */
+>   	for (i = 0; i < skb_pipe_list->len; i++) {
+> @@ -222,6 +222,7 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
+>   		    dm_pipe_info->src_host_id != ST_NCI_ESE_HOST_ID) {
+>   			pr_err("Unexpected apdu_reader pipe on host %x\n",
+>   			       dm_pipe_info->src_host_id);
+> +			kfree_skb(skb_pipe_info);
+>   			continue;
+>   		}
+>   
+> @@ -241,13 +242,12 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
+>   			ndev->hci_dev->pipes[st_nci_gates[j].pipe].host =
+>   						dm_pipe_info->src_host_id;
+>   		}
+> +		kfree_skb(skb_pipe_info);
+>   	}
+>   
+>   	memcpy(ndev->hci_dev->init_data.gates, st_nci_gates,
+>   	       sizeof(st_nci_gates));
+>   
+> -free_info:
+> -	kfree_skb(skb_pipe_info);
+>   	kfree_skb(skb_pipe_list);
+>   	return r;
+>   }
+> diff --git a/drivers/nfc/st21nfca/st21nfca.c b/drivers/nfc/st21nfca/st21nfca.c
+> index d251f7229c4e..051286562fab 100644
+> --- a/drivers/nfc/st21nfca/st21nfca.c
+> +++ b/drivers/nfc/st21nfca/st21nfca.c
+> @@ -148,14 +148,14 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
+>   				ST21NFCA_DEVICE_MGNT_GATE,
+>   				ST21NFCA_DEVICE_MGNT_PIPE);
+>   	if (r < 0)
+> -		goto free_info;
+> +		return r;
+>   
+>   	/* Get pipe list */
+>   	r = nfc_hci_send_cmd(hdev, ST21NFCA_DEVICE_MGNT_GATE,
+>   			ST21NFCA_DM_GETINFO, pipe_list, sizeof(pipe_list),
+>   			&skb_pipe_list);
+>   	if (r < 0)
+> -		goto free_info;
+> +		return r;
+>   
+>   	/* Complete the existing gate_pipe table */
+>   	for (i = 0; i < skb_pipe_list->len; i++) {
+> @@ -181,6 +181,7 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
+>   			info->src_host_id != ST21NFCA_ESE_HOST_ID) {
+>   			pr_err("Unexpected apdu_reader pipe on host %x\n",
+>   				info->src_host_id);
+> +			kfree_skb(skb_pipe_info);
+>   			continue;
+>   		}
+>   
+> @@ -200,6 +201,7 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
+>   			hdev->pipes[st21nfca_gates[j].pipe].dest_host =
+>   							info->src_host_id;
+>   		}
+> +		kfree_skb(skb_pipe_info);
+>   	}
+>   
+>   	/*
+> @@ -214,13 +216,12 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
+>   					st21nfca_gates[i].gate,
+>   					st21nfca_gates[i].pipe);
+>   			if (r < 0)
+> -				goto free_info;
+> +				goto free_list;
+>   		}
+>   	}
+>   
+>   	memcpy(hdev->init_data.gates, st21nfca_gates, sizeof(st21nfca_gates));
+> -free_info:
+> -	kfree_skb(skb_pipe_info);
+> +free_list:
+>   	kfree_skb(skb_pipe_list);
+>   	return r;
+>   }
+
