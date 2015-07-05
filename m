@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44302 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbbGaHkE (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6134 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957AbbGEIqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:40:04 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/28] staging: wilc1000: change driver handle variable
-Date: Fri, 31 Jul 2015 16:38:18 +0900
-Message-ID: <1438328316-30197-11-git-send-email-tony.cho@atmel.com> (sfid-20150731_100716_586194_5A584183)
-In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 5 Jul 2015 04:46:19 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 10/13] wil6210: skip HW version check for chip debugging
+Date: Sun,  5 Jul 2015 10:24:37 +0300
+Message-Id: <1436081080-27305-11-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150705_104656_623356_DD514EB5)
+In-Reply-To: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: glen lee <glen.lee@atmel.com>
+When loading with debug_fw flag, do not bail out on
+unknown chipId
 
-This patch change (u32)pstrWFIDrv with priv->hWILCWFIDrv as a argument
-of wlan_cfg_set since the parameter drvHandler of uint32_t type in wlan_cfg_set
-was changed with WILC_WFIDrvHandle.
-
-Signed-off-by: glen lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3e55a8a..a808722 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1295,7 +1295,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_n
- 		goto _fail_;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index cdc82cf..0d64e73 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -746,9 +746,6 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
  
- 	c_val[0] = 1; /* Enable N with immediate block ack. */
--	if (!g_linux_wlan->oup.wlan_cfg_set(0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1, 1, (u32)pstrWFIDrv))
-+	if (!g_linux_wlan->oup.wlan_cfg_set(0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1, 1, priv->hWILCWFIDrv))
- 		goto _fail_;
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
  
- 	return 0;
+-	if (wil->hw_version == HW_VER_UNKNOWN)
+-		return -ENODEV;
+-
+ 	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 	WARN_ON(test_bit(wil_status_napi_en, wil->status));
+ 
+@@ -763,6 +760,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		return 0;
+ 	}
+ 
++	if (wil->hw_version == HW_VER_UNKNOWN)
++		return -ENODEV;
++
+ 	cancel_work_sync(&wil->disconnect_worker);
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+ 	wil_bcast_fini(wil);
 -- 
-1.9.1
+2.1.4
 
