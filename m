@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44196 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753664AbbGWRPg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 13:15:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jonas Gorski <jogo@openwrt.org>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] bcma: fix linking problem with of_default_bus_match_table
-References: <1437633104-23373-1-git-send-email-kvalo@codeaurora.org>
-	<CAOiHx=k=p=0HJewHcVoKaypyrpbpyswes20jX6t3tha+OMf9aQ@mail.gmail.com>
-	<87k2tqhnyc.fsf@kamboji.qca.qualcomm.com>
-	<55B11085.5040909@openwrt.org>
-Date: Thu, 23 Jul 2015 20:15:29 +0300
-In-Reply-To: <55B11085.5040909@openwrt.org> (Jonas Gorski's message of "Thu,
-	23 Jul 2015 18:04:21 +0200")
-Message-ID: <877fpqhk26.fsf@kamboji.qca.qualcomm.com> (sfid-20150723_191540_054997_459ED078)
+Received: from arrakis.dune.hu ([78.24.191.176]:52925 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751939AbbGEK6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jul 2015 06:58:50 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by arrakis.dune.hu (Postfix) with ESMTP id 92888280631
+	for <linux-wireless@vger.kernel.org>; Sun,  5 Jul 2015 12:58:32 +0200 (CEST)
+Received: from mail-qk0-f173.google.com (mail-qk0-f173.google.com [209.85.220.173])
+	by arrakis.dune.hu (Postfix) with ESMTPSA id 3069628BCD1
+	for <linux-wireless@vger.kernel.org>; Sun,  5 Jul 2015 12:57:54 +0200 (CEST)
+Received: by qkeo142 with SMTP id o142so100638163qke.1
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Jul 2015 03:58:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436092402.6268.0.camel@sipsolutions.net>
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+ <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com> <1436092402.6268.0.camel@sipsolutions.net>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Sun, 5 Jul 2015 12:57:49 +0200
+Message-ID: <CAOiHx=mRzPoGCXzoKbw2BK524iZAgXhBRM4jzqwmEZ6rv+ZdcQ@mail.gmail.com> (sfid-20150705_125853_848403_1CA72662)
+Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Lin <dlin@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jonas Gorski <jogo@openwrt.org> writes:
+On Sun, Jul 5, 2015 at 12:33 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> I'm not so sure about the OF thing - at least in general this seems
+> right and many drivers are selecting OF. If that causes issues on
+> certain platforms then perhaps those platforms should fix the issues,
+> or the whole OF should be changed to depends on?
 
->>> I think this isn't enough, AFAICT this needs IS_BUILTIN(CONFIG_BCMA)
->>> && IS_ENABLED(CONFIG_OF), else it will break with OF=n and BCMA=y, as
->>> of_default_bus_match_table is only defined/built-in when OF=y.
->> 
->> I just tested and OF=n and BCMA=y case built succesfully for me. I think
->> it's because of_default_bus_match_table is created even when CONFIG_OF
->> is n. Can you double check, please?
->> 
->
-> Thinking more about it, I know/remember why it complies even if it
-> shouldn't: the inline prototype for !OF of of_platform_populate does not
-> use any of the arguments so the compiler optimises the reference out.
-> So unless you compile with -O0, you are fine.
+At least in linus' current HEAD I don't see any drivers selecting OF;
+only a few that select OF subsystems:
 
-Thanks for checking. I think this is good enough for now and I'll apply
-this once I get the report from kbuild.
+# grep -r --include=Kconfig "select OF" drivers/
+drivers/of/Kconfig:     select OF_EARLY_FLATTREE
+drivers/of/Kconfig:     select OF_RESOLVE
+drivers/of/Kconfig:     select OF_FLATTREE
+drivers/of/Kconfig:     select OF_ADDRESS_PCI if PCI
+drivers/of/Kconfig:     select OF_DYNAMIC
+drivers/of/Kconfig:     select OF_RESOLVE
+drivers/gpio/Kconfig:   select OF_GPIO
+drivers/pinctrl/mediatek/Kconfig:       select OF_GPIO
+drivers/pinctrl/Kconfig:        select OF_GPIO
+drivers/pinctrl/Kconfig:        select OF_GPIO
+drivers/pinctrl/Kconfig:        select OF_GPIO
+drivers/pinctrl/nomadik/Kconfig:        select OF_GPIO
+drivers/net/ethernet/freescale/Kconfig: select OF_MDIO
+drivers/gpu/drm/tilcdc/Kconfig: select OF_RESOLVE
+drivers/gpu/drm/tilcdc/Kconfig: select OF_OVERLAY
 
--- 
-Kalle Valo
+There are plenty that depend on OF though:
+
+# grep -r --include=Kconfig "depends on OF" drivers/ | wc -l
+159
+
+(I know this won't catch all and a few that it shouldn't ;)
+
+Of course arches/platforms selecting OF is fine and expected:
+
+# grep -r --include=Kconfig "select OF$" arch/ | wc -l
+15
+
+
+Regards
+Jonas
