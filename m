@@ -1,111 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47947 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932179AbbG1Isn (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6121 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755844AbbGEIqW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:48:43 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 06/21] staging: wilc1000: remove the warnings on unnecessary braces
-Date: Tue, 28 Jul 2015 17:47:25 +0900
-Message-ID: <1438073261-28315-7-git-send-email-tony.cho@atmel.com> (sfid-20150728_104851_329105_443A5159)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 5 Jul 2015 04:46:22 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 12/13] wil6210: improve mgmt frame handling
+Date: Sun,  5 Jul 2015 10:24:39 +0300
+Message-Id: <1436081080-27305-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150705_104651_041771_3AC064C6)
+In-Reply-To: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the warnings reported by checkpatch.pl on {} not
-necessary for the single statement blocks.
+Check event length;
+hex dump both Rx and Tx frames
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/wilc_sdio.c | 28 ++++++++++------------------
- 1 file changed, 10 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.c | 54 +++++++++++++++++++++++++++-------
+ 1 file changed, 44 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 6e865d4..967df95 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -106,6 +106,7 @@ static int sdio_set_func0_csa_address_byte0(uint32_t adr)
- _fail_:
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 0678fff..d3f75de 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -312,22 +312,44 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 	struct wiphy *wiphy = wil_to_wiphy(wil);
+ 	struct ieee80211_mgmt *rx_mgmt_frame =
+ 			(struct ieee80211_mgmt *)data->payload;
+-	int ch_no = data->info.channel+1;
+-	u32 freq = ieee80211_channel_to_frequency(ch_no,
+-			IEEE80211_BAND_60GHZ);
+-	struct ieee80211_channel *channel = ieee80211_get_channel(wiphy, freq);
+-	s32 signal = data->info.sqi;
+-	__le16 fc = rx_mgmt_frame->frame_control;
+-	u32 d_len = le32_to_cpu(data->info.len);
+-	u16 d_status = le16_to_cpu(data->info.status);
+-
+-	wil_dbg_wmi(wil, "MGMT: channel %d MCS %d SNR %d SQI %d%%\n",
++	int flen = len - offsetof(struct wmi_rx_mgmt_packet_event, payload);
++	int ch_no;
++	u32 freq;
++	struct ieee80211_channel *channel;
++	s32 signal;
++	__le16 fc;
++	u32 d_len;
++	u16 d_status;
 +
- static int sdio_set_func0_block_size(uint32_t block_size)
++	if (flen < 0) {
++		wil_err(wil, "MGMT Rx: short event, len %d\n", len);
++		return;
++	}
++
++	d_len = le32_to_cpu(data->info.len);
++	if (d_len != flen) {
++		wil_err(wil,
++			"MGMT Rx: length mismatch, d_len %d should be %d\n",
++			d_len, flen);
++		return;
++	}
++
++	ch_no = data->info.channel + 1;
++	freq = ieee80211_channel_to_frequency(ch_no, IEEE80211_BAND_60GHZ);
++	channel = ieee80211_get_channel(wiphy, freq);
++	signal = data->info.sqi;
++	d_status = le16_to_cpu(data->info.status);
++	fc = rx_mgmt_frame->frame_control;
++
++	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d SNR %d SQI %d%%\n",
+ 		    data->info.channel, data->info.mcs, data->info.snr,
+ 		    data->info.sqi);
+ 	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
+ 		    le16_to_cpu(fc));
+ 	wil_dbg_wmi(wil, "qid %d mid %d cid %d\n",
+ 		    data->info.qid, data->info.mid, data->info.cid);
++	wil_hex_dump_wmi("MGMT Rx ", DUMP_PREFIX_OFFSET, 16, 1, rx_mgmt_frame,
++			 d_len, true);
+ 
+ 	if (!channel) {
+ 		wil_err(wil, "Frame on unsupported channel\n");
+@@ -363,6 +385,17 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 	}
+ }
+ 
++static void wmi_evt_tx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
++{
++	struct wmi_tx_mgmt_packet_event *data = d;
++	struct ieee80211_mgmt *mgmt_frame =
++			(struct ieee80211_mgmt *)data->payload;
++	int flen = len - offsetof(struct wmi_tx_mgmt_packet_event, payload);
++
++	wil_hex_dump_wmi("MGMT Tx ", DUMP_PREFIX_OFFSET, 16, 1, mgmt_frame,
++			 flen, true);
++}
++
+ static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
+ 				  void *d, int len)
  {
- 	sdio_cmd52_t cmd;
-@@ -963,24 +964,18 @@ static int sdio_read_int(uint32_t *int_status)
- 	cmd.data = 0;
- 	g_sdio.sdio_cmd52(&cmd);
- 
--	if (cmd.data & (1 << 0)) {
-+	if (cmd.data & (1 << 0))
- 		tmp |= INT_0;
--	}
--	if (cmd.data & (1 << 2)) {
-+	if (cmd.data & (1 << 2))
- 		tmp |= INT_1;
--	}
--	if (cmd.data & (1 << 3)) {
-+	if (cmd.data & (1 << 3))
- 		tmp |= INT_2;
--	}
--	if (cmd.data & (1 << 4)) {
-+	if (cmd.data & (1 << 4))
- 		tmp |= INT_3;
--	}
--	if (cmd.data & (1 << 5)) {
-+	if (cmd.data & (1 << 5))
- 		tmp |= INT_4;
--	}
--	if (cmd.data & (1 << 6)) {
-+	if (cmd.data & (1 << 6))
- 		tmp |= INT_5;
--	}
- 	{
- 		int i;
- 
-@@ -1087,9 +1082,8 @@ static int sdio_clear_int_ext(uint32_t val)
- 						break;
- 					flags >>= 1;
- 				}
--				if (!ret) {
-+				if (!ret)
- 					goto _fail_;
--				}
- 				for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
- 					if (flags & 1)
- 						g_sdio.dPrint(N_ERR, "[wilc sdio]: Unexpected interrupt cleared %d...\n", i);
-@@ -1193,9 +1187,8 @@ static int sdio_sync_ext(int nint /*  how mant interrupts to enable. */)
- 			return 0;
- 		}
- 
--		for (i = 0; (i < 5) && (nint > 0); i++, nint--) {
-+		for (i = 0; (i < 5) && (nint > 0); i++, nint--)
- 			reg |= (1 << (27 + i));
--		}
- 		ret = sdio_write_reg(WILC_INTR_ENABLE, reg);
- 		if (!ret) {
- 			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write reg (%08x)...\n", WILC_INTR_ENABLE);
-@@ -1208,9 +1201,8 @@ static int sdio_sync_ext(int nint /*  how mant interrupts to enable. */)
- 				return 0;
- 			}
- 
--			for (i = 0; (i < 3) && (nint > 0); i++, nint--) {
-+			for (i = 0; (i < 3) && (nint > 0); i++, nint--)
- 				reg |= (1 << i);
--			}
- 
- 			ret = sdio_read_reg(WILC_INTR2_ENABLE, &reg);
- 			if (!ret) {
+@@ -680,6 +713,7 @@ static const struct {
+ 	{WMI_READY_EVENTID,			wmi_evt_ready},
+ 	{WMI_FW_READY_EVENTID,			wmi_evt_fw_ready},
+ 	{WMI_RX_MGMT_PACKET_EVENTID,		wmi_evt_rx_mgmt},
++	{WMI_TX_MGMT_PACKET_EVENTID,		wmi_evt_tx_mgmt},
+ 	{WMI_SCAN_COMPLETE_EVENTID,		wmi_evt_scan_complete},
+ 	{WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID, wmi_evt_survey_complete},
+ 	{WMI_CONNECT_EVENTID,			wmi_evt_connect},
 -- 
-1.9.1
+2.1.4
 
