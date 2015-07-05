@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:33779 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614AbbGIMIo convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6121 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755834AbbGEIqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 08:08:44 -0400
-Received: by iggp10 with SMTP id p10so12342047igg.0
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 05:08:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzA+BR+eB+BJfDkmNkRuo2kMsDh=DbsNR25NmoRD7QaCw@mail.gmail.com>
-References: <CACna6rzfb5-eGD8EgEHM05nJ5FWPnkEkW_fTxNg-3-=PCknv-Q@mail.gmail.com>
-	<CACna6rzA+BR+eB+BJfDkmNkRuo2kMsDh=DbsNR25NmoRD7QaCw@mail.gmail.com>
-Date: Thu, 9 Jul 2015 14:08:43 +0200
-Message-ID: <CACna6rz_0hE=4h9ZjV-H1s94pRtRFV3ojPGtCcfivHywpuJJsg@mail.gmail.com> (sfid-20150709_140853_998470_D5F163A1)
-Subject: Re: brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 5 Jul 2015 04:46:14 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 09/13] wil6210: use wil_fw_error_recovery()
+Date: Sun,  5 Jul 2015 10:24:36 +0300
+Message-Id: <1436081080-27305-10-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150705_104643_508689_F7A37564)
+In-Reply-To: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 July 2015 at 12:38, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 9 July 2015 at 09:07, Rafał Miłecki <zajec5@gmail.com> wrote:
->> The problem appears when trying to use more than 1 interface. It gets
->> created correctly, but setting its MAC fails. It results in wlan0-1
->> having the same MAC as wlan0 and finally having two networks (SSIDs)
->> using the same MAC. That obviously doesn't work.
->>
->> The error I see is:
->> brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
->> with -52 meaning BCME_IE_NOTFOUND.
->
-> I managed to find/guess what exactly BCM43602 firmware rejects. It
-> doesn't like 2 MAC addresses that differ by the locally administrated
-> bit only. In my case it was 00:23:6a:a3:7d:95 + 02:23:6a:a3:7d:95.
->
-> When I change MAC addresses to some other combination, e.g.:
-> 00:23:6a:a3:7d:95 + 00:23:6a:a3:7d:96
-> 02:23:6a:a3:7d:95 + 00:23:6a:a3:7d:96
-> it works correctly.
+Use function wil_fw_error_recovery() instead of inline equivalent code
 
-Oh, it appeared to be more tricky. What BCM43602 firmware doesn't
-allow is using the same value in the last 2 bits for different BSSes.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Few examples:
-00:23:6a:a3:7d:90 + 00:23:6a:a3:7d:91 is GOOD
-00:23:6a:a3:7d:90 + 00:23:6a:a3:7d:93 is GOOD
-00:23:6a:a3:7d:90 + 00:23:6a:a3:7d:94 is BAD (last two bits are 0x0)
-00:23:6a:a3:7d:92 + 00:23:6a:a3:7d:9a is BAD (last two bits are 0x2)
-
-What's weird, all other numbers can be used as you want:
-00:23:6A:A3:7D:90 + 00:7D:A3:6A:23:92 is GOOD
-
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 4740edb..cdc82cf 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -271,8 +271,7 @@ static void wil_scan_timer_fn(ulong x)
+ 
+ 	clear_bit(wil_status_fwready, wil->status);
+ 	wil_err(wil, "Scan timeout detected, start fw error recovery\n");
+-	wil->recovery_state = fw_recovery_pending;
+-	schedule_work(&wil->fw_error_worker);
++	wil_fw_error_recovery(wil);
+ }
+ 
+ static int wil_wait_for_recovery(struct wil6210_priv *wil)
 -- 
-Rafał
+2.1.4
+
