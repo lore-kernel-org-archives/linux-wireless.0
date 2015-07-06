@@ -1,97 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:58932 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753967AbbGWVGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 17:06:43 -0400
-Message-ID: <55B1575F.40403@rempel-privat.de> (sfid-20150723_230646_904240_2454F2FB)
-Date: Thu, 23 Jul 2015 23:06:39 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: wim torfs <wtorfs@gmail.com>
-CC: rolf.anderegg@weiss.ch,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
-References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch> <55A79B5C.7010501@rempel-privat.de> <55AFC6E1.7060706@weiss.ch> <55AFCFDE.7060902@rempel-privat.de> <55B0A0E1.9090300@gmail.com>
-In-Reply-To: <55B0A0E1.9090300@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4103 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319AbbGFHk1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2015 03:40:27 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 04/13] wil6210: count drops in Rx block ack reorder
+Date: Mon,  6 Jul 2015 10:39:40 +0300
+Message-Id: <1436168389-3676-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_100715_235550_9863664C)
+In-Reply-To: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+When performing Rx reordering, count skb's dropped
+per reorder buffer; and print dropped packets count
+on the "stations" debugfs entry
 
-Am 23.07.2015 um 10:08 schrieb wim torfs:
->=20
->=20
-> On 07/22/2015 07:16 PM, Oleksij Rempel wrote:
->> Am 22.07.2015 um 18:37 schrieb Rolf Anderegg:
->>>
->>> On 16/07/15 13:54, Oleksij Rempel wrote:
->>>> Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
->>>>>
->>>>> I suspect that there are bandwidth/speed issues when dealing with U=
-SB
->>>>> adapters, but that does not inherently mean that the connection is
->>>>> prone
->>>>> to drop, right? Doesn't that mean that I am leaking packages somewh=
-ere
->>>>> along the way? What else could I be looking for?
->>>>
->>>> The packages can drop if you will do channel scan. STA mode need som=
-e
->>>> seconds to complete channel scan. It means AP will be all the time
->>>> unavailable.
->>>
->>> Ok, that may be. Then again why am I not experiencing the same
->>> connection drop on my ath5k setup? Because the channel scan is more
->>> likely to be completed in due time?
->>
->> Yes, channel scantime on usb device is match longer then on pci.
->>
->=20
-> May I ask for the reason it takes a longer time to complete the scannin=
-g
-> on a USB device compared to a PCI device? I assume the internals of an
-> ath9k PCI device is similar as that of an ath9k_htc USB device, so is i=
-t
-> purely the bus speed that affects this time? Or is the USB device a
-> smaller version of the chipset on the PCI device and therefore with a
-> lower speed due to power concerns?
->=20
-> If it is due to the bus speed, would it be possible to decouple the
-> scanning process from the bus, that is, I assume that the hardware
-> performs all the necessary channel switching and channel sensing, so wh=
-y
-> not allow the hardware to gather such information and transfer the
-> results in a single burst to the host over the USB bus? Or is the
-> channel switching controlled by the host and it takes a lot of time due=
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 2 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 2 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 2 ++
+ 3 files changed, 5 insertions(+), 1 deletion(-)
 
-> to the duration of transmitting the channel switching commands to the
-> USB device?
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 42bc6e6..9ed1a94 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1353,7 +1353,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ 		else
+ 			seq_printf(s, "%c", r->reorder_buf[i] ? '*' : '_');
+ 	}
+-	seq_printf(s, "] last drop 0x%03x\n", r->ssn_last_drop);
++	seq_printf(s, "] drop %llu last 0x%03x\n", r->drop, r->ssn_last_drop);
+ }
+ 
+ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index ca10dcf..e4ac11c 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -153,6 +153,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	/* frame with out of date sequence number */
+ 	if (seq_less(seq, r->head_seq_num)) {
+ 		r->ssn_last_drop = seq;
++		r->drop++;
+ 		dev_kfree_skb(skb);
+ 		goto out;
+ 	}
+@@ -173,6 +174,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 
+ 	/* check if we already stored this frame */
+ 	if (r->reorder_buf[index]) {
++		r->drop++;
+ 		dev_kfree_skb(skb);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 4b7135e..284edda 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -427,6 +427,7 @@ struct pci_dev;
+  * @timeout: reset timer value (in TUs).
+  * @dialog_token: dialog token for aggregation session
+  * @rcu_head: RCU head used for freeing this struct
++ * @drop: total frames dropped for this reorder buffer
+  *
+  * This structure's lifetime is managed by RCU, assignments to
+  * the array holding it must hold the aggregation mutex.
+@@ -444,6 +445,7 @@ struct wil_tid_ampdu_rx {
+ 	u16 buf_size;
+ 	u16 timeout;
+ 	u16 ssn_last_drop;
++	unsigned long long drop;
+ 	u8 dialog_token;
+ 	bool first_time; /* is it 1-st time this buffer used? */
+ };
+-- 
+2.1.4
 
-Well, it is about development time vs scan time: do as match as possible
-with one code base or develop two different code bases.
-
---=20
-Regards,
-Oleksij
-
-
---0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlWxV2AACgkQHwImuRkmbWkkQwD/V5wkG2RTc0bqUwociLz/g6Cu
-KwRxzYG8q87p7hEM/VIA/j71tmSEvCaM5VZPk1p80hJmecHnwpSl1yUnFMYHu+kn
-=tQMM
------END PGP SIGNATURE-----
-
---0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB--
