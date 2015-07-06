@@ -1,34 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58192 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754406AbbGUNtL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4075 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319AbbGFHkX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 09:49:11 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: MAINTAINERS: update for mwifiex driver maintainers
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1435144941-2441-1-git-send-email-patila@marvell.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <nishants@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Message-Id: <20150721134911.017C91410B5@smtp.codeaurora.org> (sfid-20150721_154921_234672_5B817F1C)
-Date: Tue, 21 Jul 2015 13:49:10 +0000 (UTC)
+	Mon, 6 Jul 2015 03:40:23 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 01/13] wil6210: support boot loader struct v0 & v1
+Date: Mon,  6 Jul 2015 10:39:37 +0300
+Message-Id: <1436168389-3676-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_094028_817094_D8194733)
+In-Reply-To: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There are 2 versions of boot loader struct: v0 and v1.
+In the v1, boot loader build version added; as well as
+RF status.
 
-> Amit & Nishant would be taking care of maintaining mwifiex driver here
-> onwards on account of organizational changes.
-> 
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Frank Huang <frankh@marvell.com>
+Support both versions.
 
-Thanks, applied to wireless-drivers-next.git.
+Boot loader structure v1 has RF status; ignore RF error if firmware
+not going to be loaded; driver can still be used to interact with the HW
 
-Kalle Valo
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/boot_loader.h | 57 +++++++++++++++++
+ drivers/net/wireless/ath/wil6210/main.c        | 85 ++++++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/wil6210.h     | 10 ---
+ 3 files changed, 125 insertions(+), 27 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/boot_loader.h
+
+diff --git a/drivers/net/wireless/ath/wil6210/boot_loader.h b/drivers/net/wireless/ath/wil6210/boot_loader.h
+new file mode 100644
+index 0000000..0655eff
+--- /dev/null
++++ b/drivers/net/wireless/ath/wil6210/boot_loader.h
+@@ -0,0 +1,57 @@
++/* Copyright (c) 2015 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++/* This file contains the definitions for the boot loader
++ * for the Qualcomm "Sparrow" 60 Gigabit wireless solution.
++ */
++#ifndef BOOT_LOADER_EXPORT_H_
++#define BOOT_LOADER_EXPORT_H_
++
++struct bl_dedicated_registers_v1 {
++	__le32	boot_loader_ready;		/* 0x880A3C driver will poll
++						 * this Dword until BL will
++						 * set it to 1 (initial value
++						 * should be 0)
++						 */
++	__le32	boot_loader_struct_version;	/* 0x880A40 BL struct ver. */
++	__le16	rf_type;			/* 0x880A44 connected RF ID */
++	__le16	rf_status;			/* 0x880A46 RF status,
++						 * 0 is OK else error
++						 */
++	__le32	baseband_type;			/* 0x880A48 board type ID */
++	u8	mac_address[6];			/* 0x880A4c BL mac address */
++	u8	bl_version_major;		/* 0x880A52 BL ver. major */
++	u8	bl_version_minor;		/* 0x880A53 BL ver. minor */
++	__le16	bl_version_subminor;		/* 0x880A54 BL ver. subminor */
++	__le16	bl_version_build;		/* 0x880A56 BL ver. build */
++} __packed;
++
++/* the following struct is the version 0 struct */
++
++struct bl_dedicated_registers_v0 {
++	__le32	boot_loader_ready;		/* 0x880A3C driver will poll
++						 * this Dword until BL will
++						 * set it to 1 (initial value
++						 * should be 0)
++						 */
++#define BL_READY (1)	/* ready indication */
++	__le32	boot_loader_struct_version;	/* 0x880A40 BL struct ver. */
++	__le32	rf_type;			/* 0x880A44 connected RF ID */
++	__le32	baseband_type;			/* 0x880A48 board type ID */
++	u8	mac_address[6];			/* 0x880A4c BL mac address */
++} __packed;
++
++#endif /* BOOT_LOADER_EXPORT_H_ */
++
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index b9febab..65d15e2 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -21,6 +21,7 @@
+ #include "wil6210.h"
+ #include "txrx.h"
+ #include "wmi.h"
++#include "boot_loader.h"
+ 
+ #define WAIT_FOR_DISCONNECT_TIMEOUT_MS 2000
+ #define WAIT_FOR_DISCONNECT_INTERVAL_MS 10
+@@ -565,7 +566,8 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 	wil_halt_cpu(wil);
+ 
+ 	/* clear all boot loader "ready" bits */
+-	W(RGF_USER_BL + offsetof(struct RGF_BL, ready), 0);
++	W(RGF_USER_BL +
++	  offsetof(struct bl_dedicated_registers_v0, boot_loader_ready), 0);
+ 	/* Clear Fw Download notification */
+ 	C(RGF_USER_USAGE_6, BIT(0));
+ 
+@@ -607,7 +609,8 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 	/* wait until device ready. typical time is 20..80 msec */
+ 	do {
+ 		msleep(RST_DELAY);
+-		x = R(RGF_USER_BL + offsetof(struct RGF_BL, ready));
++		x = R(RGF_USER_BL + offsetof(struct bl_dedicated_registers_v0,
++					     boot_loader_ready));
+ 		if (x1 != x) {
+ 			wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n", x1, x);
+ 			x1 = x;
+@@ -617,7 +620,7 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 				x);
+ 			return -ETIME;
+ 		}
+-	} while (x != BIT_BL_READY);
++	} while (x != BL_READY);
+ 
+ 	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 
+@@ -641,25 +644,71 @@ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+ static int wil_get_bl_info(struct wil6210_priv *wil)
+ {
+ 	struct net_device *ndev = wil_to_ndev(wil);
+-	struct RGF_BL bl;
+-
+-	wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL), sizeof(bl));
+-	le32_to_cpus(&bl.ready);
+-	le32_to_cpus(&bl.version);
+-	le32_to_cpus(&bl.rf_type);
+-	le32_to_cpus(&bl.baseband_type);
++	union {
++		struct bl_dedicated_registers_v0 bl0;
++		struct bl_dedicated_registers_v1 bl1;
++	} bl;
++	u32 bl_ver;
++	u8 *mac;
++	u16 rf_status;
++
++	bl_ver = R(RGF_USER_BL + offsetof(struct bl_dedicated_registers_v0,
++					  boot_loader_struct_version));
++	switch (bl_ver) {
++	case 0:
++		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
++				     sizeof(bl.bl0));
++		le32_to_cpus(&bl.bl0.boot_loader_ready);
++		le32_to_cpus(&bl.bl0.boot_loader_struct_version);
++		le32_to_cpus(&bl.bl0.rf_type);
++		le32_to_cpus(&bl.bl0.baseband_type);
++		mac = bl.bl0.mac_address;
++		rf_status = 0; /* actually, unknown */
++		wil_info(wil,
++			 "Boot Loader struct v%d: MAC = %pM RF = 0x%08x bband = 0x%08x\n",
++			 bl_ver, mac,
++			 bl.bl0.rf_type, bl.bl0.baseband_type);
++		wil_info(wil, "Boot Loader build unknown for struct v0\n");
++		break;
++	case 1:
++		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
++				     sizeof(bl.bl1));
++		le32_to_cpus(&bl.bl1.boot_loader_ready);
++		le32_to_cpus(&bl.bl1.boot_loader_struct_version);
++		le16_to_cpus(&bl.bl1.rf_type);
++		rf_status = le16_to_cpu(bl.bl1.rf_status);
++		le32_to_cpus(&bl.bl1.baseband_type);
++		le16_to_cpus(&bl.bl1.bl_version_subminor);
++		le16_to_cpus(&bl.bl1.bl_version_build);
++		mac = bl.bl1.mac_address;
++		wil_info(wil,
++			 "Boot Loader struct v%d: MAC = %pM RF = 0x%04x (status 0x%04x) bband = 0x%08x\n",
++			 bl_ver, mac,
++			 bl.bl1.rf_type, rf_status,
++			 bl.bl1.baseband_type);
++		wil_info(wil, "Boot Loader build %d.%d.%d.%d\n",
++			 bl.bl1.bl_version_major, bl.bl1.bl_version_minor,
++			 bl.bl1.bl_version_subminor, bl.bl1.bl_version_build);
++		break;
++	default:
++		wil_err(wil, "BL: unsupported struct version 0x%08x\n", bl_ver);
++		return -EINVAL;
++	}
+ 
+-	if (!is_valid_ether_addr(bl.mac_address)) {
+-		wil_err(wil, "BL: Invalid MAC %pM\n", bl.mac_address);
++	if (!is_valid_ether_addr(mac)) {
++		wil_err(wil, "BL: Invalid MAC %pM\n", mac);
+ 		return -EINVAL;
+ 	}
+ 
+-	ether_addr_copy(ndev->perm_addr, bl.mac_address);
++	ether_addr_copy(ndev->perm_addr, mac);
+ 	if (!is_valid_ether_addr(ndev->dev_addr))
+-		ether_addr_copy(ndev->dev_addr, bl.mac_address);
+-	wil_info(wil,
+-		 "Boot Loader: ver = %d MAC = %pM RF = 0x%08x bband = 0x%08x\n",
+-		 bl.version, bl.mac_address, bl.rf_type, bl.baseband_type);
++		ether_addr_copy(ndev->dev_addr, mac);
++
++	if (rf_status) {/* bad RF cable? */
++		wil_err(wil, "RF communication error 0x%04x",
++			rf_status);
++		return -EAGAIN;
++	}
+ 
+ 	return 0;
+ }
+@@ -735,6 +784,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		return rc;
+ 
+ 	rc = wil_get_bl_info(wil);
++	if (rc == -EAGAIN && !load_fw) /* ignore RF error if not going up */
++		rc = 0;
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index c63e4a3..b79ba49 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -127,16 +127,6 @@ struct RGF_ICR {
+ 	u32 IMC; /* Mask Clear, write 1 to clear */
+ } __packed;
+ 
+-struct RGF_BL {
+-	u32 ready;		/* 0x880A3C bit [0] */
+-#define BIT_BL_READY	BIT(0)
+-	u32 version;		/* 0x880A40 version of the BL struct */
+-	u32 rf_type;		/* 0x880A44 ID of the connected RF */
+-	u32 baseband_type;	/* 0x880A48 ID of the baseband */
+-	u8  mac_address[ETH_ALEN]; /* 0x880A4C permanent MAC */
+-	u8 pad[2];
+-} __packed;
+-
+ /* registers - FW addresses */
+ #define RGF_USER_USAGE_1		(0x880004)
+ #define RGF_USER_USAGE_6		(0x880018)
+-- 
+2.1.4
+
