@@ -1,114 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6121 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755844AbbGEIqW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4103 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753670AbbGFHka (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2015 04:46:22 -0400
+	Mon, 6 Jul 2015 03:40:30 -0400
 From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
 Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
 	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
 To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 12/13] wil6210: improve mgmt frame handling
-Date: Sun,  5 Jul 2015 10:24:39 +0300
-Message-Id: <1436081080-27305-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150705_104651_041771_3AC064C6)
-In-Reply-To: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Subject: [PATCH v2 10/13] wil6210: skip HW version check for chip debugging
+Date: Mon,  6 Jul 2015 10:39:46 +0300
+Message-Id: <1436168389-3676-11-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_100715_927857_EA8F5AA1)
+In-Reply-To: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check event length;
-hex dump both Rx and Tx frames
+When loading with debug_fw flag, do not bail out on
+unknown chipId
 
 Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 54 +++++++++++++++++++++++++++-------
- 1 file changed, 44 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 0678fff..d3f75de 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -312,22 +312,44 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 	struct wiphy *wiphy = wil_to_wiphy(wil);
- 	struct ieee80211_mgmt *rx_mgmt_frame =
- 			(struct ieee80211_mgmt *)data->payload;
--	int ch_no = data->info.channel+1;
--	u32 freq = ieee80211_channel_to_frequency(ch_no,
--			IEEE80211_BAND_60GHZ);
--	struct ieee80211_channel *channel = ieee80211_get_channel(wiphy, freq);
--	s32 signal = data->info.sqi;
--	__le16 fc = rx_mgmt_frame->frame_control;
--	u32 d_len = le32_to_cpu(data->info.len);
--	u16 d_status = le16_to_cpu(data->info.status);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index cdc82cf..0d64e73 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -746,9 +746,6 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 
+-	if (wil->hw_version == HW_VER_UNKNOWN)
+-		return -ENODEV;
 -
--	wil_dbg_wmi(wil, "MGMT: channel %d MCS %d SNR %d SQI %d%%\n",
-+	int flen = len - offsetof(struct wmi_rx_mgmt_packet_event, payload);
-+	int ch_no;
-+	u32 freq;
-+	struct ieee80211_channel *channel;
-+	s32 signal;
-+	__le16 fc;
-+	u32 d_len;
-+	u16 d_status;
-+
-+	if (flen < 0) {
-+		wil_err(wil, "MGMT Rx: short event, len %d\n", len);
-+		return;
-+	}
-+
-+	d_len = le32_to_cpu(data->info.len);
-+	if (d_len != flen) {
-+		wil_err(wil,
-+			"MGMT Rx: length mismatch, d_len %d should be %d\n",
-+			d_len, flen);
-+		return;
-+	}
-+
-+	ch_no = data->info.channel + 1;
-+	freq = ieee80211_channel_to_frequency(ch_no, IEEE80211_BAND_60GHZ);
-+	channel = ieee80211_get_channel(wiphy, freq);
-+	signal = data->info.sqi;
-+	d_status = le16_to_cpu(data->info.status);
-+	fc = rx_mgmt_frame->frame_control;
-+
-+	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d SNR %d SQI %d%%\n",
- 		    data->info.channel, data->info.mcs, data->info.snr,
- 		    data->info.sqi);
- 	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
- 		    le16_to_cpu(fc));
- 	wil_dbg_wmi(wil, "qid %d mid %d cid %d\n",
- 		    data->info.qid, data->info.mid, data->info.cid);
-+	wil_hex_dump_wmi("MGMT Rx ", DUMP_PREFIX_OFFSET, 16, 1, rx_mgmt_frame,
-+			 d_len, true);
+ 	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 	WARN_ON(test_bit(wil_status_napi_en, wil->status));
  
- 	if (!channel) {
- 		wil_err(wil, "Frame on unsupported channel\n");
-@@ -363,6 +385,17 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+@@ -763,6 +760,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		return 0;
  	}
- }
  
-+static void wmi_evt_tx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
-+{
-+	struct wmi_tx_mgmt_packet_event *data = d;
-+	struct ieee80211_mgmt *mgmt_frame =
-+			(struct ieee80211_mgmt *)data->payload;
-+	int flen = len - offsetof(struct wmi_tx_mgmt_packet_event, payload);
++	if (wil->hw_version == HW_VER_UNKNOWN)
++		return -ENODEV;
 +
-+	wil_hex_dump_wmi("MGMT Tx ", DUMP_PREFIX_OFFSET, 16, 1, mgmt_frame,
-+			 flen, true);
-+}
-+
- static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
- 				  void *d, int len)
- {
-@@ -680,6 +713,7 @@ static const struct {
- 	{WMI_READY_EVENTID,			wmi_evt_ready},
- 	{WMI_FW_READY_EVENTID,			wmi_evt_fw_ready},
- 	{WMI_RX_MGMT_PACKET_EVENTID,		wmi_evt_rx_mgmt},
-+	{WMI_TX_MGMT_PACKET_EVENTID,		wmi_evt_tx_mgmt},
- 	{WMI_SCAN_COMPLETE_EVENTID,		wmi_evt_scan_complete},
- 	{WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID, wmi_evt_survey_complete},
- 	{WMI_CONNECT_EVENTID,			wmi_evt_connect},
+ 	cancel_work_sync(&wil->disconnect_worker);
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+ 	wil_bcast_fini(wil);
 -- 
 2.1.4
 
