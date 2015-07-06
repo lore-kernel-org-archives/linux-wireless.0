@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:49619 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518AbbG0IcS (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4075 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319AbbGFHkW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 04:32:18 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NS500BYF11CHP70@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Mon, 27 Jul 2015 17:32:00 +0900 (KST)
-Date: Mon, 27 Jul 2015 08:31:09 +0000 (GMT)
-From: Rahul Jain <rahul.jain@samsung.com>
-Subject: [PATCH] mwifiex: corrected README as per the file debugfs.c
-To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>
-Reply-to: rahul.jain@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=windows-1252
-MIME-version: 1.0
-Message-id: <127092198.55801437985868073.JavaMail.weblogic@epmlwas04c> (sfid-20150727_103226_780982_C37C2693)
+	Mon, 6 Jul 2015 03:40:22 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 00/13] wil6210 patches
+Date: Mon,  6 Jul 2015 10:39:36 +0300
+Message-Id: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_094026_404620_06BB31F0)
+In-Reply-To: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-U3ViamVjdDogW1BBVENIXSBtd2lmaWV4OiBjb3JyZWN0ZWQgUkVBRE1FIGFzIHBlciB0aGUgZmls
-ZSBkZWJ1Z2ZzLmMKClNpZ25lZC1vZmYtYnk6IFJhaHVsIEphaW4gPHJhaHVsLmphaW5Ac2Ftc3Vu
-Zy5jb20+ClNpZ25lZC1vZmYtYnk6IEFtaXQgS2hhdHJpIDxhbWl0LmtoYXRyaUBzYW1zdW5nLmNv
-bT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L1JFQURNRSB8IDMgKystCiAxIGZp
-bGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9SRUFETUUgYi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9td2lmaWV4L1JFQURNRQppbmRleCAyZjBmOWI1Li5lMDEwOGRmIDEwMDY0NAotLS0gYS9kcml2
-ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L1JFQURNRQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9td2lmaWV4L1JFQURNRQpAQCAtOTMsNiArOTMsNyBAQCBpbmZvCiAKIAlkcml2ZXJfbmFtZSA9
-ICJtd2lmaWV4IgogCWRyaXZlcl92ZXJzaW9uID0gPGRyaXZlcl9uYW1lLCBkcml2ZXJfdmVyc2lv
-biwgKGZpcm13YXJlX3ZlcnNpb24pPgorCXZlcmV4dCA9IDxkcml2ZXIgZXh0ZW5kZWQgdmVyc2lv
-bj4KIAlpbnRlcmZhY2VfbmFtZSA9ICJtbGFuWCIKIAlic3NfbW9kZSA9ICJBZC1ob2MiIHwgIk1h
-bmFnZWQiIHwgIkF1dG8iIHwgIlVua25vd24iCiAJbWVkaWFfc3RhdGUgPSAiRGlzY29ubmVjdGVk
-IiB8ICJDb25uZWN0ZWQiCkBAIC0xMDEsNyArMTAyLDcgQEAgaW5mbwogCWVzc2lkID0gPGN1cnJl
-bnQgU1NJRD4KIAlic3NpZCA9IDxjdXJyZW50IEJTU0lEPgogCWNoYW5uZWwgPSA8Y3VycmVudCBj
-aGFubmVsPgotCXJlZ2lvbl9jb2RlID0gPGN1cnJlbnQgcmVnaW9uIGNvZGU+CisJY291bnRyeV9j
-b2RlID0gPGN1cnJlbnQgY291bnRyeSBjb2RlPgogCW11bHRpY2Fzcl9hZGRyZXNzW25dID0gPG11
-bHRpY2FzdCBhZGRyZXNzPgogCW51bV90eF9ieXRlcyA9IDxudW1iZXIgb2YgYnl0ZXMgc2VudCB0
-byBkZXZpY2U+CiAJbnVtX3J4X2J5dGVzID0gPG51bWJlciBvZiBieXRlcyByZWNlaXZlZCBmcm9t
-IGRldmljZSBhbmQgc2VudCB0byBrZXJuZWw+Ci0tIAoxLjkuMQoK
+Several new features introduced:
+- TSO improves throughput on Tx side on systems with weak CPU
+- ACS chooses best channel automatically when starting AP
+- support for the new boot loader
 
+Bug fixes:
+- "wait for del_station to complete"
+- "hold wil->mutex while managing vrings"
+
+The rest are small fixes and improvements
+
+V2: found bug in the commit for TSO - by mistake, reported was
+NETIF_F_IP_CSUM and NETIF_F_IPV6_CSUM. Re-sending whole series
+to avoid confusion
+
+Dedy Lansky (1):
+  wil6210: treat "unhandled event" as warning instead of error
+
+Vladimir Kondratiev (12):
+  wil6210: support boot loader struct v0 & v1
+  wil6210: ACS implementation using QCA vendor command
+  wil6210: debugfs for channel survey
+  wil6210: count drops in Rx block ack reorder
+  wil6210: print "ulong" fields in hex format in the debugfs
+  wil6210: use <> vs. "" for global include
+  wil6210: wait for del_station to complete
+  wil6210: hold wil->mutex while managing vrings
+  wil6210: use wil_fw_error_recovery()
+  wil6210: skip HW version check for chip debugging
+  wil6210: TSO implementation
+  wil6210: improve mgmt frame handling
+
+ drivers/net/wireless/ath/wil6210/boot_loader.h  |  57 ++++
+ drivers/net/wireless/ath/wil6210/cfg80211.c     | 389 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/debugfs.c      |  64 +++-
+ drivers/net/wireless/ath/wil6210/main.c         | 112 +++++--
+ drivers/net/wireless/ath/wil6210/netdev.c       |   4 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c   |   2 +
+ drivers/net/wireless/ath/wil6210/txrx.c         | 383 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/txrx.h         |   8 +
+ drivers/net/wireless/ath/wil6210/wil6210.h      |  18 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.c |   2 +-
+ drivers/net/wireless/ath/wil6210/wmi.c          | 129 ++++++--
+ drivers/net/wireless/ath/wil6210/wmi.h          |  38 ++-
+ 12 files changed, 1128 insertions(+), 78 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/boot_loader.h
+
+-- 
+2.1.4
 
