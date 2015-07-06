@@ -1,266 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755515AbbG3Kyu (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:33757 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754614AbbGFLtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 06:54:50 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 17/19] wil6210: system power management
-Date: Thu, 30 Jul 2015 13:52:05 +0300
-Message-Id: <1438253527-3372-18-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_125455_077573_3F696D81)
-In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 6 Jul 2015 07:49:41 -0400
+Received: by wgck11 with SMTP id k11so137944677wgc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2015 04:49:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1430918911-14715-1-git-send-email-arik@wizery.com>
+References: <1430918911-14715-1-git-send-email-arik@wizery.com>
+Date: Mon, 6 Jul 2015 13:49:40 +0200
+Message-ID: <CALhHN=oq2WK+YHoW7UG2eLuDPEcxusZ8mpUC3DLyVDJyNhkdzg@mail.gmail.com> (sfid-20150706_134946_458337_7C12D845)
+Subject: Re: [PATCH v2] cfg80211: change GO_CONCURRENT to IR_CONCURRENT for STA
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support for the system suspend/resume.
-In preparation for the run-time PM, implementation made
-run-time PM friendly: common for system and run-time PM
-code factored out as generic functions, albeit is_runtime
-parameter value is always false currently.
+On 6 May 2015 at 15:28, Arik Nemtsov <arik@wizery.com> wrote:
+> The GO_CONCURRENT regulatory definition can be extended to station
+> interfaces requesting to IR as part of TDLS off-channel operations.
+> Rename the GO_CONCURRENT flag to IR_CONCURRENT and allow the added
+> use-case.
+>
+> Change internal users of GO_CONCURRENT to use the new definition.
+>
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |  2 +-
+>  include/net/cfg80211.h                       |  4 +--
+>  include/uapi/linux/nl80211.h                 | 28 +++++++++++---------
+>  net/wireless/chan.c                          | 38 ++++++++++++++++------------
+>  net/wireless/nl80211.c                       |  4 +--
+>  net/wireless/reg.c                           |  4 +--
+>  6 files changed, 45 insertions(+), 35 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+> index 83903a5..0b5a81d 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+> @@ -248,7 +248,7 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
+>          */
+>         if ((nvm_flags & NVM_CHANNEL_GO_CONCURRENT) &&
+>             (flags & IEEE80211_CHAN_NO_IR))
+> -               flags |= IEEE80211_CHAN_GO_CONCURRENT;
+> +               flags |= IEEE80211_CHAN_IR_CONCURRENT;
+>
+>         return flags;
+>  }
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index f8d6813..d63ecec 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -111,7 +111,7 @@ enum ieee80211_band {
+>   *     This may be due to the driver or due to regulatory bandwidth
+>   *     restrictions.
+>   * @IEEE80211_CHAN_INDOOR_ONLY: see %NL80211_FREQUENCY_ATTR_INDOOR_ONLY
+> - * @IEEE80211_CHAN_GO_CONCURRENT: see %NL80211_FREQUENCY_ATTR_GO_CONCURRENT
+> + * @IEEE80211_CHAN_IR_CONCURRENT: see %NL80211_FREQUENCY_ATTR_IR_CONCURRENT
+>   * @IEEE80211_CHAN_NO_20MHZ: 20 MHz bandwidth is not permitted
+>   *     on this channel.
+>   * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
+> @@ -129,7 +129,7 @@ enum ieee80211_channel_flags {
+>         IEEE80211_CHAN_NO_80MHZ         = 1<<7,
+>         IEEE80211_CHAN_NO_160MHZ        = 1<<8,
+>         IEEE80211_CHAN_INDOOR_ONLY      = 1<<9,
+> -       IEEE80211_CHAN_GO_CONCURRENT    = 1<<10,
+> +       IEEE80211_CHAN_IR_CONCURRENT    = 1<<10,
+>         IEEE80211_CHAN_NO_20MHZ         = 1<<11,
+>         IEEE80211_CHAN_NO_10MHZ         = 1<<12,
+>  };
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 241220c..c0ab6b0 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -2620,16 +2620,17 @@ enum nl80211_band_attr {
+>   *     an indoor surroundings, i.e., it is connected to AC power (and not
+>   *     through portable DC inverters) or is under the control of a master
+>   *     that is acting as an AP and is connected to AC power.
+> - * @NL80211_FREQUENCY_ATTR_GO_CONCURRENT: GO operation is allowed on this
+> + * @NL80211_FREQUENCY_ATTR_IR_CONCURRENT: IR operation is allowed on this
+>   *     channel if it's connected concurrently to a BSS on the same channel on
+>   *     the 2 GHz band or to a channel in the same UNII band (on the 5 GHz
+> - *     band), and IEEE80211_CHAN_RADAR is not set. Instantiating a GO on a
+> - *     channel that has the GO_CONCURRENT attribute set can be done when there
+> - *     is a clear assessment that the device is operating under the guidance of
+> - *     an authorized master, i.e., setting up a GO while the device is also
+> - *     connected to an AP with DFS and radar detection on the UNII band (it is
+> - *     up to user-space, i.e., wpa_supplicant to perform the required
+> - *     verifications)
+> + *     band), and IEEE80211_CHAN_RADAR is not set. Instantiating a GO or TDLS
+> + *     off-channel on a channel that has the IR_CONCURRENT attribute set can be
+> + *     done when there is a clear assessment that the device is operating under
+> + *     the guidance of an authorized master, i.e., setting up a GO or TDLS
+> + *     off-channel while the device is also connected to an AP with DFS and
+> + *     radar detection on the UNII band (it is up to user-space, i.e.,
+> + *     wpa_supplicant to perform the required verifications). Using this
+> + *     attribute for IR is disallowed for master interfaces (IBSS, AP).
+>   * @NL80211_FREQUENCY_ATTR_NO_20MHZ: 20 MHz operation is not allowed
+>   *     on this channel in current regulatory domain.
+>   * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
+> @@ -2641,7 +2642,7 @@ enum nl80211_band_attr {
+>   * See https://apps.fcc.gov/eas/comments/GetPublishedDocument.html?id=327&tn=528122
+>   * for more information on the FCC description of the relaxations allowed
+>   * by NL80211_FREQUENCY_ATTR_INDOOR_ONLY and
+> - * NL80211_FREQUENCY_ATTR_GO_CONCURRENT.
+> + * NL80211_FREQUENCY_ATTR_IR_CONCURRENT.
+>   */
+>  enum nl80211_frequency_attr {
+>         __NL80211_FREQUENCY_ATTR_INVALID,
+> @@ -2659,7 +2660,7 @@ enum nl80211_frequency_attr {
+>         NL80211_FREQUENCY_ATTR_NO_160MHZ,
+>         NL80211_FREQUENCY_ATTR_DFS_CAC_TIME,
+>         NL80211_FREQUENCY_ATTR_INDOOR_ONLY,
+> -       NL80211_FREQUENCY_ATTR_GO_CONCURRENT,
+> +       NL80211_FREQUENCY_ATTR_IR_CONCURRENT,
+>         NL80211_FREQUENCY_ATTR_NO_20MHZ,
+>         NL80211_FREQUENCY_ATTR_NO_10MHZ,
+>
+> @@ -2672,6 +2673,8 @@ enum nl80211_frequency_attr {
+>  #define NL80211_FREQUENCY_ATTR_PASSIVE_SCAN    NL80211_FREQUENCY_ATTR_NO_IR
+>  #define NL80211_FREQUENCY_ATTR_NO_IBSS         NL80211_FREQUENCY_ATTR_NO_IR
+>  #define NL80211_FREQUENCY_ATTR_NO_IR           NL80211_FREQUENCY_ATTR_NO_IR
+> +#define NL80211_FREQUENCY_ATTR_GO_CONCURRENT \
+> +                                       NL80211_FREQUENCY_ATTR_IR_CONCURRENT
+>
+>  /**
+>   * enum nl80211_bitrate_attr - bitrate attributes
+> @@ -2830,7 +2833,7 @@ enum nl80211_sched_scan_match_attr {
+>   * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
+>   *     base on contiguous rules and wider channels will be allowed to cross
+>   *     multiple contiguous/overlapping frequency ranges.
+> - * @NL80211_RRF_GO_CONCURRENT: See &NL80211_FREQUENCY_ATTR_GO_CONCURRENT
+> + * @NL80211_RRF_IR_CONCURRENT: See &NL80211_FREQUENCY_ATTR_IR_CONCURRENT
+>   * @NL80211_RRF_NO_HT40MINUS: channels can't be used in HT40- operation
+>   * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
+>   * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
+> @@ -2847,7 +2850,7 @@ enum nl80211_reg_rule_flags {
+>         NL80211_RRF_NO_IR               = 1<<7,
+>         __NL80211_RRF_NO_IBSS           = 1<<8,
+>         NL80211_RRF_AUTO_BW             = 1<<11,
+> -       NL80211_RRF_GO_CONCURRENT       = 1<<12,
+> +       NL80211_RRF_IR_CONCURRENT       = 1<<12,
+>         NL80211_RRF_NO_HT40MINUS        = 1<<13,
+>         NL80211_RRF_NO_HT40PLUS         = 1<<14,
+>         NL80211_RRF_NO_80MHZ            = 1<<15,
+> @@ -2859,6 +2862,7 @@ enum nl80211_reg_rule_flags {
+>  #define NL80211_RRF_NO_IR              NL80211_RRF_NO_IR
+>  #define NL80211_RRF_NO_HT40            (NL80211_RRF_NO_HT40MINUS |\
+>                                          NL80211_RRF_NO_HT40PLUS)
+> +#define NL80211_RRF_GO_CONCURRENT      NL80211_RRF_IR_CONCURRENT
+>
+>  /* For backport compatibility with older userspace */
+>  #define NL80211_RRF_NO_IR_ALL          (NL80211_RRF_NO_IR | __NL80211_RRF_NO_IBSS)
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index 5bcffdb..915b328 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
+> @@ -698,19 +698,20 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+>  EXPORT_SYMBOL(cfg80211_chandef_usable);
+>
+>  /*
+> - * For GO only, check if the channel can be used under permissive conditions
+> - * mandated by the some regulatory bodies, i.e., the channel is marked with
+> - * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
+> + * Check if the channel can be used under permissive conditions mandated by
+> + * some regulatory bodies, i.e., the channel is marked with
+> + * IEEE80211_CHAN_IR_CONCURRENT and there is an additional station interface
+>   * associated to an AP on the same channel or on the same UNII band
+>   * (assuming that the AP is an authorized master).
+> - * In addition allow the GO to operate on a channel on which indoor operation is
+> + * In addition allow operation on a channel on which indoor operation is
+>   * allowed, iff we are currently operating in an indoor environment.
+>   */
+> -static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+> +static bool cfg80211_ir_permissive_chan(struct wiphy *wiphy,
+> +                                       enum nl80211_iftype iftype,
+>                                         struct ieee80211_channel *chan)
+>  {
+>         struct wireless_dev *wdev;
+> -       struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
+> +       struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+>
+>         ASSERT_RTNL();
+>
+Seems after this patch we hit ASSERT_RTNL() when setup ibss (seems
+same for MONITOR)
+Simplest solution is move this assert after  if (iftype !=
+NL80211_IFTYPE_P2P_GO && ...) check, but I am not sure this is the
+best solution :)
+Anyway cfg80211_reg_can_beacon() need clear description about RTNL
+locking while drivers could call this ...
 
-For debug purposes, "PM" debug category introduced.
+Assert we hit:
+[ 5189.411964] wlan11: Trigger new scan to find an IBSS to join
+[ 5191.401219] wlan11: Creating new IBSS network, BSSID be:6f:19:45:ea:14
+[ 5191.401247] RTNL: assertion failed at net/wireless/chan.c (716)
+[ 5191.401254] CPU: 3 PID: 3110 Comm: kworker/u16:2 Tainted: G
+  O    4.1.0-rc7-wl-ath+
+[ 5191.401258] Hardware name: LENOVO 23443SG/23443SG, BIOS G1ET91WW
+(2.51 ) 01/09/2013
+[ 5191.401295] Workqueue: phy1 ieee80211_iface_work [mac80211]
+[ 5191.401300]  00000000 00000000 f3bcbd54 c16df17d ee90c5c0 f3bcbd7c
+f8a39d55 f8a629d4
+[ 5191.401313]  f8a64434 000002cc 00000001 ef1d8240 ee90c5c0 ee09f800
+ef1d8560 f3bcbde0
+[ 5191.401324]  f8ab28fb 00000246 00000002 ee015df0 c199d150 f3bcbda8
+c109731c ee015df0
+[ 5191.401336] Call Trace:
+[ 5191.401346]  [<c16df17d>] dump_stack+0x48/0x60
+[ 5191.401384]  [<f8a39d55>] cfg80211_reg_can_beacon+0x455/0x490 [cfg80211]
+[ 5191.401412]  [<f8ab28fb>] __ieee80211_sta_join_ibss+0x15b/0x1090 [mac80211]
+[ 5191.401419]  [<c109731c>] ? __lock_is_held+0x3c/0x60
+[ 5191.401474]  [<f8aff5f6>] ? __sdata_info+0x186/0x1b0 [mac80211]
+[ 5191.401507]  [<f8ab3e54>] ieee80211_sta_create_ibss+0xa4/0x120 [mac80211]
+[ 5191.401544]  [<f8ab707f>] ieee80211_ibss_work+0x5af/0x630 [mac80211]
+[ 5191.401551]  [<c10967ab>] ? trace_hardirqs_on+0xb/0x10
+[ 5191.401556]  [<c15bc8a9>] ? skb_dequeue+0x49/0x60
+[ 5191.401579]  [<f8ab8b89>] ieee80211_iface_work+0x2c9/0x3e0 [mac80211]
+[ 5191.401584]  [<c109731c>] ? __lock_is_held+0x3c/0x60
+[ 5191.401591]  [<c1066ec3>] process_one_work+0x1b3/0x6f0
+[ 5191.401596]  [<c1066e1a>] ? process_one_work+0x10a/0x6f0
+[ 5191.401603]  [<c106751d>] worker_thread+0xed/0x3b0
+[ 5191.401607]  [<c10967ab>] ? trace_hardirqs_on+0xb/0x10
+[ 5191.401613]  [<c1067430>] ? process_scheduled_works+0x30/0x30
+[ 5191.401618]  [<c106ce40>] kthread+0xa0/0xc0
+[ 5191.401624]  [<c16e7741>] ret_from_kernel_thread+0x21/0x30
+[ 5191.401628]  [<c106cda0>] ? __init_kthread_worker+0x60/0x60
+[ 5191.486229] IPv6: ADDRCONF(NETDEV_CHANGE): wlan11: link becomes ready
 
-Policy: AP-like interface can't be suspended; otherwise
-suspend is allowed. Hardware brought down if interface
-was up. Connection, if existed, get lost.
-Interface will be brought up upon resume if it was up
-before suspend.
+BR
+Janusz
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/Makefile   |  1 +
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 69 ++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/pm.c       | 98 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  5 ++
- 4 files changed, 173 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wil6210/pm.c
-
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-index 050506f..64b4326 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -12,6 +12,7 @@ wil6210-y += debug.o
- wil6210-y += rx_reorder.o
- wil6210-y += ioctl.o
- wil6210-y += fw.o
-+wil6210-y += pm.o
- wil6210-y += pmc.o
- wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
- wil6210-y += wil_platform.o
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index c37838d..feff1ef 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -259,11 +259,80 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
- };
- MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
- 
-+#ifdef CONFIG_PM
-+
-+static int wil6210_suspend(struct device *dev, bool is_runtime)
-+{
-+	int rc = 0;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct wil6210_priv *wil = pci_get_drvdata(pdev);
-+
-+	wil_dbg_pm(wil, "%s(%s)\n", __func__,
-+		   is_runtime ? "runtime" : "system");
-+
-+	rc = wil_can_suspend(wil, is_runtime);
-+	if (rc)
-+		goto out;
-+
-+	rc = wil_suspend(wil, is_runtime);
-+	if (rc)
-+		goto out;
-+
-+	/* TODO: how do I bring card in low power state? */
-+
-+	/* disable bus mastering */
-+	pci_clear_master(pdev);
-+	/* PCI will call pci_save_state(pdev) and pci_prepare_to_sleep(pdev) */
-+
-+out:
-+	return rc;
-+}
-+
-+static int wil6210_resume(struct device *dev, bool is_runtime)
-+{
-+	int rc = 0;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct wil6210_priv *wil = pci_get_drvdata(pdev);
-+
-+	wil_dbg_pm(wil, "%s(%s)\n", __func__,
-+		   is_runtime ? "runtime" : "system");
-+
-+	/* allow master */
-+	pci_set_master(pdev);
-+
-+	rc = wil_resume(wil, is_runtime);
-+	if (rc)
-+		pci_clear_master(pdev);
-+
-+	return rc;
-+}
-+
-+#ifdef CONFIG_PM_SLEEP
-+static int wil6210_pm_suspend(struct device *dev)
-+{
-+	return wil6210_suspend(dev, false);
-+}
-+
-+static int wil6210_pm_resume(struct device *dev)
-+{
-+	return wil6210_resume(dev, false);
-+}
-+#endif /* CONFIG_PM_SLEEP */
-+
-+#endif /* CONFIG_PM */
-+
-+static const struct dev_pm_ops wil6210_pm_ops = {
-+	SET_SYSTEM_SLEEP_PM_OPS(wil6210_pm_suspend, wil6210_pm_resume)
-+};
-+
- static struct pci_driver wil6210_driver = {
- 	.probe		= wil_pcie_probe,
- 	.remove		= wil_pcie_remove,
- 	.id_table	= wil6210_pcie_ids,
- 	.name		= WIL_NAME,
-+	.driver		= {
-+		.pm = &wil6210_pm_ops,
-+	},
- };
- 
- static int __init wil6210_driver_init(void)
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-new file mode 100644
-index 0000000..0b7ecbc
---- /dev/null
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -0,0 +1,98 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "wil6210.h"
-+
-+int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime)
-+{
-+	int rc = 0;
-+	struct wireless_dev *wdev = wil->wdev;
-+
-+	wil_dbg_pm(wil, "%s(%s)\n", __func__,
-+		   is_runtime ? "runtime" : "system");
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_MONITOR:
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		break;
-+	/* AP-like interface - can't suspend */
-+	default:
-+		wil_dbg_pm(wil, "AP-like interface\n");
-+		rc = -EBUSY;
-+		break;
-+	}
-+
-+	wil_dbg_pm(wil, "%s(%s) => %s (%d)\n", __func__,
-+		   is_runtime ? "runtime" : "system", rc ? "No" : "Yes", rc);
-+
-+	return rc;
-+}
-+
-+int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
-+{
-+	int rc = 0;
-+	struct net_device *ndev = wil_to_ndev(wil);
-+
-+	wil_dbg_pm(wil, "%s(%s)\n", __func__,
-+		   is_runtime ? "runtime" : "system");
-+
-+	/* if netif up, hardware is alive, shut it down */
-+	if (ndev->flags & IFF_UP) {
-+		rc = wil_down(wil);
-+		if (rc) {
-+			wil_err(wil, "wil_down : %d\n", rc);
-+			goto out;
-+		}
-+	}
-+
-+	if (wil->platform_ops.suspend)
-+		rc = wil->platform_ops.suspend(wil->platform_handle);
-+
-+out:
-+	wil_dbg_pm(wil, "%s(%s) => %d\n", __func__,
-+		   is_runtime ? "runtime" : "system", rc);
-+	return rc;
-+}
-+
-+int wil_resume(struct wil6210_priv *wil, bool is_runtime)
-+{
-+	int rc = 0;
-+	struct net_device *ndev = wil_to_ndev(wil);
-+
-+	wil_dbg_pm(wil, "%s(%s)\n", __func__,
-+		   is_runtime ? "runtime" : "system");
-+
-+	if (wil->platform_ops.resume) {
-+		rc = wil->platform_ops.resume(wil->platform_handle);
-+		if (rc) {
-+			wil_err(wil, "platform_ops.resume : %d\n", rc);
-+			goto out;
-+		}
-+	}
-+
-+	/* if netif up, bring hardware up
-+	 * During open(), IFF_UP set after actual device method
-+	 * invocation. This prevent recursive call to wil_up()
-+	 */
-+	if (ndev->flags & IFF_UP)
-+		rc = wil_up(wil);
-+
-+out:
-+	wil_dbg_pm(wil, "%s(%s) => %d\n", __func__,
-+		   is_runtime ? "runtime" : "system", rc);
-+	return rc;
-+}
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index c6b0fa2..dd4ea92 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -647,6 +647,7 @@ void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
- #define wil_dbg_txrx(wil, fmt, arg...) wil_dbg(wil, "DBG[TXRX]" fmt, ##arg)
- #define wil_dbg_wmi(wil, fmt, arg...) wil_dbg(wil, "DBG[ WMI]" fmt, ##arg)
- #define wil_dbg_misc(wil, fmt, arg...) wil_dbg(wil, "DBG[MISC]" fmt, ##arg)
-+#define wil_dbg_pm(wil, fmt, arg...) wil_dbg(wil, "DBG[ PM ]" fmt, ##arg)
- 
- /* target operations */
- /* register read */
-@@ -815,4 +816,8 @@ int wil_iftype_nl2wmi(enum nl80211_iftype type);
- int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd);
- int wil_request_firmware(struct wil6210_priv *wil, const char *name);
- 
-+int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime);
-+int wil_suspend(struct wil6210_priv *wil, bool is_runtime);
-+int wil_resume(struct wil6210_priv *wil, bool is_runtime);
-+
- #endif /* __WIL6210_H__ */
--- 
-2.1.4
-
+> @@ -718,16 +719,22 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+>             !(wiphy->regulatory_flags & REGULATORY_ENABLE_RELAX_NO_IR))
+>                 return false;
+>
+> +       /* only valid for GO and TDLS off-channel (station/p2p-CL) */
+> +       if (iftype != NL80211_IFTYPE_P2P_GO &&
+> +           iftype != NL80211_IFTYPE_STATION &&
+> +           iftype != NL80211_IFTYPE_P2P_CLIENT)
+> +               return false;
+> +
+>         if (regulatory_indoor_allowed() &&
+>             (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
+>                 return true;
+>
+> -       if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
+> +       if (!(chan->flags & IEEE80211_CHAN_IR_CONCURRENT))
+>                 return false;
+>
+>         /*
+>          * Generally, it is possible to rely on another device/driver to allow
+> -        * the GO concurrent relaxation, however, since the device can further
+> +        * the IR concurrent relaxation, however, since the device can further
+>          * enforce the relaxation (by doing a similar verifications as this),
+>          * and thus fail the GO instantiation, consider only the interfaces of
+>          * the current registered device.
+> @@ -748,7 +755,8 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+>                  * GO_CONCURRENT is disconnected now. But then we must make sure
+>                  * we're not outdoor on an indoor-only channel.
+>                  */
+> -               if (wdev->iftype == NL80211_IFTYPE_P2P_GO &&
+> +               if (iftype == NL80211_IFTYPE_P2P_GO &&
+> +                   wdev->iftype == NL80211_IFTYPE_P2P_GO &&
+>                     wdev->beacon_interval &&
+>                     !(chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
+>                         other_chan = wdev->chandef.chan;
+> @@ -793,7 +801,6 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+>                              struct cfg80211_chan_def *chandef,
+>                              enum nl80211_iftype iftype)
+>  {
+> -       struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+>         bool res;
+>         u32 prohibited_flags = IEEE80211_CHAN_DISABLED |
+>                                IEEE80211_CHAN_RADAR;
+> @@ -801,13 +808,12 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+>         trace_cfg80211_reg_can_beacon(wiphy, chandef, iftype);
+>
+>         /*
+> -        * Under certain conditions suggested by the some regulatory bodies
+> -        * a GO can operate on channels marked with IEEE80211_NO_IR
+> -        * so set this flag only if such relaxations are not enabled and
+> -        * the conditions are not met.
+> +        * Under certain conditions suggested by some regulatory bodies a
+> +        * GO/STA can IR on channels marked with IEEE80211_NO_IR. Set this flag
+> +        * only if such relaxations are not enabled and the conditions are not
+> +        * met.
+>          */
+> -       if (iftype != NL80211_IFTYPE_P2P_GO ||
+> -           !cfg80211_go_permissive_chan(rdev, chandef->chan))
+> +       if (!cfg80211_ir_permissive_chan(wiphy, iftype, chandef->chan))
+>                 prohibited_flags |= IEEE80211_CHAN_NO_IR;
+>
+>         if (cfg80211_chandef_dfs_required(wiphy, chandef, iftype) > 0 &&
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 8a33bba..c264eff 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -639,8 +639,8 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+>                 if ((chan->flags & IEEE80211_CHAN_INDOOR_ONLY) &&
+>                     nla_put_flag(msg, NL80211_FREQUENCY_ATTR_INDOOR_ONLY))
+>                         goto nla_put_failure;
+> -               if ((chan->flags & IEEE80211_CHAN_GO_CONCURRENT) &&
+> -                   nla_put_flag(msg, NL80211_FREQUENCY_ATTR_GO_CONCURRENT))
+> +               if ((chan->flags & IEEE80211_CHAN_IR_CONCURRENT) &&
+> +                   nla_put_flag(msg, NL80211_FREQUENCY_ATTR_IR_CONCURRENT))
+>                         goto nla_put_failure;
+>                 if ((chan->flags & IEEE80211_CHAN_NO_20MHZ) &&
+>                     nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_20MHZ))
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 0e347f8..d359e06 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -989,8 +989,8 @@ static u32 map_regdom_flags(u32 rd_flags)
+>                 channel_flags |= IEEE80211_CHAN_NO_OFDM;
+>         if (rd_flags & NL80211_RRF_NO_OUTDOOR)
+>                 channel_flags |= IEEE80211_CHAN_INDOOR_ONLY;
+> -       if (rd_flags & NL80211_RRF_GO_CONCURRENT)
+> -               channel_flags |= IEEE80211_CHAN_GO_CONCURRENT;
+> +       if (rd_flags & NL80211_RRF_IR_CONCURRENT)
+> +               channel_flags |= IEEE80211_CHAN_IR_CONCURRENT;
+>         if (rd_flags & NL80211_RRF_NO_HT40MINUS)
+>                 channel_flags |= IEEE80211_CHAN_NO_HT40MINUS;
+>         if (rd_flags & NL80211_RRF_NO_HT40PLUS)
+> --
+> 2.1.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
