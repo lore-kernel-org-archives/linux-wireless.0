@@ -1,100 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:35324 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757013AbbGQHNv (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:33597 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755138AbbGFN1v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 03:13:51 -0400
-Received: by wgav7 with SMTP id v7so9591330wga.2
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2015 00:13:50 -0700 (PDT)
-From: Andreas Fenkart <afenkart@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Fenkart <afenkart@gmail.com>
-Subject: [PATCH 4/4] mwifiex: simplify mwifiex_complete_cmd
-Date: Fri, 17 Jul 2015 09:13:06 +0200
-Message-Id: <1437117186-25243-5-git-send-email-afenkart@gmail.com> (sfid-20150717_091354_328667_0AEB19AC)
-In-Reply-To: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
-References: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
+	Mon, 6 Jul 2015 09:27:51 -0400
+Received: by oiyy130 with SMTP id y130so117549795oiy.0
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2015 06:27:50 -0700 (PDT)
+Date: Mon, 6 Jul 2015 08:27:07 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Wei Zhong <wzhong@google.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
+Message-ID: <20150706132707.GA22962@ubuntu-hedt> (sfid-20150706_152814_969826_D187F604)
+References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
+ <55966D1B.1040603@neratec.com>
+ <CAHr=VqnpJ_+ovmB3gqm+X9WX98ZeVuO8VZ2cq6OFPcdjy8Rkgg@mail.gmail.com>
+ <5596A3C0.6020303@neratec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5596A3C0.6020303@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-600f5d909a54("mwifiex: cleanup ioctl wait queue and abstraction layer")
-introduced the wakeup_interruptible suppression in mwifiex_complete_cmd
-b1a47aa5e1e1("mwifiex: fix system hang issue in cmd timeout error case")
-then added wakup_interruptible to mwifiex_cmd_timeout_func the single
-place setting a status of ETIMEDOUT.
-Instead of doing extra work, using the standard call-chain will have the
-same effect:
-mwifiex_cancel_pending_ioctl
--> mwifiex_recycle_cmd_node
--> mwifiex_insert_cmd_to_free_q
--> mwifiex_complete_cmd
--> wake_up_interruptible
+On Fri, Jul 03, 2015 at 05:01:20PM +0200, Zefir Kurtisi wrote:
+> On 07/03/2015 04:20 PM, Wei Zhong wrote:
+> > On Fri, Jul 3, 2015 at 4:08 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+> >>
+> >> On 07/02/2015 07:44 AM, Wei Zhong wrote:
+> >>> commit 2fef4cad8a1bd9cbbf178e59a1b3ca672b057095
+> >>> Author: Wei Zhong <wzhong@google.com>
+> >>> Date:   Wed Jul 1 22:39:09 2015 -0700
+> >>>
+> >>>     wireless-regdb: update CA rules for 5600 - 5650 mHz
+> >>>
+> >>>     Related regulation:
+> >>>     http://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/sf10971.html#s6.2.3
+> >>>
+> >>>     Frequency Bands 5470-5600 MHz and 5650-5725 MHz
+> >>>     Until further notice, devices subject to this section [i.e. Wifi device
+> >>>     supporting 5 GHz bands] shall not be capable of transmitting in the band
+> >>>     5600-5650 MHz. This restriction is for the protection of Environment
+> >>>     Canada’s weather radars operating in this band.
+> >>>
+> >>> diff --git a/db.txt b/db.txt
+> >>> index 809cd3c..da0cfad 100644
+> >>> --- a/db.txt
+> >>> +++ b/db.txt
+> >>> @@ -216,7 +216,8 @@ country CA: DFS-FCC
+> >>>         (2402 - 2472 @ 40), (30)
+> >>>         (5170 - 5250 @ 80), (17), AUTO-BW
+> >>>         (5250 - 5330 @ 80), (24), DFS, AUTO-BW
+> >>> -       (5490 - 5730 @ 160), (24), DFS
+> >>> +       (5490 - 5600 @ 80), (24), DFS
+> >>> +       (5650 - 5730 @ 40), (24), DFS
+> >>>         (5735 - 5835 @ 80), (30)
+> >>>
+> >>>  # Source:
+> >>> --
+> >>
+> >> I believe this could also be interpreted differently. If the change is only about
+> >> removing the weather radar band (5600-5650), the change should be
+> >>
+> >>  -       (5490 - 5730 @ 160), (24), DFS
+> >>  +       (5490 - 5570 @ 80), (24), DFS
+> >>  +       (5570 - 5590 @ 20), (24), DFS
+> >>  +       (5650 - 5730 @ 80), (24), DFS
+> >>
+> >> The second rule explicitly states that channel 116 remains available for HT20. If
+> >> this level of strict correctness is not needed, rule 1 and 2 combined would be
+> >>
+> >>  -       (5490 - 5730 @ 160), (24), DFS
+> >>  +       (5490 - 5590 @ 80), (24), DFS
+> > 
+> > I agree. 5590 is more strict than 5600.
+> > 
+> >>
+> >>  +       (5650 - 5730 @ 80), (24), DFS
+> > 
+> > 5690 MHz is not a channel can be used, is it still necessary to mark
+> > this band as 80MHz while in practice it is not possible to fully
+> > unitize the entire band?
+> > 
+> 
+> I must be missing something here, where does the restriction for 5690 come from?
+> The document handles the band 5650-5725 as available, I don't see any further
+> restrictions for 5690.
 
-The difference is that previously the condition was not set to true,
-but that's probably just an oversight in b1a47aa5e1e1 and shouldn't
-have any consequence
+I've only looked briefly at the relevant documents, but I also am not
+seeing where this restriction comes from. The regulatory document linked
+to in the patch description doesn't seem to restrict it, nor does
+anything I see in the discussion of VHT80 center frequencies in IEEE
+802.11 (in fact channel 138 is explicitly listed as a possible VHT80
+center frequency index in some of the tables).
 
-Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
----
- drivers/net/wireless/mwifiex/cmdevt.c    |  1 -
- drivers/net/wireless/mwifiex/sta_ioctl.c |  4 ++--
- drivers/net/wireless/mwifiex/util.c      | 12 ++++--------
- 3 files changed, 6 insertions(+), 11 deletions(-)
+> From your other post:
+> >>     >
+> >>     >  -       (5490 - 5730 @ 160), (24), DFS
+> >>     >  +       (5490 - 5590 @ 80), (24), DFS
+> >> 
+> >>     I agree. 5590 is more strict than 5600.
+> >> 
+> >>  
+> >> On a second thought,  5590 implies channel 116 can't have 40MHz. I think that is
+> >> still allowed per regulation.
+> >> 
+> >> 
+> 
+> No, channel 116 is not usable for HT40 if weather radar channels are disabled,
+> since it can only be combined with channel 120 and that one partially falls into
+> the restricted range.
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 6458e17..27b778d 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -976,7 +976,6 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
- 
- 		if (cmd_node->wait_q_enabled) {
- 			adapter->cmd_wait_q.status = -ETIMEDOUT;
--			wake_up_interruptible(&adapter->cmd_wait_q.wait);
- 			mwifiex_cancel_pending_ioctl(adapter);
- 		}
- 	}
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index d8b7d9c..a6c8a4f 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -66,8 +66,8 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter,
- 	if (status <= 0) {
- 		if (status == 0)
- 			status = -ETIMEDOUT;
--		mwifiex_dbg(adapter, ERROR,
--			    "cmd_wait_q terminated: %d\n", status);
-+		mwifiex_dbg(adapter, ERROR, "cmd_wait_q terminated: %d\n",
-+			    status);
- 		mwifiex_cancel_all_pending_cmd(adapter);
- 		return status;
- 	}
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 790e619..b65ef5b 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -496,16 +496,12 @@ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
- int mwifiex_complete_cmd(struct mwifiex_adapter *adapter,
- 			 struct cmd_ctrl_node *cmd_node)
- {
--	mwifiex_dbg(adapter, CMD,
--		    "cmd completed: status=%d\n",
-+	WARN_ON(!cmd_node->wait_q_enabled);
-+	mwifiex_dbg(adapter, CMD, "cmd completed: status=%d\n",
- 		    adapter->cmd_wait_q.status);
- 
--	*(cmd_node->condition) = true;
--
--	if (adapter->cmd_wait_q.status == -ETIMEDOUT)
--		mwifiex_dbg(adapter, ERROR, "cmd timeout\n");
--	else
--		wake_up_interruptible(&adapter->cmd_wait_q.wait);
-+	*cmd_node->condition = true;
-+	wake_up_interruptible(&adapter->cmd_wait_q.wait);
- 
- 	return 0;
- }
--- 
-2.1.4
+It's not necessary to restrict the band down to 5590 or break out the
+rule for channel 116 separately, the software is smart enough to work
+out what's allowed based on the original rule Wei supplied for 5490-5600
+MHz. In fact that rule exactly matches what we used to have in db.txt
+for the US prior to the TDWR restrictions being lifted.
 
+Seth
