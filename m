@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52709 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752354AbbGQMig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 08:38:36 -0400
-Message-ID: <1437136714.1933.11.camel@sipsolutions.net> (sfid-20150717_143838_987373_C24FE0A2)
-Subject: Re: [PATCH v3 1/5] mac80211: correct aid location in peering frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Fri, 17 Jul 2015 14:38:34 +0200
-In-Reply-To: <1436877119-17577-2-git-send-email-me@bobcopeland.com> (sfid-20150714_143217_907124_B20035E5)
-References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
-	 <1436877119-17577-2-git-send-email-me@bobcopeland.com>
-	 (sfid-20150714_143217_907124_B20035E5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f50.google.com ([209.85.215.50]:35949 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753973AbbGFL5J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2015 07:57:09 -0400
+Received: by lagc2 with SMTP id c2so151561487lag.3
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2015 04:57:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CALhHN=oq2WK+YHoW7UG2eLuDPEcxusZ8mpUC3DLyVDJyNhkdzg@mail.gmail.com>
+References: <1430918911-14715-1-git-send-email-arik@wizery.com> <CALhHN=oq2WK+YHoW7UG2eLuDPEcxusZ8mpUC3DLyVDJyNhkdzg@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 6 Jul 2015 14:56:51 +0300
+Message-ID: <CA+XVXfc3OcZm+y9y4DmvKjWHPNX6aQhFQGbptpk4KhMAf9dAYg@mail.gmail.com> (sfid-20150706_135719_195045_2BB911E1)
+Subject: Re: [PATCH v2] cfg80211: change GO_CONCURRENT to IR_CONCURRENT for STA
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-07-14 at 08:31 -0400, Bob Copeland wrote:
-> According to 802.11-2012 8.5.16.3.2 AID comes directly after the
-> capability bytes in mesh peering confirm frames.  The existing
-> code, however, was adding a 2 byte offset to this location,
-> resulting in garbage data going out over the air.  Remove the
-> offset to fix it.
-> 
-applied (to mac80211.git)
+> >         struct wireless_dev *wdev;
+> > -       struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
+> > +       struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+> >
+> >         ASSERT_RTNL();
+> >
+> Seems after this patch we hit ASSERT_RTNL() when setup ibss (seems
+> same for MONITOR)
+> Simplest solution is move this assert after  if (iftype !=
+> NL80211_IFTYPE_P2P_GO && ...) check, but I am not sure this is the
+> best solution :)
+> Anyway cfg80211_reg_can_beacon() need clear description about RTNL
+> locking while drivers could call this ...
 
-johannes
+We actually have a different fix in the internal Intel tree already.
+But yea you're right :)
+I guess it should be pushed out soon (or maybe I'll push it).
+
+Arik
