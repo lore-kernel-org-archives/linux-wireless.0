@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34969 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbbGXOlm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 10:41:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 08/13] wil6210: hold wil->mutex while managing vrings
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1436081080-27305-9-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Fri, 24 Jul 2015 17:41:36 +0300
-In-Reply-To: <1436081080-27305-9-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Sun, 5 Jul 2015 10:24:35 +0300")
-Message-ID: <87vbd9d3dr.fsf@kamboji.qca.qualcomm.com> (sfid-20150724_164145_106886_4C185204)
+Received: from srv.colino.net ([212.83.157.151]:50434 "EHLO mx.colino.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754652AbbGFWQQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2015 18:16:16 -0400
+Received: from net24.it (unknown [151.50.212.211])
+	by mx.colino.net (Postfix) with ESMTPSA id 08E4736A431D
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2015 00:16:12 +0200 (CEST)
+Date: Tue, 7 Jul 2015 00:16:11 +0200
+From: Salvatore De Paolis <iwkse@claws-mail.org>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Problem with firmware, rt2x00
+Message-ID: <20150707001611.550745c4@net24.it> (sfid-20150707_001620_566445_777277B2)
+In-Reply-To: <20150706203738.6fe7c3ea@net24.it>
+References: <20150706203738.6fe7c3ea@net24.it>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+On Mon, 6 Jul 2015 20:37:38 +0200
+Salvatore De Paolis <iwkse@claws-mail.org> wrote:
 
-> To prevent race when connect flow may run in parallel with
-> the disconnect event.
->
-> Scenario leading to the bug is: while running connect flow on the AP,
-> STA sends disconnect. log follows.
+> Hi all,
+> 
+> after updating the kernel and udev plus other packages I am not able anymore
+> to let my PCI wireless card works.
+> 
+> The device is listed as RT2561/RT61 (no rev. B)
+> 
+> After the update when issuing a "up" I get an error like: rt61pci agent
+> aborted rt2561s (not found?)
+> 
+> I have the firmware-ralink and such file is available in /lib/firmware
+> 
+> Monitoring the udev event I can see the action "add" is followed by a
+> "remove".
+> 
+> on my udev rule, 50-firmware.rules I have:
+> 
+> SUBSYSTEM=="firmware" , ACTION=="add", ATTR{loading}="-1"
+> 
+> Anyone has a clue about what could I do to fix this issue?
+> 
+> Best regards,
+> 
 
-[...]
-
-> --- a/drivers/net/wireless/ath/wil6210/txrx.c
-> +++ b/drivers/net/wireless/ath/wil6210/txrx.c
-> @@ -160,6 +160,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
->  	struct device *dev = wil_to_dev(wil);
->  	size_t sz = vring->size * sizeof(vring->va[0]);
->  
-> +	WARN_ON(!mutex_is_locked(&wil->mutex));
-
-lockdep_assert_held() is supposed to be used for verifying locking, see
-ath10k for examples.
+Nevermind..I solved it. The upgrade messed up the udev rule and deleted the firmware.agent
+binary. I followed this http://rt2x00.serialmonkey.com/phpBB-static/5/t-4594.html and everything
+is fine again.
 
 -- 
-Kalle Valo
+Salvatore
