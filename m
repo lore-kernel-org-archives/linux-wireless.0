@@ -1,50 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:34112 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757358AbbGQJdk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4103 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756AbbGFHk3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 05:33:40 -0400
-Received: by iebmu5 with SMTP id mu5so73159069ieb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2015 02:33:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1437124562.1933.7.camel@sipsolutions.net>
-References: <1433943751-11221-1-git-send-email-chaitanya.mgit@gmail.com>
- <1434530870.1884.12.camel@sipsolutions.net> <CABPxzYL0rnht72K1fLcpyjC=eOM4nHxzHQRpD47iE6J=J-3sOg@mail.gmail.com>
- <1434538909.1884.39.camel@sipsolutions.net> <CABPxzY+Nz+wOCtot-4ROZJ6SR-a1gV625ak8qmLHtjvR=JadGQ@mail.gmail.com>
- <1434541047.1884.41.camel@sipsolutions.net> <CABPxzYKmsGyhmM_5e11N2sgw8c-ARyJJ_rPkfjwCcZ6+hfqHgg@mail.gmail.com>
- <1437124562.1933.7.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 17 Jul 2015 15:03:20 +0530
-Message-ID: <CABPxzYJF1Oi1wdW3PUCOJ5hYiA0TmA4neJDF8w6FDFm-jGmbnQ@mail.gmail.com> (sfid-20150717_113354_912229_1A28535B)
-Subject: Re: [PATCH V3] mac80211: wowlan: suspend: Fix power save state stuck
- in ACTIVE caused by race between suspend and Tx packet.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 6 Jul 2015 03:40:29 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 07/13] wil6210: wait for del_station to complete
+Date: Mon,  6 Jul 2015 10:39:43 +0300
+Message-Id: <1436168389-3676-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_094034_457851_9AEAA4D3)
+In-Reply-To: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 17, 2015 at 2:46 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->
-> I've applied this patch.
+Multiple del_station requests may be sent to the driver by the
+supplicant when turning down AP. This may overflow mailbox
+between the FW and ucode
 
-Thanks.
+Wait till disconnect of one STA completed before sending next command.
 
->
->
-> > > I really hate this whole powersave code btw - we really should
-> > > refactor
-> > > that into its own little library module or so...
-> > Yes, that sounds good.
->
-> want to work on that? :)
-Sure, but i cannot spend full time on that so the progress might be slow.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
->
-> The whole thing is awfully broken anyway since it does hw-level
-> configuration based on vif-level state, and ath9k does in fact support
-> multiple vifs ...
-Yes, we have faced problems with this especially handling fake ps,
-roc...we should move it to per vif config
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 12b5770..0678fff 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1151,15 +1151,42 @@ int wmi_get_temperature(struct wil6210_priv *wil, u32 *t_bb, u32 *t_rf)
+ 
+ int wmi_disconnect_sta(struct wil6210_priv *wil, const u8 *mac, u16 reason)
+ {
++	int rc;
++	u16 reason_code;
+ 	struct wmi_disconnect_sta_cmd cmd = {
+ 		.disconnect_reason = cpu_to_le16(reason),
+ 	};
++	struct {
++		struct wil6210_mbox_hdr_wmi wmi;
++		struct wmi_disconnect_event evt;
++	} __packed reply;
+ 
+ 	ether_addr_copy(cmd.dst_mac, mac);
+ 
+ 	wil_dbg_wmi(wil, "%s(%pM, reason %d)\n", __func__, mac, reason);
+ 
+-	return wmi_send(wil, WMI_DISCONNECT_STA_CMDID, &cmd, sizeof(cmd));
++	rc = wmi_call(wil, WMI_DISCONNECT_STA_CMDID, &cmd, sizeof(cmd),
++		      WMI_DISCONNECT_EVENTID, &reply, sizeof(reply), 1000);
++	/* failure to disconnect in reasonable time treated as FW error */
++	if (rc) {
++		wil_fw_error_recovery(wil);
++		return rc;
++	}
++
++	/* call event handler manually after processing wmi_call,
++	 * to avoid deadlock - disconnect event handler acquires wil->mutex
++	 * while it is already held here
++	 */
++	reason_code = le16_to_cpu(reply.evt.protocol_reason_status);
++
++	wil_dbg_wmi(wil, "Disconnect %pM reason [proto %d wmi %d]\n",
++		    reply.evt.bssid, reason_code,
++		    reply.evt.disconnect_reason);
++
++	wil->sinfo_gen++;
++	wil6210_disconnect(wil, reply.evt.bssid, reason_code, true);
++
++	return 0;
+ }
+ 
+ int wmi_addba(struct wil6210_priv *wil, u8 ringid, u8 size, u16 timeout)
+-- 
+2.1.4
+
