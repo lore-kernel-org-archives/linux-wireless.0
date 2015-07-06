@@ -1,95 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16356 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752745AbbGTM0i (ORCPT
+Received: from out15.sjc.mx.trendmicro.com ([216.99.131.72]:52421 "EHLO
+	out15.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754474AbbGFTEd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2015 08:26:38 -0400
-From: <c_mpubbi@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
-Subject: [PATCH] Ath10k: Add TCP/UDP Checksum offload support for QCA99x0
-Date: Mon, 20 Jul 2015 17:56:12 +0530
-Message-ID: <1437395172-23639-1-git-send-email-c_mpubbi@qti.qualcomm.com> (sfid-20150720_142641_991024_2F19A52F)
+	Mon, 6 Jul 2015 15:04:33 -0400
+Received: from relay04.sjc.mx.trendmicro.com (unknown [10.30.239.26])
+	by out15.sjc.mx.trendmicro.com (Postfix) with ESMTP id 4578D981181
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Jul 2015 19:04:33 +0000 (UTC)
+Received: from thinktube.com (unknown [111.68.225.247])
+	by relay04.sjc.mx.trendmicro.com (Postfix) with ESMTP id AC3F298041B
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Jul 2015 19:04:32 +0000 (UTC)
+Received: from unknown (HELO [192.168.5.9]) (br1@[188.85.29.34])
+          (envelope-sender <br1@thinktube.com>)
+          by 111.68.225.247 (qmail-ldap-1.03) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 6 Jul 2015 19:04:31 -0000
+Message-ID: <559AD13B.7030105@thinktube.com> (sfid-20150706_210437_394761_CD6A5F22)
+Date: Mon, 06 Jul 2015 20:04:27 +0100
+From: Bruno Randolf <br1@thinktube.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Richard Palethorpe <richard@lm-technologies.com>,
+	Taehee Yoo <ap420073@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mesh support on rtl8192cu
+References: <CAFSTUk6UasnV4P3B1TR7kSx1ToQTC+PC2hU6PynDBWJ3ALJzyg@mail.gmail.com>	<55965CF8.20208@thinktube.com>	<CAMArcTUvpBpTB=woMiY2mET+KOUKNLvY53Exb1F6vB+aztq6Lw@mail.gmail.com> <CAFSTUk6u6rNF1njVBMFT4VAKPZ0Y6BvHB3mJEu7H7oM3tma5tQ@mail.gmail.com>
+In-Reply-To: <CAFSTUk6u6rNF1njVBMFT4VAKPZ0Y6BvHB3mJEu7H7oM3tma5tQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
+On 07/06/2015 11:46 AM, Richard Palethorpe wrote:
+> Bruno, that surprises me somewhat because I have got IBSS mode to work
+> on kernel 4.0+. Are you using a slightly older kernel?
 
-The patch adds support to offload TCP/UDP checksum
-calculations for QCA99x0.
+I'm using kernel 3.18 with wireless drivers from backports in OpenWRT
+CC, so it should be pretty recent...
 
-Signed-off-by: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
----
-This patch has dependency with peter oh's htt tx/rx patch set for
-QCA99X0 chipset.
+I wonder to what level did you verify the IBSS operation?
 
- drivers/net/wireless/ath/ath10k/htt.h    |   17 ++++++++++++++++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |    4 ++++
- 2 files changed, 20 insertions(+), 1 deletion(-)
+I did get it to basically work as well, sometimes it works well, but
+sometimes I get a packet loss of about 15-20% and outages of
+connectivity for a while. This happens not always immediately, but
+reproducibly after some time. Try pinging for an hour or so...?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index e31cd74..551f64b 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -97,10 +97,25 @@ struct htt_data_tx_desc_frag {
- } __packed;
- 
- struct htt_msdu_ext_desc {
--	__le32 tso_flag[4];
-+	__le32 tso_flag[3];
-+	__le16 ip_identification;
-+	u8 flags;
-+	u8 reserved;
- 	struct htt_data_tx_desc_frag frags[6];
- };
- 
-+#define	HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE		BIT(0)
-+#define	HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE	BIT(1)
-+#define	HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE	BIT(2)
-+#define	HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE	BIT(3)
-+#define	HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE	BIT(4)
-+
-+#define HTT_MSDU_CHECKSUM_ENABLE (HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE)
-+
- enum htt_data_tx_desc_flags0 {
- 	HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT = 1 << 0,
- 	HTT_DATA_TX_DESC_FLAGS0_NO_AGGR         = 1 << 1,
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index c49ecff..1b34c13 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -496,6 +496,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	u16 msdu_id, flags1 = 0;
- 	dma_addr_t paddr = 0;
- 	u32 frags_paddr = 0;
-+	struct htt_msdu_ext_desc *ext_desc = NULL;
- 
- 	res = ath10k_htt_tx_inc_pending(htt);
- 	if (res)
-@@ -542,6 +543,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		if (ar->hw_params.continuous_frag_desc) {
- 			frags = (struct htt_data_tx_desc_frag *)
- 				&htt->frag_desc.vaddr[msdu_id].frags;
-+			ext_desc = &htt->frag_desc.vaddr[msdu_id];
- 			frags[0].tword_addr.paddr_lo =
- 				__cpu_to_le32(skb_cb->paddr);
- 			frags[0].tword_addr.paddr_hi = 0;
-@@ -603,6 +605,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	if (msdu->ip_summed == CHECKSUM_PARTIAL) {
- 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
- 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
-+		if (ar->hw_params.continuous_frag_desc)
-+			ext_desc->flags |= HTT_MSDU_CHECKSUM_ENABLE;
- 	}
- 
- 	/* Prevent firmware from sending up tx inspection requests. There's
--- 
-1.7.9.5
+I traced it down to ARP replies being apparently "sent" on the device
+(tcpdump shows it locally) but they don't make it onto the "air"...
+
+If you or anyone else can confirm ad-hoc mode really works, on some
+version of the driver, I'll start to investigate more.
+
+bruno
 
