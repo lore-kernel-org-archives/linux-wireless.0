@@ -1,149 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:51683 "EHLO comal.ext.ti.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:50594 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751382AbbG3TuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 15:50:11 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <yanivma@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH 2/4] wl18xx: use long intervals in sched scan
-Date: Thu, 30 Jul 2015 22:38:20 +0300
-Message-ID: <1438285102-32751-2-git-send-email-yanivma@ti.com> (sfid-20150730_215025_093815_3B673357)
-In-Reply-To: <1438285102-32751-1-git-send-email-yanivma@ti.com>
-References: <1438285102-32751-1-git-send-email-yanivma@ti.com>
+	id S1754270AbbGFKcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2015 06:32:01 -0400
+Message-ID: <559A5919.3060308@openwrt.org> (sfid-20150706_123205_907846_5411318E)
+Date: Mon, 06 Jul 2015 12:31:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: miaoqing@qti.qualcomm.com, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com
+Subject: Re: [PATCH v2] ath9k: export HW random number generator
+References: <1435912110-9646-1-git-send-email-miaoqing@qca.qualcomm.com>
+In-Reply-To: <1435912110-9646-1-git-send-email-miaoqing@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On 2015-07-03 10:28, miaoqing@qti.qualcomm.com wrote:
+> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> 
+> We measured the ADC-based entropy in 3 ways, Shannon entropy,
+> collision entropy, and directly measured min-entropy. Entropy is
+> in bits per 16 bit value,
+>    ---------------------------
+>    Shannon | collision | min
+>    ---------------------------
+>    12.00   | 10.80     | 9.18
+>    ---------------------------
+> 
+> Recommend: A generous safety factor be used. NIST Special Publication
+> 800-90B (draft) requires that data used to seed a deterministic random
+> bit generator with N bits of strength have an estimated entropy at least
+> twice the block size of the underlying primitive. Given all the
+> uncertainties, it would be wise to collect even more.
+> 
+> Analysis was done by Jacobson,David(djacobso@qti.qualcomm.com).
+> 
+> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/Kconfig  |  7 ++++
+>  drivers/net/wireless/ath/ath9k/Makefile |  1 +
+>  drivers/net/wireless/ath/ath9k/ath9k.h  | 23 ++++++++++++
+>  drivers/net/wireless/ath/ath9k/main.c   |  4 ++
+>  drivers/net/wireless/ath/ath9k/rng.c    | 66 +++++++++++++++++++++++++++++++++
+>  5 files changed, 101 insertions(+)
+>  create mode 100644 drivers/net/wireless/ath/ath9k/rng.c
+> 
 
-Add support for long intervals on sched scan.
+> --- /dev/null
+> +++ b/drivers/net/wireless/ath/ath9k/rng.c
+> @@ -0,0 +1,66 @@
+> +/*
+> + * Copyright (c) 2015 Qualcomm Atheros, Inc.
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
+> +
+> +#include "ath9k.h"
+> +#include "hw.h"
+> +#include "ar9003_phy.h"
+> +
+> +static int ath9k_rng_data_read(struct hwrng *rng, u32 *data)
+> +{
+> +	u32 v1, v2;
+> +	struct ath_softc *sc = (struct ath_softc *)rng->priv;
+> +	struct ath_hw *ah = sc->sc_ah;
+> +
+> +	ath9k_ps_wakeup(sc);
+> +
+> +	v1 = REG_READ(ah, AR_PHY_TST_ADC);
+> +	v2 = REG_READ(ah, AR_PHY_TST_ADC);
+> +
+> +	ath9k_ps_restore(sc);
+> +
+> +	/* wait for data ready */
+> +	if (v1 && v2 && sc->rng_last != v1 && v1 != v2) {
+> +		*data = (v1 & 0xffff) | (v2 << 16);
+> +		sc->rng_last = v2;
+> +
+> +		return sizeof(u32);
+> +	}
+I have some doubt about this part. Doesn't the value of AR_PHY_TST_ADC
+depend on the initialization of the baseband observation registers?
+What guarantee is there that it's initialized to return any data that is
+useful for random number generation on all chipsets?
+Did you validate all relevant initval settings for this?
 
-If configured, the original request interval will
-be used num_short_interval times, and then the
-long interval will be used.
-
-While on it, fix the scan command field names
-to reflect the expected value is in ms (rather
-than secs).
-
-These values will be taken from the conf file,
-so bump its version accordingly.
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |    2 ++
- drivers/net/wireless/ti/wl18xx/scan.c |   17 ++++++++++++++---
- drivers/net/wireless/ti/wl18xx/scan.h |    4 ++--
- drivers/net/wireless/ti/wlcore/conf.h |   11 ++++++++++-
- drivers/net/wireless/ti/wlcore/scan.h |    6 ++++++
- 5 files changed, 34 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 2984056..62aabdd 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -422,6 +422,8 @@ static struct wlcore_conf wl18xx_conf = {
- 		.num_probe_reqs			= 2,
- 		.rssi_threshold			= -90,
- 		.snr_threshold			= 0,
-+		.num_short_intervals		= SCAN_MAX_SHORT_INTERVALS,
-+		.long_interval			= 30000,
- 	},
- 	.ht = {
- 		.rx_ba_win_size = 32,
-diff --git a/drivers/net/wireless/ti/wl18xx/scan.c b/drivers/net/wireless/ti/wl18xx/scan.c
-index 98666f2..ec2eb14 100644
---- a/drivers/net/wireless/ti/wl18xx/scan.c
-+++ b/drivers/net/wireless/ti/wl18xx/scan.c
-@@ -223,9 +223,20 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
- 				    SCAN_TYPE_PERIODIC);
- 	wl18xx_adjust_channels(cmd, cmd_channels);
- 
--	cmd->short_cycles_sec = 0;
--	cmd->long_cycles_sec = cpu_to_le16(req->interval);
--	cmd->short_cycles_count = 0;
-+	if (c->num_short_intervals && c->long_interval &&
-+	    c->long_interval > req->interval) {
-+		cmd->short_cycles_msec = cpu_to_le16(req->interval);
-+		cmd->long_cycles_msec = cpu_to_le16(c->long_interval);
-+		cmd->short_cycles_count = c->num_short_intervals;
-+	} else {
-+		cmd->short_cycles_msec = 0;
-+		cmd->long_cycles_msec = cpu_to_le16(req->interval);
-+		cmd->short_cycles_count = 0;
-+	}
-+	wl1271_debug(DEBUG_SCAN, "short_interval: %d, long_interval: %d, num_short: %d",
-+		     le16_to_cpu(cmd->short_cycles_msec),
-+		     le16_to_cpu(cmd->long_cycles_msec),
-+		     cmd->short_cycles_count);
- 
- 	cmd->total_cycles = 0;
- 
-diff --git a/drivers/net/wireless/ti/wl18xx/scan.h b/drivers/net/wireless/ti/wl18xx/scan.h
-index 2e636aa..66a763f 100644
---- a/drivers/net/wireless/ti/wl18xx/scan.h
-+++ b/drivers/net/wireless/ti/wl18xx/scan.h
-@@ -74,8 +74,8 @@ struct wl18xx_cmd_scan_params {
- 	u8 dfs;		   /* number of dfs channels in 5ghz */
- 	u8 passive_active; /* number of passive before active channels 2.4ghz */
- 
--	__le16 short_cycles_sec;
--	__le16 long_cycles_sec;
-+	__le16 short_cycles_msec;
-+	__le16 long_cycles_msec;
- 	u8 short_cycles_count;
- 	u8 total_cycles; /* 0 - infinite */
- 	u8 padding[2];
-diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-index 166add0..52a9d1b 100644
---- a/drivers/net/wireless/ti/wlcore/conf.h
-+++ b/drivers/net/wireless/ti/wlcore/conf.h
-@@ -1186,6 +1186,15 @@ struct conf_sched_scan_settings {
- 
- 	/* SNR threshold to be used for filtering */
- 	s8 snr_threshold;
-+
-+	/*
-+	 * number of short intervals scheduled scan cycles before
-+	 * switching to long intervals
-+	 */
-+	u8 num_short_intervals;
-+
-+	/* interval between each long scheduled scan cycle (in ms) */
-+	u16 long_interval;
- } __packed;
- 
- struct conf_ht_setting {
-@@ -1352,7 +1361,7 @@ struct conf_recovery_settings {
-  * version, the two LSB are the lower driver's private conf
-  * version.
-  */
--#define WLCORE_CONF_VERSION	(0x0006 << 16)
-+#define WLCORE_CONF_VERSION	(0x0007 << 16)
- #define WLCORE_CONF_MASK	0xffff0000
- #define WLCORE_CONF_SIZE	(sizeof(struct wlcore_conf_header) +	\
- 				 sizeof(struct wlcore_conf))
-diff --git a/drivers/net/wireless/ti/wlcore/scan.h b/drivers/net/wireless/ti/wlcore/scan.h
-index 4dadd0c..782eb29 100644
---- a/drivers/net/wireless/ti/wlcore/scan.h
-+++ b/drivers/net/wireless/ti/wlcore/scan.h
-@@ -83,6 +83,12 @@ struct wl1271_cmd_trigger_scan_to {
- #define MAX_CHANNELS_5GHZ	42
- 
- #define SCAN_MAX_CYCLE_INTERVALS 16
-+
-+/* The FW intervals can take up to 16 entries.
-+ * The 1st entry isn't used (scan is immediate). The last
-+ * entry should be used for the long_interval
-+ */
-+#define SCAN_MAX_SHORT_INTERVALS (SCAN_MAX_CYCLE_INTERVALS - 2)
- #define SCAN_MAX_BANDS 3
- 
- enum {
--- 
-1.7.9
-
+- Felix
