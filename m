@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:60126 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679AbbGPD4J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2015 23:56:09 -0400
-From: Maninder Singh <maninder1.s@samsung.com>
-To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: pankaj.m@samsung.com, Maninder Singh <maninder1.s@samsung.com>
-Subject: [PATCH 1/1] ath10k: fixing wrong initialization of struct channel
-Date: Thu, 16 Jul 2015 09:25:33 +0530
-Message-id: <1437018933-25832-1-git-send-email-maninder1.s@samsung.com> (sfid-20150716_055631_840664_250276E8)
+Received: from arrakis.dune.hu ([78.24.191.176]:38350 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752443AbbGGJu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 05:50:27 -0400
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>,
+	"Pete Hsieh" <peteh@marvell.com>
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+ <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com>
+ <e90aaab05cfd43fe9c05f738d4fc528a@SC-EXCH02.marvell.com>
+ <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
+Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
+To: "David Lin" <dlin@marvell.com>, "Jonas Gorski" <jogo@openwrt.org>
+Date: Tue, 07 Jul 2015 11:50:20 +0200
+MIME-Version: 1.0
+From: "Imre Kaloz" <kaloz@openwrt.org>
+Message-ID: <op.x1edl6b82s3iss@ecaz> (sfid-20150707_115040_074372_F16710D7)
+In-Reply-To: <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-chandef is initialized with NULL and on the very next line,
-we are using it to get channel, which is not correct.
+On Tue, 07 Jul 2015 11:38:32 +0200, Jonas Gorski <jogo@openwrt.org> wrote:
 
-channel should be initialized after obtaining chandef.
+<snip>
 
-Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>>> I think it would be good to have some more precise description here
+>>> (something like "Marvell 88W8864/8897 PCIe driver with AP support").
+>>>
+>>
+>> Will change the title from "Marvell Wireless Wi-Fi driver (mwlwifi)" to  
+>> "Marvell 88W8864/88W8897 PCIe driver with AP support".
+>
+> As Imre pointed out, mwifiex also supports AP mode, so this is not a
+> good description.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 218b6af..3d196b5 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -836,7 +836,7 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
- static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
- {
- 	struct cfg80211_chan_def *chandef = NULL;
--	struct ieee80211_channel *channel = chandef->chan;
-+	struct ieee80211_channel *channel = NULL;
- 	struct wmi_vdev_start_request_arg arg = {};
- 	int ret = 0;
- 
--- 
-1.7.9.5
+On the short run, changing the description of the drivers could work, but  
+I would suggest dropping (at least) 8897 support from mwifiex in favor of  
+mwlwifi. If supporting the 8766 isn't complicated, I would drop PCIe  
+support completely from there.
 
+David, Chor Teck, could you shed some light on the future driver strategy?  
+Does Marvell have any plans to add support for new chips to mwifiex, or do  
+you plan to add usb support to mwlwifi later?
+
+
+Cheers,
+
+Imre
