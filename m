@@ -1,127 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47930 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932179AbbG1Isg (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:35206 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756993AbbGGONO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:48:36 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/21] staging: wilc1000: remove the warnings on missing blank line
-Date: Tue, 28 Jul 2015 17:47:24 +0900
-Message-ID: <1438073261-28315-6-git-send-email-tony.cho@atmel.com> (sfid-20150728_104846_533922_A0C43EE8)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+	Tue, 7 Jul 2015 10:13:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <559BBDD6.7040808@users.sourceforge.net>
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+	<530CD2C4.4050903@users.sourceforge.net>
+	<alpine.DEB.2.10.1402251840450.7035@hadrien>
+	<530CF8FF.8080600@users.sourceforge.net>
+	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+	<530DD06F.4090703@users.sourceforge.net>
+	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+	<5317A59D.4@users.sourceforge.net>
+	<558EB32E.6090003@users.sourceforge.net>
+	<558EB4DE.3080406@users.sourceforge.net>
+	<20150707023103.GA22043@kroah.com>
+	<559B6FF8.9010704@users.sourceforge.net>
+	<CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
+	<559B85CD.6040200@users.sourceforge.net>
+	<CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
+	<559BBDD6.7040808@users.sourceforge.net>
+Date: Tue, 7 Jul 2015 16:13:12 +0200
+Message-ID: <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com> (sfid-20150707_161320_688019_F86CB07D)
+Subject: Re: Clarification for the use of additional fields in the message body
+From: Frans Klaver <fransklaver@gmail.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chris Park <chris.park@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the warnings reported by checkpatch.pl on missing a blank
-line after declaration.
+On Tue, Jul 7, 2015 at 1:53 PM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+>> I think that as far as these kernel mailing lists are concerned,
+>> the date of the update suggestion is the date on which you submitted the patch,
+>> rather than the date you originally committed it to your local tree.
+>
+> I imagine that there are committers who would like to keep
+> corresponding software development history a bit more accurate.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_sdio.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+I guess it depends on what your view on accurate is.
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 632b2b0..6e865d4 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -168,6 +168,7 @@ static int sdio_clear_int(void)
- #ifndef WILC_SDIO_IRQ_GPIO
- 	/* uint32_t sts; */
- 	sdio_cmd52_t cmd;
-+
- 	cmd.read_write = 0;
- 	cmd.function = 1;
- 	cmd.raw = 0;
-@@ -179,6 +180,7 @@ static int sdio_clear_int(void)
- 	return cmd.data;
- #else
- 	uint32_t reg;
-+
- 	if (!sdio_read_reg(WILC_HOST_RX_CTRL_0, &reg)) {
- 		g_sdio.dPrint(N_ERR, "[wilc spi]: Failed read reg (%08x)...\n", WILC_HOST_RX_CTRL_0);
- 		return 0;
-@@ -195,6 +197,7 @@ uint32_t sdio_xfer_cnt(void)
- {
- 	uint32_t cnt = 0;
- 	sdio_cmd52_t cmd;
-+
- 	cmd.read_write = 0;
- 	cmd.function = 1;
- 	cmd.raw = 0;
-@@ -259,6 +262,7 @@ static int sdio_write_reg(uint32_t addr, uint32_t data)
- 
- 	if ((addr >= 0xf0) && (addr <= 0xff)) {
- 		sdio_cmd52_t cmd;
-+
- 		cmd.read_write = 1;
- 		cmd.function = 0;
- 		cmd.raw = 0;
-@@ -482,6 +486,7 @@ static int sdio_read_reg(uint32_t addr, uint32_t *data)
- {
- 	if ((addr >= 0xf0) && (addr <= 0xff)) {
- 		sdio_cmd52_t cmd;
-+
- 		cmd.read_write = 0;
- 		cmd.function = 0;
- 		cmd.raw = 0;
-@@ -776,6 +781,7 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
- 	sdio_cmd52_t cmd;
- 	int loop;
- 	uint32_t chipid;
-+
- 	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
- 
- 	g_sdio.dPrint = func;
-@@ -977,6 +983,7 @@ static int sdio_read_int(uint32_t *int_status)
- 	}
- 	{
- 		int i;
-+
- 		for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
- 			if ((tmp >> (IRG_FLAGS_OFFSET + i)) & 0x1) {
- 				g_sdio.dPrint(N_ERR, "[wilc sdio]: Unexpected interrupt (1) : tmp=%x, data=%x\n", tmp, cmd.data);
-@@ -1015,6 +1022,7 @@ static int sdio_clear_int_ext(uint32_t val)
- #ifdef WILC_SDIO_IRQ_GPIO
- 		{
- 			uint32_t flags;
-+
- 			flags = val & ((1 << MAX_NUN_INT_THRPT_ENH2) - 1);
- 			reg = flags;
- 		}
-@@ -1032,6 +1040,7 @@ static int sdio_clear_int_ext(uint32_t val)
- 			reg |= (1 << 7);
- 		if (reg) {
- 			sdio_cmd52_t cmd;
-+
- 			cmd.read_write = 1;
- 			cmd.function = 0;
- 			cmd.raw = 0;
-@@ -1051,6 +1060,7 @@ static int sdio_clear_int_ext(uint32_t val)
- 			/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
- 			/* Cannot clear multiple interrupts. Must clear each interrupt individually */
- 			uint32_t flags;
-+
- 			flags = val & ((1 << MAX_NUM_INT) - 1);
- 			if (flags) {
- 				int i;
-@@ -1059,6 +1069,7 @@ static int sdio_clear_int_ext(uint32_t val)
- 				for (i = 0; i < g_sdio.nint; i++) {
- 					if (flags & 1) {
- 						sdio_cmd52_t cmd;
-+
- 						cmd.read_write = 1;
- 						cmd.function = 0;
- 						cmd.raw = 0;
--- 
-1.9.1
 
+>> If you wish to keep track of this evolution for yourself, or
+>> wish to share it, you're better off stashing it somewhere in a
+>> (public) git repo that you control.
+>
+> Would it be nicer to preserve such data directly also
+> by the usual mail interface?
+>
+>
+>> If you insist on placing the date somewhere, you can also put the date
+>> there if you wish. It'll be ignored by git when applied.
+>
+> This content management tool provides the capability to store
+> the discussed information by the parameters "--author=" and "--date=",
+> doesn't it?
+> Is the environment variable "GIT_AUTHOR_DATE" also interesting occasionally?
+>
+> How often do you take extra care for passing appropriate data there?
+
+I can't remember ever changing or explicitly preserving the commit
+date. I don't think I care enough. I did change the author on botched
+patches, but that's an exception. Remembering the author separately
+from the committer is something git does by design anyway.
+
+Frans
