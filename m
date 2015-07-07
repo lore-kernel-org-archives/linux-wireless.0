@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49465 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751599AbbGQQRO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 12:17:14 -0400
-Subject: [PATCH 11/27] modsign: Allow signing key to be PKCS#11
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Fri, 17 Jul 2015 17:17:08 +0100
-Message-ID: <20150717161708.2578.44915.stgit@warthog.procyon.org.uk> (sfid-20150717_182306_487890_12CD5B07)
-In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
-References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38765 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418AbbGGEAr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 00:00:47 -0400
+Date: Mon, 6 Jul 2015 19:31:50 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Chris Park <chris.park@atmel.com>, Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] staging: wilc1000: One function call less in
+ mac_ioctl() after error detection
+Message-ID: <20150707023150.GB22043@kroah.com> (sfid-20150707_060118_520768_CE4A009C)
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+ <558EB32E.6090003@users.sourceforge.net>
+ <558EB524.1050609@users.sourceforge.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <558EB524.1050609@users.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <David.Woodhouse@intel.com>
+On Sat, Jun 27, 2015 at 04:37:24PM +0200, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sat, 27 Jun 2015 16:00:59 +0200
 
-This is only the key; the corresponding *cert* still needs to be in
-$(topdir)/signing_key.x509. And there's no way to actually use this
-from the build system yet.
+Again, please fix.
 
-Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
-Signed-off-by: David Howells <dhowells@redhat.com>
----
+> 
+> The kfree() function was called in two cases by the mac_ioctl() function
+> during error handling even if the passed variable did not contain a pointer
+> for a valid data item.
+> 
+> * This implementation detail could be improved by the introduction
+>   of another jump label.
+> 
+> * Drop an unnecessary initialisation for the variable "buff" then.
 
- scripts/sign-file.c |   29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
+That's a different issue, please fix it in a separate patch.
 
-diff --git a/scripts/sign-file.c b/scripts/sign-file.c
-index 720b9bc933ae..ad0aa21bd3ac 100755
---- a/scripts/sign-file.c
-+++ b/scripts/sign-file.c
-@@ -22,6 +22,7 @@
- #include <openssl/pem.h>
- #include <openssl/pkcs7.h>
- #include <openssl/err.h>
-+#include <openssl/engine.h>
- 
- struct module_signature {
- 	uint8_t		algo;		/* Public-key crypto algorithm [0] */
-@@ -154,11 +155,29 @@ int main(int argc, char **argv)
- 	/* Read the private key and the X.509 cert the PKCS#7 message
- 	 * will point to.
- 	 */
--	b = BIO_new_file(private_key_name, "rb");
--	ERR(!b, "%s", private_key_name);
--	private_key = PEM_read_bio_PrivateKey(b, NULL, pem_pw_cb, NULL);
--	ERR(!private_key, "%s", private_key_name);
--	BIO_free(b);
-+	if (!strncmp(private_key_name, "pkcs11:", 7)) {
-+		ENGINE *e;
-+
-+		ENGINE_load_builtin_engines();
-+		drain_openssl_errors();
-+		e = ENGINE_by_id("pkcs11");
-+		ERR(!e, "Load PKCS#11 ENGINE");
-+		if (ENGINE_init(e))
-+			drain_openssl_errors();
-+		else
-+			ERR(1, "ENGINE_init");
-+		if (key_pass)
-+			ERR(!ENGINE_ctrl_cmd_string(e, "PIN", key_pass, 0), "Set PKCS#11 PIN");
-+		private_key = ENGINE_load_private_key(e, private_key_name, NULL,
-+						      NULL);
-+		ERR(!private_key, "%s", private_key_name);
-+	} else {
-+		b = BIO_new_file(private_key_name, "rb");
-+		ERR(!b, "%s", private_key_name);
-+		private_key = PEM_read_bio_PrivateKey(b, NULL, pem_pw_cb, NULL);
-+		ERR(!private_key, "%s", private_key_name);
-+		BIO_free(b);
-+	}
- 
- 	b = BIO_new_file(x509_name, "rb");
- 	ERR(!b, "%s", x509_name);
+thanks,
 
+greg k-h
