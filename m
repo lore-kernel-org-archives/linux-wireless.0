@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:35474 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbbGAQuY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 12:50:24 -0400
-Received: by wgjx7 with SMTP id x7so41889943wgj.2
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2015 09:50:23 -0700 (PDT)
-Subject: Re: [PATCH 3/3] staging: rtl8723au: function no longer discards
- return value
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
- <f1f04f73db3d925d4a790a07fc56154ba98871fc.1435700714.git.michel.von.czettritz@gmail.com>
- <20150701071224.GC2411@sudip-PC> <20150701075042.GT28762@mwanda>
- <20150701080827.GE2411@sudip-PC>
-Cc: devel@driverdev.osuosl.org, gregkh@linux.com,
-	Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jes.Sorensen@redhat.com
-From: Michel von Czettritz <michel.von.czettritz@gmail.com>
-Message-ID: <55941A4B.3060406@gmail.com> (sfid-20150701_185027_882070_C2C84242)
-Date: Wed, 1 Jul 2015 18:50:19 +0200
+Received: from mout.web.de ([212.227.17.11]:60831 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754520AbbGGLyW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 07:54:22 -0400
+Subject: Re: Clarification for the use of additional fields in the message
+ body
+To: Frans Klaver <fransklaver@gmail.com>
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+ <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
+ <559B6FF8.9010704@users.sourceforge.net>
+ <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
+ <559B85CD.6040200@users.sourceforge.net>
+ <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chris Park <chris.park@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <559BBDD6.7040808@users.sourceforge.net> (sfid-20150707_135428_597596_1698C671)
+Date: Tue, 7 Jul 2015 13:53:58 +0200
 MIME-Version: 1.0
-In-Reply-To: <20150701080827.GE2411@sudip-PC>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/01/2015 10:08 AM, Sudip Mukherjee wrote:
-> On Wed, Jul 01, 2015 at 10:50:42AM +0300, Dan Carpenter wrote:
->> On Wed, Jul 01, 2015 at 12:42:24PM +0530, Sudip Mukherjee wrote:
->>> On Tue, Jun 30, 2015 at 11:54:59PM +0200, Michel von Czettritz wrote:
->>>> The return value of FillH2CCmd in rtl8723a_set_rssi_cmd and
->>>> rtl8723a_set_raid_cmd is never checked. Both functions always return
->>>> _SUCCESS.
->>>>
->>>> Both functions now return the return value of FillH2CCmd.
->>> If they are never checked then why do we need to return some value?
->>> why not make them void?
->>
->> They probably *should* be checked eventually?
-> yes, they should check the sucess/failure of the commands. If that plan
-> is there to check the values afterwards then the patch is correct.
-Both functions are currently only called by void functions, which don't check on the return values of the functions. 
-Nonetheless I think rtl8723a_set_rssi_cmd and rtl8723a_set_raid_cmd should return correct values and another patch should take on the calling void functions error handling.
-As I'm not fully familiar with the inner workings of the driver, I'd leave the error handling for somebody else to implement, or would take it on later.
+> I think that as far as these kernel mailing lists are concerned,
+> the date of the update suggestion is the date on which you submitted the patch,
+> rather than the date you originally committed it to your local tree.
 
-regards Michel
+I imagine that there are committers who would like to keep
+corresponding software development history a bit more accurate.
 
+
+> If you wish to keep track of this evolution for yourself, or
+> wish to share it, you're better off stashing it somewhere in a
+> (public) git repo that you control.
+
+Would it be nicer to preserve such data directly also
+by the usual mail interface?
+
+
+> If you insist on placing the date somewhere, you can also put the date
+> there if you wish. It'll be ignored by git when applied.
+
+This content management tool provides the capability to store
+the discussed information by the parameters "--author=" and "--date=",
+doesn't it?
+Is the environment variable "GIT_AUTHOR_DATE" also interesting occasionally?
+
+How often do you take extra care for passing appropriate data there?
+
+Regards,
+Markus
