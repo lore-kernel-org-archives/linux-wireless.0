@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:49841 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752946AbbGINfV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 09:35:21 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH] net: wireless: reduce log level of CRDA related messages
-Date: Thu,  9 Jul 2015 15:35:15 +0200
-Message-Id: <1436448915-31724-1-git-send-email-thomas.petazzoni@free-electrons.com> (sfid-20150709_153528_507259_B4073E38)
+Received: from mout.web.de ([212.227.17.11]:53144 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751041AbbGGHzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 03:55:11 -0400
+Subject: Re: Clarification for the use of additional fields in the message
+ body
+To: Frans Klaver <fransklaver@gmail.com>
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+ <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
+ <559B6FF8.9010704@users.sourceforge.net>
+ <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chris Park <chris.park@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <559B85CD.6040200@users.sourceforge.net> (sfid-20150707_095532_625490_A5044452)
+Date: Tue, 7 Jul 2015 09:54:53 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With a basic Linux userspace, the messages "Calling CRDA to update
-world regulatory domain" appears 10 times after boot every second or
-so, followed by a final "Exceeded CRDA call max attempts. Not calling
-CRDA". For those of us not having the corresponding userspace parts,
-having those messages repeatedly displayed at boot time is a bit
-annoying, so this commit reduces their log level to pr_debug().
+> The date, as far as I know, is ignored. It is the commit date,
+> not the authoring date, and once your patch is applied by a maintainer
+> (i.e. committed), the date gets reset anyway.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- net/wireless/reg.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks for your feedback.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d359e06..29134c8 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -544,15 +544,15 @@ static int call_crda(const char *alpha2)
- 	reg_regdb_query(alpha2);
- 
- 	if (reg_crda_timeouts > REG_MAX_CRDA_TIMEOUTS) {
--		pr_info("Exceeded CRDA call max attempts. Not calling CRDA\n");
-+		pr_debug("Exceeded CRDA call max attempts. Not calling CRDA\n");
- 		return -EINVAL;
- 	}
- 
- 	if (!is_world_regdom((char *) alpha2))
--		pr_info("Calling CRDA for country: %c%c\n",
-+		pr_debug("Calling CRDA for country: %c%c\n",
- 			alpha2[0], alpha2[1]);
- 	else
--		pr_info("Calling CRDA to update world regulatory domain\n");
-+		pr_debug("Calling CRDA to update world regulatory domain\n");
- 
- 	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
- }
--- 
-2.4.5
 
+> No need to try and preserve it.
+
+I find that it might occasionally help to share and keep the record
+on timestamps about the evolution for an original update suggestion.
+
+Regards,
+Markus
