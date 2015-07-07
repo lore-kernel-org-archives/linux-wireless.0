@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52712 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754180AbbGQMjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 08:39:55 -0400
-Message-ID: <1437136793.1933.12.camel@sipsolutions.net> (sfid-20150717_143957_737312_635D8FE6)
-Subject: Re: [PATCH v3 2/5] mac80211: add missing length check for confirm
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Fri, 17 Jul 2015 14:39:53 +0200
-In-Reply-To: <1436877119-17577-3-git-send-email-me@bobcopeland.com> (sfid-20150714_143219_590927_15FC051D)
-References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
-	 <1436877119-17577-3-git-send-email-me@bobcopeland.com>
-	 (sfid-20150714_143219_590927_15FC051D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38716 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbbGGEAp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 00:00:45 -0400
+Date: Mon, 6 Jul 2015 19:31:03 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Chris Park <chris.park@atmel.com>, Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] staging: wilc1000: Delete unnecessary checks before
+ two function calls
+Message-ID: <20150707023103.GA22043@kroah.com> (sfid-20150707_060056_003945_13502968)
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+ <558EB32E.6090003@users.sourceforge.net>
+ <558EB4DE.3080406@users.sourceforge.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <558EB4DE.3080406@users.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-07-14 at 08:31 -0400, Bob Copeland wrote:
-> Although mesh_rx_plink_frame() already checks that frames have enough
-> bytes for the action code plus another two bytes for 
-> capability/reason
-> code, it doesn't take into account that confirm frames also have an
-> additional two-byte aid.  As a result, a corrupt frame could cause a
-> subsequent subtraction to wrap around to ill effect.  Add another
-> check for this case.
-> 
-Also applied.
+On Sat, Jun 27, 2015 at 04:36:14PM +0200, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sat, 27 Jun 2015 15:56:57 +0200
 
-johannes
+Why is this in the body of the email?  Please fix your email client or
+just use git send-email properly.
+
