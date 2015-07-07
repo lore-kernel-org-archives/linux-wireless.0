@@ -1,90 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:37477 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350AbbGJGU5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2248 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412AbbGGJUy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 02:20:57 -0400
-Received: by igpy18 with SMTP id y18so6310787igp.0
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 23:20:56 -0700 (PDT)
+	Tue, 7 Jul 2015 05:20:54 -0400
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: "nbd@openwrt.org" <nbd@openwrt.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>
+Subject: RE: [PATCH v2] ath9k: export HW random number generator
+Date: Tue, 7 Jul 2015 09:20:52 +0000
+Message-ID: <e9b22d656abb413091493e983786e504@NASANEXM01E.na.qualcomm.com> (sfid-20150707_112100_934347_62AD0CBD)
+References: <1435912110-9646-1-git-send-email-miaoqing@qca.qualcomm.com>
+ <559A5919.3060308@openwrt.org>
+ <262dbfcff3564c4ba2025f9fde11e8e2@NASANEXM01E.na.qualcomm.com>
+ <559B7AFC.3040202@openwrt.org>
+In-Reply-To: <559B7AFC.3040202@openwrt.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1436507759-4546-2-git-send-email-johnny.kim@atmel.com>
-References: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com> <1436507759-4546-2-git-send-email-johnny.kim@atmel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 10 Jul 2015 16:20:37 +1000
-Message-ID: <CAGRGNgX4xctq0XmEt-g3fnLG_PyUj6kHxEf1=hd41tjxcWEnCw@mail.gmail.com> (sfid-20150710_082113_295402_584CEFED)
-Subject: Re: [PATCH 1/3] staging: wilc1000: wilc_wlan_cfg_commit(): replace
- integer with pointer
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Chris Park <chris.park@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>, tony.cho@atmel.com,
-	Nicolas.FERRE@atmel.com, Dean Lee <dean.lee@atmel.com>,
-	austin.shin@atmel.com
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johnny,
+Thanks Felix, I think that's why we can't get the ideal entropy.  And  I only saw the unstable issue when read the ADC values from MAC_PCU buffer after enable BB multiplexes the ADC input from radio to MAC ,  as it will defer the regular operation.
 
-On Fri, Jul 10, 2015 at 3:55 PM, Johnny Kim <johnny.kim@atmel.com> wrote:
-> A argument of wilc_wlan_cfg_commit() is address of structure.
-> But because the size is restricted to 32bit, it is not correct
-> for 64bit machine.
->
-> So, this changes the interger value to obvious structure pointer.
->
-> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index def72fd..d32e45e 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -1862,13 +1862,13 @@ static void wilc_wlan_cleanup(void)
->
->  }
->
-> -static int wilc_wlan_cfg_commit(int type, uint32_t drvHandler)
-> +static int wilc_wlan_cfg_commit(int type, tstrWILC_WFIDrv *drvHandler)
->  {
->         wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
->         wilc_cfg_frame_t *cfg = &p->cfg_frame;
->         int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
->         int seq_no = p->cfg_seq_no % 256;
-> -       int driver_handler = (u32)drvHandler;
-> +       uintptr_t driver_handler = (uintptr_t)drvHandler;
+- Miaoqing
 
-Er, why not just remove this variable and use drvHandler directly?
+-----Original Message-----
+From: Felix Fietkau [mailto:nbd@openwrt.org] 
+Sent: Tuesday, July 07, 2015 3:09 PM
+To: Pan, Miaoqing; linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org; ath9k-devel; Valo, Kalle
+Subject: Re: [PATCH v2] ath9k: export HW random number generator
 
-> @@ -1923,7 +1923,7 @@ static int wilc_wlan_cfg_set(int start, uint32_t wid, uint8_t *buffer, uint32_t
->                 p->cfg_frame_in_use = 1;
->
->                 /*Edited by Amr - BugID_4720*/
-> -               if (wilc_wlan_cfg_commit(WILC_CFG_SET, drvHandler))
-> +               if (wilc_wlan_cfg_commit(WILC_CFG_SET, (tstrWILC_WFIDrv *)drvHandler))
+On 2015-07-07 07:07, Pan, Miaoqing wrote:
+> AR_PHY_TST_ADC is BB ADC sample register, it doesn't depend on other 
+> BB registers. Get non zero data if it has the ADC values.
+This is completely wrong!
 
-No need to cast it to it's own type.
+AR_PHY_TST_ADC is a generic observation register which can be configured to observe multiple points in the rx path.
+I did my own experiments with sampling raw I/Q values from the ADC, and you can find my patch here:
 
->                         ret_size = 0;   /* BugID_5213 */
->
->                 if (p->os_func.os_wait(p->cfg_wait, CFG_PKTS_TIMEOUT)) {
-> @@ -1960,7 +1960,7 @@ static int wilc_wlan_cfg_get(int start, uint32_t wid, int commit, uint32_t drvHa
->                 p->cfg_frame_in_use = 1;
->
->                 /*Edited by Amr - BugID_4720*/
-> -               if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drvHandler))
-> +               if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, (tstrWILC_WFIDrv *)drvHandler))
+http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=package/kernel/mac80211/patches/543-ath9k_entropy_from_adc.patch
 
-Ditto.
+It right now uses only the lowest bits (they are the hardest to control from the outside).
 
-Thanks,
+Through extensive testing (not just by me, but also by many people in the OpenWrt community), I found that leaving the AR_PHY_TST_ADC register configured for raw I/Q samples causes the radio to become unstable on AR5008-AR9002. That's why my patch currently only gathers some data at driver init time.
+By the way, on AR5008-AR9002 this register is in a different location than AR9003, something your patch also needs to take into account.
 
--- 
-Julian Calaby
+You should also make sure that the radio is actually configured to a channel (and active!) before gathering data.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+When you rework your patch, please carefully review the documentation for the fields rx_obs_sel and cf_bbb_obs_sel before you change the code again.
+
+- Felix
