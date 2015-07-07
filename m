@@ -1,80 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:52728 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751572AbbGPLEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2015 07:04:33 -0400
-Message-ID: <55A78FA3.70503@rempel-privat.de> (sfid-20150716_130437_010374_7E289C64)
-Date: Thu, 16 Jul 2015 13:04:03 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from server14-mail.hostwhitelabel.com ([104.152.168.114]:48382 "EHLO
+	server14.hostwhitelabel.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932511AbbGGRmi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 13:42:38 -0400
+From: CACook@quantum-sci.com
+To: ath10k@lists.infradead.org
+Cc: Peter Oh <poh@qca.qualcomm.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath10k: add support for qca99x0 Rx descriptors
+Date: Tue, 07 Jul 2015 10:09:38 -0700
+Message-ID: <2345251.lpvZM96hbt@andromeda> (sfid-20150707_194244_828088_3930D6E3)
+In-Reply-To: <1436287676-25767-4-git-send-email-poh@qca.qualcomm.com>
+References: <1436287676-25767-1-git-send-email-poh@qca.qualcomm.com> <1436287676-25767-4-git-send-email-poh@qca.qualcomm.com>
 MIME-Version: 1.0
-To: rolf.anderegg@weiss.ch,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
-References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch>
-In-Reply-To: <55A3A672.1060502@weiss.ch>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="nHJMrnROj1nb1iw7WRUJMorkt6msJ8D7v"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---nHJMrnROj1nb1iw7WRUJMorkt6msJ8D7v
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 07 July 2015 9:47:56 Peter Oh wrote:
+> QCA99X0 chip has an extra 4 bytes in rx_msdu_start,
+> 20 bytes in rx_msdu_end and 20 bytes in rx_ppdu_end structure
+> which are used in htt_rx_desc and HTT Rx ring offset setup.
+> This is necessary for correct Rx for QCA99X0 or Rx descriptors
+> will be overwritten and corrupted.
 
-Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
->=20
->> First of all, you are using ancient kernel and firmware. Please update=
-
->> it. Firmware should be at leas 1.4 and kernel probably 4.1 or later. i=
-'m
->> not sure which include patch with support of RMW command introduced by=
-
->> new FW.
->>
->> Then you can try to disable LED blinking which is stealing your usb
->> bandwidth.
->=20
-> Thanks for your suggestions.
-> You say ancient, I was thinking longterm stable. For various reasons I
-> require a RT patched kernel, alas this is not yet available for 4.1
-> kernels. Aside from that I have updated the kernel and firmware as you
-> propose. Also I have set ath9k_htc's blink=3D0. The kernel warnings are=
- no
-> longer occuring, however the AP's connection (which requires several
-> attempts) is still dropped after a few seconds.
-> I suspect that there are bandwidth/speed issues when dealing with USB
-> adapters, but that does not inherently mean that the connection is pron=
-e
-> to drop, right? Doesn't that mean that I am leaking packages somewhere
-> along the way? What else could I be looking for?
-
-The packages can drop if you will do channel scan. STA mode need some
-seconds to complete channel scan. It means AP will be all the time
-unavailable.
-
-> Regards,
-> Rolf Anderegg
->=20
+Will this be in the most recent git, to support the QCA9880?
 
 
---=20
-Regards,
-Oleksij
-
-
---nHJMrnROj1nb1iw7WRUJMorkt6msJ8D7v
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlWnj6MACgkQHwImuRkmbWkvUgD7BEA/J06DrziwyMgsOMqkxk2o
-i+KsWTilH8F7wVO6umYA/3vJkoVmdMR6JYdEtBVIv2cas+f7Y2ntdN1jLhSVatoj
-=LoSv
------END PGP SIGNATURE-----
-
---nHJMrnROj1nb1iw7WRUJMorkt6msJ8D7v--
