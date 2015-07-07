@@ -1,92 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:54032 "EHLO mail.hofr.at"
+Received: from mout.web.de ([212.227.15.3]:53715 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751007AbbGIF5u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 01:57:50 -0400
-Date: Thu, 9 Jul 2015 07:57:47 +0200
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Avinash Patil <avinashapatil@gmail.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH] mwifiex: drop condition with no effect
-Message-ID: <20150709055747.GA22159@opentech.at> (sfid-20150709_075753_883415_3F3EB124)
-References: <1436364902-28943-1-git-send-email-hofrat@osadl.org> <CAJwzM1kvWfP1VB4wUoT74F-Ons1R3cpoBEAdfm37sh1p5vhh+A@mail.gmail.com>
+	id S1753112AbbGGQPk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 12:15:40 -0400
+Subject: Re: Clarification for the use of additional fields in the message
+ body
+To: Frans Klaver <fransklaver@gmail.com>
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+ <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
+ <559B6FF8.9010704@users.sourceforge.net>
+ <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
+ <559B85CD.6040200@users.sourceforge.net>
+ <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
+ <559BBDD6.7040808@users.sourceforge.net>
+ <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chris Park <chris.park@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <559BFB19.2080700@users.sourceforge.net> (sfid-20150707_181603_568464_E86220E8)
+Date: Tue, 7 Jul 2015 18:15:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJwzM1kvWfP1VB4wUoT74F-Ons1R3cpoBEAdfm37sh1p5vhh+A@mail.gmail.com>
+In-Reply-To: <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 08 Jul 2015, Avinash Patil wrote:
+> I can't remember ever changing or explicitly preserving the commit date.
+> I don't think I care enough.
 
-> Hi Nicholas,
-> 
-> On Wed, Jul 8, 2015 at 7:15 AM, Nicholas Mc Guire <hofrat@osadl.org> wrote:
-> > scanning for trivial bug-patters with coccinelle spatches returned:
-> > ./drivers/net/wireless/mwifiex/sta_cmdresp.c:895
-> >         WARNING: condition with no effect (if branch == else)
-> >
-> > originally added in 'commit d8d2f19feb16 ("mwifiex: silence TDLS link
-> > delete failure for nonexistent link")' with dev_dbg/dev_err (though
-> > with the same message) to differentiate severity and then in 'commit
-> > acebe8c10a6e ("mwifiex: change dbg print func to mwifiex_dbg")' all
-> > dev_dbg,dev_warn and dev_err got converted to mwifiex_dbg which should
-> > thus probably drop this if/else as well.
-> >
-> > Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> > ---
-> >
-> > If dropping the if/else is not the right thing to do then commit
-> > acebe8c10a6e "mwifiex: change dbg print func to mwifiex_dbg" probably
-> > needs a review as well.
-> >
-> > Patch was compile tested with x86_64_defconfig + CONFIG_MWIFIEX=m
-> >
-> > Patch is against 4.2-rc1 (localversion-next is -next-20150708)
-> >
-> >  drivers/net/wireless/mwifiex/sta_cmdresp.c |   11 +++--------
-> >  1 file changed, 3 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-> > index b645884..e58f900 100644
-> > --- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-> > +++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-> > @@ -892,14 +892,9 @@ static int mwifiex_ret_tdls_oper(struct mwifiex_private *priv,
-> >         switch (action) {
-> >         case ACT_TDLS_DELETE:
-> >                 if (reason) {
-> > -                       if (!node || reason == TDLS_ERR_LINK_NONEXISTENT)
-> > -                               mwifiex_dbg(priv->adapter, ERROR,
-> > -                                           "TDLS link delete for %pM failed: reason %d\n",
-> > -                                           cmd_tdls_oper->peer_mac, reason);
-> > -                       else
-> > -                               mwifiex_dbg(priv->adapter, ERROR,
-> > -                                           "TDLS link delete for %pM failed: reason %d\n",
-> > -                                           cmd_tdls_oper->peer_mac, reason);
-> > +                       mwifiex_dbg(priv->adapter, ERROR,
-> > +                                   "TDLS link delete for %pM failed: reason %d\n",
-> > +                                   cmd_tdls_oper->peer_mac, reason);
-> 
-> I think reason why we had these 2 different prints is for first
-> occurrence in "if" which may be not so serious we used to print with
-> dev_dbg and second occurrence in "else" is more serious issue which
-> was under dev_err.
-> It would be better to use mwifiex_dbg with DBG/MSG in"if" condition
-> instead of removing whole if/else.
->
+Would any more software developers and maintainers like to share
+their experiences around such details?
 
-ok - it seemed to me that since the reason was being printed it would be
-clear from the error message which case was triggering this message but
-you are right that the initial intent to differentiate severity levels
-(from 'commit d8d2f19feb16 ("mwifiex: silence TDLS link delete failure
-for nonexistent link")' would be better served with your suggestion - I 
-just was not clear if this initial reason still holds.
+When do commit timestamps become relevant as a documentation item
+for contribution authorship?
 
-will fix it up and resend.
 
-thx!
-hofrat
+> Remembering the author separately from the committer is something
+> git does by design anyway.
+
+Do you usually just reuse a procedure from a well-known command
+for which a description is provided like the following?
+http://git-scm.com/docs/git-am
+'…
+"From: " and "Subject: " lines starting the body override
+the respective commit author name and title values
+taken from the headers.
+…'
+
+Will further fields be eventually mentioned there?
+
+Regards,
+Markus
