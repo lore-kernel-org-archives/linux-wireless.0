@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49838 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753346AbbGISgo (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59684 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758012AbbGGPPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 14:36:44 -0400
-Message-ID: <559EBF38.70107@broadcom.com> (sfid-20150709_203706_983751_17CF834B)
-Date: Thu, 9 Jul 2015 20:36:40 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 7 Jul 2015 11:15:18 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Andreas Fenkart <afenkart@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: mwifiex: cmd timeout during suspend
+Date: Tue, 7 Jul 2015 15:15:14 +0000
+Message-ID: <d380c008456945a8ab9a0b1420b333db@SC-EXCH02.marvell.com> (sfid-20150707_171529_113703_AA48A291)
+References: <CALtMJEANXpsow_-MU4uEOJwj4Y0pts=6vb7AA9q=HZyGL+vBxw@mail.gmail.com>
+In-Reply-To: <CALtMJEANXpsow_-MU4uEOJwj4Y0pts=6vb7AA9q=HZyGL+vBxw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	<kvalo@codeaurora.org>, <brudley@broadcom.com>,
-	<frankyl@broadcom.com>, <meuleman@broadcom.com>
-CC: <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH v2] brcmsmac: Use kstrdup to simplify code
-References: <1436383927-14010-1-git-send-email-christophe.jaillet@wanadoo.fr> <1436386966-16148-1-git-send-email-christophe.jaillet@wanadoo.fr>
-In-Reply-To: <1436386966-16148-1-git-send-email-christophe.jaillet@wanadoo.fr>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/2015 10:22 PM, Christophe JAILLET wrote:
-> Replace a kmalloc+strcpy by an equivalent kstrdup in order to improve
-> readability.
-
-Not sure if readability is really the issue here. At most it is a small 
-reduction of driver code by using kstrdup(). Anyway, the patch looks fine so
-
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
-> v2: fix the subject
->
->   drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c | 4 +---
->   1 file changed, 1 insertion(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> index 4813506..8a6c077 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> @@ -1476,9 +1476,7 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
->   	wl->timers = t;
->
->   #ifdef DEBUG
-> -	t->name = kmalloc(strlen(name) + 1, GFP_ATOMIC);
-> -	if (t->name)
-> -		strcpy(t->name, name);
-> +	t->name = kstrdup(name, GFP_ATOMIC);
->   #endif
->
->   	return t;
->
-
+SGkgQW5kcmVhcywNCg0KPiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5v
+cmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBC
+ZWhhbGYgT2YgQW5kcmVhcyBGZW5rYXJ0DQo+IFNlbnQ6IFR1ZXNkYXksIEp1bHkgMDcsIDIwMTUg
+MjozNyBQTQ0KPiBUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6
+IG13aWZpZXg6IGNtZCB0aW1lb3V0IGR1cmluZyBzdXNwZW5kDQo+IA0KPiBPYnNlcnZlZCBGVyBy
+ZXNldCBkdXJpbmcgc3VzcGVuZC4gVGhpcyBpcyBoYXJtZnVsIHNpbmNlIGR1cmluZyBzdXNwZW5k
+LA0KPiBkcml2ZXIgc2hhbGwgbm90IHJlc2V0IGFuZCByZWxvYWQgdGhlIEZXLg0KPiANCg0KRGV2
+aWNlIHJlc2V0IGlzIHRyaWdnZXJlZCB0byByZWNvdmVyIGZyb20gYSBjb3JuZXIgY2FzZSBmaXJt
+d2FyZSBidWcgd2hpY2ggY2F1c2VkIGNvbW1hbmQgdGltZW91dC4gV2UgaGF2ZSBzaW11bGF0ZWQg
+ZGV2aWNlIHJlc2V0IGR1cmluZyBzeXN0ZW0gc3VzcGVuZCBhbmQgb2JzZXJ2ZWQgdGhhdCBzeXN0
+ZW0gc3VzcGVuZCBhdHRlbXB0IGlzIGFib3J0ZWQgaW4gdGhpcyBjYXNlLiBObyBvdGhlciBzaWRl
+IGVmZmVjdHMgc2Vlbi4gVGhpcyBzY2VuYXJpbyBpcyBoYXJkIHRvIHJlcHJvZHVjZS4NCg0KPiBQ
+cm9ibGVtIGhhcyBiZWVuIG9ic2VydmVkIG9uIGtlcm5lbCA0LjAgLyAzOWE4ODA0NC4gSSd2ZSBh
+bHJlYWR5IHNlZW4NCj4gdGhpcyB1cHN0cmVhbSBwYXRjaDoNCj4gMWViZDIyMWY4ODM5NyBtd2lm
+aWV4OiBzdG9wIGNvbW1hbmQgcGF0aCBpbiBzdXNwZW5kIGhhbmRsZQ0KPiANCj4gU2luY2UgdGhl
+IGlzc3VlIGlzIGEgYml0IGhhcmQgdG8gcmVwcm9kdWNlLCBJJ20gd29uZGVyaW5nLCBpZiB0aGF0
+IHBhdGNoDQo+IGFscmVhZHkgZml4ZXMgdGhlIHByb2JsZW0gb3IgaWYgaXQncyBhIG5ldyBpc3N1
+ZS4NCg0KWW91IGFyZSByaWdodC4gVGhpcyBwYXRjaCBzdG9wcyBjb21tYW5kIHBhdGggaW4gY2Zn
+ODAyMTEncyBzdXNwZW5kIGhhbmRsZXIgd2hpY2ggaXMgY2FsbGVkIGF0IHZlcnkgZWFybHkgc3Rh
+Z2Ugb2Ygc3lzdGVtIHN1c3BlbmQgcHJvY2Vzcy4gU28gdGhlIHBhdGNoIGhhcyByZWR1Y2VkIHRo
+ZSBwb3NzaWJpbGl0eSBvZiBjb21tYW5kIHRpbWVvdXQgZHVyaW5nIHN5c3RlbSBzdXNwZW5kLg0K
+DQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
