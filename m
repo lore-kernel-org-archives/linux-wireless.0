@@ -1,317 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:7416 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932409AbbGJSbV (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37775 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757499AbbGGNss (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 14:31:21 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/7] brcmfmac: Increase nr of supported flowrings.
-Date: Fri, 10 Jul 2015 20:31:07 +0200
-Message-ID: <1436553071-32423-4-git-send-email-arend@broadcom.com> (sfid-20150710_203128_526178_A625F285)
-In-Reply-To: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
+	Tue, 7 Jul 2015 09:48:48 -0400
+From: Chor Teck Law <ctlaw@marvell.com>
+To: Imre Kaloz <kaloz@openwrt.org>, David Lin <dlin@marvell.com>,
+	Jonas Gorski <jogo@openwrt.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v5] Add new mac80211 driver mwlwifi.
+Date: Tue, 7 Jul 2015 13:48:38 +0000
+Message-ID: <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com> (sfid-20150707_154852_114318_457E19FE)
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+ <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com>
+ <e90aaab05cfd43fe9c05f738d4fc528a@SC-EXCH02.marvell.com>
+ <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
+ <op.x1edl6b82s3iss@ecaz>
+In-Reply-To: <op.x1edl6b82s3iss@ecaz>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
-
-Next generation devices will have firmware which will have more
-than 256 flowrings. This patch increases the maximum number of
-supported flowrings to 512.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/flowring.c | 38 ++++++++++++----------
- drivers/net/wireless/brcm80211/brcmfmac/flowring.h | 20 ++++++------
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   | 11 +++++--
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h   |  2 +-
- 4 files changed, 41 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-index 5944063..e30f8fa 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-@@ -32,7 +32,7 @@
- #define BRCMF_FLOWRING_LOW		(BRCMF_FLOWRING_HIGH - 256)
- #define BRCMF_FLOWRING_INVALID_IFIDX	0xff
- 
--#define BRCMF_FLOWRING_HASH_AP(da, fifo, ifidx) (da[5] + fifo + ifidx * 16)
-+#define BRCMF_FLOWRING_HASH_AP(da, fifo, ifidx) (da[5] * 2 + fifo + ifidx * 16)
- #define BRCMF_FLOWRING_HASH_STA(fifo, ifidx) (fifo + ifidx * 16)
- 
- static const u8 brcmf_flowring_prio2fifo[] = {
-@@ -68,7 +68,7 @@ u32 brcmf_flowring_lookup(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- 			  u8 prio, u8 ifidx)
- {
- 	struct brcmf_flowring_hash *hash;
--	u8 hash_idx;
-+	u16 hash_idx;
- 	u32 i;
- 	bool found;
- 	bool sta;
-@@ -88,6 +88,7 @@ u32 brcmf_flowring_lookup(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- 	}
- 	hash_idx =  sta ? BRCMF_FLOWRING_HASH_STA(fifo, ifidx) :
- 			  BRCMF_FLOWRING_HASH_AP(mac, fifo, ifidx);
-+	hash_idx &= (BRCMF_FLOWRING_HASHSIZE - 1);
- 	found = false;
- 	hash = flow->hash;
- 	for (i = 0; i < BRCMF_FLOWRING_HASHSIZE; i++) {
-@@ -98,6 +99,7 @@ u32 brcmf_flowring_lookup(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- 			break;
- 		}
- 		hash_idx++;
-+		hash_idx &= (BRCMF_FLOWRING_HASHSIZE - 1);
- 	}
- 	if (found)
- 		return hash[hash_idx].flowid;
-@@ -111,7 +113,7 @@ u32 brcmf_flowring_create(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- {
- 	struct brcmf_flowring_ring *ring;
- 	struct brcmf_flowring_hash *hash;
--	u8 hash_idx;
-+	u16 hash_idx;
- 	u32 i;
- 	bool found;
- 	u8 fifo;
-@@ -131,6 +133,7 @@ u32 brcmf_flowring_create(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- 	}
- 	hash_idx =  sta ? BRCMF_FLOWRING_HASH_STA(fifo, ifidx) :
- 			  BRCMF_FLOWRING_HASH_AP(mac, fifo, ifidx);
-+	hash_idx &= (BRCMF_FLOWRING_HASHSIZE - 1);
- 	found = false;
- 	hash = flow->hash;
- 	for (i = 0; i < BRCMF_FLOWRING_HASHSIZE; i++) {
-@@ -140,6 +143,7 @@ u32 brcmf_flowring_create(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- 			break;
- 		}
- 		hash_idx++;
-+		hash_idx &= (BRCMF_FLOWRING_HASHSIZE - 1);
- 	}
- 	if (found) {
- 		for (i = 0; i < flow->nrofrings; i++) {
-@@ -169,7 +173,7 @@ u32 brcmf_flowring_create(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- }
- 
- 
--u8 brcmf_flowring_tid(struct brcmf_flowring *flow, u8 flowid)
-+u8 brcmf_flowring_tid(struct brcmf_flowring *flow, u16 flowid)
- {
- 	struct brcmf_flowring_ring *ring;
- 
-@@ -179,7 +183,7 @@ u8 brcmf_flowring_tid(struct brcmf_flowring *flow, u8 flowid)
- }
- 
- 
--static void brcmf_flowring_block(struct brcmf_flowring *flow, u8 flowid,
-+static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
- 				 bool blocked)
- {
- 	struct brcmf_flowring_ring *ring;
-@@ -224,10 +228,10 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u8 flowid,
- }
- 
- 
--void brcmf_flowring_delete(struct brcmf_flowring *flow, u8 flowid)
-+void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
- {
- 	struct brcmf_flowring_ring *ring;
--	u8 hash_idx;
-+	u16 hash_idx;
- 	struct sk_buff *skb;
- 
- 	ring = flow->rings[flowid];
-@@ -249,7 +253,7 @@ void brcmf_flowring_delete(struct brcmf_flowring *flow, u8 flowid)
- }
- 
- 
--u32 brcmf_flowring_enqueue(struct brcmf_flowring *flow, u8 flowid,
-+u32 brcmf_flowring_enqueue(struct brcmf_flowring *flow, u16 flowid,
- 			   struct sk_buff *skb)
- {
- 	struct brcmf_flowring_ring *ring;
-@@ -275,7 +279,7 @@ u32 brcmf_flowring_enqueue(struct brcmf_flowring *flow, u8 flowid,
- }
- 
- 
--struct sk_buff *brcmf_flowring_dequeue(struct brcmf_flowring *flow, u8 flowid)
-+struct sk_buff *brcmf_flowring_dequeue(struct brcmf_flowring *flow, u16 flowid)
- {
- 	struct brcmf_flowring_ring *ring;
- 	struct sk_buff *skb;
-@@ -296,7 +300,7 @@ struct sk_buff *brcmf_flowring_dequeue(struct brcmf_flowring *flow, u8 flowid)
- }
- 
- 
--void brcmf_flowring_reinsert(struct brcmf_flowring *flow, u8 flowid,
-+void brcmf_flowring_reinsert(struct brcmf_flowring *flow, u16 flowid,
- 			     struct sk_buff *skb)
- {
- 	struct brcmf_flowring_ring *ring;
-@@ -307,7 +311,7 @@ void brcmf_flowring_reinsert(struct brcmf_flowring *flow, u8 flowid,
- }
- 
- 
--u32 brcmf_flowring_qlen(struct brcmf_flowring *flow, u8 flowid)
-+u32 brcmf_flowring_qlen(struct brcmf_flowring *flow, u16 flowid)
- {
- 	struct brcmf_flowring_ring *ring;
- 
-@@ -322,7 +326,7 @@ u32 brcmf_flowring_qlen(struct brcmf_flowring *flow, u8 flowid)
- }
- 
- 
--void brcmf_flowring_open(struct brcmf_flowring *flow, u8 flowid)
-+void brcmf_flowring_open(struct brcmf_flowring *flow, u16 flowid)
- {
- 	struct brcmf_flowring_ring *ring;
- 
-@@ -336,10 +340,10 @@ void brcmf_flowring_open(struct brcmf_flowring *flow, u8 flowid)
- }
- 
- 
--u8 brcmf_flowring_ifidx_get(struct brcmf_flowring *flow, u8 flowid)
-+u8 brcmf_flowring_ifidx_get(struct brcmf_flowring *flow, u16 flowid)
- {
- 	struct brcmf_flowring_ring *ring;
--	u8 hash_idx;
-+	u16 hash_idx;
- 
- 	ring = flow->rings[flowid];
- 	hash_idx = ring->hash_id;
-@@ -380,7 +384,7 @@ void brcmf_flowring_detach(struct brcmf_flowring *flow)
- 	struct brcmf_pub *drvr = bus_if->drvr;
- 	struct brcmf_flowring_tdls_entry *search;
- 	struct brcmf_flowring_tdls_entry *remove;
--	u8 flowid;
-+	u16 flowid;
- 
- 	for (flowid = 0; flowid < flow->nrofrings; flowid++) {
- 		if (flow->rings[flowid])
-@@ -404,7 +408,7 @@ void brcmf_flowring_configure_addr_mode(struct brcmf_flowring *flow, int ifidx,
- 	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
- 	struct brcmf_pub *drvr = bus_if->drvr;
- 	u32 i;
--	u8 flowid;
-+	u16 flowid;
- 
- 	if (flow->addr_mode[ifidx] != addr_mode) {
- 		for (i = 0; i < ARRAY_SIZE(flow->hash); i++) {
-@@ -430,7 +434,7 @@ void brcmf_flowring_delete_peer(struct brcmf_flowring *flow, int ifidx,
- 	struct brcmf_flowring_tdls_entry *prev;
- 	struct brcmf_flowring_tdls_entry *search;
- 	u32 i;
--	u8 flowid;
-+	u16 flowid;
- 	bool sta;
- 
- 	sta = (flow->addr_mode[ifidx] == ADDR_INDIRECT);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
-index 5551861..3a7d9c2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
-@@ -16,7 +16,7 @@
- #define BRCMFMAC_FLOWRING_H
- 
- 
--#define BRCMF_FLOWRING_HASHSIZE		256
-+#define BRCMF_FLOWRING_HASHSIZE		512		/* has to be 2^x */
- #define BRCMF_FLOWRING_INVALID_ID	0xFFFFFFFF
- 
- 
-@@ -24,7 +24,7 @@ struct brcmf_flowring_hash {
- 	u8 mac[ETH_ALEN];
- 	u8 fifo;
- 	u8 ifidx;
--	u8 flowid;
-+	u16 flowid;
- };
- 
- enum ring_status {
-@@ -61,16 +61,16 @@ u32 brcmf_flowring_lookup(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- 			  u8 prio, u8 ifidx);
- u32 brcmf_flowring_create(struct brcmf_flowring *flow, u8 da[ETH_ALEN],
- 			  u8 prio, u8 ifidx);
--void brcmf_flowring_delete(struct brcmf_flowring *flow, u8 flowid);
--void brcmf_flowring_open(struct brcmf_flowring *flow, u8 flowid);
--u8 brcmf_flowring_tid(struct brcmf_flowring *flow, u8 flowid);
--u32 brcmf_flowring_enqueue(struct brcmf_flowring *flow, u8 flowid,
-+void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid);
-+void brcmf_flowring_open(struct brcmf_flowring *flow, u16 flowid);
-+u8 brcmf_flowring_tid(struct brcmf_flowring *flow, u16 flowid);
-+u32 brcmf_flowring_enqueue(struct brcmf_flowring *flow, u16 flowid,
- 			   struct sk_buff *skb);
--struct sk_buff *brcmf_flowring_dequeue(struct brcmf_flowring *flow, u8 flowid);
--void brcmf_flowring_reinsert(struct brcmf_flowring *flow, u8 flowid,
-+struct sk_buff *brcmf_flowring_dequeue(struct brcmf_flowring *flow, u16 flowid);
-+void brcmf_flowring_reinsert(struct brcmf_flowring *flow, u16 flowid,
- 			     struct sk_buff *skb);
--u32 brcmf_flowring_qlen(struct brcmf_flowring *flow, u8 flowid);
--u8 brcmf_flowring_ifidx_get(struct brcmf_flowring *flow, u8 flowid);
-+u32 brcmf_flowring_qlen(struct brcmf_flowring *flow, u16 flowid);
-+u8 brcmf_flowring_ifidx_get(struct brcmf_flowring *flow, u16 flowid);
- struct brcmf_flowring *brcmf_flowring_attach(struct device *dev, u16 nrofrings);
- void brcmf_flowring_detach(struct brcmf_flowring *flow);
- void brcmf_flowring_configure_addr_mode(struct brcmf_flowring *flow, int ifidx,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 898c380..363a31e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -678,7 +678,7 @@ static u32 brcmf_msgbuf_flowring_create(struct brcmf_msgbuf *msgbuf, int ifidx,
- }
- 
- 
--static void brcmf_msgbuf_txflow(struct brcmf_msgbuf *msgbuf, u8 flowid)
-+static void brcmf_msgbuf_txflow(struct brcmf_msgbuf *msgbuf, u16 flowid)
- {
- 	struct brcmf_flowring *flow = msgbuf->flow;
- 	struct brcmf_commonring *commonring;
-@@ -1318,7 +1318,7 @@ int brcmf_proto_msgbuf_rx_trigger(struct device *dev)
- }
- 
- 
--void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid)
-+void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid)
- {
- 	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
- 	struct msgbuf_tx_flowring_delete_req *delete;
-@@ -1369,6 +1369,13 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	u32 count;
- 
- 	if_msgbuf = drvr->bus_if->msgbuf;
-+
-+	if (if_msgbuf->nrof_flowrings >= BRCMF_FLOWRING_HASHSIZE) {
-+		brcmf_err("driver not configured for this many flowrings %d\n",
-+			  if_msgbuf->nrof_flowrings);
-+		if_msgbuf->nrof_flowrings = BRCMF_FLOWRING_HASHSIZE - 1;
-+	}
-+
- 	msgbuf = kzalloc(sizeof(*msgbuf), GFP_KERNEL);
- 	if (!msgbuf)
- 		goto fail;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
-index 3d513e4..ee6906a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
-@@ -33,7 +33,7 @@
- 
- 
- int brcmf_proto_msgbuf_rx_trigger(struct device *dev);
--void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid);
-+void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid);
- int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr);
- void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr);
- #else
--- 
-1.9.1
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSW1yZSBLYWxveiBbbWFp
+bHRvOmthbG96QG9wZW53cnQub3JnXQ0KPiBTZW50OiBUdWVzZGF5LCBKdWx5IDA3LCAyMDE1IDI6
+NTAgQU0NCj4gVG86IERhdmlkIExpbjsgSm9uYXMgR29yc2tpDQo+IENjOiBKb2hhbm5lcyBCZXJn
+OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IENob3IgVGVjayBMYXc7IFBldGUNCj4g
+SHNpZWgNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NV0gQWRkIG5ldyBtYWM4MDIxMSBkcml2ZXIg
+bXdsd2lmaS4NCj4gDQo+IE9uIFR1ZSwgMDcgSnVsIDIwMTUgMTE6Mzg6MzIgKzAyMDAsIEpvbmFz
+IEdvcnNraSA8am9nb0BvcGVud3J0Lm9yZz4NCj4gd3JvdGU6DQo+IA0KPiA8c25pcD4NCj4gDQo+
+ID4+PiBJIHRoaW5rIGl0IHdvdWxkIGJlIGdvb2QgdG8gaGF2ZSBzb21lIG1vcmUgcHJlY2lzZSBk
+ZXNjcmlwdGlvbiBoZXJlDQo+ID4+PiAoc29tZXRoaW5nIGxpa2UgIk1hcnZlbGwgODhXODg2NC84
+ODk3IFBDSWUgZHJpdmVyIHdpdGggQVANCj4gc3VwcG9ydCIpLg0KPiA+Pj4NCj4gPj4NCj4gPj4g
+V2lsbCBjaGFuZ2UgdGhlIHRpdGxlIGZyb20gIk1hcnZlbGwgV2lyZWxlc3MgV2ktRmkgZHJpdmVy
+IChtd2x3aWZpKSINCj4gPj4gdG8gIk1hcnZlbGwgODhXODg2NC84OFc4ODk3IFBDSWUgZHJpdmVy
+IHdpdGggQVAgc3VwcG9ydCIuDQo+ID4NCj4gPiBBcyBJbXJlIHBvaW50ZWQgb3V0LCBtd2lmaWV4
+IGFsc28gc3VwcG9ydHMgQVAgbW9kZSwgc28gdGhpcyBpcyBub3QgYQ0KPiA+IGdvb2QgZGVzY3Jp
+cHRpb24uDQoNCldlIGhhdmUgZXhwbGFpbmVkIGEgZmV3IHRpbWVzIG9uIHRoaXMuLi4gUGxzIHJl
+YWQgYWJvdXQgdGhlIGRpZmZlcmVuY2Ugb2YgbXdpZmlleCB2cyBtd2x3aWZpLiBUaGVyZSBpcyBh
+IE5PVEUgYWRkZWQgdG8gdGhlIGRlc2NyaXB0aW9uIG9mIEtDb25maWcgb2YgbXdsd2lmaS4NCg0K
+V291bGQgdGhlIGNvbW11bml0eSBwcmVmZXIgdGhpcyBkZXNjcmlwdGlvbiBpbnN0ZWFkOiAiTWFy
+dmVsbCA4OFc4ODY0Lzg4Vzg4OTcgZHJpdmVyIHdpdGggTUFDODAyMTEgc3VwcG9ydCI/DQoNCj4g
+DQo+IE9uIHRoZSBzaG9ydCBydW4sIGNoYW5naW5nIHRoZSBkZXNjcmlwdGlvbiBvZiB0aGUgZHJp
+dmVycyBjb3VsZCB3b3JrLA0KPiBidXQgSSB3b3VsZCBzdWdnZXN0IGRyb3BwaW5nIChhdCBsZWFz
+dCkgODg5NyBzdXBwb3J0IGZyb20gbXdpZmlleCBpbg0KPiBmYXZvciBvZiBtd2x3aWZpLiBJZiBz
+dXBwb3J0aW5nIHRoZSA4NzY2IGlzbid0IGNvbXBsaWNhdGVkLCBJIHdvdWxkDQo+IGRyb3AgUENJ
+ZSBzdXBwb3J0IGNvbXBsZXRlbHkgZnJvbSB0aGVyZS4NCj4gDQo+IERhdmlkLCBDaG9yIFRlY2ss
+IGNvdWxkIHlvdSBzaGVkIHNvbWUgbGlnaHQgb24gdGhlIGZ1dHVyZSBkcml2ZXINCj4gc3RyYXRl
+Z3k/DQoNClRoZSBtd2x3aWZpIGFzIGl0IGlzIHRvZGF5LCBvbmx5IHN1cHBvcnRzIHNhaWQgUENJ
+ZSBkZXZpY2VzLiBUaGVyZSBpcyBubyBuZWFyIHRlcm0gcGxhbiBmb3IgYW55IG90aGVyIGRldmlj
+ZXMuIEJ1dCB3ZSBjYW5ub3Qgc3BlYWsgZm9yIGZ1dHVyZS4gTGV0J3MgY29tbWVudCBiYXNlZCBv
+biB0aGUgY3VycmVudCBzdGF0ZS4gDQoNCg0KDQoNCg==
