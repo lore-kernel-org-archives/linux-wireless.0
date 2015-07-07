@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39882 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753451AbbG2V3K (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:34972 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933409AbbGGVYF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 17:29:10 -0400
-Date: Wed, 29 Jul 2015 14:29:07 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Tony Cho <tony.cho@atmel.com>, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
-	leo.kim@atmel.com
-Subject: Re: [PATCH 09/21] staging: wilc1000: #ifdef conditionals cover
- entire functions
-Message-ID: <20150729212907.GA16614@kroah.com> (sfid-20150729_232914_930750_0B391831)
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
- <1438073261-28315-10-git-send-email-tony.cho@atmel.com>
- <20150729205454.GA7965@kroah.com>
- <20150729211408.GL5180@mwanda>
+	Tue, 7 Jul 2015 17:24:05 -0400
+Received: by iecuq6 with SMTP id uq6so143364497iec.2
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2015 14:24:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150729211408.GL5180@mwanda>
+In-Reply-To: <CACna6rzr35hM-VLxgvxtGPnnxSMPx6TM18Qfc8E1Obm7iVPG4A@mail.gmail.com>
+References: <CACna6rzr35hM-VLxgvxtGPnnxSMPx6TM18Qfc8E1Obm7iVPG4A@mail.gmail.com>
+Date: Tue, 7 Jul 2015 23:24:04 +0200
+Message-ID: <CACna6rz+=1Lg5OKmnLN3S+rx3bpiCkWhWshqvhz8jdxqH5J7bg@mail.gmail.com> (sfid-20150707_232410_632114_EBCABDEC)
+Subject: Re: brcmfmac: one faulty "iw interface add" command breaks
+ in-firmware BSS state
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2015 at 12:14:08AM +0300, Dan Carpenter wrote:
-> On Wed, Jul 29, 2015 at 01:54:54PM -0700, Greg KH wrote:
-> > On Tue, Jul 28, 2015 at 05:47:28PM +0900, Tony Cho wrote:
-> > >  	/**
-> > >  	 *      Disable power sequencer
-> > >  	 **/
-> > > -	if (!sdio_read_reg(WILC_MISC, &reg)) {
-> > > +	if(!sdio_read_reg(WILC_MISC, &reg)) {
-> > 
-> 
-> I noticed this style change during my review, but I didn't comment
-> because I was feeling in a happy mood and because it got fixed again in
-> patch 13.  Normally, of course we don't allow people to break and then
-> fix things in later patches but this was a white space issue.
+On 21 June 2015 at 21:59, Rafał Miłecki <zajec5@gmail.com> wrote:
+> I've discovered some bug in brcmfmac & its BSS management. It was
+> exposed by OpenWrt user space change ("fix") I introduced in:
+> http://git.openwrt.org/?p=openwrt.git;a=commit;h=1cbb5e8de50457c1d9724ca75cc6815df5721289
+> and it's related to the "interface add" command.
 
-What this shows is that Tony isn't syncing up properly with other
-changes that have happened in the upstream tree from his tree, which is
-indicitive of not doing development properly, which is why I rejected
-this.  And it shouldn't be done anyway, but that's a minor issue
-overall.
-
-thanks,
-
-greg k-h
+Did you try to fix it? I really would love to have upcoming OpenWrt CC
+release with a working brcmfmac.
