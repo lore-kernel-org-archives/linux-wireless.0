@@ -1,219 +1,298 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59071 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbbGCI3q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 04:29:46 -0400
-From: <miaoqing@qti.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH v2] ath9k: export HW random number generator
-Date: Fri, 3 Jul 2015 16:28:30 +0800
-Message-ID: <1435912110-9646-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150703_102954_935764_2AA5EFDC)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx02.posteo.de ([89.146.194.165]:42038 "EHLO mx02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754041AbbGGHro (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 03:47:44 -0400
+Message-ID: <1436255260.27716.6.camel@embedded.rocks> (sfid-20150707_094749_127867_150D8613)
+Subject: Re: brcmfmac: Failed to create interface p2p-dev-p2p0: -28 (No
+ space left on device)
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Arend van Spriel <aspriel@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Date: Tue, 07 Jul 2015 09:47:40 +0200
+In-Reply-To: <55894C40.1070108@broadcom.com>
+References: <1433766944.28058.16.camel@embedded.rocks>
+							 <55758D7E.3000603@broadcom.com>
+					 <1433771289.28058.24.camel@embedded.rocks>
+					 <5575C6FA.6030104@broadcom.com>
+					 <1433794640.28058.26.camel@embedded.rocks>
+			 <557605CC.6070907@broadcom.com>
+		 <1434448766.21949.9.camel@embedded.rocks>
+			 <55803214.2030204@broadcom.com> <1434608018.5481.4.camel@embedded.rocks>
+			 <55828106.7060004@broadcom.com> <1434658050.2532.6.camel@embedded.rocks>
+		 <55872A3C.7030704@gmail.com> <1435059083.4765.2.camel@embedded.rocks>
+	 <55894C40.1070108@broadcom.com>
+Content-Type: multipart/mixed; boundary="=-915tSkv4FJrHnVvcNyLJ"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-We measured the ADC-based entropy in 3 ways, Shannon entropy,
-collision entropy, and directly measured min-entropy. Entropy is
-in bits per 16 bit value,
-   ---------------------------
-   Shannon | collision | min
-   ---------------------------
-   12.00   | 10.80     | 9.18
-   ---------------------------
+--=-915tSkv4FJrHnVvcNyLJ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Recommend: A generous safety factor be used. NIST Special Publication
-800-90B (draft) requires that data used to seed a deterministic random
-bit generator with N bits of strength have an estimated entropy at least
-twice the block size of the underlying primitive. Given all the
-uncertainties, it would be wise to collect even more.
+Hi Arend,
 
-Analysis was done by Jacobson,David(djacobso@qti.qualcomm.com).
+On Di, 2015-06-23 at 14:08 +0200, Arend van Spriel wrote:
+> On 06/23/15 13:31, Jörg Krause wrote:
+> > Hi Arend,
+> > 
+> > On So, 2015-06-21 at 23:18 +0200, Arend van Spriel wrote:
+> > > 
+> > > My bad. The patch removes p2pdev from interface modes, but it is
+> > > still
+> > > listed in the interface combinations and cfg80211 will complain 
+> > > about
+> > > it. Have to extend the patch. I better do that after a good 
+> > > nights
+> > > sleep.
+> > 
+> > Never mind! Did you had a good night sleep already :-) ?
+> 
+> Several ;-) Did not get to this earlier. Thanks for the reminder.
+> 
+> Had a closer look at wiphy_verify_combinations() and I am hopeful the 
+> 
+> attached patch will fix the wiphy_register() failure.
+> 
 
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/Kconfig  |  7 ++++
- drivers/net/wireless/ath/ath9k/Makefile |  1 +
- drivers/net/wireless/ath/ath9k/ath9k.h  | 23 ++++++++++++
- drivers/net/wireless/ath/ath9k/main.c   |  4 ++
- drivers/net/wireless/ath/ath9k/rng.c    | 66 +++++++++++++++++++++++++++++++++
- 5 files changed, 101 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath9k/rng.c
+Sorry for late reply! I was busy on another topic...
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index fee0cad..bde62ec9 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -176,3 +176,10 @@ config ATH9K_HTC_DEBUGFS
- 	depends on ATH9K_HTC && DEBUG_FS
- 	---help---
- 	  Say Y, if you need access to ath9k_htc's statistics.
-+
-+config ATH9K_HWRNG
-+	bool "Random number generator support"
-+	depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
-+	default y
-+	---help---
-+	  Provides a hardware random number generator to the kernel.
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index ecda613..76f9dc3 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -15,6 +15,7 @@ ath9k-$(CONFIG_ATH9K_DFS_DEBUGFS) += dfs_debug.o
- ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
- ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
- ath9k-$(CONFIG_ATH9K_WOW) += wow.o
-+ath9k-$(CONFIG_ATH9K_HWRNG) += rng.o
- 
- ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a7a81b3..45596e5 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -23,6 +23,7 @@
- #include <linux/leds.h>
- #include <linux/completion.h>
- #include <linux/time.h>
-+#include <linux/hw_random.h>
- 
- #include "common.h"
- #include "debug.h"
-@@ -1041,6 +1042,12 @@ struct ath_softc {
- 	u32 wow_intr_before_sleep;
- 	bool force_wow;
- #endif
-+
-+#ifdef CONFIG_ATH9K_HWRNG
-+	struct hwrng rng;
-+	bool rng_initialized;
-+	u32 rng_last;
-+#endif
- };
- 
- /********/
-@@ -1063,6 +1070,22 @@ static inline int ath9k_tx99_send(struct ath_softc *sc,
- }
- #endif /* CONFIG_ATH9K_TX99 */
- 
-+/***************************/
-+/* Random Number Generator */
-+/***************************/
-+#ifdef CONFIG_ATH9K_HWRNG
-+void ath9k_rng_register(struct ath_softc *sc);
-+void ath9k_rng_unregister(struct ath_softc *sc);
-+#else
-+static inline void ath9k_rng_register(struct ath_softc *sc)
-+{
-+}
-+
-+static inline void ath9k_rng_unregister(struct ath_softc *sc)
-+{
-+}
-+#endif
-+
- static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- {
- 	common->bus_ops->read_cachesize(common, csz);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index cfd45cb..5916ab2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -739,6 +739,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	ath9k_ps_restore(sc);
- 
-+	ath9k_rng_register(sc);
-+
- 	return 0;
- }
- 
-@@ -828,6 +830,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	ath9k_deinit_channel_context(sc);
- 
-+	ath9k_rng_unregister(sc);
-+
- 	mutex_lock(&sc->mutex);
- 
- 	ath_cancel_work(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-new file mode 100644
-index 0000000..e2cce31
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/rng.c
-@@ -0,0 +1,66 @@
-+/*
-+ * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "ath9k.h"
-+#include "hw.h"
-+#include "ar9003_phy.h"
-+
-+static int ath9k_rng_data_read(struct hwrng *rng, u32 *data)
-+{
-+	u32 v1, v2;
-+	struct ath_softc *sc = (struct ath_softc *)rng->priv;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	ath9k_ps_wakeup(sc);
-+
-+	v1 = REG_READ(ah, AR_PHY_TST_ADC);
-+	v2 = REG_READ(ah, AR_PHY_TST_ADC);
-+
-+	ath9k_ps_restore(sc);
-+
-+	/* wait for data ready */
-+	if (v1 && v2 && sc->rng_last != v1 && v1 != v2) {
-+		*data = (v1 & 0xffff) | (v2 << 16);
-+		sc->rng_last = v2;
-+
-+		return sizeof(u32);
-+	}
-+
-+	sc->rng_last = v2;
-+
-+	return 0;
-+}
-+
-+void ath9k_rng_register(struct ath_softc *sc)
-+{
-+	if (WARN_ON(sc->rng_initialized))
-+		return;
-+
-+	sc->rng.name = "ath9k";
-+	sc->rng.data_read = ath9k_rng_data_read;
-+	sc->rng.priv = (unsigned long)sc;
-+
-+	if (!hwrng_register(&sc->rng))
-+		sc->rng_initialized = true;
-+}
-+
-+void ath9k_rng_unregister(struct ath_softc *sc)
-+{
-+	if (sc->rng_initialized) {
-+		hwrng_unregister(&sc->rng);
-+		sc->rng_initialized = false;
-+	}
-+}
--- 
-1.9.1
+I've applied your patch, but p2p interface is still not working. I
+attached the debug log from wpa_supplicant.
+
+I tested with Linux Kernel 4.0.7 and wpa_supplicant 2.4.
+
+This is my p2p_supplicant.conf:
+    ctrl_interface=/var/run/p2p_supplicant
+    update_config=1
+
+    device_name=HBM10
+    device_type=1-0050F204-1
+
+    p2p_go_ht40=1
+
+Test with the p2p_find command:
+    # wpa_cli -p /var/run/p2p_supplicant p2p_find
+    Selected interface 'p2p0'
+    1928.165036: p2p0: Control interface command 'P2P_FIND'
+    FAIL
+
+Best regards
+Jörg Krause
+--=-915tSkv4FJrHnVvcNyLJ
+Content-Disposition: attachment; filename="p2p.log"
+Content-Type: text/x-log; name="p2p.log"; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+IyB3cGFfc3VwcGxpY2FudCAtRG5sODAyMTEgLWlwMnAwIC1jIC9ldGMvcDJwX3N1cHBsaWNhbnQu
+Y29uZiAtTiAtRG5sODAyMTEgLWl3bGFuMCAtYyAvZXRjL3dwYV9zdXBwbGljYW50LmNvbmYgLWRk
+dCAmCiMgMTg4MC4xOTc0Mjc6IHdwYV9zdXBwbGljYW50IHYyLjQKMTg4MC4xOTgyNTk6IHJhbmRv
+bTogVHJ5aW5nIHRvIHJlYWQgZW50cm9weSBmcm9tIC9kZXYvcmFuZG9tCjE4ODAuMTk4NjI4OiBT
+dWNjZXNzZnVsbHkgaW5pdGlhbGl6ZWQgd3BhX3N1cHBsaWNhbnQKMTg4MC4xOTg5MTE6IEluaXRp
+YWxpemluZyBpbnRlcmZhY2UgJ3AycDAnIGNvbmYgJy9ldGMvcDJwX3N1cHBsaWNhbnQuY29uZicg
+ZHJpdmVyICdubDgwMjExJyBjdHJsX2ludGVyZmFjZSAnTi9BJyBicmlkZ2UgJ04vQScKMTg4MC4x
+OTkyNjg6IENvbmZpZ3VyYXRpb24gZmlsZSAnL2V0Yy9wMnBfc3VwcGxpY2FudC5jb25mJyAtPiAn
+L2V0Yy9wMnBfc3VwcGxpY2FudC5jb25mJwoxODgwLjE5OTU1MjogUmVhZGluZyBjb25maWd1cmF0
+aW9uIGZpbGUgJy9ldGMvcDJwX3N1cHBsaWNhbnQuY29uZicKMTg4MC4yMDAxODE6IGN0cmxfaW50
+ZXJmYWNlPScvdmFyL3J1bi9wMnBfc3VwcGxpY2FudCcKMTg4MC4yMDA1NTY6IHVwZGF0ZV9jb25m
+aWc9MQoxODgwLjIwMDg1NDogZGV2aWNlX25hbWU9J0hCTTEwJwoxODgwLjIwMTI0NjogcDJwX2dv
+X2h0NDA9MQoxODgwLjIxMzUzMDogcmZraWxsOiBpbml0aWFsIGV2ZW50OiBpZHg9MCB0eXBlPTEg
+b3A9MCBzb2Z0PTAgaGFyZD0wCjE4ODAuMjE2OTIxOiBubDgwMjExOiBVc2luZyBkcml2ZXItYmFz
+ZWQgcm9hbWluZwoxODgwLjIxNzMzMTogbmw4MDIxMTogU3VwcG9ydGVkIGNpcGhlciAwMC0wZi1h
+YzoxCjE4ODAuMjE3NjA2OiBubDgwMjExOiBTdXBwb3J0ZWQgY2lwaGVyIDAwLTBmLWFjOjUKMTg4
+MC4yMTc5MDE6IG5sODAyMTE6IFN1cHBvcnRlZCBjaXBoZXIgMDAtMGYtYWM6MgoxODgwLjIxODE0
+NTogbmw4MDIxMTogU3VwcG9ydGVkIGNpcGhlciAwMC0wZi1hYzo0CjE4ODAuMjE4Mzc3OiBubDgw
+MjExOiBTdXBwb3J0ZWQgY2lwaGVyIDAwLTBmLWFjOjYKMTg4MC4yMTkwMzg6IG5sODAyMTE6IFVz
+aW5nIGRyaXZlci1iYXNlZCBvZmYtY2hhbm5lbCBUWAoxODgwLjIxOTUxMzogbmw4MDIxMTogU3Vw
+cG9ydGVkIHZlbmRvciBjb21tYW5kOiB2ZW5kb3JfaWQ9MHgxMDE4IHN1YmNtZD0xCjE4ODAuMjIw
+MDc2OiBubDgwMjExOiBVc2Ugc2VwYXJhdGUgUDJQIGdyb3VwIGludGVyZmFjZSAoZHJpdmVyIGFk
+dmVydGlzZWQgc3VwcG9ydCkKMTg4MC4yMjAzNTE6IG5sODAyMTE6IHVzZSBQMlBfREVWSUNFIHN1
+cHBvcnQKMTg4MC4yMjA2MzA6IG5sODAyMTE6IGludGVyZmFjZSBwMnAwIGluIHBoeSBwaHkwCjE4
+ODAuMjIxNjQyOiBubDgwMjExOiBTZXQgbW9kZSBpZmluZGV4IDUgaWZ0eXBlIDIgKFNUQVRJT04p
+CjE4ODAuMjMxOTI2OiBubDgwMjExOiBTdWJzY3JpYmUgdG8gbWdtdCBmcmFtZXMgd2l0aCBub24t
+QVAgaGFuZGxlIDB4YjZmNzdkYjAKMTg4MC4yMzI5NDY6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1l
+IHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1h
+dGNoPTA0MGEKMTg4MC4yMzM5NTk6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAo
+V0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTA0MGIKMTg4
+MC4yMzQ4NzY6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQ
+RV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTA0MGMKMTg4MC4yMzU3NzI6IG5s
+ODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5s
+X2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTA0MGQKMTg4MC4yMzY3MzI6IG5sODAyMTE6IFJlZ2lz
+dGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2
+Zjc3ZGIwIG1hdGNoPTA5MGEKMTg4MC4yMzc2Mjg6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5
+cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNo
+PTA5MGIKMTg4MC4yMzg1MjA6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xB
+Tl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTA5MGMKMTg4MC4y
+Mzk0NjY6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9B
+Q1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTA5MGQKMTg4MC4yNDAzNzE6IG5sODAy
+MTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hh
+bmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTA0MDk1MDZmOWEwOQoxODgwLjI0MTI3OTogbmw4MDIxMTog
+UmVnaXN0ZXIgZnJhbWUgdHlwZT0weGQwIChXTEFOX0ZDX1NUWVBFX0FDVElPTikgbmxfaGFuZGxl
+PTB4YjZmNzdkYjAgbWF0Y2g9N2Y1MDZmOWEwOQoxODgwLjI0MzA2Nzogbmw4MDIxMTogUmVnaXN0
+ZXIgZnJhbWUgdHlwZT0weGQwIChXTEFOX0ZDX1NUWVBFX0FDVElPTikgbmxfaGFuZGxlPTB4YjZm
+NzdkYjAgbWF0Y2g9MDYKMTg4MC4yNDQwMjE6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9
+MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTBh
+MDcKMTg4MC4yNDUwMDA6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9G
+Q19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTBhMTEKMTg4MC4yNDU5
+MDI6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJ
+T04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIwIG1hdGNoPTExMDEKMTg4MC4yNDY4MDU6IG5sODAyMTE6
+IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRs
+ZT0weGI2Zjc3ZGIwIG1hdGNoPTExMDIKMTg4MC4yNDc3NTU6IG5sODAyMTE6IFJlZ2lzdGVyIGZy
+YW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weGI2Zjc3ZGIw
+IG1hdGNoPTA1MDUKMTg4MC4yNjQyNzc6IG5ldGxpbms6IE9wZXJzdGF0ZTogaWZpbmRleD01IGxp
+bmttb2RlPTEgKHVzZXJzcGFjZS1jb250cm9sKSwgb3BlcnN0YXRlPTUgKElGX09QRVJfRE9STUFO
+VCkKMTg4MC4yNzgxNTE6IG5sODAyMTE6IGRyaXZlciBwYXJhbT0nKG51bGwpJwoxODgwLjI3ODUx
+MDogQWRkIGludGVyZmFjZSBwMnAwIHRvIGEgbmV3IHJhZGlvIHBoeTAKMTg4MC4yODMzMTU6IG5s
+ODAyMTE6IFJlZ3VsYXRvcnkgaW5mb3JtYXRpb24gLSBjb3VudHJ5PTAwCjE4ODAuMjgzNjM0OiBu
+bDgwMjExOiAyNDAyLTI0NzIgQCA0MCBNSHogMjAgbUJtCjE4ODAuMjgzOTcxOiBubDgwMjExOiAy
+NDU3LTI0ODIgQCA0MCBNSHogMjAgbUJtIChubyBJUikKMTg4MC4yODQyNTY6IG5sODAyMTE6IDI0
+NzQtMjQ5NCBAIDIwIE1IeiAyMCBtQm0gKG5vIE9GRE0pIChubyBJUikKMTg4MC4yODQ1OTc6IG5s
+ODAyMTE6IDUxNzAtNTI1MCBAIDE2MCBNSHogMjAgbUJtIChubyBJUikKMTg4MC4yODQ4ODI6IG5s
+ODAyMTE6IDUyNTAtNTMzMCBAIDE2MCBNSHogMjAgbUJtIChERlMpIChubyBJUikKMTg4MC4yODUy
+MTI6IG5sODAyMTE6IDU0OTAtNTczMCBAIDE2MCBNSHogMjAgbUJtIChERlMpIChubyBJUikKMTg4
+MC4yODU0OTc6IG5sODAyMTE6IDU3MzUtNTgzNSBAIDgwIE1IeiAyMCBtQm0gKG5vIElSKQoxODgw
+LjI4NTc2Nzogbmw4MDIxMTogNTcyNDAtNjM3MjAgQCAyMTYwIE1IeiAwIG1CbQoxODgwLjI4NjQy
+MTogbmw4MDIxMTogQWRkZWQgODAyLjExYiBtb2RlIGJhc2VkIG9uIDgwMi4xMWcgaW5mb3JtYXRp
+b24KMTg4MC4zMTI4NzA6IHAycDA6IE93biBNQUMgYWRkcmVzczogMDI6OTA6NGM6MDc6NzE6MTIK
+MTg4MC4zMTM3OTU6IHdwYV9kcml2ZXJfbmw4MDIxMV9zZXRfa2V5OiBpZmluZGV4PTUgKHAycDAp
+IGFsZz0wIGFkZHI9MCBrZXlfaWR4PTAgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAoxODgw
+LjMxNTE1NTogd3BhX2RyaXZlcl9ubDgwMjExX3NldF9rZXk6IGlmaW5kZXg9NSAocDJwMCkgYWxn
+PTAgYWRkcj0wIGtleV9pZHg9MSBzZXRfdHg9MCBzZXFfbGVuPTAga2V5X2xlbj0wCjE4ODAuMzE2
+NDkxOiB3cGFfZHJpdmVyX25sODAyMTFfc2V0X2tleTogaWZpbmRleD01IChwMnAwKSBhbGc9MCBh
+ZGRyPTAga2V5X2lkeD0yIHNldF90eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKMTg4MC4zMTc3OTE6
+IHdwYV9kcml2ZXJfbmw4MDIxMV9zZXRfa2V5OiBpZmluZGV4PTUgKHAycDApIGFsZz0wIGFkZHI9
+MCBrZXlfaWR4PTMgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAoxODgwLjMxODczNDogcDJw
+MDogUlNOOiBmbHVzaGluZyBQTUtJRCBsaXN0IGluIHRoZSBkcml2ZXIKMTg4MC4zMTkwMjM6IG5s
+ODAyMTE6IEZsdXNoIFBNS0lEcwoxODgwLjMyODIxNTogcDJwMDogU3RhdGU6IERJU0NPTk5FQ1RF
+RCAtPiBJTkFDVElWRQoxODgwLjMyODgxMzogcDJwMDogV1BTOiBVVUlEIGJhc2VkIG9uIE1BQyBh
+ZGRyZXNzOiBjZmVhYjQ0NC1kZDY4LTViZDMtOTNhNi0zYmVkZGVhYTBiNDAKMTg4MC4zMjkzMDM6
+IEVBUE9MOiBTVVBQX1BBRSBlbnRlcmluZyBzdGF0ZSBESVNDT05ORUNURUQKMTg4MC4zMjk2MTc6
+IEVBUE9MOiBTdXBwbGljYW50IHBvcnQgc3RhdHVzOiBVbmF1dGhvcml6ZWQKMTg4MC4zMjk4Nzk6
+IG5sODAyMTE6IFNraXAgc2V0X3N1cHBfcG9ydCh1bmF1dGhvcml6ZWQpIHdoaWxlIG5vdCBhc3Nv
+Y2lhdGVkCjE4ODAuMzMwMTIwOiBFQVBPTDogS0VZX1JYIGVudGVyaW5nIHN0YXRlIE5PX0tFWV9S
+RUNFSVZFCjE4ODAuMzMwNDAwOiBFQVBPTDogU1VQUF9CRSBlbnRlcmluZyBzdGF0ZSBJTklUSUFM
+SVpFCjE4ODAuMzMwNjQzOiBFQVA6IEVBUCBlbnRlcmluZyBzdGF0ZSBESVNBQkxFRAoxODgwLjMz
+MzMyOTogcDJwMDogQWRkZWQgaW50ZXJmYWNlIHAycDAKMTg4MC4zMzM2ODc6IHAycDA6IFN0YXRl
+OiBJTkFDVElWRSAtPiBESVNDT05ORUNURUQKMTg4MC4zMzQwMTM6IG5sODAyMTE6IFNldCBwMnAw
+IG9wZXJzdGF0ZSAwLT4wIChET1JNQU5UKQoxODgwLjMzNDI3NDogbmV0bGluazogT3BlcnN0YXRl
+OiBpZmluZGV4PTUgbGlua21vZGU9LTEgKG5vIGNoYW5nZSksIG9wZXJzdGF0ZT01IChJRl9PUEVS
+X0RPUk1BTlQpCjE4ODAuMzM0ODgzOiBubDgwMjExOiBDcmVhdGUgaW50ZXJmYWNlIGlmdHlwZSAx
+MCAoUDJQX0RFVklDRSkKMTg4MC4zMzU4OTc6IEZhaWxlZCB0byBjcmVhdGUgaW50ZXJmYWNlIHAy
+cC1kZXYtcDJwMDogLTI4IChObyBzcGFjZSBsZWZ0IG9uIGRldmljZSkKMTg4MC4zMzYxOTQ6IG5s
+ODAyMTE6IEZhaWxlZCB0byBjcmVhdGUgYSBQMlAgRGV2aWNlIGludGVyZmFjZSBwMnAtZGV2LXAy
+cDAKMTg4MC4zMzY0MzE6IFAyUDogRmFpbGVkIHRvIGNyZWF0ZSBQMlAgRGV2aWNlIGludGVyZmFj
+ZQoxODgwLjMzNjcwNzogUDJQOiBGYWlsZWQgdG8gZW5hYmxlIFAyUCBEZXZpY2UgaW50ZXJmYWNl
+CjE4ODAuMzM2OTczOiBJbml0aWFsaXppbmcgaW50ZXJmYWNlICd3bGFuMCcgY29uZiAnL2V0Yy93
+cGFfc3VwcGxpY2FudC5jb25mJyBkcml2ZXIgJ25sODAyMTEnIGN0cmxfaW50ZXJmYWNlICdOL0En
+IGJyaWRnZSAnTi9BJwoxODgwLjMzNzMxMjogQ29uZmlndXJhdGlvbiBmaWxlICcvZXRjL3dwYV9z
+dXBwbGljYW50LmNvbmYnIC0+ICcvZXRjL3dwYV9zdXBwbGljYW50LmNvbmYnCjE4ODAuNjcyNTE4
+OiBSZWFkaW5nIGNvbmZpZ3VyYXRpb24gZmlsZSAnL2V0Yy93cGFfc3VwcGxpY2FudC5jb25mJwox
+ODgwLjY3MzIxMjogY3RybF9pbnRlcmZhY2U9Jy92YXIvcnVuL3dwYV9zdXBwbGljYW50JwoxODgw
+LjY3MzU0NDogdXBkYXRlX2NvbmZpZz0xCjE4ODAuNjczODIyOiBlYXBvbF92ZXJzaW9uPTEKMTg4
+MC42NzQxNjk6IGFwX3NjYW49MQoxODgwLjY3NDk5MDogcmZraWxsOiBpbml0aWFsIGV2ZW50OiBp
+ZHg9MCB0eXBlPTEgb3A9MCBzb2Z0PTAgaGFyZD0wCjE4ODAuNjc4MzUzOiBubDgwMjExOiBVc2lu
+ZyBkcml2ZXItYmFzZWQgcm9hbWluZwoxODgwLjY3ODc2MTogbmw4MDIxMTogU3VwcG9ydGVkIGNp
+cGhlciAwMC0wZi1hYzoxCjE4ODAuNjc5MDMzOiBubDgwMjExOiBTdXBwb3J0ZWQgY2lwaGVyIDAw
+LTBmLWFjOjUKMTg4MC42NzkyNzY6IG5sODAyMTE6IFN1cHBvcnRlZCBjaXBoZXIgMDAtMGYtYWM6
+MgoxODgwLjY4MTExMTogbmw4MDIxMTogU3VwcG9ydGVkIGNpcGhlciAwMC0wZi1hYzo0CjE4ODAu
+NjgxNDA3OiBubDgwMjExOiBTdXBwb3J0ZWQgY2lwaGVyIDAwLTBmLWFjOjYKMTg4MC42ODMxNTc6
+IG5sODAyMTE6IFVzaW5nIGRyaXZlci1iYXNlZCBvZmYtY2hhbm5lbCBUWAoxODgwLjY4MzcwNzog
+bmw4MDIxMTogU3VwcG9ydGVkIHZlbmRvciBjb21tYW5kOiB2ZW5kb3JfaWQ9MHgxMDE4IHN1YmNt
+ZD0xCjE4ODAuNjg0MjUyOiBubDgwMjExOiBVc2Ugc2VwYXJhdGUgUDJQIGdyb3VwIGludGVyZmFj
+ZSAoZHJpdmVyIGFkdmVydGlzZWQgc3VwcG9ydCkKMTg4MC42ODQ1ODE6IG5sODAyMTE6IHVzZSBQ
+MlBfREVWSUNFIHN1cHBvcnQKMTg4MC42ODQ4MTc6IG5sODAyMTE6IGludGVyZmFjZSB3bGFuMCBp
+biBwaHkgcGh5MAoxODgwLjY4NTkxODogbmw4MDIxMTogU2V0IG1vZGUgaWZpbmRleCA0IGlmdHlw
+ZSAyIChTVEFUSU9OKQoxODgwLjY4NzE5Mjogbmw4MDIxMTogU3Vic2NyaWJlIHRvIG1nbXQgZnJh
+bWVzIHdpdGggbm9uLUFQIGhhbmRsZSAweDI1MTI1MAoxODgwLjY4NzUxNTogbmw4MDIxMTogUmVn
+aXN0ZXIgZnJhbWUgdHlwZT0weGQwIChXTEFOX0ZDX1NUWVBFX0FDVElPTikgbmxfaGFuZGxlPTB4
+MjUxMjUwIG1hdGNoPTA0MGEKMTg4MC42ODg0MDY6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5
+cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0weDI1MTI1MCBtYXRjaD0w
+NDBiCjE4ODAuNjg5MzYxOiBubDgwMjExOiBSZWdpc3RlciBmcmFtZSB0eXBlPTB4ZDAgKFdMQU5f
+RkNfU1RZUEVfQUNUSU9OKSBubF9oYW5kbGU9MHgyNTEyNTAgbWF0Y2g9MDQwYwoxODgwLjY5MDI1
+Njogbmw4MDIxMTogUmVnaXN0ZXIgZnJhbWUgdHlwZT0weGQwIChXTEFOX0ZDX1NUWVBFX0FDVElP
+TikgbmxfaGFuZGxlPTB4MjUxMjUwIG1hdGNoPTA0MGQKMTg4MC42OTExNDA6IG5sODAyMTE6IFJl
+Z2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0w
+eDI1MTI1MCBtYXRjaD0wOTBhCjE4ODAuNjkyMDcxOiBubDgwMjExOiBSZWdpc3RlciBmcmFtZSB0
+eXBlPTB4ZDAgKFdMQU5fRkNfU1RZUEVfQUNUSU9OKSBubF9oYW5kbGU9MHgyNTEyNTAgbWF0Y2g9
+MDkwYgoxODgwLjY5MzQ5Njogbmw4MDIxMTogUmVnaXN0ZXIgZnJhbWUgdHlwZT0weGQwIChXTEFO
+X0ZDX1NUWVBFX0FDVElPTikgbmxfaGFuZGxlPTB4MjUxMjUwIG1hdGNoPTA5MGMKMTg4MC42OTQz
+OTA6IG5sODAyMTE6IFJlZ2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJ
+T04pIG5sX2hhbmRsZT0weDI1MTI1MCBtYXRjaD0wOTBkCjE4ODAuNjk1Mjk1OiBubDgwMjExOiBS
+ZWdpc3RlciBmcmFtZSB0eXBlPTB4ZDAgKFdMQU5fRkNfU1RZUEVfQUNUSU9OKSBubF9oYW5kbGU9
+MHgyNTEyNTAgbWF0Y2g9MDQwOTUwNmY5YTA5CjE4ODAuNjk2MjUxOiBubDgwMjExOiBSZWdpc3Rl
+ciBmcmFtZSB0eXBlPTB4ZDAgKFdMQU5fRkNfU1RZUEVfQUNUSU9OKSBubF9oYW5kbGU9MHgyNTEy
+NTAgbWF0Y2g9N2Y1MDZmOWEwOQoxODgwLjY5NzE0MDogbmw4MDIxMTogUmVnaXN0ZXIgZnJhbWUg
+dHlwZT0weGQwIChXTEFOX0ZDX1NUWVBFX0FDVElPTikgbmxfaGFuZGxlPTB4MjUxMjUwIG1hdGNo
+PTA2CjE4ODAuNjk4MDI0OiBubDgwMjExOiBSZWdpc3RlciBmcmFtZSB0eXBlPTB4ZDAgKFdMQU5f
+RkNfU1RZUEVfQUNUSU9OKSBubF9oYW5kbGU9MHgyNTEyNTAgbWF0Y2g9MGEwNwoxODgwLjY5ODk3
+MTogbmw4MDIxMTogUmVnaXN0ZXIgZnJhbWUgdHlwZT0weGQwIChXTEFOX0ZDX1NUWVBFX0FDVElP
+TikgbmxfaGFuZGxlPTB4MjUxMjUwIG1hdGNoPTBhMTEKMTg4MC42OTk4NjQ6IG5sODAyMTE6IFJl
+Z2lzdGVyIGZyYW1lIHR5cGU9MHhkMCAoV0xBTl9GQ19TVFlQRV9BQ1RJT04pIG5sX2hhbmRsZT0w
+eDI1MTI1MCBtYXRjaD0xMTAxCjE4ODAuNzAwNzY4OiBubDgwMjExOiBSZWdpc3RlciBmcmFtZSB0
+eXBlPTB4ZDAgKFdMQU5fRkNfU1RZUEVfQUNUSU9OKSBubF9oYW5kbGU9MHgyNTEyNTAgbWF0Y2g9
+MTEwMgoxODgwLjcwMTcxMTogbmw4MDIxMTogUmVnaXN0ZXIgZnJhbWUgdHlwZT0weGQwIChXTEFO
+X0ZDX1NUWVBFX0FDVElPTikgbmxfaGFuZGxlPTB4MjUxMjUwIG1hdGNoPTA1MDUKMTg4MC43MDM2
+NTY6IG5ldGxpbms6IE9wZXJzdGF0ZTogaWZpbmRleD00IGxpbmttb2RlPTEgKHVzZXJzcGFjZS1j
+b250cm9sKSwgb3BlcnN0YXRlPTUgKElGX09QRVJfRE9STUFOVCkKMTg4MC43MTU5NDg6IG5sODAy
+MTE6IGRyaXZlciBwYXJhbT0nKG51bGwpJwoxODgwLjcxNjMxMjogQWRkIGludGVyZmFjZSB3bGFu
+MCB0byBleGlzdGluZyByYWRpbyBwaHkwCjE4ODAuNzIwMDk1OiBubDgwMjExOiBSZWd1bGF0b3J5
+IGluZm9ybWF0aW9uIC0gY291bnRyeT0wMAoxODgwLjcyMDQ2NTogbmw4MDIxMTogMjQwMi0yNDcy
+IEAgNDAgTUh6IDIwIG1CbQoxODgwLjcyMDc2MTogbmw4MDIxMTogMjQ1Ny0yNDgyIEAgNDAgTUh6
+IDIwIG1CbSAobm8gSVIpCjE4ODAuNzIxMDM4OiBubDgwMjExOiAyNDc0LTI0OTQgQCAyMCBNSHog
+MjAgbUJtIChubyBPRkRNKSAobm8gSVIpCjE4ODAuNzIxMzcyOiBubDgwMjExOiA1MTcwLTUyNTAg
+QCAxNjAgTUh6IDIwIG1CbSAobm8gSVIpCjE4ODAuNzIxNjQ3OiBubDgwMjExOiA1MjUwLTUzMzAg
+QCAxNjAgTUh6IDIwIG1CbSAoREZTKSAobm8gSVIpCjE4ODAuNzIxOTc1OiBubDgwMjExOiA1NDkw
+LTU3MzAgQCAxNjAgTUh6IDIwIG1CbSAoREZTKSAobm8gSVIpCjE4ODAuNzIyNTM4OiBubDgwMjEx
+OiA1NzM1LTU4MzUgQCA4MCBNSHogMjAgbUJtIChubyBJUikKMTg4MC43MjI4Mzg6IG5sODAyMTE6
+IDU3MjQwLTYzNzIwIEAgMjE2MCBNSHogMCBtQm0KMTg4MC43MjM0OTc6IG5sODAyMTE6IEFkZGVk
+IDgwMi4xMWIgbW9kZSBiYXNlZCBvbiA4MDIuMTFnIGluZm9ybWF0aW9uCjE4ODAuNzUyNjc3OiB3
+bGFuMDogT3duIE1BQyBhZGRyZXNzOiAwMDoyMzpiZjplZTpiZDpkZgoxODgwLjc1MzQxOTogd3Bh
+X2RyaXZlcl9ubDgwMjExX3NldF9rZXk6IGlmaW5kZXg9NCAod2xhbjApIGFsZz0wIGFkZHI9MCBr
+ZXlfaWR4PTAgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAoxODgwLjc1NDc2Njogd3BhX2Ry
+aXZlcl9ubDgwMjExX3NldF9rZXk6IGlmaW5kZXg9NCAod2xhbjApIGFsZz0wIGFkZHI9MCBrZXlf
+aWR4PTEgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAoxODgwLjc1NjA3ODogd3BhX2RyaXZl
+cl9ubDgwMjExX3NldF9rZXk6IGlmaW5kZXg9NCAod2xhbjApIGFsZz0wIGFkZHI9MCBrZXlfaWR4
+PTIgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAoxODgwLjc1NzM4Mjogd3BhX2RyaXZlcl9u
+bDgwMjExX3NldF9rZXk6IGlmaW5kZXg9NCAod2xhbjApIGFsZz0wIGFkZHI9MCBrZXlfaWR4PTMg
+c2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAoxODgwLjc1ODMzMzogd2xhbjA6IFJTTjogZmx1
+c2hpbmcgUE1LSUQgbGlzdCBpbiB0aGUgZHJpdmVyCjE4ODAuNzU4Njc4OiBubDgwMjExOiBGbHVz
+aCBQTUtJRHMKMTg4MC43Njc3OTg6IHdsYW4wOiBTdGF0ZTogRElTQ09OTkVDVEVEIC0+IElOQUNU
+SVZFCjE4ODAuNzY4MjQ4OiB3bGFuMDogV1BTOiBVVUlEIGZyb20gdGhlIGZpcnN0IGludGVyZmFj
+ZTogY2ZlYWI0NDQtZGQ2OC01YmQzLTkzYTYtM2JlZGRlYWEwYjQwCjE4ODAuNzY4NjMxOiBFQVBP
+TDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgRElTQ09OTkVDVEVECjE4ODAuNzY4ODg2OiBFQVBP
+TDogU3VwcGxpY2FudCBwb3J0IHN0YXR1czogVW5hdXRob3JpemVkCjE4ODAuNzY5MTg5OiBubDgw
+MjExOiBTa2lwIHNldF9zdXBwX3BvcnQodW5hdXRob3JpemVkKSB3aGlsZSBub3QgYXNzb2NpYXRl
+ZAoxODgwLjc2OTQyODogRUFQT0w6IEtFWV9SWCBlbnRlcmluZyBzdGF0ZSBOT19LRVlfUkVDRUlW
+RQoxODgwLjc2OTcwMzogRUFQT0w6IFNVUFBfQkUgZW50ZXJpbmcgc3RhdGUgSU5JVElBTElaRQox
+ODgwLjc2OTk0MzogRUFQOiBFQVAgZW50ZXJpbmcgc3RhdGUgRElTQUJMRUQKMTg4MC43NzIwNTU6
+IHdsYW4wOiBBZGRlZCBpbnRlcmZhY2Ugd2xhbjAKMTg4MC43NzMwMTM6IHdsYW4wOiBTdGF0ZTog
+SU5BQ1RJVkUgLT4gRElTQ09OTkVDVEVECjE4ODAuNzczMzUyOiBubDgwMjExOiBTZXQgd2xhbjAg
+b3BlcnN0YXRlIDAtPjAgKERPUk1BTlQpCjE4ODAuNzczNjE1OiBuZXRsaW5rOiBPcGVyc3RhdGU6
+IGlmaW5kZXg9NCBsaW5rbW9kZT0tMSAobm8gY2hhbmdlKSwgb3BlcnN0YXRlPTUgKElGX09QRVJf
+RE9STUFOVCkKMTg4MC43NzQwOTU6IG5sODAyMTE6IENyZWF0ZSBpbnRlcmZhY2UgaWZ0eXBlIDEw
+IChQMlBfREVWSUNFKQoxODgwLjc3NTE0OTogRmFpbGVkIHRvIGNyZWF0ZSBpbnRlcmZhY2UgcDJw
+LWRldi13bGFuMDogLTI4IChObyBzcGFjZSBsZWZ0IG9uIGRldmljZSkKMTg4MC43NzU1MTQ6IG5s
+ODAyMTE6IEZhaWxlZCB0byBjcmVhdGUgYSBQMlAgRGV2aWNlIGludGVyZmFjZSBwMnAtZGV2LXds
+YW4wCjE4ODEuMTA4ODI4OiBQMlA6IEZhaWxlZCB0byBjcmVhdGUgUDJQIERldmljZSBpbnRlcmZh
+Y2UKMTg4MS4xMDkxNDM6IFAyUDogRmFpbGVkIHRvIGVuYWJsZSBQMlAgRGV2aWNlIGludGVyZmFj
+ZQoxODgxLjExMDA3MzogUlRNX05FV0xJTks6IGlmaV9pbmRleD01IGlmbmFtZT1wMnAwIG9wZXJz
+dGF0ZT0wIGxpbmttb2RlPTAgaWZpX2ZhbWlseT0wIGlmaV9mbGFncz0weDExMDQzIChbVVBdW1JV
+Tk5JTkddW0xPV0VSX1VQXSkKMTg4MS4xMTA5OTc6IFJUTV9ORVdMSU5LOiBpZmlfaW5kZXg9NSBp
+Zm5hbWU9cDJwMCBvcGVyc3RhdGU9NSBsaW5rbW9kZT0wIGlmaV9mYW1pbHk9MCBpZmlfZmxhZ3M9
+MHgxMTAwMyAoW1VQXVtMT1dFUl9VUF0pCjE4ODEuMTExODYxOiBSVE1fTkVXTElOSzogaWZpX2lu
+ZGV4PTUgaWZuYW1lPXAycDAgb3BlcnN0YXRlPTUgbGlua21vZGU9MSBpZmlfZmFtaWx5PTAgaWZp
+X2ZsYWdzPTB4MTEwMDMgKFtVUF1bTE9XRVJfVVBdKQoxODgxLjExMzMxNTogUlRNX05FV0xJTks6
+IGlmaV9pbmRleD00IGlmbmFtZT13bGFuMCBvcGVyc3RhdGU9NSBsaW5rbW9kZT0wIGlmaV9mYW1p
+bHk9MCBpZmlfZmxhZ3M9MHgxMTAwMyAoW1VQXVtMT1dFUl9VUF0pCjE4ODEuMTE0MTU0OiBSVE1f
+TkVXTElOSzogaWZpX2luZGV4PTQgaWZuYW1lPXdsYW4wIG9wZXJzdGF0ZT01IGxpbmttb2RlPTEg
+aWZpX2ZhbWlseT0wIGlmaV9mbGFncz0weDExMDAzIChbVVBdW0xPV0VSX1VQXSkKMTg4MS4zMzE2
+OTA6IEVBUE9MOiBkaXNhYmxlIHRpbWVyIHRpY2sKMTg4MS43NzEyMTY6IEVBUE9MOiBkaXNhYmxl
+IHRpbWVyIHRpY2sKCl==
+
+
+--=-915tSkv4FJrHnVvcNyLJ--
 
