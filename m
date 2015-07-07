@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:33939 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673AbbG0TN3 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49710 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757774AbbGGO4l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 15:13:29 -0400
-Received: by igk11 with SMTP id 11so75779118igk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 12:13:28 -0700 (PDT)
+	Tue, 7 Jul 2015 10:56:41 -0400
+From: Chor Teck Law <ctlaw@marvell.com>
+To: Imre Kaloz <kaloz@openwrt.org>, David Lin <dlin@marvell.com>,
+	Jonas Gorski <jogo@openwrt.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v5] Add new mac80211 driver mwlwifi.
+Date: Tue, 7 Jul 2015 14:56:32 +0000
+Message-ID: <09fcd8750b664c98a4929b34f6a34649@SC-EXCH03.marvell.com> (sfid-20150707_165713_754391_3F07A2F7)
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+ <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com>
+ <e90aaab05cfd43fe9c05f738d4fc528a@SC-EXCH02.marvell.com>
+ <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
+ <op.x1edl6b82s3iss@ecaz>
+ <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com>
+ <op.x1eqt6132s3iss@ecaz>
+In-Reply-To: <op.x1eqt6132s3iss@ecaz>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
-Date: Mon, 27 Jul 2015 12:13:28 -0700
-Message-ID: <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com> (sfid-20150727_211332_907799_A8013365)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-From: Adrian Chadd <adrian@freebsd.org>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I wonder if this is a mis-merge on my part (I'm the freebsd maintainer.)
-
-can you log the noisefloor calibrated values before and after the
-patch? I'd like to see how low it calibrrates to.
-
-
--a
-
-
-On 22 July 2015 at 01:42, Martin Blumenstingl
-<martin.blumenstingl@googlemail.com> wrote:
-> The FreeBSD driver [0] uses the same 2G values as for the AR9280 chips.
-> Using the same values in ath9k results in much better throughput for me.
->
-> Before this patch I had a huge amount of packet loss (sometimes up to
-> 40%) and the max transfer speed was somewhere around 5Mbit/s. With this
-> patch applied I have zero packet loss and ten times the throughput.
-> My device uses a AR9227 which is the PCI variant of the AR9287.
->
-> [0] http://bxr.su/FreeBSD/sys/dev/ath/ath_hal/ar9002/ar9287.h
->
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> ---
-> Patch has not changed, I am just CC'ing @linux-wireless (instead of
-> @ath9k-devel only).
->
->  drivers/net/wireless/ath/ath9k/ar9002_phy.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> index 6314ae2..9d17a53 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> @@ -610,8 +610,8 @@
->  #define AR_PHY_CCA_MIN_GOOD_VAL_9271_2GHZ      -127
->  #define AR_PHY_CCA_MAX_GOOD_VAL_9271_2GHZ      -116
->
-> -#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -120
-> +#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -112
->  #define AR_PHY_CCA_MIN_GOOD_VAL_9287_2GHZ    -127
-> -#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -110
-> +#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -97
->
->  #endif
-> --
-> 2.4.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSW1yZSBLYWxveiBbbWFp
+bHRvOmthbG96QG9wZW53cnQub3JnXQ0KPiBTZW50OiBUdWVzZGF5LCBKdWx5IDA3LCAyMDE1IDc6
+MzYgQU0NCj4gVG86IERhdmlkIExpbjsgSm9uYXMgR29yc2tpOyBDaG9yIFRlY2sgTGF3DQo+IENj
+OiBKb2hhbm5lcyBCZXJnOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IFBldGUgSHNp
+ZWgNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NV0gQWRkIG5ldyBtYWM4MDIxMSBkcml2ZXIgbXds
+d2lmaS4NCj4gDQo+IE9uIFR1ZSwgMDcgSnVsIDIwMTUgMTU6NDg6MzggKzAyMDAsIENob3IgVGVj
+ayBMYXcgPGN0bGF3QG1hcnZlbGwuY29tPg0KPiB3cm90ZToNCj4gDQo+ID4+ID4+IFdpbGwgY2hh
+bmdlIHRoZSB0aXRsZSBmcm9tICJNYXJ2ZWxsIFdpcmVsZXNzIFdpLUZpIGRyaXZlcg0KPiAobXds
+d2lmaSkiDQo+ID4+ID4+IHRvICJNYXJ2ZWxsIDg4Vzg4NjQvODhXODg5NyBQQ0llIGRyaXZlciB3
+aXRoIEFQIHN1cHBvcnQiLg0KPiA+PiA+DQo+ID4+ID4gQXMgSW1yZSBwb2ludGVkIG91dCwgbXdp
+ZmlleCBhbHNvIHN1cHBvcnRzIEFQIG1vZGUsIHNvIHRoaXMgaXMgbm90DQo+ID4+ID4gYSBnb29k
+IGRlc2NyaXB0aW9uLg0KPiA+DQo+ID4gV2UgaGF2ZSBleHBsYWluZWQgYSBmZXcgdGltZXMgb24g
+dGhpcy4uLiBQbHMgcmVhZCBhYm91dCB0aGUNCj4gZGlmZmVyZW5jZQ0KPiA+IG9mIG13aWZpZXgg
+dnMgbXdsd2lmaS4gVGhlcmUgaXMgYSBOT1RFIGFkZGVkIHRvIHRoZSBkZXNjcmlwdGlvbiBvZg0K
+PiA+IEtDb25maWcgb2YgbXdsd2lmaS4NCj4gPg0KPiA+IFdvdWxkIHRoZSBjb21tdW5pdHkgcHJl
+ZmVyIHRoaXMgZGVzY3JpcHRpb24gaW5zdGVhZDogIk1hcnZlbGwNCj4gPiA4OFc4ODY0Lzg4Vzg4
+OTcgZHJpdmVyIHdpdGggTUFDODAyMTEgc3VwcG9ydCI/DQo+IA0KPiBJIGhhdmUgYSBkaWZmZXJl
+bnQgc3VnZ2VzdGlvbiwgcGxlYXNlIHJlYWQgYmVsb3cuDQo+IA0KPiA+PiBPbiB0aGUgc2hvcnQg
+cnVuLCBjaGFuZ2luZyB0aGUgZGVzY3JpcHRpb24gb2YgdGhlIGRyaXZlcnMgY291bGQNCj4gd29y
+aywNCj4gPj4gYnV0IEkgd291bGQgc3VnZ2VzdCBkcm9wcGluZyAoYXQgbGVhc3QpIDg4OTcgc3Vw
+cG9ydCBmcm9tIG13aWZpZXggaW4NCj4gPj4gZmF2b3Igb2YgbXdsd2lmaS4gSWYgc3VwcG9ydGlu
+ZyB0aGUgODc2NiBpc24ndCBjb21wbGljYXRlZCwgSSB3b3VsZA0KPiA+PiBkcm9wIFBDSWUgc3Vw
+cG9ydCBjb21wbGV0ZWx5IGZyb20gdGhlcmUuDQo+ID4+DQo+ID4+IERhdmlkLCBDaG9yIFRlY2ss
+IGNvdWxkIHlvdSBzaGVkIHNvbWUgbGlnaHQgb24gdGhlIGZ1dHVyZSBkcml2ZXINCj4gPj4gc3Ry
+YXRlZ3k/DQo+ID4NCj4gPiBUaGUgbXdsd2lmaSBhcyBpdCBpcyB0b2RheSwgb25seSBzdXBwb3J0
+cyBzYWlkIFBDSWUgZGV2aWNlcy4gVGhlcmUgaXMNCj4gPiBubyBuZWFyIHRlcm0gcGxhbiBmb3Ig
+YW55IG90aGVyIGRldmljZXMuIEJ1dCB3ZSBjYW5ub3Qgc3BlYWsgZm9yDQo+IGZ1dHVyZS4NCj4g
+PiBMZXQncyBjb21tZW50IGJhc2VkIG9uIHRoZSBjdXJyZW50IHN0YXRlLg0KPiANCj4gU3VyZSB0
+aGluZywgd2hhdCBJIHdhcyB0YWxraW5nIGFib3V0IGlzIG1vcmUgbGlrZSBtYWtpbmcgdGhlIGRy
+aXZlcg0KPiBzZWxlY3Rpb24gbGVzcyBjb25mdXNpbmcgZm9yIHRoZSBlbmR1c2VyLg0KPiANCj4g
+V2hhdCBJIHdvdWxkIHByb3Bvc2UgaXMgc29tZXRoaW5nIGFsb25nIHRoZSBsaW5lcyAoSSBoYXZl
+IHRvIGNoZWF0IGENCj4gYml0LCBJIGtub3cpOg0KPiANCj4gbXdsd2lmaTogIk1hcnZlbGwgQXZh
+c3RhciAoODAyLjExYWMpIFBDSWUgc3VwcG9ydCINCj4gbXdpZmlleDogIk1hcnZlbGwgQXZhc3Rh
+ciAoODAyLjExbikgc3VwcG9ydCINCj4gbXdsOGsgOiAgIk1hcnZlbGwgVG9wRG9nICg4MDIuMTFu
+KSBzdXBwb3J0Ig0KDQpUaGFua3MgZm9yIHNjcmF0Y2hpbmcgeW91ciBoZWFkIG9uIHRoaXMuIFdl
+IGNhbm5vdCBjaGFuZ2UgbXdpZmlleCBiZWNhdXNlIG9mIGl0cyBicm9hZGVyIGluc3RhbGxhdGlv
+biBvbiBlbWJlZGRlZCBkZXZpY2VzIGFuZCBsYXB0b3BzLiBBbmQgaXQgaXMgZGVmaW5pdGVseSBt
+b3JlIHdpZGVseSB1c2VkIGFzIDExYWMgdGhhbiAxMW4uDQoNCldlIGNhbiBhZGQgQXZhc3RhciBp
+ZiBwcmVmZXJyZWQgKG5vdCByZXF1aXJlZCBidXQgb2spLiBNYWluIHRoaW5nIGFib3V0IG13bHdp
+ZmkgaXMgdGhhdCBpdCBkaWZmZXJzIGZyb20gb3RoZXJzIGZvciBpdHMgbWFjODAyMTEgY29tcGF0
+aWJpbGl0eS4gU2hvdWxkIHdlIHVzZSANCiJNYXJ2ZWxsIEF2YXN0YXIgODhXODg2NC84OFc4ODk3
+IFBDSWUgZHJpdmVyIChtYWM4MDIxMSBjb21wYXRpYmxlKSI/DQoNCj4gDQo+IA0KPiBJbXJlDQo+
+IA0KPiBQUzoNCj4gDQo+IENoZWF0aW5nIGFzIGluIG13bDhrIHN1cHBvcnRzIHRoZSA4NzY0IEF2
+YXN0YXIgcmFkaW8gYW5kIG13aWZpZXgNCj4gc3VwcG9ydHMgMTFhYywgYnV0IHdlbGwuLi4NCg==
