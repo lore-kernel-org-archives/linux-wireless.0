@@ -1,86 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4103 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319AbbGFHk1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2015 03:40:27 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 04/13] wil6210: count drops in Rx block ack reorder
-Date: Mon,  6 Jul 2015 10:39:40 +0300
-Message-Id: <1436168389-3676-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_100715_235550_9863664C)
-In-Reply-To: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:59832 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756991AbbGGOVg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 10:21:36 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by arrakis.dune.hu (Postfix) with ESMTP id A5BAC28BE70
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2015 16:21:14 +0200 (CEST)
+Received: from mail-qk0-f180.google.com (mail-qk0-f180.google.com [209.85.220.180])
+	by arrakis.dune.hu (Postfix) with ESMTPSA id C5F11286F45
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2015 16:21:00 +0200 (CEST)
+Received: by qkei195 with SMTP id i195so140678892qke.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2015 07:21:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com>
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+ <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com>
+ <e90aaab05cfd43fe9c05f738d4fc528a@SC-EXCH02.marvell.com> <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
+ <op.x1edl6b82s3iss@ecaz> <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Tue, 7 Jul 2015 16:20:56 +0200
+Message-ID: <CAOiHx==88xDNAbi1mKbM2+MCTCha+HLMJPzq4ovVfqu-Aym-jg@mail.gmail.com> (sfid-20150707_162205_052442_FD2CCC89)
+Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
+To: Chor Teck Law <ctlaw@marvell.com>
+Cc: Imre Kaloz <kaloz@openwrt.org>, David Lin <dlin@marvell.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When performing Rx reordering, count skb's dropped
-per reorder buffer; and print dropped packets count
-on the "stations" debugfs entry
+On Tue, Jul 7, 2015 at 3:48 PM, Chor Teck Law <ctlaw@marvell.com> wrote:
+>
+>
+>> -----Original Message-----
+>> From: Imre Kaloz [mailto:kaloz@openwrt.org]
+>> Sent: Tuesday, July 07, 2015 2:50 AM
+>> To: David Lin; Jonas Gorski
+>> Cc: Johannes Berg; linux-wireless@vger.kernel.org; Chor Teck Law; Pete
+>> Hsieh
+>> Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
+>>
+>> On Tue, 07 Jul 2015 11:38:32 +0200, Jonas Gorski <jogo@openwrt.org>
+>> wrote:
+>>
+>> <snip>
+>>
+>> >>> I think it would be good to have some more precise description here
+>> >>> (something like "Marvell 88W8864/8897 PCIe driver with AP
+>> support").
+>> >>>
+>> >>
+>> >> Will change the title from "Marvell Wireless Wi-Fi driver (mwlwifi)"
+>> >> to "Marvell 88W8864/88W8897 PCIe driver with AP support".
+>> >
+>> > As Imre pointed out, mwifiex also supports AP mode, so this is not a
+>> > good description.
+>
+> We have explained a few times on this... Pls read about the difference of mwifiex vs mwlwifi. There is a NOTE added to the description of KConfig of mwlwifi.
+>
+> Would the community prefer this description instead: "Marvell 88W8864/88W8897 driver with MAC80211 support"?
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c    | 2 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c | 2 ++
- drivers/net/wireless/ath/wil6210/wil6210.h    | 2 ++
- 3 files changed, 5 insertions(+), 1 deletion(-)
+Let's keep the name as is and do a cleanup / naming discussion
+seperate of that. This should not block the acceptance of the driver.
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 42bc6e6..9ed1a94 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1353,7 +1353,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
- 		else
- 			seq_printf(s, "%c", r->reorder_buf[i] ? '*' : '_');
- 	}
--	seq_printf(s, "] last drop 0x%03x\n", r->ssn_last_drop);
-+	seq_printf(s, "] drop %llu last 0x%03x\n", r->drop, r->ssn_last_drop);
- }
- 
- static int wil_sta_debugfs_show(struct seq_file *s, void *data)
-diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-index ca10dcf..e4ac11c 100644
---- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
-+++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-@@ -153,6 +153,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
- 	/* frame with out of date sequence number */
- 	if (seq_less(seq, r->head_seq_num)) {
- 		r->ssn_last_drop = seq;
-+		r->drop++;
- 		dev_kfree_skb(skb);
- 		goto out;
- 	}
-@@ -173,6 +174,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
- 
- 	/* check if we already stored this frame */
- 	if (r->reorder_buf[index]) {
-+		r->drop++;
- 		dev_kfree_skb(skb);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 4b7135e..284edda 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -427,6 +427,7 @@ struct pci_dev;
-  * @timeout: reset timer value (in TUs).
-  * @dialog_token: dialog token for aggregation session
-  * @rcu_head: RCU head used for freeing this struct
-+ * @drop: total frames dropped for this reorder buffer
-  *
-  * This structure's lifetime is managed by RCU, assignments to
-  * the array holding it must hold the aggregation mutex.
-@@ -444,6 +445,7 @@ struct wil_tid_ampdu_rx {
- 	u16 buf_size;
- 	u16 timeout;
- 	u16 ssn_last_drop;
-+	unsigned long long drop;
- 	u8 dialog_token;
- 	bool first_time; /* is it 1-st time this buffer used? */
- };
--- 
-2.1.4
 
+Jonas
