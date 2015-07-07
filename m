@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:36761 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589AbbGNNUH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 09:20:07 -0400
-Message-ID: <55A50C82.4040107@lwfinger.net> (sfid-20150714_152038_139795_5956DA6B)
-Date: Tue, 14 Jul 2015 08:20:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:59608 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752095AbbGGHI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2015 03:08:56 -0400
+Message-ID: <559B7AFC.3040202@openwrt.org> (sfid-20150707_090859_843220_0D23BE7B)
+Date: Tue, 07 Jul 2015 09:08:44 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Bastien Nocera <hadess@hadess.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rfkill-gpio: Add support for the Realtek 8723 BT
-References: <1436825494.20249.47.camel@hadess.net>
-In-Reply-To: <1436825494.20249.47.camel@hadess.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH v2] ath9k: export HW random number generator
+References: <1435912110-9646-1-git-send-email-miaoqing@qca.qualcomm.com> <559A5919.3060308@openwrt.org> <262dbfcff3564c4ba2025f9fde11e8e2@NASANEXM01E.na.qualcomm.com>
+In-Reply-To: <262dbfcff3564c4ba2025f9fde11e8e2@NASANEXM01E.na.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2015 05:11 PM, Bastien Nocera wrote:
-> http://thread.gmane.org/gmane.linux.kernel.wireless.general/127706/focu
-> s=127896
->
-> Signed-off-by: Bastien Nocera <hadess@hadess.net>
+On 2015-07-07 07:07, Pan, Miaoqing wrote:
+> AR_PHY_TST_ADC is BB ADC sample register, it doesn't depend on other
+> BB registers. Get non zero data if it has the ADC values.
+This is completely wrong!
 
-Bastien,
+AR_PHY_TST_ADC is a generic observation register which can be configured
+to observe multiple points in the rx path.
+I did my own experiments with sampling raw I/Q values from the ADC, and
+you can find my patch here:
 
-The subject of this patch needs a bit more detail. I know that you mean the 
-RTL8723B versions of the Bluetooth devices. The subject should say this.
+http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=package/kernel/mac80211/patches/543-ath9k_entropy_from_adc.patch
 
-The commit message needs a bit more detail. Referencing the E-mail thread is OK, 
-but a bit more is needed. What fails without this change?
+It right now uses only the lowest bits (they are the hardest to control
+from the outside).
 
-To help keep that patches straight, change the next submission to say "[PATCH 
-V2]" in the subject. In addition, after the ---, add a section saying what 
-changed in V2. That info is not retained in the final commit message in the 
-repo, but it can be very useful to a maintainer.
+Through extensive testing (not just by me, but also by many people in
+the OpenWrt community), I found that leaving the AR_PHY_TST_ADC register
+configured for raw I/Q samples causes the radio to become unstable on
+AR5008-AR9002. That's why my patch currently only gathers some data at
+driver init time.
+By the way, on AR5008-AR9002 this register is in a different location
+than AR9003, something your patch also needs to take into account.
 
-Larry
+You should also make sure that the radio is actually configured to a
+channel (and active!) before gathering data.
 
->
-> ---
->   net/rfkill/rfkill-gpio.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index d5d58d9..9471024 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -168,6 +168,7 @@ static const struct acpi_device_id
-> rfkill_acpi_match[] = {
->   	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
->   	{ "BCM2E40", RFKILL_TYPE_BLUETOOTH },
->   	{ "BCM2E64", RFKILL_TYPE_BLUETOOTH },
-> +	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
->   	{ "BCM4752", RFKILL_TYPE_GPS },
->   	{ "LNV4752", RFKILL_TYPE_GPS },
->   	{ },
->
+When you rework your patch, please carefully review the documentation
+for the fields rx_obs_sel and cf_bbb_obs_sel before you change the code
+again.
 
+- Felix
