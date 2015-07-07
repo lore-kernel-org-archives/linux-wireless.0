@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:34665 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbbGMHfN (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:1352 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853AbbGGQvI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2015 03:35:13 -0400
-Received: by wgkl9 with SMTP id l9so18658023wgk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2015 00:35:12 -0700 (PDT)
-Received: from [1.1.8.48] (206.Red-213-97-173.staticIP.rima-tde.net. [213.97.173.206])
-        by smtp.googlemail.com with ESMTPSA id h9sm17003021wjx.20.2015.07.13.00.35.12
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 13 Jul 2015 00:35:12 -0700 (PDT)
-Message-ID: <55A36A2E.70005@gmail.com> (sfid-20150713_093518_350946_00A43FCE)
-Date: Mon, 13 Jul 2015 09:35:10 +0200
-From: jorge Dominguez <jmadomrod@gmail.com>
+	Tue, 7 Jul 2015 12:51:08 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/3] ath10k: update data path to support QCA99X0
+Date: Tue, 7 Jul 2015 09:47:53 -0700
+Message-ID: <1436287676-25767-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150707_185113_320977_C7F4AD19)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Realtek RTL8723as Blueetooth driver
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+This patch series update ath10k HTT Tx/Rx path to support
+QCA99X0 chip and make it able to run data traffic on both of
+Tx and Rx path.
 
-Currently we have a development proyect with IMX6 freescale processor 
-and a rtl8723as wifi+BT chipset to provide wifi and BT 4.0 funcionality.
+Peter Oh (3):
+  ath10k: update tx path to support QCA99X0
+  ath10k: redefine rx_ppdu_end_common structure to cover qca99x0
+  ath10k: add support for qca99x0 Rx descriptors
 
-We have problems with UART driver for bluetooth on rtl8723as chipset 
-with Low Energy BLE devices. Connections with BLE dont work properly. We 
-believe is a rtl8723a_fw issue.
+ drivers/net/wireless/ath/ath10k/htt.h     |  13 ++-
+ drivers/net/wireless/ath/ath10k/htt_rx.c  |  24 ++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c  |  29 +++--
+ drivers/net/wireless/ath/ath10k/rx_desc.h | 175 ++++++++++++++++++++++++++++--
+ 4 files changed, 212 insertions(+), 29 deletions(-)
 
-Could anybody provide reference for Bluetooth driver for rtl8723as chipset?
+-- 
+1.9.1
 
-Best Regards,
-Jorge
