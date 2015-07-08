@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28274 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752117AbbGUFW2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 01:22:28 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Extend struct htt_mgmt_tx_dec for qca99x0
-Date: Tue, 21 Jul 2015 10:52:00 +0530
-Message-ID: <1437456121-7800-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150721_072232_271450_18F96C63)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:7747 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932306AbbGHMmA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2015 08:42:00 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 00/10] random patches to mac80211
+Date: Wed,  8 Jul 2015 15:41:42 +0300
+Message-Id: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150708_144205_168888_BF5734C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HTT_H2T_MSG_TYPE_MGMT_TX msg in 10.4 firmware carries additional
-4 byte in htt_mgmt_tx_desc where it tells to firmware that at what
-rate mgmt frame has to go out in the air. It's an optional parameter,
-setting this field to zero will force firmware to choose auto rate
-and send the frame out.
+Hi Johannes,
 
-Those 4 byte info is missed out in the current code and 10.4 firmware
-ended up reading some junk in those 4 byte and sometime malfunctioning.
+Here are the patches that we had on our internal tree.
+There are other patches that have been sent the ML already
+and that I couldn't find in mac80211-next.
 
-Fix it by adding 4 byte in struct htt_mgmt_tx_desc. Non 10.4 firmware
-will not process those four byte. So, adding 4 byte at the end of
-struct htt_mgmt_tx_desc will not create any impact on other chipset.
+Arik Nemtsov (3):
+  cfg80211: use RTNL locked reg_can_beacon for IR-relaxation
+  mac80211: TDLS: handle chan-switch in RTNL locked work
+  mac80211: TDLS: deny ch-switch req on disallowed channels
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    | 6 ++++++
- drivers/net/wireless/ath/ath10k/htt_tx.c | 2 ++
- 2 files changed, 8 insertions(+)
+Avri Altman (1):
+  mac80211: enable changing netdev features with ethtool
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 8bdf1e7..d4b6415 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -260,6 +260,9 @@ struct htt_aggr_conf {
- } __packed;
- 
- #define HTT_MGMT_FRM_HDR_DOWNLOAD_LEN 32
-+struct htt_mgmt_tx_desc_qca99x0 {
-+	__le32 rate;
-+} __packed;
- 
- struct htt_mgmt_tx_desc {
- 	u8 pad[sizeof(u32) - sizeof(struct htt_cmd_hdr)];
-@@ -268,6 +271,9 @@ struct htt_mgmt_tx_desc {
- 	__le32 len;
- 	__le32 vdev_id;
- 	u8 hdr[HTT_MGMT_FRM_HDR_DOWNLOAD_LEN];
-+	union {
-+		struct htt_mgmt_tx_desc_qca99x0 qca99x0;
-+	} __packed;
- } __packed;
- 
- enum htt_mgmt_tx_status {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 148d5b6..73b0c42 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -448,6 +448,8 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 
- 	skb_put(txdesc, len);
- 	cmd = (struct htt_cmd *)txdesc->data;
-+	memset(cmd, 0, len);
-+
- 	cmd->hdr.msg_type         = HTT_H2T_MSG_TYPE_MGMT_TX;
- 	cmd->mgmt_tx.msdu_paddr = __cpu_to_le32(ATH10K_SKB_CB(msdu)->paddr);
- 	cmd->mgmt_tx.len        = __cpu_to_le32(msdu->len);
+Eliad Peller (1):
+  mac80211: clear local->suspended before calling drv_resume()
+
+Gregory Greenman (1):
+  mac80211: add possibility to advertise 802.11 FTM support
+
+Johannes Berg (3):
+  mac80211: remove ieee80211_aes_cmac_calculate_k1_k2()
+  mac80211: shut down interfaces before destroying interface list
+  mac80211: allow drivers to set netdev hw_features
+
+Sara Sharon (1):
+  mac80211: Add support for declaring MU-MIMO capability
+
+ include/linux/ieee80211.h  |  6 ++++
+ include/net/cfg80211.h     | 17 +++++++++
+ include/net/mac80211.h     | 29 +++++++--------
+ net/mac80211/aes_cmac.c    | 17 ---------
+ net/mac80211/debugfs.c     |  1 +
+ net/mac80211/driver-ops.h  | 22 ++++++++++++
+ net/mac80211/ieee80211_i.h | 18 +++++++---
+ net/mac80211/iface.c       | 69 +++++++++++++++++++++++++++--------
+ net/mac80211/main.c        | 16 ++++++---
+ net/mac80211/mlme.c        | 37 ++++++++++++++++++-
+ net/mac80211/rx.c          |  5 ++-
+ net/mac80211/tdls.c        | 89 ++++++++++++++++++++++++++++++++++------------
+ net/mac80211/trace.h       | 28 +++++++++++++++
+ net/mac80211/util.c        | 18 +++++++---
+ net/wireless/chan.c        | 45 +++++++++++++++++------
+ net/wireless/nl80211.c     | 14 ++++----
+ net/wireless/reg.c         |  2 +-
+ net/wireless/trace.h       | 11 +++---
+ 18 files changed, 337 insertions(+), 107 deletions(-)
+
 -- 
-1.8.1.2
+2.1.4
 
