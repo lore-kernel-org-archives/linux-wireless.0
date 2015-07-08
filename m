@@ -1,36 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40195 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752196AbbGXApA (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:34813 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755061AbbGHTxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 20:45:00 -0400
-Date: Fri, 24 Jul 2015 03:44:55 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
-	dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com
-Subject: Re: [PATCH V2 1/3] staging: wilc1000: coreconfigurator.c: remove
- WILC_MALLOC
-Message-ID: <20150724004454.GU5371@mwanda> (sfid-20150724_024503_919836_FD10D946)
-References: <1437695755-9731-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 8 Jul 2015 15:53:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437695755-9731-1-git-send-email-chaehyun.lim@gmail.com>
+In-Reply-To: <1436383927-14010-1-git-send-email-christophe.jaillet@wanadoo.fr>
+References: <1436383927-14010-1-git-send-email-christophe.jaillet@wanadoo.fr>
+Date: Wed, 8 Jul 2015 22:53:51 +0300
+Message-ID: <CANUX_P2djxM92BZX=0O7Zmb+0Y7Gs9xpbfUgPnCB0gnDwfSJuQ@mail.gmail.com> (sfid-20150708_215418_994650_6AB25AC5)
+Subject: Re: [PATCH] mac80211: Use kstrdup to simplify code
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
+	Arend van Spriel <arend@broadcom.com>, frankyl@broadcom.com,
+	meuleman@broadcom.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 24, 2015 at 08:55:53AM +0900, Chaehyun Lim wrote:
-> Use kmalloc and kmalloc_array instead of WILC_MALLOC.
-> 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The subject is wrong. You are not patch mac80211, but bcrmsmac.
+
+On Wed, Jul 8, 2015 at 10:32 PM, Christophe JAILLET
+<christophe.jaillet@wanadoo.fr> wrote:
+> Replace a kmalloc+strcpy by an equivalent kstrdup in order to improve
+> readability.
+>
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 > ---
-> V2: Use GFP_KERNEL flag instead of GFP_ATOMIC
-
-This is probably the correct thing but how did you check that we aren't
-holding a spin_lock or in IRQ context?
-
-regards,
-dan carpenter
-
+>  drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> index 4813506..8a6c077 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> @@ -1476,9 +1476,7 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+>         wl->timers = t;
+>
+>  #ifdef DEBUG
+> -       t->name = kmalloc(strlen(name) + 1, GFP_ATOMIC);
+> -       if (t->name)
+> -               strcpy(t->name, name);
+> +       t->name = kstrdup(name, GFP_ATOMIC);
+>  #endif
+>
+>         return t;
+> --
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
