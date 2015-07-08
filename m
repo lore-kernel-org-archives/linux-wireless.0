@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:35182 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752583AbbGGJRN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 05:17:13 -0400
-Received: by wgjx7 with SMTP id x7so161954859wgj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2015 02:17:11 -0700 (PDT)
-Date: Tue, 7 Jul 2015 11:23:37 +0200
-From: Luis de Bethencourt <luis@debethencourt.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: kernelnewbies@kernelnewbies.org, Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH 0/4] staging: wilc1000: cover letter
-Message-ID: <20150707092337.GA1502@goodgumbo.baconseed.org> (sfid-20150707_111718_961089_BE9F3327)
-References: <20150626144340.GA29835@goodgumbo.baconseed.org>
- <20150707022209.GD12574@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150707022209.GD12574@kroah.com>
+Received: from www.osadl.org ([62.245.132.105]:53019 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758270AbbGHOXS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2015 10:23:18 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Avinash Patil <patila@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] mwifiex: drop condition with no effect
+Date: Wed,  8 Jul 2015 16:15:02 +0200
+Message-Id: <1436364902-28943-1-git-send-email-hofrat@osadl.org> (sfid-20150708_162329_351619_70CB2007)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 06, 2015 at 07:22:09PM -0700, Greg Kroah-Hartman wrote:
-> On Fri, Jun 26, 2015 at 04:43:44PM +0200, Luis de Bethencourt wrote:
-> > Patches to be applied on top of
-> > https://patchwork.kernel.org/patch/6655831/
-> 
-> I don't use patchwork, and when on an airplane with no internet access
-> (like right now), a url provides no context at all.  Always use email
-> subject lines or something that I can actually reference properly while
-> offline...
-> 
-> thanks,
-> 
-> greg k-h
+scanning for trivial bug-patters with coccinelle spatches returned:
+./drivers/net/wireless/mwifiex/sta_cmdresp.c:895
+        WARNING: condition with no effect (if branch == else)
 
-OK. Sorry. Didn't knew this but noted for the future.
+originally added in 'commit d8d2f19feb16 ("mwifiex: silence TDLS link
+delete failure for nonexistent link")' with dev_dbg/dev_err (though
+with the same message) to differentiate severity and then in 'commit
+acebe8c10a6e ("mwifiex: change dbg print func to mwifiex_dbg")' all
+dev_dbg,dev_warn and dev_err got converted to mwifiex_dbg which should
+thus probably drop this if/else as well.
 
-Thanks for the reviews and merges!
-Luis
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
+
+If dropping the if/else is not the right thing to do then commit 
+acebe8c10a6e "mwifiex: change dbg print func to mwifiex_dbg" probably
+needs a review as well.
+
+Patch was compile tested with x86_64_defconfig + CONFIG_MWIFIEX=m
+
+Patch is against 4.2-rc1 (localversion-next is -next-20150708)
+
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index b645884..e58f900 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -892,14 +892,9 @@ static int mwifiex_ret_tdls_oper(struct mwifiex_private *priv,
+ 	switch (action) {
+ 	case ACT_TDLS_DELETE:
+ 		if (reason) {
+-			if (!node || reason == TDLS_ERR_LINK_NONEXISTENT)
+-				mwifiex_dbg(priv->adapter, ERROR,
+-					    "TDLS link delete for %pM failed: reason %d\n",
+-					    cmd_tdls_oper->peer_mac, reason);
+-			else
+-				mwifiex_dbg(priv->adapter, ERROR,
+-					    "TDLS link delete for %pM failed: reason %d\n",
+-					    cmd_tdls_oper->peer_mac, reason);
++			mwifiex_dbg(priv->adapter, ERROR,
++				    "TDLS link delete for %pM failed: reason %d\n",
++				    cmd_tdls_oper->peer_mac, reason);
+ 		} else {
+ 			mwifiex_dbg(priv->adapter, MSG,
+ 				    "TDLS link delete for %pM successful\n",
+-- 
+1.7.10.4
+
