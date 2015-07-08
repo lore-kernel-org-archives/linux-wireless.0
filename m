@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:37476 "EHLO hauke-m.de"
+Received: from mga03.intel.com ([134.134.136.65]:35464 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753709AbbG3Reb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 13:34:31 -0400
-Message-ID: <55BA6024.4000307@hauke-m.de> (sfid-20150730_193440_272909_F4B1471E)
-Date: Thu, 30 Jul 2015 19:34:28 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+	id S933688AbbGHORs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2015 10:17:48 -0400
+From: "Sharon, Sara" <sara.sharon@intel.com>
+To: 'Nicholas Krause' <xerofoify@gmail.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+CC: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"Altman, Avri" <avri.altman@intel.com>,
+	"Kaufman, Liad" <liad.kaufman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] iwlwifi:Add increment statement for a  for loop in the
+ function iwl_pcie_rx_allocator
+Date: Wed, 8 Jul 2015 14:17:42 +0000
+Message-ID: <84271B8B681983469E84120965EB1B04349FDC8D@HASMSX106.ger.corp.intel.com> (sfid-20150708_161812_369263_222185A8)
+References: <1436363071-548-1-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1436363071-548-1-git-send-email-xerofoify@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: fix extpa_gain check for 2GHz
-References: <1438205790-17629-1-git-send-email-hauke@hauke-m.de> <8738065hkb.fsf@kamboji.qca.qualcomm.com> <CACna6rySwFsFhSjRgyw_oVk3BX9sSHu81rPTusmGujOveehbiA@mail.gmail.com>
-In-Reply-To: <CACna6rySwFsFhSjRgyw_oVk3BX9sSHu81rPTusmGujOveehbiA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/30/2015 08:54 AM, Rafał Miłecki wrote:
-> On 30 July 2015 at 07:40, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Hauke Mehrtens <hauke@hauke-m.de> writes:
->>
->>> On the 2GHz and and on the 5GHZ band only the extpa_gain setting from
->>> the 5GHz band was checked. this patch makes it check the property from
->>> the correct band.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>
->> Is this a regression? If yes, please add a Fixes line.
->>
->> Should this go to 4.2?
+> This removes the incrementing of the variable i at the end of the
+> function iwl_pcie_rx_allocator's for loop into the for loop statement
+> by adding the increment statement of i++ at the end of the for loop
+> declaration in order to improve readablitiy of this for loop's
+> declaration in the function iwl_pcie_rx_allocator.
 > 
-> Not a regression. It's like this for a loooong time.
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> ---
+>  drivers/net/wireless/iwlwifi/pcie/rx.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> AFAIK PCI(e) cards don't have external power amplifier, so this code
-> is most likely used for some fancy SoCs only. There are 3 known SoCs
-> with N-PHY rev 5 or 6: BCM4717A1, BCM4718A1 & BCM4716B0.
+> diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c
+> b/drivers/net/wireless/iwlwifi/pcie/rx.c
+> index a3fbaa0..a26609c 100644
+> --- a/drivers/net/wireless/iwlwifi/pcie/rx.c
+> +++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+> @@ -441,7 +441,7 @@ static void iwl_pcie_rx_allocator(struct iwl_trans
+> *trans)
+>  		list_replace_init(&rba->rbd_empty, &local_empty);
+>  		spin_unlock(&rba->lock);
 > 
-> So we may consider taking it for 4.2 without any "Fixes: " line but I
-> wouldn't care too much about Cc-ing stable.
+> -		for (i = 0; i < RX_CLAIM_REQ_ALLOC;) {
+> +		for (i = 0; i < RX_CLAIM_REQ_ALLOC; i++) {
+>  			struct iwl_rx_mem_buffer *rxb;
+>  			struct page *page;
 > 
-> Hauke: do you agree?
-> 
-Yes, I do not have a device I know of which is affected by this error, I
-just saw this while looking at code close by. Just put this into the
-next Linux version and not to stable.
 
-Hauke
+This is wrong in the error flows. Please note the continue statements in the code.
+It is important that the loop counter will not be incremented in those cases, or your kernel will panic.
+
+> @@ -478,7 +478,6 @@ static void iwl_pcie_rx_allocator(struct iwl_trans
+> *trans)
+> 
+>  			/* move the allocated entry to the out list */
+>  			list_move(&rxb->list, &local_allocated);
+> -			i++;
+>  		}
+> 
+>  		spin_lock(&rba->lock);
+> --
+> 2.1.4
+
+---------------------------------------------------------------------
+A member of the Intel Corporation group of companies
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
