@@ -1,44 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:36180 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753203AbbGIT5n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 15:57:43 -0400
-Date: Thu, 9 Jul 2015 21:57:37 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or
- primitive
-Message-ID: <20150709195737.GA26965@worktop.ger.corp.intel.com> (sfid-20150709_215804_707559_34282E58)
-References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
- <1436429599-10762-3-git-send-email-vgupta@synopsys.com>
- <559EBC91.2070600@broadcom.com>
- <559EBDF4.7030808@broadcom.com>
+Received: from mout.web.de ([212.227.17.11]:63896 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754091AbbGHHJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2015 03:09:35 -0400
+Subject: Re: Clarification for the use of additional fields in the message
+ body
+To: Julian Calaby <julian.calaby@gmail.com>
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+ <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
+ <559B6FF8.9010704@users.sourceforge.net>
+ <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
+ <559B85CD.6040200@users.sourceforge.net>
+ <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
+ <559BBDD6.7040808@users.sourceforge.net>
+ <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
+ <559BFB19.2080700@users.sourceforge.net>
+ <CAGRGNgXTN8AxBNNfie4KvvErOXm3LUyL_QLLWQ6TN_wJgJkD-A@mail.gmail.com>
+Cc: Frans Klaver <fransklaver@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chris Park <chris.park@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <559CCC9D.8050606@users.sourceforge.net> (sfid-20150708_090955_862110_66B0DFC7)
+Date: Wed, 8 Jul 2015 09:09:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <559EBDF4.7030808@broadcom.com>
+In-Reply-To: <CAGRGNgXTN8AxBNNfie4KvvErOXm3LUyL_QLLWQ6TN_wJgJkD-A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 09, 2015 at 08:31:16PM +0200, Arend van Spriel wrote:
-> >There is or there was? If there is now I am fine with this patch, but if
-> >it already was there the author might have had a reason for adding a
-> >local function and I would like to hear that reason.
-> 
-> Nevermind. Just noticed you are proposing the generic implementation in this
-> series. Currently on vacation and want to discuss with Hante about this
-> change.
+> There's a file in the documentation directory of the kernel
+> tree describing submitting patches and email client setup.
+> Read them both,
 
-No there is one in linux/atomic.h, he just renamed the #ifdef guard and
-provided a 'sane' implementation for his arch.
+I read this information several times.
+
+
+> do what they say without anything extra.
+
+Do you see any special consequences if a bit of "extra" functionality
+is already provided by the Git software for a while?
+
+
+> Your attempts to "improve" on the system are unnecessary
+
+It seems that my approach does not need improvements for the current
+command "git am".
+Would a few extensions for the available documentation help to clarify
+the situation?
+
+
+Do items like "commit mail address" and "commit timestamp"
+belong together for the data structure "author" by design
+in this content management system?
+
+
+> and annoying people.
+
+I understand that various update suggestions can be surprising.
+It is also usual that corresponding acceptance might take
+a bit longer than what some contributors would prefer.
+
+Regards,
+Markus
