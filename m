@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:7878 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750854AbbGXLJx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 07:09:53 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Andreas Fenkart <afenkart@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>
-Subject: RE: [PATCH 3/4] mwifiex: remove CMD_F_CANCELED flag
-Date: Fri, 24 Jul 2015 11:09:49 +0000
-Message-ID: <e39a5c966cd745398c2710ed02ccbe44@SC-EXCH04.marvell.com> (sfid-20150724_130956_383356_E4100152)
-References: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
- <1437117186-25243-4-git-send-email-afenkart@gmail.com>
-In-Reply-To: <1437117186-25243-4-git-send-email-afenkart@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:34426 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933448AbbGHPTk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2015 11:19:40 -0400
+Received: by oiab3 with SMTP id b3so49902255oia.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jul 2015 08:19:39 -0700 (PDT)
+Message-ID: <559D3F89.9000404@lwfinger.net> (sfid-20150708_171950_422691_04E20642)
+Date: Wed, 08 Jul 2015 10:19:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: David Binderman <dcb314@hotmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: linux-4.2-rc1/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c:2183:
+ bad expression ?
+References: <DUB128-W77C11FFEB09B442BD8C9229C910@phx.gbl>
+In-Reply-To: <DUB128-W77C11FFEB09B442BD8C9229C910@phx.gbl>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
+On 07/08/2015 03:41 AM, David Binderman wrote:
+> Hello there,
+>
+> [linux-4.2-rc1/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c:2183]: (style) Expression '(X & 0xfc) == 0x3' is always false.
+>
+> Source code is
+>
+>     if ((bt_msr & 0xfc) == MSR_AP)
 
-> From: Andreas Fenkart [mailto:afenkart@gmail.com]
-> Sent: Friday, July 17, 2015 12:43 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Amitkumar Karwar; Kalle Valo; Andreas Fenkart
-> Subject: [PATCH 3/4] mwifiex: remove CMD_F_CANCELED flag
-> 
-> CMD_F_CANCELED was used to abort mwifiex_process_cmdresp in case it
-> already started or starts processing the cmd.
-> But this was probably not working the way intended:
-> - it is racy: mwifiex_process_cmdresp might already have passed that
->   test and is continuing to use the cmd node being recycled
-> - mwifiex_process_cmdresp repeatedly uses adapter->curr_cmd which
->   we just set to NULL
-> - mwifiex_recycle_cmd_node will clear the flag
-> 
-> The reason why it probably works is that mwifiex_cancel_pending_ioctl is
-> only called from mwifiex_cmd_timeout_func, where the there is little
-> chance of a command response still arriving
-> 
+Thanks for the report. A fix was just submitted listing you as the Reporter.
 
-You are right. Command timeout handler is called when there is no response from firmware for 10 seconds. If firmware is alive and working, we would have received command response within a  millisecond. So there is very little chance of command response arriving while executing command timeout handler.
+Larry
 
-Regards,
-Amit
+
