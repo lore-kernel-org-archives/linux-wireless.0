@@ -1,101 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47995 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932223AbbG1Is5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:48:57 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/21] staging: wilc1000: remove a dead preprocessor conditionals
-Date: Tue, 28 Jul 2015 17:47:27 +0900
-Message-ID: <1438073261-28315-9-git-send-email-tony.cho@atmel.com> (sfid-20150728_104906_477455_CF639957)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:58373 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932306AbbGHMmJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2015 08:42:09 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/10] mac80211: TDLS: deny ch-switch req on disallowed channels
+Date: Wed,  8 Jul 2015 15:41:46 +0300
+Message-Id: <1436359312-26533-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150708_144216_289288_2658F741)
+In-Reply-To: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the preprocessor conditionals which are related to
-the WILC1000_SINGLE_TRANSFER definition becasue this is not used.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+If a TDLS station is not allowed to beacon on a channel, don't accept
+a channel switch request to this channel.
+Move channel building code up to avoid lockdep violations - reg_can_beacon
+needs to take the wdev lock.
+
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/wilc_sdio.c | 26 --------------------------
- 1 file changed, 26 deletions(-)
+ net/mac80211/tdls.c | 49 +++++++++++++++++++++++++++++++------------------
+ 1 file changed, 31 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index ea545c9..8f674ad 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -10,11 +10,7 @@
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 91e86bf..aee701a 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1737,6 +1737,31 @@ ieee80211_process_tdls_channel_switch_req(struct ieee80211_sub_if_data *sdata,
+ 		return -EINVAL;
+ 	}
  
--#ifdef WILC1000_SINGLE_TRANSFER
--#define WILC_SDIO_BLOCK_SIZE 256
--#else
- #define WILC_SDIO_BLOCK_SIZE 512
--#endif
++	if (!elems.sec_chan_offs) {
++		chan_type = NL80211_CHAN_HT20;
++	} else {
++		switch (elems.sec_chan_offs->sec_chan_offs) {
++		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++			chan_type = NL80211_CHAN_HT40PLUS;
++			break;
++		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++			chan_type = NL80211_CHAN_HT40MINUS;
++			break;
++		default:
++			chan_type = NL80211_CHAN_HT20;
++			break;
++		}
++	}
++
++	cfg80211_chandef_create(&chandef, chan, chan_type);
++
++	/* we will be active on the TDLS link */
++	if (!cfg80211_reg_can_beacon_relax(sdata->local->hw.wiphy, &chandef,
++					   sdata->wdev.iftype)) {
++		tdls_dbg(sdata, "TDLS chan switch to forbidden channel\n");
++		return -EINVAL;
++	}
++
+ 	mutex_lock(&local->sta_mtx);
+ 	sta = sta_info_get(sdata, tf->sa);
+ 	if (!sta || !test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH)) {
+@@ -1757,27 +1782,15 @@ ieee80211_process_tdls_channel_switch_req(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 	}
  
- typedef struct {
- 	void *os_context;
-@@ -321,16 +317,6 @@ static int sdio_write(uint32_t addr, uint8_t *buf, uint32_t size)
- 		cmd.function = 0;
- 		cmd.address = 0x10f;
- 	} else {
--#ifdef WILC1000_SINGLE_TRANSFER
--		/**
--		 *      has to be block aligned...
--		 **/
--		nleft = size % block_size;
--		if (nleft > 0) {
--			size += block_size;
--			size &= ~(block_size - 1);
+-	if (!sta->sta.ht_cap.ht_supported) {
+-		chan_type = NL80211_CHAN_NO_HT;
+-	} else if (!elems.sec_chan_offs) {
+-		chan_type = NL80211_CHAN_HT20;
+-	} else {
+-		switch (elems.sec_chan_offs->sec_chan_offs) {
+-		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+-			chan_type = NL80211_CHAN_HT40PLUS;
+-			break;
+-		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+-			chan_type = NL80211_CHAN_HT40MINUS;
+-			break;
+-		default:
+-			chan_type = NL80211_CHAN_HT20;
+-			break;
 -		}
--#else
- 		/**
- 		 *      has to be word aligned...
- 		 **/
-@@ -338,7 +324,6 @@ static int sdio_write(uint32_t addr, uint8_t *buf, uint32_t size)
- 			size += 4;
- 			size &= ~0x3;
- 		}
--#endif
++	/* peer should have known better */
++	if (!sta->sta.ht_cap.ht_supported && elems.sec_chan_offs &&
++	    elems.sec_chan_offs->sec_chan_offs) {
++		tdls_dbg(sdata, "TDLS chan switch - wide chan unsupported\n");
++		ret = -ENOTSUPP;
++		goto out;
+ 	}
  
- 		/**
- 		 *      func 1 access
-@@ -463,16 +448,6 @@ static int sdio_read(uint32_t addr, uint8_t *buf, uint32_t size)
- 		cmd.function = 0;
- 		cmd.address = 0x10f;
- 	} else {
--#ifdef WILC1000_SINGLE_TRANSFER
--		/**
--		 *      has to be block aligned...
--		 **/
--		nleft = size % block_size;
--		if (nleft > 0) {
--			size += block_size;
--			size &= ~(block_size - 1);
--		}
--#else
- 		/**
- 		 *      has to be word aligned...
- 		 **/
-@@ -480,7 +455,6 @@ static int sdio_read(uint32_t addr, uint8_t *buf, uint32_t size)
- 			size += 4;
- 			size &= ~0x3;
- 		}
--#endif
+-	cfg80211_chandef_create(&chandef, chan, chan_type);
+ 	params.chandef = &chandef;
+-
+ 	params.switch_time = le16_to_cpu(elems.ch_sw_timing->switch_time);
+ 	params.switch_timeout = le16_to_cpu(elems.ch_sw_timing->switch_timeout);
  
- 		/**
- 		 *      func 1 access
 -- 
-1.9.1
+2.1.4
 
