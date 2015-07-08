@@ -1,50 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:50778 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751217AbbG0KYB convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:36037 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbbGHXsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 06:24:01 -0400
-From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Arend van Spriel <arend@broadcom.com>
-CC: Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or
- primitive
-Date: Mon, 27 Jul 2015 10:23:53 +0000
-Message-ID: <C2D7FE5348E1B147BCA15975FBA23075665AF526@IN01WEMBXB.internal.synopsys.com> (sfid-20150727_122429_276401_02D75C1A)
-References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
-	<1436429599-10762-3-git-send-email-vgupta@synopsys.com>
-	<87twstbi9p.fsf@kamboji.qca.qualcomm.com>	<55B2743F.6060304@synopsys.com>
- <55B4C0A8.9000909@broadcom.com> <871tftc3pw.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 8 Jul 2015 19:48:03 -0400
 MIME-Version: 1.0
+In-Reply-To: <559D29B9.2080408@users.sourceforge.net>
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien> <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+ <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
+ <559B6FF8.9010704@users.sourceforge.net> <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
+ <559B85CD.6040200@users.sourceforge.net> <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
+ <559BBDD6.7040808@users.sourceforge.net> <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
+ <559BFB19.2080700@users.sourceforge.net> <CAGRGNgXTN8AxBNNfie4KvvErOXm3LUyL_QLLWQ6TN_wJgJkD-A@mail.gmail.com>
+ <559CCC9D.8050606@users.sourceforge.net> <CAGRGNgWcHxwjx07A45No8vArXR12JGKcfif1Rvi30PQbJs4SGQ@mail.gmail.com>
+ <559CED4C.1080402@users.sourceforge.net> <CAGRGNgU1SSUw-97aS0nhFObcMpLPdP3ej9WWNVwN77Fd=ws-bQ@mail.gmail.com>
+ <559D29B9.2080408@users.sourceforge.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 9 Jul 2015 09:47:43 +1000
+Message-ID: <CAGRGNgU+1xsdXe9aTYCVvowbo-w9s7chcaNphzzdB2xsuXOBxA@mail.gmail.com> (sfid-20150709_014809_635876_8F08D485)
+Subject: Re: Clarification for the use of additional fields in the message body
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Frans Klaver <fransklaver@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Chris Park <chris.park@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 27 July 2015 01:08 PM, Kalle Valo wrote:
->>> >> Per last discussion on this topic, Arend wanted to discuss abt this with Hante.
->>> >> I'm not taking it anyways so feel free to pick it up if you want !
->> >
->> > Well, that was before your "timeline" clarification about the generic
->> > function. One what tree is this patch based?
-> Yeah, if this patch depends on another patch I need to know about it.
-> Otherwise I might break something when I apply this patch.
+Hi Markus,
 
-It was latest linux-next at the time, 4.1-rcx perhaps, don't remember exactly. But
-it certainly doesn't depend on any new code  - the patch simply makes use of an
-existing API vs. using a local hard coded version of same.
+On Wed, Jul 8, 2015 at 11:46 PM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+>> Is there truly no way to simplify that process?
+>
+> I see some software development possibilities which could improve
+> the communication with high volume mailing lists.
 
-Give it a spin off your existing tree - shdn't be too difficult to test  I presume.
+You shouldn't need any software development, most people's processes are:
 
--Vineet
+1. Make changes
+2. git add <files>
+3. git commit
+4. Repeat 1-3 for all changes they want to make
+5. git-format-patch
+6. git-send-email through some SMTP server to the list and appropriate
+other people
+
+>From what I've read, you appear to have some semi-automatic tool for
+steps 1 through 4. I'd strongly recommend changing your patch
+submission process to use git-format-patch and git-send-email. If
+Sourceforge's email system doesn't let you send emails with SMTP
+directly, then you might want to try sending emails through your ISP's
+mail server.
+
+Maintainers use a very similar process, however they collect and
+review patches in some personal repository in addition to making
+changes and committing them. Tools like patchwork are simply fancy
+methods of accumulating patches into git trees. Most people are using
+git-format-patch and git-send-email, possibly with some scripting
+around them, to format and send patches.
+
+>> You should be sending the patches directly with SMTP using git-send-email,
+>
+> This tool is also fine for the publishing of a lot of patches.
+
+git-send-email or some other tool?
+
+>> if you're not, then you're making things overly complicated for yourself.
+>
+> But I prefer a graphical user interface for my mail handling so far.
+
+I send my patches using git-send-email through gmail's servers then
+deal with literally everything else through gmail's web interface or
+Android app. Using git-send-email doesn't mean you can't use a
+graphical mail interface.
+
+I used to send patches through a carefully configured instance of
+Thunderbird, however this required too many steps and it loved to
+mangle patches in ways that annoyed people.
+
+>> Having a feature doesn't mean that it should be used.
+>
+> Does any of the "questionable functionality" get occasionally overlooked
+> a bit too often?
+
+It's not "questionable functionality", it's functionality we don't see
+a need for.
+
+If I wanted to, I could insert a patch at any point in the history of
+Linux in my own repository, however any attempt to push that upstream
+would cause enormous amounts of pain and annoyance, to everyone who
+attempted to deal with it, so I don't.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
