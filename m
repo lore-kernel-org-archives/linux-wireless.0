@@ -1,112 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:48287 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932213AbbG1IuR (ORCPT
+Received: from mail-yk0-f169.google.com ([209.85.160.169]:36738 "EHLO
+	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752479AbbGHVzk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:50:17 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 20/21] staging: wilc1000: remove unnecessary spcae
-Date: Tue, 28 Jul 2015 17:47:39 +0900
-Message-ID: <1438073261-28315-21-git-send-email-tony.cho@atmel.com> (sfid-20150728_105027_080192_50C3892D)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+	Wed, 8 Jul 2015 17:55:40 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1436364902-28943-1-git-send-email-hofrat@osadl.org>
+References: <1436364902-28943-1-git-send-email-hofrat@osadl.org>
+Date: Wed, 8 Jul 2015 14:55:39 -0700
+Message-ID: <CAJwzM1kvWfP1VB4wUoT74F-Ons1R3cpoBEAdfm37sh1p5vhh+A@mail.gmail.com> (sfid-20150708_235547_359053_589A4B31)
+Subject: Re: [PATCH] mwifiex: drop condition with no effect
+From: Avinash Patil <avinashapatil@gmail.com>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Kim, Leo" <leo.kim@atmel.com>
+Hi Nicholas,
 
-This patch removes the warnings reported by checkpatch.pl on
-space prohibited between function name and open parenthesis '('
+On Wed, Jul 8, 2015 at 7:15 AM, Nicholas Mc Guire <hofrat@osadl.org> wrote:
+> scanning for trivial bug-patters with coccinelle spatches returned:
+> ./drivers/net/wireless/mwifiex/sta_cmdresp.c:895
+>         WARNING: condition with no effect (if branch == else)
+>
+> originally added in 'commit d8d2f19feb16 ("mwifiex: silence TDLS link
+> delete failure for nonexistent link")' with dev_dbg/dev_err (though
+> with the same message) to differentiate severity and then in 'commit
+> acebe8c10a6e ("mwifiex: change dbg print func to mwifiex_dbg")' all
+> dev_dbg,dev_warn and dev_err got converted to mwifiex_dbg which should
+> thus probably drop this if/else as well.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+>
+> If dropping the if/else is not the right thing to do then commit
+> acebe8c10a6e "mwifiex: change dbg print func to mwifiex_dbg" probably
+> needs a review as well.
+>
+> Patch was compile tested with x86_64_defconfig + CONFIG_MWIFIEX=m
+>
+> Patch is against 4.2-rc1 (localversion-next is -next-20150708)
+>
+>  drivers/net/wireless/mwifiex/sta_cmdresp.c |   11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> index b645884..e58f900 100644
+> --- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> +++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> @@ -892,14 +892,9 @@ static int mwifiex_ret_tdls_oper(struct mwifiex_private *priv,
+>         switch (action) {
+>         case ACT_TDLS_DELETE:
+>                 if (reason) {
+> -                       if (!node || reason == TDLS_ERR_LINK_NONEXISTENT)
+> -                               mwifiex_dbg(priv->adapter, ERROR,
+> -                                           "TDLS link delete for %pM failed: reason %d\n",
+> -                                           cmd_tdls_oper->peer_mac, reason);
+> -                       else
+> -                               mwifiex_dbg(priv->adapter, ERROR,
+> -                                           "TDLS link delete for %pM failed: reason %d\n",
+> -                                           cmd_tdls_oper->peer_mac, reason);
+> +                       mwifiex_dbg(priv->adapter, ERROR,
+> +                                   "TDLS link delete for %pM failed: reason %d\n",
+> +                                   cmd_tdls_oper->peer_mac, reason);
 
-Signed-off-by: Kim, Leo <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+I think reason why we had these 2 different prints is for first
+occurrence in "if" which may be not so serious we used to print with
+dev_dbg and second occurrence in "else" is more serious issue which
+was under dev_err.
+It would be better to use mwifiex_dbg with DBG/MSG in"if" condition
+instead of removing whole if/else.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index d012af5..3e55a8a 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -194,9 +194,9 @@ static char *ps8current = DebugBuffer;
- void printk_later(const char *format, ...)
- {
- 	va_list args;
--	va_start (args, format);
--	ps8current += vsprintf (ps8current, format, args);
--	va_end (args);
-+	va_start(args, format);
-+	ps8current += vsprintf(ps8current, format, args);
-+	va_end(args);
- 	if ((ps8current - DebugBuffer) > DEGUG_BUFFER_LENGTH)
- 		ps8current = DebugBuffer;
- 
-@@ -477,9 +477,9 @@ static int init_irq(linux_wlan_t *p_nic)
-  *
-  * ex) nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
-  */
--#elif defined (NM73131_0_BOARD)
-+#elif defined(NM73131_0_BOARD)
- 		nic->dev_irq_num = IRQ_WILC1000;
--#elif defined (PANDA_BOARD)
-+#elif defined(PANDA_BOARD)
- 		gpio_export(GPIO_NUM, 1);
- 		nic->dev_irq_num = OMAP_GPIO_IRQ(GPIO_NUM);
- 		irq_set_irq_type(nic->dev_irq_num, IRQ_TYPE_LEVEL_LOW);
-@@ -1483,7 +1483,7 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
- 
- 	nwi->os_context.txq_wait_event = (void *)&g_linux_wlan->txq_event;
- 
--#if defined (MEMORY_STATIC)
-+#if defined(MEMORY_STATIC)
- 	nwi->os_context.rx_buffer_size = LINUX_RX_SIZE;
- #endif
- 	nwi->os_context.rxq_critical_section = (void *)&g_linux_wlan->rxq_cs;
-@@ -1935,7 +1935,7 @@ _fail_locks_:
-  *      - this function will be called automatically by OS when module inserted.
-  */
- 
--#if !defined (NM73131_0_BOARD)
-+#if !defined(NM73131_0_BOARD)
- int mac_init_fn(struct net_device *ndev)
- {
- 
-@@ -1966,7 +1966,7 @@ void    WILC_WFI_frame_register(struct wiphy *wiphy, struct net_device *dev,
- 				u16 frame_type, bool reg);
- 
- /* This fn is called, when this device is setup using ifconfig */
--#if !defined (NM73131_0_BOARD)
-+#if !defined(NM73131_0_BOARD)
- int mac_open(struct net_device *ndev)
- {
- 	perInterface_wlan_t *nic;
-@@ -2565,7 +2565,7 @@ int wilc_netdev_init(void)
- /*The 1st function called after module inserted*/
- static int __init init_wilc_driver(void)
- {
--#if defined (WILC_DEBUGFS)
-+#if defined(WILC_DEBUGFS)
- 	if (wilc_debugfs_init() < 0) {
- 		PRINT_D(GENERIC_DBG, "fail to create debugfs for wilc driver\n");
- 		return -1;
-@@ -2671,7 +2671,7 @@ static void __exit exit_wilc_driver(void)
- 		}
- 		printk("Module_exit Done.\n");
- 
--#if defined (WILC_DEBUGFS)
-+#if defined(WILC_DEBUGFS)
- 		wilc_debugfs_remove();
- #endif
- 
--- 
-1.9.1
-
+>                 } else {
+>                         mwifiex_dbg(priv->adapter, MSG,
+>                                     "TDLS link delete for %pM successful\n",
+> --
+> 1.7.10.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
