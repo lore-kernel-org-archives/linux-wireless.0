@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59684 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758012AbbGGPPS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 11:15:18 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Andreas Fenkart <afenkart@gmail.com>,
+Received: from dub004-omc4s30.hotmail.com ([157.55.2.105]:54270 "EHLO
+	DUB004-OMC4S30.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934068AbbGHIlx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2015 04:41:53 -0400
+Message-ID: <DUB128-W77C11FFEB09B442BD8C9229C910@phx.gbl> (sfid-20150708_104200_952625_3CC3E1B5)
+From: David Binderman <dcb314@hotmail.com>
+To: Larry Finger <larry.finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: mwifiex: cmd timeout during suspend
-Date: Tue, 7 Jul 2015 15:15:14 +0000
-Message-ID: <d380c008456945a8ab9a0b1420b333db@SC-EXCH02.marvell.com> (sfid-20150707_171529_113703_AA48A291)
-References: <CALtMJEANXpsow_-MU4uEOJwj4Y0pts=6vb7AA9q=HZyGL+vBxw@mail.gmail.com>
-In-Reply-To: <CALtMJEANXpsow_-MU4uEOJwj4Y0pts=6vb7AA9q=HZyGL+vBxw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Subject: linux-4.2-rc1/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c:2183: bad
+ expression ?
+Date: Wed, 8 Jul 2015 08:41:51 +0000
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQW5kcmVhcywNCg0KPiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5v
-cmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBC
-ZWhhbGYgT2YgQW5kcmVhcyBGZW5rYXJ0DQo+IFNlbnQ6IFR1ZXNkYXksIEp1bHkgMDcsIDIwMTUg
-MjozNyBQTQ0KPiBUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6
-IG13aWZpZXg6IGNtZCB0aW1lb3V0IGR1cmluZyBzdXNwZW5kDQo+IA0KPiBPYnNlcnZlZCBGVyBy
-ZXNldCBkdXJpbmcgc3VzcGVuZC4gVGhpcyBpcyBoYXJtZnVsIHNpbmNlIGR1cmluZyBzdXNwZW5k
-LA0KPiBkcml2ZXIgc2hhbGwgbm90IHJlc2V0IGFuZCByZWxvYWQgdGhlIEZXLg0KPiANCg0KRGV2
-aWNlIHJlc2V0IGlzIHRyaWdnZXJlZCB0byByZWNvdmVyIGZyb20gYSBjb3JuZXIgY2FzZSBmaXJt
-d2FyZSBidWcgd2hpY2ggY2F1c2VkIGNvbW1hbmQgdGltZW91dC4gV2UgaGF2ZSBzaW11bGF0ZWQg
-ZGV2aWNlIHJlc2V0IGR1cmluZyBzeXN0ZW0gc3VzcGVuZCBhbmQgb2JzZXJ2ZWQgdGhhdCBzeXN0
-ZW0gc3VzcGVuZCBhdHRlbXB0IGlzIGFib3J0ZWQgaW4gdGhpcyBjYXNlLiBObyBvdGhlciBzaWRl
-IGVmZmVjdHMgc2Vlbi4gVGhpcyBzY2VuYXJpbyBpcyBoYXJkIHRvIHJlcHJvZHVjZS4NCg0KPiBQ
-cm9ibGVtIGhhcyBiZWVuIG9ic2VydmVkIG9uIGtlcm5lbCA0LjAgLyAzOWE4ODA0NC4gSSd2ZSBh
-bHJlYWR5IHNlZW4NCj4gdGhpcyB1cHN0cmVhbSBwYXRjaDoNCj4gMWViZDIyMWY4ODM5NyBtd2lm
-aWV4OiBzdG9wIGNvbW1hbmQgcGF0aCBpbiBzdXNwZW5kIGhhbmRsZQ0KPiANCj4gU2luY2UgdGhl
-IGlzc3VlIGlzIGEgYml0IGhhcmQgdG8gcmVwcm9kdWNlLCBJJ20gd29uZGVyaW5nLCBpZiB0aGF0
-IHBhdGNoDQo+IGFscmVhZHkgZml4ZXMgdGhlIHByb2JsZW0gb3IgaWYgaXQncyBhIG5ldyBpc3N1
-ZS4NCg0KWW91IGFyZSByaWdodC4gVGhpcyBwYXRjaCBzdG9wcyBjb21tYW5kIHBhdGggaW4gY2Zn
-ODAyMTEncyBzdXNwZW5kIGhhbmRsZXIgd2hpY2ggaXMgY2FsbGVkIGF0IHZlcnkgZWFybHkgc3Rh
-Z2Ugb2Ygc3lzdGVtIHN1c3BlbmQgcHJvY2Vzcy4gU28gdGhlIHBhdGNoIGhhcyByZWR1Y2VkIHRo
-ZSBwb3NzaWJpbGl0eSBvZiBjb21tYW5kIHRpbWVvdXQgZHVyaW5nIHN5c3RlbSBzdXNwZW5kLg0K
-DQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
+Hello there,
+
+[linux-4.2-rc1/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c:2183]: (style) Expression '(X & 0xfc) == 0x3' is always false.
+
+Source code is
+
+   if ((bt_msr & 0xfc) == MSR_AP)
+
+Regards
+
+David Binderman
+
+ 		 	   		  
