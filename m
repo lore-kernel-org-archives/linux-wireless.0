@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:59832 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756991AbbGGOVg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 10:21:36 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by arrakis.dune.hu (Postfix) with ESMTP id A5BAC28BE70
-	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2015 16:21:14 +0200 (CEST)
-Received: from mail-qk0-f180.google.com (mail-qk0-f180.google.com [209.85.220.180])
-	by arrakis.dune.hu (Postfix) with ESMTPSA id C5F11286F45
-	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2015 16:21:00 +0200 (CEST)
-Received: by qkei195 with SMTP id i195so140678892qke.3
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2015 07:21:16 -0700 (PDT)
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:33875 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbbGIOFH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2015 10:05:07 -0400
+Received: by oiab3 with SMTP id b3so71692901oia.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 07:05:06 -0700 (PDT)
+Date: Thu, 9 Jul 2015 09:04:17 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Wei Zhong <wzhong@google.com>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
+Message-ID: <20150709140417.GA142895@ubuntu-hedt> (sfid-20150709_160511_738405_386FDE0E)
+References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
+ <55966D1B.1040603@neratec.com>
+ <CAHr=VqnpJ_+ovmB3gqm+X9WX98ZeVuO8VZ2cq6OFPcdjy8Rkgg@mail.gmail.com>
+ <5596A3C0.6020303@neratec.com>
+ <20150706132707.GA22962@ubuntu-hedt>
+ <559A9378.7000006@neratec.com>
+ <20150707201126.GB369@ubuntu-xps13>
+ <559CF926.8000508@neratec.com>
 MIME-Version: 1.0
-In-Reply-To: <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com>
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
- <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com>
- <e90aaab05cfd43fe9c05f738d4fc528a@SC-EXCH02.marvell.com> <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
- <op.x1edl6b82s3iss@ecaz> <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Tue, 7 Jul 2015 16:20:56 +0200
-Message-ID: <CAOiHx==88xDNAbi1mKbM2+MCTCha+HLMJPzq4ovVfqu-Aym-jg@mail.gmail.com> (sfid-20150707_162205_052442_FD2CCC89)
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-To: Chor Teck Law <ctlaw@marvell.com>
-Cc: Imre Kaloz <kaloz@openwrt.org>, David Lin <dlin@marvell.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <559CF926.8000508@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 7, 2015 at 3:48 PM, Chor Teck Law <ctlaw@marvell.com> wrote:
->
->
->> -----Original Message-----
->> From: Imre Kaloz [mailto:kaloz@openwrt.org]
->> Sent: Tuesday, July 07, 2015 2:50 AM
->> To: David Lin; Jonas Gorski
->> Cc: Johannes Berg; linux-wireless@vger.kernel.org; Chor Teck Law; Pete
->> Hsieh
->> Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
->>
->> On Tue, 07 Jul 2015 11:38:32 +0200, Jonas Gorski <jogo@openwrt.org>
->> wrote:
->>
->> <snip>
->>
->> >>> I think it would be good to have some more precise description here
->> >>> (something like "Marvell 88W8864/8897 PCIe driver with AP
->> support").
->> >>>
->> >>
->> >> Will change the title from "Marvell Wireless Wi-Fi driver (mwlwifi)"
->> >> to "Marvell 88W8864/88W8897 PCIe driver with AP support".
->> >
->> > As Imre pointed out, mwifiex also supports AP mode, so this is not a
->> > good description.
->
-> We have explained a few times on this... Pls read about the difference of mwifiex vs mwlwifi. There is a NOTE added to the description of KConfig of mwlwifi.
->
-> Would the community prefer this description instead: "Marvell 88W8864/88W8897 driver with MAC80211 support"?
+On Wed, Jul 08, 2015 at 12:19:18PM +0200, Zefir Kurtisi wrote:
+> My claim is that in its current state the regdb does not exactly formalize the
+> limitations given by regulatory for a simple reason: it uses channel semantics
+> where it should only handle frequency ranges. Take the discussed rules for CA at
+> hand: while the linked document considers frequencies from 5150 to 5350, the
+> according rule for CA is defined as (5170 - 5250 @ 80). Why 5170 instead of 5150?
+> Because we know there is no channel defined below 5170 - but why do we need to
+> embed this information as a rule when it is already handled by SW?
+> 
+> In the current regdb, both semantics are used, e.g. UA (5150-5350) vs. CA
+> (5170-5250) or ES (5470-5725) vs. FI (5490-5710)).
 
-Let's keep the name as is and do a cleanup / naming discussion
-seperate of that. This should not block the acceptance of the driver.
+I'm not surprised. I don't know that anyone has given it that much
+thought before.
 
+> This might sound like an irrelevant difference, but here is why it matters: the
+> above mentioned rules for ES and FI would give the same channel lists - as long as
+> we think in HT20 and HT40. But only ES gives access to 10 and 5MHz operation on
+> channel 144.
 
-Jonas
+Good example.
+
+> My bottom line is: regulatory rules must not contain channel semantics - this is
+> done by the SW. Rules must be a literal formalization of the country's regulatory,
+> which always uses frequency ranges within defined band edges.
+
+I'm generally in agreement. I'll try to pay closer attention to this in
+the future.
+
+> Sorry for this going off-topic. It has nothing to do with the changes proposed by
+> Wei, but is more about something to keep in mind when considering upcoming support
+> for narrow band channels at band edges.
+
+Except that it seems to have inspired Wei to change the patch to do
+exactly what you're arguing against ;-)
+
+Seth
