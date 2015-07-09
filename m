@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:32843 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182AbbGNMcP (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:35640 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443AbbGIMqj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 08:32:15 -0400
-Received: by ietj16 with SMTP id j16so10056358iet.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 05:32:14 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v3 2/5] mac80211: add missing length check for confirm frames
-Date: Tue, 14 Jul 2015 08:31:56 -0400
-Message-Id: <1436877119-17577-3-git-send-email-me@bobcopeland.com> (sfid-20150714_143219_590927_15FC051D)
-In-Reply-To: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
-References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
+	Thu, 9 Jul 2015 08:46:39 -0400
+Received: by labgy5 with SMTP id gy5so93312336lab.2
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 05:46:38 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: set wiphy's addr_mask to force using valid MACs
+Date: Thu,  9 Jul 2015 14:46:20 +0200
+Message-Id: <1436445980-22196-1-git-send-email-zajec5@gmail.com> (sfid-20150709_144732_928325_3C1CEB55)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although mesh_rx_plink_frame() already checks that frames have enough
-bytes for the action code plus another two bytes for capability/reason
-code, it doesn't take into account that confirm frames also have an
-additional two-byte aid.  As a result, a corrupt frame could cause a
-subsequent subtraction to wrap around to ill effect.  Add another
-check for this case.
+Broadcom's firmware requires every BSS to use MAC address with unique
+last 2 bits. Otherwise it rejects submitted MAC which results in:
+brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Set addr_mask properly to hint only last 2 bits can be modified. This
+isn't exactly true as all bits can be changed but that's the only way
+to force unique values in the last 2 bits.
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-v3: newly introduced
-
- net/mac80211/mesh_plink.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 956384087e12..ac1029f28133 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -1123,6 +1123,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
- 						WLAN_SP_MESH_PEERING_CONFIRM) {
- 		baseaddr += 4;
- 		baselen += 4;
-+
-+		if (baselen > len)
-+			return;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index d86d1f1..4ab1d92 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -6100,6 +6100,11 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		return NULL;
  	}
- 	ieee802_11_parse_elems(baseaddr, len - baselen, true, &elems);
- 	mesh_process_plink_frame(sdata, mgmt, &elems);
+ 	memcpy(wiphy->perm_addr, drvr->mac, ETH_ALEN);
++	/* Firmware requires last 2 bits to contain unique value for every BSS.
++	 * Unfortunately this will also disallow changing other bits (firmware
++	 * supports it as long as last 2 bits are unique) but it's the only way.
++	 */
++	wiphy->addr_mask[ETH_ALEN - 1] = 0x02;
+ 	set_wiphy_dev(wiphy, busdev);
+ 
+ 	cfg = wiphy_priv(wiphy);
 -- 
-2.1.4
+1.8.4.5
 
