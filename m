@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:35125 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639AbbGWLTh (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:35649 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753296AbbGIQBl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 07:19:37 -0400
-Received: by pdrg1 with SMTP id g1so155750976pdr.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 04:19:37 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
+	Thu, 9 Jul 2015 12:01:41 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/3] staging: wilc1000: coreconfigurator.c: fix kmalloc error check
-Date: Thu, 23 Jul 2015 20:19:19 +0900
-Message-Id: <1437650359-2051-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150723_131940_922879_26EB473D)
-In-Reply-To: <1437650359-2051-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1437650359-2051-1-git-send-email-chaehyun.lim@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 1/4] staging: vt6655: check ieee80211_bss_conf bssid not NULL
+Date: Thu,  9 Jul 2015 17:01:24 +0100
+Message-Id: <1436457687-3113-1-git-send-email-tvboxspy@gmail.com> (sfid-20150709_180144_927078_82255D76)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return -ENOMEM if memory allocation is failed.
+Sometimes bssid can go null on failed association.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.19+
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ drivers/staging/vt6655/device_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index b51c15f..eca21bf 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -675,11 +675,8 @@ s32 CoreConfiguratorInit(void)
- 	sema_init(&SemHandlePktResp, 0);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index ed040fb..b0c8e23 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1418,7 +1418,7 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
  
- 	gps8ConfigPacket = kmalloc(MAX_PACKET_BUFF_SIZE, GFP_ATOMIC);
--	if (gps8ConfigPacket == NULL) {
--		PRINT_ER("failed in gps8ConfigPacket allocation\n");
--		s32Error = WILC_NO_MEM;
--		goto _fail_;
--	}
-+	if (gps8ConfigPacket == NULL)
-+		return -ENOMEM;
+ 	priv->current_aid = conf->aid;
  
- 	WILC_memset((void *)gps8ConfigPacket, 0, MAX_PACKET_BUFF_SIZE);
+-	if (changed & BSS_CHANGED_BSSID) {
++	if (changed & BSS_CHANGED_BSSID && conf->bssid) {
+ 		unsigned long flags;
  
-@@ -1032,10 +1029,8 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
- 
- 	pstrSurveyResults = kmalloc_array(u32SurveyResultsCount,
- 				sizeof(wid_site_survey_reslts_s), GFP_ATOMIC);
--	if (pstrSurveyResults == NULL) {
--		u32SurveyResultsCount = 0;
--		WILC_ERRORREPORT(s32Error, WILC_NO_MEM);
--	}
-+	if (pstrSurveyResults == NULL)
-+		return -ENOMEM;
- 
- 	WILC_memset((void *)(pstrSurveyResults), 0, u32SurveyResultsCount * sizeof(wid_site_survey_reslts_s));
- 
+ 		spin_lock_irqsave(&priv->lock, flags);
 -- 
-1.9.1
+2.1.4
 
