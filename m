@@ -1,49 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:36763 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbbGBLvN (ORCPT
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:41020 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751700AbbGIIOA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2015 07:51:13 -0400
-Received: by igrv9 with SMTP id v9so94498800igr.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 04:51:12 -0700 (PDT)
+	Thu, 9 Jul 2015 04:14:00 -0400
+From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
+To: Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arch@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
+Subject: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
+Date: Thu, 9 Jul 2015 13:43:18 +0530
+Message-ID: <1436429599-10762-3-git-send-email-vgupta@synopsys.com> (sfid-20150709_101512_386844_1FBC5A11)
+In-Reply-To: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
+References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <1435837168.2285.8.camel@sipsolutions.net>
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
- <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
- <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
- <1435082418.2777.11.camel@ipeer-box> <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com>
- <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
- <1435822032.2285.2.camel@sipsolutions.net> <CALhHN=ojLBA1AFGz=atjJhv+fJAr-Rkhd0cgYpma_4Rx+HYOaw@mail.gmail.com>
- <1435837168.2285.8.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 2 Jul 2015 17:20:53 +0530
-Message-ID: <CABPxzY+P+p18gVG-o9WhuQy_VVvR3QaS-CQMr8RuiD_2iSTFgw@mail.gmail.com> (sfid-20150702_135116_909105_3370B24D)
-Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 2, 2015 at 5:09 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2015-07-02 at 11:44 +0200, Janusz Dziedzic wrote:
->>
->> > The issue above can probably easily fixed by doing the BSS update
->> > after
->> > the "direct probe responded" though, no? Like this:
->> > https://p.sipsolutions.net/67f9212f0f9f3642.txt
->> >
->> This was my first idea, but in such case I suspect we will send
->> another direct probe while  bss->proberesp_ies will be not set and
->> ieee80211_probe_auth() will send second probe_req?
-Yes, if the seuqnce number is not set the second probe resp
-also gets dropped.
+There's already a generic implementation so use that instead.
+---
+I'm not sure if the driver usage of atomic_or?() is correct in terms of
+storage size of @val for 64 bit arches.
 
-> But why would it not be set? We do rely on ieee80211_rx_bss_info()
-> setting it, after all.
-The probe resp is dropped early in the rx_path so this call is not made.
+Assuming LP64 programming model for linux on say x86_64: atomic_or()
+callers in this driver use long (sana 64 bit) storage and pass it to
+atomic_orr/atomic_or which downcasts it to 32 bits. Is that OK ?
+---
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Cc: Daniel Kim <dekim@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list@broadcom.com
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: netdev@vger.kernel.org
+Cc: linux-arch@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+
+Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index d36f5f3d931b..f990e3d0e696 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -2564,15 +2564,6 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ 	}
+ }
+ 
+-static void atomic_orr(int val, atomic_t *v)
+-{
+-	int old_val;
+-
+-	old_val = atomic_read(v);
+-	while (atomic_cmpxchg(v, old_val, val | old_val) != old_val)
+-		old_val = atomic_read(v);
+-}
+-
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+ 	struct brcmf_core *buscore;
+@@ -2595,7 +2586,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	if (val) {
+ 		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
+ 		bus->sdcnt.f1regdata++;
+-		atomic_orr(val, &bus->intstatus);
++		atomic_or(val, &bus->intstatus);
+ 	}
+ 
+ 	return ret;
+@@ -2712,7 +2703,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 
+ 	/* Keep still-pending events for next scheduling */
+ 	if (intstatus)
+-		atomic_orr(intstatus, &bus->intstatus);
++		atomic_or(intstatus, &bus->intstatus);
+ 
+ 	brcmf_sdio_clrintr(bus);
+ 
+-- 
+1.9.1
+
