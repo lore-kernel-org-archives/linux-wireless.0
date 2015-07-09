@@ -1,53 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34263 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752459AbbGZNA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2015 09:00:26 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: "Joglekar\, Tejas \(T.\)" <tjogleka@visteon.com>
-Cc: "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging:rtl8723au:core:rtw_sreset.c:Fix for space related error
-References: <20150726074009.GA14066@tejas-asus.domain.name>
-Date: Sun, 26 Jul 2015 09:00:23 -0400
-In-Reply-To: <20150726074009.GA14066@tejas-asus.domain.name> (Tejas Joglekar's
-	message of "Sun, 26 Jul 2015 07:40:51 +0000")
-Message-ID: <wrfjd1zful94.fsf@redhat.com> (sfid-20150726_150043_134642_36674A73)
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:34333 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbbGIHH1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2015 03:07:27 -0400
+Received: by igoe12 with SMTP id e12so7839440igo.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 00:07:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 9 Jul 2015 09:07:27 +0200
+Message-ID: <CACna6rzfb5-eGD8EgEHM05nJ5FWPnkEkW_fTxNg-3-=PCknv-Q@mail.gmail.com> (sfid-20150709_090735_380192_7ADF797A)
+Subject: brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Content-Type: multipart/mixed; boundary=089e013a01c8735546051a6be8f8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Joglekar, Tejas (T.)" <tjogleka@visteon.com> writes:
-> From: Joglekar Tejas <tjogleka@visteon.com>
->
-> This patch fixes the error given by checkpatch.pl
->
-> Signed-off-by: Joglekar Tejas <tjogleka@visteon.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_sreset.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_sreset.c b/drivers/staging/rtl8723au/core/rtw_sreset.c
-> index 29a29d9..48b7723 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_sreset.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_sreset.c
-> @@ -71,7 +71,7 @@ static void sreset_restore_security_station(struct rtw_adapter *padapter)
->  			/* pairwise key */
->  			rtw_setstakey_cmd23a(padapter, (unsigned char *)psta, true);
->  			/* group key */
-> -			rtw_set_key23a(padapter,&padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
-> +			rtw_set_key23a(padapter, &padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
->  		}
->  	}
->  }
+--089e013a01c8735546051a6be8f8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-NAK!
+Hey guys, I'm afraid I hit another brcmfmac bug.
 
-If you are 'fixing' checkpatch 'errors', do it properly and break down
-the line and solve the 80 character limit 'error' as well.
+First of all, I implemented a trivial workaround for the previous bug
+reported in the:
+brcmfmac: one faulty "iw interface add" command breaks in-firmware BSS stat=
+e
+See my workaround in OpenWrt git:
+http://git.openwrt.org/?p=3Dopenwrt.git;a=3Dcommitdiff;h=3D0e6c9bd9556eea98=
+b476ad371d64d8d16e3a9f9c
 
-Jes
+So now OpenWrt's user space calls using "iw" tool don't trigger
+brcmfmac BSSes bug anymore. I can successfully use one AP interface
+per device.
+
+The problem appears when trying to use more than 1 interface. It gets
+created correctly, but setting its MAC fails. It results in wlan0-1
+having the same MAC as wlan0 and finally having two networks (SSIDs)
+using the same MAC. That obviously doesn't work.
+
+The error I see is:
+brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
+with -52 meaning BCME_IE_NOTFOUND.
+
+--=20
+Rafa=C5=82
+
+--089e013a01c8735546051a6be8f8
+Content-Type: text/plain; charset=US-ASCII; name="dmesg.txt"
+Content-Disposition: attachment; filename="dmesg.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ibvunzru1
+
+WyAgIDE3LjAxNDI1MV0gYnJjbWZtYWMgMDAwMDowMTowMC4wOiBlbmFibGluZyBkZXZpY2UgKDAx
+NDAgLT4gMDE0MikKWyAgIDE3LjAyODk3NF0gY2ZnODAyMTE6ICAgKDI0MDIwMDAgS0h6IC0gMjQ3
+MjAwMCBLSHogQCA0MDAwMCBLSHopLCAoTi9BLCAyMDAwIG1CbSksIChOL0EpClsgICAxNy4wMzY5
+NTBdIGNmZzgwMjExOiAgICgyNDU3MDAwIEtIeiAtIDI0ODIwMDAgS0h6IEAgNDAwMDAgS0h6KSwg
+KE4vQSwgMjAwMCBtQm0pLCAoTi9BKQpbICAgMTcuMDQ0OTM5XSBjZmc4MDIxMTogICAoMjQ3NDAw
+MCBLSHogLSAyNDk0MDAwIEtIeiBAIDIwMDAwIEtIeiksIChOL0EsIDIwMDAgbUJtKSwgKE4vQSkK
+WyAgIDE3LjA1MjkyMl0gY2ZnODAyMTE6ICAgKDUxNzAwMDAgS0h6IC0gNTI1MDAwMCBLSHogQCA4
+MDAwMCBLSHosIDE2MDAwMCBLSHogQVVUTyksIChOL0EsIDIwMDAgbUJtKSwgKE4vQSkKWyAgIDE3
+LjA2MjM2M10gY2ZnODAyMTE6ICAgKDUyNTAwMDAgS0h6IC0gNTMzMDAwMCBLSHogQCA4MDAwMCBL
+SHosIDE2MDAwMCBLSHogQVVUTyksIChOL0EsIDIwMDAgbUJtKSwgKDAgcykKWyAgIDE3LjA3MTgw
+NV0gY2ZnODAyMTE6ICAgKDU0OTAwMDAgS0h6IC0gNTczMDAwMCBLSHogQCAxNjAwMDAgS0h6KSwg
+KE4vQSwgMjAwMCBtQm0pLCAoMCBzKQpbICAgMTcuMDc5ODU5XSBjZmc4MDIxMTogICAoNTczNTAw
+MCBLSHogLSA1ODM1MDAwIEtIeiBAIDgwMDAwIEtIeiksIChOL0EsIDIwMDAgbUJtKSwgKE4vQSkK
+WyAgIDE3LjA4Nzg0Ml0gY2ZnODAyMTE6ICAgKDU3MjQwMDAwIEtIeiAtIDYzNzIwMDAwIEtIeiBA
+IDIxNjAwMDAgS0h6KSwgKE4vQSwgMCBtQm0pLCAoTi9BKQpbICAgMTcuODY3NTMzXSBicmNtZm1h
+YyAwMDAwOjAxOjAwLjA6IERpcmVjdCBmaXJtd2FyZSBsb2FkIGZvciBicmNtL2JyY21mbWFjNDM2
+MDItcGNpZS50eHQgZmFpbGVkIHdpdGggZXJyb3IgLTIKWyAgIDE3Ljg3NzQwOF0gYnJjbWZtYWMg
+MDAwMDowMTowMC4wOiBGYWxsaW5nIGJhY2sgdG8gdXNlciBoZWxwZXIKWyAgIDE3Ljg5MjQ5OV0g
+ZmlybXdhcmUgYnJjbSFicmNtZm1hYzQzNjAyLXBjaWUudHh0OiBmaXJtd2FyZV9sb2FkaW5nX3N0
+b3JlOiBtYXAgcGFnZXMgZmFpbGVkClsgICAxNy45MDEwODRdIGJyY21mbWFjOiBicmNtZl9md19y
+ZXF1ZXN0X252cmFtX2RvbmU6IEZvdW5kIHBsYXRmb3JtIE5WUkFNICgxOTIwNCBCKQpbICAgMTgu
+MTYzNjc1XSBicmNtZm1hYzogYnJjbWZfY19wcmVpbml0X2RjbWRzOiBGaXJtd2FyZSB2ZXJzaW9u
+ID0gd2wwOiBNYXIgIDMgMjAxNSAwNDo0Njo1MSB2ZXJzaW9uIDcuMzUuMTc3LjMzIChyNTM4MDUy
+KSBGV0lEIDAxLWM4MzE3YzgwClsgICAxOC4xODQzNDVdIGJyY21mbWFjOiBicmNtZl9jZmc4MDIx
+MV9yZWdfbm90aWZpZXI6IG5vdCBhIElTTzMxNjYgY29kZQpbICAyMDMuNjkxODQ1XSBicmNtZm1h
+YzogYnJjbWZfYWRkX2lmOiBFUlJPUjogbmV0ZGV2OndsYW4wIGFscmVhZHkgZXhpc3RzClsgIDIw
+My42OTgzNjFdIGJyY21mbWFjOiBicmNtZl9hZGRfaWY6IGlnbm9yZSBJRiBldmVudApbICAyMDMu
+ODY2MjE0XSBicmNtZm1hYzogYnJjbWZfYWRkX2lmOiBFUlJPUjogbmV0ZGV2OndsYW4wIGFscmVh
+ZHkgZXhpc3RzClsgIDIwMy44NzI3NTBdIGJyY21mbWFjOiBicmNtZl9hZGRfaWY6IGlnbm9yZSBJ
+RiBldmVudApbICAyMDMuOTMyNDkyXSBicmNtZm1hYzogX2JyY21mX3NldF9tYWNfYWRkcmVzczog
+U2V0dGluZyBjdXJfZXRoZXJhZGRyIGZhaWxlZCwgLTUyClsgIDIwNC4wODg2MzVdIGJyY21mbWFj
+OiBicmNtZl9hZGRfaWY6IEVSUk9SOiBuZXRkZXY6d2xhbjAgYWxyZWFkeSBleGlzdHMKWyAgMjA0
+LjA5NTIwNV0gYnJjbWZtYWM6IGJyY21mX2FkZF9pZjogaWdub3JlIElGIGV2ZW50Cg==
+--089e013a01c8735546051a6be8f8
+Content-Type: application/octet-stream; name="hostapd.conf"
+Content-Disposition: attachment; filename="hostapd.conf"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ibvunwz50
+
+ZHJpdmVyPW5sODAyMTEKbG9nZ2VyX3N5c2xvZz0xMjcKbG9nZ2VyX3N5c2xvZ19sZXZlbD0yCmxv
+Z2dlcl9zdGRvdXQ9MTI3CmxvZ2dlcl9zdGRvdXRfbGV2ZWw9Mgpod19tb2RlPWcKY2hhbm5lbD0x
+MQoKaWVlZTgwMjExbj0xCmh0X2NvZXg9MApodF9jYXBhYj1bU0hPUlQtR0ktMjBdW0RTU1NfQ0NL
+LTQwXQoKaW50ZXJmYWNlPXdsYW4wCmN0cmxfaW50ZXJmYWNlPS92YXIvcnVuL2hvc3RhcGQKZGlz
+YXNzb2NfbG93X2Fjaz0xCnByZWFtYmxlPTEKd21tX2VuYWJsZWQ9MQppZ25vcmVfYnJvYWRjYXN0
+X3NzaWQ9MAp1YXBzZF9hZHZlcnRpc2VtZW50X2VuYWJsZWQ9MQp3cGFfcGFzc3BocmFzZT1wYXNz
+d29yZDEyMwphdXRoX2FsZ3M9MQp3cGE9Mgp3cGFfcGFpcndpc2U9Q0NNUApzc2lkPU9wZW5XcnRB
+CmJyaWRnZT1ici1sYW4Kd3BhX2tleV9tZ210PVdQQS1QU0sKb2tjPTAKZGlzYWJsZV9wbWtzYV9j
+YWNoaW5nPTEKYnNzaWQ9MDA6MjM6NmE6YTM6N2Q6OTUKCgpic3M9d2xhbjAtMQpjdHJsX2ludGVy
+ZmFjZT0vdmFyL3J1bi9ob3N0YXBkCmRpc2Fzc29jX2xvd19hY2s9MQpwcmVhbWJsZT0xCndtbV9l
+bmFibGVkPTEKaWdub3JlX2Jyb2FkY2FzdF9zc2lkPTAKdWFwc2RfYWR2ZXJ0aXNlbWVudF9lbmFi
+bGVkPTEKd3BhX3Bhc3NwaHJhc2U9cGFzc3dvcmQxMjMKYXV0aF9hbGdzPTEKd3BhPTIKd3BhX3Bh
+aXJ3aXNlPUNDTVAKc3NpZD1PcGVuV3J0QgpicmlkZ2U9YnItbGFuCndwYV9rZXlfbWdtdD1XUEEt
+UFNLCm9rYz0wCmRpc2FibGVfcG1rc2FfY2FjaGluZz0xCmJzc2lkPTAyOjIzOjZhOmEzOjdkOjk1
+Cg==
+--089e013a01c8735546051a6be8f8--
