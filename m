@@ -1,112 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:39712 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932342AbbGJSbV (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:33779 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbbGIMIo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 14:31:21 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 4/7] brcmfmac: add debugfs entry for msgbuf statistics
-Date: Fri, 10 Jul 2015 20:31:08 +0200
-Message-ID: <1436553071-32423-5-git-send-email-arend@broadcom.com> (sfid-20150710_203126_518064_A557A9FC)
-In-Reply-To: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
+	Thu, 9 Jul 2015 08:08:44 -0400
+Received: by iggp10 with SMTP id p10so12342047igg.0
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 05:08:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rzA+BR+eB+BJfDkmNkRuo2kMsDh=DbsNR25NmoRD7QaCw@mail.gmail.com>
+References: <CACna6rzfb5-eGD8EgEHM05nJ5FWPnkEkW_fTxNg-3-=PCknv-Q@mail.gmail.com>
+	<CACna6rzA+BR+eB+BJfDkmNkRuo2kMsDh=DbsNR25NmoRD7QaCw@mail.gmail.com>
+Date: Thu, 9 Jul 2015 14:08:43 +0200
+Message-ID: <CACna6rz_0hE=4h9ZjV-H1s94pRtRFV3ojPGtCcfivHywpuJJsg@mail.gmail.com> (sfid-20150709_140853_998470_D5F163A1)
+Subject: Re: brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On 9 July 2015 at 12:38, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 9 July 2015 at 09:07, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> The problem appears when trying to use more than 1 interface. It gets
+>> created correctly, but setting its MAC fails. It results in wlan0-1
+>> having the same MAC as wlan0 and finally having two networks (SSIDs)
+>> using the same MAC. That obviously doesn't work.
+>>
+>> The error I see is:
+>> brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
+>> with -52 meaning BCME_IE_NOTFOUND.
+>
+> I managed to find/guess what exactly BCM43602 firmware rejects. It
+> doesn't like 2 MAC addresses that differ by the locally administrated
+> bit only. In my case it was 00:23:6a:a3:7d:95 + 02:23:6a:a3:7d:95.
+>
+> When I change MAC addresses to some other combination, e.g.:
+> 00:23:6a:a3:7d:95 + 00:23:6a:a3:7d:96
+> 02:23:6a:a3:7d:95 + 00:23:6a:a3:7d:96
+> it works correctly.
 
-Expose ring buffer read/write pointers and other useful statistics
-through debugfs.
+Oh, it appeared to be more tricky. What BCM43602 firmware doesn't
+allow is using the same value in the last 2 bits for different BSSes.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 56 ++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+Few examples:
+00:23:6a:a3:7d:90 + 00:23:6a:a3:7d:91 is GOOD
+00:23:6a:a3:7d:90 + 00:23:6a:a3:7d:93 is GOOD
+00:23:6a:a3:7d:90 + 00:23:6a:a3:7d:94 is BAD (last two bits are 0x0)
+00:23:6a:a3:7d:92 + 00:23:6a:a3:7d:9a is BAD (last two bits are 0x2)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 363a31e..d0e1ce5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -1360,6 +1360,60 @@ void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid)
- 	}
- }
- 
-+#ifdef DEBUG
-+static int brcmf_msgbuf_stats_read(struct seq_file *seq, void *data)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(seq->private);
-+	struct brcmf_pub *drvr = bus_if->drvr;
-+	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
-+	struct brcmf_commonring *commonring;
-+	u16 i;
-+	struct brcmf_flowring_ring *ring;
-+	struct brcmf_flowring_hash *hash;
-+
-+	commonring = msgbuf->commonrings[BRCMF_H2D_MSGRING_CONTROL_SUBMIT];
-+	seq_printf(seq, "h2d_ctl_submit: rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_H2D_MSGRING_RXPOST_SUBMIT];
-+	seq_printf(seq, "h2d_rx_submit:  rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_D2H_MSGRING_CONTROL_COMPLETE];
-+	seq_printf(seq, "d2h_ctl_cmplt:  rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_D2H_MSGRING_TX_COMPLETE];
-+	seq_printf(seq, "d2h_tx_cmplt:   rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_D2H_MSGRING_RX_COMPLETE];
-+	seq_printf(seq, "d2h_rx_cmplt:   rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+
-+	seq_printf(seq, "\nh2d_flowrings: depth %u\n",
-+		   BRCMF_H2D_TXFLOWRING_MAX_ITEM);
-+	seq_puts(seq, "Active flowrings:\n");
-+	hash = msgbuf->flow->hash;
-+	for (i = 0; i < msgbuf->flow->nrofrings; i++) {
-+		if (!msgbuf->flow->rings[i])
-+			continue;
-+		ring = msgbuf->flow->rings[i];
-+		if (ring->status != RING_OPEN)
-+			continue;
-+		commonring = msgbuf->flowrings[i];
-+		hash = &msgbuf->flow->hash[ring->hash_id];
-+		seq_printf(seq, "id %3u: rp %4u, wp %4u, qlen %4u, blocked %u\n"
-+				"        ifidx %u, fifo %u, da %pM\n",
-+				i, commonring->r_ptr, commonring->w_ptr,
-+				skb_queue_len(&ring->skblist), ring->blocked,
-+				hash->ifidx, hash->fifo, hash->mac);
-+	}
-+
-+	return 0;
-+}
-+#else
-+static int brcmf_msgbuf_stats_read(struct seq_file *seq, void *data)
-+{
-+	return 0;
-+}
-+#endif
- 
- int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- {
-@@ -1467,6 +1521,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	spin_lock_init(&msgbuf->flowring_work_lock);
- 	INIT_LIST_HEAD(&msgbuf->work_queue);
- 
-+	brcmf_debugfs_add_entry(drvr, "msgbuf_stats", brcmf_msgbuf_stats_read);
-+
- 	return 0;
- 
- fail:
+What's weird, all other numbers can be used as you want:
+00:23:6A:A3:7D:90 + 00:7D:A3:6A:23:92 is GOOD
+
 -- 
-1.9.1
-
+Rafał
