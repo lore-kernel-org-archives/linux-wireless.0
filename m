@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58021 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836AbbGVGQy (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:36180 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753203AbbGIT5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 02:16:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Marty Faltesek <mfaltesek@google.com>
-Cc: linux-wireless@vger.kernel.org, dgentry@google.com,
-	apenwarr@google.com
-Subject: Re: [PATCH] ath10k: Improve performance by reducing tx_lock contention.
-References: <1437527130-15232-1-git-send-email-mfaltesek@google.com>
-Date: Wed, 22 Jul 2015 09:16:49 +0300
-In-Reply-To: <1437527130-15232-1-git-send-email-mfaltesek@google.com> (Marty
-	Faltesek's message of "Tue, 21 Jul 2015 21:05:30 -0400")
-Message-ID: <87wpxslnse.fsf@kamboji.qca.qualcomm.com> (sfid-20150722_081702_748315_21210B2B)
+	Thu, 9 Jul 2015 15:57:43 -0400
+Date: Thu, 9 Jul 2015 21:57:37 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or
+ primitive
+Message-ID: <20150709195737.GA26965@worktop.ger.corp.intel.com> (sfid-20150709_215804_707559_34282E58)
+References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
+ <1436429599-10762-3-git-send-email-vgupta@synopsys.com>
+ <559EBC91.2070600@broadcom.com>
+ <559EBDF4.7030808@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <559EBDF4.7030808@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marty Faltesek <mfaltesek@google.com> writes:
+On Thu, Jul 09, 2015 at 08:31:16PM +0200, Arend van Spriel wrote:
+> >There is or there was? If there is now I am fine with this patch, but if
+> >it already was there the author might have had a reason for adding a
+> >local function and I would like to hear that reason.
+> 
+> Nevermind. Just noticed you are proposing the generic implementation in this
+> series. Currently on vacation and want to discuss with Hante about this
+> change.
 
-> From: Qi Zhou <qizhou@google.com>
->
-> During tx completion, tx_lock is held for longer than required, preventing
-> efficient refill of htt->pending_tx. Refactor the code so that only MSDU
-> related operations are protected by the lock.
->
-> Improves downstream performance on a 3x3 client from 495 to 580 Mbps.
-
-It would be good to mention the actual platform/CPU as I guess this
-improvement is platform specific?
-
-> Signed-off-by: Denton Gentry <dgentry@google.com>
-> Signed-off-by: Avery Pennarun <apenwarr@google.com>
-> [mfaltesek@google.com: removed conflicting code for tracking msdu_ids.]
-> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
->
-> Change-Id: Ia0fe8b037033c3335b5632b7276c3b0e33e738d4
-
-No gerrit tags, please.
-
-So that patchwork finds the patch please send it to the ath10k list and
-cc linux-wireless as documented here:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/sources#submitting_patches
-
--- 
-Kalle Valo
+No there is one in linux/atomic.h, he just renamed the #ifdef guard and
+provided a 'sane' implementation for his arch.
