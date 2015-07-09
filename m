@@ -1,50 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39993 "EHLO mga09.intel.com"
+Received: from hofr.at ([212.69.189.236]:54032 "EHLO mail.hofr.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754537AbbGVRb5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 13:31:57 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: nick <xerofoify@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Altman, Avri" <avri.altman@intel.com>,
-	"eliad@wizery.com" <eliad@wizery.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
+	id S1751007AbbGIF5u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2015 01:57:50 -0400
+Date: Thu, 9 Jul 2015 07:57:47 +0200
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Avinash Patil <avinashapatil@gmail.com>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [linuxwifi] [PATCH] iwlwifi:Fix error handling in the function
- iwl_pcie_enqueue_hcmd
-Date: Wed, 22 Jul 2015 17:31:51 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E7B3D53@hasmsx107.ger.corp.intel.com> (sfid-20150722_193221_244538_541C6897)
-References: <1437583079-28861-1-git-send-email-xerofoify@gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32E7B3D25@hasmsx107.ger.corp.intel.com>
- <55AFD306.5060303@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH] mwifiex: drop condition with no effect
+Message-ID: <20150709055747.GA22159@opentech.at> (sfid-20150709_075753_883415_3F3EB124)
+References: <1436364902-28943-1-git-send-email-hofrat@osadl.org> <CAJwzM1kvWfP1VB4wUoT74F-Ons1R3cpoBEAdfm37sh1p5vhh+A@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJwzM1kvWfP1VB4wUoT74F-Ons1R3cpoBEAdfm37sh1p5vhh+A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/22/2015 08:30 PM, nick wrote:
-> 
-> 
-> On 2015-07-22 01:28 PM, Grumbach, Emmanuel wrote:
->>
->>
->> On 07/22/2015 07:39 PM, Nicholas Krause wrote:
->>> This fixes error handling in the function iwl_pcie_enqueue_hcmd
->>> by checking if all calls to the function wl_pcie_txq_build_tfd
->>> have failed by returning a error code and if so jump to the goto
->>> label out from the cleaning up of acquired resources before
->>
->> What tests did you run on your patch?
->>
-> None did I miss something?
+On Wed, 08 Jul 2015, Avinash Patil wrote:
 
-I can't really accept a patch if you don't even test it, right?
-Your patch doesn't look problematic at first glance, but hitting
-these paths isn't easy and I am not very happy to change the behavior
-without direct testing.
+> Hi Nicholas,
+> 
+> On Wed, Jul 8, 2015 at 7:15 AM, Nicholas Mc Guire <hofrat@osadl.org> wrote:
+> > scanning for trivial bug-patters with coccinelle spatches returned:
+> > ./drivers/net/wireless/mwifiex/sta_cmdresp.c:895
+> >         WARNING: condition with no effect (if branch == else)
+> >
+> > originally added in 'commit d8d2f19feb16 ("mwifiex: silence TDLS link
+> > delete failure for nonexistent link")' with dev_dbg/dev_err (though
+> > with the same message) to differentiate severity and then in 'commit
+> > acebe8c10a6e ("mwifiex: change dbg print func to mwifiex_dbg")' all
+> > dev_dbg,dev_warn and dev_err got converted to mwifiex_dbg which should
+> > thus probably drop this if/else as well.
+> >
+> > Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> > ---
+> >
+> > If dropping the if/else is not the right thing to do then commit
+> > acebe8c10a6e "mwifiex: change dbg print func to mwifiex_dbg" probably
+> > needs a review as well.
+> >
+> > Patch was compile tested with x86_64_defconfig + CONFIG_MWIFIEX=m
+> >
+> > Patch is against 4.2-rc1 (localversion-next is -next-20150708)
+> >
+> >  drivers/net/wireless/mwifiex/sta_cmdresp.c |   11 +++--------
+> >  1 file changed, 3 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> > index b645884..e58f900 100644
+> > --- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> > +++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> > @@ -892,14 +892,9 @@ static int mwifiex_ret_tdls_oper(struct mwifiex_private *priv,
+> >         switch (action) {
+> >         case ACT_TDLS_DELETE:
+> >                 if (reason) {
+> > -                       if (!node || reason == TDLS_ERR_LINK_NONEXISTENT)
+> > -                               mwifiex_dbg(priv->adapter, ERROR,
+> > -                                           "TDLS link delete for %pM failed: reason %d\n",
+> > -                                           cmd_tdls_oper->peer_mac, reason);
+> > -                       else
+> > -                               mwifiex_dbg(priv->adapter, ERROR,
+> > -                                           "TDLS link delete for %pM failed: reason %d\n",
+> > -                                           cmd_tdls_oper->peer_mac, reason);
+> > +                       mwifiex_dbg(priv->adapter, ERROR,
+> > +                                   "TDLS link delete for %pM failed: reason %d\n",
+> > +                                   cmd_tdls_oper->peer_mac, reason);
+> 
+> I think reason why we had these 2 different prints is for first
+> occurrence in "if" which may be not so serious we used to print with
+> dev_dbg and second occurrence in "else" is more serious issue which
+> was under dev_err.
+> It would be better to use mwifiex_dbg with DBG/MSG in"if" condition
+> instead of removing whole if/else.
+>
 
+ok - it seemed to me that since the reason was being printed it would be
+clear from the error message which case was triggering this message but
+you are right that the initial intent to differentiate severity levels
+(from 'commit d8d2f19feb16 ("mwifiex: silence TDLS link delete failure
+for nonexistent link")' would be better served with your suggestion - I 
+just was not clear if this initial reason still holds.
+
+will fix it up and resend.
+
+thx!
+hofrat
