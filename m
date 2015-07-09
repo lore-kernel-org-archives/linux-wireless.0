@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:57993 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754906AbbG3JKc (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49838 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346AbbGISgo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 05:10:32 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 0/5] 2nd patch for illegal coding style
-Date: Thu, 30 Jul 2015 18:10:09 +0900
-Message-ID: <1438247414-19708-1-git-send-email-tony.cho@atmel.com> (sfid-20150730_111038_627639_87DBD8B3)
+	Thu, 9 Jul 2015 14:36:44 -0400
+Message-ID: <559EBF38.70107@broadcom.com> (sfid-20150709_203706_983751_17CF834B)
+Date: Thu, 9 Jul 2015 20:36:40 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	<kvalo@codeaurora.org>, <brudley@broadcom.com>,
+	<frankyl@broadcom.com>, <meuleman@broadcom.com>
+CC: <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH v2] brcmsmac: Use kstrdup to simplify code
+References: <1436383927-14010-1-git-send-email-christophe.jaillet@wanadoo.fr> <1436386966-16148-1-git-send-email-christophe.jaillet@wanadoo.fr>
+In-Reply-To: <1436386966-16148-1-git-send-email-christophe.jaillet@wanadoo.fr>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch V2 includes only patches rejected. The rejected patch for the
-following, #ifdef conditionals cover entire functions, introduced new error on
-required space before the open parenthesis '('. This is my mistake while
-rewriting codes.
+On 07/08/2015 10:22 PM, Christophe JAILLET wrote:
+> Replace a kmalloc+strcpy by an equivalent kstrdup in order to improve
+> readability.
 
-The original 13th patch didn't include new fix introduced on the previous patch
-due to no sync-up issue. The original 13th patch fixed the same warnings but
-in different place. 
+Not sure if readability is really the issue here. At most it is a small 
+reduction of driver code by using kstrdup(). Anyway, the patch looks fine so
 
-The 64bit compile warnings will be resolved after sending these patches. Then,
-ambiguous sdio/spi parts including preprocessor conditionals will be tried.
-
-Tony Cho (5):
-  staging: wilc1000: #ifdef conditionals cover entire functions
-  staging: wilc1000: remove unnecessary blank lines
-  staging: wilc1000: remove warnings on missing blank line
-  staging: wilc1000: remove errors on required space
-  staging: wilc1000: remove unused functions
-
- drivers/staging/wilc1000/wilc_sdio.c | 518 +++++++++++++++++++----------------
- drivers/staging/wilc1000/wilc_wlan.c |   1 -
- 2 files changed, 283 insertions(+), 236 deletions(-)
-
--- 
-1.9.1
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> ---
+> v2: fix the subject
+>
+>   drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c | 4 +---
+>   1 file changed, 1 insertion(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> index 4813506..8a6c077 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> @@ -1476,9 +1476,7 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+>   	wl->timers = t;
+>
+>   #ifdef DEBUG
+> -	t->name = kmalloc(strlen(name) + 1, GFP_ATOMIC);
+> -	if (t->name)
+> -		strcpy(t->name, name);
+> +	t->name = kstrdup(name, GFP_ATOMIC);
+>   #endif
+>
+>   	return t;
+>
 
