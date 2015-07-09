@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59442 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755326AbbGCNzr (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:36069 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbbGILIt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 09:55:47 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix target to cpu address conversion logic
-Date: Fri, 3 Jul 2015 19:25:27 +0530
-Message-ID: <1435931727-300-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150703_155551_140124_506EEADD)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 9 Jul 2015 07:08:49 -0400
+Received: by lbbpo10 with SMTP id po10so72926869lbb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 04:08:47 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/6] ath10k: don't set cck/ofdm scan flags
+Date: Thu,  9 Jul 2015 13:08:34 +0200
+Message-Id: <1436440119-30231-2-git-send-email-michal.kazior@tieto.com> (sfid-20150709_130854_120140_798D9D1D)
+In-Reply-To: <1436440119-30231-1-git-send-email-michal.kazior@tieto.com>
+References: <1436440119-30231-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'commit 418ca5992e2f ("ath10k: Make target cpu address to
-CE address conversion chip specific")' mask 0x7fff is added
-by mistake instead of 0x7ff. Fix this regression.
+mac80211 already does provide complete IEs for
+Probe Requests for hw scan and ath10k firmware was
+appending duplicate Supported Rates IEs
+unnecessarily.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 3 ---
+ drivers/net/wireless/ath/ath10k/wmi.c | 1 -
+ 2 files changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 130746b..a69bfa4 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -765,7 +765,7 @@ static u32 ath10k_pci_targ_cpu_to_ce_addr(struct ath10k *ar, u32 addr)
- 	case ATH10K_HW_QCA6174:
- 		val = (ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
- 					  CORE_CTRL_ADDRESS) &
--		       0x7fff) << 21;
-+		       0x7ff) << 21;
- 		break;
- 	case ATH10K_HW_QCA99X0:
- 		val = ath10k_pci_read32(ar, PCIE_BAR_REG_ADDRESS);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b5b74e84ad16..63c59593494e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4641,9 +4641,6 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
+ 	arg.vdev_id = arvif->vdev_id;
+ 	arg.scan_id = ATH10K_SCAN_ID;
+ 
+-	if (!req->no_cck)
+-		arg.scan_ctrl_flags |= WMI_SCAN_ADD_CCK_RATES;
+-
+ 	if (req->ie_len) {
+ 		arg.ie_len = req->ie_len;
+ 		memcpy(arg.ie, req->ie, arg.ie_len);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 638332e96931..0791a4336e80 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5180,7 +5180,6 @@ void ath10k_wmi_start_scan_init(struct ath10k *ar,
+ 		| WMI_SCAN_EVENT_BSS_CHANNEL
+ 		| WMI_SCAN_EVENT_FOREIGN_CHANNEL
+ 		| WMI_SCAN_EVENT_DEQUEUED;
+-	arg->scan_ctrl_flags |= WMI_SCAN_ADD_OFDM_RATES;
+ 	arg->scan_ctrl_flags |= WMI_SCAN_CHAN_STAT_EVENT;
+ 	arg->n_bssids = 1;
+ 	arg->bssids[0].bssid = "\xFF\xFF\xFF\xFF\xFF\xFF";
 -- 
-1.9.1
+2.1.4
 
