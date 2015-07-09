@@ -1,42 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48899 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753668AbbGPPJr (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:29162 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753058AbbGISbV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2015 11:09:47 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6GF9kj9023753
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 08:09:46 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1vnb4c5ecj-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 08:09:46 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 0/3] mwifiex p2p fixes
-Date: Thu, 16 Jul 2015 08:05:20 -0700
-Message-ID: <1437059123-19477-1-git-send-email-akarwar@marvell.com> (sfid-20150716_170949_994166_3016D45C)
+	Thu, 9 Jul 2015 14:31:21 -0400
+Message-ID: <559EBDF4.7030808@broadcom.com> (sfid-20150709_203143_950845_BC7B8A09)
+Date: Thu, 9 Jul 2015 20:31:16 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arch@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
+References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com> <1436429599-10762-3-git-send-email-vgupta@synopsys.com> <559EBC91.2070600@broadcom.com>
+In-Reply-To: <559EBC91.2070600@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series resolves couple of issues observed during p2p
-opeations.
+On 07/09/2015 08:25 PM, Arend van Spriel wrote:
+> On 07/09/2015 10:13 AM, Vineet Gupta wrote:
+>> There's already a generic implementation so use that instead.
+>
+> There is or there was? If there is now I am fine with this patch, but if
+> it already was there the author might have had a reason for adding a
+> local function and I would like to hear that reason.
 
-v2: Removed redundant tag "UPSTREAM:" in patch title.
+Nevermind. Just noticed you are proposing the generic implementation in 
+this series. Currently on vacation and want to discuss with Hante about 
+this change.
 
-Aniket Nagarnaik (3):
-  mwifiex: add bss mode TLV to extended scan command
-  mwifiex: use maximum ssid length as 0xfe for p2p
-  mwifiex: correct p2p and station interface counters
+Regards,
+Arend
 
- drivers/net/wireless/mwifiex/cfg80211.c |  4 +++-
- drivers/net/wireless/mwifiex/fw.h       |  6 ++++++
- drivers/net/wireless/mwifiex/scan.c     | 14 ++++++++++++++
- 3 files changed, 23 insertions(+), 1 deletion(-)
-
--- 
-1.8.1.4
+>> ---
+>> I'm not sure if the driver usage of atomic_or?() is correct in terms of
+>> storage size of @val for 64 bit arches.
+>>
+>> Assuming LP64 programming model for linux on say x86_64: atomic_or()
+>> callers in this driver use long (sana 64 bit) storage and pass it to
+>> atomic_orr/atomic_or which downcasts it to 32 bits. Is that OK ?
+>
+> The function is used with 32bit register value from the device so I
+> think it is ok.
+>
+> Regards,
+> Arend
+>
+>> ---
+>> Cc: Brett Rudley <brudley@broadcom.com>
+>> Cc: Arend van Spriel <arend@broadcom.com>
+>> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+>> Cc: Hante Meuleman <meuleman@broadcom.com>
+>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>> Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Cc: Daniel Kim <dekim@broadcom.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: brcm80211-dev-list@broadcom.com
+>> Cc: Peter Zijlstra <peterz@infradead.org>
+>> Cc: Ingo Molnar <mingo@kernel.org>
+>> Cc: netdev@vger.kernel.org
+>> Cc: linux-arch@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+>>
+>> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 13 ++-----------
+>>   1 file changed, 2 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+>> b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+>> index d36f5f3d931b..f990e3d0e696 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+>> @@ -2564,15 +2564,6 @@ static inline void brcmf_sdio_clrintr(struct
+>> brcmf_sdio *bus)
+>>       }
+>>   }
+>>
+>> -static void atomic_orr(int val, atomic_t *v)
+>> -{
+>> -    int old_val;
+>> -
+>> -    old_val = atomic_read(v);
+>> -    while (atomic_cmpxchg(v, old_val, val | old_val) != old_val)
+>> -        old_val = atomic_read(v);
+>> -}
+>> -
+>>   static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+>>   {
+>>       struct brcmf_core *buscore;
+>> @@ -2595,7 +2586,7 @@ static int brcmf_sdio_intr_rstatus(struct
+>> brcmf_sdio *bus)
+>>       if (val) {
+>>           brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
+>>           bus->sdcnt.f1regdata++;
+>> -        atomic_orr(val, &bus->intstatus);
+>> +        atomic_or(val, &bus->intstatus);
+>>       }
+>>
+>>       return ret;
+>> @@ -2712,7 +2703,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+>>
+>>       /* Keep still-pending events for next scheduling */
+>>       if (intstatus)
+>> -        atomic_orr(intstatus, &bus->intstatus);
+>> +        atomic_or(intstatus, &bus->intstatus);
+>>
+>>       brcmf_sdio_clrintr(bus);
+>>
+>>
+>
 
