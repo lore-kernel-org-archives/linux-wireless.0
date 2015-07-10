@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:65512 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754331AbbGVRQS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 13:16:18 -0400
-Message-ID: <55AFCFDE.7060902@rempel-privat.de> (sfid-20150722_191622_011380_17542D3F)
-Date: Wed, 22 Jul 2015 19:16:14 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from nasmtp02.atmel.com ([204.2.163.16]:49358 "EHLO
+	SJOEDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753048AbbGJILf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2015 04:11:35 -0400
+Message-ID: <559F7E1F.7070407@atmel.com> (sfid-20150710_101149_849275_6623C555)
+Date: Fri, 10 Jul 2015 17:11:11 +0900
+From: Johnny Kim <johnny.kim@atmel.com>
 MIME-Version: 1.0
-To: rolf.anderegg@weiss.ch,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
-References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch> <55A79B5C.7010501@rempel-privat.de> <55AFC6E1.7060706@weiss.ch>
-In-Reply-To: <55AFC6E1.7060706@weiss.ch>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="cCOHluhaxTd4Jsu03aue19j23Q970PxSV"
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Chris Park <chris.park@atmel.com>,
+	"Rachel Kim" <rachel.kim@atmel.com>, <tony.cho@atmel.com>,
+	<Nicolas.FERRE@atmel.com>, Dean Lee <dean.lee@atmel.com>,
+	<austin.shin@atmel.com>
+Subject: Re: [PATCH 2/3] staging: wilc1000: wilc_wlan_cfg_get(): replace integer
+ with void pointer
+References: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com> <1436507759-4546-3-git-send-email-johnny.kim@atmel.com> <CAGRGNgVwVKq2JQ5FypdAZvLUoYPEL+MQ=yPsMJo3onOfWin7vQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgVwVKq2JQ5FypdAZvLUoYPEL+MQ=yPsMJo3onOfWin7vQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---cCOHluhaxTd4Jsu03aue19j23Q970PxSV
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-Am 22.07.2015 um 18:37 schrieb Rolf Anderegg:
->=20
-> On 16/07/15 13:54, Oleksij Rempel wrote:
->> Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
->>>
->>> I suspect that there are bandwidth/speed issues when dealing with USB=
-
->>> adapters, but that does not inherently mean that the connection is pr=
-one
->>> to drop, right? Doesn't that mean that I am leaking packages somewher=
-e
->>> along the way? What else could I be looking for?
+On 2015년 07월 10일 15:25, Julian Calaby wrote:
+> Hi Johnny,
+>
+> On Fri, Jul 10, 2015 at 3:55 PM, Johnny Kim <johnny.kim@atmel.com> wrote:
+>> Last argument of wilc_wlan_cfg_get function is actually structure's address.
+>> This should be changed to be compatible with 64bit machine.
+>> Because wilc_wlan_cfg_get function is mapped by function pointer later,
+>> wilc_wlan_oup_t.wlan_cfg_get should be changed together.
 >>
->> The packages can drop if you will do channel scan. STA mode need some
->> seconds to complete channel scan. It means AP will be all the time
->> unavailable.
->=20
-> Ok, that may be. Then again why am I not experiencing the same
-> connection drop on my ath5k setup? Because the channel scan is more
-> likely to be completed in due time?
-
-Yes, channel scantime on usb device is match longer then on pci.
-
---=20
-Regards,
-Oleksij
-
-
---cCOHluhaxTd4Jsu03aue19j23Q970PxSV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlWvz94ACgkQHwImuRkmbWnNtwD6AwBOOM+E3FimwDj78ctBID7k
-hp3uq6ozb0fZ2koYzj4A/RFlUUjLgCykYmCv4cn0TWzPViSY2GsDuAopU8Q32gRM
-=ngAb
------END PGP SIGNATURE-----
-
---cCOHluhaxTd4Jsu03aue19j23Q970PxSV--
+>> tstrWILC_WFIDrv structure is defined after wilc_wlan_oup_t.wlan_cfg_get
+>> is defined. So, this patch changes the argument to void type pointer.
+> Why not add a patch moving the structure definition before
+> wilc_wlan_oup_t.wlan_cfg_get is defined?
+Current patch focus on accessing 64bit address rightly.
+The define order you and I mentioned should be repaired with another subject
+because of complexity among files.
+>> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+>> ---
+>>   drivers/staging/wilc1000/coreconfigurator.c | 2 +-
+>>   drivers/staging/wilc1000/wilc_wlan.c        | 2 +-
+>>   drivers/staging/wilc1000/wilc_wlan_if.h     | 2 +-
+>>   3 files changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+>> index b069614..141d7b4 100644
+>> --- a/drivers/staging/wilc1000/coreconfigurator.c
+>> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+>> @@ -2094,7 +2094,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+>>                                     (counter == u32WIDsCount - 1));
+>>                          if (!gpstrWlanOps->wlan_cfg_get(!counter,
+>>                                                          pstrWIDs[counter].u16WIDid,
+>> -                                                       (counter == u32WIDsCount - 1), drvHandler)) {
+>> +                                                       (counter == u32WIDsCount - 1), (void *)drvHandler)) {
+> If I recall correctly, you shouldn't need void * casts.
+>
+> Thanks,
+>
+Thanks.
+Johnny.
