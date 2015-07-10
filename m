@@ -1,63 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40794 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754113AbbGAO5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 10:57:18 -0400
-Message-ID: <1435762626.2168.1.camel@sipsolutions.net> (sfid-20150701_165721_325691_E2386591)
-Subject: Re: [PATCH v4] Add new mac80211 driver mwlwifi.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Lin <dlin@marvell.com>,
-	"quozl@laptop.org" <quozl@laptop.org>,
-	Dan Williams <dcbw@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
-Date: Wed, 01 Jul 2015 16:57:06 +0200
-In-Reply-To: <019032ba6cc14a4293b670496dd2bb1e@SC-EXCH02.marvell.com>
-References: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
-	 <1435652491.2082.5.camel@sipsolutions.net>
-	 <1435673924.9390.4.camel@redhat.com> <20150630222610.GB30901@us.netrek.org>
-	 <019032ba6cc14a4293b670496dd2bb1e@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:37477 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753350AbbGJGU5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2015 02:20:57 -0400
+Received: by igpy18 with SMTP id y18so6310787igp.0
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 23:20:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1436507759-4546-2-git-send-email-johnny.kim@atmel.com>
+References: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com> <1436507759-4546-2-git-send-email-johnny.kim@atmel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 10 Jul 2015 16:20:37 +1000
+Message-ID: <CAGRGNgX4xctq0XmEt-g3fnLG_PyUj6kHxEf1=hd41tjxcWEnCw@mail.gmail.com> (sfid-20150710_082113_295402_584CEFED)
+Subject: Re: [PATCH 1/3] staging: wilc1000: wilc_wlan_cfg_commit(): replace
+ integer with pointer
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Chris Park <chris.park@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>, tony.cho@atmel.com,
+	Nicolas.FERRE@atmel.com, Dean Lee <dean.lee@atmel.com>,
+	austin.shin@atmel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-07-01 at 14:42 +0000, David Lin wrote:
-> > We can leave both selectable by developer testing as per your
-> suggestion, and assume users/integrators will know how to put the 
-> driver they want in their system. We were warned about causing 
-> confusion hence the conditioning in CONFIG. Do you feel there's no 
-> concern leaving both driver in, not checking each other's presence? 
-> We can comply either way.
+Hi Johnny,
 
-I think you should just leave both selectable.
+On Fri, Jul 10, 2015 at 3:55 PM, Johnny Kim <johnny.kim@atmel.com> wrote:
+> A argument of wilc_wlan_cfg_commit() is address of structure.
+> But because the size is restricted to 32bit, it is not correct
+> for 64bit machine.
+>
+> So, this changes the interger value to obvious structure pointer.
+>
+> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wlan.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+> index def72fd..d32e45e 100644
+> --- a/drivers/staging/wilc1000/wilc_wlan.c
+> +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> @@ -1862,13 +1862,13 @@ static void wilc_wlan_cleanup(void)
+>
+>  }
+>
+> -static int wilc_wlan_cfg_commit(int type, uint32_t drvHandler)
+> +static int wilc_wlan_cfg_commit(int type, tstrWILC_WFIDrv *drvHandler)
+>  {
+>         wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+>         wilc_cfg_frame_t *cfg = &p->cfg_frame;
+>         int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
+>         int seq_no = p->cfg_seq_no % 256;
+> -       int driver_handler = (u32)drvHandler;
+> +       uintptr_t driver_handler = (uintptr_t)drvHandler;
 
-> > > > This looks OK, though I get a very strange dependency loop 
-> > > > warning
-> > > > from Kconfig here.
-> 
-> For the next patch, we will modify the code to still work even though 
-> the target does not support DTS. So we can remove "select OF" from 
-> Kconfig file.
+Er, why not just remove this variable and use drvHandler directly?
 
-If the driver needs OF don't bother - the dependency loop is very long
-and the warning is rather strange.
+> @@ -1923,7 +1923,7 @@ static int wilc_wlan_cfg_set(int start, uint32_t wid, uint8_t *buffer, uint32_t
+>                 p->cfg_frame_in_use = 1;
+>
+>                 /*Edited by Amr - BugID_4720*/
+> -               if (wilc_wlan_cfg_commit(WILC_CFG_SET, drvHandler))
+> +               if (wilc_wlan_cfg_commit(WILC_CFG_SET, (tstrWILC_WFIDrv *)drvHandler))
 
-> > > > > writew(0x00, (void __iomem *)&priv->pcmd_buf[1]);
-> > > > 
-> > > > cannot be right. This memory isn't __iomem, it's 
-> > > > dma_alloc_coherent,
-> > > > so a simple write should be done.
-> > > > 
-> 
-> Without this casting, C=2 will cause a warning message like this: 
-> "Warning: incorrect type in argument 2 (different address spaces)"
+No need to cast it to it's own type.
 
-Yes, but the warning is correct and the cast is wrong. This isn't
-__iomem, it's simply mapped, so you should just do a
-	(u32 *)pcmd_buf[1] = 0;
+>                         ret_size = 0;   /* BugID_5213 */
+>
+>                 if (p->os_func.os_wait(p->cfg_wait, CFG_PKTS_TIMEOUT)) {
+> @@ -1960,7 +1960,7 @@ static int wilc_wlan_cfg_get(int start, uint32_t wid, int commit, uint32_t drvHa
+>                 p->cfg_frame_in_use = 1;
+>
+>                 /*Edited by Amr - BugID_4720*/
+> -               if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, drvHandler))
+> +               if (wilc_wlan_cfg_commit(WILC_CFG_QUERY, (tstrWILC_WFIDrv *)drvHandler))
 
-or something like that. The writev() to such a pointer cannot be right.
+Ditto.
 
-> johannes
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
