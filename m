@@ -1,44 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52984 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757715AbbGQNql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 09:46:41 -0400
-Message-ID: <1437140799.1933.24.camel@sipsolutions.net> (sfid-20150717_154655_455668_4ED72A1F)
-Subject: Re: [PATCH 10/10] mac80211: enable changing netdev features with
- ethtool
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Avri Altman <avri.altman@intel.com>
-Date: Fri, 17 Jul 2015 15:46:39 +0200
-In-Reply-To: <1436359312-26533-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150708_144237_229138_0E3078CD)
-References: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1436359312-26533-11-git-send-email-emmanuel.grumbach@intel.com>
-	 (sfid-20150708_144237_229138_0E3078CD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44306 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300AbbGJF4c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2015 01:56:32 -0400
+From: Johnny Kim <johnny.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>, <chris.park@atmel.com>
+CC: <johnny.kim@atmel.com>, <rachel.kim@atmel.com>,
+	<tony.cho@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	<dean.lee@atmel.com>, <austin.shin@atmel.com>
+Subject: [PATCH 2/3] staging: wilc1000: wilc_wlan_cfg_get(): replace integer with void pointer
+Date: Fri, 10 Jul 2015 14:55:56 +0900
+Message-ID: <1436507759-4546-3-git-send-email-johnny.kim@atmel.com> (sfid-20150710_075635_155186_FBBB6A2D)
+In-Reply-To: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com>
+References: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-07-08 at 15:41 +0300, Emmanuel Grumbach wrote:
-> From: Avri Altman <avri.altman@intel.com>
-> 
-> For drivers that have offloading features, these are currently
-> forced and cannot be modified in any way. Enable that so users
-> can change the features if needed, but of course this requires
-> driver interaction.
-> 
-> For AP_VLAN don't allow direct changes but propagate them from
-> the AP interface.
-> 
-> Additionally, add NETIF_F_RXCSUM to the whitelist, if a driver
-> has this capability it doesn't have to advertise this but can
-> just set the skb->checksum field accordingly, but advertising
-> it will allow it to be changed with ethtool.
-> 
-This patch has an issue when ethtool is called while the interface is
-still down, so I'll not apply it for now. I'll try to sort out that
-issue after my vacation.
+Last argument of wilc_wlan_cfg_get function is actually structure's address.
+This should be changed to be compatible with 64bit machine.
+Because wilc_wlan_cfg_get function is mapped by function pointer later,
+wilc_wlan_oup_t.wlan_cfg_get should be changed together.
 
-As a consequence, patch 9 is worthless so I'll also leave that for now.
+tstrWILC_WFIDrv structure is defined after wilc_wlan_oup_t.wlan_cfg_get
+is defined. So, this patch changes the argument to void type pointer.
 
-johannes
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c        | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h     | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index b069614..141d7b4 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -2094,7 +2094,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+ 				   (counter == u32WIDsCount - 1));
+ 			if (!gpstrWlanOps->wlan_cfg_get(!counter,
+ 							pstrWIDs[counter].u16WIDid,
+-							(counter == u32WIDsCount - 1), drvHandler)) {
++							(counter == u32WIDsCount - 1), (void *)drvHandler)) {
+ 				ret = -1;
+ 				printk("[Sendconfigpkt]Get Timed out\n");
+ 				break;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index d32e45e..c0a8063 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1938,7 +1938,7 @@ static int wilc_wlan_cfg_set(int start, uint32_t wid, uint8_t *buffer, uint32_t
+ 
+ 	return ret_size;
+ }
+-static int wilc_wlan_cfg_get(int start, uint32_t wid, int commit, uint32_t drvHandler)
++static int wilc_wlan_cfg_get(int start, uint32_t wid, int commit, void* drvHandler)
+ {
+ 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
+ 	uint32_t offset;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 8735a6a..8c293ab 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -194,7 +194,7 @@ typedef struct {
+ 	void (*wlan_handle_rx_isr)(void);
+ 	void (*wlan_cleanup)(void);
+ 	int (*wlan_cfg_set)(int, uint32_t, uint8_t *, uint32_t, int, uint32_t);
+-	int (*wlan_cfg_get)(int, uint32_t, int, uint32_t);
++	int (*wlan_cfg_get)(int, uint32_t, int, void *);
+ 	int (*wlan_cfg_get_value)(uint32_t, uint8_t *, uint32_t);
+ 	/*Bug3959: transmitting mgmt frames received from host*/
+ 	#if defined(WILC_AP_EXTERNAL_MLME) || defined(WILC_P2P)
+-- 
+1.9.1
+
