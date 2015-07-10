@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:33566 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbbGVSR5 (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:34097 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729AbbGJFUO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 14:17:57 -0400
-Received: by wicmv11 with SMTP id mv11so92407958wic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:56 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 13/15] staging: vt6655: always set 32 bit dma mask
-Date: Wed, 22 Jul 2015 19:16:45 +0100
-Message-Id: <1437589007-5479-13-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201806_435646_E218ACEC)
-In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
-References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 10 Jul 2015 01:20:14 -0400
+Received: by wgov12 with SMTP id v12so55222681wgo.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 22:20:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <559F0BEF.4000808@candelatech.com>
+References: <559F0BEF.4000808@candelatech.com>
+Date: Fri, 10 Jul 2015 07:20:13 +0200
+Message-ID: <CA+BoTQm-e__mFFPBpr+Lphe3BGs+m3EaLZkn1DE2nz8EkKHT6Q@mail.gmail.com> (sfid-20150710_072018_726064_F770B7C1)
+Subject: Re: How is AP supposed to handle power-save packets from peer?
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The device is limited to 32 bit address space.
+On 10 July 2015 at 02:03, Ben Greear <greearb@candelatech.com> wrote:
+> Suppose one is doing heavy download (AP -> peer traffic), and there are lots of frames in the
+> NIC's tx buffers (ath10k firmware, in this case).
+>
+> Then, peer sends a power-save pkt telling AP it is going off-channel or otherwise
+> will be unavailable.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+I assume you're exploring the worst-case scenario when all tx buffers
+are consumed and peer goes to sleep, am I correct?
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index c82bf48..c97353b 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1747,6 +1747,12 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 		return -ENODEV;
- 	}
- 
-+	if (dma_set_mask(&pcid->dev, DMA_BIT_MASK(32))) {
-+		dev_err(&pcid->dev, ": Failed to set dma 32 bit mask\n");
-+		device_free_info(priv);
-+		return -ENODEV;
-+	}
-+
- 	INIT_WORK(&priv->interrupt_work, vnt_interrupt_work);
- 
- 	/* do reset */
--- 
-2.1.4
 
+>
+> What is the appropriate behaviour from the AP?  Can the firmware just drop all those tx frames to
+> make room to handle other stations?  Maybe report ACK failure and hope the upper level stacks
+> retransmit as appropriate?
+>
+> Or, is the host supposed to flush the peer's packets to clear out the frames?
+>
+> Or, is firmware somehow supposed to keep all the frames for when the peer comes back?
+
+Firmware will keep frames buffered until station wakes up again.
+
+There's a timeout to detect stale stations as far as I'm aware and the
+default value is 10s (sounds familiar? this goes back to mgmt tx/
+credit starvation). This makes to handle stations that go to sleep and
+then out of range/away. AP doesn't need to keep frames buffered till
+the end of time. Once the timeout is hit firmware stops caring about
+station's last seen sleep state transition and marks it as awake and
+just sends frames to it (with tons of retransmits if it's really not
+there anymore since there'd be noone to ACK) - in which case you'll
+get no_ack=1 in tx status.
+
+See: WMI_10X_VDEV_PARAM_AP_DETECT_OUT_OF_SYNC_SLEEPING_STA_TIME_SECS
+
+Ideally there should be little to no buffer bloat but it's difficult
+to do that considering aggregation sizes of 11ac..
+
+
+Michał
