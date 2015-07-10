@@ -1,54 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60696 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbbGWGbw (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:43332 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932216AbbGJSbV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 02:31:52 -0400
-Received: from potku.com (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: kvalo@smtp.codeaurora.org)
-	by smtp.codeaurora.org (Postfix) with ESMTPSA id CD4DB140A76
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 06:31:50 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] bcma: fix linking problem with of_default_bus_match_table
-Date: Thu, 23 Jul 2015 09:31:44 +0300
-Message-Id: <1437633104-23373-1-git-send-email-kvalo@codeaurora.org> (sfid-20150723_083157_157561_C9E329A0)
+	Fri, 10 Jul 2015 14:31:21 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/7] brcmfmac: correct interface combination info
+Date: Fri, 10 Jul 2015 20:31:06 +0200
+Message-ID: <1436553071-32423-3-git-send-email-arend@broadcom.com> (sfid-20150710_203130_480060_8D746919)
+In-Reply-To: <1436553071-32423-1-git-send-email-arend@broadcom.com>
+References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen reported a build problem caused by commit cae761b5a6bd ("bcma: populate
-bus DT subnodes as platform_device-s"):
+The interface combination provided by brcmfmac did not truly reflect
+the combinations supported by driver and/or firmware.
 
-ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
-
-Rafał Miłecki suggested as a quick fix to use IS_BUILTIN() to workaround the
-issue. The downside is that this won't work when BCMA is compiled as a module,
-but we can live with that for now just to unblock the breakage.
-
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Fixes: cae761b5a6bd ("bcma: populate bus DT subnodes as platform_device-s")
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Pontus Fuchs <pontusf@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/bcma/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 151 +++++++++++++++------
+ 1 file changed, 112 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 59128478a90f..6b7d54622058 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -410,7 +410,7 @@ int bcma_bus_register(struct bcma_bus *bus)
- 		bcma_core_pci_early_init(&bus->drv_pci[0]);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index d86d1f1..ae54b66 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -5695,63 +5695,132 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
  	}
+ };
  
--	if (bus->host_pdev) {
-+	if (IS_BUILTIN(CONFIG_BCMA) && bus->host_pdev) {
- 		struct device *dev = &bus->host_pdev->dev;
++/**
++ * brcmf_setup_ifmodes() - determine interface modes and combinations.
++ *
++ * @wiphy: wiphy object.
++ * @ifp: interface object needed for feat module api.
++ *
++ * The interface modes and combinations are determined dynamically here
++ * based on firmware functionality.
++ *
++ * no p2p and no mbss:
++ *
++ *	#STA <= 1, #AP <= 1, channels = 1, 2 total
++ *
++ * no p2p and mbss:
++ *
++ *	#STA <= 1, #AP <= 1, channels = 1, 2 total
++ *	#AP <= 4, matching BI, channels = 1, 4 total
++ *
++ * p2p, no mchan, and mbss:
++ *
++ *	#STA <= 1, #P2P-DEV <= 1, #{P2P-CL, P2P-GO} <= 1, channels = 1, 3 total
++ *	#STA <= 1, #P2P-DEV <= 1, #AP <= 1, #P2P-CL <= 1, channels = 1, 4 total
++ *	#AP <= 4, matching BI, channels = 1, 4 total
++ *
++ * p2p, mchan, and mbss:
++ *
++ *	#STA <= 1, #P2P-DEV <= 1, #{P2P-CL, P2P-GO} <= 1, channels = 2, 3 total
++ *	#STA <= 1, #P2P-DEV <= 1, #AP <= 1, #P2P-CL <= 1, channels = 1, 4 total
++ *	#AP <= 4, matching BI, channels = 1, 4 total
++ */
+ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ {
+ 	struct ieee80211_iface_combination *combo = NULL;
+-	struct ieee80211_iface_limit *limits = NULL;
+-	int i = 0, max_iface_cnt;
++	struct ieee80211_iface_limit *c0_limits = NULL;
++	struct ieee80211_iface_limit *p2p_limits = NULL;
++	struct ieee80211_iface_limit *mbss_limits = NULL;
++	bool mbss, p2p;
++	int i, c, n_combos;
++
++	mbss = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS);
++	p2p = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P);
  
- 		of_platform_populate(dev->of_node, of_default_bus_match_table,
+-	combo = kzalloc(sizeof(*combo), GFP_KERNEL);
++	n_combos = 1 + !!p2p + !!mbss;
++	combo = kcalloc(n_combos, sizeof(*combo), GFP_KERNEL);
+ 	if (!combo)
+ 		goto err;
+ 
+-	limits = kzalloc(sizeof(*limits) * 4, GFP_KERNEL);
+-	if (!limits)
++	c0_limits = kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
++	if (!c0_limits)
+ 		goto err;
+ 
++	if (p2p) {
++		p2p_limits = kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
++		if (!p2p_limits)
++			goto err;
++	}
++
++	if (mbss) {
++		mbss_limits = kcalloc(1, sizeof(*mbss_limits), GFP_KERNEL);
++		if (!mbss_limits)
++			goto err;
++	}
++
+ 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				 BIT(NL80211_IFTYPE_ADHOC) |
+ 				 BIT(NL80211_IFTYPE_AP);
+ 
+-	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
+-		combo->num_different_channels = 2;
+-	else
+-		combo->num_different_channels = 1;
+-
+-	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) {
+-		limits[i].max = 1;
+-		limits[i++].types = BIT(NL80211_IFTYPE_STATION);
+-		limits[i].max = 4;
+-		limits[i++].types = BIT(NL80211_IFTYPE_AP);
+-		max_iface_cnt = 5;
+-	} else {
+-		limits[i].max = 2;
+-		limits[i++].types = BIT(NL80211_IFTYPE_STATION) |
+-				    BIT(NL80211_IFTYPE_AP);
+-		max_iface_cnt = 2;
+-	}
+-
+-	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P)) {
++	c = 0;
++	i = 0;
++	combo[c].num_different_channels = 1;
++	c0_limits[i].max = 1;
++	c0_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
++	if (p2p) {
++		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
++			combo[c].num_different_channels = 2;
+ 		wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 					  BIT(NL80211_IFTYPE_P2P_GO) |
+ 					  BIT(NL80211_IFTYPE_P2P_DEVICE);
+-		limits[i].max = 1;
+-		limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-				    BIT(NL80211_IFTYPE_P2P_GO);
+-		limits[i].max = 1;
+-		limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
+-		max_iface_cnt += 2;
+-	}
+-	combo->max_interfaces = max_iface_cnt;
+-	combo->limits = limits;
+-	combo->n_limits = i;
+-
++		c0_limits[i].max = 1;
++		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
++		c0_limits[i].max = 1;
++		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
++				       BIT(NL80211_IFTYPE_P2P_GO);
++	} else {
++		c0_limits[i].max = 1;
++		c0_limits[i++].types = BIT(NL80211_IFTYPE_AP);
++	}
++	combo[c].max_interfaces = i;
++	combo[c].n_limits = i;
++	combo[c].limits = c0_limits;
++
++	if (p2p) {
++		c++;
++		i = 0;
++		combo[c].num_different_channels = 1;
++		p2p_limits[i].max = 1;
++		p2p_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
++		p2p_limits[i].max = 1;
++		p2p_limits[i++].types = BIT(NL80211_IFTYPE_AP);
++		p2p_limits[i].max = 1;
++		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT);
++		p2p_limits[i].max = 1;
++		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
++		combo[c].max_interfaces = i;
++		combo[c].n_limits = i;
++		combo[c].limits = p2p_limits;
++	}
++
++	if (mbss) {
++		c++;
++		combo[c].beacon_int_infra_match = true;
++		combo[c].num_different_channels = 1;
++		mbss_limits[0].max = 4;
++		mbss_limits[0].types = BIT(NL80211_IFTYPE_AP);
++		combo[c].max_interfaces = 4;
++		combo[c].n_limits = 1;
++		combo[c].limits = mbss_limits;
++	}
++	wiphy->n_iface_combinations = n_combos;
+ 	wiphy->iface_combinations = combo;
+-	wiphy->n_iface_combinations = 1;
+ 	return 0;
+ 
+ err:
+-	kfree(limits);
++	kfree(c0_limits);
++	kfree(p2p_limits);
++	kfree(mbss_limits);
+ 	kfree(combo);
+ 	return -ENOMEM;
+ }
+@@ -6059,11 +6128,15 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
+ 
+ static void brcmf_free_wiphy(struct wiphy *wiphy)
+ {
++	int i;
++
+ 	if (!wiphy)
+ 		return;
+ 
+-	if (wiphy->iface_combinations)
+-		kfree(wiphy->iface_combinations->limits);
++	if (wiphy->iface_combinations) {
++		for (i = 0; i < wiphy->n_iface_combinations; i++)
++			kfree(wiphy->iface_combinations[i].limits);
++	}
+ 	kfree(wiphy->iface_combinations);
+ 	if (wiphy->bands[IEEE80211_BAND_2GHZ]) {
+ 		kfree(wiphy->bands[IEEE80211_BAND_2GHZ]->channels);
 -- 
-1.7.9.5
+1.9.1
 
