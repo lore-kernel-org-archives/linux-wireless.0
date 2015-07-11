@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58289 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755966AbbGVG2W (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53878 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995AbbGKQTz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 02:28:22 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Avery Pennarun <apenwarr@google.com>
-Cc: Marty Faltesek <mfaltesek@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Denton Gentry <dgentry@google.com>
-Subject: Re: [PATCH] ath10k: Improve performance by reducing tx_lock contention.
-References: <1437527130-15232-1-git-send-email-mfaltesek@google.com>
-	<87wpxslnse.fsf@kamboji.qca.qualcomm.com>
-	<CAPp0ZBavC33umwjraqtxpKWP6Ez9X1_7K9fZNsP2oPu4v=uyEw@mail.gmail.com>
-Date: Wed, 22 Jul 2015 09:28:16 +0300
-In-Reply-To: <CAPp0ZBavC33umwjraqtxpKWP6Ez9X1_7K9fZNsP2oPu4v=uyEw@mail.gmail.com>
-	(Avery Pennarun's message of "Wed, 22 Jul 2015 02:21:27 -0400")
-Message-ID: <87si8gln9b.fsf@kamboji.qca.qualcomm.com> (sfid-20150722_082825_711737_5C0D8617)
+	Sat, 11 Jul 2015 12:19:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix QCA61X4 boot up
+References: <1435930429-3970-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Sat, 11 Jul 2015 19:19:50 +0300
+In-Reply-To: <1435930429-3970-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Fri, 3 Jul 2015 15:33:49 +0200")
+Message-ID: <87615qwtsp.fsf@kamboji.qca.qualcomm.com> (sfid-20150711_181959_214870_EB9D6B2A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avery Pennarun <apenwarr@google.com> writes:
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-> On Wed, Jul 22, 2015 at 2:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Marty Faltesek <mfaltesek@google.com> writes:
->>> From: Qi Zhou <qizhou@google.com>
->>>
->>> During tx completion, tx_lock is held for longer than required, preventing
->>> efficient refill of htt->pending_tx. Refactor the code so that only MSDU
->>> related operations are protected by the lock.
->>>
->>> Improves downstream performance on a 3x3 client from 495 to 580 Mbps.
->>
->> It would be good to mention the actual platform/CPU as I guess this
->> improvement is platform specific?
+> commit "a521ee983d312db7 ath10k: Add new reg_address/mask to hw register
+> table" commit has broken the QCA61x4 support, by providing wrong
+> fw_indicator_address, which shall be 0x0003a028 instead of 0x00009028.
 >
-> That's a good idea to mention in the commit message, although given
-> that it's just an in-driver lock contention patch, it probably affects
-> any underpowered multicore CPU.
+> User experience was a failing boot up sequence (crashing device during
+> initialization)
+>
+> [  181.663874] ath10k_pci 0000:02:00.0: enabling device (0000 -> 0002)
+> [  181.664787] ath10k_pci 0000:02:00.0: pci irq msi-x interrupts 8 irq_mode 0 reset_mode 0
+> [  181.688886] ath10k_pci 0000:02:00.0: device has crashed during init
+> [  181.688897] ath10k_pci 0000:02:00.0: failed to wait for target after cold reset: -70
+> [  181.688902] ath10k_pci 0000:02:00.0: failed to reset chip: -70
+> [  181.689774] ath10k_pci: probe of 0000:02:00.0 failed with error -70
+>
+> Fix it by updating the address with correct value.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Yeah, that would be good to mention as well :)
+Thanks, applied.
 
 -- 
 Kalle Valo
