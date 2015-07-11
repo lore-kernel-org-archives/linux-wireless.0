@@ -1,159 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:36507 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbbGEJMV (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:63223 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbbGKQPF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2015 05:12:21 -0400
-Message-ID: <55980E84.1070800@gmail.com> (sfid-20150705_111225_248365_FA4918E4)
-Date: Sat, 04 Jul 2015 18:49:08 +0200
-From: "christophe.ricard" <christophe.ricard@gmail.com>
+	Sat, 11 Jul 2015 12:15:05 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <poh@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath10k: update tx path to support QCA99X0
+References: <1436287676-25767-1-git-send-email-poh@qca.qualcomm.com>
+	<1436287676-25767-2-git-send-email-poh@qca.qualcomm.com>
+Date: Sat, 11 Jul 2015 19:14:56 +0300
+In-Reply-To: <1436287676-25767-2-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Tue, 7 Jul 2015 09:47:54 -0700")
+Message-ID: <87egkewu0v.fsf@kamboji.qca.qualcomm.com> (sfid-20150711_181519_912015_563E6ED8)
 MIME-Version: 1.0
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: st21nfca,st-nci: fix use of uninitialized variables
- in error path
-References: <1435573074-29503-1-git-send-email-nicolas.iooss_linux@m4x.org>
-In-Reply-To: <1435573074-29503-1-git-send-email-nicolas.iooss_linux@m4x.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nicolas,
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-Thanks for your fix.
-I have slit your patch for st21nfca and st-nci in order to propagate 
-them in earlier kernel revision through stable@vger.kernel.org.
-I will rework st-nci patch for kernel revision < 4.2
+> Since QCA99X0 uses fragmentation descriptor differently from
+> other ones on tx path, we need to handle it separately.
+>
+> QCA99X0 is using 48 bits for address and 16 bits for length
+> out of 2 dword and each values have to be programmed by frag
+> desc base addr + msdu id, so that hardware can retrieve
+> corresponding frag data.
+>
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 
-Best Regards
-Christophe
+kbuild found a new warning:
 
-On 29/06/2015 12:17, Nicolas Iooss wrote:
-> st21nfca_hci_load_session() calls kfree_skb() on unitialized variables
-> skb_pipe_info and skb_pipe_list if the call to nfc_hci_connect_gate()
-> failed.  Reword the error path to not use these variables when they are
-> not initialized.  While at it, there seemed to be a memory leak because
-> skb_pipe_info was only freed once, after the for-loop, even though
-> several ones were created by nfc_hci_send_cmd.
->
-> st_nci_hci_load_session() is similar to st21nfca_hci_load_session(), so
-> rework this function too.
->
-> Fixes: ec03ff1a8f9a ("NFC: st21nfca: Remove skb_pipe_list and skb_pipe_info
-> useless allocation")
->
-> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-> ---
->
-> As I haven't got the hardware needed to perform tests, I only compile-tested
-> this patch.
->
-> Moreover I may then have missed something important for example in the way
-> the memory is managed (I did not understand why skb_pipe_info was not freed
-> in the for loop).
->
->   drivers/nfc/st-nci/st-nci_se.c  |  8 ++++----
->   drivers/nfc/st21nfca/st21nfca.c | 11 ++++++-----
->   2 files changed, 10 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/nfc/st-nci/st-nci_se.c b/drivers/nfc/st-nci/st-nci_se.c
-> index 97addfa96c6f..c742ef65a05a 100644
-> --- a/drivers/nfc/st-nci/st-nci_se.c
-> +++ b/drivers/nfc/st-nci/st-nci_se.c
-> @@ -189,14 +189,14 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
->   				ST_NCI_DEVICE_MGNT_GATE,
->   				ST_NCI_DEVICE_MGNT_PIPE);
->   	if (r < 0)
-> -		goto free_info;
-> +		return r;
->   
->   	/* Get pipe list */
->   	r = nci_hci_send_cmd(ndev, ST_NCI_DEVICE_MGNT_GATE,
->   			ST_NCI_DM_GETINFO, pipe_list, sizeof(pipe_list),
->   			&skb_pipe_list);
->   	if (r < 0)
-> -		goto free_info;
-> +		return r;
->   
->   	/* Complete the existing gate_pipe table */
->   	for (i = 0; i < skb_pipe_list->len; i++) {
-> @@ -222,6 +222,7 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
->   		    dm_pipe_info->src_host_id != ST_NCI_ESE_HOST_ID) {
->   			pr_err("Unexpected apdu_reader pipe on host %x\n",
->   			       dm_pipe_info->src_host_id);
-> +			kfree_skb(skb_pipe_info);
->   			continue;
->   		}
->   
-> @@ -241,13 +242,12 @@ int st_nci_hci_load_session(struct nci_dev *ndev)
->   			ndev->hci_dev->pipes[st_nci_gates[j].pipe].host =
->   						dm_pipe_info->src_host_id;
->   		}
-> +		kfree_skb(skb_pipe_info);
->   	}
->   
->   	memcpy(ndev->hci_dev->init_data.gates, st_nci_gates,
->   	       sizeof(st_nci_gates));
->   
-> -free_info:
-> -	kfree_skb(skb_pipe_info);
->   	kfree_skb(skb_pipe_list);
->   	return r;
->   }
-> diff --git a/drivers/nfc/st21nfca/st21nfca.c b/drivers/nfc/st21nfca/st21nfca.c
-> index d251f7229c4e..051286562fab 100644
-> --- a/drivers/nfc/st21nfca/st21nfca.c
-> +++ b/drivers/nfc/st21nfca/st21nfca.c
-> @@ -148,14 +148,14 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
->   				ST21NFCA_DEVICE_MGNT_GATE,
->   				ST21NFCA_DEVICE_MGNT_PIPE);
->   	if (r < 0)
-> -		goto free_info;
-> +		return r;
->   
->   	/* Get pipe list */
->   	r = nfc_hci_send_cmd(hdev, ST21NFCA_DEVICE_MGNT_GATE,
->   			ST21NFCA_DM_GETINFO, pipe_list, sizeof(pipe_list),
->   			&skb_pipe_list);
->   	if (r < 0)
-> -		goto free_info;
-> +		return r;
->   
->   	/* Complete the existing gate_pipe table */
->   	for (i = 0; i < skb_pipe_list->len; i++) {
-> @@ -181,6 +181,7 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
->   			info->src_host_id != ST21NFCA_ESE_HOST_ID) {
->   			pr_err("Unexpected apdu_reader pipe on host %x\n",
->   				info->src_host_id);
-> +			kfree_skb(skb_pipe_info);
->   			continue;
->   		}
->   
-> @@ -200,6 +201,7 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
->   			hdev->pipes[st21nfca_gates[j].pipe].dest_host =
->   							info->src_host_id;
->   		}
-> +		kfree_skb(skb_pipe_info);
->   	}
->   
->   	/*
-> @@ -214,13 +216,12 @@ static int st21nfca_hci_load_session(struct nfc_hci_dev *hdev)
->   					st21nfca_gates[i].gate,
->   					st21nfca_gates[i].pipe);
->   			if (r < 0)
-> -				goto free_info;
-> +				goto free_list;
->   		}
->   	}
->   
->   	memcpy(hdev->init_data.gates, st21nfca_gates, sizeof(st21nfca_gates));
-> -free_info:
-> -	kfree_skb(skb_pipe_info);
-> +free_list:
->   	kfree_skb(skb_pipe_list);
->   	return r;
->   }
+>> drivers/net/wireless/ath/ath10k/htt_tx.c:547:52: sparse: incorrect
+>> type in assignment (different base types)
+   drivers/net/wireless/ath/ath10k/htt_tx.c:547:52:    expected
+>> restricted __le16 [usertype] len_16
+   drivers/net/wireless/ath/ath10k/htt_tx.c:547:52:    got restricted
+>> __le32 [usertype] <noident>
 
+-- 
+Kalle Valo
