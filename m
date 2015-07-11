@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:36617 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177AbbGTPOG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:40661 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995AbbGKQVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2015 11:14:06 -0400
-Received: by oibn4 with SMTP id n4so110675382oib.3
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2015 08:14:04 -0700 (PDT)
-Date: Mon, 20 Jul 2015 10:12:53 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [ANN] wireless-regdb: master-2015-07-20
-Message-ID: <20150720151253.GB41548@ubuntu-hedt> (sfid-20150720_171410_533530_953FFF6B)
+	Sat, 11 Jul 2015 12:21:35 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Fix target to cpu address conversion logic
+References: <1435931727-300-1-git-send-email-vthiagar@qti.qualcomm.com>
+Date: Sat, 11 Jul 2015 19:21:30 +0300
+In-Reply-To: <1435931727-300-1-git-send-email-vthiagar@qti.qualcomm.com>
+	(Vasanthakumar Thiagarajan's message of "Fri, 3 Jul 2015 19:25:27
+	+0530")
+Message-ID: <871tgewtpx.fsf@kamboji.qca.qualcomm.com> (sfid-20150711_182138_504552_BA50ABBF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2015-07-20) is available at:
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.07.20.tar.gz
+> 'commit 418ca5992e2f ("ath10k: Make target cpu address to
+> CE address conversion chip specific")' mask 0x7fff is added
+> by mistake instead of 0x7ff. Fix this regression.
+>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-The short log of changes since the 2015-06-05 release is below.
+Thanks, applied.
 
-Thanks,
-Seth
-
----
-
-Seth Forshee (1):
-      wireless-regdb: update regulatory.bin based on preceding changes
-
-Wei Zhong (1):
-      wireless-regdb: update CA rules for 5600 - 5650 mHz
+-- 
+Kalle Valo
