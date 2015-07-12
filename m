@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46103 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753399AbbGPNa3 (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:33055 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbbGLW3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2015 09:30:29 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6GDTSiH000974
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 06:30:29 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1vnb4adar6-5
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 06:30:29 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Aniket Nagarnaik <aniketn@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 3/3] UPSTREAM: mwifiex: correct p2p and station interface counters
-Date: Thu, 16 Jul 2015 06:27:29 -0700
-Message-ID: <1437053249-18440-4-git-send-email-akarwar@marvell.com> (sfid-20150716_153032_463289_2BD195A4)
-In-Reply-To: <1437053249-18440-1-git-send-email-akarwar@marvell.com>
-References: <1437053249-18440-1-git-send-email-akarwar@marvell.com>
+	Sun, 12 Jul 2015 18:29:22 -0400
+Received: by qkdl129 with SMTP id l129so1082360qkd.0
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2015 15:29:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Sun, 12 Jul 2015 15:29:22 -0700
+Message-ID: <CANfj49X8iP48QLDirPgpgMiQavefd8tg=PPYZj_sdEMG5cT2JQ@mail.gmail.com> (sfid-20150713_002934_693257_AFDF2C53)
+Subject: [SOLVED] Re: Oops with rtl8187
+From: Oliver Kurth <okurth@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aniket Nagarnaik <aniketn@marvell.com>
+I have it solved now, I think - the issue was the cable :-P. I
+replaced the cable, and it's a lot more stable. With another cable I
+didn't see the Oops any more.
 
-While changing interface type from p2p client or p2p go to
-station, we should update counters for p2p interface and
-station interface. Also calling mwifiex_cfg80211_deinit_p2p
-method instead of mwifiex_cfg80211_init_p2p_client method to
-deinit p2p interface.
+On the RPi, I also need a cable with 2 USB plugs, one for extra power.
 
-Signed-off-by: Aniket Nagarnaik <aniketn@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Sorry for the noise - I should have tried another cable earlier.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index b15e4c7..b024015 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1115,8 +1115,10 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
- 	case NL80211_IFTYPE_P2P_GO:
- 		switch (type) {
- 		case NL80211_IFTYPE_STATION:
--			if (mwifiex_cfg80211_init_p2p_client(priv))
-+			if (mwifiex_cfg80211_deinit_p2p(priv))
- 				return -EFAULT;
-+			priv->adapter->curr_iface_comb.p2p_intf--;
-+			priv->adapter->curr_iface_comb.sta_intf++;
- 			dev->ieee80211_ptr->iftype = type;
- 			break;
- 		case NL80211_IFTYPE_ADHOC:
--- 
-1.8.1.4
+Oliver
 
+On Sun, Jul 12, 2015 at 11:33 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> On 07/12/2015 12:41 PM, Oliver Kurth wrote:
+>>
+>> I have a awus036h (Alfa) wireless usb adapter, which uses the rtl8187
+>> driver. I am trying to get it to work with a raspberry pi running
+>> Linux 4.0.7-v7+. It sometimes works for some time, but will always
+>> eventually crash, bringing the whole network down. I already upgraded
+>> from 3.18, where I had the same issue. I also tested it by connecting
+>> it to a Linux vm in VMware Fusion running Ubuntu 15.04 with kernel
+>> 3.19.0-21 and got the same Oops, so it is not a problem just confined
+>> to the raspberry or the arm architecture.
+>
+>
+> What was the architecture of the host machine that was running that Ubuntu
+> VM?
+>
+> Where are you getting driver 8192cu that is shown in the module list below.
+> If you were using the one that has been built into the kernel since 2008, it
+> would be named rtl8187. I have used that driver extensively on x86 and
+> x86_64 architectures, both in x86 hosts and VirtualBox VMs and I have never
+> seen this problem.
+>
+>
+> --snip--
+>
+>
+>> Oops: 817 [#1] PREEMPT SMP ARM
+>> Jul 11 06:00:23 raspberrypi kernel: [   41.753311] Modules linked in:
+>> xt_state iptable_filter ipt_MASQUERADE nf_nat_masquerade_ipv4
+>> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat
+>> nf_connt
+>> rack ip_tables x_tables snd_bcm2835 snd_pcm snd_seq snd_seq_device
+>> snd_timer snd arc4 rtl8187 eeprom_93cx6 mac80211 cfg80211 rfkill
+>> 8192cu uio_pdrv_genirq uio
+>
+>
+>
+> Larry
+>
