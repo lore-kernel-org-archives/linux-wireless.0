@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6910 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbbGMRz7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2015 13:55:59 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/3] ath10k: redefine rx_ppdu_end_common structure to cover qca99x0
-Date: Mon, 13 Jul 2015 10:54:07 -0700
-Message-ID: <1e1a39ed557a03deab1373c9df48b8a266f16692.1436809751.git.poh@qca.qualcomm.com> (sfid-20150713_195607_596722_04D7FF2C)
-In-Reply-To: <cover.1436809751.git.poh@qca.qualcomm.com>
-References: <cover.1436809751.git.poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:20159 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751413AbbGLRId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2015 13:08:33 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/10] iwlwifi: pcie: Fix bug in NIC's PM registers access
+Date: Sun, 12 Jul 2015 20:08:13 +0300
+Message-Id: <1436720900-18588-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150712_190848_450729_1F65C917)
+In-Reply-To: <1436720814.17999.2.camel@intel.com>
+References: <1436720814.17999.2.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rx_ppdu_end_common structure is valid for both of qca998x and
-qca6174, but not for qca99x0 since it has new additional members.
-Hence update the common structure to cover qca99x0 as well.
+From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+While cleanig the access to those hw-dependent registers,
+instead of using the product family type, wrong condition was added
+mistakenly and enabled 8000 family devices a forbidden access
+to HW registers, fix it.
+
+Fixes: 95411d0455cc ("iwlwifi: pcie: Control access to the NIC's PM registers via iwl_cfg")
+Signed-off-by: Dreyfuss, Haim <haim.dreyfuss@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/rx_desc.h | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index 492b5a5..6cb078d 100644
---- a/drivers/net/wireless/ath/ath10k/rx_desc.h
-+++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
-@@ -891,13 +891,13 @@ struct rx_ppdu_end_common {
- 	__le32 evm_p15;
- 	__le32 tsf_timestamp;
- 	__le32 wb_timestamp;
--	u8 locationing_timestamp;
--	u8 phy_err_code;
--	__le16 flags; /* %RX_PPDU_END_FLAGS_ */
--	__le32 info0; /* %RX_PPDU_END_INFO0_ */
- } __packed;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 43ae658..608ba1e 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -182,7 +182,7 @@ static void iwl_trans_pcie_write_shr(struct iwl_trans *trans, u32 reg, u32 val)
  
- struct rx_ppdu_end_qca988x {
-+	u8 locationing_timestamp;
-+	u8 phy_err_code;
-+	__le16 flags; /* %RX_PPDU_END_FLAGS_ */
-+	__le32 info0; /* %RX_PPDU_END_INFO0_ */
- 	__le16 bb_length;
- 	__le16 info1; /* %RX_PPDU_END_INFO1_ */
- } __packed;
-@@ -909,6 +909,10 @@ struct rx_ppdu_end_qca988x {
- #define RX_PPDU_END_RTT_NORMAL_MODE            BIT(31)
+ static void iwl_pcie_set_pwr(struct iwl_trans *trans, bool vaux)
+ {
+-	if (!trans->cfg->apmg_not_supported)
++	if (trans->cfg->apmg_not_supported)
+ 		return;
  
- struct rx_ppdu_end_qca6174 {
-+	u8 locationing_timestamp;
-+	u8 phy_err_code;
-+	__le16 flags; /* %RX_PPDU_END_FLAGS_ */
-+	__le32 info0; /* %RX_PPDU_END_INFO0_ */
- 	__le32 rtt; /* %RX_PPDU_END_RTT_ */
- 	__le16 bb_length;
- 	__le16 info1; /* %RX_PPDU_END_INFO1_ */
+ 	if (vaux && pci_pme_capable(to_pci_dev(trans->dev), PCI_D3cold))
 -- 
-1.9.1
+2.1.4
 
