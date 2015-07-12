@@ -1,259 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4075 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319AbbGFHkX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2015 03:40:23 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 01/13] wil6210: support boot loader struct v0 & v1
-Date: Mon,  6 Jul 2015 10:39:37 +0300
-Message-Id: <1436168389-3676-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_094028_817094_D8194733)
-In-Reply-To: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mga02.intel.com ([134.134.136.20]:20159 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750982AbbGLRId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2015 13:08:33 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 04/10] iwlwifi: pcie: don't panic if pcie transport alloc fails
+Date: Sun, 12 Jul 2015 20:08:14 +0300
+Message-Id: <1436720900-18588-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150712_190838_536851_50DF0B38)
+In-Reply-To: <1436720814.17999.2.camel@intel.com>
+References: <1436720814.17999.2.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are 2 versions of boot loader struct: v0 and v1.
-In the v1, boot loader build version added; as well as
-RF status.
+iwl_trans_pcie_alloc needs to return a non-zero value
+if it fails. Otherwise the iwl_drv_start will think that
+the allocation succeeded.
+Remove the duplication of err and ret variable and use ret
+which is the name we usually use in other places of the
+driver.
 
-Support both versions.
-
-Boot loader structure v1 has RF status; ignore RF error if firmware
-not going to be loaded; driver can still be used to interact with the HW
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Fixes: c278754a21e6 ("iwlwifi: mvm: support family 8000 B2/C steps")
+CC: <stable@vger.kernel.org> [4.1]
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/boot_loader.h | 57 +++++++++++++++++
- drivers/net/wireless/ath/wil6210/main.c        | 85 ++++++++++++++++++++------
- drivers/net/wireless/ath/wil6210/wil6210.h     | 10 ---
- 3 files changed, 125 insertions(+), 27 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/boot_loader.h
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 44 +++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/boot_loader.h b/drivers/net/wireless/ath/wil6210/boot_loader.h
-new file mode 100644
-index 0000000..0655eff
---- /dev/null
-+++ b/drivers/net/wireless/ath/wil6210/boot_loader.h
-@@ -0,0 +1,57 @@
-+/* Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+/* This file contains the definitions for the boot loader
-+ * for the Qualcomm "Sparrow" 60 Gigabit wireless solution.
-+ */
-+#ifndef BOOT_LOADER_EXPORT_H_
-+#define BOOT_LOADER_EXPORT_H_
-+
-+struct bl_dedicated_registers_v1 {
-+	__le32	boot_loader_ready;		/* 0x880A3C driver will poll
-+						 * this Dword until BL will
-+						 * set it to 1 (initial value
-+						 * should be 0)
-+						 */
-+	__le32	boot_loader_struct_version;	/* 0x880A40 BL struct ver. */
-+	__le16	rf_type;			/* 0x880A44 connected RF ID */
-+	__le16	rf_status;			/* 0x880A46 RF status,
-+						 * 0 is OK else error
-+						 */
-+	__le32	baseband_type;			/* 0x880A48 board type ID */
-+	u8	mac_address[6];			/* 0x880A4c BL mac address */
-+	u8	bl_version_major;		/* 0x880A52 BL ver. major */
-+	u8	bl_version_minor;		/* 0x880A53 BL ver. minor */
-+	__le16	bl_version_subminor;		/* 0x880A54 BL ver. subminor */
-+	__le16	bl_version_build;		/* 0x880A56 BL ver. build */
-+} __packed;
-+
-+/* the following struct is the version 0 struct */
-+
-+struct bl_dedicated_registers_v0 {
-+	__le32	boot_loader_ready;		/* 0x880A3C driver will poll
-+						 * this Dword until BL will
-+						 * set it to 1 (initial value
-+						 * should be 0)
-+						 */
-+#define BL_READY (1)	/* ready indication */
-+	__le32	boot_loader_struct_version;	/* 0x880A40 BL struct ver. */
-+	__le32	rf_type;			/* 0x880A44 connected RF ID */
-+	__le32	baseband_type;			/* 0x880A48 board type ID */
-+	u8	mac_address[6];			/* 0x880A4c BL mac address */
-+} __packed;
-+
-+#endif /* BOOT_LOADER_EXPORT_H_ */
-+
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index b9febab..65d15e2 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -21,6 +21,7 @@
- #include "wil6210.h"
- #include "txrx.h"
- #include "wmi.h"
-+#include "boot_loader.h"
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 608ba1e..fe61d0a 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -2459,7 +2459,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	struct iwl_trans_pcie *trans_pcie;
+ 	struct iwl_trans *trans;
+ 	u16 pci_cmd;
+-	int err;
++	int ret;
  
- #define WAIT_FOR_DISCONNECT_TIMEOUT_MS 2000
- #define WAIT_FOR_DISCONNECT_INTERVAL_MS 10
-@@ -565,7 +566,8 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	wil_halt_cpu(wil);
+ 	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
+ 				&pdev->dev, cfg, &trans_ops_pcie, 0);
+@@ -2474,8 +2474,8 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	spin_lock_init(&trans_pcie->ref_lock);
+ 	init_waitqueue_head(&trans_pcie->ucode_write_waitq);
  
- 	/* clear all boot loader "ready" bits */
--	W(RGF_USER_BL + offsetof(struct RGF_BL, ready), 0);
-+	W(RGF_USER_BL +
-+	  offsetof(struct bl_dedicated_registers_v0, boot_loader_ready), 0);
- 	/* Clear Fw Download notification */
- 	C(RGF_USER_USAGE_6, BIT(0));
+-	err = pci_enable_device(pdev);
+-	if (err)
++	ret = pci_enable_device(pdev);
++	if (ret)
+ 		goto out_no_pci;
  
-@@ -607,7 +609,8 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	/* wait until device ready. typical time is 20..80 msec */
- 	do {
- 		msleep(RST_DELAY);
--		x = R(RGF_USER_BL + offsetof(struct RGF_BL, ready));
-+		x = R(RGF_USER_BL + offsetof(struct bl_dedicated_registers_v0,
-+					     boot_loader_ready));
- 		if (x1 != x) {
- 			wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n", x1, x);
- 			x1 = x;
-@@ -617,7 +620,7 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 				x);
- 			return -ETIME;
+ 	if (!cfg->base_params->pcie_l1_allowed) {
+@@ -2491,23 +2491,23 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(36));
+-	if (!err)
+-		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(36));
+-	if (err) {
+-		err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-		if (!err)
+-			err = pci_set_consistent_dma_mask(pdev,
++	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(36));
++	if (!ret)
++		ret = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(36));
++	if (ret) {
++		ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (!ret)
++			ret = pci_set_consistent_dma_mask(pdev,
+ 							  DMA_BIT_MASK(32));
+ 		/* both attempts failed: */
+-		if (err) {
++		if (ret) {
+ 			dev_err(&pdev->dev, "No suitable DMA available\n");
+ 			goto out_pci_disable_device;
  		}
--	} while (x != BIT_BL_READY);
-+	} while (x != BL_READY);
- 
- 	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
- 
-@@ -641,25 +644,71 @@ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
- static int wil_get_bl_info(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
--	struct RGF_BL bl;
--
--	wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL), sizeof(bl));
--	le32_to_cpus(&bl.ready);
--	le32_to_cpus(&bl.version);
--	le32_to_cpus(&bl.rf_type);
--	le32_to_cpus(&bl.baseband_type);
-+	union {
-+		struct bl_dedicated_registers_v0 bl0;
-+		struct bl_dedicated_registers_v1 bl1;
-+	} bl;
-+	u32 bl_ver;
-+	u8 *mac;
-+	u16 rf_status;
-+
-+	bl_ver = R(RGF_USER_BL + offsetof(struct bl_dedicated_registers_v0,
-+					  boot_loader_struct_version));
-+	switch (bl_ver) {
-+	case 0:
-+		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
-+				     sizeof(bl.bl0));
-+		le32_to_cpus(&bl.bl0.boot_loader_ready);
-+		le32_to_cpus(&bl.bl0.boot_loader_struct_version);
-+		le32_to_cpus(&bl.bl0.rf_type);
-+		le32_to_cpus(&bl.bl0.baseband_type);
-+		mac = bl.bl0.mac_address;
-+		rf_status = 0; /* actually, unknown */
-+		wil_info(wil,
-+			 "Boot Loader struct v%d: MAC = %pM RF = 0x%08x bband = 0x%08x\n",
-+			 bl_ver, mac,
-+			 bl.bl0.rf_type, bl.bl0.baseband_type);
-+		wil_info(wil, "Boot Loader build unknown for struct v0\n");
-+		break;
-+	case 1:
-+		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
-+				     sizeof(bl.bl1));
-+		le32_to_cpus(&bl.bl1.boot_loader_ready);
-+		le32_to_cpus(&bl.bl1.boot_loader_struct_version);
-+		le16_to_cpus(&bl.bl1.rf_type);
-+		rf_status = le16_to_cpu(bl.bl1.rf_status);
-+		le32_to_cpus(&bl.bl1.baseband_type);
-+		le16_to_cpus(&bl.bl1.bl_version_subminor);
-+		le16_to_cpus(&bl.bl1.bl_version_build);
-+		mac = bl.bl1.mac_address;
-+		wil_info(wil,
-+			 "Boot Loader struct v%d: MAC = %pM RF = 0x%04x (status 0x%04x) bband = 0x%08x\n",
-+			 bl_ver, mac,
-+			 bl.bl1.rf_type, rf_status,
-+			 bl.bl1.baseband_type);
-+		wil_info(wil, "Boot Loader build %d.%d.%d.%d\n",
-+			 bl.bl1.bl_version_major, bl.bl1.bl_version_minor,
-+			 bl.bl1.bl_version_subminor, bl.bl1.bl_version_build);
-+		break;
-+	default:
-+		wil_err(wil, "BL: unsupported struct version 0x%08x\n", bl_ver);
-+		return -EINVAL;
-+	}
- 
--	if (!is_valid_ether_addr(bl.mac_address)) {
--		wil_err(wil, "BL: Invalid MAC %pM\n", bl.mac_address);
-+	if (!is_valid_ether_addr(mac)) {
-+		wil_err(wil, "BL: Invalid MAC %pM\n", mac);
- 		return -EINVAL;
  	}
  
--	ether_addr_copy(ndev->perm_addr, bl.mac_address);
-+	ether_addr_copy(ndev->perm_addr, mac);
- 	if (!is_valid_ether_addr(ndev->dev_addr))
--		ether_addr_copy(ndev->dev_addr, bl.mac_address);
--	wil_info(wil,
--		 "Boot Loader: ver = %d MAC = %pM RF = 0x%08x bband = 0x%08x\n",
--		 bl.version, bl.mac_address, bl.rf_type, bl.baseband_type);
-+		ether_addr_copy(ndev->dev_addr, mac);
-+
-+	if (rf_status) {/* bad RF cable? */
-+		wil_err(wil, "RF communication error 0x%04x",
-+			rf_status);
-+		return -EAGAIN;
-+	}
+-	err = pci_request_regions(pdev, DRV_NAME);
+-	if (err) {
++	ret = pci_request_regions(pdev, DRV_NAME);
++	if (ret) {
+ 		dev_err(&pdev->dev, "pci_request_regions failed\n");
+ 		goto out_pci_disable_device;
+ 	}
+@@ -2515,7 +2515,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	trans_pcie->hw_base = pci_ioremap_bar(pdev, 0);
+ 	if (!trans_pcie->hw_base) {
+ 		dev_err(&pdev->dev, "pci_ioremap_bar failed\n");
+-		err = -ENODEV;
++		ret = -ENODEV;
+ 		goto out_pci_release_regions;
+ 	}
  
- 	return 0;
+@@ -2527,9 +2527,9 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	trans_pcie->pci_dev = pdev;
+ 	iwl_disable_interrupts(trans);
+ 
+-	err = pci_enable_msi(pdev);
+-	if (err) {
+-		dev_err(&pdev->dev, "pci_enable_msi failed(0X%x)\n", err);
++	ret = pci_enable_msi(pdev);
++	if (ret) {
++		dev_err(&pdev->dev, "pci_enable_msi failed(0X%x)\n", ret);
+ 		/* enable rfkill interrupt: hw bug w/a */
+ 		pci_read_config_word(pdev, PCI_COMMAND, &pci_cmd);
+ 		if (pci_cmd & PCI_COMMAND_INTX_DISABLE) {
+@@ -2547,7 +2547,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	 */
+ 	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000) {
+ 		unsigned long flags;
+-		int ret;
+ 
+ 		trans->hw_rev = (trans->hw_rev & 0xfff0) |
+ 				(CSR_HW_REV_STEP(trans->hw_rev << 2) << 2);
+@@ -2591,13 +2590,14 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	/* Initialize the wait queue for commands */
+ 	init_waitqueue_head(&trans_pcie->wait_command_queue);
+ 
+-	if (iwl_pcie_alloc_ict(trans))
++	ret = iwl_pcie_alloc_ict(trans);
++	if (ret)
+ 		goto out_pci_disable_msi;
+ 
+-	err = request_threaded_irq(pdev->irq, iwl_pcie_isr,
++	ret = request_threaded_irq(pdev->irq, iwl_pcie_isr,
+ 				   iwl_pcie_irq_handler,
+ 				   IRQF_SHARED, DRV_NAME, trans);
+-	if (err) {
++	if (ret) {
+ 		IWL_ERR(trans, "Error allocating IRQ %d\n", pdev->irq);
+ 		goto out_free_ict;
+ 	}
+@@ -2617,5 +2617,5 @@ out_pci_disable_device:
+ 	pci_disable_device(pdev);
+ out_no_pci:
+ 	iwl_trans_free(trans);
+-	return ERR_PTR(err);
++	return ERR_PTR(ret);
  }
-@@ -735,6 +784,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		return rc;
- 
- 	rc = wil_get_bl_info(wil);
-+	if (rc == -EAGAIN && !load_fw) /* ignore RF error if not going up */
-+		rc = 0;
- 	if (rc)
- 		return rc;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index c63e4a3..b79ba49 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -127,16 +127,6 @@ struct RGF_ICR {
- 	u32 IMC; /* Mask Clear, write 1 to clear */
- } __packed;
- 
--struct RGF_BL {
--	u32 ready;		/* 0x880A3C bit [0] */
--#define BIT_BL_READY	BIT(0)
--	u32 version;		/* 0x880A40 version of the BL struct */
--	u32 rf_type;		/* 0x880A44 ID of the connected RF */
--	u32 baseband_type;	/* 0x880A48 ID of the baseband */
--	u8  mac_address[ETH_ALEN]; /* 0x880A4C permanent MAC */
--	u8 pad[2];
--} __packed;
--
- /* registers - FW addresses */
- #define RGF_USER_USAGE_1		(0x880004)
- #define RGF_USER_USAGE_6		(0x880018)
 -- 
 2.1.4
 
