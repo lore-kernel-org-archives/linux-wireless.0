@@ -1,80 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:33318 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691AbbGVSRo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 14:17:44 -0400
-Received: by wicmv11 with SMTP id mv11so92400662wic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:43 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/15] staging: vt6655: remove unnecessary variable skb_dma
-Date: Wed, 22 Jul 2015 19:16:36 +0100
-Message-Id: <1437589007-5479-4-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201749_958260_A01C1CC3)
-In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
-References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:20913 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751352AbbGLRG7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2015 13:06:59 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2015-06-15
+Date: Sun, 12 Jul 2015 17:06:56 +0000
+Message-ID: <1436720814.17999.2.camel@intel.com> (sfid-20150712_190704_133454_83F2D59A)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-skb_dma flips from 0 to the contents buf_dma.
-
-This is nolonger necessary so use buf_dma directly
-and remove skb_dma altogether.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/desc.h        | 1 -
- drivers/staging/vt6655/device_main.c | 3 +--
- drivers/staging/vt6655/rxtx.c        | 1 -
- 3 files changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 758eeb2..d568101 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -256,7 +256,6 @@ typedef struct tagDEVICE_TD_INFO {
- 	void *mic_hdr;
- 	struct sk_buff *skb;
- 	unsigned char *buf;
--	dma_addr_t          skb_dma;
- 	dma_addr_t          buf_dma;
- 	dma_addr_t          curr_desc;
- 	unsigned long dwReqCount;
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 695aa25..89611a7 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -970,7 +970,6 @@ static void device_free_tx_buf(struct vnt_private *pDevice, PSTxDesc pDesc)
- 	if (skb)
- 		ieee80211_tx_status_irqsafe(pDevice->hw, skb);
- 
--	pTDInfo->skb_dma = 0;
- 	pTDInfo->skb = NULL;
- 	pTDInfo->byFlags = 0;
- }
-@@ -1201,7 +1200,7 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	head_td->m_td1TD1.wReqCount =
- 			cpu_to_le16((u16)head_td->pTDInfo->dwReqCount);
- 
--	head_td->buff_addr = cpu_to_le32(head_td->pTDInfo->skb_dma);
-+	head_td->buff_addr = cpu_to_le32(head_td->pTDInfo->buf_dma);
- 
- 	/* Poll Transmit the adapter */
- 	wmb();
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 0ffa9bf..82380f3 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -1202,7 +1202,6 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 
- 	ptdCurr->pTDInfo->dwReqCount = cbReqCount;
- 	ptdCurr->pTDInfo->dwHeaderLength = cbHeaderLength;
--	ptdCurr->pTDInfo->skb_dma = ptdCurr->pTDInfo->buf_dma;
- 
- 	return cbHeaderLength;
- }
--- 
-2.1.4
-
+SGkgS2FsbGUsDQoNClRoaXMgaXMgdGhlIGZpcnN0IHB1bGwgcmVxdWVzdCBvZiBmaXhlcyBmb3Ig
+NC4yLiBBIGZldyBvZiB0aGUgcGF0Y2hlcw0KaGVyZSBhcmUgQ0NlZCB0byBzdGFibGUuIEJlc2lk
+ZXMgZml4IGZvciAoaGFyZCB0byBoaXQpIGNyYXNoZXMgdGhlcmUgYXJlDQphIGJ1bmNoIG9mIGZp
+eGVzIGZvciA4MDAwIGRldmljZXMgd2hpY2ggYXJlIG5vdyB1bmRlcmdvaW5nIHRoZSBmaW5hbA0K
+cm91bmQgb2YgdGVzdHMuDQpMZXQgbWUga25vdyBpZiB5b3UgaGF2ZSBpc3N1ZXMhDQoNCmVtbWFu
+dWVsDQoNCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCBlMDQ1NjcxN2U0ODNi
+YjhhOTQzMWI4MGE1YmRjOTlhOTI4YjliMDAzOg0KDQogIE1lcmdlIGdpdDovL2dpdC5rZXJuZWwu
+b3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9kYXZlbS9uZXQtbmV4dCAoMjAxNS0wNi0yNCAx
+Njo0OTo0OSAtMDcwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6
+DQoNCiAgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaXds
+d2lmaS9pd2x3aWZpLWZpeGVzLmdpdCB0YWdzL2l3bHdpZmktZm9yLWthbGxlLTIwMTUtMDYtMTIN
+Cg0KZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvIGJlODhhMWFkYTliOTdiYjAxNjE5NmI3
+ZjRhMWZjMmZlMmY3OTg1Mjk6DQoNCiAgaXdsd2lmaTogbnZtOiByZW1vdmUgbWFjIGFkZHJlc3Mg
+Ynl0ZSBzd2FwcGluZyBpbiA4MDAwIGZhbWlseSAoMjAxNS0wNy0xMiAxOTo1NDoxOSArMDMwMCkN
+Cg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLQ0KKiBidWcgZml4ZXMgc3BlY2lmaWMgZm9yIDgwMDAgc2VyaWVzDQoqIGZpeCBh
+IGNyYXNoIGluIHRpbWUgZXZlbnRzDQoqIGZpeCBhIGNyYXNoIGluIFBDSWUgdHJhbnNwb3J0DQoq
+IGZpeCBCVCBDb2V4IGNvZGUgdGhhdCBwcmV2ZW50ZWQgYXNzb2NpYXRpb24gb24gY2VydGFpbg0K
+ICAgICAgICBkZXZpY2VzICgzMTYwKS4NCiogcmV2ZXJ0IHRoZSBuZXcgUkJEIGFsbG9jYXRpb24g
+bW9kZWwgYmVjYXVzZSBpdCBpbnRyb2R1Y2VkDQoJYSBidWcgd2hlbiBydW5uaW5nIG9uIHdlYWsg
+Vk0gc2V0dXBzLg0KKiBhIG5ldyBkZXZpY2UgSURzDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkF2cmFoYW0gU3Rlcm4g
+KDEpOg0KICAgICAgaXdsd2lmaTogbXZtOiBBZGQgcHJlZW1wdGl2ZSBmbGFnIHRvIHNjaGV1bGRl
+ZCBzY2FuDQoNCkRyZXlmdXNzLCBIYWltICgxKToNCiAgICAgIGl3bHdpZmk6IHBjaWU6IEZpeCBi
+dWcgaW4gTklDJ3MgUE0gcmVnaXN0ZXJzIGFjY2Vzcw0KDQpFbW1hbnVlbCBHcnVtYmFjaCAoNCk6
+DQogICAgICBpd2x3aWZpOiBtdm06IGZpeCBhbnRlbm5hIHNlbGVjdGlvbiB3aGVuIEJUIGlzIGFj
+dGl2ZQ0KICAgICAgaXdsd2lmaTogcGNpZTogZG9uJ3QgcGFuaWMgaWYgcGNpZSB0cmFuc3BvcnQg
+YWxsb2MgZmFpbHMNCiAgICAgIGl3bHdpZmk6IHBjaWU6IHByZXBhcmUgdGhlIGRldmljZSBiZWZv
+cmUgYWNjZXNzaW5nIGl0DQogICAgICBSZXZlcnQgIml3bHdpZmk6IHBjaWU6IE5ldyBSQkQgYWxs
+b2NhdGlvbiBtb2RlbCINCg0KSm9oYW5uZXMgQmVyZyAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06
+IGNoZWNrIHRpbWUtZXZlbnQgdmlmIHRvIGF2b2lkIGJhZCBkZWxldGlvbg0KDQpMaWFkIEthdWZt
+YW4gKDEpOg0KICAgICAgaXdsd2lmaTogbnZtOiByZW1vdmUgbWFjIGFkZHJlc3MgYnl0ZSBzd2Fw
+cGluZyBpbiA4MDAwIGZhbWlseQ0KDQpNYXR0aSBHb3R0bGllYiAoMSk6DQogICAgICBpd2x3aWZp
+OiBtdm06IEF2b2lkIGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgd2hlbiBzZXR0aW5nIGlndGsNCg0K
+T3JlbiBHaXZvbiAoMSk6DQogICAgICBpd2x3aWZpOiBlZGl0IHRoZSAzMTY1IHNlcmllcyBhbmQg
+ODAwMCBzZXJpZXMgUENJIElEcw0KDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wt
+ZmguaCAgICAgICAgICB8ICAgNiArKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
+LW52bS1wYXJzZS5jICAgfCAgMTIgKystDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9t
+dm0vZnctYXBpLXNjYW4uaCB8ICAgMyArLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+bXZtL3NjYW4uYyAgICAgICAgfCAgIDMgKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+bXZtL3N0YS5jICAgICAgICAgfCAgIDMgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
+L212bS90aW1lLWV2ZW50LmMgIHwgICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
+aS9tdm0vdHguYyAgICAgICAgICB8ICAgMiArLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdp
+ZmkvcGNpZS9kcnYuYyAgICAgICAgfCAgIDUgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
+aWZpL3BjaWUvaW50ZXJuYWwuaCAgIHwgIDUxICsrLS0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvaXdsd2lmaS9wY2llL3J4LmMgICAgICAgICB8IDQxNCArKysrKysrKysrKysrKysrKyst
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5j
+ICAgICAgfCAgNTIgKysrKysrKy0tLS0tDQogMTEgZmlsZXMgY2hhbmdlZCwgMTQzIGluc2VydGlv
+bnMoKyksIDQxMCBkZWxldGlvbnMoLSkNCg0K
