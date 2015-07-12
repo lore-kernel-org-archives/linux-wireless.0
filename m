@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:34956 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757126AbbGGXnh convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:35879 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbbGLSdz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 19:43:37 -0400
+	Sun, 12 Jul 2015 14:33:55 -0400
+Received: by obdbs4 with SMTP id bs4so217756176obd.3
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2015 11:33:54 -0700 (PDT)
+Message-ID: <55A2B30F.4090606@lwfinger.net> (sfid-20150712_203858_437806_28730C11)
+Date: Sun, 12 Jul 2015 13:33:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <559BFB19.2080700@users.sourceforge.net>
-References: <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
- <558EB4DE.3080406@users.sourceforge.net> <20150707023103.GA22043@kroah.com>
- <559B6FF8.9010704@users.sourceforge.net> <CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
- <559B85CD.6040200@users.sourceforge.net> <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
- <559BBDD6.7040808@users.sourceforge.net> <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
- <559BFB19.2080700@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 8 Jul 2015 09:43:17 +1000
-Message-ID: <CAGRGNgXTN8AxBNNfie4KvvErOXm3LUyL_QLLWQ6TN_wJgJkD-A@mail.gmail.com> (sfid-20150708_014407_621905_7650812C)
-Subject: Re: Clarification for the use of additional fields in the message body
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Frans Klaver <fransklaver@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Chris Park <chris.park@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Oliver Kurth <okurth@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Oops with rtl8187
+References: <CANfj49UXDJACBjSgdd8RE6=cQ43KMBapOCh7qaQ00jZQZ2bOPQ@mail.gmail.com>
+In-Reply-To: <CANfj49UXDJACBjSgdd8RE6=cQ43KMBapOCh7qaQ00jZQZ2bOPQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Markus,
+On 07/12/2015 12:41 PM, Oliver Kurth wrote:
+> I have a awus036h (Alfa) wireless usb adapter, which uses the rtl8187
+> driver. I am trying to get it to work with a raspberry pi running
+> Linux 4.0.7-v7+. It sometimes works for some time, but will always
+> eventually crash, bringing the whole network down. I already upgraded
+> from 3.18, where I had the same issue. I also tested it by connecting
+> it to a Linux vm in VMware Fusion running Ubuntu 15.04 with kernel
+> 3.19.0-21 and got the same Oops, so it is not a problem just confined
+> to the raspberry or the arm architecture.
 
-On Wed, Jul 8, 2015 at 2:15 AM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
->> I can't remember ever changing or explicitly preserving the commit date.
->> I don't think I care enough.
->
-> Would any more software developers and maintainers like to share
-> their experiences around such details?
->
-> When do commit timestamps become relevant as a documentation item
-> for contribution authorship?
+What was the architecture of the host machine that was running that Ubuntu VM?
 
-They are never relevant.
+Where are you getting driver 8192cu that is shown in the module list below. If 
+you were using the one that has been built into the kernel since 2008, it would 
+be named rtl8187. I have used that driver extensively on x86 and x86_64 
+architectures, both in x86 hosts and VirtualBox VMs and I have never seen this 
+problem.
 
-"When" a commit happened is never relevant except in relation to other
-things, at which point the actual date and time is almost completely
-irrelevant.
 
-Just submit your patches using git-format-patch or git-send-email and
-friends. There's a file in the documentation directory of the kernel
-tree describing submitting patches and email client setup. Read them
-both, do what they say without anything extra.
+--snip--
 
->> Remembering the author separately from the committer is something
->> git does by design anyway.
->
-> Do you usually just reuse a procedure from a well-known command
-> for which a description is provided like the following?
-> http://git-scm.com/docs/git-am
-> '…
-> "From: " and "Subject: " lines starting the body override
-> the respective commit author name and title values
-> taken from the headers.
-> …'
->
-> Will further fields be eventually mentioned there?
+> Oops: 817 [#1] PREEMPT SMP ARM
+> Jul 11 06:00:23 raspberrypi kernel: [   41.753311] Modules linked in:
+> xt_state iptable_filter ipt_MASQUERADE nf_nat_masquerade_ipv4
+> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat
+> nf_connt
+> rack ip_tables x_tables snd_bcm2835 snd_pcm snd_seq snd_seq_device
+> snd_timer snd arc4 rtl8187 eeprom_93cx6 mac80211 cfg80211 rfkill
+> 8192cu uio_pdrv_genirq uio
 
-Why? Just do what is described in SubmittingPatches. Your attempts to
-"improve" on the system are unnecessary and annoying people. The
-instructions there are the recommended way to do things for a reason.
 
-Thanks,
+Larry
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
