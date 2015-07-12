@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36070 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752918AbbGBLuF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2015 07:50:05 -0400
-Received: by igrv9 with SMTP id v9so94480347igr.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 04:50:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1435837125.2285.7.camel@sipsolutions.net>
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
- <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
- <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
- <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
- <1435082418.2777.11.camel@ipeer-box> <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com>
- <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
- <1435822032.2285.2.camel@sipsolutions.net> <CABPxzYLVDUsFu3WwCFzYjE-sZtARiDSM6iGRu6RSFxeJ7k=rOw@mail.gmail.com>
- <1435837125.2285.7.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 2 Jul 2015 17:19:45 +0530
-Message-ID: <CABPxzYLP=GUVL6BAGYRn0Btu5pFRVNiBKrvifO-FS2jmLa2kUw@mail.gmail.com> (sfid-20150702_135010_652884_CA7183BB)
-Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:50075 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751160AbbGLRIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2015 13:08:34 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/10] iwlwifi: mvm: check time-event vif to avoid bad deletion
+Date: Sun, 12 Jul 2015 20:08:16 +0300
+Message-Id: <1436720900-18588-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150712_190843_173612_A934B0AD)
+In-Reply-To: <1436720814.17999.2.camel@intel.com>
+References: <1436720814.17999.2.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 2, 2015 at 5:08 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2015-07-02 at 14:32 +0530, Krishna Chaitanya wrote:
->>
->> We have also found another issue with direct probe.
->> Some of the AP's are not setting sequence number in the probe
->> responses
->> so in case of a retry they are dropped as duplicate by rx_h_check
->> causing direct probe to fail.
->
-> I don't quite see how that can be an issue, since the RETRY bit
-> shouldn't be set??
+From: Johannes Berg <johannes.berg@intel.com>
 
-If retry bit is not set, then it works, but in a noisy channel 2.4GHz
-we are seeing high retries causing direct probes to fail 90% of the
-time.
+The time event is initialized relatively late in interface (mvmvif)
+initialization, so it's possible to fail before that happens. As a
+consequence, the driver will crash if it ever tries to delete this
+time event in case initialization was unsuccessful.
 
-The AP in case is Marvel AP RD88W8787 (WFA Testbed).
+Avoid this by using the time event's vif pointer to indicate validity.
+The vif pointer is != NULL whenever the id is != TE_MAX, except for
+this special error case where the vif pointer will have the correct
+property (as the whole memory is cleared on allocation) whereas the
+id is 0, causing a crash in trying to delete the time event from the
+list.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/time-event.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+index d24b6a8..e472729 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+@@ -86,7 +86,7 @@ void iwl_mvm_te_clear_data(struct iwl_mvm *mvm,
+ {
+ 	lockdep_assert_held(&mvm->time_event_lock);
+ 
+-	if (te_data->id == TE_MAX)
++	if (!te_data->vif)
+ 		return;
+ 
+ 	list_del(&te_data->list);
+-- 
+2.1.4
+
