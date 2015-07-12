@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:34170 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111AbbG3MKl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 08:10:41 -0400
-Received: by pacan13 with SMTP id an13so23172245pac.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2015 05:10:41 -0700 (PDT)
-Date: Thu, 30 Jul 2015 17:40:32 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
-	leo.kim@atmel.com
-Subject: Re: [PATCH V2 3/5] staging: wilc1000: remove warnings on missing
- blank line
-Message-ID: <20150730121032.GB12823@sudip-pc> (sfid-20150730_141045_227593_B641B63F)
-References: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
- <1438247414-19708-4-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438247414-19708-4-git-send-email-tony.cho@atmel.com>
+Received: from mga02.intel.com ([134.134.136.20]:49208 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751061AbbGLRId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2015 13:08:33 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 05/10] iwlwifi: pcie: prepare the device before accessing it
+Date: Sun, 12 Jul 2015 20:08:15 +0300
+Message-Id: <1436720900-18588-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150712_190846_556411_044D7144)
+In-Reply-To: <1436720814.17999.2.camel@intel.com>
+References: <1436720814.17999.2.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2015 at 06:10:12PM +0900, Tony Cho wrote:
-> This patch removes the warnings reported by checkpatch.pl on missing
-> a blank line after declarations.
-> 
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
-> V2: This patch doesn't have a difference with the first one. However,
-> it's resent becasue not accepted with the 9th patch.
-> ---
->  drivers/staging/wilc1000/wilc_sdio.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-> index ee1cbd1..50be2a1 100644
-> --- a/drivers/staging/wilc1000/wilc_sdio.c
-> +++ b/drivers/staging/wilc1000/wilc_sdio.c
-> @@ -780,6 +780,7 @@ static int sdio_clear_int_ext(uint32_t val)
->  
->  	if (g_sdio.has_thrpt_enh3) {
->  		uint32_t reg;
-> +
->  		reg = val & ((1 << MAX_NUN_INT_THRPT_ENH2) - 1);
->  
->  		/* select VMM table 0 */
-This patch will not apply. After your first patch (1/5)
-if (g_sdio.has_thrpt_enh3) has become if(g_sdio.has_thrpt_enh3).
+For 8000 series, we need to access the device to know what
+firmware to load. Before we do so, we need to prepare the
+device otherwise we might not be able to access the
+hardware.
 
-regards
-sudip
+Fixes: c278754a21e6 ("iwlwifi: mvm: support family 8000 B2/C steps")
+CC: <stable@vger.kernel.org> [4.1]
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index fe61d0a..6203c4a 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -2551,6 +2551,12 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		trans->hw_rev = (trans->hw_rev & 0xfff0) |
+ 				(CSR_HW_REV_STEP(trans->hw_rev << 2) << 2);
+ 
++		ret = iwl_pcie_prepare_card_hw(trans);
++		if (ret) {
++			IWL_WARN(trans, "Exit HW not ready\n");
++			goto out_pci_disable_msi;
++		}
++
+ 		/*
+ 		 * in-order to recognize C step driver should read chip version
+ 		 * id located at the AUX bus MISC address space.
+-- 
+2.1.4
+
