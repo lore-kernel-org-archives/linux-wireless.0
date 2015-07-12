@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:36147 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585AbbGWDdM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 23:33:12 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v2 3/5] wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz) band for Taiwan (TW)
-Date: Thu, 23 Jul 2015 11:32:58 +0800
-Message-Id: <1437622380-4154-4-git-send-email-wens@csie.org> (sfid-20150723_053325_154988_59508A1D)
-In-Reply-To: <1437622380-4154-1-git-send-email-wens@csie.org>
-References: <1437622380-4154-1-git-send-email-wens@csie.org>
+Received: from mga02.intel.com ([134.134.136.20]:20159 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751160AbbGLRIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2015 13:08:32 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/10] iwlwifi: mvm: Avoid accessing Null pointer when setting igtk
+Date: Sun, 12 Jul 2015 20:08:12 +0300
+Message-Id: <1436720900-18588-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150712_190836_441130_76E09804)
+In-Reply-To: <1436720814.17999.2.camel@intel.com>
+References: <1436720814.17999.2.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taiwan's Ministry of Transportation and Communications revised its
-frequency allocation rules [1] on 2014/11/17, opening up 5150 ~ 5250
-MHz to U-NII applications.
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-Taiwan's regulatory body, NCC, officially stated [3][4] that until
-the technical regulatory standard [2] are updated to cover this part
-of the spectrum, FCC rules (part 15E, 15.407, effective 2014/06/02)
-shall serve in its place.
+Sometimes when setting an igtk key the station maybe NULL.
+In the of case igtk the function will skip to the end, and
+try to print sta->addr, if sta is Null - we will access a
+Null pointer.
 
-Also add AUTO-BW to this and the next (5250 ~ 5350 MHz) rule, so the
-system can actually use VHT160 channels spanning these two rules.
+Avoid accessing a Null pointer when setting a igtk key &
+the sta == NULL, and print a default MAC address instead.
 
-[1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
-[2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-[3] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
-[4] Proposal #10312260 (p.6, Chinese),
-    http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- db.txt | 3 ++-
+ drivers/net/wireless/iwlwifi/mvm/sta.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 8a05c57..cadd52c 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1127,7 +1127,8 @@ country TT: DFS-FCC
- #   (section 3.10.1, 4.7)
- country TW: DFS-JP
- 	(2400 - 2483.5 @ 40), (30)
--	(5250 - 5350 @ 80), (17), DFS
-+	(5150 - 5250 @ 80), (30), AUTO-BW
-+	(5250 - 5350 @ 80), (17), DFS, AUTO-BW
- 	(5470 - 5725 @ 160), (23), DFS
- 	(5725 - 5850 @ 80), (30)
-  
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index d68dc69..26f076e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -1401,6 +1401,7 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
+ 	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
+ 	u8 sta_id;
+ 	int ret;
++	static const u8 __maybe_unused zero_addr[ETH_ALEN] = {0};
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -1467,7 +1468,7 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
+ end:
+ 	IWL_DEBUG_WEP(mvm, "key: cipher=%x len=%d idx=%d sta=%pM ret=%d\n",
+ 		      keyconf->cipher, keyconf->keylen, keyconf->keyidx,
+-		      sta->addr, ret);
++		      sta ? sta->addr : zero_addr, ret);
+ 	return ret;
+ }
+ 
 -- 
 2.1.4
 
