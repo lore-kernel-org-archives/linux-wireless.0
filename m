@@ -1,69 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39006 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbbG2VBY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 17:01:24 -0400
-Date: Wed, 29 Jul 2015 14:01:23 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
-	leo.kim@atmel.com
-Subject: Re: [PATCH 21/21] staging: wilc1000: update TODO list of WILC1000
-Message-ID: <20150729210123.GA25941@kroah.com> (sfid-20150729_230127_808959_272201F0)
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
- <1438073261-28315-22-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438073261-28315-22-git-send-email-tony.cho@atmel.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:55856 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751038AbbGMK2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2015 06:28:42 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Bruno Randolf <br1@einfach.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/2] average: provide macro to create static EWMA
+Date: Mon, 13 Jul 2015 12:28:37 +0200
+Message-Id: <1436783318-15576-1-git-send-email-johannes@sipsolutions.net> (sfid-20150713_122845_592200_28FE13FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 05:47:40PM +0900, Tony Cho wrote:
-> The TODO list is updated for the WILC1000 kernel driver. The TODO list
-> contains many items listed in time sequence.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I don't understand what you mean by "in time sequence"
+Having the EWMA parameters stored in the runtime struct imposes
+memory requirements for the constant values that could just be
+inlined in the code. This particularly makes sense if there are
+a lot of such structs, for example in mac80211 in the station
+table where each station has a number of these in an array, and
+there can be many stations.
 
-> 
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
->  drivers/staging/wilc1000/TODO | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
-> index 95199d8..6b745cd 100644
-> --- a/drivers/staging/wilc1000/TODO
-> +++ b/drivers/staging/wilc1000/TODO
-> @@ -1,14 +1,15 @@
->  TODO:
-> -- remove the defined feature as kernel versions
-> -- remove OS wrapper functions
-> -- remove custom debug and tracing functions
-> +- remove most of warnings reported by checkpatch.pl
+Provide a macro DECLARE_EWMA() that declares the necessary struct
+and inline functions to access it with the parameters hard-coded;
+using this also means the user no longer needs to 'select AVERAGE'
+as it's entirely self-contained.
 
-"most"?  Why not all?
+In the mac80211 case, on x86-64, this actually slightly *reduces*
+code size, while also saving 80 bytes of runtime memory per sta.
 
-> +- remove OS wrapper functions to use kernel API as is
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/average.h | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-Why reword this, the original line is just fine.
+diff --git a/include/linux/average.h b/include/linux/average.h
+index c6028fd742c1..802adeab7037 100644
+--- a/include/linux/average.h
++++ b/include/linux/average.h
+@@ -27,4 +27,43 @@ static inline unsigned long ewma_read(const struct ewma *avg)
+ 	return avg->internal >> avg->factor;
+ }
+ 
++#define DECLARE_EWMA(name, _factor, _weight)				\
++	struct ewma_##name {						\
++		unsigned long internal;					\
++	};								\
++	static inline void ewma_##name##_init(struct ewma_##name *e)	\
++	{								\
++		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
++		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
++		BUILD_BUG_ON(!is_power_of_2(_factor));			\
++		BUILD_BUG_ON(!is_power_of_2(_weight));			\
++		e->internal = 0;					\
++	}								\
++	static inline unsigned long					\
++	ewma_##name##_read(struct ewma_##name *e)			\
++	{								\
++		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
++		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
++		BUILD_BUG_ON(!is_power_of_2(_factor));			\
++		BUILD_BUG_ON(!is_power_of_2(_weight));			\
++		return e->internal >> ilog2(_factor);			\
++	}								\
++	static inline void ewma_##name##_add(struct ewma_##name *e,	\
++					     unsigned long val)		\
++	{								\
++		unsigned long internal = ACCESS_ONCE(e->internal);	\
++		unsigned long weight = ilog2(_weight);			\
++		unsigned long factor = ilog2(_factor);			\
++									\
++		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
++		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
++		BUILD_BUG_ON(!is_power_of_2(_factor));			\
++		BUILD_BUG_ON(!is_power_of_2(_weight));			\
++									\
++		ACCESS_ONCE(e->internal) = internal ?			\
++			(((internal << weight) - internal) +		\
++				(val << factor)) >> weight :		\
++			(val << factor);				\
++	}
++
+ #endif /* _LINUX_AVERAGE_H */
+-- 
+2.1.4
 
->  - rework comments and function headers(also coding style)
->  - replace all semaphores with mutexes or completions
-> -- make spi and sdio components coexist in one build
-
-Why remove this item?  It's not done and needs to be done.
-
-> +- remove compile warnings related to 64 bit machine
-
-That's a given, I'm not enabling the build of the driver until that
-happens.  Please work on that next, coding style fixes can happen after
-that.  As of right now, this driver is marked BROKEN.
-
-thanks,
-
-greg k-h
