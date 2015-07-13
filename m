@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51879 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932366AbbGQJKB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 05:10:01 -0400
-Message-ID: <1437124199.1933.6.camel@sipsolutions.net> (sfid-20150717_111008_750218_CA1695C5)
-Subject: Re: [PATCH] mac80211: don't clear all tx flags when requeing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 17 Jul 2015 11:09:59 +0200
-In-Reply-To: <1437124038.1933.4.camel@sipsolutions.net> (sfid-20150717_110753_137870_576AC4E6)
-References: <1435823996-32510-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150702_100018_000929_8F93B7A2) <1437123955.1933.3.camel@sipsolutions.net>
-	 (sfid-20150717_110614_486475_B0C53BCA) <1437124038.1933.4.camel@sipsolutions.net>
-	 (sfid-20150717_110753_137870_576AC4E6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:33714 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbbGMFms (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2015 01:42:48 -0400
+Received: by widic2 with SMTP id ic2so2480330wid.0
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2015 22:42:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CALhHN=o5b7rZUW9Wr4K0P2d3XreCO2hcf5t8+0eArwAVfWSUKQ@mail.gmail.com>
+References: <CALhHN=o5b7rZUW9Wr4K0P2d3XreCO2hcf5t8+0eArwAVfWSUKQ@mail.gmail.com>
+Date: Mon, 13 Jul 2015 07:42:46 +0200
+Message-ID: <CALhHN=ruLW=hfnAO5A9p6Ggu+KtrcwKSTBomnOTAym7b5jpBOg@mail.gmail.com> (sfid-20150713_074255_278366_5B7ACA2D)
+Subject: Re: ath9k: multicast don't work when: two STA (sta + p2p_client) + hwcrypt
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Sujith Manoharan <sujith@msujith.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-07-17 at 11:07 +0200, Johannes Berg wrote:
-> 
-> > > Once (a) is not stripped (b) becomes important
-> > > because it's the main condition to clear the
-> > > Service Period bit of the station when Tx status
-> > > for the released frame is reported back.
-> > > 
-> > > This problem was observed with ath9k acting as P2P
-> > > GO in some testing scenarios but isn't limited to
-> > > it. AP operation with mac80211 based Tx A-MPDU
-> > > control combined with clients using PS-Poll frames
-> > > is subject to this race.
-> > 
-> > I'm not sure I quite understand - how is the aggregation teardown
-> > causing frame filtering?
-> > 
-> 
-> Never mind, I was looking at the wrong code. I'll apply this.
-> 
+On 18 June 2015 at 10:06, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
+> STA iface:
+> ath: phy0: Set HW Key 0 (pairwise) vif: 2c:d0:5a:d3:f1:e9 sta:
+> f4:b7:e2:38:83:f3 - idx: 4
+> ath: phy0: Set HW Key 0 (group) vif: 2c:d0:5a:d3:f1:e9 sta:
+> (null) - idx: 1
+>
+> P2P_CLIENT iface:
+> ath: phy0: Set HW Key 0 (pairwise) vif: 2e:d0:5a:d3:f1:e9 sta:
+> 0c:8b:fd:1e:58:9f - idx: 68
+> ath: phy0: Set HW Key 0 (group) vif: 2e:d0:5a:d3:f1:e9 sta:
+> (null) - idx: 1
+>
+> Seems we overwrite multicast hw key - both idx = 1
+>
+> 1) First patch I made:
+>
+> diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
+> index 1816b4e..b15873b 100644
+> --- a/drivers/net/wireless/ath/key.c
+> +++ b/drivers/net/wireless/ath/key.c
+> @@ -507,6 +507,15 @@ int ath_key_config(struct ath_common *common,
+>
+>         if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+>                 switch (vif->type) {
+> +               case NL80211_IFTYPE_STATION:
+> +                       idx = key->keyidx;
+> +                       if (vif->bss_conf.bssid) {
+> +                               ether_addr_copy(gmac, bssid);
+> +                               gmac[0] |= 0x01;
+> +                               mac = gmac;
+> +                               idx =
+> ath_reserve_key_cache_slot(common, key->cipher);
+> +                       }
+> +                       break;
+>                 case NL80211_IFTYPE_AP:
+>                         memcpy(gmac, vif->addr, ETH_ALEN);
+>                         gmac[0] |= 0x01;
+>
+> Multicast works fine for STA/P2P_CLIENT but multicast rekeying don't
+> work correctly, while we have 2 multicast keys installed for the same
+> bssid (eg. idx 6, 68) after rekey. Seem hw choose always key with
+> lowest idx - hw decrypt mcast packects correctly every second rekey
+> :-)
+>
+> BTW, this needs attention to be sure hw decrypt frames correctly - I
+> am checking RX_FLAG_DECRYPTED flag, while often HW send crypted
+> packets and mac80211 decrypt them correctly (every second rekey for
+> example). So, some mixture of hwcrypt and swcrypt is seen :)
+>
+> 2) works perfectly when ath9k loaded with nohwcrypt=1
+>
+> Any ideas how to solve this correctly (is it possible with hwcrypt at all)?
+>
+> BR
+> Janusz
 
-However, I'd like to ask you to look at this again - I can see how it
-fixes the problem now, but it seems like a fairly unreliable fix since
-the frame is sent through TX processing again, and you're relying on
-that preserving a flag that's otherwise marked temporary...
-
-So I think it may be better to adjust the station flags in this case to
-let a new (the same) frame be the ps-poll response again.
-
-johannes
+Adding ath9k-devel@lists.ath9k.org
