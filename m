@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:36212 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556AbbGWAWA convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6910 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbbGMRz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 20:22:00 -0400
-Received: by iehx8 with SMTP id x8so100264503ieh.3
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 17:21:59 -0700 (PDT)
+	Mon, 13 Jul 2015 13:55:59 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/3] ath10k: redefine rx_ppdu_end_common structure to cover qca99x0
+Date: Mon, 13 Jul 2015 10:54:07 -0700
+Message-ID: <1e1a39ed557a03deab1373c9df48b8a266f16692.1436809751.git.poh@qca.qualcomm.com> (sfid-20150713_195607_596722_04D7FF2C)
+In-Reply-To: <cover.1436809751.git.poh@qca.qualcomm.com>
+References: <cover.1436809751.git.poh@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <BCEC8D504C0E1149AC1D24D3F78D48EC3CB64C5B@MARCM-SBS2011.marcmltd.local>
-References: <BCEC8D504C0E1149AC1D24D3F78D48EC3CB64C5B@MARCM-SBS2011.marcmltd.local>
-Date: Thu, 23 Jul 2015 02:21:59 +0200
-Message-ID: <CACna6rzV-BwBHo_dO1ersLtO2JVHRqAyyB9rTqt0hp8TuRgDkA@mail.gmail.com> (sfid-20150723_022218_432520_93607D1C)
-Subject: Re: Patch for backtrace dump WARNING: CPU: 0 PID: 668 at net/wireless/sme.c:655
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Marc Murphy <marcmltd@marcm.co.uk>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 July 2015 at 22:14, Marc Murphy <marcmltd@marcm.co.uk> wrote:
-> I have been looking at an issue with WPA/WPA2 and joining a specific Access Point SSID that also has a hidden SSID available.  This was with 3.14.47 kernel but it is also present in all 3.x kernels.
-> When the AP's are being scanned it there is a warning generated stating that the bssid is empty yet when you inspect what is actually happening in the code it is because there is an SSID string but its length is 0 so it fails to return when it should.
->
-> in net/wireless/scan.c there is a function is_bss that should return the cfg80211_bss struct when it finds the matching details.  When the bssid is found but the SSID is empty (valid string "" but with length of 0) it passes through when it should return as the bssid matches.
->
-> Patch is as follows:
+rx_ppdu_end_common structure is valid for both of qca998x and
+qca6174, but not for qca99x0 since it has new additional members.
+Hence update the common structure to cover qca99x0 as well.
 
-Please follow
-Documentation/SubmittingPatches
-Documentation/CodingStyle
-(and resend your patch)
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/rx_desc.h | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-You need a clear commit messages, description and use kernel's coding style.
+diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
+index 492b5a5..6cb078d 100644
+--- a/drivers/net/wireless/ath/ath10k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
+@@ -891,13 +891,13 @@ struct rx_ppdu_end_common {
+ 	__le32 evm_p15;
+ 	__le32 tsf_timestamp;
+ 	__le32 wb_timestamp;
+-	u8 locationing_timestamp;
+-	u8 phy_err_code;
+-	__le16 flags; /* %RX_PPDU_END_FLAGS_ */
+-	__le32 info0; /* %RX_PPDU_END_INFO0_ */
+ } __packed;
+ 
+ struct rx_ppdu_end_qca988x {
++	u8 locationing_timestamp;
++	u8 phy_err_code;
++	__le16 flags; /* %RX_PPDU_END_FLAGS_ */
++	__le32 info0; /* %RX_PPDU_END_INFO0_ */
+ 	__le16 bb_length;
+ 	__le16 info1; /* %RX_PPDU_END_INFO1_ */
+ } __packed;
+@@ -909,6 +909,10 @@ struct rx_ppdu_end_qca988x {
+ #define RX_PPDU_END_RTT_NORMAL_MODE            BIT(31)
+ 
+ struct rx_ppdu_end_qca6174 {
++	u8 locationing_timestamp;
++	u8 phy_err_code;
++	__le16 flags; /* %RX_PPDU_END_FLAGS_ */
++	__le32 info0; /* %RX_PPDU_END_INFO0_ */
+ 	__le32 rtt; /* %RX_PPDU_END_RTT_ */
+ 	__le16 bb_length;
+ 	__le16 info1; /* %RX_PPDU_END_INFO1_ */
+-- 
+1.9.1
+
