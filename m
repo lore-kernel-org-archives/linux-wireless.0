@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34775 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126AbbGXOiU (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:34665 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096AbbGMHfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 10:38:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 03/13] wil6210: debugfs for channel survey
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1436081080-27305-4-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Fri, 24 Jul 2015 17:38:14 +0300
-In-Reply-To: <1436081080-27305-4-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Sun, 5 Jul 2015 10:24:30 +0300")
-Message-ID: <87zj2ld3jd.fsf@kamboji.qca.qualcomm.com> (sfid-20150724_163823_892532_9AA3E6E6)
+	Mon, 13 Jul 2015 03:35:13 -0400
+Received: by wgkl9 with SMTP id l9so18658023wgk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2015 00:35:12 -0700 (PDT)
+Received: from [1.1.8.48] (206.Red-213-97-173.staticIP.rima-tde.net. [213.97.173.206])
+        by smtp.googlemail.com with ESMTPSA id h9sm17003021wjx.20.2015.07.13.00.35.12
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 13 Jul 2015 00:35:12 -0700 (PDT)
+Message-ID: <55A36A2E.70005@gmail.com> (sfid-20150713_093518_350946_00A43FCE)
+Date: Mon, 13 Jul 2015 09:35:10 +0200
+From: jorge Dominguez <jmadomrod@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+Subject: Realtek RTL8723as Blueetooth driver
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+Hello,
 
-> Print channel survey results on the debugfs. New entry
-> named "survey"
->
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Currently we have a development proyect with IMX6 freescale processor 
+and a rtl8723as wifi+BT chipset to provide wifi and BT 4.0 funcionality.
 
-Why? We have nl80211 command for this, if I understood correctly this
-more or less duplicates that functionality?
+We have problems with UART driver for bluetooth on rtl8723as chipset 
+with Low Energy BLE devices. Connections with BLE dont work properly. We 
+believe is a rtl8723a_fw issue.
 
--- 
-Kalle Valo
+Could anybody provide reference for Bluetooth driver for rtl8723as chipset?
+
+Best Regards,
+Jorge
