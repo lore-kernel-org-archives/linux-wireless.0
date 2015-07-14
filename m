@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:36031 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754628AbbGXRWN (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:36761 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589AbbGNNUH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 13:22:13 -0400
-Message-ID: <55B2743F.6060304@synopsys.com> (sfid-20150724_192234_983109_C7DA6679)
-Date: Fri, 24 Jul 2015 20:22:07 +0300
-From: Vineet Gupta <vgupta@synopsys.com>
+	Tue, 14 Jul 2015 09:20:07 -0400
+Message-ID: <55A50C82.4040107@lwfinger.net> (sfid-20150714_152038_139795_5956DA6B)
+Date: Tue, 14 Jul 2015 08:20:02 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Vineet Gupta <Vineet.Gupta1@synopsys.com>
-CC: Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
-References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>	<1436429599-10762-3-git-send-email-vgupta@synopsys.com> <87twstbi9p.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87twstbi9p.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+To: Bastien Nocera <hadess@hadess.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rfkill-gpio: Add support for the Realtek 8723 BT
+References: <1436825494.20249.47.camel@hadess.net>
+In-Reply-To: <1436825494.20249.47.camel@hadess.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 24 July 2015 08:02 PM, Kalle Valo wrote:
-> Vineet Gupta <Vineet.Gupta1@synopsys.com> writes:
-> 
->> > There's already a generic implementation so use that instead.
->> > ---
->> > I'm not sure if the driver usage of atomic_or?() is correct in terms of
->> > storage size of @val for 64 bit arches.
->> >
->> > Assuming LP64 programming model for linux on say x86_64: atomic_or()
->> > callers in this driver use long (sana 64 bit) storage and pass it to
->> > atomic_orr/atomic_or which downcasts it to 32 bits. Is that OK ?
->> > ---
->> > Cc: Brett Rudley <brudley@broadcom.com>
->> > Cc: Arend van Spriel <arend@broadcom.com>
->> > Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
->> > Cc: Hante Meuleman <meuleman@broadcom.com>
->> > Cc: Kalle Valo <kvalo@codeaurora.org>
->> > Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> > Cc: Daniel Kim <dekim@broadcom.com>
->> > Cc: linux-wireless@vger.kernel.org
->> > Cc: brcm80211-dev-list@broadcom.com
->> > Cc: Peter Zijlstra <peterz@infradead.org>
->> > Cc: Ingo Molnar <mingo@kernel.org>
->> > Cc: netdev@vger.kernel.org
->> > Cc: linux-arch@vger.kernel.org
->> > Cc: linux-kernel@vger.kernel.org
->> > Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
->> >
->> > Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
-> What's the plan with this patch? Should I take it to my
-> wireless-drivers-next tree or will someone else take it?
+On 07/13/2015 05:11 PM, Bastien Nocera wrote:
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/127706/focu
+> s=127896
+>
+> Signed-off-by: Bastien Nocera <hadess@hadess.net>
 
+Bastien,
 
-Per last discussion on this topic, Arend wanted to discuss abt this with Hante.
-I'm not taking it anyways so feel free to pick it up if you want !
+The subject of this patch needs a bit more detail. I know that you mean the 
+RTL8723B versions of the Bluetooth devices. The subject should say this.
 
--Vineet
+The commit message needs a bit more detail. Referencing the E-mail thread is OK, 
+but a bit more is needed. What fails without this change?
+
+To help keep that patches straight, change the next submission to say "[PATCH 
+V2]" in the subject. In addition, after the ---, add a section saying what 
+changed in V2. That info is not retained in the final commit message in the 
+repo, but it can be very useful to a maintainer.
+
+Larry
+
+>
+> ---
+>   net/rfkill/rfkill-gpio.c | 1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index d5d58d9..9471024 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -168,6 +168,7 @@ static const struct acpi_device_id
+> rfkill_acpi_match[] = {
+>   	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
+>   	{ "BCM2E40", RFKILL_TYPE_BLUETOOTH },
+>   	{ "BCM2E64", RFKILL_TYPE_BLUETOOTH },
+> +	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
+>   	{ "BCM4752", RFKILL_TYPE_GPS },
+>   	{ "LNV4752", RFKILL_TYPE_GPS },
+>   	{ },
+>
+
