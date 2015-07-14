@@ -1,161 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44239 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751658AbbGaHjp (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:36663 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813AbbGNMcQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:39:45 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 07/28] staging: wilc1000: remove unused variables
-Date: Fri, 31 Jul 2015 16:38:15 +0900
-Message-ID: <1438328316-30197-8-git-send-email-tony.cho@atmel.com> (sfid-20150731_093947_714048_94388ADE)
-In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 14 Jul 2015 08:32:16 -0400
+Received: by igbij6 with SMTP id ij6so44850858igb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 05:32:15 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH v3 3/5] mac80211: reorder mesh_plink to remove forward decl
+Date: Tue, 14 Jul 2015 08:31:57 -0400
+Message-Id: <1436877119-17577-4-git-send-email-me@bobcopeland.com> (sfid-20150714_143221_475965_7A920809)
+In-Reply-To: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
+References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: glen lee <glen.lee@atmel.com>
+Move mesh_plink_frame_tx() above the first caller to remove
+the forward declaration.
 
-This patch removes unused variable pstrWFIDrv.
-
-Signed-off-by: glen lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 15 ---------------
- 1 file changed, 15 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c8ebf51..66565f6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -607,7 +607,6 @@ static s32 Handle_SetChannel(WILC_WFIDrvHandle drvHandler, tstrHostIFSetChan *ps
+v3: unchanged from v1
+
+ net/mac80211/mesh_plink.c | 109 ++++++++++++++++++++++------------------------
+ 1 file changed, 52 insertions(+), 57 deletions(-)
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index ac1029f28133..a5aa0345dd7e 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -53,11 +53,6 @@ static const char * const mplevents[] = {
+ 	[CLS_IGNR] = "CLS_IGNR"
+ };
  
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID	strWID;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+-static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+-			       enum ieee80211_self_protected_actioncode action,
+-			       u8 *da, u16 llid, u16 plid, u16 reason);
+-
+-
+ /* We only need a valid sta if user configured a minimum rssi_threshold. */
+ static bool rssi_threshold_check(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta)
+@@ -204,58 +199,6 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
+ 	return BSS_CHANGED_HT;
+ }
  
- 	/*prepare configuration packet*/
- 	strWID.u16WIDid = (u16)WID_CURRENT_CHANNEL;
-@@ -733,7 +732,6 @@ s32 Handle_set_IPAddress(WILC_WFIDrvHandle drvHandler, u8 *pu8IPAddr, u8 idx)
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	char firmwareIPAddress[4] = {0};
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+-/**
+- * __mesh_plink_deactivate - deactivate mesh peer link
+- *
+- * @sta: mesh peer link to deactivate
+- *
+- * All mesh paths with this peer as next hop will be flushed
+- * Returns beacon changed flag if the beacon content changed.
+- *
+- * Locking: the caller must hold sta->mesh->plink_lock
+- */
+-static u32 __mesh_plink_deactivate(struct sta_info *sta)
+-{
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	u32 changed = 0;
+-
+-	lockdep_assert_held(&sta->mesh->plink_lock);
+-
+-	if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
+-		changed = mesh_plink_dec_estab_count(sdata);
+-	sta->mesh->plink_state = NL80211_PLINK_BLOCKED;
+-	mesh_path_flush_by_nexthop(sta);
+-
+-	ieee80211_mps_sta_status_update(sta);
+-	changed |= ieee80211_mps_set_sta_local_pm(sta,
+-			NL80211_MESH_POWER_UNKNOWN);
+-
+-	return changed;
+-}
+-
+-/**
+- * mesh_plink_deactivate - deactivate mesh peer link
+- *
+- * @sta: mesh peer link to deactivate
+- *
+- * All mesh paths with this peer as next hop will be flushed
+- */
+-u32 mesh_plink_deactivate(struct sta_info *sta)
+-{
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	u32 changed;
+-
+-	spin_lock_bh(&sta->mesh->plink_lock);
+-	changed = __mesh_plink_deactivate(sta);
+-	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
+-	mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
+-			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
+-			    sta->mesh->reason);
+-	spin_unlock_bh(&sta->mesh->plink_lock);
+-
+-	return changed;
+-}
+-
+ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			       enum ieee80211_self_protected_actioncode action,
+ 			       u8 *da, u16 llid, u16 plid, u16 reason)
+@@ -375,6 +318,58 @@ free:
+ 	return err;
+ }
  
- 	if (pu8IPAddr[0] < 192)
- 		pu8IPAddr[0] = 0;
-@@ -837,7 +835,6 @@ static s32 Handle_SetMacAddress(WILC_WFIDrvHandle drvHandler, tstrHostIfSetMacAd
- 
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID	strWID;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 	u8 *mac_buf = (u8 *)WILC_MALLOC(ETH_ALEN);
- 
- 	if (mac_buf == NULL) {
-@@ -3161,7 +3158,6 @@ static s32 Switch_Log_Terminal(WILC_WFIDrvHandle drvHandler)
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	static char dummy = 9;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	strWID.u16WIDid = (u16)WID_LOGTerminal_Switch;
- 	strWID.enuWIDtype = WID_CHAR;
-@@ -3438,7 +3434,6 @@ static void Handle_AddBeacon(WILC_WFIDrvHandle drvHandler, tstrHostIFSetBeacon *
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	u8 *pu8CurrByte;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	PRINT_D(HOSTINF_DBG, "Adding BEACON\n");
- 
-@@ -3510,7 +3505,6 @@ static void Handle_DelBeacon(WILC_WFIDrvHandle drvHandler, tstrHostIFDelBeacon *
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	u8 *pu8CurrByte;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	strWID.u16WIDid = (u16)WID_DEL_BEACON;
- 	strWID.enuWIDtype = WID_CHAR;
-@@ -3607,7 +3601,6 @@ static void Handle_AddStation(WILC_WFIDrvHandle drvHandler, tstrWILC_AddStaParam
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	u8 *pu8CurrByte;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	PRINT_D(HOSTINF_DBG, "Handling add station\n");
- 	strWID.u16WIDid = (u16)WID_ADD_STA;
-@@ -3651,7 +3644,6 @@ static void Handle_DelAllSta(WILC_WFIDrvHandle drvHandler, tstrHostIFDelAllSta *
- 
- 	tstrWID strWID;
- 	u8 *pu8CurrByte;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 	u8 i;
- 	u8 au8Zero_Buff[6] = {0};
- 
-@@ -3709,7 +3701,6 @@ static void Handle_DelStation(WILC_WFIDrvHandle drvHandler, tstrHostIFDelSta *ps
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	u8 *pu8CurrByte;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	strWID.u16WIDid = (u16)WID_REMOVE_STA;
- 	strWID.enuWIDtype = WID_BIN;
-@@ -3754,7 +3745,6 @@ static void Handle_EditStation(WILC_WFIDrvHandle drvHandler, tstrWILC_AddStaPara
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	u8 *pu8CurrByte;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	strWID.u16WIDid = (u16)WID_EDIT_STA;
- 	strWID.enuWIDtype = WID_BIN;
-@@ -3878,7 +3868,6 @@ static int Handle_RegisterFrame(WILC_WFIDrvHandle drvHandler, tstrHostIfRegister
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	u8 *pu8CurrByte;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	PRINT_D(HOSTINF_DBG, "Handling frame register Flag : %d FrameType: %d\n", pstrHostIfRegisterFrame->bReg, pstrHostIfRegisterFrame->u16FrameType);
- 
-@@ -4021,7 +4010,6 @@ static void Handle_PowerManagement(WILC_WFIDrvHandle drvHandler, tstrHostIfPower
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	s8 s8PowerMode;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	strWID.u16WIDid = (u16)WID_POWER_MANAGEMENT;
- 
-@@ -4118,7 +4106,6 @@ static s32 Handle_AddBASession(WILC_WFIDrvHandle drvHandler, tstrHostIfBASession
- 	tstrWID strWID;
- 	int AddbaTimeout = 100;
- 	char *ptr = NULL;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\nBufferSize == %d\nSessionTimeOut = %d\n",
- 		strHostIfBASessionInfo->au8Bssid[0],
-@@ -4205,7 +4192,6 @@ static s32 Handle_DelBASession(WILC_WFIDrvHandle drvHandler, tstrHostIfBASession
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	char *ptr = NULL;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	PRINT_D(GENERIC_DBG, "Delete Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\n",
- 		strHostIfBASessionInfo->au8Bssid[0],
-@@ -4275,7 +4261,6 @@ static s32 Handle_DelAllRxBASessions(WILC_WFIDrvHandle drvHandler, tstrHostIfBAS
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
- 	char *ptr = NULL;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
- 
- 	PRINT_D(GENERIC_DBG, "Delete Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\n",
- 		strHostIfBASessionInfo->au8Bssid[0],
++/**
++ * __mesh_plink_deactivate - deactivate mesh peer link
++ *
++ * @sta: mesh peer link to deactivate
++ *
++ * All mesh paths with this peer as next hop will be flushed
++ * Returns beacon changed flag if the beacon content changed.
++ *
++ * Locking: the caller must hold sta->mesh->plink_lock
++ */
++static u32 __mesh_plink_deactivate(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u32 changed = 0;
++
++	lockdep_assert_held(&sta->mesh->plink_lock);
++
++	if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
++		changed = mesh_plink_dec_estab_count(sdata);
++	sta->mesh->plink_state = NL80211_PLINK_BLOCKED;
++	mesh_path_flush_by_nexthop(sta);
++
++	ieee80211_mps_sta_status_update(sta);
++	changed |= ieee80211_mps_set_sta_local_pm(sta,
++			NL80211_MESH_POWER_UNKNOWN);
++
++	return changed;
++}
++
++/**
++ * mesh_plink_deactivate - deactivate mesh peer link
++ *
++ * @sta: mesh peer link to deactivate
++ *
++ * All mesh paths with this peer as next hop will be flushed
++ */
++u32 mesh_plink_deactivate(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u32 changed;
++
++	spin_lock_bh(&sta->mesh->plink_lock);
++	changed = __mesh_plink_deactivate(sta);
++	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
++	mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
++			    sta->mesh->reason);
++	spin_unlock_bh(&sta->mesh->plink_lock);
++
++	return changed;
++}
++
+ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 			       struct sta_info *sta,
+ 			       struct ieee802_11_elems *elems, bool insert)
 -- 
-1.9.1
+2.1.4
 
