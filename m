@@ -1,154 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36197 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753833AbbGXR3p (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:41422 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134AbbGNIqq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 13:29:45 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Liu CF/TW <cfliu.tw@gmail.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH v4] ath10k: enable raw encap mode and software crypto engine.
-References: <1434138966-3652-1-git-send-email-cfliu.tw@gmail.com>
-Date: Fri, 24 Jul 2015 20:29:39 +0300
-In-Reply-To: <1434138966-3652-1-git-send-email-cfliu.tw@gmail.com> (Liu CF's
-	message of "Fri, 12 Jun 2015 12:56:06 -0700")
-Message-ID: <87pp3hbh18.fsf@kamboji.qca.qualcomm.com> (sfid-20150724_192949_441992_CA33E7AD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 14 Jul 2015 04:46:46 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NRG02ESAZ1W93A0@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 14 Jul 2015 17:46:44 +0900 (KST)
+Date: Tue, 14 Jul 2015 08:46:44 +0000 (GMT)
+From: Rahul Jain <rahul.jain@samsung.com>
+Subject: [PATCH v2] cfg80211-wext: deleting dead code
+To: =?windows-1252?Q?Rafa=3F_Mi=3Fecki?= <zajec5@gmail.com>
+Cc: David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nitin Jhanwar <nitin.j@samsung.com>,
+	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
+	Amit Khatri <amit.khatri@samsung.com>
+Reply-to: rahul.jain@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=windows-1252
+MIME-version: 1.0
+Message-id: <10994553.722921436863601814.JavaMail.weblogic@ep2mlwas06c> (sfid-20150714_104747_045833_76019E67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Liu CF/TW <cfliu.tw@gmail.com> writes:
+RnJvbSBlOTQ1NzM3ZWYyZTNhNWI3MTk4Yjk3OTVkNjM3NWRlODViMmZhYzA4IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQ0KRnJvbTogUmFodWwgSmFpbiA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4N
+CkRhdGU6IFR1ZSwgMTQgSnVsIDIwMTUgMTQ6MDQ6MDkgKzA1MzANClN1YmplY3Q6IFtQQVRDSF0g
+Y2ZnODAyMTEtd2V4dDogZGVsZXRpbmcgZGVhZCBjb2RlDQoNCkluIGZ1bmMgY2ZnODAyMTFfd2V4
+dF9zaXdyZXRyeSgpLCB0aGUgdmFsdWUgb2YgY2hhbmdlZCBpcyBnZXR0aW5nDQptb2RpZmllZCB0
+byBub24temVybyB2YWx1ZSB3aXRoaW4gaWYtZWxzZSBjb25kaXRpb24gYW5kIGl0IGlzIGJlY29t
+aW5nIGEgbm9uLXplcm8gdmFsdWUuDQpTbywgdGhlIGNvbmRpdGlvbiAiaWYgKCFjaGFuZ2VkKSIg
+YmVjb21lcyB1bnJlYWNoYWJsZS4NCg0KU2lnbmVkLW9mZi1ieTogUmFodWwgSmFpbiA8cmFodWwu
+amFpbkBzYW1zdW5nLmNvbT4NClNpZ25lZC1vZmYtYnk6IEFtaXQgS2hhdHJpIDxhbWl0LmtoYXRy
+aUBzYW1zdW5nLmNvbT4NCi0tLQ0KIG5ldC93aXJlbGVzcy93ZXh0LWNvbXBhdC5jIHwgMyAtLS0N
+CiAxIGZpbGUgY2hhbmdlZCwgMyBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL25ldC93aXJl
+bGVzcy93ZXh0LWNvbXBhdC5jIGIvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMNCmluZGV4IGZk
+NjgyODMuLjhkZTFiNjQgMTAwNjQ0DQotLS0gYS9uZXQvd2lyZWxlc3Mvd2V4dC1jb21wYXQuYw0K
+KysrIGIvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMNCkBAIC0zODcsOSArMzg3LDYgQEAgc3Rh
+dGljIGludCBjZmc4MDIxMV93ZXh0X3Npd3JldHJ5KHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsDQog
+CQljaGFuZ2VkIHw9IFdJUEhZX1BBUkFNX1JFVFJZX1NIT1JUOw0KIAl9DQogDQotCWlmICghY2hh
+bmdlZCkNCi0JCXJldHVybiAwOw0KLQ0KIAllcnIgPSByZGV2X3NldF93aXBoeV9wYXJhbXMocmRl
+diwgY2hhbmdlZCk7DQogCWlmIChlcnIpIHsNCiAJCXdkZXYtPndpcGh5LT5yZXRyeV9zaG9ydCA9
+IG9zaG9ydDsNCi0tIA0KMS45LjENCg0KLS0tLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tLS0N
+ClNlbmRlciA6IFJhZmE/IE1pP2Vja2k8emFqZWM1QGdtYWlsLmNvbT4NCkRhdGUgOiBKdWwgMTQs
+IDIwMTUgMDE6MjggKEdNVCswNTozMCkNClRpdGxlIDogUmU6IFtQQVRDSF0gTG9naWNhbGx5IERl
+YWRDb2RlDQoNCk9uIDMgSnVseSAyMDE1IGF0IDA2OjUyLCBSYWh1bCBKYWluIHdyb3RlOg0KPiBG
+cm9tIDBjMzQwMzAxNjZhMTUwZDZkOWYxYWI1MmU3YmI0MGE1NDQwYTY4YzIgTW9uIFNlcCAxNyAw
+MDowMDowMCAyMDAxDQo+IEZyb206IFJhaHVsIEphaW4gDQo+IERhdGU6IEZyaSwgMyBKdWwgMjAx
+NSAxMDoxOToxMiArMDUzMA0KPiBTdWJqZWN0OiBbUEFUQ0hdIExvZ2ljYWxseSBEZWFkQ29kZQ0K
+DQpZb3UgZGlkbid0IHVzZSBhbnkgcHJlZml4IGZvciB0aGUgY29tbWl0IG1lc3NhZ2UsIGl0J3Mg
+dW5jbGVhcg0KKExvZ2ljYWxseSBEZWFkQ29kZSB3aGF0PyksIG5vIGRlc2NyaXB0aW9uLCB5b3Ug
+dG91Y2ggdHdvIGNvZGUgcGxhY2VzDQphdCBvbmNlLg0KDQpQbGVhc2UgZml4IGFib3ZlIHByb2Js
+ZW1zIGFuZCByZXNlbmQu
 
-> From: David Liu <cfliu.tw@gmail.com>
->
->   This patch enables raw Rx/Tx encap mode to support software based
->   crypto engine. This patch introduces a new module param 'cryptmode'.
->
->    cryptmode:
->
->      0: Use hardware crypto engine globally with native Wi-Fi mode TX/RX
->         encapsulation to the firmware. This is the default mode.
->      1: Use sofware crypto engine globally with raw mode TX/RX
->         encapsulation to the firmware.
->
->    Known limitation:
->      A-MSDU must be disabled for RAW Tx encap mode to perform well when
->      heavy traffic is applied.
->
->    Testing: (by Michal Kazior <michal.kazior@tieto.com>)
->
->      a) Performance Testing
->
->       cryptmode=1
->        ap=qca988x sta=killer1525
->         killer1525  ->  qca988x     194.496 mbps [tcp1 ip4]
->         killer1525  ->  qca988x     238.309 mbps [tcp5 ip4]
->         killer1525  ->  qca988x     266.958 mbps [udp1 ip4]
->         killer1525  ->  qca988x     477.468 mbps [udp5 ip4]
->         qca988x     ->  killer1525  301.378 mbps [tcp1 ip4]
->         qca988x     ->  killer1525  297.949 mbps [tcp5 ip4]
->         qca988x     ->  killer1525  331.351 mbps [udp1 ip4]
->         qca988x     ->  killer1525  371.528 mbps [udp5 ip4]
->        ap=killer1525 sta=qca988x
->         qca988x     ->  killer1525  331.447 mbps [tcp1 ip4]
->         qca988x     ->  killer1525  328.783 mbps [tcp5 ip4]
->         qca988x     ->  killer1525  375.309 mbps [udp1 ip4]
->         qca988x     ->  killer1525  403.379 mbps [udp5 ip4]
->         killer1525  ->  qca988x     203.689 mbps [tcp1 ip4]
->         killer1525  ->  qca988x     222.339 mbps [tcp5 ip4]
->         killer1525  ->  qca988x     264.199 mbps [udp1 ip4]
->         killer1525  ->  qca988x     479.371 mbps [udp5 ip4]
->
->       Note:
->        - only open network tested for RAW vs nwifi performance comparison
->        - killer1525 (qca6174 hw2.2) is 2x2 device (hence max 866mbps)
->        - used iperf
->        - OTA, devices a few cm apart from each other, no shielding
->        - tcpX/udpX, X - means number of threads used
->
->       Overview:
->        - relative Tx performance drop is seen but is within reasonable and
->          expected threshold (A-MSDU must be disabled with RAW Tx)
->
->      b) Connectivity Testing
->
->       cryptmode=1
->        ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta          OK
->        ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta          OK
->        ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta          OK
->        ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta          OK
->        ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta          OK
->        ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta          OK
->        ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta          OK
->        ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta          OK
->        ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br       OK
->        ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br       OK
->        ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br       OK
->        ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br       OK
->        ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br       OK
->        ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br       OK
->        ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br       OK
->        ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br       OK
->        ap=iwl6205 sta1=qca988x crypto=open     topology-1ap1sta2br1vlan  OK
->        ap=iwl6205 sta1=qca988x crypto=wep1     topology-1ap1sta2br1vlan  OK
->        ap=iwl6205 sta1=qca988x crypto=wpa      topology-1ap1sta2br1vlan  OK
->        ap=iwl6205 sta1=qca988x crypto=wpa-ccmp topology-1ap1sta2br1vlan  OK
->        ap=qca988x sta1=iwl6205 crypto=open     topology-1ap1sta2br1vlan  OK
->        ap=qca988x sta1=iwl6205 crypto=wep1     topology-1ap1sta2br1vlan  OK
->        ap=qca988x sta1=iwl6205 crypto=wpa      topology-1ap1sta2br1vlan  OK
->        ap=qca988x sta1=iwl6205 crypto=wpa-ccmp topology-1ap1sta2br1vlan  OK
->
->       Note:
->        - each test takes all possible endpoint pairs and pings
->        - each pair-ping flushes arp table
->        - ip6 is used
->
->      c) Testbed Topology:
->
->       1ap1sta:
->         [ap] ---- [sta]
->
->         endpoints: ap, sta
->
->       1ap1sta2br:
->         [veth0] [ap] ---- [sta] [veth2]
->            |     |          |     |
->         [veth1]  |          \   [veth3]
->             \   /            \  /
->             [br0]            [br1]
->
->         endpoints: veth0, veth2, br0, br1
->         note: STA works in 4addr mode, AP has wds_sta=1
->
->       1ap1sta2br1vlan:
->         [veth0] [ap] ---- [sta] [veth2]
->            |     |          |     |
->         [veth1]  |          \   [veth3]
->             \   /            \  /
->           [br0]              [br1]
->             |                  |
->           [vlan0_id2]        [vlan1_id2]
->
->         endpoints: vlan0_id2, vlan1_id2
->         note: STA works in 4addr mode, AP has wds_sta=1
->
->   Credits:
->
->     Thanks to Michal Kazior <michal.kazior@tieto.com> who helped find the
->     amsdu issue, contributed a workaround (already squashed into this 
->     patch), and contributed the throughput and connectivity tests results.
->
-> Signed-off-by: David Liu <cfliu.tw@gmail.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> Tested-by: Michal Kazior <michal.kazior@tieto.com>
 
-Sorry for taking so long with the review and testing, this got delayed
-because of my vacation. I now rebased the patch to the pending branch
-and fixed conflicts. Please review carefully my changes:
-
-https://github.com/kvalo/ath/commit/8f30e155b942cc712afe9ec80b463f923e7c2700
-
--- 
-Kalle Valo
