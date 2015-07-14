@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.12]:53944 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750926AbbGaNLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 09:11:36 -0400
-From: Jakub Kicinski <moorray3@wp.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH -next 2/4] mt7601u: use correct ieee80211_rx variant
-Date: Fri, 31 Jul 2015 15:04:47 +0200
-Message-Id: <1438347889-14669-2-git-send-email-moorray3@wp.pl> (sfid-20150731_151139_856841_09DB1533)
-In-Reply-To: <1438347889-14669-1-git-send-email-moorray3@wp.pl>
-References: <1438347889-14669-1-git-send-email-moorray3@wp.pl>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:34090 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813AbbGNMcO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jul 2015 08:32:14 -0400
+Received: by iebmu5 with SMTP id mu5so9947450ieb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 05:32:13 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH v3 1/5] mac80211: correct aid location in peering frames
+Date: Tue, 14 Jul 2015 08:31:55 -0400
+Message-Id: <1436877119-17577-2-git-send-email-me@bobcopeland.com> (sfid-20150714_143217_907124_B20035E5)
+In-Reply-To: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
+References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kicinski <kubakici@wp.pl>
+According to 802.11-2012 8.5.16.3.2 AID comes directly after the
+capability bytes in mesh peering confirm frames.  The existing
+code, however, was adding a 2 byte offset to this location,
+resulting in garbage data going out over the air.  Remove the
+offset to fix it.
 
-Rx is run inside a tasklet so ieee80211_rx() should be used
-instead of ieee80211_rx_ni().
-
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/mediatek/mt7601u/dma.c | 2 +-
+ net/mac80211/mesh_plink.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
-index 7217da4f1543..fb183e369d92 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
-@@ -112,7 +112,7 @@ static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
- 	if (!skb)
- 		return;
- 
--	ieee80211_rx_ni(dev->hw, skb);
-+	ieee80211_rx(dev->hw, skb);
- }
- 
- static u16 mt7601u_rx_next_seg_len(u8 *data, u32 data_len)
+v3: split out from patch 4
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 1a7d98398626..956384087e12 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -306,7 +306,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		if (action == WLAN_SP_MESH_PEERING_CONFIRM) {
+ 			/* AID */
+ 			pos = skb_put(skb, 2);
+-			put_unaligned_le16(plid, pos + 2);
++			put_unaligned_le16(plid, pos);
+ 		}
+ 		if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
+ 		    ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
 -- 
-2.1.0
+2.1.4
 
