@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11296 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814AbbGAK24 (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:35660 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbbGNGnh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 06:28:56 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Raja Mani <rmani@qti.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 1/8] ath10k: enhance swba event handler to adapt different size tim bitmap
-References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
-	<1434984747-24294-2-git-send-email-rmani@qti.qualcomm.com>
-	<87h9poxjvs.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 1 Jul 2015 13:28:47 +0300
-In-Reply-To: <87h9poxjvs.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Wed, 1 Jul 2015 13:16:55 +0300")
-Message-ID: <87d20cxjc0.fsf@kamboji.qca.qualcomm.com> (sfid-20150701_122900_598638_29290547)
+	Tue, 14 Jul 2015 02:43:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <55A43355.2070302@gmx.de>
+References: <55A43355.2070302@gmx.de>
+Date: Tue, 14 Jul 2015 09:43:35 +0300
+Message-ID: <CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com> (sfid-20150714_084414_306470_B2227F1A)
+Subject: Re: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Toralf_F=C3=B6rster?= <toralf.foerster@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Hi,
 
->>  	/* if next SWBA has no tim_changed the tim_bitmap is garbage.
->>  	 * we must copy the bitmap upon change and reuse it later */
->>  	if (__le32_to_cpu(tim_info->tim_changed)) {
->>  		int i;
->>  
->> -		BUILD_BUG_ON(sizeof(arvif->u.ap.tim_bitmap) !=
->> -			     sizeof(tim_info->tim_bitmap));
->> +		WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->
-> I'm worried that this WARN_ON() spams too much so I changed it to:
->
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -2893,7 +2893,7 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
->         if (__le32_to_cpu(tim_info->tim_changed)) {
->                 int i;
->  
-> -               WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
-> +               WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->  
->                 for (i = 0; i < tim_len; i++) {
->                         t = tim_info->tim_bitmap[i / 4];
+On Tue, Jul 14, 2015 at 12:53 AM, Toralf Förster <toralf.foerster@gmx.de> wrote:
+> At a Gentoo (hardened) I experienced - starting with hardened kernel 4.0.6-r1 - the (attached) hickup of the "03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 83)" at a ThinkPad T440s. The network stucks till I do restart the network device using /etc/init.d/net.wlp3s0.
 
-Actually I got more worried about this. If tim_len >
-sizeof(arvif->u.ap.tim_bitmap) don't we read out of bounds? So we should
-actually add return for that case or am I missing something?
+You are not using the latest firmware. Please upgrade to 25.17.12.0.
+You'll be able to find the firmware here:
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git/plain/iwlwifi-7260-12.ucode
 
-Full code:
-
-		WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
-
-		for (i = 0; i < tim_len; i++) {
-			t = tim_info->tim_bitmap[i / 4];
-			v = __le32_to_cpu(t);
-			arvif->u.ap.tim_bitmap[i] = (v >> ((i % 4) * 8)) & 0xFF;
-		}
-
--- 
-Kalle Valo
+Note that users reported an improvement with -13.ucode, but you'll
+need 4.1 to use that firmware.
+The issue you are facing can be caused by a lot of factor and hence it
+is hard to know if the newer versions will fix your problem, but it is
+worth trying.
