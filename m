@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33743 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752455AbbGNNVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 09:21:53 -0400
-Message-ID: <1436880105.11226.2.camel@sipsolutions.net> (sfid-20150714_152156_888476_F0E3722C)
+Received: from senator.holtmann.net ([87.106.208.187]:49836 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbbGNP3X convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jul 2015 11:29:23 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2102\))
 Subject: Re: [PATCH] rfkill-gpio: Add support for the Realtek 8723 BT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Bastien Nocera <hadess@hadess.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1436825494.20249.47.camel@hadess.net>
+Date: Tue, 14 Jul 2015 17:29:17 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Date: Tue, 14 Jul 2015 15:21:45 +0200
-In-Reply-To: <55A50C82.4040107@lwfinger.net> (sfid-20150714_152007_936504_073B238A)
+Message-Id: <A2E649D0-855C-4DBC-8A23-7D2CF2747530@holtmann.org> (sfid-20150714_172957_039056_645881DD)
 References: <1436825494.20249.47.camel@hadess.net>
-	 <55A50C82.4040107@lwfinger.net> (sfid-20150714_152007_936504_073B238A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: Bastien Nocera <hadess@hadess.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-07-14 at 08:20 -0500, Larry Finger wrote:
-> On 07/13/2015 05:11 PM, Bastien Nocera wrote:
-> > http://thread.gmane.org/gmane.linux.kernel.wireless.general/127706/
-> > focu
-> > s=127896
-> > 
-> > Signed-off-by: Bastien Nocera <hadess@hadess.net>
-> 
-> Bastien,
-> 
-> The subject of this patch needs a bit more detail. I know that you 
-> mean the 
-> RTL8723B versions of the Bluetooth devices. The subject should say 
-> this.
-> 
-> The commit message needs a bit more detail. Referencing the E-mail 
-> thread is OK, 
-> but a bit more is needed. What fails without this change?
-> 
-> To help keep that patches straight, change the next submission to say 
-> "[PATCH 
-> V2]" in the subject. In addition, after the ---, add a section saying 
-> what 
-> changed in V2. That info is not retained in the final commit message 
-> in the 
-> repo, but it can be very useful to a maintainer.
-> 
+Hi Bastien,
 
-And while at it, please use links that include the message-id (e.g.
-mid.gmane.org) so it's searchable even if the archive disappears.
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/127706/focu
+> s=127896
+> 
+> Signed-off-by: Bastien Nocera <hadess@hadess.net>
+> 
+> ---
+> net/rfkill/rfkill-gpio.c | 1 +
+> 1 file changed, 1 insertion(+)
+> 
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index d5d58d9..9471024 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -168,6 +168,7 @@ static const struct acpi_device_id
+> rfkill_acpi_match[] = {
+> 	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
+> 	{ "BCM2E40", RFKILL_TYPE_BLUETOOTH },
+> 	{ "BCM2E64", RFKILL_TYPE_BLUETOOTH },
+> +	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
+> 	{ "BCM4752", RFKILL_TYPE_GPS },
+> 	{ "LNV4752", RFKILL_TYPE_GPS },
+> 	{ },
 
-johannes
+while this is most likely a good start to get people going and testing the hardware, I think long-term some these IDs have to move out of this driver and into a Realtek specific UART slave driver (once we get such a thing upstream).
+
+I think one example would be what Fred is currently doing for the Broadcom UART devices. Essentially we are currently misusing the RFKILL switch for an on/off switch of the GPIO lines. This would be better handled by the Bluetooth subsystem itself when you power on the controller.
+
+Regards
+
+Marcel
+
