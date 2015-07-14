@@ -1,69 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:33710 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754865AbbG1IHt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:07:49 -0400
-Received: by laah7 with SMTP id h7so63699470laa.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 01:07:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
- <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
- <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
- <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
- <CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com> <CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Tue, 28 Jul 2015 10:07:28 +0200
-Message-ID: <CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com> (sfid-20150728_100821_266664_0FDD0316)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:46665 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751689AbbGNMWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jul 2015 08:22:48 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] iwlwifi: Deinline iwl_{read,write}{8,32}
+Date: Tue, 14 Jul 2015 14:22:38 +0200
+Message-Id: <1436876558-6674-1-git-send-email-dvlasenk@redhat.com> (sfid-20150714_142312_559231_7F694DD8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 5:47 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Those are some high values (eg from noise/spur somewhere) and the
-> driver is deciding to program in -110. So the radio thinks its deaf.
-That made me think... I have a second ath9k device, this time with an
-AR9300 (note, this is 3x3 instead of 2x2). I have set it up with
-similar settings as the AR9227 (= AP mode) and this is the result:
-# cat /sys/kernel/debug/ieee80211/phy0/ath9k/dump_nfcal
-Channel Noise Floor : -95
-Chain | privNF | # Readings | NF Readings
-0       -122    5               -122 -122 -121 -122 -121
-1       -119    5               -119 -119 -119 -119 -119
-2       -121    5               -121 -121 -120 -120 -121
+With CONFIG_IWLWIFI_DEVICE_TRACING=y, these functions are rather large,
+too big for inlining.
 
-The values on that AR9300 device seem to be much better.
+With this .config: http://busybox.net/~vda/kernel_config,
+after uninlining these functions have sizes and callsite counts
+as follows:
 
-While I was at it, here is the output from a third device (TP-Link
-TL-WR1043ND), which uses an Atheros AR9100 MAC/BB Rev:7 AR2133 RF
-Rev:a2
-Please note that this device is "STA" mode, whereas all other devices
-are in "AP" mode.
-# cat /sys/kernel/debug/ieee80211/phy0/ath9k/dump_nfcal
-Channel Noise Floor : -95
-Chain | privNF | # Readings | NF Readings
-0       -89     5               -89 -89 -88 -89 -89
-1       -88     5               -88 -88 -88 -88 -88
-2       -81     5               -81 -81 -80 -82 -82
+iwl_read32  475 bytes, 51 callsites
+iwl_write32 477 bytes, 90 callsites
+iwl_write8  493 bytes, 3 callsites
 
-> Hm, I think that explains a few other NICs behaving badly too....
-I have found an OpenWrt ticket where users are describing similar
-problems, but on an TP-Link TL-WR1043ND (AR9100 + AR2133) ([0]
-Now here comes the interesting part: Only my device with the AR9227
-shows bad performance. All other devices (including the AR9100 +
-AR2133 based one, which also ready "bad values") are performing fine -
-at least for me.
+Reduction in size is about 74,000 bytes:
 
+    text     data      bss       dec     hex filename
+90758147 17226024 36659200 144643371 89f152b vmlinux0
+90687995 17221928 36659200 144569123 89df323 vmlinux.after
 
-Regards,
-Martin
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+---
+ drivers/net/wireless/iwlwifi/iwl-io.c |  7 +++++++
+ drivers/net/wireless/iwlwifi/iwl-io.h | 39 +++++++++++++++++++++--------------
+ 2 files changed, 30 insertions(+), 16 deletions(-)
 
-[0] https://dev.openwrt.org/ticket/17582
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index 27c66e4..aed121e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -38,6 +38,13 @@
+ 
+ #define IWL_POLL_INTERVAL 10	/* microseconds */
+ 
++#if defined(CONFIG_IWLWIFI_DEVICE_TRACING)
++IWL_READ_WRITE( /*not inlined*/ )
++IWL_EXPORT_SYMBOL(iwl_write8);
++IWL_EXPORT_SYMBOL(iwl_write32);
++IWL_EXPORT_SYMBOL(iwl_read32);
++#endif
++
+ int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
+ 		 u32 bits, u32 mask, int timeout)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 705d12c..3c9d2a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -32,24 +32,31 @@
+ #include "iwl-devtrace.h"
+ #include "iwl-trans.h"
+ 
+-static inline void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val)
+-{
+-	trace_iwlwifi_dev_iowrite8(trans->dev, ofs, val);
+-	iwl_trans_write8(trans, ofs, val);
+-}
+-
+-static inline void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val)
+-{
+-	trace_iwlwifi_dev_iowrite32(trans->dev, ofs, val);
+-	iwl_trans_write32(trans, ofs, val);
++#define IWL_READ_WRITE(static_inline) \
++static_inline void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val) \
++{ \
++	trace_iwlwifi_dev_iowrite8(trans->dev, ofs, val); \
++	iwl_trans_write8(trans, ofs, val); \
++} \
++static_inline void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val) \
++{ \
++	trace_iwlwifi_dev_iowrite32(trans->dev, ofs, val); \
++	iwl_trans_write32(trans, ofs, val); \
++} \
++static_inline u32 iwl_read32(struct iwl_trans *trans, u32 ofs) \
++{ \
++	u32 val = iwl_trans_read32(trans, ofs); \
++	trace_iwlwifi_dev_ioread32(trans->dev, ofs, val); \
++	return val; \
+ }
+ 
+-static inline u32 iwl_read32(struct iwl_trans *trans, u32 ofs)
+-{
+-	u32 val = iwl_trans_read32(trans, ofs);
+-	trace_iwlwifi_dev_ioread32(trans->dev, ofs, val);
+-	return val;
+-}
++#if !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
++IWL_READ_WRITE(static inline)
++#else
++void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val);
++void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val);
++u32 iwl_read32(struct iwl_trans *trans, u32 ofs);
++#endif
+ 
+ static inline void iwl_set_bit(struct iwl_trans *trans, u32 reg, u32 mask)
+ {
+-- 
+1.8.1.4
+
