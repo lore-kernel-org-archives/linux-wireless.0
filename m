@@ -1,52 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:36366 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751878AbbG1Rl6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 13:41:58 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:46181 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752301AbbGNTUV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jul 2015 15:20:21 -0400
+Date: Tue, 14 Jul 2015 21:20:15 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Kees Cook <keescook@chromium.org>,
+	David Howells <dhowells@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Ming Lei <ming.lei@canonical.com>, seth.forshee@canonical.com,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	David Howells <dhowells@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>, jlee@suse.com,
+	Takashi Iwai <tiwai@suse.de>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kyle McMartin <kyle@kernel.org>,
+	David Woodhouse <David.Woodhouse@intel.com>
+Subject: Re: [RFC v3 2/2] firmware: add firmware signature checking support
+Message-ID: <20150714192015.GO7021@wotan.suse.de> (sfid-20150714_212046_762441_9DAE965E)
+References: <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
+ <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
+ <CAGXu5jJnPqgpvXd05-dtSbYeSVndcpH1_XMMczPWn5Gq-DUtcw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <3945775.m5HblJPgiO@tauon.atsec.com>
-References: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
-	<a8b787bd17d94e8899bf1be6131165b2@NASANEXM01E.na.qualcomm.com>
-	<55B60BC9.8040800@rempel-privat.de>
-	<3945775.m5HblJPgiO@tauon.atsec.com>
-Date: Tue, 28 Jul 2015 13:41:57 -0400
-Message-ID: <CACXcFmnUcf66+X967JQL9mGrpa6ZYOqz99oK6JV8nFzABn=NZA@mail.gmail.com> (sfid-20150728_194214_542104_C8DD7699)
-Subject: Re: [PATCH 2/2] ath9k: export HW random number generator
-From: Sandy Harris <sandyinchina@gmail.com>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	"Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Theodore Ts'o" <tytso@mit.edu>, linux-crypto@vger.kernel.org,
-	nhorman@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXu5jJnPqgpvXd05-dtSbYeSVndcpH1_XMMczPWn5Gq-DUtcw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 27, 2015 at 7:01 AM, Stephan Mueller <smueller@chronox.de> wrote:
+On Mon, Jun 08, 2015 at 12:56:44PM -0700, Kees Cook wrote:
+> On Mon, May 18, 2015 at 5:45 PM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> >
+> > diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+> > index 134dd77..97cab65 100644
+> > --- a/drivers/base/firmware_class.c
+> > +++ b/drivers/base/firmware_class.c
+> > @@ -180,17 +190,33 @@ static struct firmware_buf *__allocate_fw_buf(const char *fw_name,
+> >                                               struct firmware_cache *fwc)
+> >  {
+> >         struct firmware_buf *buf;
+> > +       const char *sign_ext = ".p7s";
+> > +       char *signed_name;
+> > +
+> > +       signed_name = kzalloc(PATH_MAX, GFP_ATOMIC);
+> > +       if (!signed_name)
+> > +               return NULL;
+> >
+> >         buf = kzalloc(sizeof(*buf), GFP_ATOMIC);
+> > -       if (!buf)
+> > +       if (!buf) {
+> > +               kfree(signed_name);
+> >                 return NULL;
+> > +       }
+> >
+> >         buf->fw_id = kstrdup_const(fw_name, GFP_ATOMIC);
+> >         if (!buf->fw_id) {
+> > +               kfree(signed_name);
+> >                 kfree(buf);
+> >                 return NULL;
+> >         }
+> >
+> > +       strcpy(signed_name, buf->fw_id);
+> > +       strncat(signed_name, sign_ext, strlen(sign_ext));
+> 
+> fw_id is potentially unbounded, so using strncat hear poses an
+> overflow risk. Maybe better to use strlcpy?
+> 
 
-> This one does not look good for a claim that the RNG produces white noise. An
-> RNG that is wired up to /dev/hwrng should produce white noise. Either by
-> having an appropriate noise source or by conditioning the output of the noise
-> source.
+Thanks for the feedback, indeed.
 
-Yes.
-
-> When conditioning the output, you have to be careful about the entropy claim.
-
-A very good analysis of how to deal with this is in Denker's Turbid paper:
-http://www.av8n.com/turbid/
-
-In particular, see section 4.2 on Saturation
-
-> However, the hwrandom framework does not provide any conditioning logic.
-
-At first sight, this sounds like a blunder to me, but I have not
-looked at hwrandom at all. Is there a rationale?
-
-For example, not building conditioning into that driver would make
-perfect sense if the output were just being fed into the random(4)
-which does plenty of mixing. The only problem then would be to make
-sure of giving random(4) reasonable entropy estimates.
+ Luis
