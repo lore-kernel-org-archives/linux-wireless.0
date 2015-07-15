@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44306 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbbGJF4c (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:34323 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752390AbbGORuB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 01:56:32 -0400
-From: Johnny Kim <johnny.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>, <chris.park@atmel.com>
-CC: <johnny.kim@atmel.com>, <rachel.kim@atmel.com>,
-	<tony.cho@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	<dean.lee@atmel.com>, <austin.shin@atmel.com>
-Subject: [PATCH 2/3] staging: wilc1000: wilc_wlan_cfg_get(): replace integer with void pointer
-Date: Fri, 10 Jul 2015 14:55:56 +0900
-Message-ID: <1436507759-4546-3-git-send-email-johnny.kim@atmel.com> (sfid-20150710_075635_155186_FBBB6A2D)
-In-Reply-To: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com>
-References: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com>
+	Wed, 15 Jul 2015 13:50:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAK1hOcPvb3mOeVm5HMqSCKAyJv47HturM+C9uxvA1=KWn94dtw@mail.gmail.com>
+References: <1436876558-6674-1-git-send-email-dvlasenk@redhat.com>
+	<55A502B6.5090806@cogentembedded.com>
+	<CAK1hOcPvb3mOeVm5HMqSCKAyJv47HturM+C9uxvA1=KWn94dtw@mail.gmail.com>
+Date: Wed, 15 Jul 2015 20:49:59 +0300
+Message-ID: <CANUX_P2=J81pJpyeMLEf+un=Pe8MhoGz7QJrrRUe19oeux8BhQ@mail.gmail.com> (sfid-20150715_195038_706307_1FC998BB)
+Subject: Re: [PATCH] iwlwifi: Deinline iwl_{read,write}{8,32}
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Denys Vlasenko <dvlasenk@redhat.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Last argument of wilc_wlan_cfg_get function is actually structure's address.
-This should be changed to be compatible with 64bit machine.
-Because wilc_wlan_cfg_get function is mapped by function pointer later,
-wilc_wlan_oup_t.wlan_cfg_get should be changed together.
+On Tue, Jul 14, 2015 at 3:41 PM, Denys Vlasenko
+<vda.linux@googlemail.com> wrote:
+> On Tue, Jul 14, 2015 at 2:38 PM, Sergei Shtylyov
+> <sergei.shtylyov@cogentembedded.com> wrote:
+>>> +#define IWL_READ_WRITE(static_inline) \
+>>> +static_inline void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val) \
+>>> +{ \
+>>> +       trace_iwlwifi_dev_iowrite8(trans->dev, ofs, val); \
+>>> +       iwl_trans_write8(trans, ofs, val); \
+>>> +} \
+>> [...]
+>>>
+>>> +#if !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
+>>> +IWL_READ_WRITE(static inline)
+>>
+>>    Not static_inline?
+>
+> Yes. Here we are putting two words, "static inline", in front of every
+> function definition.
+> --
 
-tstrWILC_WFIDrv structure is defined after wilc_wlan_oup_t.wlan_cfg_get
-is defined. So, this patch changes the argument to void type pointer.
-
-Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c        | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h     | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index b069614..141d7b4 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -2094,7 +2094,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
- 				   (counter == u32WIDsCount - 1));
- 			if (!gpstrWlanOps->wlan_cfg_get(!counter,
- 							pstrWIDs[counter].u16WIDid,
--							(counter == u32WIDsCount - 1), drvHandler)) {
-+							(counter == u32WIDsCount - 1), (void *)drvHandler)) {
- 				ret = -1;
- 				printk("[Sendconfigpkt]Get Timed out\n");
- 				break;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index d32e45e..c0a8063 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1938,7 +1938,7 @@ static int wilc_wlan_cfg_set(int start, uint32_t wid, uint8_t *buffer, uint32_t
- 
- 	return ret_size;
- }
--static int wilc_wlan_cfg_get(int start, uint32_t wid, int commit, uint32_t drvHandler)
-+static int wilc_wlan_cfg_get(int start, uint32_t wid, int commit, void* drvHandler)
- {
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
- 	uint32_t offset;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 8735a6a..8c293ab 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -194,7 +194,7 @@ typedef struct {
- 	void (*wlan_handle_rx_isr)(void);
- 	void (*wlan_cleanup)(void);
- 	int (*wlan_cfg_set)(int, uint32_t, uint8_t *, uint32_t, int, uint32_t);
--	int (*wlan_cfg_get)(int, uint32_t, int, uint32_t);
-+	int (*wlan_cfg_get)(int, uint32_t, int, void *);
- 	int (*wlan_cfg_get_value)(uint32_t, uint8_t *, uint32_t);
- 	/*Bug3959: transmitting mgmt frames received from host*/
- 	#if defined(WILC_AP_EXTERNAL_MLME) || defined(WILC_P2P)
--- 
-1.9.1
-
+I'll try to come up with a patch that is easier for me to read, but I
+am really busy right now. Ping me in a week if you have heard from me
+earlier.
