@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38716 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbbGGEAp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 00:00:45 -0400
-Date: Mon, 6 Jul 2015 19:31:03 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Chris Park <chris.park@atmel.com>, Dean Lee <dean.lee@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] staging: wilc1000: Delete unnecessary checks before
- two function calls
-Message-ID: <20150707023103.GA22043@kroah.com> (sfid-20150707_060056_003945_13502968)
-References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net>
- <558EB32E.6090003@users.sourceforge.net>
- <558EB4DE.3080406@users.sourceforge.net>
+Received: from mout.gmx.net ([212.227.17.20]:54101 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752581AbbGOTUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2015 15:20:43 -0400
+Subject: Re: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <55A43355.2070302@gmx.de>
+ <CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com>
+ <55A65F98.2030304@gmx.de>
+ <CANUX_P20BhjPym8Mn1gf4ELMJOA26RjL3y0AVB_M6qjC5zReqQ@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+From: =?UTF-8?Q?Toralf_F=c3=b6rster?= <toralf.foerster@gmx.de>
+Message-ID: <55A6B287.9040808@gmx.de> (sfid-20150715_212100_412230_F70E05AE)
+Date: Wed, 15 Jul 2015 21:20:39 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <558EB4DE.3080406@users.sourceforge.net>
+In-Reply-To: <CANUX_P20BhjPym8Mn1gf4ELMJOA26RjL3y0AVB_M6qjC5zReqQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 27, 2015 at 04:36:14PM +0200, SF Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sat, 27 Jun 2015 15:56:57 +0200
+On 07/15/2015 07:48 PM, Emmanuel Grumbach wrote:
+> Can you reproduce easily?
+> 
+Unfortunately not, it happens sometimes gtwice a day, and then I do have 5 or more daays in a row w/o any problems.
 
-Why is this in the body of the email?  Please fix your email client or
-just use git send-email properly.
+> What bandwidth are you using? 20Mhz or 40Mhz?
+20 MHz accordingly to my Fritz!Box 7360 display.
 
+-- 
+Toralf, pgp key: 872AE508 0076E94E
