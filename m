@@ -1,144 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:35393 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbbGISBd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 14:01:33 -0400
-Received: by lblf12 with SMTP id f12so10068869lbl.2
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 11:01:32 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: WARNING: brcmfmac/core.c:1144 brcmf_netdev_wait_pend8021x
-Date: Thu,  9 Jul 2015 20:01:23 +0200
-Message-Id: <1436464883-10504-1-git-send-email-zajec5@gmail.com> (sfid-20150709_200146_440816_E8744C4F)
+Received: from bear.ext.ti.com ([192.94.94.41]:47050 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752803AbbGOLJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2015 07:09:48 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id t6FB9mmx014895
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2015 06:09:48 -0500
+Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id t6FB9mmE017518
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2015 06:09:48 -0500
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>
+Subject: [PATCH] wl18xx: add dynamic fw traces
+Date: Wed, 15 Jul 2015 13:58:17 +0300
+Message-ID: <1436957897-27602-1-git-send-email-guym@ti.com> (sfid-20150715_130952_905840_CF114DEF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello again.
+add option to dynamically configure the fw
+which debug traces to open
 
-After fixing user space <-> brcmfmac communication for using valid MACs:
-[PATCH] brcmfmac: set wiphy's addresses to provide valid MACs
-i started testing multiple interfaces.
-
-It seems there are many bugs in brcmfmac :(
-
-So after running 3 AP interfaces and switching my STA device between them I
-started seeing WARNINGs triggered by brcmf_netdev_wait_pend8021x. It was
-brcmf_cfg80211_del_key that was calling above function.
-
-The problem is that brcmf_netdev_start_xmit increases interfaces's
-pend_8021x_cnt on every transmission of ETH_P_PAE but brcmf_txfinalize fails
-(from time to time?) do decrease it.
-
-There is a bug in brcmf_txfinalize that stops it from finding an interface for
-the received TX transmission success. I added some debugging to brcmfmac as you
-can see below and this is what I got:
-[   39.394022] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c72c1dc0 on ifidx:0
-[   39.413251] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c72c1dc0 on ifidx:2
-[   39.421887] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c725a7c0 on ifidx:1
-[   39.431720] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c6a78a00 on ifidx:0
-[   39.442829] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c725a7c0 but got invalid ifidx:1
-[   39.451773] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c726ee80 on ifidx:2
-[   39.460384] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c725a7c0 on ifidx:1
-[   39.536224] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c725a7c0 but got invalid ifidx:1
-[   51.884737] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c714cd00 on ifidx:1
-[   51.895577] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c714cd00 but got invalid ifidx:1
-[   51.904592] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c707de80 on ifidx:2
-[   51.913195] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c7011e80 on ifidx:0
-[   51.922900] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c725a280 on ifidx:1
-[   51.933988] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c725a280 but got invalid ifidx:1
-[   51.942979] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c714cd00 on ifidx:2
-[   51.951602] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c707de80 on ifidx:0
-[   55.228402] brcmfmac: [brcmf_netdev_wait_pend8021x] WARNING pend_8021x_cnt:4
-[   55.278395] brcmfmac: [brcmf_netdev_wait_pend8021x] WARNING pend_8021x_cnt:4
-[   55.328394] brcmfmac: [brcmf_netdev_wait_pend8021x] WARNING pend_8021x_cnt:4
-[   55.336211] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c7070b80 on ifidx:2
-[   55.347075] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c7070b80 and decreased pend_8021x_cnt for ifidx:2 but got negative count -1!
-[   55.387991] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c6a78a00 on ifidx:1
-[   55.396601] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c7070b80 on ifidx:0
-[   55.406245] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c707d400 on ifidx:2
-[   55.417257] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c6a78a00 but got invalid ifidx:1
-[   55.426144] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c707d400 and decreased pend_8021x_cnt for ifidx:2 but got negative count -1!
-[   55.439019] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c714cd00 on ifidx:1
-[   55.447611] brcmfmac: [brcmf_netdev_start_xmit] Transmitting ETH_P_PAE skb:c72c2580 on ifidx:0
-[   55.498397] brcmfmac: [brcmf_netdev_wait_pend8021x] WARNING pend_8021x_cnt:6
-[   55.504785] brcmfmac: [brcmf_txfinalize] Finalized ETH_P_PAE skb:c714cd00 but got invalid ifidx:1
-
-As you can see brcmf_txfinalize fails to find interface for ifidx:1. Why is
-that? It seems that drvr->iflist is an array indexed by bssidx, but
-brcmf_txfinalize uses ifidx to access it. Obviously ifidx != bssidx.
-
-This also results in decreasing pend_8021x_cnt for wrong interfaces and some
-negative values.
-
-Will you fix this?
+Signed-off-by: Guy Mishol <guym@ti.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/core.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ti/wl18xx/acx.c     |   23 ++++++++++++++
+ drivers/net/wireless/ti/wl18xx/acx.h     |   13 +++++++-
+ drivers/net/wireless/ti/wl18xx/debugfs.c |   48 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/main.c    |    5 +++
+ drivers/net/wireless/ti/wlcore/wlcore.h  |    3 ++
+ 5 files changed, 91 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index 5663870..e521ce5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -238,8 +238,10 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 		goto done;
- 	}
- 
--	if (eh->h_proto == htons(ETH_P_PAE))
-+	if (eh->h_proto == htons(ETH_P_PAE)) {
-+		pr_info("[%s] Transmitting ETH_P_PAE skb:%p on ifidx:%d\n", __FUNCTION__, skb, ifp->ifidx);
- 		atomic_inc(&ifp->pend_8021x_cnt);
-+	}
- 
- 	ret = brcmf_fws_process_skb(ifp, skb);
- 
-@@ -543,6 +545,8 @@ void brcmf_rx_frame(struct device *dev, struct sk_buff *skb)
- 		brcmf_netif_rx(ifp, skb);
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
+index 86923d5..b7a70bc 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.c
++++ b/drivers/net/wireless/ti/wl18xx/acx.c
+@@ -280,3 +280,26 @@ out:
+ 	return ret;
  }
  
-+static int brcmf_get_pend_8021x_cnt(struct brcmf_if *ifp);
++int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl)
++{
++	struct acx_dynamic_fw_traces_cfg *acx;
++	int ret;
++	wl1271_debug(DEBUG_ACX, "acx dynamic fw traces config %d",
++		     wl->dynamic_fw_traces);
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++	acx->dynamic_fw_traces = cpu_to_le32(wl->dynamic_fw_traces);
 +
- void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp, u8 ifidx,
- 		      bool success)
++	ret = wl1271_cmd_configure(wl, ACX_DYNAMIC_TRACES_CFG,
++							acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx config dynamic fw traces failed: %d", ret);
++		goto out;
++	}
++out:
++	kfree(acx);
++	return ret;
++}
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+index ce29713..d92211d 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.h
++++ b/drivers/net/wireless/ti/wl18xx/acx.h
+@@ -35,7 +35,8 @@ enum {
+ 	ACX_PEER_CAP			 = 0x0056,
+ 	ACX_INTERRUPT_NOTIFY		 = 0x0057,
+ 	ACX_RX_BA_FILTER		 = 0x0058,
+-	ACX_AP_SLEEP_CFG                 = 0x0059
++	ACX_AP_SLEEP_CFG                 = 0x0059,
++	ACX_DYNAMIC_TRACES_CFG		 = 0x005A,
+ };
+ 
+ /* numbers of bits the length field takes (add 1 for the actual number) */
+@@ -406,6 +407,15 @@ struct acx_ap_sleep_cfg {
+ 	u8 idle_conn_thresh;
+ } __packed;
+ 
++/*
++ * ACX_DYNAMIC_TRACES_CFG
++ * configure the FW dynamic traces
++ */
++struct acx_dynamic_fw_traces_cfg {
++	struct acx_header header;
++	__le32 dynamic_fw_traces;
++} __packed;
++
+ int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
+ 				  u32 sdio_blk_size, u32 extra_mem_blks,
+ 				  u32 len_field_size);
+@@ -419,5 +429,6 @@ int wl18xx_acx_set_peer_cap(struct wl1271 *wl,
+ int wl18xx_acx_interrupt_notify_config(struct wl1271 *wl, bool action);
+ int wl18xx_acx_rx_ba_filter(struct wl1271 *wl, bool action);
+ int wl18xx_acx_ap_sleep(struct wl1271 *wl);
++int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl);
+ 
+ #endif /* __WL18XX_ACX_H__ */
+diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
+index 66bb4d0..0cb7e38 100644
+--- a/drivers/net/wireless/ti/wl18xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
+@@ -370,6 +370,53 @@ static const struct file_operations radar_debug_mode_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t dynamic_fw_traces_write(struct file *file,
++					const char __user *user_buf,
++					size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	unsigned long value;
++	int ret;
++
++	ret = kstrtoul_from_user(user_buf, count, 0, &value);
++
++	mutex_lock(&wl->mutex);
++
++	wl->dynamic_fw_traces = value;
++
++	if (unlikely(wl->state != WLCORE_STATE_ON))
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	ret = wl18xx_acx_dynamic_fw_traces(wl);
++	if (ret < 0)
++		count = ret;
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++static ssize_t dynamic_fw_traces_read(struct file *file,
++					char __user *userbuf,
++					size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	return wl1271_format_buffer(userbuf, count, ppos,
++					"%d\n", wl->dynamic_fw_traces);
++}
++
++static const struct file_operations dynamic_fw_traces_ops = {
++	.read = dynamic_fw_traces_read,
++	.write = dynamic_fw_traces_write,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
+ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 			     struct dentry *rootdir)
  {
-@@ -551,14 +555,24 @@ void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp, u8 ifidx,
- 	u16 type;
+@@ -551,6 +598,7 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(conf, moddir);
+ 	DEBUGFS_ADD(radar_detection, moddir);
+ 	DEBUGFS_ADD(radar_debug_mode, moddir);
++	DEBUGFS_ADD(dynamic_fw_traces, moddir);
  
- 	ifp = drvr->iflist[ifidx];
--	if (!ifp)
-+	if (!ifp) {
-+		eh = (struct ethhdr *)(txp->data);
-+		type = ntohs(eh->h_proto);
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 638bfc5..213af48 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1137,6 +1137,11 @@ static int wl18xx_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/* set the dynamic fw traces bitmap */
++	ret = wl18xx_acx_dynamic_fw_traces(wl);
++	if (ret < 0)
++		return ret;
 +
-+		if (type == ETH_P_PAE) {
-+			pr_warn("[%s] Finalized ETH_P_PAE skb:%p but got invalid ifidx:%d\n", __FUNCTION__, txp, ifidx);
-+		}
+ 	if (checksum_param) {
+ 		ret = wl18xx_acx_set_checksum_state(wl);
+ 		if (ret != 0)
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 807d764..6787fb0 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -522,6 +522,9 @@ struct wl1271 {
+ 	/* the current dfs region */
+ 	enum nl80211_dfs_regions dfs_region;
+ 	bool radar_debug_mode;
 +
- 		goto done;
-+	}
++	/* dynamic fw traces */
++	u32 dynamic_fw_traces;
+ };
  
- 	eh = (struct ethhdr *)(txp->data);
- 	type = ntohs(eh->h_proto);
- 
- 	if (type == ETH_P_PAE) {
- 		atomic_dec(&ifp->pend_8021x_cnt);
-+		if (brcmf_get_pend_8021x_cnt(ifp) < 0)
-+			pr_warn("[%s] Finalized ETH_P_PAE skb:%p and decreased pend_8021x_cnt for ifidx:%d but got negative count %d!\n", __FUNCTION__, txp, ifidx, brcmf_get_pend_8021x_cnt(ifp));
- 		if (waitqueue_active(&ifp->pend_8021x_wait))
- 			wake_up(&ifp->pend_8021x_wait);
- 	}
-@@ -1140,8 +1154,8 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
- 	err = wait_event_timeout(ifp->pend_8021x_wait,
- 				 !brcmf_get_pend_8021x_cnt(ifp),
- 				 msecs_to_jiffies(MAX_WAIT_FOR_8021X_TX));
--
--	WARN_ON(!err);
-+	if (!err)
-+		pr_err("[%s] WARNING pend_8021x_cnt:%d\n", __FUNCTION__, brcmf_get_pend_8021x_cnt(ifp));
- 
- 	return !err;
- }
+ int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
 -- 
-1.8.4.5
+1.7.9
 
