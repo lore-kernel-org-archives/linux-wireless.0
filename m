@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:34683 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139AbbGaFjF (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:36498 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753269AbbGOTrE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 01:39:05 -0400
-From: Shraddha Barke <shraddha.6596@gmail.com>
-To: Dean Lee <dean.lee@atmel.com>, Rachel Kim <rachel.kim@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Cc: Shraddha Barke <shraddha.6596@gmail.com>
-Subject: [PATCH] Staging:wilc1000 :Remove typedef from struct
-Date: Fri, 31 Jul 2015 11:08:47 +0530
-Message-Id: <1438321127-8120-1-git-send-email-shraddha.6596@gmail.com> (sfid-20150731_073909_820506_D7540577)
+	Wed, 15 Jul 2015 15:47:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <55A6B287.9040808@gmx.de>
+References: <55A43355.2070302@gmx.de>
+	<CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com>
+	<55A65F98.2030304@gmx.de>
+	<CANUX_P20BhjPym8Mn1gf4ELMJOA26RjL3y0AVB_M6qjC5zReqQ@mail.gmail.com>
+	<55A6B287.9040808@gmx.de>
+Date: Wed, 15 Jul 2015 22:47:01 +0300
+Message-ID: <CANUX_P095t=cUBs5yfAtMGdYCqJEejVo-PtRvH8azoszLS98qA@mail.gmail.com> (sfid-20150715_214959_592453_BCAB7C40)
+Subject: Re: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Toralf_F=C3=B6rster?= <toralf.foerster@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following checkpatch.pl warning:
+On Wed, Jul 15, 2015 at 10:20 PM, Toralf Förster <toralf.foerster@gmx.de> wrote:
+> On 07/15/2015 07:48 PM, Emmanuel Grumbach wrote:
+>> Can you reproduce easily?
+>>
+> Unfortunately not, it happens sometimes gtwice a day, and then I do have 5 or more daays in a row w/o any problems.
+>
+>> What bandwidth are you using? 20Mhz or 40Mhz?
+> 20 MHz accordingly to my Fritz!Box 7360 display.
+>
+Fritz!Box - oh well. We've had lots of issues with this kind of APs.
 
-WARNING: do not add new typedefs
-
-Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 54eb8a1..d6ef6e1 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -88,7 +88,7 @@ typedef enum {
- } tenuFrmSubtype;
- 
- /* Basic Frame Classes */
--typedef enum {
-+enum {
- 	CLASS1_FRAME_TYPE      = 0x00,
- 	CLASS2_FRAME_TYPE      = 0x01,
- 	CLASS3_FRAME_TYPE      = 0x02,
--- 
-2.1.0
-
+There is already an open bug:
+https://bugzilla.kernel.org/show_bug.cgi?id=97291
