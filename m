@@ -1,71 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49486 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbbGaUqY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 16:46:24 -0400
-Date: Fri, 31 Jul 2015 13:46:23 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
-	leo.kim@atmel.com
-Subject: Re: [PATCH 01/28] staging: wilc1000: change type of driver handler
- in host interface msg
-Message-ID: <20150731204623.GA1572@kroah.com> (sfid-20150731_224630_857592_31F13045)
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
- <1438328316-30197-2-git-send-email-tony.cho@atmel.com>
+Received: from mout.gmx.net ([212.227.17.22]:61669 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752581AbbGOUDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2015 16:03:15 -0400
+Subject: Re: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <55A43355.2070302@gmx.de>
+ <CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com>
+ <55A65F98.2030304@gmx.de>
+ <CANUX_P20BhjPym8Mn1gf4ELMJOA26RjL3y0AVB_M6qjC5zReqQ@mail.gmail.com>
+ <55A6B287.9040808@gmx.de>
+ <CANUX_P095t=cUBs5yfAtMGdYCqJEejVo-PtRvH8azoszLS98qA@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+From: =?UTF-8?Q?Toralf_F=c3=b6rster?= <toralf.foerster@gmx.de>
+Message-ID: <55A6BC7E.1000102@gmx.de> (sfid-20150715_220331_507644_E1A9DC07)
+Date: Wed, 15 Jul 2015 22:03:10 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438328316-30197-2-git-send-email-tony.cho@atmel.com>
+In-Reply-To: <CANUX_P095t=cUBs5yfAtMGdYCqJEejVo-PtRvH8azoszLS98qA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2015 at 04:38:09PM +0900, Tony Cho wrote:
-> From: glen lee <glen.lee@atmel.com>
+On 07/15/2015 09:47 PM, Emmanuel Grumbach wrote:
+> Fritz!Box - oh well. We've had lots of issues with this kind of APs.
 > 
-> This patch changes void pointer type of drvHandler with WILC_WFIDrvHandle
-> type variable since the structure member drvHandler in tstrHostIFmsg is
-> explicitly used to pass driver pointer as handler.
-> The void pointer as argument is ambiguous for the functions to handle correctly.
+> There is already an open bug:
+> https://bugzilla.kernel.org/show_bug.cgi?id=97291
 > 
-> After this patch, ATWILC_WFIDrvHandle type will be used as handler type to
-> interface with other functions which does not need to know all about wifi driver
-> structre tstrATWILC_WFIDrv.
-> As a consequence of this patch, several patches will be followed up to change
-> type of parameter which take drvHandler as argument.
-> 
-> Signed-off-by: glen lee <glen.lee@atmel.com>
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 02aaf39..fb4194a 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -467,7 +467,7 @@ typedef union _tuniHostIFmsgBody {
->  typedef struct _tstrHostIFmsg {
->  	u16 u16MsgId;                                           /*!< Message ID */
->  	tuniHostIFmsgBody uniHostIFmsgBody;             /*!< Message body */
-> -	void *drvHandler;
-> +	WILC_WFIDrvHandle drvHandler;
->  } tstrHostIFmsg;
->  
->  #ifdef CONNECT_DIRECT
+AH thx.
 
-This patch adds build warnings to the tree, which isn't ok.  Change the
-variable type and then fix up the places it is used in the same patch.
-Right now you have a bunch more "warning: assignment from incompatible
-pointer type [-Wincompatible-pointer-types]" added, which isn't ok.
+FWIW it worked flawlessly since Dec last year so far - no software upgrade at the fritz box nor any hardware change.
+So the current kernel uncovered then an (existing hidden ?) issue, right ?
 
-Each patch in a series should do one logical thing, and never add more
-build warnings to the build.  Please rework this series to do this
-correctly.
 
-thanks,
-
-greg k-h
+-- 
+Toralf, pgp key: 872AE508 0076E94E
