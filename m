@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39431 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751599AbbGQQQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 12:16:50 -0400
-Subject: [PATCH 09/27] modsign: Abort modules_install when signing fails
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Fri, 17 Jul 2015 17:16:44 +0100
-Message-ID: <20150717161644.2578.6348.stgit@warthog.procyon.org.uk> (sfid-20150717_182323_815823_BCC01CC4)
-In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
-References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from relay5-d.mail.gandi.net ([217.70.183.197]:43905 "EHLO
+	relay5-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156AbbGOGbY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2015 02:31:24 -0400
+Message-ID: <1436941830.20249.64.camel@hadess.net> (sfid-20150715_083142_194782_2FC3BDA3)
+Subject: Re: [PATCH] rfkill-gpio: Add support for the Realtek 8723 BT
+From: Bastien Nocera <hadess@hadess.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 15 Jul 2015 08:30:30 +0200
+In-Reply-To: <55A50C82.4040107@lwfinger.net>
+References: <1436825494.20249.47.camel@hadess.net>
+	 <55A50C82.4040107@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <David.Woodhouse@intel.com>
+On Tue, 2015-07-14 at 08:20 -0500, Larry Finger wrote:
+> On 07/13/2015 05:11 PM, Bastien Nocera wrote:
+> > http://thread.gmane.org/gmane.linux.kernel.wireless.general/127706/
+> > focu
+> > s=127896
+> > 
+> > Signed-off-by: Bastien Nocera <hadess@hadess.net>
+> 
+> Bastien,
+> 
+> The subject of this patch needs a bit more detail. I know that you 
+> mean the 
+> RTL8723B versions of the Bluetooth devices. The subject should say 
+> this.
+> 
+> The commit message needs a bit more detail. Referencing the E-mail 
+> thread is OK, 
+> but a bit more is needed. What fails without this change?
 
-Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
-Signed-off-by: David Howells <dhowells@redhat.com>
----
+Nothing yet, as the current Bluetooth support for this device is
+completely in user-space, and doesn't sync up with rfkill.
 
- scripts/Makefile.modinst |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> To help keep that patches straight, change the next submission to say 
+> "[PATCH 
+> V2]" in the subject. In addition, after the ---, add a section saying 
+> what 
+> changed in V2. That info is not retained in the final commit message 
+> in the 
+> repo, but it can be very useful to a maintainer.
 
-diff --git a/scripts/Makefile.modinst b/scripts/Makefile.modinst
-index e48a4e9d8868..07650eeaaf06 100644
---- a/scripts/Makefile.modinst
-+++ b/scripts/Makefile.modinst
-@@ -22,7 +22,7 @@ quiet_cmd_modules_install = INSTALL $@
-     mkdir -p $(2) ; \
-     cp $@ $(2) ; \
-     $(mod_strip_cmd) $(2)/$(notdir $@) ; \
--    $(mod_sign_cmd) $(2)/$(notdir $@) $(patsubst %,|| true,$(KBUILD_EXTMOD)) ; \
-+    $(mod_sign_cmd) $(2)/$(notdir $@) $(patsubst %,|| true,$(KBUILD_EXTMOD)) && \
-     $(mod_compress_cmd) $(2)/$(notdir $@)
- 
- # Modules built outside the kernel source tree go into extra by default
 
+I already submitted this patch? I certainly forgot doing so :)
