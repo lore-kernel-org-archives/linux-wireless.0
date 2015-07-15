@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:36865 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753090AbbG2Vgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 17:36:43 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: kvalo@qca.qualcomm.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] b43: fix extpa_gain check for 2GHz
-Date: Wed, 29 Jul 2015 23:36:30 +0200
-Message-Id: <1438205790-17629-1-git-send-email-hauke@hauke-m.de> (sfid-20150729_233647_031809_186F034D)
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:35471 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbbGOFmW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2015 01:42:22 -0400
+Received: by wgjx7 with SMTP id x7so24132492wgj.2
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 22:42:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAOtFK_UO_0z2h+i0Q33GJ4kqYTpQrFyVdRMqsnA2j4AzPSALTg@mail.gmail.com>
+References: <CAOtFK_UO_0z2h+i0Q33GJ4kqYTpQrFyVdRMqsnA2j4AzPSALTg@mail.gmail.com>
+Date: Wed, 15 Jul 2015 07:42:20 +0200
+Message-ID: <CALhHN=p2VeaS+o353SUwoe7H3RUyuZv6MAFmu_ks_jO-xAtH6g@mail.gmail.com> (sfid-20150715_074226_349185_684BC043)
+Subject: Re: [ath9k-devel] Wi-Fi Direct multi-role support in ath9k
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Adrien Decostre <ad.decostre@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the 2GHz and and on the 5GHZ band only the extpa_gain setting from
-the 5GHz band was checked. this patch makes it check the property from
-the correct band.
+On 14 July 2015 at 16:31, Adrien Decostre <ad.decostre@gmail.com> wrote:
+> Dear all,
+>
+>
+>
+> I am experimenting a bit with Wi-Fi Direct on top of the ath9k driver and I
+> am wondering if it is possible to operate at the same moment, on the same
+> IEEE802.11n module, a software AP for an infrastructure Wi-Fi network (e.g.
+> by using hostapd) and a soft AP for a Wi-Fi Direct link.
+>
+> As far as I understand, for this, the driver needs to support the
+> “multi-role” feature. Is it right?
+>
+> Is this feature already supported by the ath9k driver?
+>
+You should load driver with use_chanctx=1 (before compile with
+CONFIG_ATH9K_CHANNEL_CONTEXT)
+I tested AP and P2P_GO on different channels using AR9462.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/tables_nphy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 25d1cbd..b2f0d24 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -3728,7 +3728,7 @@ const u32 *b43_nphy_get_tx_gain_table(struct b43_wldev *dev)
- 		switch (phy->rev) {
- 		case 6:
- 		case 5:
--			if (sprom->fem.ghz5.extpa_gain == 3)
-+			if (sprom->fem.ghz2.extpa_gain == 3)
- 				return b43_ntab_tx_gain_epa_rev3_hi_pwr_2g;
- 			/* fall through */
- 		case 4:
--- 
-2.1.4
-
+BR
+Janusz
