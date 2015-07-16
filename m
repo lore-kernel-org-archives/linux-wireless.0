@@ -1,88 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:49553 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862AbbGAD5f (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:31919 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753399AbbGPNa1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Jun 2015 23:57:35 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NQS02PASIZXTVB0@mailout1.samsung.com> for
- linux-wireless@vger.kernel.org; Wed, 01 Jul 2015 12:57:33 +0900 (KST)
-Date: Wed, 01 Jul 2015 03:57:33 +0000 (GMT)
-From: Amit Khatri <amit.khatri@samsung.com>
-Subject: Re: Re: [PATCH] iw: Static analyser fixes
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Rahul Jain <rahul.jain@samsung.com>,
-	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>
-Reply-to: amit.khatri@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0
-Message-id: <571872053.94931435723052622.JavaMail.weblogic@ep2mlwas04a> (sfid-20150701_055740_364290_A8F518D6)
+	Thu, 16 Jul 2015 09:30:27 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6GDTSiF000974
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 06:30:26 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1vnb4adar6-3
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 06:30:26 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Aniket Nagarnaik <aniketn@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/3] UPSTREAM: mwifiex: use maximum ssid length as 0xfe for p2p
+Date: Thu, 16 Jul 2015 06:27:28 -0700
+Message-ID: <1437053249-18440-3-git-send-email-akarwar@marvell.com> (sfid-20150716_153030_249345_10B46635)
+In-Reply-To: <1437053249-18440-1-git-send-email-akarwar@marvell.com>
+References: <1437053249-18440-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-aGkgSnVsaWFuLA0KDQpJIGhhdmUgbW9kaWZpZWQgcGF0Y2ggYWNjb3JkaW5nIHRvIHlvdXIgc3Vn
-Z2VzdGlvbi4gDQoNClN1YmplY3Q6IFtQQVRDSF0gaXc6IFN0YXRpYyBhbmFseXNlciBmaXhlcw0K
-DQpTaWduZWQtb2ZmLWJ5OiBBbWl0IEtoYXRyaSA8YW1pdC5raGF0cmlAc2Ftc3VuZy5jb20+DQpT
-aWduZWQtb2ZmLWJ5OiBSYWh1bCBKYWluIDxyYWh1bC5qYWluQHNhbXN1bmcuY29tPg0KLS0tDQog
-Y3FtLmMgICB8IDIgKysNCiBldmVudC5jIHwgNCArKystDQogaXcuYyAgICB8IDIgKy0NCiBzY2Fu
-LmMgIHwgMiArKw0KIDQgZmlsZXMgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9u
-cygtKQ0KDQpkaWZmIC0tZ2l0IGEvY3FtLmMgYi9jcW0uYw0KaW5kZXggNjU4NzZhZi4uYmY2MDQw
-MSAxMDA2NDQNCi0tLSBhL2NxbS5jDQorKysgYi9jcW0uYw0KQEAgLTM0LDYgKzM0LDggQEAgc3Rh
-dGljIGludCBpd19jcW1fcnNzaShzdHJ1Y3Qgbmw4MDIxMV9zdGF0ZSAqc3RhdGUsIHN0cnVjdCBu
-bF9jYiAqY2IsDQogDQogCS8qIGNvbm5lY3Rpb24gcXVhbGl0eSBtb25pdG9yIGF0dHJpYnV0ZXMg
-Ki8NCiAJY3FtID0gbmxtc2dfYWxsb2MoKTsNCisJaWYoIWNxbSkNCisJCXJldHVybiAtRU5PTUVN
-Ow0KIA0KIAlOTEFfUFVUX1UzMihjcW0sIE5MODAyMTFfQVRUUl9DUU1fUlNTSV9USE9MRCwgdGhv
-bGQpOw0KIAlOTEFfUFVUX1UzMihjcW0sIE5MODAyMTFfQVRUUl9DUU1fUlNTSV9IWVNULCBoeXN0
-KTsNCmRpZmYgLS1naXQgYS9ldmVudC5jIGIvZXZlbnQuYw0KaW5kZXggZjczZTA3OC4uNTBiM2Ix
-NyAxMDA2NDQNCi0tLSBhL2V2ZW50LmMNCisrKyBiL2V2ZW50LmMNCkBAIC00OSw4ICs0OSwxMCBA
-QCBzdGF0aWMgdm9pZCBwcmludF9mcmFtZShzdHJ1Y3QgcHJpbnRfZXZlbnRfYXJncyAqYXJncywg
-c3RydWN0IG5sYXR0ciAqYXR0cikNCiAJY2hhciBtYWNidWZbNiozXTsNCiAJdWludDE2X3QgdG1w
-Ow0KIA0KLQlpZiAoIWF0dHIpDQorCWlmICghYXR0cikgew0KIAkJcHJpbnRmKCIgW25vIGZyYW1l
-XSIpOw0KKwkJcmV0dXJuOw0KKwl9DQogDQogCWZyYW1lID0gbmxhX2RhdGEoYXR0cik7DQogCWxl
-biA9IG5sYV9sZW4oYXR0cik7DQpkaWZmIC0tZ2l0IGEvaXcuYyBiL2l3LmMNCmluZGV4IGRjOTk1
-NjYuLjFlOTEzYjYgMTAwNjQ0DQotLS0gYS9pdy5jDQorKysgYi9pdy5jDQpAQCAtNDc3LDggKzQ3
-Nyw4IEBAIHN0YXRpYyBpbnQgX19oYW5kbGVfY21kKHN0cnVjdCBubDgwMjExX3N0YXRlICpzdGF0
-ZSwgZW51bSBpZF9pbnB1dCBpZGJ5LA0KIAl3aGlsZSAoZXJyID4gMCkNCiAJCW5sX3JlY3Ztc2dz
-KHN0YXRlLT5ubF9zb2NrLCBjYik7DQogIG91dDoNCi0JbmxfY2JfcHV0KGNiKTsNCiAgb3V0X2Zy
-ZWVfbXNnOg0KKwlubF9jYl9wdXQoY2IpOw0KIAlubG1zZ19mcmVlKG1zZyk7DQogCXJldHVybiBl
-cnI7DQogIG5sYV9wdXRfZmFpbHVyZToNCmRpZmYgLS1naXQgYS9zY2FuLmMgYi9zY2FuLmMNCmlu
-ZGV4IGJmMzlmMzQuLjU0ODNjMWQgMTAwNjQ0DQotLS0gYS9zY2FuLmMNCisrKyBiL3NjYW4uYw0K
-QEAgLTQwOSw2ICs0MDksOCBAQCBzdGF0aWMgaW50IGhhbmRsZV9zY2FuKHN0cnVjdCBubDgwMjEx
-X3N0YXRlICpzdGF0ZSwNCiAJCQkJYnJlYWs7DQogCQkJfQ0KIAkJY2FzZSBET05FOg0KKwkJCW5s
-bXNnX2ZyZWUoc3NpZHMpOw0KKwkJCW5sbXNnX2ZyZWUoZnJlcXMpOw0KIAkJCXJldHVybiAxOw0K
-IAkJY2FzZSBGUkVROg0KIAkJCWZyZXEgPSBzdHJ0b3VsKGFyZ3ZbaV0sICZlcHRyLCAxMCk7DQot
-LSANCjEuOS4xDQoNCg0KLS0tLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tLS0NClNlbmRlciA6
-IEp1bGlhbiBDYWxhYnk8anVsaWFuLmNhbGFieUBnbWFpbC5jb20+IA0KRGF0ZSAgIDogSnVuIDMw
-LCAyMDE1IDE3OjU5IChHTVQrMDU6MzApDQpUaXRsZSAgOiBSZTogW1BBVENIXSBpdzogU3RhdGlj
-IGFuYWx5c2VyIGZpeGVzDQoNCkhpIEFtaXQsDQoNCk9uIFR1ZSwgSnVuIDMwLCAyMDE1IGF0IDEw
-OjE3IFBNLCBBbWl0IEtoYXRyaSA8YW1pdC5raGF0cmlAc2Ftc3VuZy5jb20+IHdyb3RlOg0KPiBI
-aSBKb2hhbm5lcywNCj4NCj4gU3ViamVjdDogW1BBVENIXSBpdzogU3RhdGljIGFuYWx5c2VyIGZp
-eGVzDQo+DQo+IFNpZ25lZC1vZmYtYnk6IEFtaXQgS2hhdHJpIDxhbWl0LmtoYXRyaUBzYW1zdW5n
-LmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogUmFodWwgSmFpbiA8cmFodWwuamFpbkBzYW1zdW5nLmNv
-bT4NCj4gLS0tDQo+ICBjcW0uYyAgIHwgMiArKw0KPiAgZXZlbnQuYyB8IDYgKysrKystDQo+ICBp
-dy5jICAgIHwgMiArLQ0KPiAgc2Nhbi5jICB8IDIgKysNCj4gIDQgZmlsZXMgY2hhbmdlZCwgMTAg
-aW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2V2ZW50LmMg
-Yi9ldmVudC5jDQo+IGluZGV4IGY3M2UwNzguLjA2ZDIzNmIgMTAwNjQ0DQo+IC0tLSBhL2V2ZW50
-LmMNCj4gKysrIGIvZXZlbnQuYw0KPiBAQCAtNDksOCArNDksMTAgQEAgc3RhdGljIHZvaWQgcHJp
-bnRfZnJhbWUoc3RydWN0IHByaW50X2V2ZW50X2FyZ3MgKmFyZ3MsIHN0cnVjdCBubGF0dHIgKmF0
-dHIpDQo+ICAgICAgICAgY2hhciBtYWNidWZbNiozXTsNCj4gICAgICAgICB1aW50MTZfdCB0bXA7
-DQo+DQo+IC0gICAgICAgaWYgKCFhdHRyKQ0KPiArICAgICAgIGlmICghYXR0cikgew0KPiAgICAg
-ICAgICAgICAgICAgcHJpbnRmKCIgW25vIGZyYW1lXSIpOw0KPiArICAgICAgICAgICAgICAgZ290
-byBvdXQ7DQo+ICsgICAgICAgfQ0KPg0KPiAgICAgICAgIGZyYW1lID0gbmxhX2RhdGEoYXR0cik7
-DQo+ICAgICAgICAgbGVuID0gbmxhX2xlbihhdHRyKTsNCj4gQEAgLTk3LDYgKzk5LDggQEAgc3Rh
-dGljIHZvaWQgcHJpbnRfZnJhbWUoc3RydWN0IHByaW50X2V2ZW50X2FyZ3MgKmFyZ3MsIHN0cnVj
-dCBubGF0dHIgKmF0dHIpDQo+ICAgICAgICAgZm9yIChpID0gMDsgaSA8IGxlbjsgaSsrKQ0KPiAg
-ICAgICAgICAgICAgICAgcHJpbnRmKCIgJS4wMngiLCBmcmFtZVtpXSk7DQo+ICAgICAgICAgcHJp
-bnRmKCJdIik7DQo+ICsgb3V0Og0KPiArICAgICAgIDsgIC8qZW1wdHkgc3RhdGVtZW50IHRvIGF2
-b2lkIGNvbXBpbGVyIGVycm9yICovDQoNCkVyLCB3aHkgbm90IGp1c3QgcmV0dXJuIGluIHRoZSBp
-ZiAoIWF0dHIpIGJsb2NrPw0KDQpUaGFua3MsDQoNCi0tIA0KSnVsaWFuIENhbGFieQ0KDQpFbWFp
-bDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NClByb2ZpbGU6IGh0dHA6Ly93d3cuZ29vZ2xlLmNv
-bS9wcm9maWxlcy9qdWxpYW4uY2FsYWJ5Lw0KPHA+Jm5ic3A7PC9wPjxwPiZuYnNwOzwvcD4=
+From: Aniket Nagarnaik <aniketn@marvell.com>
 
+0xfe is basically a magic number used to ask firmware match
+provided string in a SSID. In this case, firmware will
+return scan results containing"DIRECT-" string.
+
+Signed-off-by: Aniket Nagarnaik <aniketn@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/scan.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index ef2bef8..ef8da8e 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -909,6 +909,10 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 				wildcard_ssid_tlv->max_ssid_length =
+ 							IEEE80211_MAX_SSID_LEN;
+ 
++			if (!memcmp(user_scan_in->ssid_list[i].ssid,
++				    "DIRECT-", 7))
++				wildcard_ssid_tlv->max_ssid_length = 0xfe;
++
+ 			memcpy(wildcard_ssid_tlv->ssid,
+ 			       user_scan_in->ssid_list[i].ssid, ssid_len);
+ 
+-- 
+1.8.1.4
 
