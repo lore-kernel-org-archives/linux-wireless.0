@@ -1,39 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:36124 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933000AbbGHLsS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 07:48:18 -0400
-Received: by widjy10 with SMTP id jy10so214714647wid.1
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Jul 2015 04:48:17 -0700 (PDT)
+Received: from bear.ext.ti.com ([192.94.94.41]:35607 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754581AbbGPIeT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2015 04:34:19 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id t6G8YJU2021386
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 03:34:19 -0500
+Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
+	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id t6G8YJlY004609
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 03:34:19 -0500
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>
+Subject: [PATCH] wlcore: add antenna diversity reading
+Date: Thu, 16 Jul 2015 11:22:47 +0300
+Message-ID: <1437034967-30374-1-git-send-email-guym@ti.com> (sfid-20150716_103433_303462_6A75033B)
 MIME-Version: 1.0
-In-Reply-To: <CAMArcTUjCviPJUBO6BQKt0MT29-KC7sM=eeF87OHZWQYO50xJw@mail.gmail.com>
-References: <CAFSTUk6UasnV4P3B1TR7kSx1ToQTC+PC2hU6PynDBWJ3ALJzyg@mail.gmail.com>
-	<55965CF8.20208@thinktube.com>
-	<CAMArcTUvpBpTB=woMiY2mET+KOUKNLvY53Exb1F6vB+aztq6Lw@mail.gmail.com>
-	<CAFSTUk6u6rNF1njVBMFT4VAKPZ0Y6BvHB3mJEu7H7oM3tma5tQ@mail.gmail.com>
-	<559AD13B.7030105@thinktube.com>
-	<CAFSTUk7T_kA0OxuUApQp0Nj0kqv0pS945Y+KssokYa2Ow2F+-g@mail.gmail.com>
-	<CAMArcTVS5SaE605vf1yQgpUbXVaaoDS2Qcn1KJJnMVbrjbWkKg@mail.gmail.com>
-	<CAMArcTUjCviPJUBO6BQKt0MT29-KC7sM=eeF87OHZWQYO50xJw@mail.gmail.com>
-Date: Wed, 8 Jul 2015 12:48:17 +0100
-Message-ID: <CAFSTUk632p88RKqA6xZ+Ro=qHGtP4V3CQin9B-K0qGkB7S8sUw@mail.gmail.com> (sfid-20150708_134823_087945_5CC89E5A)
-Subject: Re: mesh support on rtl8192cu
-From: Richard Palethorpe <richard@lm-technologies.com>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bruno Randolf <br1@thinktube.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 8, 2015 at 8:20 AM, Taehee Yoo <ap420073@gmail.com> wrote:
-> Richard, I do apologize for my mistake.
-> I found that the rtl8192cu can't send the beacon frame at mesh mode.
-> Sender side wireshark shows sending beacon frame. but receiver side
-> wireshark doesn't show the rtl8192cu's mesh beacon.
-> I think connection issue's cause is rtl8192cu's wrong beacon code.
+update the rssi reading on rx_status
+to read both RSSI level (7 bits) and
+antenna diversity (msb)
 
-Thank you for looking into it Taehee. Using an adapter in monitor mode
-I can see that the rtl8192cu is sending out beacon frames and ARP
-packets over the air (if I use arping) in mesh mode.
+Signed-off-by: Guy Mishol <guym@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/rx.c |    3 ++-
+ drivers/net/wireless/ti/wlcore/rx.h |    3 +++
+ 2 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 3844944..c2f673f 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -74,7 +74,8 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 	if (desc->rate <= wl->hw_min_ht_rate)
+ 		status->flag |= RX_FLAG_HT;
+ 
+-	status->signal = desc->rssi;
++	status->signal = ((desc->rssi & RSSI_LEVEL_BITMASK) | BIT(7));
++	status->antenna = ((desc->rssi & ANT_DIVERSITY_BITMASK) >> 7);
+ 
+ 	/*
+ 	 * FIXME: In wl1251, the SNR should be divided by two.  In wl1271 we
+diff --git a/drivers/net/wireless/ti/wlcore/rx.h b/drivers/net/wireless/ti/wlcore/rx.h
+index a3b1618..f5a7087c 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.h
++++ b/drivers/net/wireless/ti/wlcore/rx.h
+@@ -30,6 +30,9 @@
+ #define WL1271_RX_MAX_RSSI -30
+ #define WL1271_RX_MIN_RSSI -95
+ 
++#define RSSI_LEVEL_BITMASK	0x7F
++#define ANT_DIVERSITY_BITMASK	BIT(7)
++
+ #define SHORT_PREAMBLE_BIT   BIT(0)
+ #define OFDM_RATE_BIT        BIT(6)
+ #define PBCC_RATE_BIT        BIT(7)
+-- 
+1.7.9
+
