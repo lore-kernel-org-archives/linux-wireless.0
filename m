@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:35471 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbbGOFmW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2015 01:42:22 -0400
-Received: by wgjx7 with SMTP id x7so24132492wgj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 22:42:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOtFK_UO_0z2h+i0Q33GJ4kqYTpQrFyVdRMqsnA2j4AzPSALTg@mail.gmail.com>
-References: <CAOtFK_UO_0z2h+i0Q33GJ4kqYTpQrFyVdRMqsnA2j4AzPSALTg@mail.gmail.com>
-Date: Wed, 15 Jul 2015 07:42:20 +0200
-Message-ID: <CALhHN=p2VeaS+o353SUwoe7H3RUyuZv6MAFmu_ks_jO-xAtH6g@mail.gmail.com> (sfid-20150715_074226_349185_684BC043)
-Subject: Re: [ath9k-devel] Wi-Fi Direct multi-role support in ath9k
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Adrien Decostre <ad.decostre@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:59417 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753493AbbGPMmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2015 08:42:19 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH 2/2] iwlegacy: convert hex_dump_to_buffer() to %*ph
+Date: Thu, 16 Jul 2015 15:42:15 +0300
+Message-Id: <1437050535-22858-2-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20150716_144251_101447_4B318068)
+In-Reply-To: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 July 2015 at 16:31, Adrien Decostre <ad.decostre@gmail.com> wrote:
-> Dear all,
->
->
->
-> I am experimenting a bit with Wi-Fi Direct on top of the ath9k driver and I
-> am wondering if it is possible to operate at the same moment, on the same
-> IEEE802.11n module, a software AP for an infrastructure Wi-Fi network (e.g.
-> by using hostapd) and a soft AP for a Wi-Fi Direct link.
->
-> As far as I understand, for this, the driver needs to support the
-> “multi-role” feature. Is it right?
->
-> Is this feature already supported by the ath9k driver?
->
-You should load driver with use_chanctx=1 (before compile with
-CONFIG_ATH9K_CHANNEL_CONTEXT)
-I tested AP and P2P_GO on different channels using AR9462.
+There is no need to use hex_dump_to_buffer() in the cases like this:
 
-BR
-Janusz
+	hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);	/* len <= 16 */
+	sprintf("%s\n", outbuf);
+
+since it maybe easily converted to simple:
+
+	sprintf("%*ph\n", len, buf);
+
+Note: it seems in the case the output is groupped by 2 bytes and looks like a
+typo. Thus, patch changes that to plain byte stream.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c | 2 +-
+ drivers/net/wireless/iwlegacy/debug.c    | 8 ++------
+ 2 files changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 7f4cb69..af1b3e6 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3259,7 +3259,7 @@ il3945_show_measurement(struct device *d, struct device_attribute *attr,
+ 
+ 	while (size && PAGE_SIZE - len) {
+ 		hex_dump_to_buffer(data + ofs, size, 16, 1, buf + len,
+-				   PAGE_SIZE - len, 1);
++				   PAGE_SIZE - len, true);
+ 		len = strlen(buf);
+ 		if (PAGE_SIZE - len)
+ 			buf[len++] = '\n';
+diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
+index 3440101..908b9f4 100644
+--- a/drivers/net/wireless/iwlegacy/debug.c
++++ b/drivers/net/wireless/iwlegacy/debug.c
+@@ -515,12 +515,8 @@ il_dbgfs_nvm_read(struct file *file, char __user *user_buf, size_t count,
+ 	    scnprintf(buf + pos, buf_size - pos, "EEPROM " "version: 0x%x\n",
+ 		      eeprom_ver);
+ 	for (ofs = 0; ofs < eeprom_len; ofs += 16) {
+-		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x ", ofs);
+-		hex_dump_to_buffer(ptr + ofs, 16, 16, 2, buf + pos,
+-				   buf_size - pos, 0);
+-		pos += strlen(buf + pos);
+-		if (buf_size - pos > 0)
+-			buf[pos++] = '\n';
++		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x %16ph\n",
++				 ofs, ptr + ofs);
+ 	}
+ 
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+-- 
+2.1.4
+
