@@ -1,104 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:58373 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932306AbbGHMmJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 08:42:09 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/10] mac80211: TDLS: deny ch-switch req on disallowed channels
-Date: Wed,  8 Jul 2015 15:41:46 +0300
-Message-Id: <1436359312-26533-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150708_144216_289288_2658F741)
-In-Reply-To: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46103 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753399AbbGPNa3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2015 09:30:29 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6GDTSiH000974
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 06:30:29 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1vnb4adar6-5
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 06:30:29 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Aniket Nagarnaik <aniketn@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 3/3] UPSTREAM: mwifiex: correct p2p and station interface counters
+Date: Thu, 16 Jul 2015 06:27:29 -0700
+Message-ID: <1437053249-18440-4-git-send-email-akarwar@marvell.com> (sfid-20150716_153032_463289_2BD195A4)
+In-Reply-To: <1437053249-18440-1-git-send-email-akarwar@marvell.com>
+References: <1437053249-18440-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Aniket Nagarnaik <aniketn@marvell.com>
 
-If a TDLS station is not allowed to beacon on a channel, don't accept
-a channel switch request to this channel.
-Move channel building code up to avoid lockdep violations - reg_can_beacon
-needs to take the wdev lock.
+While changing interface type from p2p client or p2p go to
+station, we should update counters for p2p interface and
+station interface. Also calling mwifiex_cfg80211_deinit_p2p
+method instead of mwifiex_cfg80211_init_p2p_client method to
+deinit p2p interface.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Aniket Nagarnaik <aniketn@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- net/mac80211/tdls.c | 49 +++++++++++++++++++++++++++++++------------------
- 1 file changed, 31 insertions(+), 18 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 91e86bf..aee701a 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -1737,6 +1737,31 @@ ieee80211_process_tdls_channel_switch_req(struct ieee80211_sub_if_data *sdata,
- 		return -EINVAL;
- 	}
- 
-+	if (!elems.sec_chan_offs) {
-+		chan_type = NL80211_CHAN_HT20;
-+	} else {
-+		switch (elems.sec_chan_offs->sec_chan_offs) {
-+		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+			chan_type = NL80211_CHAN_HT40PLUS;
-+			break;
-+		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+			chan_type = NL80211_CHAN_HT40MINUS;
-+			break;
-+		default:
-+			chan_type = NL80211_CHAN_HT20;
-+			break;
-+		}
-+	}
-+
-+	cfg80211_chandef_create(&chandef, chan, chan_type);
-+
-+	/* we will be active on the TDLS link */
-+	if (!cfg80211_reg_can_beacon_relax(sdata->local->hw.wiphy, &chandef,
-+					   sdata->wdev.iftype)) {
-+		tdls_dbg(sdata, "TDLS chan switch to forbidden channel\n");
-+		return -EINVAL;
-+	}
-+
- 	mutex_lock(&local->sta_mtx);
- 	sta = sta_info_get(sdata, tf->sa);
- 	if (!sta || !test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH)) {
-@@ -1757,27 +1782,15 @@ ieee80211_process_tdls_channel_switch_req(struct ieee80211_sub_if_data *sdata,
- 		goto out;
- 	}
- 
--	if (!sta->sta.ht_cap.ht_supported) {
--		chan_type = NL80211_CHAN_NO_HT;
--	} else if (!elems.sec_chan_offs) {
--		chan_type = NL80211_CHAN_HT20;
--	} else {
--		switch (elems.sec_chan_offs->sec_chan_offs) {
--		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--			chan_type = NL80211_CHAN_HT40PLUS;
--			break;
--		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--			chan_type = NL80211_CHAN_HT40MINUS;
--			break;
--		default:
--			chan_type = NL80211_CHAN_HT20;
--			break;
--		}
-+	/* peer should have known better */
-+	if (!sta->sta.ht_cap.ht_supported && elems.sec_chan_offs &&
-+	    elems.sec_chan_offs->sec_chan_offs) {
-+		tdls_dbg(sdata, "TDLS chan switch - wide chan unsupported\n");
-+		ret = -ENOTSUPP;
-+		goto out;
- 	}
- 
--	cfg80211_chandef_create(&chandef, chan, chan_type);
- 	params.chandef = &chandef;
--
- 	params.switch_time = le16_to_cpu(elems.ch_sw_timing->switch_time);
- 	params.switch_timeout = le16_to_cpu(elems.ch_sw_timing->switch_timeout);
- 
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index b15e4c7..b024015 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1115,8 +1115,10 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		switch (type) {
+ 		case NL80211_IFTYPE_STATION:
+-			if (mwifiex_cfg80211_init_p2p_client(priv))
++			if (mwifiex_cfg80211_deinit_p2p(priv))
+ 				return -EFAULT;
++			priv->adapter->curr_iface_comb.p2p_intf--;
++			priv->adapter->curr_iface_comb.sta_intf++;
+ 			dev->ieee80211_ptr->iftype = type;
+ 			break;
+ 		case NL80211_IFTYPE_ADHOC:
 -- 
-2.1.4
+1.8.1.4
 
