@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4743 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964845AbbGVLy0 (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:60126 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752679AbbGPD4J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 07:54:26 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6MBnm6P028385
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 04:54:26 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1vqm5jkw4w-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 04:54:26 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Zhaoyang Liu <liuzy@marvell.com>
-Subject: [PATCH 4/4] mwifiex: corrections in PCIe event skb handling
-Date: Wed, 22 Jul 2015 04:53:45 -0700
-Message-ID: <1437566025-3324-4-git-send-email-akarwar@marvell.com> (sfid-20150722_135432_251632_7335E659)
-In-Reply-To: <1437566025-3324-1-git-send-email-akarwar@marvell.com>
-References: <1437566025-3324-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 15 Jul 2015 23:56:09 -0400
+From: Maninder Singh <maninder1.s@samsung.com>
+To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: pankaj.m@samsung.com, Maninder Singh <maninder1.s@samsung.com>
+Subject: [PATCH 1/1] ath10k: fixing wrong initialization of struct channel
+Date: Thu, 16 Jul 2015 09:25:33 +0530
+Message-id: <1437018933-25832-1-git-send-email-maninder1.s@samsung.com> (sfid-20150716_055631_840664_250276E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preallocated event SKBs are getting reused for PCIe chipset.
-Their physical addresses are shared with firmware so that
-firmware can write data into them.
+chandef is initialized with NULL and on the very next line,
+we are using it to get channel, which is not correct.
 
-This patch makes sure that SKB is cleared and length is set to
-default while submitting it to firmware.
+channel should be initialized after obtaining chandef.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
 ---
- drivers/net/wireless/mwifiex/pcie.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 77b9055..33c75d7 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1807,6 +1807,8 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 218b6af..3d196b5 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -836,7 +836,7 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
+ static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
+ {
+ 	struct cfg80211_chan_def *chandef = NULL;
+-	struct ieee80211_channel *channel = chandef->chan;
++	struct ieee80211_channel *channel = NULL;
+ 	struct wmi_vdev_start_request_arg arg = {};
+ 	int ret = 0;
  
- 	if (!card->evt_buf_list[rdptr]) {
- 		skb_push(skb, INTF_HEADER_LEN);
-+		skb_put(skb, MAX_EVENT_SIZE - skb->len);
-+		memset(skb->data, 0, MAX_EVENT_SIZE);
- 		if (mwifiex_map_pci_memory(adapter, skb,
- 					   MAX_EVENT_SIZE,
- 					   PCI_DMA_FROMDEVICE))
 -- 
-1.8.1.4
+1.7.9.5
 
