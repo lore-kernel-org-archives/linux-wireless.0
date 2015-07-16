@@ -1,55 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:33062 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739AbbG1Xnb (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49039 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754700AbbGPPJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 19:43:31 -0400
-Received: by lbbyj8 with SMTP id yj8so84984339lbb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 16:43:30 -0700 (PDT)
+	Thu, 16 Jul 2015 11:09:40 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6GF9daw031161
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 08:09:39 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1vnb4adjxy-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2015 08:09:39 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Aniket Nagarnaik <aniketn@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2 1/3] mwifiex: add bss mode TLV to extended scan command
+Date: Thu, 16 Jul 2015 08:05:21 -0700
+Message-ID: <1437059123-19477-2-git-send-email-akarwar@marvell.com> (sfid-20150716_170943_497831_7F7B690A)
+In-Reply-To: <1437059123-19477-1-git-send-email-akarwar@marvell.com>
+References: <1437059123-19477-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmom3+aaPjPGAusFbP68-Z3BcY4n=nbyetJDiWdRo4L3fHA@mail.gmail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
- <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
- <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
- <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
- <CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com>
- <CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
- <CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com>
- <CAJ-Vmokfovc806T+Ja6nQhbGUDM=uU7MmKwad6Uc2hNYV+DDtA@mail.gmail.com>
- <CAFBinCDqn5HCb3APpqfFULwrmqPGpuj2upFOC=5qZUZzHWBnVg@mail.gmail.com>
- <CAJ-VmonRw=htFB+xNrxa=bgAsERUu+zhXrwvpoj9kONsEfooLw@mail.gmail.com>
- <CAFBinCB43LEj3KJVX7qqY40aKYCq68MYi2AD_5MKk43tj7HeXg@mail.gmail.com> <CAJ-Vmom3+aaPjPGAusFbP68-Z3BcY4n=nbyetJDiWdRo4L3fHA@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Wed, 29 Jul 2015 01:43:11 +0200
-Message-ID: <CAFBinCCPouYbKNoyB=z7v0EQKWMhrVJogKvJK=DhqLtwef=zvw@mail.gmail.com> (sfid-20150729_014349_507564_098FEEF6)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 29, 2015 at 1:37 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Cool! Does it let you capture lots of samples over time and plot them?
-At least FFT_eval would allow capturing samples, but the device with
-the AR9227 is a small router -> no screen there, so I have to dump it
-on that device, copy it to my PC and look at the samples there.
-I have also just seen that in FFT_eval one can "Navigate through the
-currently selected datasets using the arrow keys (left and right)."
-This would require me to make many screenshots. Is there a chance you
-can compile FFT_eval on FreeBSD (it "only" seems to require SDL and
-SDL_ttf) and run it yourself?
+From: Aniket Nagarnaik <aniketn@marvell.com>
 
-> Or is the second one that as well?
-What do you mean exactly?
+We are setting BSS mode as ANY so that firmware will provide
+all types of scan entries.
 
-> Is this before or after the NF patches?
-This is after my NF patch.
+Signed-off-by: Aniket Nagarnaik <aniketn@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   |  6 ++++++
+ drivers/net/wireless/mwifiex/scan.c | 10 ++++++++++
+ 2 files changed, 16 insertions(+)
 
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index cd09051..59662bb 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -177,6 +177,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define TLV_TYPE_CHANNEL_STATS      (PROPRIETARY_TLV_BASE_ID + 198)
+ #define TLV_BTCOEX_WL_AGGR_WINSIZE  (PROPRIETARY_TLV_BASE_ID + 202)
+ #define TLV_BTCOEX_WL_SCANTIME      (PROPRIETARY_TLV_BASE_ID + 203)
++#define TLV_TYPE_BSS_MODE           (PROPRIETARY_TLV_BASE_ID + 206)
+ 
+ #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
+ 
+@@ -1370,6 +1371,11 @@ struct host_cmd_ds_802_11_scan_ext {
+ 	u8    tlv_buffer[1];
+ } __packed;
+ 
++struct mwifiex_ie_types_bss_mode {
++	struct mwifiex_ie_types_header  header;
++	u8 bss_mode;
++} __packed;
++
+ struct mwifiex_ie_types_bss_scan_rsp {
+ 	struct mwifiex_ie_types_header header;
+ 	u8 bssid[ETH_ALEN];
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index baf9715..ef2bef8 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -823,6 +823,7 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 	int i;
+ 	u8 ssid_filter;
+ 	struct mwifiex_ie_types_htcap *ht_cap;
++	struct mwifiex_ie_types_bss_mode *bss_mode;
+ 
+ 	/* The tlv_buf_len is calculated for each scan command.  The TLVs added
+ 	   in this routine will be preserved since the routine that sends the
+@@ -968,6 +969,15 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 	else
+ 		*max_chan_per_scan = MWIFIEX_DEF_CHANNELS_PER_SCAN_CMD;
+ 
++	if (adapter->ext_scan) {
++		bss_mode = (struct mwifiex_ie_types_bss_mode *)tlv_pos;
++		bss_mode->header.type = cpu_to_le16(TLV_TYPE_BSS_MODE);
++		bss_mode->header.len = cpu_to_le16(sizeof(bss_mode->bss_mode));
++		bss_mode->bss_mode = scan_cfg_out->bss_mode;
++		tlv_pos += sizeof(bss_mode->header) +
++			   le16_to_cpu(bss_mode->header.len);
++	}
++
+ 	/* If the input config or adapter has the number of Probes set,
+ 	   add tlv */
+ 	if (num_probes) {
+-- 
+1.8.1.4
 
-Regards,
-Martin
