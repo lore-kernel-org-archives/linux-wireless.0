@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:36146 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbbGWDdM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 23:33:12 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/5] wireless-regdb: Update TW and US rules to latest regulations
-Date: Thu, 23 Jul 2015 11:32:55 +0800
-Message-Id: <1437622380-4154-1-git-send-email-wens@csie.org> (sfid-20150723_053321_384282_5F1DA176)
+Received: from mout.gmx.net ([212.227.15.18]:56478 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753490AbbGPLyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2015 07:54:09 -0400
+Message-ID: <55A79B5C.7010501@rempel-privat.de> (sfid-20150716_135414_510009_8C31F82D)
+Date: Thu, 16 Jul 2015 13:54:04 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: rolf.anderegg@weiss.ch,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
+References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch>
+In-Reply-To: <55A3A672.1060502@weiss.ch>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="jemb7E2e6nwxhQHAK08a3PpkUo9NiSrxQ"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Seth,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--jemb7E2e6nwxhQHAK08a3PpkUo9NiSrxQ
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-I've split up my original patch into 4, each addressing a small part of
-the original. I've also added a patch to update the US 5150 ~ 5250 MHz
-rule.
+Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
+>=20
+>> First of all, you are using ancient kernel and firmware. Please update=
 
-Patch 1 updates the 5470 ~ 5725 MHz rules for Taiwan, specifically
-the opening up of 5600 ~ 5650 MHz spectrum previously allocated to
-weather radars. The transmission power limit is also corrected to
-match the regulations.
+>> it. Firmware should be at leas 1.4 and kernel probably 4.1 or later. i=
+'m
+>> not sure which include patch with support of RMW command introduced by=
 
-Patch 2 changes the boundary frequencies for each rule for Taiwan to
-match the frequency allocation table. The "regulation" database shouldn't
-care about artificial channel boundaries.
+>> new FW.
+>>
+>> Then you can try to disable LED blinking which is stealing your usb
+>> bandwidth.
+>=20
+> Thanks for your suggestions.
+> You say ancient, I was thinking longterm stable. For various reasons I
+> require a RT patched kernel, alas this is not yet available for 4.1
+> kernels. Aside from that I have updated the kernel and firmware as you
+> propose. Also I have set ath9k_htc's blink=3D0. The kernel warnings are=
+ no
+> longer occuring, however the AP's connection (which requires several
+> attempts) is still dropped after a few seconds.
+> I suspect that there are bandwidth/speed issues when dealing with USB
+> adapters, but that does not inherently mean that the connection is pron=
+e
+> to drop, right? Doesn't that mean that I am leaking packages somewhere
+> along the way? What else could I be looking for?
 
-Patch 3 adds the previously unusable 5150 ~ 5250 MHz band for Taiwan.
+The packages can drop if you will do channel scan. STA mode need some
+seconds to complete channel scan. It means AP will be all the time
+unavailable.
 
-Patch 4 updates the transmission power limits for 5150 ~ 5250 MHz for
-the US.
-
-Patch 5 updates the transmission power limits for Taiwan, per the NCC's
-official reply. This patch may be slightly controversial, as there is
-no official English document. Either someone will have to independently
-verify this, or translate the Chinese document.
+> Regards,
+> Rolf Anderegg
+>=20
 
 
-Regards
-ChenYu
+--=20
+Regards,
+Oleksij
 
-Chen-Yu Tsai (5):
-  wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz) rules for Taiwan
-    (TW)
-  wireless-regdb: Update regulatory rule boundary frequencies for Taiwan
-    (TW)
-  wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz) band for Taiwan (TW)
-  wireless-regdb: Update 5GHz rules for US
-  wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
 
- db.txt | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
 
--- 
-2.1.4
+--jemb7E2e6nwxhQHAK08a3PpkUo9NiSrxQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlWnm1wACgkQHwImuRkmbWlWBgD+Knd5Rce+SoISXkXxXjwA7ZMb
+AvWrnLl3a+nWxrrl+vUA/iw0IWxzHHzOI3GkF+C8slp9wQR0uyxigXR9j+KjDZaC
+=vtdN
+-----END PGP SIGNATURE-----
+
+--jemb7E2e6nwxhQHAK08a3PpkUo9NiSrxQ--
