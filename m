@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44279 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbbGJF4S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 01:56:18 -0400
-From: Johnny Kim <johnny.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>, <chris.park@atmel.com>
-CC: <johnny.kim@atmel.com>, <rachel.kim@atmel.com>,
-	<tony.cho@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	<dean.lee@atmel.com>, <austin.shin@atmel.com>
-Subject: [PATCH 0/3] staging: wilc1000: rework integer value for x64
-Date: Fri, 10 Jul 2015 14:55:54 +0900
-Message-ID: <1436507759-4546-1-git-send-email-johnny.kim@atmel.com> (sfid-20150710_075622_163648_5EFD7671)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:53004 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945931AbbGQNuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 09:50:35 -0400
+Message-ID: <1437141022.1933.26.camel@sipsolutions.net> (sfid-20150717_155055_716841_66D101D6)
+Subject: Re: [PATCH] mac80211: Deinline rate_control_rate_init,
+ rate_control_rate_update
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denys Vlasenko <dvlasenk@redhat.com>,
+	John Linville <linville@tuxdriver.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 17 Jul 2015 15:50:22 +0200
+In-Reply-To: <1436964966-2441-2-git-send-email-dvlasenk@redhat.com> (sfid-20150715_145648_616165_75545060)
+References: <1436964966-2441-1-git-send-email-dvlasenk@redhat.com>
+	 <1436964966-2441-2-git-send-email-dvlasenk@redhat.com>
+	 (sfid-20150715_145648_616165_75545060)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Greg.
+On Wed, 2015-07-15 at 14:56 +0200, Denys Vlasenko wrote:
+> With this .config: http://busybox.net/~vda/kernel_config,
+> after deinlining these functions have sizes and callsite counts
+> as follows:
+> 
+> rate_control_rate_init: 554 bytes, 8 calls
+> rate_control_rate_update: 1596 bytes, 5 calls
+> 
+> Total size reduction: about 11 kbytes.
+> 
+Both applied.
 
-This driver convert pointer address to integer value and use it
-as function argument. because the value has a limited 32bit size,
-current driver happen many issues on x64 machine.
-
-I have split it up enough sensibliy to allow review. If this patches
-are accepted, I will update more patches related with this patch.
-
-Best regards.
-Johnny.
-
-Johnny Kim (3):
-  staging: wilc1000: wilc_wlan_cfg_commit(): replace integer with
-    pointer
-  staging: wilc1000: wilc_wlan_cfg_get(): replace integer with void
-    pointer
-  staging: wilc1000: wilc_wlan_cfg_set(): replace integer with void
-    pointer
-
- drivers/staging/wilc1000/coreconfigurator.c |  4 ++--
- drivers/staging/wilc1000/linux_wlan.c       |  2 +-
- drivers/staging/wilc1000/wilc_wlan.c        | 12 ++++++------
- drivers/staging/wilc1000/wilc_wlan_if.h     |  4 ++--
- 4 files changed, 11 insertions(+), 11 deletions(-)
-
--- 
-1.9.1
-
+johannes
