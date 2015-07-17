@@ -1,97 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22265 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753530AbbGTMNl (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:35751 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756995AbbGQHNr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2015 08:13:41 -0400
-From: y@vger.kernel.org
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
-Subject: [PATCH] Ath10k: Add TCP/UDP Checksum offload support for QCA99x0
-Date: Mon, 20 Jul 2015 17:42:59 +0530
-Message-ID: <1437394379-30539-1-git-send-email-y> (sfid-20150720_141345_171210_4E432979)
-In-Reply-To: <n>
-References: <n>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 17 Jul 2015 03:13:47 -0400
+Received: by wibxm9 with SMTP id xm9so31466397wib.0
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2015 00:13:46 -0700 (PDT)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 3/4] mwifiex: remove CMD_F_CANCELED flag
+Date: Fri, 17 Jul 2015 09:13:05 +0200
+Message-Id: <1437117186-25243-4-git-send-email-afenkart@gmail.com> (sfid-20150717_091349_662975_86F6F09D)
+In-Reply-To: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
+References: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
+CMD_F_CANCELED was used to abort mwifiex_process_cmdresp in
+case it already started or starts processing the cmd.
+But this was probably not working the way intended:
+- it is racy: mwifiex_process_cmdresp might already have passed that
+  test and is continuing to use the cmd node being recycled
+- mwifiex_process_cmdresp repeatedly uses adapter->curr_cmd which
+  we just set to NULL
+- mwifiex_recycle_cmd_node will clear the flag
 
-The patch adds support to offload TCP/UDP checksum
-calculations for QCA99x0.
+The reason why it probably works is that mwifiex_cancel_pending_ioctl
+is only called from mwifiex_cmd_timeout_func, where the there is little
+chance of a command response still arriving
 
-Signed-off-by: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
-This patch has dependency with peter oh's htt tx/rx patch set for
-QCA99X0 chipset.
+ drivers/net/wireless/mwifiex/cmdevt.c | 23 ++++++++++-------------
+ drivers/net/wireless/mwifiex/fw.h     |  1 -
+ 2 files changed, 10 insertions(+), 14 deletions(-)
 
- drivers/net/wireless/ath/ath10k/htt.h    |   17 ++++++++++++++++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |    4 ++++
- 2 files changed, 20 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index e31cd74..551f64b 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -97,10 +97,25 @@ struct htt_data_tx_desc_frag {
- } __packed;
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 87b6dee..6458e17 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -807,17 +807,6 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 	adapter->is_cmd_timedout = 0;
  
- struct htt_msdu_ext_desc {
--	__le32 tso_flag[4];
-+	__le32 tso_flag[3];
-+	__le16 ip_identification;
-+	u8 flags;
-+	u8 reserved;
- 	struct htt_data_tx_desc_frag frags[6];
- };
- 
-+#define	HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE		BIT(0)
-+#define	HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE	BIT(1)
-+#define	HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE	BIT(2)
-+#define	HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE	BIT(3)
-+#define	HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE	BIT(4)
+ 	resp = (struct host_cmd_ds_command *) adapter->curr_cmd->resp_skb->data;
+-	if (adapter->curr_cmd->cmd_flag & CMD_F_CANCELED) {
+-		mwifiex_dbg(adapter, ERROR,
+-			    "CMD_RESP: %#x been canceled\n",
+-			    le16_to_cpu(resp->command));
+-		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+-		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+-		adapter->curr_cmd = NULL;
+-		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+-		return -1;
+-	}
+-
+ 	if (adapter->curr_cmd->cmd_flag & CMD_F_HOSTCMD) {
+ 		/* Copy original response back to response buffer */
+ 		struct mwifiex_ds_misc_cmd *hostcmd;
+@@ -1090,10 +1079,18 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 	    (adapter->curr_cmd->wait_q_enabled)) {
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+ 		cmd_node = adapter->curr_cmd;
+-		cmd_node->cmd_flag |= CMD_F_CANCELED;
+-		mwifiex_recycle_cmd_node(adapter, cmd_node);
++		/* setting curr_cmd to NULL is quite dangerous, because
++		 * mwifiex_process_cmdresp checks curr_cmd to be != NULL
++		 * at the beginning then relies on it and dereferences
++		 * it at will
++		 * this probably works since mwifiex_cmd_timeout_func
++		 * is the only caller of this function and responses
++		 * at that point
++		 */
+ 		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
 +
-+#define HTT_MSDU_CHECKSUM_ENABLE (HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE \
-+				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE)
-+
- enum htt_data_tx_desc_flags0 {
- 	HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT = 1 << 0,
- 	HTT_DATA_TX_DESC_FLAGS0_NO_AGGR         = 1 << 1,
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index c49ecff..1b34c13 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -496,6 +496,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	u16 msdu_id, flags1 = 0;
- 	dma_addr_t paddr = 0;
- 	u32 frags_paddr = 0;
-+	struct htt_msdu_ext_desc *ext_desc = NULL;
- 
- 	res = ath10k_htt_tx_inc_pending(htt);
- 	if (res)
-@@ -542,6 +543,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		if (ar->hw_params.continuous_frag_desc) {
- 			frags = (struct htt_data_tx_desc_frag *)
- 				&htt->frag_desc.vaddr[msdu_id].frags;
-+			ext_desc = &htt->frag_desc.vaddr[msdu_id];
- 			frags[0].tword_addr.paddr_lo =
- 				__cpu_to_le32(skb_cb->paddr);
- 			frags[0].tword_addr.paddr_hi = 0;
-@@ -603,6 +605,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	if (msdu->ip_summed == CHECKSUM_PARTIAL) {
- 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
- 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
-+		if (ar->hw_params.continuous_frag_desc)
-+			ext_desc->flags |= HTT_MSDU_CHECKSUM_ENABLE;
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
  	}
  
- 	/* Prevent firmware from sending up tx inspection requests. There's
+ 	/* Cancel all pending scan command */
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index cd09051..c71e6b2 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -432,7 +432,6 @@ enum P2P_MODES {
+ 
+ 
+ #define CMD_F_HOSTCMD           (1 << 0)
+-#define CMD_F_CANCELED          (1 << 1)
+ 
+ #define HostCmd_CMD_ID_MASK             0x0fff
+ 
 -- 
-1.7.9.5
+2.1.4
 
