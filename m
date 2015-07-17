@@ -1,115 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4103 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873AbbGFHke (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2015 03:40:34 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 12/13] wil6210: improve mgmt frame handling
-Date: Mon,  6 Jul 2015 10:39:48 +0300
-Message-Id: <1436168389-3676-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150706_100715_748324_22818B7A)
-In-Reply-To: <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35452 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752306AbbGQQSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 12:18:24 -0400
+Subject: [PATCH 17/27] ASN.1: Add an ASN.1 compiler option to dump the
+ element tree
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Fri, 17 Jul 2015 17:18:18 +0100
+Message-ID: <20150717161818.2578.76526.stgit@warthog.procyon.org.uk> (sfid-20150717_182215_928593_D5D75226)
+In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check event length;
-hex dump both Rx and Tx frames
+Add an ASN.1 compiler option to dump the element tree to stdout.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+Reviewed-By: David Woodhouse <David.Woodhouse@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 54 +++++++++++++++++++++++++++-------
- 1 file changed, 44 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 0678fff..d3f75de 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -312,22 +312,44 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 	struct wiphy *wiphy = wil_to_wiphy(wil);
- 	struct ieee80211_mgmt *rx_mgmt_frame =
- 			(struct ieee80211_mgmt *)data->payload;
--	int ch_no = data->info.channel+1;
--	u32 freq = ieee80211_channel_to_frequency(ch_no,
--			IEEE80211_BAND_60GHZ);
--	struct ieee80211_channel *channel = ieee80211_get_channel(wiphy, freq);
--	s32 signal = data->info.sqi;
--	__le16 fc = rx_mgmt_frame->frame_control;
--	u32 d_len = le32_to_cpu(data->info.len);
--	u16 d_status = le16_to_cpu(data->info.status);
--
--	wil_dbg_wmi(wil, "MGMT: channel %d MCS %d SNR %d SQI %d%%\n",
-+	int flen = len - offsetof(struct wmi_rx_mgmt_packet_event, payload);
-+	int ch_no;
-+	u32 freq;
-+	struct ieee80211_channel *channel;
-+	s32 signal;
-+	__le16 fc;
-+	u32 d_len;
-+	u16 d_status;
-+
-+	if (flen < 0) {
-+		wil_err(wil, "MGMT Rx: short event, len %d\n", len);
-+		return;
-+	}
-+
-+	d_len = le32_to_cpu(data->info.len);
-+	if (d_len != flen) {
-+		wil_err(wil,
-+			"MGMT Rx: length mismatch, d_len %d should be %d\n",
-+			d_len, flen);
-+		return;
-+	}
-+
-+	ch_no = data->info.channel + 1;
-+	freq = ieee80211_channel_to_frequency(ch_no, IEEE80211_BAND_60GHZ);
-+	channel = ieee80211_get_channel(wiphy, freq);
-+	signal = data->info.sqi;
-+	d_status = le16_to_cpu(data->info.status);
-+	fc = rx_mgmt_frame->frame_control;
-+
-+	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d SNR %d SQI %d%%\n",
- 		    data->info.channel, data->info.mcs, data->info.snr,
- 		    data->info.sqi);
- 	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
- 		    le16_to_cpu(fc));
- 	wil_dbg_wmi(wil, "qid %d mid %d cid %d\n",
- 		    data->info.qid, data->info.mid, data->info.cid);
-+	wil_hex_dump_wmi("MGMT Rx ", DUMP_PREFIX_OFFSET, 16, 1, rx_mgmt_frame,
-+			 d_len, true);
+ scripts/asn1_compiler.c |   86 ++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 74 insertions(+), 12 deletions(-)
+
+diff --git a/scripts/asn1_compiler.c b/scripts/asn1_compiler.c
+index 7750e9c31483..866f85e5fdd2 100644
+--- a/scripts/asn1_compiler.c
++++ b/scripts/asn1_compiler.c
+@@ -13,6 +13,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdint.h>
++#include <stdbool.h>
+ #include <string.h>
+ #include <ctype.h>
+ #include <unistd.h>
+@@ -311,9 +312,11 @@ struct token {
  
- 	if (!channel) {
- 		wil_err(wil, "Frame on unsupported channel\n");
-@@ -363,6 +385,17 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ static struct token *token_list;
+ static unsigned nr_tokens;
+-static _Bool verbose;
++static bool verbose_opt;
++static bool debug_opt;
+ 
+-#define debug(fmt, ...) do { if (verbose) printf(fmt, ## __VA_ARGS__); } while (0)
++#define verbose(fmt, ...) do { if (verbose_opt) printf(fmt, ## __VA_ARGS__); } while (0)
++#define debug(fmt, ...) do { if (debug_opt) printf(fmt, ## __VA_ARGS__); } while (0)
+ 
+ static int directive_compare(const void *_key, const void *_pdir)
+ {
+@@ -518,7 +521,7 @@ static void tokenise(char *buffer, char *end)
  	}
+ 
+ 	nr_tokens = tix;
+-	debug("Extracted %u tokens\n", nr_tokens);
++	verbose("Extracted %u tokens\n", nr_tokens);
+ 
+ #if 0
+ 	{
+@@ -534,6 +537,7 @@ static void tokenise(char *buffer, char *end)
+ 
+ static void build_type_list(void);
+ static void parse(void);
++static void dump_elements(void);
+ static void render(FILE *out, FILE *hdr);
+ 
+ /*
+@@ -548,16 +552,27 @@ int main(int argc, char **argv)
+ 	char *kbuild_verbose;
+ 	int fd;
+ 
++	kbuild_verbose = getenv("KBUILD_VERBOSE");
++	if (kbuild_verbose)
++		verbose_opt = atoi(kbuild_verbose);
++
++	while (argc > 4) {
++		if (strcmp(argv[1], "-v") == 0)
++			verbose_opt = true;
++		else if (strcmp(argv[1], "-d") == 0)
++			debug_opt = true;
++		else
++			break;
++		memmove(&argv[1], &argv[2], (argc - 2) * sizeof(char *));
++		argc--;
++	}
++
+ 	if (argc != 4) {
+-		fprintf(stderr, "Format: %s <grammar-file> <c-file> <hdr-file>\n",
++		fprintf(stderr, "Format: %s [-v] [-d] <grammar-file> <c-file> <hdr-file>\n",
+ 			argv[0]);
+ 		exit(2);
+ 	}
+ 
+-	kbuild_verbose = getenv("KBUILD_VERBOSE");
+-	if (kbuild_verbose)
+-		verbose = atoi(kbuild_verbose);
+-
+ 	filename = argv[1];
+ 	outputname = argv[2];
+ 	headername = argv[3];
+@@ -608,6 +623,7 @@ int main(int argc, char **argv)
+ 	tokenise(buffer, buffer + readlen);
+ 	build_type_list();
+ 	parse();
++	dump_elements();
+ 
+ 	out = fopen(outputname, "w");
+ 	if (!out) {
+@@ -756,7 +772,7 @@ static void build_type_list(void)
+ 
+ 	qsort(type_index, nr, sizeof(type_index[0]), type_index_compare);
+ 
+-	debug("Extracted %u types\n", nr_types);
++	verbose("Extracted %u types\n", nr_types);
+ #if 0
+ 	for (n = 0; n < nr_types; n++) {
+ 		struct type *type = type_index[n];
+@@ -801,7 +817,7 @@ static void parse(void)
+ 
+ 	} while (type++, !(type->flags & TYPE_STOP_MARKER));
+ 
+-	debug("Extracted %u actions\n", nr_actions);
++	verbose("Extracted %u actions\n", nr_actions);
  }
  
-+static void wmi_evt_tx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ static struct element *element_list;
+@@ -1191,6 +1207,52 @@ overrun_error:
+ 	exit(1);
+ }
+ 
++static void dump_element(const struct element *e, int level)
 +{
-+	struct wmi_tx_mgmt_packet_event *data = d;
-+	struct ieee80211_mgmt *mgmt_frame =
-+			(struct ieee80211_mgmt *)data->payload;
-+	int flen = len - offsetof(struct wmi_tx_mgmt_packet_event, payload);
++	const struct element *c;
++	const struct type *t = e->type_def;
++	const char *name = e->name ? e->name->value : ".";
++	int nsize = e->name ? e->name->size : 1;
++	const char *tname = t && t->name ? t->name->value : ".";
++	int tnsize = t && t->name ? t->name->size : 1;
++	char tag[32];
 +
-+	wil_hex_dump_wmi("MGMT Tx ", DUMP_PREFIX_OFFSET, 16, 1, mgmt_frame,
-+			 flen, true);
++	if (e->class == 0 && e->method == 0 && e->tag == 0)
++		strcpy(tag, "<...>");
++	else if (e->class == ASN1_UNIV)
++		sprintf(tag, "%s %s %s",
++			asn1_classes[e->class],
++			asn1_methods[e->method],
++			asn1_universal_tags[e->tag]);
++	else
++		sprintf(tag, "%s %s %u",
++			asn1_classes[e->class],
++			asn1_methods[e->method],
++			e->tag);
++
++	printf("%c%c%c%c %c %*s[*] \e[33m%s\e[m %*.*s %*.*s\n",
++	       e->flags & ELEMENT_IMPLICIT ? 'I' : '-',
++	       e->flags & ELEMENT_EXPLICIT ? 'E' : '-',
++	       e->flags & ELEMENT_SKIPPABLE ? 'S' : '-',
++	       e->flags & ELEMENT_CONDITIONAL ? 'C' : '-',
++	       "-tTqQcato"[e->compound],
++	       level, "",
++	       tag,
++	       tnsize, tnsize, tname,
++	       nsize, nsize, name);
++	if (e->compound == TYPE_REF)
++		dump_element(e->type->type->element, level + 3);
++	else
++		for (c = e->children; c; c = c->next)
++			dump_element(c, level + 3);
 +}
 +
- static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
- 				  void *d, int len)
- {
-@@ -680,6 +713,7 @@ static const struct {
- 	{WMI_READY_EVENTID,			wmi_evt_ready},
- 	{WMI_FW_READY_EVENTID,			wmi_evt_fw_ready},
- 	{WMI_RX_MGMT_PACKET_EVENTID,		wmi_evt_rx_mgmt},
-+	{WMI_TX_MGMT_PACKET_EVENTID,		wmi_evt_tx_mgmt},
- 	{WMI_SCAN_COMPLETE_EVENTID,		wmi_evt_scan_complete},
- 	{WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID, wmi_evt_survey_complete},
- 	{WMI_CONNECT_EVENTID,			wmi_evt_connect},
--- 
-2.1.4
++static void dump_elements(void)
++{
++	if (debug_opt)
++		dump_element(type_list[0].element, 0);
++}
++
+ static void render_element(FILE *out, struct element *e, struct element *tag);
+ static void render_out_of_line_list(FILE *out);
+ 
+@@ -1292,7 +1354,7 @@ static void render(FILE *out, FILE *hdr)
+ 	}
+ 
+ 	/* We do two passes - the first one calculates all the offsets */
+-	debug("Pass 1\n");
++	verbose("Pass 1\n");
+ 	nr_entries = 0;
+ 	root = &type_list[0];
+ 	render_element(NULL, root->element, NULL);
+@@ -1303,7 +1365,7 @@ static void render(FILE *out, FILE *hdr)
+ 		e->flags &= ~ELEMENT_RENDERED;
+ 
+ 	/* And then we actually render */
+-	debug("Pass 2\n");
++	verbose("Pass 2\n");
+ 	fprintf(out, "\n");
+ 	fprintf(out, "static const unsigned char %s_machine[] = {\n",
+ 		grammar_name);
 
