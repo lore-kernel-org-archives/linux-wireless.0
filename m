@@ -1,280 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:34471 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933999AbbGVAiN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 20:38:13 -0400
-Received: by oigd21 with SMTP id d21so91989278oig.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 17:38:12 -0700 (PDT)
-From: ahmed.taahir@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Taahir Ahmed <ahmed.taahir@gmail.com>
-Subject: [PATCH 1/2] Support python 3 in utils/key2pub.py.
-Date: Tue, 21 Jul 2015 19:37:45 -0500
-Message-Id: <1437525466-27512-2-git-send-email-ahmed.taahir@gmail.com> (sfid-20150722_023817_814803_83F197A5)
-In-Reply-To: <1437525466-27512-1-git-send-email-ahmed.taahir@gmail.com>
-References: <1437525466-27512-1-git-send-email-ahmed.taahir@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34469 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752598AbbGQQPE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 12:15:04 -0400
+Subject: [PATCH 00/27] MODSIGN: Use PKCS#7 for module signatures
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Fri, 17 Jul 2015 17:14:57 +0100
+Message-ID: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk> (sfid-20150717_182443_865029_0D1DFADE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Taahir Ahmed <ahmed.taahir@gmail.com>
 
-utils/key2pub.py can now be run under either python 2.7 or python 3.x.
-This required some minor syntactical changes as well as switching from
-M2Crypto to pycrypto, since M2Crypto doesn't support python 3.x.
+Here's a set of patches that does the following:
 
-In addition, some errors in the generated source file keys-ssl.h are
-fixed:
+ (1) Extracts both parts of an X.509 AuthorityKeyIdentifier (AKID)
+     extension.  We already extract the bit that can match the
+     subjectKeyIdentifier (SKID) of the parent X.509 cert, but we currently
+     ignore the bits that can match the issuer and serialNumber.
 
-  * The correct OpenSSL header for BN_ULONG is included.
+     Looks up an X.509 cert by issuer and serialNumber if those are
+     provided in the AKID.  If the keyIdentifier is also provided, checks
+     that the subjectKeyIdentifier of the cert found matches that also.
 
-  * The generated constants are given the 'ull' suffix to prevent
-    warnings about constants that are too large.
+     If no issuer and serialNumber are provided in the AKID, looks up an
+     X.509 cert by SKID using the AKID keyIdentifier.
+
+     This allows module signing to be done with certificates that don't
+     have an SKID by which they can be looked up.
+
+ (2) Makes use of the PKCS#7 facility to provide module signatures.
+
+     sign-file is replaced with a program that generates a PKCS#7 message
+     that has no X.509 certs embedded and that has detached data (the
+     module content) and adds it onto the message with magic string and
+     descriptor.
+
+ (3) The PKCS#7 message supplies all the information that is needed to
+     select the X.509 cert to be used to verify the signature by standard
+     means (including selection of digest algorithm and public key
+     algorithm).  No kernel-specific magic values are required.
+
+ (4) Makes it possible to get sign-file to just write out a file containing
+     the PKCS#7 signature blob.  This can be used for debugging and
+     potentially for firmware signing.
+
+ (5) Extracts the function that does PKCS#7 signature verification on a
+     blob from the module signing code and put it somewhere more general so
+     that other things, such as firmware signing, can make use of it
+     without depending on module config options.
+
+ (6) Adds support for CMS messages in place of PKCS#7 (they're very similar
+     ASN.1) and makes sign-file create CMS messages instead of PKCS#7.
+     This allows signatures to refer to the verifying key by X.509 cert
+     SKID instead of X.509 cert issuer and serial number.
+
+ (7) Provides support for providing a password/pin for an encrypted private
+     key to sign-file.
+
+ (8) Makes it possible to use PKCS#11 with sign-file, thus allowing the use
+     of cryptographic hardware.
+
+ (9) Overhauls the way the module signing key is handled.  If the name in
+     CONFIG_MODULE_SIG_KEY is "signing_key.pem" then a key will be
+     automatically generated and placed in the build directory.  If the
+     name is different, autogeneration is suppressed and the file is
+     presumed to be a PEM file containing both the private key and X.509
+     certificate.
+
+(10) Overhauls the way auxiliary trusted keys are added to the kernel.
+     Files matching the pattern "*.x509" are no longer just gathered up and
+     cat'd together.  Now CONFIG_SYSTEM_TRUSTED_KEYS must be set to point
+     to a single PEM file containing a set of X.509 certs cat'd together if
+     this facility is desired.
+
+Note that the revised sign-file program no longer supports the "-s
+<signature>" option to add an externally generated signature.  This is
+deprecated in favour of using PKCS#11.  Note also that the format of the
+signature file that would be passed to -s has changed.
+
+David Woodhouse also has stated an intention to overhaul the makefile magic
+he added to deal with quotes and quoting encountered when using CONFIG_*
+option strings in the makefile.
+
+The patches can be found here also:
+
+	http://git.kernel.org/cgit/linux/kernel/git/dhowells/linux-fs.git/log/?h=modsign-pkcs7
+
+and are tagged with:
+
+	modsign-pkcs7-20150717
+
+
+Additionally, the last four patches are provisionally added to support
+firmware signing and are added for comment since they depend on the
+preceding set of patches.
+
+(11) Add usage restriction markers to the extendedKeyUsage field of an
+     X.509 certificate to indicate what may be checked with it.
+
+(12) Parse the keyUsage extension of an X.509 certificate to detect CA keys
+     that are used for key signing.
+
+(13) Add a PKCS#7 authenticated attribute to hold the name of the firmware
+     blob passed to request_key() so that this can be checked prior to
+     permitting the load.
+
+(14) Implement a key usage restrictions.  For instance, a keys specifically
+     restricted to module signature checking may not be used to verify
+     firmware blobs and a key specifically restricted to kexec image
+     signature checking may not be used for checking the signature on an
+     X.509 certificate.
+
+     I have allowed that keys that have no restrictions noted can be used
+     for anything other than firmware, but possibly this should be
+     restricted further.
+
+They can be found here also:
+
+	http://git.kernel.org/cgit/linux/kernel/git/dhowells/linux-fs.git/log/?h=fwsign-pkcs7
+
+and are tagged with:
+
+	fwsign-pkcs7-20150717
+
+David
 ---
- Makefile         |   2 +-
- utils/key2pub.py | 146 ++++++++++++++++++++++++++++---------------------------
- 2 files changed, 75 insertions(+), 73 deletions(-)
+David Howells (17):
+      X.509: Extract both parts of the AuthorityKeyIdentifier
+      X.509: Support X.509 lookup by Issuer+Serial form AuthorityKeyIdentifier
+      PKCS#7: Allow detached data to be supplied for signature checking purposes
+      MODSIGN: Provide a utility to append a PKCS#7 signature to a module
+      MODSIGN: Use PKCS#7 messages as module signatures
+      system_keyring.c doesn't need to #include module-internal.h
+      MODSIGN: Extract the blob PKCS#7 signature verifier from module signing
+      PKCS#7: Check content type and versions
+      ASN.1: Add an ASN.1 compiler option to dump the element tree
+      ASN.1: Fix handling of CHOICE in ASN.1 compiler
+      X.509: Change recorded SKID & AKID to not include Subject or Issuer
+      PKCS#7: Support CMS messages also [RFC5652]
+      sign-file: Generate CMS message as signature instead of PKCS#7
+      X.509: Restrict the usage of a key based on information in X.509 certificate
+      X.509: Parse the keyUsage extension to detect key-signing keys
+      PKCS#7: Add an optional authenticated attribute to hold firmware name
+      KEYS: Restrict signature verification to keys appropriate to the purpose
 
-diff --git a/Makefile b/Makefile
-index a3ead30..65fc780 100644
---- a/Makefile
-+++ b/Makefile
-@@ -112,7 +112,7 @@ $(REG_BIN):
- keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
- 	$(NQ) '  GEN ' $@
- 	$(NQ) '  Trusted pubkeys:' $(wildcard $(PUBKEY_DIR)/*.pem)
--	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
-+	$(Q) python /utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
- 
- $(LIBREG): regdb.h reglib.h reglib.c
- 	$(NQ) '  CC  ' $@
-diff --git a/utils/key2pub.py b/utils/key2pub.py
-index 3e84cd2..ff92748 100755
---- a/utils/key2pub.py
-+++ b/utils/key2pub.py
-@@ -1,126 +1,128 @@
- #!/usr/bin/env python
- 
-+import io
- import sys
- try:
--       from M2Crypto import RSA
--except ImportError, e:
--       sys.stderr.write('ERROR: Failed to import the "M2Crypto" module: %s\n' % e.message)
--       sys.stderr.write('Please install the "M2Crypto" Python module.\n')
--       sys.stderr.write('On Debian GNU/Linux the package is called "python-m2crypto".\n')
--       sys.exit(1)
-+    from Crypto.PublicKey import RSA
-+except ImportError as e:
-+    sys.stderr.write('ERROR: Failed to import the "Crypto.PublicKey" module: %s\n' % e.message)
-+    sys.stderr.write('Please install the "Crypto.PublicKey" Python module.\n')
-+    sys.stderr.write('On Debian GNU/Linux the package is called "python-crypto".\n')
-+    sys.exit(1)
-+
-+def bitwise_collect(value, radix_bits):
-+    words = []
-+    radix_mask = (1 << radix_bits) - 1
-+    while value != 0:
-+        words.append(value & radix_mask)
-+        value >>= radix_bits
-+    return words
- 
- def print_ssl_64(output, name, val):
--    while val[0] == '\0':
--        val = val[1:]
--    while len(val) % 8:
--        val = '\0' + val
--    vnew = []
--    while len(val):
--        vnew.append((val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7]))
--        val = val[8:]
--    vnew.reverse()
--    output.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
-+    # OpenSSL expects 64-bit words given least-significant-word first.
-+    vwords = bitwise_collect(val, 64)
-+
-+    output.write(u'static BN_ULONG {}[] = {{\n'.format(name))
-     idx = 0
--    for v1, v2, v3, v4, v5, v6, v7, v8 in vnew:
-+    for vword in vwords:
-         if not idx:
--            output.write('\t')
--        output.write('0x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4), ord(v5), ord(v6), ord(v7), ord(v8)))
-+            output.write(u'\t')
-+        output.write(u'0x{:016x}ULL, '.format(vword))
-         idx += 1
-         if idx == 2:
-             idx = 0
--            output.write('\n')
-+            output.write(u'\n')
-     if idx:
--        output.write('\n')
--    output.write('};\n\n')
-+        output.write(u'\n')
-+    output.write(u'};\n\n')
- 
- def print_ssl_32(output, name, val):
--    while val[0] == '\0':
--        val = val[1:]
--    while len(val) % 4:
--        val = '\0' + val
--    vnew = []
--    while len(val):
--        vnew.append((val[0], val[1], val[2], val[3], ))
--        val = val[4:]
--    vnew.reverse()
--    output.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
-+    # OpenSSL expects 32-bit words given least-significant-word first.
-+    vwords = bitwise_collect(val, 32)
-+
-+    output.write(u'static BN_ULONG {}[] = {{\n'.format(name))
-     idx = 0
--    for v1, v2, v3, v4 in vnew:
-+    for vword in vwords:
-         if not idx:
--            output.write('\t')
--        output.write('0x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4)))
-+            output.write(u'\t')
-+        output.write(u'0x{:08x}, '.format(vword))
-         idx += 1
-         if idx == 4:
-             idx = 0
--            output.write('\n')
-+            output.write(u'\n')
-     if idx:
--        output.write('\n')
--    output.write('};\n\n')
-+        output.write(u'\n')
-+    output.write(u'};\n\n')
- 
- def print_ssl(output, name, val):
-+
-+    output.write(u'#include <stdint.h>\n')
-+    output.write(u'#include <openssl/bn.h>\n')
-+
-     import struct
--    output.write('#include <stdint.h>\n')
-     if len(struct.pack('@L', 0)) == 8:
-         return print_ssl_64(output, name, val)
-     else:
-         return print_ssl_32(output, name, val)
- 
- def print_ssl_keys(output, n):
--    output.write(r'''
-+    output.write(u'''
- struct pubkey {
- 	struct bignum_st e, n;
- };
- 
--#define KEY(data) {				\
--	.d = data,				\
--	.top = sizeof(data)/sizeof(data[0]),	\
-+#define KEY(data) {                          \\
-+	.d = data,                           \\
-+	.top = sizeof(data)/sizeof(data[0]), \\
- }
- 
--#define KEYS(e,n)	{ KEY(e), KEY(n), }
-+#define KEYS(e,n)    { KEY(e), KEY(n), }
- 
- static struct pubkey keys[] = {
- ''')
-     for n in xrange(n + 1):
--        output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
--    output.write('};\n')
-+        output.write(u'	KEYS(e_{0}, n_{0}),\n'.format(n))
-+    output.write(u'};\n')
-     pass
- 
- def print_gcrypt(output, name, val):
--    output.write('#include <stdint.h>\n')
--    while val[0] == '\0':
--        val = val[1:]
--    output.write('static const uint8_t %s[%d] = {\n' % (name, len(val)))
-+    # gcrypt expects 8-bit words most-significant-word first
-+    vwords = bitwise_collect(val, 8)
-+    vwords.reverse()
-+    
-+    output.write(u'#include <stdint.h>\n')
-+    output.write(u'static const uint8_t %s[%d] = {\n' % (name, len(vwords)))
-     idx = 0
--    for v in val:
-+    for vword in vwords:
-         if not idx:
--            output.write('\t')
--        output.write('0x%.2x, ' % ord(v))
-+            output.write(u'\t')
-+        output.write(u'0x{:02x}, '.format(vword))
-         idx += 1
-         if idx == 8:
-             idx = 0
--            output.write('\n')
-+            output.write(u'\n')
-     if idx:
--        output.write('\n')
--    output.write('};\n\n')
-+        output.write(u'\n')
-+    output.write(u'};\n\n')
- 
- def print_gcrypt_keys(output, n):
--    output.write(r'''
-+    output.write(u'''
- struct key_params {
- 	const uint8_t *e, *n;
- 	uint32_t len_e, len_n;
- };
- 
--#define KEYS(_e, _n) {			\
--	.e = _e, .len_e = sizeof(_e),	\
--	.n = _n, .len_n = sizeof(_n),	\
-+#define KEYS(_e, _n) {                \\
-+	.e = _e, .len_e = sizeof(_e), \\
-+	.n = _n, .len_n = sizeof(_n), \\
- }
- 
- static const struct key_params keys[] = {
- ''')
--    for n in xrange(n + 1):
--        output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
--    output.write('};\n')
--    
-+    for n in range(n + 1):
-+        output.write(u'	KEYS(e_{0}, n_{0}),\n'.format(n))
-+    output.write(u'};\n')
-+
- 
- modes = {
-     '--ssl': (print_ssl, print_ssl_keys),
-@@ -135,21 +137,21 @@ except IndexError:
-     mode = None
- 
- if not mode in modes:
--    print 'Usage: %s [%s] input-file... output-file' % (sys.argv[0], '|'.join(modes.keys()))
-+    print('Usage: {} [{}] input-file... output-file'.format(sys.argv[0], '|'.join(modes.keys())))
-     sys.exit(2)
- 
--output = open(outfile, 'w')
-+output = io.open(outfile, 'w')
- 
- # load key
- idx = 0
- for f in files:
--    try:
--        key = RSA.load_pub_key(f)
--    except RSA.RSAError:
--        key = RSA.load_key(f)
- 
--    modes[mode][0](output, 'e_%d' % idx, key.e[4:])
--    modes[mode][0](output, 'n_%d' % idx, key.n[4:])
-+    key_contents = io.open(f, 'rb').read()
-+    key = RSA.importKey(key_contents)
-+
-+    modes[mode][0](output, 'e_{}'.format(idx), key.e)
-+    modes[mode][0](output, 'n_{}'.format(idx), key.n)
-+
-     idx += 1
- 
- modes[mode][1](output, idx - 1)
--- 
-2.3.6
+David Woodhouse (9):
+      modsign: Abort modules_install when signing fails
+      modsign: Allow password to be specified for signing key
+      modsign: Allow signing key to be PKCS#11
+      modsign: Allow external signing key to be specified
+      modsign: Extract signing cert from CONFIG_MODULE_SIG_KEY if needed
+      modsign: Use single PEM file for autogenerated key
+      modsign: Add explicit CONFIG_SYSTEM_TRUSTED_KEYS option
+      extract-cert: Cope with multiple X.509 certificates in a single file
+      modsign: Use extract-cert to process CONFIG_SYSTEM_TRUSTED_KEYS
+
+Luis R. Rodriguez (1):
+      sign-file: Add option to only create signature file
+
+
+ .gitignore                                |    1 
+ Documentation/kbuild/kbuild.txt           |    5 
+ Documentation/module-signing.txt          |   51 +++-
+ Makefile                                  |    8 -
+ arch/x86/kernel/kexec-bzimage64.c         |    4 
+ crypto/asymmetric_keys/Makefile           |   12 +
+ crypto/asymmetric_keys/asymmetric_type.c  |   14 +
+ crypto/asymmetric_keys/pkcs7.asn1         |   16 +
+ crypto/asymmetric_keys/pkcs7_key_type.c   |   17 +
+ crypto/asymmetric_keys/pkcs7_parser.c     |  208 ++++++++++++++
+ crypto/asymmetric_keys/pkcs7_parser.h     |    6 
+ crypto/asymmetric_keys/pkcs7_trust.c      |   24 +-
+ crypto/asymmetric_keys/pkcs7_verify.c     |  101 +++++--
+ crypto/asymmetric_keys/public_key.c       |   79 +++++
+ crypto/asymmetric_keys/public_key.h       |    3 
+ crypto/asymmetric_keys/signature.c        |    6 
+ crypto/asymmetric_keys/verify_pefile.c    |    9 -
+ crypto/asymmetric_keys/x509_akid.asn1     |   35 ++
+ crypto/asymmetric_keys/x509_cert_parser.c |  251 ++++++++++++++---
+ crypto/asymmetric_keys/x509_extusage.asn1 |    3 
+ crypto/asymmetric_keys/x509_parser.h      |    8 -
+ crypto/asymmetric_keys/x509_public_key.c  |  101 +++++--
+ include/crypto/pkcs7.h                    |   10 +
+ include/crypto/public_key.h               |   36 ++
+ include/keys/asymmetric-subtype.h         |    7 
+ include/keys/system_keyring.h             |    8 +
+ include/linux/oid_registry.h              |    8 +
+ include/linux/verify_pefile.h             |    6 
+ init/Kconfig                              |   55 +++-
+ kernel/Makefile                           |  114 ++++++--
+ kernel/module_signing.c                   |  213 +--------------
+ kernel/system_certificates.S              |    3 
+ kernel/system_keyring.c                   |   78 +++++
+ lib/oid_registry.c                        |    1 
+ scripts/Makefile                          |    4 
+ scripts/Makefile.modinst                  |    2 
+ scripts/asn1_compiler.c                   |  104 ++++++-
+ scripts/extract-cert.c                    |  166 +++++++++++
+ scripts/sign-file                         |  421 -----------------------------
+ scripts/sign-file.c                       |  288 ++++++++++++++++++++
+ security/integrity/digsig_asymmetric.c    |    3 
+ 41 files changed, 1647 insertions(+), 842 deletions(-)
+ create mode 100644 crypto/asymmetric_keys/x509_akid.asn1
+ create mode 100644 crypto/asymmetric_keys/x509_extusage.asn1
+ create mode 100644 scripts/extract-cert.c
+ delete mode 100755 scripts/sign-file
+ create mode 100755 scripts/sign-file.c
 
