@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59351 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbbGWGGf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 02:06:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
-References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
-	<CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com>
-Date: Thu, 23 Jul 2015 09:06:28 +0300
-In-Reply-To: <CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com>
-	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Thu, 23 Jul 2015
- 02:30:41 +0200")
-Message-ID: <871tfzif17.fsf@kamboji.qca.qualcomm.com> (sfid-20150723_080638_804961_A9284B1B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:53185 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758087AbbGQOsH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 10:48:07 -0400
+Message-ID: <1437144483.1933.27.camel@sipsolutions.net> (sfid-20150717_164811_113789_A7C6D03E)
+Subject: Re: [PATCH v3 5/5] mac80211: select an AID when creating new mesh
+ STAs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Fri, 17 Jul 2015 16:48:03 +0200
+In-Reply-To: <1437140910.1933.25.camel@sipsolutions.net> (sfid-20150717_154838_591136_E99D8286)
+References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
+	 <1436877119-17577-6-git-send-email-me@bobcopeland.com>
+	 (sfid-20150714_143227_832790_AC27A2F3) <1437140910.1933.25.camel@sipsolutions.net>
+	 (sfid-20150717_154838_591136_E99D8286)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+On Fri, 2015-07-17 at 15:48 +0200, Johannes Berg wrote:
+> On Tue, 2015-07-14 at 08:31 -0400, Bob Copeland wrote:
+> > Instead of using peer link id for AID, generate a new
+> > AID when creating mesh STAs in the kernel peering manager.
+> > This enables smaller TIM elements and more closely follows
+> > the standard, and it also enables mesh to work on drivers
+> > that require a valid AID when the STA is inserted (ath10k
+> > firmware has this requirement, for example).
+> > 
+> > In the case of userspace-managed stations, we use the AID
+> > from NL80211_CMD_NEW_STATION.
+> > 
+> Applied the remaining 3 patches to mac80211-next (after merging
+> mac80211)
+> 
 
->> +       if (bus->host_pdev) {
->> +               struct device *dev = &bus->host_pdev->dev;
->> +
->> +               of_platform_populate(dev->of_node, of_default_bus_match_table,
->> +                                    NULL, dev);
->> +       }
->> +
->
-> This caused a compile error when using bcma as module:
-> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
->
-> There are two options I guess:
-> 1) Export of_default_bus_match_table
-> 2) Use some better condition like
-> if (IS_BUILTIN(CONFIG_BCMA) && bus->host_pdev)
->
-> Unfortunately I'm on my long holidays right now.
->
-> Hauke: do you think you can find a moment to handle this?
+Actually, I'm dropping this one (the 5th) as it broke all the wpa_s
+mesh test cases. Perhaps wpa_s isn't assigning an AID and mac80211
+needs a fallback?
 
-I can cook up a patch which uses IS_BUILTIN() so that we get the build
-working again. You can fix this better once you come back.
-
-> Sorry for the problem :|
-
-No worries, enjoy your vacation :)
-
--- 
-Kalle Valo
+johannes
