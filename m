@@ -1,101 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52890 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757488AbbGQNbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 09:31:41 -0400
-Message-ID: <1437139894.1933.16.camel@sipsolutions.net> (sfid-20150717_153149_337845_B05B138A)
-Subject: pull-request: mac80211 2015-07-17
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 17 Jul 2015 15:31:34 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:36807 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756977AbbGQHNn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 03:13:43 -0400
+Received: by widjy10 with SMTP id jy10so33791638wid.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2015 00:13:42 -0700 (PDT)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 2/4] mwifiex: remove redundant reset of cmd_wait_q status
+Date: Fri, 17 Jul 2015 09:13:04 +0200
+Message-Id: <1437117186-25243-3-git-send-email-afenkart@gmail.com> (sfid-20150717_091347_074803_BEB08172)
+In-Reply-To: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
+References: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+mwifiex_cancel_pending_ioctl is called only from
+mwifiex_cmd_timeout_func. There the wait_q status is set to
+-ETIMEDWAIT before calling this function. Whether we reset the status
+to -1 or leave it at -ETIMEDWAIT at end doesn't matter since both
+are != 0 hence mean failure
 
-We've accumulated some wireless fixes, please pull. Arik's fix is a bit
-bigger than I might like, but it fixes a real locking issue and we
-didn't really see a good way to make a smaller version.
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Let me know if there's any problem.
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 2f4715e..87b6dee 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1123,7 +1123,6 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 			}
+ 		}
+ 	}
+-	adapter->cmd_wait_q.status = -1;
+ }
+ 
+ /*
+-- 
+2.1.4
 
-johannes
-
-
-The following changes since commit f760b87f8f12eb262f14603e65042996fe03720e:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2015-07-13 11:18:25 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-07-17
-
-for you to fetch changes up to 923b352f19d9ea971ae2536eab55f5fc9e95fedf:
-
-  cfg80211: use RTNL locked reg_can_beacon for IR-relaxation (2015-07-17 15:02:02 +0200)
-
-----------------------------------------------------------------
-Some fixes for the current cycle:
-
- 1. Arik introduced an rtnl-locked regulatory API to be able
-    to differentiate between place do/don't have the RTNL;
-    this fixes missing locking in some of the code paths
-
- 2. Two small mesh bugfixes from Bob, one to avoid treating
-    a certain malformed over-the-air frame and one to avoid
-    sending a garbage field over the air.
-
- 3. A fix for powersave during WoWLAN suspend from Krishna Chaitanya.
-
- 4. A fix for a powersave vs. aggregation teardown race, from Michal.
-
- 5. Thomas reduced the loglevel of CRDA messages to avoid spamming
-    the kernel log with mostly irrelevant information.
-
- 6. Tom fixed a dangling debugfs directory pointer that could cause
-    crashes if subsequent addition of the same interface to debugfs
-    failed for some reason.
-
- 7. A fix from myself for a list corruption issue in mac80211 during
-    combined interface shutdown/removal - shut down interfaces first
-    and only then remove them to avoid that.
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      cfg80211: use RTNL locked reg_can_beacon for IR-relaxation
-
-Bob Copeland (2):
-      mac80211: correct aid location in peering frames
-      mac80211: add missing length check for confirm frames
-
-Chaitanya T K (1):
-      mac80211: wowlan: enable powersave if suspend while ps-polling
-
-Johannes Berg (1):
-      mac80211: shut down interfaces before destroying interface list
-
-Michal Kazior (1):
-      mac80211: don't clear all tx flags when requeing
-
-Thomas Petazzoni (1):
-      wireless: regulatory: reduce log level of CRDA related messages
-
-Tom Hughes (1):
-      mac80211: clear subdir_stations when removing debugfs
-
- include/net/cfg80211.h        | 17 ++++++++++++++++
- net/mac80211/debugfs_netdev.c |  1 +
- net/mac80211/iface.c          | 25 +++++++++++++-----------
- net/mac80211/mesh_plink.c     |  5 ++++-
- net/mac80211/pm.c             | 16 +++++++++++++++
- net/mac80211/tdls.c           |  6 +++---
- net/mac80211/tx.c             |  4 +++-
- net/wireless/chan.c           | 45 ++++++++++++++++++++++++++++++++-----------
- net/wireless/nl80211.c        | 14 ++++++++------
- net/wireless/reg.c            |  8 ++++----
- net/wireless/trace.h          | 11 +++++++----
- 11 files changed, 111 insertions(+), 41 deletions(-)
