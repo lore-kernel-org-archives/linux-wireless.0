@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:45032 "EHLO
-	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932321AbbG1N5N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 09:57:13 -0400
-From: Robert ABEL <rabel@cit-ec.uni-bielefeld.de>
-To: johannes@sipsolutions.net, davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Robert ABEL <rabel@cit-ec.uni-bielefeld.de>
-Subject: [PATCH] net: rfkill-regulator: fix compiler warning
-Date: Tue, 28 Jul 2015 15:47:40 +0200
-Message-Id: <1438091260-16062-1-git-send-email-rabel@cit-ec.uni-bielefeld.de> (sfid-20150728_160000_079796_E6DD2E34)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52707 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757205AbbGQMhv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 08:37:51 -0400
+Message-ID: <1437136664.1933.10.camel@sipsolutions.net> (sfid-20150717_143809_044459_082F3B47)
+Subject: Re: [PATCH] net: wireless: reduce log level of CRDA related messages
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Fri, 17 Jul 2015 14:37:44 +0200
+In-Reply-To: <1436448915-31724-1-git-send-email-thomas.petazzoni@free-electrons.com> (sfid-20150709_153528_507259_B4073E38)
+References: <1436448915-31724-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	 (sfid-20150709_153528_507259_B4073E38)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pdata char* name => const char* name
+On Thu, 2015-07-09 at 15:35 +0200, Thomas Petazzoni wrote:
+> With a basic Linux userspace, the messages "Calling CRDA to update
+> world regulatory domain" appears 10 times after boot every second or
+> so, followed by a final "Exceeded CRDA call max attempts. Not calling
+> CRDA". For those of us not having the corresponding userspace parts,
+> having those messages repeatedly displayed at boot time is a bit
+> annoying, so this commit reduces their log level to pr_debug().
+> 
+Applied.
 
-Signed-off-by: Robert ABEL <rabel@cit-ec.uni-bielefeld.de>
----
- include/linux/rfkill-regulator.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/include/linux/rfkill-regulator.h b/include/linux/rfkill-regulator.h
-index aca36bc..594d8e7 100644
---- a/include/linux/rfkill-regulator.h
-+++ b/include/linux/rfkill-regulator.h
-@@ -41,7 +41,7 @@
- #include <linux/rfkill.h>
- 
- struct rfkill_regulator_platform_data {
--	char *name;             /* the name for the rfkill switch */
-+	const char *name;       /* the name for the rfkill switch */
- 	enum rfkill_type type;  /* the type as specified in rfkill.h */
- };
- 
--- 
-2.5.0
-
+johannes
