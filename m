@@ -1,38 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42471 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756852AbbGGNWa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 09:22:30 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 02/13] wil6210: ACS implementation using QCA vendor command
-Date: Tue, 7 Jul 2015 16:22:25 +0300
-Message-ID: <65296673.xqVxgzcabI@lx-wigig-72> (sfid-20150707_152233_826481_BDA403B5)
-In-Reply-To: <1436092516.6268.1.camel@sipsolutions.net>
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1436081080-27305-3-git-send-email-qca_vkondrat@qca.qualcomm.com> <1436092516.6268.1.camel@sipsolutions.net>
+Received: from mout.gmx.net ([212.227.15.18]:56354 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750849AbbGQOGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 10:06:49 -0400
+Subject: Re: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <55A43355.2070302@gmx.de>
+ <CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+From: =?UTF-8?Q?Toralf_F=c3=b6rster?= <toralf.foerster@gmx.de>
+Message-ID: <55A90BF4.6040402@gmx.de> (sfid-20150717_160706_965554_2EC5C6E3)
+Date: Fri, 17 Jul 2015 16:06:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, July 05, 2015 12:35:16 PM Johannes Berg wrote:
-> On Sun, 2015-07-05 at 10:24 +0300, Vladimir Kondratiev wrote:
-> > ACS is implemented by registering to QCA vendor ACS sub command.
-> > On receive of the command from hostapd, driver issues passive
-> > scan command and block until scan results are available.
-> > When received, the results are sent up using QCA vendor ACS
-> > results event
-> 
-> I'm not convinced that we really want vendor commands upstream in the
-> kernel. There at least we could go the extra mile to make proper non
-> -vendor APIs, no?
-> 
-> johannes
+On 07/14/2015 08:43 AM, Emmanuel Grumbach wrote:
+> You are not using the latest firmware. Please upgrade to 25.17.12.0.
 
-We are looking into this and will be back soon.
+At least with this firmware the issue is self-healing after a short while - I do not need to restart the interface.
 
-Thanks, Vladimir
+-- 
+Toralf, pgp key: 872AE508 0076E94E
