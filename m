@@ -1,55 +1,406 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay5-d.mail.gandi.net ([217.70.183.197]:43905 "EHLO
-	relay5-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbbGOGbY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2015 02:31:24 -0400
-Message-ID: <1436941830.20249.64.camel@hadess.net> (sfid-20150715_083142_194782_2FC3BDA3)
-Subject: Re: [PATCH] rfkill-gpio: Add support for the Realtek 8723 BT
-From: Bastien Nocera <hadess@hadess.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 15 Jul 2015 08:30:30 +0200
-In-Reply-To: <55A50C82.4040107@lwfinger.net>
-References: <1436825494.20249.47.camel@hadess.net>
-	 <55A50C82.4040107@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:48821 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752598AbbGQQPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 12:15:16 -0400
+Subject: [PATCH 01/27] X.509: Extract both parts of the
+ AuthorityKeyIdentifier
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Fri, 17 Jul 2015 17:15:09 +0100
+Message-ID: <20150717161509.2578.10031.stgit@warthog.procyon.org.uk> (sfid-20150717_182431_958782_DA2739A8)
+In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-07-14 at 08:20 -0500, Larry Finger wrote:
-> On 07/13/2015 05:11 PM, Bastien Nocera wrote:
-> > http://thread.gmane.org/gmane.linux.kernel.wireless.general/127706/
-> > focu
-> > s=127896
-> > 
-> > Signed-off-by: Bastien Nocera <hadess@hadess.net>
-> 
-> Bastien,
-> 
-> The subject of this patch needs a bit more detail. I know that you 
-> mean the 
-> RTL8723B versions of the Bluetooth devices. The subject should say 
-> this.
-> 
-> The commit message needs a bit more detail. Referencing the E-mail 
-> thread is OK, 
-> but a bit more is needed. What fails without this change?
+Extract both parts of the AuthorityKeyIdentifier, not just the keyIdentifier,
+as the second part can be used to match X.509 certificates by issuer and
+serialNumber.
 
-Nothing yet, as the current Bluetooth support for this device is
-completely in user-space, and doesn't sync up with rfkill.
+Signed-off-by: David Howells <dhowells@redhat.com>
+Tested-by: Vivek Goyal <vgoyal@redhat.com>
+---
 
-> To help keep that patches straight, change the next submission to say 
-> "[PATCH 
-> V2]" in the subject. In addition, after the ---, add a section saying 
-> what 
-> changed in V2. That info is not retained in the final commit message 
-> in the 
-> repo, but it can be very useful to a maintainer.
+ crypto/asymmetric_keys/Makefile           |    8 +-
+ crypto/asymmetric_keys/pkcs7_trust.c      |    4 -
+ crypto/asymmetric_keys/pkcs7_verify.c     |   12 +-
+ crypto/asymmetric_keys/x509_akid.asn1     |   35 +++++++
+ crypto/asymmetric_keys/x509_cert_parser.c |  142 ++++++++++++++++++-----------
+ crypto/asymmetric_keys/x509_parser.h      |    5 +
+ crypto/asymmetric_keys/x509_public_key.c  |    8 +-
+ 7 files changed, 145 insertions(+), 69 deletions(-)
+ create mode 100644 crypto/asymmetric_keys/x509_akid.asn1
 
+diff --git a/crypto/asymmetric_keys/Makefile b/crypto/asymmetric_keys/Makefile
+index e47fcd9ac5e8..cd1406f9b14a 100644
+--- a/crypto/asymmetric_keys/Makefile
++++ b/crypto/asymmetric_keys/Makefile
+@@ -15,15 +15,21 @@ obj-$(CONFIG_PUBLIC_KEY_ALGO_RSA) += rsa.o
+ obj-$(CONFIG_X509_CERTIFICATE_PARSER) += x509_key_parser.o
+ x509_key_parser-y := \
+ 	x509-asn1.o \
++	x509_akid-asn1.o \
+ 	x509_rsakey-asn1.o \
+ 	x509_cert_parser.o \
+ 	x509_public_key.o
+ 
+-$(obj)/x509_cert_parser.o: $(obj)/x509-asn1.h $(obj)/x509_rsakey-asn1.h
++$(obj)/x509_cert_parser.o: \
++	$(obj)/x509-asn1.h \
++	$(obj)/x509_akid-asn1.h \
++	$(obj)/x509_rsakey-asn1.h
+ $(obj)/x509-asn1.o: $(obj)/x509-asn1.c $(obj)/x509-asn1.h
++$(obj)/x509_akid-asn1.o: $(obj)/x509_akid-asn1.c $(obj)/x509_akid-asn1.h
+ $(obj)/x509_rsakey-asn1.o: $(obj)/x509_rsakey-asn1.c $(obj)/x509_rsakey-asn1.h
+ 
+ clean-files	+= x509-asn1.c x509-asn1.h
++clean-files	+= x509_akid-asn1.c x509_akid-asn1.h
+ clean-files	+= x509_rsakey-asn1.c x509_rsakey-asn1.h
+ 
+ #
+diff --git a/crypto/asymmetric_keys/pkcs7_trust.c b/crypto/asymmetric_keys/pkcs7_trust.c
+index 1d29376072da..0f6463b6692b 100644
+--- a/crypto/asymmetric_keys/pkcs7_trust.c
++++ b/crypto/asymmetric_keys/pkcs7_trust.c
+@@ -85,8 +85,8 @@ static int pkcs7_validate_trust_one(struct pkcs7_message *pkcs7,
+ 	/* No match - see if the root certificate has a signer amongst the
+ 	 * trusted keys.
+ 	 */
+-	if (last && last->authority) {
+-		key = x509_request_asymmetric_key(trust_keyring, last->authority,
++	if (last && last->akid_skid) {
++		key = x509_request_asymmetric_key(trust_keyring, last->akid_skid,
+ 						  false);
+ 		if (!IS_ERR(key)) {
+ 			x509 = last;
+diff --git a/crypto/asymmetric_keys/pkcs7_verify.c b/crypto/asymmetric_keys/pkcs7_verify.c
+index cd455450b069..a4d083f7e9e1 100644
+--- a/crypto/asymmetric_keys/pkcs7_verify.c
++++ b/crypto/asymmetric_keys/pkcs7_verify.c
+@@ -187,11 +187,11 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
+ 			goto maybe_missing_crypto_in_x509;
+ 
+ 		pr_debug("- issuer %s\n", x509->issuer);
+-		if (x509->authority)
++		if (x509->akid_skid)
+ 			pr_debug("- authkeyid %*phN\n",
+-				 x509->authority->len, x509->authority->data);
++				 x509->akid_skid->len, x509->akid_skid->data);
+ 
+-		if (!x509->authority ||
++		if (!x509->akid_skid ||
+ 		    strcmp(x509->subject, x509->issuer) == 0) {
+ 			/* If there's no authority certificate specified, then
+ 			 * the certificate must be self-signed and is the root
+@@ -216,13 +216,13 @@ static int pkcs7_verify_sig_chain(struct pkcs7_message *pkcs7,
+ 		 * list to see if the next one is there.
+ 		 */
+ 		pr_debug("- want %*phN\n",
+-			 x509->authority->len, x509->authority->data);
++			 x509->akid_skid->len, x509->akid_skid->data);
+ 		for (p = pkcs7->certs; p; p = p->next) {
+ 			if (!p->skid)
+ 				continue;
+ 			pr_debug("- cmp [%u] %*phN\n",
+ 				 p->index, p->skid->len, p->skid->data);
+-			if (asymmetric_key_id_same(p->skid, x509->authority))
++			if (asymmetric_key_id_same(p->skid, x509->akid_skid))
+ 				goto found_issuer;
+ 		}
+ 
+@@ -338,8 +338,6 @@ int pkcs7_verify(struct pkcs7_message *pkcs7)
+ 		ret = x509_get_sig_params(x509);
+ 		if (ret < 0)
+ 			return ret;
+-		pr_debug("X.509[%u] %*phN\n",
+-			 n, x509->authority->len, x509->authority->data);
+ 	}
+ 
+ 	for (sinfo = pkcs7->signed_infos; sinfo; sinfo = sinfo->next) {
+diff --git a/crypto/asymmetric_keys/x509_akid.asn1 b/crypto/asymmetric_keys/x509_akid.asn1
+new file mode 100644
+index 000000000000..1a33231a75a8
+--- /dev/null
++++ b/crypto/asymmetric_keys/x509_akid.asn1
+@@ -0,0 +1,35 @@
++-- X.509 AuthorityKeyIdentifier
++-- rfc5280 section 4.2.1.1
++
++AuthorityKeyIdentifier ::= SEQUENCE {
++	keyIdentifier			[0] IMPLICIT KeyIdentifier		OPTIONAL,
++	authorityCertIssuer		[1] IMPLICIT GeneralNames		OPTIONAL,
++	authorityCertSerialNumber	[2] IMPLICIT CertificateSerialNumber	OPTIONAL
++	}
++
++KeyIdentifier ::= OCTET STRING ({ x509_akid_note_kid })
++
++CertificateSerialNumber ::= INTEGER ({ x509_akid_note_serial })
++
++GeneralNames ::= SEQUENCE OF GeneralName
++
++GeneralName ::= CHOICE {
++	otherName			[0] ANY,
++	rfc822Name			[1] IA5String,
++	dNSName				[2] IA5String,
++	x400Address			[3] ANY,
++	directoryName			[4] Name ({ x509_akid_note_name }),
++	ediPartyName			[5] ANY,
++	uniformResourceIdentifier	[6] IA5String,
++	iPAddress			[7] OCTET STRING,
++	registeredID			[8] OBJECT IDENTIFIER
++	}
++
++Name ::= SEQUENCE OF RelativeDistinguishedName
++
++RelativeDistinguishedName ::= SET OF AttributeValueAssertion
++
++AttributeValueAssertion ::= SEQUENCE {
++	attributeType		OBJECT IDENTIFIER ({ x509_note_OID }),
++	attributeValue		ANY ({ x509_extract_name_segment })
++	}
+diff --git a/crypto/asymmetric_keys/x509_cert_parser.c b/crypto/asymmetric_keys/x509_cert_parser.c
+index a668d90302d3..6c130dd56f35 100644
+--- a/crypto/asymmetric_keys/x509_cert_parser.c
++++ b/crypto/asymmetric_keys/x509_cert_parser.c
+@@ -18,6 +18,7 @@
+ #include "public_key.h"
+ #include "x509_parser.h"
+ #include "x509-asn1.h"
++#include "x509_akid-asn1.h"
+ #include "x509_rsakey-asn1.h"
+ 
+ struct x509_parse_context {
+@@ -35,6 +36,10 @@ struct x509_parse_context {
+ 	u16		o_offset;		/* Offset of organizationName (O) */
+ 	u16		cn_offset;		/* Offset of commonName (CN) */
+ 	u16		email_offset;		/* Offset of emailAddress */
++	unsigned	raw_akid_size;
++	const void	*raw_akid;		/* Raw authorityKeyId in ASN.1 */
++	const void	*akid_raw_issuer;	/* Raw directoryName in authorityKeyId */
++	unsigned	akid_raw_issuer_size;
+ };
+ 
+ /*
+@@ -48,7 +53,8 @@ void x509_free_certificate(struct x509_certificate *cert)
+ 		kfree(cert->subject);
+ 		kfree(cert->id);
+ 		kfree(cert->skid);
+-		kfree(cert->authority);
++		kfree(cert->akid_id);
++		kfree(cert->akid_skid);
+ 		kfree(cert->sig.digest);
+ 		mpi_free(cert->sig.rsa.s);
+ 		kfree(cert);
+@@ -85,6 +91,18 @@ struct x509_certificate *x509_cert_parse(const void *data, size_t datalen)
+ 	if (ret < 0)
+ 		goto error_decode;
+ 
++	/* Decode the AuthorityKeyIdentifier */
++	if (ctx->raw_akid) {
++		pr_devel("AKID: %u %*phN\n",
++			 ctx->raw_akid_size, ctx->raw_akid_size, ctx->raw_akid);
++		ret = asn1_ber_decoder(&x509_akid_decoder, ctx,
++				       ctx->raw_akid, ctx->raw_akid_size);
++		if (ret < 0) {
++			pr_warn("Couldn't decode AuthKeyIdentifier\n");
++			goto error_decode;
++		}
++	}
++
+ 	/* Decode the public key */
+ 	ret = asn1_ber_decoder(&x509_rsakey_decoder, ctx,
+ 			       ctx->key, ctx->key_size);
+@@ -422,7 +440,6 @@ int x509_process_extension(void *context, size_t hdrlen,
+ 	struct x509_parse_context *ctx = context;
+ 	struct asymmetric_key_id *kid;
+ 	const unsigned char *v = value;
+-	int i;
+ 
+ 	pr_debug("Extension: %u\n", ctx->last_oid);
+ 
+@@ -449,57 +466,8 @@ int x509_process_extension(void *context, size_t hdrlen,
+ 
+ 	if (ctx->last_oid == OID_authorityKeyIdentifier) {
+ 		/* Get hold of the CA key fingerprint */
+-		if (ctx->cert->authority || vlen < 5)
+-			return -EBADMSG;
+-
+-		/* Authority Key Identifier must be a Constructed SEQUENCE */
+-		if (v[0] != (ASN1_SEQ | (ASN1_CONS << 5)))
+-			return -EBADMSG;
+-
+-		/* Authority Key Identifier is not indefinite length */
+-		if (unlikely(vlen == ASN1_INDEFINITE_LENGTH))
+-			return -EBADMSG;
+-
+-		if (vlen < ASN1_INDEFINITE_LENGTH) {
+-			/* Short Form length */
+-			if (v[1] != vlen - 2 ||
+-			    v[2] != SEQ_TAG_KEYID ||
+-			    v[3] > vlen - 4)
+-				return -EBADMSG;
+-
+-			vlen = v[3];
+-			v += 4;
+-		} else {
+-			/* Long Form length */
+-			size_t seq_len = 0;
+-			size_t sub = v[1] - ASN1_INDEFINITE_LENGTH;
+-
+-			if (sub > 2)
+-				return -EBADMSG;
+-
+-			/* calculate the length from subsequent octets */
+-			v += 2;
+-			for (i = 0; i < sub; i++) {
+-				seq_len <<= 8;
+-				seq_len |= v[i];
+-			}
+-
+-			if (seq_len != vlen - 2 - sub ||
+-			    v[sub] != SEQ_TAG_KEYID ||
+-			    v[sub + 1] > vlen - 4 - sub)
+-				return -EBADMSG;
+-
+-			vlen = v[sub + 1];
+-			v += (sub + 2);
+-		}
+-
+-		kid = asymmetric_key_generate_id(ctx->cert->raw_issuer,
+-						 ctx->cert->raw_issuer_size,
+-						 v, vlen);
+-		if (IS_ERR(kid))
+-			return PTR_ERR(kid);
+-		pr_debug("authkeyid %*phN\n", kid->len, kid->data);
+-		ctx->cert->authority = kid;
++		ctx->raw_akid = v;
++		ctx->raw_akid_size = vlen;
+ 		return 0;
+ 	}
+ 
+@@ -569,3 +537,71 @@ int x509_note_not_after(void *context, size_t hdrlen,
+ 	struct x509_parse_context *ctx = context;
+ 	return x509_note_time(&ctx->cert->valid_to, hdrlen, tag, value, vlen);
+ }
++
++/*
++ * Note a key identifier-based AuthorityKeyIdentifier
++ */
++int x509_akid_note_kid(void *context, size_t hdrlen,
++		       unsigned char tag,
++		       const void *value, size_t vlen)
++{
++	struct x509_parse_context *ctx = context;
++	struct asymmetric_key_id *kid;
++
++	pr_debug("AKID: keyid: %*phN\n", (int)vlen, value);
++
++	if (ctx->cert->akid_skid)
++		return 0;
++
++	kid = asymmetric_key_generate_id(ctx->cert->raw_issuer,
++					 ctx->cert->raw_issuer_size,
++					 value, vlen);
++	if (IS_ERR(kid))
++		return PTR_ERR(kid);
++	pr_debug("authkeyid %*phN\n", kid->len, kid->data);
++	ctx->cert->akid_skid = kid;
++	return 0;
++}
++
++/*
++ * Note a directoryName in an AuthorityKeyIdentifier
++ */
++int x509_akid_note_name(void *context, size_t hdrlen,
++			unsigned char tag,
++			const void *value, size_t vlen)
++{
++	struct x509_parse_context *ctx = context;
++
++	pr_debug("AKID: name: %*phN\n", (int)vlen, value);
++
++	ctx->akid_raw_issuer = value;
++	ctx->akid_raw_issuer_size = vlen;
++	return 0;
++}
++
++/*
++ * Note a serial number in an AuthorityKeyIdentifier
++ */
++int x509_akid_note_serial(void *context, size_t hdrlen,
++			  unsigned char tag,
++			  const void *value, size_t vlen)
++{
++	struct x509_parse_context *ctx = context;
++	struct asymmetric_key_id *kid;
++
++	pr_debug("AKID: serial: %*phN\n", (int)vlen, value);
++
++	if (!ctx->akid_raw_issuer || ctx->cert->akid_id)
++		return 0;
++
++	kid = asymmetric_key_generate_id(value,
++					 vlen,
++					 ctx->akid_raw_issuer,
++					 ctx->akid_raw_issuer_size);
++	if (IS_ERR(kid))
++		return PTR_ERR(kid);
++
++	pr_debug("authkeyid %*phN\n", kid->len, kid->data);
++	ctx->cert->akid_id = kid;
++	return 0;
++}
+diff --git a/crypto/asymmetric_keys/x509_parser.h b/crypto/asymmetric_keys/x509_parser.h
+index 3dfe6b5d6f0b..dcdb5c94f514 100644
+--- a/crypto/asymmetric_keys/x509_parser.h
++++ b/crypto/asymmetric_keys/x509_parser.h
+@@ -19,9 +19,10 @@ struct x509_certificate {
+ 	struct public_key_signature sig;	/* Signature parameters */
+ 	char		*issuer;		/* Name of certificate issuer */
+ 	char		*subject;		/* Name of certificate subject */
+-	struct asymmetric_key_id *id;		/* Serial number + issuer */
++	struct asymmetric_key_id *id;		/* Issuer + Serial number */
+ 	struct asymmetric_key_id *skid;		/* Subject + subjectKeyId (optional) */
+-	struct asymmetric_key_id *authority;	/* Authority key identifier (optional) */
++	struct asymmetric_key_id *akid_id;	/* CA AuthKeyId matching ->id (optional) */
++	struct asymmetric_key_id *akid_skid;	/* CA AuthKeyId matching ->skid (optional) */
+ 	struct tm	valid_from;
+ 	struct tm	valid_to;
+ 	const void	*tbs;			/* Signed data */
+diff --git a/crypto/asymmetric_keys/x509_public_key.c b/crypto/asymmetric_keys/x509_public_key.c
+index 24f17e6c5904..bb55d6074d5f 100644
+--- a/crypto/asymmetric_keys/x509_public_key.c
++++ b/crypto/asymmetric_keys/x509_public_key.c
+@@ -227,10 +227,10 @@ static int x509_validate_trust(struct x509_certificate *cert,
+ 	if (!trust_keyring)
+ 		return -EOPNOTSUPP;
+ 
+-	if (ca_keyid && !asymmetric_key_id_partial(cert->authority, ca_keyid))
++	if (ca_keyid && !asymmetric_key_id_partial(cert->akid_skid, ca_keyid))
+ 		return -EPERM;
+ 
+-	key = x509_request_asymmetric_key(trust_keyring, cert->authority,
++	key = x509_request_asymmetric_key(trust_keyring, cert->akid_skid,
+ 					  false);
+ 	if (!IS_ERR(key))  {
+ 		if (!use_builtin_keys
+@@ -287,8 +287,8 @@ static int x509_key_preparse(struct key_preparsed_payload *prep)
+ 	cert->pub->id_type = PKEY_ID_X509;
+ 
+ 	/* Check the signature on the key if it appears to be self-signed */
+-	if (!cert->authority ||
+-	    asymmetric_key_id_same(cert->skid, cert->authority)) {
++	if (!cert->akid_skid ||
++	    asymmetric_key_id_same(cert->skid, cert->akid_skid)) {
+ 		ret = x509_check_signature(cert->pub, cert); /* self-signed */
+ 		if (ret < 0)
+ 			goto error_free_cert;
 
-I already submitted this patch? I certainly forgot doing so :)
