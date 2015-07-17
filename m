@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:34813 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755061AbbGHTxx (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:34112 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757358AbbGQJdk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 15:53:53 -0400
+	Fri, 17 Jul 2015 05:33:40 -0400
+Received: by iebmu5 with SMTP id mu5so73159069ieb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2015 02:33:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1436383927-14010-1-git-send-email-christophe.jaillet@wanadoo.fr>
-References: <1436383927-14010-1-git-send-email-christophe.jaillet@wanadoo.fr>
-Date: Wed, 8 Jul 2015 22:53:51 +0300
-Message-ID: <CANUX_P2djxM92BZX=0O7Zmb+0Y7Gs9xpbfUgPnCB0gnDwfSJuQ@mail.gmail.com> (sfid-20150708_215418_994650_6AB25AC5)
-Subject: Re: [PATCH] mac80211: Use kstrdup to simplify code
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
-	Arend van Spriel <arend@broadcom.com>, frankyl@broadcom.com,
-	meuleman@broadcom.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
+In-Reply-To: <1437124562.1933.7.camel@sipsolutions.net>
+References: <1433943751-11221-1-git-send-email-chaitanya.mgit@gmail.com>
+ <1434530870.1884.12.camel@sipsolutions.net> <CABPxzYL0rnht72K1fLcpyjC=eOM4nHxzHQRpD47iE6J=J-3sOg@mail.gmail.com>
+ <1434538909.1884.39.camel@sipsolutions.net> <CABPxzY+Nz+wOCtot-4ROZJ6SR-a1gV625ak8qmLHtjvR=JadGQ@mail.gmail.com>
+ <1434541047.1884.41.camel@sipsolutions.net> <CABPxzYKmsGyhmM_5e11N2sgw8c-ARyJJ_rPkfjwCcZ6+hfqHgg@mail.gmail.com>
+ <1437124562.1933.7.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 17 Jul 2015 15:03:20 +0530
+Message-ID: <CABPxzYJF1Oi1wdW3PUCOJ5hYiA0TmA4neJDF8w6FDFm-jGmbnQ@mail.gmail.com> (sfid-20150717_113354_912229_1A28535B)
+Subject: Re: [PATCH V3] mac80211: wowlan: suspend: Fix power save state stuck
+ in ACTIVE caused by race between suspend and Tx packet.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The subject is wrong. You are not patch mac80211, but bcrmsmac.
+On Fri, Jul 17, 2015 at 2:46 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>
+> I've applied this patch.
 
-On Wed, Jul 8, 2015 at 10:32 PM, Christophe JAILLET
-<christophe.jaillet@wanadoo.fr> wrote:
-> Replace a kmalloc+strcpy by an equivalent kstrdup in order to improve
-> readability.
+Thanks.
+
 >
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
 >
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> index 4813506..8a6c077 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> @@ -1476,9 +1476,7 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
->         wl->timers = t;
+> > > I really hate this whole powersave code btw - we really should
+> > > refactor
+> > > that into its own little library module or so...
+> > Yes, that sounds good.
 >
->  #ifdef DEBUG
-> -       t->name = kmalloc(strlen(name) + 1, GFP_ATOMIC);
-> -       if (t->name)
-> -               strcpy(t->name, name);
-> +       t->name = kstrdup(name, GFP_ATOMIC);
->  #endif
+> want to work on that? :)
+Sure, but i cannot spend full time on that so the progress might be slow.
+
 >
->         return t;
-> --
-> 2.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The whole thing is awfully broken anyway since it does hw-level
+> configuration based on vif-level state, and ath9k does in fact support
+> multiple vifs ...
+Yes, we have faced problems with this especially handling fake ps,
+roc...we should move it to per vif config
