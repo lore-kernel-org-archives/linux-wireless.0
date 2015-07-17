@@ -1,492 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:48243 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932247AbbG1IuL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:50:11 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 19/21] staging: wilc1000: remove warnings on the multiple blank lines uses
-Date: Tue, 28 Jul 2015 17:47:38 +0900
-Message-ID: <1438073261-28315-20-git-send-email-tony.cho@atmel.com> (sfid-20150728_105020_803710_FE8335AD)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47701 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751599AbbGQQQj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 12:16:39 -0400
+Subject: [PATCH 08/27] MODSIGN: Extract the blob PKCS#7 signature verifier
+ from module signing
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Fri, 17 Jul 2015 17:16:33 +0100
+Message-ID: <20150717161633.2578.77118.stgit@warthog.procyon.org.uk> (sfid-20150717_181655_355621_168C1306)
+In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Kim, Leo" <leo.kim@atmel.com>
+Extract the function that drives the PKCS#7 signature verification given a
+data blob and a PKCS#7 blob out from the module signing code and lump it with
+the system keyring code as it's generic.  This makes it independent of module
+config options and opens it to use by the firmware loader.
 
-This patch removes the warnings reported by checkpatch.pl for using
-multiple blank lines.
-
-Signed-off-by: Kim, Leo <leo.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+Cc: Luis R. Rodriguez <mcgrof@suse.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Ming Lei <ming.lei@canonical.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Kyle McMartin <kyle@kernel.org>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 69 -----------------------------------
- 1 file changed, 69 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index a4589b7..d012af5 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -102,7 +102,6 @@ static int linux_wlan_device_detection(int on_off)
- 	return 0;
- }
- 
--
- #ifdef DISABLE_PWRSAVE_AND_SCAN_DURING_IP
- static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
- 
-@@ -115,7 +114,6 @@ static struct notifier_block g_dev_notifier = {
- 		if (g_linux_wlan->oup.wlan_cleanup != NULL) \
- 			g_linux_wlan->oup.wlan_cleanup(); }
- 
--
- #ifndef STA_FIRMWARE
- #define STA_FIRMWARE	"wifi_firmware.bin"
- #endif
-@@ -128,15 +126,12 @@ static struct notifier_block g_dev_notifier = {
- #define P2P_CONCURRENCY_FIRMWARE	"wifi_firmware_p2p_concurrency.bin"
- #endif
- 
--
--
- typedef struct android_wifi_priv_cmd {
- 	char *buf;
- 	int used_len;
- 	int total_len;
- } android_wifi_priv_cmd;
- 
--
- #define IRQ_WAIT	1
- #define IRQ_NO_WAIT	0
- /*
-@@ -157,7 +152,6 @@ void linux_wlan_unlock(void *vp);
- extern void WILC_WFI_monitor_rx(uint8_t *buff, uint32_t size);
- extern void WILC_WFI_p2p_rx(struct net_device *dev, uint8_t *buff, uint32_t size);
- 
--
- static void *internal_alloc(uint32_t size, uint32_t flag);
- static void linux_wlan_tx_complete(void *priv, int status);
- void frmw_to_linux(uint8_t *buff, uint32_t size, uint32_t pkt_offset);
-@@ -169,8 +163,6 @@ static struct net_device_stats *mac_stats(struct net_device *dev);
- static int  mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd);
- static void wilc_set_multicast_list(struct net_device *dev);
- 
--
--
- /*
-  * for now - in frmw_to_linux there should be private data to be passed to it
-  * and this data should be pointer to net device
-@@ -199,8 +191,6 @@ volatile int WatchDogdebuggerCounter;
- char DebugBuffer[DEGUG_BUFFER_LENGTH + 20] = {0};
- static char *ps8current = DebugBuffer;
- 
--
--
- void printk_later(const char *format, ...)
- {
- 	va_list args;
-@@ -212,7 +202,6 @@ void printk_later(const char *format, ...)
- 
- }
- 
--
- void dump_logs()
- {
- 	if (DebugBuffer[0]) {
-@@ -244,11 +233,8 @@ static int DebuggingThreadTask(void *vp)
- 		WatchDogdebuggerCounter = 0;
- 	}
- }
--
--
- #endif
- 
--
- #ifdef DISABLE_PWRSAVE_AND_SCAN_DURING_IP
- static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr)
- {
-@@ -296,7 +282,6 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
- 
- 		PRINT_INFO(GENERIC_DBG, "\n ============== IP Address Obtained ===============\n\n");
- 
--
- 		/*If we are in station mode or client mode*/
- 		if (nic->iftype == STATION_MODE || nic->iftype == CLIENT_MODE) {
- 			pstrWFIDrv->IFC_UP = 1;
-@@ -305,8 +290,6 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
- 			PRINT_D(GENERIC_DBG, "IP obtained , enable scan\n");
- 		}
- 
--
--
- 		if (bEnablePS)
- 			host_int_set_power_mgmt((WILC_WFIDrvHandle)pstrWFIDrv, 1, 0);
- 
-@@ -332,7 +315,6 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
- 
- 		resolve_disconnect_aberration(pstrWFIDrv);
- 
--
- 		PRINT_D(GENERIC_DBG, "[%s] Down IP\n", dev_iface->ifa_label);
- 
- 		pIP_Add_buff = null_ip;
-@@ -385,8 +367,6 @@ void linux_wlan_disable_irq(int wait)
- #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
- static irqreturn_t isr_uh_routine(int irq, void *user_data)
- {
--
--
- 	int_rcvdU++;
- #if (RX_BH_TYPE != RX_BH_THREADED_IRQ)
- 	linux_wlan_disable_irq(IRQ_NO_WAIT);
-@@ -438,9 +418,6 @@ static void isr_bh_routine(struct work_struct *work)
- 	#else
- 		return;
- 	#endif
--
--
--
- 	}
- 
- 	int_rcvdB++;
-@@ -451,7 +428,6 @@ static void isr_bh_routine(struct work_struct *work)
- 		PRINT_ER("wlan_handle_rx_isr() hasn't been initialized\n");
- 	}
- 
--
- #if (RX_BH_TYPE == RX_BH_THREADED_IRQ)
- 	return IRQ_HANDLED;
- #endif
-@@ -485,7 +461,6 @@ static int isr_bh_routine(void *vp)
+ include/keys/system_keyring.h |    5 ++++
+ init/Kconfig                  |   29 ++++++++++++++++--------
+ kernel/module_signing.c       |   44 +-----------------------------------
+ kernel/system_keyring.c       |   50 +++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 75 insertions(+), 53 deletions(-)
+
+diff --git a/include/keys/system_keyring.h b/include/keys/system_keyring.h
+index 72665eb80692..9791c907cdb7 100644
+--- a/include/keys/system_keyring.h
++++ b/include/keys/system_keyring.h
+@@ -28,4 +28,9 @@ static inline struct key *get_system_trusted_keyring(void)
  }
  #endif
  
--
- #if (defined WILC_SPI) || (defined WILC_SDIO_IRQ_GPIO)
- static int init_irq(linux_wlan_t *p_nic)
- {
-@@ -516,7 +491,6 @@ static int init_irq(linux_wlan_t *p_nic)
- 		PRINT_ER("could not obtain gpio for WILC_INTR\n");
- 	}
++#ifdef CONFIG_SYSTEM_DATA_VERIFICATION
++extern int system_verify_data(const void *data, unsigned long len,
++			      const void *raw_pkcs7, size_t pkcs7_len);
++#endif
++
+ #endif /* _KEYS_SYSTEM_KEYRING_H */
+diff --git a/init/Kconfig b/init/Kconfig
+index e16d9e587cee..14b3d8422502 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1752,6 +1752,24 @@ config SYSTEM_TRUSTED_KEYRING
  
--
- #if (RX_BH_TYPE == RX_BH_THREADED_IRQ)
- 	if ((ret != -1) && (request_threaded_irq(nic->dev_irq_num, isr_uh_routine, isr_bh_routine,
- 						  IRQF_TRIGGER_LOW | IRQF_ONESHOT,               /*Without IRQF_ONESHOT the uh will remain kicked in and dont gave a chance to bh*/
-@@ -552,7 +526,6 @@ static void deinit_irq(linux_wlan_t *nic)
- #endif
- }
+ 	  Keys in this keyring are used by module signature checking.
  
--
- /*
-  *      OS functions
++config SYSTEM_DATA_VERIFICATION
++	def_bool n
++	select SYSTEM_TRUSTED_KEYRING
++	select KEYS
++	select CRYPTO
++	select ASYMMETRIC_KEY_TYPE
++	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
++	select PUBLIC_KEY_ALGO_RSA
++	select ASN1
++	select OID_REGISTRY
++	select X509_CERTIFICATE_PARSER
++	select PKCS7_MESSAGE_PARSER
++	help
++	  Provide PKCS#7 message verification using the contents of the system
++	  trusted keyring to provide public keys.  This then can be used for
++	  module verification, kexec image verification and firmware blob
++	  verification.
++
+ config PROFILING
+ 	bool "Profiling support"
+ 	help
+@@ -1860,16 +1878,7 @@ config MODULE_SRCVERSION_ALL
+ config MODULE_SIG
+ 	bool "Module signature verification"
+ 	depends on MODULES
+-	select SYSTEM_TRUSTED_KEYRING
+-	select KEYS
+-	select CRYPTO
+-	select ASYMMETRIC_KEY_TYPE
+-	select ASYMMETRIC_PUBLIC_KEY_SUBTYPE
+-	select PUBLIC_KEY_ALGO_RSA
+-	select ASN1
+-	select OID_REGISTRY
+-	select X509_CERTIFICATE_PARSER
+-	select PKCS7_MESSAGE_PARSER
++	select SYSTEM_DATA_VERIFICATION
+ 	help
+ 	  Check modules for valid signatures upon load: the signature
+ 	  is simply appended to the module. For more information see
+diff --git a/kernel/module_signing.c b/kernel/module_signing.c
+index 8eb20cc66b39..70ad463f6df0 100644
+--- a/kernel/module_signing.c
++++ b/kernel/module_signing.c
+@@ -10,10 +10,8 @@
   */
-@@ -599,7 +572,6 @@ void linux_wlan_free(void *vp)
- 	}
- }
  
--
- static void *internal_alloc(uint32_t size, uint32_t flag)
- {
- 	char *pntr = NULL;
-@@ -608,7 +580,6 @@ static void *internal_alloc(uint32_t size, uint32_t flag)
- 	return (void *)pntr;
- }
+ #include <linux/kernel.h>
+-#include <linux/err.h>
+ #include <keys/system_keyring.h>
+ #include <crypto/public_key.h>
+-#include <crypto/pkcs7.h>
+ #include "module-internal.h"
  
--
- static void linux_wlan_init_lock(char *lockName, void *plock, int count)
- {
- 	sema_init((struct semaphore *)plock, count);
-@@ -654,7 +625,6 @@ void linux_wlan_unlock(void *vp)
- 	}
- }
- 
--
- static void linux_wlan_init_mutex(char *lockName, void *plock, int count)
- {
- 	mutex_init((struct mutex *)plock);
-@@ -700,7 +670,6 @@ static void linux_wlan_unlock_mutex(void *vp)
- 	}
- }
- 
--
- /*Added by Amr - BugID_4720*/
- static void linux_wlan_init_spin_lock(char *lockName, void *plock, int count)
- {
-@@ -938,7 +907,6 @@ int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
- 	const struct firmware *wilc_firmware;
- 	char *firmware;
- 
--
- 	if (nic->iftype == AP_MODE)
- 		firmware = AP_FIRMWARE;
- 	else if (nic->iftype == STATION_MODE)
-@@ -950,8 +918,6 @@ int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
- 		firmware = P2P_CONCURRENCY_FIRMWARE;
- 	}
- 
--
--
- 	if (nic == NULL) {
- 		PRINT_ER("NIC is NULL\n");
- 		goto _fail_;
-@@ -962,7 +928,6 @@ int linux_wlan_get_firmware(perInterface_wlan_t *p_nic)
- 		goto _fail_;
- 	}
- 
--
- 	/*	the firmare should be located in /lib/firmware in
- 	 *      root file system with the name specified above */
- 
-@@ -1061,7 +1026,6 @@ _FAIL_:
- 	return ret;
- }
- 
--
- /* startup configuration - could be changed later using iconfig*/
- static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_nic)
- {
-@@ -1087,7 +1051,6 @@ static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_n
- 	PRINT_D(INIT_DBG, "MAC address is : %02x-%02x-%02x-%02x-%02x-%02x\n", mac_add[0], mac_add[1], mac_add[2], mac_add[3], mac_add[4], mac_add[5]);
- 	wilc_get_chipid(0);
- 
--
- 	if (g_linux_wlan->oup.wlan_cfg_set == NULL) {
- 		PRINT_D(INIT_DBG, "Null p[ointer\n");
- 		goto _fail_;
-@@ -1107,7 +1070,6 @@ static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_n
- 	if (!g_linux_wlan->oup.wlan_cfg_set(0, WID_BSS_TYPE, c_val, 1, 0, 0))
- 		goto _fail_;
- 
--
- 	/* c_val[0] = RATE_AUTO; / * bug 4275: Enable autorate and limit it to 24Mbps * / */
- 	c_val[0] = RATE_AUTO;
- 	if (!g_linux_wlan->oup.wlan_cfg_set(0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
-@@ -1342,7 +1304,6 @@ _fail_:
- 	return -1;
- }
- 
--
- /**************************/
- void wilc1000_wlan_deinit(linux_wlan_t *nic)
- {
-@@ -1376,7 +1337,6 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
- 		  #endif
- 		#endif
- 
--
- 		/* not sure if the following unlocks are needed or not*/
- 		if (&g_linux_wlan->rxq_event != NULL)
- 			linux_wlan_unlock(&g_linux_wlan->rxq_event);
-@@ -1384,7 +1344,6 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
- 		if (&g_linux_wlan->txq_event != NULL)
- 			linux_wlan_unlock(&g_linux_wlan->txq_event);
- 
--
- 	#if (RX_BH_TYPE == RX_BH_WORK_QUEUE)
- 		/*Removing the work struct from the linux kernel workqueue*/
- 		if (&g_linux_wlan->rx_work_queue != NULL)
-@@ -1401,7 +1360,6 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
- 		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
- 		deinit_irq(g_linux_wlan);
- 
--
- 		if (&g_linux_wlan->oup != NULL) {
- 			if (g_linux_wlan->oup.wlan_stop != NULL)
- 				g_linux_wlan->oup.wlan_stop();
-@@ -1662,17 +1620,14 @@ static void wlan_deinitialize_threads(linux_wlan_t *nic)
- 	if (&g_linux_wlan->rxq_event != NULL)
- 		linux_wlan_unlock(&g_linux_wlan->rxq_event);
- 
--
- 	if (g_linux_wlan->rxq_thread != NULL) {
- 		kthread_stop(g_linux_wlan->rxq_thread);
- 		g_linux_wlan->rxq_thread = NULL;
- 	}
- 
--
- 	if (&g_linux_wlan->txq_event != NULL)
- 		linux_wlan_unlock(&g_linux_wlan->txq_event);
- 
--
- 	if (g_linux_wlan->txq_thread != NULL) {
- 		kthread_stop(g_linux_wlan->txq_thread);
- 		g_linux_wlan->txq_thread = NULL;
-@@ -1872,7 +1827,6 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 		/*Save the oup structre into global pointer*/
- 		gpstrWlanOps = &g_linux_wlan->oup;
- 
--
- 		ret = wlan_initialize_threads(nic);
- 		if (ret < 0) {
- 			PRINT_ER("Initializing Threads FAILED\n");
-@@ -1910,7 +1864,6 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 			goto _fail_irq_enable_;
- 		}
- 
--
- 		/*Download firmware*/
- 		ret = linux_wlan_firmware_download(g_linux_wlan);
- 		if (ret < 0) {
-@@ -1950,7 +1903,6 @@ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic)
- 		g_linux_wlan->wilc1000_initialized = 1;
- 		return 0; /*success*/
- 
--
- _fail_fw_start_:
- 		if (&g_linux_wlan->oup != NULL) {
- 			if (g_linux_wlan->oup.wlan_stop != NULL)
-@@ -1979,7 +1931,6 @@ _fail_locks_:
- 	return ret;
- }
- 
--
  /*
-  *      - this function will be called automatically by OS when module inserted.
+@@ -37,46 +35,6 @@ struct module_signature {
+ };
+ 
+ /*
+- * Verify a PKCS#7-based signature on a module.
+- */
+-static int mod_verify_pkcs7(const void *mod, unsigned long modlen,
+-			    const void *raw_pkcs7, size_t pkcs7_len)
+-{
+-	struct pkcs7_message *pkcs7;
+-	bool trusted;
+-	int ret;
+-
+-	pkcs7 = pkcs7_parse_message(raw_pkcs7, pkcs7_len);
+-	if (IS_ERR(pkcs7))
+-		return PTR_ERR(pkcs7);
+-
+-	/* The data should be detached - so we need to supply it. */
+-	if (pkcs7_supply_detached_data(pkcs7, mod, modlen) < 0) {
+-		pr_err("PKCS#7 signature with non-detached data\n");
+-		ret = -EBADMSG;
+-		goto error;
+-	}
+-
+-	ret = pkcs7_verify(pkcs7);
+-	if (ret < 0)
+-		goto error;
+-
+-	ret = pkcs7_validate_trust(pkcs7, system_trusted_keyring, &trusted);
+-	if (ret < 0)
+-		goto error;
+-
+-	if (!trusted) {
+-		pr_err("PKCS#7 signature not signed with a trusted key\n");
+-		ret = -ENOKEY;
+-	}
+-
+-error:
+-	pkcs7_free_message(pkcs7);
+-	pr_devel("<==%s() = %d\n", __func__, ret);
+-	return ret;
+-}
+-
+-/*
+  * Verify the signature on a module.
   */
-@@ -2011,7 +1962,6 @@ int mac_init_fn(struct net_device *ndev)
- }
- #endif
- 
--
- void    WILC_WFI_frame_register(struct wiphy *wiphy, struct net_device *dev,
- 				u16 frame_type, bool reg);
- 
-@@ -2075,7 +2025,6 @@ int mac_open(struct net_device *ndev)
- 		goto _err_;
+ int mod_verify_sig(const void *mod, unsigned long *_modlen)
+@@ -114,5 +72,5 @@ int mod_verify_sig(const void *mod, unsigned long *_modlen)
+ 		return -EBADMSG;
  	}
  
--
- 	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev,
- 				nic->g_struct_frame_reg[0].frame_type, nic->g_struct_frame_reg[0].reg);
- 	WILC_WFI_frame_register(nic->wilc_netdev->ieee80211_ptr->wiphy, nic->wilc_netdev,
-@@ -2114,7 +2063,6 @@ struct net_device_stats *mac_stats(struct net_device *dev)
- {
- 	perInterface_wlan_t *nic = netdev_priv(dev);
- 
--
- 	return &nic->netstats;
+-	return mod_verify_pkcs7(mod, modlen, mod + modlen, sig_len);
++	return system_verify_data(mod, modlen, mod + modlen, sig_len);
  }
+diff --git a/kernel/system_keyring.c b/kernel/system_keyring.c
+index 4cda71ee51c7..95f2dcbc7616 100644
+--- a/kernel/system_keyring.c
++++ b/kernel/system_keyring.c
+@@ -16,6 +16,7 @@
+ #include <linux/err.h>
+ #include <keys/asymmetric-type.h>
+ #include <keys/system_keyring.h>
++#include <crypto/pkcs7.h>
  
-@@ -2129,7 +2077,6 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
- 	pstrWFIDrv = (tstrWILC_WFIDrv *)priv->hWILCWFIDrv;
- 
--
- 	if (!dev)
- 		return;
- 
-@@ -2250,7 +2197,6 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	QueueCount = WILC_Xmit_data((void *)tx_data, HOST_TO_WLAN);
- 	#endif /* WILC_FULLY_HOSTING_AP */
- 
--
- 	if (QueueCount > FLOW_CONTROL_UPPER_THRESHOLD) {
- 		netif_stop_queue(g_linux_wlan->strInterfaceInfo[0].wilc_netdev);
- 		netif_stop_queue(g_linux_wlan->strInterfaceInfo[1].wilc_netdev);
-@@ -2259,7 +2205,6 @@ int mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ struct key *system_trusted_keyring;
+ EXPORT_SYMBOL_GPL(system_trusted_keyring);
+@@ -103,3 +104,52 @@ dodgy_cert:
  	return 0;
  }
- 
--
- int mac_close(struct net_device *ndev)
- {
- 	struct WILC_WFI_priv *priv;
-@@ -2282,8 +2227,6 @@ int mac_close(struct net_device *ndev)
- 
- 	pstrWFIDrv = (tstrWILC_WFIDrv *)priv->hWILCWFIDrv;
- 
--
--
- 	PRINT_D(GENERIC_DBG, "Mac close\n");
- 
- 	if (g_linux_wlan == NULL) {
-@@ -2329,7 +2272,6 @@ int mac_close(struct net_device *ndev)
- 	return 0;
- }
- 
--
- int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
- {
- 
-@@ -2340,8 +2282,6 @@ int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
- 	struct WILC_WFI_priv *priv;
- 	s32 s32Error = WILC_SUCCESS;
- 
--
--
- 	/* struct iwreq *wrq = (struct iwreq *) req;	// tony moved to case SIOCSIWPRIV */
- 	#ifdef USE_WIRELESS
- 	nic = netdev_priv(ndev);
-@@ -2435,7 +2375,6 @@ void frmw_to_linux(uint8_t *buff, uint32_t size, uint32_t pkt_offset)
- 		frame_len = size;
- 		buff_to_send = buff;
- 
--
- 		/* Need to send the packet up to the host, allocate a skb buffer */
- 		skb = dev_alloc_skb(frame_len);
- 		if (skb == NULL) {
-@@ -2600,7 +2539,6 @@ int wilc_netdev_init(void)
- 		}
- 		#endif
- 
--
- 		if (register_netdev(ndev)) {
- 			PRINT_ER("Device couldn't be registered - %s\n", ndev->name);
- 			return -1; /* ERROR */
-@@ -2624,12 +2562,9 @@ int wilc_netdev_init(void)
- 	return 0;
- }
- 
--
- /*The 1st function called after module inserted*/
- static int __init init_wilc_driver(void)
- {
--
--
- #if defined (WILC_DEBUGFS)
- 	if (wilc_debugfs_init() < 0) {
- 		PRINT_D(GENERIC_DBG, "fail to create debugfs for wilc driver\n");
-@@ -2679,13 +2614,11 @@ static void __exit exit_wilc_driver(void)
- 			nic[i] = netdev_priv(g_linux_wlan->strInterfaceInfo[i].wilc_netdev);
- 	}
- 
--
- 	if ((g_linux_wlan != NULL) && g_linux_wlan->wilc_firmware != NULL) {
- 		release_firmware(g_linux_wlan->wilc_firmware);
- 		g_linux_wlan->wilc_firmware = NULL;
- 	}
- 
--
- 	if ((g_linux_wlan != NULL) && (((g_linux_wlan->strInterfaceInfo[0].wilc_netdev) != NULL)
- 				       || ((g_linux_wlan->strInterfaceInfo[1].wilc_netdev) != NULL))) {
- 		PRINT_D(INIT_DBG, "Waiting for mac_close ....\n");
-@@ -2695,7 +2628,6 @@ static void __exit exit_wilc_driver(void)
- 		else
- 			PRINT_D(INIT_DBG, "mac_closed\n");
- 
--
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
- 			/* close all opened interfaces */
- 			if (g_linux_wlan->strInterfaceInfo[i].wilc_netdev != NULL) {
-@@ -2715,7 +2647,6 @@ static void __exit exit_wilc_driver(void)
- 		}
- 	}
- 
--
- #ifdef USE_WIRELESS
- #ifdef WILC_AP_EXTERNAL_MLME
- 	/* Bug 4600 : WILC_WFI_deinit_mon_interface was already called at mac_close */
--- 
-1.9.1
+ late_initcall(load_system_certificate_list);
++
++#ifdef CONFIG_SYSTEM_DATA_VERIFICATION
++
++/**
++ * Verify a PKCS#7-based signature on system data.
++ * @data: The data to be verified.
++ * @len: Size of @data.
++ * @raw_pkcs7: The PKCS#7 message that is the signature.
++ * @pkcs7_len: The size of @raw_pkcs7.
++ */
++int system_verify_data(const void *data, unsigned long len,
++		       const void *raw_pkcs7, size_t pkcs7_len)
++{
++	struct pkcs7_message *pkcs7;
++	bool trusted;
++	int ret;
++
++	pkcs7 = pkcs7_parse_message(raw_pkcs7, pkcs7_len);
++	if (IS_ERR(pkcs7))
++		return PTR_ERR(pkcs7);
++
++	/* The data should be detached - so we need to supply it. */
++	if (pkcs7_supply_detached_data(pkcs7, data, len) < 0) {
++		pr_err("PKCS#7 signature with non-detached data\n");
++		ret = -EBADMSG;
++		goto error;
++	}
++
++	ret = pkcs7_verify(pkcs7);
++	if (ret < 0)
++		goto error;
++
++	ret = pkcs7_validate_trust(pkcs7, system_trusted_keyring, &trusted);
++	if (ret < 0)
++		goto error;
++
++	if (!trusted) {
++		pr_err("PKCS#7 signature not signed with a trusted key\n");
++		ret = -ENOKEY;
++	}
++
++error:
++	pkcs7_free_message(pkcs7);
++	pr_devel("<==%s() = %d\n", __func__, ret);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(system_verify_data);
++
++#endif /* CONFIG_SYSTEM_DATA_VERIFICATION */
 
