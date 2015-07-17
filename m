@@ -1,203 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:34294 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242AbbG0G5r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 02:57:47 -0400
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH] wl18xx: add dynamic fw traces
-Date: Mon, 27 Jul 2015 09:46:02 +0300
-Message-ID: <1437979562-20252-1-git-send-email-guym@ti.com> (sfid-20150727_085759_088144_48B4BED5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:52890 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757488AbbGQNbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 09:31:41 -0400
+Message-ID: <1437139894.1933.16.camel@sipsolutions.net> (sfid-20150717_153149_337845_B05B138A)
+Subject: pull-request: mac80211 2015-07-17
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 17 Jul 2015 15:31:34 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add option to dynamically configure the fw
-which debug traces to open
+Hi Dave,
 
-Signed-off-by: Guy Mishol <guym@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/acx.c     |   27 ++++++++++++++++
- drivers/net/wireless/ti/wl18xx/acx.h     |   13 +++++++-
- drivers/net/wireless/ti/wl18xx/debugfs.c |   50 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/main.c    |    5 +++
- drivers/net/wireless/ti/wlcore/wlcore.h  |    3 ++
- 5 files changed, 97 insertions(+), 1 deletions(-)
+We've accumulated some wireless fixes, please pull. Arik's fix is a bit
+bigger than I might like, but it fixes a real locking issue and we
+didn't really see a good way to make a smaller version.
 
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-index 67f2a0e..4be0409 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.c
-+++ b/drivers/net/wireless/ti/wl18xx/acx.c
-@@ -282,3 +282,30 @@ out:
- 	kfree(acx);
- 	return ret;
- }
-+
-+int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl)
-+{
-+	struct acx_dynamic_fw_traces_cfg *acx;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_ACX, "acx dynamic fw traces config %d",
-+		     wl->dynamic_fw_traces);
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->dynamic_fw_traces = cpu_to_le32(wl->dynamic_fw_traces);
-+
-+	ret = wl1271_cmd_configure(wl, ACX_DYNAMIC_TRACES_CFG,
-+				   acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx config dynamic fw traces failed: %d", ret);
-+		goto out;
-+	}
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-index 4afccd4..c8a33f4 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.h
-+++ b/drivers/net/wireless/ti/wl18xx/acx.h
-@@ -35,7 +35,8 @@ enum {
- 	ACX_PEER_CAP			 = 0x0056,
- 	ACX_INTERRUPT_NOTIFY		 = 0x0057,
- 	ACX_RX_BA_FILTER		 = 0x0058,
--	ACX_AP_SLEEP_CFG                 = 0x0059
-+	ACX_AP_SLEEP_CFG                 = 0x0059,
-+	ACX_DYNAMIC_TRACES_CFG		 = 0x005A,
- };
- 
- /* numbers of bits the length field takes (add 1 for the actual number) */
-@@ -367,6 +368,15 @@ struct acx_ap_sleep_cfg {
- 	u8 idle_conn_thresh;
- } __packed;
- 
-+/*
-+ * ACX_DYNAMIC_TRACES_CFG
-+ * configure the FW dynamic traces
-+ */
-+struct acx_dynamic_fw_traces_cfg {
-+	struct acx_header header;
-+	__le32 dynamic_fw_traces;
-+} __packed;
-+
- int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
- 				  u32 sdio_blk_size, u32 extra_mem_blks,
- 				  u32 len_field_size);
-@@ -380,5 +390,6 @@ int wl18xx_acx_set_peer_cap(struct wl1271 *wl,
- int wl18xx_acx_interrupt_notify_config(struct wl1271 *wl, bool action);
- int wl18xx_acx_rx_ba_filter(struct wl1271 *wl, bool action);
- int wl18xx_acx_ap_sleep(struct wl1271 *wl);
-+int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl);
- 
- #endif /* __WL18XX_ACX_H__ */
-diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
-index 5fbd223..8c6a1c8 100644
---- a/drivers/net/wireless/ti/wl18xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
-@@ -281,6 +281,55 @@ static const struct file_operations radar_detection_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t dynamic_fw_traces_write(struct file *file,
-+					const char __user *user_buf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 0, &value);
-+	if (ret < 0)
-+		return ret;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl->dynamic_fw_traces = value;
-+
-+	if (unlikely(wl->state != WLCORE_STATE_ON))
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl18xx_acx_dynamic_fw_traces(wl);
-+	if (ret < 0)
-+		count = ret;
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static ssize_t dynamic_fw_traces_read(struct file *file,
-+					char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	return wl1271_format_buffer(userbuf, count, ppos,
-+				    "%d\n", wl->dynamic_fw_traces);
-+}
-+
-+static const struct file_operations dynamic_fw_traces_ops = {
-+	.read = dynamic_fw_traces_read,
-+	.write = dynamic_fw_traces_write,
-+	.open = simple_open,
-+	.llseek = default_llseek,
-+};
-+
- int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 			     struct dentry *rootdir)
- {
-@@ -433,6 +482,7 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 
- 	DEBUGFS_ADD(conf, moddir);
- 	DEBUGFS_ADD(radar_detection, moddir);
-+	DEBUGFS_ADD(dynamic_fw_traces, moddir);
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 49aca2c..8ce9825 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1159,6 +1159,11 @@ static int wl18xx_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
-+	/* set the dynamic fw traces bitmap */
-+	ret = wl18xx_acx_dynamic_fw_traces(wl);
-+	if (ret < 0)
-+		return ret;
-+
- 	if (checksum_param) {
- 		ret = wl18xx_acx_set_checksum_state(wl);
- 		if (ret != 0)
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 7f363fa..a1b6040 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -500,6 +500,9 @@ struct wl1271 {
- 	/* interface combinations supported by the hw */
- 	const struct ieee80211_iface_combination *iface_combinations;
- 	u8 n_iface_combinations;
-+
-+	/* dynamic fw traces */
-+	u32 dynamic_fw_traces;
- };
- 
- int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
--- 
-1.7.0.4
+Let me know if there's any problem.
 
+johannes
+
+
+The following changes since commit f760b87f8f12eb262f14603e65042996fe03720e:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2015-07-13 11:18:25 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-07-17
+
+for you to fetch changes up to 923b352f19d9ea971ae2536eab55f5fc9e95fedf:
+
+  cfg80211: use RTNL locked reg_can_beacon for IR-relaxation (2015-07-17 15:02:02 +0200)
+
+----------------------------------------------------------------
+Some fixes for the current cycle:
+
+ 1. Arik introduced an rtnl-locked regulatory API to be able
+    to differentiate between place do/don't have the RTNL;
+    this fixes missing locking in some of the code paths
+
+ 2. Two small mesh bugfixes from Bob, one to avoid treating
+    a certain malformed over-the-air frame and one to avoid
+    sending a garbage field over the air.
+
+ 3. A fix for powersave during WoWLAN suspend from Krishna Chaitanya.
+
+ 4. A fix for a powersave vs. aggregation teardown race, from Michal.
+
+ 5. Thomas reduced the loglevel of CRDA messages to avoid spamming
+    the kernel log with mostly irrelevant information.
+
+ 6. Tom fixed a dangling debugfs directory pointer that could cause
+    crashes if subsequent addition of the same interface to debugfs
+    failed for some reason.
+
+ 7. A fix from myself for a list corruption issue in mac80211 during
+    combined interface shutdown/removal - shut down interfaces first
+    and only then remove them to avoid that.
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      cfg80211: use RTNL locked reg_can_beacon for IR-relaxation
+
+Bob Copeland (2):
+      mac80211: correct aid location in peering frames
+      mac80211: add missing length check for confirm frames
+
+Chaitanya T K (1):
+      mac80211: wowlan: enable powersave if suspend while ps-polling
+
+Johannes Berg (1):
+      mac80211: shut down interfaces before destroying interface list
+
+Michal Kazior (1):
+      mac80211: don't clear all tx flags when requeing
+
+Thomas Petazzoni (1):
+      wireless: regulatory: reduce log level of CRDA related messages
+
+Tom Hughes (1):
+      mac80211: clear subdir_stations when removing debugfs
+
+ include/net/cfg80211.h        | 17 ++++++++++++++++
+ net/mac80211/debugfs_netdev.c |  1 +
+ net/mac80211/iface.c          | 25 +++++++++++++-----------
+ net/mac80211/mesh_plink.c     |  5 ++++-
+ net/mac80211/pm.c             | 16 +++++++++++++++
+ net/mac80211/tdls.c           |  6 +++---
+ net/mac80211/tx.c             |  4 +++-
+ net/wireless/chan.c           | 45 ++++++++++++++++++++++++++++++++-----------
+ net/wireless/nl80211.c        | 14 ++++++++------
+ net/wireless/reg.c            |  8 ++++----
+ net/wireless/trace.h          | 11 +++++++----
+ 11 files changed, 111 insertions(+), 41 deletions(-)
