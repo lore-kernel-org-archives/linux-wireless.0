@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:53719 "EHLO comal.ext.ti.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52859 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751308AbbG0Ohe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 10:37:34 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id t6REbXKl023137
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 09:37:33 -0500
-Received: from DLEE70.ent.ti.com (dlee70.ent.ti.com [157.170.170.113])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id t6REbXAg025245
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 09:37:33 -0500
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>
-Subject: [PATCH] wlcore: add antenna diversity reading comments
-Date: Mon, 27 Jul 2015 17:25:49 +0300
-Message-ID: <1438007149-23044-1-git-send-email-guym@ti.com> (sfid-20150727_163737_162832_F322D57F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1756923AbbGQNSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 09:18:12 -0400
+Message-ID: <1437139089.1933.14.camel@sipsolutions.net> (sfid-20150717_151814_960014_819748DD)
+Subject: Re: [PATCH 02/10] cfg80211: use RTNL locked reg_can_beacon for
+ IR-relaxation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Date: Fri, 17 Jul 2015 15:18:09 +0200
+In-Reply-To: <1436359312-26533-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150708_144212_150926_532CADAA)
+References: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1436359312-26533-3-git-send-email-emmanuel.grumbach@intel.com>
+	 (sfid-20150708_144212_150926_532CADAA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add comments to the antenna diversity reading
+On Wed, 2015-07-08 at 15:41 +0300, Emmanuel Grumbach wrote:
+> From: Arik Nemtsov <arik@wizery.com>
+> 
+> The RTNL is required to check for IR-relaxation conditions that allow
+> more channels to beacon. Export an RTNL locked version of 
+> reg_can_beacon
+> and use it where possible in AP/STA interface type flows, where
+> IR-relaxation may be applicable.
+> 
+Applied.
 
-Signed-off-by: Guy Mishol <guym@ti.com>
----
- drivers/net/wireless/ti/wlcore/rx.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index 7df672a..5b29273 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -74,6 +74,12 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 	if (desc->rate <= wl->hw_min_ht_rate)
- 		status->flag |= RX_FLAG_HT;
- 
-+	/*
-+	* Read the signal level and antenna diversity indication.
-+	* The msb in the signal level is always set as it is a
-+	* negative number.
-+	* The antenna indication is the msb of the rssi.
-+	*/
- 	status->signal = ((desc->rssi & RSSI_LEVEL_BITMASK) | BIT(7));
- 	status->antenna = ((desc->rssi & ANT_DIVERSITY_BITMASK) >> 7);
- 
--- 
-1.7.0.4
-
+johannes
