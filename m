@@ -1,79 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:33032 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbbGIMm3 convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37985 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752913AbbGQJ3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 08:42:29 -0400
-Received: by wiwl6 with SMTP id l6so17578291wiw.0
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 05:42:28 -0700 (PDT)
+	Fri, 17 Jul 2015 05:29:00 -0400
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: Su Kang Yin <paradyse@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>
+CC: "nbd@openwrt.org" <nbd@openwrt.org>
+Subject: RE: ath9k 4.1.2 freeze
+Date: Fri, 17 Jul 2015 09:28:57 +0000
+Message-ID: <9f46c4afaab64213bdbbffe8227fcf00@NASANEXM01E.na.qualcomm.com> (sfid-20150717_112906_527345_DE8859C2)
+References: <CAHjFwoB8N=uKrVv3qkFyr4BuPuY9L71kXqvJP3HZ+3qj=7z_ag@mail.gmail.com>
+ <CAHjFwoAv2NA243S6UF=uK7ZoSxOWzdeayCAX5EOrVPP_NsGMMg@mail.gmail.com>
+In-Reply-To: <CAHjFwoAv2NA243S6UF=uK7ZoSxOWzdeayCAX5EOrVPP_NsGMMg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20150707150040.GA1374@w1.fi>
-References: <CA+BoTQm==AM3F2Fxq6T_+uY+jq0yXc9JHFT0iwpe2XJrmxkSsg@mail.gmail.com>
-	<20150707150040.GA1374@w1.fi>
-Date: Thu, 9 Jul 2015 14:42:28 +0200
-Message-ID: <CA+BoTQnA4bkx33-cEZGJEbCyGBx=xS7Cy_6iY3JkrGsA8ds_Kg@mail.gmail.com> (sfid-20150709_144249_905085_C31F5916)
-Subject: Re: Association race when acting as AP?
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 July 2015 at 17:00, Jouni Malinen <j@w1.fi> wrote:
-> On Thu, Jul 02, 2015 at 10:24:33AM +0200, Michal Kazior wrote:
->> After looking into hostapd code I noticed something strange and I wonder if
->> anyone else is already aware of this problem:
->>
->>  1. AP starts
->>  2. STA->AP auth OTA
->>  3. AP->STA auth OTA
->>  4. STA->AP assoc req OTA
->>  5. AP->STA assoc resp OTA
->>  6. STA sends NullFunc with "STA will go to sleep" bit set
->>  7. AP driver/device sees a frame from with unknown TA/SA and issues Deauth
->> w/ Reason 7
->>    (this Deauth doesn't originate from hostapd; it comes from the device FW
->> in my case)
->
-> If there is a driver or firmware design that sends these
-> Deauthentication frames on their own, they better be able to handle race
-> conditions and enable this functionality at the correct time..
-
-At least one ath10k qca61x4 firmware seems to send Deauth when it gets
-a NullFunc from DA which doesn't have an internal peer entry. It
-doesn't seem to care whether peer is authenticated or associated
-though. Probably having none->auth, auth->assoc state transitions
-(instead of a single none->assoc) would be enough - at least for
-ath10k today.
-
-
-> Sure,
-> cfg80211 and hostapd may need modifications to make this work better,
-> but this needs to be done for things to work properly. There's a good
-> reason for hostapd having code to check the internal STA associated
-> flag before triggering deauthentication based on EVENT_RX_FROM_UNKNOWN
-> events..
->
->> To me this looks like a race in hostapd. The station should be installed to
->> driver _before_ sending Assoc Resp frame, not after. My quick-n-dirty hack
->> seems to help:
->
-> Adding a STA entry before sending Association Response frame would be
-> fine, but this change would do more: it would claim that STA entry to be
-> in associated state. That is not correct from the IEEE 802.11 standard
-> view point. On the AP side, a STA becomes associated when an ACK frame
-> to the (Re)Association Response frame is received by the AP.
-
-This seems pretty racy inherently. Driver/firmware actually needs to
-be aware of this requirement and make sure to avoid reordering Tx ACK
-processing and Rx. Since Tx/Rx engines are often (if not always?)
-independent of each other I imagine this could be a common problem
-across many devices today but perhaps not easily observable due to
-narrow time window this could happen in.
-
-Anyway - thank you for your great insight!
-
-
-Michał
+K0ZlbGl4DQoNClNlZW1zIHRoZSBuZXcgdmVyc2lvbiBtaXNzIHR3byBwYXRjaGVzLA0KDQpVcHN0
+cmVhbTogYTNlNmMxZWZmNTQ4Nzg1MDZiMmRkZGNjMjAyZGY5Y2M4MTgwZmFjYg0KaHR0cDovL2dp
+dC5vcGVud3J0Lm9yZy8/cD1vcGVud3J0LmdpdDthPWJsb2I7Zj10YXJnZXQvbGludXgvYXI3MXh4
+L3BhdGNoZXMtMy4xOC83MzYtTUlQUy1hdGg3OS1maXgtY2hhaW5lZC1pcnEtZGlzYWJsZS5wYXRj
+aDtoPThjYjM4ZDM5NzE2NzhlM2NmOTUxZDM2ZTZhYjJmNGIxNzBjZDFmMGM7aGI9SEVBRA0KDQot
+IE1pYW9xaW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBTdSBLYW5nIFlp
+biBbbWFpbHRvOnBhcmFkeXNlQGdtYWlsLmNvbV0gDQpTZW50OiBGcmlkYXksIEp1bHkgMTcsIDIw
+MTUgNDozNiBQTQ0KVG86IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgYXRoOWstZGV2
+ZWwNClN1YmplY3Q6IFJlOiBhdGg5ayA0LjEuMiBmcmVlemUNCg0KbG9nIGF0dGFjaGVkDQoNCk9u
+IDE3IEp1bHkgMjAxNSBhdCAxNjozNSwgU3UgS2FuZyBZaW4gPHBhcmFkeXNlQGdtYWlsLmNvbT4g
+d3JvdGU6DQo+IHJlc2VuZA0KPg0KPg0KPiBPbiAxNyBKdWx5IDIwMTUgYXQgMTY6MzMsIFN1IEth
+bmcgWWluIDxwYXJhZHlzZUBnbWFpbC5jb20+IHdyb3RlOg0KPj4NCj4+IEhpLA0KPj4NCj4+IEtl
+cm5lbCA0LjEuMiBhdGg5ayB3aXRoIGF0aGVyb3MgREIxMjAsIGRyaXZlciBsb2NrdXAgb24gImVu
+YWJsZSBJRVIiIA0KPj4gYWZ0ZXIgQUhCIGludGVyZmFjZSB1cCAoUENJIGludGVyZmFjZSBpcyBm
+aW5lKS4gTm8gcHJvYmxlbSBmb3VuZCBvbiBrZXJuZWwgMy4xMC4NCj4+DQo+PiAtIGNhbnRvbmEN
+Cj4+DQo+PiBbICAgODMuOTkwMDAwXSBhdGg6IHBoeTE6IHR4IGNoYWluIDE6IGlxIGNvcnIgY29l
+ZmY9NzQNCj4+IFsgICA4NC4wMDAwMDBdIGF0aDogcGh5MTogcnggY2hhaW4gMTogbWFnIGNvcnI9
+MCAgcGhhc2UgY29ycj0tMg0KPj4gWyAgIDg0LjAwMDAwMF0gYXRoOiBwaHkxOiByeCBjaGFpbiAx
+OiBpcSBjb3JyIGNvZWZmPTdlDQo+PiBbICAgODQuMDEwMDAwXSBhdGg6IHBoeTE6IERvaW5nIFR4
+IElRIENhbCBmb3IgY2hhaW4gMQ0KPj4gWyAgIDg0LjAxMDAwMF0gYXRoOiBwaHkxOiBJUV9SRVNb
+MF09MHhkMjQ4OTAwYiBJUV9SRVNbMV09MHhmZWZmDQo+PiBbICAgODQuMDIwMDAwXSBhdGg6IHBo
+eTE6IElRX1JFU1syXT0weGYwZjQ2NDk5IElRX1JFU1szXT0weDI2MmYNCj4+IFsgICA4NC4wMjAw
+MDBdIGF0aDogcGh5MTogSVFfUkVTWzRdPTB4NjZmYTlmZmYgSVFfUkVTWzVdPTB4ZmU4Mg0KPj4g
+WyAgIDg0LjAzMDAwMF0gYXRoOiBwaHkxOiBjaGFpbiAxOiBtYWcgbWlzbWF0Y2g9MCBwaGFzZSBt
+aXNtYXRjaD0wDQo+PiBbICAgODQuMDQwMDAwXSBhdGg6IHBoeTE6IHR4IGNoYWluIDE6IG1hZyBj
+b3JyPTAgIHBoYXNlIGNvcnI9LTEzDQo+PiBbICAgODQuMDQwMDAwXSBhdGg6IHBoeTE6IHR4IGNo
+YWluIDE6IGlxIGNvcnIgY29lZmY9NzMNCj4+IFsgICA4NC4wNTAwMDBdIGF0aDogcGh5MTogcngg
+Y2hhaW4gMTogbWFnIGNvcnI9MCAgcGhhc2UgY29ycj0tMw0KPj4gWyAgIDg0LjA1MDAwMF0gYXRo
+OiBwaHkxOiByeCBjaGFpbiAxOiBpcSBjb3JyIGNvZWZmPTdkDQo+PiBbICAgODQuMDYwMDAwXSBh
+dGg6IHBoeTE6IERvaW5nIFR4IElRIENhbCBmb3IgY2hhaW4gMQ0KPj4gWyAgIDg0LjA2MDAwMF0g
+YXRoOiBwaHkxOiBJUV9SRVNbMF09MHhjYzRlZDAxMSBJUV9SRVNbMV09MHhmZjJmDQo+PiBbICAg
+ODQuMDcwMDAwXSBhdGg6IHBoeTE6IElRX1JFU1syXT0weGVmZjMzNGZhIElRX1JFU1szXT0weDI5
+NWYNCj4+IFsgICA4NC4wNzAwMDBdIGF0aDogcGh5MTogSVFfUkVTWzRdPTB4OWJmYTFmZmQgSVFf
+UkVTWzVdPTB4ZmU0Mg0KPj4gWyAgIDg0LjA4MDAwMF0gYXRoOiBwaHkxOiBjaGFpbiAxOiBtYWcg
+bWlzbWF0Y2g9MCBwaGFzZSBtaXNtYXRjaD0wDQo+PiBbICAgODQuMDkwMDAwXSBhdGg6IHBoeTE6
+IHR4IGNoYWluIDE6IG1hZyBjb3JyPTAgIHBoYXNlIGNvcnI9LTE0DQo+PiBbICAgODQuMDkwMDAw
+XSBhdGg6IHBoeTE6IHR4IGNoYWluIDE6IGlxIGNvcnIgY29lZmY9NzINCj4+IFsgICA4NC4xMDAw
+MDBdIGF0aDogcGh5MTogcnggY2hhaW4gMTogbWFnIGNvcnI9MCAgcGhhc2UgY29ycj0tMg0KPj4g
+WyAgIDg0LjEwMDAwMF0gYXRoOiBwaHkxOiByeCBjaGFpbiAxOiBpcSBjb3JyIGNvZWZmPTdlDQo+
+PiBbICAgODQuMTEwMDAwXSBhdGg6IHBoeTE6IGVuYWJsaW5nIElRIENhbGlicmF0aW9uDQo+PiBb
+ICAgODQuMTEwMDAwXSBhdGg6IHBoeTE6IHN0YXJ0aW5nIElRIE1pc21hdGNoIENhbGlicmF0aW9u
+DQo+PiBbICAgODQuMTIwMDAwXSBhdGg6IHBoeTE6IEVuYWJsZWQgQkIgV2F0Y2hkb2cgdGltZW91
+dCAoMjUgbXMpDQo+PiBbICAgODQuMTIwMDAwXSBhdGg6IHBoeTE6IE5ldyBpbnRlcnJ1cHQgbWFz
+ayAweGY0MDAwNDczDQo+PiBbICAgODQuMTMwMDAwXSBhdGg6IHBoeTE6IG5ldyBJTVIgMHg4MTgw
+MDE3NQ0KPj4gWyAgIDg0LjEzMDAwMF0gYXRoOiBwaHkxOiBtYWNhZGRyOiAwMDoxMTphYTpkNDo3
+MzphMCwgYnNzaWQ6DQo+PiAwMDowMDowMDowMDowMDowMCwgYnNzaWRtYXNrOiBmZjpmZjpmZjpm
+ZjpmZjpmZg0KPj4gWyAgIDg0LjE0MDAwMF0gYXRoOiBwaHkxOiBFbmFibGUgTUlCIGNvdW50ZXJz
+DQo+PiBbICAgODQuMTUwMDAwXSBhdGg6IHBoeTE6IFJlc3RvcmUgaGlzdG9yeTogb3Btb2RlIDIg
+Y2hhbiAyNDEyIE1oeg0KPj4gaXNfc2Nhbm5pbmc9MCBvZmRtOjMgY2NrOjINCj4+IFsgICA4NC4x
+NTAwMDBdIGF0aDogcGh5MTogKioqKiBvZmRtbGV2ZWwgMz0+MywgcnNzaT0wW2xvPTcgaGk9NDBd
+DQo+PiBbICAgODQuMTYwMDAwXSBhdGg6IHBoeTE6ICoqKiogY2NrbGV2ZWwgMj0+MiwgcnNzaT0w
+W2xvPTcgaGk9NDBdDQo+PiBbICAgODQuMTcwMDAwXSBhdGg6IHBoeTE6IE5ldyBpbnRlcnJ1cHQg
+bWFzayAweGY0MDAwNDczDQo+PiBbICAgODQuMTcwMDAwXSBhdGg6IHBoeTE6IG5ldyBJTVIgMHg4
+MTgwMDE3NQ0KPj4gWyAgIDg0LjE3MDAwMF0gYXRoOiBwaHkxOiBlbmFibGUgSUVSDQo+PiA9PT09
+PT09PT09PT09PT09PT09PT09PTxGUkVFWkUgb24gd2xhbjEgDQo+PiAoQUhCKSk9PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQo+Pg0K
