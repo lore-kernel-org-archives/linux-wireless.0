@@ -1,81 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:34585 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932828AbbGGUL2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 16:11:28 -0400
-Received: by obbkm3 with SMTP id km3so136409841obb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2015 13:11:28 -0700 (PDT)
-Date: Tue, 7 Jul 2015 15:11:26 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Wei Zhong <wzhong@google.com>, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
-Message-ID: <20150707201126.GB369@ubuntu-xps13> (sfid-20150707_221133_220522_9D2608AF)
-References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
- <55966D1B.1040603@neratec.com>
- <CAHr=VqnpJ_+ovmB3gqm+X9WX98ZeVuO8VZ2cq6OFPcdjy8Rkgg@mail.gmail.com>
- <5596A3C0.6020303@neratec.com>
- <20150706132707.GA22962@ubuntu-hedt>
- <559A9378.7000006@neratec.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58434 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751190AbbGQQRZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2015 12:17:25 -0400
+Subject: [PATCH 12/27] modsign: Allow external signing key to be specified
+From: David Howells <dhowells@redhat.com>
+To: mcgrof@gmail.com
+Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
+	gregkh@linuxfoundation.org, kyle@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
+	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
+Date: Fri, 17 Jul 2015 17:17:19 +0100
+Message-ID: <20150717161719.2578.22073.stgit@warthog.procyon.org.uk> (sfid-20150717_182257_283823_D5382A2C)
+In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <559A9378.7000006@neratec.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 06, 2015 at 04:40:56PM +0200, Zefir Kurtisi wrote:
-> On 07/06/2015 03:27 PM, Seth Forshee wrote:
-> > On Fri, Jul 03, 2015 at 05:01:20PM +0200, Zefir Kurtisi wrote:
-> >> On 07/03/2015 04:20 PM, Wei Zhong wrote:
-> >> [...]
-> >> From your other post:
-> >>>>     >
-> >>>>     >  -       (5490 - 5730 @ 160), (24), DFS
-> >>>>     >  +       (5490 - 5590 @ 80), (24), DFS
-> >>>>
-> >>>>     I agree. 5590 is more strict than 5600.
-> >>>>
-> >>>>  
-> >>>> On a second thought,  5590 implies channel 116 can't have 40MHz. I think that is
-> >>>> still allowed per regulation.
-> >>>>
-> >>>>
-> >>
-> >> No, channel 116 is not usable for HT40 if weather radar channels are disabled,
-> >> since it can only be combined with channel 120 and that one partially falls into
-> >> the restricted range.
-> > 
-> > It's not necessary to restrict the band down to 5590 or break out the
-> > rule for channel 116 separately, the software is smart enough to work
-> > out what's allowed based on the original rule Wei supplied for 5490-5600
-> > MHz. In fact that rule exactly matches what we used to have in db.txt
-> > for the US prior to the TDWR restrictions being lifted.
-> > 
-> 
-> Yes, the SW is smart and sane enough to extract the limitations even if they are
-> defined less restrictive than required. Which raises the general question of what
-> needs to be defined as rule and what can be relied on to be handled correctly by
-> the SW.
-> 
-> Example: why do we need to bother about the max-bw parameter for a rule at all? We
-> know there is no 160MHz channel within 5490 and 5600, as does the SW. If we wrote
-> (5490 - 5600 @ 160) instead of (5490 - 5600 @ 80), nothing would change.
-> 
-> To me it sounds not fully consistent to explicitly limit max-bw while relying on
-> SW to sanitize frequency ranges. Not that it really matters in practice, but it
-> has a potential to simplify the rules (i.e. provide max-bw parameter only if the
-> according country defines restrictions and leave SW to handle it otherwise).
+From: David Woodhouse <David.Woodhouse@intel.com>
 
-The database is just about capturing the rules of the various regulatory
-bodies. I don't know off the top of my head if there are any cases today
-where the maximum allowed badwidth in a given range is less than the
-maximum possible bandwidth in that range, but it certainly doesn't seem
-impossible. So I wouldn't call it inconsistent.
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
 
-We aren't expecting the kernel to "sanitize" the frequency ranges
-either. It doesn't rely on the regdb to tell it which frequencies are
-legitimate.
+ Documentation/module-signing.txt |   31 ++++++++++++++++++++++++++-----
+ Makefile                         |    2 +-
+ init/Kconfig                     |   14 ++++++++++++++
+ kernel/Makefile                  |    5 +++++
+ 4 files changed, 46 insertions(+), 6 deletions(-)
 
-Seth
+diff --git a/Documentation/module-signing.txt b/Documentation/module-signing.txt
+index faaa6ea002f7..84597c7ea175 100644
+--- a/Documentation/module-signing.txt
++++ b/Documentation/module-signing.txt
+@@ -88,6 +88,22 @@ This has a number of options available:
+      than being a module) so that modules signed with that algorithm can have
+      their signatures checked without causing a dependency loop.
+ 
++ (4) "File name or PKCS#11 URI of module signing key" (CONFIG_MODULE_SIG_KEY)
++
++     Setting this option to something other than its default of
++     "signing_key.priv" will disable the autogeneration of signing keys and
++     allow the kernel modules to be signed with a key of your choosing.
++     The string provided should identify a file containing a private key
++     in PEM form, or — on systems where the OpenSSL ENGINE_pkcs11 is
++     appropriately installed — a PKCS#11 URI as defined by RFC7512.
++
++     If the PEM file containing the private key is encrypted, or if the
++     PKCS#11 token requries a PIN, this can be provided at build time by
++     means of the KBUILD_SIGN_PIN variable.
++
++     The corresponding X.509 certificate in DER form should still be placed
++     in a file named signing_key.x509 in the top-level build directory.
++
+ 
+ =======================
+ GENERATING SIGNING KEYS
+@@ -100,8 +116,9 @@ it can be deleted or stored securely.  The public key gets built into the
+ kernel so that it can be used to check the signatures as the modules are
+ loaded.
+ 
+-Under normal conditions, the kernel build will automatically generate a new
+-keypair using openssl if one does not exist in the files:
++Under normal conditions, when CONFIG_MODULE_SIG_KEY is unchanged from its
++default of "signing_key.priv", the kernel build will automatically generate
++a new keypair using openssl if one does not exist in the files:
+ 
+ 	signing_key.priv
+ 	signing_key.x509
+@@ -135,8 +152,12 @@ kernel sources tree and the openssl command.  The following is an example to
+ generate the public/private key files:
+ 
+ 	openssl req -new -nodes -utf8 -sha256 -days 36500 -batch -x509 \
+-	   -config x509.genkey -outform DER -out signing_key.x509 \
+-	   -keyout signing_key.priv
++	   -config x509.genkey -outform PEM -out kernel_key.pem \
++	   -keyout kernel_key.pem
++
++The full pathname for the resulting kernel_key.pem file can then be specified
++in the CONFIG_MODULE_SIG_KEY option, and the certificate and key therein will
++be used instead of an autogenerated keypair.
+ 
+ 
+ =========================
+@@ -181,7 +202,7 @@ To manually sign a module, use the scripts/sign-file tool available in
+ the Linux kernel source tree.  The script requires 4 arguments:
+ 
+ 	1.  The hash algorithm (e.g., sha256)
+-	2.  The private key filename
++	2.  The private key filename or PKCS#11 URI
+ 	3.  The public key filename
+ 	4.  The kernel module to be signed
+ 
+diff --git a/Makefile b/Makefile
+index 95bb0ff83634..e1195798a00f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -869,7 +869,7 @@ INITRD_COMPRESS-$(CONFIG_RD_LZ4)   := lz4
+ # export INITRD_COMPRESS := $(INITRD_COMPRESS-y)
+ 
+ ifdef CONFIG_MODULE_SIG_ALL
+-MODSECKEY = ./signing_key.priv
++MODSECKEY = $(CONFIG_MODULE_SIG_KEY)
+ MODPUBKEY = ./signing_key.x509
+ export MODPUBKEY
+ mod_sign_cmd = scripts/sign-file $(CONFIG_MODULE_SIG_HASH) $(MODSECKEY) $(MODPUBKEY)
+diff --git a/init/Kconfig b/init/Kconfig
+index 14b3d8422502..1b1148e9181b 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1948,6 +1948,20 @@ config MODULE_SIG_HASH
+ 	default "sha384" if MODULE_SIG_SHA384
+ 	default "sha512" if MODULE_SIG_SHA512
+ 
++config MODULE_SIG_KEY
++	string "File name or PKCS#11 URI of module signing key"
++	default "signing_key.priv"
++	depends on MODULE_SIG
++	help
++         Provide the file name of a private key in PKCS#8 PEM format, or
++         a PKCS#11 URI according to RFC7512. The corresponding X.509
++         certificate in DER form should be present in signing_key.x509
++         in the top-level build directory.
++
++         If this option is unchanged from its default "signing_key.priv",
++         then the kernel will automatically generate the private key and
++         certificate as described in Documentation/module-signing.txt
++
+ config MODULE_COMPRESS
+ 	bool "Compress modules on installation"
+ 	depends on MODULES
+diff --git a/kernel/Makefile b/kernel/Makefile
+index 43c4c920f30a..2c937ace292e 100644
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -170,6 +170,10 @@ ifndef CONFIG_MODULE_SIG_HASH
+ $(error Could not determine digest type to use from kernel config)
+ endif
+ 
++# We do it this way rather than having a boolean option for enabling an
++# external private key, because 'make randconfig' might enable such a
++# boolean option and we unfortunately can't make it depend on !RANDCONFIG.
++ifeq ($(CONFIG_MODULE_SIG_KEY),"signing_key.priv")
+ signing_key.priv signing_key.x509: x509.genkey
+ 	@echo "###"
+ 	@echo "### Now generating an X.509 key pair to be used for signing modules."
+@@ -207,3 +211,4 @@ x509.genkey:
+ 	@echo >>x509.genkey "subjectKeyIdentifier=hash"
+ 	@echo >>x509.genkey "authorityKeyIdentifier=keyid"
+ endif
++endif
+
