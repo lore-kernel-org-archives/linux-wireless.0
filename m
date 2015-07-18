@@ -1,87 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx18-05.smtp.antispamcloud.com ([207.244.64.174]:54516 "EHLO
-	mx18-05.smtp.antispamcloud.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752337AbbGXLbq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 07:31:46 -0400
-Message-ID: <55B21B37.4080509@topic.nl> (sfid-20150724_133203_018284_72A8EA39)
-Date: Fri, 24 Jul 2015 13:02:15 +0200
-From: Mike Looijmans <mike.looijmans@topic.nl>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:36547 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725AbbGRTH1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jul 2015 15:07:27 -0400
 MIME-Version: 1.0
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>,
-	<fariyaf@gmail.com>
-Subject: Re: Commit "rsi: fix memory leak in rsi_load_ta_instructions()" breaks
- things
-References: <55B1E2CB.3040908@topic.nl> <55B1F9CC.4060507@ispras.ru>
-In-Reply-To: <55B1F9CC.4060507@ispras.ru>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <55A90BF4.6040402@gmx.de>
+References: <55A43355.2070302@gmx.de>
+	<CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com>
+	<55A90BF4.6040402@gmx.de>
+Date: Sat, 18 Jul 2015 22:07:24 +0300
+Message-ID: <CANUX_P1NbGYnkwEqYebcTtL+C4NQF1NS4ji47fsRi9OzcoQk2A@mail.gmail.com> (sfid-20150718_210749_197949_A1660CCF)
+Subject: Re: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Toralf_F=C3=B6rster?= <toralf.foerster@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-﻿On 24-07-15 10:39, Alexey Khoroshilov wrote:
-> Dear Mike,
+Emmanuel Grumbach
+egrumbach@gmail.com
+
+
+On Fri, Jul 17, 2015 at 5:06 PM, Toralf Förster <toralf.foerster@gmx.de> wrote:
+> On 07/14/2015 08:43 AM, Emmanuel Grumbach wrote:
+>> You are not using the latest firmware. Please upgrade to 25.17.12.0.
 >
-> On 24.07.2015 14:01, Mike Looijmans wrote:
->> Regarding this commit:
->>
->> https://lkml.org/lkml/2014/12/12/709
->>
->>      rsi: fix memory leak in rsi_load_ta_instructions()
->>
->>      Memory allocated by kmemdup() in rsi_load_ta_instructions() is leaked.
->>      But duplication of firmware data here is useless,
->>      so the patch removes kmemdup() at all.
->>
->>      Found by Linux Driver Verification project (linuxtesting.org).
->>
->>      Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
->>      Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->>
->> We use this driver for the Redpine Wifi chip on our "florida" board, and
->> after this commit it stopped working. Symptom was that the "wlan0"
->> device was not created at all. Reverting the commit makes it work again.
->>
->> Apparently, the kmemdup action is needed for something. I suspect the
->> DMA controller is still copying the firmware data before the method
->> returned.
+> At least with this firmware the issue is self-healing after a short while - I do not need to restart the interface.
 >
-> To test your hypothesis, could you please check if it is still broken
-> with kfree(fw); added just after release_firmware(fw_entry); in
-> rsi_load_ta_instructions().
 
-Tried, and appears to work if i just kfree() the firmware copy. It does leave 
-a bad taste though. I'd expect fw_entry->data to point to a kmalloc'd area as 
-well. So it might work now just because it happens to be that the memory if 
-"far enough away" and isn't being touched by anything else until the transfer 
-is done. And on some other setup, it may suddenly fail unexpectedly.
+Thanks for the feedback.
 
-I thought to move the kfree to a point where the driver unregisters, but 
-apparently it doesn't have any internal hook for that (sdio_done or so).
+> FWIW it worked flawlessly since Dec last year so far - no software upgrade at the fritz box nor any hardware change.
+> So the current kernel uncovered then an (existing hidden ?) issue, right ?
 
-I'd really like to see some comment from the Redpine folks on this, but since 
-there hasn't been any event in the past year or so, I don't expect much.
-
-
-
-
-
-Kind regards,
-
-Mike Looijmans
-System Expert
-
-TOPIC Embedded Products
-Eindhovenseweg 32-C, NL-5683 KH Best
-Postbus 440, NL-5680 AK Best
-Telefoon: +31 (0) 499 33 69 79
-Telefax: +31 (0) 499 33 69 70
-E-mail: mike.looijmans@topicproducts.com
-Website: www.topicproducts.com
-
-Please consider the environment before printing this e-mail
-
-
-
-
-
+The current kernel might just be loading a newer firmware that has a regression.
+It may very well be a regression in iwlwifi (kernel or firmware).
+What you can try is to use an older firmware. kernel 4.0 can still
+load -9.ucode and up. So you can just try to downgrade the firmware.
+Please use: ethtool -i wlan0 to check the version of the firmware.
+Don't rely on the information in modinfo.
