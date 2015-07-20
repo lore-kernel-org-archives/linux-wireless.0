@@ -1,89 +1,292 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755517AbbG3Kyv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 06:54:51 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 19/19] wil6210: support future boot loaders
-Date: Thu, 30 Jul 2015 13:52:07 +0300
-Message-Id: <1438253527-3372-20-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_125501_208990_FD2458C8)
-In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mga03.intel.com ([134.134.136.65]:32473 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752400AbbGTTnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jul 2015 15:43:16 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: sara.sharon@intel.com,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 02/10] mac80211: allow to transmit A-MSDU within A-MPDU
+Date: Mon, 20 Jul 2015 22:42:56 +0300
+Message-Id: <1437421384-19884-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150720_214333_838647_F5899D34)
+In-Reply-To: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Boot loader versions as backward compatible,
-starting from v1
+Advertise the capability to send A-MSDU within A-MPDU
+in the AddBA request sent by mac80211. Let the driver
+know about the peer's capabilities.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 29 +++++++----------------------
- 1 file changed, 7 insertions(+), 22 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
+ drivers/net/wireless/mac80211_hwsim.c       |  2 +-
+ include/linux/ieee80211.h                   |  1 +
+ include/net/mac80211.h                      |  5 ++++-
+ net/mac80211/agg-rx.c                       |  4 ++--
+ net/mac80211/agg-tx.c                       | 15 ++++++++++-----
+ net/mac80211/driver-ops.h                   |  7 ++++---
+ net/mac80211/sta_info.h                     |  2 ++
+ net/mac80211/trace.h                        | 10 ++++++----
+ 10 files changed, 32 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index d11a147..2fb04c5 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -643,37 +643,26 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
- 	u8 *mac;
- 	u16 rf_status;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index f603fb3..8ccfea6 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -731,7 +731,7 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif,
+ 				   enum ieee80211_ampdu_mlme_action action,
+ 				   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-				   u8 buf_size)
++				   u8 buf_size, bool amsdu)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	int ret = -EINVAL;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 45e9913..f5c508a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -815,7 +815,7 @@ static int iwl_mvm_mac_ampdu_action(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+ 				    enum ieee80211_ampdu_mlme_action action,
+ 				    struct ieee80211_sta *sta, u16 tid,
+-				    u16 *ssn, u8 buf_size)
++				    u16 *ssn, u8 buf_size, bool amsdu)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	int ret;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 99e873d..d0b0fdf 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1819,7 +1819,7 @@ static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       enum ieee80211_ampdu_mlme_action action,
+ 				       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-				       u8 buf_size)
++				       u8 buf_size, bool amsdu)
+ {
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_TX_START:
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index b9c7897..2226496 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1379,6 +1379,7 @@ struct ieee80211_ht_operation {
  
--	bl_ver = wil_r(wil, RGF_USER_BL +
--		       offsetof(struct bl_dedicated_registers_v0,
--				boot_loader_struct_version));
--	switch (bl_ver) {
--	case 0:
--		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
--				     sizeof(bl.bl0));
--		le32_to_cpus(&bl.bl0.boot_loader_ready);
--		le32_to_cpus(&bl.bl0.boot_loader_struct_version);
-+	wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
-+			     sizeof(bl));
-+	bl_ver = le32_to_cpu(bl.bl0.boot_loader_struct_version);
-+	mac = bl.bl0.mac_address;
-+
-+	if (bl_ver == 0) {
- 		le32_to_cpus(&bl.bl0.rf_type);
- 		le32_to_cpus(&bl.bl0.baseband_type);
--		mac = bl.bl0.mac_address;
- 		rf_status = 0; /* actually, unknown */
- 		wil_info(wil,
- 			 "Boot Loader struct v%d: MAC = %pM RF = 0x%08x bband = 0x%08x\n",
- 			 bl_ver, mac,
- 			 bl.bl0.rf_type, bl.bl0.baseband_type);
- 		wil_info(wil, "Boot Loader build unknown for struct v0\n");
--		break;
--	case 1:
--	case 2:
--		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
--				     sizeof(bl.bl1));
--		le32_to_cpus(&bl.bl1.boot_loader_ready);
--		le32_to_cpus(&bl.bl1.boot_loader_struct_version);
-+	} else {
- 		le16_to_cpus(&bl.bl1.rf_type);
- 		rf_status = le16_to_cpu(bl.bl1.rf_status);
- 		le32_to_cpus(&bl.bl1.baseband_type);
- 		le16_to_cpus(&bl.bl1.bl_version_subminor);
- 		le16_to_cpus(&bl.bl1.bl_version_build);
--		mac = bl.bl1.mac_address;
- 		wil_info(wil,
- 			 "Boot Loader struct v%d: MAC = %pM RF = 0x%04x (status 0x%04x) bband = 0x%08x\n",
- 			 bl_ver, mac,
-@@ -682,10 +671,6 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
- 		wil_info(wil, "Boot Loader build %d.%d.%d.%d\n",
- 			 bl.bl1.bl_version_major, bl.bl1.bl_version_minor,
- 			 bl.bl1.bl_version_subminor, bl.bl1.bl_version_build);
--		break;
--	default:
--		wil_err(wil, "BL: unsupported struct version 0x%08x\n", bl_ver);
--		return -EINVAL;
+ 
+ /* block-ack parameters */
++#define IEEE80211_ADDBA_PARAM_AMSDU_MASK 0x0001
+ #define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
+ #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
+ #define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFC0
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 95ea827..280419a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3013,6 +3013,9 @@ enum ieee80211_reconfig_type {
+  *	buffer size of 8. Correct ways to retransmit #1 would be:
+  *	 - TX:       1 or 18 or 81
+  *	Even "189" would be wrong since 1 could be lost again.
++ *	The @amsdu parameter is valid when the action is set to
++ *	%IEEE80211_AMPDU_TX_OPERATIONAL and indicates the peer's ability
++ *	to receive A-MSDU within A-MPDU.
+  *
+  *	Returns a negative error code on failure.
+  *	The callback can sleep.
+@@ -3346,7 +3349,7 @@ struct ieee80211_ops {
+ 			    struct ieee80211_vif *vif,
+ 			    enum ieee80211_ampdu_mlme_action action,
+ 			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-			    u8 buf_size);
++			    u8 buf_size, bool amsdu);
+ 	int (*get_survey)(struct ieee80211_hw *hw, int idx,
+ 		struct survey_info *survey);
+ 	void (*rfkill_poll)(struct ieee80211_hw *hw);
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 78de79b..10ad4ac 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -79,7 +79,7 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 	       (int)reason);
+ 
+ 	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
+-			     &sta->sta, tid, NULL, 0))
++			     &sta->sta, tid, NULL, 0, false))
+ 		sdata_info(sta->sdata,
+ 			   "HW problem - can not stop rx aggregation for %pM tid %d\n",
+ 			   sta->sta.addr, tid);
+@@ -323,7 +323,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 		__skb_queue_head_init(&tid_agg_rx->reorder_buf[i]);
+ 
+ 	ret = drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_START,
+-			       &sta->sta, tid, &start_seq_num, 0);
++			       &sta->sta, tid, &start_seq_num, 0, false);
+ 	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
+ 	       sta->sta.addr, tid, ret);
+ 	if (ret) {
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index c8ba2e7..a758eb84 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -97,7 +97,8 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
+ 
+ 	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
+-	capab = (u16)(1 << 1);		/* bit 1 aggregation policy */
++	capab = (u16)(1 << 0);		/* bit 0 A-MSDU support */
++	capab |= (u16)(1 << 1);		/* bit 1 aggregation policy */
+ 	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
+ 	capab |= (u16)(agg_size << 6);	/* bit 15:6 max size of aggergation */
+ 
+@@ -331,7 +332,7 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 			return -EALREADY;
+ 		ret = drv_ampdu_action(local, sta->sdata,
+ 				       IEEE80211_AMPDU_TX_STOP_FLUSH_CONT,
+-				       &sta->sta, tid, NULL, 0);
++				       &sta->sta, tid, NULL, 0, false);
+ 		WARN_ON_ONCE(ret);
+ 		return 0;
  	}
+@@ -381,7 +382,7 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 	tid_tx->tx_stop = reason == AGG_STOP_LOCAL_REQUEST;
  
- 	if (!is_valid_ether_addr(mac)) {
+ 	ret = drv_ampdu_action(local, sta->sdata, action,
+-			       &sta->sta, tid, NULL, 0);
++			       &sta->sta, tid, NULL, 0, false);
+ 
+ 	/* HW shall not deny going back to legacy */
+ 	if (WARN_ON(ret)) {
+@@ -469,7 +470,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 	start_seq_num = sta->tid_seq[tid] >> 4;
+ 
+ 	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
+-			       &sta->sta, tid, &start_seq_num, 0);
++			       &sta->sta, tid, &start_seq_num, 0, false);
+ 	if (ret) {
+ 		ht_dbg(sdata,
+ 		       "BA request denied - HW unavailable for %pM tid %d\n",
+@@ -693,7 +694,8 @@ static void ieee80211_agg_tx_operational(struct ieee80211_local *local,
+ 
+ 	drv_ampdu_action(local, sta->sdata,
+ 			 IEEE80211_AMPDU_TX_OPERATIONAL,
+-			 &sta->sta, tid, NULL, tid_tx->buf_size);
++			 &sta->sta, tid, NULL, tid_tx->buf_size,
++			 tid_tx->amsdu);
+ 
+ 	/*
+ 	 * synchronize with TX path, while splicing the TX path
+@@ -918,8 +920,10 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 	struct tid_ampdu_tx *tid_tx;
+ 	u16 capab, tid;
+ 	u8 buf_size;
++	bool amsdu;
+ 
+ 	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
++	amsdu = capab & IEEE80211_ADDBA_PARAM_AMSDU_MASK;
+ 	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
+ 	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
+ 
+@@ -968,6 +972,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 		}
+ 
+ 		tid_tx->buf_size = buf_size;
++		tid_tx->amsdu = amsdu;
+ 
+ 		if (test_bit(HT_AGG_STATE_DRV_READY, &tid_tx->state))
+ 			ieee80211_agg_tx_operational(local, sta, tid);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 32a2e70..68c4b7a 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -743,7 +743,7 @@ static inline int drv_ampdu_action(struct ieee80211_local *local,
+ 				   struct ieee80211_sub_if_data *sdata,
+ 				   enum ieee80211_ampdu_mlme_action action,
+ 				   struct ieee80211_sta *sta, u16 tid,
+-				   u16 *ssn, u8 buf_size)
++				   u16 *ssn, u8 buf_size, bool amsdu)
+ {
+ 	int ret = -EOPNOTSUPP;
+ 
+@@ -753,11 +753,12 @@ static inline int drv_ampdu_action(struct ieee80211_local *local,
+ 	if (!check_sdata_in_driver(sdata))
+ 		return -EIO;
+ 
+-	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, buf_size);
++	trace_drv_ampdu_action(local, sdata, action, sta, tid,
++			       ssn, buf_size, amsdu);
+ 
+ 	if (local->ops->ampdu_action)
+ 		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
+-					       sta, tid, ssn, buf_size);
++					       sta, tid, ssn, buf_size, amsdu);
+ 
+ 	trace_drv_return_int(local, ret);
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 226f8ca4..fde5d9f 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -130,6 +130,7 @@ enum ieee80211_agg_stop_reason {
+  * @buf_size: reorder buffer size at receiver
+  * @failed_bar_ssn: ssn of the last failed BAR tx attempt
+  * @bar_pending: BAR needs to be re-sent
++ * @amsdu: support A-MSDU withing A-MDPU
+  *
+  * This structure's lifetime is managed by RCU, assignments to
+  * the array holding it must hold the aggregation mutex.
+@@ -155,6 +156,7 @@ struct tid_ampdu_tx {
+ 
+ 	u16 failed_bar_ssn;
+ 	bool bar_pending;
++	bool amsdu;
+ };
+ 
+ /**
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 6f14591..8244f16 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -944,9 +944,9 @@ TRACE_EVENT(drv_ampdu_action,
+ 		 struct ieee80211_sub_if_data *sdata,
+ 		 enum ieee80211_ampdu_mlme_action action,
+ 		 struct ieee80211_sta *sta, u16 tid,
+-		 u16 *ssn, u8 buf_size),
++		 u16 *ssn, u8 buf_size, bool amsdu),
+ 
+-	TP_ARGS(local, sdata, action, sta, tid, ssn, buf_size),
++	TP_ARGS(local, sdata, action, sta, tid, ssn, buf_size, amsdu),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+@@ -955,6 +955,7 @@ TRACE_EVENT(drv_ampdu_action,
+ 		__field(u16, tid)
+ 		__field(u16, ssn)
+ 		__field(u8, buf_size)
++		__field(bool, amsdu)
+ 		VIF_ENTRY
+ 	),
+ 
+@@ -966,12 +967,13 @@ TRACE_EVENT(drv_ampdu_action,
+ 		__entry->tid = tid;
+ 		__entry->ssn = ssn ? *ssn : 0;
+ 		__entry->buf_size = buf_size;
++		__entry->amsdu = amsdu;
+ 	),
+ 
+ 	TP_printk(
+-		LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT " action:%d tid:%d buf:%d",
++		LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT " action:%d tid:%d buf:%d amsdu:%d",
+ 		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->action,
+-		__entry->tid, __entry->buf_size
++		__entry->tid, __entry->buf_size, __entry->amsdu
+ 	)
+ );
+ 
 -- 
 2.1.4
 
