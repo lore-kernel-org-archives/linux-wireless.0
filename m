@@ -1,79 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47052 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([134.134.136.65]:32482 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754293AbbGBCAz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 22:00:55 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Michel von Czettritz <michel.von.czettritz@gmail.com>
-Cc: gregkh@linux.com, Larry.Finger@lwfinger.net,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] staging: rtl8723au: fix "incorrect type in assignment"
-References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
-	<d7c0812eedadab3697323bd53aeadba48ecf6d89.1435700714.git.michel.von.czettritz@gmail.com>
-	<wrfj7fqj62mh.fsf@redhat.com> <5594797A.3010609@gmail.com>
-Date: Wed, 01 Jul 2015 22:00:53 -0400
-In-Reply-To: <5594797A.3010609@gmail.com> (Michel von Czettritz's message of
-	"Thu, 2 Jul 2015 01:36:26 +0200")
-Message-ID: <wrfjmvzf2u96.fsf@redhat.com> (sfid-20150702_040059_131885_51CB31AB)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754124AbbGTTna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jul 2015 15:43:30 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: sara.sharon@intel.com,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 08/10] iwlwifi: mvm: add support for A-MSDU Tx
+Date: Mon, 20 Jul 2015 22:43:02 +0300
+Message-Id: <1437421384-19884-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150720_214344_984182_4D94522F)
+In-Reply-To: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michel von Czettritz <michel.von.czettritz@gmail.com> writes:
-> On 07/01/2015 10:31 PM, Jes Sorensen wrote:
->> Michel von Czettritz <michel.von.czettritz@gmail.com> writes:
->>> Writing the output of cpu_to_le32 to an u32 or *(u32*) is an implicit
->>> cast and results in an sparse warning.
->>>
->>> Since param and mask won't be changed, the implicit cast can be avoided
->>> by creating local variables.
->>>
->>> Signed-off-by: Michel von Czettritz <michel.von.czettritz@gmail.com>
->>> ---
->>>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 10 ++++++----
->>>  1 file changed, 6 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->>> index 1003365..a5e6726 100644
->>> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->>> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->>> @@ -115,9 +115,10 @@ exit:
->>>  
->>>  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
->>>  {
->>> -	*((u32 *)param) = cpu_to_le32(*(param));
->>> +	__le32 param_le;
->>> +	param_le = cpu_to_le32(*(param));
->>>  
->>> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)param);
->>> +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&param_le);
->>>  
->>>  	return _SUCCESS;
->>>  }
->>> @@ -125,10 +126,11 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
->>>  int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
->>>  {
->>>  	u8 buf[5];
->>> +	__le32 mask_le;
->>>  
->>>  	memset(buf, 0, 5);
->>> -	mask = cpu_to_le32(mask);
->>> -	memcpy(buf, &mask, 4);
->>> +	mask_le = cpu_to_le32(mask);
->>> +	memcpy(buf, &mask_le, 4);
->> 
->> cpu_to_le32() + memcpy() is ugly - put_unaligned_le32() would make more
->> sense.
->> 
->> Jes
-> I'm not sure if the fold, changing u32* to u32, and changing this, is
-> a bit much.
-> Should this be a second patch? Or maybe a patch for each function?
+Now that LSO is working, we can have a big buffer at once
+in the driver. Allow to build an A-MSDU out of all this
+data. Using A-MSDU will allow better throughput.
 
-I would change the u32 * in one patch and the conversion and memcpy in
-another.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   1 +
+ drivers/net/wireless/iwlwifi/mvm/tx.c       | 105 +++++++++++++++++++++++++---
+ 2 files changed, 98 insertions(+), 8 deletions(-)
 
-Cheers,
-Jes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index def314e..0334ad4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -435,6 +435,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	ieee80211_hw_set(hw, CONNECTION_MONITOR);
+ 	ieee80211_hw_set(hw, CHANCTX_STA_CSA);
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
++	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
+ 
+ 	if (IWL_MVM_SW_CSUM_OFFLOAD)
+ 		hw->netdev_features |= NETIF_F_IP_CSUM | NETIF_F_TSO |
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index 27b8491..3f89d71 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -476,8 +476,10 @@ static void iwl_update_ip_tcph(void *iph, struct tcphdr *tcph, bool ipv6,
+  * @ieee80211_hdr *hdr: Points to the WiFi header.
+  * @gso_nr_frags: The number of frags in the original GSO skb.
+  * @wifi_hdr_iv_len: The length of the WiFi header including IV.
++ * @amsdu_pad: Number of bytes for the A-MSDU subframe
+  * @tcp_fin: True if TCP_FIN is set in the original GSO skb.
+  * @tcp_push: True if TCP_PSH is set in the original GSO skb.
++ * @amsdu: True if we are building an A-MSDU
+  */
+ struct iwl_lso_splitter {
+ 	unsigned int linear_payload_len;
+@@ -493,8 +495,10 @@ struct iwl_lso_splitter {
+ 	struct ieee80211_hdr *hdr;
+ 	u8 gso_nr_frags;
+ 	u8 wifi_hdr_iv_len;
++	u8 amsdu_pad;
+ 	bool tcp_fin;
+ 	bool tcp_push;
++	bool amsdu;
+ };
+ 
+ /*
+@@ -616,9 +620,10 @@ static int iwl_add_msdu(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+ 			struct iwl_lso_splitter *p)
+ {
+ 
+-	unsigned int tcp_seg_sz, snap_ip_tcp_len, copy_sz = 0;
++	unsigned int tcp_seg_sz, snap_ip_tcp_len, subframe_sz, copy_sz = 0;
+ 	bool ipv6 = p->si->gso_type & SKB_GSO_TCPV6;
+ 	u8 *start_hdr = *hdr_page_pos;
++	__be16 *length = NULL;
+ 	struct tcphdr *tcph;
+ 	struct iphdr *iph;
+ 
+@@ -626,10 +631,32 @@ static int iwl_add_msdu(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+ 		8 + skb_network_header_len(skb_gso) + tcp_hdrlen(skb_gso);
+ 	copy_sz = min_t(unsigned int, p->linear_payload_len, p->mss);
+ 
+-	*hdr_page_pos = get_page_pos(hdr_page, *hdr_page_pos, snap_ip_tcp_len + copy_sz);
++	*hdr_page_pos =
++		get_page_pos(hdr_page, *hdr_page_pos,
++			     snap_ip_tcp_len + copy_sz +
++			     sizeof(struct ethhdr) + 4);
+ 	if (!*hdr_page_pos)
+ 		return -1;
+ 
++	subframe_sz = snap_ip_tcp_len;
++
++	if (p->amsdu) {
++		memset(*hdr_page_pos, 0, p->amsdu_pad);
++		*hdr_page_pos += p->amsdu_pad;
++
++		/* TODO: AP MODE */
++
++		memcpy(*hdr_page_pos, p->hdr->addr3, ETH_ALEN);
++		*hdr_page_pos += ETH_ALEN;
++
++		memcpy(*hdr_page_pos, p->hdr->addr2, ETH_ALEN);
++		*hdr_page_pos += ETH_ALEN;
++
++		length = (void *)*hdr_page_pos;
++		*hdr_page_pos += sizeof(*length);
++		subframe_sz += sizeof(struct ethhdr);
++	}
++
+ 	/*
+ 	 * Copy SNAP / IP / TCP headers from the original GSO skb to the
+ 	 * header page.
+@@ -671,6 +698,11 @@ static int iwl_add_msdu(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+ 
+ 	/* .. and now add the payload coming from the frags. */
+ 	tcp_seg_sz = iwl_add_tcp_segment(mvm, skb_gso, skb, p, copy_sz);
++	subframe_sz += tcp_seg_sz;
++	p->amsdu_pad = (4 - (subframe_sz)) & 0x3;
++
++	if (length)
++		*length = cpu_to_be16(subframe_sz - sizeof(struct ethhdr));
+ 
+ 	iwl_update_ip_tcph(iph, tcph, ipv6, tcp_seg_sz,
+ 			   p->gso_payload_pos - tcp_seg_sz, ip_id);
+@@ -691,7 +723,7 @@ static int iwl_add_msdu(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+ 						tcp_seg_sz, tcp_hdrlen(skb_gso));
+ 	skb->ip_summed = CHECKSUM_COMPLETE;
+ 
+-	return 0;
++	return subframe_sz;
+ }
+ 
+ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff* skb_gso,
+@@ -847,9 +879,12 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff* skb_gso,
+ 	if (keyconf && keyconf->cipher == WLAN_CIPHER_SUITE_CCMP)
+ 		s.wifi_hdr_iv_len += IEEE80211_CCMP_HDR_LEN;
+ 
++	s.amsdu = true;
+ 	while (s.gso_payload_pos < s.gso_payload_len) {
+ 		struct sk_buff *skb = dev_alloc_skb(s.wifi_hdr_iv_len);
+-		int ret;
++		unsigned int ip_tcp_snap_hdrlen, amsdu_sz, max_amsdu_sz;
++		u8 *qc;
++
+ 		s.frag_in_mpdu = 0;
+ 
+ 		if (WARN_ON(s.gso_frag_num >= s.gso_nr_frags))
+@@ -864,11 +899,65 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff* skb_gso,
+ 		memcpy(skb_put(skb, s.wifi_hdr_iv_len),
+ 		       wifi_hdr, s.wifi_hdr_iv_len);
+ 
+-		ret = iwl_add_msdu(mvm, skb_gso, skb, &hdr_page,
+-				   &hdr_page_pos, i++, &s);
+-		if (ret < 0) {
+-			skb_queue_purge(mpdus_skb);
++		/* No need to have an AMSDU if we have at most mss bytes */
++		if (s.gso_payload_len - s.gso_payload_pos <= s.mss)
++			s.amsdu = false;
++
++		max_amsdu_sz = sta->max_amsdu_sz;
++
++		if (!max_amsdu_sz || !s.amsdu) {
++			int l;
++
++			s.amsdu = false;
++			l = iwl_add_msdu(mvm, skb_gso, skb, &hdr_page,
++					 &hdr_page_pos, i++, &s);
++			if (l < 0) {
++				skb_queue_purge(mpdus_skb);
++				goto err;
++			}
++
++			__skb_queue_tail(mpdus_skb, skb);
++			continue;
++		}
++
++		if (WARN_ON_ONCE(max_amsdu_sz < s.mss))
+ 			goto err;
++
++		qc = ieee80211_get_qos_ctl((void *)skb->data);
++		*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++
++		amsdu_sz = 0;
++		s.amsdu_pad = 0;
++		ip_tcp_snap_hdrlen =
++			8 + ip_hdrlen(skb_gso) + tcp_hdrlen(skb_gso);
++
++		i = 0;
++
++		/*
++		 * Make sure we have enough room for
++		 * ethernet header, SNAP header, IP header, TCP header and MSS.
++		 * Make sure we don't add more MSDUs than allowed
++		 */
++		while (amsdu_sz + sizeof(struct ethhdr) + s.mss +
++		       ip_tcp_snap_hdrlen < max_amsdu_sz &&
++		       (!sta->max_msdus || i < sta->max_msdus) &&
++		       s.gso_payload_pos < s.gso_payload_len) {
++			unsigned int l;
++
++
++			if (s.frag_in_mpdu >= mvm->trans->max_skb_frags - 1) {
++				IWL_ERR(mvm, "2 frags need for each MSDU\n");
++				break;
++			}
++
++			l = iwl_add_msdu(mvm, skb_gso, skb, &hdr_page,
++					 &hdr_page_pos, i++, &s);
++			if (l < 0) {
++				skb_queue_purge(mpdus_skb);
++				goto err;
++			}
++
++			amsdu_sz += l;
+ 		}
+ 
+ 		__skb_queue_tail(mpdus_skb, skb);
+-- 
+2.1.4
 
