@@ -1,101 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:41965
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753333AbbGBLkd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2015 07:40:33 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mga03.intel.com ([134.134.136.65]:32482 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753243AbbGTTnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jul 2015 15:43:32 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH] ath9k: make DMA stop related messages debug-only
-Date: Thu,  2 Jul 2015 13:40:29 +0200
-Message-Id: <1435837229-94571-1-git-send-email-nbd@openwrt.org> (sfid-20150702_134037_263416_68AFF237)
+Cc: sara.sharon@intel.com,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 09/10] iwlwifi: mvm: allow to configure the maximal size of an A-MSDU
+Date: Mon, 20 Jul 2015 22:43:03 +0300
+Message-Id: <1437421384-19884-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150720_214337_906548_D79AE86C)
+In-Reply-To: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A long time ago, ath9k had issues during reset where the DMA engine
-would stay active and could potentially corrupt memory.
-To debug those issues, the driver would print warnings whenever they
-occur.
+Since an A-MSDU has one single CRC for the whole
+aggregation, it is tricky to know what size to allow.
+For now, add a debugfs hook to be able to tune the
+algorightm.
 
-Nowadays, these issues are gone and the primary cause of these messages
-is if the MAC is stuck during reset or busy processing a long
-transmission. This is fairly harmless, yet these messages continue to
-worry users.
-
-To reduce the number of bogus bug reports, turn these messages into
-debug messages and count their occurence in the "reset" debugfs file.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c | 2 ++
- drivers/net/wireless/ath/ath9k/debug.h | 2 ++
- drivers/net/wireless/ath/ath9k/recv.c  | 7 +++----
- drivers/net/wireless/ath/ath9k/xmit.c  | 7 +++++--
- 4 files changed, 12 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 19 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h     |  1 +
+ drivers/net/wireless/iwlwifi/mvm/tx.c      |  7 ++++++-
+ 3 files changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index dbf8f49..da32c8f 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -765,6 +765,8 @@ static int read_file_reset(struct seq_file *file, void *data)
- 		[RESET_TYPE_BEACON_STUCK] = "Stuck Beacon",
- 		[RESET_TYPE_MCI] = "MCI Reset",
- 		[RESET_TYPE_CALIBRATION] = "Calibration error",
-+		[RESET_TX_DMA_ERROR] = "Tx DMA stop error",
-+		[RESET_RX_DMA_ERROR] = "Rx DMA stop error",
- 	};
- 	int i;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index a8e9319..cd68c5f 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -50,6 +50,8 @@ enum ath_reset_type {
- 	RESET_TYPE_BEACON_STUCK,
- 	RESET_TYPE_MCI,
- 	RESET_TYPE_CALIBRATION,
-+	RESET_TX_DMA_ERROR,
-+	RESET_RX_DMA_ERROR,
- 	__RESET_TYPE_MAX
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b777209..ce79219 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -491,10 +491,9 @@ bool ath_stoprecv(struct ath_softc *sc)
- 
- 	if (!(ah->ah_flags & AH_UNPLUGGED) &&
- 	    unlikely(!stopped)) {
--		ath_err(ath9k_hw_common(sc->sc_ah),
--			"Could not stop RX, we could be "
--			"confusing the DMA engine when we start RX up\n");
--		ATH_DBG_WARN_ON_ONCE(!stopped);
-+		ath_dbg(ath9k_hw_common(sc->sc_ah), RESET,
-+			"Failed to stop Rx DMA\n");
-+		RESET_STAT_INC(sc, RESET_RX_DMA_ERROR);
- 	}
- 	return stopped && !reset;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index ffb4b5c..621792c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -981,6 +981,23 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
+ 	return count;
  }
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3ad79bb..2c627f1 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1883,8 +1883,11 @@ bool ath_drain_all_txq(struct ath_softc *sc)
- 			npend |= BIT(i);
- 	}
  
--	if (npend)
--		ath_err(common, "Failed to stop TX DMA, queues=0x%03x!\n", npend);
-+	if (npend) {
-+		RESET_STAT_INC(sc, RESET_TX_DMA_ERROR);
-+		ath_dbg(common, RESET,
-+			"Failed to stop TX DMA, queues=0x%03x!\n", npend);
-+	}
++static ssize_t iwl_dbgfs_max_amsdu_sz_write(struct iwl_mvm *mvm,
++					    char *buf, size_t count,
++					    loff_t *ppos)
++{
++	unsigned int max_amsdu_sz;
++	int ret;
++
++	ret = kstrtoint(buf, 0, &max_amsdu_sz);
++
++	if (max_amsdu_sz > 11454 || max_amsdu_sz < IEEE80211_MAX_DATA_LEN)
++		return -EINVAL;
++
++	mvm->max_amsdu_sz = max_amsdu_sz;
++
++	return count;
++}
++
+ #define ADD_TEXT(...) pos += scnprintf(buf + pos, bufsz - pos, __VA_ARGS__)
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+ static ssize_t iwl_dbgfs_bcast_filters_read(struct file *file,
+@@ -1499,6 +1516,7 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_conf, 8);
+ MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 8);
++MVM_DEBUGFS_WRITE_FILE_OPS(max_amsdu_sz, 10);
  
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
- 		if (!ATH_TXQ_SETUP(sc, i))
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(bcast_filters, 256);
+@@ -1542,6 +1560,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 	MVM_DEBUGFS_ADD_FILE(d0i3_refs, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(fw_dbg_conf, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(fw_dbg_collect, mvm->debugfs_dir, S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE(max_amsdu_sz, mvm->debugfs_dir, S_IWUSR);
+ 	if (!debugfs_create_bool("enable_scan_iteration_notif",
+ 				 S_IRUSR | S_IWUSR,
+ 				 mvm->debugfs_dir,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index c8b9d88..82a0c50 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -663,6 +663,7 @@ struct iwl_mvm {
+ 	u32 dbgfs_prph_reg_addr;
+ 	bool disable_power_off;
+ 	bool disable_power_off_d3;
++	unsigned int max_amsdu_sz;
+ 
+ 	u32 scan_iter_notif_enabled; /* must be u32 for debugfs_create_bool */
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index 3f89d71..cddc296 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -903,7 +903,12 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff* skb_gso,
+ 		if (s.gso_payload_len - s.gso_payload_pos <= s.mss)
+ 			s.amsdu = false;
+ 
+-		max_amsdu_sz = sta->max_amsdu_sz;
++		max_amsdu_sz = ACCESS_ONCE(mvm->max_amsdu_sz);
++		if (max_amsdu_sz)
++			max_amsdu_sz = min_t(unsigned int, sta->max_amsdu_sz,
++					     max_amsdu_sz);
++		else
++			max_amsdu_sz = sta->max_amsdu_sz;
+ 
+ 		if (!max_amsdu_sz || !s.amsdu) {
+ 			int l;
 -- 
-2.2.2
+2.1.4
 
