@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35235 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752380AbbGUOaW (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:61201 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbbGTRO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 10:30:22 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: <miaoqing@qti.qualcomm.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] ath9k: Fix register definitions for QCA956x
-References: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
-Date: Tue, 21 Jul 2015 17:30:17 +0300
-In-Reply-To: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
-	(miaoqing@qti.qualcomm.com's message of "Wed, 15 Jul 2015 15:54:06
-	+0800")
-Message-ID: <87mvypmvly.fsf@kamboji.qca.qualcomm.com> (sfid-20150721_163026_240401_4B825584)
+	Mon, 20 Jul 2015 13:14:58 -0400
+Message-ID: <55AD2C8F.9010509@broadcom.com> (sfid-20150720_191501_091385_781B8E7C)
+Date: Mon, 20 Jul 2015 19:14:55 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
+References: <1436553071-32423-1-git-send-email-arend@broadcom.com> <CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>
+In-Reply-To: <CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<miaoqing@qti.qualcomm.com> writes:
-
-> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+On 07/19/2015 05:05 PM, Rafał Miłecki wrote:
+> On 10 July 2015 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
+>> This series comprises of following changes:
+>> - support NVRAM loading for bcm47xx platform.
+>> - revise announced interface combinations and validate against it.
+>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
+>> - couple of PCIe fixes.
+>> - rework dealing with interface instances.
 >
-> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> I'm not sure which patch has caused this (I applied all of them except
+> for the 1st one) but now brcmfmac fails totally:
+>> Unable to handle kernel NULL pointer dereference at virtual address 00000014
+>
+> I'm afraid I won't be able to spend any more time of this soon, so can
+> you try to reproduce this problem, please?
 
-No need to change anything for this patch, but I want to warn that in
-the future I will automatically start rejecting patches with empty
-commit logs.
+So what is your scenario for this issue. Multiple AP interfaces?
 
--- 
-Kalle Valo
+Regards,
+Arend
