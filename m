@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:37484 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756149AbbGQJf4 convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42427 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754008AbbGTPsO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 05:35:56 -0400
-Received: by wibud3 with SMTP id ud3so37792406wib.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2015 02:35:55 -0700 (PDT)
+	Mon, 20 Jul 2015 11:48:14 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
+	ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH v2] ath9k: spectral - simplify max_index calculation
+References: <1434626241-1334-1-git-send-email-zefir.kurtisi@neratec.com>
+	<5582E0CF.1050804@neratec.com>
+Date: Mon, 20 Jul 2015 18:48:08 +0300
+In-Reply-To: <5582E0CF.1050804@neratec.com> (Zefir Kurtisi's message of "Thu,
+	18 Jun 2015 17:16:31 +0200")
+Message-ID: <877fpusudj.fsf@kamboji.qca.qualcomm.com> (sfid-20150720_174817_396618_866D2600)
 MIME-Version: 1.0
-In-Reply-To: <1437124199.1933.6.camel@sipsolutions.net>
-References: <1435823996-32510-1-git-send-email-michal.kazior@tieto.com>
-	<1437123955.1933.3.camel@sipsolutions.net>
-	<1437124038.1933.4.camel@sipsolutions.net>
-	<1437124199.1933.6.camel@sipsolutions.net>
-Date: Fri, 17 Jul 2015 11:35:55 +0200
-Message-ID: <CA+BoTQnMFLLq9tFdXR42YArd2m=WuxfKbyguQc+G2cZSSJ8nAw@mail.gmail.com> (sfid-20150717_113600_735242_68C0B8E1)
-Subject: Re: [PATCH] mac80211: don't clear all tx flags when requeing
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 July 2015 at 11:09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2015-07-17 at 11:07 +0200, Johannes Berg wrote:
->>
->> > > Once (a) is not stripped (b) becomes important
->> > > because it's the main condition to clear the
->> > > Service Period bit of the station when Tx status
->> > > for the released frame is reported back.
->> > >
->> > > This problem was observed with ath9k acting as P2P
->> > > GO in some testing scenarios but isn't limited to
->> > > it. AP operation with mac80211 based Tx A-MPDU
->> > > control combined with clients using PS-Poll frames
->> > > is subject to this race.
->> >
->> > I'm not sure I quite understand - how is the aggregation teardown
->> > causing frame filtering?
->> >
->>
->> Never mind, I was looking at the wrong code. I'll apply this.
->>
+Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
+
+> After further discussion with Nick, we better leave spectral as is.
 >
-> However, I'd like to ask you to look at this again - I can see how it
-> fixes the problem now, but it seems like a fairly unreliable fix since
-> the frame is sent through TX processing again, and you're relying on
-> that preserving a flag that's otherwise marked temporary...
->
-> So I think it may be better to adjust the station flags in this case to
-> let a new (the same) frame be the ps-poll response again.
+> Please ignore / drop this one.
 
-Hmm.. I did contemplate on clearing the station flag. I didn't explore
-the idea thoroughly but my feeling was it could introduce new u-APSD
-corner-case bug(s) since you'd be changing the station state before
-it'd normally be done and hence would behave differently when handling
-Rx. I'll look into it more.
+Ok, patch dropped.
 
+> On 06/18/2015 01:17 PM, Zefir Kurtisi wrote:
+>> The max_index value provided in the spectral data set
+>> has to be interpreted differently for HT20 and HT40.
+>> In HT40, the value is given as unsigned index and
+>> shall be taken as is, while in HT20 it is a signed
+>> value around bin index 28 and needs to be converted
+>> to an unsigned index.
+>> 
+>> This patch simplifies the previous correction and
+>> prepares the related functions to be shared with
+>> the DFS module.
+>> 
+>> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
-Michał
+Please edit your quotes, leaving this extra cruft makes it hard for me
+to use patchwork.
+
+-- 
+Kalle Valo
