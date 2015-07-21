@@ -1,76 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:33869 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752821AbbGAXgb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 19:36:31 -0400
-Received: by wiar9 with SMTP id r9so84224488wia.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2015 16:36:29 -0700 (PDT)
-Subject: Re: [PATCH 2/3] staging: rtl8723au: fix "incorrect type in
- assignment"
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
- <d7c0812eedadab3697323bd53aeadba48ecf6d89.1435700714.git.michel.von.czettritz@gmail.com>
- <wrfj7fqj62mh.fsf@redhat.com>
-Cc: gregkh@linux.com, Larry.Finger@lwfinger.net,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-From: Michel von Czettritz <michel.von.czettritz@gmail.com>
-Message-ID: <5594797A.3010609@gmail.com> (sfid-20150702_013655_137994_C9566889)
-Date: Thu, 2 Jul 2015 01:36:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <wrfj7fqj62mh.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from plane.gmane.org ([80.91.229.3]:47919 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751211AbbGULUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jul 2015 07:20:11 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ZHVai-0007Xq-Vq
+	for linux-wireless@vger.kernel.org; Tue, 21 Jul 2015 13:20:09 +0200
+Received: from 192.198.151.44 ([192.198.151.44])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 13:20:03 +0200
+Received: from doru.gucea by 192.198.151.44 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 13:20:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Doru <doru.gucea@intel.com>
+Subject: FW: Multiple Vifs in Managed Mode
+Date: Tue, 21 Jul 2015 11:16:54 +0000 (UTC)
+Message-ID: <loom.20150721T131536-749@post.gmane.org> (sfid-20150721_132015_629545_B094D01D)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/01/2015 10:31 PM, Jes Sorensen wrote:
-> Michel von Czettritz <michel.von.czettritz@gmail.com> writes:
->> Writing the output of cpu_to_le32 to an u32 or *(u32*) is an implicit
->> cast and results in an sparse warning.
->>
->> Since param and mask won't be changed, the implicit cast can be avoided
->> by creating local variables.
->>
->> Signed-off-by: Michel von Czettritz <michel.von.czettritz@gmail.com>
->> ---
->>  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 10 ++++++----
->>  1 file changed, 6 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->> index 1003365..a5e6726 100644
->> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->> @@ -115,9 +115,10 @@ exit:
->>  
->>  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
->>  {
->> -	*((u32 *)param) = cpu_to_le32(*(param));
->> +	__le32 param_le;
->> +	param_le = cpu_to_le32(*(param));
->>  
->> -	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)param);
->> +	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, (u8 *)&param_le);
->>  
->>  	return _SUCCESS;
->>  }
->> @@ -125,10 +126,11 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u32 *param)
->>  int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
->>  {
->>  	u8 buf[5];
->> +	__le32 mask_le;
->>  
->>  	memset(buf, 0, 5);
->> -	mask = cpu_to_le32(mask);
->> -	memcpy(buf, &mask, 4);
->> +	mask_le = cpu_to_le32(mask);
->> +	memcpy(buf, &mask_le, 4);
-> 
-> cpu_to_le32() + memcpy() is ugly - put_unaligned_le32() would make more
-> sense.
-> 
-> Jes
-I'm not sure if the fold, changing u32* to u32, and changing this, is a bit much.
-Should this be a second patch? Or maybe a patch for each function?
-
-Regards Michel
+SGVsbG8sIEpvaGFubmVzCgpXaGF0IEkgdHJ5IHRvIGRvIGlzIHBlcmZlY3RseSAgZGVzY3JpYmVkIGluIHRoaXMgcGljdHVyZTogCmh0dHBzOi8vZHJpdmUuZ29vZ2xlLmNvbS9maWxlL2QvMEI1U0JIMDhQVV9DaFNWVlFkRWhRUTI5bmVHOC92aWV3Pwp1c3A9c2hhcmluZwpJdOKAmXMgd29ydGggbWVudGlvbmluZyB0aGF0IEkgbmVlZCB0byBkbyB0aGlzIG9uIGFuIEFuZHJvaWQgcGhvbmUuIFRoZSAKcHJvYmxlbSBpcyB0aGF0IHRoZSBvbmx5IHJlc291cmNlcwpmb3IgZmluZGluZyBhIHNvbHV0aW9uIHNlZW1zIHRvIGJlIHRoaXMgbWFpbGluZyBsaXN0IGFuZCB0aGUgYXNzb2NpYXRlZCAKd2ViIHNpdGUgYnV0IHRoZSBpbmZvcm1hdGlvbiBpcyBwcmV0dHkKc2NhdHRlcmVkLiBGcm9tIHRoZSByZXNlYXJjaCBJ4oCZdmUgZG9uZSB1bnRpbCBub3csIHRoZSBtYWM4MDIxMSBsYXllciAKYWxyZWFkeSBoYXMgc3VwcG9ydCBmb3IgbXVsdGktdmlmcwpidXQgdGhpcyBpcyB1c2VsZXNzIGlmIHRoZSBkcml2ZXIgZG9lc27igJl0IHVzZSB0aGlzIGZ1bmN0aW9uYWxpdHkuCgpJIHRyaWVkIHRvIGNyZWF0ZSBtdWx0aXBsZSB2aWYgb24gMyBkaWZmZXJlbnQgQW5kcm9pZCBzbWFydHBob25lcyAoTmV4dXMgCjUsIE5leHVzIFMsIFNhbXN1bmcgR2FsYXh5IFM0KSBidXQgCmFsbCBvZiB0aGVtIGFsbG93ZWQgbWUgdG8gY3JlYXRlIG9ubHkgb25lIHZpZi4gVGhlIGRyaXZlciB1c2VkIGluIHRoaXMgCmNhc2UgaXMgdGhlIG9uZSBmcm9tIApkcml2ZXJzL25ldC93aXJlbGVzcy9iY21kaGQuIExvb2tpbmcgaW50byB0aGUgY29kZSBJIG5vdGljZWQgdGhhdCBhIAptYXhpbXVtIG9mIDMgaW50ZXJmYWNlcyBpbiB0aGUgbWFuYWdlZAptb2RlIGFyZSBhbGxvd2VkLiBBcyB0aGVyZSBhcmUgYWxyZWFkeSB0d28gaW50ZXJmYWNlcyBpbiB0aGUgbWFuYWdlZCAKbW9kZSAocDJwMCBhbmQgdGhlIHBoeXNpY2FsIFdpZmkgaW50ZXJmYWNlKSAKdGhlIGFib3ZlIGJlaGF2aW9yICBzZWVtcyB0byBiZSB0aGUgcmlnaHQgb25lLgoKTXkgcXVlc3Rpb24gaXM6IGZyb20geW91ciBrbm93bGVkZ2UgaXMgdGhlcmUgYW55IHdpcmVsZXNzIGRyaXZlciBmb3IgYSAKc21hcnRwaG9uZeKAmXMgV2lGaSBjaGlwc2V0IHdoaWNoIHN1cHBvcnRzIAptdWx0aXBsZSB2aWZzPyBJdCBkb2VzbuKAmXQgbWF0dGVyIGlmIHRoZSBkcml2ZXIgaXMgb3Blbi1zb3VyY2UgKGNhbiBiZSAKZm91bmQgaW4gdGhlIGRyaXZlcnMvbmV0L3dpcmVsZXNzIGZvbGRlcikgb3IKaXMgcHJlc2VudGVkIGluIGEgYmluYXJ5IGZvcm1hdC4gCgpJIG1lbnRpb24gdGhhdCBtb3N0IG9mIHRoZSBkcml2ZXJzIGZvciBsYXB0b3Bz4oCZIFdpRmkgY2hpcHNldHMgc2VlbXMgdG8gCmhhdmUgc3VwcG9ydCBmb3IgbXVsdGktdmlmcy4gV2hhdOKAmXMgdGhlIHJlYXNvbiAKZm9yIG5vdCBpbXBsZW1lbnRpbmcgdGhpcyBpbiB0aGUgZHJpdmVycyBmb3Igc21hcnRwaG9uZXPigJkgV2lGaSBjaGlwc2V0cz8KClNvcnJ5IGZvciB0aGUgd2FsbCBvZiB0ZXh0LiBUaGFua3MsCkRvcnUgCg==
 
