@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:48083 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932223AbbG1ItY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33096 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754850AbbGUOH3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:49:24 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 12/21] staging: wilc1000: alignment should match open parenthesis
-Date: Tue, 28 Jul 2015 17:47:31 +0900
-Message-ID: <1438073261-28315-13-git-send-email-tony.cho@atmel.com> (sfid-20150728_104931_544298_09BB08C4)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+	Tue, 21 Jul 2015 10:07:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
+References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+Date: Tue, 21 Jul 2015 17:07:23 +0300
+In-Reply-To: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Sun, 28 Jun 2015
+ 17:17:13 +0200")
+Message-ID: <871tg1ob8k.fsf@kamboji.qca.qualcomm.com> (sfid-20150721_160739_275382_209815CF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Jude.Lee" <jude.lee@atmel.com>
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-This patch fixes the checks reported by checkpatch.pl
-alignment should match open parenthesis
+> Our bus should allow defining children nodes as we may want to specify
+> devices attached to the bus. This is required e.g. to specify NAND or
+> ChipCommon cores and use bus's address and IRQ mappings.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Signed-off-by: Jude.Lee <jude.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.h | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Thanks, manually applied to wireless-drivers-next.git.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 3b4b01b..56ff2ba 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -167,17 +167,18 @@ extern s32 CoreConfiguratorInit(void);
- extern s32 CoreConfiguratorDeInit(void);
- 
- extern s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
--				 u32 u32WIDsCount, bool bRespRequired, u32 drvHandler);
-+			 u32 u32WIDsCount, bool bRespRequired, u32 drvHandler);
- extern s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
- extern s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo);
- 
- extern s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
--				      tstrConnectRespInfo **ppstrConnectRespInfo);
-+			      tstrConnectRespInfo **ppstrConnectRespInfo);
- extern s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo);
- 
- #ifndef CONNECT_DIRECT
- extern s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZE],
--				      wid_site_survey_reslts_s **ppstrSurveyResults, u32 *pu32SurveyResultsCount);
-+			      wid_site_survey_reslts_s **ppstrSurveyResults,
-+			      u32 *pu32SurveyResultsCount);
- extern s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults);
- #endif
- 
 -- 
-1.9.1
-
+Kalle Valo
