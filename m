@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55044 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbbGQIQF (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42244 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754653AbbGUP4N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 04:16:05 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Oren Givon <oren.givon@intel.com>
-Subject: Re: [PATCH 07/10] iwlwifi: edit the 3165 series and 8000 series PCI IDs
-References: <1436720814.17999.2.camel@intel.com>
-	<1436720900-18588-7-git-send-email-emmanuel.grumbach@intel.com>
-Date: Fri, 17 Jul 2015 11:15:57 +0300
-In-Reply-To: <1436720900-18588-7-git-send-email-emmanuel.grumbach@intel.com>
-	(Emmanuel Grumbach's message of "Sun, 12 Jul 2015 20:08:17 +0300")
-Message-ID: <87k2tzurlu.fsf@kamboji.qca.qualcomm.com> (sfid-20150717_101610_889593_45E2D463)
+	Tue, 21 Jul 2015 11:56:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <maninder1.s@samsung.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	PANKAJ MISHRA <pankaj.m@samsung.com>
+Subject: Re: [PATCH 1/1] ath10k: fixing wrong initialization of struct channel
+References: <1785807958.195941437479984203.JavaMail.weblogic@epmlwas04a>
+Date: Tue, 21 Jul 2015 18:56:05 +0300
+In-Reply-To: <1785807958.195941437479984203.JavaMail.weblogic@epmlwas04a>
+	(Maninder Singh's message of "Tue, 21 Jul 2015 11:59:44 +0000")
+Message-ID: <87bnf5mrmy.fsf@kamboji.qca.qualcomm.com> (sfid-20150721_175631_694961_7FDA3142)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+Maninder Singh <maninder1.s@samsung.com> writes:
 
-> From: Oren Givon <oren.givon@intel.com>
+>>> chandef is initialized with NULL and on the very next line,
+>>> we are using it to get channel, which is not correct.
+>>>
+>>> channel should be initialized after obtaining chandef.
+>>>
+>>> Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
 >
-> Add new 3165 devices support.
-> Add one new 8000 series device support.
-> Remove support for 0x0000, 0xC030 and 0xD030 sub-system IDs
-> in the 8000 series.
+>>How did you find this bug?
+>
+> Static anlysis reports this bug like coverity or any other static tool like cppcheck :-
+>
+> drivers/net/wireless/ath/ath10k/mac.c:839]: (error) Possible null pointer dereference: chandef
 
-The commit log doesn't mention anything _why_ the three ids are removed.
-In the future please document that so that people don't need to guess.
+Thanks. This is always good to add to the commit log so I did that:
+
+    ath10k: fix wrong initialization of struct channel
+    
+    chandef is initialized with NULL and on the very next line, we are using it to
+    get channel, which is not correct. Channel should be initialized after
+    obtaining chandef.
+    
+    Found by cppcheck:
+    
+    ath/ath10k/mac.c:839]: (error) Possible null pointer dereference: chandef
+    
+    Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
 
 -- 
 Kalle Valo
