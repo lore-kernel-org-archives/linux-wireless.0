@@ -1,85 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755376AbbG3Kym (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39409 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932067AbbGUPKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 06:54:42 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 02/19] wil6210: count drops in Rx block ack reorder
-Date: Thu, 30 Jul 2015 13:51:50 +0300
-Message-Id: <1438253527-3372-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130716_539947_7E766B7A)
-In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 21 Jul 2015 11:10:19 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [v2,1/3] mwifiex: add bss mode TLV to extended scan command
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1437059123-19477-2-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Aniket Nagarnaik <aniketn@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20150721151018.D99FC141C14@smtp.codeaurora.org> (sfid-20150721_171022_753120_929A2E01)
+Date: Tue, 21 Jul 2015 15:10:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When performing Rx reordering, count skb's dropped
-per reorder buffer; and print dropped packets count
-on the "stations" debugfs entry
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c    | 2 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c | 2 ++
- drivers/net/wireless/ath/wil6210/wil6210.h    | 2 ++
- 3 files changed, 5 insertions(+), 1 deletion(-)
+> From: Aniket Nagarnaik <aniketn@marvell.com>
+> 
+> We are setting BSS mode as ANY so that firmware will provide
+> all types of scan entries.
+> 
+> Signed-off-by: Aniket Nagarnaik <aniketn@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 75219a1..b862676 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1353,7 +1353,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
- 		else
- 			seq_printf(s, "%c", r->reorder_buf[i] ? '*' : '_');
- 	}
--	seq_printf(s, "] last drop 0x%03x\n", r->ssn_last_drop);
-+	seq_printf(s, "] drop %llu last 0x%03x\n", r->drop, r->ssn_last_drop);
- }
- 
- static int wil_sta_debugfs_show(struct seq_file *s, void *data)
-diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-index ca10dcf..e4ac11c 100644
---- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
-+++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-@@ -153,6 +153,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
- 	/* frame with out of date sequence number */
- 	if (seq_less(seq, r->head_seq_num)) {
- 		r->ssn_last_drop = seq;
-+		r->drop++;
- 		dev_kfree_skb(skb);
- 		goto out;
- 	}
-@@ -173,6 +174,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
- 
- 	/* check if we already stored this frame */
- 	if (r->reorder_buf[index]) {
-+		r->drop++;
- 		dev_kfree_skb(skb);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index b79ba49..54f1673 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -426,6 +426,7 @@ struct pci_dev;
-  * @timeout: reset timer value (in TUs).
-  * @dialog_token: dialog token for aggregation session
-  * @rcu_head: RCU head used for freeing this struct
-+ * @drop: total frames dropped for this reorder buffer
-  *
-  * This structure's lifetime is managed by RCU, assignments to
-  * the array holding it must hold the aggregation mutex.
-@@ -443,6 +444,7 @@ struct wil_tid_ampdu_rx {
- 	u16 buf_size;
- 	u16 timeout;
- 	u16 ssn_last_drop;
-+	unsigned long long drop;
- 	u8 dialog_token;
- 	bool first_time; /* is it 1-st time this buffer used? */
- };
--- 
-2.1.4
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
+40d7412b56f0 mwifiex: add bss mode TLV to extended scan command
+0c6303cc0695 mwifiex: use maximum ssid length as 0xfe for p2p
+e79801ffe9c8 mwifiex: correct p2p and station interface counters
+
+Kalle Valo
