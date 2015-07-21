@@ -1,78 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:35206 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756993AbbGGONO (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:35053 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933373AbbGURcH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 10:13:14 -0400
-MIME-Version: 1.0
-In-Reply-To: <559BBDD6.7040808@users.sourceforge.net>
-References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
-	<530CD2C4.4050903@users.sourceforge.net>
-	<alpine.DEB.2.10.1402251840450.7035@hadrien>
-	<530CF8FF.8080600@users.sourceforge.net>
-	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
-	<530DD06F.4090703@users.sourceforge.net>
-	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
-	<5317A59D.4@users.sourceforge.net>
-	<558EB32E.6090003@users.sourceforge.net>
-	<558EB4DE.3080406@users.sourceforge.net>
-	<20150707023103.GA22043@kroah.com>
-	<559B6FF8.9010704@users.sourceforge.net>
-	<CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
-	<559B85CD.6040200@users.sourceforge.net>
-	<CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com>
-	<559BBDD6.7040808@users.sourceforge.net>
-Date: Tue, 7 Jul 2015 16:13:12 +0200
-Message-ID: <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com> (sfid-20150707_161320_688019_F86CB07D)
-Subject: Re: Clarification for the use of additional fields in the message body
-From: Frans Klaver <fransklaver@gmail.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Chris Park <chris.park@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
+	Tue, 21 Jul 2015 13:32:07 -0400
+From: Steve Pennington <sgpenn@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Greg Donald <gdonald@gmail.com>, Joe Perches <joe@perches.com>,
+	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
+	Masanari Iida <standby24x7@gmail.com>,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	linux-kernel@vger.kernel.org
+Cc: Steve Pennington <sgpenn@gmail.com>
+Subject: [PATCH] staging: rtl8723au: fix incorrect type in assignment warning
+Date: Tue, 21 Jul 2015 12:31:35 -0500
+Message-Id: <1437499895-18532-1-git-send-email-sgpenn@gmail.com> (sfid-20150721_193222_699245_E731759E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 7, 2015 at 1:53 PM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
->> I think that as far as these kernel mailing lists are concerned,
->> the date of the update suggestion is the date on which you submitted the patch,
->> rather than the date you originally committed it to your local tree.
->
-> I imagine that there are committers who would like to keep
-> corresponding software development history a bit more accurate.
+Repaced call to htons with call to cpu_to_be16s to fix the
+following sparse warning:
+drivers/staging/rtl8723au/core/rtw_recv.c:1557:21: warning: incorrect type in assignment (different base types)
+drivers/staging/rtl8723au/core/rtw_recv.c:1557:21:    expected unsigned short [unsigned] [assigned] [usertype] len
+drivers/staging/rtl8723au/core/rtw_recv.c:1557:21:    got restricted __be16 [usertype] <noident>
 
-I guess it depends on what your view on accurate is.
+Signed-off-by: Steve Pennington <sgpenn@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_recv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
+index 274a4b6..39318ae 100644
+--- a/drivers/staging/rtl8723au/core/rtw_recv.c
++++ b/drivers/staging/rtl8723au/core/rtw_recv.c
+@@ -1554,7 +1554,7 @@ static int wlanhdr_to_ethhdr (struct recv_frame *precvframe)
+ 	ether_addr_copy(ptr + ETH_ALEN, pattrib->src);
+ 
+ 	if (!bsnaphdr) {
+-		len = htons(len);
++		cpu_to_be16s(&len);
+ 		memcpy(ptr + 12, &len, 2);
+ 	}
+ 
+-- 
+2.4.6
 
->> If you wish to keep track of this evolution for yourself, or
->> wish to share it, you're better off stashing it somewhere in a
->> (public) git repo that you control.
->
-> Would it be nicer to preserve such data directly also
-> by the usual mail interface?
->
->
->> If you insist on placing the date somewhere, you can also put the date
->> there if you wish. It'll be ignored by git when applied.
->
-> This content management tool provides the capability to store
-> the discussed information by the parameters "--author=" and "--date=",
-> doesn't it?
-> Is the environment variable "GIT_AUTHOR_DATE" also interesting occasionally?
->
-> How often do you take extra care for passing appropriate data there?
-
-I can't remember ever changing or explicitly preserving the commit
-date. I don't think I care enough. I did change the author on botched
-patches, but that's an exception. Remembering the author separately
-from the committer is something git does by design anyway.
-
-Frans
