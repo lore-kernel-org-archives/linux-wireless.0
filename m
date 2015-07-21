@@ -1,61 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24054 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753036AbbGJJFI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38066 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755688AbbGUO7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 05:05:08 -0400
-Message-ID: <559F8ABE.2080805@broadcom.com> (sfid-20150710_110529_689554_7EC7AD12)
-Date: Fri, 10 Jul 2015 11:05:02 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 21 Jul 2015 10:59:09 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
-References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com> <1436429599-10762-3-git-send-email-vgupta@synopsys.com> <559EBC91.2070600@broadcom.com> <C2D7FE5348E1B147BCA15975FBA23075665AD26A@IN01WEMBXB.internal.synopsys.com>
-In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075665AD26A@IN01WEMBXB.internal.synopsys.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Subject: Re: rtlwifi: rtl8821ae: Fix an expression that is always false
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1436368730-636-1-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	David Binderman <dcb314@hotmail.com>
+Message-Id: <20150721145908.9F8EC141A64@smtp.codeaurora.org> (sfid-20150721_165938_823021_03706D75)
+Date: Tue, 21 Jul 2015 14:59:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/10/2015 06:49 AM, Vineet Gupta wrote:
-> On Thursday 09 July 2015 11:55 PM, Arend van Spriel wrote:
->> On 07/09/2015 10:13 AM, Vineet Gupta wrote:
->>>> There's already a generic implementation so use that instead.
->> There is or there was? If there is now I am fine with this patch, but if
->> it already was there the author might have had a reason for adding a
->> local function and I would like to hear that reason.
->>
->
-> atomic_orr() was introduced to this driver with
->
-> 2014-03-06 5cbb9c285bdc brcmfmac: Use atomic functions for intstatus update.
->
-> as it seems atomic_set_mask() was not available cross arch. And atomic_or() in
-> generic code was indeed introduced after that
->
-> 2014-04-23 560cb12a4080 locking,arch: Rewrite generic atomic support
->
-> Hence likely the reason author went with home grown atomic_orr()
 
-Hi Vineet
+> In routine _rtl8821ae_set_media_status(), an incorrect mask results in a test
+> for AP status to always be false. Similar bugs were fixed in rtl8192cu and
+> rtl8192de, but this instance was missed at that time.
+> 
+> Reported-by: David Binderman <dcb314@hotmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> [3.18+]
+> Cc: David Binderman <dcb314@hotmail.com>
 
-Thanks for looking into the timeline. Will look into it and let you know.
+Thanks, applied to wireless-drivers-next.git.
 
-Regards,
-Arend
-
-> -Vineet
->
-
+Kalle Valo
