@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35665 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362AbbG1Iax (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58192 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754406AbbGUNtL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:30:53 -0400
-Received: by wibxm9 with SMTP id xm9so145925067wib.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 01:30:51 -0700 (PDT)
-From: Adrien Schildknecht <adrien+dev@schischi.me>
-To: johannes@sipsolutions.net, davem@davemloft.net,
-	thomas@net.t-labs.tu-berlin.de
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Adrien Schildknecht <adrien+dev@schischi.me>
-Subject: [PATCH] mac80211: fix invalid read in minstrel_sort_best_tp_rates()
-Date: Tue, 28 Jul 2015 10:30:16 +0200
-Message-Id: <1438072216-19228-1-git-send-email-adrien+dev@schischi.me> (sfid-20150728_103201_012821_805C7127)
+	Tue, 21 Jul 2015 09:49:11 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: MAINTAINERS: update for mwifiex driver maintainers
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1435144941-2441-1-git-send-email-patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <nishants@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Message-Id: <20150721134911.017C91410B5@smtp.codeaurora.org> (sfid-20150721_154921_234672_5B817F1C)
+Date: Tue, 21 Jul 2015 13:49:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At the last iteration of the loop, j may equal zero and thus
-tp_list[j - 1] causes an invalid read.
-Changed the logic of the loop so that j - 1 is always >= 0.
 
-Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
----
- net/mac80211/rc80211_minstrel.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+> Amit & Nishant would be taking care of maintaining mwifiex driver here
+> onwards on account of organizational changes.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Frank Huang <frankh@marvell.com>
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 247552a..3ece7d1 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -92,14 +92,15 @@ int minstrel_get_tp_avg(struct minstrel_rate *mr, int prob_ewma)
- static inline void
- minstrel_sort_best_tp_rates(struct minstrel_sta_info *mi, int i, u8 *tp_list)
- {
--	int j = MAX_THR_RATES;
--	struct minstrel_rate_stats *tmp_mrs = &mi->r[j - 1].stats;
-+	int j;
-+	struct minstrel_rate_stats *tmp_mrs;
- 	struct minstrel_rate_stats *cur_mrs = &mi->r[i].stats;
- 
--	while (j > 0 && (minstrel_get_tp_avg(&mi->r[i], cur_mrs->prob_ewma) >
--	       minstrel_get_tp_avg(&mi->r[tp_list[j - 1]], tmp_mrs->prob_ewma))) {
--		j--;
-+	for (j = MAX_THR_RATES; j > 0; --j) {
- 		tmp_mrs = &mi->r[tp_list[j - 1]].stats;
-+		if (minstrel_get_tp_avg(&mi->r[i], cur_mrs->prob_ewma) <=
-+		    minstrel_get_tp_avg(&mi->r[tp_list[j - 1]], tmp_mrs->prob_ewma))
-+			break;
- 	}
- 
- 	if (j < MAX_THR_RATES - 1)
--- 
-2.4.6
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
