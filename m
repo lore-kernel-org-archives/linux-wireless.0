@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42257 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:38181 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753887AbbGTPnd (ORCPT
+	with ESMTP id S932776AbbGUO7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2015 11:43:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] rtlwifi: rtl8192c: Add init codes for "fw_version" and "fw_subversion".
-References: <1434552997-3562-1-git-send-email-ap420073@gmail.com>
-Date: Mon, 20 Jul 2015 18:43:28 +0300
-In-Reply-To: <1434552997-3562-1-git-send-email-ap420073@gmail.com> (Taehee
-	Yoo's message of "Wed, 17 Jun 2015 23:56:37 +0900")
-Message-ID: <87bnf6sulb.fsf@kamboji.qca.qualcomm.com> (sfid-20150720_174337_095856_563F133C)
+	Tue, 21 Jul 2015 10:59:55 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [v2] brcmsmac: Use kstrdup to simplify code
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1436386966-16148-1-git-send-email-christophe.jaillet@wanadoo.fr>
+To: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
+Cc: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
+	meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Message-Id: <20150721145955.0E500141A8D@smtp.codeaurora.org> (sfid-20150721_170017_792751_7D84F900)
+Date: Tue, 21 Jul 2015 14:59:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taehee Yoo <ap420073@gmail.com> writes:
 
-> The variable "fw_version" is used in the _ResetDigitalProcedure1().
-> but It is not initialized. so I add init codes for "fw_version" and
-> "fw_subversion".
->
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
-> V3 - Fix sparse warning.
-> V2 - Moved new statements into location where header is known to exist.
+> Replace a kmalloc+strcpy by an equivalent kstrdup in order to improve
+> readability.
+> 
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
 
-I have already applied v2 and v3 won't apply anymore. What you need to
-do is to create a new patch against wireless-drivers-next (on top of v2)
-which fixes the sparse warning.
+Thanks, applied to wireless-drivers-next.git.
 
--- 
 Kalle Valo
