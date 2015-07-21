@@ -1,28 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:47919 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751211AbbGULUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 07:20:11 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ZHVai-0007Xq-Vq
-	for linux-wireless@vger.kernel.org; Tue, 21 Jul 2015 13:20:09 +0200
-Received: from 192.198.151.44 ([192.198.151.44])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 13:20:03 +0200
-Received: from doru.gucea by 192.198.151.44 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 13:20:03 +0200
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:36761 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690AbbGUJMg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jul 2015 05:12:36 -0400
+Received: by lbbqi7 with SMTP id qi7so31047687lbb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 02:12:35 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-From: Doru <doru.gucea@intel.com>
-Subject: FW: Multiple Vifs in Managed Mode
-Date: Tue, 21 Jul 2015 11:16:54 +0000 (UTC)
-Message-ID: <loom.20150721T131536-749@post.gmane.org> (sfid-20150721_132015_629545_B094D01D)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org, sujith@msujith.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v3 2/4] ath9k: handle RoC cancel correctly
+Date: Tue, 21 Jul 2015 11:11:41 +0200
+Message-Id: <1437469903-32362-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150721_111241_037809_797B7027)
+In-Reply-To: <1437469903-32362-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1437469903-32362-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGVsbG8sIEpvaGFubmVzCgpXaGF0IEkgdHJ5IHRvIGRvIGlzIHBlcmZlY3RseSAgZGVzY3JpYmVkIGluIHRoaXMgcGljdHVyZTogCmh0dHBzOi8vZHJpdmUuZ29vZ2xlLmNvbS9maWxlL2QvMEI1U0JIMDhQVV9DaFNWVlFkRWhRUTI5bmVHOC92aWV3Pwp1c3A9c2hhcmluZwpJdOKAmXMgd29ydGggbWVudGlvbmluZyB0aGF0IEkgbmVlZCB0byBkbyB0aGlzIG9uIGFuIEFuZHJvaWQgcGhvbmUuIFRoZSAKcHJvYmxlbSBpcyB0aGF0IHRoZSBvbmx5IHJlc291cmNlcwpmb3IgZmluZGluZyBhIHNvbHV0aW9uIHNlZW1zIHRvIGJlIHRoaXMgbWFpbGluZyBsaXN0IGFuZCB0aGUgYXNzb2NpYXRlZCAKd2ViIHNpdGUgYnV0IHRoZSBpbmZvcm1hdGlvbiBpcyBwcmV0dHkKc2NhdHRlcmVkLiBGcm9tIHRoZSByZXNlYXJjaCBJ4oCZdmUgZG9uZSB1bnRpbCBub3csIHRoZSBtYWM4MDIxMSBsYXllciAKYWxyZWFkeSBoYXMgc3VwcG9ydCBmb3IgbXVsdGktdmlmcwpidXQgdGhpcyBpcyB1c2VsZXNzIGlmIHRoZSBkcml2ZXIgZG9lc27igJl0IHVzZSB0aGlzIGZ1bmN0aW9uYWxpdHkuCgpJIHRyaWVkIHRvIGNyZWF0ZSBtdWx0aXBsZSB2aWYgb24gMyBkaWZmZXJlbnQgQW5kcm9pZCBzbWFydHBob25lcyAoTmV4dXMgCjUsIE5leHVzIFMsIFNhbXN1bmcgR2FsYXh5IFM0KSBidXQgCmFsbCBvZiB0aGVtIGFsbG93ZWQgbWUgdG8gY3JlYXRlIG9ubHkgb25lIHZpZi4gVGhlIGRyaXZlciB1c2VkIGluIHRoaXMgCmNhc2UgaXMgdGhlIG9uZSBmcm9tIApkcml2ZXJzL25ldC93aXJlbGVzcy9iY21kaGQuIExvb2tpbmcgaW50byB0aGUgY29kZSBJIG5vdGljZWQgdGhhdCBhIAptYXhpbXVtIG9mIDMgaW50ZXJmYWNlcyBpbiB0aGUgbWFuYWdlZAptb2RlIGFyZSBhbGxvd2VkLiBBcyB0aGVyZSBhcmUgYWxyZWFkeSB0d28gaW50ZXJmYWNlcyBpbiB0aGUgbWFuYWdlZCAKbW9kZSAocDJwMCBhbmQgdGhlIHBoeXNpY2FsIFdpZmkgaW50ZXJmYWNlKSAKdGhlIGFib3ZlIGJlaGF2aW9yICBzZWVtcyB0byBiZSB0aGUgcmlnaHQgb25lLgoKTXkgcXVlc3Rpb24gaXM6IGZyb20geW91ciBrbm93bGVkZ2UgaXMgdGhlcmUgYW55IHdpcmVsZXNzIGRyaXZlciBmb3IgYSAKc21hcnRwaG9uZeKAmXMgV2lGaSBjaGlwc2V0IHdoaWNoIHN1cHBvcnRzIAptdWx0aXBsZSB2aWZzPyBJdCBkb2VzbuKAmXQgbWF0dGVyIGlmIHRoZSBkcml2ZXIgaXMgb3Blbi1zb3VyY2UgKGNhbiBiZSAKZm91bmQgaW4gdGhlIGRyaXZlcnMvbmV0L3dpcmVsZXNzIGZvbGRlcikgb3IKaXMgcHJlc2VudGVkIGluIGEgYmluYXJ5IGZvcm1hdC4gCgpJIG1lbnRpb24gdGhhdCBtb3N0IG9mIHRoZSBkcml2ZXJzIGZvciBsYXB0b3Bz4oCZIFdpRmkgY2hpcHNldHMgc2VlbXMgdG8gCmhhdmUgc3VwcG9ydCBmb3IgbXVsdGktdmlmcy4gV2hhdOKAmXMgdGhlIHJlYXNvbiAKZm9yIG5vdCBpbXBsZW1lbnRpbmcgdGhpcyBpbiB0aGUgZHJpdmVycyBmb3Igc21hcnRwaG9uZXPigJkgV2lGaSBjaGlwc2V0cz8KClNvcnJ5IGZvciB0aGUgd2FsbCBvZiB0ZXh0LiBUaGFua3MsCkRvcnUgCg==
+In case we will get ROC cancel from mac80211 we
+should not call ieee80211_remain_on_channel_expired().
+
+In other case I hit such warning on MIPS and
+p2p negotiation failed (tested with use_chanctx=1).
+
+ath: phy0: Starting RoC period
+ath: phy0: Channel definition created: 2412 MHz
+ath: phy0: Assigned next_chan to 2412 MHz
+ath: phy0: Offchannel duration for chan 2412 MHz : 506632
+ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+ath: phy0: Stopping current chanctx: 2412
+ath: phy0: Flush timeout: 200
+ath: phy0: ath_chanctx_set_next: Set channel 2412 MHz
+ath: phy0: Set channel: 2412 MHz width: 0
+ath: phy0: Reset to 2412 MHz, HT40: 0 fastcc: 0
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_TSF_TIMER, state: ATH_CHANCTX_STATE_IDLE
+ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+ath: phy0: Cancel RoC
+ath: phy0: RoC aborted
+ath: phy0: RoC request on vif: 00:03:7f:4e:a0:cd, type: 1 duration: 500
+ath: phy0: Starting RoC period
+ath: phy0: Channel definition created: 2412 MHz
+ath: phy0: Assigned next_chan to 2412 MHz
+ath: phy0: Offchannel duration for chan 2412 MHz : 506705
+ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
+ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
+ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 3312 at drivers/net/wireless/ath/ath9k/main.c:2319
+Modules linked in: ath9k ath9k_common ath9k_hw ath mac80211 cfg80211
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  9 ++++++++-
+ drivers/net/wireless/ath/ath9k/channel.c | 23 ++++++++++++++++-------
+ drivers/net/wireless/ath/ath9k/main.c    |  4 ++--
+ 3 files changed, 26 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a7a81b3..db7a7b6 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -410,6 +410,12 @@ enum ath_offchannel_state {
+ 	ATH_OFFCHANNEL_ROC_DONE,
+ };
+ 
++enum ath_roc_complete_reason {
++	ATH_ROC_COMPLETE_EXPIRE,
++	ATH_ROC_COMPLETE_ABORT,
++	ATH_ROC_COMPLETE_CANCEL,
++};
++
+ struct ath_offchannel {
+ 	struct ath_chanctx chan;
+ 	struct timer_list timer;
+@@ -471,7 +477,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ void ath_chanctx_set_next(struct ath_softc *sc, bool force);
+ void ath_offchannel_next(struct ath_softc *sc);
+ void ath_scan_complete(struct ath_softc *sc, bool abort);
+-void ath_roc_complete(struct ath_softc *sc, bool abort);
++void ath_roc_complete(struct ath_softc *sc,
++		      enum ath_roc_complete_reason reason);
+ struct ath_chanctx* ath_is_go_chanctx_present(struct ath_softc *sc);
+ 
+ #else
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 2066650..90f5773 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -915,18 +915,27 @@ void ath_offchannel_next(struct ath_softc *sc)
+ 	}
+ }
+ 
+-void ath_roc_complete(struct ath_softc *sc, bool abort)
++void ath_roc_complete(struct ath_softc *sc, enum ath_roc_complete_reason reason)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+-	if (abort)
++	sc->offchannel.roc_vif = NULL;
++	sc->offchannel.roc_chan = NULL;
++
++	switch (reason) {
++	case ATH_ROC_COMPLETE_ABORT:
+ 		ath_dbg(common, CHAN_CTX, "RoC aborted\n");
+-	else
++		ieee80211_remain_on_channel_expired(sc->hw);
++		break;
++	case ATH_ROC_COMPLETE_EXPIRE:
+ 		ath_dbg(common, CHAN_CTX, "RoC expired\n");
++		ieee80211_remain_on_channel_expired(sc->hw);
++		break;
++	case ATH_ROC_COMPLETE_CANCEL:
++		ath_dbg(common, CHAN_CTX, "RoC canceled\n");
++		break;
++	}
+ 
+-	sc->offchannel.roc_vif = NULL;
+-	sc->offchannel.roc_chan = NULL;
+-	ieee80211_remain_on_channel_expired(sc->hw);
+ 	ath_offchannel_next(sc);
+ 	ath9k_ps_restore(sc);
+ }
+@@ -1058,7 +1067,7 @@ static void ath_offchannel_timer(unsigned long data)
+ 	case ATH_OFFCHANNEL_ROC_START:
+ 	case ATH_OFFCHANNEL_ROC_WAIT:
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_DONE;
+-		ath_roc_complete(sc, false);
++		ath_roc_complete(sc, ATH_ROC_COMPLETE_EXPIRE);
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index cfd45cb..b7b77e0 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2246,7 +2246,7 @@ static void ath9k_cancel_pending_offchannel(struct ath_softc *sc)
+ 
+ 		del_timer_sync(&sc->offchannel.timer);
+ 		if (sc->offchannel.state >= ATH_OFFCHANNEL_ROC_START)
+-			ath_roc_complete(sc, true);
++			ath_roc_complete(sc, ATH_ROC_COMPLETE_ABORT);
+ 	}
+ 
+ 	if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
+@@ -2355,7 +2355,7 @@ static int ath9k_cancel_remain_on_channel(struct ieee80211_hw *hw)
+ 
+ 	if (sc->offchannel.roc_vif) {
+ 		if (sc->offchannel.state >= ATH_OFFCHANNEL_ROC_START)
+-			ath_roc_complete(sc, true);
++			ath_roc_complete(sc, ATH_ROC_COMPLETE_CANCEL);
+ 	}
+ 
+ 	mutex_unlock(&sc->mutex);
+-- 
+1.9.1
 
