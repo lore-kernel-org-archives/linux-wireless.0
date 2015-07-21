@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:34325 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137AbbGMOSj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39022 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753327AbbGUPGp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2015 10:18:39 -0400
-Received: by wibud3 with SMTP id ud3so31133197wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2015 07:18:38 -0700 (PDT)
+	Tue, 21 Jul 2015 11:06:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Guy Mishol <guym@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl18xx: add dynamic fw traces
+References: <1436957897-27602-1-git-send-email-guym@ti.com>
+Date: Tue, 21 Jul 2015 18:06:40 +0300
+In-Reply-To: <1436957897-27602-1-git-send-email-guym@ti.com> (Guy Mishol's
+	message of "Wed, 15 Jul 2015 13:58:17 +0300")
+Message-ID: <87fv4hmtxb.fsf@kamboji.qca.qualcomm.com> (sfid-20150721_170657_647880_43D269E1)
 MIME-Version: 1.0
-Date: Mon, 13 Jul 2015 23:18:38 +0900
-Message-ID: <CANnKGXifAbn3oDYd99O6Hxo=yM9dGQmKJVuOC7FpVR7Utyp=0w@mail.gmail.com> (sfid-20150713_161842_655220_97488A20)
-Subject: A bug about multicast power save transmitting
-From: Gyujin Lee <gjlee@mwnl.snu.ac.kr>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Guy Mishol <guym@ti.com> writes:
 
-Firstly, I want to apologize for any mistakes I make this mail.
-This is the first mail I have posted
+> add option to dynamically configure the fw
+> which debug traces to open
+>
+> Signed-off-by: Guy Mishol <guym@ti.com>
 
-My WiFi chipset:
-Qualcomm Atheros AR9380/HB112
+Failed to apply, please rebase:
 
-Device driver: ath9k (backports-4.1-rc1-1)
+Applying: wl18xx: add dynamic fw traces
+fatal: sha1 information is lacking or useless
+(drivers/net/wireless/ti/wl18xx/acx.c).
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0001 wl18xx: add dynamic fw traces
 
-
-In power save multicast transmission, I want to increase the number of
-transmitted multicast packets at a time.
-So, I extend the max_duration of "ath_tx_cabq" function in the file
-/drivers/net/wireless/ath/ath9k/xmit.c
-
-void ath_tx_cabq{
-...
-line 2437      sc->cur_chan->beacon.dtim_period / ATH_BCBUF
-              => sc->cur_chan->beacon.dtim_period
-     // Eliminate ATH_BCBUF
-...
-}
-
-Then, multicast packets can be transmitted over one beacon interval.
-(DTIM interval is not zero)
-
-In this case, some of next multicast packets are transmitted before
-next DTIM beacon.
-(If multicast transmission ends in a beacon interval, all of next
-multicast packets are transmitted after next DTIM beacon)
-
-For example, if PHY rate for multicast transmission is 6Mb/s, 3
-multicast packets are transmitted before DTIM beacon and other packets
-are transmitted after DTIM beacon.
-
-
-Is this phenomenon an error of this chipset?
-
-Can I fix this error via modifying device driver?
-
-
-Thank you.
-
-Regards,
-Gyujin Lee
-
---
+-- 
+Kalle Valo
