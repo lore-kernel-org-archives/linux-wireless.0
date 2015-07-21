@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:36539 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754936AbbGDCPx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 22:15:53 -0400
-Received: by wguu7 with SMTP id u7so99499685wgu.3
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jul 2015 19:15:52 -0700 (PDT)
+Received: from mail-db3on0092.outbound.protection.outlook.com ([157.55.234.92]:62688
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753617AbbGUPFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jul 2015 11:05:21 -0400
+From: Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
+Subject: [PATCH] ath10k: suppress 'failed to process fft' warning messages.
+Date: Tue, 21 Jul 2015 15:50:15 +0100
+Message-ID: <1437490215-11214-1-git-send-email-kevin@darbyshire-bryant.me.uk> (sfid-20150721_170524_207149_DDA65FE7)
 MIME-Version: 1.0
-In-Reply-To: <55965CF8.20208@thinktube.com>
-References: <CAFSTUk6UasnV4P3B1TR7kSx1ToQTC+PC2hU6PynDBWJ3ALJzyg@mail.gmail.com>
-	<55965CF8.20208@thinktube.com>
-Date: Sat, 4 Jul 2015 11:15:52 +0900
-Message-ID: <CAMArcTUvpBpTB=woMiY2mET+KOUKNLvY53Exb1F6vB+aztq6Lw@mail.gmail.com> (sfid-20150704_041907_093563_A6AC86F6)
-Subject: Re: mesh support on rtl8192cu
-From: Taehee Yoo <ap420073@gmail.com>
-To: Bruno Randolf <br1@thinktube.com>
-Cc: Richard Palethorpe <richard@lm-technologies.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-07-03 18:59 GMT+09:00 Bruno Randolf <br1@thinktube.com>:
-> On 07/03/2015 10:34 AM, Richard Palethorpe wrote:
->> Hello Taehee,
->>
->> I have been experimenting with MESH mode on kernel 4.0.7. It is
->> sending beacons out, but is unable to establish a connection.
->>
->> I have two rtl8192cu based dongles connected to identical VMs and am
->> using the following commands to set up the mesh:
->>
->> iw dev wls160u2 set type mesh
->> ip addr add 192.168.2.1/24 broadcast 192.168.2.255 dev wls160u2
->> ip link set wls160u2 up
->> iw dev wls160u2 mesh join lmmesh
->>
->> Running 'iw dev wls160u2 mpath dump' produces no results and there is
->> nothing regarding mesh in dmesg. I can't find any other information on
->> mesh with rtl8192cu other than the patch which you submitted.
->>
->> I am wondering if it does work, but there is a step I am missing or if
->> something is wrong with the code?
->
-> I don't know about this 'mesh' mode, but I have noted problems in ad-hoc
-> mode with this chipset and driver. The problem seems to be that ARP
-> replies are not sent on the air... Not sure what the reason is or if
-> it's possible to fix it in the driver, but my conclusion for now is that
-> this device is unusable for ad-hoc mode. Similar problems may exist for
-> mesh?
->
-> bruno
->
+When using DFS channels on Ath10k, kernel log has repeated warning message
+'failed to process fft: -22' typically under medium/heavy traffic.
 
-I don't know about a mesh network.
-But, according to my ping test result, 'mpath dump' shows ping traffics.
+This patch switches the warnings to driver debug (WMI events) mode only
+thus reducing log file noise.
 
-Did you generate any traffics?
+DFS and spectral scan share underlying HW mechanisms and enabling one
+(DFS) enables the other (spectral scan) as far as event reporting from
+firmware to driver is concerned. Spectral scan events take no part in
+processing of DFS radar pulses which are delivered as distinct events,
+so the fft (spectral event) warning is harmless and DFS interference
+detection/protection still occurs.
+
+Symptoms seen & fix tested in both debug & non-debug modes on TP-Link
+Archer C7 v2 platform.
+
+Signed-off-by: Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 0791a43..1435614 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3498,7 +3498,7 @@ void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
+ 							  fftr, fftr_len,
+ 							  tsf);
+ 			if (res < 0) {
+-				ath10k_warn(ar, "failed to process fft report: %d\n",
++				ath10k_dbg(ar, ATH10K_DBG_WMI, "failed to process fft report: %d\n",
+ 					    res);
+ 				return;
+ 			}
+-- 
+1.9.1
+
