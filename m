@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:36345 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbbGaFQQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34048 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755235AbbGUOUY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 01:16:16 -0400
-From: Shraddha Barke <shraddha.6596@gmail.com>
-To: Dean Lee <dean.lee@atmel.com>, Rachel Kim <rachel.kim@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Cc: Shraddha Barke <shraddha.6596@gmail.com>
-Subject: [PATCH] Staging:wilc1000 :Remove braces for single statement blocks
-Date: Fri, 31 Jul 2015 10:45:55 +0530
-Message-Id: <1438319755-7438-1-git-send-email-shraddha.6596@gmail.com> (sfid-20150731_071636_331420_3757E52F)
+	Tue, 21 Jul 2015 10:20:24 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<wil6210@qca.qualcomm.com>,
+	Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>
+Subject: Re: [PATCH 11/13] wil6210: TSO implementation
+References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1436081080-27305-12-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<CANUX_P0OLXxf_kj2SaYOeeQmQ7XHOhjMWia76--CLq15pXKWRQ@mail.gmail.com>
+	<2576505.6RpAF3j2eF@lx-wigig-72>
+Date: Tue, 21 Jul 2015 17:20:18 +0300
+In-Reply-To: <2576505.6RpAF3j2eF@lx-wigig-72> (Vladimir Kondratiev's message
+	of "Thu, 9 Jul 2015 14:37:22 +0300")
+Message-ID: <87r3o1mw2l.fsf@kamboji.qca.qualcomm.com> (sfid-20150721_162028_454691_FDB30C63)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following checkpatch.pl warning:
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-WARNING: braces {} are not necessary for single statement blocks
-Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> On Wednesday, July 08, 2015 10:06:37 PM Emmanuel Grumbach wrote:
+>> So your device is able to replicate and update the IP / TCP header?
+>> I don't really follow what your device is able to do.
+>> You seem to be cutting the frags so that their length sums up to mss.
+>> Which hints that your device can't segment the buffer by itself. OTOH,
+>> I don't see how you treat the IP / TCP header copy and modification.
+>> 
+> Emmanuel:
+> Yes, it is correct - hardware know to replicate IP/TCP header; and
+> DMA written in such a way that I have to arrange fragments to
+> sums up to MSS.
+>
+> So this code fragment is OK. We tested it with lots of traffic.
+> However, after your comments for another code fragment,
+> I found there is a way to do it better. I'll rework and send updated patch.
+>
+> Kalle: please drop this patch. The rest of patches should apply cleanly
+> without this one.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 4d5bd1c..1143282 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -1055,10 +1055,8 @@ s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 
--	if (pstrSurveyResults != NULL) {
-+	if (pstrSurveyResults != NULL)
- 		WILC_FREE(pstrSurveyResults);
--	}
--
- 	return s32Error;
- }
- #endif
+Ok, dropped this patch.
+
 -- 
-2.1.0
-
+Kalle Valo
