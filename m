@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1542 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751918AbbGESNF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2015 14:13:05 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"seth.forshee@canonical.com" <seth.forshee@canonical.com>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>
-Subject: Re: pull request: add -13.ucode firmware for Intel Wireless
-Date: Sun, 5 Jul 2015 18:13:00 +0000
-Message-ID: <1436119980.18783.1.camel@intel.com> (sfid-20150705_201313_868506_7FCCFC89)
-References: <1434651812.4885.9.camel@intel.com>
-	 <1434652237.4885.16.camel@intel.com>
-In-Reply-To: <1434652237.4885.16.camel@intel.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:33577 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690AbbGUJMj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jul 2015 05:12:39 -0400
+Received: by lbbyj8 with SMTP id yj8so111544300lbb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 02:12:38 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org, sujith@msujith.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v3 4/4] ath9k: setup rxfilter when offchannel
+Date: Tue, 21 Jul 2015 11:11:43 +0200
+Message-Id: <1437469903-32362-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150721_111244_289681_C70BB971)
+In-Reply-To: <1437469903-32362-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1437469903-32362-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE1LTA2LTE4IGF0IDIxOjMwICswMzAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
-ZToNCj4gSGksDQo+IA0KPiBUaGlzIGlzIGEgcHVsbCByZXF1ZXN0IGZvciBhIG5ldyB2ZXJzaW9u
-IG9mIHRoZSBmaXJtd2FyZSBmb3IgSW50ZWwNCj4gd2lyZWxlc3MgZGV2aWNlcy4gTm90ZSB0aGF0
-IHdpdGggdGhpcyBuZXcgZmlybXdhcmUsIHdlIGFyZSBub3cgYWRkaW5nDQo+IHN1cHBvcnQgZm9y
-IDMgbmV3IGRldmljZXM6IDMxNjUsIDgyNjAgYW5kIDQxNjUuDQo+IA0KPiBJIGhhZCBzZW50IGEg
-cHVsbCByZXF1ZXN0IGEgd2hpbGUgYWdvLCB0aGlzIG9uZSByZXBsYWNlcyB0aGUgb2xkZXIgb25l
-Lg0KPiBTaW5jZSB0aGVuLCB3ZSBoYXZlIGFkZGVkIGJ1ZyBmaXhlcyBhbmQgd2UgYXJlIG5vdyBh
-YmxlIHRvIHJlbGVhc2UNCj4gaXdsd2lmaS04MDAwQy51Y29kZSB3aGljaCBzdXBwb3J0IDgyNjAg
-YW5kIDQxNjUuDQo+IA0KPiBQbGVhc2UgcHVsbC4NCg0KQW55IGNoYW5jZSB0byBnZXQgdGhhdCBw
-dWxsIHJlcXVlc3QgaG9ub3JlZD8NCkkgYWRkZWQgdGhlIGRpc3RybyByZXBzIHdob20gSSBrbm93
-LiBUaGlzIGZpcm13YXJlIGluY2x1ZGVzIHF1aXRlIGEgZmV3DQpidWcgZml4ZXMuLi4NCg0K
+Setup rxfiler correctly for offchannel ctx.
+
+This fix problem we didn't configure rxfilter, next
+didn't receive probe requests and next failed
+p2p_find. This was seen when ath9k loaded with
+use_chanctx=1
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3de829f..c27143b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1468,6 +1468,9 @@ static void ath9k_configure_filter(struct ieee80211_hw *hw,
+ 	spin_lock_bh(&sc->chan_lock);
+ 	ath_for_each_chanctx(sc, ctx)
+ 		ctx->rxfilter = *total_flags;
++#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
++	sc->offchannel.chan.rxfilter = *total_flags;
++#endif
+ 	spin_unlock_bh(&sc->chan_lock);
+ 
+ 	ath9k_ps_wakeup(sc);
+-- 
+1.9.1
+
