@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:5687 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753235AbbG3OF6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58231 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753980AbbGUNuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 10:05:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: initialize msdu ext. descriptor before use
-References: <1437694326-31977-1-git-send-email-poh@qca.qualcomm.com>
-Date: Thu, 30 Jul 2015 17:05:47 +0300
-In-Reply-To: <1437694326-31977-1-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Thu, 23 Jul 2015 16:32:06 -0700")
-Message-ID: <87r3np3flw.fsf@kamboji.qca.qualcomm.com> (sfid-20150730_160611_815901_519D84DB)
-MIME-Version: 1.0
+	Tue, 21 Jul 2015 09:50:16 -0400
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix leak of gen_ie storage on exit from
+ mwifiex_del_mgmt_ies
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1435346976-29030-1-git-send-email-linville@tuxdriver.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Message-Id: <20150721135015.936221410C6@smtp.codeaurora.org> (sfid-20150721_155020_442119_9EE2BF55)
+Date: Tue, 21 Jul 2015 13:50:15 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
 
-> Initial QCA99X0 support has a known issue with TCP Tx throughput.
-> All other path such as UDP Tx/Rx and TCP Rx meet their expectation
-> (> 900Mbps), but TCP Tx marked as low as 5Mbps when single pair is
-> used on iperf.
->
-> The root cause is turned out because TSO flag is not initialized
-> properly so that firmware configures TSO in wrong way.
-> TSO flags in msdu extension descriptor is required to be reset
-> to indicate firmware there is no TSO is enabled, otherwise it
-> could act as TSO is enabled which causes huge throughput drop.
->
-> In fact, it's enough by resetting TSO flags only to prevent the
-> unexpected behavior, but initializing whole msdu ext. descriptor
-> will help to clear uncertainty of firmware could bring on as it
-> constantly updated.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+> Storage pointed to by gen_ie is allocated with kmalloc, but was
+> never freed.
+> 
+> Coverity CID #1271251
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Thanks, applied.
+Thanks, applied to wireless-drivers-next.git.
 
--- 
 Kalle Valo
