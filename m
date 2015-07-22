@@ -1,114 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755458AbbG3Kyo (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:37363 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbbGVSRD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 06:54:44 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 09/19] wil6210: improve mgmt frame handling
-Date: Thu, 30 Jul 2015 13:51:57 +0300
-Message-Id: <1438253527-3372-10-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130717_005616_97222CDC)
-In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 22 Jul 2015 14:17:03 -0400
+Received: by wibud3 with SMTP id ud3so184779026wib.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:02 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/15] staging: vt6655: Remove ununsed macro ASSERT
+Date: Wed, 22 Jul 2015 19:16:33 +0100
+Message-Id: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201708_911722_513F590E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check event length;
-hex dump both Rx and Tx frames
+VIAWET_DEBUG is not defined so macro is empty.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Remove the macro.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 54 +++++++++++++++++++++++++++-------
- 1 file changed, 44 insertions(+), 10 deletions(-)
+ drivers/staging/vt6655/baseband.c    | 4 +---
+ drivers/staging/vt6655/card.c        | 1 -
+ drivers/staging/vt6655/device_cfg.h  | 9 ---------
+ drivers/staging/vt6655/device_main.c | 9 ++++-----
+ drivers/staging/vt6655/mac.c         | 1 -
+ drivers/staging/vt6655/rxtx.c        | 1 -
+ 6 files changed, 5 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 362ce7a..349f14a 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -312,22 +312,44 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 	struct wiphy *wiphy = wil_to_wiphy(wil);
- 	struct ieee80211_mgmt *rx_mgmt_frame =
- 			(struct ieee80211_mgmt *)data->payload;
--	int ch_no = data->info.channel+1;
--	u32 freq = ieee80211_channel_to_frequency(ch_no,
--			IEEE80211_BAND_60GHZ);
--	struct ieee80211_channel *channel = ieee80211_get_channel(wiphy, freq);
--	s32 signal = data->info.sqi;
--	__le16 fc = rx_mgmt_frame->frame_control;
--	u32 d_len = le32_to_cpu(data->info.len);
--	u16 d_status = le16_to_cpu(data->info.status);
--
--	wil_dbg_wmi(wil, "MGMT: channel %d MCS %d SNR %d SQI %d%%\n",
-+	int flen = len - offsetof(struct wmi_rx_mgmt_packet_event, payload);
-+	int ch_no;
-+	u32 freq;
-+	struct ieee80211_channel *channel;
-+	s32 signal;
-+	__le16 fc;
-+	u32 d_len;
-+	u16 d_status;
-+
-+	if (flen < 0) {
-+		wil_err(wil, "MGMT Rx: short event, len %d\n", len);
-+		return;
-+	}
-+
-+	d_len = le32_to_cpu(data->info.len);
-+	if (d_len != flen) {
-+		wil_err(wil,
-+			"MGMT Rx: length mismatch, d_len %d should be %d\n",
-+			d_len, flen);
-+		return;
-+	}
-+
-+	ch_no = data->info.channel + 1;
-+	freq = ieee80211_channel_to_frequency(ch_no, IEEE80211_BAND_60GHZ);
-+	channel = ieee80211_get_channel(wiphy, freq);
-+	signal = data->info.sqi;
-+	d_status = le16_to_cpu(data->info.status);
-+	fc = rx_mgmt_frame->frame_control;
-+
-+	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d SNR %d SQI %d%%\n",
- 		    data->info.channel, data->info.mcs, data->info.snr,
- 		    data->info.sqi);
- 	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
- 		    le16_to_cpu(fc));
- 	wil_dbg_wmi(wil, "qid %d mid %d cid %d\n",
- 		    data->info.qid, data->info.mid, data->info.cid);
-+	wil_hex_dump_wmi("MGMT Rx ", DUMP_PREFIX_OFFSET, 16, 1, rx_mgmt_frame,
-+			 d_len, true);
+diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
+index b0ea38f..befaa42 100644
+--- a/drivers/staging/vt6655/baseband.c
++++ b/drivers/staging/vt6655/baseband.c
+@@ -1728,10 +1728,8 @@ BBuGetFrameTime(
+ 	unsigned int uRateIdx = (unsigned int) wRate;
+ 	unsigned int uRate = 0;
  
- 	if (!channel) {
- 		wil_err(wil, "Frame on unsupported channel\n");
-@@ -363,6 +385,17 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+-	if (uRateIdx > RATE_54M) {
+-		ASSERT(0);
++	if (uRateIdx > RATE_54M)
+ 		return 0;
+-	}
+ 
+ 	uRate = (unsigned int)awcFrameTime[uRateIdx];
+ 
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index e00c060..df62bdc 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -847,7 +847,6 @@ void CARDvSetLoopbackMode(struct vnt_private *priv, unsigned short wLoopbackMode
+ 	case CARD_LB_PHY:
+ 		break;
+ 	default:
+-		ASSERT(false);
+ 		break;
  	}
+ 	/* set MAC loopback */
+diff --git a/drivers/staging/vt6655/device_cfg.h b/drivers/staging/vt6655/device_cfg.h
+index a4a8a84..c7f21716 100644
+--- a/drivers/staging/vt6655/device_cfg.h
++++ b/drivers/staging/vt6655/device_cfg.h
+@@ -70,17 +70,8 @@ typedef enum  _chip_type {
+ } CHIP_TYPE, *PCHIP_TYPE;
+ 
+ #ifdef VIAWET_DEBUG
+-#define ASSERT(x)							\
+-do {									\
+-	if (!(x)) {							\
+-		pr_err("assertion %s failed: file %s line %d\n", \
+-		       #x, __func__, __LINE__);				\
+-		*(int *)0 = 0;						\
+-	}								\
+-} while (0)
+ #define DBG_PORT80(value)                   outb(value, 0x80)
+ #else
+-#define ASSERT(x)
+ #define DBG_PORT80(value)
+ #endif
+ 
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 23ad16e..053291a 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -623,7 +623,7 @@ static void device_init_rd0_ring(struct vnt_private *pDevice)
+ 	for (i = 0; i < pDevice->sOpts.nRxDescs0; i ++, curr += sizeof(SRxDesc)) {
+ 		pDesc = &(pDevice->aRD0Ring[i]);
+ 		pDesc->pRDInfo = alloc_rd_info();
+-		ASSERT(pDesc->pRDInfo);
++
+ 		if (!device_alloc_rx_buf(pDevice, pDesc))
+ 			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
+ 
+@@ -647,7 +647,7 @@ static void device_init_rd1_ring(struct vnt_private *pDevice)
+ 	for (i = 0; i < pDevice->sOpts.nRxDescs1; i ++, curr += sizeof(SRxDesc)) {
+ 		pDesc = &(pDevice->aRD1Ring[i]);
+ 		pDesc->pRDInfo = alloc_rd_info();
+-		ASSERT(pDesc->pRDInfo);
++
+ 		if (!device_alloc_rx_buf(pDevice, pDesc))
+ 			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
+ 
+@@ -705,7 +705,7 @@ static void device_init_td0_ring(struct vnt_private *pDevice)
+ 	for (i = 0; i < pDevice->sOpts.nTxDescs[0]; i++, curr += sizeof(STxDesc)) {
+ 		pDesc = &(pDevice->apTD0Rings[i]);
+ 		pDesc->pTDInfo = alloc_td_info();
+-		ASSERT(pDesc->pTDInfo);
++
+ 		if (pDevice->flags & DEVICE_FLAGS_TX_ALIGN) {
+ 			pDesc->pTDInfo->buf = pDevice->tx0_bufs + (i)*PKT_BUF_SZ;
+ 			pDesc->pTDInfo->buf_dma = pDevice->tx_bufs_dma0 + (i)*PKT_BUF_SZ;
+@@ -731,7 +731,7 @@ static void device_init_td1_ring(struct vnt_private *pDevice)
+ 	for (i = 0; i < pDevice->sOpts.nTxDescs[1]; i++, curr += sizeof(STxDesc)) {
+ 		pDesc = &(pDevice->apTD1Rings[i]);
+ 		pDesc->pTDInfo = alloc_td_info();
+-		ASSERT(pDesc->pTDInfo);
++
+ 		if (pDevice->flags & DEVICE_FLAGS_TX_ALIGN) {
+ 			pDesc->pTDInfo->buf = pDevice->tx1_bufs + (i) * PKT_BUF_SZ;
+ 			pDesc->pTDInfo->buf_dma = pDevice->tx_bufs_dma1 + (i) * PKT_BUF_SZ;
+@@ -818,7 +818,6 @@ static bool device_alloc_rx_buf(struct vnt_private *pDevice, PSRxDesc pRD)
+ 	pRDInfo->skb = dev_alloc_skb((int)pDevice->rx_buf_sz);
+ 	if (pRDInfo->skb == NULL)
+ 		return false;
+-	ASSERT(pRDInfo->skb);
+ 
+ 	pRDInfo->skb_dma =
+ 		dma_map_single(&pDevice->pcid->dev,
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index aed530f..65dd49c 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -186,7 +186,6 @@ void MACvSetLoopbackMode(void __iomem *dwIoBase, unsigned char byLoopbackMode)
+ {
+ 	unsigned char byOrgValue;
+ 
+-	ASSERT(byLoopbackMode < 3);
+ 	byLoopbackMode <<= 6;
+ 	/* set TCR */
+ 	VNSvInPortB(dwIoBase + MAC_REG_TEST, &byOrgValue);
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 534338c..0ffa9bf 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -387,7 +387,6 @@ s_uGetDataDuration(
+ 		break;
+ 	}
+ 
+-	ASSERT(false);
+ 	return 0;
  }
  
-+static void wmi_evt_tx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
-+{
-+	struct wmi_tx_mgmt_packet_event *data = d;
-+	struct ieee80211_mgmt *mgmt_frame =
-+			(struct ieee80211_mgmt *)data->payload;
-+	int flen = len - offsetof(struct wmi_tx_mgmt_packet_event, payload);
-+
-+	wil_hex_dump_wmi("MGMT Tx ", DUMP_PREFIX_OFFSET, 16, 1, mgmt_frame,
-+			 flen, true);
-+}
-+
- static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
- 				  void *d, int len)
- {
-@@ -659,6 +692,7 @@ static const struct {
- 	{WMI_READY_EVENTID,		wmi_evt_ready},
- 	{WMI_FW_READY_EVENTID,		wmi_evt_fw_ready},
- 	{WMI_RX_MGMT_PACKET_EVENTID,	wmi_evt_rx_mgmt},
-+	{WMI_TX_MGMT_PACKET_EVENTID,		wmi_evt_tx_mgmt},
- 	{WMI_SCAN_COMPLETE_EVENTID,	wmi_evt_scan_complete},
- 	{WMI_CONNECT_EVENTID,		wmi_evt_connect},
- 	{WMI_DISCONNECT_EVENTID,	wmi_evt_disconnect},
 -- 
 2.1.4
 
