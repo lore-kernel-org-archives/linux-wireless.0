@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:21142 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754904AbbGCLIQ convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:33560 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071AbbGVC7X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 07:08:16 -0400
-Message-ID: <55966D1B.1040603@neratec.com> (sfid-20150703_130821_535048_F32F7BF3)
-Date: Fri, 03 Jul 2015 13:08:11 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+	Tue, 21 Jul 2015 22:59:23 -0400
+Received: by obdeg2 with SMTP id eg2so30970864obd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 19:59:22 -0700 (PDT)
+From: Taahir Ahmed <ahmed.taahir@gmail.com>
+To: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+Reply-To: ahmed.taahir@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] Support python 3 in utils/key2pub.py.
+Date: Tue, 21 Jul 2015 21:59:16 -0500
+Message-ID: <2988720.J8nzy94PWW@basis> (sfid-20150722_045926_128490_BE88842D)
+In-Reply-To: <20150722045045.30642c25@mir>
+References: <1437525466-27512-1-git-send-email-ahmed.taahir@gmail.com> <1437525466-27512-2-git-send-email-ahmed.taahir@gmail.com> <20150722045045.30642c25@mir>
 MIME-Version: 1.0
-To: Wei Zhong <wzhong@google.com>, seth.forshee@canonical.com
-CC: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
-References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
-In-Reply-To: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; boundary="nextPart9803875.RJTeOcanib"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/02/2015 07:44 AM, Wei Zhong wrote:
-> commit 2fef4cad8a1bd9cbbf178e59a1b3ca672b057095
-> Author: Wei Zhong <wzhong@google.com>
-> Date:   Wed Jul 1 22:39:09 2015 -0700
-> 
->     wireless-regdb: update CA rules for 5600 - 5650 mHz
-> 
->     Related regulation:
->     http://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/sf10971.html#s6.2.3
-> 
->     Frequency Bands 5470-5600 MHz and 5650-5725 MHz
->     Until further notice, devices subject to this section [i.e. Wifi device
->     supporting 5 GHz bands] shall not be capable of transmitting in the band
->     5600-5650 MHz. This restriction is for the protection of Environment
->     Canada’s weather radars operating in this band.
-> 
-> diff --git a/db.txt b/db.txt
-> index 809cd3c..da0cfad 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -216,7 +216,8 @@ country CA: DFS-FCC
->         (2402 - 2472 @ 40), (30)
->         (5170 - 5250 @ 80), (17), AUTO-BW
->         (5250 - 5330 @ 80), (24), DFS, AUTO-BW
-> -       (5490 - 5730 @ 160), (24), DFS
-> +       (5490 - 5600 @ 80), (24), DFS
-> +       (5650 - 5730 @ 40), (24), DFS
->         (5735 - 5835 @ 80), (30)
-> 
->  # Source:
-> --
+--nextPart9803875.RJTeOcanib
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-I believe this could also be interpreted differently. If the change is only about
-removing the weather radar band (5600-5650), the change should be
+On Wednesday 22 July 2015 04:50:45 Stefan Lippers-Hollmann wrote:
+> You omit $(pwd) from ./utils/key2pub.py, while /utils/key2pub.py
+> won't exist.
 
- -       (5490 - 5730 @ 160), (24), DFS
- +       (5490 - 5570 @ 80), (24), DFS
- +       (5570 - 5590 @ 20), (24), DFS
- +       (5650 - 5730 @ 80), (24), DFS
+Wow, that's a really bad mistake on my part.  It should indeed probably
+be './utils/key2pub.py'.  I made this change after my general testing,
+simply because emacs was undoing the execute bit every time I saved
+key2pub.py.
 
-The second rule explicitly states that channel 116 remains available for HT20. If
-this level of strict correctness is not needed, rule 1 and 2 combined would be
+It's not really a material change, so I'll probably just put it back the
+way it was.
 
- -       (5490 - 5730 @ 160), (24), DFS
- +       (5490 - 5590 @ 80), (24), DFS
- +       (5650 - 5730 @ 80), (24), DFS
+The rest of the patch is tested, I pinky-swear :)
+ 
+> As little as I know about python packaging policies in Debian
+> (and probably Fedora), /usr/bin/python is never supposed to point
+> to python3 - afaik the interpreter should always be called python3
+> there, so I don't really see how that's going to work there.
 
+I'm not assuming that the system interpreter is any particular version:
+key2pub.py has been modified so it runs under either 2.7 or 3.x.
 
-Cheers
-Zefir
+Some more simplification might be possible if 2.7 support is dropped,
+but not much, and I didn't want to rock the boat.
+
+Thanks for the prompt review!
+
+Taahir
+
+--nextPart9803875.RJTeOcanib
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAABAgAGBQJVrwcJAAoJEP0dGB2mOaLGRngIAIeswxfwlLWr7lGkozTftZ2d
+0DeEaS//7PL8MUudWBa6VGEUXUQLmw9cP8/Og5forCBH0E9XuAJ0dfUMKLfHzDp/
+fpHPu8Aplpn1ztR4fXNGGLl6yK35vDzyFBXyU837EHnTYV1Ht1GTZYP2A2jSC3DX
+pMNpq5ACEpLFtSzw3ELNCE/IUYTAU4C1XQXak5wnIXcJdLDj2njue2tGh/aTGv7u
+r2wpo+nwN6vZTErGo/nrSPf01/nEiul7ftSVeRblfplsLtDxNTkTdPltsOKWyo96
+RgdknTL6hF5JPfoyDwHoJg+MDdBlMdE5g6hOr6x3h8YoR1q2ZbifM3MYq3M12Io=
+=1kYc
+-----END PGP SIGNATURE-----
+
+--nextPart9803875.RJTeOcanib--
+
