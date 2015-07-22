@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dub004-omc3s12.hotmail.com ([157.55.2.21]:57158 "EHLO
-	DUB004-OMC3S12.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753031AbbG0KB3 (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:32872 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754968AbbGVFVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 06:01:29 -0400
-Message-ID: <DUB128-W16873176A9A97616BAD50D9C8E0@phx.gbl> (sfid-20150727_120133_835078_CCFC49D5)
-From: David Binderman <dcb314@hotmail.com>
-To: Chris Park <chris.park@atmel.com>,
-	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
-	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
-	"dean.lee@atmel.com" <dean.lee@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: linux-4.2-rc4/drivers/staging/wilc1000/linux_mon.c:264: memory
- leak ?
-Date: Mon, 27 Jul 2015 10:01:27 +0000
-In-Reply-To: <55B5F38F.6070001@atmel.com>
-References: <DUB128-W86C6FB82F690B96CCC5C5E9C8E0@phx.gbl>,<55B5F38F.6070001@atmel.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 22 Jul 2015 01:21:39 -0400
+Received: by obdeg2 with SMTP id eg2so32207867obd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 22:21:38 -0700 (PDT)
+From: ahmed.taahir@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: Taahir Ahmed <ahmed.taahir@gmail.com>
+Subject: [PATCH 2/2] Small build system improvements.
+Date: Wed, 22 Jul 2015 00:21:24 -0500
+Message-Id: <1437542484-23409-3-git-send-email-ahmed.taahir@gmail.com> (sfid-20150722_072143_983442_A9F64C45)
+In-Reply-To: <1437542484-23409-1-git-send-email-ahmed.taahir@gmail.com>
+References: <1437542484-23409-1-git-send-email-ahmed.taahir@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGVsbG8gdGhlcmUsCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IGJ1dCBJdCBp
-cyBub3QgbWVtb3J5IGxlYWsgYmVjYXVzZSBJZiB0eCBxdWV1ZSBpcyBjb21wbGV0ZSwga2ZyZWUo
-KSBpcyAgCj4gY2FsbGVkIGluIG1nbXRfdHhfY29tcGxldGUoKSBmdW50aW9uLiAKCk1heWJlIEkn
-dmUgYmVlbiBzbGlnaHRseSBsZXNzIHRoYW4gY2xlYXIuIEknbGwgaGF2ZSBhbm90aGVyIGdvLgoK
-VGhlcmUgaXMgYSBjYWxsIHRvIGttYWxsb2MgYXJvdW5kIGxpbmUgMjUwLgoKU291cmNlIGNvZGUg
-aXMKCsKgwqDCoCBtZ210X3R4ID0ga21hbGxvYyhzaXplb2Yoc3RydWN0IHR4X2NvbXBsZXRlX21v
-bl9kYXRhKSwgR0ZQX0FUT01JQyk7CgpBIGZldyBsaW5lcyBsYXRlciBpcyBhIHNlY29uZCBjYWxs
-IHRvIGttYWxsb2MKCsKgwqAgbWdtdF90eC0+YnVmZiA9IGttYWxsb2MobGVuLCBHRlBfQVRPTUlD
-KTsKCklmIHRoZSBzZWNvbmQgY2FsbCBmYWlscywgdGhlbiBwcm9wZXIgdGlkeXVwIHdvdWxkIG5v
-cm1hbGx5IGluY2x1ZGUKY2FsbGluZyBrZnJlZSBmb3IgdGhlIGZpcnN0IGNhbGwuIFRoaXMgZG9l
-c24ndCBoYXBwZW4gaW4gdGhlIGVycm9yIGhhbmRsaW5nCmNvZGUgZm9yIHRoZSBzZWNvbmQgY2Fs
-bC4KCsKgwqAgaWYgKG1nbXRfdHgtPmJ1ZmYgPT0gTlVMTCkgewrCoMKgwqDCoMKgwqDCoCBQUklO
-VF9FUigiRmFpbGVkIHRvIGFsbG9jYXRlIG1lbW9yeSBmb3IgbWdtdF90eCBidWZmXG4iKTsKwqDC
-oMKgwqDCoMKgwqAgcmV0dXJuIFdJTENfRkFJTDsKwqDCoMKgIH0KCk5vdCBhIGJpZyBidWcsIEkg
-YWRtaXQsIGJ1dCBtaWdodCBiZSB3b3J0aCBmaXhpbmcuClNvbWV0aGluZyBsaWtlCgrCoMKgIGlm
-IChtZ210X3R4LT5idWZmID09IE5VTEwpIHsKwqDCoMKgwqDCoMKgwqAga2ZyZWUobWdtdCk7CsKg
-wqDCoMKgwqDCoMKgIFBSSU5UX0VSKCJGYWlsZWQgdG8gYWxsb2NhdGUgbWVtb3J5IGZvciBtZ210
-X3R4IGJ1ZmZcbiIpOwrCoMKgwqDCoMKgwqDCoCByZXR1cm4gV0lMQ19GQUlMOwrCoMKgwqAgfQoK
-d291bGQgcHJvYmFibHkgZml4IGl0LiAKCk15IGFwb2xvZ2llcyBmb3Igbm90IGJlaW5nIGNsZWFy
-IGVhcmxpZXIuCgoKUmVnYXJkcwoKRGF2aWQgQmluZGVybWFuCgoKPiAgCj4gU291cmNlIGNvZGUg
-aXMgCj4gIAo+ICAgICAgZ19saW51eF93bGFuLT5vdXAud2xhbl9hZGRfbWdtdF90b190eF9xdWUo
-bWdtdF90eCwgbWdtdF90eC0+YnVmZiwgIAo+IG1nbXRfdHgtPnNpemUsIG1nbXRfdHhfY29tcGxl
-dGUpOyAKPiAgCj4gICAgICBzdGF0aWMgdm9pZCBtZ210X3R4X2NvbXBsZXRlKHZvaWQgKnByaXYs
-IGludCBzdGF0dXMpIAo+ICAgICB7IAo+ICAgICAgICAgIC4uLiAKPiAgICAgICAgICBrZnJlZShw
-dl9kYXRhLT5idWZmKTsgCj4gICAgICAgICAga2ZyZWUocHZfZGF0YSk7IAo+ICAgICAgfSAKPiAg
-Cj4gQlIuIAo+IENocmlzIAo+ICAKPiBPbiAyMDE164WEIDA37JuUIDI37J28IDE3OjIwLCBEYXZp
-ZCBCaW5kZXJtYW4gd3JvdGU6IAo+ICAKPiBIZWxsbyB0aGVyZSwgCj4gIAo+IFtsaW51eC00LjIt
-cmM0L2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9saW51eF9tb24uYzoyNjRdOiAoZXJyb3IpIE1l
-bW9yeSBsZWFrOiBtZ210X3R4IAo+ICAKPiBTb3VyY2UgY29kZSBpcyAKPiAgCj4gICAgICBtZ210
-X3R4LT5idWZmID0ga21hbGxvYyhsZW4sIEdGUF9BVE9NSUMpOyAKPiAgICAgIGlmIChtZ210X3R4
-LT5idWZmID09IE5VTEwpIHsgCj4gICAgICAgICAgUFJJTlRfRVIoIkZhaWxlZCB0byBhbGxvY2F0
-ZSBtZW1vcnkgZm9yIG1nbXRfdHggYnVmZlxuIik7IAo+ICAgICAgICAgIHJldHVybiBXSUxDX0ZB
-SUw7IAo+ICAKPiAgICAgIH0gCj4gIAo+IFN1Z2dlc3QgYWRkIG1pc3NpbmcgY2FsbCB0byBrZnJl
-ZS4gCj4gIAo+ICAKPiBSZWdhcmRzIAo+ICAKPiBEYXZpZCBCaW5kZXJtYW4gCj4gIAo+ICAKPiAg
-CiAJCSAJICAgCQkgIA==
+From: Taahir Ahmed <ahmed.taahir@gmail.com>
+
+Phony targets are properly declared.
+
+User's CFLAGS are not clobbered with '-O2 -g' unless the user has set no
+cflags.
+---
+ Makefile | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 4ce900c..b5aa8e3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -29,17 +29,19 @@ RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
+ # utils/key2pub.py.  Python 2.7 and 3.x are supported.
+ BUILDTIME_PYTHON ?= python
+ 
+-CFLAGS += -O2 -fpic
++CFLAGS ?= -O2 -g
++CFLAGS += -fPIC
+ CFLAGS += -std=gnu99 -Wall -Werror -pedantic
+-CFLAGS += -Wall -g
+ LDLIBREG += -lreg
+ LDLIBS += $(LDLIBREG)
+ LDLIBS += -lm
+ LIBREG += libreg.so
+ LDFLAGS += -L ./
+ 
++.PHONY: all
+ all: all_noverify verify
+ 
++.PHONY: all_noverify
+ all_noverify: $(LIBREG) crda intersect regdbdump db2rd optimize
+ 
+ ifeq ($(USE_OPENSSL),1)
+@@ -122,11 +124,13 @@ $(LIBREG): regdb.h reglib.h reglib.c
+ 	$(NQ) '  CC  ' $@
+ 	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -shared -Wl,-soname,$(LIBREG) $^
+ 
++.PHONY: install-libreg-headers
+ install-libreg-headers:
+ 	$(NQ) '  INSTALL  libreg-headers'
+ 	$(Q)mkdir -p $(DESTDIR)/$(INCLUDE_DIR)
+ 	$(Q)cp *.h $(DESTDIR)/$(INCLUDE_DIR)/
+ 
++.PHONY: install-libreg
+ install-libreg:
+ 	$(NQ) '  INSTALL  libreg'
+ 	$(Q)mkdir -p $(DESTDIR)/$(LIBDIR)
+@@ -167,6 +171,7 @@ verify: $(REG_BIN) regdbdump
+ 	@$(NQ) ' GZIP' $<
+ 	$(Q)gzip < $< > $@
+ 
++.PHONY: install
+ install: install-libreg install-libreg-headers crda crda.8.gz regdbdump.8.gz
+ 	$(NQ) '  INSTALL  crda'
+ 	$(Q)$(MKDIR) $(DESTDIR)/$(SBINDIR)
+@@ -189,6 +194,7 @@ install: install-libreg install-libreg-headers crda crda.8.gz regdbdump.8.gz
+ 	$(NQ) '  INSTALL  regdbdump.8.gz'
+ 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
+ 
++.PHONY: clean
+ clean:
+ 	$(Q)rm -f $(LIBREG) crda regdbdump intersect db2rd optimize \
+ 		*.o *~ *.pyc keys-*.h *.gz \
+-- 
+2.3.6
+
