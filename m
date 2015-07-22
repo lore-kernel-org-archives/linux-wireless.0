@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:34323 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752390AbbGORuB (ORCPT
+Received: from mo4-p05-ob.smtp.rzone.de ([81.169.146.180]:19954 "EHLO
+	mo4-p05-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071AbbGVC5A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2015 13:50:01 -0400
+	Tue, 21 Jul 2015 22:57:00 -0400
+Date: Wed, 22 Jul 2015 04:50:45 +0200
+From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+To: ahmed.taahir@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] Support python 3 in utils/key2pub.py.
+Message-ID: <20150722045045.30642c25@mir> (sfid-20150722_045704_575300_F18AE317)
+In-Reply-To: <1437525466-27512-2-git-send-email-ahmed.taahir@gmail.com>
+References: <1437525466-27512-1-git-send-email-ahmed.taahir@gmail.com>
+	<1437525466-27512-2-git-send-email-ahmed.taahir@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAK1hOcPvb3mOeVm5HMqSCKAyJv47HturM+C9uxvA1=KWn94dtw@mail.gmail.com>
-References: <1436876558-6674-1-git-send-email-dvlasenk@redhat.com>
-	<55A502B6.5090806@cogentembedded.com>
-	<CAK1hOcPvb3mOeVm5HMqSCKAyJv47HturM+C9uxvA1=KWn94dtw@mail.gmail.com>
-Date: Wed, 15 Jul 2015 20:49:59 +0300
-Message-ID: <CANUX_P2=J81pJpyeMLEf+un=Pe8MhoGz7QJrrRUe19oeux8BhQ@mail.gmail.com> (sfid-20150715_195038_706307_1FC998BB)
-Subject: Re: [PATCH] iwlwifi: Deinline iwl_{read,write}{8,32}
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Denys Vlasenko <dvlasenk@redhat.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 3:41 PM, Denys Vlasenko
-<vda.linux@googlemail.com> wrote:
-> On Tue, Jul 14, 2015 at 2:38 PM, Sergei Shtylyov
-> <sergei.shtylyov@cogentembedded.com> wrote:
->>> +#define IWL_READ_WRITE(static_inline) \
->>> +static_inline void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val) \
->>> +{ \
->>> +       trace_iwlwifi_dev_iowrite8(trans->dev, ofs, val); \
->>> +       iwl_trans_write8(trans, ofs, val); \
->>> +} \
->> [...]
->>>
->>> +#if !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
->>> +IWL_READ_WRITE(static inline)
->>
->>    Not static_inline?
->
-> Yes. Here we are putting two words, "static inline", in front of every
-> function definition.
-> --
+Hi
 
-I'll try to come up with a patch that is easier for me to read, but I
-am really busy right now. Ping me in a week if you have heard from me
-earlier.
+On 2015-07-21, ahmed.taahir@gmail.com wrote:
+> From: Taahir Ahmed <ahmed.taahir@gmail.com>
+> 
+> utils/key2pub.py can now be run under either python 2.7 or python 3.x.
+> This required some minor syntactical changes as well as switching from
+> M2Crypto to pycrypto, since M2Crypto doesn't support python 3.x.
+[...]
+> diff --git a/Makefile b/Makefile
+> index a3ead30..65fc780 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -112,7 +112,7 @@ $(REG_BIN):
+>  keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
+>  	$(NQ) '  GEN ' $@
+>  	$(NQ) '  Trusted pubkeys:' $(wildcard $(PUBKEY_DIR)/*.pem)
+> -	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
+> +	$(Q) python /utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
+[...]
+
+Without having tested it, nor being that familiar with python coding,
+but this hunk seems to be problematic on two accords.
+
+You omit $(pwd) from ./utils/key2pub.py, while /utils/key2pub.py
+won't exist.
+
+As little as I know about python packaging policies in Debian
+(and probably Fedora), /usr/bin/python is never supposed to point
+to python3 - afaik the interpreter should always be called python3
+there, so I don't really see how that's going to work there.
+
+Sorry if I missed anything obvious, but these things just caught
+my attention without having looked any deeper.
+
+Regards
+	Stefan Lippers-Hollmann
