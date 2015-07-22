@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:36002 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582AbbGXHpO (ORCPT
+Received: from server11.hostfactory.ch ([62.146.13.133]:48104 "EHLO
+	server11.hostfactory.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934322AbbGVQiF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 03:45:14 -0400
-Received: by lagw2 with SMTP id w2so9151559lag.3
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2015 00:45:13 -0700 (PDT)
+	Wed, 22 Jul 2015 12:38:05 -0400
+Message-ID: <55AFC6E1.7060706@weiss.ch> (sfid-20150722_183812_982601_8E5CC0B4)
+Date: Wed, 22 Jul 2015 18:37:53 +0200
+From: Rolf Anderegg <rolf.anderegg@weiss.ch>
+Reply-To: rolf.anderegg@weiss.ch
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P3zn1tTjL=G7dgWuf8Yj4Pi2Xb4PpGW+1r5e--dtA6-0A@mail.gmail.com>
-References: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
-	<loom.20150724T015627-838@post.gmane.org>
-	<CANUX_P03KBFk+TVNF78oW=PtxMJ_bwC4sF0UoyuFUjDV+p=wYQ@mail.gmail.com>
-	<CANUX_P3zn1tTjL=G7dgWuf8Yj4Pi2Xb4PpGW+1r5e--dtA6-0A@mail.gmail.com>
-Date: Fri, 24 Jul 2015 10:45:12 +0300
-Message-ID: <CANUX_P3uVqLWyCB_49Av706_WkOsmz+2B2oeOn+uC7wOZdAk4w@mail.gmail.com> (sfid-20150724_094517_855987_4C856B2C)
-Subject: Re: [RFC 0/5] cfg80211 / mac80211: add support for Neighbor Awareness Networking
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: QH <qiumin.hu@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Oleksij Rempel <linux@rempel-privat.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
+References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch> <55A79B5C.7010501@rempel-privat.de>
+In-Reply-To: <55A79B5C.7010501@rempel-privat.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 24, 2015 at 6:59 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Fri, Jul 24, 2015 at 6:53 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> On Fri, Jul 24, 2015 at 2:59 AM, QH <qiumin.hu@gmail.com> wrote:
->>>
->>> Emmanuel Grumbach <emmanuel.grumbach@...> writes:
->>>
->>>
->>> ++++++++++++++++++++++++++++++++++++++++++-
->>> >  net/wireless/rdev-ops.h      |  57 +++++
->>> >  net/wireless/trace.h         |  77 +++++++
->>> >  net/wireless/util.c          |   9 +-
->>> >  19 files changed, 1126 insertions(+), 11 deletions(-)
->>> >
->>>
->>> where can I get these patches?
->>>
->>> thanks,
->>
->> These patches were't merged because they were sent as an RFC only. The
->> API towards the OS aren't clear (to me) yet, so it seems a bit
->> premature to build the user space API for that. But this RFC series
->> looks like a good start.
->
-> You can always apply the patches on your kernel source if you want
-> though. You can find them in patchwork, or alike.
 
-One more thing - since you seem to be interested / know about NAN, I'd
-love to get your insight about the proposed API.
+On 16/07/15 13:54, Oleksij Rempel wrote:
+> Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
+>>
+>> I suspect that there are bandwidth/speed issues when dealing with USB
+>> adapters, but that does not inherently mean that the connection is prone
+>> to drop, right? Doesn't that mean that I am leaking packages somewhere
+>> along the way? What else could I be looking for?
+> 
+> The packages can drop if you will do channel scan. STA mode need some
+> seconds to complete channel scan. It means AP will be all the time
+> unavailable.
+
+Ok, that may be. Then again why am I not experiencing the same
+connection drop on my ath5k setup? Because the channel scan is more
+likely to be completed in due time?
+
+Regards,
+Rolf Anderegg
