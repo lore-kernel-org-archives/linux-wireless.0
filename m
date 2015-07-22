@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:33402 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205AbbGaQCA (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:34727 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752514AbbGVFVg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 12:02:00 -0400
-Received: by oig1 with SMTP id 1so6712051oig.0
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2015 09:02:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+XVXfegO1SoTkxYwT7Ne6f6eFxqEJXrvzR_ZOyz=Kso4QKUyQ@mail.gmail.com>
-References: <1438292115-39495-1-git-send-email-filbranden@google.com>
- <1438292115-39495-3-git-send-email-filbranden@google.com> <CA+XVXfegO1SoTkxYwT7Ne6f6eFxqEJXrvzR_ZOyz=Kso4QKUyQ@mail.gmail.com>
-From: enh <enh@google.com>
-Date: Fri, 31 Jul 2015 09:01:40 -0700
-Message-ID: <CAJgzZorOZ-HU2BUbWkssFzm++N-MEryxckPQRj7DyFEyMz0Jrg@mail.gmail.com> (sfid-20150731_180206_473621_8CAE46E2)
-Subject: Re: [PATCH 2/2] iw: remove android-nl.c with unneeded workaround
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Filipe Brandenburger <filbranden@google.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Christopher Wiley <wiley@google.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Jul 2015 01:21:36 -0400
+Received: by obre1 with SMTP id e1so128297272obr.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 22:21:36 -0700 (PDT)
+Received: from localhost.localdomain (50-24-3-101.bcstcmtk01.res.dyn.suddenlink.net. [50.24.3.101])
+        by smtp.gmail.com with ESMTPSA id oy11sm222891oeb.3.2015.07.21.22.21.35
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 21 Jul 2015 22:21:35 -0700 (PDT)
+From: ahmed.taahir@gmail.com
+To: linux-wireless@vger.kernel.org
+Subject: Support Python 3 in the crda build system (Take 2)
+Date: Wed, 22 Jul 2015 00:21:22 -0500
+Message-Id: <1437542484-23409-1-git-send-email-ahmed.taahir@gmail.com> (sfid-20150722_072140_179152_2A291310)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-no, because this is meant for the platform build system rather than
-the NDK. although the NDK has a concept of target API level, the
-platform only has "current".
+Updated Intro:
 
-On Thu, Jul 30, 2015 at 11:56 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Fri, Jul 31, 2015 at 12:35 AM, Filipe Brandenburger
-> <filbranden@google.com> wrote:
->> The workaround might have been necessary in the past, however now it
->> produces the following error:
->>
->>   .../libnl.a(attr.o): multiple definition of 'nla_put_flag'
->>   .../android-nl.o: previous definition here
->>   collect2: error: ld returned 1 exit status
->
-> Since this is required by earlier versions, can't you #ifdef the code
-> according to version? Also for the makefile change..
+This patchset takes into account helpful comments by Stefan.  The user
+can now set the make variable BUILD_PYTHON to select which interpreter
+runs key2pub.py.
 
+key2pub.py is further simplified as well.
 
+Original Intro:
 
--- 
-Elliott Hughes - http://who/enh - http://jessies.org/~enh/
-Android native code/tools questions? Mail me/drop by/add me as a reviewer.
+crda's build system is one of the last packages with a hard dep on
+python-2.7 on my Gentoo system.  This patchset adapts the utility
+script 'key2pub.py' so that it will run under either Python 2.7 or
+Python 3.x.  The main change is a switch from using M2Crypto to
+PyCrypto, specifically for Python 3.x support.
+
+In addition, Gentoo had a small collection of bugfix patches that were
+applied every time someone installed crda.  I've included those that
+seemed to have general applicability, as described in Patch 2.
+
