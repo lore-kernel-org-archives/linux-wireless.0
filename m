@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:42899 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932264AbbGHA4q convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:37574 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753138AbbGVGVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 20:56:46 -0400
-From: "Kim, Johnny" <johnny.kim@atmel.com>
-To: 'David Binderman' <dcb314@hotmail.com>,
-	"Kim, Rachel" <Rachel.Kim@atmel.com>,
-	"Lee, Dean" <Dean.Lee@atmel.com>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: linux-4.2-rc1/drivers/staging/wilc1000/linux_wlan.c:1874: bad
- test ?
-Date: Wed, 8 Jul 2015 00:56:14 +0000
-Message-ID: <3860A773274B9F4F94F72A20E848602354C1419D@penmbx02.corp.atmel.com> (sfid-20150708_025658_542684_0B948B9D)
-References: <DUB128-W333766FA47F8690AEA26469C920@phx.gbl>
-In-Reply-To: <DUB128-W333766FA47F8690AEA26469C920@phx.gbl>
-Content-Type: text/plain; charset="iso-8859-1"
+	Wed, 22 Jul 2015 02:21:47 -0400
+Received: by igbpg9 with SMTP id pg9so125495882igb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 23:21:47 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <87wpxslnse.fsf@kamboji.qca.qualcomm.com>
+References: <1437527130-15232-1-git-send-email-mfaltesek@google.com> <87wpxslnse.fsf@kamboji.qca.qualcomm.com>
+From: Avery Pennarun <apenwarr@google.com>
+Date: Wed, 22 Jul 2015 02:21:27 -0400
+Message-ID: <CAPp0ZBavC33umwjraqtxpKWP6Ez9X1_7K9fZNsP2oPu4v=uyEw@mail.gmail.com> (sfid-20150722_082150_991209_B34B4782)
+Subject: Re: [PATCH] ath10k: Improve performance by reducing tx_lock contention.
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Marty Faltesek <mfaltesek@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Denton Gentry <dgentry@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello David.
+On Wed, Jul 22, 2015 at 2:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Marty Faltesek <mfaltesek@google.com> writes:
+>> From: Qi Zhou <qizhou@google.com>
+>>
+>> During tx completion, tx_lock is held for longer than required, preventing
+>> efficient refill of htt->pending_tx. Refactor the code so that only MSDU
+>> related operations are protected by the lock.
+>>
+>> Improves downstream performance on a 3x3 client from 495 to 580 Mbps.
+>
+> It would be good to mention the actual platform/CPU as I guess this
+> improvement is platform specific?
 
-Thanks for your detail review.
-The code is wrong and will be removed because of unused code later.
-
-Regards.
-Johnny.
-
------Original Message-----
-From: David Binderman [mailto:dcb314@hotmail.com] 
-Sent: Tuesday, July 07, 2015 8:19 PM
-To: Kim, Johnny; Kim, Rachel; Lee, Dean; Park, Chris; linux-wireless@vger.kernel.org
-Subject: linux-4.2-rc1/drivers/staging/wilc1000/linux_wlan.c:1874: bad test ?
-
-Hello there,
-
-[linux-4.2-rc1/drivers/staging/wilc1000/linux_wlan.c:1874]: (style) A pointer can not be negative so it is either pointless or an error to check if it is.
-
-Source code is
-
-     if (wilc_mac_thread < 0) {
-
-but
-
-struct task_struct *wilc_mac_thread;
-
-Regards
-
-David Binderman
-
- 		 	   		  
+That's a good idea to mention in the commit message, although given
+that it's just an in-driver lock contention patch, it probably affects
+any underpowered multicore CPU.
