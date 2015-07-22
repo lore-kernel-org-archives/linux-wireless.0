@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36715 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933239AbbGUXOX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 19:14:23 -0400
+Received: from mout.gmx.net ([212.227.15.15]:65512 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754331AbbGVRQS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2015 13:16:18 -0400
+Message-ID: <55AFCFDE.7060902@rempel-privat.de> (sfid-20150722_191622_011380_17542D3F)
+Date: Wed, 22 Jul 2015 19:16:14 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-In-Reply-To: <20150714192015.GO7021@wotan.suse.de>
-References: <1431996325-8840-1-git-send-email-mcgrof@do-not-panic.com>
- <1431996325-8840-3-git-send-email-mcgrof@do-not-panic.com>
- <CAGXu5jJnPqgpvXd05-dtSbYeSVndcpH1_XMMczPWn5Gq-DUtcw@mail.gmail.com> <20150714192015.GO7021@wotan.suse.de>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 21 Jul 2015 16:14:02 -0700
-Message-ID: <CAB=NE6WpVnSD98CQ86ccnziwCuP5cfMDqY++1GWc7Ypv0hkH6A@mail.gmail.com> (sfid-20150722_011441_548312_F8B47EA4)
-Subject: Re: [RFC v3 2/2] firmware: add firmware signature checking support
-To: Kees Cook <keescook@chromium.org>,
-	David Howells <dhowells@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>, jlee@suse.com,
-	Takashi Iwai <tiwai@suse.de>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kyle McMartin <kyle@kernel.org>,
-	David Woodhouse <David.Woodhouse@intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: rolf.anderegg@weiss.ch,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
+References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch> <55A79B5C.7010501@rempel-privat.de> <55AFC6E1.7060706@weiss.ch>
+In-Reply-To: <55AFC6E1.7060706@weiss.ch>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="cCOHluhaxTd4Jsu03aue19j23Q970PxSV"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 12:20 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->> > +       strcpy(signed_name, buf->fw_id);
->> > +       strncat(signed_name, sign_ext, strlen(sign_ext));
->>
->> fw_id is potentially unbounded, so using strncat hear poses an
->> overflow risk. Maybe better to use strlcpy?
->>
->
-> Thanks for the feedback, indeed.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--cCOHluhaxTd4Jsu03aue19j23Q970PxSV
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Ok I've made this change based on David's tree.
+Am 22.07.2015 um 18:37 schrieb Rolf Anderegg:
+>=20
+> On 16/07/15 13:54, Oleksij Rempel wrote:
+>> Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
+>>>
+>>> I suspect that there are bandwidth/speed issues when dealing with USB=
 
- Luis
+>>> adapters, but that does not inherently mean that the connection is pr=
+one
+>>> to drop, right? Doesn't that mean that I am leaking packages somewher=
+e
+>>> along the way? What else could I be looking for?
+>>
+>> The packages can drop if you will do channel scan. STA mode need some
+>> seconds to complete channel scan. It means AP will be all the time
+>> unavailable.
+>=20
+> Ok, that may be. Then again why am I not experiencing the same
+> connection drop on my ath5k setup? Because the channel scan is more
+> likely to be completed in due time?
+
+Yes, channel scantime on usb device is match longer then on pci.
+
+--=20
+Regards,
+Oleksij
+
+
+--cCOHluhaxTd4Jsu03aue19j23Q970PxSV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlWvz94ACgkQHwImuRkmbWnNtwD6AwBOOM+E3FimwDj78ctBID7k
+hp3uq6ozb0fZ2koYzj4A/RFlUUjLgCykYmCv4cn0TWzPViSY2GsDuAopU8Q32gRM
+=ngAb
+-----END PGP SIGNATURE-----
+
+--cCOHluhaxTd4Jsu03aue19j23Q970PxSV--
