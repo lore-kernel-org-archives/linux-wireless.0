@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:32770 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751378AbbGBOpq (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:34321 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932590AbbGVInS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2015 10:45:46 -0400
-Received: by igcur8 with SMTP id ur8so120593534igc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jul 2015 07:45:45 -0700 (PDT)
-Date: Thu, 2 Jul 2015 10:45:27 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Subject: Re: [PATCH 3/3] mac80211: select an AID when creating new mesh STAs
-Message-ID: <20150702144527.GA3846@localhost> (sfid-20150702_164549_469035_6E9459F6)
-References: <1435843690-2856-1-git-send-email-me@bobcopeland.com>
- <1435843690-2856-4-git-send-email-me@bobcopeland.com>
- <1435843898.2285.24.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435843898.2285.24.camel@sipsolutions.net>
+	Wed, 22 Jul 2015 04:43:18 -0400
+Received: by wibud3 with SMTP id ud3so143938982wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 01:43:17 -0700 (PDT)
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: ath9k-devel@qca.qualcomm.com, nbd@openwrt.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+Date: Wed, 22 Jul 2015 10:42:43 +0200
+Message-Id: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com> (sfid-20150722_104338_377097_C16D6D7A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 02, 2015 at 03:31:38PM +0200, Johannes Berg wrote:
-> On Thu, 2015-07-02 at 09:28 -0400, Bob Copeland wrote:
-> > 
-> > +	DECLARE_BITMAP(aid_map, IEEE80211_MAX_AID + 1);
-> > 
-> Is there really much point in keeping a long-lived bitmap rather than
-> iterating the existing stations when adding a new one? It's not such a
-> frequent operation after all.
+The FreeBSD driver [0] uses the same 2G values as for the AR9280 chips.
+Using the same values in ath9k results in much better throughput for me.
 
-Not really -- I tried it both ways initially, and the bitmap ended up
-with less code and u.mesh was still (slightly) smaller than u.mgd, but I
-agree it does feel kind of bloaty so I'll prep a version the other way.
+Before this patch I had a huge amount of packet loss (sometimes up to
+40%) and the max transfer speed was somewhere around 5Mbit/s. With this
+patch applied I have zero packet loss and ten times the throughput.
+My device uses a AR9227 which is the PCI variant of the AR9287.
 
+[0] http://bxr.su/FreeBSD/sys/dev/ath/ath_hal/ar9002/ar9287.h
+
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+Patch has not changed, I am just CC'ing @linux-wireless (instead of
+@ath9k-devel only).
+
+ drivers/net/wireless/ath/ath9k/ar9002_phy.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+index 6314ae2..9d17a53 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+@@ -610,8 +610,8 @@
+ #define AR_PHY_CCA_MIN_GOOD_VAL_9271_2GHZ      -127
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9271_2GHZ      -116
+ 
+-#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -120
++#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -112
+ #define AR_PHY_CCA_MIN_GOOD_VAL_9287_2GHZ    -127
+-#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -110
++#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -97
+ 
+ #endif
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.4.6
+
