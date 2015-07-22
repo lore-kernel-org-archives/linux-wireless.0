@@ -1,227 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:43332 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932216AbbGJSbV (ORCPT
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:36045 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934008AbbGVBF4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 14:31:21 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/7] brcmfmac: correct interface combination info
-Date: Fri, 10 Jul 2015 20:31:06 +0200
-Message-ID: <1436553071-32423-3-git-send-email-arend@broadcom.com> (sfid-20150710_203130_480060_8D746919)
-In-Reply-To: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 21 Jul 2015 21:05:56 -0400
+Received: by qgy5 with SMTP id 5so96387670qgy.3
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 18:05:55 -0700 (PDT)
+From: Marty Faltesek <mfaltesek@google.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@qca.qualcomm.com, dgentry@google.com, apenwarr@google.com
+Subject: [PATCH] ath10k: Improve performance by reducing tx_lock contention.
+Date: Tue, 21 Jul 2015 21:05:30 -0400
+Message-Id: <1437527130-15232-1-git-send-email-mfaltesek@google.com> (sfid-20150722_030559_837838_7FBC2B4D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interface combination provided by brcmfmac did not truly reflect
-the combinations supported by driver and/or firmware.
+From: Qi Zhou <qizhou@google.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Pontus Fuchs <pontusf@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+During tx completion, tx_lock is held for longer than required, preventing
+efficient refill of htt->pending_tx. Refactor the code so that only MSDU
+related operations are protected by the lock.
+
+Improves downstream performance on a 3x3 client from 495 to 580 Mbps.
+
+Signed-off-by: Denton Gentry <dgentry@google.com>
+Signed-off-by: Avery Pennarun <apenwarr@google.com>
+[mfaltesek@google.com: removed conflicting code for tracking msdu_ids.]
+Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+
+Change-Id: Ia0fe8b037033c3335b5632b7276c3b0e33e738d4
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 151 +++++++++++++++------
- 1 file changed, 112 insertions(+), 39 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++----------
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  8 ++------
+ drivers/net/wireless/ath/ath10k/txrx.c   | 17 ++++++++---------
+ 3 files changed, 12 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index d86d1f1..ae54b66 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -5695,63 +5695,132 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 89eb16b..79e68fa 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1633,8 +1633,6 @@ static void ath10k_htt_rx_frm_tx_compl(struct ath10k *ar,
+ 	__le16 msdu_id;
+ 	int i;
+ 
+-	lockdep_assert_held(&htt->tx_lock);
+-
+ 	switch (status) {
+ 	case HTT_DATA_TX_STATUS_NO_ACK:
+ 		tx_done.no_ack = true;
+@@ -2000,15 +1998,11 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 			break;
+ 		}
+ 
+-		spin_lock_bh(&htt->tx_lock);
+ 		ath10k_txrx_tx_unref(htt, &tx_done);
+-		spin_unlock_bh(&htt->tx_lock);
+ 		break;
  	}
- };
- 
-+/**
-+ * brcmf_setup_ifmodes() - determine interface modes and combinations.
-+ *
-+ * @wiphy: wiphy object.
-+ * @ifp: interface object needed for feat module api.
-+ *
-+ * The interface modes and combinations are determined dynamically here
-+ * based on firmware functionality.
-+ *
-+ * no p2p and no mbss:
-+ *
-+ *	#STA <= 1, #AP <= 1, channels = 1, 2 total
-+ *
-+ * no p2p and mbss:
-+ *
-+ *	#STA <= 1, #AP <= 1, channels = 1, 2 total
-+ *	#AP <= 4, matching BI, channels = 1, 4 total
-+ *
-+ * p2p, no mchan, and mbss:
-+ *
-+ *	#STA <= 1, #P2P-DEV <= 1, #{P2P-CL, P2P-GO} <= 1, channels = 1, 3 total
-+ *	#STA <= 1, #P2P-DEV <= 1, #AP <= 1, #P2P-CL <= 1, channels = 1, 4 total
-+ *	#AP <= 4, matching BI, channels = 1, 4 total
-+ *
-+ * p2p, mchan, and mbss:
-+ *
-+ *	#STA <= 1, #P2P-DEV <= 1, #{P2P-CL, P2P-GO} <= 1, channels = 2, 3 total
-+ *	#STA <= 1, #P2P-DEV <= 1, #AP <= 1, #P2P-CL <= 1, channels = 1, 4 total
-+ *	#AP <= 4, matching BI, channels = 1, 4 total
-+ */
- static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
- 	struct ieee80211_iface_combination *combo = NULL;
--	struct ieee80211_iface_limit *limits = NULL;
--	int i = 0, max_iface_cnt;
-+	struct ieee80211_iface_limit *c0_limits = NULL;
-+	struct ieee80211_iface_limit *p2p_limits = NULL;
-+	struct ieee80211_iface_limit *mbss_limits = NULL;
-+	bool mbss, p2p;
-+	int i, c, n_combos;
-+
-+	mbss = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS);
-+	p2p = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P);
- 
--	combo = kzalloc(sizeof(*combo), GFP_KERNEL);
-+	n_combos = 1 + !!p2p + !!mbss;
-+	combo = kcalloc(n_combos, sizeof(*combo), GFP_KERNEL);
- 	if (!combo)
- 		goto err;
- 
--	limits = kzalloc(sizeof(*limits) * 4, GFP_KERNEL);
--	if (!limits)
-+	c0_limits = kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
-+	if (!c0_limits)
- 		goto err;
- 
-+	if (p2p) {
-+		p2p_limits = kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
-+		if (!p2p_limits)
-+			goto err;
-+	}
-+
-+	if (mbss) {
-+		mbss_limits = kcalloc(1, sizeof(*mbss_limits), GFP_KERNEL);
-+		if (!mbss_limits)
-+			goto err;
-+	}
-+
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				 BIT(NL80211_IFTYPE_ADHOC) |
- 				 BIT(NL80211_IFTYPE_AP);
- 
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
--		combo->num_different_channels = 2;
--	else
--		combo->num_different_channels = 1;
--
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) {
--		limits[i].max = 1;
--		limits[i++].types = BIT(NL80211_IFTYPE_STATION);
--		limits[i].max = 4;
--		limits[i++].types = BIT(NL80211_IFTYPE_AP);
--		max_iface_cnt = 5;
--	} else {
--		limits[i].max = 2;
--		limits[i++].types = BIT(NL80211_IFTYPE_STATION) |
--				    BIT(NL80211_IFTYPE_AP);
--		max_iface_cnt = 2;
--	}
--
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P)) {
-+	c = 0;
-+	i = 0;
-+	combo[c].num_different_channels = 1;
-+	c0_limits[i].max = 1;
-+	c0_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
-+	if (p2p) {
-+		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
-+			combo[c].num_different_channels = 2;
- 		wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 					  BIT(NL80211_IFTYPE_P2P_GO) |
- 					  BIT(NL80211_IFTYPE_P2P_DEVICE);
--		limits[i].max = 1;
--		limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
--				    BIT(NL80211_IFTYPE_P2P_GO);
--		limits[i].max = 1;
--		limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
--		max_iface_cnt += 2;
--	}
--	combo->max_interfaces = max_iface_cnt;
--	combo->limits = limits;
--	combo->n_limits = i;
--
-+		c0_limits[i].max = 1;
-+		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		c0_limits[i].max = 1;
-+		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				       BIT(NL80211_IFTYPE_P2P_GO);
-+	} else {
-+		c0_limits[i].max = 1;
-+		c0_limits[i++].types = BIT(NL80211_IFTYPE_AP);
-+	}
-+	combo[c].max_interfaces = i;
-+	combo[c].n_limits = i;
-+	combo[c].limits = c0_limits;
-+
-+	if (p2p) {
-+		c++;
-+		i = 0;
-+		combo[c].num_different_channels = 1;
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_AP);
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT);
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		combo[c].max_interfaces = i;
-+		combo[c].n_limits = i;
-+		combo[c].limits = p2p_limits;
-+	}
-+
-+	if (mbss) {
-+		c++;
-+		combo[c].beacon_int_infra_match = true;
-+		combo[c].num_different_channels = 1;
-+		mbss_limits[0].max = 4;
-+		mbss_limits[0].types = BIT(NL80211_IFTYPE_AP);
-+		combo[c].max_interfaces = 4;
-+		combo[c].n_limits = 1;
-+		combo[c].limits = mbss_limits;
-+	}
-+	wiphy->n_iface_combinations = n_combos;
- 	wiphy->iface_combinations = combo;
--	wiphy->n_iface_combinations = 1;
- 	return 0;
- 
- err:
--	kfree(limits);
-+	kfree(c0_limits);
-+	kfree(p2p_limits);
-+	kfree(mbss_limits);
- 	kfree(combo);
- 	return -ENOMEM;
- }
-@@ -6059,11 +6128,15 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
- 
- static void brcmf_free_wiphy(struct wiphy *wiphy)
- {
-+	int i;
-+
- 	if (!wiphy)
+ 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
+-		spin_lock_bh(&htt->tx_lock);
+-		__skb_queue_tail(&htt->tx_compl_q, skb);
+-		spin_unlock_bh(&htt->tx_lock);
++		skb_queue_tail(&htt->tx_compl_q, skb);
+ 		tasklet_schedule(&htt->txrx_compl_task);
  		return;
+ 	case HTT_T2H_MSG_TYPE_SEC_IND: {
+@@ -2093,12 +2087,10 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 	struct htt_resp *resp;
+ 	struct sk_buff *skb;
  
--	if (wiphy->iface_combinations)
--		kfree(wiphy->iface_combinations->limits);
-+	if (wiphy->iface_combinations) {
-+		for (i = 0; i < wiphy->n_iface_combinations; i++)
-+			kfree(wiphy->iface_combinations[i].limits);
-+	}
- 	kfree(wiphy->iface_combinations);
- 	if (wiphy->bands[IEEE80211_BAND_2GHZ]) {
- 		kfree(wiphy->bands[IEEE80211_BAND_2GHZ]->channels);
+-	spin_lock_bh(&htt->tx_lock);
+-	while ((skb = __skb_dequeue(&htt->tx_compl_q))) {
++	while ((skb = skb_dequeue(&htt->tx_compl_q))) {
+ 		ath10k_htt_rx_frm_tx_compl(htt->ar, skb);
+ 		dev_kfree_skb_any(skb);
+ 	}
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	spin_lock_bh(&htt->rx_ring.lock);
+ 	while ((skb = __skb_dequeue(&htt->rx_compl_q))) {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index a60ef7d..262d657 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -112,9 +112,7 @@ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
+ 	tx_done.discard = 1;
+ 	tx_done.msdu_id = msdu_id;
+ 
+-	spin_lock_bh(&htt->tx_lock);
+ 	ath10k_txrx_tx_unref(htt, &tx_done);
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	return 0;
+ }
+@@ -355,12 +353,11 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 
+ 	spin_lock_bh(&htt->tx_lock);
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
++	spin_unlock_bh(&htt->tx_lock);
+ 	if (res < 0) {
+-		spin_unlock_bh(&htt->tx_lock);
+ 		goto err_tx_dec;
+ 	}
+ 	msdu_id = res;
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	txdesc = ath10k_htc_alloc_skb(ar, len);
+ 	if (!txdesc) {
+@@ -429,12 +426,11 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 
+ 	spin_lock_bh(&htt->tx_lock);
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
++	spin_unlock_bh(&htt->tx_lock);
+ 	if (res < 0) {
+-		spin_unlock_bh(&htt->tx_lock);
+ 		goto err_tx_dec;
+ 	}
+ 	msdu_id = res;
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+ 	prefetch_len = roundup(prefetch_len, 4);
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 826500b..40a8083 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -53,8 +53,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	struct ath10k_skb_cb *skb_cb;
+ 	struct sk_buff *msdu;
+ 
+-	lockdep_assert_held(&htt->tx_lock);
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+ 		   "htt tx completion msdu_id %u discard %d no_ack %d success %d\n",
+ 		   tx_done->msdu_id, !!tx_done->discard,
+@@ -66,12 +64,19 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		return;
+ 	}
+ 
++	spin_lock_bh(&htt->tx_lock);
+ 	msdu = idr_find(&htt->pending_tx, tx_done->msdu_id);
+ 	if (!msdu) {
+ 		ath10k_warn(ar, "received tx completion for invalid msdu_id: %d\n",
+ 			    tx_done->msdu_id);
++		spin_unlock_bh(&htt->tx_lock);
+ 		return;
+ 	}
++	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
++	__ath10k_htt_tx_dec_pending(htt);
++	if (htt->num_pending_tx == 0)
++		wake_up(&htt->empty_tx_wq);
++	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	skb_cb = ATH10K_SKB_CB(msdu);
+ 
+@@ -90,7 +95,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ 	if (tx_done->discard) {
+ 		ieee80211_free_txskb(htt->ar->hw, msdu);
+-		goto exit;
++		return;
+ 	}
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+@@ -104,12 +109,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ 	ieee80211_tx_status(htt->ar->hw, msdu);
+ 	/* we do not own the msdu anymore */
+-
+-exit:
+-	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+-	__ath10k_htt_tx_dec_pending(htt);
+-	if (htt->num_pending_tx == 0)
+-		wake_up(&htt->empty_tx_wq);
+ }
+ 
+ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
 -- 
-1.9.1
+2.4.3.573.g4eafbef
 
