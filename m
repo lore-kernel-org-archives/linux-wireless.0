@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:37574 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138AbbGVGVr (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4743 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964845AbbGVLy0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 02:21:47 -0400
-Received: by igbpg9 with SMTP id pg9so125495882igb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 23:21:47 -0700 (PDT)
+	Wed, 22 Jul 2015 07:54:26 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6MBnm6P028385
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 04:54:26 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1vqm5jkw4w-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 04:54:26 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Zhaoyang Liu <liuzy@marvell.com>
+Subject: [PATCH 4/4] mwifiex: corrections in PCIe event skb handling
+Date: Wed, 22 Jul 2015 04:53:45 -0700
+Message-ID: <1437566025-3324-4-git-send-email-akarwar@marvell.com> (sfid-20150722_135432_251632_7335E659)
+In-Reply-To: <1437566025-3324-1-git-send-email-akarwar@marvell.com>
+References: <1437566025-3324-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87wpxslnse.fsf@kamboji.qca.qualcomm.com>
-References: <1437527130-15232-1-git-send-email-mfaltesek@google.com> <87wpxslnse.fsf@kamboji.qca.qualcomm.com>
-From: Avery Pennarun <apenwarr@google.com>
-Date: Wed, 22 Jul 2015 02:21:27 -0400
-Message-ID: <CAPp0ZBavC33umwjraqtxpKWP6Ez9X1_7K9fZNsP2oPu4v=uyEw@mail.gmail.com> (sfid-20150722_082150_991209_B34B4782)
-Subject: Re: [PATCH] ath10k: Improve performance by reducing tx_lock contention.
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Marty Faltesek <mfaltesek@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Denton Gentry <dgentry@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 2:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Marty Faltesek <mfaltesek@google.com> writes:
->> From: Qi Zhou <qizhou@google.com>
->>
->> During tx completion, tx_lock is held for longer than required, preventing
->> efficient refill of htt->pending_tx. Refactor the code so that only MSDU
->> related operations are protected by the lock.
->>
->> Improves downstream performance on a 3x3 client from 495 to 580 Mbps.
->
-> It would be good to mention the actual platform/CPU as I guess this
-> improvement is platform specific?
+Preallocated event SKBs are getting reused for PCIe chipset.
+Their physical addresses are shared with firmware so that
+firmware can write data into them.
 
-That's a good idea to mention in the commit message, although given
-that it's just an in-driver lock contention patch, it probably affects
-any underpowered multicore CPU.
+This patch makes sure that SKB is cleared and length is set to
+default while submitting it to firmware.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 77b9055..33c75d7 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1807,6 +1807,8 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+ 
+ 	if (!card->evt_buf_list[rdptr]) {
+ 		skb_push(skb, INTF_HEADER_LEN);
++		skb_put(skb, MAX_EVENT_SIZE - skb->len);
++		memset(skb->data, 0, MAX_EVENT_SIZE);
+ 		if (mwifiex_map_pci_memory(adapter, skb,
+ 					   MAX_EVENT_SIZE,
+ 					   PCI_DMA_FROMDEVICE))
+-- 
+1.8.1.4
+
