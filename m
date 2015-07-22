@@ -1,37 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:34426 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933448AbbGHPTk (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:35065 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934466AbbGVOuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 11:19:40 -0400
-Received: by oiab3 with SMTP id b3so49902255oia.1
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Jul 2015 08:19:39 -0700 (PDT)
-Message-ID: <559D3F89.9000404@lwfinger.net> (sfid-20150708_171950_422691_04E20642)
-Date: Wed, 08 Jul 2015 10:19:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 22 Jul 2015 10:50:16 -0400
+Received: from mail-ig0-f181.google.com (mail-ig0-f181.google.com [209.85.213.181])
+	(Authenticated sender: b93043)
+	by smtp.csie.ntu.edu.tw (Postfix) with ESMTPSA id 26492207A2
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 22:50:14 +0800 (CST)
+Received: by igvi1 with SMTP id i1so130890191igv.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 07:50:12 -0700 (PDT)
 MIME-Version: 1.0
-To: David Binderman <dcb314@hotmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-4.2-rc1/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c:2183:
- bad expression ?
-References: <DUB128-W77C11FFEB09B442BD8C9229C910@phx.gbl>
-In-Reply-To: <DUB128-W77C11FFEB09B442BD8C9229C910@phx.gbl>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <CAGb2v65aLaHarHym6XQN_uz5nNiU8SMCuhVZ+GJ3_FVmRqk4uQ@mail.gmail.com>
+References: <1436256435-25048-1-git-send-email-wens@csie.org>
+ <20150707205418.GC369@ubuntu-xps13> <CAGb2v67gw=Z32fLGzKP2S0OGf-fQPhCLEZdt4v5yZuRAvSis7g@mail.gmail.com>
+ <CAGb2v65qjqLEaChkQDNYaZY7dnA3=DVVrAKQnR-wtggKQj5_+g@mail.gmail.com>
+ <20150709151555.GB142895@ubuntu-hedt> <CAGb2v64D9-1WL_Z5K1+4eq1c57UCMtEW1bXoMJM1NAQr25qLUw@mail.gmail.com>
+ <CAGb2v65aLaHarHym6XQN_uz5nNiU8SMCuhVZ+GJ3_FVmRqk4uQ@mail.gmail.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Wed, 22 Jul 2015 22:49:53 +0800
+Message-ID: <CAGb2v67YxmzD4uLXaWou57eVTSB9t8gSv0ZAue27Vrtf+eZJmw@mail.gmail.com> (sfid-20150722_165022_698155_BD85023C)
+Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Taiwan (TW)
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	wireless-regdb <wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/2015 03:41 AM, David Binderman wrote:
-> Hello there,
+On Wed, Jul 22, 2015 at 3:56 PM, Chen-Yu Tsai <wens@csie.org> wrote:
+> On Wed, Jul 22, 2015 at 3:40 PM, Chen-Yu Tsai <wens@csie.org> wrote:
+>> On Thu, Jul 9, 2015 at 11:15 PM, Seth Forshee
+>> <seth.forshee@canonical.com> wrote:
+>>> On Wed, Jul 08, 2015 at 11:07:20AM +0800, Chen-Yu Tsai wrote:
+>>>> > Thanks. I think there should be a written document about what the
+>>>> > rules should be like, or what is expected:
+>>>> >
+>>>> >   1. WiFi channel boundaries or band boundaries
+>>>> >   2. peak output power or peak power spectral density
+>>>> >
+>>>> > In http://lists.infradead.org/pipermail/wireless-regdb/2015-July/000856.html
+>>>> > you mentioned the software is smart enough to work out how to combine
+>>>> > different bands and what channels to use, so I see no reason to explicitly
+>>>> > chop up contiguous spectrum, unless there are explicit rules forbidding
+>>>> > combined use of bands with different regulatory rules. AFAIK the FCC
+>>>> > only requires one to satisfy all rules when usage crosses band boundaries.
+>>>> >
+>>>> > http://lists.infradead.org/pipermail/wireless-regdb/2015-July/000857.html
+>>>> > also raises a similar question.
+>>>
+>>> I was really commenting about the transmit power updates in your patch.
+>>> I just compared the frequency changes to the documentation you linked to
+>>> and those do look okay to me.
+>>
+>> I see.
+>>
+>>>> >> I would however consider an update for 5.15-5.25 GHz and 5.6-5.65 GHz
+>>>> >> provided that there's official documentation to substantiate the change.
+>>>> >> I unfortunately cannot read Chinese, so I would need some assistance to
+>>>> >> confirm the documentation.
+>>>> >
+>>>> > I could possibly ask around, though I'm not optimistic. The "official"
+>>>> > documents are just transcripts from NCC hosted Q&A sessions regarding
+>>>> > the latest regulations. Proposals/questions are submitted by vendors,
+>>>> > and the NCC responds and puts together an aggregated transcript.
+>>>>
+>>>> Just got off the phone with the NCC. Their position is, spectrum allocation
+>>>> is not within their purview, but the Ministry of Transportation and
+>>>> Communications. As noted in the patch, they have already opened up the
+>>>> spectrum to U-NII and low power radio usage. What remains is that the
+>>>> NCC revise its testing standards. Until then, their position is that,
+>>>> since their testing standards are modeled after FCC standards, vendors
+>>>> can just test under FCC standards, then convert the reports into LP0002
+>>>> format, and cite the FCC test report.
+>>>>
+>>>> There is no formal English version of the Q&A transcript, at least not
+>>>> until some foreign testing body requests it. The person in charge just
+>>>> asked me to translate it myself...
+>>>
+>>> If you send a patch which updates only the frequencies I would likely
+>>> apply that after allowing a week or so for others to either ack or nack
+>>> it (and running the stuff you linked to through google translate and
+>>> seeing if I could make any sense of the output).
+>>
+>> Got it.
+>>
+>>> I think the power updates are probably based on a misunderstanding, and
+>>> may not even be completely correct. For the most part after they've been
+>>> converted to EIRP (eirp = 10 * log10(mW)) they don't turn out to be
+>>> substantially different than what we have now. I think the value in
+>>> 5250-5350 MHz is probably incorrect however. Based on my quick skim of
+>>> the document you linked to it should be 50 mW rather than 250. 50 mW
+>>> also roughly matches to the 17 dBm which is in the database today,
+>>> whereas 250 mW is closer to 24 dBm.
+>>
+>> Yes. About the first part, it seems dbparse.py converts values in mW
+>> into EIRP anyway. However I don't think EIRT equals "peak power spectral
+>> density".
 >
-> [linux-4.2-rc1/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c:2183]: (style) Expression '(X & 0xfc) == 0x3' is always false.
->
-> Source code is
->
->     if ((bt_msr & 0xfc) == MSR_AP)
+> Sorry, this part applies to the US rules, not part of this patch.
 
-Thanks for the report. A fix was just submitted listing you as the Reporter.
+I just realized that what I misunderstood as PSD was the fact that no one
+had updated the power limits of U-NII-1 for the US. I've added such a patch
+to my series.
 
-Larry
+Sorry for the noise.
 
-
+>> About the second part, yes the current values match the ones in LP0002.
+>> However as I stated, the regulatory body has explicitly allowed certifying
+>> under the latest FCC rules, which effectively raises the limits from
+>> 50 mW to 250 mW.
+>>
+>>> My suggestion would be update the frequencies but not the existing
+>>> transmit power limits, unless you discover that any of the power limits
+>>> are definitely incorrect.
+>>
+>> I'll split up the patch into 3:
+>>
+>>   1. Add the new 5150 - 5250 frequency band, using current LP0002
+>>      limits if any, otherwise FCC limits.
+>>
+>>   2. Tweak frequency boundaries for the remaining bands to make
+>>      them contiguous and properly reflect the regulations rather
+>>      than the WiFi channel frequencies.
+>>
+>>   3. Update power limits and DFS requirements to latest FCC standards.
+>>
+>> Each patch will then explain why and how the regulations changed
+>> along with references, in English if available.
+>>
+>> You can then decide on whether to merge all three or just the first
+>> two.
+>>
+>>
+>> Regards
+>> ChenYu
