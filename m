@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:33412 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755016AbbGYOcd (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27451 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964841AbbGVLyY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2015 10:32:33 -0400
-Received: by wicmv11 with SMTP id mv11so91732169wic.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2015 07:32:32 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [RFC 0/4] mac80211: define VHT rate mask logic
-Date: Sat, 25 Jul 2015 16:32:25 +0200
-Message-Id: <1437834749-23765-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150725_163241_712242_F81024B0)
+	Wed, 22 Jul 2015 07:54:24 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6MBnm6O028385
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 04:54:23 -0700
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1vqm5jkw4t-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 04:54:23 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Zhaoyang Liu <liuzy@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 3/4] mwifiex: fix system crash observed during initialisation
+Date: Wed, 22 Jul 2015 04:53:44 -0700
+Message-ID: <1437566025-3324-3-git-send-email-akarwar@marvell.com> (sfid-20150722_135432_816507_E61478A6)
+In-Reply-To: <1437566025-3324-1-git-send-email-akarwar@marvell.com>
+References: <1437566025-3324-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to mask vht rates using ratemask configured by the user through
-iw command (e.g. iw dev wlan0 set bitrates vht-mcs-5 2:2,4).
-Remove ieee80211_tx_rate dependency in rate mask code in order to use
-mcs/legacy rate mask logic for station rate table as well.
-This patchset has been tested using mac80211/mt76 driver on
-Buffalo WHR-1166D router running OpenWrt trunk
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-Lorenzo Bianconi (4):
-  mac80211: remove ieee80211_tx_info from rate_control_apply_mask
-    signature
-  mac80211: remove ieee80211_tx_rate dependency in rate mask code
-  mac80211: define rate_control_apply_mask_ratetbl()
-  mac80211: add rate mask logic for vht rates
+System crash was observed if one of the driver initialisation
+commands is timed out. The reason is our timeout handler triggers
+firmware dump, meanwhile driver initialisation error paths have
+already freed the adapter structure.
 
- net/mac80211/cfg.c            |  16 ++-
- net/mac80211/debugfs_netdev.c |  34 ++++++
- net/mac80211/ieee80211_i.h    |   5 +
- net/mac80211/iface.c          |  14 ++-
- net/mac80211/rate.c           | 251 ++++++++++++++++++++++++++++++------------
- net/mac80211/vht.c            |  27 +++++
- 6 files changed, 271 insertions(+), 76 deletions(-)
+Firmware hasn't yet completely initialized. So collecting firmware
+dump is not needed in this case. Command timeout handler is
+modified in this patch to fix the crash issue.
 
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 207da40..dbfbbdf 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -993,8 +993,10 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+ 			mwifiex_cancel_pending_ioctl(adapter);
+ 		}
+ 	}
+-	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
++	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING) {
+ 		mwifiex_init_fw_complete(adapter);
++		return;
++	}
+ 
+ 	if (adapter->if_ops.device_dump)
+ 		adapter->if_ops.device_dump(adapter);
 -- 
-2.1.4
+1.8.1.4
 
