@@ -1,53 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49793 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750842AbbG0HNF (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:36568 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752743AbbGVSRz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 03:13:05 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wifi freezing (module mwifiex)
-Date: Mon, 27 Jul 2015 07:13:00 +0000
-Message-ID: <0e2dc4e2bd9f4486979cedb4c47e60f2@SC-EXCH04.marvell.com> (sfid-20150727_091309_529170_8D92A22D)
-References: <871tfzast5.fsf@free.fr>
-In-Reply-To: <871tfzast5.fsf@free.fr>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 22 Jul 2015 14:17:55 -0400
+Received: by wicgb10 with SMTP id gb10so109877025wic.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:54 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 11/15] staging: vt6655: Fix wReqCount to __le16
+Date: Wed, 22 Jul 2015 19:16:43 +0100
+Message-Id: <1437589007-5479-11-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201804_332914_8923DA47)
+In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSnVsaWVuLA0KDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9y
-ZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
-aGFsZiBPZiBKdWxpZW4gQ3ViaXpvbGxlcw0KPiBTZW50OiBUaHVyc2RheSwgSnVseSAyMywgMjAx
-NSA3OjE4IFBNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVj
-dDogd2lmaSBmcmVlemluZyAobW9kdWxlIG13aWZpZXgpDQo+IA0KPiBJJ20gcnVubmluZyB2YW5p
-bGxhIGtlcm5lbCA0LjIuMC1yYzMgb24gYSBNaWNyb3NvZnQgU3VyZmFjZSBQcm8uIFRoZQ0KPiB3
-aWZpIChtb2R1bGUgbXdpZmlleCkgZnJlZXplcyB0aGUgd2hvbGUgc3lzdGVtIGFmdGVyIGEgZmV3
-IHNlY29uZHMgb2YNCj4gdXNlLiBUaGUgcHJvYmxlbSBhcHBlYXJlZCBhcm91bmQga2VybmVsIDMu
-MTkuDQo+IA0KPiBJJ3ZlIHRyaWVkIHRvIGdldCBzb21lIGRlYnVnIGluZm8gd2l0aCB0aGUgZHlu
-YW1pYyBkZWJ1Z2dpbmcgbWV0aG9kLA0KPiB1c2luZyB0aGUgZm9sbG93aW5nOg0KPiANCj4gLS04
-PC0tLS0tLS0tLS0tLS0tLWN1dCBoZXJlLS0tLS0tLS0tLS0tLS0tc3RhcnQtLS0tLS0tLS0tLS0t
-PjgtLS0NCj4gZWNobyAibW9kdWxlIG13aWZpZXggK3AiID4gL3N5cy9rZXJuZWwvZGVidWcvZHlu
-YW1pY19kZWJ1Zy9jb250cm9sDQo+IGVjaG8gIm1vZHVsZSBtd2lmaWV4X3NkaW8gK3AiID4gL3N5
-cy9rZXJuZWwvZGVidWcvZHluYW1pY19kZWJ1Zy9jb250cm9sDQo+IGVjaG8gIm1vZHVsZSBtd2lm
-aWV4X3BjaWUgK3AiID4gL3N5cy9rZXJuZWwvZGVidWcvZHluYW1pY19kZWJ1Zy9jb250cm9sDQo+
-IGVjaG8gIm1vZHVsZSBtd2lmaWV4X3VzYiArcCIgPiAvc3lzL2tlcm5lbC9kZWJ1Zy9keW5hbWlj
-X2RlYnVnL2NvbnRyb2wNCj4gLS04PC0tLS0tLS0tLS0tLS0tLWN1dCBoZXJlLS0tLS0tLS0tLS0t
-LS0tZW5kLS0tLS0tLS0tLS0tLS0tPjgtLS0NCj4gDQo+IGFuZCBnZXR0aW5nIHRoZSBtZXNzYWdl
-cyB3aXRoDQo+IA0KPiAtLTg8LS0tLS0tLS0tLS0tLS0tY3V0IGhlcmUtLS0tLS0tLS0tLS0tLS1z
-dGFydC0tLS0tLS0tLS0tLS0+OC0tLQ0KPiB3aGlsZSB0cnVlOyBkbyBkbWVzZyAtYyA+PiBtd2lm
-aWV4X2xvZ3MudHh0OyBzbGVlcCAxOyBkb25lICYNCj4gLS04PC0tLS0tLS0tLS0tLS0tLWN1dCBo
-ZXJlLS0tLS0tLS0tLS0tLS0tZW5kLS0tLS0tLS0tLS0tLS0tPjgtLS0NCj4gDQo+IHVudGlsIHRo
-ZSBzeXN0ZW0gZnJlZXplcy4NCj4gDQo+IFN1cnByaXNpbmdseSwgdGhlcmUgYXJlIHZlcnkgZmV3
-IG1lc3NhZ2VzIHJlbGF0ZWQgdG8gbXdpZmlleCAoc2VlIHRoZQ0KPiBmb2xsb3dpbmcgbG9ncyku
-IElzIHRoZXJlIHNvbWV0aGluZyB3cm9uZyB3aXRoIHRoZSBkeW5hbWljIGRlYnVnZ2luZ8KgPw0K
-PiBXaGF0IG90aGVyIGluZm9ybWF0aW9uIGNvdWxkIEkgcHJvdmlkZcKgPw0KPiANCg0KVGhhbmtz
-IGZvciByZXBvcnRpbmcgdGhlIHByb2JsZW0uIFdlIG5vdyBoYXZlIGEgc2VwYXJhdGUgbWVjaGFu
-aXNtIGZvciBkZWJ1ZyBsb2dzIGFuZCBkb24ndCBzdXBwb3J0IGR5bmFtaWMgZGVidWdnaW5nIGFu
-eW1vcmUuDQpJc3N1ZSBiZWxvdyBjb21tYW5kIHRvIGVuYWJsZSBsb2dzIGFuZCBzaGFyZSB0aGVt
-Lg0KDQoiZWNobyAweGZmZmZmZmZmID4gL3N5cy9rZXJuZWwvZGVidWcvbXdpZmlleC9tbGFuMC9k
-ZWJ1Z19tYXNrIg0KDQpEbyB5b3UgaGF2ZSBmb2xsb3dpbmcgVVNCIGNoaXBzZXQgc3BlY2lmaWMg
-Zml4ZXMgaW5jbHVkZWQ/DQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVs
-ZXNzL21zZzEyOTEyOS5odG1sDQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL25ldGRldi9t
-c2czMzQzNjcuaHRtbA0KDQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
+Should be __le16 and do and correct endian conversion.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c | 8 ++++----
+ drivers/staging/vt6655/desc.h | 6 +++---
+ drivers/staging/vt6655/dpc.c  | 2 +-
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index df62bdc..ae8fd7f 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -573,17 +573,17 @@ CARDvSafeResetRx(
+ 	/* init state, all RD is chip's */
+ 	for (uu = 0; uu < pDevice->sOpts.nRxDescs0; uu++) {
+ 		pDesc = &(pDevice->aRD0Ring[uu]);
+-		pDesc->m_rd0RD0.wResCount = (unsigned short)(pDevice->rx_buf_sz);
++		pDesc->m_rd0RD0.wResCount = cpu_to_le16(pDevice->rx_buf_sz);
+ 		pDesc->m_rd0RD0.f1Owner = OWNED_BY_NIC;
+-		pDesc->m_rd1RD1.wReqCount = (unsigned short)(pDevice->rx_buf_sz);
++		pDesc->m_rd1RD1.wReqCount = cpu_to_le16(pDevice->rx_buf_sz);
+ 	}
+ 
+ 	/* init state, all RD is chip's */
+ 	for (uu = 0; uu < pDevice->sOpts.nRxDescs1; uu++) {
+ 		pDesc = &(pDevice->aRD1Ring[uu]);
+-		pDesc->m_rd0RD0.wResCount = (unsigned short)(pDevice->rx_buf_sz);
++		pDesc->m_rd0RD0.wResCount = cpu_to_le16(pDevice->rx_buf_sz);
+ 		pDesc->m_rd0RD0.f1Owner = OWNED_BY_NIC;
+-		pDesc->m_rd1RD1.wReqCount = (unsigned short)(pDevice->rx_buf_sz);
++		pDesc->m_rd1RD1.wReqCount = cpu_to_le16(pDevice->rx_buf_sz);
+ 	}
+ 
+ 	/* set perPkt mode */
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index 251f7bc..f6563d3 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -175,7 +175,7 @@ typedef struct tagDEVICE_RD_INFO {
+ #ifdef __BIG_ENDIAN
+ 
+ typedef struct tagRDES0 {
+-	volatile unsigned short wResCount;
++	volatile __le16 wResCount;
+ 	union {
+ 		volatile u16    f15Reserved;
+ 		struct {
+@@ -190,7 +190,7 @@ SRDES0, *PSRDES0;
+ #else
+ 
+ typedef struct tagRDES0 {
+-	unsigned short wResCount;
++	__le16         wResCount;
+ 	unsigned short f15Reserved:15;
+ 	unsigned short f1Owner:1;
+ } __attribute__ ((__packed__))
+@@ -199,7 +199,7 @@ SRDES0;
+ #endif
+ 
+ typedef struct tagRDES1 {
+-	unsigned short wReqCount;
++	__le16	       wReqCount;
+ 	unsigned short wReserved;
+ } __attribute__ ((__packed__))
+ SRDES1;
+diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
+index b25ee96..e14eed1 100644
+--- a/drivers/staging/vt6655/dpc.c
++++ b/drivers/staging/vt6655/dpc.c
+@@ -144,7 +144,7 @@ bool vnt_receive_frame(struct vnt_private *priv, PSRxDesc curr_rd)
+ 			 priv->rx_buf_sz, DMA_FROM_DEVICE);
+ 
+ 	frame_size = le16_to_cpu(curr_rd->m_rd1RD1.wReqCount)
+-			- cpu_to_le16(curr_rd->m_rd0RD0.wResCount);
++			- le16_to_cpu(curr_rd->m_rd0RD0.wResCount);
+ 
+ 	if ((frame_size > 2364) || (frame_size < 33)) {
+ 		/* Frame Size error drop this packet.*/
+-- 
+2.1.4
+
