@@ -1,84 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9662 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751842AbbGALSZ (ORCPT
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:35593 "EHLO
+	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815AbbGVUiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 07:18:25 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Raja Mani <rmani@qti.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 1/8] ath10k: enhance swba event handler to adapt different size tim bitmap
-References: <1434984747-24294-1-git-send-email-rmani@qti.qualcomm.com>
-	<1434984747-24294-2-git-send-email-rmani@qti.qualcomm.com>
-	<87h9poxjvs.fsf@kamboji.qca.qualcomm.com>
-	<87d20cxjc0.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 1 Jul 2015 14:18:15 +0300
-In-Reply-To: <87d20cxjc0.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Wed, 1 Jul 2015 13:28:47 +0300")
-Message-ID: <87zj3gw2h4.fsf@kamboji.qca.qualcomm.com> (sfid-20150701_131828_329748_52CDEE25)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 22 Jul 2015 16:38:46 -0400
+Received: by qkbm65 with SMTP id m65so107057233qkb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 13:38:45 -0700 (PDT)
+From: Marty Faltesek <mfaltesek@google.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, dgentry@google.com,
+	apenwarr@google.com
+Subject: [PATCH v2] ath10k: Improve performance by reducing tx_lock contention.
+Date: Wed, 22 Jul 2015 16:38:24 -0400
+Message-Id: <1437597504-25554-1-git-send-email-mfaltesek@google.com> (sfid-20150722_223852_206070_B892A016)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Qi Zhou <qizhou@google.com>
 
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->>>  	/* if next SWBA has no tim_changed the tim_bitmap is garbage.
->>>  	 * we must copy the bitmap upon change and reuse it later */
->>>  	if (__le32_to_cpu(tim_info->tim_changed)) {
->>>  		int i;
->>>  
->>> -		BUILD_BUG_ON(sizeof(arvif->u.ap.tim_bitmap) !=
->>> -			     sizeof(tim_info->tim_bitmap));
->>> +		WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->>
->> I'm worried that this WARN_ON() spams too much so I changed it to:
->>
->> --- a/drivers/net/wireless/ath/ath10k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
->> @@ -2893,7 +2893,7 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
->>         if (__le32_to_cpu(tim_info->tim_changed)) {
->>                 int i;
->>  
->> -               WARN_ON(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->> +               WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->>  
->>                 for (i = 0; i < tim_len; i++) {
->>                         t = tim_info->tim_bitmap[i / 4];
->
-> Actually I got more worried about this. If tim_len >
-> sizeof(arvif->u.ap.tim_bitmap) don't we read out of bounds? So we should
-> actually add return for that case or am I missing something?
->
-> Full code:
->
-> 		WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
->
-> 		for (i = 0; i < tim_len; i++) {
-> 			t = tim_info->tim_bitmap[i / 4];
-> 			v = __le32_to_cpu(t);
-> 			arvif->u.ap.tim_bitmap[i] = (v >> ((i % 4) * 8)) & 0xFF;
-> 		}
+During tx completion, tx_lock is held for longer than required, preventing
+efficient refill of htt->pending_tx. Refactor the code so that only MSDU
+related operations are protected by the lock.
 
-I talked with Raja and I changed this now to:
+Improves downstream performance on a dual-core ARM Freescale LS1024A
+(f.k.a. Mindspeed Comcerto 2000) AP with a 3x3 client from 495 to 580 Mbps.
+Other CPU bound multicore systems may also benefit.
 
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2893,7 +2893,11 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
-        if (__le32_to_cpu(tim_info->tim_changed)) {
-                int i;
+Signed-off-by: Denton Gentry <dgentry@google.com>
+Signed-off-by: Avery Pennarun <apenwarr@google.com>
+[mfaltesek@google.com: removed conflicting code for tracking msdu_ids.]
+Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++----------
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  8 ++------
+ drivers/net/wireless/ath/ath10k/txrx.c   | 17 ++++++++---------
+ 3 files changed, 12 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 89eb16b..79e68fa 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1633,8 +1633,6 @@ static void ath10k_htt_rx_frm_tx_compl(struct ath10k *ar,
+ 	__le16 msdu_id;
+ 	int i;
  
--               WARN_ON_ONCE(sizeof(arvif->u.ap.tim_bitmap) < tim_len);
-+               if (sizeof(arvif->u.ap.tim_bitmap) < tim_len) {
-+                       ath10k_warn(ar, "SWBA TIM field is too big (%d), truncated it to %d",
-+                                   tim_len, sizeof(arvif->u.ap.tim_bitmap));
-+                       tim_len = sizeof(arvif->u.ap.tim_bitmap);
-+               }
+-	lockdep_assert_held(&htt->tx_lock);
+-
+ 	switch (status) {
+ 	case HTT_DATA_TX_STATUS_NO_ACK:
+ 		tx_done.no_ack = true;
+@@ -2000,15 +1998,11 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 			break;
+ 		}
  
-                for (i = 0; i < tim_len; i++) {
-                        t = tim_info->tim_bitmap[i / 4];
-
+-		spin_lock_bh(&htt->tx_lock);
+ 		ath10k_txrx_tx_unref(htt, &tx_done);
+-		spin_unlock_bh(&htt->tx_lock);
+ 		break;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
+-		spin_lock_bh(&htt->tx_lock);
+-		__skb_queue_tail(&htt->tx_compl_q, skb);
+-		spin_unlock_bh(&htt->tx_lock);
++		skb_queue_tail(&htt->tx_compl_q, skb);
+ 		tasklet_schedule(&htt->txrx_compl_task);
+ 		return;
+ 	case HTT_T2H_MSG_TYPE_SEC_IND: {
+@@ -2093,12 +2087,10 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 	struct htt_resp *resp;
+ 	struct sk_buff *skb;
+ 
+-	spin_lock_bh(&htt->tx_lock);
+-	while ((skb = __skb_dequeue(&htt->tx_compl_q))) {
++	while ((skb = skb_dequeue(&htt->tx_compl_q))) {
+ 		ath10k_htt_rx_frm_tx_compl(htt->ar, skb);
+ 		dev_kfree_skb_any(skb);
+ 	}
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	spin_lock_bh(&htt->rx_ring.lock);
+ 	while ((skb = __skb_dequeue(&htt->rx_compl_q))) {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index a60ef7d..262d657 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -112,9 +112,7 @@ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
+ 	tx_done.discard = 1;
+ 	tx_done.msdu_id = msdu_id;
+ 
+-	spin_lock_bh(&htt->tx_lock);
+ 	ath10k_txrx_tx_unref(htt, &tx_done);
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	return 0;
+ }
+@@ -355,12 +353,11 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 
+ 	spin_lock_bh(&htt->tx_lock);
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
++	spin_unlock_bh(&htt->tx_lock);
+ 	if (res < 0) {
+-		spin_unlock_bh(&htt->tx_lock);
+ 		goto err_tx_dec;
+ 	}
+ 	msdu_id = res;
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	txdesc = ath10k_htc_alloc_skb(ar, len);
+ 	if (!txdesc) {
+@@ -429,12 +426,11 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 
+ 	spin_lock_bh(&htt->tx_lock);
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
++	spin_unlock_bh(&htt->tx_lock);
+ 	if (res < 0) {
+-		spin_unlock_bh(&htt->tx_lock);
+ 		goto err_tx_dec;
+ 	}
+ 	msdu_id = res;
+-	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+ 	prefetch_len = roundup(prefetch_len, 4);
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 826500b..40a8083 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -53,8 +53,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	struct ath10k_skb_cb *skb_cb;
+ 	struct sk_buff *msdu;
+ 
+-	lockdep_assert_held(&htt->tx_lock);
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+ 		   "htt tx completion msdu_id %u discard %d no_ack %d success %d\n",
+ 		   tx_done->msdu_id, !!tx_done->discard,
+@@ -66,12 +64,19 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		return;
+ 	}
+ 
++	spin_lock_bh(&htt->tx_lock);
+ 	msdu = idr_find(&htt->pending_tx, tx_done->msdu_id);
+ 	if (!msdu) {
+ 		ath10k_warn(ar, "received tx completion for invalid msdu_id: %d\n",
+ 			    tx_done->msdu_id);
++		spin_unlock_bh(&htt->tx_lock);
+ 		return;
+ 	}
++	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
++	__ath10k_htt_tx_dec_pending(htt);
++	if (htt->num_pending_tx == 0)
++		wake_up(&htt->empty_tx_wq);
++	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	skb_cb = ATH10K_SKB_CB(msdu);
+ 
+@@ -90,7 +95,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ 	if (tx_done->discard) {
+ 		ieee80211_free_txskb(htt->ar->hw, msdu);
+-		goto exit;
++		return;
+ 	}
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+@@ -104,12 +109,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ 	ieee80211_tx_status(htt->ar->hw, msdu);
+ 	/* we do not own the msdu anymore */
+-
+-exit:
+-	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+-	__ath10k_htt_tx_dec_pending(htt);
+-	if (htt->num_pending_tx == 0)
+-		wake_up(&htt->empty_tx_wq);
+ }
+ 
+ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
 -- 
-Kalle Valo
+2.4.3.573.g4eafbef
+
