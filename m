@@ -1,101 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:41020 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751700AbbGIIOA (ORCPT
+Received: from mo4-p05-ob.smtp.rzone.de ([81.169.146.183]:63523 "EHLO
+	mo4-p05-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755678AbbGVEB1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 04:14:00 -0400
-From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
-To: Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arch@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
-Subject: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
-Date: Thu, 9 Jul 2015 13:43:18 +0530
-Message-ID: <1436429599-10762-3-git-send-email-vgupta@synopsys.com> (sfid-20150709_101512_386844_1FBC5A11)
-In-Reply-To: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
-References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
+	Wed, 22 Jul 2015 00:01:27 -0400
+Date: Wed, 22 Jul 2015 06:01:24 +0200
+From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+To: Taahir Ahmed <ahmed.taahir@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] Support python 3 in utils/key2pub.py.
+Message-ID: <20150722060124.250c6f2c@mir> (sfid-20150722_060131_817811_A22F62B4)
+In-Reply-To: <2988720.J8nzy94PWW@basis>
+References: <1437525466-27512-1-git-send-email-ahmed.taahir@gmail.com>
+	<1437525466-27512-2-git-send-email-ahmed.taahir@gmail.com>
+	<20150722045045.30642c25@mir>
+	<2988720.J8nzy94PWW@basis>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's already a generic implementation so use that instead.
----
-I'm not sure if the driver usage of atomic_or?() is correct in terms of
-storage size of @val for 64 bit arches.
+Hi
 
-Assuming LP64 programming model for linux on say x86_64: atomic_or()
-callers in this driver use long (sana 64 bit) storage and pass it to
-atomic_orr/atomic_or which downcasts it to 32 bits. Is that OK ?
----
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Cc: Daniel Kim <dekim@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list@broadcom.com
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: netdev@vger.kernel.org
-Cc: linux-arch@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+On 2015-07-21, Taahir Ahmed wrote:
+> On Wednesday 22 July 2015 04:50:45 Stefan Lippers-Hollmann wrote:
+> > You omit $(pwd) from ./utils/key2pub.py, while /utils/key2pub.py
+> > won't exist.
+> 
+> Wow, that's a really bad mistake on my part.  It should indeed probably
+> be './utils/key2pub.py'.  I made this change after my general testing,
+> simply because emacs was undoing the execute bit every time I saved
+> key2pub.py.
+> 
+> It's not really a material change, so I'll probably just put it back the
+> way it was.
+> 
+> The rest of the patch is tested, I pinky-swear :)
+>  
+> > As little as I know about python packaging policies in Debian
+> > (and probably Fedora), /usr/bin/python is never supposed to point
+> > to python3 - afaik the interpreter should always be called python3
+> > there, so I don't really see how that's going to work there.
+> 
+> I'm not assuming that the system interpreter is any particular version:
+> key2pub.py has been modified so it runs under either 2.7 or 3.x.
+> 
+> Some more simplification might be possible if 2.7 support is dropped,
+> but not much, and I didn't want to rock the boat.
 
-Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+The problem, as I understand it, is that the python3 interpreter will
+never be available as (/usr/bin/)python on Debian (or Fedora; even if
+python2.x is not installed on the system), but always be called python3. 
+So your new python3 compatibility is never actually used, neither on a 
+python3-only system.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index d36f5f3d931b..f990e3d0e696 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -2564,15 +2564,6 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
- 	}
- }
- 
--static void atomic_orr(int val, atomic_t *v)
--{
--	int old_val;
--
--	old_val = atomic_read(v);
--	while (atomic_cmpxchg(v, old_val, val | old_val) != old_val)
--		old_val = atomic_read(v);
--}
--
- static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- {
- 	struct brcmf_core *buscore;
-@@ -2595,7 +2586,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	if (val) {
- 		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
- 		bus->sdcnt.f1regdata++;
--		atomic_orr(val, &bus->intstatus);
-+		atomic_or(val, &bus->intstatus);
- 	}
- 
- 	return ret;
-@@ -2712,7 +2703,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 
- 	/* Keep still-pending events for next scheduling */
- 	if (intstatus)
--		atomic_orr(intstatus, &bus->intstatus);
-+		atomic_or(intstatus, &bus->intstatus);
- 
- 	brcmf_sdio_clrintr(bus);
- 
--- 
-1.9.1
+Therefore I'd suggest this approach instead, either make the python
+interpreter user configurable, e.g.:
 
+PYTHON ?= python
+
+so the user can specify the interpreter when invoking make (as in
+make PYTHON=python3), xor trying to auto-detect it (untested):
+
+ifeq ($(shell which python3),)
+  PYTHON = python
+else
+  PYTHON = python3
+endif
+
+and then using 
+
+$(Q) $(PYTHON) ./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
+
+wherever python is needed.
+
+Regards
+	Stefan Lippers-Hollmann
