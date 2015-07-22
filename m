@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:34100 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753909AbbG0Wac (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57682 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754968AbbGVGHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 18:30:32 -0400
-Received: by lafd3 with SMTP id d3so47412333laf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 15:30:31 -0700 (PDT)
+	Wed, 22 Jul 2015 02:07:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
+References: <20150722103239.04995fda@canb.auug.org.au>
+Date: Wed, 22 Jul 2015 09:07:05 +0300
+In-Reply-To: <20150722103239.04995fda@canb.auug.org.au> (Stephen Rothwell's
+	message of "Wed, 22 Jul 2015 10:32:39 +1000")
+Message-ID: <871tg0n2t2.fsf@kamboji.qca.qualcomm.com> (sfid-20150722_080738_302862_A0BA3E0D)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
- <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Tue, 28 Jul 2015 00:30:11 +0200
-Message-ID: <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com> (sfid-20150728_003036_118253_AACFF458)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Adrian,
+Hi Stephen,
 
-On Mon, Jul 27, 2015 at 9:13 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> I wonder if this is a mis-merge on my part (I'm the freebsd maintainer.)
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
+
+> After merging the wireless-drivers-next tree, today's linux-next build
+> (x86_64 allmodconfig) failed like this:
 >
-> can you log the noisefloor calibrated values before and after the
-> patch? I'd like to see how low it calibrrates to.
-Sure, I hope dump_nfcal provides all values you need.
+> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
+>
+> Caused by commit
+>
+>   cae761b5a6bd ("bcma: populate bus DT subnodes as platform_device-s")
+>
+> I have used the wireless-drivers-next tree from next-20150721 for today.
 
-result with my patch applied (HT20):
-# cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
-Channel Noise Floor : -95
-Chain | privNF | # Readings | NF Readings
-0       -106    5               -110 -105 -109 -106 -106
-1       -97     5               -97 -97 -97 -97 -97
+Sorry about that.
 
-Result before my patch (HT20):
-# cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
-Channel Noise Floor : -91
-Chain | privNF | # Readings | NF Readings
-0 -120 0
-1 -120 0
+Rafal, can you please send a patch to fix this? I'll apply it ASAP.
 
-Result before my patch (HT40):
-# cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
-Channel Noise Floor : -91
-Chain | privNF | # Readings | NF Readings
-0 -110 5 -110 -110 -110 -110 -110
-1 -110 5 -110 -110 -110 -110 -110
-3 -110 5 -110 -110 -110 -110 -110
-4 -110 5 -110 -110 -110 -110 -110
-
-
-Let me know if this helps you or if you need more information.
-
-
-Regards,
-Martin
+-- 
+Kalle Valo
