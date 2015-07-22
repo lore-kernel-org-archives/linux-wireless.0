@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:34640 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119AbbGaFcc (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:37317 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752724AbbGVSRw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 01:32:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <1438319755-7438-1-git-send-email-shraddha.6596@gmail.com>
-References: <1438319755-7438-1-git-send-email-shraddha.6596@gmail.com>
-Date: Fri, 31 Jul 2015 11:02:30 +0530
-Message-ID: <CAK-LDbJi8VeQAmK4AaCoD4RqOW09b-vOzJfLJwHVQDFh7oYZ0A@mail.gmail.com> (sfid-20150731_073248_680418_F13508ED)
-Subject: Re: [PATCH] Staging:wilc1000 :Remove braces for single statement blocks
-From: Vaishali Thakkar <vthakkar1994@gmail.com>
-To: Shraddha Barke <shraddha.6596@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Jul 2015 14:17:52 -0400
+Received: by wibud3 with SMTP id ud3so184807848wib.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:51 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/15] staging: vt6655: Fix tagSRxDesc -> buff_addr type
+Date: Wed, 22 Jul 2015 19:16:41 +0100
+Message-Id: <1437589007-5479-9-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201759_096841_CBF4A640)
+In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 Jul 2015 10:49, "Shraddha Barke" <shraddha.6596@gmail.com> wrote:
->
-> This patch fixes the following checkpatch.pl warning:
->
-> WARNING: braces {} are not necessary for single statement blocks
+Should always be __le32.
 
-There should be one line space between your commit log
-and Signed-off-by line.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/desc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index 4d5bd1c..1143282 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -1055,10 +1055,8 @@ s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults)
->  {
->         s32 s32Error = WILC_SUCCESS;
->
-> -       if (pstrSurveyResults != NULL) {
-> +       if (pstrSurveyResults != NULL)
->                 WILC_FREE(pstrSurveyResults);
-> -       }
-> -
->         return s32Error;
->  }
->  #endif
-> --
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index 3302d0182..42e005a 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -208,7 +208,7 @@ SRDES1;
+ typedef struct tagSRxDesc {
+ 	volatile SRDES0 m_rd0RD0;
+ 	volatile SRDES1 m_rd1RD1;
+-	volatile u32    buff_addr;
++	volatile __le32 buff_addr;
+ 	volatile u32    next_desc;
+ 	struct tagSRxDesc *next __aligned(8);
+ 	volatile PDEVICE_RD_INFO pRDInfo __aligned(8);
+-- 
+2.1.4
+
