@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:35949 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753973AbbGFL5J (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36484 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752279AbbGVSRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2015 07:57:09 -0400
-Received: by lagc2 with SMTP id c2so151561487lag.3
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2015 04:57:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CALhHN=oq2WK+YHoW7UG2eLuDPEcxusZ8mpUC3DLyVDJyNhkdzg@mail.gmail.com>
-References: <1430918911-14715-1-git-send-email-arik@wizery.com> <CALhHN=oq2WK+YHoW7UG2eLuDPEcxusZ8mpUC3DLyVDJyNhkdzg@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 6 Jul 2015 14:56:51 +0300
-Message-ID: <CA+XVXfc3OcZm+y9y4DmvKjWHPNX6aQhFQGbptpk4KhMAf9dAYg@mail.gmail.com> (sfid-20150706_135719_195045_2BB911E1)
-Subject: Re: [PATCH v2] cfg80211: change GO_CONCURRENT to IR_CONCURRENT for STA
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Jul 2015 14:17:50 -0400
+Received: by wicgb10 with SMTP id gb10so109874627wic.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:49 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 08/15] staging: vt6655: remove unused tagDEVICE_RD_INFO -> curr_desc
+Date: Wed, 22 Jul 2015 19:16:40 +0100
+Message-Id: <1437589007-5479-8-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201756_906795_3ED89B18)
+In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >         struct wireless_dev *wdev;
-> > -       struct wiphy *wiphy = wiphy_idx_to_wiphy(rdev->wiphy_idx);
-> > +       struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-> >
-> >         ASSERT_RTNL();
-> >
-> Seems after this patch we hit ASSERT_RTNL() when setup ibss (seems
-> same for MONITOR)
-> Simplest solution is move this assert after  if (iftype !=
-> NL80211_IFTYPE_P2P_GO && ...) check, but I am not sure this is the
-> best solution :)
-> Anyway cfg80211_reg_can_beacon() need clear description about RTNL
-> locking while drivers could call this ...
+variable is assigned a value that is never used.
 
-We actually have a different fix in the internal Intel tree already.
-But yea you're right :)
-I guess it should be pushed out soon (or maybe I'll push it).
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/desc.h        | 1 -
+ drivers/staging/vt6655/device_main.c | 2 --
+ 2 files changed, 3 deletions(-)
 
-Arik
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index 26cd3e1..3302d0182 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -170,7 +170,6 @@
+ typedef struct tagDEVICE_RD_INFO {
+ 	struct sk_buff *skb;
+ 	dma_addr_t  skb_dma;
+-	dma_addr_t  curr_desc;
+ } DEVICE_RD_INFO,   *PDEVICE_RD_INFO;
+ 
+ #ifdef __BIG_ENDIAN
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 7409ed2..c82bf48 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -628,7 +628,6 @@ static void device_init_rd0_ring(struct vnt_private *pDevice)
+ 			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
+ 
+ 		pDesc->next = &(pDevice->aRD0Ring[(i+1) % pDevice->sOpts.nRxDescs0]);
+-		pDesc->pRDInfo->curr_desc = cpu_to_le32(curr);
+ 		pDesc->next_desc = cpu_to_le32(curr + sizeof(SRxDesc));
+ 	}
+ 
+@@ -652,7 +651,6 @@ static void device_init_rd1_ring(struct vnt_private *pDevice)
+ 			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
+ 
+ 		pDesc->next = &(pDevice->aRD1Ring[(i+1) % pDevice->sOpts.nRxDescs1]);
+-		pDesc->pRDInfo->curr_desc = cpu_to_le32(curr);
+ 		pDesc->next_desc = cpu_to_le32(curr + sizeof(SRxDesc));
+ 	}
+ 
+-- 
+2.1.4
+
