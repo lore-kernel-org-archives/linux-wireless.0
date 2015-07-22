@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:34347 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214AbbGWAYm (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34438 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933999AbbGVAiH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 20:24:42 -0400
-Received: by iebmu5 with SMTP id mu5so179745783ieb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 17:24:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1437512677-6153-1-git-send-email-linus.walleij@linaro.org>
-References: <1437512677-6153-1-git-send-email-linus.walleij@linaro.org>
-Date: Thu, 23 Jul 2015 02:24:42 +0200
-Message-ID: <CACna6rxkPVPz9N6ueOeuxwrDuQ8rRU9XZS9FdTZP1Yqd5=4+QQ@mail.gmail.com> (sfid-20150723_022445_808352_B5DC6DBA)
-Subject: Re: [PATCH] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Felix Fietkau <nbd@openwrt.org>, Kalle Valo <kvalo@codeaurora.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 21 Jul 2015 20:38:07 -0400
+Received: by oigd21 with SMTP id d21so91988384oig.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 17:38:07 -0700 (PDT)
+Received: from localhost.localdomain (50-24-3-101.bcstcmtk01.res.dyn.suddenlink.net. [50.24.3.101])
+        by smtp.gmail.com with ESMTPSA id mu5sm15178904obc.4.2015.07.21.17.38.06
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 21 Jul 2015 17:38:06 -0700 (PDT)
+From: ahmed.taahir@gmail.com
+To: linux-wireless@vger.kernel.org
+Subject: Support Python3 in the crda buildsystem.
+Date: Tue, 21 Jul 2015 19:37:44 -0500
+Message-Id: <1437525466-27512-1-git-send-email-ahmed.taahir@gmail.com> (sfid-20150722_023812_906437_A7615ED8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 July 2015 at 23:04, Linus Walleij <linus.walleij@linaro.org> wrote:
-> This switches the BCMA GPIO driver to use GPIOLIB_IRQCHIP to
-> handle its interrupts instead of rolling its own copy of the
-> irqdomain handling etc.
->
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
-> Hi BCMA people,
->
-> if we can figure this out it would be great if you can test this
-> and merge it through whatever GIT tree handles BCMA patches.
-> Alternatively I can merge it into the GPIO tree with your ACK.
->
-> This is not even compiled, I don't have the right cross compilers
-> but the conversion is done like all other GPIOLIB_IRQCHIP conversions
-> I've done, so it shouldn't be very far off. Maybe you can get it
-> in shape in accordance with my idea if I screwed up? Thanks.
+crda's build system is one of the last packages with a hard dep on
+python-2.7 on my Gentoo system.  This patchset adapts the utility
+script 'key2pub.py' so that it will run under either Python 2.7 or
+Python 3.x.  The main change is a switch from using M2Crypto to
+PyCrypto, specifically for Python 3.x support.
 
-I'm away one my holidays, won't be able to check it anytime soon.
-Unless someone else willing to test it appears, I guess we should hold
-it for now, sorry :( I'll for sure handle this after my holidays (late
-august).
+In addition, Gentoo had a small collection of bugfix patches that were
+applied every time someone installed crda.  I've included those that
+seemed to have general applicability, as described in Patch 2.
+
