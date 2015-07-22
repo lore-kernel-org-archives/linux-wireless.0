@@ -1,100 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5349 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751846AbbGXLMQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 07:12:16 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Andreas Fenkart <afenkart@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>
-Subject: RE: [PATCH 1/4] mwifiex: remove explicit mwifiex_complete_cmd calls
-Date: Fri, 24 Jul 2015 11:12:10 +0000
-Message-ID: <758ab3b3a6f344d1abeda85b6d230823@SC-EXCH04.marvell.com> (sfid-20150724_131219_869444_C05BF964)
-References: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
- <1437117186-25243-2-git-send-email-afenkart@gmail.com>
-In-Reply-To: <1437117186-25243-2-git-send-email-afenkart@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:33609 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754AbbGVSSA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2015 14:18:00 -0400
+Received: by wicmv11 with SMTP id mv11so92409154wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:59 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 15/15] staging: vt6655: desc.h remove dead strctures
+Date: Wed, 22 Jul 2015 19:16:47 +0100
+Message-Id: <1437589007-5479-15-git-send-email-tvboxspy@gmail.com> (sfid-20150722_203715_944010_EF8D9443)
+In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
+Remove these unsed structures.
+typedef struct tagSTxSyncDesc
+typedef struct tagSRrvTime_atim
+typedef struct tagSTxBufHead
+typedef struct tagSBEACONCtl
+typedef struct tagSSecretKey
+typedef struct tagSKeyEntry
 
-> From: Andreas Fenkart [mailto:afenkart@gmail.com]
-> Sent: Friday, July 17, 2015 12:43 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Amitkumar Karwar; Kalle Valo; Andreas Fenkart
-> Subject: [PATCH 1/4] mwifiex: remove explicit mwifiex_complete_cmd calls
-> 
-> standard call chain when releasing a cmd node:
-> mwifiex_recycle_cmd_node
-> -> mwifiex_insert_cmd_to_free_q
-> -> mwifiex_complete_cmd, if wait_q_enabled
-> 
-> calling mwifiex_complete_cmd explicitly and setting wait_q_enabled =
-> false is redundant
-> 
-> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
-> ---
->  drivers/net/wireless/mwifiex/cmdevt.c | 10 ++--------
->  1 file changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/cmdevt.c
-> b/drivers/net/wireless/mwifiex/cmdevt.c
-> index 207da40..2f4715e 100644
-> --- a/drivers/net/wireless/mwifiex/cmdevt.c
-> +++ b/drivers/net/wireless/mwifiex/cmdevt.c
-> @@ -167,8 +167,6 @@ static int mwifiex_dnld_cmd_to_fw(struct
-> mwifiex_private *priv,
->  		mwifiex_dbg(adapter, ERROR,
->  			    "DNLD_CMD: FW in reset state, ignore cmd %#x\n",
->  			cmd_code);
-> -		if (cmd_node->wait_q_enabled)
-> -			mwifiex_complete_cmd(adapter, cmd_node);
->  		mwifiex_recycle_cmd_node(adapter, cmd_node);
->  		queue_work(adapter->workqueue, &adapter->main_work);
->  		return -1;
-> @@ -1024,6 +1022,7 @@ mwifiex_cancel_all_pending_cmd(struct
-> mwifiex_adapter *adapter)
->  		adapter->curr_cmd->wait_q_enabled = false;
->  		adapter->cmd_wait_q.status = -1;
->  		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
-> +		/* no recycle probably wait for response */
->  	}
->  	/* Cancel all pending command */
->  	spin_lock_irqsave(&adapter->cmd_pending_q_lock, flags); @@ -
-> 1032,11 +1031,8 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter
-> *adapter)
->  		list_del(&cmd_node->list);
->  		spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
-> 
-> -		if (cmd_node->wait_q_enabled) {
-> +		if (cmd_node->wait_q_enabled)
->  			adapter->cmd_wait_q.status = -1;
-> -			mwifiex_complete_cmd(adapter, cmd_node);
-> -			cmd_node->wait_q_enabled = false;
-> -		}
->  		mwifiex_recycle_cmd_node(adapter, cmd_node);
->  		spin_lock_irqsave(&adapter->cmd_pending_q_lock, flags);
->  	}
-> @@ -1094,10 +1090,8 @@ mwifiex_cancel_pending_ioctl(struct
-> mwifiex_adapter *adapter)
->  	    (adapter->curr_cmd->wait_q_enabled)) {
->  		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
->  		cmd_node = adapter->curr_cmd;
-> -		cmd_node->wait_q_enabled = false;
->  		cmd_node->cmd_flag |= CMD_F_CANCELED;
->  		mwifiex_recycle_cmd_node(adapter, cmd_node);
-> -		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
->  		adapter->curr_cmd = NULL;
->  		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock,
-> cmd_flags);
->  	}
-> --
-> 2.1.4
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/desc.h | 59 -------------------------------------------
+ 1 file changed, 59 deletions(-)
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index 2374fa5..c916214 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -273,27 +273,6 @@ typedef struct tagSTxDesc {
+ STxDesc, *PSTxDesc;
+ typedef const STxDesc *PCSTxDesc;
+ 
+-typedef struct tagSTxSyncDesc {
+-	volatile    STDES0  m_td0TD0;
+-	volatile    STDES1  m_td1TD1;
+-	volatile    u32 buff_addr; /* pointer to logical buffer */
+-	volatile    u32 next_desc; /* pointer to next logical descriptor */
+-	volatile    unsigned short m_wFIFOCtl;
+-	volatile    unsigned short m_wTimeStamp;
+-	struct tagSTxSyncDesc *next __aligned(8);
+-	volatile    PDEVICE_TD_INFO pTDInfo __aligned(8);
+-} __attribute__ ((__packed__))
+-STxSyncDesc, *PSTxSyncDesc;
+-typedef const STxSyncDesc *PCSTxSyncDesc;
+-
+-/* RsvTime buffer header */
+-typedef struct tagSRrvTime_atim {
+-	unsigned short wCTSTxRrvTime_ba;
+-	unsigned short wTxRrvTime_a;
+-} __attribute__ ((__packed__))
+-SRrvTime_atim, *PSRrvTime_atim;
+-typedef const SRrvTime_atim *PCSRrvTime_atim;
+-
+ /* Length, Service, and Signal fields of Phy for Tx */
+ struct vnt_phy_field {
+ 	u8 signal;
+@@ -307,42 +286,4 @@ union vnt_phy_field_swap {
+ 	u32 field_write;
+ };
+ 
+-/* Tx FIFO header */
+-typedef struct tagSTxBufHead {
+-	u32 adwTxKey[4];
+-	unsigned short wFIFOCtl;
+-	unsigned short wTimeStamp;
+-	unsigned short wFragCtl;
+-	unsigned char byTxPower;
+-	unsigned char wReserved;
+-} __attribute__ ((__packed__))
+-STxBufHead, *PSTxBufHead;
+-typedef const STxBufHead *PCSTxBufHead;
+-
+-typedef struct tagSBEACONCtl {
+-	u32 BufReady:1;
+-	u32 TSF:15;
+-	u32 BufLen:11;
+-	u32 Reserved:5;
+-} __attribute__ ((__packed__))
+-SBEACONCtl;
+-
+-typedef struct tagSSecretKey {
+-	u32 dwLowDword;
+-	unsigned char byHighByte;
+-} __attribute__ ((__packed__))
+-SSecretKey;
+-
+-typedef struct tagSKeyEntry {
+-	unsigned char abyAddrHi[2];
+-	unsigned short wKCTL;
+-	unsigned char abyAddrLo[4];
+-	u32 dwKey0[4];
+-	u32 dwKey1[4];
+-	u32 dwKey2[4];
+-	u32 dwKey3[4];
+-	u32 dwKey4[4];
+-} __attribute__ ((__packed__))
+-SKeyEntry;
+-
+ #endif /* __DESC_H__ */
+-- 
+2.1.4
 
-Regards,
-Amitkumar
