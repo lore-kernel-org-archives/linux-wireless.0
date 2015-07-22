@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64406 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752299AbbG1LfL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 07:35:11 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Subject: RE: [RFC 02/10] mac80211: allow to transmit A-MSDU within A-MPDU
-Date: Tue, 28 Jul 2015 11:35:07 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E7D9B01@hasmsx107.ger.corp.intel.com> (sfid-20150728_133515_664955_0CFE8D3A)
-References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
- <1437421384-19884-3-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYKKCLDaoAyE0VR66ynAxnm9Ob5m6T0ADbH415J6-i=6WA@mail.gmail.com>
-In-Reply-To: <CABPxzYKKCLDaoAyE0VR66ynAxnm9Ob5m6T0ADbH415J6-i=6WA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:33591 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752724AbbGVSR7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2015 14:17:59 -0400
+Received: by wicmv11 with SMTP id mv11so92408681wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:58 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 14/15] staging: vt6655: s_cbFillTxBufHead replace STxBufHead
+Date: Wed, 22 Jul 2015 19:16:46 +0100
+Message-Id: <1437589007-5479-14-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201808_749904_F925AA13)
+In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gVHVlLCBKdWwgMjEsIDIwMTUgYXQgMToxMiBBTSwgRW1tYW51ZWwgR3J1bWJhY2gN
-Cj4gPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4gd3JvdGU6DQo+ID4NCj4gPiBkaWZmIC0t
-Z2l0IGEvbmV0L21hYzgwMjExL2FnZy10eC5jIGIvbmV0L21hYzgwMjExL2FnZy10eC5jIGluZGV4
-DQo+ID4gYzhiYTJlNy4uYTc1OGViODQgMTAwNjQ0DQo+ID4gLS0tIGEvbmV0L21hYzgwMjExL2Fn
-Zy10eC5jDQo+ID4gKysrIGIvbmV0L21hYzgwMjExL2FnZy10eC5jDQo+ID4gQEAgLTk3LDcgKzk3
-LDggQEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX3NlbmRfYWRkYmFfcmVxdWVzdChzdHJ1Y3QNCj4g
-aWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCj4gPiAgICAgICAgIG1nbXQtPnUuYWN0aW9u
-LnUuYWRkYmFfcmVxLmFjdGlvbl9jb2RlID0NCj4gPiBXTEFOX0FDVElPTl9BRERCQV9SRVE7DQo+
-ID4NCj4gPiAgICAgICAgIG1nbXQtPnUuYWN0aW9uLnUuYWRkYmFfcmVxLmRpYWxvZ190b2tlbiA9
-IGRpYWxvZ190b2tlbjsNCj4gPiAtICAgICAgIGNhcGFiID0gKHUxNikoMSA8PCAxKTsgICAgICAg
-ICAgLyogYml0IDEgYWdncmVnYXRpb24gcG9saWN5ICovDQo+ID4gKyAgICAgICBjYXBhYiA9ICh1
-MTYpKDEgPDwgMCk7ICAgICAgICAgIC8qIGJpdCAwIEEtTVNEVSBzdXBwb3J0ICovDQo+IA0KPiBT
-aG91bGRuJ3QgdGhpcyBiZSBiYXNlZCBvbiBIVyBjYXBhYmlsaXR5PyBXZSBjYW4gYWRkIGNvdXBs
-ZSBvZiBtb3JlIF9IV18NCj4gZmxhZ3MgZm9yIFRYIGFuZCBSWCBhbmQgcG9wdWxhdGUgdGhpcyBi
-YXNlZCBvbiB0aGF0Pw0KDQpXaHk/DQpXaGF0IHdpbGwgaGFwcGVuIGlmIHdlIGFzayBmb3IgQS1N
-U0RVIGluc2lkZSBBLU1QRFUgYW5kIHdlIHdvbid0IGRvIEEtTVNEVT8NCldvcnN0IGNhc2UsIHRo
-ZSBBUCB3aWxsIGRlbnkgdGhpcyBhbmQgd2lsbCBjbGVhciB0aGF0IGJpdCBpbiBpdHMgcmVzcG9u
-c2UuDQoNCj4gDQo+ID4NCj4gPiArICAgICAgIGNhcGFiIHw9ICh1MTYpKDEgPDwgMSk7ICAgICAg
-ICAgLyogYml0IDEgYWdncmVnYXRpb24gcG9saWN5ICovDQo+ID4gICAgICAgICBjYXBhYiB8PSAo
-dTE2KSh0aWQgPDwgMik7ICAgICAgIC8qIGJpdCA1OjIgVElEIG51bWJlciAqLw0KPiA+ICAgICAg
-ICAgY2FwYWIgfD0gKHUxNikoYWdnX3NpemUgPDwgNik7ICAvKiBiaXQgMTU6NiBtYXggc2l6ZSBv
-Zg0KPiA+IGFnZ2VyZ2F0aW9uICovDQo=
+vnt_tx_fifo_head has now replaced STxBufHead
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/rxtx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 82380f3..380b879 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -1088,7 +1088,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
+ 
+ 
+ 	/* Set RrvTime/RTS/CTS Buffer */
+-	wTxBufSize = sizeof(STxBufHead);
++	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
+ 	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {/* 802.11g packet */
+ 
+ 		if (byFBOption == AUTO_FB_NONE) {
+-- 
+2.1.4
+
