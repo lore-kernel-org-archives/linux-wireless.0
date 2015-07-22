@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57634 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751511AbbGLRIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2015 13:08:44 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/10] iwlwifi: nvm: remove mac address byte swapping in 8000 family
-Date: Sun, 12 Jul 2015 20:08:20 +0300
-Message-Id: <1436720900-18588-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150712_190850_697436_65D95F66)
-In-Reply-To: <1436720814.17999.2.camel@intel.com>
-References: <1436720814.17999.2.camel@intel.com>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:37226 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691AbbGVSRr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2015 14:17:47 -0400
+Received: by wibud3 with SMTP id ud3so184805179wib.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:46 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/15] staging: vt6655: fix tagDEVICE_TD_INFO -> buff_addr type
+Date: Wed, 22 Jul 2015 19:16:38 +0100
+Message-Id: <1437589007-5479-6-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201754_457068_776A2A1A)
+In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Should always be __le32 type
 
-This fixes the byte order copying in the MAO (Mac Override
-Section) section from the PNVM, as the byte swapping is not
-required anymore in the 8000 family. Due to the byte
-swapping, the driver was reporting an incorrect MAC
-adddress.
-
-CC: <stable@vger.kernel.org> [4.1]
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/staging/vt6655/desc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 80fefe7..3b8e85e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -540,13 +540,11 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 		hw_addr = (const u8 *)(mac_override +
- 				 MAC_ADDRESS_OVERRIDE_FAMILY_8000);
- 
--		/* The byte order is little endian 16 bit, meaning 214365 */
--		data->hw_addr[0] = hw_addr[1];
--		data->hw_addr[1] = hw_addr[0];
--		data->hw_addr[2] = hw_addr[3];
--		data->hw_addr[3] = hw_addr[2];
--		data->hw_addr[4] = hw_addr[5];
--		data->hw_addr[5] = hw_addr[4];
-+		/*
-+		 * Store the MAC address from MAO section.
-+		 * No byte swapping is required in MAO section
-+		 */
-+		memcpy(data->hw_addr, hw_addr, ETH_ALEN);
- 
- 		/*
- 		 * Force the use of the OTP MAC address in case of reserved MAC
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index 485c6fd..8dc53bd 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -266,7 +266,7 @@ typedef struct tagDEVICE_TD_INFO {
+ typedef struct tagSTxDesc {
+ 	volatile    STDES0  m_td0TD0;
+ 	volatile    STDES1  m_td1TD1;
+-	volatile    u32    buff_addr;
++	volatile    __le32  buff_addr;
+ 	volatile    u32    next_desc;
+ 	struct tagSTxDesc *next __aligned(8);
+ 	volatile    PDEVICE_TD_INFO pTDInfo __aligned(8);
 -- 
 2.1.4
 
