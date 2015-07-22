@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52858 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754180AbbGQNQh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 09:16:37 -0400
-Message-ID: <1437138995.1933.13.camel@sipsolutions.net> (sfid-20150717_151640_511026_7E7DD6B1)
-Subject: Re: [PATCH v3] cfg80211: Handle minimum bandwidth for quarter and
- half rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthias May <matthias.may@neratec.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 17 Jul 2015 15:16:35 +0200
-In-Reply-To: <55A8FF32.5070308@neratec.com>
-References: <1434035553-6621-1-git-send-email-matthias.may@neratec.com>
-		 (sfid-20150611_171301_187773_8C09D939) <1437136527.1933.9.camel@sipsolutions.net>
-	 <55A8FF32.5070308@neratec.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:33566 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752743AbbGVSR5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2015 14:17:57 -0400
+Received: by wicmv11 with SMTP id mv11so92407958wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:56 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 13/15] staging: vt6655: always set 32 bit dma mask
+Date: Wed, 22 Jul 2015 19:16:45 +0100
+Message-Id: <1437589007-5479-13-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201806_435646_E218ACEC)
+In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-07-17 at 15:12 +0200, Matthias May wrote:
-> 
-> I've improved this patch a bit since i posted v3.
-> Mainly setting more disabled flags when using a country code which 
-> only 
-> allows only narrow channels.
-> In certain circumstance it was possible to start operation on a 20/10 
-> 
-> channel on a channel which only allowed 5/10.
-> 
-> I didn't post it yet because i was running some more tests with it 
-> and 
-> used it "productively" to see if something else breaks.
-> Will post it now.
-> 
+The device is limited to 32 bit address space.
 
-Are you saying I should drop this version before I push it out?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-johannes
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index c82bf48..c97353b 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1747,6 +1747,12 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 		return -ENODEV;
+ 	}
+ 
++	if (dma_set_mask(&pcid->dev, DMA_BIT_MASK(32))) {
++		dev_err(&pcid->dev, ": Failed to set dma 32 bit mask\n");
++		device_free_info(priv);
++		return -ENODEV;
++	}
++
+ 	INIT_WORK(&priv->interrupt_work, vnt_interrupt_work);
+ 
+ 	/* do reset */
+-- 
+2.1.4
+
