@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52956 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757535AbbGQNoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 09:44:15 -0400
-Message-ID: <1437140653.1933.22.camel@sipsolutions.net> (sfid-20150717_154418_512925_F18E20F5)
-Subject: Re: [PATCH 07/10] mac80211: add possibility to advertise 802.11 FTM
- support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>
-Date: Fri, 17 Jul 2015 15:44:13 +0200
-In-Reply-To: <1436359312-26533-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150708_144228_968070_E0A49984)
-References: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1436359312-26533-8-git-send-email-emmanuel.grumbach@intel.com>
-	 (sfid-20150708_144228_968070_E0A49984)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:58289 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755966AbbGVG2W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2015 02:28:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Avery Pennarun <apenwarr@google.com>
+Cc: Marty Faltesek <mfaltesek@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Denton Gentry <dgentry@google.com>
+Subject: Re: [PATCH] ath10k: Improve performance by reducing tx_lock contention.
+References: <1437527130-15232-1-git-send-email-mfaltesek@google.com>
+	<87wpxslnse.fsf@kamboji.qca.qualcomm.com>
+	<CAPp0ZBavC33umwjraqtxpKWP6Ez9X1_7K9fZNsP2oPu4v=uyEw@mail.gmail.com>
+Date: Wed, 22 Jul 2015 09:28:16 +0300
+In-Reply-To: <CAPp0ZBavC33umwjraqtxpKWP6Ez9X1_7K9fZNsP2oPu4v=uyEw@mail.gmail.com>
+	(Avery Pennarun's message of "Wed, 22 Jul 2015 02:21:27 -0400")
+Message-ID: <87si8gln9b.fsf@kamboji.qca.qualcomm.com> (sfid-20150722_082825_711737_5C0D8617)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-07-08 at 15:41 +0300, Emmanuel Grumbach wrote:
-> From: Gregory Greenman <gregory.greenman@intel.com>
-> 
-> Add possibility for a driver to advertise 802.11 Fine Timing 
-> Measurement support.
-> 
-I believe that without any API whatsoever, the device won't be able to
-know what to do even if everything is supported in firmware? I'll not
-apply this for now.
+Avery Pennarun <apenwarr@google.com> writes:
 
-johannes
+> On Wed, Jul 22, 2015 at 2:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Marty Faltesek <mfaltesek@google.com> writes:
+>>> From: Qi Zhou <qizhou@google.com>
+>>>
+>>> During tx completion, tx_lock is held for longer than required, preventing
+>>> efficient refill of htt->pending_tx. Refactor the code so that only MSDU
+>>> related operations are protected by the lock.
+>>>
+>>> Improves downstream performance on a 3x3 client from 495 to 580 Mbps.
+>>
+>> It would be good to mention the actual platform/CPU as I guess this
+>> improvement is platform specific?
+>
+> That's a good idea to mention in the commit message, although given
+> that it's just an in-driver lock contention patch, it probably affects
+> any underpowered multicore CPU.
+
+Yeah, that would be good to mention as well :)
+
+-- 
+Kalle Valo
