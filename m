@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2248 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412AbbGGJUy convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:36019 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859AbbGWIIG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 05:20:54 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: "nbd@openwrt.org" <nbd@openwrt.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>
-Subject: RE: [PATCH v2] ath9k: export HW random number generator
-Date: Tue, 7 Jul 2015 09:20:52 +0000
-Message-ID: <e9b22d656abb413091493e983786e504@NASANEXM01E.na.qualcomm.com> (sfid-20150707_112100_934347_62AD0CBD)
-References: <1435912110-9646-1-git-send-email-miaoqing@qca.qualcomm.com>
- <559A5919.3060308@openwrt.org>
- <262dbfcff3564c4ba2025f9fde11e8e2@NASANEXM01E.na.qualcomm.com>
- <559B7AFC.3040202@openwrt.org>
-In-Reply-To: <559B7AFC.3040202@openwrt.org>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 23 Jul 2015 04:08:06 -0400
+Received: by wicgb10 with SMTP id gb10so131180050wic.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 01:08:04 -0700 (PDT)
+Message-ID: <55B0A0E1.9090300@gmail.com> (sfid-20150723_100814_673304_7A9B8B8D)
+Date: Thu, 23 Jul 2015 10:08:01 +0200
+From: wim torfs <wtorfs@gmail.com>
 MIME-Version: 1.0
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: rolf.anderegg@weiss.ch,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
+References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch> <55A79B5C.7010501@rempel-privat.de> <55AFC6E1.7060706@weiss.ch> <55AFCFDE.7060902@rempel-privat.de>
+In-Reply-To: <55AFCFDE.7060902@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Felix, I think that's why we can't get the ideal entropy.  And  I only saw the unstable issue when read the ADC values from MAC_PCU buffer after enable BB multiplexes the ADC input from radio to MAC ,  as it will defer the regular operation.
 
-- Miaoqing
 
------Original Message-----
-From: Felix Fietkau [mailto:nbd@openwrt.org] 
-Sent: Tuesday, July 07, 2015 3:09 PM
-To: Pan, Miaoqing; linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org; ath9k-devel; Valo, Kalle
-Subject: Re: [PATCH v2] ath9k: export HW random number generator
+On 07/22/2015 07:16 PM, Oleksij Rempel wrote:
+> Am 22.07.2015 um 18:37 schrieb Rolf Anderegg:
+>>
+>> On 16/07/15 13:54, Oleksij Rempel wrote:
+>>> Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
+>>>>
+>>>> I suspect that there are bandwidth/speed issues when dealing with USB
+>>>> adapters, but that does not inherently mean that the connection is prone
+>>>> to drop, right? Doesn't that mean that I am leaking packages somewhere
+>>>> along the way? What else could I be looking for?
+>>>
+>>> The packages can drop if you will do channel scan. STA mode need some
+>>> seconds to complete channel scan. It means AP will be all the time
+>>> unavailable.
+>>
+>> Ok, that may be. Then again why am I not experiencing the same
+>> connection drop on my ath5k setup? Because the channel scan is more
+>> likely to be completed in due time?
+>
+> Yes, channel scantime on usb device is match longer then on pci.
+>
 
-On 2015-07-07 07:07, Pan, Miaoqing wrote:
-> AR_PHY_TST_ADC is BB ADC sample register, it doesn't depend on other 
-> BB registers. Get non zero data if it has the ADC values.
-This is completely wrong!
+May I ask for the reason it takes a longer time to complete the scanning 
+on a USB device compared to a PCI device? I assume the internals of an 
+ath9k PCI device is similar as that of an ath9k_htc USB device, so is it 
+purely the bus speed that affects this time? Or is the USB device a 
+smaller version of the chipset on the PCI device and therefore with a 
+lower speed due to power concerns?
 
-AR_PHY_TST_ADC is a generic observation register which can be configured to observe multiple points in the rx path.
-I did my own experiments with sampling raw I/Q values from the ADC, and you can find my patch here:
+If it is due to the bus speed, would it be possible to decouple the 
+scanning process from the bus, that is, I assume that the hardware 
+performs all the necessary channel switching and channel sensing, so why 
+not allow the hardware to gather such information and transfer the 
+results in a single burst to the host over the USB bus? Or is the 
+channel switching controlled by the host and it takes a lot of time due 
+to the duration of transmitting the channel switching commands to the 
+USB device?
 
-http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=package/kernel/mac80211/patches/543-ath9k_entropy_from_adc.patch
+Thanks,
 
-It right now uses only the lowest bits (they are the hardest to control from the outside).
+Wim.
 
-Through extensive testing (not just by me, but also by many people in the OpenWrt community), I found that leaving the AR_PHY_TST_ADC register configured for raw I/Q samples causes the radio to become unstable on AR5008-AR9002. That's why my patch currently only gathers some data at driver init time.
-By the way, on AR5008-AR9002 this register is in a different location than AR9003, something your patch also needs to take into account.
-
-You should also make sure that the radio is actually configured to a channel (and active!) before gathering data.
-
-When you rework your patch, please carefully review the documentation for the fields rx_obs_sel and cf_bbb_obs_sel before you change the code again.
-
-- Felix
