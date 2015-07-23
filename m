@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:34895 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752670AbbFGMEQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Jun 2015 08:04:16 -0400
-Received: by pdbnf5 with SMTP id nf5so82554774pdb.2
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jun 2015 05:04:15 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: ap420073@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH V2 3/3] rtlwifi: rtl8192cu: Fix variable isfirst_ampdu
-Date: Sun,  7 Jun 2015 21:03:57 +0900
-Message-Id: <1433678637-7718-2-git-send-email-ap420073@gmail.com> (sfid-20150607_140441_712836_5E19236D)
-In-Reply-To: <1433678637-7718-1-git-send-email-ap420073@gmail.com>
-References: <1433678637-7718-1-git-send-email-ap420073@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:39167 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752717AbbGWQEV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2015 12:04:21 -0400
+Subject: Re: [PATCH] bcma: fix linking problem with of_default_bus_match_table
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1437633104-23373-1-git-send-email-kvalo@codeaurora.org>
+ <CAOiHx=k=p=0HJewHcVoKaypyrpbpyswes20jX6t3tha+OMf9aQ@mail.gmail.com>
+ <87k2tqhnyc.fsf@kamboji.qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Jonas Gorski <jogo@openwrt.org>
+Message-ID: <55B11085.5040909@openwrt.org> (sfid-20150723_180425_061373_9ED3E6EE)
+Date: Thu, 23 Jul 2015 18:04:21 +0200
+MIME-Version: 1.0
+In-Reply-To: <87k2tqhnyc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl92cu_rx_query_desc set a isampdu twice.
-but second code is related to isfirst_ampdu.
-so i change it.
+On 23.07.2015 17:51, Kalle Valo wrote:
+> Jonas Gorski <jogo@openwrt.org> writes:
+> 
+>> Hi,
+>>
+>> On Thu, Jul 23, 2015 at 8:31 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>
+>>> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+>>> index 59128478a90f..6b7d54622058 100644
+>>> --- a/drivers/bcma/main.c
+>>> +++ b/drivers/bcma/main.c
+>>> @@ -410,7 +410,7 @@ int bcma_bus_register(struct bcma_bus *bus)
+>>>                 bcma_core_pci_early_init(&bus->drv_pci[0]);
+>>>         }
+>>>
+>>> -       if (bus->host_pdev) {
+>>> +       if (IS_BUILTIN(CONFIG_BCMA) && bus->host_pdev) {
+>>>                 struct device *dev = &bus->host_pdev->dev;
+>>>
+>>>                 of_platform_populate(dev->of_node, of_default_bus_match_table,
+>>
+>> I think this isn't enough, AFAICT this needs IS_BUILTIN(CONFIG_BCMA)
+>> && IS_ENABLED(CONFIG_OF), else it will break with OF=n and BCMA=y, as
+>> of_default_bus_match_table is only defined/built-in when OF=y.
+> 
+> I just tested and OF=n and BCMA=y case built succesfully for me. I think
+> it's because of_default_bus_match_table is created even when CONFIG_OF
+> is n. Can you double check, please?
+> 
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thinking more about it, I know/remember why it complies even if it
+shouldn't: the inline prototype for !OF of of_platform_populate does not
+use any of the arguments so the compiler optimises the reference out.
+So unless you compile with -O0, you are fine.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index cbead00..95880fe 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -321,7 +321,7 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
- 	stats->rate = (u8) GET_RX_DESC_RX_MCS(pdesc);
- 	stats->shortpreamble = (u16) GET_RX_DESC_SPLCP(pdesc);
- 	stats->isampdu = (bool) (GET_RX_DESC_PAGGR(pdesc) == 1);
--	stats->isampdu = (bool) ((GET_RX_DESC_PAGGR(pdesc) == 1)
-+	stats->isfirst_ampdu = (bool)((GET_RX_DESC_PAGGR(pdesc) == 1)
- 				   && (GET_RX_DESC_FAGGR(pdesc) == 1));
- 	stats->timestamp_low = GET_RX_DESC_TSFL(pdesc);
- 	stats->rx_is40Mhzpacket = (bool) GET_RX_DESC_BW(pdesc);
--- 
-2.1.4
+I always forget that this works, so sorry for the noise.
 
+
+Jonas
