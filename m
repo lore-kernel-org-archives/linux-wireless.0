@@ -1,60 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40363 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbbGaHIu (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:34848 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589AbbGWAam convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:08:50 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	"Pan\, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	"linville\@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Theodore Ts'o <tytso@mit.edu>, linux-crypto@vger.kernel.org,
-	nhorman@tuxdriver.com
-Subject: Re: [PATCH 2/2] ath9k: export HW random number generator
-References: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
-	<a8b787bd17d94e8899bf1be6131165b2@NASANEXM01E.na.qualcomm.com>
-	<55B60BC9.8040800@rempel-privat.de>
-	<3945775.m5HblJPgiO@tauon.atsec.com>
-Date: Fri, 31 Jul 2015 10:08:42 +0300
-In-Reply-To: <3945775.m5HblJPgiO@tauon.atsec.com> (Stephan Mueller's message
-	of "Mon, 27 Jul 2015 13:01:46 +0200")
-Message-ID: <8738043ith.fsf@kamboji.qca.qualcomm.com> (sfid-20150731_090854_707497_D3431C8B)
+	Wed, 22 Jul 2015 20:30:42 -0400
+Received: by iecri3 with SMTP id ri3so85379821iec.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 17:30:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+Date: Thu, 23 Jul 2015 02:30:41 +0200
+Message-ID: <CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com> (sfid-20150723_023045_693768_E56FE52B)
+Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephan Mueller <smueller@chronox.de> writes:
+On 28 June 2015 at 17:17, Rafał Miłecki <zajec5@gmail.com> wrote:
+> Our bus should allow defining children nodes as we may want to specify
+> devices attached to the bus. This is required e.g. to specify NAND or
+> ChipCommon cores and use bus's address and IRQ mappings.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/bcma/main.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+>
+> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> index 9635f10..5912847 100644
+> --- a/drivers/bcma/main.c
+> +++ b/drivers/bcma/main.c
+> @@ -12,6 +12,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/of_address.h>
+>  #include <linux/of_irq.h>
+> +#include <linux/of_platform.h>
+>
+>  MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
+>  MODULE_LICENSE("GPL");
+> @@ -409,6 +410,13 @@ int bcma_bus_register(struct bcma_bus *bus)
+>                 bcma_core_pci_early_init(&bus->drv_pci[0]);
+>         }
+>
+> +       if (bus->host_pdev) {
+> +               struct device *dev = &bus->host_pdev->dev;
+> +
+> +               of_platform_populate(dev->of_node, of_default_bus_match_table,
+> +                                    NULL, dev);
+> +       }
+> +
 
->>-rw-rw-r-- 1 lex lex 2564096 Jul 27 11:36 hwrng.out
->>-rw-rw-r-- 1 lex lex 2468394 Jul 27 11:36 hwrng.out.bz2
->>
->>Do i understand it correctly, in case of hwrng bzip was able to find
->>enough pattern to compressed the data? Even with format overhead?
->>
->>I'm no an expert, help of an expert would be welcome, added some more
->>people to CC
->
-> This one does not look good for a claim that the RNG produces white noise. An 
-> RNG that is wired up to /dev/hwrng should produce white noise. Either by 
-> having an appropriate noise source or by conditioning the output of the noise 
-> source.
->
-> When conditioning the output, you have to be careful about the entropy claim. 
-> For example, you cannot state that the data stream from your noise source has 
-> close to one bit of entropy for each obtained bit. Thus, the conditioner must 
-> ensure that the data from the noise source is collected and its entropy is 
-> maintained and accumulated.
->
-> However, the hwrandom framework does not provide any conditioning logic. And I 
-> would say that such conditioner logic should not reside in a driver either. I 
-> would say that the discussed RNG does not seem fit for hooking it up with the 
-> hwrandom framework.
+This caused a compile error when using bcma as module:
+ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
 
-Based on the discussion I'm going to revert this patch, at least for
-now.
+There are two options I guess:
+1) Export of_default_bus_match_table
+2) Use some better condition like
+if (IS_BUILTIN(CONFIG_BCMA) && bus->host_pdev)
+
+Unfortunately I'm on my long holidays right now.
+
+Hauke: do you think you can find a moment to handle this?
+
+Sorry for the problem :|
 
 -- 
-Kalle Valo
+Rafał
