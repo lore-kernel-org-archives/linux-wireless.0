@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23593 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220AbbGAHu6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59351 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbbGWGGf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 03:50:58 -0400
-Date: Wed, 1 Jul 2015 10:50:42 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Michel von Czettritz <michel.von.czettritz@gmail.com>,
-	devel@driverdev.osuosl.org, gregkh@linux.com,
-	Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	Jes.Sorensen@redhat.com
-Subject: Re: [PATCH 3/3] staging: rtl8723au: function no longer discards
- return value
-Message-ID: <20150701075042.GT28762@mwanda> (sfid-20150701_095107_478311_8206B2E5)
-References: <cover.1435700714.git.michel.von.czettritz@gmail.com>
- <f1f04f73db3d925d4a790a07fc56154ba98871fc.1435700714.git.michel.von.czettritz@gmail.com>
- <20150701071224.GC2411@sudip-PC>
+	Thu, 23 Jul 2015 02:06:35 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
+References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+	<CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com>
+Date: Thu, 23 Jul 2015 09:06:28 +0300
+In-Reply-To: <CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com>
+	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Thu, 23 Jul 2015
+ 02:30:41 +0200")
+Message-ID: <871tfzif17.fsf@kamboji.qca.qualcomm.com> (sfid-20150723_080638_804961_A9284B1B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150701071224.GC2411@sudip-PC>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 01, 2015 at 12:42:24PM +0530, Sudip Mukherjee wrote:
-> On Tue, Jun 30, 2015 at 11:54:59PM +0200, Michel von Czettritz wrote:
-> > The return value of FillH2CCmd in rtl8723a_set_rssi_cmd and
-> > rtl8723a_set_raid_cmd is never checked. Both functions always return
-> > _SUCCESS.
-> > 
-> > Both functions now return the return value of FillH2CCmd.
-> If they are never checked then why do we need to return some value?
-> why not make them void?
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-They probably *should* be checked eventually?
+>> +       if (bus->host_pdev) {
+>> +               struct device *dev = &bus->host_pdev->dev;
+>> +
+>> +               of_platform_populate(dev->of_node, of_default_bus_match_table,
+>> +                                    NULL, dev);
+>> +       }
+>> +
+>
+> This caused a compile error when using bcma as module:
+> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
+>
+> There are two options I guess:
+> 1) Export of_default_bus_match_table
+> 2) Use some better condition like
+> if (IS_BUILTIN(CONFIG_BCMA) && bus->host_pdev)
+>
+> Unfortunately I'm on my long holidays right now.
+>
+> Hauke: do you think you can find a moment to handle this?
 
-regards,
-dan carpenter
+I can cook up a patch which uses IS_BUILTIN() so that we get the build
+working again. You can fix this better once you come back.
 
+> Sorry for the problem :|
+
+No worries, enjoy your vacation :)
+
+-- 
+Kalle Valo
