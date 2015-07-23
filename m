@@ -1,32 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:35748 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752892AbbGIT0P (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:33186 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752970AbbGWNBa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 15:26:15 -0400
-Received: by labgy5 with SMTP id gy5so100209170lab.2
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2015 12:26:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1435952472-22752-4-git-send-email-me@bobcopeland.com>
-References: <1435952472-22752-1-git-send-email-me@bobcopeland.com>
-	<1435952472-22752-4-git-send-email-me@bobcopeland.com>
-Date: Thu, 9 Jul 2015 15:26:13 -0400
-Message-ID: <CAEKwDSCiF-Bb2ywWM8Reo6sQtDDuLZuditDzLvfXEaK5W-uCVw@mail.gmail.com> (sfid-20150709_212619_451013_38B95EFF)
-Subject: Re: [PATCH v2 3/3] mac80211: select an AID when creating new mesh STAs
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	devel@lists.open80211s.org, Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 23 Jul 2015 09:01:30 -0400
+Received: by pdbnt7 with SMTP id nt7so85980129pdb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 06:01:30 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 3/3] staging: wilc1000: coreconfigurator.c: fix kmalloc error check
+Date: Thu, 23 Jul 2015 22:01:19 +0900
+Message-Id: <1437656479-6173-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150723_150147_750984_BDB70A25)
+In-Reply-To: <1437656479-6173-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1437656479-6173-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 3, 2015 at 3:41 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> Instead of using peer link id for AID, generate a new
-> AID when creating mesh STAs in the kernel peering manager.
+Return -ENOMEM if memory allocation is failed.
 
-I missed a case where llid was used for aid in
-ieee80211_mps_frame_release() -- will send a v3 for the series.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: use ! operator instead of NULL comparison.
 
+ drivers/staging/wilc1000/coreconfigurator.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 9c3ecaa..ff1eb5b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -675,11 +675,8 @@ s32 CoreConfiguratorInit(void)
+ 	sema_init(&SemHandlePktResp, 0);
+ 
+ 	gps8ConfigPacket = kmalloc(MAX_PACKET_BUFF_SIZE, GFP_ATOMIC);
+-	if (gps8ConfigPacket == NULL) {
+-		PRINT_ER("failed in gps8ConfigPacket allocation\n");
+-		s32Error = WILC_NO_MEM;
+-		goto _fail_;
+-	}
++	if (!gps8ConfigPacket)
++		return -ENOMEM;
+ 
+ 	WILC_memset((void *)gps8ConfigPacket, 0, MAX_PACKET_BUFF_SIZE);
+ 
+@@ -1032,10 +1029,8 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
+ 
+ 	pstrSurveyResults = kmalloc_array(u32SurveyResultsCount,
+ 				sizeof(wid_site_survey_reslts_s), GFP_ATOMIC);
+-	if (pstrSurveyResults == NULL) {
+-		u32SurveyResultsCount = 0;
+-		WILC_ERRORREPORT(s32Error, WILC_NO_MEM);
+-	}
++	if (!pstrSurveyResults)
++		return -ENOMEM;
+ 
+ 	WILC_memset((void *)(pstrSurveyResults), 0, u32SurveyResultsCount * sizeof(wid_site_survey_reslts_s));
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.9.1
+
