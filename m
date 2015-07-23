@@ -1,89 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:35852 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753897AbbGFKqU convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:33872 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752907AbbGWNB2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2015 06:46:20 -0400
-Received: by widjy10 with SMTP id jy10so157050107wid.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2015 03:46:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMArcTUvpBpTB=woMiY2mET+KOUKNLvY53Exb1F6vB+aztq6Lw@mail.gmail.com>
-References: <CAFSTUk6UasnV4P3B1TR7kSx1ToQTC+PC2hU6PynDBWJ3ALJzyg@mail.gmail.com>
-	<55965CF8.20208@thinktube.com>
-	<CAMArcTUvpBpTB=woMiY2mET+KOUKNLvY53Exb1F6vB+aztq6Lw@mail.gmail.com>
-Date: Mon, 6 Jul 2015 11:46:19 +0100
-Message-ID: <CAFSTUk6u6rNF1njVBMFT4VAKPZ0Y6BvHB3mJEu7H7oM3tma5tQ@mail.gmail.com> (sfid-20150706_124624_900099_48496313)
-Subject: Re: mesh support on rtl8192cu
-From: Richard Palethorpe <richard@lm-technologies.com>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Bruno Randolf <br1@thinktube.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 23 Jul 2015 09:01:28 -0400
+Received: by pdbbh15 with SMTP id bh15so111295411pdb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 06:01:27 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 2/3] staging: wilc1000: coreconfigurator.c: add kmalloc error check
+Date: Thu, 23 Jul 2015 22:01:18 +0900
+Message-Id: <1437656479-6173-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150723_150148_366892_9520D2DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 4, 2015 at 3:15 AM, Taehee Yoo <ap420073@gmail.com> wrote:
-> 2015-07-03 18:59 GMT+09:00 Bruno Randolf <br1@thinktube.com>:
->> On 07/03/2015 10:34 AM, Richard Palethorpe wrote:
->>> Hello Taehee,
->>>
->>> I have been experimenting with MESH mode on kernel 4.0.7. It is
->>> sending beacons out, but is unable to establish a connection.
->>>
->>> I have two rtl8192cu based dongles connected to identical VMs and am
->>> using the following commands to set up the mesh:
->>>
->>> iw dev wls160u2 set type mesh
->>> ip addr add 192.168.2.1/24 broadcast 192.168.2.255 dev wls160u2
->>> ip link set wls160u2 up
->>> iw dev wls160u2 mesh join lmmesh
->>>
->>> Running 'iw dev wls160u2 mpath dump' produces no results and there is
->>> nothing regarding mesh in dmesg. I can't find any other information on
->>> mesh with rtl8192cu other than the patch which you submitted.
->>>
->>> I am wondering if it does work, but there is a step I am missing or if
->>> something is wrong with the code?
->>
->> I don't know about this 'mesh' mode, but I have noted problems in ad-hoc
->> mode with this chipset and driver. The problem seems to be that ARP
->> replies are not sent on the air... Not sure what the reason is or if
->> it's possible to fix it in the driver, but my conclusion for now is that
->> this device is unusable for ad-hoc mode. Similar problems may exist for
->> mesh?
->>
->> bruno
->>
->
-> I don't know about a mesh network.
-> But, according to my ping test result, 'mpath dump' shows ping traffics.
->
-> Did you generate any traffics?
+Add error check if memory allocation is failed.
 
-Bruno, that surprises me somewhat because I have got IBSS mode to work
-on kernel 4.0+. Are you using a slightly older kernel?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: use ! operator instead of NULL comparison
 
-Taehee, I tried to ping with "ping -I wls160u2 192.168.2.1" which
-didn't work. It is my understanding that "iw mpath dump" should show
-other nodes in the network as soon as they have connected by doing "iw
-dev <dev> mesh join <network>".
+ drivers/staging/wilc1000/coreconfigurator.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-According to this page:
-https://wireless.wiki.kernel.org/en/developers/documentation/mac80211/api,
-there are a number of things that need to be done for mesh. I quote:
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 7e2b2ab41..9c3ecaa 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -812,6 +812,9 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 		u32 u32Tsf_Hi;
+ 
+ 		pstrNetworkInfo = kmalloc(sizeof(tstrNetworkInfo), GFP_ATOMIC);
++		if (!pstrNetworkInfo)
++			return -ENOMEM;
++
+ 		WILC_memset((void *)(pstrNetworkInfo), 0, sizeof(tstrNetworkInfo));
+ 
+ 		pstrNetworkInfo->s8rssi = pu8WidVal[0];
+@@ -863,6 +866,9 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 
+ 		if (u16IEsLen > 0) {
+ 			pstrNetworkInfo->pu8IEs = kmalloc(u16IEsLen, GFP_ATOMIC);
++			if (!pstrNetworkInfo->pu8IEs)
++				return -ENOMEM;
++
+ 			WILC_memset((void *)(pstrNetworkInfo->pu8IEs), 0, u16IEsLen);
+ 
+ 			WILC_memcpy(pstrNetworkInfo->pu8IEs, pu8IEs, u16IEsLen);
+@@ -930,6 +936,9 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 	u16 u16IEsLen = 0;
+ 
+ 	pstrConnectRespInfo = kmalloc(sizeof(tstrConnectRespInfo), GFP_ATOMIC);
++	if (!pstrConnectRespInfo)
++		return -ENOMEM;
++
+ 	WILC_memset((void *)(pstrConnectRespInfo), 0, sizeof(tstrConnectRespInfo));
+ 
+ 	/* u16AssocRespLen = pu8Buffer[0]; */
+@@ -950,6 +959,9 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+ 		pstrConnectRespInfo->pu8RespIEs = kmalloc(u16IEsLen, GFP_ATOMIC);
++		if (!pstrConnectRespInfo->pu8RespIEs)
++			return -ENOMEM;
++
+ 		WILC_memset((void *)(pstrConnectRespInfo->pu8RespIEs), 0, u16IEsLen);
+ 
+ 		WILC_memcpy(pstrConnectRespInfo->pu8RespIEs, pu8IEs, u16IEsLen);
+-- 
+1.9.1
 
-"
-- react to the set_tim() callback or fetch each beacon from mac80211
-For MESH mode, it must
-- - allow beacons to be transmitted for NL80211_IFTYPE_MESH_POINT
-interfaces. These can be AP or IBSS style beacons.
-- - receive beacons and control frames for NL80211_IFTYPE_MESH_POINT interfaces
-- - set the NL80211_IFTYPE_MESH_POINT bit in the
-hw→wiphy→interface_modes mask to indicate that MP mode is supported.
-...
-"
-
-The driver doesn't use the TIM callback, so it should "fetch each
-beacon from mac80211". The driver does appear to send beacons, so that
-part should be OK. I don't know if it receives beacons correctly in
-mesh mode however.
