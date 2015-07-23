@@ -1,84 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47869 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755457AbbG1IsO (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:36261 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbbGWLTb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:48:14 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/21] staging: wilc1000: describe the config symbol fully
-Date: Tue, 28 Jul 2015 17:47:21 +0900
-Message-ID: <1438073261-28315-3-git-send-email-tony.cho@atmel.com> (sfid-20150728_104828_279462_C3CE04D3)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 23 Jul 2015 07:19:31 -0400
+Received: by pachj5 with SMTP id hj5so156084406pac.3
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 04:19:31 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/3] staging: wilc1000: coreconfigurator.c: remove WILC_MALLOC
+Date: Thu, 23 Jul 2015 20:19:17 +0900
+Message-Id: <1437650359-2051-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150723_131935_173922_EFBD8D98)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the warnings reported by checkpatch.pl on the short
-description for the config symbol in the Kconfig by adding more comments
-to describe the config symbol in more detail.
+Use kmalloc and kmalloc_array instead of WILC_MALLOC.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/Kconfig | 28 ++++++++++++++++++++--------
- 1 file changed, 20 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
-index 062d9c5..51bbf46 100644
---- a/drivers/staging/wilc1000/Kconfig
-+++ b/drivers/staging/wilc1000/Kconfig
-@@ -37,17 +37,26 @@ choice
- 	bool "SDIO support"
- 	depends on MMC
- 	---help---
--	  This module adds support for the SDIO interface
--	  of adapters using WILC chipset. Select this if
--	  your platform is using the SDIO bus.
-+	  This module adds support for the SDIO interface of adapters using
-+	  WILC1000 chipset. The Atmel WILC1000 SDIO is a full speed interface.
-+	  It meets SDIO card specification version 2.0. The interface supports
-+	  the 1-bit/4-bit SD transfer mode at the clock range of 0-50 MHz.
-+	  The host can use this interface to read and write from any register
-+	  within the chip as well as configure the WILC1000 for data DMA.
-+	  To use this interface, pin9 (SDIO_SPI_CFG) must be grounded. Select
-+	  this if your platform is using the SDIO bus.
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index b069614..7e2b2ab41 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -674,7 +674,7 @@ s32 CoreConfiguratorInit(void)
+ 	sema_init(&SemHandleSendPkt, 1);
+ 	sema_init(&SemHandlePktResp, 0);
  
- 	config WILC1000_SPI
- 	depends on SPI
- 	bool "SPI support"
- 	---help---
--	  This module adds support for the SPI interface
--	  of adapters using WILC chipset. Select this if
--	  your platform is using the SPI bus.
-+	  This module adds support for the SPI interface of adapters using
-+	  WILC1000 chipset. The Atmel WILC1000 has a Serial Peripheral
-+	  Interface (SPI) that operates as a SPI slave. This SPI interface can
-+	  be used for control and for serial I/O of 802.11 data. The SPI is a
-+	  full-duplex slave synchronous serial interface that is available
-+	  immediately following reset when pin 9 (SDIO_SPI_CFG) is tied to
-+	  VDDIO. Select this if your platform is using the SPI bus.
- endchoice
+-	gps8ConfigPacket = (s8 *)WILC_MALLOC(MAX_PACKET_BUFF_SIZE);
++	gps8ConfigPacket = kmalloc(MAX_PACKET_BUFF_SIZE, GFP_ATOMIC);
+ 	if (gps8ConfigPacket == NULL) {
+ 		PRINT_ER("failed in gps8ConfigPacket allocation\n");
+ 		s32Error = WILC_NO_MEM;
+@@ -811,7 +811,7 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 		u32 u32Tsf_Lo;
+ 		u32 u32Tsf_Hi;
  
- config WILC1000_HW_OOB_INTR
-@@ -55,5 +64,8 @@ config WILC1000_HW_OOB_INTR
- 	depends on WILC1000 && WILC1000_SDIO
- 	default n
- 	---help---
--	  If your platform don't recognize SDIO IRQ, connect chipset external IRQ pin
--	  and check this option. Or, Use this to get all interrupts including SDIO interrupts.
-+	  This option enables out-of-band interrupt support for the WILC1000
-+	  chipset. This OOB interrupt is intended to provide a faster interrupt
-+	  mechanism for SDIO host controllers that don't support SDIO interrupt.
-+	  Select this option If the SDIO host controller in your platform
-+	  doesn't support SDIO time devision interrupt.
+-		pstrNetworkInfo = (tstrNetworkInfo *)WILC_MALLOC(sizeof(tstrNetworkInfo));
++		pstrNetworkInfo = kmalloc(sizeof(tstrNetworkInfo), GFP_ATOMIC);
+ 		WILC_memset((void *)(pstrNetworkInfo), 0, sizeof(tstrNetworkInfo));
+ 
+ 		pstrNetworkInfo->s8rssi = pu8WidVal[0];
+@@ -862,7 +862,7 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 		u16IEsLen = u16RxLen - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
+ 
+ 		if (u16IEsLen > 0) {
+-			pstrNetworkInfo->pu8IEs = (u8 *)WILC_MALLOC(u16IEsLen);
++			pstrNetworkInfo->pu8IEs = kmalloc(u16IEsLen, GFP_ATOMIC);
+ 			WILC_memset((void *)(pstrNetworkInfo->pu8IEs), 0, u16IEsLen);
+ 
+ 			WILC_memcpy(pstrNetworkInfo->pu8IEs, pu8IEs, u16IEsLen);
+@@ -929,7 +929,7 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 	u8 *pu8IEs = 0;
+ 	u16 u16IEsLen = 0;
+ 
+-	pstrConnectRespInfo = (tstrConnectRespInfo *)WILC_MALLOC(sizeof(tstrConnectRespInfo));
++	pstrConnectRespInfo = kmalloc(sizeof(tstrConnectRespInfo), GFP_ATOMIC);
+ 	WILC_memset((void *)(pstrConnectRespInfo), 0, sizeof(tstrConnectRespInfo));
+ 
+ 	/* u16AssocRespLen = pu8Buffer[0]; */
+@@ -949,7 +949,7 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 		pu8IEs = &pu8Buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+ 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+-		pstrConnectRespInfo->pu8RespIEs = (u8 *)WILC_MALLOC(u16IEsLen);
++		pstrConnectRespInfo->pu8RespIEs = kmalloc(u16IEsLen, GFP_ATOMIC);
+ 		WILC_memset((void *)(pstrConnectRespInfo->pu8RespIEs), 0, u16IEsLen);
+ 
+ 		WILC_memcpy(pstrConnectRespInfo->pu8RespIEs, pu8IEs, u16IEsLen);
+@@ -1018,7 +1018,8 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
+ 		}
+ 	}
+ 
+-	pstrSurveyResults = (wid_site_survey_reslts_s *)WILC_MALLOC(u32SurveyResultsCount * sizeof(wid_site_survey_reslts_s));
++	pstrSurveyResults = kmalloc_array(u32SurveyResultsCount,
++				sizeof(wid_site_survey_reslts_s), GFP_ATOMIC);
+ 	if (pstrSurveyResults == NULL) {
+ 		u32SurveyResultsCount = 0;
+ 		WILC_ERRORREPORT(s32Error, WILC_NO_MEM);
 -- 
 1.9.1
 
