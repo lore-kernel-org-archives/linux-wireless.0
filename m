@@ -1,160 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48162 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.15.18]:58932 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752539AbbGQQSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 12:18:13 -0400
-Subject: [PATCH 16/27] PKCS#7: Check content type and versions
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Fri, 17 Jul 2015 17:18:06 +0100
-Message-ID: <20150717161806.2578.85483.stgit@warthog.procyon.org.uk> (sfid-20150717_182224_009500_D6FB4D60)
-In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
-References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+	id S1753967AbbGWVGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2015 17:06:43 -0400
+Message-ID: <55B1575F.40403@rempel-privat.de> (sfid-20150723_230646_904240_2454F2FB)
+Date: Thu, 23 Jul 2015 23:06:39 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: wim torfs <wtorfs@gmail.com>
+CC: rolf.anderegg@weiss.ch,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc: virtual interfaces, AP connection drop & kernel warning
+References: <559D41B3.4050604@weiss.ch> <559F9AF8.5000208@rempel-privat.de> <55A3A672.1060502@weiss.ch> <55A79B5C.7010501@rempel-privat.de> <55AFC6E1.7060706@weiss.ch> <55AFCFDE.7060902@rempel-privat.de> <55B0A0E1.9090300@gmail.com>
+In-Reply-To: <55B0A0E1.9090300@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We only support PKCS#7 signed-data [RFC2315 sec 9] content at the top level,
-so reject anything else.  Further, check that the version numbers in
-SignedData and SignerInfo are 1 in both cases.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Note that we don't restrict the inner content type.  In the PKCS#7 code we
-don't parse the data attached there, but merely verify the signature over
-it.
+Am 23.07.2015 um 10:08 schrieb wim torfs:
+>=20
+>=20
+> On 07/22/2015 07:16 PM, Oleksij Rempel wrote:
+>> Am 22.07.2015 um 18:37 schrieb Rolf Anderegg:
+>>>
+>>> On 16/07/15 13:54, Oleksij Rempel wrote:
+>>>> Am 13.07.2015 um 13:52 schrieb Rolf Anderegg:
+>>>>>
+>>>>> I suspect that there are bandwidth/speed issues when dealing with U=
+SB
+>>>>> adapters, but that does not inherently mean that the connection is
+>>>>> prone
+>>>>> to drop, right? Doesn't that mean that I am leaking packages somewh=
+ere
+>>>>> along the way? What else could I be looking for?
+>>>>
+>>>> The packages can drop if you will do channel scan. STA mode need som=
+e
+>>>> seconds to complete channel scan. It means AP will be all the time
+>>>> unavailable.
+>>>
+>>> Ok, that may be. Then again why am I not experiencing the same
+>>> connection drop on my ath5k setup? Because the channel scan is more
+>>> likely to be completed in due time?
+>>
+>> Yes, channel scantime on usb device is match longer then on pci.
+>>
+>=20
+> May I ask for the reason it takes a longer time to complete the scannin=
+g
+> on a USB device compared to a PCI device? I assume the internals of an
+> ath9k PCI device is similar as that of an ath9k_htc USB device, so is i=
+t
+> purely the bus speed that affects this time? Or is the USB device a
+> smaller version of the chipset on the PCI device and therefore with a
+> lower speed due to power concerns?
+>=20
+> If it is due to the bus speed, would it be possible to decouple the
+> scanning process from the bus, that is, I assume that the hardware
+> performs all the necessary channel switching and channel sensing, so wh=
+y
+> not allow the hardware to gather such information and transfer the
+> results in a single burst to the host over the USB bus? Or is the
+> channel switching controlled by the host and it takes a lot of time due=
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Reviewed-By: David Woodhouse <David.Woodhouse@intel.com>
----
+> to the duration of transmitting the channel switching commands to the
+> USB device?
 
- crypto/asymmetric_keys/pkcs7.asn1     |    6 +--
- crypto/asymmetric_keys/pkcs7_parser.c |   75 +++++++++++++++++++++++++++++++++
- 2 files changed, 77 insertions(+), 4 deletions(-)
+Well, it is about development time vs scan time: do as match as possible
+with one code base or develop two different code bases.
 
-diff --git a/crypto/asymmetric_keys/pkcs7.asn1 b/crypto/asymmetric_keys/pkcs7.asn1
-index a5a14ef28c86..05504431e1c1 100644
---- a/crypto/asymmetric_keys/pkcs7.asn1
-+++ b/crypto/asymmetric_keys/pkcs7.asn1
-@@ -1,12 +1,12 @@
- PKCS7ContentInfo ::= SEQUENCE {
--	contentType	ContentType,
-+	contentType	ContentType ({ pkcs7_check_content_type }),
- 	content		[0] EXPLICIT SignedData OPTIONAL
- }
- 
- ContentType ::= OBJECT IDENTIFIER ({ pkcs7_note_OID })
- 
- SignedData ::= SEQUENCE {
--	version			INTEGER,
-+	version			INTEGER ({ pkcs7_note_signeddata_version }),
- 	digestAlgorithms	DigestAlgorithmIdentifiers,
- 	contentInfo		ContentInfo,
- 	certificates		CHOICE {
-@@ -68,7 +68,7 @@ SignerInfos ::= CHOICE {
- }
- 
- SignerInfo ::= SEQUENCE {
--	version			INTEGER,
-+	version			INTEGER ({ pkcs7_note_signerinfo_version }),
- 	issuerAndSerialNumber	IssuerAndSerialNumber,
- 	digestAlgorithm		DigestAlgorithmIdentifier ({ pkcs7_sig_note_digest_algo }),
- 	authenticatedAttributes	CHOICE {
-diff --git a/crypto/asymmetric_keys/pkcs7_parser.c b/crypto/asymmetric_keys/pkcs7_parser.c
-index 3bd5a1e4c493..ab427f04b299 100644
---- a/crypto/asymmetric_keys/pkcs7_parser.c
-+++ b/crypto/asymmetric_keys/pkcs7_parser.c
-@@ -226,6 +226,79 @@ int pkcs7_sig_note_pkey_algo(void *context, size_t hdrlen,
- }
- 
- /*
-+ * We only support signed data [RFC2315 sec 9].
-+ */
-+int pkcs7_check_content_type(void *context, size_t hdrlen,
-+			     unsigned char tag,
-+			     const void *value, size_t vlen)
-+{
-+	struct pkcs7_parse_context *ctx = context;
-+
-+	if (ctx->last_oid != OID_signed_data) {
-+		pr_warn("Only support pkcs7_signedData type\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Note the SignedData version
-+ */
-+int pkcs7_note_signeddata_version(void *context, size_t hdrlen,
-+				  unsigned char tag,
-+				  const void *value, size_t vlen)
-+{
-+	unsigned version;
-+
-+	if (vlen != 1)
-+		goto unsupported;
-+
-+	version = *(const u8 *)value;
-+	switch (version) {
-+	case 1:
-+		/* PKCS#7 SignedData [RFC2315 sec 9.1] */
-+		break;
-+	default:
-+		goto unsupported;
-+	}
-+
-+	return 0;
-+
-+unsupported:
-+	pr_warn("Unsupported SignedData version\n");
-+	return -EINVAL;
-+}
-+
-+/*
-+ * Note the SignerInfo version
-+ */
-+int pkcs7_note_signerinfo_version(void *context, size_t hdrlen,
-+				  unsigned char tag,
-+				  const void *value, size_t vlen)
-+{
-+	unsigned version;
-+
-+	if (vlen != 1)
-+		goto unsupported;
-+
-+	version = *(const u8 *)value;
-+	switch (version) {
-+	case 1:
-+		/* PKCS#7 SignerInfo [RFC2315 sec 9.2] */
-+		break;
-+	default:
-+		goto unsupported;
-+	}
-+
-+	return 0;
-+
-+unsupported:
-+	pr_warn("Unsupported SignerInfo version\n");
-+	return -EINVAL;
-+}
-+
-+/*
-  * Extract a certificate and store it in the context.
-  */
- int pkcs7_extract_cert(void *context, size_t hdrlen,
-@@ -326,7 +399,7 @@ int pkcs7_sig_note_authenticated_attr(void *context, size_t hdrlen,
- }
- 
- /*
-- * Note the set of auth attributes for digestion purposes [RFC2315 9.3]
-+ * Note the set of auth attributes for digestion purposes [RFC2315 sec 9.3]
-  */
- int pkcs7_sig_note_set_of_authattrs(void *context, size_t hdrlen,
- 				    unsigned char tag,
+--=20
+Regards,
+Oleksij
 
+
+--0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlWxV2AACgkQHwImuRkmbWkkQwD/V5wkG2RTc0bqUwociLz/g6Cu
+KwRxzYG8q87p7hEM/VIA/j71tmSEvCaM5VZPk1p80hJmecHnwpSl1yUnFMYHu+kn
+=tQMM
+-----END PGP SIGNATURE-----
+
+--0dDGEX2vqGTmRRufPSjMFtHJdosuR0EmB--
