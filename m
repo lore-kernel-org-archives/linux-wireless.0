@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:36484 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752279AbbGVSRu (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:34347 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214AbbGWAYm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 14:17:50 -0400
-Received: by wicgb10 with SMTP id gb10so109874627wic.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:49 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/15] staging: vt6655: remove unused tagDEVICE_RD_INFO -> curr_desc
-Date: Wed, 22 Jul 2015 19:16:40 +0100
-Message-Id: <1437589007-5479-8-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201756_906795_3ED89B18)
-In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
-References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 22 Jul 2015 20:24:42 -0400
+Received: by iebmu5 with SMTP id mu5so179745783ieb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 17:24:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1437512677-6153-1-git-send-email-linus.walleij@linaro.org>
+References: <1437512677-6153-1-git-send-email-linus.walleij@linaro.org>
+Date: Thu, 23 Jul 2015 02:24:42 +0200
+Message-ID: <CACna6rxkPVPz9N6ueOeuxwrDuQ8rRU9XZS9FdTZP1Yqd5=4+QQ@mail.gmail.com> (sfid-20150723_022445_808352_B5DC6DBA)
+Subject: Re: [PATCH] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Felix Fietkau <nbd@openwrt.org>, Kalle Valo <kvalo@codeaurora.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-variable is assigned a value that is never used.
+On 21 July 2015 at 23:04, Linus Walleij <linus.walleij@linaro.org> wrote:
+> This switches the BCMA GPIO driver to use GPIOLIB_IRQCHIP to
+> handle its interrupts instead of rolling its own copy of the
+> irqdomain handling etc.
+>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+> Hi BCMA people,
+>
+> if we can figure this out it would be great if you can test this
+> and merge it through whatever GIT tree handles BCMA patches.
+> Alternatively I can merge it into the GPIO tree with your ACK.
+>
+> This is not even compiled, I don't have the right cross compilers
+> but the conversion is done like all other GPIOLIB_IRQCHIP conversions
+> I've done, so it shouldn't be very far off. Maybe you can get it
+> in shape in accordance with my idea if I screwed up? Thanks.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/desc.h        | 1 -
- drivers/staging/vt6655/device_main.c | 2 --
- 2 files changed, 3 deletions(-)
-
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 26cd3e1..3302d0182 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -170,7 +170,6 @@
- typedef struct tagDEVICE_RD_INFO {
- 	struct sk_buff *skb;
- 	dma_addr_t  skb_dma;
--	dma_addr_t  curr_desc;
- } DEVICE_RD_INFO,   *PDEVICE_RD_INFO;
- 
- #ifdef __BIG_ENDIAN
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 7409ed2..c82bf48 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -628,7 +628,6 @@ static void device_init_rd0_ring(struct vnt_private *pDevice)
- 			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
- 
- 		pDesc->next = &(pDevice->aRD0Ring[(i+1) % pDevice->sOpts.nRxDescs0]);
--		pDesc->pRDInfo->curr_desc = cpu_to_le32(curr);
- 		pDesc->next_desc = cpu_to_le32(curr + sizeof(SRxDesc));
- 	}
- 
-@@ -652,7 +651,6 @@ static void device_init_rd1_ring(struct vnt_private *pDevice)
- 			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
- 
- 		pDesc->next = &(pDevice->aRD1Ring[(i+1) % pDevice->sOpts.nRxDescs1]);
--		pDesc->pRDInfo->curr_desc = cpu_to_le32(curr);
- 		pDesc->next_desc = cpu_to_le32(curr + sizeof(SRxDesc));
- 	}
- 
--- 
-2.1.4
-
+I'm away one my holidays, won't be able to check it anytime soon.
+Unless someone else willing to test it appears, I guess we should hold
+it for now, sorry :( I'll for sure handle this after my holidays (late
+august).
