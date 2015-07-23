@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39968 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752518AbbG1RM1 convert rfc822-to-8bit (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45092 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753850AbbGWVwP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 13:12:27 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Subject: Re: [RFC 02/10] mac80211: allow to transmit A-MSDU within A-MPDU
-Date: Tue, 28 Jul 2015 17:12:23 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E7DA09A@hasmsx107.ger.corp.intel.com> (sfid-20150728_191231_770141_0734AFD6)
-References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
- <1437421384-19884-3-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYKKCLDaoAyE0VR66ynAxnm9Ob5m6T0ADbH415J6-i=6WA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32E7D9B01@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 23 Jul 2015 17:52:15 -0400
+Date: Thu, 23 Jul 2015 14:52:14 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com
+Subject: Re: [PATCH 1/3] staging: wilc1000: coreconfigurator.c: remove
+ WILC_MALLOC
+Message-ID: <20150723215214.GA32146@kroah.com> (sfid-20150723_235218_776831_D1D7A1DB)
+References: <1437650359-2051-1-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437650359-2051-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 23, 2015 at 08:19:17PM +0900, Chaehyun Lim wrote:
+> Use kmalloc and kmalloc_array instead of WILC_MALLOC.
+> 
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.c | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+> index b069614..7e2b2ab41 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.c
+> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+> @@ -674,7 +674,7 @@ s32 CoreConfiguratorInit(void)
+>  	sema_init(&SemHandleSendPkt, 1);
+>  	sema_init(&SemHandlePktResp, 0);
+>  
+> -	gps8ConfigPacket = (s8 *)WILC_MALLOC(MAX_PACKET_BUFF_SIZE);
+> +	gps8ConfigPacket = kmalloc(MAX_PACKET_BUFF_SIZE, GFP_ATOMIC);
 
+I know this is what WILC_MALLOC() did, but should this really be
+GFP_ATOMIC?
 
-On 07/28/2015 02:35 PM, Grumbach, Emmanuel wrote:
->> On Tue, Jul 21, 2015 at 1:12 AM, Emmanuel Grumbach
->> <emmanuel.grumbach@intel.com> wrote:
->>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c index
->>> c8ba2e7..a758eb84 100644
->>> --- a/net/mac80211/agg-tx.c
->>> +++ b/net/mac80211/agg-tx.c
->>> @@ -97,7 +97,8 @@ static void ieee80211_send_addba_request(struct
->> ieee80211_sub_if_data *sdata,
->>>         mgmt->u.action.u.addba_req.action_code =
->>> WLAN_ACTION_ADDBA_REQ;
->>>
->>>         mgmt->u.action.u.addba_req.dialog_token = dialog_token;
->>> -       capab = (u16)(1 << 1);          /* bit 1 aggregation policy */
->>> +       capab = (u16)(1 << 0);          /* bit 0 A-MSDU support */
->> Shouldn't this be based on HW capability? We can add couple of more _HW_
->> flags for TX and RX and populate this based on that?
-> Why?
-> What will happen if we ask for A-MSDU inside A-MPDU and we won't do A-MSDU?
-> Worst case, the AP will deny this and will clear that bit in its response.
+>  	if (gps8ConfigPacket == NULL) {
+>  		PRINT_ER("failed in gps8ConfigPacket allocation\n");
+>  		s32Error = WILC_NO_MEM;
+> @@ -811,7 +811,7 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+>  		u32 u32Tsf_Lo;
+>  		u32 u32Tsf_Hi;
+>  
+> -		pstrNetworkInfo = (tstrNetworkInfo *)WILC_MALLOC(sizeof(tstrNetworkInfo));
+> +		pstrNetworkInfo = kmalloc(sizeof(tstrNetworkInfo), GFP_ATOMIC);
 
-I feel that my response was accurate, but the wording wasn't precise enough.
-We have two possibilities:
-1) the AP does support A-MSDU in A-MPDU
-2) the AP does not support A-MSDU in A-MPDU
+Same here.  And everywhere else you changed this code, please review and
+resend.
 
-In the first case, the AP will reply with that bit set and the client
-can choose to send A-MSDU or not. I don't think that the AP needs to
-allocate anything special to support A-MSDU in A-MPDU, so it is free to ask.
-In the second case, the AP will reply with that same bit clear in the
-AddBA response, and mac0211 / driver will know not to send A-MSDU in
-A-MPDU (which the driver doesn't support in the case you were describing
-- so this is a no-op).
+thanks,
 
-The only concern you may have is about APs that would decline the AddBA
-request because of that bit. That doesn't seem to happen since a lot of
-vendors use A-MSDU in A-MPDU.
+greg k-h
