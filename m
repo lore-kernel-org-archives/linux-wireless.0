@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:33293 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071AbbG3Vfi (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33991 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639AbbGWLTe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 17:35:38 -0400
-Received: by padck2 with SMTP id ck2so29369099pad.0
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2015 14:35:38 -0700 (PDT)
-From: Filipe Brandenburger <filbranden@google.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Elliott Hughes <enh@google.com>,
-	Christopher Wiley <wiley@google.com>,
-	Filipe Brandenburger <filbranden@google.com>
-Subject: [PATCH 2/2] iw: remove android-nl.c with unneeded workaround
-Date: Thu, 30 Jul 2015 14:35:15 -0700
-Message-Id: <1438292115-39495-3-git-send-email-filbranden@google.com> (sfid-20150730_233545_683482_AFE73F07)
-In-Reply-To: <1438292115-39495-1-git-send-email-filbranden@google.com>
-References: <1438292115-39495-1-git-send-email-filbranden@google.com>
+	Thu, 23 Jul 2015 07:19:34 -0400
+Received: by pacan13 with SMTP id an13so157820782pac.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 04:19:34 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/3] staging: wilc1000: coreconfigurator.c: add kmalloc error check
+Date: Thu, 23 Jul 2015 20:19:18 +0900
+Message-Id: <1437650359-2051-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150723_131937_489696_487A881F)
+In-Reply-To: <1437650359-2051-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1437650359-2051-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The workaround might have been necessary in the past, however now it
-produces the following error:
+Add error check if memory allocation is failed.
 
-  .../libnl.a(attr.o): multiple definition of 'nla_put_flag'
-  .../android-nl.o: previous definition here
-  collect2: error: ld returned 1 exit status
-
-TEST=Built AOSP tree with this patchset, tested the generated iw binary.
-
-Signed-off-by: Filipe Brandenburger <filbranden@google.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- Android.mk   | 2 +-
- android-nl.c | 6 ------
- 2 files changed, 1 insertion(+), 7 deletions(-)
- delete mode 100644 android-nl.c
+ drivers/staging/wilc1000/coreconfigurator.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/Android.mk b/Android.mk
-index 0820892c6c19..8d6567f624c1 100644
---- a/Android.mk
-+++ b/Android.mk
-@@ -7,7 +7,7 @@ IW_ANDROID_BUILD=y
- NO_PKG_CONFIG=y
- include $(LOCAL_PATH)/Makefile
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 7e2b2ab41..b51c15f 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -812,6 +812,9 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 		u32 u32Tsf_Hi;
  
--LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS)) android-nl.c
-+LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS))
+ 		pstrNetworkInfo = kmalloc(sizeof(tstrNetworkInfo), GFP_ATOMIC);
++		if (pstrNetworkInfo == NULL)
++			return -ENOMEM;
++
+ 		WILC_memset((void *)(pstrNetworkInfo), 0, sizeof(tstrNetworkInfo));
  
- LOCAL_C_INCLUDES := \
- 	$(LOCAL_PATH) \
-diff --git a/android-nl.c b/android-nl.c
-deleted file mode 100644
-index d216f5fe8680..000000000000
---- a/android-nl.c
-+++ /dev/null
-@@ -1,6 +0,0 @@
--#include <netlink/attr.h>
--
--int nla_put_flag(struct nl_msg *msg, int flag)
--{
--	return nla_put(msg, flag, 0, NULL);
--}
+ 		pstrNetworkInfo->s8rssi = pu8WidVal[0];
+@@ -863,6 +866,9 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 
+ 		if (u16IEsLen > 0) {
+ 			pstrNetworkInfo->pu8IEs = kmalloc(u16IEsLen, GFP_ATOMIC);
++			if (pstrNetworkInfo->pu8IEs == NULL)
++				return -ENOMEM;
++
+ 			WILC_memset((void *)(pstrNetworkInfo->pu8IEs), 0, u16IEsLen);
+ 
+ 			WILC_memcpy(pstrNetworkInfo->pu8IEs, pu8IEs, u16IEsLen);
+@@ -930,6 +936,9 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 	u16 u16IEsLen = 0;
+ 
+ 	pstrConnectRespInfo = kmalloc(sizeof(tstrConnectRespInfo), GFP_ATOMIC);
++	if (pstrConnectRespInfo == NULL)
++		return -ENOMEM;
++
+ 	WILC_memset((void *)(pstrConnectRespInfo), 0, sizeof(tstrConnectRespInfo));
+ 
+ 	/* u16AssocRespLen = pu8Buffer[0]; */
+@@ -950,6 +959,9 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+ 		pstrConnectRespInfo->pu8RespIEs = kmalloc(u16IEsLen, GFP_ATOMIC);
++		if (pstrConnectRespInfo->pu8RespIEs == NULL)
++			return -ENOMEM;
++
+ 		WILC_memset((void *)(pstrConnectRespInfo->pu8RespIEs), 0, u16IEsLen);
+ 
+ 		WILC_memcpy(pstrConnectRespInfo->pu8RespIEs, pu8IEs, u16IEsLen);
 -- 
-2.5.0.rc2.392.g76e840b
+1.9.1
 
