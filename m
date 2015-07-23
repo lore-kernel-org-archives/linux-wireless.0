@@ -1,112 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:18996 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbbGISZ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 14:25:28 -0400
-Message-ID: <559EBC91.2070600@broadcom.com> (sfid-20150709_202602_849280_18832B04)
-Date: Thu, 9 Jul 2015 20:25:21 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arch@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
-References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com> <1436429599-10762-3-git-send-email-vgupta@synopsys.com>
-In-Reply-To: <1436429599-10762-3-git-send-email-vgupta@synopsys.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mx02.posteo.de ([89.146.194.165]:60883 "EHLO mx02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753386AbbGWLGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2015 07:06:03 -0400
+Message-ID: <1437649559.15337.1.camel@embedded.rocks> (sfid-20150723_130617_526164_1BB1BB0C)
+Subject: Re: brcmfmac: Failed to create interface p2p-dev-p2p0: -28 (No
+ space left on device)
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Arend van Spriel <aspriel@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Date: Thu, 23 Jul 2015 13:05:59 +0200
+In-Reply-To: <1436255260.27716.6.camel@embedded.rocks>
+References: <1433766944.28058.16.camel@embedded.rocks>
+	 <55758D7E.3000603@broadcom.com> <1433771289.28058.24.camel@embedded.rocks>
+	 <5575C6FA.6030104@broadcom.com> <1433794640.28058.26.camel@embedded.rocks>
+	 <557605CC.6070907@broadcom.com> <1434448766.21949.9.camel@embedded.rocks>
+	 <55803214.2030204@broadcom.com> <1434608018.5481.4.camel@embedded.rocks>
+	 <55828106.7060004@broadcom.com> <1434658050.2532.6.camel@embedded.rocks>
+	 <55872A3C.7030704@gmail.com> <1435059083.4765.2.camel@embedded.rocks>
+	 <55894C40.1070108@broadcom.com> <1436255260.27716.6.camel@embedded.rocks>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2015 10:13 AM, Vineet Gupta wrote:
-> There's already a generic implementation so use that instead.
+Hi all,
 
-There is or there was? If there is now I am fine with this patch, but if 
-it already was there the author might have had a reason for adding a 
-local function and I would like to hear that reason.
+On Di, 2015-07-07 at 09:47 +0200, Jörg Krause wrote:
+> Hi Arend,
+> 
+> On Di, 2015-06-23 at 14:08 +0200, Arend van Spriel wrote:
+> > On 06/23/15 13:31, Jörg Krause wrote:
+> > > Hi Arend,
+> > > 
+> > > On So, 2015-06-21 at 23:18 +0200, Arend van Spriel wrote:
+> > > > 
+> > > > My bad. The patch removes p2pdev from interface modes, but it 
+> > > > is
+> > > > still
+> > > > listed in the interface combinations and cfg80211 will complain 
+> > > > 
+> > > > about
+> > > > it. Have to extend the patch. I better do that after a good 
+> > > > nights
+> > > > sleep.
+> > > 
+> > > Never mind! Did you had a good night sleep already :-) ?
+> > 
+> > Several ;-) Did not get to this earlier. Thanks for the reminder.
+> > 
+> > Had a closer look at wiphy_verify_combinations() and I am hopeful 
+> > the 
+> > 
+> > attached patch will fix the wiphy_register() failure.
+> > 
+> 
+> Sorry for late reply! I was busy on another topic...
+> 
+> I've applied your patch, but p2p interface is still not working. I
+> attached the debug log from wpa_supplicant.
+> 
+> I tested with Linux Kernel 4.0.7 and wpa_supplicant 2.4.
+> 
+> This is my p2p_supplicant.conf:
+>     ctrl_interface=/var/run/p2p_supplicant
+>     update_config=1
+> 
+>     device_name=HBM10
+>     device_type=1-0050F204-1
+> 
+>     p2p_go_ht40=1
+> 
+> Test with the p2p_find command:
+>     # wpa_cli -p /var/run/p2p_supplicant p2p_find
+>     Selected interface 'p2p0'
+>     1928.165036: p2p0: Control interface command 'P2P_FIND'
+>     FAIL
+> 
 
-> ---
-> I'm not sure if the driver usage of atomic_or?() is correct in terms of
-> storage size of @val for 64 bit arches.
->
-> Assuming LP64 programming model for linux on say x86_64: atomic_or()
-> callers in this driver use long (sana 64 bit) storage and pass it to
-> atomic_orr/atomic_or which downcasts it to 32 bits. Is that OK ?
+ping :-) Any news on this?
 
-The function is used with 32bit register value from the device so I 
-think it is ok.
-
-Regards,
-Arend
-
-> ---
-> Cc: Brett Rudley <brudley@broadcom.com>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-> Cc: Hante Meuleman <meuleman@broadcom.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Cc: Daniel Kim <dekim@broadcom.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: brcm80211-dev-list@broadcom.com
-> Cc: Peter Zijlstra <peterz@infradead.org>
-> Cc: Ingo Molnar <mingo@kernel.org>
-> Cc: netdev@vger.kernel.org
-> Cc: linux-arch@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
->
-> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 13 ++-----------
->   1 file changed, 2 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> index d36f5f3d931b..f990e3d0e696 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-> @@ -2564,15 +2564,6 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
->   	}
->   }
->
-> -static void atomic_orr(int val, atomic_t *v)
-> -{
-> -	int old_val;
-> -
-> -	old_val = atomic_read(v);
-> -	while (atomic_cmpxchg(v, old_val, val | old_val) != old_val)
-> -		old_val = atomic_read(v);
-> -}
-> -
->   static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
->   {
->   	struct brcmf_core *buscore;
-> @@ -2595,7 +2586,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
->   	if (val) {
->   		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
->   		bus->sdcnt.f1regdata++;
-> -		atomic_orr(val, &bus->intstatus);
-> +		atomic_or(val, &bus->intstatus);
->   	}
->
->   	return ret;
-> @@ -2712,7 +2703,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
->
->   	/* Keep still-pending events for next scheduling */
->   	if (intstatus)
-> -		atomic_orr(intstatus, &bus->intstatus);
-> +		atomic_or(intstatus, &bus->intstatus);
->
->   	brcmf_sdio_clrintr(bus);
->
->
-
+Best regards
+Jörg Krause
