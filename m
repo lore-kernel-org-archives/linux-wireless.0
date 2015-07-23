@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:11253 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753219AbbGISI0 (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:36154 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbbGWDdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 14:08:26 -0400
-Message-ID: <559EB897.1020509@broadcom.com> (sfid-20150709_200844_299083_EC68BBA1)
-Date: Thu, 9 Jul 2015 20:08:23 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed,
- -52
-References: <CACna6rzfb5-eGD8EgEHM05nJ5FWPnkEkW_fTxNg-3-=PCknv-Q@mail.gmail.com>
-In-Reply-To: <CACna6rzfb5-eGD8EgEHM05nJ5FWPnkEkW_fTxNg-3-=PCknv-Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Wed, 22 Jul 2015 23:33:13 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2 5/5] wireless-regdb: Update 5 GHz rules for Taiwan (TW) to follow US
+Date: Thu, 23 Jul 2015 11:33:00 +0800
+Message-Id: <1437622380-4154-6-git-send-email-wens@csie.org> (sfid-20150723_053322_655751_991CD08B)
+In-Reply-To: <1437622380-4154-1-git-send-email-wens@csie.org>
+References: <1437622380-4154-1-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2015 09:07 AM, Rafał Miłecki wrote:
-> Hey guys, I'm afraid I hit another brcmfmac bug.
->
-> First of all, I implemented a trivial workaround for the previous bug
-> reported in the:
-> brcmfmac: one faulty "iw interface add" command breaks in-firmware BSS state
-> See my workaround in OpenWrt git:
-> http://git.openwrt.org/?p=openwrt.git;a=commitdiff;h=0e6c9bd9556eea98b476ad371d64d8d16e3a9f9c
->
-> So now OpenWrt's user space calls using "iw" tool don't trigger
-> brcmfmac BSSes bug anymore. I can successfully use one AP interface
-> per device.
->
-> The problem appears when trying to use more than 1 interface. It gets
-> created correctly, but setting its MAC fails. It results in wlan0-1
-> having the same MAC as wlan0 and finally having two networks (SSIDs)
-> using the same MAC. That obviously doesn't work.
+Following the amendment of FCC part 15E and U-NII regulations effective
+2014/06/02, and the opening up of 5150 ~ 5250 MHz and 5600 ~ 5650 MHz
+spectrum in Taiwan, vendors have asked whether Taiwan's regulations
+would be updated to match the new FCC rules, when this would happen,
+and what to do in the interim.
 
-Can we please take one step back. I am not understanding how you guys 
-use the multiple interfaces. The multiple AP interfaces in brcmfmac are 
-only intended for Multiple-BSS feature as described in hostapd.conf 
-which changes wlan0 from STA to AP and creates additional AP interfaces, 
-but you seem to be creating an AP interface with iw next to a STA interface.
+The NCC, Taiwan's regulatory body has officially replied that new
+amendments are under way, and the goal is to match the FCC rules.
+Until the amendments come through, vendors are free to test and
+submit applications using the new FCC rules for transmission power
+limits and DFS requirements, though unintended / unwanted emissions
+must still conform to the current standard, LP0002. [1][2]
 
-I actually have patches pending that correct the announced interface 
-combinations. I am currently on vacation as my family expanded with a 
-baby girl.
+This has been confirmed via a phone call to the NCC.
 
-Regards,
-Arend
+[1] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
+[2] Proposal #10312260 (p.6, Chinese),
+    http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
 
-> The error I see is:
-> brcmfmac: _brcmf_set_mac_address: Setting cur_etheraddr failed, -52
-> with -52 meaning BCME_IE_NOTFOUND.
->
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+---
+ db.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 29ba4b6..56fbba3 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1125,10 +1125,10 @@ country TT: DFS-FCC
+ # LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
+ #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+ #   (section 3.10.1, 4.7)
+-country TW: DFS-JP
++country TW: DFS-FCC
+ 	(2400 - 2483.5 @ 40), (30)
+ 	(5150 - 5250 @ 80), (30), AUTO-BW
+-	(5250 - 5350 @ 80), (17), DFS, AUTO-BW
++	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (23), DFS
+ 	(5725 - 5850 @ 80), (30)
+  
+-- 
+2.1.4
 
