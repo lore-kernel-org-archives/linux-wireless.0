@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:34086 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754696AbbG0Xz2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52930 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbbGXICj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 19:55:28 -0400
-Received: by lafd3 with SMTP id d3so48215261laf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 16:55:27 -0700 (PDT)
+	Fri, 24 Jul 2015 04:02:39 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Mike Looijmans <mike.looijmans@topic.nl>
+Cc: <linux-wireless@vger.kernel.org>, <khoroshilov@ispras.ru>,
+	Fariya Fatima <fariyaf@gmail.com>
+Subject: Re: Commit "rsi: fix memory leak in rsi_load_ta_instructions()" breaks things
+References: <55B1E2CB.3040908@topic.nl>
+Date: Fri, 24 Jul 2015 11:02:32 +0300
+In-Reply-To: <55B1E2CB.3040908@topic.nl> (Mike Looijmans's message of "Fri, 24
+	Jul 2015 09:01:31 +0200")
+Message-ID: <87egjyf0fb.fsf@kamboji.qca.qualcomm.com> (sfid-20150724_100244_425048_8BC78EC0)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
- <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
- <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com> <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Tue, 28 Jul 2015 01:55:08 +0200
-Message-ID: <CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com> (sfid-20150728_015532_359302_154D63B8)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 1:50 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> is it never getting any readings before your patch? NF Readings all
-> look empty...
-Yes, looks like it. Unfortunately I haven't saved a complete kernel
-log (with ath9k debug level = 0x00004449) but only a few parts. Here
-are the interesting bits:
-<7>[ 449.746679] ath: phy1: NF calibrated [ctl] [chain 0] is -106
-<7>[ 449.746697] ath: phy1: NF[0] (-106) > MAX (-110), correcting to MAX
-<7>[ 449.746714] ath: phy1: NF calibrated [ctl] [chain 1] is -90
-<7>[ 449.746731] ath: phy1: NF[1] (-90) > MAX (-110), correcting to MAX
-<7>[ 449.746748] ath: phy1: NF calibrated [ext] [chain 0] is -103
-<7>[ 449.746765] ath: phy1: NF[3] (-103) > MAX (-110), correcting to MAX
-<7>[ 449.746781] ath: phy1: NF calibrated [ext] [chain 1] is -86
-<7>[ 449.746798] ath: phy1: NF[4] (-86) > MAX (-110), correcting to MAX
-<7>[ 449.746878] ath: phy1: Calibration @37407 finished: long ani, caldone: true
+Mike Looijmans <mike.looijmans@topic.nl> writes:
 
-I'd assume (because I don't know the ath9k code) that ath9k simply
-ignores NF readings that are "out of range" (as suggested by those
-messages).
+> ﻿Regarding this commit:
+>
+> https://lkml.org/lkml/2014/12/12/709
+>
+>     rsi: fix memory leak in rsi_load_ta_instructions()
+>
+>     Memory allocated by kmemdup() in rsi_load_ta_instructions() is leaked.
+>     But duplication of firmware data here is useless,
+>     so the patch removes kmemdup() at all.
+>
+>     Found by Linux Driver Verification project (linuxtesting.org).
+>
+>     Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+>     Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>
+> We use this driver for the Redpine Wifi chip on our "florida" board,
+> and after this commit it stopped working. Symptom was that the "wlan0"
+> device was not created at all. Reverting the commit makes it work
+> again.
+>
+> Apparently, the kmemdup action is needed for something. I suspect the
+> DMA controller is still copying the firmware data before the method
+> returned.
+>
+> Having no experience with this part of the kernel, I wasn't able to
+> come up with a more constructive solution than just reverting the
+> patch.
 
+Hmm, rsi doesn't seem to have an entry in MAINTAINERS? Do we have a
+maintainer for this driver? Adding Fariya as the first rsi commiter.
 
-Regards,
-Martin
+Unless someone has better suggestions I'll just revert the patch.
+
+-- 
+Kalle Valo
