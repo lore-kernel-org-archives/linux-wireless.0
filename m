@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42584 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbbG0K2c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 06:28:32 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Mike Looijmans <mike.looijmans@topic.nl>
-Cc: linux-wireless@vger.kernel.org, khoroshilov@ispras.ru,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] rsi: Fix failure to load firmware after memory leak fix and fix the leak
-References: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl>
-Date: Mon, 27 Jul 2015 13:28:26 +0300
-In-Reply-To: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl> (Mike
-	Looijmans's message of "Mon, 27 Jul 2015 07:43:33 +0200")
-Message-ID: <87wpxlao8l.fsf@kamboji.qca.qualcomm.com> (sfid-20150727_122853_181962_CBE131C0)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:7878 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750854AbbGXLJx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2015 07:09:53 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Andreas Fenkart <afenkart@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>
+Subject: RE: [PATCH 3/4] mwifiex: remove CMD_F_CANCELED flag
+Date: Fri, 24 Jul 2015 11:09:49 +0000
+Message-ID: <e39a5c966cd745398c2710ed02ccbe44@SC-EXCH04.marvell.com> (sfid-20150724_130956_383356_E4100152)
+References: <1437117186-25243-1-git-send-email-afenkart@gmail.com>
+ <1437117186-25243-4-git-send-email-afenkart@gmail.com>
+In-Reply-To: <1437117186-25243-4-git-send-email-afenkart@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mike Looijmans <mike.looijmans@topic.nl> writes:
+Hi Andreas,
 
-> Fixes commit eae79b4f3e82ca63a53478a161b190a0d38fe526 ("rsi: fix memory leak
-> in rsi_load_ta_instructions()") which stopped the driver from functioning.
+> From: Andreas Fenkart [mailto:afenkart@gmail.com]
+> Sent: Friday, July 17, 2015 12:43 PM
+> To: linux-wireless@vger.kernel.org
+> Cc: Amitkumar Karwar; Kalle Valo; Andreas Fenkart
+> Subject: [PATCH 3/4] mwifiex: remove CMD_F_CANCELED flag
+> 
+> CMD_F_CANCELED was used to abort mwifiex_process_cmdresp in case it
+> already started or starts processing the cmd.
+> But this was probably not working the way intended:
+> - it is racy: mwifiex_process_cmdresp might already have passed that
+>   test and is continuing to use the cmd node being recycled
+> - mwifiex_process_cmdresp repeatedly uses adapter->curr_cmd which
+>   we just set to NULL
+> - mwifiex_recycle_cmd_node will clear the flag
+> 
+> The reason why it probably works is that mwifiex_cancel_pending_ioctl is
+> only called from mwifiex_cmd_timeout_func, where the there is little
+> chance of a command response still arriving
+> 
 
-You can abbreviate the commit id:
+You are right. Command timeout handler is called when there is no response from firmware for 10 seconds. If firmware is alive and working, we would have received command response within a  millisecond. So there is very little chance of command response arriving while executing command timeout handler.
 
-Fixes commit eae79b4f3e82 ("rsi: fix memory leak in
-rsi_load_ta_instructions()") which stopped the driver from functioning.
-
-> Firmware data has been allocated using vmalloc(), resulting in memory
-> that cannot be used for DMA. Hence the firmware was first copied to a
-> buffer allocated with kmalloc() in the original code. This patch reverts
-> the commit and only calls "kfree()" to release the buffer after sending
-> the data. This fixes the memory leak without breaking the driver.
->
-> Add a comment to the kmemdup() calls to explain why this is done.
->
-> Tested on a Topic Miami-Florida board which contains the rsi SDIO chip.
->
-> Also added the same kfree() call to the USB glue driver. This was not
-> tested on actual hardware though, as I only have the SDIO version.
->
-> Signed-off-by: Mike Looijmans <mike.looijmans@topic.nl>
-
-Add this before Signed-off-by line:
-
-Fixes: eae79b4f3e82 ("rsi: fix memory leak in rsi_load_ta_instructions()")
-
-> Cc: stable@vger.kernel.org
-
-Also no need to send email to stable@vger.kernel.org list, this line is
-enough and the stable team will pick the commit automatically.
-
--- 
-Kalle Valo
+Regards,
+Amit
