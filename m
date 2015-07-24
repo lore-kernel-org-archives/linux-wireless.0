@@ -1,130 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:34496 "EHLO
-	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932937AbbGVH5P (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:35342 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752409AbbGXQLs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 03:57:15 -0400
-Received: from mail-ig0-f176.google.com (mail-ig0-f176.google.com [209.85.213.176])
-	(Authenticated sender: b93043)
-	by smtp.csie.ntu.edu.tw (Postfix) with ESMTPSA id B89ED207D0
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 15:57:13 +0800 (CST)
-Received: by igr7 with SMTP id 7so61592961igr.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 00:57:12 -0700 (PDT)
+	Fri, 24 Jul 2015 12:11:48 -0400
+Received: by lblf12 with SMTP id f12so18286948lbl.2
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2015 09:11:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAGb2v64D9-1WL_Z5K1+4eq1c57UCMtEW1bXoMJM1NAQr25qLUw@mail.gmail.com>
-References: <1436256435-25048-1-git-send-email-wens@csie.org>
- <20150707205418.GC369@ubuntu-xps13> <CAGb2v67gw=Z32fLGzKP2S0OGf-fQPhCLEZdt4v5yZuRAvSis7g@mail.gmail.com>
- <CAGb2v65qjqLEaChkQDNYaZY7dnA3=DVVrAKQnR-wtggKQj5_+g@mail.gmail.com>
- <20150709151555.GB142895@ubuntu-hedt> <CAGb2v64D9-1WL_Z5K1+4eq1c57UCMtEW1bXoMJM1NAQr25qLUw@mail.gmail.com>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Wed, 22 Jul 2015 15:56:52 +0800
-Message-ID: <CAGb2v65aLaHarHym6XQN_uz5nNiU8SMCuhVZ+GJ3_FVmRqk4uQ@mail.gmail.com> (sfid-20150722_095719_416837_E007E3A4)
-Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Taiwan (TW)
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: wireless-regdb <wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Chen-Yu Tsai <wens@csie.org>
+In-Reply-To: <871tfzif17.fsf@kamboji.qca.qualcomm.com>
+References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+	<CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com>
+	<871tfzif17.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 24 Jul 2015 18:11:47 +0200
+Message-ID: <CAGhQ9VyH4yvnU_kPAy3a7Z+80jNV8uNoTr=Nd=eV2D-iz9YVUQ@mail.gmail.com> (sfid-20150724_181151_903550_717B14CD)
+Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
+From: Joachim Eastwood <manabian@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 3:40 PM, Chen-Yu Tsai <wens@csie.org> wrote:
-> On Thu, Jul 9, 2015 at 11:15 PM, Seth Forshee
-> <seth.forshee@canonical.com> wrote:
->> On Wed, Jul 08, 2015 at 11:07:20AM +0800, Chen-Yu Tsai wrote:
->>> > Thanks. I think there should be a written document about what the
->>> > rules should be like, or what is expected:
->>> >
->>> >   1. WiFi channel boundaries or band boundaries
->>> >   2. peak output power or peak power spectral density
->>> >
->>> > In http://lists.infradead.org/pipermail/wireless-regdb/2015-July/000856.html
->>> > you mentioned the software is smart enough to work out how to combine
->>> > different bands and what channels to use, so I see no reason to explicitly
->>> > chop up contiguous spectrum, unless there are explicit rules forbidding
->>> > combined use of bands with different regulatory rules. AFAIK the FCC
->>> > only requires one to satisfy all rules when usage crosses band boundaries.
->>> >
->>> > http://lists.infradead.org/pipermail/wireless-regdb/2015-July/000857.html
->>> > also raises a similar question.
+On 23 July 2015 at 08:06, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Rafał Miłecki <zajec5@gmail.com> writes:
+>
+>>> +       if (bus->host_pdev) {
+>>> +               struct device *dev = &bus->host_pdev->dev;
+>>> +
+>>> +               of_platform_populate(dev->of_node, of_default_bus_match_table,
+>>> +                                    NULL, dev);
+>>> +       }
+>>> +
 >>
->> I was really commenting about the transmit power updates in your patch.
->> I just compared the frequency changes to the documentation you linked to
->> and those do look okay to me.
->
-> I see.
->
->>> >> I would however consider an update for 5.15-5.25 GHz and 5.6-5.65 GHz
->>> >> provided that there's official documentation to substantiate the change.
->>> >> I unfortunately cannot read Chinese, so I would need some assistance to
->>> >> confirm the documentation.
->>> >
->>> > I could possibly ask around, though I'm not optimistic. The "official"
->>> > documents are just transcripts from NCC hosted Q&A sessions regarding
->>> > the latest regulations. Proposals/questions are submitted by vendors,
->>> > and the NCC responds and puts together an aggregated transcript.
->>>
->>> Just got off the phone with the NCC. Their position is, spectrum allocation
->>> is not within their purview, but the Ministry of Transportation and
->>> Communications. As noted in the patch, they have already opened up the
->>> spectrum to U-NII and low power radio usage. What remains is that the
->>> NCC revise its testing standards. Until then, their position is that,
->>> since their testing standards are modeled after FCC standards, vendors
->>> can just test under FCC standards, then convert the reports into LP0002
->>> format, and cite the FCC test report.
->>>
->>> There is no formal English version of the Q&A transcript, at least not
->>> until some foreign testing body requests it. The person in charge just
->>> asked me to translate it myself...
->>
->> If you send a patch which updates only the frequencies I would likely
->> apply that after allowing a week or so for others to either ack or nack
->> it (and running the stuff you linked to through google translate and
->> seeing if I could make any sense of the output).
->
-> Got it.
->
->> I think the power updates are probably based on a misunderstanding, and
->> may not even be completely correct. For the most part after they've been
->> converted to EIRP (eirp = 10 * log10(mW)) they don't turn out to be
->> substantially different than what we have now. I think the value in
->> 5250-5350 MHz is probably incorrect however. Based on my quick skim of
->> the document you linked to it should be 50 mW rather than 250. 50 mW
->> also roughly matches to the 17 dBm which is in the database today,
->> whereas 250 mW is closer to 24 dBm.
->
-> Yes. About the first part, it seems dbparse.py converts values in mW
-> into EIRP anyway. However I don't think EIRT equals "peak power spectral
-> density".
+>> This caused a compile error when using bcma as module:
+>> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
 
-Sorry, this part applies to the US rules, not part of this patch.
+I encountered the same problem with my modular memory controller driver.
 
-> About the second part, yes the current values match the ones in LP0002.
-> However as I stated, the regulatory body has explicitly allowed certifying
-> under the latest FCC rules, which effectively raises the limits from
-> 50 mW to 250 mW.
->
->> My suggestion would be update the frequencies but not the existing
->> transmit power limits, unless you discover that any of the power limits
->> are definitely incorrect.
->
-> I'll split up the patch into 3:
->
->   1. Add the new 5150 - 5250 frequency band, using current LP0002
->      limits if any, otherwise FCC limits.
->
->   2. Tweak frequency boundaries for the remaining bands to make
->      them contiguous and properly reflect the regulations rather
->      than the WiFi channel frequencies.
->
->   3. Update power limits and DFS requirements to latest FCC standards.
->
-> Each patch will then explain why and how the regulations changed
-> along with references, in English if available.
->
-> You can then decide on whether to merge all three or just the first
-> two.
->
->
-> Regards
-> ChenYu
+>> There are two options I guess:
+>> 1) Export of_default_bus_match_table
+
+See link below for Rob Herring's take on that.
+http://marc.info/?l=linaro-kernel&m=143766694414121&w=2
+
+
+regards,
+Joachim Eastwood
