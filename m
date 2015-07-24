@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51742 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751503AbbGURrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2015 13:47:11 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Steve Pennington <sgpenn@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Greg Donald <gdonald@gmail.com>, Joe Perches <joe@perches.com>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	Masanari Iida <standby24x7@gmail.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: fix incorrect type in assignment warning
-References: <1437499895-18532-1-git-send-email-sgpenn@gmail.com>
-Date: Tue, 21 Jul 2015 13:47:10 -0400
-In-Reply-To: <1437499895-18532-1-git-send-email-sgpenn@gmail.com> (Steve
-	Pennington's message of "Tue, 21 Jul 2015 12:31:35 -0500")
-Message-ID: <wrfjr3o1o129.fsf@redhat.com> (sfid-20150721_194729_013732_B8806DB9)
+Received: from mail-la0-f54.google.com ([209.85.215.54]:36002 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582AbbGXHpO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2015 03:45:14 -0400
+Received: by lagw2 with SMTP id w2so9151559lag.3
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2015 00:45:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CANUX_P3zn1tTjL=G7dgWuf8Yj4Pi2Xb4PpGW+1r5e--dtA6-0A@mail.gmail.com>
+References: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
+	<loom.20150724T015627-838@post.gmane.org>
+	<CANUX_P03KBFk+TVNF78oW=PtxMJ_bwC4sF0UoyuFUjDV+p=wYQ@mail.gmail.com>
+	<CANUX_P3zn1tTjL=G7dgWuf8Yj4Pi2Xb4PpGW+1r5e--dtA6-0A@mail.gmail.com>
+Date: Fri, 24 Jul 2015 10:45:12 +0300
+Message-ID: <CANUX_P3uVqLWyCB_49Av706_WkOsmz+2B2oeOn+uC7wOZdAk4w@mail.gmail.com> (sfid-20150724_094517_855987_4C856B2C)
+Subject: Re: [RFC 0/5] cfg80211 / mac80211: add support for Neighbor Awareness Networking
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: QH <qiumin.hu@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Steve Pennington <sgpenn@gmail.com> writes:
-> Repaced call to htons with call to cpu_to_be16s to fix the
-> following sparse warning:
-> drivers/staging/rtl8723au/core/rtw_recv.c:1557:21: warning: incorrect type in assignment (different base types)
-> drivers/staging/rtl8723au/core/rtw_recv.c:1557:21:    expected unsigned short [unsigned] [assigned] [usertype] len
-> drivers/staging/rtl8723au/core/rtw_recv.c:1557:21:    got restricted __be16 [usertype] <noident>
+On Fri, Jul 24, 2015 at 6:59 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Fri, Jul 24, 2015 at 6:53 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Fri, Jul 24, 2015 at 2:59 AM, QH <qiumin.hu@gmail.com> wrote:
+>>>
+>>> Emmanuel Grumbach <emmanuel.grumbach@...> writes:
+>>>
+>>>
+>>> ++++++++++++++++++++++++++++++++++++++++++-
+>>> >  net/wireless/rdev-ops.h      |  57 +++++
+>>> >  net/wireless/trace.h         |  77 +++++++
+>>> >  net/wireless/util.c          |   9 +-
+>>> >  19 files changed, 1126 insertions(+), 11 deletions(-)
+>>> >
+>>>
+>>> where can I get these patches?
+>>>
+>>> thanks,
+>>
+>> These patches were't merged because they were sent as an RFC only. The
+>> API towards the OS aren't clear (to me) yet, so it seems a bit
+>> premature to build the user space API for that. But this RFC series
+>> looks like a good start.
 >
-> Signed-off-by: Steve Pennington <sgpenn@gmail.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_recv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-> index 274a4b6..39318ae 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_recv.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-> @@ -1554,7 +1554,7 @@ static int wlanhdr_to_ethhdr (struct recv_frame *precvframe)
->  	ether_addr_copy(ptr + ETH_ALEN, pattrib->src);
->  
->  	if (!bsnaphdr) {
-> -		len = htons(len);
-> +		cpu_to_be16s(&len);
->  		memcpy(ptr + 12, &len, 2);
->  	}
+> You can always apply the patches on your kernel source if you want
+> though. You can find them in patchwork, or alike.
 
-Thats an awful fix - use put_unaligned_le16() instead.
-
-Jes
+One more thing - since you seem to be interested / know about NAN, I'd
+love to get your insight about the proposed API.
