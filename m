@@ -1,88 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:9362 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084AbbGJGZy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33786 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752638AbbGXOMg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 02:25:54 -0400
-From: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-To: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
-	<clement.perrochaud@effinnov.com>,
-	Charles Gorand <charles.gorand@effinnov.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-nfc@lists.01.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-Subject: [PATCH] nfc: Drop owner assignment from i2c_driver
-Date: Fri, 10 Jul 2015 15:25:50 +0900
-Message-id: <1436509550-21453-1-git-send-email-k.kozlowski@samsung.com> (sfid-20150710_082615_892345_1EABEE99)
+	Fri, 24 Jul 2015 10:12:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Mike Looijmans <mike.looijmans@topic.nl>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	<linux-wireless@vger.kernel.org>, <fariyaf@gmail.com>
+Subject: Re: Commit "rsi: fix memory leak in rsi_load_ta_instructions()" breaks things
+References: <55B1E2CB.3040908@topic.nl> <55B1F9CC.4060507@ispras.ru>
+	<55B21B37.4080509@topic.nl> <55B222F2.1070207@ispras.ru>
+	<55B240B4.9050202@topic.nl>
+Date: Fri, 24 Jul 2015 17:12:27 +0300
+In-Reply-To: <55B240B4.9050202@topic.nl> (Mike Looijmans's message of "Fri, 24
+	Jul 2015 15:42:12 +0200")
+Message-ID: <87k2tpejas.fsf@kamboji.qca.qualcomm.com> (sfid-20150724_161239_698626_0B254292)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i2c_driver does not need to set an owner because i2c_register_driver()
-will set it.
+Mike Looijmans <mike.looijmans@topic.nl> writes:
 
-Signed-off-by: Krzysztof Kozlowski <k.kozlowski@samsung.com>
+> ﻿On 24-07-15 13:35, Alexey Khoroshilov wrote:
+>> On 24.07.2015 18:02, Mike Looijmans wrote:
+>>> On 24-07-15 10:39, Alexey Khoroshilov wrote:
+>>>> Dear Mike,
+>>>>
+>>>> On 24.07.2015 14:01, Mike Looijmans wrote:
+>>>>> Regarding this commit:
+>>>>>
+>>>>> https://lkml.org/lkml/2014/12/12/709
+>>>>>
+>>>>>       rsi: fix memory leak in rsi_load_ta_instructions()
+>>>>>
+>>>>>       Memory allocated by kmemdup() in rsi_load_ta_instructions() is
+>>>>> leaked.
+>>>>>       But duplication of firmware data here is useless,
+>>>>>       so the patch removes kmemdup() at all.
+>>>>>
+>>>>>       Found by Linux Driver Verification project (linuxtesting.org).
+>>>>>
+>>>>>       Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+>>>>>       Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>>>>>
+>>>>> We use this driver for the Redpine Wifi chip on our "florida" board, and
+>>>>> after this commit it stopped working. Symptom was that the "wlan0"
+>>>>> device was not created at all. Reverting the commit makes it work again.
+>>>>>
+>>>>> Apparently, the kmemdup action is needed for something. I suspect the
+>>>>> DMA controller is still copying the firmware data before the method
+>>>>> returned.
+>>>>
+>>>> To test your hypothesis, could you please check if it is still broken
+>>>> with kfree(fw); added just after release_firmware(fw_entry); in
+>>>> rsi_load_ta_instructions().
+>>>
+>>> Tried, and appears to work if i just kfree() the firmware copy. It does
+>>> leave a bad taste though. I'd expect fw_entry->data to point to a
+>>> kmalloc'd area as well. So it might work now just because it happens to
+>>> be that the memory if "far enough away" and isn't being touched by
+>>> anything else until the transfer is done. And on some other setup, it
+>>> may suddenly fail unexpectedly.
+>>>
+>>> I thought to move the kfree to a point where the driver unregisters, but
+>>> apparently it doesn't have any internal hook for that (sdio_done or so).
+>>>
+>>> I'd really like to see some comment from the Redpine folks on this, but
+>>> since there hasn't been any event in the past year or so, I don't expect
+>>> much.
+>>
+>> May be if firmware comes from userspace it is mapped to both kernel and
+>> userspace and by some reason it is not good for DMA.
+>> Another idea is fw_entry->data appears to be misaligned somehow.
+>
+> Just read some documentation:
+> https://kernel.org/doc/Documentation/firmware_class/README
+> It states "kernel: grows a buffer in PAGE_SIZE increments to hold the
+> image as it comes in". Probably the firmware buffer is fragmented in
+> memory as a result, and that wouldn't be very DMA friendly indeed. The
+> copy would be contiguous again.
+>
+> I noticed that the same kfree is missing in the usb glue part of the
+> RSI driver. I can't test that though, we only have the SDIO connected.
+>
+> I can submit a patch to add the "kfree()" call. Don't know about the
+> revert though, can I just submit the revert as a patch and then the
+> "kfree" as a second patch in the same set?
 
----
+Better to do the revert and kfree() addition in one patch, they are
+simple enough. Just document in the commit log that it reverts the
+broken commit.
 
-The coccinelle script which generated the patch was sent here:
-http://www.spinics.net/lists/kernel/msg2029903.html
----
- drivers/nfc/nxp-nci/i2c.c  | 1 -
- drivers/nfc/pn544/i2c.c    | 1 -
- drivers/nfc/st-nci/i2c.c   | 1 -
- drivers/nfc/st21nfca/i2c.c | 1 -
- 4 files changed, 4 deletions(-)
+And remember to add CC stable to the commit log so that the fix goes to
+stable releases.
 
-diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-index 2f77f1d03638..6c5e63cd0022 100644
---- a/drivers/nfc/nxp-nci/i2c.c
-+++ b/drivers/nfc/nxp-nci/i2c.c
-@@ -450,7 +450,6 @@ MODULE_DEVICE_TABLE(acpi, acpi_id);
- static struct i2c_driver nxp_nci_i2c_driver = {
- 	.driver = {
- 		   .name = NXP_NCI_I2C_DRIVER_NAME,
--		   .owner  = THIS_MODULE,
- 		   .acpi_match_table = ACPI_PTR(acpi_id),
- 		   .of_match_table = of_match_ptr(of_nxp_nci_i2c_match),
- 		  },
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index fa75c53f3fa5..a095523309cf 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -1162,7 +1162,6 @@ MODULE_DEVICE_TABLE(of, of_pn544_i2c_match);
- static struct i2c_driver pn544_hci_i2c_driver = {
- 	.driver = {
- 		   .name = PN544_HCI_I2C_DRIVER_NAME,
--		   .owner  = THIS_MODULE,
- 		   .of_match_table = of_match_ptr(of_pn544_i2c_match),
- 		   .acpi_match_table = ACPI_PTR(pn544_hci_i2c_acpi_match),
- 		  },
-diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
-index 06175ce769bb..c21c45c656c0 100644
---- a/drivers/nfc/st-nci/i2c.c
-+++ b/drivers/nfc/st-nci/i2c.c
-@@ -370,7 +370,6 @@ MODULE_DEVICE_TABLE(of, of_st_nci_i2c_match);
- 
- static struct i2c_driver st_nci_i2c_driver = {
- 	.driver = {
--		.owner = THIS_MODULE,
- 		.name = ST_NCI_I2C_DRIVER_NAME,
- 		.of_match_table = of_match_ptr(of_st_nci_i2c_match),
- 	},
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index a32143951616..6f987fa36371 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -680,7 +680,6 @@ MODULE_DEVICE_TABLE(of, of_st21nfca_i2c_match);
- 
- static struct i2c_driver st21nfca_hci_i2c_driver = {
- 	.driver = {
--		.owner = THIS_MODULE,
- 		.name = ST21NFCA_HCI_I2C_DRIVER_NAME,
- 		.of_match_table = of_match_ptr(of_st21nfca_i2c_match),
- 	},
 -- 
-1.9.1
-
+Kalle Valo
