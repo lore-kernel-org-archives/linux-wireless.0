@@ -1,67 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:49376 "EHLO imap.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751885AbbGIQvL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 12:51:11 -0400
-Date: Thu, 9 Jul 2015 12:51:02 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Frans Klaver <fransklaver@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Chris Park <chris.park@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Clarification for the use of additional fields in the message
- body
-Message-ID: <20150709165102.GA9417@thunk.org> (sfid-20150709_185116_185741_CEF9B431)
-References: <559BBDD6.7040808@users.sourceforge.net>
- <CAH6sp9O=NgJXOJzQaaA0o_yae+ae1oJa5Kcqmpo-WWBO_xUW+g@mail.gmail.com>
- <559BFB19.2080700@users.sourceforge.net>
- <CAGRGNgXTN8AxBNNfie4KvvErOXm3LUyL_QLLWQ6TN_wJgJkD-A@mail.gmail.com>
- <559CCC9D.8050606@users.sourceforge.net>
- <CAGRGNgWcHxwjx07A45No8vArXR12JGKcfif1Rvi30PQbJs4SGQ@mail.gmail.com>
- <559CED4C.1080402@users.sourceforge.net>
- <CAGRGNgU1SSUw-97aS0nhFObcMpLPdP3ej9WWNVwN77Fd=ws-bQ@mail.gmail.com>
- <20150708150335.GB20551@thunk.org>
- <559D416A.7050601@users.sourceforge.net>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11471 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750854AbbGXLOe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2015 07:14:34 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Andreas Fenkart <afenkart@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Avinash Patil <patila@marvell.com>
+Subject: RE: [PATCH] mwifiex: sdio: reset adapter using mmc_hw_reset
+Date: Fri, 24 Jul 2015 11:14:30 +0000
+Message-ID: <8bf463aeba9e4a9aa1ac6104cd6909eb@SC-EXCH04.marvell.com> (sfid-20150724_131437_845832_63867835)
+References: <1437065401-20245-1-git-send-email-afenkart@gmail.com>
+In-Reply-To: <1437065401-20245-1-git-send-email-afenkart@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <559D416A.7050601@users.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 08, 2015 at 05:27:38PM +0200, SF Markus Elfring wrote:
-> > Note also that some maintainers have work flow that deliberately smash
-> > the date (i.e., because they are using a system such as guilt),
-> > so if you are depending on the submitted timestamp, it's going to
-> > break on you.
-> 
-> Thanks for your hint.
-> 
-> I am just trying to offer the possibility for the reuse of a more
-> precise commit timestamp together with an appropriate author mail
-> address for my update suggestions.
-> Do you reject any more such message field overrides?
+Hi Andreas,
 
-Well, I won't hold it against you, since I also often need to fix
-patches or git commit descriptions anyway.  But at the same time, my
-workflow (which you have no right to dictate) **will** destroy your
-timestamp.  Given that you haven't explained why you want to do this,
-I'm not going have much sympathy if you complain.
+> From: Andreas Fenkart [mailto:afenkart@gmail.com]
+> Sent: Thursday, July 16, 2015 10:20 PM
+> To: linux-wireless@vger.kernel.org
+> Cc: Amitkumar Karwar; Avinash Patil; Andreas Fenkart
+> Subject: [PATCH] mwifiex: sdio: reset adapter using mmc_hw_reset
+> 
+> Since 1fb654fd97ff("mmc: sdio: add reset callback to bus operations"),
+> sdio cards can be power cycled using mmc_hw_reset.
+> The use mmc_remove_host/mmc_add_host is discouraged, because these are
+> internal functions to the mmc core and should only be used by mmc hosts
+> 
+> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+> ---
+>  drivers/net/wireless/mwifiex/sdio.c | 51 ++++++++++++++++++++++++++----
+> -------
+>  drivers/net/wireless/mwifiex/sdio.h |  3 +++
+>  2 files changed, 39 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/sdio.c
+> b/drivers/net/wireless/mwifiex/sdio.c
+> index a0b121f..e4c35ee 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/mwifiex/sdio.c
+> @@ -91,6 +91,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const
+> struct sdio_device_id *id)
+>  		return -ENOMEM;
+> 
+>  	card->func = func;
+> +	card->device_id = id;
+> 
+>  	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+> 
+> @@ -2107,26 +2108,46 @@ mwifiex_update_mp_end_port(struct
+> mwifiex_adapter *adapter, u16 port)
+>  		    port, card->mp_data_port_mask);
+>  }
+> 
+> +static void mwifiex_recreate_adapter(struct sdio_mmc_card *card) {
+> +	struct sdio_func *func = card->func;
+> +	const struct sdio_device_id *device_id = card->device_id;
+> +
+> +	/* TODO mmc_hw_reset does not require destroying and re-probing
+> the
+> +	 * whole adapter. Hence there was no need to for this rube-
+> goldberg
+> +	 * design to reload the fw from an external workqueue. If we don't
+> +	 * destroy the adapter we could reload the fw from
+> +	 * mwifiex_main_work_queue directly.
+> +	 * The real difficulty with fw reset is to restore all the user
+> +	 * settings applied through ioctl. By destroying and recreating
+> the
+> +	 * adapter, we take the easy way out, since we rely on user space
+> to
+> +	 * restore them. We assume that user space will treat the new
+> +	 * incarnation of the adapter(interfaces) as if they had been just
+> +	 * discovered and initializes them from scratch.
+> +	 */
+> +
+> +	mwifiex_sdio_remove(func);
+> +
+> +	/* power cycle the adapter */
+> +	sdio_claim_host(func);
+> +	mmc_hw_reset(func->card->host);
+> +	sdio_release_host(func);
+> +
+> +	mwifiex_sdio_probe(func, device_id);
+> +}
+> +
+>  static struct mwifiex_adapter *save_adapter;  static void
+> mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)  {
+>  	struct sdio_mmc_card *card = adapter->card;
+> -	struct mmc_host *target = card->func->card->host;
+> -
+> -	/* The actual reset operation must be run outside of driver
+> thread.
+> -	 * This is because mmc_remove_host() will cause the device to be
+> -	 * instantly destroyed, and the driver then needs to end its
+> thread,
+> -	 * leading to a deadlock.
+> -	 *
+> -	 * We run it in a totally independent workqueue.
+> -	 */
+> 
+> -	mwifiex_dbg(adapter, WARN, "Resetting card...\n");
+> -	mmc_remove_host(target);
+> -	/* 200ms delay is based on experiment with sdhci controller */
+> -	mdelay(200);
+> -	target->rescan_entered = 0; /* rescan non-removable cards */
+> -	mmc_add_host(target);
+> +	/* TODO card pointer is unprotected. If the adapter is removed
+> +	 * physically, sdio core might trigger mwifiex_sdio_remove, before
+> this
+> +	 * workqueue is run, which will destroy the adapter struct. When
+> this
+> +	 * workqueue eventually exceutes it will dereference an invalid
+> adapter
+> +	 * pointer
+> +	 */
+> +	mwifiex_recreate_adapter(card);
+>  }
+> 
+>  /* This function read/write firmware */ diff --git
+> a/drivers/net/wireless/mwifiex/sdio.h
+> b/drivers/net/wireless/mwifiex/sdio.h
+> index 6f645cf..c44da61 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.h
+> +++ b/drivers/net/wireless/mwifiex/sdio.h
+> @@ -262,6 +262,9 @@ struct sdio_mmc_card {
+> 
+>  	struct mwifiex_sdio_mpa_tx mpa_tx;
+>  	struct mwifiex_sdio_mpa_rx mpa_rx;
+> +
+> +	/* needed for card reset */
+> +	const struct sdio_device_id *device_id;
+>  };
+> 
+>  struct mwifiex_sdio_device {
+> --
+> 2.1.4
 
-Personally, given that you're going through some extremely baroque
-e-mail/patchsubmission scheme, I don't understand why you can't also
-arrange to override the Date field in the e-mail header.  But I don't
-really care all that much, because I can ignore your timestamp no
-matter where you put it.
+Looks fine to me.
+
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
 Regards,
-
-					- Ted
+Amitkumar
