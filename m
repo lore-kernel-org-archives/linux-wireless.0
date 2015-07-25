@@ -1,240 +1,391 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755454AbbG3Kys (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:37167 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932082AbbGYOcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 06:54:48 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 14/19] wil6210: remove 3-MSI support
-Date: Thu, 30 Jul 2015 13:52:02 +0300
-Message-Id: <1438253527-3372-15-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_125456_116511_D6511A10)
-In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sat, 25 Jul 2015 10:32:39 -0400
+Received: by wibud3 with SMTP id ud3so64706619wib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2015 07:32:38 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [RFC 4/4] mac80211: add rate mask logic for vht rates
+Date: Sat, 25 Jul 2015 16:32:29 +0200
+Message-Id: <1437834749-23765-5-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150725_163245_687582_B3AD047C)
+In-Reply-To: <1437834749-23765-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1437834749-23765-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the recent kernel versions, multiple MSI is not well supported.
-In particular, it is not supported on x86 and ARM architectures.
-Also, internal interrupt handling logic is simpler and
-more effective when using single interrupt.
+Define rc_rateidx_vht_mcs_mask array and rate_idx_match_vht_mcs_mask()
+method in order to apply mcs mask for vht rates
 
-Remove support for 3 MSI, convert module parameter
-"use_msi" from int with range [0,1,3] to boolean.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/interrupt.c | 55 +++------------------------
- drivers/net/wireless/ath/wil6210/pcie_bus.c  | 56 ++++++----------------------
- drivers/net/wireless/ath/wil6210/wil6210.h   |  3 +-
- 3 files changed, 18 insertions(+), 96 deletions(-)
+ net/mac80211/cfg.c            |  16 +++++--
+ net/mac80211/debugfs_netdev.c |  34 ++++++++++++++
+ net/mac80211/ieee80211_i.h    |   5 +++
+ net/mac80211/iface.c          |  14 +++++-
+ net/mac80211/rate.c           | 100 +++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/vht.c            |  27 ++++++++++++
+ 6 files changed, 181 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 28ffc18..596d09b 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -541,42 +541,6 @@ static irqreturn_t wil6210_hardirq(int irq, void *cookie)
- 	return rc;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5789d83..685ec13 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2504,16 +2504,26 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+ 		memcpy(sdata->rc_rateidx_mcs_mask[i], mask->control[i].ht_mcs,
+ 		       sizeof(mask->control[i].ht_mcs));
++		memcpy(sdata->rc_rateidx_vht_mcs_mask[i],
++		       mask->control[i].vht_mcs,
++		       sizeof(mask->control[i].vht_mcs));
+ 
+ 		sdata->rc_has_mcs_mask[i] = false;
++		sdata->rc_has_vht_mcs_mask[i] = false;
+ 		if (!sband)
+ 			continue;
+ 
+-		for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++)
+-			if (~sdata->rc_rateidx_mcs_mask[i][j]) {
++		for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++) {
++			if (~sdata->rc_rateidx_mcs_mask[i][j])
+ 				sdata->rc_has_mcs_mask[i] = true;
++
++			if (~sdata->rc_rateidx_vht_mcs_mask[i][j])
++				sdata->rc_has_vht_mcs_mask[i] = true;
++
++			if (sdata->rc_has_mcs_mask[i] &&
++			    sdata->rc_has_vht_mcs_mask[i])
+ 				break;
+-			}
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index c09c013..1021e87 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -186,6 +186,38 @@ IEEE80211_IF_FILE(rc_rateidx_mcs_mask_2ghz,
+ IEEE80211_IF_FILE(rc_rateidx_mcs_mask_5ghz,
+ 		  rc_rateidx_mcs_mask[IEEE80211_BAND_5GHZ], HEXARRAY);
+ 
++static ssize_t ieee80211_if_fmt_rc_rateidx_vht_mcs_mask_2ghz(
++				const struct ieee80211_sub_if_data *sdata,
++				char *buf, int buflen)
++{
++	int i, len = 0;
++	const u16 *mask = sdata->rc_rateidx_vht_mcs_mask[IEEE80211_BAND_2GHZ];
++
++	for (i = 0; i < NL80211_VHT_NSS_MAX; i++)
++		len += scnprintf(buf + len, buflen - len, "%04x ", mask[i]);
++	len += scnprintf(buf + len, buflen - len, "\n");
++
++	return len;
++}
++
++IEEE80211_IF_FILE_R(rc_rateidx_vht_mcs_mask_2ghz);
++
++static ssize_t ieee80211_if_fmt_rc_rateidx_vht_mcs_mask_5ghz(
++				const struct ieee80211_sub_if_data *sdata,
++				char *buf, int buflen)
++{
++	int i, len = 0;
++	const u16 *mask = sdata->rc_rateidx_vht_mcs_mask[IEEE80211_BAND_5GHZ];
++
++	for (i = 0; i < NL80211_VHT_NSS_MAX; i++)
++		len += scnprintf(buf + len, buflen - len, "%04x ", mask[i]);
++	len += scnprintf(buf + len, buflen - len, "\n");
++
++	return len;
++}
++
++IEEE80211_IF_FILE_R(rc_rateidx_vht_mcs_mask_5ghz);
++
+ IEEE80211_IF_FILE(flags, flags, HEX);
+ IEEE80211_IF_FILE(state, state, LHEX);
+ IEEE80211_IF_FILE(txpower, vif.bss_conf.txpower, DEC);
+@@ -565,6 +597,8 @@ static void add_common_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
++	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_2ghz);
++	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_5ghz);
+ 	DEBUGFS_ADD(hw_queues);
  }
  
--static int wil6210_request_3msi(struct wil6210_priv *wil, int irq)
--{
--	int rc;
--	/*
--	 * IRQ's are in the following order:
--	 * - Tx
--	 * - Rx
--	 * - Misc
--	 */
--
--	rc = request_irq(irq, wil6210_irq_tx, IRQF_SHARED,
--			 WIL_NAME"_tx", wil);
--	if (rc)
--		return rc;
--
--	rc = request_irq(irq + 1, wil6210_irq_rx, IRQF_SHARED,
--			 WIL_NAME"_rx", wil);
--	if (rc)
--		goto free0;
--
--	rc = request_threaded_irq(irq + 2, wil6210_irq_misc,
--				  wil6210_irq_misc_thread,
--				  IRQF_SHARED, WIL_NAME"_misc", wil);
--	if (rc)
--		goto free1;
--
--	return 0;
--	/* error branch */
--free1:
--	free_irq(irq + 1, wil);
--free0:
--	free_irq(irq, wil);
--
--	return rc;
--}
--
- /* can't use wil_ioread32_and_clear because ICC value is not set yet */
- static inline void wil_clear32(void __iomem *addr)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 36f217e..6e52659 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -901,6 +901,9 @@ struct ieee80211_sub_if_data {
+ 	bool rc_has_mcs_mask[IEEE80211_NUM_BANDS];
+ 	u8  rc_rateidx_mcs_mask[IEEE80211_NUM_BANDS][IEEE80211_HT_MCS_MASK_LEN];
+ 
++	bool rc_has_vht_mcs_mask[IEEE80211_NUM_BANDS];
++	u16 rc_rateidx_vht_mcs_mask[IEEE80211_NUM_BANDS][NL80211_VHT_NSS_MAX];
++
+ 	union {
+ 		struct ieee80211_if_ap ap;
+ 		struct ieee80211_if_wds wds;
+@@ -1713,6 +1716,8 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 enum ieee80211_band band, bool nss_only);
+ void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
+ 				      struct ieee80211_sta_vht_cap *vht_cap);
++void ieee80211_get_vht_mask_from_cap(__le16 vht_cap,
++				     u16 vht_mask[NL80211_VHT_NSS_MAX]);
+ 
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 0fba7f9..6964fc6 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1788,13 +1788,23 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		sband = local->hw.wiphy->bands[i];
+ 		sdata->rc_rateidx_mask[i] =
+ 			sband ? (1 << sband->n_bitrates) - 1 : 0;
+-		if (sband)
++		if (sband) {
++			__le16 cap;
++			u16 *vht_rate_mask;
++
+ 			memcpy(sdata->rc_rateidx_mcs_mask[i],
+ 			       sband->ht_cap.mcs.rx_mask,
+ 			       sizeof(sdata->rc_rateidx_mcs_mask[i]));
+-		else
++
++			cap = sband->vht_cap.vht_mcs.rx_mcs_map;
++			vht_rate_mask = sdata->rc_rateidx_vht_mcs_mask[i];
++			ieee80211_get_vht_mask_from_cap(cap, vht_rate_mask);
++		} else {
+ 			memset(sdata->rc_rateidx_mcs_mask[i], 0,
+ 			       sizeof(sdata->rc_rateidx_mcs_mask[i]));
++			memset(sdata->rc_rateidx_vht_mcs_mask[i], 0,
++			       sizeof(sdata->rc_rateidx_vht_mcs_mask[i]));
++		}
+ 	}
+ 
+ 	ieee80211_set_default_queues(sdata);
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 7e71de9..ac1d85a 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -414,16 +414,77 @@ static bool rate_idx_match_mcs_mask(s8 *rate_idx, u8 *mcs_mask)
+ 	return false;
+ }
+ 
++static bool rate_idx_match_vht_mcs_mask(s8 *rate_idx, u16 *vht_mask)
++{
++	int i, j;
++	int ridx, rbit;
++
++	ridx = *rate_idx >> 4;
++	rbit = *rate_idx & 0xf;
++
++	if (ridx < 0 || ridx >= NL80211_VHT_NSS_MAX)
++		return false;
+ 
++	/* See whether the selected rate or anything below it is allowed. */
++	for (i = ridx; i >= 0; i--) {
++		for (j = rbit; j >= 0; j--) {
++			if (vht_mask[i] & BIT(j)) {
++				*rate_idx = (i << 4) | j;
++				return true;
++			}
++		}
++		rbit = 15;
++	}
++
++	/* Try to find a higher rate that would be allowed */
++	ridx = (*rate_idx + 1) >> 4;
++	rbit = (*rate_idx + 1) & 0xf;
++
++	for (i = ridx; i < NL80211_VHT_NSS_MAX; i++) {
++		for (j = rbit; j < 16; j++) {
++			if (vht_mask[i] & BIT(j)) {
++				*rate_idx = (i << 4) | j;
++				return true;
++			}
++		}
++		rbit = 0;
++	}
++	return false;
++}
+ 
+ static void rate_idx_match_mask(s8 *rate_idx, u16 *rate_flags,
+ 				struct ieee80211_supported_band *sband,
+ 				enum nl80211_chan_width chan_width,
+ 				u32 mask,
+-				u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
++				u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN],
++				u16 vht_mask[NL80211_VHT_NSS_MAX])
  {
-@@ -596,19 +560,16 @@ void wil6210_clear_irq(struct wil6210_priv *wil)
- 	wmb(); /* make sure write completed */
- }
+-	/* handle HT rates */
+-	if (*rate_flags & IEEE80211_TX_RC_MCS) {
++	if (*rate_flags & IEEE80211_TX_RC_VHT_MCS) {
++		/* handle VHT rates */
++		if (rate_idx_match_vht_mcs_mask(rate_idx, vht_mask))
++			return;
++
++		*rate_idx = 0;
++		/* keep protection flags */
++		*rate_flags &= (IEEE80211_TX_RC_USE_RTS_CTS |
++				IEEE80211_TX_RC_USE_CTS_PROTECT |
++				IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
++
++		*rate_flags |= IEEE80211_TX_RC_MCS;
++		if (chan_width == NL80211_CHAN_WIDTH_40)
++			*rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
++
++		if (rate_idx_match_mcs_mask(rate_idx, mcs_mask))
++			return;
++
++		/* also try the legacy rates. */
++		*rate_flags &= ~(IEEE80211_TX_RC_MCS |
++				 IEEE80211_TX_RC_40_MHZ_WIDTH);
++		if (rate_idx_match_legacy_mask(rate_idx, sband->n_bitrates,
++					       mask))
++			return;
++	} else if (*rate_flags & IEEE80211_TX_RC_MCS) {
++		/* handle HT rates */
+ 		if (rate_idx_match_mcs_mask(rate_idx, mcs_mask))
+ 			return;
  
--int wil6210_init_irq(struct wil6210_priv *wil, int irq)
-+int wil6210_init_irq(struct wil6210_priv *wil, int irq, bool use_msi)
+@@ -620,7 +681,8 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
+ static bool rate_control_cap_mask(struct ieee80211_sub_if_data *sdata,
+ 				  struct ieee80211_supported_band *sband,
+ 				  struct ieee80211_sta *sta, u32 *mask,
+-				  u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
++				  u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN],
++				  u16 vht_mask[NL80211_VHT_NSS_MAX])
  {
- 	int rc;
+ 	u32 i, flags;
  
--	wil_dbg_misc(wil, "%s() n_msi=%d\n", __func__, wil->n_msi);
-+	wil_dbg_misc(wil, "%s(%s)\n", __func__, use_msi ? "MSI" : "INTx");
+@@ -632,7 +694,8 @@ static bool rate_control_cap_mask(struct ieee80211_sub_if_data *sdata,
+ 	}
  
--	if (wil->n_msi == 3)
--		rc = wil6210_request_3msi(wil, irq);
--	else
--		rc = request_threaded_irq(irq, wil6210_hardirq,
--					  wil6210_thread_irq,
--					  wil->n_msi ? 0 : IRQF_SHARED,
--					  WIL_NAME, wil);
-+	rc = request_threaded_irq(irq, wil6210_hardirq,
-+				  wil6210_thread_irq,
-+				  use_msi ? 0 : IRQF_SHARED,
-+				  WIL_NAME, wil);
- 	return rc;
+ 	if (*mask == (1 << sband->n_bitrates) - 1 &&
+-	    !sdata->rc_has_mcs_mask[sband->band])
++	    !sdata->rc_has_mcs_mask[sband->band] &&
++	    !sdata->rc_has_vht_mcs_mask[sband->band])
+ 		return false;
+ 
+ 	if (sdata->rc_has_mcs_mask[sband->band])
+@@ -641,11 +704,25 @@ static bool rate_control_cap_mask(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		memset(mcs_mask, 0xff, IEEE80211_HT_MCS_MASK_LEN);
+ 
++	if (sdata->rc_has_vht_mcs_mask[sband->band])
++		memcpy(vht_mask, sdata->rc_rateidx_vht_mcs_mask[sband->band],
++		       sizeof(u16) * NL80211_VHT_NSS_MAX);
++	else
++		memset(vht_mask, 0xff, sizeof(u16) * NL80211_VHT_NSS_MAX);
++
+ 	if (sta) {
++		__le16 sta_vht_cap;
++		u16 sta_vht_mask[NL80211_VHT_NSS_MAX];
++
+ 		/* Filter out rates that the STA does not support */
+ 		*mask &= sta->supp_rates[sband->band];
+ 		for (i = 0; i < sizeof(mcs_mask); i++)
+ 			mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
++
++		sta_vht_cap = sta->vht_cap.vht_mcs.rx_mcs_map;
++		ieee80211_get_vht_mask_from_cap(sta_vht_cap, sta_vht_mask);
++		for (i = 0; i < NL80211_VHT_NSS_MAX; i++)
++			vht_mask[i] &= sta_vht_mask[i];
+ 	}
+ 
+ 	return true;
+@@ -659,10 +736,11 @@ rate_control_apply_mask_ratetbl(struct sta_info *sta,
+ 	int i;
+ 	u32 mask;
+ 	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
++	u16 vht_mask[NL80211_VHT_NSS_MAX];
+ 	enum nl80211_chan_width chan_width;
+ 
+ 	if (!rate_control_cap_mask(sta->sdata, sband, &sta->sta, &mask,
+-				   mcs_mask))
++				   mcs_mask, vht_mask))
+ 		return;
+ 
+ 	chan_width = sta->sdata->vif.bss_conf.chandef.width;
+@@ -671,7 +749,8 @@ rate_control_apply_mask_ratetbl(struct sta_info *sta,
+ 			break;
+ 
+ 		rate_idx_match_mask(&rates->rate[i].idx, &rates->rate[i].flags,
+-				    sband, chan_width, mask, mcs_mask);
++				    sband, chan_width, mask, mcs_mask,
++				    vht_mask);
+ 	}
  }
  
-@@ -618,8 +579,4 @@ void wil6210_fini_irq(struct wil6210_priv *wil, int irq)
+@@ -684,7 +763,7 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_chan_width chan_width;
+ 	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
+ 	u32 mask;
+-	u16 rate_flags;
++	u16 rate_flags, vht_mask[NL80211_VHT_NSS_MAX];
+ 	int i;
  
- 	wil_mask_irq(wil);
- 	free_irq(irq, wil);
--	if (wil->n_msi == 3) {
--		free_irq(irq + 1, wil);
--		free_irq(irq + 2, wil);
--	}
- }
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index aa3ecc6..d065b79 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -21,11 +21,9 @@
- 
- #include "wil6210.h"
- 
--static int use_msi = 1;
--module_param(use_msi, int, S_IRUGO);
--MODULE_PARM_DESC(use_msi,
--		 " Use MSI interrupt: "
--		 "0 - don't, 1 - (default) - single, or 3");
-+static bool use_msi = true;
-+module_param(use_msi, bool, S_IRUGO);
-+MODULE_PARM_DESC(use_msi, " Use MSI interrupt, default - true");
- 
- static
- void wil_set_capabilities(struct wil6210_priv *wil)
-@@ -50,24 +48,12 @@ void wil_set_capabilities(struct wil6210_priv *wil)
- 
- void wil_disable_irq(struct wil6210_priv *wil)
- {
--	int irq = wil->pdev->irq;
--
--	disable_irq(irq);
--	if (wil->n_msi == 3) {
--		disable_irq(irq + 1);
--		disable_irq(irq + 2);
--	}
-+	disable_irq(wil->pdev->irq);
- }
- 
- void wil_enable_irq(struct wil6210_priv *wil)
- {
--	int irq = wil->pdev->irq;
--
--	enable_irq(irq);
--	if (wil->n_msi == 3) {
--		enable_irq(irq + 1);
--		enable_irq(irq + 2);
--	}
-+	enable_irq(wil->pdev->irq);
- }
- 
- /* Bus ops */
-@@ -80,6 +66,7 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 	 * and only MSI should be used
+ 	/*
+@@ -692,7 +771,8 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
+ 	 * default mask (allow all rates) is used to save some processing for
+ 	 * the common case.
  	 */
- 	int msi_only = pdev->msi_enabled;
-+	bool _use_msi = use_msi;
+-	if (!rate_control_cap_mask(sdata, sband, sta, &mask, mcs_mask))
++	if (!rate_control_cap_mask(sdata, sband, sta, &mask, mcs_mask,
++				   vht_mask))
+ 		return;
  
- 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 	/*
+@@ -708,7 +788,7 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
  
-@@ -87,41 +74,20 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 
- 	pci_set_master(pdev);
- 
--	/*
--	 * how many MSI interrupts to request?
--	 */
--	switch (use_msi) {
--	case 3:
--	case 1:
--		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
--		break;
--	case 0:
--		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
--		break;
--	default:
--		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
--		use_msi = 1;
--	}
--
--	if (use_msi == 3 && pci_enable_msi_range(pdev, 3, 3) < 0) {
--		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
--		use_msi = 1;
--	}
-+	wil_dbg_misc(wil, "Setup %s interrupt\n", use_msi ? "MSI" : "INTx");
- 
--	if (use_msi == 1 && pci_enable_msi(pdev)) {
-+	if (use_msi && pci_enable_msi(pdev)) {
- 		wil_err(wil, "pci_enable_msi failed, use INTx\n");
--		use_msi = 0;
-+		_use_msi = false;
+ 		rate_flags = rates[i].flags;
+ 		rate_idx_match_mask(&rates[i].idx, &rate_flags, sband,
+-				    chan_width, mask, mcs_mask);
++				    chan_width, mask, mcs_mask, vht_mask);
+ 		rates[i].flags = rate_flags;
  	}
- 
--	wil->n_msi = use_msi;
--
--	if ((wil->n_msi == 0) && msi_only) {
-+	if (!_use_msi && msi_only) {
- 		wil_err(wil, "Interrupt pin not routed, unable to use INTx\n");
- 		rc = -ENODEV;
- 		goto stop_master;
- 	}
- 
--	rc = wil6210_init_irq(wil, pdev->irq);
-+	rc = wil6210_init_irq(wil, pdev->irq, _use_msi);
- 	if (rc)
- 		goto stop_master;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index c722724..3c22178 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -536,7 +536,6 @@ struct pmc_ctx {
- 
- struct wil6210_priv {
- 	struct pci_dev *pdev;
--	int n_msi;
- 	struct wireless_dev *wdev;
- 	void __iomem *csr;
- 	DECLARE_BITMAP(status, wil_status_last);
-@@ -739,7 +738,7 @@ void wil_back_tx_worker(struct work_struct *work);
- void wil_back_tx_flush(struct wil6210_priv *wil);
- 
- void wil6210_clear_irq(struct wil6210_priv *wil);
--int wil6210_init_irq(struct wil6210_priv *wil, int irq);
-+int wil6210_init_irq(struct wil6210_priv *wil, int irq, bool use_msi);
- void wil6210_fini_irq(struct wil6210_priv *wil, int irq);
- void wil_mask_irq(struct wil6210_priv *wil);
- void wil_unmask_irq(struct wil6210_priv *wil);
+ }
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index f05808d..cfe583a 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -426,3 +426,30 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	if (changed > 0)
+ 		rate_control_rate_update(local, sband, sta, changed);
+ }
++
++void ieee80211_get_vht_mask_from_cap(__le16 vht_cap,
++				     u16 vht_mask[NL80211_VHT_NSS_MAX])
++{
++	int i;
++	u16 mask, cap = le16_to_cpu(vht_cap);
++
++	for (i = 0; i < NL80211_VHT_NSS_MAX; i++) {
++		mask = (cap >> i * 2) & IEEE80211_VHT_MCS_NOT_SUPPORTED;
++		switch (mask) {
++		case IEEE80211_VHT_MCS_SUPPORT_0_7:
++			vht_mask[i] = 0x00FF;
++			break;
++		case IEEE80211_VHT_MCS_SUPPORT_0_8:
++			vht_mask[i] = 0x01FF;
++			break;
++		case IEEE80211_VHT_MCS_SUPPORT_0_9:
++			vht_mask[i] = 0x03FF;
++			break;
++		case IEEE80211_VHT_MCS_NOT_SUPPORTED:
++		default:
++			vht_mask[i] = 0;
++			break;
++		}
++	}
++}
++
 -- 
 2.1.4
 
