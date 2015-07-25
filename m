@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38350 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752443AbbGGJu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 05:50:27 -0400
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>,
-	"Pete Hsieh" <peteh@marvell.com>
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
- <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com>
- <e90aaab05cfd43fe9c05f738d4fc528a@SC-EXCH02.marvell.com>
- <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-To: "David Lin" <dlin@marvell.com>, "Jonas Gorski" <jogo@openwrt.org>
-Date: Tue, 07 Jul 2015 11:50:20 +0200
+Received: from mail-la0-f44.google.com ([209.85.215.44]:34662 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754441AbbGYVAh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2015 17:00:37 -0400
+Received: by lafd3 with SMTP id d3so20233323laf.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2015 14:00:35 -0700 (PDT)
 MIME-Version: 1.0
-From: "Imre Kaloz" <kaloz@openwrt.org>
-Message-ID: <op.x1edl6b82s3iss@ecaz> (sfid-20150707_115040_074372_F16710D7)
-In-Reply-To: <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
+In-Reply-To: <55B3DB9A.9060209@hauke-m.de>
+References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
+	<CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com>
+	<871tfzif17.fsf@kamboji.qca.qualcomm.com>
+	<CAGhQ9VyH4yvnU_kPAy3a7Z+80jNV8uNoTr=Nd=eV2D-iz9YVUQ@mail.gmail.com>
+	<55B3DB9A.9060209@hauke-m.de>
+Date: Sat, 25 Jul 2015 23:00:35 +0200
+Message-ID: <CAGhQ9VyV2LuDUEjtOYgTZg3kEDr5XJs8FqjXpV7wLC2U2CBd-w@mail.gmail.com> (sfid-20150725_230736_484742_9E1A0D9A)
+Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
+From: Joachim Eastwood <manabian@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 07 Jul 2015 11:38:32 +0200, Jonas Gorski <jogo@openwrt.org> wrote:
-
-<snip>
-
->>> I think it would be good to have some more precise description here
->>> (something like "Marvell 88W8864/8897 PCIe driver with AP support").
+On 25 July 2015 at 20:55, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 07/24/2015 06:11 PM, Joachim Eastwood wrote:
+>> On 23 July 2015 at 08:06, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Rafał Miłecki <zajec5@gmail.com> writes:
 >>>
+>>>>> +       if (bus->host_pdev) {
+>>>>> +               struct device *dev = &bus->host_pdev->dev;
+>>>>> +
+>>>>> +               of_platform_populate(dev->of_node, of_default_bus_match_table,
+>>>>> +                                    NULL, dev);
+>>>>> +       }
+>>>>> +
+>>>>
+>>>> This caused a compile error when using bcma as module:
+>>>> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
 >>
->> Will change the title from "Marvell Wireless Wi-Fi driver (mwlwifi)" to  
->> "Marvell 88W8864/88W8897 PCIe driver with AP support".
+>> I encountered the same problem with my modular memory controller driver.
+>>
+>>>> There are two options I guess:
+>>>> 1) Export of_default_bus_match_table
+>>
+>> See link below for Rob Herring's take on that.
+>> http://marc.info/?l=linaro-kernel&m=143766694414121&w=2
+>>
+>>
+>> regards,
+>> Joachim Eastwood
+>>
+> Hi Joachim,
 >
-> As Imre pointed out, mwifiex also supports AP mode, so this is not a
-> good description.
+> are you working on a patch which exports "of_default_bus_match_table"
+> or provides a wrapper function? If not then I will look into this.
 
-On the short run, changing the description of the drivers could work, but  
-I would suggest dropping (at least) 8897 support from mwifiex in favor of  
-mwlwifi. If supporting the 8766 isn't complicated, I would drop PCIe  
-support completely from there.
+Not really, so if you could take it that would be great. Thanks.
 
-David, Chor Teck, could you shed some light on the future driver strategy?  
-Does Marvell have any plans to add support for new chips to mwifiex, or do  
-you plan to add usb support to mwlwifi later?
-
-
-Cheers,
-
-Imre
+regards,
+Joachim Eastwood
