@@ -1,51 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:32897 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbbG3LlO (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:38111 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932075AbbGYOch (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 07:41:14 -0400
-Received: by padck2 with SMTP id ck2so22458974pad.0
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2015 04:41:13 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [RESEND V2 0/3] cover letter of wilc1000 patches
-Date: Thu, 30 Jul 2015 20:41:02 +0900
-Message-Id: <1438256465-19540-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150730_134117_507294_CD270AAD)
+	Sat, 25 Jul 2015 10:32:37 -0400
+Received: by wibxm9 with SMTP id xm9so65211910wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2015 07:32:36 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [RFC 3/4] mac80211: define rate_control_apply_mask_ratetbl()
+Date: Sat, 25 Jul 2015 16:32:28 +0200
+Message-Id: <1437834749-23765-4-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150725_163242_840593_00A54455)
+In-Reply-To: <1437834749-23765-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1437834749-23765-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Greg
+Define rate_control_apply_mask_ratetbl() in order to apply ratemask in
+rate_control_set_rates() for station rate table
 
-I'm sorry that I did not say whether GFP_ATOMIC should be used or not.
-This is my review on it. If it's not correct, please give me any comment or direction.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ net/mac80211/rate.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-First patch has 4 sites of kmalloc change in coreconfigurator.c
-First one, it is used for gps8ConfigPacket at CoreconfiguratorInit and CoreConfiguratorDeInit.
-I think it should be removed next time because I cannot find anywhere to use it.
-Then, it is okay to change flag as GFP_KERNEL.
-
-Other three changes are used to handle host interface message within a kernel thread.
-The manipulation of host interface message is not called on IRQ context and I could not
-find any spin lock inside function.
-
-If this patches are accepted, I will try to continue to change WILC_MALLOC macro as kmalloc.
-I always appreciate your comment and advice.
-
-Thanks
-Chaehyun Lim
-
-
-Chaehyun Lim (3):
-  staging: wilc1000: coreconfigurator.c: remove WILC_MALLOC
-  staging: wilc1000: coreconfigurator.c: add kmalloc error check
-  staging: wilc1000: coreconfigurator.c: fix kmalloc error check
-
- drivers/staging/wilc1000/coreconfigurator.c | 38 +++++++++++++++++------------
- 1 file changed, 23 insertions(+), 15 deletions(-)
-
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 4f61ca0..7e71de9 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -651,6 +651,30 @@ static bool rate_control_cap_mask(struct ieee80211_sub_if_data *sdata,
+ 	return true;
+ }
+ 
++static void
++rate_control_apply_mask_ratetbl(struct sta_info *sta,
++				struct ieee80211_supported_band *sband,
++				struct ieee80211_sta_rates *rates)
++{
++	int i;
++	u32 mask;
++	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
++	enum nl80211_chan_width chan_width;
++
++	if (!rate_control_cap_mask(sta->sdata, sband, &sta->sta, &mask,
++				   mcs_mask))
++		return;
++
++	chan_width = sta->sdata->vif.bss_conf.chandef.width;
++	for (i = 0; i < IEEE80211_TX_RATE_TABLE_SIZE; i++) {
++		if (rates->rate[i].idx < 0)
++			break;
++
++		rate_idx_match_mask(&rates->rate[i].idx, &rates->rate[i].flags,
++				    sband, chan_width, mask, mcs_mask);
++	}
++}
++
+ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
+ 				    struct ieee80211_sta *sta,
+ 				    struct ieee80211_supported_band *sband,
+@@ -766,7 +790,10 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sta_rates *old;
++	struct ieee80211_supported_band *sband;
+ 
++	sband = hw->wiphy->bands[ieee80211_get_sdata_band(sta->sdata)];
++	rate_control_apply_mask_ratetbl(sta, sband, rates);
+ 	/*
+ 	 * mac80211 guarantees that this function will not be called
+ 	 * concurrently, so the following RCU access is safe, even without
 -- 
-1.9.1
+2.1.4
 
