@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:35105 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814AbbG1Xhe (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:31252 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753063AbbGZLMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 19:37:34 -0400
-Received: by igr7 with SMTP id 7so135874556igr.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 16:37:33 -0700 (PDT)
+	Sun, 26 Jul 2015 07:12:44 -0400
+Message-ID: <55B4C0A8.9000909@broadcom.com> (sfid-20150726_131309_996879_BA3F81EB)
+Date: Sun, 26 Jul 2015 13:12:40 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFBinCB43LEj3KJVX7qqY40aKYCq68MYi2AD_5MKk43tj7HeXg@mail.gmail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
-	<CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
-	<CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
-	<CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
-	<CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com>
-	<CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
-	<CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com>
-	<CAJ-Vmokfovc806T+Ja6nQhbGUDM=uU7MmKwad6Uc2hNYV+DDtA@mail.gmail.com>
-	<CAFBinCDqn5HCb3APpqfFULwrmqPGpuj2upFOC=5qZUZzHWBnVg@mail.gmail.com>
-	<CAJ-VmonRw=htFB+xNrxa=bgAsERUu+zhXrwvpoj9kONsEfooLw@mail.gmail.com>
-	<CAFBinCB43LEj3KJVX7qqY40aKYCq68MYi2AD_5MKk43tj7HeXg@mail.gmail.com>
-Date: Tue, 28 Jul 2015 16:37:33 -0700
-Message-ID: <CAJ-Vmom3+aaPjPGAusFbP68-Z3BcY4n=nbyetJDiWdRo4L3fHA@mail.gmail.com> (sfid-20150729_013753_618229_F92AA0FB)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-From: Adrian Chadd <adrian@freebsd.org>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Vineet Gupta <vgupta@synopsys.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Vineet Gupta <Vineet.Gupta1@synopsys.com>
+CC: Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arch@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
+References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>	<1436429599-10762-3-git-send-email-vgupta@synopsys.com> <87twstbi9p.fsf@kamboji.qca.qualcomm.com> <55B2743F.6060304@synopsys.com>
+In-Reply-To: <55B2743F.6060304@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 July 2015 at 15:33, Martin Blumenstingl
-<martin.blumenstingl@googlemail.com> wrote:
-> On Wed, Jul 29, 2015 at 12:22 AM, Adrian Chadd <adrian@freebsd.org> wrote:
->> Hm, doesn't someone have a graphical frontend for this on linux?
-> Yep, I just found FFT_eval (screenshot: [0] and ath_spectral
-> (screenshot [1]) in the ath9k spectral scan wiki page.
+On 07/24/2015 07:22 PM, Vineet Gupta wrote:
+> On Friday 24 July 2015 08:02 PM, Kalle Valo wrote:
+>> Vineet Gupta <Vineet.Gupta1@synopsys.com> writes:
+>>
+>>>> There's already a generic implementation so use that instead.
+>>>> ---
+>>>> I'm not sure if the driver usage of atomic_or?() is correct in terms of
+>>>> storage size of @val for 64 bit arches.
+>>>>
+>>>> Assuming LP64 programming model for linux on say x86_64: atomic_or()
+>>>> callers in this driver use long (sana 64 bit) storage and pass it to
+>>>> atomic_orr/atomic_or which downcasts it to 32 bits. Is that OK ?
+>>>> ---
+>>>> Cc: Brett Rudley <brudley@broadcom.com>
+>>>> Cc: Arend van Spriel <arend@broadcom.com>
+>>>> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+>>>> Cc: Hante Meuleman <meuleman@broadcom.com>
+>>>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>>>> Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>>> Cc: Daniel Kim <dekim@broadcom.com>
+>>>> Cc: linux-wireless@vger.kernel.org
+>>>> Cc: brcm80211-dev-list@broadcom.com
+>>>> Cc: Peter Zijlstra <peterz@infradead.org>
+>>>> Cc: Ingo Molnar <mingo@kernel.org>
+>>>> Cc: netdev@vger.kernel.org
+>>>> Cc: linux-arch@vger.kernel.org
+>>>> Cc: linux-kernel@vger.kernel.org
+>>>> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+>>>>
+>>>> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+>> What's the plan with this patch? Should I take it to my
+>> wireless-drivers-next tree or will someone else take it?
 >
 >
-> [0] http://abload.de/img/athscanfjsvv.png
-> [1] http://abload.de/img/fft-evaldqsbq.png
+> Per last discussion on this topic, Arend wanted to discuss abt this with Hante.
+> I'm not taking it anyways so feel free to pick it up if you want !
 
-Cool! Does it let you capture lots of samples over time and plot them?
-Or is the second one that as well?
+Well, that was before your "timeline" clarification about the generic 
+function. One what tree is this patch based?
 
-Is this before or after the NF patches?
-
-
--adrian
+Regards,
+Arend
