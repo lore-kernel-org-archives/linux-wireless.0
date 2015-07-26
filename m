@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42427 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51320 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754008AbbGTPsO (ORCPT
+	with ESMTP id S1751923AbbGZL4j convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2015 11:48:14 -0400
+	Sun, 26 Jul 2015 07:56:39 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
-	ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2] ath9k: spectral - simplify max_index calculation
-References: <1434626241-1334-1-git-send-email-zefir.kurtisi@neratec.com>
-	<5582E0CF.1050804@neratec.com>
-Date: Mon, 20 Jul 2015 18:48:08 +0300
-In-Reply-To: <5582E0CF.1050804@neratec.com> (Zefir Kurtisi's message of "Thu,
-	18 Jun 2015 17:16:31 +0200")
-Message-ID: <877fpusudj.fsf@kamboji.qca.qualcomm.com> (sfid-20150720_174817_396618_866D2600)
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	manabian@gmail.com
+Subject: Re: [PATCH] bcma: fix build error when build as module
+References: <1437851427-7485-1-git-send-email-hauke@hauke-m.de>
+Date: Sun, 26 Jul 2015 14:56:31 +0300
+In-Reply-To: <1437851427-7485-1-git-send-email-hauke@hauke-m.de> (Hauke
+	Mehrtens's message of "Sat, 25 Jul 2015 21:10:27 +0200")
+Message-ID: <87lhe3b09c.fsf@kamboji.qca.qualcomm.com> (sfid-20150726_135751_243990_E4CA659D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
+Hauke Mehrtens <hauke@hauke-m.de> writes:
 
-> After further discussion with Nick, we better leave spectral as is.
+> Currently of_default_bus_match_table is not exported so we can only use
+> this feature when bcma is build into the kernel. This patch removes
+> support for child buses when bcma is build as a module as a temporary
+> fix for a build problem introduces in this commit:
 >
-> Please ignore / drop this one.
+> commit cae761b5a6bdc597ba476a040fdcd5b4bc559b85
+> Author: Rafał Miłecki <zajec5@gmail.com>
+> Date:   Sun Jun 28 17:17:13 2015 +0200
+>
+>     bcma: populate bus DT subnodes as platform_device-s
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Ok, patch dropped.
+Thanks, manually applied to wireless-drivers-next.git. (Still
+patchwork.kernel.org has buggy utf-8 support, sigh.) I just added
+Reported-by and Fixes lines to the commit log.
 
-> On 06/18/2015 01:17 PM, Zefir Kurtisi wrote:
->> The max_index value provided in the spectral data set
->> has to be interpreted differently for HT20 and HT40.
->> In HT40, the value is given as unsigned index and
->> shall be taken as is, while in HT20 it is a signed
->> value around bin index 28 and needs to be converted
->> to an unsigned index.
->> 
->> This patch simplifies the previous correction and
->> prepares the related functions to be shared with
->> the DFS module.
->> 
->> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-
-Please edit your quotes, leaving this extra cruft makes it hard for me
-to use patchwork.
+I wrote a similar patch but I'll drop that as your has better comments :)
 
 -- 
 Kalle Valo
