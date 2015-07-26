@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49528 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1947022AbbGaUwO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 16:52:14 -0400
-Date: Fri, 31 Jul 2015 13:52:13 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Shraddha Barke <shraddha.6596@gmail.com>
-Cc: Dean Lee <dean.lee@atmel.com>, Rachel Kim <rachel.kim@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Staging:wilc1000 :Remove typedef from struct
-Message-ID: <20150731205213.GF1650@kroah.com> (sfid-20150731_225238_140827_599B8654)
-References: <1438321127-8120-1-git-send-email-shraddha.6596@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34263 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752459AbbGZNA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jul 2015 09:00:26 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "Joglekar\, Tejas \(T.\)" <tjogleka@visteon.com>
+Cc: "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging:rtl8723au:core:rtw_sreset.c:Fix for space related error
+References: <20150726074009.GA14066@tejas-asus.domain.name>
+Date: Sun, 26 Jul 2015 09:00:23 -0400
+In-Reply-To: <20150726074009.GA14066@tejas-asus.domain.name> (Tejas Joglekar's
+	message of "Sun, 26 Jul 2015 07:40:51 +0000")
+Message-ID: <wrfjd1zful94.fsf@redhat.com> (sfid-20150726_150043_134642_36674A73)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438321127-8120-1-git-send-email-shraddha.6596@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2015 at 11:08:47AM +0530, Shraddha Barke wrote:
-> This patch fixes the following checkpatch.pl warning:
-> 
-> WARNING: do not add new typedefs
-> 
-> Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
+"Joglekar, Tejas (T.)" <tjogleka@visteon.com> writes:
+> From: Joglekar Tejas <tjogleka@visteon.com>
+>
+> This patch fixes the error given by checkpatch.pl
+>
+> Signed-off-by: Joglekar Tejas <tjogleka@visteon.com>
 > ---
->  drivers/staging/wilc1000/coreconfigurator.c | 2 +-
+>  drivers/staging/rtl8723au/core/rtw_sreset.c | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index 54eb8a1..d6ef6e1 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -88,7 +88,7 @@ typedef enum {
->  } tenuFrmSubtype;
->  
->  /* Basic Frame Classes */
-> -typedef enum {
-> +enum {
->  	CLASS1_FRAME_TYPE      = 0x00,
->  	CLASS2_FRAME_TYPE      = 0x01,
->  	CLASS3_FRAME_TYPE      = 0x02,
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_sreset.c b/drivers/staging/rtl8723au/core/rtw_sreset.c
+> index 29a29d9..48b7723 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_sreset.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_sreset.c
+> @@ -71,7 +71,7 @@ static void sreset_restore_security_station(struct rtw_adapter *padapter)
+>  			/* pairwise key */
+>  			rtw_setstakey_cmd23a(padapter, (unsigned char *)psta, true);
+>  			/* group key */
+> -			rtw_set_key23a(padapter,&padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
+> +			rtw_set_key23a(padapter, &padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
+>  		}
+>  	}
+>  }
 
-Did you test-build this change?
+NAK!
+
+If you are 'fixing' checkpatch 'errors', do it properly and break down
+the line and solve the 80 character limit 'error' as well.
+
+Jes
