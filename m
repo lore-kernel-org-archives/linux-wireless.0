@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51320 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923AbbGZL4j convert rfc822-to-8bit (ORCPT
+Received: from mail-am1on0135.outbound.protection.outlook.com ([157.56.112.135]:47719
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752871AbbGZIOw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2015 07:56:39 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	manabian@gmail.com
-Subject: Re: [PATCH] bcma: fix build error when build as module
-References: <1437851427-7485-1-git-send-email-hauke@hauke-m.de>
-Date: Sun, 26 Jul 2015 14:56:31 +0300
-In-Reply-To: <1437851427-7485-1-git-send-email-hauke@hauke-m.de> (Hauke
-	Mehrtens's message of "Sat, 25 Jul 2015 21:10:27 +0200")
-Message-ID: <87lhe3b09c.fsf@kamboji.qca.qualcomm.com> (sfid-20150726_135751_243990_E4CA659D)
+	Sun, 26 Jul 2015 04:14:52 -0400
+From: "Joglekar, Tejas (T.)" <tjogleka@visteon.com>
+To: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] staging:rtl8723au:core:rtw_sreset.c:Fix for space related
+ error
+Date: Sun, 26 Jul 2015 07:40:51 +0000
+Message-ID: <20150726074009.GA14066@tejas-asus.domain.name> (sfid-20150726_101528_372359_1E984A7A)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke Mehrtens <hauke@hauke-m.de> writes:
+From: Joglekar Tejas <tjogleka@visteon.com>
 
-> Currently of_default_bus_match_table is not exported so we can only use
-> this feature when bcma is build into the kernel. This patch removes
-> support for child buses when bcma is build as a module as a temporary
-> fix for a build problem introduces in this commit:
->
-> commit cae761b5a6bdc597ba476a040fdcd5b4bc559b85
-> Author: Rafał Miłecki <zajec5@gmail.com>
-> Date:   Sun Jun 28 17:17:13 2015 +0200
->
->     bcma: populate bus DT subnodes as platform_device-s
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+This patch fixes the error given by checkpatch.pl
 
-Thanks, manually applied to wireless-drivers-next.git. (Still
-patchwork.kernel.org has buggy utf-8 support, sigh.) I just added
-Reported-by and Fixes lines to the commit log.
+Signed-off-by: Joglekar Tejas <tjogleka@visteon.com>
+---
+ drivers/staging/rtl8723au/core/rtw_sreset.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I wrote a similar patch but I'll drop that as your has better comments :)
-
+diff --git a/drivers/staging/rtl8723au/core/rtw_sreset.c b/drivers/staging/rtl8723au/core/rtw_sreset.c
+index 29a29d9..48b7723 100644
+--- a/drivers/staging/rtl8723au/core/rtw_sreset.c
++++ b/drivers/staging/rtl8723au/core/rtw_sreset.c
+@@ -71,7 +71,7 @@ static void sreset_restore_security_station(struct rtw_adapter *padapter)
+ 			/* pairwise key */
+ 			rtw_setstakey_cmd23a(padapter, (unsigned char *)psta, true);
+ 			/* group key */
+-			rtw_set_key23a(padapter,&padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
++			rtw_set_key23a(padapter, &padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
+ 		}
+ 	}
+ }
 -- 
-Kalle Valo
+1.9.1
