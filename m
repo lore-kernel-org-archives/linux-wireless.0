@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49208 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751061AbbGLRId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2015 13:08:33 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 05/10] iwlwifi: pcie: prepare the device before accessing it
-Date: Sun, 12 Jul 2015 20:08:15 +0300
-Message-Id: <1436720900-18588-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150712_190846_556411_044D7144)
-In-Reply-To: <1436720814.17999.2.camel@intel.com>
-References: <1436720814.17999.2.camel@intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46638 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbbG0IL3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2015 04:11:29 -0400
+Date: Mon, 27 Jul 2015 11:11:11 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] mac80211: remove always true condition
+Message-ID: <20150727081111.GB2937@mwanda> (sfid-20150727_101134_862939_89BE60D8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For 8000 series, we need to access the device to know what
-firmware to load. Before we do so, we need to prepare the
-device otherwise we might not be able to access the
-hardware.
+The outside if statement checks that IEEE80211_TX_INTFL_MLME_CONN_TX is
+set so this condition is always true.  Checking twice upsets the static
+checkers.
 
-Fixes: c278754a21e6 ("iwlwifi: mvm: support family 8000 B2/C steps")
-CC: <stable@vger.kernel.org> [4.1]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/trans.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index fe61d0a..6203c4a 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -2551,6 +2551,12 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		trans->hw_rev = (trans->hw_rev & 0xfff0) |
- 				(CSR_HW_REV_STEP(trans->hw_rev << 2) << 2);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 45628f3..8ba5832 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -515,7 +515,7 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
  
-+		ret = iwl_pcie_prepare_card_hw(trans);
-+		if (ret) {
-+			IWL_WARN(trans, "Exit HW not ready\n");
-+			goto out_pci_disable_msi;
-+		}
-+
- 		/*
- 		 * in-order to recognize C step driver should read chip version
- 		 * id located at the AUX bus MISC address space.
--- 
-2.1.4
-
+ 		if (!sdata) {
+ 			skb->dev = NULL;
+-		} else if (info->flags & IEEE80211_TX_INTFL_MLME_CONN_TX) {
++		} else {
+ 			unsigned int hdr_size =
+ 				ieee80211_hdrlen(hdr->frame_control);
+ 
+@@ -529,9 +529,6 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+ 				ieee80211_mgd_conn_tx_status(sdata,
+ 							     hdr->frame_control,
+ 							     acked);
+-		} else {
+-			/* we assign ack frame ID for the others */
+-			WARN_ON(1);
+ 		}
+ 
+ 		rcu_read_unlock();
