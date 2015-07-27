@@ -1,110 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atl4mhob13.myregisteredsite.com ([209.17.115.51]:50208 "EHLO
-	atl4mhob13.myregisteredsite.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751688AbbG1Fv1 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:34294 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242AbbG0G5r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 01:51:27 -0400
-Received: from mailpod.hostingplatform.com ([10.30.71.203])
-	by atl4mhob13.myregisteredsite.com (8.14.4/8.14.4) with ESMTP id t6S5p5nu015054
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 01:51:05 -0400
-From: Mike Looijmans <mike.looijmans@topic.nl>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, khoroshilov@ispras.ru,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Mike Looijmans <mike.looijmans@topic.nl>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] rsi: Fix failure to load firmware after memory leak fix and fix the leak
-Date: Tue, 28 Jul 2015 07:51:01 +0200
-Message-Id: <1438062661-3173-1-git-send-email-mike.looijmans@topic.nl> (sfid-20150728_075146_724163_BEC6BE9B)
-References: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl>
-In-Reply-To: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl>
+	Mon, 27 Jul 2015 02:57:47 -0400
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH] wl18xx: add dynamic fw traces
+Date: Mon, 27 Jul 2015 09:46:02 +0300
+Message-ID: <1437979562-20252-1-git-send-email-guym@ti.com> (sfid-20150727_085759_088144_48B4BED5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes commit eae79b4f3e82 ("rsi: fix memory leak in rsi_load_ta_instructions()")
-which stopped the driver from functioning.
+add option to dynamically configure the fw
+which debug traces to open
 
-Firmware data has been allocated using vmalloc(), resulting in memory
-that cannot be used for DMA. Hence the firmware was first copied to a
-buffer allocated with kmalloc() in the original code. This patch reverts
-the commit and only calls "kfree()" to release the buffer after sending
-the data. This fixes the memory leak without breaking the driver.
-
-Add a comment to the kmemdup() calls to explain why this is done, and abort
-if memory allocation fails.
-
-Tested on a Topic Miami-Florida board which contains the rsi SDIO chip.
-
-Also added the same kfree() call to the USB glue driver. This was not
-tested on actual hardware though, as I only have the SDIO version.
-
-Fixes: eae79b4f3e82 ("rsi: fix memory leak in rsi_load_ta_instructions()")
-Signed-off-by: Mike Looijmans <mike.looijmans@topic.nl>
-Cc: stable@vger.kernel.org
+Signed-off-by: Guy Mishol <guym@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
-v2: Add "Fixes:" header and abbreviate git hashes.
-    Return -ENOMEM if kmemdup() fails.
+ drivers/net/wireless/ti/wl18xx/acx.c     |   27 ++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/acx.h     |   13 +++++++-
+ drivers/net/wireless/ti/wl18xx/debugfs.c |   50 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/main.c    |    5 +++
+ drivers/net/wireless/ti/wlcore/wlcore.h  |    3 ++
+ 5 files changed, 97 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 8 +++++++-
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 4 ++++
- 2 files changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index b6cc9ff..1c6788a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -172,6 +172,7 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
- 	u32 len;
- 	u32 num_blocks;
-+	const u8 *fw;
- 	const struct firmware *fw_entry = NULL;
- 	u32 block_size = dev->tx_blk_size;
- 	int status = 0;
-@@ -200,6 +201,10 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 		return status;
- 	}
- 
-+	/* Copy firmware into DMA-accessible memory */
-+	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
-+	if (!fw)
-+		return -ENOMEM;
- 	len = fw_entry->size;
- 
- 	if (len % 4)
-@@ -210,7 +215,8 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
- 	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
- 
--	status = rsi_copy_to_card(common, fw_entry->data, len, num_blocks);
-+	status = rsi_copy_to_card(common, fw, len, num_blocks);
-+	kfree(fw);
- 	release_firmware(fw_entry);
- 	return status;
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
+index 67f2a0e..4be0409 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.c
++++ b/drivers/net/wireless/ti/wl18xx/acx.c
+@@ -282,3 +282,30 @@ out:
+ 	kfree(acx);
+ 	return ret;
  }
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-index 1106ce7..30c2cf7 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-@@ -146,7 +146,10 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 		return status;
- 	}
++
++int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl)
++{
++	struct acx_dynamic_fw_traces_cfg *acx;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx dynamic fw traces config %d",
++		     wl->dynamic_fw_traces);
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	acx->dynamic_fw_traces = cpu_to_le32(wl->dynamic_fw_traces);
++
++	ret = wl1271_cmd_configure(wl, ACX_DYNAMIC_TRACES_CFG,
++				   acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx config dynamic fw traces failed: %d", ret);
++		goto out;
++	}
++out:
++	kfree(acx);
++	return ret;
++}
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+index 4afccd4..c8a33f4 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.h
++++ b/drivers/net/wireless/ti/wl18xx/acx.h
+@@ -35,7 +35,8 @@ enum {
+ 	ACX_PEER_CAP			 = 0x0056,
+ 	ACX_INTERRUPT_NOTIFY		 = 0x0057,
+ 	ACX_RX_BA_FILTER		 = 0x0058,
+-	ACX_AP_SLEEP_CFG                 = 0x0059
++	ACX_AP_SLEEP_CFG                 = 0x0059,
++	ACX_DYNAMIC_TRACES_CFG		 = 0x005A,
+ };
  
-+	/* Copy firmware into DMA-accessible memory */
- 	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
-+	if (!fw)
-+		return -ENOMEM;
- 	len = fw_entry->size;
+ /* numbers of bits the length field takes (add 1 for the actual number) */
+@@ -367,6 +368,15 @@ struct acx_ap_sleep_cfg {
+ 	u8 idle_conn_thresh;
+ } __packed;
  
- 	if (len % 4)
-@@ -158,6 +161,7 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
- 	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
++/*
++ * ACX_DYNAMIC_TRACES_CFG
++ * configure the FW dynamic traces
++ */
++struct acx_dynamic_fw_traces_cfg {
++	struct acx_header header;
++	__le32 dynamic_fw_traces;
++} __packed;
++
+ int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
+ 				  u32 sdio_blk_size, u32 extra_mem_blks,
+ 				  u32 len_field_size);
+@@ -380,5 +390,6 @@ int wl18xx_acx_set_peer_cap(struct wl1271 *wl,
+ int wl18xx_acx_interrupt_notify_config(struct wl1271 *wl, bool action);
+ int wl18xx_acx_rx_ba_filter(struct wl1271 *wl, bool action);
+ int wl18xx_acx_ap_sleep(struct wl1271 *wl);
++int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl);
  
- 	status = rsi_copy_to_card(common, fw, len, num_blocks);
-+	kfree(fw);
- 	release_firmware(fw_entry);
- 	return status;
- }
+ #endif /* __WL18XX_ACX_H__ */
+diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
+index 5fbd223..8c6a1c8 100644
+--- a/drivers/net/wireless/ti/wl18xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
+@@ -281,6 +281,55 @@ static const struct file_operations radar_detection_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t dynamic_fw_traces_write(struct file *file,
++					const char __user *user_buf,
++					size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	unsigned long value;
++	int ret;
++
++	ret = kstrtoul_from_user(user_buf, count, 0, &value);
++	if (ret < 0)
++		return ret;
++
++	mutex_lock(&wl->mutex);
++
++	wl->dynamic_fw_traces = value;
++
++	if (unlikely(wl->state != WLCORE_STATE_ON))
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	ret = wl18xx_acx_dynamic_fw_traces(wl);
++	if (ret < 0)
++		count = ret;
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++static ssize_t dynamic_fw_traces_read(struct file *file,
++					char __user *userbuf,
++					size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	return wl1271_format_buffer(userbuf, count, ppos,
++				    "%d\n", wl->dynamic_fw_traces);
++}
++
++static const struct file_operations dynamic_fw_traces_ops = {
++	.read = dynamic_fw_traces_read,
++	.write = dynamic_fw_traces_write,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
+ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 			     struct dentry *rootdir)
+ {
+@@ -433,6 +482,7 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 
+ 	DEBUGFS_ADD(conf, moddir);
+ 	DEBUGFS_ADD(radar_detection, moddir);
++	DEBUGFS_ADD(dynamic_fw_traces, moddir);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 49aca2c..8ce9825 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1159,6 +1159,11 @@ static int wl18xx_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/* set the dynamic fw traces bitmap */
++	ret = wl18xx_acx_dynamic_fw_traces(wl);
++	if (ret < 0)
++		return ret;
++
+ 	if (checksum_param) {
+ 		ret = wl18xx_acx_set_checksum_state(wl);
+ 		if (ret != 0)
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 7f363fa..a1b6040 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -500,6 +500,9 @@ struct wl1271 {
+ 	/* interface combinations supported by the hw */
+ 	const struct ieee80211_iface_combination *iface_combinations;
+ 	u8 n_iface_combinations;
++
++	/* dynamic fw traces */
++	u32 dynamic_fw_traces;
+ };
+ 
+ int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
 -- 
-1.9.1
+1.7.0.4
 
