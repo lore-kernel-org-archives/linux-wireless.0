@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:33591 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752724AbbGVSR7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 14:17:59 -0400
-Received: by wicmv11 with SMTP id mv11so92408681wic.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:58 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 14/15] staging: vt6655: s_cbFillTxBufHead replace STxBufHead
-Date: Wed, 22 Jul 2015 19:16:46 +0100
-Message-Id: <1437589007-5479-14-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201808_749904_F925AA13)
-In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
-References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:53719 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751308AbbG0Ohe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2015 10:37:34 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id t6REbXKl023137
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 09:37:33 -0500
+Received: from DLEE70.ent.ti.com (dlee70.ent.ti.com [157.170.170.113])
+	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id t6REbXAg025245
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 09:37:33 -0500
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>
+Subject: [PATCH] wlcore: add antenna diversity reading comments
+Date: Mon, 27 Jul 2015 17:25:49 +0300
+Message-ID: <1438007149-23044-1-git-send-email-guym@ti.com> (sfid-20150727_163737_162832_F322D57F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vnt_tx_fifo_head has now replaced STxBufHead
+add comments to the antenna diversity reading
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Guy Mishol <guym@ti.com>
 ---
- drivers/staging/vt6655/rxtx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/rx.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 82380f3..380b879 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -1088,7 +1088,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 7df672a..5b29273 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -74,6 +74,12 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 	if (desc->rate <= wl->hw_min_ht_rate)
+ 		status->flag |= RX_FLAG_HT;
  
++	/*
++	* Read the signal level and antenna diversity indication.
++	* The msb in the signal level is always set as it is a
++	* negative number.
++	* The antenna indication is the msb of the rssi.
++	*/
+ 	status->signal = ((desc->rssi & RSSI_LEVEL_BITMASK) | BIT(7));
+ 	status->antenna = ((desc->rssi & ANT_DIVERSITY_BITMASK) >> 7);
  
- 	/* Set RrvTime/RTS/CTS Buffer */
--	wTxBufSize = sizeof(STxBufHead);
-+	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
- 	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {/* 802.11g packet */
- 
- 		if (byFBOption == AUTO_FB_NONE) {
 -- 
-2.1.4
+1.7.0.4
 
