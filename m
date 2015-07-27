@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:34070 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754250AbbGCJeN (ORCPT
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:50778 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751217AbbG0KYB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 05:34:13 -0400
-Received: by wgqq4 with SMTP id q4so83707696wgq.1
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jul 2015 02:34:11 -0700 (PDT)
+	Mon, 27 Jul 2015 06:24:01 -0400
+From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Arend van Spriel <arend@broadcom.com>
+CC: Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or
+ primitive
+Date: Mon, 27 Jul 2015 10:23:53 +0000
+Message-ID: <C2D7FE5348E1B147BCA15975FBA23075665AF526@IN01WEMBXB.internal.synopsys.com> (sfid-20150727_122429_276401_02D75C1A)
+References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
+	<1436429599-10762-3-git-send-email-vgupta@synopsys.com>
+	<87twstbi9p.fsf@kamboji.qca.qualcomm.com>	<55B2743F.6060304@synopsys.com>
+ <55B4C0A8.9000909@broadcom.com> <871tftc3pw.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Date: Fri, 3 Jul 2015 10:34:11 +0100
-Message-ID: <CAFSTUk6UasnV4P3B1TR7kSx1ToQTC+PC2hU6PynDBWJ3ALJzyg@mail.gmail.com> (sfid-20150703_113547_793129_F137D98A)
-Subject: mesh support on rtl8192cu
-From: Richard Palethorpe <richard@lm-technologies.com>
-To: ap420073@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Taehee,
+On Monday 27 July 2015 01:08 PM, Kalle Valo wrote:
+>>> >> Per last discussion on this topic, Arend wanted to discuss abt this with Hante.
+>>> >> I'm not taking it anyways so feel free to pick it up if you want !
+>> >
+>> > Well, that was before your "timeline" clarification about the generic
+>> > function. One what tree is this patch based?
+> Yeah, if this patch depends on another patch I need to know about it.
+> Otherwise I might break something when I apply this patch.
 
-I have been experimenting with MESH mode on kernel 4.0.7. It is
-sending beacons out, but is unable to establish a connection.
+It was latest linux-next at the time, 4.1-rcx perhaps, don't remember exactly. But
+it certainly doesn't depend on any new code  - the patch simply makes use of an
+existing API vs. using a local hard coded version of same.
 
-I have two rtl8192cu based dongles connected to identical VMs and am
-using the following commands to set up the mesh:
+Give it a spin off your existing tree - shdn't be too difficult to test  I presume.
 
-iw dev wls160u2 set type mesh
-ip addr add 192.168.2.1/24 broadcast 192.168.2.255 dev wls160u2
-ip link set wls160u2 up
-iw dev wls160u2 mesh join lmmesh
-
-Running 'iw dev wls160u2 mpath dump' produces no results and there is
-nothing regarding mesh in dmesg. I can't find any other information on
-mesh with rtl8192cu other than the patch which you submitted.
-
-I am wondering if it does work, but there is a step I am missing or if
-something is wrong with the code?
-
-Thank you,
-Richard.
+-Vineet
