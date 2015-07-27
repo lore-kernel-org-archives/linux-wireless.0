@@ -1,117 +1,490 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26205 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbbGMRz7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2015 13:55:59 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/3] ath10k: update tx path to support QCA99X0
-Date: Mon, 13 Jul 2015 10:54:06 -0700
-Message-ID: <35bc9f65af58c5ea9f4570b142f69851753621ec.1436809751.git.poh@qca.qualcomm.com> (sfid-20150713_195606_938600_4569038B)
-In-Reply-To: <cover.1436809751.git.poh@qca.qualcomm.com>
-References: <cover.1436809751.git.poh@qca.qualcomm.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:37692 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752901AbbG0IdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2015 04:33:07 -0400
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 1/2] wl18xx: update statistics acx and debugfs files
+Date: Mon, 27 Jul 2015 11:21:23 +0300
+Message-ID: <1437985283-20506-1-git-send-email-guym@ti.com> (sfid-20150727_103312_209780_51C313ED)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since QCA99X0 uses fragmentation descriptor differently from
-other ones on tx path, we need to handle it separately.
+From: Eliad Peller <eliad@wizery.com>
 
-QCA99X0 is using 48 bits for address and 16 bits for length
-out of 2 dword and each values have to be programmed by frag
-desc base addr + msdu id, so that hardware can retrieve
-corresponding frag data.
+Sync the driver statistics acx and debugfs representation
+with the current fw api.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    | 13 +++++++++++--
- drivers/net/wireless/ath/ath10k/htt_tx.c | 29 +++++++++++++++++++++--------
- 2 files changed, 32 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ti/wl18xx/acx.h     |   78 ++++++++++++---
+ drivers/net/wireless/ti/wl18xx/debugfs.c |  159 ++++++++++++++++++------------
+ 2 files changed, 156 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 8bdf1e7..e31cd74 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -83,8 +83,17 @@ struct htt_ver_req {
-  * around the mask + shift defs.
-  */
- struct htt_data_tx_desc_frag {
--	__le32 paddr;
--	__le32 len;
-+	union {
-+		struct double_word_addr {
-+			__le32 paddr;
-+			__le32 len;
-+		} __packed dword_addr;
-+		struct triple_word_addr {
-+			__le32 paddr_lo;
-+			__le16 paddr_hi;
-+			__le16 len_16;
-+		} __packed tword_addr;
-+	} __packed;
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+index c8a33f4..6c5fef3 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.h
++++ b/drivers/net/wireless/ti/wl18xx/acx.h
+@@ -93,11 +93,23 @@ struct wl18xx_acx_checksum_state {
+ 
+ 
+ struct wl18xx_acx_error_stats {
+-	u32 error_frame;
+-	u32 error_null_Frame_tx_start;
+-	u32 error_numll_frame_cts_start;
+-	u32 error_bar_retry;
+-	u32 error_frame_cts_nul_flid;
++	u32 error_frame_non_ctrl;
++	u32 error_frame_ctrl;
++	u32 error_frame_during_protection;
++	u32 null_frame_tx_start;
++	u32 null_frame_cts_start;
++	u32 bar_retry;
++	u32 num_frame_cts_nul_flid;
++	u32 tx_abort_failure;
++	u32 tx_resume_failure;
++	u32 rx_cmplt_db_overflow_cnt;
++	u32 elp_while_rx_exch;
++	u32 elp_while_tx_exch;
++	u32 elp_while_tx;
++	u32 elp_while_nvic_pending;
++	u32 rx_excessive_frame_len;
++	u32 burst_mismatch;
++	u32 tbc_exch_mismatch;
  } __packed;
  
- struct htt_msdu_ext_desc {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 148d5b6..5724c84 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -63,7 +63,8 @@ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb)
+ struct wl18xx_acx_debug_stats {
+@@ -114,6 +126,7 @@ struct wl18xx_acx_ring_stats {
+ 	u32 tx_cmplt;
+ } __packed;
  
- 	lockdep_assert_held(&htt->tx_lock);
++#define NUM_OF_RATES_INDEXES 30
+ struct wl18xx_acx_tx_stats {
+ 	u32 tx_prepared_descs;
+ 	u32 tx_cmplt;
+@@ -123,7 +136,7 @@ struct wl18xx_acx_tx_stats {
+ 	u32 tx_data_programmed;
+ 	u32 tx_burst_programmed;
+ 	u32 tx_starts;
+-	u32 tx_imm_resp;
++	u32 tx_stop;
+ 	u32 tx_start_templates;
+ 	u32 tx_start_int_templates;
+ 	u32 tx_start_fw_gen;
+@@ -132,13 +145,14 @@ struct wl18xx_acx_tx_stats {
+ 	u32 tx_exch;
+ 	u32 tx_retry_template;
+ 	u32 tx_retry_data;
++	u32 tx_retry_per_rate[NUM_OF_RATES_INDEXES];
+ 	u32 tx_exch_pending;
+ 	u32 tx_exch_expiry;
+ 	u32 tx_done_template;
+ 	u32 tx_done_data;
+ 	u32 tx_done_int_template;
+-	u32 tx_frame_checksum;
+-	u32 tx_checksum_result;
++	u32 tx_cfe1;
++	u32 tx_cfe2;
+ 	u32 frag_called;
+ 	u32 frag_mpdu_alloc_failed;
+ 	u32 frag_init_called;
+@@ -166,11 +180,8 @@ struct wl18xx_acx_rx_stats {
+ 	u32 rx_cmplt_task;
+ 	u32 rx_phy_hdr;
+ 	u32 rx_timeout;
++	u32 rx_rts_timeout;
+ 	u32 rx_timeout_wa;
+-	u32 rx_wa_density_dropped_frame;
+-	u32 rx_wa_ba_not_expected;
+-	u32 rx_frame_checksum;
+-	u32 rx_checksum_result;
+ 	u32 defrag_called;
+ 	u32 defrag_init_called;
+ 	u32 defrag_in_process_called;
+@@ -180,6 +191,7 @@ struct wl18xx_acx_rx_stats {
+ 	u32 decrypt_key_not_found;
+ 	u32 defrag_need_decrypt;
+ 	u32 rx_tkip_replays;
++	u32 rx_xfr;
+ } __packed;
  
--	ret = idr_alloc(&htt->pending_tx, skb, 0, 0x10000, GFP_ATOMIC);
-+	ret = idr_alloc(&htt->pending_tx, skb, 0,
-+			htt->max_num_pending_tx, GFP_ATOMIC);
+ struct wl18xx_acx_isr_stats {
+@@ -194,6 +206,13 @@ struct wl18xx_acx_pwr_stats {
+ 	u32 connection_out_of_sync;
+ 	u32 cont_miss_bcns_spread[PWR_STAT_MAX_CONT_MISSED_BCNS_SPREAD];
+ 	u32 rcvd_awake_bcns_cnt;
++	u32 sleep_time_count;
++	u32 sleep_time_avg;
++	u32 sleep_cycle_avg;
++	u32 sleep_percent;
++	u32 ap_sleep_active_conf;
++	u32 ap_sleep_user_conf;
++	u32 ap_sleep_counter;
+ } __packed;
  
- 	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt tx alloc msdu_id %d\n", ret);
+ struct wl18xx_acx_event_stats {
+@@ -228,11 +247,11 @@ struct wl18xx_acx_rx_rate_stats {
+ } __packed;
  
-@@ -259,6 +260,7 @@ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
- 	cmd->frag_desc_bank_cfg.desc_size = sizeof(struct htt_msdu_ext_desc);
- 	cmd->frag_desc_bank_cfg.bank_base_addrs[0] =
- 				__cpu_to_le32(htt->frag_desc.paddr);
-+	cmd->frag_desc_bank_cfg.bank_id[0].bank_min_id = 0;
- 	cmd->frag_desc_bank_cfg.bank_id[0].bank_max_id =
- 				__cpu_to_le16(htt->max_num_pending_tx - 1);
+ #define AGGR_STATS_TX_AGG	16
+-#define AGGR_STATS_TX_RATE	16
+ #define AGGR_STATS_RX_SIZE_LEN	16
  
-@@ -537,16 +539,27 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
- 		/* pass through */
- 	case ATH10K_HW_TXRX_ETHERNET:
--		frags = skb_cb->htt.txbuf->frags;
-+		if (ar->hw_params.continuous_frag_desc) {
-+			frags = (struct htt_data_tx_desc_frag *)
-+				&htt->frag_desc.vaddr[msdu_id].frags;
-+			frags[0].tword_addr.paddr_lo = __cpu_to_le32(skb_cb->paddr);
-+			frags[0].tword_addr.paddr_hi = 0;
-+			frags[0].tword_addr.len_16 = __cpu_to_le16(msdu->len);
-+			frags[1].tword_addr.paddr_lo = 0;
-+			frags[1].tword_addr.paddr_hi = 0;
+ struct wl18xx_acx_aggr_stats {
+-	u32 tx_agg_vs_rate[AGGR_STATS_TX_AGG * AGGR_STATS_TX_RATE];
++	u32 tx_agg_rate[AGGR_STATS_TX_AGG];
++	u32 tx_agg_len[AGGR_STATS_TX_AGG];
+ 	u32 rx_size[AGGR_STATS_RX_SIZE_LEN];
+ } __packed;
  
--		frags[0].paddr = __cpu_to_le32(skb_cb->paddr);
--		frags[0].len = __cpu_to_le32(msdu->len);
--		frags[1].paddr = 0;
--		frags[1].len = 0;
-+			frags_paddr =  htt->frag_desc.paddr +
-+				(sizeof(struct htt_msdu_ext_desc) * msdu_id);
-+		} else {
-+			frags = skb_cb->htt.txbuf->frags;
-+			frags[0].dword_addr.paddr = __cpu_to_le32(skb_cb->paddr);
-+			frags[0].dword_addr.len = __cpu_to_le32(msdu->len);
-+			frags[1].dword_addr.paddr = 0;
-+			frags[1].dword_addr.len = 0;
+@@ -258,6 +277,7 @@ struct wl18xx_acx_pipeline_stats {
+ 	u32 cs_rx_packet_in;
+ 	u32 cs_rx_packet_out;
+ 	u16 pipeline_fifo_full[PIPE_STATS_HW_FIFO];
++	u16 padding;
+ } __packed;
  
-+			frags_paddr = skb_cb->htt.txbuf_paddr;
-+		}
- 		flags0 |= SM(skb_cb->txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
+ struct wl18xx_acx_mem_stats {
+@@ -267,21 +287,45 @@ struct wl18xx_acx_mem_stats {
+ 	u32 fw_gen_free_mem_blks;
+ } __packed;
+ 
++struct wl18xx_acx_thermal_stats {
++	u16 irq_thr_low;
++	u16 irq_thr_high;
++	u16 tx_stop;
++	u16 tx_resume;
++	u16 false_irq;
++	u16 adc_source_unexpected;
++} __packed;
++
++#define WL18XX_NUM_OF_CALIBRATIONS_ERRORS 18
++struct wl18xx_acx_calib_failure_stats {
++	u16 fail_count[WL18XX_NUM_OF_CALIBRATIONS_ERRORS];
++	u32 calib_count;
++} __packed;
++
++struct wl18xx_roaming_stats {
++	s32 rssi_level;
++} __packed;
++
++struct wl18xx_dfs_stats {
++	u32 num_of_radar_detections;
++} __packed;
++
+ struct wl18xx_acx_statistics {
+ 	struct acx_header header;
+ 
+ 	struct wl18xx_acx_error_stats		error;
+-	struct wl18xx_acx_debug_stats		debug;
+ 	struct wl18xx_acx_tx_stats		tx;
+ 	struct wl18xx_acx_rx_stats		rx;
+ 	struct wl18xx_acx_isr_stats		isr;
+ 	struct wl18xx_acx_pwr_stats		pwr;
+-	struct wl18xx_acx_ps_poll_stats		ps_poll;
+ 	struct wl18xx_acx_rx_filter_stats	rx_filter;
+ 	struct wl18xx_acx_rx_rate_stats		rx_rate;
+ 	struct wl18xx_acx_aggr_stats		aggr_size;
+ 	struct wl18xx_acx_pipeline_stats	pipeline;
+-	struct wl18xx_acx_mem_stats		mem;
++	struct wl18xx_acx_thermal_stats		thermal;
++	struct wl18xx_acx_calib_failure_stats	calib;
++	struct wl18xx_roaming_stats		roaming;
++	struct wl18xx_dfs_stats			dfs;
+ } __packed;
+ 
+ struct wl18xx_acx_clear_statistics {
+diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
+index 8c6a1c8..cf71005 100644
+--- a/drivers/net/wireless/ti/wl18xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
+@@ -36,18 +36,23 @@
+ 	DEBUGFS_FWSTATS_FILE_ARRAY(a, b, c, wl18xx_acx_statistics)
+ 
+ 
+-WL18XX_DEBUGFS_FWSTATS_FILE(debug, debug1, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(debug, debug2, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(debug, debug3, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(debug, debug4, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(debug, debug5, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(debug, debug6, "%u");
 -
--		frags_paddr = skb_cb->htt.txbuf_paddr;
- 		break;
- 	case ATH10K_HW_TXRX_MGMT:
- 		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
+-WL18XX_DEBUGFS_FWSTATS_FILE(error, error_frame, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(error, error_null_Frame_tx_start, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(error, error_numll_frame_cts_start, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(error, error_bar_retry, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(error, error_frame_cts_nul_flid, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, error_frame_non_ctrl, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, error_frame_ctrl, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, error_frame_during_protection, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, null_frame_tx_start, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, null_frame_cts_start, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, bar_retry, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, num_frame_cts_nul_flid, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, tx_abort_failure, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, tx_resume_failure, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, rx_cmplt_db_overflow_cnt, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, elp_while_rx_exch, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, elp_while_tx_exch, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, elp_while_tx, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, elp_while_nvic_pending, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, rx_excessive_frame_len, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, burst_mismatch, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(error, tbc_exch_mismatch, "%u");
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_prepared_descs, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_cmplt, "%u");
+@@ -57,7 +62,7 @@ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_template_programmed, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_data_programmed, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_burst_programmed, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_starts, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_imm_resp, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_stop, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_start_templates, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_start_int_templates, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_start_fw_gen, "%u");
+@@ -66,13 +71,15 @@ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_start_null_frame, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_exch, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_retry_template, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_retry_data, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(tx, tx_retry_per_rate,
++				  NUM_OF_RATES_INDEXES);
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_exch_pending, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_exch_expiry, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_done_template, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_done_data, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_done_int_template, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_frame_checksum, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_checksum_result, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_cfe1, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(tx, tx_cfe2, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, frag_called, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, frag_mpdu_alloc_failed, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(tx, frag_init_called, "%u");
+@@ -97,11 +104,8 @@ WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_pre_complt, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_cmplt_task, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_phy_hdr, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_timeout, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_rts_timeout, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_timeout_wa, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_wa_density_dropped_frame, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_wa_ba_not_expected, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_frame_checksum, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_checksum_result, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, defrag_called, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, defrag_init_called, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, defrag_in_process_called, "%u");
+@@ -111,6 +115,7 @@ WL18XX_DEBUGFS_FWSTATS_FILE(rx, defrag_decrypt_failed, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, decrypt_key_not_found, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, defrag_need_decrypt, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_tkip_replays, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(rx, rx_xfr, "%u");
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE(isr, irqs, "%u");
+ 
+@@ -120,14 +125,13 @@ WL18XX_DEBUGFS_FWSTATS_FILE(pwr, connection_out_of_sync, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(pwr, cont_miss_bcns_spread,
+ 				  PWR_STAT_MAX_CONT_MISSED_BCNS_SPREAD);
+ WL18XX_DEBUGFS_FWSTATS_FILE(pwr, rcvd_awake_bcns_cnt, "%u");
+-
+-
+-WL18XX_DEBUGFS_FWSTATS_FILE(ps_poll, ps_poll_timeouts, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(ps_poll, upsd_timeouts, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(ps_poll, upsd_max_ap_turn, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(ps_poll, ps_poll_max_ap_turn, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(ps_poll, ps_poll_utilization, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(ps_poll, upsd_utilization, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pwr, sleep_time_count, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pwr, sleep_time_avg, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pwr, sleep_cycle_avg, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pwr, sleep_percent, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pwr, ap_sleep_active_conf, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pwr, ap_sleep_user_conf, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pwr, ap_sleep_counter, "%u");
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx_filter, beacon_filter, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(rx_filter, arp_filter, "%u");
+@@ -141,8 +145,10 @@ WL18XX_DEBUGFS_FWSTATS_FILE(rx_filter, max_arp_queue_dep, "%u");
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(rx_rate, rx_frames_per_rates, 50);
+ 
+-WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(aggr_size, tx_agg_vs_rate,
+-				  AGGR_STATS_TX_AGG*AGGR_STATS_TX_RATE);
++WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(aggr_size, tx_agg_rate,
++				  AGGR_STATS_TX_AGG);
++WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(aggr_size, tx_agg_len,
++				  AGGR_STATS_TX_AGG);
+ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(aggr_size, rx_size,
+ 				  AGGR_STATS_RX_SIZE_LEN);
+ 
+@@ -167,10 +173,20 @@ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, cs_rx_packet_out, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(pipeline, pipeline_fifo_full,
+ 				  PIPE_STATS_HW_FIFO);
+ 
+-WL18XX_DEBUGFS_FWSTATS_FILE(mem, rx_free_mem_blks, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(mem, tx_free_mem_blks, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(mem, fwlog_free_mem_blks, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(mem, fw_gen_free_mem_blks, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(thermal, irq_thr_low, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(thermal, irq_thr_high, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(thermal, tx_stop, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(thermal, tx_resume, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(thermal, false_irq, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(thermal, adc_source_unexpected, "%u");
++
++WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(calib, fail_count,
++				  WL18XX_NUM_OF_CALIBRATIONS_ERRORS);
++WL18XX_DEBUGFS_FWSTATS_FILE(calib, calib_count, "%u");
++
++WL18XX_DEBUGFS_FWSTATS_FILE(roaming, rssi_level, "%d");
++
++WL18XX_DEBUGFS_FWSTATS_FILE(dfs, num_of_radar_detections, "%d");
+ 
+ static ssize_t conf_read(struct file *file, char __user *user_buf,
+ 			 size_t count, loff_t *ppos)
+@@ -350,18 +366,23 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 
+ 	DEBUGFS_ADD(clear_fw_stats, stats);
+ 
+-	DEBUGFS_FWSTATS_ADD(debug, debug1);
+-	DEBUGFS_FWSTATS_ADD(debug, debug2);
+-	DEBUGFS_FWSTATS_ADD(debug, debug3);
+-	DEBUGFS_FWSTATS_ADD(debug, debug4);
+-	DEBUGFS_FWSTATS_ADD(debug, debug5);
+-	DEBUGFS_FWSTATS_ADD(debug, debug6);
+-
+-	DEBUGFS_FWSTATS_ADD(error, error_frame);
+-	DEBUGFS_FWSTATS_ADD(error, error_null_Frame_tx_start);
+-	DEBUGFS_FWSTATS_ADD(error, error_numll_frame_cts_start);
+-	DEBUGFS_FWSTATS_ADD(error, error_bar_retry);
+-	DEBUGFS_FWSTATS_ADD(error, error_frame_cts_nul_flid);
++	DEBUGFS_FWSTATS_ADD(error, error_frame_non_ctrl);
++	DEBUGFS_FWSTATS_ADD(error, error_frame_ctrl);
++	DEBUGFS_FWSTATS_ADD(error, error_frame_during_protection);
++	DEBUGFS_FWSTATS_ADD(error, null_frame_tx_start);
++	DEBUGFS_FWSTATS_ADD(error, null_frame_cts_start);
++	DEBUGFS_FWSTATS_ADD(error, bar_retry);
++	DEBUGFS_FWSTATS_ADD(error, num_frame_cts_nul_flid);
++	DEBUGFS_FWSTATS_ADD(error, tx_abort_failure);
++	DEBUGFS_FWSTATS_ADD(error, tx_resume_failure);
++	DEBUGFS_FWSTATS_ADD(error, rx_cmplt_db_overflow_cnt);
++	DEBUGFS_FWSTATS_ADD(error, elp_while_rx_exch);
++	DEBUGFS_FWSTATS_ADD(error, elp_while_tx_exch);
++	DEBUGFS_FWSTATS_ADD(error, elp_while_tx);
++	DEBUGFS_FWSTATS_ADD(error, elp_while_nvic_pending);
++	DEBUGFS_FWSTATS_ADD(error, rx_excessive_frame_len);
++	DEBUGFS_FWSTATS_ADD(error, burst_mismatch);
++	DEBUGFS_FWSTATS_ADD(error, tbc_exch_mismatch);
+ 
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_prepared_descs);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_cmplt);
+@@ -371,7 +392,7 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_data_programmed);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_burst_programmed);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_starts);
+-	DEBUGFS_FWSTATS_ADD(tx, tx_imm_resp);
++	DEBUGFS_FWSTATS_ADD(tx, tx_stop);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_start_templates);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_start_int_templates);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_start_fw_gen);
+@@ -380,13 +401,14 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_exch);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_retry_template);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_retry_data);
++	DEBUGFS_FWSTATS_ADD(tx, tx_retry_per_rate);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_exch_pending);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_exch_expiry);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_done_template);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_done_data);
+ 	DEBUGFS_FWSTATS_ADD(tx, tx_done_int_template);
+-	DEBUGFS_FWSTATS_ADD(tx, tx_frame_checksum);
+-	DEBUGFS_FWSTATS_ADD(tx, tx_checksum_result);
++	DEBUGFS_FWSTATS_ADD(tx, tx_cfe1);
++	DEBUGFS_FWSTATS_ADD(tx, tx_cfe2);
+ 	DEBUGFS_FWSTATS_ADD(tx, frag_called);
+ 	DEBUGFS_FWSTATS_ADD(tx, frag_mpdu_alloc_failed);
+ 	DEBUGFS_FWSTATS_ADD(tx, frag_init_called);
+@@ -411,11 +433,8 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(rx, rx_cmplt_task);
+ 	DEBUGFS_FWSTATS_ADD(rx, rx_phy_hdr);
+ 	DEBUGFS_FWSTATS_ADD(rx, rx_timeout);
++	DEBUGFS_FWSTATS_ADD(rx, rx_rts_timeout);
+ 	DEBUGFS_FWSTATS_ADD(rx, rx_timeout_wa);
+-	DEBUGFS_FWSTATS_ADD(rx, rx_wa_density_dropped_frame);
+-	DEBUGFS_FWSTATS_ADD(rx, rx_wa_ba_not_expected);
+-	DEBUGFS_FWSTATS_ADD(rx, rx_frame_checksum);
+-	DEBUGFS_FWSTATS_ADD(rx, rx_checksum_result);
+ 	DEBUGFS_FWSTATS_ADD(rx, defrag_called);
+ 	DEBUGFS_FWSTATS_ADD(rx, defrag_init_called);
+ 	DEBUGFS_FWSTATS_ADD(rx, defrag_in_process_called);
+@@ -425,6 +444,7 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(rx, decrypt_key_not_found);
+ 	DEBUGFS_FWSTATS_ADD(rx, defrag_need_decrypt);
+ 	DEBUGFS_FWSTATS_ADD(rx, rx_tkip_replays);
++	DEBUGFS_FWSTATS_ADD(rx, rx_xfr);
+ 
+ 	DEBUGFS_FWSTATS_ADD(isr, irqs);
+ 
+@@ -433,13 +453,13 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(pwr, connection_out_of_sync);
+ 	DEBUGFS_FWSTATS_ADD(pwr, cont_miss_bcns_spread);
+ 	DEBUGFS_FWSTATS_ADD(pwr, rcvd_awake_bcns_cnt);
+-
+-	DEBUGFS_FWSTATS_ADD(ps_poll, ps_poll_timeouts);
+-	DEBUGFS_FWSTATS_ADD(ps_poll, upsd_timeouts);
+-	DEBUGFS_FWSTATS_ADD(ps_poll, upsd_max_ap_turn);
+-	DEBUGFS_FWSTATS_ADD(ps_poll, ps_poll_max_ap_turn);
+-	DEBUGFS_FWSTATS_ADD(ps_poll, ps_poll_utilization);
+-	DEBUGFS_FWSTATS_ADD(ps_poll, upsd_utilization);
++	DEBUGFS_FWSTATS_ADD(pwr, sleep_time_count);
++	DEBUGFS_FWSTATS_ADD(pwr, sleep_time_avg);
++	DEBUGFS_FWSTATS_ADD(pwr, sleep_cycle_avg);
++	DEBUGFS_FWSTATS_ADD(pwr, sleep_percent);
++	DEBUGFS_FWSTATS_ADD(pwr, ap_sleep_active_conf);
++	DEBUGFS_FWSTATS_ADD(pwr, ap_sleep_user_conf);
++	DEBUGFS_FWSTATS_ADD(pwr, ap_sleep_counter);
+ 
+ 	DEBUGFS_FWSTATS_ADD(rx_filter, beacon_filter);
+ 	DEBUGFS_FWSTATS_ADD(rx_filter, arp_filter);
+@@ -453,7 +473,8 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 
+ 	DEBUGFS_FWSTATS_ADD(rx_rate, rx_frames_per_rates);
+ 
+-	DEBUGFS_FWSTATS_ADD(aggr_size, tx_agg_vs_rate);
++	DEBUGFS_FWSTATS_ADD(aggr_size, tx_agg_rate);
++	DEBUGFS_FWSTATS_ADD(aggr_size, tx_agg_len);
+ 	DEBUGFS_FWSTATS_ADD(aggr_size, rx_size);
+ 
+ 	DEBUGFS_FWSTATS_ADD(pipeline, hs_tx_stat_fifo_int);
+@@ -475,10 +496,20 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(pipeline, cs_rx_packet_out);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, pipeline_fifo_full);
+ 
+-	DEBUGFS_FWSTATS_ADD(mem, rx_free_mem_blks);
+-	DEBUGFS_FWSTATS_ADD(mem, tx_free_mem_blks);
+-	DEBUGFS_FWSTATS_ADD(mem, fwlog_free_mem_blks);
+-	DEBUGFS_FWSTATS_ADD(mem, fw_gen_free_mem_blks);
++	DEBUGFS_FWSTATS_ADD(thermal, irq_thr_low);
++	DEBUGFS_FWSTATS_ADD(thermal, irq_thr_high);
++	DEBUGFS_FWSTATS_ADD(thermal, tx_stop);
++	DEBUGFS_FWSTATS_ADD(thermal, tx_resume);
++	DEBUGFS_FWSTATS_ADD(thermal, false_irq);
++	DEBUGFS_FWSTATS_ADD(thermal, adc_source_unexpected);
++
++	DEBUGFS_FWSTATS_ADD(calib, fail_count);
++
++	DEBUGFS_FWSTATS_ADD(calib, calib_count);
++
++	DEBUGFS_FWSTATS_ADD(roaming, rssi_level);
++
++	DEBUGFS_FWSTATS_ADD(dfs, num_of_radar_detections);
+ 
+ 	DEBUGFS_ADD(conf, moddir);
+ 	DEBUGFS_ADD(radar_detection, moddir);
 -- 
-1.9.1
+1.7.0.4
 
