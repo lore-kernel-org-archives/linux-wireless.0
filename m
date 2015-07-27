@@ -1,144 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44795 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbbGOM4T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:56:19 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] mac80211: Deinline drv_sta_state
-Date: Wed, 15 Jul 2015 14:56:05 +0200
-Message-Id: <1436964966-2441-1-git-send-email-dvlasenk@redhat.com> (sfid-20150715_145657_535403_D309F8D1)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49793 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750842AbbG0HNF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2015 03:13:05 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Julien Cubizolles <j.cubizolles@free.fr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: wifi freezing (module mwifiex)
+Date: Mon, 27 Jul 2015 07:13:00 +0000
+Message-ID: <0e2dc4e2bd9f4486979cedb4c47e60f2@SC-EXCH04.marvell.com> (sfid-20150727_091309_529170_8D92A22D)
+References: <871tfzast5.fsf@free.fr>
+In-Reply-To: <871tfzast5.fsf@free.fr>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this .config: http://busybox.net/~vda/kernel_config,
-after deinlining the function size is 3132 bytes and there are
-7 callsites.
-
-Total size reduction: about 20 kbytes.
-
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-CC: John Linville <linville@tuxdriver.com>
-CC: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
----
- net/mac80211/Makefile     |  1 +
- net/mac80211/driver-ops.c | 41 +++++++++++++++++++++++++++++++++++++++++
- net/mac80211/driver-ops.h | 29 ++---------------------------
- 3 files changed, 44 insertions(+), 27 deletions(-)
- create mode 100644 net/mac80211/driver-ops.c
-
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index 3275f01..783e891 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -3,6 +3,7 @@ obj-$(CONFIG_MAC80211) += mac80211.o
- # mac80211 objects
- mac80211-y := \
- 	main.o status.o \
-+	driver-ops.o \
- 	sta_info.o \
- 	wep.o \
- 	wpa.o \
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-new file mode 100644
-index 0000000..267c3b1
---- /dev/null
-+++ b/net/mac80211/driver-ops.c
-@@ -0,0 +1,41 @@
-+/*
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <net/mac80211.h>
-+#include "ieee80211_i.h"
-+#include "trace.h"
-+#include "driver-ops.h"
-+
-+__must_check
-+int drv_sta_state(struct ieee80211_local *local,
-+		  struct ieee80211_sub_if_data *sdata,
-+		  struct sta_info *sta,
-+		  enum ieee80211_sta_state old_state,
-+		  enum ieee80211_sta_state new_state)
-+{
-+	int ret = 0;
-+
-+	might_sleep();
-+
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
-+
-+	trace_drv_sta_state(local, sdata, &sta->sta, old_state, new_state);
-+	if (local->ops->sta_state) {
-+		ret = local->ops->sta_state(&local->hw, &sdata->vif, &sta->sta,
-+					    old_state, new_state);
-+	} else if (old_state == IEEE80211_STA_AUTH &&
-+		   new_state == IEEE80211_STA_ASSOC) {
-+		ret = drv_sta_add(local, sdata, &sta->sta);
-+		if (ret == 0)
-+			sta->uploaded = true;
-+	} else if (old_state == IEEE80211_STA_ASSOC &&
-+		   new_state == IEEE80211_STA_AUTH) {
-+		drv_sta_remove(local, sdata, &sta->sta);
-+	}
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 32a2e70..02d9133 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -573,37 +573,12 @@ static inline void drv_sta_pre_rcu_remove(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
--static inline __must_check
-+__must_check
- int drv_sta_state(struct ieee80211_local *local,
- 		  struct ieee80211_sub_if_data *sdata,
- 		  struct sta_info *sta,
- 		  enum ieee80211_sta_state old_state,
--		  enum ieee80211_sta_state new_state)
--{
--	int ret = 0;
--
--	might_sleep();
--
--	sdata = get_bss_sdata(sdata);
--	if (!check_sdata_in_driver(sdata))
--		return -EIO;
--
--	trace_drv_sta_state(local, sdata, &sta->sta, old_state, new_state);
--	if (local->ops->sta_state) {
--		ret = local->ops->sta_state(&local->hw, &sdata->vif, &sta->sta,
--					    old_state, new_state);
--	} else if (old_state == IEEE80211_STA_AUTH &&
--		   new_state == IEEE80211_STA_ASSOC) {
--		ret = drv_sta_add(local, sdata, &sta->sta);
--		if (ret == 0)
--			sta->uploaded = true;
--	} else if (old_state == IEEE80211_STA_ASSOC &&
--		   new_state == IEEE80211_STA_AUTH) {
--		drv_sta_remove(local, sdata, &sta->sta);
--	}
--	trace_drv_return_int(local, ret);
--	return ret;
--}
-+		  enum ieee80211_sta_state new_state);
- 
- static inline void drv_sta_rc_update(struct ieee80211_local *local,
- 				     struct ieee80211_sub_if_data *sdata,
--- 
-1.8.1.4
-
+SGkgSnVsaWVuLA0KDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9y
+ZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
+aGFsZiBPZiBKdWxpZW4gQ3ViaXpvbGxlcw0KPiBTZW50OiBUaHVyc2RheSwgSnVseSAyMywgMjAx
+NSA3OjE4IFBNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVj
+dDogd2lmaSBmcmVlemluZyAobW9kdWxlIG13aWZpZXgpDQo+IA0KPiBJJ20gcnVubmluZyB2YW5p
+bGxhIGtlcm5lbCA0LjIuMC1yYzMgb24gYSBNaWNyb3NvZnQgU3VyZmFjZSBQcm8uIFRoZQ0KPiB3
+aWZpIChtb2R1bGUgbXdpZmlleCkgZnJlZXplcyB0aGUgd2hvbGUgc3lzdGVtIGFmdGVyIGEgZmV3
+IHNlY29uZHMgb2YNCj4gdXNlLiBUaGUgcHJvYmxlbSBhcHBlYXJlZCBhcm91bmQga2VybmVsIDMu
+MTkuDQo+IA0KPiBJJ3ZlIHRyaWVkIHRvIGdldCBzb21lIGRlYnVnIGluZm8gd2l0aCB0aGUgZHlu
+YW1pYyBkZWJ1Z2dpbmcgbWV0aG9kLA0KPiB1c2luZyB0aGUgZm9sbG93aW5nOg0KPiANCj4gLS04
+PC0tLS0tLS0tLS0tLS0tLWN1dCBoZXJlLS0tLS0tLS0tLS0tLS0tc3RhcnQtLS0tLS0tLS0tLS0t
+PjgtLS0NCj4gZWNobyAibW9kdWxlIG13aWZpZXggK3AiID4gL3N5cy9rZXJuZWwvZGVidWcvZHlu
+YW1pY19kZWJ1Zy9jb250cm9sDQo+IGVjaG8gIm1vZHVsZSBtd2lmaWV4X3NkaW8gK3AiID4gL3N5
+cy9rZXJuZWwvZGVidWcvZHluYW1pY19kZWJ1Zy9jb250cm9sDQo+IGVjaG8gIm1vZHVsZSBtd2lm
+aWV4X3BjaWUgK3AiID4gL3N5cy9rZXJuZWwvZGVidWcvZHluYW1pY19kZWJ1Zy9jb250cm9sDQo+
+IGVjaG8gIm1vZHVsZSBtd2lmaWV4X3VzYiArcCIgPiAvc3lzL2tlcm5lbC9kZWJ1Zy9keW5hbWlj
+X2RlYnVnL2NvbnRyb2wNCj4gLS04PC0tLS0tLS0tLS0tLS0tLWN1dCBoZXJlLS0tLS0tLS0tLS0t
+LS0tZW5kLS0tLS0tLS0tLS0tLS0tPjgtLS0NCj4gDQo+IGFuZCBnZXR0aW5nIHRoZSBtZXNzYWdl
+cyB3aXRoDQo+IA0KPiAtLTg8LS0tLS0tLS0tLS0tLS0tY3V0IGhlcmUtLS0tLS0tLS0tLS0tLS1z
+dGFydC0tLS0tLS0tLS0tLS0+OC0tLQ0KPiB3aGlsZSB0cnVlOyBkbyBkbWVzZyAtYyA+PiBtd2lm
+aWV4X2xvZ3MudHh0OyBzbGVlcCAxOyBkb25lICYNCj4gLS04PC0tLS0tLS0tLS0tLS0tLWN1dCBo
+ZXJlLS0tLS0tLS0tLS0tLS0tZW5kLS0tLS0tLS0tLS0tLS0tPjgtLS0NCj4gDQo+IHVudGlsIHRo
+ZSBzeXN0ZW0gZnJlZXplcy4NCj4gDQo+IFN1cnByaXNpbmdseSwgdGhlcmUgYXJlIHZlcnkgZmV3
+IG1lc3NhZ2VzIHJlbGF0ZWQgdG8gbXdpZmlleCAoc2VlIHRoZQ0KPiBmb2xsb3dpbmcgbG9ncyku
+IElzIHRoZXJlIHNvbWV0aGluZyB3cm9uZyB3aXRoIHRoZSBkeW5hbWljIGRlYnVnZ2luZ8KgPw0K
+PiBXaGF0IG90aGVyIGluZm9ybWF0aW9uIGNvdWxkIEkgcHJvdmlkZcKgPw0KPiANCg0KVGhhbmtz
+IGZvciByZXBvcnRpbmcgdGhlIHByb2JsZW0uIFdlIG5vdyBoYXZlIGEgc2VwYXJhdGUgbWVjaGFu
+aXNtIGZvciBkZWJ1ZyBsb2dzIGFuZCBkb24ndCBzdXBwb3J0IGR5bmFtaWMgZGVidWdnaW5nIGFu
+eW1vcmUuDQpJc3N1ZSBiZWxvdyBjb21tYW5kIHRvIGVuYWJsZSBsb2dzIGFuZCBzaGFyZSB0aGVt
+Lg0KDQoiZWNobyAweGZmZmZmZmZmID4gL3N5cy9rZXJuZWwvZGVidWcvbXdpZmlleC9tbGFuMC9k
+ZWJ1Z19tYXNrIg0KDQpEbyB5b3UgaGF2ZSBmb2xsb3dpbmcgVVNCIGNoaXBzZXQgc3BlY2lmaWMg
+Zml4ZXMgaW5jbHVkZWQ/DQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVs
+ZXNzL21zZzEyOTEyOS5odG1sDQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL25ldGRldi9t
+c2czMzQzNjcuaHRtbA0KDQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
