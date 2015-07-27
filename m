@@ -1,274 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36650 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751551AbbGaQm5 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:37753 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752528AbbG0IcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 12:42:57 -0400
-Received: by ioeg141 with SMTP id g141so91152007ioe.3
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2015 09:42:56 -0700 (PDT)
+	Mon, 27 Jul 2015 04:32:25 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id t6R8WOoW019426
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 03:32:24 -0500
+Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
+	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id t6R8WOM1023173
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 03:32:24 -0500
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>
+Subject: [PATCH 2/2] wl18xx: add diversity statistics
+Date: Mon, 27 Jul 2015 11:20:41 +0300
+Message-ID: <1437985241-20438-1-git-send-email-guym@ti.com> (sfid-20150727_103231_790465_E1625B5C)
 MIME-Version: 1.0
-In-Reply-To: <1438352271-31827-1-git-send-email-akarwar@marvell.com>
-References: <1438352271-31827-1-git-send-email-akarwar@marvell.com>
-Date: Fri, 31 Jul 2015 09:42:56 -0700
-Message-ID: <CAMcMvshXwBPH-j0-DLAaRkRnbnvnu+tC9z-PAyAwSjRc139mCQ@mail.gmail.com> (sfid-20150731_184300_977162_76F07376)
-Subject: Re: [PATCH 3/3] mwifiex:fix unable to connect hidden SSID AP on DFS channel
-From: Paul Stewart <pstew@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>, chunfan chen <jeffc@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2015 at 7:17 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: chunfan chen <jeffc@marvell.com>
->
-> We will check if any hidden SSID found in passive scan channels
-> and do specific SSID active scan for those channels.
->
-> Signed-off-by: chunfan chen <jeffc@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
->  drivers/net/wireless/mwifiex/fw.h   |   1 +
->  drivers/net/wireless/mwifiex/init.c |   2 +-
->  drivers/net/wireless/mwifiex/main.h |   2 +
->  drivers/net/wireless/mwifiex/scan.c | 124 ++++++++++++++++++++++++++++++++----
->  4 files changed, 117 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-> index 9a8c1832..3ec2ac8 100644
-> --- a/drivers/net/wireless/mwifiex/fw.h
-> +++ b/drivers/net/wireless/mwifiex/fw.h
-> @@ -685,6 +685,7 @@ struct mwifiex_fw_chan_stats {
->  enum mwifiex_chan_scan_mode_bitmasks {
->         MWIFIEX_PASSIVE_SCAN = BIT(0),
->         MWIFIEX_DISABLE_CHAN_FILT = BIT(1),
-> +       MWIFIEX_HIDDEN_SSID_REPORT = BIT(4),
->  };
->
->  struct mwifiex_chan_scan_param_set {
-> diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-> index 7a970c2..5d3ae63 100644
-> --- a/drivers/net/wireless/mwifiex/init.c
-> +++ b/drivers/net/wireless/mwifiex/init.c
-> @@ -301,7 +301,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
->         adapter->iface_limit.sta_intf = MWIFIEX_MAX_STA_NUM;
->         adapter->iface_limit.uap_intf = MWIFIEX_MAX_UAP_NUM;
->         adapter->iface_limit.p2p_intf = MWIFIEX_MAX_P2P_NUM;
-> -
-> +       adapter->active_scan_triggered = false;
->         setup_timer(&adapter->wakeup_timer, wakeup_timer_fn,
->                     (unsigned long)adapter);
->  }
-> diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-> index face747..6b95121 100644
-> --- a/drivers/net/wireless/mwifiex/main.h
-> +++ b/drivers/net/wireless/mwifiex/main.h
-> @@ -666,6 +666,7 @@ struct mwifiex_private {
->         struct mwifiex_11h_intf_state state_11h;
->         struct mwifiex_ds_mem_rw mem_rw;
->         struct sk_buff_head bypass_txq;
-> +       struct mwifiex_user_scan_chan hidden_chan[MWIFIEX_USER_SCAN_CHAN_MAX];
->  };
->
->
-> @@ -986,6 +987,7 @@ struct mwifiex_adapter {
->         u8 coex_tx_win_size;
->         u8 coex_rx_win_size;
->         bool drcs_enabled;
-> +       u8 active_scan_triggered;
->  };
->
->  void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-> index ef8da8e..e17fab6 100644
-> --- a/drivers/net/wireless/mwifiex/scan.c
-> +++ b/drivers/net/wireless/mwifiex/scan.c
-> @@ -527,7 +527,8 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
->
->                         if (ch->flags & IEEE80211_CHAN_NO_IR)
->                                 scan_chan_list[chan_idx].chan_scan_mode_bitmap
-> -                                       |= MWIFIEX_PASSIVE_SCAN;
-> +                                       |= (MWIFIEX_PASSIVE_SCAN |
-> +                                           MWIFIEX_HIDDEN_SSID_REPORT);
->                         else
->                                 scan_chan_list[chan_idx].chan_scan_mode_bitmap
->                                         &= ~MWIFIEX_PASSIVE_SCAN;
-> @@ -1049,7 +1050,8 @@ mwifiex_config_scan(struct mwifiex_private *priv,
->                         if (scan_type == MWIFIEX_SCAN_TYPE_PASSIVE)
->                                 (scan_chan_list +
->                                  chan_idx)->chan_scan_mode_bitmap
-> -                                       |= MWIFIEX_PASSIVE_SCAN;
-> +                                       |= (MWIFIEX_PASSIVE_SCAN |
-> +                                           MWIFIEX_HIDDEN_SSID_REPORT);
->                         else
->                                 (scan_chan_list +
->                                  chan_idx)->chan_scan_mode_bitmap
-> @@ -1600,6 +1602,46 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
->         return ret;
->  }
->
-> +/* This function checks if any hidden SSID found in passive scan channels
-> + * and save those channels for specific SSID active scan
-> + */
-> +static int mwifiex_save_hidden_ssid_channels(struct mwifiex_private *priv,
-> +                                            struct cfg80211_bss *bss)
-> +{
-> +       struct mwifiex_bssdescriptor *bss_desc;
-> +       int ret;
-> +       int chid;
-> +       u8 null_ssid[IEEE80211_MAX_SSID_LEN] = {0};
+Add diversity statistics and sync the driver
+statistics acx and debugfs representation
+with the current fw api.
 
-Alas, this is not the only form of "hidden SSID".  This behavior is
-not standardized.  You need to either expand your search to other
-hidden SSID signatures (zero-length SSID, all-nulls-up-to-length
-SSID), or think about turning this behavior on if you get any scan
-results at all.
+Signed-off-by: Guy Mishol <guym@ti.com>
+---
+ drivers/net/wireless/ti/wl18xx/acx.h     |   47 ++++-------------------------
+ drivers/net/wireless/ti/wl18xx/debugfs.c |   21 ++++++-------
+ 2 files changed, 16 insertions(+), 52 deletions(-)
 
-> +
-> +       /* Allocate and fill new bss descriptor */
-> +       bss_desc = kzalloc(sizeof(*bss_desc), GFP_KERNEL);
-> +       if (!bss_desc)
-> +               return -ENOMEM;
-> +
-> +       ret = mwifiex_fill_new_bss_desc(priv, bss, bss_desc);
-> +       if (ret)
-> +               goto done;
-> +
-> +       if (!memcmp(bss_desc->ssid.ssid, null_ssid, bss_desc->ssid.ssid_len)) {
-> +               mwifiex_dbg(priv->adapter, INFO, "found hidden SSID\n");
-> +               for (chid = 0 ; chid < MWIFIEX_USER_SCAN_CHAN_MAX; chid++) {
-> +                       if (priv->hidden_chan[chid].chan_number == 0) {
-> +                               priv->hidden_chan[chid].chan_number =
-> +                                       bss->channel->hw_value;
-> +                               priv->hidden_chan[chid].radio_type =
-> +                                       bss->channel->band;
-> +                               priv->hidden_chan[chid].scan_type =
-> +                                       MWIFIEX_SCAN_TYPE_ACTIVE;
-> +                               break;
-> +                       }
-> +               }
-> +       }
-> +
-> +done:
-> +       kfree(bss_desc);
-> +       return 0;
-> +}
-> +
->  static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
->                                           struct cfg80211_bss *bss)
->  {
-> @@ -1789,6 +1831,14 @@ mwifiex_parse_single_response_buf(struct mwifiex_private *priv, u8 **bss_info,
->                                     .mac_address, ETH_ALEN))
->                                 mwifiex_update_curr_bss_params(priv, bss);
->                         cfg80211_put_bss(priv->wdev.wiphy, bss);
-> +
-> +                       if ((chan->flags & IEEE80211_CHAN_RADAR) ||
-> +                           (chan->flags & IEEE80211_CHAN_NO_IR)) {
-> +                               mwifiex_dbg(adapter, INFO,
-> +                                           "radar or passive channel %d\n",
-> +                                           channel);
-> +                               mwifiex_save_hidden_ssid_channels(priv, bss);
-> +                       }
->                 }
->         } else {
->                 mwifiex_dbg(adapter, WARN, "missing BSS channel IE\n");
-> @@ -1812,6 +1862,54 @@ static void mwifiex_complete_scan(struct mwifiex_private *priv)
->         }
->  }
->
-> +/* This function checks if any hidden SSID found in passive scan channels
-> + * and do specific SSID active scan for those channels
-> + */
-> +static int
-> +mwifiex_active_scan_req_for_passive_chan(struct mwifiex_private *priv)
-> +{
-> +       int ret;
-> +       struct mwifiex_adapter *adapter = priv->adapter;
-> +       u8 id = 0;
-> +       struct mwifiex_user_scan_cfg  *user_scan_cfg;
-> +
-> +       if (adapter->active_scan_triggered) {
-> +               adapter->active_scan_triggered = false;
-> +               return 0;
-> +       }
-> +
-> +       if (priv->hidden_chan[0].chan_number == 0) {
-> +               mwifiex_dbg(adapter, INFO, "No BSS with hidden SSID found on DFS channels\n");
-> +               return 0;
-> +       }
-> +       user_scan_cfg = kzalloc(sizeof(*user_scan_cfg), GFP_KERNEL);
-> +
-> +       if (!user_scan_cfg)
-> +               return -ENOMEM;
-> +
-> +       memset(user_scan_cfg, 0, sizeof(*user_scan_cfg));
-> +
-> +       for (id = 0; id < MWIFIEX_USER_SCAN_CHAN_MAX; id++)
-> +               memcpy(&user_scan_cfg->chan_list[id],
-> +                      &priv->hidden_chan[id],
-> +                      sizeof(struct mwifiex_user_scan_chan));
-> +
-> +       adapter->active_scan_triggered = true;
-> +       user_scan_cfg->num_ssids = priv->scan_request->n_ssids;
-> +       user_scan_cfg->ssid_list = priv->scan_request->ssids;
-> +
-> +       ret = mwifiex_scan_networks(priv, user_scan_cfg);
-> +       kfree(user_scan_cfg);
-> +
-> +       memset(&priv->hidden_chan, 0, sizeof(priv->hidden_chan));
-> +
-> +       if (ret) {
-> +               dev_err(priv->adapter->dev, "scan failed: %d\n", ret);
-> +               return ret;
-> +       }
-> +
-> +       return 0;
-> +}
->  static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
->  {
->         struct mwifiex_adapter *adapter = priv->adapter;
-> @@ -1825,6 +1923,8 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
->                 adapter->scan_processing = false;
->                 spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
->
-> +               mwifiex_active_scan_req_for_passive_chan(priv);
-> +
->                 if (!adapter->ext_scan)
->                         mwifiex_complete_scan(priv);
->
-> @@ -1851,15 +1951,17 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
->                 adapter->scan_processing = false;
->                 spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
->
-> -               if (priv->scan_request) {
-> -                       mwifiex_dbg(adapter, INFO,
-> -                                   "info: aborting scan\n");
-> -                       cfg80211_scan_done(priv->scan_request, 1);
-> -                       priv->scan_request = NULL;
-> -               } else {
-> -                       priv->scan_aborting = false;
-> -                       mwifiex_dbg(adapter, INFO,
-> -                                   "info: scan already aborted\n");
-> +               if (!adapter->active_scan_triggered) {
-> +                       if (priv->scan_request) {
-> +                               mwifiex_dbg(adapter, INFO,
-> +                                           "info: aborting scan\n");
-> +                               cfg80211_scan_done(priv->scan_request, 1);
-> +                               priv->scan_request = NULL;
-> +                       } else {
-> +                               priv->scan_aborting = false;
-> +                               mwifiex_dbg(adapter, INFO,
-> +                                           "info: scan already aborted\n");
-> +                       }
->                 }
->         } else {
->                 /* Get scan command from scan_pending_q and put to
-> --
-> 1.8.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+index 6c5fef3..342a299 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.h
++++ b/drivers/net/wireless/ti/wl18xx/acx.h
+@@ -112,20 +112,6 @@ struct wl18xx_acx_error_stats {
+ 	u32 tbc_exch_mismatch;
+ } __packed;
+ 
+-struct wl18xx_acx_debug_stats {
+-	u32 debug1;
+-	u32 debug2;
+-	u32 debug3;
+-	u32 debug4;
+-	u32 debug5;
+-	u32 debug6;
+-} __packed;
+-
+-struct wl18xx_acx_ring_stats {
+-	u32 prepared_descs;
+-	u32 tx_cmplt;
+-} __packed;
+-
+ #define NUM_OF_RATES_INDEXES 30
+ struct wl18xx_acx_tx_stats {
+ 	u32 tx_prepared_descs;
+@@ -215,21 +201,6 @@ struct wl18xx_acx_pwr_stats {
+ 	u32 ap_sleep_counter;
+ } __packed;
+ 
+-struct wl18xx_acx_event_stats {
+-	u32 calibration;
+-	u32 rx_mismatch;
+-	u32 rx_mem_empty;
+-} __packed;
+-
+-struct wl18xx_acx_ps_poll_stats {
+-	u32 ps_poll_timeouts;
+-	u32 upsd_timeouts;
+-	u32 upsd_max_ap_turn;
+-	u32 ps_poll_max_ap_turn;
+-	u32 ps_poll_utilization;
+-	u32 upsd_utilization;
+-} __packed;
+-
+ struct wl18xx_acx_rx_filter_stats {
+ 	u32 beacon_filter;
+ 	u32 arp_filter;
+@@ -260,8 +231,6 @@ struct wl18xx_acx_aggr_stats {
+ struct wl18xx_acx_pipeline_stats {
+ 	u32 hs_tx_stat_fifo_int;
+ 	u32 hs_rx_stat_fifo_int;
+-	u32 tcp_tx_stat_fifo_int;
+-	u32 tcp_rx_stat_fifo_int;
+ 	u32 enc_tx_stat_fifo_int;
+ 	u32 enc_rx_stat_fifo_int;
+ 	u32 rx_complete_stat_fifo_int;
+@@ -269,22 +238,19 @@ struct wl18xx_acx_pipeline_stats {
+ 	u32 post_proc_swi;
+ 	u32 sec_frag_swi;
+ 	u32 pre_to_defrag_swi;
+-	u32 defrag_to_csum_swi;
+-	u32 csum_to_rx_xfer_swi;
++	u32 defrag_to_rx_xfer_swi;
+ 	u32 dec_packet_in;
+ 	u32 dec_packet_in_fifo_full;
+ 	u32 dec_packet_out;
+-	u32 cs_rx_packet_in;
+-	u32 cs_rx_packet_out;
+ 	u16 pipeline_fifo_full[PIPE_STATS_HW_FIFO];
+ 	u16 padding;
+ } __packed;
+ 
+-struct wl18xx_acx_mem_stats {
+-	u32 rx_free_mem_blks;
+-	u32 tx_free_mem_blks;
+-	u32 fwlog_free_mem_blks;
+-	u32 fw_gen_free_mem_blks;
++#define DIVERSITY_STATS_NUM_OF_ANT	2
++
++struct wl18xx_acx_diversity_stats {
++	u32 num_of_packets_per_ant[DIVERSITY_STATS_NUM_OF_ANT];
++	u32 total_num_of_toggles;
+ } __packed;
+ 
+ struct wl18xx_acx_thermal_stats {
+@@ -322,6 +288,7 @@ struct wl18xx_acx_statistics {
+ 	struct wl18xx_acx_rx_rate_stats		rx_rate;
+ 	struct wl18xx_acx_aggr_stats		aggr_size;
+ 	struct wl18xx_acx_pipeline_stats	pipeline;
++	struct wl18xx_acx_diversity_stats	diversity;
+ 	struct wl18xx_acx_thermal_stats		thermal;
+ 	struct wl18xx_acx_calib_failure_stats	calib;
+ 	struct wl18xx_roaming_stats		roaming;
+diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
+index cf71005..4edfe28 100644
+--- a/drivers/net/wireless/ti/wl18xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
+@@ -153,8 +153,6 @@ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(aggr_size, rx_size,
+ 				  AGGR_STATS_RX_SIZE_LEN);
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, hs_tx_stat_fifo_int, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, tcp_tx_stat_fifo_int, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, tcp_rx_stat_fifo_int, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, enc_tx_stat_fifo_int, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, enc_rx_stat_fifo_int, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, rx_complete_stat_fifo_int, "%u");
+@@ -162,17 +160,18 @@ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, pre_proc_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, post_proc_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, sec_frag_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, pre_to_defrag_swi, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, defrag_to_csum_swi, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, csum_to_rx_xfer_swi, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, defrag_to_rx_xfer_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, dec_packet_in, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, dec_packet_in_fifo_full, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, dec_packet_out, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, cs_rx_packet_in, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, cs_rx_packet_out, "%u");
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(pipeline, pipeline_fifo_full,
+ 				  PIPE_STATS_HW_FIFO);
+ 
++WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(diversity, num_of_packets_per_ant,
++				  DIVERSITY_STATS_NUM_OF_ANT);
++WL18XX_DEBUGFS_FWSTATS_FILE(diversity, total_num_of_toggles, "%u");
++
+ WL18XX_DEBUGFS_FWSTATS_FILE(thermal, irq_thr_low, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(thermal, irq_thr_high, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(thermal, tx_stop, "%u");
+@@ -478,8 +477,6 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(aggr_size, rx_size);
+ 
+ 	DEBUGFS_FWSTATS_ADD(pipeline, hs_tx_stat_fifo_int);
+-	DEBUGFS_FWSTATS_ADD(pipeline, tcp_tx_stat_fifo_int);
+-	DEBUGFS_FWSTATS_ADD(pipeline, tcp_rx_stat_fifo_int);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, enc_tx_stat_fifo_int);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, enc_rx_stat_fifo_int);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, rx_complete_stat_fifo_int);
+@@ -487,15 +484,15 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(pipeline, post_proc_swi);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, sec_frag_swi);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, pre_to_defrag_swi);
+-	DEBUGFS_FWSTATS_ADD(pipeline, defrag_to_csum_swi);
+-	DEBUGFS_FWSTATS_ADD(pipeline, csum_to_rx_xfer_swi);
++	DEBUGFS_FWSTATS_ADD(pipeline, defrag_to_rx_xfer_swi);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, dec_packet_in);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, dec_packet_in_fifo_full);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, dec_packet_out);
+-	DEBUGFS_FWSTATS_ADD(pipeline, cs_rx_packet_in);
+-	DEBUGFS_FWSTATS_ADD(pipeline, cs_rx_packet_out);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, pipeline_fifo_full);
+ 
++	DEBUGFS_FWSTATS_ADD(diversity, num_of_packets_per_ant);
++	DEBUGFS_FWSTATS_ADD(diversity, total_num_of_toggles);
++
+ 	DEBUGFS_FWSTATS_ADD(thermal, irq_thr_low);
+ 	DEBUGFS_FWSTATS_ADD(thermal, irq_thr_high);
+ 	DEBUGFS_FWSTATS_ADD(thermal, tx_stop);
+-- 
+1.7.0.4
+
