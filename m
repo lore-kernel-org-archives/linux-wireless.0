@@ -1,63 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:41422 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134AbbGNIqq (ORCPT
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:33112 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932334AbbG0Xut (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 04:46:46 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NRG02ESAZ1W93A0@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 14 Jul 2015 17:46:44 +0900 (KST)
-Date: Tue, 14 Jul 2015 08:46:44 +0000 (GMT)
-From: Rahul Jain <rahul.jain@samsung.com>
-Subject: [PATCH v2] cfg80211-wext: deleting dead code
-To: =?windows-1252?Q?Rafa=3F_Mi=3Fecki?= <zajec5@gmail.com>
-Cc: David Miller <davem@davemloft.net>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nitin Jhanwar <nitin.j@samsung.com>,
-	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
-	Amit Khatri <amit.khatri@samsung.com>
-Reply-to: rahul.jain@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=windows-1252
-MIME-version: 1.0
-Message-id: <10994553.722921436863601814.JavaMail.weblogic@ep2mlwas06c> (sfid-20150714_104747_045833_76019E67)
+	Mon, 27 Jul 2015 19:50:49 -0400
+Received: by igbpg9 with SMTP id pg9so114472588igb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 16:50:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
+References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+	<CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
+	<CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
+Date: Mon, 27 Jul 2015 16:50:48 -0700
+Message-ID: <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com> (sfid-20150728_015100_187382_882EE69B)
+Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+From: Adrian Chadd <adrian@freebsd.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbSBlOTQ1NzM3ZWYyZTNhNWI3MTk4Yjk3OTVkNjM3NWRlODViMmZhYzA4IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQ0KRnJvbTogUmFodWwgSmFpbiA8cmFodWwuamFpbkBzYW1zdW5nLmNvbT4N
-CkRhdGU6IFR1ZSwgMTQgSnVsIDIwMTUgMTQ6MDQ6MDkgKzA1MzANClN1YmplY3Q6IFtQQVRDSF0g
-Y2ZnODAyMTEtd2V4dDogZGVsZXRpbmcgZGVhZCBjb2RlDQoNCkluIGZ1bmMgY2ZnODAyMTFfd2V4
-dF9zaXdyZXRyeSgpLCB0aGUgdmFsdWUgb2YgY2hhbmdlZCBpcyBnZXR0aW5nDQptb2RpZmllZCB0
-byBub24temVybyB2YWx1ZSB3aXRoaW4gaWYtZWxzZSBjb25kaXRpb24gYW5kIGl0IGlzIGJlY29t
-aW5nIGEgbm9uLXplcm8gdmFsdWUuDQpTbywgdGhlIGNvbmRpdGlvbiAiaWYgKCFjaGFuZ2VkKSIg
-YmVjb21lcyB1bnJlYWNoYWJsZS4NCg0KU2lnbmVkLW9mZi1ieTogUmFodWwgSmFpbiA8cmFodWwu
-amFpbkBzYW1zdW5nLmNvbT4NClNpZ25lZC1vZmYtYnk6IEFtaXQgS2hhdHJpIDxhbWl0LmtoYXRy
-aUBzYW1zdW5nLmNvbT4NCi0tLQ0KIG5ldC93aXJlbGVzcy93ZXh0LWNvbXBhdC5jIHwgMyAtLS0N
-CiAxIGZpbGUgY2hhbmdlZCwgMyBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL25ldC93aXJl
-bGVzcy93ZXh0LWNvbXBhdC5jIGIvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMNCmluZGV4IGZk
-NjgyODMuLjhkZTFiNjQgMTAwNjQ0DQotLS0gYS9uZXQvd2lyZWxlc3Mvd2V4dC1jb21wYXQuYw0K
-KysrIGIvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMNCkBAIC0zODcsOSArMzg3LDYgQEAgc3Rh
-dGljIGludCBjZmc4MDIxMV93ZXh0X3Npd3JldHJ5KHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsDQog
-CQljaGFuZ2VkIHw9IFdJUEhZX1BBUkFNX1JFVFJZX1NIT1JUOw0KIAl9DQogDQotCWlmICghY2hh
-bmdlZCkNCi0JCXJldHVybiAwOw0KLQ0KIAllcnIgPSByZGV2X3NldF93aXBoeV9wYXJhbXMocmRl
-diwgY2hhbmdlZCk7DQogCWlmIChlcnIpIHsNCiAJCXdkZXYtPndpcGh5LT5yZXRyeV9zaG9ydCA9
-IG9zaG9ydDsNCi0tIA0KMS45LjENCg0KLS0tLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tLS0N
-ClNlbmRlciA6IFJhZmE/IE1pP2Vja2k8emFqZWM1QGdtYWlsLmNvbT4NCkRhdGUgOiBKdWwgMTQs
-IDIwMTUgMDE6MjggKEdNVCswNTozMCkNClRpdGxlIDogUmU6IFtQQVRDSF0gTG9naWNhbGx5IERl
-YWRDb2RlDQoNCk9uIDMgSnVseSAyMDE1IGF0IDA2OjUyLCBSYWh1bCBKYWluIHdyb3RlOg0KPiBG
-cm9tIDBjMzQwMzAxNjZhMTUwZDZkOWYxYWI1MmU3YmI0MGE1NDQwYTY4YzIgTW9uIFNlcCAxNyAw
-MDowMDowMCAyMDAxDQo+IEZyb206IFJhaHVsIEphaW4gDQo+IERhdGU6IEZyaSwgMyBKdWwgMjAx
-NSAxMDoxOToxMiArMDUzMA0KPiBTdWJqZWN0OiBbUEFUQ0hdIExvZ2ljYWxseSBEZWFkQ29kZQ0K
-DQpZb3UgZGlkbid0IHVzZSBhbnkgcHJlZml4IGZvciB0aGUgY29tbWl0IG1lc3NhZ2UsIGl0J3Mg
-dW5jbGVhcg0KKExvZ2ljYWxseSBEZWFkQ29kZSB3aGF0PyksIG5vIGRlc2NyaXB0aW9uLCB5b3Ug
-dG91Y2ggdHdvIGNvZGUgcGxhY2VzDQphdCBvbmNlLg0KDQpQbGVhc2UgZml4IGFib3ZlIHByb2Js
-ZW1zIGFuZCByZXNlbmQu
+is it never getting any readings before your patch? NF Readings all
+look empty...
 
 
+
+
+-adrian
+
+
+On 27 July 2015 at 15:30, Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
+> Hi Adrian,
+>
+> On Mon, Jul 27, 2015 at 9:13 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>> I wonder if this is a mis-merge on my part (I'm the freebsd maintainer.)
+>>
+>> can you log the noisefloor calibrated values before and after the
+>> patch? I'd like to see how low it calibrrates to.
+> Sure, I hope dump_nfcal provides all values you need.
+>
+> result with my patch applied (HT20):
+> # cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
+> Channel Noise Floor : -95
+> Chain | privNF | # Readings | NF Readings
+> 0       -106    5               -110 -105 -109 -106 -106
+> 1       -97     5               -97 -97 -97 -97 -97
+>
+> Result before my patch (HT20):
+> # cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
+> Channel Noise Floor : -91
+> Chain | privNF | # Readings | NF Readings
+> 0 -120 0
+> 1 -120 0
+>
+> Result before my patch (HT40):
+> # cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
+> Channel Noise Floor : -91
+> Chain | privNF | # Readings | NF Readings
+> 0 -110 5 -110 -110 -110 -110 -110
+> 1 -110 5 -110 -110 -110 -110 -110
+> 3 -110 5 -110 -110 -110 -110 -110
+> 4 -110 5 -110 -110 -110 -110 -110
+>
+>
+> Let me know if this helps you or if you need more information.
+>
+>
+> Regards,
+> Martin
