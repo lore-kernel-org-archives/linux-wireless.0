@@ -1,229 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:51650 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751702AbbGMVx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2015 17:53:29 -0400
-To: linux-wireless@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
-From: =?UTF-8?Q?Toralf_F=c3=b6rster?= <toralf.foerster@gmx.de>
-Subject: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
-Message-ID: <55A43355.2070302@gmx.de> (sfid-20150713_235359_583348_8FC9CF0B)
-Date: Mon, 13 Jul 2015 23:53:25 +0200
+Received: from smtp.codeaurora.org ([198.145.29.96]:41148 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbbG0KIw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2015 06:08:52 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Vineet Gupta <vgupta@synopsys.com>,
+	Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arch@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 2/3] brcmfmac: dhd_sdio.c: use existing atomic_or primitive
+References: <1436429599-10762-1-git-send-email-vgupta@synopsys.com>
+	<1436429599-10762-3-git-send-email-vgupta@synopsys.com>
+	<87twstbi9p.fsf@kamboji.qca.qualcomm.com>
+	<55B2743F.6060304@synopsys.com> <55B4C0A8.9000909@broadcom.com>
+Date: Mon, 27 Jul 2015 13:08:43 +0300
+In-Reply-To: <55B4C0A8.9000909@broadcom.com> (Arend van Spriel's message of
+	"Sun, 26 Jul 2015 13:12:40 +0200")
+Message-ID: <871tftc3pw.fsf@kamboji.qca.qualcomm.com> (sfid-20150727_120918_091646_E44EF580)
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030003090806050001010503"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030003090806050001010503
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Arend van Spriel <arend@broadcom.com> writes:
 
-At a Gentoo (hardened) I experienced - starting with hardened kernel 4.0.6-r1 - the (attached) hickup of the "03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 83)" at a ThinkPad T440s. The network stucks till I do restart the network device using /etc/init.d/net.wlp3s0.
+> On 07/24/2015 07:22 PM, Vineet Gupta wrote:
+>> On Friday 24 July 2015 08:02 PM, Kalle Valo wrote:
+>>> Vineet Gupta <Vineet.Gupta1@synopsys.com> writes:
+>>>
+>>>>> There's already a generic implementation so use that instead.
+>>>>> ---
+>>>>> I'm not sure if the driver usage of atomic_or?() is correct in terms of
+>>>>> storage size of @val for 64 bit arches.
+>>>>>
+>>>>> Assuming LP64 programming model for linux on say x86_64: atomic_or()
+>>>>> callers in this driver use long (sana 64 bit) storage and pass it to
+>>>>> atomic_orr/atomic_or which downcasts it to 32 bits. Is that OK ?
+>>>>> ---
+>>>>> Cc: Brett Rudley <brudley@broadcom.com>
+>>>>> Cc: Arend van Spriel <arend@broadcom.com>
+>>>>> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+>>>>> Cc: Hante Meuleman <meuleman@broadcom.com>
+>>>>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>>>>> Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>>>> Cc: Daniel Kim <dekim@broadcom.com>
+>>>>> Cc: linux-wireless@vger.kernel.org
+>>>>> Cc: brcm80211-dev-list@broadcom.com
+>>>>> Cc: Peter Zijlstra <peterz@infradead.org>
+>>>>> Cc: Ingo Molnar <mingo@kernel.org>
+>>>>> Cc: netdev@vger.kernel.org
+>>>>> Cc: linux-arch@vger.kernel.org
+>>>>> Cc: linux-kernel@vger.kernel.org
+>>>>> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+>>>>>
+>>>>> Signed-off-by: Vineet Gupta <vgupta@synopsys.com>
+>>> What's the plan with this patch? Should I take it to my
+>>> wireless-drivers-next tree or will someone else take it?
+>>
+>>
+>> Per last discussion on this topic, Arend wanted to discuss abt this with Hante.
+>> I'm not taking it anyways so feel free to pick it up if you want !
+>
+> Well, that was before your "timeline" clarification about the generic
+> function. One what tree is this patch based?
 
-Whilst it doesn't happen too often :
-
-kern.log-20150628.gz:Jun 28 13:22:14 t44 kernel: [10834.174446] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150705.gz:Jun 29 16:51:39 t44 kernel: [  624.439353] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150705.gz:Jun 29 17:06:39 t44 kernel: [ 1525.363875] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150705.gz:Jun 30 17:33:39 t44 kernel: [36046.223577] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150705.gz:Jul  1 21:25:31 t44 kernel: [79159.821177] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150713.gz:Jul 11 18:44:12 t44 kernel: [ 1445.297971] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150713.gz:Jul 11 18:44:36 t44 kernel: [ 1469.484403] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150713.gz:Jul 11 18:45:31 t44 kernel: [ 1524.456420] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150713.gz:Jul 12 13:19:15 t44 kernel: [31053.095047] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150713.gz:Jul 12 20:10:01 t44 kernel: [55726.004528] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log-20150713.gz:Jul 12 23:20:00 t44 kernel: [67138.498066] iwlwifi 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-kern.log:Jul 13 23:35:40 t44 kernel: [42668.521705] iwlwifi 0000:03:00.0: Microcode SW error detected. Restarting 0x2000000.
-
-it is nevertheless annoying.
-
-I tried to switch from sys-kernel/linux-firmware-20150206 to version -20150320 but that doesn't helped.
-
-Any hints where to start ?
+Yeah, if this patch depends on another patch I need to know about it.
+Otherwise I might break something when I apply this patch.
 
 -- 
-Toralf, pgp key: 872AE508 0076E94E
-
---------------030003090806050001010503
-Content-Type: text/plain; charset=UTF-8;
- name="syslog.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="syslog.txt"
-
-Ckp1bCAxMyAyMzozNTozOSB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogUXVl
-dWUgMTYgc3R1Y2sgZm9yIDEwMDAwIG1zLgpKdWwgMTMgMjM6MzU6MzkgdDQ0IGtlcm5lbDog
-aXdsd2lmaSAwMDAwOjAzOjAwLjA6IEN1cnJlbnQgU1cgcmVhZF9wdHIgOTUgd3JpdGVfcHRy
-IDk3Ckp1bCAxMyAyMzozNTozOSB0NDQga2VybmVsOiBpd2wgZGF0YTogMDAwMDAwMDA6IDAw
-IDAwIDAwIDgwIDAwIDAwIDAwIDAwIDAxIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4u
-Li4uLi4uLi4uCkp1bCAxMyAyMzozNTozOSB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6
-MDAuMDogRkggVFJCcygwKSA9IDB4MDAwMDAwMDAKSnVsIDEzIDIzOjM1OjM5IHQ0NCBrZXJu
-ZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBGSCBUUkJzKDEpID0gMHhjMDExMDA2MApKdWwg
-MTMgMjM6MzU6MzkgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IEZIIFRSQnMo
-MikgPSAweDgwMjAxMDMxCkp1bCAxMyAyMzozNTozOSB0NDQga2VybmVsOiBpd2x3aWZpIDAw
-MDA6MDM6MDAuMDogRkggVFJCcygzKSA9IDB4ODAzMDAwOTEKSnVsIDEzIDIzOjM1OjM5IHQ0
-NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBGSCBUUkJzKDQpID0gMHgwMDAwMDAw
-MApKdWwgMTMgMjM6MzU6MzkgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IEZI
-IFRSQnMoNSkgPSAweDAwMDAwMDAwCkp1bCAxMyAyMzozNTozOSB0NDQga2VybmVsOiBpd2x3
-aWZpIDAwMDA6MDM6MDAuMDogRkggVFJCcyg2KSA9IDB4MDAwMDAwMDAKSnVsIDEzIDIzOjM1
-OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBGSCBUUkJzKDcpID0gMHgw
-MDcwOTA3MQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAw
-LjA6IFEgMCBpcyBhY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDMgcmFfdGlkIDB4MDAwMCBb
-MTQ1LDE0Nl0KSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzow
-MC4wOiBRIDEgaXMgYWN0aXZlIGFuZCBtYXBwZWQgdG8gZmlmbyAyIHJhX3RpZCAweDAwMDAg
-WzUwLDUwXQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAw
-LjA6IFEgMiBpcyBhY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDEgcmFfdGlkIDB4MDAwMCBb
-MjUwLDI1MF0KSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzow
-MC4wOiBRIDMgaXMgYWN0aXZlIGFuZCBtYXBwZWQgdG8gZmlmbyAwIHJhX3RpZCAweDAwMDAg
-WzAsMF0KSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4w
-OiBRIDQgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBb
-MCwwXQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6
-IFEgNSBpcyBpbmFjdGl2ZSBhbmQgbWFwcGVkIHRvIGZpZm8gMCByYV90aWQgMHgwMDAwIFsw
-LDBdCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDog
-USA2IGlzIGluYWN0aXZlIGFuZCBtYXBwZWQgdG8gZmlmbyAwIHJhX3RpZCAweDAwMDAgWzAs
-MF0KSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBR
-IDcgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-OCBpcyBpbmFjdGl2ZSBhbmQgbWFwcGVkIHRvIGZpZm8gMCByYV90aWQgMHgwMDAwIFswLDBd
-Ckp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogUSA5
-IGlzIGFjdGl2ZSBhbmQgbWFwcGVkIHRvIGZpZm8gNyByYV90aWQgMHgwMDAwIFsxMTQsMTE0
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTAgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTEgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTIgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTMgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTQgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTUgaXMgYWN0aXZlIGFuZCBtYXBwZWQgdG8gZmlmbyA1IHJhX3RpZCAweDAwMDAgWzAsMF0K
-SnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBRIDE2
-IGlzIGFjdGl2ZSBhbmQgbWFwcGVkIHRvIGZpZm8gMSByYV90aWQgMHgwMDAwIFs5NSw5N10K
-SnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBRIDE3
-IGlzIGluYWN0aXZlIGFuZCBtYXBwZWQgdG8gZmlmbyAyIHJhX3RpZCAweDAwMDUgWzM4LDM4
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTggaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IFEg
-MTkgaXMgaW5hY3RpdmUgYW5kIG1hcHBlZCB0byBmaWZvIDAgcmFfdGlkIDB4MDAwMCBbMCww
-XQpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IE1p
-Y3JvY29kZSBTVyBlcnJvciBkZXRlY3RlZC4gIFJlc3RhcnRpbmcgMHgyMDAwMDAwLgpKdWwg
-MTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAwLjA6IENTUiB2YWx1
-ZXM6Ckp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDog
-KDJuZCBieXRlIG9mIENTUl9JTlRfQ09BTEVTQ0lORyBpcyBDU1JfSU5UX1BFUklPRElDX1JF
-RykKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgICAgQ1NSX0hXX0lGX0NPTkZJR19SRUc6IDBYNDA0ODkyMDQKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgICBDU1JfSU5UX0NP
-QUxFU0NJTkc6IDBYODAwMDAwNDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICAgICAgICAgIENTUl9JTlQ6IDBYMDAwMDAw
-MDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgICAgICAgICAgICBDU1JfSU5UX01BU0s6IDBYMDAwMDAwMDAKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgQ1NSX0ZIX0lO
-VF9TVEFUVVM6IDBYMDAwMDAwMDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICAgICAgQ1NSX0dQSU9fSU46IDBYMDAwMDAw
-MDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgICAgICAgICAgICAgICBDU1JfUkVTRVQ6IDBYMDAwMDAwMDAKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICAgICBDU1Jf
-R1BfQ05UUkw6IDBYMDgwNDAzYzUKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICAgICAgIENTUl9IV19SRVY6IDBYMDAwMDAx
-NDQKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgICAgICAgICAgQ1NSX0VFUFJPTV9SRUc6IDBYMDAwMDAwMDAKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICAgIENTUl9F
-RVBST01fR1A6IDBYODAwMDAwMDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICAgQ1NSX09UUF9HUF9SRUc6IDBYODAzYTAw
-MDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgICAgICAgICAgICAgQ1NSX0dJT19SRUc6IDBYMDAwODAwNDIKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgIENTUl9HUF9V
-Q09ERV9SRUc6IDBYMDAwMDAwMDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgQ1NSX0dQX0RSSVZFUl9SRUc6IDBYMDAwMDAw
-MDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgICAgICAgQ1NSX1VDT0RFX0RSVl9HUDE6IDBYMDAwMDAwMDAKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgQ1NSX1VDT0RF
-X0RSVl9HUDI6IDBYMDAwMDAwMDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICAgICAgQ1NSX0xFRF9SRUc6IDBYMDAwMDAw
-NjAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgICAgQ1NSX0RSQU1fSU5UX1RCTF9SRUc6IDBYODgwZmZmZmYKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgQ1NSX0dJT19DSElD
-S0VOX0JJVFM6IDBYMjc4MDAyMDAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgICBDU1JfQU5BX1BMTF9DRkc6IDBYZDU1NTU1
-ZDUKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAg
-ICAgIENTUl9NT05JVE9SX1NUQVRVU19SRUc6IDBYM2MwODAxOWQKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAgICAgICAgICAgQ1NSX0hXX1JF
-Vl9XQV9SRUc6IDBYMDAwMTAwMWEKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDowMzowMC4wOiAgICAgICAgQ1NSX0RCR19IUEVUX01FTV9SRUc6IDBYZmZmZjAw
-MTAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBG
-SCByZWdpc3RlciB2YWx1ZXM6Ckp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZp
-IDAwMDA6MDM6MDAuMDogICAgICAgICBGSF9SU0NTUl9DSE5MMF9TVFRTX1dQVFJfUkVHOiAw
-WDBmZmZmZDAwCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6
-MDAuMDogICAgICAgIEZIX1JTQ1NSX0NITkwwX1JCRENCX0JBU0VfUkVHOiAwWDAwZmZmZmUw
-Ckp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogICAg
-ICAgICAgICAgICAgICBGSF9SU0NTUl9DSE5MMF9XUFRSOiAwWDAwMDAwMGY4Ckp1bCAxMyAy
-MzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogICAgICAgICBGSF9N
-RU1fUkNTUl9DSE5MMF9DT05GSUdfUkVHOiAwWDAwODAxMTE0Ckp1bCAxMyAyMzozNTo0MCB0
-NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogICAgICAgICAgRkhfTUVNX1JTU1Jf
-U0hBUkVEX0NUUkxfUkVHOiAwWDAwMDAwMGZjCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVs
-OiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogICAgICAgICAgICBGSF9NRU1fUlNTUl9SWF9TVEFU
-VVNfUkVHOiAwWDAzMDMwMDAwCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZp
-IDAwMDA6MDM6MDAuMDogICAgRkhfTUVNX1JTU1JfUlhfRU5BQkxFX0VSUl9JUlEyRFJWOiAw
-WDAwMDAwMDAwCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6
-MDAuMDogICAgICAgICAgICAgICAgRkhfVFNTUl9UWF9TVEFUVVNfUkVHOiAwWDA3ZmYwMDAx
-Ckp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogICAg
-ICAgICAgICAgICAgIEZIX1RTU1JfVFhfRVJST1JfUkVHOiAwWDAwMDAwMDAwCkp1bCAxMyAy
-MzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogU3RhcnQgSVdMIEVy
-cm9yIExvZyBEdW1wOgpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAw
-OjAzOjAwLjA6IFN0YXR1czogMHgwMDAwMDAwMCwgY291bnQ6IDYKSnVsIDEzIDIzOjM1OjQw
-IHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBMb2FkZWQgZmlybXdhcmUgdmVy
-c2lvbjogMjUuMTUuMTIuMApKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAw
-MDAwOjAzOjAwLjA6IDB4MDAwMDAwODQgfCBOTUlfSU5URVJSVVBUX1VOS05PV04KSnVsIDEz
-IDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAweDAwMDAwMkIw
-IHwgdVBjCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAu
-MDogMHgwMDAwMDAwMCB8IGJyYW5jaGxpbmsxCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVs
-OiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMEIzNCB8IGJyYW5jaGxpbmsyCkp1bCAx
-MyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAxNjRG
-MCB8IGludGVycnVwdGxpbmsxCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZp
-IDAwMDA6MDM6MDAuMDogMHgwMDAxNjRGMCB8IGludGVycnVwdGxpbmsyCkp1bCAxMyAyMzoz
-NTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDAwMCB8IGRh
-dGExCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDog
-MHgwMDAwMDA4MCB8IGRhdGEyCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZp
-IDAwMDA6MDM6MDAuMDogMHgwNzAzMDAwMCB8IGRhdGEzCkp1bCAxMyAyMzozNTo0MCB0NDQg
-a2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHhFNTQxMjU1MCB8IGJlYWNvbiB0aW1l
-Ckp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHg0
-M0Y1OEIwRCB8IHRzZiBsb3cKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkg
-MDAwMDowMzowMC4wOiAweDAwMDAwMjlGIHwgdHNmIGhpCkp1bCAxMyAyMzozNTo0MCB0NDQg
-a2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDAwMCB8IHRpbWUgZ3AxCkp1
-bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHhFQkQ2
-OUZCQyB8IHRpbWUgZ3AyCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAw
-MDA6MDM6MDAuMDogMHgwMDAwMDAwMCB8IHRpbWUgZ3AzCkp1bCAxMyAyMzozNTo0MCB0NDQg
-a2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDA0MTkwRiB8IHVDb2RlIHZlcnNp
-b24KSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAw
-eDAwMDAwMTQ0IHwgaHcgdmVyc2lvbgpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXds
-d2lmaSAwMDAwOjAzOjAwLjA6IDB4NDA0ODkyMDQgfCBib2FyZCB2ZXJzaW9uCkp1bCAxMyAy
-MzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDAxQyB8
-IGhjbWQKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4w
-OiAweDAwMDIyMDBBIHwgaXNyMApKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lm
-aSAwMDAwOjAzOjAwLjA6IDB4MDA4MDAwMDAgfCBpc3IxCkp1bCAxMyAyMzozNTo0MCB0NDQg
-a2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDAwQSB8IGlzcjIKSnVsIDEz
-IDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiAweDAwNDE0MEMw
-IHwgaXNyMwpKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAw
-LjA6IDB4MDAwMDAwMDAgfCBpc3I0Ckp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3
-aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDExMCB8IGlzcl9wcmVmCkp1bCAxMyAyMzozNTo0
-MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDAwMCB8IHdhaXRf
-ZXZlbnQKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4w
-OiAweDAwMDAwMDgwIHwgbDJwX2NvbnRyb2wKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6
-IGl3bHdpZmkgMDAwMDowMzowMC4wOiAweDAwMDEwMDIwIHwgbDJwX2R1cmF0aW9uCkp1bCAx
-MyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDAz
-RiB8IGwycF9taHZhbGlkCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAw
-MDA6MDM6MDAuMDogMHgwMDAwMDBDRSB8IGwycF9hZGRyX21hdGNoCkp1bCAxMyAyMzozNTo0
-MCB0NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogMHgwMDAwMDAwNSB8IGxtcG1f
-cG1nX3NlbApKdWwgMTMgMjM6MzU6NDAgdDQ0IGtlcm5lbDogaXdsd2lmaSAwMDAwOjAzOjAw
-LjA6IDB4MDMwMjE0MjEgfCB0aW1lc3RhbXAKSnVsIDEzIDIzOjM1OjQwIHQ0NCBrZXJuZWw6
-IGl3bHdpZmkgMDAwMDowMzowMC4wOiAweDAwMzRGODA4IHwgZmxvd19oYW5kbGVyCkp1bCAx
-MyAyMzozNTo0MCB0NDQga2VybmVsOiBpZWVlODAyMTEgcGh5MDogSGFyZHdhcmUgcmVzdGFy
-dCB3YXMgcmVxdWVzdGVkCkp1bCAxMyAyMzozNTo0MCB0NDQga2VybmVsOiBpd2x3aWZpIDAw
-MDA6MDM6MDAuMDogTDEgRW5hYmxlZCAtIExUUiBFbmFibGVkCkp1bCAxMyAyMzozNTo0MCB0
-NDQga2VybmVsOiBpd2x3aWZpIDAwMDA6MDM6MDAuMDogTDEgRW5hYmxlZCAtIExUUiBFbmFi
-bGVkCg==
---------------030003090806050001010503--
+Kalle Valo
