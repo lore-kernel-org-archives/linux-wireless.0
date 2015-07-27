@@ -1,201 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47050 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752803AbbGOLJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2015 07:09:48 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id t6FB9mmx014895
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2015 06:09:48 -0500
-Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
-	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id t6FB9mmE017518
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2015 06:09:48 -0500
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>
-Subject: [PATCH] wl18xx: add dynamic fw traces
-Date: Wed, 15 Jul 2015 13:58:17 +0300
-Message-ID: <1436957897-27602-1-git-send-email-guym@ti.com> (sfid-20150715_130952_905840_CF114DEF)
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:36268 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754373AbbG0UIP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2015 16:08:15 -0400
+Received: by wicgb10 with SMTP id gb10so127627450wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 13:08:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Mon, 27 Jul 2015 22:08:14 +0200
+Message-ID: <CAMQd7mbWC7rj8-eU7Jv21ehT8KrpC=L=xWxzDQxHEU_ePNSdUg@mail.gmail.com> (sfid-20150727_220818_747011_DDCC9CAD)
+Subject: QCA6174 hw2.1 irq_mode=0 broken on 4.2-rc3, working on 4.1.2
+From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add option to dynamically configure the fw
-which debug traces to open
+Hello there,
 
-Signed-off-by: Guy Mishol <guym@ti.com>
----
- drivers/net/wireless/ti/wl18xx/acx.c     |   23 ++++++++++++++
- drivers/net/wireless/ti/wl18xx/acx.h     |   13 +++++++-
- drivers/net/wireless/ti/wl18xx/debugfs.c |   48 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/main.c    |    5 +++
- drivers/net/wireless/ti/wlcore/wlcore.h  |    3 ++
- 5 files changed, 91 insertions(+), 1 deletions(-)
+I gave 4.2 rc3 a shot and I discovered the wireless was not working
+anymore with it. I tried adding irq_mode=1 alongside skip_otp=y in
+ath10k_core (I assume you need fw api 5 to remove this, is that
+correct?, I still have fw 4 only).
 
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-index 86923d5..b7a70bc 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.c
-+++ b/drivers/net/wireless/ti/wl18xx/acx.c
-@@ -280,3 +280,26 @@ out:
- 	return ret;
- }
- 
-+int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl)
-+{
-+	struct acx_dynamic_fw_traces_cfg *acx;
-+	int ret;
-+	wl1271_debug(DEBUG_ACX, "acx dynamic fw traces config %d",
-+		     wl->dynamic_fw_traces);
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+	acx->dynamic_fw_traces = cpu_to_le32(wl->dynamic_fw_traces);
-+
-+	ret = wl1271_cmd_configure(wl, ACX_DYNAMIC_TRACES_CFG,
-+							acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx config dynamic fw traces failed: %d", ret);
-+		goto out;
-+	}
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-index ce29713..d92211d 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.h
-+++ b/drivers/net/wireless/ti/wl18xx/acx.h
-@@ -35,7 +35,8 @@ enum {
- 	ACX_PEER_CAP			 = 0x0056,
- 	ACX_INTERRUPT_NOTIFY		 = 0x0057,
- 	ACX_RX_BA_FILTER		 = 0x0058,
--	ACX_AP_SLEEP_CFG                 = 0x0059
-+	ACX_AP_SLEEP_CFG                 = 0x0059,
-+	ACX_DYNAMIC_TRACES_CFG		 = 0x005A,
- };
- 
- /* numbers of bits the length field takes (add 1 for the actual number) */
-@@ -406,6 +407,15 @@ struct acx_ap_sleep_cfg {
- 	u8 idle_conn_thresh;
- } __packed;
- 
-+/*
-+ * ACX_DYNAMIC_TRACES_CFG
-+ * configure the FW dynamic traces
-+ */
-+struct acx_dynamic_fw_traces_cfg {
-+	struct acx_header header;
-+	__le32 dynamic_fw_traces;
-+} __packed;
-+
- int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
- 				  u32 sdio_blk_size, u32 extra_mem_blks,
- 				  u32 len_field_size);
-@@ -419,5 +429,6 @@ int wl18xx_acx_set_peer_cap(struct wl1271 *wl,
- int wl18xx_acx_interrupt_notify_config(struct wl1271 *wl, bool action);
- int wl18xx_acx_rx_ba_filter(struct wl1271 *wl, bool action);
- int wl18xx_acx_ap_sleep(struct wl1271 *wl);
-+int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl);
- 
- #endif /* __WL18XX_ACX_H__ */
-diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
-index 66bb4d0..0cb7e38 100644
---- a/drivers/net/wireless/ti/wl18xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
-@@ -370,6 +370,53 @@ static const struct file_operations radar_debug_mode_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t dynamic_fw_traces_write(struct file *file,
-+					const char __user *user_buf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 0, &value);
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl->dynamic_fw_traces = value;
-+
-+	if (unlikely(wl->state != WLCORE_STATE_ON))
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl18xx_acx_dynamic_fw_traces(wl);
-+	if (ret < 0)
-+		count = ret;
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static ssize_t dynamic_fw_traces_read(struct file *file,
-+					char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	return wl1271_format_buffer(userbuf, count, ppos,
-+					"%d\n", wl->dynamic_fw_traces);
-+}
-+
-+static const struct file_operations dynamic_fw_traces_ops = {
-+	.read = dynamic_fw_traces_read,
-+	.write = dynamic_fw_traces_write,
-+	.open = simple_open,
-+	.llseek = default_llseek,
-+};
-+
- int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 			     struct dentry *rootdir)
- {
-@@ -551,6 +598,7 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(conf, moddir);
- 	DEBUGFS_ADD(radar_detection, moddir);
- 	DEBUGFS_ADD(radar_debug_mode, moddir);
-+	DEBUGFS_ADD(dynamic_fw_traces, moddir);
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 638bfc5..213af48 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1137,6 +1137,11 @@ static int wl18xx_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
-+	/* set the dynamic fw traces bitmap */
-+	ret = wl18xx_acx_dynamic_fw_traces(wl);
-+	if (ret < 0)
-+		return ret;
-+
- 	if (checksum_param) {
- 		ret = wl18xx_acx_set_checksum_state(wl);
- 		if (ret != 0)
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 807d764..6787fb0 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -522,6 +522,9 @@ struct wl1271 {
- 	/* the current dfs region */
- 	enum nl80211_dfs_regions dfs_region;
- 	bool radar_debug_mode;
-+
-+	/* dynamic fw traces */
-+	u32 dynamic_fw_traces;
- };
- 
- int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
--- 
-1.7.9
+Loading with irq_mode=0
 
+[   21.130224] ath10k_pci 0000:03:00.0: enabling device (0000 -> 0002)
+[   21.130734] ath10k_pci 0000:03:00.0: pci irq msi-x interrupts 8
+irq_mode 0 reset_mode 0
+[   21.277023] ath10k_pci 0000:03:00.0: Direct firmware load for
+ath10k/cal-pci-0000:03:00.0.bin failed with error -2
+[   21.278105] ath10k_pci 0000:03:00.0: Direct firmware load for
+ath10k/QCA6174/hw2.1/board-pci-168c:003e:1a56:1525.bin failed with
+error -2
+[   21.278109] ath10k_pci 0000:03:00.0: failed to load spec board
+file, falling back to generic: -2
+[   21.279048] ath10k_pci 0000:03:00.0: Direct firmware load for
+ath10k/QCA6174/hw2.1/firmware-5.bin failed with error -2
+[   21.279051] ath10k_pci 0000:03:00.0: could not fetch firmware file
+'ath10k/QCA6174/hw2.1/firmware-5.bin': -2
+[   22.445285] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
+[   22.445319] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
+[   23.445028] ath10k_pci 0000:03:00.0: failed to receive control
+response completion, polling..
+[   23.445183] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
+[   23.445247] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
+[   24.445040] ath10k_pci 0000:03:00.0: Service connect timeout
+[   24.445043] ath10k_pci 0000:03:00.0: failed to connect htt (-110)
+[   24.508619] ath10k_pci 0000:03:00.0: could not init core (-110)
+[   24.508640] ath10k_pci 0000:03:00.0: could not probe fw (-110)
+[   74.965904] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
+
+With irq_mode=1 (and debug_mask=0x00000432 for ath10k_core... didn't
+do.. anything?)
+
+[  612.043708] ath10k_pci 0000:03:00.0: limiting irq mode to: 1
+[  612.043711] ath10k_pci 0000:03:00.0: pci irq legacy interrupts 0
+irq_mode 1 reset_mode 0
+[  612.249048] ath10k_pci 0000:03:00.0: Direct firmware load for
+ath10k/cal-pci-0000:03:00.0.bin failed with error -2
+[  612.249148] ath10k_pci 0000:03:00.0: Direct firmware load for
+ath10k/QCA6174/hw2.1/board-pci-168c:003e:1a56:1525.bin failed with
+error -2
+[  612.249150] ath10k_pci 0000:03:00.0: failed to load spec board
+file, falling back to generic: -2
+[  612.249251] ath10k_pci 0000:03:00.0: Direct firmware load for
+ath10k/QCA6174/hw2.1/firmware-5.bin failed with error -2
+[  612.249252] ath10k_pci 0000:03:00.0: could not fetch firmware file
+'ath10k/QCA6174/hw2.1/firmware-5.bin': -2
+[  613.435568] ath10k_pci 0000:03:00.0: qca6174 hw2.1 (0x05010000,
+0x003405ff, 168c:003e:1a56:1525 fallback) fw killer-n1525-fw api 4 htt
+3.0 wmi 4 cal otp max_sta 32
+[  613.435571] ath10k_pci 0000:03:00.0: debug 0 debugfs 1 tracing 0
+dfs 0 testmode 0
+[  613.509157] ath: EEPROM regdomain: 0x6c
+[  613.509160] ath: EEPROM indicates we should expect a direct regpair map
+[  613.509162] ath: Country alpha2 being used: 00
+[  613.509163] ath: Regpair used: 0x6c
+[  613.513311] ath10k_pci 0000:03:00.0 wlp3s0: renamed from wlan0
+
+
+This is a Dell Alienware 15 (early 2015) laptop.
