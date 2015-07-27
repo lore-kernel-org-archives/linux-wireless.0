@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42515 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129AbbGTPwO (ORCPT
+Received: from dub004-omc3s12.hotmail.com ([157.55.2.21]:57158 "EHLO
+	DUB004-OMC3S12.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753031AbbG0KB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2015 11:52:14 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	nbd@openwrt.org, sujith@msujith.org, chaitanya.mgit@gmail.com
-Subject: Re: [PATCH 1/3 v2] ath9k: handle RoC cancel correctly
-References: <1435049662-20477-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Mon, 20 Jul 2015 18:52:08 +0300
-In-Reply-To: <1435049662-20477-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Tue, 23 Jun 2015 10:54:22 +0200")
-Message-ID: <87380isu6v.fsf@kamboji.qca.qualcomm.com> (sfid-20150720_175221_342264_87B710CD)
+	Mon, 27 Jul 2015 06:01:29 -0400
+Message-ID: <DUB128-W16873176A9A97616BAD50D9C8E0@phx.gbl> (sfid-20150727_120133_835078_CCFC49D5)
+From: David Binderman <dcb314@hotmail.com>
+To: Chris Park <chris.park@atmel.com>,
+	"johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"rachel.kim@atmel.com" <rachel.kim@atmel.com>,
+	"dean.lee@atmel.com" <dean.lee@atmel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: linux-4.2-rc4/drivers/staging/wilc1000/linux_mon.c:264: memory
+ leak ?
+Date: Mon, 27 Jul 2015 10:01:27 +0000
+In-Reply-To: <55B5F38F.6070001@atmel.com>
+References: <DUB128-W86C6FB82F690B96CCC5C5E9C8E0@phx.gbl>,<55B5F38F.6070001@atmel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
-
-> In case we will get ROC cancel from mac80211 we
-> should not call ieee80211_remain_on_channel_expired().
->
-> In other case I hit such warning on MIPS and
-> p2p negotiation failed (tested with use_chanctx=1).
->
-> ath: phy0: Starting RoC period
-> ath: phy0: Channel definition created: 2412 MHz
-> ath: phy0: Assigned next_chan to 2412 MHz
-> ath: phy0: Offchannel duration for chan 2412 MHz : 506632
-> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
-> ath: phy0: Stopping current chanctx: 2412
-> ath: phy0: Flush timeout: 200
-> ath: phy0: ath_chanctx_set_next: Set channel 2412 MHz
-> ath: phy0: Set channel: 2412 MHz width: 0
-> ath: phy0: Reset to 2412 MHz, HT40: 0 fastcc: 0
-> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_TSF_TIMER, state: ATH_CHANCTX_STATE_IDLE
-> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
-> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
-> ath: phy0: Cancel RoC
-> ath: phy0: RoC aborted
-> ath: phy0: RoC request on vif: 00:03:7f:4e:a0:cd, type: 1 duration: 500
-> ath: phy0: Starting RoC period
-> ath: phy0: Channel definition created: 2412 MHz
-> ath: phy0: Assigned next_chan to 2412 MHz
-> ath: phy0: Offchannel duration for chan 2412 MHz : 506705
-> ath: phy0: ath_chanctx_set_next: current: 2412 MHz, next: 2412 MHz
-> ath: phy0: ath_offchannel_channel_change: offchannel state: ATH_OFFCHANNEL_ROC_START
-> ath: phy0: cur_chan: 2412 MHz, event: ATH_CHANCTX_EVENT_SWITCH, state: ATH_CHANCTX_STATE_IDLE
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 3312 at drivers/net/wireless/ath/ath9k/main.c:2319
-> Modules linked in: ath9k ath9k_common ath9k_hw ath mac80211 cfg80211
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-
-When changing something in a patchset please resend the whole series,
-not just the patch which has changed. So please resend the whole series
-as v3.
-
--- 
-Kalle Valo
+SGVsbG8gdGhlcmUsCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IGJ1dCBJdCBp
+cyBub3QgbWVtb3J5IGxlYWsgYmVjYXVzZSBJZiB0eCBxdWV1ZSBpcyBjb21wbGV0ZSwga2ZyZWUo
+KSBpcyAgCj4gY2FsbGVkIGluIG1nbXRfdHhfY29tcGxldGUoKSBmdW50aW9uLiAKCk1heWJlIEkn
+dmUgYmVlbiBzbGlnaHRseSBsZXNzIHRoYW4gY2xlYXIuIEknbGwgaGF2ZSBhbm90aGVyIGdvLgoK
+VGhlcmUgaXMgYSBjYWxsIHRvIGttYWxsb2MgYXJvdW5kIGxpbmUgMjUwLgoKU291cmNlIGNvZGUg
+aXMKCsKgwqDCoCBtZ210X3R4ID0ga21hbGxvYyhzaXplb2Yoc3RydWN0IHR4X2NvbXBsZXRlX21v
+bl9kYXRhKSwgR0ZQX0FUT01JQyk7CgpBIGZldyBsaW5lcyBsYXRlciBpcyBhIHNlY29uZCBjYWxs
+IHRvIGttYWxsb2MKCsKgwqAgbWdtdF90eC0+YnVmZiA9IGttYWxsb2MobGVuLCBHRlBfQVRPTUlD
+KTsKCklmIHRoZSBzZWNvbmQgY2FsbCBmYWlscywgdGhlbiBwcm9wZXIgdGlkeXVwIHdvdWxkIG5v
+cm1hbGx5IGluY2x1ZGUKY2FsbGluZyBrZnJlZSBmb3IgdGhlIGZpcnN0IGNhbGwuIFRoaXMgZG9l
+c24ndCBoYXBwZW4gaW4gdGhlIGVycm9yIGhhbmRsaW5nCmNvZGUgZm9yIHRoZSBzZWNvbmQgY2Fs
+bC4KCsKgwqAgaWYgKG1nbXRfdHgtPmJ1ZmYgPT0gTlVMTCkgewrCoMKgwqDCoMKgwqDCoCBQUklO
+VF9FUigiRmFpbGVkIHRvIGFsbG9jYXRlIG1lbW9yeSBmb3IgbWdtdF90eCBidWZmXG4iKTsKwqDC
+oMKgwqDCoMKgwqAgcmV0dXJuIFdJTENfRkFJTDsKwqDCoMKgIH0KCk5vdCBhIGJpZyBidWcsIEkg
+YWRtaXQsIGJ1dCBtaWdodCBiZSB3b3J0aCBmaXhpbmcuClNvbWV0aGluZyBsaWtlCgrCoMKgIGlm
+IChtZ210X3R4LT5idWZmID09IE5VTEwpIHsKwqDCoMKgwqDCoMKgwqAga2ZyZWUobWdtdCk7CsKg
+wqDCoMKgwqDCoMKgIFBSSU5UX0VSKCJGYWlsZWQgdG8gYWxsb2NhdGUgbWVtb3J5IGZvciBtZ210
+X3R4IGJ1ZmZcbiIpOwrCoMKgwqDCoMKgwqDCoCByZXR1cm4gV0lMQ19GQUlMOwrCoMKgwqAgfQoK
+d291bGQgcHJvYmFibHkgZml4IGl0LiAKCk15IGFwb2xvZ2llcyBmb3Igbm90IGJlaW5nIGNsZWFy
+IGVhcmxpZXIuCgoKUmVnYXJkcwoKRGF2aWQgQmluZGVybWFuCgoKPiAgCj4gU291cmNlIGNvZGUg
+aXMgCj4gIAo+ICAgICAgZ19saW51eF93bGFuLT5vdXAud2xhbl9hZGRfbWdtdF90b190eF9xdWUo
+bWdtdF90eCwgbWdtdF90eC0+YnVmZiwgIAo+IG1nbXRfdHgtPnNpemUsIG1nbXRfdHhfY29tcGxl
+dGUpOyAKPiAgCj4gICAgICBzdGF0aWMgdm9pZCBtZ210X3R4X2NvbXBsZXRlKHZvaWQgKnByaXYs
+IGludCBzdGF0dXMpIAo+ICAgICB7IAo+ICAgICAgICAgIC4uLiAKPiAgICAgICAgICBrZnJlZShw
+dl9kYXRhLT5idWZmKTsgCj4gICAgICAgICAga2ZyZWUocHZfZGF0YSk7IAo+ICAgICAgfSAKPiAg
+Cj4gQlIuIAo+IENocmlzIAo+ICAKPiBPbiAyMDE164WEIDA37JuUIDI37J28IDE3OjIwLCBEYXZp
+ZCBCaW5kZXJtYW4gd3JvdGU6IAo+ICAKPiBIZWxsbyB0aGVyZSwgCj4gIAo+IFtsaW51eC00LjIt
+cmM0L2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9saW51eF9tb24uYzoyNjRdOiAoZXJyb3IpIE1l
+bW9yeSBsZWFrOiBtZ210X3R4IAo+ICAKPiBTb3VyY2UgY29kZSBpcyAKPiAgCj4gICAgICBtZ210
+X3R4LT5idWZmID0ga21hbGxvYyhsZW4sIEdGUF9BVE9NSUMpOyAKPiAgICAgIGlmIChtZ210X3R4
+LT5idWZmID09IE5VTEwpIHsgCj4gICAgICAgICAgUFJJTlRfRVIoIkZhaWxlZCB0byBhbGxvY2F0
+ZSBtZW1vcnkgZm9yIG1nbXRfdHggYnVmZlxuIik7IAo+ICAgICAgICAgIHJldHVybiBXSUxDX0ZB
+SUw7IAo+ICAKPiAgICAgIH0gCj4gIAo+IFN1Z2dlc3QgYWRkIG1pc3NpbmcgY2FsbCB0byBrZnJl
+ZS4gCj4gIAo+ICAKPiBSZWdhcmRzIAo+ICAKPiBEYXZpZCBCaW5kZXJtYW4gCj4gIAo+ICAKPiAg
+CiAJCSAJICAgCQkgIA==
