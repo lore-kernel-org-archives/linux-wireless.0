@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44541 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbbGaHlX (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:34086 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754696AbbG0Xz2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:41:23 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 22/28] staging: wilc1000: fix passing argument from incompatible type warning
-Date: Fri, 31 Jul 2015 16:38:30 +0900
-Message-ID: <1438328316-30197-23-git-send-email-tony.cho@atmel.com> (sfid-20150731_094125_453694_B60F9E51)
-In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+	Mon, 27 Jul 2015 19:55:28 -0400
+Received: by lafd3 with SMTP id d3so48215261laf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 16:55:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
+References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+ <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
+ <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com> <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Tue, 28 Jul 2015 01:55:08 +0200
+Message-ID: <CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com> (sfid-20150728_015532_359302_154D63B8)
+Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: glen lee <glen.lee@atmel.com>
+On Tue, Jul 28, 2015 at 1:50 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+> is it never getting any readings before your patch? NF Readings all
+> look empty...
+Yes, looks like it. Unfortunately I haven't saved a complete kernel
+log (with ath9k debug level = 0x00004449) but only a few parts. Here
+are the interesting bits:
+<7>[ 449.746679] ath: phy1: NF calibrated [ctl] [chain 0] is -106
+<7>[ 449.746697] ath: phy1: NF[0] (-106) > MAX (-110), correcting to MAX
+<7>[ 449.746714] ath: phy1: NF calibrated [ctl] [chain 1] is -90
+<7>[ 449.746731] ath: phy1: NF[1] (-90) > MAX (-110), correcting to MAX
+<7>[ 449.746748] ath: phy1: NF calibrated [ext] [chain 0] is -103
+<7>[ 449.746765] ath: phy1: NF[3] (-103) > MAX (-110), correcting to MAX
+<7>[ 449.746781] ath: phy1: NF calibrated [ext] [chain 1] is -86
+<7>[ 449.746798] ath: phy1: NF[4] (-86) > MAX (-110), correcting to MAX
+<7>[ 449.746878] ath: phy1: Calibration @37407 finished: long ani, caldone: true
 
-This patch changes pstrWFIDrv with pstrHostIfSetDrvHandler->u32Address which
-is WILC_WFIDrvHandle type.
-The type of parameter 5 in SendConfigPkt and u32Address in tstrHostIfSetDrvHandler
-was changed with WILC_WFIDrvHandle so the SendConfigPkt needs to take
-pstrHostIfSetDrvHandler->u32Address as argument as it is.
+I'd assume (because I don't know the ath9k code) that ath9k simply
+ignores NF readings that are "out of range" (as suggested by those
+messages).
 
-Signed-off-by: glen lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ab2e082..953df71 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -653,7 +653,7 @@ static s32 Handle_SetWfiDrvHandler(tstrHostIfSetDrvHandler *pstrHostIfSetDrvHand
- 
- 	/*Sending Cfg*/
- 
--	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, pstrWFIDrv);
-+	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, pstrHostIfSetDrvHandler->u32Address);
- 
- 
- 	if ((pstrHostIfSetDrvHandler->u32Address) == NULL)
--- 
-1.9.1
-
+Regards,
+Martin
