@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:34203 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbbG2It7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42584 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbbG0K2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 04:49:59 -0400
-Received: by lbbst4 with SMTP id st4so2051387lbb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2015 01:49:58 -0700 (PDT)
+	Mon, 27 Jul 2015 06:28:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Mike Looijmans <mike.looijmans@topic.nl>
+Cc: linux-wireless@vger.kernel.org, khoroshilov@ispras.ru,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] rsi: Fix failure to load firmware after memory leak fix and fix the leak
+References: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl>
+Date: Mon, 27 Jul 2015 13:28:26 +0300
+In-Reply-To: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl> (Mike
+	Looijmans's message of "Mon, 27 Jul 2015 07:43:33 +0200")
+Message-ID: <87wpxlao8l.fsf@kamboji.qca.qualcomm.com> (sfid-20150727_122853_181962_CBE131C0)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-VmonVPdm-Nng2XXUQb8KimRu2tHdoboBe0frKhcb0fENQjA@mail.gmail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
- <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
- <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
- <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
- <CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com>
- <CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
- <CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com>
- <CAJ-Vmokfovc806T+Ja6nQhbGUDM=uU7MmKwad6Uc2hNYV+DDtA@mail.gmail.com>
- <CAFBinCDqn5HCb3APpqfFULwrmqPGpuj2upFOC=5qZUZzHWBnVg@mail.gmail.com>
- <CAJ-VmonRw=htFB+xNrxa=bgAsERUu+zhXrwvpoj9kONsEfooLw@mail.gmail.com>
- <CAFBinCB43LEj3KJVX7qqY40aKYCq68MYi2AD_5MKk43tj7HeXg@mail.gmail.com>
- <CAJ-Vmom3+aaPjPGAusFbP68-Z3BcY4n=nbyetJDiWdRo4L3fHA@mail.gmail.com>
- <CAFBinCCPouYbKNoyB=z7v0EQKWMhrVJogKvJK=DhqLtwef=zvw@mail.gmail.com> <CAJ-VmonVPdm-Nng2XXUQb8KimRu2tHdoboBe0frKhcb0fENQjA@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Wed, 29 Jul 2015 10:49:38 +0200
-Message-ID: <CAFBinCB2bFcvOj=jig4auzopEGkCsS7Vc6J+UhLz7EW2h=pkdQ@mail.gmail.com> (sfid-20150729_105011_492722_E185D8D8)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 29, 2015 at 9:49 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> ok, can you re-run this again before the NF patch, so I can compare?
-Sure, here they are: [0]
+Mike Looijmans <mike.looijmans@topic.nl> writes:
 
-And here are the NF values reported by ath9k right before that:
-# cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
-Channel Noise Floor : -91
-Chain | privNF | # Readings | NF Readings
-0       -110    2               -110 -110
-1       -110    2               -110 -110
+> Fixes commit eae79b4f3e82ca63a53478a161b190a0d38fe526 ("rsi: fix memory leak
+> in rsi_load_ta_instructions()") which stopped the driver from functioning.
 
+You can abbreviate the commit id:
 
-Regards,
-Martin
+Fixes commit eae79b4f3e82 ("rsi: fix memory leak in
+rsi_load_ta_instructions()") which stopped the driver from functioning.
 
-[0] https://dl.dropboxusercontent.com/u/26940713/tmp/spectral_out_nopatch
+> Firmware data has been allocated using vmalloc(), resulting in memory
+> that cannot be used for DMA. Hence the firmware was first copied to a
+> buffer allocated with kmalloc() in the original code. This patch reverts
+> the commit and only calls "kfree()" to release the buffer after sending
+> the data. This fixes the memory leak without breaking the driver.
+>
+> Add a comment to the kmemdup() calls to explain why this is done.
+>
+> Tested on a Topic Miami-Florida board which contains the rsi SDIO chip.
+>
+> Also added the same kfree() call to the USB glue driver. This was not
+> tested on actual hardware though, as I only have the SDIO version.
+>
+> Signed-off-by: Mike Looijmans <mike.looijmans@topic.nl>
+
+Add this before Signed-off-by line:
+
+Fixes: eae79b4f3e82 ("rsi: fix memory leak in rsi_load_ta_instructions()")
+
+> Cc: stable@vger.kernel.org
+
+Also no need to send email to stable@vger.kernel.org list, this line is
+enough and the stable team will pick the commit automatically.
+
+-- 
+Kalle Valo
