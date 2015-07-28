@@ -1,291 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57922 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753105AbbGQQPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 12:15:51 -0400
-Subject: [PATCH 04/27] MODSIGN: Provide a utility to append a PKCS#7
- signature to a module
-From: David Howells <dhowells@redhat.com>
-To: mcgrof@gmail.com
-Cc: mjg59@srcf.ucam.org, keyrings@linux-nfs.org,
-	gregkh@linuxfoundation.org, kyle@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, linux-security-module@vger.kernel.org,
-	zohar@linux.vnet.ibm.com, dwmw2@infradead.org
-Date: Fri, 17 Jul 2015 17:15:44 +0100
-Message-ID: <20150717161544.2578.50267.stgit@warthog.procyon.org.uk> (sfid-20150717_182404_969316_A785701A)
-In-Reply-To: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
-References: <20150717161456.2578.95678.stgit@warthog.procyon.org.uk>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48287 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932213AbbG1IuR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2015 04:50:17 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 20/21] staging: wilc1000: remove unnecessary spcae
+Date: Tue, 28 Jul 2015 17:47:39 +0900
+Message-ID: <1438073261-28315-21-git-send-email-tony.cho@atmel.com> (sfid-20150728_105027_080192_50C3892D)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide a utility that:
+From: "Kim, Leo" <leo.kim@atmel.com>
 
- (1) Digests a module using the specified hash algorithm (typically sha256).
+This patch removes the warnings reported by checkpatch.pl on
+space prohibited between function name and open parenthesis '('
 
-     [The digest can be dumped into a file by passing the '-d' flag]
-
- (2) Generates a PKCS#7 message that:
-
-     (a) Has detached data (ie. the module content).
-
-     (b) Is signed with the specified private key.
-
-     (c) Refers to the specified X.509 certificate.
-
-     (d) Has an empty X.509 certificate list.
-
-     [The PKCS#7 message can be dumped into a file by passing the '-p' flag]
-
- (3) Generates a signed module by concatenating the old module, the PKCS#7
-     message, a descriptor and a magic string.  The descriptor contains the
-     size of the PKCS#7 message and indicates the id_type as PKEY_ID_PKCS7.
-
- (4) Either writes the signed module to the specified destination or renames
-     it over the source module.
-
-This allows module signing to reuse the PKCS#7 handling code that was added
-for PE file parsing for signed kexec.
-
-Note that the utility is written in C and must be linked against the OpenSSL
-crypto library.
-
-Note further that I have temporarily dropped support for handling externally
-created signatures until we can work out the best way to do those.  Hopefully,
-whoever creates the signature can give me a PKCS#7 certificate.
-
-Signed-off-by: David Howells <dhowells@redhat.com>
-Tested-by: Vivek Goyal <vgoyal@redhat.com>
+Signed-off-by: Kim, Leo <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
+ drivers/staging/wilc1000/linux_wlan.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
- include/crypto/public_key.h |    1 
- scripts/sign-file.c         |  205 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 206 insertions(+)
- create mode 100755 scripts/sign-file.c
-
-diff --git a/include/crypto/public_key.h b/include/crypto/public_key.h
-index b6f27a240856..fda097e079a4 100644
---- a/include/crypto/public_key.h
-+++ b/include/crypto/public_key.h
-@@ -33,6 +33,7 @@ extern const struct public_key_algorithm *pkey_algo[PKEY_ALGO__LAST];
- enum pkey_id_type {
- 	PKEY_ID_PGP,		/* OpenPGP generated key ID */
- 	PKEY_ID_X509,		/* X.509 arbitrary subjectKeyIdentifier */
-+	PKEY_ID_PKCS7,		/* Signature in PKCS#7 message */
- 	PKEY_ID_TYPE__LAST
- };
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d012af5..3e55a8a 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -194,9 +194,9 @@ static char *ps8current = DebugBuffer;
+ void printk_later(const char *format, ...)
+ {
+ 	va_list args;
+-	va_start (args, format);
+-	ps8current += vsprintf (ps8current, format, args);
+-	va_end (args);
++	va_start(args, format);
++	ps8current += vsprintf(ps8current, format, args);
++	va_end(args);
+ 	if ((ps8current - DebugBuffer) > DEGUG_BUFFER_LENGTH)
+ 		ps8current = DebugBuffer;
  
-diff --git a/scripts/sign-file.c b/scripts/sign-file.c
-new file mode 100755
-index 000000000000..5b8a6dda3235
---- /dev/null
-+++ b/scripts/sign-file.c
-@@ -0,0 +1,205 @@
-+/* Sign a module file using the given key.
-+ *
-+ * Copyright (C) 2014 Red Hat, Inc. All Rights Reserved.
-+ * Written by David Howells (dhowells@redhat.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public Licence
-+ * as published by the Free Software Foundation; either version
-+ * 2 of the Licence, or (at your option) any later version.
-+ */
-+#define _GNU_SOURCE
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <string.h>
-+#include <getopt.h>
-+#include <err.h>
-+#include <arpa/inet.h>
-+#include <openssl/bio.h>
-+#include <openssl/evp.h>
-+#include <openssl/pem.h>
-+#include <openssl/pkcs7.h>
-+#include <openssl/err.h>
-+
-+struct module_signature {
-+	uint8_t		algo;		/* Public-key crypto algorithm [0] */
-+	uint8_t		hash;		/* Digest algorithm [0] */
-+	uint8_t		id_type;	/* Key identifier type [PKEY_ID_PKCS7] */
-+	uint8_t		signer_len;	/* Length of signer's name [0] */
-+	uint8_t		key_id_len;	/* Length of key identifier [0] */
-+	uint8_t		__pad[3];
-+	uint32_t	sig_len;	/* Length of signature data */
-+};
-+
-+#define PKEY_ID_PKCS7 2
-+
-+static char magic_number[] = "~Module signature appended~\n";
-+
-+static __attribute__((noreturn))
-+void format(void)
-+{
-+	fprintf(stderr,
-+		"Usage: scripts/sign-file [-dp] <hash algo> <key> <x509> <module> [<dest>]\n");
-+	exit(2);
-+}
-+
-+static void display_openssl_errors(int l)
-+{
-+	const char *file;
-+	char buf[120];
-+	int e, line;
-+
-+	if (ERR_peek_error() == 0)
-+		return;
-+	fprintf(stderr, "At main.c:%d:\n", l);
-+
-+	while ((e = ERR_get_error_line(&file, &line))) {
-+		ERR_error_string(e, buf);
-+		fprintf(stderr, "- SSL %s: %s:%d\n", buf, file, line);
-+	}
-+}
-+
-+static void drain_openssl_errors(void)
-+{
-+	const char *file;
-+	int line;
-+
-+	if (ERR_peek_error() == 0)
-+		return;
-+	while (ERR_get_error_line(&file, &line)) {}
-+}
-+
-+#define ERR(cond, fmt, ...)				\
-+	do {						\
-+		bool __cond = (cond);			\
-+		display_openssl_errors(__LINE__);	\
-+		if (__cond) {				\
-+			err(1, fmt, ## __VA_ARGS__);	\
-+		}					\
-+	} while(0)
-+
-+int main(int argc, char **argv)
-+{
-+	struct module_signature sig_info = { .id_type = PKEY_ID_PKCS7 };
-+	char *hash_algo = NULL;
-+	char *private_key_name, *x509_name, *module_name, *dest_name;
-+	bool save_pkcs7 = false, replace_orig;
-+	unsigned char buf[4096];
-+	unsigned long module_size, pkcs7_size;
-+	const EVP_MD *digest_algo;
-+	EVP_PKEY *private_key;
-+	PKCS7 *pkcs7;
-+	X509 *x509;
-+	BIO *b, *bd, *bm;
-+	int opt, n;
-+
-+	ERR_load_crypto_strings();
-+	ERR_clear_error();
-+
-+	do {
-+		opt = getopt(argc, argv, "dp");
-+		switch (opt) {
-+		case 'p': save_pkcs7 = true; break;
-+		case -1: break;
-+		default: format();
-+		}
-+	} while (opt != -1);
-+
-+	argc -= optind;
-+	argv += optind;
-+	if (argc < 4 || argc > 5)
-+		format();
-+
-+	hash_algo = argv[0];
-+	private_key_name = argv[1];
-+	x509_name = argv[2];
-+	module_name = argv[3];
-+	if (argc == 5) {
-+		dest_name = argv[4];
-+		replace_orig = false;
-+	} else {
-+		ERR(asprintf(&dest_name, "%s.~signed~", module_name) < 0,
-+		    "asprintf");
-+		replace_orig = true;
-+	}
-+
-+	/* Read the private key and the X.509 cert the PKCS#7 message
-+	 * will point to.
-+	 */
-+	b = BIO_new_file(private_key_name, "rb");
-+	ERR(!b, "%s", private_key_name);
-+        private_key = PEM_read_bio_PrivateKey(b, NULL, NULL, NULL);
-+	BIO_free(b);
-+
-+	b = BIO_new_file(x509_name, "rb");
-+	ERR(!b, "%s", x509_name);
-+	x509 = d2i_X509_bio(b, NULL); /* Binary encoded X.509 */
-+	if (!x509) {
-+		BIO_reset(b);
-+		x509 = PEM_read_bio_X509(b, NULL, NULL, NULL); /* PEM encoded X.509 */
-+		if (x509)
-+			drain_openssl_errors();
-+	}
-+	BIO_free(b);
-+	ERR(!x509, "%s", x509_name);
-+
-+	/* Open the destination file now so that we can shovel the module data
-+	 * across as we read it.
-+	 */
-+	bd = BIO_new_file(dest_name, "wb");
-+	ERR(!bd, "%s", dest_name);
-+
-+	/* Digest the module data. */
-+	OpenSSL_add_all_digests();
-+	display_openssl_errors(__LINE__);
-+	digest_algo = EVP_get_digestbyname(hash_algo);
-+	ERR(!digest_algo, "EVP_get_digestbyname");
-+
-+	bm = BIO_new_file(module_name, "rb");
-+	ERR(!bm, "%s", module_name);
-+
-+	/* Load the PKCS#7 message from the digest buffer. */
-+	pkcs7 = PKCS7_sign(NULL, NULL, NULL, NULL,
-+			   PKCS7_NOCERTS | PKCS7_PARTIAL | PKCS7_BINARY | PKCS7_DETACHED | PKCS7_STREAM);
-+	ERR(!pkcs7, "PKCS7_sign");
-+
-+	ERR(!PKCS7_sign_add_signer(pkcs7, x509, private_key, digest_algo, PKCS7_NOCERTS | PKCS7_BINARY),
-+	    "PKCS7_sign_add_signer");
-+	ERR(PKCS7_final(pkcs7, bm, PKCS7_NOCERTS | PKCS7_BINARY) < 0,
-+	    "PKCS7_final");
-+
-+	if (save_pkcs7) {
-+		char *pkcs7_name;
-+
-+		ERR(asprintf(&pkcs7_name, "%s.pkcs7", module_name) < 0, "asprintf");
-+		b = BIO_new_file(pkcs7_name, "wb");
-+		ERR(!b, "%s", pkcs7_name);
-+		ERR(i2d_PKCS7_bio_stream(b, pkcs7, NULL, 0) < 0, "%s", pkcs7_name);
-+		BIO_free(b);
-+	}
-+
-+	/* Append the marker and the PKCS#7 message to the destination file */
-+	ERR(BIO_reset(bm) < 0, "%s", module_name);
-+	while ((n = BIO_read(bm, buf, sizeof(buf))),
-+	       n > 0) {
-+		ERR(BIO_write(bd, buf, n) < 0, "%s", dest_name);
-+	}
-+	ERR(n < 0, "%s", module_name);
-+	module_size = BIO_number_written(bd);
-+
-+	ERR(i2d_PKCS7_bio_stream(bd, pkcs7, NULL, 0) < 0, "%s", dest_name);
-+	pkcs7_size = BIO_number_written(bd) - module_size;
-+	sig_info.sig_len = htonl(pkcs7_size);
-+	ERR(BIO_write(bd, &sig_info, sizeof(sig_info)) < 0, "%s", dest_name);
-+	ERR(BIO_write(bd, magic_number, sizeof(magic_number) - 1) < 0, "%s", dest_name);
-+
-+	ERR(BIO_free(bd) < 0, "%s", dest_name);
-+
-+	/* Finally, if we're signing in place, replace the original. */
-+	if (replace_orig)
-+		ERR(rename(dest_name, module_name) < 0, "%s", dest_name);
-+
-+	return 0;
-+}
+@@ -477,9 +477,9 @@ static int init_irq(linux_wlan_t *p_nic)
+  *
+  * ex) nic->dev_irq_num = gpio_to_irq(GPIO_NUM);
+  */
+-#elif defined (NM73131_0_BOARD)
++#elif defined(NM73131_0_BOARD)
+ 		nic->dev_irq_num = IRQ_WILC1000;
+-#elif defined (PANDA_BOARD)
++#elif defined(PANDA_BOARD)
+ 		gpio_export(GPIO_NUM, 1);
+ 		nic->dev_irq_num = OMAP_GPIO_IRQ(GPIO_NUM);
+ 		irq_set_irq_type(nic->dev_irq_num, IRQ_TYPE_LEVEL_LOW);
+@@ -1483,7 +1483,7 @@ void linux_to_wlan(wilc_wlan_inp_t *nwi, linux_wlan_t *nic)
+ 
+ 	nwi->os_context.txq_wait_event = (void *)&g_linux_wlan->txq_event;
+ 
+-#if defined (MEMORY_STATIC)
++#if defined(MEMORY_STATIC)
+ 	nwi->os_context.rx_buffer_size = LINUX_RX_SIZE;
+ #endif
+ 	nwi->os_context.rxq_critical_section = (void *)&g_linux_wlan->rxq_cs;
+@@ -1935,7 +1935,7 @@ _fail_locks_:
+  *      - this function will be called automatically by OS when module inserted.
+  */
+ 
+-#if !defined (NM73131_0_BOARD)
++#if !defined(NM73131_0_BOARD)
+ int mac_init_fn(struct net_device *ndev)
+ {
+ 
+@@ -1966,7 +1966,7 @@ void    WILC_WFI_frame_register(struct wiphy *wiphy, struct net_device *dev,
+ 				u16 frame_type, bool reg);
+ 
+ /* This fn is called, when this device is setup using ifconfig */
+-#if !defined (NM73131_0_BOARD)
++#if !defined(NM73131_0_BOARD)
+ int mac_open(struct net_device *ndev)
+ {
+ 	perInterface_wlan_t *nic;
+@@ -2565,7 +2565,7 @@ int wilc_netdev_init(void)
+ /*The 1st function called after module inserted*/
+ static int __init init_wilc_driver(void)
+ {
+-#if defined (WILC_DEBUGFS)
++#if defined(WILC_DEBUGFS)
+ 	if (wilc_debugfs_init() < 0) {
+ 		PRINT_D(GENERIC_DBG, "fail to create debugfs for wilc driver\n");
+ 		return -1;
+@@ -2671,7 +2671,7 @@ static void __exit exit_wilc_driver(void)
+ 		}
+ 		printk("Module_exit Done.\n");
+ 
+-#if defined (WILC_DEBUGFS)
++#if defined(WILC_DEBUGFS)
+ 		wilc_debugfs_remove();
+ #endif
+ 
+-- 
+1.9.1
 
