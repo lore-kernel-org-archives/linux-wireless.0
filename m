@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:33167 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbbG1LYz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5513 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752460AbbG1FLa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 07:24:55 -0400
-Received: by igbpg9 with SMTP id pg9so131980386igb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 04:24:55 -0700 (PDT)
+	Tue, 28 Jul 2015 01:11:30 -0400
+Message-ID: <55B70EEF.9070205@qti.qualcomm.com> (sfid-20150728_071133_290682_59FB336C)
+Date: Tue, 28 Jul 2015 10:41:11 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1437421384-19884-3-git-send-email-emmanuel.grumbach@intel.com>
-References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com> <1437421384-19884-3-git-send-email-emmanuel.grumbach@intel.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 28 Jul 2015 16:54:35 +0530
-Message-ID: <CABPxzYKKCLDaoAyE0VR66ynAxnm9Ob5m6T0ADbH415J6-i=6WA@mail.gmail.com> (sfid-20150728_132459_725763_2E51D94A)
-Subject: Re: [RFC 02/10] mac80211: allow to transmit A-MSDU within A-MPDU
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	sara.sharon@intel.com
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH] ath10k: remove NULL ptr deref in variable init of ath10k_monitor_vdev_start
+References: <1438024935-3946-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1438024935-3946-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 21, 2015 at 1:12 AM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
+On Tuesday 28 July 2015 12:52 AM, John W. Linville wrote:
+> In ath10k_monitor_vdev_start, chandef is initialized to NULL and then
+> channel is immediately thereafter initialized to chandef->chan (i.e.
+> NULL->chan).  This appears to be some sort of cut-n-paste error, since
+> the same assignment is done later (i.e. after chandef has been properly
+> assigned to a non-NULL value).  So, let's just remove this "brown paper
+> bag" typo/thinko... :-)
 >
-> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-> index c8ba2e7..a758eb84 100644
-> --- a/net/mac80211/agg-tx.c
-> +++ b/net/mac80211/agg-tx.c
-> @@ -97,7 +97,8 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
->         mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
+> Coverity CID #1309505
 >
->         mgmt->u.action.u.addba_req.dialog_token = dialog_token;
-> -       capab = (u16)(1 << 1);          /* bit 1 aggregation policy */
-> +       capab = (u16)(1 << 0);          /* bit 0 A-MSDU support */
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index c9a7d5b5dffc..2823222dea92 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -836,7 +836,7 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
+>   static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
+>   {
+>   	struct cfg80211_chan_def *chandef = NULL;
+> -	struct ieee80211_channel *channel = chandef->chan;
+> +	struct ieee80211_channel *channel;
+>   	struct wmi_vdev_start_request_arg arg = {};
+>   	int ret = 0;
+>
 
-Shouldn't this be based on HW capability? We can add couple of more
-_HW_ flags for TX and RX
-and populate this based on that?
+There is a similar change integrated recently, 
+https://github.com/kvalo/ath/commit/19be9e9a7ac7e6050eab426283d2a87593cf6e82 .
 
->
-> +       capab |= (u16)(1 << 1);         /* bit 1 aggregation policy */
->         capab |= (u16)(tid << 2);       /* bit 5:2 TID number */
->         capab |= (u16)(agg_size << 6);  /* bit 15:6 max size of aggergation */
+Vasanth
+
+
