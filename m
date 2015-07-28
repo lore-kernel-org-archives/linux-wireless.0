@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34257 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753020AbbGAXYG (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:38489 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751723AbbG1R0w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 19:24:06 -0400
-From: David Lin <dlin@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"quozl@laptop.org" <quozl@laptop.org>,
-	Dan Williams <dcbw@redhat.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v4] Add new mac80211 driver mwlwifi.
-Date: Wed, 1 Jul 2015 23:23:40 +0000
-Message-ID: <33ed6d508911424ca6ac6e3ef7c95fa8@SC-EXCH02.marvell.com> (sfid-20150702_012412_994667_49844837)
-References: <cf8d3fa226704acea770a987100f4d4e@SC-EXCH02.marvell.com>
-	 <1435652491.2082.5.camel@sipsolutions.net>
-	 <1435673924.9390.4.camel@redhat.com> <20150630222610.GB30901@us.netrek.org>
-	 <019032ba6cc14a4293b670496dd2bb1e@SC-EXCH02.marvell.com>
- <1435762626.2168.1.camel@sipsolutions.net>
-In-Reply-To: <1435762626.2168.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 28 Jul 2015 13:26:52 -0400
+Received: by iggf3 with SMTP id f3so130935727igg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 10:26:52 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7DA09A@hasmsx107.ger.corp.intel.com>
+References: <1437421384-19884-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1437421384-19884-3-git-send-email-emmanuel.grumbach@intel.com>
+ <CABPxzYKKCLDaoAyE0VR66ynAxnm9Ob5m6T0ADbH415J6-i=6WA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E7D9B01@hasmsx107.ger.corp.intel.com> <0BA3FCBA62E2DC44AF3030971E174FB32E7DA09A@hasmsx107.ger.corp.intel.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 28 Jul 2015 22:56:33 +0530
+Message-ID: <CABPxzYKAdM95FFrUb-z620eX5+m9HDBXHABsb-x1AvChB0awgg@mail.gmail.com> (sfid-20150728_192656_143397_555FF6DF)
+Subject: Re: [RFC 02/10] mac80211: allow to transmit A-MSDU within A-MPDU
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiBPbiBXZWQsIDIwMTUtMDctMDEgYXQgMTQ6NDIgKzAw
-MDAsIERhdmlkIExpbiB3cm90ZToNCj4gPiA+IFdlIGNhbiBsZWF2ZSBib3RoIHNlbGVjdGFibGUg
-YnkgZGV2ZWxvcGVyIHRlc3RpbmcgYXMgcGVyIHlvdXINCj4gPiBzdWdnZXN0aW9uLCBhbmQgYXNz
-dW1lIHVzZXJzL2ludGVncmF0b3JzIHdpbGwga25vdyBob3cgdG8gcHV0IHRoZQ0KPiA+IGRyaXZl
-ciB0aGV5IHdhbnQgaW4gdGhlaXIgc3lzdGVtLiBXZSB3ZXJlIHdhcm5lZCBhYm91dCBjYXVzaW5n
-DQo+ID4gY29uZnVzaW9uIGhlbmNlIHRoZSBjb25kaXRpb25pbmcgaW4gQ09ORklHLiBEbyB5b3Ug
-ZmVlbCB0aGVyZSdzIG5vDQo+ID4gY29uY2VybiBsZWF2aW5nIGJvdGggZHJpdmVyIGluLCBub3Qg
-Y2hlY2tpbmcgZWFjaCBvdGhlcidzIHByZXNlbmNlPw0KPiA+IFdlIGNhbiBjb21wbHkgZWl0aGVy
-IHdheS4NCj4gDQo+IEkgdGhpbmsgeW91IHNob3VsZCBqdXN0IGxlYXZlIGJvdGggc2VsZWN0YWJs
-ZS4NCj4NCg0KT0ssIHdlIHdpbGwgbGVhdmUgYm90aCBvZiB0aGVtIHNlbGVjdGFibGUsIGFuZCBw
-cm92aWRlIGFkZGl0aW9uYWwg4oCcTk9UReKAnSAod2FybmluZykgaW4gdGhlIEtjb25maWcgSEVM
-UCBtZXNzYWdlLg0KDQo+IA0KPiA+ID4gPiA+IFRoaXMgbG9va3MgT0ssIHRob3VnaCBJIGdldCBh
-IHZlcnkgc3RyYW5nZSBkZXBlbmRlbmN5IGxvb3ANCj4gPiA+ID4gPiB3YXJuaW5nIGZyb20gS2Nv
-bmZpZyBoZXJlLg0KPiA+DQo+ID4gRm9yIHRoZSBuZXh0IHBhdGNoLCB3ZSB3aWxsIG1vZGlmeSB0
-aGUgY29kZSB0byBzdGlsbCB3b3JrIGV2ZW4gdGhvdWdoDQo+ID4gdGhlIHRhcmdldCBkb2VzIG5v
-dCBzdXBwb3J0IERUUy4gU28gd2UgY2FuIHJlbW92ZSAic2VsZWN0IE9GIiBmcm9tDQo+ID4gS2Nv
-bmZpZyBmaWxlLg0KPiANCj4gSWYgdGhlIGRyaXZlciBuZWVkcyBPRiBkb24ndCBib3RoZXIgLSB0
-aGUgZGVwZW5kZW5jeSBsb29wIGlzIHZlcnkgbG9uZyBhbmQgdGhlDQo+IHdhcm5pbmcgaXMgcmF0
-aGVyIHN0cmFuZ2UuDQo+IA0KPiA+ID4gPiA+ID4gd3JpdGV3KDB4MDAsICh2b2lkIF9faW9tZW0g
-KikmcHJpdi0+cGNtZF9idWZbMV0pOw0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gY2Fubm90IGJlIHJp
-Z2h0LiBUaGlzIG1lbW9yeSBpc24ndCBfX2lvbWVtLCBpdCdzDQo+ID4gPiA+ID4gZG1hX2FsbG9j
-X2NvaGVyZW50LCBzbyBhIHNpbXBsZSB3cml0ZSBzaG91bGQgYmUgZG9uZS4NCj4gPiA+ID4gPg0K
-PiA+DQo+ID4gV2l0aG91dCB0aGlzIGNhc3RpbmcsIEM9MiB3aWxsIGNhdXNlIGEgd2FybmluZyBt
-ZXNzYWdlIGxpa2UgdGhpczoNCj4gPiAiV2FybmluZzogaW5jb3JyZWN0IHR5cGUgaW4gYXJndW1l
-bnQgMiAoZGlmZmVyZW50IGFkZHJlc3Mgc3BhY2VzKSINCj4gDQo+IFllcywgYnV0IHRoZSB3YXJu
-aW5nIGlzIGNvcnJlY3QgYW5kIHRoZSBjYXN0IGlzIHdyb25nLiBUaGlzIGlzbid0IF9faW9tZW0s
-IGl0J3MNCj4gc2ltcGx5IG1hcHBlZCwgc28geW91IHNob3VsZCBqdXN0IGRvIGENCj4gCSh1MzIg
-KilwY21kX2J1ZlsxXSA9IDA7DQo+IA0KPiBvciBzb21ldGhpbmcgbGlrZSB0aGF0LiBUaGUgd3Jp
-dGV2KCkgdG8gc3VjaCBhIHBvaW50ZXIgY2Fubm90IGJlIHJpZ2h0Lg0KPg0KDQpVbmRlcnN0b29k
-LiBUaGFua3MuIFdpbGwgbWFrZSBjaGFuZ2VzIGFjY29yZGluZ2x5Lg0KDQo+DQo+ID4gSm9oYW5u
-ZXMNCg0KVGhhbmtzLA0KRGF2aWQNCg==
+On Tue, Jul 28, 2015 at 10:42 PM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>
+>
+> On 07/28/2015 02:35 PM, Grumbach, Emmanuel wrote:
+>>> On Tue, Jul 21, 2015 at 1:12 AM, Emmanuel Grumbach
+>>> <emmanuel.grumbach@intel.com> wrote:
+>>>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c index
+>>>> c8ba2e7..a758eb84 100644
+>>>> --- a/net/mac80211/agg-tx.c
+>>>> +++ b/net/mac80211/agg-tx.c
+>>>> @@ -97,7 +97,8 @@ static void ieee80211_send_addba_request(struct
+>>> ieee80211_sub_if_data *sdata,
+>>>>         mgmt->u.action.u.addba_req.action_code =
+>>>> WLAN_ACTION_ADDBA_REQ;
+>>>>
+>>>>         mgmt->u.action.u.addba_req.dialog_token = dialog_token;
+>>>> -       capab = (u16)(1 << 1);          /* bit 1 aggregation policy */
+>>>> +       capab = (u16)(1 << 0);          /* bit 0 A-MSDU support */
+>>> Shouldn't this be based on HW capability? We can add couple of more _HW_
+>>> flags for TX and RX and populate this based on that?
+>> Why?
+>> What will happen if we ask for A-MSDU inside A-MPDU and we won't do A-MSDU?
+>> Worst case, the AP will deny this and will clear that bit in its response.
+>
+> I feel that my response was accurate, but the wording wasn't precise enough.
+> We have two possibilities:
+> 1) the AP does support A-MSDU in A-MPDU
+> 2) the AP does not support A-MSDU in A-MPDU
+>
+> In the first case, the AP will reply with that bit set and the client
+> can choose to send A-MSDU or not. I don't think that the AP needs to
+> allocate anything special to support A-MSDU in A-MPDU, so it is free to ask.
+AP needs to allocate large RX buffers to accomodate AMSDU + AMPDU, no?
+> In the second case, the AP will reply with that same bit clear in the
+> AddBA response, and mac0211 / driver will know not to send A-MSDU in
+> A-MPDU (which the driver doesn't support in the case you were describing
+> - so this is a no-op).
+> The only concern you may have is about APs that would decline the AddBA
+> request because of that bit. That doesn't seem to happen since a lot of
+> vendors use A-MSDU in A-MPDU.
+
+I understand from AP point of view, but what about the local HW? Don't we need
+HW support to handle this A-MSDU in AMPDU? (or) the driver should handle this
+support in ampdu_action based on the amsdu flag?
