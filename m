@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:34155 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753917AbbGAXGJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38506 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755638AbbG1OpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2015 19:06:09 -0400
-Received: by lagx9 with SMTP id x9so50110521lag.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2015 16:06:08 -0700 (PDT)
+	Tue, 28 Jul 2015 10:45:17 -0400
+Date: Tue, 28 Jul 2015 10:31:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH] ath10k: remove NULL ptr deref in variable init of
+ ath10k_monitor_vdev_start
+Message-ID: <20150728143124.GB17081@tuxdriver.com> (sfid-20150728_164527_617411_FE0373F7)
+References: <1438024935-3946-1-git-send-email-linville@tuxdriver.com>
+ <55B70EEF.9070205@qti.qualcomm.com>
 MIME-Version: 1.0
-Date: Wed, 1 Jul 2015 16:06:07 -0700
-Message-ID: <CAPA_7haE3gvZm2suZ+duDs6MhaOdc1JwQ4n6qyu4DY+KevXAZA@mail.gmail.com> (sfid-20150702_010620_893703_7E6C5CDC)
-Subject: rt2800usb Dual Mode
-From: Stark Pister <stark@cirrent.co>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55B70EEF.9070205@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a panda wireless module that uses the rt2800usb driver and I am
-trying to ascertain if it is capable of using both station and ap
-modes at the same time. The "valid interface combinations" section of
-"iw phy phy0 info" lists the following:
+On Tue, Jul 28, 2015 at 10:41:11AM +0530, Vasanthakumar Thiagarajan wrote:
+> On Tuesday 28 July 2015 12:52 AM, John W. Linville wrote:
+> >In ath10k_monitor_vdev_start, chandef is initialized to NULL and then
+> >channel is immediately thereafter initialized to chandef->chan (i.e.
+> >NULL->chan).  This appears to be some sort of cut-n-paste error, since
+> >the same assignment is done later (i.e. after chandef has been properly
+> >assigned to a non-NULL value).  So, let's just remove this "brown paper
+> >bag" typo/thinko... :-)
+> >
+> >Coverity CID #1309505
+> >
+> >Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> >---
+> >  drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> >diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> >index c9a7d5b5dffc..2823222dea92 100644
+> >--- a/drivers/net/wireless/ath/ath10k/mac.c
+> >+++ b/drivers/net/wireless/ath/ath10k/mac.c
+> >@@ -836,7 +836,7 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
+> >  static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
+> >  {
+> >  	struct cfg80211_chan_def *chandef = NULL;
+> >-	struct ieee80211_channel *channel = chandef->chan;
+> >+	struct ieee80211_channel *channel;
+> >  	struct wmi_vdev_start_request_arg arg = {};
+> >  	int ret = 0;
+> >
+> 
+> There is a similar change integrated recently,
+> https://github.com/kvalo/ath/commit/19be9e9a7ac7e6050eab426283d2a87593cf6e82
 
-* #{ AP, mesh point } <= 8,
-  total <= 8, #channels <= 1
+OK.  I don't see much point in the NULL assignment for channel, but the main
+point is to avoide the chandef->chan part.
 
-I have been told that to use both station and ap mode, I also need a
-#{ managed } <= 1 in that section. However, the wifi module clearly
-knows how to operate a managed station interface (that is the default
-behavior I believe). Is this just a mislabeling of valid interface
-combinations or does the #{ managed } tag mean something other than it
-being able to have a managed station?
-
-If it is possible to use this chip to operate in both modes
-simultaneously, how would I go about doing that. I assume I would use
-two virtual interfaces on top of the phy0 interface, but the
-linux-wireless page for virtual interfaces is empty for both the
-station and ap sections of the doc.
-(https://wireless.wiki.kernel.org/en/users/documentation/iw/vif)
-I can infer the commands I would use to set up those interfaces but
-that same doc also says "(special steps required)" about the mode
-"AP".
-
-Any help would be really appreciated. Feel free to point me to
-documentation if I have missed something.
-
+John
 -- 
-Stark Pister
-Software Developer
-Cirrent.co
-(925) 818-1813
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
