@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45259 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753197AbbGBIjA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2015 04:39:00 -0400
-Message-ID: <1435826335.2285.6.camel@sipsolutions.net> (sfid-20150702_103904_992495_C206EC09)
-Subject: Re: Association race when acting as AP?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Date: Thu, 02 Jul 2015 10:38:55 +0200
-In-Reply-To: <CA+BoTQm==AM3F2Fxq6T_+uY+jq0yXc9JHFT0iwpe2XJrmxkSsg@mail.gmail.com>
-References: <CA+BoTQm==AM3F2Fxq6T_+uY+jq0yXc9JHFT0iwpe2XJrmxkSsg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48186 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755386AbbG1It4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2015 04:49:56 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 17/21] staging: wilc1000: remove unnecessary blank lines
+Date: Tue, 28 Jul 2015 17:47:36 +0900
+Message-ID: <1438073261-28315-18-git-send-email-tony.cho@atmel.com> (sfid-20150728_105008_254216_E83811AE)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[please try to send w/o html if you're CC'ing the linux-wireless list]
+This patch removes the following warnings reported by checkpatch.pl.
+- Blank lines aren't necessary after an open brace '{'
+- Blank lines aren't necessary before a close brace '}'
 
-> To me this looks like a race in hostapd. The station should be 
-> installed to driver _before_ sending Assoc Resp frame, not after. My 
-> quick-n-dirty hack seems to help:
-> 
-[...]
-> Is anyone aware of this problem already? Anyone working on it? Any 
-> gotchas I should be aware of before I go into fixing this in a proper 
-> way? Or am I missing something and this isn't actually a problem?
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-The TI folks had a similar patch that broke open networks, not sure
-what was wrong there.
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 50be2a1..42c5ad8 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -679,7 +679,6 @@ static void sdio_set_default_speed(void)
+ 
+ static int sdio_read_size(uint32_t *size)
+ {
+-
+ 	uint32_t tmp;
+ 	sdio_cmd52_t cmd;
+ 
+@@ -806,7 +805,6 @@ static int sdio_clear_int_ext(uint32_t val)
+ 				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
+ 				goto _fail_;
+ 			}
+-
+ 		}
+ 	} else {
+ 		/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+@@ -910,7 +908,6 @@ static int sdio_clear_int_ext(uint32_t val)
+ 				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
+ 				goto _fail_;
+ 			}
+-
+ 		}
+ 	} else {
+ 		uint32_t vmm_ctl;
+-- 
+1.9.1
 
-Ultimately, depending on the nl80211 capabilities, the station should
-in fact be added (as unauthenticated) before even sending the
-authentication response frame, and then stepping through the stages
-appropriately.
-
-It should also react to errors by sending a negative association
-response I guess.
-
-johannes
