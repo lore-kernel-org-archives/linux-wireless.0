@@ -1,82 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx12-05.smtp.antispamcloud.com ([46.165.232.175]:52207 "EHLO
-	mx12-05.smtp.antispamcloud.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750844AbbG1GVG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 02:21:06 -0400
-Message-ID: <55B718D1.2030803@topic.nl> (sfid-20150728_082116_991711_B84D8C46)
-Date: Tue, 28 Jul 2015 07:53:21 +0200
-From: Mike Looijmans <mike.looijmans@topic.nl>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48100 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932141AbbG1Ita (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2015 04:49:30 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 13/21] staging: wilc1000: remove errors on required space
+Date: Tue, 28 Jul 2015 17:47:32 +0900
+Message-ID: <1438073261-28315-14-git-send-email-tony.cho@atmel.com> (sfid-20150728_104938_497938_4CD486D8)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <khoroshilov@ispras.ru>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH] rsi: Fix failure to load firmware after memory leak fix
- and fix the leak
-References: <1437975813-3285-1-git-send-email-mike.looijmans@topic.nl> <87wpxlao8l.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87wpxlao8l.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-﻿On 27-07-15 12:28, Kalle Valo wrote:
-> Mike Looijmans <mike.looijmans@topic.nl> writes:
->
->> Fixes commit eae79b4f3e82ca63a53478a161b190a0d38fe526 ("rsi: fix memory leak
->> in rsi_load_ta_instructions()") which stopped the driver from functioning.
->
-> You can abbreviate the commit id:
->
-> Fixes commit eae79b4f3e82 ("rsi: fix memory leak in
-> rsi_load_ta_instructions()") which stopped the driver from functioning.
->
->> Firmware data has been allocated using vmalloc(), resulting in memory
->> that cannot be used for DMA. Hence the firmware was first copied to a
->> buffer allocated with kmalloc() in the original code. This patch reverts
->> the commit and only calls "kfree()" to release the buffer after sending
->> the data. This fixes the memory leak without breaking the driver.
->>
->> Add a comment to the kmemdup() calls to explain why this is done.
->>
->> Tested on a Topic Miami-Florida board which contains the rsi SDIO chip.
->>
->> Also added the same kfree() call to the USB glue driver. This was not
->> tested on actual hardware though, as I only have the SDIO version.
->>
->> Signed-off-by: Mike Looijmans <mike.looijmans@topic.nl>
->
-> Add this before Signed-off-by line:
->
-> Fixes: eae79b4f3e82 ("rsi: fix memory leak in rsi_load_ta_instructions()")
->
->> Cc: stable@vger.kernel.org
->
-> Also no need to send email to stable@vger.kernel.org list, this line is
-> enough and the stable team will pick the commit automatically.
+This patch removes the errors reported by checkpatch.pl, which is the
+space required before the open parenthesis '('.
 
-I wondered why that happened, and just noticed that git send-email 
-automatically added this to the recipients. So it happened for v2 as well, 
-sorry for that.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-
-Kind regards,
-
-Mike Looijmans
-System Expert
-
-TOPIC Embedded Products
-Eindhovenseweg 32-C, NL-5683 KH Best
-Postbus 440, NL-5680 AK Best
-Telefoon: +31 (0) 499 33 69 79
-Telefax: +31 (0) 499 33 69 70
-E-mail: mike.looijmans@topicproducts.com
-Website: www.topicproducts.com
-
-Please consider the environment before printing this e-mail
-
-
-
-
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index ee5578b..1621f91 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -475,7 +475,7 @@ static int sdio_sync(void)
+ 	/**
+ 	 *      Disable power sequencer
+ 	 **/
+-	if(!sdio_read_reg(WILC_MISC, &reg)) {
++	if (!sdio_read_reg(WILC_MISC, &reg)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read misc reg...\n");
+ 		return 0;
+ 	}
+@@ -781,7 +781,7 @@ static int sdio_clear_int_ext(uint32_t val)
+ {
+ 	int ret;
+ 
+-	if(g_sdio.has_thrpt_enh3) {
++	if (g_sdio.has_thrpt_enh3) {
+ 		uint32_t reg;
+ 		reg = val & ((1 << MAX_NUN_INT_THRPT_ENH2) - 1);
+ 
+-- 
+1.9.1
 
