@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34176 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbGXOW0 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48166 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932141AbbG1Itu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 10:22:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>
-Subject: Re: [PATCH v2 02/13] wil6210: ACS implementation using QCA vendor command
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1436168389-3676-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1436168389-3676-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Fri, 24 Jul 2015 17:22:18 +0300
-In-Reply-To: <1436168389-3676-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Mon, 6 Jul 2015 10:39:38 +0300")
-Message-ID: <878ua5eiud.fsf@kamboji.qca.qualcomm.com> (sfid-20150724_162230_277290_7EAA1BD8)
+	Tue, 28 Jul 2015 04:49:50 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 16/21] staging: wilc1000: remove unnecessary inner braces
+Date: Tue, 28 Jul 2015 17:47:35 +0900
+Message-ID: <1438073261-28315-17-git-send-email-tony.cho@atmel.com> (sfid-20150728_110715_677777_E234B76C)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+This patch removes unnecessary inner braces.
 
-> ACS is implemented by registering to QCA vendor ACS sub command.
-> On receive of the command from hostapd, driver issues passive
-> scan command and block until scan results are available.
-> When received, the results are sent up using QCA vendor ACS
-> results event
->
-> Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 30 ++++++++++++++----------------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
 
-I dropped this patch per discussion but now I got a conflict:
-
-Pushing patch "wil6210-improve-mgmt-frame-han" ... done (conflict)
-Error: 1 merge conflict(s)
-       CONFLICT (content): Merge conflict in
-       drivers/net/wireless/ath/wil6210/wmi.c
-
-Please resend the whole patchset.
-
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 296203a..50be2a1 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -686,23 +686,21 @@ static int sdio_read_size(uint32_t *size)
+ 	/**
+ 	 *      Read DMA count in words
+ 	 **/
+-	{
+-		cmd.read_write = 0;
+-		cmd.function = 0;
+-		cmd.raw = 0;
+-		cmd.address = 0xf2;
+-		cmd.data = 0;
+-		g_sdio.sdio_cmd52(&cmd);
+-		tmp = cmd.data;
++	cmd.read_write = 0;
++	cmd.function = 0;
++	cmd.raw = 0;
++	cmd.address = 0xf2;
++	cmd.data = 0;
++	g_sdio.sdio_cmd52(&cmd);
++	tmp = cmd.data;
+ 
+-		/* cmd.read_write = 0; */
+-		/* cmd.function = 0; */
+-		/* cmd.raw = 0; */
+-		cmd.address = 0xf3;
+-		cmd.data = 0;
+-		g_sdio.sdio_cmd52(&cmd);
+-		tmp |= (cmd.data << 8);
+-	}
++	/* cmd.read_write = 0; */
++	/* cmd.function = 0; */
++	/* cmd.raw = 0; */
++	cmd.address = 0xf3;
++	cmd.data = 0;
++	g_sdio.sdio_cmd52(&cmd);
++	tmp |= (cmd.data << 8);
+ 
+ 	*size = tmp;
+ 	return 1;
 -- 
-Kalle Valo
+1.9.1
+
