@@ -1,67 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:34662 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754441AbbGYVAh convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47995 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932223AbbG1Is5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2015 17:00:37 -0400
-Received: by lafd3 with SMTP id d3so20233323laf.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2015 14:00:35 -0700 (PDT)
+	Tue, 28 Jul 2015 04:48:57 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/21] staging: wilc1000: remove a dead preprocessor conditionals
+Date: Tue, 28 Jul 2015 17:47:27 +0900
+Message-ID: <1438073261-28315-9-git-send-email-tony.cho@atmel.com> (sfid-20150728_104906_477455_CF639957)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <55B3DB9A.9060209@hauke-m.de>
-References: <1435504633-20831-1-git-send-email-zajec5@gmail.com>
-	<CACna6rzFYpwbzM+s-KzFQmTym4iLVn+Ap+DWgFmAZzhWKTQfJw@mail.gmail.com>
-	<871tfzif17.fsf@kamboji.qca.qualcomm.com>
-	<CAGhQ9VyH4yvnU_kPAy3a7Z+80jNV8uNoTr=Nd=eV2D-iz9YVUQ@mail.gmail.com>
-	<55B3DB9A.9060209@hauke-m.de>
-Date: Sat, 25 Jul 2015 23:00:35 +0200
-Message-ID: <CAGhQ9VyV2LuDUEjtOYgTZg3kEDr5XJs8FqjXpV7wLC2U2CBd-w@mail.gmail.com> (sfid-20150725_230736_484742_9E1A0D9A)
-Subject: Re: [PATCH] bcma: populate bus DT subnodes as platform_device-s
-From: Joachim Eastwood <manabian@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 July 2015 at 20:55, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 07/24/2015 06:11 PM, Joachim Eastwood wrote:
->> On 23 July 2015 at 08:06, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Rafał Miłecki <zajec5@gmail.com> writes:
->>>
->>>>> +       if (bus->host_pdev) {
->>>>> +               struct device *dev = &bus->host_pdev->dev;
->>>>> +
->>>>> +               of_platform_populate(dev->of_node, of_default_bus_match_table,
->>>>> +                                    NULL, dev);
->>>>> +       }
->>>>> +
->>>>
->>>> This caused a compile error when using bcma as module:
->>>> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
->>
->> I encountered the same problem with my modular memory controller driver.
->>
->>>> There are two options I guess:
->>>> 1) Export of_default_bus_match_table
->>
->> See link below for Rob Herring's take on that.
->> http://marc.info/?l=linaro-kernel&m=143766694414121&w=2
->>
->>
->> regards,
->> Joachim Eastwood
->>
-> Hi Joachim,
->
-> are you working on a patch which exports "of_default_bus_match_table"
-> or provides a wrapper function? If not then I will look into this.
+This patch removes the preprocessor conditionals which are related to
+the WILC1000_SINGLE_TRANSFER definition becasue this is not used.
 
-Not really, so if you could take it that would be great. Thanks.
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 26 --------------------------
+ 1 file changed, 26 deletions(-)
 
-regards,
-Joachim Eastwood
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index ea545c9..8f674ad 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -10,11 +10,7 @@
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+ 
+-#ifdef WILC1000_SINGLE_TRANSFER
+-#define WILC_SDIO_BLOCK_SIZE 256
+-#else
+ #define WILC_SDIO_BLOCK_SIZE 512
+-#endif
+ 
+ typedef struct {
+ 	void *os_context;
+@@ -321,16 +317,6 @@ static int sdio_write(uint32_t addr, uint8_t *buf, uint32_t size)
+ 		cmd.function = 0;
+ 		cmd.address = 0x10f;
+ 	} else {
+-#ifdef WILC1000_SINGLE_TRANSFER
+-		/**
+-		 *      has to be block aligned...
+-		 **/
+-		nleft = size % block_size;
+-		if (nleft > 0) {
+-			size += block_size;
+-			size &= ~(block_size - 1);
+-		}
+-#else
+ 		/**
+ 		 *      has to be word aligned...
+ 		 **/
+@@ -338,7 +324,6 @@ static int sdio_write(uint32_t addr, uint8_t *buf, uint32_t size)
+ 			size += 4;
+ 			size &= ~0x3;
+ 		}
+-#endif
+ 
+ 		/**
+ 		 *      func 1 access
+@@ -463,16 +448,6 @@ static int sdio_read(uint32_t addr, uint8_t *buf, uint32_t size)
+ 		cmd.function = 0;
+ 		cmd.address = 0x10f;
+ 	} else {
+-#ifdef WILC1000_SINGLE_TRANSFER
+-		/**
+-		 *      has to be block aligned...
+-		 **/
+-		nleft = size % block_size;
+-		if (nleft > 0) {
+-			size += block_size;
+-			size &= ~(block_size - 1);
+-		}
+-#else
+ 		/**
+ 		 *      has to be word aligned...
+ 		 **/
+@@ -480,7 +455,6 @@ static int sdio_read(uint32_t addr, uint8_t *buf, uint32_t size)
+ 			size += 4;
+ 			size &= ~0x3;
+ 		}
+-#endif
+ 
+ 		/**
+ 		 *      func 1 access
+-- 
+1.9.1
+
