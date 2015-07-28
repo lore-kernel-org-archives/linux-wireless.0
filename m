@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50773 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752345AbbGWXdI (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48301 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996AbbG1IuY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 19:33:08 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: initialize msdu ext. descriptor before use
-Date: Thu, 23 Jul 2015 16:32:06 -0700
-Message-ID: <1437694326-31977-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150724_013312_165079_D563CDAC)
+	Tue, 28 Jul 2015 04:50:24 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 21/21] staging: wilc1000: update TODO list of WILC1000
+Date: Tue, 28 Jul 2015 17:47:40 +0900
+Message-ID: <1438073261-28315-22-git-send-email-tony.cho@atmel.com> (sfid-20150728_105034_015677_BA1D2B73)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initial QCA99X0 support has a known issue with TCP Tx throughput.
-All other path such as UDP Tx/Rx and TCP Rx meet their expectation
-(> 900Mbps), but TCP Tx marked as low as 5Mbps when single pair is
-used on iperf.
+The TODO list is updated for the WILC1000 kernel driver. The TODO list
+contains many items listed in time sequence.
 
-The root cause is turned out because TSO flag is not initialized
-properly so that firmware configures TSO in wrong way.
-TSO flags in msdu extension descriptor is required to be reset
-to indicate firmware there is no TSO is enabled, otherwise it
-could act as TSO is enabled which causes huge throughput drop.
-
-In fact, it's enough by resetting TSO flags only to prevent the
-unexpected behavior, but initializing whole msdu ext. descriptor
-will help to clear uncertainty of firmware could bring on as it
-constantly updated.
-
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_tx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/TODO | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index c49ecff..1c61c17 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -540,14 +540,14 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		/* pass through */
- 	case ATH10K_HW_TXRX_ETHERNET:
- 		if (ar->hw_params.continuous_frag_desc) {
-+			memset(&htt->frag_desc.vaddr[msdu_id], 0,
-+			       sizeof(struct htt_msdu_ext_desc));
- 			frags = (struct htt_data_tx_desc_frag *)
- 				&htt->frag_desc.vaddr[msdu_id].frags;
- 			frags[0].tword_addr.paddr_lo =
- 				__cpu_to_le32(skb_cb->paddr);
- 			frags[0].tword_addr.paddr_hi = 0;
- 			frags[0].tword_addr.len_16 = __cpu_to_le16(msdu->len);
--			frags[1].tword_addr.paddr_lo = 0;
--			frags[1].tword_addr.paddr_hi = 0;
- 
- 			frags_paddr =  htt->frag_desc.paddr +
- 				(sizeof(struct htt_msdu_ext_desc) * msdu_id);
+diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
+index 95199d8..6b745cd 100644
+--- a/drivers/staging/wilc1000/TODO
++++ b/drivers/staging/wilc1000/TODO
+@@ -1,14 +1,15 @@
+ TODO:
+-- remove the defined feature as kernel versions
+-- remove OS wrapper functions
+-- remove custom debug and tracing functions
++- remove most of warnings reported by checkpatch.pl
++- remove OS wrapper functions to use kernel API as is
+ - rework comments and function headers(also coding style)
+ - replace all semaphores with mutexes or completions
+-- make spi and sdio components coexist in one build
++- remove compile warnings related to 64 bit machine
+ - turn compile-time platform configuration (BEAGLE_BOARD,
+   PANDA_BOARD, PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...)
+   into run-time options that are read from DT
+-- support soft-ap and p2p mode
+-- support resume/suspend function
++- support soft-ap and p2p mode by updating the WILC1000 driver and fw
++- support resume/suspend function by updating the WILC1000 driver and fw
+ - replace SIOCDEVPRIVATE commands with generic API functions
+ - use wext-core handling instead of private SIOCSIWPRIV implementation
++- replace CamelCase to follow coding style
++- remove the warnings, line over 80 characters
 -- 
 1.9.1
 
