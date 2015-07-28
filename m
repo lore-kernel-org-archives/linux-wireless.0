@@ -1,73 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:36630 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbbGVSRG (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:37350 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135AbbG1WWd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 14:17:06 -0400
-Received: by wicgb10 with SMTP id gb10so109849080wic.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:05 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/15] staging: vt6655: dead code tx path remove dma_unmap_single
-Date: Wed, 22 Jul 2015 19:16:35 +0100
-Message-Id: <1437589007-5479-3-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201713_407318_EB10C570)
-In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
-References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 28 Jul 2015 18:22:33 -0400
+Received: by igbpg9 with SMTP id pg9so1044573igb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 15:22:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFBinCDqn5HCb3APpqfFULwrmqPGpuj2upFOC=5qZUZzHWBnVg@mail.gmail.com>
+References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+	<CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
+	<CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
+	<CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
+	<CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com>
+	<CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
+	<CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com>
+	<CAJ-Vmokfovc806T+Ja6nQhbGUDM=uU7MmKwad6Uc2hNYV+DDtA@mail.gmail.com>
+	<CAFBinCDqn5HCb3APpqfFULwrmqPGpuj2upFOC=5qZUZzHWBnVg@mail.gmail.com>
+Date: Tue, 28 Jul 2015 15:22:32 -0700
+Message-ID: <CAJ-VmonRw=htFB+xNrxa=bgAsERUu+zhXrwvpoj9kONsEfooLw@mail.gmail.com> (sfid-20150729_002236_219925_2DAB19BC)
+Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+From: Adrian Chadd <adrian@freebsd.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When pTDInfo->skb_dma not equal to pTDInfo->buf_dma, pTDInfo->skb_dma
-equals zero.
+Hm, doesn't someone have a graphical frontend for this on linux?
 
-as mentioned in comment pre-allocated buf_dma can't be unmapped
-so remove dead code.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 14 --------------
- 1 file changed, 14 deletions(-)
+-a
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 053291a..695aa25 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -754,10 +754,6 @@ static void device_free_td0_ring(struct vnt_private *pDevice)
- 		PSTxDesc        pDesc = &(pDevice->apTD0Rings[i]);
- 		PDEVICE_TD_INFO  pTDInfo = pDesc->pTDInfo;
- 
--		if (pTDInfo->skb_dma && (pTDInfo->skb_dma != pTDInfo->buf_dma))
--			dma_unmap_single(&pDevice->pcid->dev, pTDInfo->skb_dma,
--					 pTDInfo->skb->len, DMA_TO_DEVICE);
--
- 		dev_kfree_skb(pTDInfo->skb);
- 		kfree(pDesc->pTDInfo);
- 	}
-@@ -771,10 +767,6 @@ static void device_free_td1_ring(struct vnt_private *pDevice)
- 		PSTxDesc        pDesc = &(pDevice->apTD1Rings[i]);
- 		PDEVICE_TD_INFO  pTDInfo = pDesc->pTDInfo;
- 
--		if (pTDInfo->skb_dma && (pTDInfo->skb_dma != pTDInfo->buf_dma))
--			dma_unmap_single(&pDevice->pcid->dev, pTDInfo->skb_dma,
--					 pTDInfo->skb->len, DMA_TO_DEVICE);
--
- 		dev_kfree_skb(pTDInfo->skb);
- 		kfree(pDesc->pTDInfo);
- 	}
-@@ -975,12 +967,6 @@ static void device_free_tx_buf(struct vnt_private *pDevice, PSTxDesc pDesc)
- 	PDEVICE_TD_INFO  pTDInfo = pDesc->pTDInfo;
- 	struct sk_buff *skb = pTDInfo->skb;
- 
--	/* pre-allocated buf_dma can't be unmapped. */
--	if (pTDInfo->skb_dma && (pTDInfo->skb_dma != pTDInfo->buf_dma)) {
--		dma_unmap_single(&pDevice->pcid->dev, pTDInfo->skb_dma,
--				 skb->len, DMA_TO_DEVICE);
--	}
--
- 	if (skb)
- 		ieee80211_tx_status_irqsafe(pDevice->hw, skb);
- 
--- 
-2.1.4
 
+On 28 July 2015 at 15:07, Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
+> On Tue, Jul 28, 2015 at 7:25 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>> So the values aren't "bad" on the 1043nd - they're in 1/2 or 1/4dB,
+>> but there's no scalar quantity (ie, it's not in dBm.) The 1043nd
+>> calibrates down to around -95 or so, which "sounds" like it's in dBm
+>> but it isn't, and any similarity is just coincidence.
+> Ok, then we'll ignore the 1043nd from now on.
+>
+>> It does sound like your AR9227 sees noise. can you fire up the
+>> spectral analysis stuff to plot what the NIC is seeing? (yes, the
+>> AR9287/AR9227 has spectral analysis mode, same as the AR9280, AR9285,
+>> and >= AR9300.)
+> I am assuming that "background" mode is what you want, see [0].
+> Thus I ran the following on my AR9227 device:
+> # echo background > /sys/kernel/debug/ieee80211/phy1/ath9k/spectral_scan_ctl
+> # echo trigger > /sys/kernel/debug/ieee80211/phy1/ath9k/spectral_scan_ctl
+> # cat /sys/kernel/debug/ieee80211/phy1/ath9k/spectral_scan0 > /tmp/samples
+>
+> The result can be found here: [1].
+> Note that at this point no client was connected to my AP. My patch
+> (from the initial mail) was applied - but that shouldn't have any
+> effect on the spectral scan output (at least that's what I'm
+> assuming).
+>
+> Just for documentation purposes - those are the NF values that I have
+> seen a few seconds before getting the spectral scan data:
+> # cat /sys/kernel/debug/ieee80211/phy1/ath9k/dump_nfcal
+> Channel Noise Floor : -93
+> Chain | privNF | # Readings | NF Readings
+> 0     -104   5          -109 -109 -109 -104 -104
+> 1     -97    5          -97 -97 -97 -97 -97
+>
+>
+> Regards,
+> Martin
+>
+>
+> [0] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/spectral_scan
+> [1] https://dl.dropboxusercontent.com/u/26940713/tmp/spectral_out
