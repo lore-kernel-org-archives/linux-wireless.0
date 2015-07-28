@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:54396 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753233AbbGXIjr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 04:39:47 -0400
-Message-ID: <55B1F9CC.4060507@ispras.ru> (sfid-20150724_103952_122642_764AA3BA)
-Date: Fri, 24 Jul 2015 15:39:40 +0700
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:52231 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715AbbG1Fes (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2015 01:34:48 -0400
+From: "Park, Chris" <Chris.Park@atmel.com>
+To: David Binderman <dcb314@hotmail.com>,
+	"Kim, Johnny" <johnny.kim@atmel.com>,
+	"Kim, Rachel" <Rachel.Kim@atmel.com>,
+	"Lee, Dean" <Dean.Lee@atmel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: linux-4.2-rc4/drivers/staging/wilc1000/linux_mon.c:264: memory
+ leak ?
+Date: Tue, 28 Jul 2015 05:33:53 +0000
+Message-ID: <9F325F9AF694F142A7DAB1FCFDC3B7BA5401F40E@penmbx01> (sfid-20150728_073451_573323_CB05FA9D)
+References: <DUB128-W86C6FB82F690B96CCC5C5E9C8E0@phx.gbl>,<55B5F38F.6070001@atmel.com>
+ <DUB128-W16873176A9A97616BAD50D9C8E0@phx.gbl>
+In-Reply-To: <DUB128-W16873176A9A97616BAD50D9C8E0@phx.gbl>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Mike Looijmans <mike.looijmans@topic.nl>
-CC: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	fariyaf@gmail.com
-Subject: Re: Commit "rsi: fix memory leak in rsi_load_ta_instructions()" breaks
- things
-References: <55B1E2CB.3040908@topic.nl>
-In-Reply-To: <55B1E2CB.3040908@topic.nl>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Mike,
-
-On 24.07.2015 14:01, Mike Looijmans wrote:
-> Regarding this commit:
-> 
-> https://lkml.org/lkml/2014/12/12/709
-> 
->     rsi: fix memory leak in rsi_load_ta_instructions()
-> 
->     Memory allocated by kmemdup() in rsi_load_ta_instructions() is leaked.
->     But duplication of firmware data here is useless,
->     so the patch removes kmemdup() at all.
-> 
->     Found by Linux Driver Verification project (linuxtesting.org).
-> 
->     Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
->     Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> 
-> We use this driver for the Redpine Wifi chip on our "florida" board, and
-> after this commit it stopped working. Symptom was that the "wlan0"
-> device was not created at all. Reverting the commit makes it work again.
-> 
-> Apparently, the kmemdup action is needed for something. I suspect the
-> DMA controller is still copying the firmware data before the method
-> returned.
-
-To test your hypothesis, could you please check if it is still broken
-with kfree(fw); added just after release_firmware(fw_entry); in
-rsi_load_ta_instructions().
-
---
-Thanks,
-Alexey
-
+SGkgRGF2aWQuDQoNClNvcnJ5LCBJIGRpZCBub3QgdGhpbmsgYWJvdXQgdGhhdC4NClRoaXMgaXMg
+YSB2ZXJ5IGdvb2QgcG9pbnQgYW5kIHN1Z2dlc3Rpb24uDQoNCkkgd2lsbCBjaGVjayBhbmQgZml4
+IHNvdXJjZSBjb2RlLg0KDQpUaGFuayB5b3UgZm9yIHlvdXIgYWR2aWNlLg0KDQpCUi4NCkNocmlz
+Lg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBEYXZpZCBCaW5kZXJtYW4g
+W21haWx0bzpkY2IzMTRAaG90bWFpbC5jb21dIA0KU2VudDogTW9uZGF5LCBKdWx5IDI3LCAyMDE1
+IDc6MDEgUE0NClRvOiBQYXJrLCBDaHJpczsgS2ltLCBKb2hubnk7IEtpbSwgUmFjaGVsOyBMZWUs
+IERlYW47IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IGxpbnV4
+LTQuMi1yYzQvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2xpbnV4X21vbi5jOjI2NDogbWVtb3J5
+IGxlYWsgPw0KDQpIZWxsbyB0aGVyZSwNCg0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18NCj4gYnV0IEl0IGlzIG5vdCBtZW1vcnkgbGVhayBiZWNhdXNlIElmIHR4IHF1ZXVlIGlzIGNv
+bXBsZXRlLCBrZnJlZSgpIGlzIA0KPiBjYWxsZWQgaW4gbWdtdF90eF9jb21wbGV0ZSgpIGZ1bnRp
+b24uDQoNCk1heWJlIEkndmUgYmVlbiBzbGlnaHRseSBsZXNzIHRoYW4gY2xlYXIuIEknbGwgaGF2
+ZSBhbm90aGVyIGdvLg0KDQpUaGVyZSBpcyBhIGNhbGwgdG8ga21hbGxvYyBhcm91bmQgbGluZSAy
+NTAuDQoNClNvdXJjZSBjb2RlIGlzDQoNCsKgwqDCoCBtZ210X3R4ID0ga21hbGxvYyhzaXplb2Yo
+c3RydWN0IHR4X2NvbXBsZXRlX21vbl9kYXRhKSwgR0ZQX0FUT01JQyk7DQoNCkEgZmV3IGxpbmVz
+IGxhdGVyIGlzIGEgc2Vjb25kIGNhbGwgdG8ga21hbGxvYw0KDQrCoMKgIG1nbXRfdHgtPmJ1ZmYg
+PSBrbWFsbG9jKGxlbiwgR0ZQX0FUT01JQyk7DQoNCklmIHRoZSBzZWNvbmQgY2FsbCBmYWlscywg
+dGhlbiBwcm9wZXIgdGlkeXVwIHdvdWxkIG5vcm1hbGx5IGluY2x1ZGUgY2FsbGluZyBrZnJlZSBm
+b3IgdGhlIGZpcnN0IGNhbGwuIFRoaXMgZG9lc24ndCBoYXBwZW4gaW4gdGhlIGVycm9yIGhhbmRs
+aW5nIGNvZGUgZm9yIHRoZSBzZWNvbmQgY2FsbC4NCg0KwqDCoCBpZiAobWdtdF90eC0+YnVmZiA9
+PSBOVUxMKSB7DQrCoMKgwqDCoMKgwqDCoCBQUklOVF9FUigiRmFpbGVkIHRvIGFsbG9jYXRlIG1l
+bW9yeSBmb3IgbWdtdF90eCBidWZmXG4iKTsNCsKgwqDCoMKgwqDCoMKgIHJldHVybiBXSUxDX0ZB
+SUw7DQrCoMKgwqAgfQ0KDQpOb3QgYSBiaWcgYnVnLCBJIGFkbWl0LCBidXQgbWlnaHQgYmUgd29y
+dGggZml4aW5nLg0KU29tZXRoaW5nIGxpa2UNCg0KwqDCoCBpZiAobWdtdF90eC0+YnVmZiA9PSBO
+VUxMKSB7DQrCoMKgwqDCoMKgwqDCoCBrZnJlZShtZ210KTsNCsKgwqDCoMKgwqDCoMKgIFBSSU5U
+X0VSKCJGYWlsZWQgdG8gYWxsb2NhdGUgbWVtb3J5IGZvciBtZ210X3R4IGJ1ZmZcbiIpOw0KwqDC
+oMKgwqDCoMKgwqAgcmV0dXJuIFdJTENfRkFJTDsNCsKgwqDCoCB9DQoNCndvdWxkIHByb2JhYmx5
+IGZpeCBpdC4gDQoNCk15IGFwb2xvZ2llcyBmb3Igbm90IGJlaW5nIGNsZWFyIGVhcmxpZXIuDQoN
+Cg0KUmVnYXJkcw0KDQpEYXZpZCBCaW5kZXJtYW4NCg0KDQo+ICANCj4gU291cmNlIGNvZGUgaXMN
+Cj4gIA0KPiAgICAgIGdfbGludXhfd2xhbi0+b3VwLndsYW5fYWRkX21nbXRfdG9fdHhfcXVlKG1n
+bXRfdHgsIG1nbXRfdHgtPmJ1ZmYsIA0KPiBtZ210X3R4LT5zaXplLCBtZ210X3R4X2NvbXBsZXRl
+KTsNCj4gIA0KPiAgICAgIHN0YXRpYyB2b2lkIG1nbXRfdHhfY29tcGxldGUodm9pZCAqcHJpdiwg
+aW50IHN0YXR1cykgDQo+ICAgICB7IA0KPiAgICAgICAgICAuLi4gDQo+ICAgICAgICAgIGtmcmVl
+KHB2X2RhdGEtPmJ1ZmYpOyANCj4gICAgICAgICAga2ZyZWUocHZfZGF0YSk7IA0KPiAgICAgIH0N
+Cj4gIA0KPiBCUi4gDQo+IENocmlzDQo+ICANCj4gT24gMjAxNeuFhCAwN+yblCAyN+ydvCAxNzoy
+MCwgRGF2aWQgQmluZGVybWFuIHdyb3RlOiANCj4gIA0KPiBIZWxsbyB0aGVyZSwNCj4gIA0KPiBb
+bGludXgtNC4yLXJjNC9kcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvbGludXhfbW9uLmM6MjY0XTog
+KGVycm9yKSANCj4gTWVtb3J5IGxlYWs6IG1nbXRfdHgNCj4gIA0KPiBTb3VyY2UgY29kZSBpcw0K
+PiAgDQo+ICAgICAgbWdtdF90eC0+YnVmZiA9IGttYWxsb2MobGVuLCBHRlBfQVRPTUlDKTsgDQo+
+ICAgICAgaWYgKG1nbXRfdHgtPmJ1ZmYgPT0gTlVMTCkgeyANCj4gICAgICAgICAgUFJJTlRfRVIo
+IkZhaWxlZCB0byBhbGxvY2F0ZSBtZW1vcnkgZm9yIG1nbXRfdHggYnVmZlxuIik7IA0KPiAgICAg
+ICAgICByZXR1cm4gV0lMQ19GQUlMOw0KPiAgDQo+ICAgICAgfQ0KPiAgDQo+IFN1Z2dlc3QgYWRk
+IG1pc3NpbmcgY2FsbCB0byBrZnJlZS4gDQo+ICANCj4gIA0KPiBSZWdhcmRzDQo+ICANCj4gRGF2
+aWQgQmluZGVybWFuDQo+ICANCj4gIA0KPiAgDQogCQkgCSAgIAkJICANCg==
