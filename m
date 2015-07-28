@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33434 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbbGaFZ5 (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:35665 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755362AbbG1Iax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 01:25:57 -0400
-From: Shraddha Barke <shraddha.6596@gmail.com>
-To: Dean Lee <dean.lee@atmel.com>, Rachel Kim <rachel.kim@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Cc: Shraddha Barke <shraddha.6596@gmail.com>
-Subject: [PATCH] Staging: wilc1000 :Insert blank line after declaration
-Date: Fri, 31 Jul 2015 10:55:40 +0530
-Message-Id: <1438320340-7716-1-git-send-email-shraddha.6596@gmail.com> (sfid-20150731_072617_961998_F1DC3DB7)
+	Tue, 28 Jul 2015 04:30:53 -0400
+Received: by wibxm9 with SMTP id xm9so145925067wib.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 01:30:51 -0700 (PDT)
+From: Adrien Schildknecht <adrien+dev@schischi.me>
+To: johannes@sipsolutions.net, davem@davemloft.net,
+	thomas@net.t-labs.tu-berlin.de
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Adrien Schildknecht <adrien+dev@schischi.me>
+Subject: [PATCH] mac80211: fix invalid read in minstrel_sort_best_tp_rates()
+Date: Tue, 28 Jul 2015 10:30:16 +0200
+Message-Id: <1438072216-19228-1-git-send-email-adrien+dev@schischi.me> (sfid-20150728_103201_012821_805C7127)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following checkpatch.pl warning:
+At the last iteration of the loop, j may equal zero and thus
+tp_list[j - 1] causes an invalid read.
+Changed the logic of the loop so that j - 1 is always >= 0.
 
-WARNING: Missing a blank line after declarations
-Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
+Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/rc80211_minstrel.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 1143282..0f31d63 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -1094,6 +1094,7 @@ void ProcessCharWid(char *pcPacket, s32 *ps32PktLen,
- 	u8 *pu8val = (u8 *)ps8WidVal;
- 	u8 u8val = 0;
- 	s32 s32PktLen = *ps32PktLen;
-+
- 	if (pstrWID == NULL) {
- 		PRINT_WRN(CORECONFIG_DBG, "Can't set CHAR val 0x%x ,NULL structure\n", u8val);
- 		return;
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 247552a..3ece7d1 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -92,14 +92,15 @@ int minstrel_get_tp_avg(struct minstrel_rate *mr, int prob_ewma)
+ static inline void
+ minstrel_sort_best_tp_rates(struct minstrel_sta_info *mi, int i, u8 *tp_list)
+ {
+-	int j = MAX_THR_RATES;
+-	struct minstrel_rate_stats *tmp_mrs = &mi->r[j - 1].stats;
++	int j;
++	struct minstrel_rate_stats *tmp_mrs;
+ 	struct minstrel_rate_stats *cur_mrs = &mi->r[i].stats;
+ 
+-	while (j > 0 && (minstrel_get_tp_avg(&mi->r[i], cur_mrs->prob_ewma) >
+-	       minstrel_get_tp_avg(&mi->r[tp_list[j - 1]], tmp_mrs->prob_ewma))) {
+-		j--;
++	for (j = MAX_THR_RATES; j > 0; --j) {
+ 		tmp_mrs = &mi->r[tp_list[j - 1]].stats;
++		if (minstrel_get_tp_avg(&mi->r[i], cur_mrs->prob_ewma) <=
++		    minstrel_get_tp_avg(&mi->r[tp_list[j - 1]], tmp_mrs->prob_ewma))
++			break;
+ 	}
+ 
+ 	if (j < MAX_THR_RATES - 1)
 -- 
-2.1.0
+2.4.6
 
