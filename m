@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:61669 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752581AbbGOUDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2015 16:03:15 -0400
-Subject: Re: iwlwifi: Microcode SW error detected. Restarting 0x2000000.
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-References: <55A43355.2070302@gmx.de>
- <CANUX_P3hndEGmrkUrW2=UjDXU2m=V7o01kabnS_7R-t0nQ0mTA@mail.gmail.com>
- <55A65F98.2030304@gmx.de>
- <CANUX_P20BhjPym8Mn1gf4ELMJOA26RjL3y0AVB_M6qjC5zReqQ@mail.gmail.com>
- <55A6B287.9040808@gmx.de>
- <CANUX_P095t=cUBs5yfAtMGdYCqJEejVo-PtRvH8azoszLS98qA@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>
-From: =?UTF-8?Q?Toralf_F=c3=b6rster?= <toralf.foerster@gmx.de>
-Message-ID: <55A6BC7E.1000102@gmx.de> (sfid-20150715_220331_507644_E1A9DC07)
-Date: Wed, 15 Jul 2015 22:03:10 +0200
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48719 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434AbbG1QXh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2015 12:23:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: remove NULL ptr deref in variable init of ath10k_monitor_vdev_start
+References: <1438024935-3946-1-git-send-email-linville@tuxdriver.com>
+	<55B70EEF.9070205@qti.qualcomm.com>
+	<20150728143124.GB17081@tuxdriver.com>
+Date: Tue, 28 Jul 2015 19:23:25 +0300
+In-Reply-To: <20150728143124.GB17081@tuxdriver.com> (John W. Linville's
+	message of "Tue, 28 Jul 2015 10:31:25 -0400")
+Message-ID: <87a8ug8d4y.fsf@kamboji.qca.qualcomm.com> (sfid-20150728_182340_768133_7FE43AD5)
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P095t=cUBs5yfAtMGdYCqJEejVo-PtRvH8azoszLS98qA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/15/2015 09:47 PM, Emmanuel Grumbach wrote:
-> Fritz!Box - oh well. We've had lots of issues with this kind of APs.
-> 
-> There is already an open bug:
-> https://bugzilla.kernel.org/show_bug.cgi?id=97291
-> 
-AH thx.
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-FWIW it worked flawlessly since Dec last year so far - no software upgrade at the fritz box nor any hardware change.
-So the current kernel uncovered then an (existing hidden ?) issue, right ?
+> On Tue, Jul 28, 2015 at 10:41:11AM +0530, Vasanthakumar Thiagarajan wrote:
+>> On Tuesday 28 July 2015 12:52 AM, John W. Linville wrote:
+>> >In ath10k_monitor_vdev_start, chandef is initialized to NULL and then
+>> >channel is immediately thereafter initialized to chandef->chan (i.e.
+>> >NULL->chan).  This appears to be some sort of cut-n-paste error, since
+>> >the same assignment is done later (i.e. after chandef has been properly
+>> >assigned to a non-NULL value).  So, let's just remove this "brown paper
+>> >bag" typo/thinko... :-)
+>> >
+>> >Coverity CID #1309505
+>> >
+>> >Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
+[...]
+
+>> There is a similar change integrated recently,
+>> https://github.com/kvalo/ath/commit/19be9e9a7ac7e6050eab426283d2a87593cf6e82
+>
+> OK.  I don't see much point in the NULL assignment for channel, but the main
+> point is to avoide the chandef->chan part.
+
+Yeah, that was an oversight in my review. Want to send a patch to fix
+that? :)
 
 -- 
-Toralf, pgp key: 872AE508 0076E94E
+Kalle Valo
