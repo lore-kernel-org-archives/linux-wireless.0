@@ -1,57 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22594 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbbG2GyU (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:48057 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932223AbbG1ItR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 02:54:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Enrico Tagliavini <enrico.tagliavini@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: QCA6174 hw2.1 irq_mode=0 broken on 4.2-rc3, working on 4.1.2
-References: <CAMQd7mbWC7rj8-eU7Jv21ehT8KrpC=L=xWxzDQxHEU_ePNSdUg@mail.gmail.com>
-	<CA+BoTQmd0Uoi=2MNMsDXYe1yKsYa3P8uvVzWwXoMynQGtjeD4w@mail.gmail.com>
-	<CAMQd7maioLviTaLHp+f03HafABijKD_d92K_SRO8XS51poKGqg@mail.gmail.com>
-	<CA+BoTQkA0k1RBwzKFchcWebuWUmdoaqvaAq4BRz2o3C-GGUCog@mail.gmail.com>
-	<CAMQd7ma7hehYLBf-5hUD0sViUwWGX8vy7ENXuBi8Q49F88A45Q@mail.gmail.com>
-	<CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
-Date: Wed, 29 Jul 2015 09:54:06 +0300
-In-Reply-To: <CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 29 Jul 2015 07:28:19 +0200")
-Message-ID: <871tfr8ne9.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_085425_322909_31E1EC0F)
+	Tue, 28 Jul 2015 04:49:17 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/21] staging: wilc1000: remove multiple blank lines
+Date: Tue, 28 Jul 2015 17:47:30 +0900
+Message-ID: <1438073261-28315-12-git-send-email-tony.cho@atmel.com> (sfid-20150728_104925_286777_3DD2502A)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: "Jude.Lee" <jude.lee@atmel.com>
 
->> This wont work for bisecting. I have to setup something else. Is
->> it ok if I restrict the bisect on the ath10k tree? That has enough
->> commit already to begin with, plus I'm going to be on the road in less
->> than two weeks.
->
-> As long as you establish a working and a non-working commit id on
-> kvalo tree it should be fine I guess.
+This patch removes the warnings reported by checkpatch.pl for using
+multiple blank lines.
 
-And you can always limit the bisect to a certain directory, but the risk
-here is that if the regression is outside ath10k bisect won't find it.
-So you need to carefully consider is it safe to do or not. From the man
-page:
+Signed-off-by: Jude.Lee <jude.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
-"Cutting down bisection by giving more parameters to bisect start
-
-       You can further cut down the number of trials, if you know what
-       part of the tree is involved in the problem you are tracking
-       down, by specifying path parameters when issuing the bisect start
-       command:
-
-           $ git bisect start -- arch/i386 include/asm-i386"
-
-Also if you can even just narrow down the regression to a smaller set of
-patches, let's say few hundred, might make it easier to find the
-regression.
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 9059c8d..3b4b01b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -8,7 +8,6 @@
+  *  @version	1.0
+  */
+ 
+-
+ #ifndef CORECONFIGURATOR_H
+ #define CORECONFIGURATOR_H
+ 
+@@ -42,7 +41,6 @@ extern u16 g_num_total_switches;
+ #define AID_LEN                 2
+ #define IE_HDR_LEN              2
+ 
+-
+ /* Operating Mode: SET */
+ #define SET_CFG              0
+ /* Operating Mode: GET */
+@@ -59,15 +57,12 @@ extern u16 g_num_total_switches;
+ #define MAC_CONNECTED                1
+ #define MAC_DISCONNECTED             0
+ 
+-
+-
+ /*****************************************************************************/
+ /* Function Macros                                                           */
+ /*****************************************************************************/
+ #define MAKE_WORD16(lsb, msb) ((((u16)(msb) << 8) & 0xFF00) | (lsb))
+ #define MAKE_WORD32(lsw, msw) ((((u32)(msw) << 16) & 0xFFFF0000) | (lsw))
+ 
+-
+ /*****************************************************************************/
+ /* Type Definitions                                                                                                                       */
+ /*****************************************************************************/
+@@ -140,7 +135,6 @@ typedef struct {
+ 	u16 u16RespIEsLen;
+ } tstrConnectRespInfo;
+ 
+-
+ typedef struct {
+ 	u8 au8bssid[6];
+ 	u8 *pu8ReqIEs;
+@@ -150,8 +144,6 @@ typedef struct {
+ 	u16 u16ConnectStatus;
+ } tstrConnectInfo;
+ 
+-
+-
+ typedef struct {
+ 	u16 u16reason;
+ 	u8 *ie;
 -- 
-Kalle Valo
+1.9.1
+
