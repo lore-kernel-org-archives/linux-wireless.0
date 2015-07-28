@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11637 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751261AbbG0MC5 (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:33710 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754865AbbG1IHt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2015 08:02:57 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6RC05OT013330
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 05:02:56 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1vv9ynvqy6-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2015 05:02:56 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwifiex: add missing skb_push() in mwifiex_check_uap_capabilties
-Date: Mon, 27 Jul 2015 05:02:27 -0700
-Message-ID: <1437998547-3592-1-git-send-email-akarwar@marvell.com> (sfid-20150727_140300_469362_5DF358ED)
+	Tue, 28 Jul 2015 04:07:49 -0400
+Received: by laah7 with SMTP id h7so63699470laa.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 01:07:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
+References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+ <CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
+ <CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
+ <CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
+ <CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com> <CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Tue, 28 Jul 2015 10:07:28 +0200
+Message-ID: <CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com> (sfid-20150728_100821_266664_0FDD0316)
+Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For PCIe/USB chipsets, preallocated skb buffers are reused for
-event handling. mwifiex_check_uap_capabilties() performs
-skb_pull(). This patch adds missing skb_push() to restore skb's
-data pointer/length.
+On Tue, Jul 28, 2015 at 5:47 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+> Those are some high values (eg from noise/spur somewhere) and the
+> driver is deciding to program in -110. So the radio thinks its deaf.
+That made me think... I have a second ath9k device, this time with an
+AR9300 (note, this is 3x3 instead of 2x2). I have set it up with
+similar settings as the AR9227 (= AP mode) and this is the result:
+# cat /sys/kernel/debug/ieee80211/phy0/ath9k/dump_nfcal
+Channel Noise Floor : -95
+Chain | privNF | # Readings | NF Readings
+0       -122    5               -122 -122 -121 -122 -121
+1       -119    5               -119 -119 -119 -119 -119
+2       -121    5               -121 -121 -120 -120 -121
 
-This bug was introduced by commit debfc6008169 ("mwifiex: update
-AP WMM settings from BSS_START event")
+The values on that AR9300 device seem to be much better.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
- drivers/net/wireless/mwifiex/uap_event.c | 2 ++
- 1 file changed, 2 insertions(+)
+While I was at it, here is the output from a third device (TP-Link
+TL-WR1043ND), which uses an Atheros AR9100 MAC/BB Rev:7 AR2133 RF
+Rev:a2
+Please note that this device is "STA" mode, whereas all other devices
+are in "AP" mode.
+# cat /sys/kernel/debug/ieee80211/phy0/ath9k/dump_nfcal
+Channel Noise Floor : -95
+Chain | privNF | # Readings | NF Readings
+0       -89     5               -89 -89 -88 -89 -89
+1       -88     5               -88 -88 -88 -88 -88
+2       -81     5               -81 -81 -80 -82 -82
 
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 7bc1f85..4a07476 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -41,6 +41,8 @@ static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
- 	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
- 			 event->data, event->len);
- 
-+	skb_push(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
-+
- 	while ((evt_len >= sizeof(tlv_hdr->header))) {
- 		tlv_hdr = (struct mwifiex_ie_types_data *)curr;
- 		tlv_len = le16_to_cpu(tlv_hdr->header.len);
--- 
-1.8.1.4
+> Hm, I think that explains a few other NICs behaving badly too....
+I have found an OpenWrt ticket where users are describing similar
+problems, but on an TP-Link TL-WR1043ND (AR9100 + AR2133) ([0]
+Now here comes the interesting part: Only my device with the AR9227
+shows bad performance. All other devices (including the AR9100 +
+AR2133 based one, which also ready "bad values") are performing fine -
+at least for me.
 
+
+Regards,
+Martin
+
+[0] https://dev.openwrt.org/ticket/17582
