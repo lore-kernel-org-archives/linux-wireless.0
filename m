@@ -1,113 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:62688 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516AbbG3Kyu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47930 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932179AbbG1Isg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 06:54:50 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 18/19] wil6210: report boot loader error
-Date: Thu, 30 Jul 2015 13:52:06 +0300
-Message-Id: <1438253527-3372-19-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130716_660065_7D8DDEB8)
-In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 28 Jul 2015 04:48:36 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/21] staging: wilc1000: remove the warnings on missing blank line
+Date: Tue, 28 Jul 2015 17:47:24 +0900
+Message-ID: <1438073261-28315-6-git-send-email-tony.cho@atmel.com> (sfid-20150728_104846_533922_A0C43EE8)
+In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Boot loader reports error starting from the struct v2.
+This patch removes the warnings reported by checkpatch.pl on missing a blank
+line after declaration.
 
-Print error info before reset (power up state) in debug mode,
-and print same info as error if target reset timed out.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/ath/wil6210/boot_loader.h |  5 ++++
- drivers/net/wireless/ath/wil6210/main.c        | 37 +++++++++++++++++++++++++-
- 2 files changed, 41 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_sdio.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/boot_loader.h b/drivers/net/wireless/ath/wil6210/boot_loader.h
-index 1b4fd40..c131b5e 100644
---- a/drivers/net/wireless/ath/wil6210/boot_loader.h
-+++ b/drivers/net/wireless/ath/wil6210/boot_loader.h
-@@ -36,6 +36,11 @@ struct bl_dedicated_registers_v1 {
- 	u8	bl_version_minor;		/* 0x880A53 BL ver. minor */
- 	__le16	bl_version_subminor;		/* 0x880A54 BL ver. subminor */
- 	__le16	bl_version_build;		/* 0x880A56 BL ver. build */
-+	/* valid only for version 2 and above */
-+	__le32  bl_assert_code;         /* 0x880A58 BL Assert code */
-+	__le32  bl_assert_blink;        /* 0x880A5C BL Assert Branch */
-+	__le32  bl_reserved[22];        /* 0x880A60 - 0x880AB4 */
-+	__le32  bl_magic_number;        /* 0x880AB8 BL Magic number */
- } __packed;
- 
- /* the following struct is the version 0 struct */
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 4422323..d11a147 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -663,6 +663,7 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
- 		wil_info(wil, "Boot Loader build unknown for struct v0\n");
- 		break;
- 	case 1:
-+	case 2:
- 		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
- 				     sizeof(bl.bl1));
- 		le32_to_cpus(&bl.bl1.boot_loader_ready);
-@@ -705,6 +706,37 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
- 	return 0;
- }
- 
-+static void wil_bl_crash_info(struct wil6210_priv *wil, bool is_err)
-+{
-+	u32 bl_assert_code, bl_assert_blink, bl_magic_number;
-+	u32 bl_ver = wil_r(wil, RGF_USER_BL +
-+			   offsetof(struct bl_dedicated_registers_v0,
-+				    boot_loader_struct_version));
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 632b2b0..6e865d4 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -168,6 +168,7 @@ static int sdio_clear_int(void)
+ #ifndef WILC_SDIO_IRQ_GPIO
+ 	/* uint32_t sts; */
+ 	sdio_cmd52_t cmd;
 +
-+	if (bl_ver < 2)
-+		return;
+ 	cmd.read_write = 0;
+ 	cmd.function = 1;
+ 	cmd.raw = 0;
+@@ -179,6 +180,7 @@ static int sdio_clear_int(void)
+ 	return cmd.data;
+ #else
+ 	uint32_t reg;
 +
-+	bl_assert_code = wil_r(wil, RGF_USER_BL +
-+			       offsetof(struct bl_dedicated_registers_v1,
-+					bl_assert_code));
-+	bl_assert_blink = wil_r(wil, RGF_USER_BL +
-+				offsetof(struct bl_dedicated_registers_v1,
-+					 bl_assert_blink));
-+	bl_magic_number = wil_r(wil, RGF_USER_BL +
-+				offsetof(struct bl_dedicated_registers_v1,
-+					 bl_magic_number));
-+
-+	if (is_err) {
-+		wil_err(wil,
-+			"BL assert code 0x%08x blink 0x%08x magic 0x%08x\n",
-+			bl_assert_code, bl_assert_blink, bl_magic_number);
-+	} else {
-+		wil_dbg_misc(wil,
-+			     "BL assert code 0x%08x blink 0x%08x magic 0x%08x\n",
-+			     bl_assert_code, bl_assert_blink, bl_magic_number);
-+	}
-+}
-+
- static int wil_wait_for_fw_ready(struct wil6210_priv *wil)
+ 	if (!sdio_read_reg(WILC_HOST_RX_CTRL_0, &reg)) {
+ 		g_sdio.dPrint(N_ERR, "[wilc spi]: Failed read reg (%08x)...\n", WILC_HOST_RX_CTRL_0);
+ 		return 0;
+@@ -195,6 +197,7 @@ uint32_t sdio_xfer_cnt(void)
  {
- 	ulong to = msecs_to_jiffies(1000);
-@@ -770,10 +802,13 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	flush_workqueue(wil->wq_service);
- 	flush_workqueue(wil->wmi_wq);
+ 	uint32_t cnt = 0;
+ 	sdio_cmd52_t cmd;
++
+ 	cmd.read_write = 0;
+ 	cmd.function = 1;
+ 	cmd.raw = 0;
+@@ -259,6 +262,7 @@ static int sdio_write_reg(uint32_t addr, uint32_t data)
  
-+	wil_bl_crash_info(wil, false);
- 	rc = wil_target_reset(wil);
- 	wil_rx_fini(wil);
--	if (rc)
-+	if (rc) {
-+		wil_bl_crash_info(wil, true);
- 		return rc;
-+	}
+ 	if ((addr >= 0xf0) && (addr <= 0xff)) {
+ 		sdio_cmd52_t cmd;
++
+ 		cmd.read_write = 1;
+ 		cmd.function = 0;
+ 		cmd.raw = 0;
+@@ -482,6 +486,7 @@ static int sdio_read_reg(uint32_t addr, uint32_t *data)
+ {
+ 	if ((addr >= 0xf0) && (addr <= 0xff)) {
+ 		sdio_cmd52_t cmd;
++
+ 		cmd.read_write = 0;
+ 		cmd.function = 0;
+ 		cmd.raw = 0;
+@@ -776,6 +781,7 @@ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ 	sdio_cmd52_t cmd;
+ 	int loop;
+ 	uint32_t chipid;
++
+ 	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
  
- 	rc = wil_get_bl_info(wil);
- 	if (rc == -EAGAIN && !load_fw) /* ignore RF error if not going up */
+ 	g_sdio.dPrint = func;
+@@ -977,6 +983,7 @@ static int sdio_read_int(uint32_t *int_status)
+ 	}
+ 	{
+ 		int i;
++
+ 		for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+ 			if ((tmp >> (IRG_FLAGS_OFFSET + i)) & 0x1) {
+ 				g_sdio.dPrint(N_ERR, "[wilc sdio]: Unexpected interrupt (1) : tmp=%x, data=%x\n", tmp, cmd.data);
+@@ -1015,6 +1022,7 @@ static int sdio_clear_int_ext(uint32_t val)
+ #ifdef WILC_SDIO_IRQ_GPIO
+ 		{
+ 			uint32_t flags;
++
+ 			flags = val & ((1 << MAX_NUN_INT_THRPT_ENH2) - 1);
+ 			reg = flags;
+ 		}
+@@ -1032,6 +1040,7 @@ static int sdio_clear_int_ext(uint32_t val)
+ 			reg |= (1 << 7);
+ 		if (reg) {
+ 			sdio_cmd52_t cmd;
++
+ 			cmd.read_write = 1;
+ 			cmd.function = 0;
+ 			cmd.raw = 0;
+@@ -1051,6 +1060,7 @@ static int sdio_clear_int_ext(uint32_t val)
+ 			/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+ 			/* Cannot clear multiple interrupts. Must clear each interrupt individually */
+ 			uint32_t flags;
++
+ 			flags = val & ((1 << MAX_NUM_INT) - 1);
+ 			if (flags) {
+ 				int i;
+@@ -1059,6 +1069,7 @@ static int sdio_clear_int_ext(uint32_t val)
+ 				for (i = 0; i < g_sdio.nint; i++) {
+ 					if (flags & 1) {
+ 						sdio_cmd52_t cmd;
++
+ 						cmd.read_write = 1;
+ 						cmd.function = 0;
+ 						cmd.raw = 0;
 -- 
-2.1.4
+1.9.1
 
