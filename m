@@ -1,74 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:60001 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757607AbbGGOgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 10:36:00 -0400
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-To: "David Lin" <dlin@marvell.com>, "Jonas Gorski" <jogo@openwrt.org>,
-	"Chor Teck Law" <ctlaw@marvell.com>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Pete Hsieh" <peteh@marvell.com>
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
- <CAOiHx=ncv=N33-CC-F0=_dovJ=PGsi3MBB3SEMg51fWcyuMmPg@mail.gmail.com>
- <e90aaab05cfd43fe9c05f738d4fc528a@SC-EXCH02.marvell.com>
- <CAOiHx=nnzfURJk6qeoyaV_qX0HPdtKSvZNmSNxKxypURMpNbkA@mail.gmail.com>
- <op.x1edl6b82s3iss@ecaz>
- <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com>
-Date: Tue, 07 Jul 2015 16:35:56 +0200
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39006 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803AbbG2VBY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2015 17:01:24 -0400
+Date: Wed, 29 Jul 2015 14:01:23 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 21/21] staging: wilc1000: update TODO list of WILC1000
+Message-ID: <20150729210123.GA25941@kroah.com> (sfid-20150729_230127_808959_272201F0)
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+ <1438073261-28315-22-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-From: "Imre Kaloz" <kaloz@openwrt.org>
-Message-ID: <op.x1eqt6132s3iss@ecaz> (sfid-20150707_163604_472463_CF202736)
-In-Reply-To: <82abdac15d6a469082af54661922f50c@SC-EXCH03.marvell.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438073261-28315-22-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 07 Jul 2015 15:48:38 +0200, Chor Teck Law <ctlaw@marvell.com>  
-wrote:
+On Tue, Jul 28, 2015 at 05:47:40PM +0900, Tony Cho wrote:
+> The TODO list is updated for the WILC1000 kernel driver. The TODO list
+> contains many items listed in time sequence.
 
->> >> Will change the title from "Marvell Wireless Wi-Fi driver (mwlwifi)"
->> >> to "Marvell 88W8864/88W8897 PCIe driver with AP support".
->> >
->> > As Imre pointed out, mwifiex also supports AP mode, so this is not a
->> > good description.
->
-> We have explained a few times on this... Pls read about the difference  
-> of mwifiex vs mwlwifi. There is a NOTE added to the description of  
-> KConfig of mwlwifi.
->
-> Would the community prefer this description instead: "Marvell  
-> 88W8864/88W8897 driver with MAC80211 support"?
+I don't understand what you mean by "in time sequence"
 
-I have a different suggestion, please read below.
+> 
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+>  drivers/staging/wilc1000/TODO | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
+> index 95199d8..6b745cd 100644
+> --- a/drivers/staging/wilc1000/TODO
+> +++ b/drivers/staging/wilc1000/TODO
+> @@ -1,14 +1,15 @@
+>  TODO:
+> -- remove the defined feature as kernel versions
+> -- remove OS wrapper functions
+> -- remove custom debug and tracing functions
+> +- remove most of warnings reported by checkpatch.pl
 
->> On the short run, changing the description of the drivers could work,
->> but I would suggest dropping (at least) 8897 support from mwifiex in
->> favor of mwlwifi. If supporting the 8766 isn't complicated, I would
->> drop PCIe support completely from there.
->>
->> David, Chor Teck, could you shed some light on the future driver
->> strategy?
->
-> The mwlwifi as it is today, only supports said PCIe devices. There is no  
-> near term plan for any other devices. But we cannot speak for future.  
-> Let's comment based on the current state.
+"most"?  Why not all?
 
-Sure thing, what I was talking about is more like making the driver  
-selection less confusing for the enduser.
+> +- remove OS wrapper functions to use kernel API as is
 
-What I would propose is something along the lines (I have to cheat a bit,  
-I know):
+Why reword this, the original line is just fine.
 
-mwlwifi: "Marvell Avastar (802.11ac) PCIe support"
-mwifiex: "Marvell Avastar (802.11n) support"
-mwl8k :  "Marvell TopDog (802.11n) support"
+>  - rework comments and function headers(also coding style)
+>  - replace all semaphores with mutexes or completions
+> -- make spi and sdio components coexist in one build
 
+Why remove this item?  It's not done and needs to be done.
 
+> +- remove compile warnings related to 64 bit machine
 
-Imre
+That's a given, I'm not enabling the build of the driver until that
+happens.  Please work on that next, coding style fixes can happen after
+that.  As of right now, this driver is marked BROKEN.
 
-PS:
+thanks,
 
-Cheating as in mwl8k supports the 8764 Avastar radio and mwifiex supports  
-11ac, but well...
+greg k-h
