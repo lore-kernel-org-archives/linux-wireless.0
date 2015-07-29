@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:40283 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061AbbGaIji convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44195 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbbG2JeG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 04:39:38 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Stephan Mueller <smueller@chronox.de>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
-	"Jacobson, David" <djacobso@qti.qualcomm.com>
-CC: Oleksij Rempel <linux@rempel-privat.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Theodore Ts'o <tytso@mit.edu>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"nhorman@tuxdriver.com" <nhorman@tuxdriver.com>
-Subject: RE: [PATCH 2/2] ath9k: export HW random number generator
-Date: Fri, 31 Jul 2015 08:39:35 +0000
-Message-ID: <3ec13417acdc48628adaedb68d259b9c@NASANEXM01E.na.qualcomm.com> (sfid-20150731_104346_949074_DF9D0D46)
-References: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
-	<a8b787bd17d94e8899bf1be6131165b2@NASANEXM01E.na.qualcomm.com>
-	<55B60BC9.8040800@rempel-privat.de>	<3945775.m5HblJPgiO@tauon.atsec.com>
- <8738043ith.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8738043ith.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 29 Jul 2015 05:34:06 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Vivek Natarajan <nataraja@qti.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Support different txbf configuration schemes
+References: <1437395401-2765-1-git-send-email-nataraja@qti.qualcomm.com>
+Date: Wed, 29 Jul 2015 12:33:57 +0300
+In-Reply-To: <1437395401-2765-1-git-send-email-nataraja@qti.qualcomm.com>
+	(Vivek Natarajan's message of "Mon, 20 Jul 2015 18:00:00 +0530")
+Message-ID: <87zj2f5muy.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_113411_947395_82F698B1)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+Pouyan & David.
+Vivek Natarajan <nataraja@qti.qualcomm.com> writes:
 
------Original Message-----
-From: Kalle Valo [mailto:kvalo@codeaurora.org] 
-Sent: Friday, July 31, 2015 3:09 PM
-To: Stephan Mueller
-Cc: Oleksij Rempel; Pan, Miaoqing; linville@tuxdriver.com; linux-wireless@vger.kernel.org; Theodore Ts'o; linux-crypto@vger.kernel.org; nhorman@tuxdriver.com
-Subject: Re: [PATCH 2/2] ath9k: export HW random number generator
-
-Stephan Mueller <smueller@chronox.de> writes:
-
->>-rw-rw-r-- 1 lex lex 2564096 Jul 27 11:36 hwrng.out
->>-rw-rw-r-- 1 lex lex 2468394 Jul 27 11:36 hwrng.out.bz2
->>
->>Do i understand it correctly, in case of hwrng bzip was able to find 
->>enough pattern to compressed the data? Even with format overhead?
->>
->>I'm no an expert, help of an expert would be welcome, added some more 
->>people to CC
+> qca61x4 uses the vdev param as a sole sufficient configuration
+> for txbf while qca99x0 enables txbf during peer assoc by
+> combining the vdev param value with peer assoc's vht capabilities
 >
-> This one does not look good for a claim that the RNG produces white 
-> noise. An RNG that is wired up to /dev/hwrng should produce white 
-> noise. Either by having an appropriate noise source or by conditioning 
-> the output of the noise source.
+> This patch gets the appropriate txbf configuration scheme
+> before passing the wmi command to enable the same in the firmware.
 >
-> When conditioning the output, you have to be careful about the entropy claim. 
-> For example, you cannot state that the data stream from your noise 
-> source has close to one bit of entropy for each obtained bit. Thus, 
-> the conditioner must ensure that the data from the noise source is 
-> collected and its entropy is maintained and accumulated.
->
-> However, the hwrandom framework does not provide any conditioning 
-> logic. And I would say that such conditioner logic should not reside 
-> in a driver either. I would say that the discussed RNG does not seem 
-> fit for hooking it up with the hwrandom framework.
+> Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
 
-Based on the discussion I'm going to revert this patch, at least for now.
+The patches don't apply anymore and as they lacking proper sha1 ids I
+cannot fix the conflicts myself, so please rebase. Please always use
+ath.git master branch without _any_ extra patches because that way I can
+usually fix conflicts myself with the help of 3-way merge.
 
---
+Applying: ath10k: Support different txbf configuration schemes
+fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0001 ath10k: Support different txbf configuration schemes
+
+-- 
 Kalle Valo
