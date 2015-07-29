@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:33005 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756915AbbGQHNf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37070 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844AbbG2IQ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 03:13:35 -0400
-Received: by wgmn9 with SMTP id n9so75162412wgm.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2015 00:13:34 -0700 (PDT)
-From: Andreas Fenkart <afenkart@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Fenkart <afenkart@gmail.com>
-Subject: [PATCH 0/4] refactor cmd_node recycling
-Date: Fri, 17 Jul 2015 09:13:02 +0200
-Message-Id: <1437117186-25243-1-git-send-email-afenkart@gmail.com> (sfid-20150717_091339_009960_F0D64CDB)
+	Wed, 29 Jul 2015 04:16:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Nik Nyby <nikolas@gnu.org>
+Cc: linux-wireless@vger.kernel.org, trivial@kernel.org
+Subject: Re: [PATCH v2] ath6kl: Trivial: spell "distribution" correctly in a comment.
+References: <1435378264-13873-1-git-send-email-nikolas@gnu.org>
+	<1435599037-1369-1-git-send-email-nikolas@gnu.org>
+Date: Wed, 29 Jul 2015 11:16:17 +0300
+In-Reply-To: <1435599037-1369-1-git-send-email-nikolas@gnu.org> (Nik Nyby's
+	message of "Mon, 29 Jun 2015 13:30:37 -0400")
+Message-ID: <87twsn750u.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_101749_118239_0515050C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following patches are trying to simplify the code paths used
-to recycle processed commands
+Nik Nyby <nikolas@gnu.org> writes:
 
-Andreas Fenkart (4):
-  mwifiex: remove explicit mwifiex_complete_cmd calls
-  mwifiex: remove redundant reset of cmd_wait_q status
-  mwifiex: remove CMD_F_CANCELED flag
-  mwifiex: simplify mwifiex_complete_cmd
+> This fixes two misspellings of "distribution" in a comment.
+>
+> Signed-off-by: Nik Nyby <nikolas@gnu.org>
 
- drivers/net/wireless/mwifiex/cmdevt.c    | 35 +++++++++++---------------------
- drivers/net/wireless/mwifiex/fw.h        |  1 -
- drivers/net/wireless/mwifiex/sta_ioctl.c |  4 ++--
- drivers/net/wireless/mwifiex/util.c      | 12 ++++-------
- 4 files changed, 18 insertions(+), 34 deletions(-)
+Thanks, applied to ath.git.
 
 -- 
-2.1.4
-
+Kalle Valo
