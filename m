@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:34230 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbbG1OcM (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:32797 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840AbbG2HiG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 10:32:12 -0400
-Received: by wibud3 with SMTP id ud3so183557647wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 07:32:10 -0700 (PDT)
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [RFC 0/4] mac80211: define VHT rate mask logic
-Message-ID: <55B79267.9020706@gmail.com> (sfid-20150728_163215_146762_F7CC26BB)
-Date: Tue, 28 Jul 2015 16:32:07 +0200
+	Wed, 29 Jul 2015 03:38:06 -0400
+Received: by obdeg2 with SMTP id eg2so1312012obd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2015 00:38:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <55B80F21.3090803@gmail.com>
+References: <55B80F21.3090803@gmail.com>
+Date: Wed, 29 Jul 2015 09:38:04 +0200
+Message-ID: <CACRpkdYTJWS7mbw_OJtW78ThQ6jZ7aSoM5uR1SLihV4L+E5vtQ@mail.gmail.com> (sfid-20150729_093811_532663_5B3258D8)
+Subject: Re: Driver for Mediatek MT7630E
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi wrote:
+On Wed, Jul 29, 2015 at 1:24 AM, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> Linus Walleij wrote:
+>
+>> Did anything ever happen to this?
+>>
+>> My daughter has this device in her laptop it seems, sigh.
+>>
+>> I might start fiddling with it unless someone else is already
+>> doing it.
+>
+> Jakub Kicinski was working on it at: https://github.com/kuba-moo/mt7630e
 
-> [...]
-> This patchset has been tested using mac80211/mt76 driver on
-> Buffalo WHR-1166D router running OpenWrt trunk
+Ah yeah that is what I have running. It's a fork of rt2x00 so it's
+missing all fixes since 3.11 or so, just a question of when this
+becomes unsupportable.
 
-mt76 is an out of the tree driver, included only in OpenWrt.
+This code is a complete mashup of Linux and duct-taped Windows
+NDIS-based driver code, my eyes are bleeding from looking at it.
 
-Maybe OpenWrt people should begin sending code to upstream,
-because their tree [1] is full of patches [2] .
+The defines etc patched in have obvious gaps due to other unsupported
+chips such as MT7601u I suspect. I guess it's necessary to also
+look at this in order to not screw things up for 7601.
+https://github.com/porjo/mt7601
 
-[1] http://git.openwrt.org/?p=openwrt.git
-[2] target/linux/* (target/linux/generic/patches-* specifically)
-    and package/kernel/* (package/kernel/mac80211/* for wireless)
+Yours,
+Linus Walleij
