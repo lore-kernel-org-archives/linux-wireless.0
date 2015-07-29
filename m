@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46525 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753204AbbGBLjc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2015 07:39:32 -0400
-Message-ID: <1435837168.2285.8.camel@sipsolutions.net> (sfid-20150702_133935_527438_8B42DAA3)
-Subject: Re: AP + P2P_GO multichan tests with intel7260 as a P2P_CLIENT -
- direct probe issue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
-Date: Thu, 02 Jul 2015 13:39:28 +0200
-In-Reply-To: <CALhHN=ojLBA1AFGz=atjJhv+fJAr-Rkhd0cgYpma_4Rx+HYOaw@mail.gmail.com> (sfid-20150702_114406_759616_5CDED4CB)
-References: <CALhHN=qr6k_a8W-8SGG4CNipB+Ovm3qxJnzKd0yL6JUYD4eT_Q@mail.gmail.com>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF2DE@HASMSX110.ger.corp.intel.com>
-	 <CABPxzYK1yvRuYnZP4xgywJy0wEx28MCZWw-G09kr7MNzZ6MMxA@mail.gmail.com>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A04DADF415@HASMSX110.ger.corp.intel.com>
-	 <CABPxzYKPAf+bXdMoiY5DYz6HPMF=C0wQ0c4igJnTqmNAuk_yvA@mail.gmail.com>
-	 <1435082418.2777.11.camel@ipeer-box>
-	 <CB3B3D4774441E42AA3EA0E1BA8230A04DAE2088@HASMSX110.ger.corp.intel.com>
-	 <CALhHN=okaQGRQAPdLm1dxCaYFDBD3bq4=yr2eMU_55LDtzoHLw@mail.gmail.com>
-	 <1435822032.2285.2.camel@sipsolutions.net>
-	 <CALhHN=ojLBA1AFGz=atjJhv+fJAr-Rkhd0cgYpma_4Rx+HYOaw@mail.gmail.com>
-	 (sfid-20150702_114406_759616_5CDED4CB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22594 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751593AbbG2GyU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2015 02:54:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Enrico Tagliavini <enrico.tagliavini@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: QCA6174 hw2.1 irq_mode=0 broken on 4.2-rc3, working on 4.1.2
+References: <CAMQd7mbWC7rj8-eU7Jv21ehT8KrpC=L=xWxzDQxHEU_ePNSdUg@mail.gmail.com>
+	<CA+BoTQmd0Uoi=2MNMsDXYe1yKsYa3P8uvVzWwXoMynQGtjeD4w@mail.gmail.com>
+	<CAMQd7maioLviTaLHp+f03HafABijKD_d92K_SRO8XS51poKGqg@mail.gmail.com>
+	<CA+BoTQkA0k1RBwzKFchcWebuWUmdoaqvaAq4BRz2o3C-GGUCog@mail.gmail.com>
+	<CAMQd7ma7hehYLBf-5hUD0sViUwWGX8vy7ENXuBi8Q49F88A45Q@mail.gmail.com>
+	<CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
+Date: Wed, 29 Jul 2015 09:54:06 +0300
+In-Reply-To: <CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 29 Jul 2015 07:28:19 +0200")
+Message-ID: <871tfr8ne9.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_085425_322909_31E1EC0F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-07-02 at 11:44 +0200, Janusz Dziedzic wrote:
-> 
-> > The issue above can probably easily fixed by doing the BSS update 
-> > after
-> > the "direct probe responded" though, no? Like this:
-> > https://p.sipsolutions.net/67f9212f0f9f3642.txt
-> > 
-> This was my first idea, but in such case I suspect we will send
-> another direct probe while  bss->proberesp_ies will be not set and
-> ieee80211_probe_auth() will send second probe_req?
-> 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-But why would it not be set? We do rely on ieee80211_rx_bss_info()
-setting it, after all.
+>> This wont work for bisecting. I have to setup something else. Is
+>> it ok if I restrict the bisect on the ath10k tree? That has enough
+>> commit already to begin with, plus I'm going to be on the road in less
+>> than two weeks.
+>
+> As long as you establish a working and a non-working commit id on
+> kvalo tree it should be fine I guess.
 
-johannes
+And you can always limit the bisect to a certain directory, but the risk
+here is that if the regression is outside ath10k bisect won't find it.
+So you need to carefully consider is it safe to do or not. From the man
+page:
+
+"Cutting down bisection by giving more parameters to bisect start
+
+       You can further cut down the number of trials, if you know what
+       part of the tree is involved in the problem you are tracking
+       down, by specifying path parameters when issuing the bisect start
+       command:
+
+           $ git bisect start -- arch/i386 include/asm-i386"
+
+Also if you can even just narrow down the regression to a smaller set of
+patches, let's say few hundred, might make it easier to find the
+regression.
+
+-- 
+Kalle Valo
