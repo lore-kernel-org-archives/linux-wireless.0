@@ -1,141 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:3963 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932509AbbGJSbV (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:33254 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261AbbG2JCm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2015 14:31:21 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 1/7] brcmfmac: Add support for host platform NVRAM loading.
-Date: Fri, 10 Jul 2015 20:31:05 +0200
-Message-ID: <1436553071-32423-2-git-send-email-arend@broadcom.com> (sfid-20150710_203132_476018_E25A2E79)
-In-Reply-To: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
+	Wed, 29 Jul 2015 05:02:42 -0400
+Received: by wicmv11 with SMTP id mv11so210077300wic.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2015 02:02:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <871tfr8ne9.fsf@kamboji.qca.qualcomm.com>
+References: <CAMQd7mbWC7rj8-eU7Jv21ehT8KrpC=L=xWxzDQxHEU_ePNSdUg@mail.gmail.com>
+	<CA+BoTQmd0Uoi=2MNMsDXYe1yKsYa3P8uvVzWwXoMynQGtjeD4w@mail.gmail.com>
+	<CAMQd7maioLviTaLHp+f03HafABijKD_d92K_SRO8XS51poKGqg@mail.gmail.com>
+	<CA+BoTQkA0k1RBwzKFchcWebuWUmdoaqvaAq4BRz2o3C-GGUCog@mail.gmail.com>
+	<CAMQd7ma7hehYLBf-5hUD0sViUwWGX8vy7ENXuBi8Q49F88A45Q@mail.gmail.com>
+	<CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
+	<871tfr8ne9.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 29 Jul 2015 11:02:40 +0200
+Message-ID: <CAMQd7mY+upL+t9q0yJ0uL_jw_STEKL+hhe1PF_D5yPwfTkcgZg@mail.gmail.com> (sfid-20150729_110247_432006_D48C568C)
+Subject: Re: QCA6174 hw2.1 irq_mode=0 broken on 4.2-rc3, working on 4.1.2
+From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Yeah that's what I meant. My idea was to first bisect only the ath10k
+directory, so restricting the bisect on the commits touching stuff
+there. I guess if the issue is more broad it will come up somewhere
+else as well, so this is a good starting point, I hope. Thank you for
+pointing it out though, this will actually be the first time I do a
+proper bisect.
 
-Host platforms such as routers supported by OpenWRT can
-support NVRAM reading directly from internal NVRAM store.
-With this patch the nvram load routines will fall back to
-this method when there is no nvram file and support is
-available in the kernel.
+Also do you want me to bisect Kalle's sources or Linus' master? By
+what Michał said I guess Kalle's but I ask to be sure.
 
-Cc: Rafał Miłecki <zajec5@gmail.com>
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi Rafał,
+Also to be clear: I'm using Linus' sources at the moment, as provided
+by Fedora rawhide.
 
-Hopefully I resolved the merge conflicts properly. It still works as
-intended for x86. Can you verify this patch for MIPS?
+For me it's the same, so let me know what you prefer and is more
+useful to solve this issue.
 
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 43 ++++++++++++++--------
- 1 file changed, 27 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-index 743f16b..1503937 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-@@ -19,6 +19,7 @@
- #include <linux/device.h>
- #include <linux/firmware.h>
- #include <linux/module.h>
-+#include <linux/bcm47xx_nvram.h>
- 
- #include "debug.h"
- #include "firmware.h"
-@@ -146,7 +147,7 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
- 	u32 cplen;
- 
- 	c = nvp->data[nvp->pos];
--	if (!is_nvram_char(c)) {
-+	if (!is_nvram_char(c) && (c != ' ')) {
- 		/* key,value pair complete */
- 		ekv = (u8 *)&nvp->data[nvp->pos];
- 		skv = (u8 *)&nvp->data[nvp->entry];
-@@ -207,6 +208,7 @@ static int brcmf_init_nvram_parser(struct nvram_parser *nvp,
- 
- 	memset(nvp, 0, sizeof(*nvp));
- 	nvp->data = data;
-+
- 	/* Limit size to MAX_NVRAM_SIZE, some files contain lot of comment */
- 	if (data_len > BRCMF_FW_MAX_NVRAM_SIZE)
- 		size = BRCMF_FW_MAX_NVRAM_SIZE;
-@@ -426,19 +428,34 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 	struct brcmf_fw *fwctx = ctx;
- 	u32 nvram_length = 0;
- 	void *nvram = NULL;
-+	u8 *data = NULL;
-+	size_t data_len;
-+	bool raw_nvram;
- 
- 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
--	if (!fw && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
--		goto fail;
-+	if ((fw) && (fw->data)) {
-+		data = (u8 *)fw->data;
-+		data_len = fw->size;
-+		raw_nvram = false;
-+	} else {
-+		data = bcm47xx_nvram_get_contents(&data_len);
-+		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
-+			goto fail;
-+		raw_nvram = true;
-+	}
- 
--	if (fw) {
--		nvram = brcmf_fw_nvram_strip(fw->data, fw->size, &nvram_length,
-+	if (data) {
-+		nvram = brcmf_fw_nvram_strip(data, data_len, &nvram_length,
- 					     fwctx->domain_nr, fwctx->bus_nr);
--		release_firmware(fw);
--		if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
--			goto fail;
-+		if (raw_nvram)
-+			bcm47xx_nvram_release_contents(data);
- 	}
- 
-+	if (fw)
-+		release_firmware(fw);
-+	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
-+		goto fail;
-+
- 	fwctx->done(fwctx->dev, fwctx->code, nvram, nvram_length);
- 	kfree(fwctx);
- 	return;
-@@ -473,15 +490,9 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- 	if (!ret)
- 		return;
- 
--	/* when nvram is optional call .done() callback here */
--	if (fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL) {
--		fwctx->done(fwctx->dev, fw, NULL, 0);
--		kfree(fwctx);
--		return;
--	}
-+	brcmf_fw_request_nvram_done(NULL, fwctx);
-+	return;
- 
--	/* failed nvram request */
--	release_firmware(fw);
- fail:
- 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
- 	device_release_driver(fwctx->dev);
--- 
-1.9.1
-
+On 29 July 2015 at 08:54, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>>> This wont work for bisecting. I have to setup something else. Is
+>>> it ok if I restrict the bisect on the ath10k tree? That has enough
+>>> commit already to begin with, plus I'm going to be on the road in less
+>>> than two weeks.
+>>
+>> As long as you establish a working and a non-working commit id on
+>> kvalo tree it should be fine I guess.
+>
+> And you can always limit the bisect to a certain directory, but the risk
+> here is that if the regression is outside ath10k bisect won't find it.
+> So you need to carefully consider is it safe to do or not. From the man
+> page:
+>
+> "Cutting down bisection by giving more parameters to bisect start
+>
+>        You can further cut down the number of trials, if you know what
+>        part of the tree is involved in the problem you are tracking
+>        down, by specifying path parameters when issuing the bisect start
+>        command:
+>
+>            $ git bisect start -- arch/i386 include/asm-i386"
+>
+> Also if you can even just narrow down the regression to a smaller set of
+> patches, let's say few hundred, might make it easier to find the
+> regression.
+>
+> --
+> Kalle Valo
