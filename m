@@ -1,33 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:33765 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750717AbbGHHUL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56267 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbbG2JaT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 03:20:11 -0400
-Received: by wiwl6 with SMTP id l6so335432277wiw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Jul 2015 00:20:10 -0700 (PDT)
+	Wed, 29 Jul 2015 05:30:19 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Enrico Tagliavini <enrico.tagliavini@gmail.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: QCA6174 hw2.1 irq_mode=0 broken on 4.2-rc3, working on 4.1.2
+References: <CAMQd7mbWC7rj8-eU7Jv21ehT8KrpC=L=xWxzDQxHEU_ePNSdUg@mail.gmail.com>
+	<CA+BoTQmd0Uoi=2MNMsDXYe1yKsYa3P8uvVzWwXoMynQGtjeD4w@mail.gmail.com>
+	<CAMQd7maioLviTaLHp+f03HafABijKD_d92K_SRO8XS51poKGqg@mail.gmail.com>
+	<CA+BoTQkA0k1RBwzKFchcWebuWUmdoaqvaAq4BRz2o3C-GGUCog@mail.gmail.com>
+	<CAMQd7ma7hehYLBf-5hUD0sViUwWGX8vy7ENXuBi8Q49F88A45Q@mail.gmail.com>
+	<CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
+	<871tfr8ne9.fsf@kamboji.qca.qualcomm.com>
+	<CAMQd7mY+upL+t9q0yJ0uL_jw_STEKL+hhe1PF_D5yPwfTkcgZg@mail.gmail.com>
+Date: Wed, 29 Jul 2015 12:30:07 +0300
+In-Reply-To: <CAMQd7mY+upL+t9q0yJ0uL_jw_STEKL+hhe1PF_D5yPwfTkcgZg@mail.gmail.com>
+	(Enrico Tagliavini's message of "Wed, 29 Jul 2015 11:02:40 +0200")
+Message-ID: <874mkn71ls.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_113025_170723_97E4DEB2)
 MIME-Version: 1.0
-In-Reply-To: <CAMArcTVS5SaE605vf1yQgpUbXVaaoDS2Qcn1KJJnMVbrjbWkKg@mail.gmail.com>
-References: <CAFSTUk6UasnV4P3B1TR7kSx1ToQTC+PC2hU6PynDBWJ3ALJzyg@mail.gmail.com>
-	<55965CF8.20208@thinktube.com>
-	<CAMArcTUvpBpTB=woMiY2mET+KOUKNLvY53Exb1F6vB+aztq6Lw@mail.gmail.com>
-	<CAFSTUk6u6rNF1njVBMFT4VAKPZ0Y6BvHB3mJEu7H7oM3tma5tQ@mail.gmail.com>
-	<559AD13B.7030105@thinktube.com>
-	<CAFSTUk7T_kA0OxuUApQp0Nj0kqv0pS945Y+KssokYa2Ow2F+-g@mail.gmail.com>
-	<CAMArcTVS5SaE605vf1yQgpUbXVaaoDS2Qcn1KJJnMVbrjbWkKg@mail.gmail.com>
-Date: Wed, 8 Jul 2015 16:20:10 +0900
-Message-ID: <CAMArcTUjCviPJUBO6BQKt0MT29-KC7sM=eeF87OHZWQYO50xJw@mail.gmail.com> (sfid-20150708_092016_354874_6B70704A)
-Subject: Re: mesh support on rtl8192cu
-From: Taehee Yoo <ap420073@gmail.com>
-To: Richard Palethorpe <richard@lm-technologies.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bruno Randolf <br1@thinktube.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard, I do apologize for my mistake.
-I found that the rtl8192cu can't send the beacon frame at mesh mode.
-Sender side wireshark shows sending beacon frame. but receiver side
-wireshark doesn't show the rtl8192cu's mesh beacon.
-I think connection issue's cause is rtl8192cu's wrong beacon code.
+Enrico Tagliavini <enrico.tagliavini@gmail.com> writes:
+
+> Yeah that's what I meant. My idea was to first bisect only the ath10k
+> directory, so restricting the bisect on the commits touching stuff
+> there. I guess if the issue is more broad it will come up somewhere
+> else as well, so this is a good starting point, I hope. Thank you for
+> pointing it out though, this will actually be the first time I do a
+> proper bisect.
+
+And remember to always to mention if you have restricted the bisect
+somehow, that's important information. And better if you provide 'git
+bisect log' output as well.
+
+> Also do you want me to bisect Kalle's sources or Linus' master? By
+> what Michał said I guess Kalle's but I ask to be sure.
+>
+> Also to be clear: I'm using Linus' sources at the moment, as provided
+> by Fedora rawhide.
+>
+> For me it's the same, so let me know what you prefer and is more
+> useful to solve this issue.
+
+Good that you brought this up. As ath.git master branch gets rebased
+every rc1 release you really cannot use that for bisect. Either you
+should use ath.git ath-next branch or Linus' tree. To be on the safe
+side I always recommend to use Linus' tree if at all possible.
+
+-- 
+Kalle Valo
