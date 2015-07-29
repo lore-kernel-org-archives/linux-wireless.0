@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52989 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758094AbbGQNsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 09:48:33 -0400
-Message-ID: <1437140910.1933.25.camel@sipsolutions.net> (sfid-20150717_154838_591136_E99D8286)
-Subject: Re: [PATCH v3 5/5] mac80211: select an AID when creating new mesh
- STAs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Fri, 17 Jul 2015 15:48:30 +0200
-In-Reply-To: <1436877119-17577-6-git-send-email-me@bobcopeland.com> (sfid-20150714_143227_832790_AC27A2F3)
-References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
-	 <1436877119-17577-6-git-send-email-me@bobcopeland.com>
-	 (sfid-20150714_143227_832790_AC27A2F3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:36126 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430AbbG2OHp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2015 10:07:45 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH] staging: wilc1000: host_interface.c: Fix build warning
+Date: Wed, 29 Jul 2015 19:36:59 +0530
+Message-Id: <1438178819-12740-1-git-send-email-csgorentla@gmail.com> (sfid-20150729_161115_318324_7D97C49A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-07-14 at 08:31 -0400, Bob Copeland wrote:
-> Instead of using peer link id for AID, generate a new
-> AID when creating mesh STAs in the kernel peering manager.
-> This enables smaller TIM elements and more closely follows
-> the standard, and it also enables mesh to work on drivers
-> that require a valid AID when the STA is inserted (ath10k
-> firmware has this requirement, for example).
-> 
-> In the case of userspace-managed stations, we use the AID
-> from NL80211_CMD_NEW_STATION.
-> 
-Applied the remaining 3 patches to mac80211-next (after merging
-mac80211)
+Fixed - warning: ‘*((void *)&strHostIFmsg+4).pu8Head’ may be used uninitialized 
 
-johannes
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c089e73..f610903 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -7113,7 +7113,7 @@ s32 host_int_add_beacon(WILC_WFIDrvHandle hWFIDrv, u32 u32Interval,
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
+-	tstrHostIFmsg strHostIFmsg;
++	tstrHostIFmsg strHostIFmsg = {};
+ 	tstrHostIFSetBeacon *pstrSetBeaconParam = &strHostIFmsg.uniHostIFmsgBody.strHostIFSetBeacon;
+ 
+ 	if (pstrWFIDrv == NULL)
+-- 
+2.4.5
+
