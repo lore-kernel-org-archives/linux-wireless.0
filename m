@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32890 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbbG3Fky (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43400 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657AbbG2I0W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 01:40:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: <zajec5@gmail.com>, <linux-wireless@vger.kernel.org>,
-	<b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: fix extpa_gain check for 2GHz
-References: <1438205790-17629-1-git-send-email-hauke@hauke-m.de>
-Date: Thu, 30 Jul 2015 08:40:36 +0300
-In-Reply-To: <1438205790-17629-1-git-send-email-hauke@hauke-m.de> (Hauke
-	Mehrtens's message of "Wed, 29 Jul 2015 23:36:30 +0200")
-Message-ID: <8738065hkb.fsf@kamboji.qca.qualcomm.com> (sfid-20150730_074057_039478_D7E30CCE)
+	Wed, 29 Jul 2015 04:26:22 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: suppress 'failed to process fft' warning messages.
+References: <1437490215-11214-1-git-send-email-kevin@darbyshire-bryant.me.uk>
+Date: Wed, 29 Jul 2015 11:25:46 +0300
+In-Reply-To: <1437490215-11214-1-git-send-email-kevin@darbyshire-bryant.me.uk>
+	(Kevin Darbyshire-Bryant's message of "Tue, 21 Jul 2015 15:50:15
+	+0100")
+Message-ID: <87lhdz74l1.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_102744_821900_78598590)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke Mehrtens <hauke@hauke-m.de> writes:
+Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk> writes:
 
-> On the 2GHz and and on the 5GHZ band only the extpa_gain setting from
-> the 5GHz band was checked. this patch makes it check the property from
-> the correct band.
+> When using DFS channels on Ath10k, kernel log has repeated warning message
+> 'failed to process fft: -22' typically under medium/heavy traffic.
 >
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> This patch switches the warnings to driver debug (WMI events) mode only
+> thus reducing log file noise.
+>
+> DFS and spectral scan share underlying HW mechanisms and enabling one
+> (DFS) enables the other (spectral scan) as far as event reporting from
+> firmware to driver is concerned. Spectral scan events take no part in
+> processing of DFS radar pulses which are delivered as distinct events,
+> so the fft (spectral event) warning is harmless and DFS interference
+> detection/protection still occurs.
+>
+> Symptoms seen & fix tested in both debug & non-debug modes on TP-Link
+> Archer C7 v2 platform.
+>
+> Signed-off-by: Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
 
-Is this a regression? If yes, please add a Fixes line.
+Thanks, applied.
 
-Should this go to 4.2?
+In the future please use v2, v3 to mark different versions of the patch
+so that I can easily find the latest version:
+
+https://www.kernel.org/doc/Documentation/SubmittingPatches
 
 -- 
 Kalle Valo
