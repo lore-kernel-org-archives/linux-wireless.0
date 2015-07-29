@@ -1,51 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44503 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbbGaHlK (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38438 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803AbbG2UpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:41:10 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 20/28] staging: wilc1000: remove unnecessary type case
-Date: Fri, 31 Jul 2015 16:38:28 +0900
-Message-ID: <1438328316-30197-21-git-send-email-tony.cho@atmel.com> (sfid-20150731_094113_447359_3D66611C)
-In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+	Wed, 29 Jul 2015 16:45:13 -0400
+Date: Wed, 29 Jul 2015 13:45:07 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Subject: Re: [PATCH V2 1/3] staging: wilc1000: coreconfigurator.c: remove
+ WILC_MALLOC
+Message-ID: <20150729204507.GA9379@kroah.com> (sfid-20150729_224518_057745_19285810)
+References: <1437695755-9731-1-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437695755-9731-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: glen lee <glen.lee@atmel.com>
+On Fri, Jul 24, 2015 at 08:55:53AM +0900, Chaehyun Lim wrote:
+> Use kmalloc and kmalloc_array instead of WILC_MALLOC.
+> 
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+> V2: Use GFP_KERNEL flag instead of GFP_ATOMIC
 
-This patch removes (u32) type cast which makes build warning since
-the u32Address of u32 type was changed with WILC_WFIDrvHandle.
+Please answer Dan's question for the next time you resend this series, I
+can't take these as-is so am dropping them from my queue.
 
-Signed-off-by: glen lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fae7fd5..bc9195f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -656,7 +656,7 @@ static s32 Handle_SetWfiDrvHandler(tstrHostIfSetDrvHandler *pstrHostIfSetDrvHand
- 	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, pstrWFIDrv);
- 
- 
--	if ((pstrHostIfSetDrvHandler->u32Address) == (u32)NULL)
-+	if ((pstrHostIfSetDrvHandler->u32Address) == NULL)
- 		up(&hSemDeinitDrvHandle);
- 
- 
--- 
-1.9.1
-
+greg k-h
