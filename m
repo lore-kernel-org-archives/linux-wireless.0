@@ -1,88 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55856 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751038AbbGMK2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2015 06:28:42 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Bruno Randolf <br1@einfach.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/2] average: provide macro to create static EWMA
-Date: Mon, 13 Jul 2015 12:28:37 +0200
-Message-Id: <1436783318-15576-1-git-send-email-johannes@sipsolutions.net> (sfid-20150713_122845_592200_28FE13FE)
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:33719 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbbG2HtE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2015 03:49:04 -0400
+Received: by igbpg9 with SMTP id pg9so161651404igb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2015 00:49:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFBinCCPouYbKNoyB=z7v0EQKWMhrVJogKvJK=DhqLtwef=zvw@mail.gmail.com>
+References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
+	<CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
+	<CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
+	<CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
+	<CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com>
+	<CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
+	<CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com>
+	<CAJ-Vmokfovc806T+Ja6nQhbGUDM=uU7MmKwad6Uc2hNYV+DDtA@mail.gmail.com>
+	<CAFBinCDqn5HCb3APpqfFULwrmqPGpuj2upFOC=5qZUZzHWBnVg@mail.gmail.com>
+	<CAJ-VmonRw=htFB+xNrxa=bgAsERUu+zhXrwvpoj9kONsEfooLw@mail.gmail.com>
+	<CAFBinCB43LEj3KJVX7qqY40aKYCq68MYi2AD_5MKk43tj7HeXg@mail.gmail.com>
+	<CAJ-Vmom3+aaPjPGAusFbP68-Z3BcY4n=nbyetJDiWdRo4L3fHA@mail.gmail.com>
+	<CAFBinCCPouYbKNoyB=z7v0EQKWMhrVJogKvJK=DhqLtwef=zvw@mail.gmail.com>
+Date: Wed, 29 Jul 2015 00:49:02 -0700
+Message-ID: <CAJ-VmonVPdm-Nng2XXUQb8KimRu2tHdoboBe0frKhcb0fENQjA@mail.gmail.com> (sfid-20150729_094908_775985_89A6388F)
+Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
+From: Adrian Chadd <adrian@freebsd.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ok, can you re-run this again before the NF patch, so I can compare?
 
-Having the EWMA parameters stored in the runtime struct imposes
-memory requirements for the constant values that could just be
-inlined in the code. This particularly makes sense if there are
-a lot of such structs, for example in mac80211 in the station
-table where each station has a number of these in an array, and
-there can be many stations.
+And yeah, I can compile up fft_eval for freebsd. I think I've done it
+once or twice before..
 
-Provide a macro DECLARE_EWMA() that declares the necessary struct
-and inline functions to access it with the parameters hard-coded;
-using this also means the user no longer needs to 'select AVERAGE'
-as it's entirely self-contained.
 
-In the mac80211 case, on x86-64, this actually slightly *reduces*
-code size, while also saving 80 bytes of runtime memory per sta.
+-a
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/average.h | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
 
-diff --git a/include/linux/average.h b/include/linux/average.h
-index c6028fd742c1..802adeab7037 100644
---- a/include/linux/average.h
-+++ b/include/linux/average.h
-@@ -27,4 +27,43 @@ static inline unsigned long ewma_read(const struct ewma *avg)
- 	return avg->internal >> avg->factor;
- }
- 
-+#define DECLARE_EWMA(name, _factor, _weight)				\
-+	struct ewma_##name {						\
-+		unsigned long internal;					\
-+	};								\
-+	static inline void ewma_##name##_init(struct ewma_##name *e)	\
-+	{								\
-+		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
-+		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
-+		BUILD_BUG_ON(!is_power_of_2(_factor));			\
-+		BUILD_BUG_ON(!is_power_of_2(_weight));			\
-+		e->internal = 0;					\
-+	}								\
-+	static inline unsigned long					\
-+	ewma_##name##_read(struct ewma_##name *e)			\
-+	{								\
-+		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
-+		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
-+		BUILD_BUG_ON(!is_power_of_2(_factor));			\
-+		BUILD_BUG_ON(!is_power_of_2(_weight));			\
-+		return e->internal >> ilog2(_factor);			\
-+	}								\
-+	static inline void ewma_##name##_add(struct ewma_##name *e,	\
-+					     unsigned long val)		\
-+	{								\
-+		unsigned long internal = ACCESS_ONCE(e->internal);	\
-+		unsigned long weight = ilog2(_weight);			\
-+		unsigned long factor = ilog2(_factor);			\
-+									\
-+		BUILD_BUG_ON(!__builtin_constant_p(_factor));		\
-+		BUILD_BUG_ON(!__builtin_constant_p(_weight));		\
-+		BUILD_BUG_ON(!is_power_of_2(_factor));			\
-+		BUILD_BUG_ON(!is_power_of_2(_weight));			\
-+									\
-+		ACCESS_ONCE(e->internal) = internal ?			\
-+			(((internal << weight) - internal) +		\
-+				(val << factor)) >> weight :		\
-+			(val << factor);				\
-+	}
-+
- #endif /* _LINUX_AVERAGE_H */
--- 
-2.1.4
-
+On 28 July 2015 at 16:43, Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
+> On Wed, Jul 29, 2015 at 1:37 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+>> Cool! Does it let you capture lots of samples over time and plot them?
+> At least FFT_eval would allow capturing samples, but the device with
+> the AR9227 is a small router -> no screen there, so I have to dump it
+> on that device, copy it to my PC and look at the samples there.
+> I have also just seen that in FFT_eval one can "Navigate through the
+> currently selected datasets using the arrow keys (left and right)."
+> This would require me to make many screenshots. Is there a chance you
+> can compile FFT_eval on FreeBSD (it "only" seems to require SDL and
+> SDL_ttf) and run it yourself?
+>
+>> Or is the second one that as well?
+> What do you mean exactly?
+>
+>> Is this before or after the NF patches?
+> This is after my NF patch.
+>
+>
+> Regards,
+> Martin
