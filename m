@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56834 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbbGXHoJ (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39882 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451AbbG2V3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 03:44:09 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2] ath10k: Delay device access after cold reset
-References: <1436518880-9638-1-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Fri, 24 Jul 2015 10:44:02 +0300
-In-Reply-To: <1436518880-9638-1-git-send-email-vthiagar@qti.qualcomm.com>
-	(Vasanthakumar Thiagarajan's message of "Fri, 10 Jul 2015 14:31:20
-	+0530")
-Message-ID: <87vbdaf1a5.fsf@kamboji.qca.qualcomm.com> (sfid-20150724_094413_000796_03EFED1D)
+	Wed, 29 Jul 2015 17:29:10 -0400
+Date: Wed, 29 Jul 2015 14:29:07 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Tony Cho <tony.cho@atmel.com>, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 09/21] staging: wilc1000: #ifdef conditionals cover
+ entire functions
+Message-ID: <20150729212907.GA16614@kroah.com> (sfid-20150729_232914_930750_0B391831)
+References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+ <1438073261-28315-10-git-send-email-tony.cho@atmel.com>
+ <20150729205454.GA7965@kroah.com>
+ <20150729211408.GL5180@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150729211408.GL5180@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+On Thu, Jul 30, 2015 at 12:14:08AM +0300, Dan Carpenter wrote:
+> On Wed, Jul 29, 2015 at 01:54:54PM -0700, Greg KH wrote:
+> > On Tue, Jul 28, 2015 at 05:47:28PM +0900, Tony Cho wrote:
+> > >  	/**
+> > >  	 *      Disable power sequencer
+> > >  	 **/
+> > > -	if (!sdio_read_reg(WILC_MISC, &reg)) {
+> > > +	if(!sdio_read_reg(WILC_MISC, &reg)) {
+> > 
+> 
+> I noticed this style change during my review, but I didn't comment
+> because I was feeling in a happy mood and because it got fixed again in
+> patch 13.  Normally, of course we don't allow people to break and then
+> fix things in later patches but this was a white space issue.
 
-> It is observed that during cold reset pcie access right
-> after a write operation to SOC_GLOBAL_RESET_ADDRESS causes
-> Data Bus Error and system hard lockup. The reason
-> for bus error is that pcie needs some time to get
-> back to stable state for any transaction during cold reset. Add
-> delay of 20 msecs after write of SOC_GLOBAL_RESET_ADDRESS
-> to fix this issue. This patch is tested on QCA988X. This is
-> also tested on QCA99X0 which is WIP.
->
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+What this shows is that Tony isn't syncing up properly with other
+changes that have happened in the upstream tree from his tree, which is
+indicitive of not doing development properly, which is why I rejected
+this.  And it shouldn't be done anyway, but that's a minor issue
+overall.
 
-Thanks, applied.
+thanks,
 
--- 
-Kalle Valo
+greg k-h
