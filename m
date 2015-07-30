@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:44616 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493AbbGaHls (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:39590 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752364AbbG3MSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:41:48 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 26/28] staging: wilc1000: remove unused variable
-Date: Fri, 31 Jul 2015 16:38:34 +0900
-Message-ID: <1438328316-30197-27-git-send-email-tony.cho@atmel.com> (sfid-20150731_094157_261730_EA1A20EE)
-In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
-References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+	Thu, 30 Jul 2015 08:18:53 -0400
+Date: Thu, 30 Jul 2015 15:18:17 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, rachel.kim@atmel.com,
+	dean.lee@atmel.com, chris.park@atmel.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com
+Subject: Re: [RESEND V2 0/3] cover letter of wilc1000 patches
+Message-ID: <20150730121817.GN5180@mwanda> (sfid-20150730_141929_115452_1E49233A)
+References: <1438256465-19540-1-git-send-email-chaehyun.lim@gmail.com>
+ <CAKV=isuiu4GeYxPFpwqSn8io-uq7hz53tiBX9dmh62b4rvRA=g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKV=isuiu4GeYxPFpwqSn8io-uq7hz53tiBX9dmh62b4rvRA=g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: glen lee <glen.lee@atmel.com>
+On Thu, Jul 30, 2015 at 09:03:48PM +0900, Chaehyun Lim wrote:
+> On Thu, Jul 30, 2015 at 8:41 PM, Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
+> >
+> > First patch has 4 sites of kmalloc change in coreconfigurator.c
+> > First one, it is used for gps8ConfigPacket at CoreconfiguratorInit and CoreConfiguratorDeInit.
+> > I think it should be removed next time because I cannot find anywhere to use it.
+> > Then, it is okay to change flag as GFP_KERNEL.
+> >
+> > Other three changes are used to handle host interface message within a kernel thread.
+> > The manipulation of host interface message is not called on IRQ context and I could not
+> > find any spin lock inside function.
+> >
 
-This patch removes unused variable pstrWFIDrv.
+This information is good information and it should be in the patch
+description.
 
-Signed-off-by: glen lee <glen.lee@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 953df71..c5db385 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -642,7 +642,6 @@ static s32 Handle_SetWfiDrvHandler(tstrHostIfSetDrvHandler *pstrHostIfSetDrvHand
- 
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID	strWID;
--	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)((pstrHostIfSetDrvHandler->u32Address));
- 
- 
- 	/*prepare configuration packet*/
--- 
-1.9.1
+regards,
+dan carpenter
 
