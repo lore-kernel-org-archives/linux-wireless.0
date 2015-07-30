@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:59608 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752095AbbGGHI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 03:08:56 -0400
-Message-ID: <559B7AFC.3040202@openwrt.org> (sfid-20150707_090859_843220_0D23BE7B)
-Date: Tue, 07 Jul 2015 09:08:44 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58025 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755133AbbG3JKr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2015 05:10:47 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 2/5] staging: wilc1000: remove unnecessary blank lines
+Date: Thu, 30 Jul 2015 18:10:11 +0900
+Message-ID: <1438247414-19708-3-git-send-email-tony.cho@atmel.com> (sfid-20150730_111050_441871_06A327FD)
+In-Reply-To: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
+References: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath9k: export HW random number generator
-References: <1435912110-9646-1-git-send-email-miaoqing@qca.qualcomm.com> <559A5919.3060308@openwrt.org> <262dbfcff3564c4ba2025f9fde11e8e2@NASANEXM01E.na.qualcomm.com>
-In-Reply-To: <262dbfcff3564c4ba2025f9fde11e8e2@NASANEXM01E.na.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-07-07 07:07, Pan, Miaoqing wrote:
-> AR_PHY_TST_ADC is BB ADC sample register, it doesn't depend on other
-> BB registers. Get non zero data if it has the ADC values.
-This is completely wrong!
+This patch removes the following warnings reported by checkpatch.pl.
+- Blank lines aren't necessary after an open brace '{'
+- Blank lines aren't necessary before a close brace '}'
 
-AR_PHY_TST_ADC is a generic observation register which can be configured
-to observe multiple points in the rx path.
-I did my own experiments with sampling raw I/Q values from the ADC, and
-you can find my patch here:
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+V2: This patch doesn't have a difference with the first one but resent
+because it's rejected with the 9th patch.
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=package/kernel/mac80211/patches/543-ath9k_entropy_from_adc.patch
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 50be2a1..42c5ad8 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -679,7 +679,6 @@ static void sdio_set_default_speed(void)
+ 
+ static int sdio_read_size(uint32_t *size)
+ {
+-
+ 	uint32_t tmp;
+ 	sdio_cmd52_t cmd;
+ 
+@@ -806,7 +805,6 @@ static int sdio_clear_int_ext(uint32_t val)
+ 				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
+ 				goto _fail_;
+ 			}
+-
+ 		}
+ 	} else {
+ 		/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+@@ -910,7 +908,6 @@ static int sdio_clear_int_ext(uint32_t val)
+ 				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
+ 				goto _fail_;
+ 			}
+-
+ 		}
+ 	} else {
+ 		uint32_t vmm_ctl;
+-- 
+1.9.1
 
-It right now uses only the lowest bits (they are the hardest to control
-from the outside).
-
-Through extensive testing (not just by me, but also by many people in
-the OpenWrt community), I found that leaving the AR_PHY_TST_ADC register
-configured for raw I/Q samples causes the radio to become unstable on
-AR5008-AR9002. That's why my patch currently only gathers some data at
-driver init time.
-By the way, on AR5008-AR9002 this register is in a different location
-than AR9003, something your patch also needs to take into account.
-
-You should also make sure that the radio is actually configured to a
-channel (and active!) before gathering data.
-
-When you rework your patch, please carefully review the documentation
-for the fields rx_obs_sel and cf_bbb_obs_sel before you change the code
-again.
-
-- Felix
