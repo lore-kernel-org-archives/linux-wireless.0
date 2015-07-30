@@ -1,304 +1,652 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54703 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752406AbbGaOSH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:58011 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755039AbbG3JKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 10:18:07 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6VEF6VW023617
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2015 07:18:06 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1vv91rusds-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2015 07:18:06 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>, Zhaoyang Liu <liuzy@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/3] mwifiex: add firmware dump support for SD8997
-Date: Fri, 31 Jul 2015 07:17:40 -0700
-Message-ID: <1438352260-31794-1-git-send-email-akarwar@marvell.com> (sfid-20150731_161817_079700_4D34B990)
+	Thu, 30 Jul 2015 05:10:40 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 1/5] staging: wilc1000: #ifdef conditionals cover entire functions
+Date: Thu, 30 Jul 2015 18:10:10 +0900
+Message-ID: <1438247414-19708-2-git-send-email-tony.cho@atmel.com> (sfid-20150730_111045_969545_215A3C33)
+In-Reply-To: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
+References: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhaoyang Liu <liuzy@marvell.com>
+This patch lets preprocessor conditionals (#ifdef) related to
+WILC_SDIO_IRQ_GPIO to compile out the entire functions. Compiling out
+the entire functions is preferred rather than portions of functions or
+expressions becausue doing so makes code harder to read.
 
-This patch adds firmware dump feature for SD8997 chipset.
-The difference here is only one memory type is needed
-to save all firmware information. Device dump information
-will be uploaded to usersapace file.
-
-Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/mwifiex/sdio.c | 147 +++++++++++++++++++++++++++++++++---
- drivers/net/wireless/mwifiex/sdio.h |  11 ++-
- 2 files changed, 148 insertions(+), 10 deletions(-)
+V2: Remove the warnings on the following:
+- ERROR: space required before the open parenthesis '('
+This patch is resent because unexpected warning is added while rewriting
+codes.
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 480 +++++++++++++++++++++--------------
+ 1 file changed, 292 insertions(+), 188 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 9904a77..7cef27e9 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -51,6 +51,10 @@ static unsigned long iface_work_flags;
- 
- static struct semaphore add_remove_card_sem;
- 
-+static struct memory_type_mapping generic_mem_type_map[] = {
-+	{"DUMP", NULL, 0, 0xDD},
-+};
-+
- static struct memory_type_mapping mem_type_mapping_tbl[] = {
- 	{"ITCM", NULL, 0, 0xF0},
- 	{"DTCM", NULL, 0, 0xF1},
-@@ -108,6 +112,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 		card->mp_tx_agg_buf_size = data->mp_tx_agg_buf_size;
- 		card->mp_rx_agg_buf_size = data->mp_rx_agg_buf_size;
- 		card->can_dump_fw = data->can_dump_fw;
-+		card->fw_dump_enh = data->fw_dump_enh;
- 		card->can_auto_tdls = data->can_auto_tdls;
- 		card->can_ext_scan = data->can_ext_scan;
- 	}
-@@ -1969,8 +1974,13 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	adapter->dev = &func->dev;
- 
- 	strcpy(adapter->fw_name, card->firmware);
--	adapter->mem_type_mapping_tbl = mem_type_mapping_tbl;
--	adapter->num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl);
-+	if (card->fw_dump_enh) {
-+		adapter->mem_type_mapping_tbl = generic_mem_type_map;
-+		adapter->num_mem_types = 1;
-+	} else {
-+		adapter->mem_type_mapping_tbl = mem_type_mapping_tbl;
-+		adapter->num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl);
-+	}
- 
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 5a18148..c52044a 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -155,22 +155,9 @@ _fail_:
  	return 0;
  }
-@@ -2163,8 +2173,8 @@ rdwr_status mwifiex_sdio_rdwr_firmware(struct mwifiex_adapter *adapter,
- 	int ret, tries;
- 	u8 ctrl_data = 0;
  
--	sdio_writeb(card->func, FW_DUMP_HOST_READY, card->reg->fw_dump_ctrl,
--		    &ret);
-+	sdio_writeb(card->func, card->reg->fw_dump_host_ready,
-+		    card->reg->fw_dump_ctrl, &ret);
- 	if (ret) {
- 		mwifiex_dbg(adapter, ERROR, "SDIO Write ERR\n");
- 		return RDWR_STATUS_FAILURE;
-@@ -2180,10 +2190,10 @@ rdwr_status mwifiex_sdio_rdwr_firmware(struct mwifiex_adapter *adapter,
- 			break;
- 		if (doneflag && ctrl_data == doneflag)
- 			return RDWR_STATUS_DONE;
--		if (ctrl_data != FW_DUMP_HOST_READY) {
-+		if (ctrl_data != card->reg->fw_dump_host_ready) {
- 			mwifiex_dbg(adapter, WARN,
--				    "The ctrl reg was changed, re-try again!\n");
--			sdio_writeb(card->func, FW_DUMP_HOST_READY,
-+				    "The ctrl reg was changed, re-try again\n");
-+			sdio_writeb(card->func, card->reg->fw_dump_host_ready,
- 				    card->reg->fw_dump_ctrl, &ret);
- 			if (ret) {
- 				mwifiex_dbg(adapter, ERROR, "SDIO write err\n");
-@@ -2192,7 +2202,7 @@ rdwr_status mwifiex_sdio_rdwr_firmware(struct mwifiex_adapter *adapter,
- 		}
- 		usleep_range(100, 200);
- 	}
--	if (ctrl_data == FW_DUMP_HOST_READY) {
-+	if (ctrl_data == card->reg->fw_dump_host_ready) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "Fail to pull ctrl_data\n");
- 		return RDWR_STATUS_FAILURE;
-@@ -2325,10 +2335,129 @@ done:
- 	sdio_release_host(card->func);
- }
- 
-+static void mwifiex_sdio_generic_fw_dump(struct mwifiex_adapter *adapter)
-+{
-+	struct sdio_mmc_card *card = adapter->card;
-+	struct memory_type_mapping *entry = &generic_mem_type_map[0];
-+	unsigned int reg, reg_start, reg_end;
-+	u8 start_flag = 0, done_flag = 0;
-+	u8 *dbg_ptr, *end_ptr;
-+	enum rdwr_status stat;
-+	int ret = -1, tries;
-+
-+	if (!card->fw_dump_enh)
-+		return;
-+
-+	if (entry->mem_ptr) {
-+		vfree(entry->mem_ptr);
-+		entry->mem_ptr = NULL;
-+	}
-+	entry->mem_size = 0;
-+
-+	mwifiex_pm_wakeup_card(adapter);
-+	sdio_claim_host(card->func);
-+
-+	mwifiex_dbg(adapter, MSG, "== mwifiex firmware dump start ==\n");
-+
-+	stat = mwifiex_sdio_rdwr_firmware(adapter, done_flag);
-+	if (stat == RDWR_STATUS_FAILURE)
-+		goto done;
-+
-+	reg_start = card->reg->fw_dump_start;
-+	reg_end = card->reg->fw_dump_end;
-+	for (reg = reg_start; reg <= reg_end; reg++) {
-+		for (tries = 0; tries < MAX_POLL_TRIES; tries++) {
-+			start_flag = sdio_readb(card->func, reg, &ret);
-+			if (ret) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "SDIO read err\n");
-+				goto done;
-+			}
-+			if (start_flag == 0)
-+				break;
-+			if (tries == MAX_POLL_TRIES) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "FW not ready to dump\n");
-+				ret = -1;
-+				goto done;
-+			}
-+		}
-+		usleep_range(100, 200);
-+	}
-+
-+	entry->mem_ptr = vmalloc(0xf0000 + 1);
-+	if (!entry->mem_ptr) {
-+		ret = -1;
-+		goto done;
-+	}
-+	dbg_ptr = entry->mem_ptr;
-+	entry->mem_size = 0xf0000;
-+	end_ptr = dbg_ptr + entry->mem_size;
-+
-+	done_flag = entry->done_flag;
-+	mwifiex_dbg(adapter, DUMP,
-+		    "Start %s output, please wait...\n", entry->mem_name);
-+
-+	while (true) {
-+		stat = mwifiex_sdio_rdwr_firmware(adapter, done_flag);
-+		if (stat == RDWR_STATUS_FAILURE)
-+			goto done;
-+		for (reg = reg_start; reg <= reg_end; reg++) {
-+			*dbg_ptr = sdio_readb(card->func, reg, &ret);
-+			if (ret) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "SDIO read err\n");
-+				goto done;
-+			}
-+			dbg_ptr++;
-+			if (dbg_ptr >= end_ptr) {
-+				u8 *tmp_ptr;
-+
-+				tmp_ptr = vmalloc(entry->mem_size + 0x4000 + 1);
-+				if (!tmp_ptr)
-+					goto done;
-+
-+				memcpy(tmp_ptr, entry->mem_ptr,
-+				       entry->mem_size);
-+				vfree(entry->mem_ptr);
-+				entry->mem_ptr = tmp_ptr;
-+				tmp_ptr = NULL;
-+				dbg_ptr = entry->mem_ptr + entry->mem_size;
-+				entry->mem_size += 0x4000;
-+				end_ptr = entry->mem_ptr + entry->mem_size;
-+			}
-+		}
-+		if (stat == RDWR_STATUS_DONE) {
-+			entry->mem_size = dbg_ptr - entry->mem_ptr;
-+			mwifiex_dbg(adapter, DUMP, "dump %s done size=0x%x\n",
-+				    entry->mem_name, entry->mem_size);
-+			ret = 0;
-+			break;
-+		}
-+	}
-+	mwifiex_dbg(adapter, MSG, "== mwifiex firmware dump end ==\n");
-+
-+done:
-+	if (ret) {
-+		mwifiex_dbg(adapter, ERROR, "firmware dump failed\n");
-+		if (entry->mem_ptr) {
-+			vfree(entry->mem_ptr);
-+			entry->mem_ptr = NULL;
-+		}
-+		entry->mem_size = 0;
-+	}
-+	sdio_release_host(card->func);
-+}
-+
- static void mwifiex_sdio_device_dump_work(struct mwifiex_adapter *adapter)
++#ifdef WILC_SDIO_IRQ_GPIO
+ static int sdio_clear_int(void)
  {
-+	struct sdio_mmc_card *card = adapter->card;
+-#ifndef WILC_SDIO_IRQ_GPIO
+-	/* uint32_t sts; */
+-	sdio_cmd52_t cmd;
+-
+-	cmd.read_write = 0;
+-	cmd.function = 1;
+-	cmd.raw = 0;
+-	cmd.address = 0x4;
+-	cmd.data = 0;
+-	g_sdio.sdio_cmd52(&cmd);
+-	int_clrd++;
+-
+-	return cmd.data;
+-#else
+ 	uint32_t reg;
+ 
+ 	if (!sdio_read_reg(WILC_HOST_RX_CTRL_0, &reg)) {
+@@ -181,9 +168,23 @@ static int sdio_clear_int(void)
+ 	sdio_write_reg(WILC_HOST_RX_CTRL_0, reg);
+ 	int_clrd++;
+ 	return 1;
+-#endif
++}
++#else
++static int sdio_clear_int(void)
++{
++	sdio_cmd52_t cmd;
 +
- 	mwifiex_drv_info_dump(adapter);
--	mwifiex_sdio_fw_dump(adapter);
-+	if (card->fw_dump_enh)
-+		mwifiex_sdio_generic_fw_dump(adapter);
-+	else
-+		mwifiex_sdio_fw_dump(adapter);
- 	mwifiex_upload_device_dump(adapter);
++	cmd.read_write = 0;
++	cmd.function = 1;
++	cmd.raw = 0;
++	cmd.address = 0x4;
++	cmd.data = 0;
++	g_sdio.sdio_cmd52(&cmd);
++	int_clrd++;
+ 
++	return cmd.data;
+ }
++#endif /* WILC_SDIO_IRQ_GPIO */
+ 
+ uint32_t sdio_xfer_cnt(void)
+ {
+@@ -521,9 +522,11 @@ static int sdio_deinit(void *pv)
+ 	return 1;
  }
  
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index cd149196..b9fbc5c 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -223,6 +223,7 @@ struct mwifiex_sdio_card_reg {
- 	u8 cmd_cfg_1;
- 	u8 cmd_cfg_2;
- 	u8 cmd_cfg_3;
-+	u8 fw_dump_host_ready;
- 	u8 fw_dump_ctrl;
- 	u8 fw_dump_start;
- 	u8 fw_dump_end;
-@@ -258,6 +259,7 @@ struct sdio_mmc_card {
- 	bool supports_sdio_new_mode;
- 	bool has_control_mask;
- 	bool can_dump_fw;
-+	bool fw_dump_enh;
- 	bool can_auto_tdls;
- 	bool can_ext_scan;
++#ifdef WILC_SDIO_IRQ_GPIO
+ static int sdio_sync(void)
+ {
+ 	uint32_t reg;
++	int ret;
  
-@@ -279,6 +281,7 @@ struct mwifiex_sdio_device {
- 	bool supports_sdio_new_mode;
- 	bool has_control_mask;
- 	bool can_dump_fw;
-+	bool fw_dump_enh;
- 	bool can_auto_tdls;
- 	bool can_ext_scan;
- };
-@@ -354,6 +357,7 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
- 	.cmd_cfg_1 = 0xb9,
- 	.cmd_cfg_2 = 0xba,
- 	.cmd_cfg_3 = 0xbb,
-+	.fw_dump_host_ready = 0xee,
- 	.fw_dump_ctrl = 0xe2,
- 	.fw_dump_start = 0xe3,
- 	.fw_dump_end = 0xea,
-@@ -404,6 +408,10 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8997 = {
- 	.cmd_cfg_1 = 0xc5,
- 	.cmd_cfg_2 = 0xc6,
- 	.cmd_cfg_3 = 0xc7,
-+	.fw_dump_host_ready = 0xcc,
-+	.fw_dump_ctrl = 0xf0,
-+	.fw_dump_start = 0xf1,
-+	.fw_dump_end = 0xf8,
- 	.func1_dump_reg_start = 0x10,
- 	.func1_dump_reg_end = 0x17,
- 	.func1_scratch_reg = 0xe8,
-@@ -532,7 +540,8 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8997 = {
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_MAX,
- 	.supports_sdio_new_mode = true,
- 	.has_control_mask = false,
--	.can_dump_fw = false,
-+	.can_dump_fw = true,
-+	.fw_dump_enh = true,
- 	.can_auto_tdls = false,
- 	.can_ext_scan = true,
- };
+ 	/**
+ 	 *      Disable power sequencer
+@@ -539,45 +542,60 @@ static int sdio_sync(void)
+ 		return 0;
+ 	}
+ 
+-#ifdef WILC_SDIO_IRQ_GPIO
+-	{
+-		uint32_t reg;
+-		int ret;
++	/**
++	 *      interrupt pin mux select
++	 **/
++	ret = sdio_read_reg(WILC_PIN_MUX_0, &reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc spi]: Failed read reg (%08x)...\n", WILC_PIN_MUX_0);
++		return 0;
++	}
++	reg |= (1 << 8);
++	ret = sdio_write_reg(WILC_PIN_MUX_0, reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc spi]: Failed write reg (%08x)...\n", WILC_PIN_MUX_0);
++		return 0;
++	}
+ 
+-		/**
+-		 *      interrupt pin mux select
+-		 **/
+-		ret = sdio_read_reg(WILC_PIN_MUX_0, &reg);
+-		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc spi]: Failed read reg (%08x)...\n", WILC_PIN_MUX_0);
+-			return 0;
+-		}
+-		reg |= (1 << 8);
+-		ret = sdio_write_reg(WILC_PIN_MUX_0, reg);
+-		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc spi]: Failed write reg (%08x)...\n", WILC_PIN_MUX_0);
+-			return 0;
+-		}
++	/**
++	 *      interrupt enable
++	 **/
++	ret = sdio_read_reg(WILC_INTR_ENABLE, &reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc spi]: Failed read reg (%08x)...\n", WILC_INTR_ENABLE);
++		return 0;
++	}
++	reg |= (1 << 16);
++	ret = sdio_write_reg(WILC_INTR_ENABLE, reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc spi]: Failed write reg (%08x)...\n", WILC_INTR_ENABLE);
++		return 0;
++	}
+ 
+-		/**
+-		 *      interrupt enable
+-		 **/
+-		ret = sdio_read_reg(WILC_INTR_ENABLE, &reg);
+-		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc spi]: Failed read reg (%08x)...\n", WILC_INTR_ENABLE);
+-			return 0;
+-		}
+-		reg |= (1 << 16);
+-		ret = sdio_write_reg(WILC_INTR_ENABLE, reg);
+-		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc spi]: Failed write reg (%08x)...\n", WILC_INTR_ENABLE);
+-			return 0;
+-		}
++	return 1;
++}
++#else
++static int sdio_sync(void)
++{
++	uint32_t reg;
++
++	/**
++	 *      Disable power sequencer
++	 **/
++	if (!sdio_read_reg(WILC_MISC, &reg)) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read misc reg...\n");
++		return 0;
++	}
++
++	reg &= ~(1 << 8);
++	if (!sdio_write_reg(WILC_MISC, reg)) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write misc reg...\n");
++		return 0;
+ 	}
+-#endif
+ 
+ 	return 1;
+ }
++#endif /* WILC_SDIO_IRQ_GPIO */
+ 
+ static int sdio_init(wilc_wlan_inp_t *inp, wilc_debug_func func)
+ {
+@@ -744,18 +762,40 @@ static int sdio_read_size(uint32_t *size)
+ 	return 1;
+ }
+ 
++#ifdef WILC_SDIO_IRQ_GPIO
+ static int sdio_read_int(uint32_t *int_status)
+ {
++	uint32_t tmp;
++	sdio_cmd52_t cmd;
++	uint32_t irq_flags;
++
++	sdio_read_size(&tmp);
++
++	cmd.read_write = 0;
++	cmd.function = 0;
++	cmd.raw = 0;
++	cmd.address = 0xf7;
++	cmd.data = 0;
++	g_sdio.sdio_cmd52(&cmd);
++	irq_flags = cmd.data & 0x1f;
++	tmp |= ((irq_flags >> 0) << IRG_FLAGS_OFFSET);
++
++	*int_status = tmp;
+ 
++	return 1;
++}
++#else
++static int sdio_read_int(uint32_t *int_status)
++{
+ 	uint32_t tmp;
+ 	sdio_cmd52_t cmd;
++	int i;
+ 
+ 	sdio_read_size(&tmp);
+ 
+ 	/**
+ 	 *      Read IRQ flags
+ 	 **/
+-#ifndef WILC_SDIO_IRQ_GPIO
+ 	/* cmd.read_write = 0; */
+ 	cmd.function = 1;
+ 	/* cmd.raw = 0; */
+@@ -775,54 +815,29 @@ static int sdio_read_int(uint32_t *int_status)
+ 		tmp |= INT_4;
+ 	if (cmd.data & (1 << 6))
+ 		tmp |= INT_5;
+-	{
+-		int i;
+ 
+-		for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+-			if ((tmp >> (IRG_FLAGS_OFFSET + i)) & 0x1) {
+-				g_sdio.dPrint(N_ERR, "[wilc sdio]: Unexpected interrupt (1) : tmp=%x, data=%x\n", tmp, cmd.data);
+-				break;
+-			}
++	for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
++		if ((tmp >> (IRG_FLAGS_OFFSET + i)) & 0x1) {
++			g_sdio.dPrint(N_ERR, "[wilc sdio]: Unexpected interrupt (1) : tmp=%x, data=%x\n", tmp, cmd.data);
++			break;
+ 		}
+ 	}
+-#else
+-	{
+-		uint32_t irq_flags;
+-
+-		cmd.read_write = 0;
+-		cmd.function = 0;
+-		cmd.raw = 0;
+-		cmd.address = 0xf7;
+-		cmd.data = 0;
+-		g_sdio.sdio_cmd52(&cmd);
+-		irq_flags = cmd.data & 0x1f;
+-		tmp |= ((irq_flags >> 0) << IRG_FLAGS_OFFSET);
+-	}
+-
+-#endif
+ 
+ 	*int_status = tmp;
+ 
+ 	return 1;
+ }
++#endif	/* WILC_SDIO_IRQ_GPIO */
+ 
++#ifdef WILC_SDIO_IRQ_GPIO
+ static int sdio_clear_int_ext(uint32_t val)
+ {
+ 	int ret;
+ 
+-	if (g_sdio.has_thrpt_enh3) {
++	if(g_sdio.has_thrpt_enh3) {
+ 		uint32_t reg;
++		reg = val & ((1 << MAX_NUN_INT_THRPT_ENH2) - 1);
+ 
+-#ifdef WILC_SDIO_IRQ_GPIO
+-		{
+-			uint32_t flags;
+-
+-			flags = val & ((1 << MAX_NUN_INT_THRPT_ENH2) - 1);
+-			reg = flags;
+-		}
+-#else
+-		reg = 0;
+-#endif
+ 		/* select VMM table 0 */
+ 		if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
+ 			reg |= (1 << 5);
+@@ -849,76 +864,135 @@ static int sdio_clear_int_ext(uint32_t val)
+ 
+ 		}
+ 	} else {
+-#ifdef WILC_SDIO_IRQ_GPIO
+-		{
+-			/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+-			/* Cannot clear multiple interrupts. Must clear each interrupt individually */
+-			uint32_t flags;
+-
+-			flags = val & ((1 << MAX_NUM_INT) - 1);
+-			if (flags) {
+-				int i;
+-
+-				ret = 1;
+-				for (i = 0; i < g_sdio.nint; i++) {
+-					if (flags & 1) {
+-						sdio_cmd52_t cmd;
+-
+-						cmd.read_write = 1;
+-						cmd.function = 0;
+-						cmd.raw = 0;
+-						cmd.address = 0xf8;
+-						cmd.data = (1 << i);
+-
+-						ret = g_sdio.sdio_cmd52(&cmd);
+-						if (!ret) {
+-							g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
+-							goto _fail_;
+-						}
+-
++		/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
++		/* Cannot clear multiple interrupts. Must clear each interrupt individually */
++		uint32_t flags;
++		uint32_t vmm_ctl;
++
++		flags = val & ((1 << MAX_NUM_INT) - 1);
++		if (flags) {
++			int i;
++
++			ret = 1;
++			for (i = 0; i < g_sdio.nint; i++) {
++				if (flags & 1) {
++					sdio_cmd52_t cmd;
++
++					cmd.read_write = 1;
++					cmd.function = 0;
++					cmd.raw = 0;
++					cmd.address = 0xf8;
++					cmd.data = (1 << i);
++
++					ret = g_sdio.sdio_cmd52(&cmd);
++					if (!ret) {
++						g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
++						goto _fail_;
+ 					}
+-					if (!ret)
+-						break;
+-					flags >>= 1;
+ 				}
+ 				if (!ret)
+-					goto _fail_;
+-				for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+-					if (flags & 1)
+-						g_sdio.dPrint(N_ERR, "[wilc sdio]: Unexpected interrupt cleared %d...\n", i);
+-					flags >>= 1;
+-				}
++					break;
++				flags >>= 1;
++			}
++			if (!ret)
++				goto _fail_;
++			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
++				if (flags & 1)
++					g_sdio.dPrint(N_ERR, "[wilc sdio]: Unexpected interrupt cleared %d...\n", i);
++				flags >>= 1;
+ 			}
+ 		}
+-#endif /* WILC_SDIO_IRQ_GPIO */
+ 
+-		{
+-			uint32_t vmm_ctl;
+-
+-			vmm_ctl = 0;
+-			/* select VMM table 0 */
+-			if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
+-				vmm_ctl |= (1 << 0);
+-			/* select VMM table 1 */
+-			if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
+-				vmm_ctl |= (1 << 1);
+-			/* enable VMM */
+-			if ((val & EN_VMM) == EN_VMM)
+-				vmm_ctl |= (1 << 2);
+-
+-			if (vmm_ctl) {
+-				sdio_cmd52_t cmd;
+-
+-				cmd.read_write = 1;
+-				cmd.function = 0;
+-				cmd.raw = 0;
+-				cmd.address = 0xf6;
+-				cmd.data = vmm_ctl;
+-				ret = g_sdio.sdio_cmd52(&cmd);
+-				if (!ret) {
+-					g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf6 data (%d) ...\n", __LINE__);
+-					goto _fail_;
+-				}
++		vmm_ctl = 0;
++		/* select VMM table 0 */
++		if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
++			vmm_ctl |= (1 << 0);
++		/* select VMM table 1 */
++		if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
++			vmm_ctl |= (1 << 1);
++		/* enable VMM */
++		if ((val & EN_VMM) == EN_VMM)
++			vmm_ctl |= (1 << 2);
++
++		if (vmm_ctl) {
++			sdio_cmd52_t cmd;
++
++			cmd.read_write = 1;
++			cmd.function = 0;
++			cmd.raw = 0;
++			cmd.address = 0xf6;
++			cmd.data = vmm_ctl;
++			ret = g_sdio.sdio_cmd52(&cmd);
++			if (!ret) {
++				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf6 data (%d) ...\n", __LINE__);
++				goto _fail_;
++			}
++		}
++	}
++
++	return 1;
++_fail_:
++	return 0;
++}
++#else
++static int sdio_clear_int_ext(uint32_t val)
++{
++	int ret;
++
++	if (g_sdio.has_thrpt_enh3) {
++		uint32_t reg = 0;
++
++		/* select VMM table 0 */
++		if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
++			reg |= (1 << 5);
++		/* select VMM table 1 */
++		if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
++			reg |= (1 << 6);
++		/* enable VMM */
++		if ((val & EN_VMM) == EN_VMM)
++			reg |= (1 << 7);
++		if (reg) {
++			sdio_cmd52_t cmd;
++
++			cmd.read_write = 1;
++			cmd.function = 0;
++			cmd.raw = 0;
++			cmd.address = 0xf8;
++			cmd.data = reg;
++
++			ret = g_sdio.sdio_cmd52(&cmd);
++			if (!ret) {
++				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf8 data (%d) ...\n", __LINE__);
++				goto _fail_;
++			}
++
++		}
++	} else {
++		uint32_t vmm_ctl;
++
++		vmm_ctl = 0;
++		/* select VMM table 0 */
++		if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
++			vmm_ctl |= (1 << 0);
++		/* select VMM table 1 */
++		if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
++			vmm_ctl |= (1 << 1);
++		/* enable VMM */
++		if ((val & EN_VMM) == EN_VMM)
++			vmm_ctl |= (1 << 2);
++
++		if (vmm_ctl) {
++			sdio_cmd52_t cmd;
++
++			cmd.read_write = 1;
++			cmd.function = 0;
++			cmd.raw = 0;
++			cmd.address = 0xf6;
++			cmd.data = vmm_ctl;
++			ret = g_sdio.sdio_cmd52(&cmd);
++			if (!ret) {
++				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed cmd52, set 0xf6 data (%d) ...\n", __LINE__);
++				goto _fail_;
+ 			}
+ 		}
+ 	}
+@@ -927,10 +1001,13 @@ static int sdio_clear_int_ext(uint32_t val)
+ _fail_:
+ 	return 0;
+ }
++#endif	/* WILC_SDIO_IRQ_GPIO */
+ 
++#ifdef WILC_SDIO_IRQ_GPIO
+ static int sdio_sync_ext(int nint /*  how mant interrupts to enable. */)
+ {
+ 	uint32_t reg;
++	int ret, i;
+ 
+ 	if (nint > MAX_NUM_INT) {
+ 		g_sdio.dPrint(N_ERR, "[wilc sdio]: Too many interupts (%d)...\n", nint);
+@@ -957,62 +1034,89 @@ static int sdio_sync_ext(int nint /*  how mant interrupts to enable. */)
+ 		return 0;
+ 	}
+ 
+-#ifdef WILC_SDIO_IRQ_GPIO
+-	{
+-		uint32_t reg;
+-		int ret, i;
++	/**
++	 *      interrupt pin mux select
++	 **/
++	ret = sdio_read_reg(WILC_PIN_MUX_0, &reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read reg (%08x)...\n", WILC_PIN_MUX_0);
++		return 0;
++	}
++	reg |= (1 << 8);
++	ret = sdio_write_reg(WILC_PIN_MUX_0, reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write reg (%08x)...\n", WILC_PIN_MUX_0);
++		return 0;
++	}
+ 
+-		/**
+-		 *      interrupt pin mux select
+-		 **/
+-		ret = sdio_read_reg(WILC_PIN_MUX_0, &reg);
+-		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read reg (%08x)...\n", WILC_PIN_MUX_0);
+-			return 0;
+-		}
+-		reg |= (1 << 8);
+-		ret = sdio_write_reg(WILC_PIN_MUX_0, reg);
+-		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write reg (%08x)...\n", WILC_PIN_MUX_0);
+-			return 0;
+-		}
++	/**
++	 *      interrupt enable
++	 **/
++	ret = sdio_read_reg(WILC_INTR_ENABLE, &reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read reg (%08x)...\n", WILC_INTR_ENABLE);
++		return 0;
++	}
+ 
+-		/**
+-		 *      interrupt enable
+-		 **/
+-		ret = sdio_read_reg(WILC_INTR_ENABLE, &reg);
++	for (i = 0; (i < 5) && (nint > 0); i++, nint--)
++		reg |= (1 << (27 + i));
++	ret = sdio_write_reg(WILC_INTR_ENABLE, reg);
++	if (!ret) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write reg (%08x)...\n", WILC_INTR_ENABLE);
++		return 0;
++	}
++	if (nint) {
++		ret = sdio_read_reg(WILC_INTR2_ENABLE, &reg);
+ 		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read reg (%08x)...\n", WILC_INTR_ENABLE);
++			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read reg (%08x)...\n", WILC_INTR2_ENABLE);
+ 			return 0;
+ 		}
+ 
+-		for (i = 0; (i < 5) && (nint > 0); i++, nint--)
+-			reg |= (1 << (27 + i));
+-		ret = sdio_write_reg(WILC_INTR_ENABLE, reg);
++		for (i = 0; (i < 3) && (nint > 0); i++, nint--)
++			reg |= (1 << i);
++
++		ret = sdio_read_reg(WILC_INTR2_ENABLE, &reg);
+ 		if (!ret) {
+-			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write reg (%08x)...\n", WILC_INTR_ENABLE);
++			g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write reg (%08x)...\n", WILC_INTR2_ENABLE);
+ 			return 0;
+ 		}
+-		if (nint) {
+-			ret = sdio_read_reg(WILC_INTR2_ENABLE, &reg);
+-			if (!ret) {
+-				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read reg (%08x)...\n", WILC_INTR2_ENABLE);
+-				return 0;
+-			}
++	}
+ 
+-			for (i = 0; (i < 3) && (nint > 0); i++, nint--)
+-				reg |= (1 << i);
++	return 1;
++}
++#else
++static int sdio_sync_ext(int nint /*  how mant interrupts to enable. */)
++{
++	uint32_t reg;
+ 
+-			ret = sdio_read_reg(WILC_INTR2_ENABLE, &reg);
+-			if (!ret) {
+-				g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write reg (%08x)...\n", WILC_INTR2_ENABLE);
+-				return 0;
+-			}
+-		}
++	if (nint > MAX_NUM_INT) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Too many interupts (%d)...\n", nint);
++		return 0;
+ 	}
+-#endif /* WILC_SDIO_IRQ_GPIO */
++	if (nint > MAX_NUN_INT_THRPT_ENH2) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Error: Cannot support more than 5 interrupts when has_thrpt_enh2=1.\n");
++		return 0;
++	}
++
++	g_sdio.nint = nint;
++
++	/**
++	 *      Disable power sequencer
++	 **/
++	if (!sdio_read_reg(WILC_MISC, &reg)) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed read misc reg...\n");
++		return 0;
++	}
++
++	reg &= ~(1 << 8);
++	if (!sdio_write_reg(WILC_MISC, reg)) {
++		g_sdio.dPrint(N_ERR, "[wilc sdio]: Failed write misc reg...\n");
++		return 0;
++	}
++
+ 	return 1;
+ }
++#endif	/* WILC_SDIO_IRQ_GPIO */
+ 
+ /********************************************
+  *
 -- 
-1.8.1.4
+1.9.1
 
