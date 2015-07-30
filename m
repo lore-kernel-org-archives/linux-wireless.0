@@ -1,84 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:35767 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755100AbbGCOUw convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:35601 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444AbbG3Fzw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 10:20:52 -0400
-Received: by ykdy1 with SMTP id y1so96947237ykd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jul 2015 07:20:51 -0700 (PDT)
+	Thu, 30 Jul 2015 01:55:52 -0400
 MIME-Version: 1.0
-In-Reply-To: <55966D1B.1040603@neratec.com>
-References: <CAHr=Vq=hJr6WUQgFXftMSG2zYgwtCXgoTaXBzRfM8-kQa2-K2w@mail.gmail.com>
-	<55966D1B.1040603@neratec.com>
-Date: Fri, 3 Jul 2015 07:20:51 -0700
-Message-ID: <CAHr=VqnpJ_+ovmB3gqm+X9WX98ZeVuO8VZ2cq6OFPcdjy8Rkgg@mail.gmail.com> (sfid-20150703_162056_466819_7C34CDAB)
-Subject: Re: wireless-regdb: update CA rules for 5600 - 5650 mHz
-From: Wei Zhong <wzhong@google.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <55B9B3BA.6080406@linux.intel.com>
+References: <55B9B3BA.6080406@linux.intel.com>
+Date: Thu, 30 Jul 2015 08:55:50 +0300
+Message-ID: <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com> (sfid-20150730_075615_421644_C99912B0)
+Subject: Re: [PATCH] net/wireless: enable wiphy device to suspend/resume asynchronously
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 3, 2015 at 4:08 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+On Thu, Jul 30, 2015 at 8:18 AM, Fu, Zhonghui
+<zhonghui.fu@linux.intel.com> wrote:
+> Enable wiphy device to suspend/resume asynchronously. This can improve
+> system suspend/resume speed.
 >
-> On 07/02/2015 07:44 AM, Wei Zhong wrote:
-> > commit 2fef4cad8a1bd9cbbf178e59a1b3ca672b057095
-> > Author: Wei Zhong <wzhong@google.com>
-> > Date:   Wed Jul 1 22:39:09 2015 -0700
-> >
-> >     wireless-regdb: update CA rules for 5600 - 5650 mHz
-> >
-> >     Related regulation:
-> >     http://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/sf10971.html#s6.2.3
-> >
-> >     Frequency Bands 5470-5600 MHz and 5650-5725 MHz
-> >     Until further notice, devices subject to this section [i.e. Wifi device
-> >     supporting 5 GHz bands] shall not be capable of transmitting in the band
-> >     5600-5650 MHz. This restriction is for the protection of Environment
-> >     Canada’s weather radars operating in this band.
-> >
-> > diff --git a/db.txt b/db.txt
-> > index 809cd3c..da0cfad 100644
-> > --- a/db.txt
-> > +++ b/db.txt
-> > @@ -216,7 +216,8 @@ country CA: DFS-FCC
-> >         (2402 - 2472 @ 40), (30)
-> >         (5170 - 5250 @ 80), (17), AUTO-BW
-> >         (5250 - 5330 @ 80), (24), DFS, AUTO-BW
-> > -       (5490 - 5730 @ 160), (24), DFS
-> > +       (5490 - 5600 @ 80), (24), DFS
-> > +       (5650 - 5730 @ 40), (24), DFS
-> >         (5735 - 5835 @ 80), (30)
-> >
-> >  # Source:
-> > --
->
-> I believe this could also be interpreted differently. If the change is only about
-> removing the weather radar band (5600-5650), the change should be
->
->  -       (5490 - 5730 @ 160), (24), DFS
->  +       (5490 - 5570 @ 80), (24), DFS
->  +       (5570 - 5590 @ 20), (24), DFS
->  +       (5650 - 5730 @ 80), (24), DFS
->
-> The second rule explicitly states that channel 116 remains available for HT20. If
-> this level of strict correctness is not needed, rule 1 and 2 combined would be
->
->  -       (5490 - 5730 @ 160), (24), DFS
->  +       (5490 - 5590 @ 80), (24), DFS
 
-I agree. 5590 is more strict than 5600.
+How will that impact the timing with respect to the suspend call
+coming from the bus?
+I think that a few drivers rely on the suspend call of the wiphy
+device happening before the suspend call to the bus device.
+Not sure though.
 
+> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> ---
+>  net/wireless/core.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
 >
->  +       (5650 - 5730 @ 80), (24), DFS
-
-5690 MHz is not a channel can be used, is it still necessary to mark
-this band as 80MHz while in practice it is not possible to fully
-unitize the entire band?
-
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 2a0bbd2..bc5e68f 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -416,6 +416,7 @@ use_default_name:
+>         device_initialize(&rdev->wiphy.dev);
+>         rdev->wiphy.dev.class = &ieee80211_class;
+>         rdev->wiphy.dev.platform_data = rdev;
+> +       device_enable_async_suspend(&rdev->wiphy.dev);
 >
+>         INIT_LIST_HEAD(&rdev->destroy_list);
+>         spin_lock_init(&rdev->destroy_list_lock);
+> -- 1.7.1
 >
-> Cheers
-> Zefir
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
