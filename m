@@ -1,60 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:36480 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932110AbbGGIXe (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755376AbbG3Kym (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2015 04:23:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <559B85CD.6040200@users.sourceforge.net>
-References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
-	<530CD2C4.4050903@users.sourceforge.net>
-	<alpine.DEB.2.10.1402251840450.7035@hadrien>
-	<530CF8FF.8080600@users.sourceforge.net>
-	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
-	<530DD06F.4090703@users.sourceforge.net>
-	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
-	<5317A59D.4@users.sourceforge.net>
-	<558EB32E.6090003@users.sourceforge.net>
-	<558EB4DE.3080406@users.sourceforge.net>
-	<20150707023103.GA22043@kroah.com>
-	<559B6FF8.9010704@users.sourceforge.net>
-	<CAH6sp9Nn7LKdqT9E0bykY8jpEc-Ugxn8wby5yLcW+nsx=yG3NQ@mail.gmail.com>
-	<559B85CD.6040200@users.sourceforge.net>
-Date: Tue, 7 Jul 2015 10:23:32 +0200
-Message-ID: <CAH6sp9Npqma18pj=ZsxYpCNDCm-AjjXvw61MGKBEKSYvg_LUBg@mail.gmail.com> (sfid-20150707_102418_656197_DC81504A)
-Subject: Re: Clarification for the use of additional fields in the message body
-From: Frans Klaver <fransklaver@gmail.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Chris Park <chris.park@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Jul 2015 06:54:42 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 02/19] wil6210: count drops in Rx block ack reorder
+Date: Thu, 30 Jul 2015 13:51:50 +0300
+Message-Id: <1438253527-3372-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130716_539947_7E766B7A)
+In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 7, 2015 at 9:54 AM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
+When performing Rx reordering, count skb's dropped
+per reorder buffer; and print dropped packets count
+on the "stations" debugfs entry
 
->> No need to try and preserve it.
->
-> I find that it might occasionally help to share and keep the record
-> on timestamps about the evolution for an original update suggestion.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 2 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 2 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 2 ++
+ 3 files changed, 5 insertions(+), 1 deletion(-)
 
-I think that as far as these kernel mailing lists are concerned, the
-date of the update suggestion is the date on which you submitted the
-patch, rather than the date you originally committed it to your local
-tree. If you wish to keep track of this evolution for yourself, or
-wish to share it, you're better off stashing it somewhere in a
-(public) git repo that you control. If you wish, you can always make
-mention of that repo below the ---, just above the diffstat. If you
-insist on placing the date somewhere, you can also put the date there
-if you wish. It'll be ignored by git when applied.
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 75219a1..b862676 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1353,7 +1353,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ 		else
+ 			seq_printf(s, "%c", r->reorder_buf[i] ? '*' : '_');
+ 	}
+-	seq_printf(s, "] last drop 0x%03x\n", r->ssn_last_drop);
++	seq_printf(s, "] drop %llu last 0x%03x\n", r->drop, r->ssn_last_drop);
+ }
+ 
+ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index ca10dcf..e4ac11c 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -153,6 +153,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	/* frame with out of date sequence number */
+ 	if (seq_less(seq, r->head_seq_num)) {
+ 		r->ssn_last_drop = seq;
++		r->drop++;
+ 		dev_kfree_skb(skb);
+ 		goto out;
+ 	}
+@@ -173,6 +174,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 
+ 	/* check if we already stored this frame */
+ 	if (r->reorder_buf[index]) {
++		r->drop++;
+ 		dev_kfree_skb(skb);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b79ba49..54f1673 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -426,6 +426,7 @@ struct pci_dev;
+  * @timeout: reset timer value (in TUs).
+  * @dialog_token: dialog token for aggregation session
+  * @rcu_head: RCU head used for freeing this struct
++ * @drop: total frames dropped for this reorder buffer
+  *
+  * This structure's lifetime is managed by RCU, assignments to
+  * the array holding it must hold the aggregation mutex.
+@@ -443,6 +444,7 @@ struct wil_tid_ampdu_rx {
+ 	u16 buf_size;
+ 	u16 timeout;
+ 	u16 ssn_last_drop;
++	unsigned long long drop;
+ 	u8 dialog_token;
+ 	bool first_time; /* is it 1-st time this buffer used? */
+ };
+-- 
+2.1.4
 
-Cheers,
-Frans
