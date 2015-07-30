@@ -1,66 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx6-14.smtp.antispamcloud.com ([95.211.2.226]:48725 "EHLO
-	mx6-14.smtp.antispamcloud.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751653AbbGXHrv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2015 03:47:51 -0400
-Message-ID: <55B1E2CB.3040908@topic.nl> (sfid-20150724_094755_337088_CE674ECE)
-Date: Fri, 24 Jul 2015 09:01:31 +0200
-From: Mike Looijmans <mike.looijmans@topic.nl>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: <khoroshilov@ispras.ru>, <kvalo@codeaurora.org>
-Subject: Commit "rsi: fix memory leak in rsi_load_ta_instructions()" breaks
- things
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:36013 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbbG3LlS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2015 07:41:18 -0400
+Received: by pdjr16 with SMTP id r16so23802621pdj.3
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2015 04:41:17 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [RESEND V2 1/3] staging: wilc1000: coreconfigurator.c: remove WILC_MALLOC
+Date: Thu, 30 Jul 2015 20:41:03 +0900
+Message-Id: <1438256465-19540-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150730_134120_746210_F528EFBD)
+In-Reply-To: <1438256465-19540-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1438256465-19540-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-﻿Regarding this commit:
+Use kmalloc and kmalloc_array instead of WILC_MALLOC.
 
-https://lkml.org/lkml/2014/12/12/709
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-     rsi: fix memory leak in rsi_load_ta_instructions()
-
-     Memory allocated by kmemdup() in rsi_load_ta_instructions() is leaked.
-     But duplication of firmware data here is useless,
-     so the patch removes kmemdup() at all.
-
-     Found by Linux Driver Verification project (linuxtesting.org).
-
-     Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-     Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
-We use this driver for the Redpine Wifi chip on our "florida" board, and after 
-this commit it stopped working. Symptom was that the "wlan0" device was not 
-created at all. Reverting the commit makes it work again.
-
-Apparently, the kmemdup action is needed for something. I suspect the DMA 
-controller is still copying the firmware data before the method returned.
-
-Having no experience with this part of the kernel, I wasn't able to come up 
-with a more constructive solution than just reverting the patch.
-
-Kind regards,
-Mike Looijmans.
-
-
-Kind regards,
-
-Mike Looijmans
-System Expert
-
-TOPIC Embedded Products
-Eindhovenseweg 32-C, NL-5683 KH Best
-Postbus 440, NL-5680 AK Best
-Telefoon: +31 (0) 499 33 69 79
-Telefax: +31 (0) 499 33 69 70
-E-mail: mike.looijmans@topicproducts.com
-Website: www.topicproducts.com
-
-Please consider the environment before printing this e-mail
-
-
-
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 342a336..37e09b8 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -674,7 +674,7 @@ s32 CoreConfiguratorInit(void)
+ 	sema_init(&SemHandleSendPkt, 1);
+ 	sema_init(&SemHandlePktResp, 0);
+ 
+-	gps8ConfigPacket = (s8 *)WILC_MALLOC(MAX_PACKET_BUFF_SIZE);
++	gps8ConfigPacket = kmalloc(MAX_PACKET_BUFF_SIZE, GFP_KERNEL);
+ 	if (gps8ConfigPacket == NULL) {
+ 		PRINT_ER("failed in gps8ConfigPacket allocation\n");
+ 		s32Error = WILC_NO_MEM;
+@@ -811,7 +811,7 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 		u32 u32Tsf_Lo;
+ 		u32 u32Tsf_Hi;
+ 
+-		pstrNetworkInfo = (tstrNetworkInfo *)WILC_MALLOC(sizeof(tstrNetworkInfo));
++		pstrNetworkInfo = kmalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
+ 		WILC_memset((void *)(pstrNetworkInfo), 0, sizeof(tstrNetworkInfo));
+ 
+ 		pstrNetworkInfo->s8rssi = pu8WidVal[0];
+@@ -861,7 +861,7 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
+ 		u16IEsLen = u16RxLen - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
+ 
+ 		if (u16IEsLen > 0) {
+-			pstrNetworkInfo->pu8IEs = (u8 *)WILC_MALLOC(u16IEsLen);
++			pstrNetworkInfo->pu8IEs = kmalloc(u16IEsLen, GFP_KERNEL);
+ 			WILC_memset((void *)(pstrNetworkInfo->pu8IEs), 0, u16IEsLen);
+ 
+ 			WILC_memcpy(pstrNetworkInfo->pu8IEs, pu8IEs, u16IEsLen);
+@@ -928,7 +928,7 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 	u8 *pu8IEs = 0;
+ 	u16 u16IEsLen = 0;
+ 
+-	pstrConnectRespInfo = (tstrConnectRespInfo *)WILC_MALLOC(sizeof(tstrConnectRespInfo));
++	pstrConnectRespInfo = kmalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
+ 	WILC_memset((void *)(pstrConnectRespInfo), 0, sizeof(tstrConnectRespInfo));
+ 
+ 	/* u16AssocRespLen = pu8Buffer[0]; */
+@@ -948,7 +948,7 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
+ 		pu8IEs = &pu8Buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+ 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+-		pstrConnectRespInfo->pu8RespIEs = (u8 *)WILC_MALLOC(u16IEsLen);
++		pstrConnectRespInfo->pu8RespIEs = kmalloc(u16IEsLen, GFP_KERNEL);
+ 		WILC_memset((void *)(pstrConnectRespInfo->pu8RespIEs), 0, u16IEsLen);
+ 
+ 		WILC_memcpy(pstrConnectRespInfo->pu8RespIEs, pu8IEs, u16IEsLen);
+@@ -1017,7 +1017,8 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
+ 		}
+ 	}
+ 
+-	pstrSurveyResults = (wid_site_survey_reslts_s *)WILC_MALLOC(u32SurveyResultsCount * sizeof(wid_site_survey_reslts_s));
++	pstrSurveyResults = kmalloc_array(u32SurveyResultsCount,
++				sizeof(wid_site_survey_reslts_s), GFP_KERNEL);
+ 	if (pstrSurveyResults == NULL) {
+ 		u32SurveyResultsCount = 0;
+ 		WILC_ERRORREPORT(s32Error, WILC_NO_MEM);
+-- 
+1.9.1
 
