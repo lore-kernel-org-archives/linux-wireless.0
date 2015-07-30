@@ -1,36 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52704 "EHLO sipsolutions.net"
+Received: from comal.ext.ti.com ([198.47.26.152]:51723 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756760AbbGQMfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 08:35:32 -0400
-Message-ID: <1437136527.1933.9.camel@sipsolutions.net> (sfid-20150717_143536_573716_E1854DE0)
-Subject: Re: [PATCH v3] cfg80211: Handle minimum bandwidth for quarter and
- half rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthias May <matthias.may@neratec.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 17 Jul 2015 14:35:27 +0200
-In-Reply-To: <1434035553-6621-1-git-send-email-matthias.may@neratec.com> (sfid-20150611_171301_187773_8C09D939)
-References: <1434035553-6621-1-git-send-email-matthias.may@neratec.com>
-	 (sfid-20150611_171301_187773_8C09D939)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751629AbbG3TvT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2015 15:51:19 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <yanivma@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Eyal Reizer <eyalr@ti.com>
+Subject: [PATCH 2/2] ARM: dts: am335x-evm: add wilink8 bluetooth support
+Date: Thu, 30 Jul 2015 22:39:29 +0300
+Message-ID: <1438285169-338-2-git-send-email-yanivma@ti.com> (sfid-20150730_215122_129230_80660E9A)
+In-Reply-To: <1438285169-338-1-git-send-email-yanivma@ti.com>
+References: <1438285169-338-1-git-send-email-yanivma@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-06-11 at 17:12 +0200, Matthias May wrote:
-> The goal of this patch is to improve regd handling of quarter and 
-> half rates.
-> 
-> The original assumption of 20MHz wide channels is with the 
-> introduction of
-> quarter and half rates no longer true.
-> With this patch we no longer disable all channels that don't fit into 
-> the
-> 20MHz grid, but instead set the appropriate flags to disable 
-> operation on
-> specific bandwidths.
-> 
-Applied.
+From: Eliad Peller <eliad@wizery.com>
 
-johannes
+uart1 is used for shared transport (used for multiplexing
+bluetooth and nfc data). add the needed muxes and definitions.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
+---
+ arch/arm/boot/dts/am335x-evm.dts |   29 +++++++++++++++++++++++++++++
+ 1 files changed, 29 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/boot/dts/am335x-evm.dts b/arch/arm/boot/dts/am335x-evm.dts
+index b690674..a0a3f72 100644
+--- a/arch/arm/boot/dts/am335x-evm.dts
++++ b/arch/arm/boot/dts/am335x-evm.dts
+@@ -135,6 +135,18 @@
+ 		};
+ 	};
+ 
++	kim {
++		compatible = "kim";
++		nshutdown_gpio = <117>; /* Bank3, pin21 */
++		dev_name = "/dev/ttyO1";
++		flow_cntrl = <1>;
++		baud_rate = <3000000>;
++	};
++
++	btwilink {
++		compatible = "btwilink";
++	};
++
+ 	sound {
+ 		compatible = "ti,da830-evm-audio";
+ 		ti,model = "AM335x-EVM";
+@@ -191,6 +203,16 @@
+ 		>;
+ 	};
+ 
++	uart1_pins: pinmux_uart1_pins {
++		pinctrl-single,pins = <
++			0x178 (PIN_INPUT | MUX_MODE0)			/* uart1_ctsn.uart1_ctsn */
++			0x17C (PIN_OUTPUT_PULLDOWN | MUX_MODE0)	/* uart1_rtsn.uart1_rtsn */
++			0x180 (PIN_INPUT_PULLUP | MUX_MODE0)	/* uart1_rxd.uart1_rxd */
++			0x184 (PIN_OUTPUT_PULLDOWN | MUX_MODE0) 	/* uart1_txd.uart1_txd */
++		>;
++	};
++
++
+ 	clkout2_pin: pinmux_clkout2_pin {
+ 		pinctrl-single,pins = <
+ 			0x1b4 (PIN_OUTPUT_PULLDOWN | MUX_MODE3)	/* xdma_event_intr1.clkout2 */
+@@ -359,6 +381,13 @@
+ 	status = "okay";
+ };
+ 
++&uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart1_pins>;
++
++	status = "okay";
++};
++
+ &i2c0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&i2c0_pins>;
+-- 
+1.7.9
+
