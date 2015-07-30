@@ -1,41 +1,407 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:36648 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751968AbbGNMcP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 08:32:15 -0400
-Received: by igbij6 with SMTP id ij6so44850471igb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 05:32:14 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v3 0/5] mesh AID fixes
-Date: Tue, 14 Jul 2015 08:31:54 -0400
-Message-Id: <1436877119-17577-1-git-send-email-me@bobcopeland.com> (sfid-20150714_143222_468227_17AB0939)
+Received: from bear.ext.ti.com ([192.94.94.41]:50103 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751833AbbG3TuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2015 15:50:14 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <yanivma@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 4/4] wlcore: add p2p device support
+Date: Thu, 30 Jul 2015 22:38:22 +0300
+Message-ID: <1438285102-32751-4-git-send-email-yanivma@ti.com> (sfid-20150730_215021_655722_7CDF0264)
+In-Reply-To: <1438285102-32751-1-git-send-email-yanivma@ti.com>
+References: <1438285102-32751-1-git-send-email-yanivma@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset removes usage of peer link ID as a stand-in for
-AID, in order to follow the standard in this regard.
+From: Eliad Peller <eliad@wizery.com>
 
-This revision gained two patches: one was an existing bugfix that
-was buried in a reorg patch, and the other is a fix for a missing
-length check found while reviewing the code.
+When starting a p2p mgmt interface, enable its device role. This
+allows us to keep the sta role disabled and scan on the dev role.
 
-Bob Copeland (5):
-  mac80211: correct aid location in peering frames
-  mac80211: add missing length check for confirm frames
-  mac80211: reorder mesh_plink to remove forward decl
-  mac80211: mesh: separate plid and aid concepts
-  mac80211: select an AID when creating new mesh STAs
+In general, p2p management interfaces cannot send vif-specific commands
+to FW, as the vif role id is invalid. Only off-channel data and scans
+happen on this vif, so most ops are not relevant.
 
- net/mac80211/mesh_plink.c | 172 ++++++++++++++++++++++++++++------------------
- net/mac80211/mesh_ps.c    |   2 +-
- net/mac80211/sta_info.c   |   5 +-
- net/mac80211/sta_info.h   |   2 +
- 4 files changed, 108 insertions(+), 73 deletions(-)
+If the vif is a p2p mgmt vif, block some mac80211 ops.
 
+Configure rate policies for p2p mgmt interface, as
+otherwise p2p packets come out with arbitrary rates.
+
+Since wpa_supplicant currently doesn't support standalone
+p2p device mode (without another attached managed interface),
+add p2p device to the allowed interface combinations without
+decreasing the allowed station count.
+
+Moreover, increase the station count in some cases, as AP
+mode usually starts as station interface, and the AP interface
+is now different from the p2p management one).
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl12xx/scan.c     |    6 ++-
+ drivers/net/wireless/ti/wl18xx/main.c     |   48 +++++++++++++++++++-
+ drivers/net/wireless/ti/wl18xx/scan.c     |    6 ++-
+ drivers/net/wireless/ti/wlcore/cmd.c      |   26 +++++++----
+ drivers/net/wireless/ti/wlcore/init.c     |    2 +-
+ drivers/net/wireless/ti/wlcore/init.h     |    1 +
+ drivers/net/wireless/ti/wlcore/main.c     |   69 +++++++++++++++++++++++-----
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    5 ++
+ 8 files changed, 136 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/scan.c b/drivers/net/wireless/ti/wl12xx/scan.c
+index 0c0d5cd..7c355ff 100644
+--- a/drivers/net/wireless/ti/wl12xx/scan.c
++++ b/drivers/net/wireless/ti/wl12xx/scan.c
+@@ -118,7 +118,11 @@ static int wl1271_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	if (passive)
+ 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
+ 
+-	cmd->params.role_id = wlvif->role_id;
++	/* scan on the dev role if the regular one is not started */
++	if (wlcore_is_p2p_mgmt(wlvif))
++		cmd->params.role_id = wlvif->dev_role_id;
++	else
++		cmd->params.role_id = wlvif->role_id;
+ 
+ 	if (WARN_ON(cmd->params.role_id == WL12XX_INVALID_ROLE_ID)) {
+ 		ret = -EINVAL;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 62aabdd..4ff9e75 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1799,7 +1799,7 @@ static struct ieee80211_sta_ht_cap wl18xx_mimo_ht_cap_2ghz = {
+ 
+ static const struct ieee80211_iface_limit wl18xx_iface_limits[] = {
+ 	{
+-		.max = 3,
++		.max = 2,
+ 		.types = BIT(NL80211_IFTYPE_STATION),
+ 	},
+ 	{
+@@ -1808,6 +1808,10 @@ static const struct ieee80211_iface_limit wl18xx_iface_limits[] = {
+ 			 BIT(NL80211_IFTYPE_P2P_GO) |
+ 			 BIT(NL80211_IFTYPE_P2P_CLIENT),
+ 	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
++	},
+ };
+ 
+ static const struct ieee80211_iface_limit wl18xx_iface_ap_limits[] = {
+@@ -1815,6 +1819,48 @@ static const struct ieee80211_iface_limit wl18xx_iface_ap_limits[] = {
+ 		.max = 2,
+ 		.types = BIT(NL80211_IFTYPE_AP),
+ 	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
++	},
++};
++
++static const struct ieee80211_iface_limit wl18xx_iface_ap_cl_limits[] = {
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_STATION),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_AP),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_CLIENT),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
++	},
++};
++
++static const struct ieee80211_iface_limit wl18xx_iface_ap_go_limits[] = {
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_STATION),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_AP),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_GO),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
++	},
+ };
+ 
+ static const struct ieee80211_iface_combination
+diff --git a/drivers/net/wireless/ti/wl18xx/scan.c b/drivers/net/wireless/ti/wl18xx/scan.c
+index ec2eb14..c938c49 100644
+--- a/drivers/net/wireless/ti/wl18xx/scan.c
++++ b/drivers/net/wireless/ti/wl18xx/scan.c
+@@ -51,7 +51,11 @@ static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		goto out;
+ 	}
+ 
+-	cmd->role_id = wlvif->role_id;
++	/* scan on the dev role if the regular one is not started */
++	if (wlcore_is_p2p_mgmt(wlvif))
++		cmd->role_id = wlvif->dev_role_id;
++	else
++		cmd->role_id = wlvif->role_id;
+ 
+ 	if (WARN_ON(cmd->role_id == WL12XX_INVALID_ROLE_ID)) {
+ 		ret = -EINVAL;
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index dbc55a0..f01d24b 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -2003,12 +2003,15 @@ int wl12xx_start_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		      wlvif->bss_type == BSS_TYPE_IBSS)))
+ 		return -EINVAL;
+ 
+-	ret = wl12xx_cmd_role_enable(wl,
+-				     wl12xx_wlvif_to_vif(wlvif)->addr,
+-				     WL1271_ROLE_DEVICE,
+-				     &wlvif->dev_role_id);
+-	if (ret < 0)
+-		goto out;
++	/* the dev role is already started for p2p mgmt interfaces */
++	if (!wlcore_is_p2p_mgmt(wlvif)) {
++		ret = wl12xx_cmd_role_enable(wl,
++					     wl12xx_wlvif_to_vif(wlvif)->addr,
++					     WL1271_ROLE_DEVICE,
++					     &wlvif->dev_role_id);
++		if (ret < 0)
++			goto out;
++	}
+ 
+ 	ret = wl12xx_cmd_role_start_dev(wl, wlvif, band, channel);
+ 	if (ret < 0)
+@@ -2023,7 +2026,8 @@ int wl12xx_start_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ out_stop:
+ 	wl12xx_cmd_role_stop_dev(wl, wlvif);
+ out_disable:
+-	wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
++	if (!wlcore_is_p2p_mgmt(wlvif))
++		wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
+ out:
+ 	return ret;
+ }
+@@ -2052,9 +2056,11 @@ int wl12xx_stop_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
+-	if (ret < 0)
+-		goto out;
++	if (!wlcore_is_p2p_mgmt(wlvif)) {
++		ret = wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
++		if (ret < 0)
++			goto out;
++	}
+ 
+ out:
+ 	return ret;
+diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
+index 5ca1fb1..e92f263 100644
+--- a/drivers/net/wireless/ti/wlcore/init.c
++++ b/drivers/net/wireless/ti/wlcore/init.c
+@@ -348,7 +348,7 @@ static int wl12xx_init_fwlog(struct wl1271 *wl)
+ }
+ 
+ /* generic sta initialization (non vif-specific) */
+-static int wl1271_sta_hw_init(struct wl1271 *wl, struct wl12xx_vif *wlvif)
++int wl1271_sta_hw_init(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ {
+ 	int ret;
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/init.h b/drivers/net/wireless/ti/wlcore/init.h
+index a45fbfdd..fd1cdb6 100644
+--- a/drivers/net/wireless/ti/wlcore/init.h
++++ b/drivers/net/wireless/ti/wlcore/init.h
+@@ -35,5 +35,6 @@ int wl1271_hw_init(struct wl1271 *wl);
+ int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif);
+ int wl1271_init_ap_rates(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+ int wl1271_ap_init_templates(struct wl1271 *wl, struct ieee80211_vif *vif);
++int wl1271_sta_hw_init(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+ 
+ #endif
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 337223b..e819369 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1792,6 +1792,9 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+ 
+ 	wl->wow_enabled = true;
+ 	wl12xx_for_each_wlvif(wl, wlvif) {
++		if (wlcore_is_p2p_mgmt(wlvif))
++			continue;
++
+ 		ret = wl1271_configure_suspend(wl, wlvif, wow);
+ 		if (ret < 0) {
+ 			mutex_unlock(&wl->mutex);
+@@ -1901,6 +1904,9 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ 		goto out;
+ 
+ 	wl12xx_for_each_wlvif(wl, wlvif) {
++		if (wlcore_is_p2p_mgmt(wlvif))
++			continue;
++
+ 		wl1271_configure_resume(wl, wlvif);
+ 	}
+ 
+@@ -2256,6 +2262,7 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 		wlvif->p2p = 1;
+ 		/* fall-through */
+ 	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_DEVICE:
+ 		wlvif->bss_type = BSS_TYPE_STA_BSS;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+@@ -2477,7 +2484,8 @@ static void wlcore_hw_queue_iter(void *data, u8 *mac,
+ {
+ 	struct wlcore_hw_queue_iter_data *iter_data = data;
+ 
+-	if (WARN_ON_ONCE(vif->hw_queue[0] == IEEE80211_INVAL_HW_QUEUE))
++	if (vif->type == NL80211_IFTYPE_P2P_DEVICE ||
++	    WARN_ON_ONCE(vif->hw_queue[0] == IEEE80211_INVAL_HW_QUEUE))
+ 		return;
+ 
+ 	if (iter_data->cur_running || vif == iter_data->vif) {
+@@ -2495,6 +2503,11 @@ static int wlcore_allocate_hw_queue_base(struct wl1271 *wl,
+ 	struct wlcore_hw_queue_iter_data iter_data = {};
+ 	int i, q_base;
+ 
++	if (vif->type == NL80211_IFTYPE_P2P_DEVICE) {
++		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
++		return 0;
++	}
++
+ 	iter_data.vif = vif;
+ 
+ 	/* mark all bits taken by active interfaces */
+@@ -2618,14 +2631,27 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 			goto out;
+ 	}
+ 
+-	ret = wl12xx_cmd_role_enable(wl, vif->addr,
+-				     role_type, &wlvif->role_id);
+-	if (ret < 0)
+-		goto out;
++	if (!wlcore_is_p2p_mgmt(wlvif)) {
++		ret = wl12xx_cmd_role_enable(wl, vif->addr,
++					     role_type, &wlvif->role_id);
++		if (ret < 0)
++			goto out;
+ 
+-	ret = wl1271_init_vif_specific(wl, vif);
+-	if (ret < 0)
+-		goto out;
++		ret = wl1271_init_vif_specific(wl, vif);
++		if (ret < 0)
++			goto out;
++
++	} else {
++		ret = wl12xx_cmd_role_enable(wl, vif->addr, WL1271_ROLE_DEVICE,
++					     &wlvif->dev_role_id);
++		if (ret < 0)
++			goto out;
++
++		/* needed mainly for configuring rate policies */
++		ret = wl1271_sta_hw_init(wl, wlvif);
++		if (ret < 0)
++			goto out;
++	}
+ 
+ 	list_add(&wlvif->list, &wl->wlvif_list);
+ 	set_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags);
+@@ -2696,9 +2722,15 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 				wl12xx_stop_dev(wl, wlvif);
+ 		}
+ 
+-		ret = wl12xx_cmd_role_disable(wl, &wlvif->role_id);
+-		if (ret < 0)
+-			goto deinit;
++		if (!wlcore_is_p2p_mgmt(wlvif)) {
++			ret = wl12xx_cmd_role_disable(wl, &wlvif->role_id);
++			if (ret < 0)
++				goto deinit;
++		} else {
++			ret = wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
++			if (ret < 0)
++				goto deinit;
++		}
+ 
+ 		wl1271_ps_elp_sleep(wl);
+ 	}
+@@ -3088,6 +3120,9 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ {
+ 	int ret;
+ 
++	if (wlcore_is_p2p_mgmt(wlvif))
++		return 0;
++
+ 	if (conf->power_level != wlvif->power_level) {
+ 		ret = wl1271_acx_tx_power(wl, wlvif, conf->power_level);
+ 		if (ret < 0)
+@@ -3207,6 +3242,9 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+ 		goto out;
+ 
+ 	wl12xx_for_each_wlvif(wl, wlvif) {
++		if (wlcore_is_p2p_mgmt(wlvif))
++			continue;
++
+ 		if (wlvif->bss_type != BSS_TYPE_AP_BSS) {
+ 			if (*total & FIF_ALLMULTI)
+ 				ret = wl1271_acx_group_address_tbl(wl, wlvif,
+@@ -4837,6 +4875,9 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw,
+ 	u8 ps_scheme;
+ 	int ret = 0;
+ 
++	if (wlcore_is_p2p_mgmt(wlvif))
++		return 0;
++
+ 	mutex_lock(&wl->mutex);
+ 
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
+@@ -6078,8 +6119,10 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ 
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP) |
+-		BIT(NL80211_IFTYPE_P2P_CLIENT) | BIT(NL80211_IFTYPE_P2P_GO);
++					 BIT(NL80211_IFTYPE_AP) |
++					 BIT(NL80211_IFTYPE_P2P_DEVICE) |
++					 BIT(NL80211_IFTYPE_P2P_CLIENT) |
++					 BIT(NL80211_IFTYPE_P2P_GO);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	wl->hw->wiphy->max_sched_scan_ssids = 16;
+ 	wl->hw->wiphy->max_match_sets = 16;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 39efc6d..27c5687 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -503,6 +503,11 @@ struct ieee80211_vif *wl12xx_wlvif_to_vif(struct wl12xx_vif *wlvif)
+ 	return container_of((void *)wlvif, struct ieee80211_vif, drv_priv);
+ }
+ 
++static inline bool wlcore_is_p2p_mgmt(struct wl12xx_vif *wlvif)
++{
++	return wl12xx_wlvif_to_vif(wlvif)->type == NL80211_IFTYPE_P2P_DEVICE;
++}
++
+ #define wl12xx_for_each_wlvif(wl, wlvif) \
+ 		list_for_each_entry(wlvif, &wl->wlvif_list, list)
+ 
 -- 
-2.1.4
+1.7.9
 
