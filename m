@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.iliad.fr ([212.27.33.1]:33201 "EHLO ns.iliad.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751132AbbGIPcx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2015 11:32:53 -0400
-Message-ID: <1436455659.36587.131.camel@sakura.staff.proxad.net> (sfid-20150709_173256_566115_178A00FD)
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-From: Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To: David Lin <dlin@marvell.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mail-io0-f175.google.com ([209.85.223.175]:33476 "EHLO
+	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754547AbbG3GyL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2015 02:54:11 -0400
+Received: by ioii16 with SMTP id i16so44782729ioi.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2015 23:54:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <8738065hkb.fsf@kamboji.qca.qualcomm.com>
+References: <1438205790-17629-1-git-send-email-hauke@hauke-m.de>
+	<8738065hkb.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 30 Jul 2015 08:54:10 +0200
+Message-ID: <CACna6rySwFsFhSjRgyw_oVk3BX9sSHu81rPTusmGujOveehbiA@mail.gmail.com> (sfid-20150730_085421_199776_3A3F52B4)
+Subject: Re: [PATCH] b43: fix extpa_gain check for 2GHz
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
-Date: Thu, 09 Jul 2015 17:27:39 +0200
-In-Reply-To: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 30 July 2015 at 07:40, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Hauke Mehrtens <hauke@hauke-m.de> writes:
+>
+>> On the 2GHz and and on the 5GHZ band only the extpa_gain setting from
+>> the 5GHz band was checked. this patch makes it check the property from
+>> the correct band.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>
+> Is this a regression? If yes, please add a Fixes line.
+>
+> Should this go to 4.2?
 
-On Fri, 2015-07-03 at 06:10 +0000, David Lin wrote:
+Not a regression. It's like this for a loooong time.
 
-Hello,
+AFAIK PCI(e) cards don't have external power amplifier, so this code
+is most likely used for some fancy SoCs only. There are 3 known SoCs
+with N-PHY rev 5 or 6: BCM4717A1, BCM4718A1 & BCM4716B0.
 
-> The Linux driver for WRT1900AC. The work was initially developed as
-> part of openwrt effort and maintained on
-> https://github.com/kaloz/mwlwifi.
+So we may consider taking it for 4.2 without any "Fixes: " line but I
+wouldn't care too much about Cc-ing stable.
 
-I see *massive* code duplication with the mwl8k driver.
-
-This is, I guess, not a surprise since the supported chipset are an
-evolution of the ones supported by mwl8k, just look at how close/similar
-the descriptor format is.
-
-The problem is that each new Marvell chipset comes with a new firmware
-version, and there is no effort to have a common firmware API or code
-base that supports multiple chipsets.
-
-That pushes the bloat on the kernel side, do we really agree on that ?
+Hauke: do you agree?
 
 -- 
-Maxime
-
-
+Rafał
