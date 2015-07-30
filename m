@@ -1,107 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6121 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497AbbGEIqF (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33293 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071AbbG3Vfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2015 04:46:05 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 03/13] wil6210: debugfs for channel survey
-Date: Sun,  5 Jul 2015 10:24:30 +0300
-Message-Id: <1436081080-27305-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150705_104620_576527_58E5D0DA)
-In-Reply-To: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Thu, 30 Jul 2015 17:35:38 -0400
+Received: by padck2 with SMTP id ck2so29369099pad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2015 14:35:38 -0700 (PDT)
+From: Filipe Brandenburger <filbranden@google.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Elliott Hughes <enh@google.com>,
+	Christopher Wiley <wiley@google.com>,
+	Filipe Brandenburger <filbranden@google.com>
+Subject: [PATCH 2/2] iw: remove android-nl.c with unneeded workaround
+Date: Thu, 30 Jul 2015 14:35:15 -0700
+Message-Id: <1438292115-39495-3-git-send-email-filbranden@google.com> (sfid-20150730_233545_683482_AFE73F07)
+In-Reply-To: <1438292115-39495-1-git-send-email-filbranden@google.com>
+References: <1438292115-39495-1-git-send-email-filbranden@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print channel survey results on the debugfs. New entry
-named "survey"
+The workaround might have been necessary in the past, however now it
+produces the following error:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+  .../libnl.a(attr.o): multiple definition of 'nla_put_flag'
+  .../android-nl.o: previous definition here
+  collect2: error: ld returned 1 exit status
+
+TEST=Built AOSP tree with this patchset, tested the generated iw binary.
+
+Signed-off-by: Filipe Brandenburger <filbranden@google.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 60 ++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+ Android.mk   | 2 +-
+ android-nl.c | 6 ------
+ 2 files changed, 1 insertion(+), 7 deletions(-)
+ delete mode 100644 android-nl.c
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 75219a1..42bc6e6 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1414,6 +1414,65 @@ static const struct file_operations fops_sta = {
- 	.llseek		= seq_lseek,
- };
+diff --git a/Android.mk b/Android.mk
+index 0820892c6c19..8d6567f624c1 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -7,7 +7,7 @@ IW_ANDROID_BUILD=y
+ NO_PKG_CONFIG=y
+ include $(LOCAL_PATH)/Makefile
  
-+/*---------Survey results------------*/
-+static int wil_survey_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	int i, n_ch;
-+	u16 filled;
-+
-+	if (!wil->survey_ready) {
-+		seq_puts(s, "Survey not ready\n");
-+		return 0;
-+	}
-+	seq_printf(s, "dwell_time : %d\n",
-+		   le32_to_cpu(wil->survey_reply.evt.dwell_time));
-+	filled = le16_to_cpu(wil->survey_reply.evt.filled);
-+	n_ch = min_t(int, wil->survey_reply.evt.num_scanned_channels,
-+		     ARRAY_SIZE(wil->survey_reply.ch_info));
-+
-+#define ACS_FILLED(x) (filled & WMI_ACS_INFO_BITMASK_ ## x) ? \
-+	" " __stringify(x) : ""
-+	seq_printf(s, "Filled : 0x%04x%s%s%s%s%s\n", filled,
-+		   ACS_FILLED(BEACON_FOUND),
-+		   ACS_FILLED(BUSY_TIME),
-+		   ACS_FILLED(TX_TIME),
-+		   ACS_FILLED(RX_TIME),
-+		   ACS_FILLED(NOISE)
-+		  );
-+#undef ACS_FILLED
-+	seq_printf(s, "Channels [%d] {\n", n_ch);
-+	for (i = 0; i < n_ch; i++) {
-+		struct scan_channel_info *ch = &wil->survey_reply.ch_info[i];
-+
-+		seq_printf(s, "  [%d]", ch->channel);
-+#define ACS_PRINT(x, str, field) do { if (filled & WMI_ACS_INFO_BITMASK_ ## x) \
-+		seq_printf(s, " %s : %d", str, field); \
-+	} while (0)
-+		ACS_PRINT(BEACON_FOUND, "bcon", ch->beacon_found);
-+		ACS_PRINT(BUSY_TIME, "busy", le16_to_cpu(ch->busy_time));
-+		ACS_PRINT(TX_TIME, "tx", le16_to_cpu(ch->tx_time));
-+		ACS_PRINT(RX_TIME, "rx", le16_to_cpu(ch->rx_time));
-+		ACS_PRINT(NOISE, "noise", ch->noise);
-+#undef ACS_PRINT
-+		seq_puts(s, "\n");
-+	}
-+	seq_puts(s, "}\n");
-+	return 0;
-+}
-+
-+static int wil_survey_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_survey_debugfs_show, inode->i_private);
-+}
-+
-+static const struct file_operations fops_survey = {
-+	.open		= wil_survey_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
- /*----------------*/
- static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 				       struct dentry *dbg)
-@@ -1460,6 +1519,7 @@ static const struct {
- 	{"link",	S_IRUGO,		&fops_link},
- 	{"info",	S_IRUGO,		&fops_info},
- 	{"recovery",	S_IRUGO | S_IWUSR,	&fops_recovery},
-+	{"survey",	S_IRUGO,		&fops_survey},
- };
+-LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS)) android-nl.c
++LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS))
  
- static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+ LOCAL_C_INCLUDES := \
+ 	$(LOCAL_PATH) \
+diff --git a/android-nl.c b/android-nl.c
+deleted file mode 100644
+index d216f5fe8680..000000000000
+--- a/android-nl.c
++++ /dev/null
+@@ -1,6 +0,0 @@
+-#include <netlink/attr.h>
+-
+-int nla_put_flag(struct nl_msg *msg, int flag)
+-{
+-	return nla_put(msg, flag, 0, NULL);
+-}
 -- 
-2.1.4
+2.5.0.rc2.392.g76e840b
 
