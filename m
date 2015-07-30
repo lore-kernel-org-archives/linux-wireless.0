@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39590 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364AbbG3MSx (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36497 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753832AbbG3Kyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 08:18:53 -0400
-Date: Thu, 30 Jul 2015 15:18:17 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, rachel.kim@atmel.com,
-	dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com
-Subject: Re: [RESEND V2 0/3] cover letter of wilc1000 patches
-Message-ID: <20150730121817.GN5180@mwanda> (sfid-20150730_141929_115452_1E49233A)
-References: <1438256465-19540-1-git-send-email-chaehyun.lim@gmail.com>
- <CAKV=isuiu4GeYxPFpwqSn8io-uq7hz53tiBX9dmh62b4rvRA=g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKV=isuiu4GeYxPFpwqSn8io-uq7hz53tiBX9dmh62b4rvRA=g@mail.gmail.com>
+	Thu, 30 Jul 2015 06:54:43 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 03/19] wil6210: print "ulong" fields in hex format in the debugfs
+Date: Thu, 30 Jul 2015 13:51:51 +0300
+Message-Id: <1438253527-3372-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130716_896116_FC8926AF)
+In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2015 at 09:03:48PM +0900, Chaehyun Lim wrote:
-> On Thu, Jul 30, 2015 at 8:41 PM, Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
-> >
-> > First patch has 4 sites of kmalloc change in coreconfigurator.c
-> > First one, it is used for gps8ConfigPacket at CoreconfiguratorInit and CoreConfiguratorDeInit.
-> > I think it should be removed next time because I cannot find anywhere to use it.
-> > Then, it is okay to change flag as GFP_KERNEL.
-> >
-> > Other three changes are used to handle host interface message within a kernel thread.
-> > The manipulation of host interface message is not called on IRQ context and I could not
-> > find any spin lock inside function.
-> >
+In the debugfs, there is "ulong" attribute printing.
+It is used for bitmap printing, and more appropriate format
+would be hexadecimal, not decimal.
 
-This information is good information and it should be in the patch
-description.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index b862676..2651ec4 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -306,7 +306,7 @@ static int wil_debugfs_ulong_get(void *data, u64 *val)
+ }
+ 
+ DEFINE_SIMPLE_ATTRIBUTE(wil_fops_ulong, wil_debugfs_ulong_get,
+-			wil_debugfs_ulong_set, "%llu\n");
++			wil_debugfs_ulong_set, "0x%llx\n");
+ 
+ static struct dentry *wil_debugfs_create_ulong(const char *name, umode_t mode,
+ 					       struct dentry *parent,
+-- 
+2.1.4
 
