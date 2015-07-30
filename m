@@ -1,178 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:29618 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752999AbbG3OFj (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36497 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753832AbbG3Kyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 10:05:39 -0400
-Message-id: <55BA2F26.2030003@samsung.com> (sfid-20150730_160633_565002_566CA880)
-Date: Thu, 30 Jul 2015 16:05:26 +0200
-From: Robert Baldyga <r.baldyga@samsung.com>
-MIME-version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, robh+dt@kernel.org, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, linux-wireless@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nfc@lists.01.org, m.szyprowski@samsung.com
-Subject: Re: [PATCH] nfc: s3fwrn5: Add driver for Samsung S3FWRN5 NFC Chip
-References: <1438172116-27099-1-git-send-email-r.baldyga@samsung.com>
- <1438251763.15571.29.camel@tiscali.nl>
-In-reply-to: <1438251763.15571.29.camel@tiscali.nl>
-Content-type: text/plain; charset=utf-8
+	Thu, 30 Jul 2015 06:54:45 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 11/19] wil6210: sort IEs handling
+Date: Thu, 30 Jul 2015 13:51:59 +0300
+Message-Id: <1438253527-3372-12-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130716_771647_9BCD26AE)
+In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/30/2015 12:22 PM, Paul Bolle wrote:
-> On wo, 2015-07-29 at 14:15 +0200, Robert Baldyga wrote:
->> --- /dev/null
->> +++ b/drivers/nfc/s3fwrn5/Kconfig
->> @@ -0,0 +1,22 @@
->> +config NFC_S3FWRN5
->> +	tristate "Samsung S3FWRN5 NFC driver"
->> +	depends on NFC_NCI
->> +	default n
->> +	---help---
->> +	  Core driver for Samsung S3FWRN5 NFC chip.
->> +
->> +	  To compile this driver as a module, choose m here. The module will
->> +	  be called s3fwrn5.ko.
->> +	  Say N if unsure.
-> 
-> If I scanned the code correctly then all this module does is exporting
-> three functions to s3fwrn5_i2c.ko. Note that there's also no
-> module_unit() in sight. So it's a library, of sorts. And there's no
-> reason to load this module without also loading s3fwrn5_i2c.ko. Likewise
-> there's no reason to build it without also building s3fwrn5_i2c.ko.
-> 
-> So perhaps you could merge the two Kconfig symbols you add in this
-> patch.
-> 
-> Or, if you'd like to keep both Kconfig symbols, for whatever reason, you
-> might want to make NFC_S3FWRN5 a "silent" symbol that will be selected
-> by NFC_S3FWRN5_I2C. (That probably requires NFC_S3FWRN5_I2C to depend on
-> both NFC_NCI and I2C.)
-> 
-> Would either of the above two options work here?
+sort overall IE's handling
+prepare code (disabled for now) to add IEs for the beacon
 
-I would like to keep NFC_S3FWRN5 symbol, because in future another PHYs
-can be supported, so this would allow to select core whether PHY will be
-selected. However "silent" symbol seems to be a good solution.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 78 +++++++++++------------------
+ 1 file changed, 29 insertions(+), 49 deletions(-)
 
-> 
->> +config NFC_S3FWRN5_I2C
->> +	tristate "Samsung S3FWRN5 I2C support"
->> +	depends on NFC_S3FWRN5 && I2C
->> +	default y
-> 
-> You only added "default y" to make setting this symbol in "make *config"
-> a one step process, right?
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index e4be2d9..8811174 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -722,46 +722,51 @@ static int wil_fix_bcon(struct wil6210_priv *wil,
+ {
+ 	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
+ 	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
+-	int rc = 0;
+ 
+ 	if (bcon->probe_resp_len <= hlen)
+ 		return 0;
+ 
++/* always use IE's from full probe frame, they has more info
++ * notable RSN
++ */
++	bcon->proberesp_ies = f->u.probe_resp.variable;
++	bcon->proberesp_ies_len = bcon->probe_resp_len - hlen;
+ 	if (!bcon->assocresp_ies) {
+-		bcon->assocresp_ies = f->u.probe_resp.variable;
+-		bcon->assocresp_ies_len = bcon->probe_resp_len - hlen;
+-		rc = 1;
++		bcon->assocresp_ies = bcon->proberesp_ies;
++		bcon->assocresp_ies_len = bcon->proberesp_ies_len;
+ 	}
+ 
+-	return rc;
++	return 1;
+ }
+ 
+ /* internal functions for device reset and starting AP */
+ static int _wil_cfg80211_set_ies(struct wiphy *wiphy,
+-				 size_t probe_ies_len, const u8 *probe_ies,
+-				 size_t assoc_ies_len, const u8 *assoc_ies)
+-
++				 struct cfg80211_beacon_data *bcon)
+ {
+ 	int rc;
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+ 
+-	/* FW do not form regular beacon, so bcon IE's are not set
+-	 * For the DMG bcon, when it will be supported, bcon IE's will
+-	 * be reused; add something like:
+-	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+-	 * bcon->beacon_ies);
+-	 */
+-	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, probe_ies_len, probe_ies);
++	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
++			bcon->proberesp_ies);
+ 	if (rc) {
+ 		wil_err(wil, "set_ie(PROBE_RESP) failed\n");
+ 		return rc;
+ 	}
+ 
+-	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, assoc_ies_len, assoc_ies);
++	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
++			bcon->assocresp_ies);
+ 	if (rc) {
+ 		wil_err(wil, "set_ie(ASSOC_RESP) failed\n");
+ 		return rc;
+ 	}
++#if 0 /* to use beacon IE's, remove this #if 0 */
++	rc = wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->tail_len,
++			bcon->tail);
++	if (rc) {
++		wil_err(wil, "set_ie(BEACON) failed\n");
++		return rc;
++	}
++#endif
+ 
+ 	return 0;
+ }
+@@ -770,8 +775,7 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 				  struct net_device *ndev,
+ 				  const u8 *ssid, size_t ssid_len, u32 privacy,
+ 				  int bi, u8 chan,
+-				  size_t probe_ies_len, const u8 *probe_ies,
+-				  size_t assoc_ies_len, const u8 *assoc_ies,
++				  struct cfg80211_beacon_data *bcon,
+ 				  u8 hidden_ssid)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+@@ -792,8 +796,7 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	if (rc)
+ 		goto out;
+ 
+-	rc = _wil_cfg80211_set_ies(wiphy, probe_ies_len, probe_ies,
+-				   assoc_ies_len, assoc_ies);
++	rc = _wil_cfg80211_set_ies(wiphy, bcon);
+ 	if (rc)
+ 		goto out;
+ 
+@@ -827,27 +830,20 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 				      struct cfg80211_beacon_data *bcon)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+-	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
+-	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
+-	const u8 *pr_ies = NULL;
+-	size_t pr_ies_len = 0;
+ 	int rc;
+ 	u32 privacy = 0;
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 	wil_print_bcon_data(bcon);
+ 
+-	if (bcon->probe_resp_len > hlen) {
+-		pr_ies = f->u.probe_resp.variable;
+-		pr_ies_len = bcon->probe_resp_len - hlen;
+-	}
+-
+ 	if (wil_fix_bcon(wil, bcon)) {
+ 		wil_dbg_misc(wil, "Fixed bcon\n");
+ 		wil_print_bcon_data(bcon);
+ 	}
+ 
+-	if (pr_ies && cfg80211_find_ie(WLAN_EID_RSN, pr_ies, pr_ies_len))
++	if (bcon->proberesp_ies &&
++	    cfg80211_find_ie(WLAN_EID_RSN, bcon->proberesp_ies,
++			     bcon->proberesp_ies_len))
+ 		privacy = 1;
+ 
+ 	/* in case privacy has changed, need to restart the AP */
+@@ -860,14 +856,10 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 		rc = _wil_cfg80211_start_ap(wiphy, ndev, wdev->ssid,
+ 					    wdev->ssid_len, privacy,
+ 					    wdev->beacon_interval,
+-					    wil->channel, pr_ies_len, pr_ies,
+-					    bcon->assocresp_ies_len,
+-					    bcon->assocresp_ies,
++					    wil->channel, bcon,
+ 					    wil->hidden_ssid);
+ 	} else {
+-		rc = _wil_cfg80211_set_ies(wiphy, pr_ies_len, pr_ies,
+-					   bcon->assocresp_ies_len,
+-					   bcon->assocresp_ies);
++		rc = _wil_cfg80211_set_ies(wiphy, bcon);
+ 	}
+ 
+ 	return rc;
+@@ -882,10 +874,6 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	struct ieee80211_channel *channel = info->chandef.chan;
+ 	struct cfg80211_beacon_data *bcon = &info->beacon;
+ 	struct cfg80211_crypto_settings *crypto = &info->crypto;
+-	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
+-	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
+-	const u8 *pr_ies = NULL;
+-	size_t pr_ies_len = 0;
+ 	u8 hidden_ssid;
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+@@ -925,11 +913,6 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wil_print_bcon_data(bcon);
+ 	wil_print_crypto(wil, crypto);
+ 
+-	if (bcon->probe_resp_len > hlen) {
+-		pr_ies = f->u.probe_resp.variable;
+-		pr_ies_len = bcon->probe_resp_len - hlen;
+-	}
+-
+ 	if (wil_fix_bcon(wil, bcon)) {
+ 		wil_dbg_misc(wil, "Fixed bcon\n");
+ 		wil_print_bcon_data(bcon);
+@@ -938,10 +921,7 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	rc = _wil_cfg80211_start_ap(wiphy, ndev,
+ 				    info->ssid, info->ssid_len, info->privacy,
+ 				    info->beacon_interval, channel->hw_value,
+-				    pr_ies_len, pr_ies,
+-				    bcon->assocresp_ies_len,
+-				    bcon->assocresp_ies,
+-				    hidden_ssid);
++				    bcon, hidden_ssid);
+ 
+ 	return rc;
+ }
+-- 
+2.1.4
 
-Thats right. Moreover for now i2c is the only available PHY, so if
-someone decides to select S3FWRN5 core driver he also probably wants to
-have the PHY selected ;)
-
->> +	---help---
->> +	  This module adds support for an I2C interface to the S3FWRN5 chip.
->> +	  Select this if your platform is using the I2C bus.
->> +
->> +	  To compile this driver as a module, choose m here. The module will
->> +	  be called s3fwrn5_i2c.ko.
->> +	  Say N if unsure.
-> 
-> (This advice is at odds with "default y" above, by the way.)
-> 
->> --- /dev/null
->> +++ b/drivers/nfc/s3fwrn5/Makefile
-> 
->> +s3fwrn5-objs = core.o firmware.o nci.o
->> +s3fwrn5_i2c-objs = i2c.o
->> +
->> +obj-$(CONFIG_NFC_S3FWRN5) += s3fwrn5.o
->> +obj-$(CONFIG_NFC_S3FWRN5_I2C) += s3fwrn5_i2c.o
-> 
->> --- /dev/null
->> +++ b/drivers/nfc/s3fwrn5/core.c
-> 
->> + * This program is free software; you can redistribute it and/or modify it
->> + * under the terms and conditions of the GNU General Public License,
->> + * version 2, as published by the Free Software Foundation.
-> 
->> +int s3fwrn5_probe(struct nci_dev **ndev, void *phy_id, struct device *pdev,
->> +	struct s3fwrn5_phy_ops *phy_ops, unsigned int max_payload)
->> +{
->> +	[...]
->> +}
->> +EXPORT_SYMBOL(s3fwrn5_probe);
->> +
->> +void s3fwrn5_remove(struct nci_dev *ndev)
->> +{
->> +	[...]
->> +}
->> +EXPORT_SYMBOL(s3fwrn5_remove);
->> +
->> +int s3fwrn5_recv_frame(struct nci_dev *ndev, struct sk_buff *skb,
->> +	enum s3fwrn5_mode mode)
->> +{
->> +	[...]
->> +}
->> +EXPORT_SYMBOL(s3fwrn5_recv_frame);
-> 
->> +MODULE_LICENSE("GPL");
-> 
->> --- /dev/null
->> +++ b/drivers/nfc/s3fwrn5/i2c.c
-> 
->> + * This program is free software; you can redistribute it and/or modify it
->> + * under the terms and conditions of the GNU General Public License,
->> + * version 2, as published by the Free Software Foundation.
-> 
->> +static int s3fwrn5_i2c_fw_read(struct s3fwrn5_i2c_phy *phy)
->> +{
->> +	[...]
->> +
->> +	return s3fwrn5_recv_frame(phy->ndev, skb, S3FWRN5_MODE_FW);
->> +}
->> +
->> +static int s3fwrn5_i2c_nci_read(struct s3fwrn5_i2c_phy *phy)
->> +{
->> +	[...]
->> +
->> +	return s3fwrn5_recv_frame(phy->ndev, skb, S3FWRN5_MODE_NCI);
->> +}
-> 
->> +static int s3fwrn5_i2c_probe(struct i2c_client *client,
->> +				  const struct i2c_device_id *id)
->> +{
->> +	[...]
->> +
->> +	ret = s3fwrn5_probe(&phy->ndev, phy, &phy->i2c_dev->dev, &i2c_phy_ops,
->> +		S3FWRN5_I2C_MAX_PAYLOAD);
->> +	[...]
->> +		s3fwrn5_remove(phy->ndev);
->> +
->> +	[...]
->> +}
->> +
->> +static int s3fwrn5_i2c_remove(struct i2c_client *client)
->> +{
->> +	[...]
->> +
->> +	s3fwrn5_remove(phy->ndev);
->> +
->> +	[...]
->> +}
-> 
->> +MODULE_LICENSE("GPL");
-> 
-> Nit: both modules' code contain a comment referring to the "GNU General
-> Public License, version 2". They also both use the "GPL" ident in their
-> MODULE_LICENSE() macro. And, according to include/linux/module.h, that
-> ident states the license is GPL v2 or later. So I think either the
-> comments or the idents need to change.
-> 
-
-Will be fixed.
-
-Thanks,
-Robert Baldyga
