@@ -1,53 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:35879 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbbGLSdz (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873AbbG3Kyr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2015 14:33:55 -0400
-Received: by obdbs4 with SMTP id bs4so217756176obd.3
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2015 11:33:54 -0700 (PDT)
-Message-ID: <55A2B30F.4090606@lwfinger.net> (sfid-20150712_203858_437806_28730C11)
-Date: Sun, 12 Jul 2015 13:33:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Oliver Kurth <okurth@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Oops with rtl8187
-References: <CANfj49UXDJACBjSgdd8RE6=cQ43KMBapOCh7qaQ00jZQZ2bOPQ@mail.gmail.com>
-In-Reply-To: <CANfj49UXDJACBjSgdd8RE6=cQ43KMBapOCh7qaQ00jZQZ2bOPQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Thu, 30 Jul 2015 06:54:47 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 13/19] wil6210: detailed statistics for Rx reorder drop
+Date: Thu, 30 Jul 2015 13:52:01 +0300
+Message-Id: <1438253527-3372-14-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_125450_606111_B64E2AF7)
+In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/12/2015 12:41 PM, Oliver Kurth wrote:
-> I have a awus036h (Alfa) wireless usb adapter, which uses the rtl8187
-> driver. I am trying to get it to work with a raspberry pi running
-> Linux 4.0.7-v7+. It sometimes works for some time, but will always
-> eventually crash, bringing the whole network down. I already upgraded
-> from 3.18, where I had the same issue. I also tested it by connecting
-> it to a Linux vm in VMware Fusion running Ubuntu 15.04 with kernel
-> 3.19.0-21 and got the same Oops, so it is not a problem just confined
-> to the raspberry or the arm architecture.
+Rx drops may be for 2 reasons: frame is old,
+or it is duplicate. On the debugfs "stations" entry,
+provide counters per reorder buffer for total
+frames processed, drops for these 2 reasons.
+Also add debug print for dropped frames.
 
-What was the architecture of the host machine that was running that Ubuntu VM?
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  6 +++++-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |  8 ++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 15 ++++++++-------
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
-Where are you getting driver 8192cu that is shown in the module list below. If 
-you were using the one that has been built into the kernel since 2008, it would 
-be named rtl8187. I have used that driver extensively on x86 and x86_64 
-architectures, both in x86 hosts and VirtualBox VMs and I have never seen this 
-problem.
-
-
---snip--
-
-> Oops: 817 [#1] PREEMPT SMP ARM
-> Jul 11 06:00:23 raspberrypi kernel: [   41.753311] Modules linked in:
-> xt_state iptable_filter ipt_MASQUERADE nf_nat_masquerade_ipv4
-> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat
-> nf_connt
-> rack ip_tables x_tables snd_bcm2835 snd_pcm snd_seq snd_seq_device
-> snd_timer snd arc4 rtl8187 eeprom_93cx6 mac80211 cfg80211 rfkill
-> 8192cu uio_pdrv_genirq uio
-
-
-Larry
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 2651ec4..05b550f 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1344,6 +1344,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ {
+ 	int i;
+ 	u16 index = ((r->head_seq_num - r->ssn) & 0xfff) % r->buf_size;
++	unsigned long long drop_dup = r->drop_dup, drop_old = r->drop_old;
+ 
+ 	seq_printf(s, "([%2d] %3d TU) 0x%03x [", r->buf_size, r->timeout,
+ 		   r->head_seq_num);
+@@ -1353,7 +1354,10 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ 		else
+ 			seq_printf(s, "%c", r->reorder_buf[i] ? '*' : '_');
+ 	}
+-	seq_printf(s, "] drop %llu last 0x%03x\n", r->drop, r->ssn_last_drop);
++	seq_printf(s,
++		   "] total %llu drop %llu (dup %llu + old %llu) last 0x%03x\n",
++		   r->total, drop_dup + drop_old, drop_dup, drop_old,
++		   r->ssn_last_drop);
+ }
+ 
+ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index e4ac11c..9238c1a 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -121,6 +121,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 		goto out;
+ 	}
+ 
++	r->total++;
+ 	hseq = r->head_seq_num;
+ 
+ 	/** Due to the race between WMI events, where BACK establishment
+@@ -153,7 +154,9 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	/* frame with out of date sequence number */
+ 	if (seq_less(seq, r->head_seq_num)) {
+ 		r->ssn_last_drop = seq;
+-		r->drop++;
++		r->drop_old++;
++		wil_dbg_txrx(wil, "Rx drop: old seq 0x%03x head 0x%03x\n",
++			     seq, r->head_seq_num);
+ 		dev_kfree_skb(skb);
+ 		goto out;
+ 	}
+@@ -174,7 +177,8 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 
+ 	/* check if we already stored this frame */
+ 	if (r->reorder_buf[index]) {
+-		r->drop++;
++		r->drop_dup++;
++		wil_dbg_txrx(wil, "Rx drop: dup seq 0x%03x\n", seq);
+ 		dev_kfree_skb(skb);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 54f1673..c722724 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -424,13 +424,12 @@ struct pci_dev;
+  * @ssn: Starting Sequence Number expected to be aggregated.
+  * @buf_size: buffer size for incoming A-MPDUs
+  * @timeout: reset timer value (in TUs).
++ * @ssn_last_drop: SSN of the last dropped frame
++ * @total: total number of processed incoming frames
++ * @drop_dup: duplicate frames dropped for this reorder buffer
++ * @drop_old: old frames dropped for this reorder buffer
+  * @dialog_token: dialog token for aggregation session
+- * @rcu_head: RCU head used for freeing this struct
+- * @drop: total frames dropped for this reorder buffer
+- *
+- * This structure's lifetime is managed by RCU, assignments to
+- * the array holding it must hold the aggregation mutex.
+- *
++ * @first_time: true when this buffer used 1-st time
+  */
+ struct wil_tid_ampdu_rx {
+ 	struct sk_buff **reorder_buf;
+@@ -444,7 +443,9 @@ struct wil_tid_ampdu_rx {
+ 	u16 buf_size;
+ 	u16 timeout;
+ 	u16 ssn_last_drop;
+-	unsigned long long drop;
++	unsigned long long total; /* frames processed */
++	unsigned long long drop_dup;
++	unsigned long long drop_old;
+ 	u8 dialog_token;
+ 	bool first_time; /* is it 1-st time this buffer used? */
+ };
+-- 
+2.1.4
 
