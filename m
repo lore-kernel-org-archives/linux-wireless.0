@@ -1,101 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:36802 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbbGNMiQ (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497AbbG3Kyq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 08:38:16 -0400
-Received: by lagw2 with SMTP id w2so5191338lag.3
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 05:38:15 -0700 (PDT)
-Subject: Re: [PATCH] iwlwifi: Deinline iwl_{read,write}{8,32}
-To: Denys Vlasenko <dvlasenk@redhat.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-References: <1436876558-6674-1-git-send-email-dvlasenk@redhat.com>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <55A502B6.5090806@cogentembedded.com> (sfid-20150714_143822_393295_5F02E6CD)
-Date: Tue, 14 Jul 2015 15:38:14 +0300
-MIME-Version: 1.0
-In-Reply-To: <1436876558-6674-1-git-send-email-dvlasenk@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Thu, 30 Jul 2015 06:54:46 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 12/19] wil6210: unify wmi_set_ie() error handling
+Date: Thu, 30 Jul 2015 13:52:00 +0300
+Message-Id: <1438253527-3372-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130716_291042_3029AABE)
+In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+When printing error message, provide string describing IE kind.
+Derive it from IE type
+This allows removing of error messages printing
+in callers
 
-On 7/14/2015 3:22 PM, Denys Vlasenko wrote:
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 29 ++++++++---------------------
+ drivers/net/wireless/ath/wil6210/wmi.c      | 19 +++++++++++++++++--
+ 2 files changed, 25 insertions(+), 23 deletions(-)
 
-> With CONFIG_IWLWIFI_DEVICE_TRACING=y, these functions are rather large,
-> too big for inlining.
-
-> With this .config: http://busybox.net/~vda/kernel_config,
-> after uninlining these functions have sizes and callsite counts
-> as follows:
-
-> iwl_read32  475 bytes, 51 callsites
-> iwl_write32 477 bytes, 90 callsites
-> iwl_write8  493 bytes, 3 callsites
-
-> Reduction in size is about 74,000 bytes:
-
->      text     data      bss       dec     hex filename
-> 90758147 17226024 36659200 144643371 89f152b vmlinux0
-> 90687995 17221928 36659200 144569123 89df323 vmlinux.after
-
-> Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-> CC: Johannes Berg <johannes.berg@intel.com>
-> CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: Intel Linux Wireless <ilw@linux.intel.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> CC: linux-kernel@vger.kernel.org
-> ---
->   drivers/net/wireless/iwlwifi/iwl-io.c |  7 +++++++
->   drivers/net/wireless/iwlwifi/iwl-io.h | 39 +++++++++++++++++++++--------------
->   2 files changed, 30 insertions(+), 16 deletions(-)
-
-[...]
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-> index 705d12c..3c9d2a8 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-io.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-> @@ -32,24 +32,31 @@
->   #include "iwl-devtrace.h"
->   #include "iwl-trans.h"
->
-[...]
-> +#define IWL_READ_WRITE(static_inline) \
-> +static_inline void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val) \
-> +{ \
-> +	trace_iwlwifi_dev_iowrite8(trans->dev, ofs, val); \
-> +	iwl_trans_write8(trans, ofs, val); \
-> +} \
-> +static_inline void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val) \
-> +{ \
-> +	trace_iwlwifi_dev_iowrite32(trans->dev, ofs, val); \
-> +	iwl_trans_write32(trans, ofs, val); \
-> +} \
-> +static_inline u32 iwl_read32(struct iwl_trans *trans, u32 ofs) \
-> +{ \
-> +	u32 val = iwl_trans_read32(trans, ofs); \
-> +	trace_iwlwifi_dev_ioread32(trans->dev, ofs, val); \
-> +	return val; \
->   }
-[...]
-> +#if !defined(CONFIG_IWLWIFI_DEVICE_TRACING)
-> +IWL_READ_WRITE(static inline)
-
-    Not static_inline?
-
-> +#else
-> +void iwl_write8(struct iwl_trans *trans, u32 ofs, u8 val);
-> +void iwl_write32(struct iwl_trans *trans, u32 ofs, u32 val);
-> +u32 iwl_read32(struct iwl_trans *trans, u32 ofs);
-> +#endif
-
-MBR, Sergei
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 8811174..20d07ef 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -336,12 +336,9 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 	else
+ 		wil_dbg_misc(wil, "Scan has no IE's\n");
+ 
+-	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_REQ, request->ie_len,
+-			request->ie);
+-	if (rc) {
+-		wil_err(wil, "Aborting scan, set_ie failed: %d\n", rc);
++	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_REQ, request->ie_len, request->ie);
++	if (rc)
+ 		goto out;
+-	}
+ 
+ 	rc = wmi_send(wil, WMI_START_SCAN_CMDID, &cmd, sizeof(cmd.cmd) +
+ 			cmd.cmd.num_channels * sizeof(cmd.cmd.channel_list[0]));
+@@ -462,10 +459,8 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 	 * ies in FW.
+ 	 */
+ 	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_REQ, sme->ie_len, sme->ie);
+-	if (rc) {
+-		wil_err(wil, "WMI_SET_APPIE_CMD failed\n");
++	if (rc)
+ 		goto out;
+-	}
+ 
+ 	/* WMI_CONNECT_CMD */
+ 	memset(&conn, 0, sizeof(conn));
+@@ -748,27 +743,19 @@ static int _wil_cfg80211_set_ies(struct wiphy *wiphy,
+ 
+ 	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
+ 			bcon->proberesp_ies);
+-	if (rc) {
+-		wil_err(wil, "set_ie(PROBE_RESP) failed\n");
++	if (rc)
+ 		return rc;
+-	}
+ 
+ 	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
+ 			bcon->assocresp_ies);
+-	if (rc) {
+-		wil_err(wil, "set_ie(ASSOC_RESP) failed\n");
+-		return rc;
+-	}
+ #if 0 /* to use beacon IE's, remove this #if 0 */
+-	rc = wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->tail_len,
+-			bcon->tail);
+-	if (rc) {
+-		wil_err(wil, "set_ie(BEACON) failed\n");
++	if (rc)
+ 		return rc;
+-	}
++
++	rc = wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->tail_len, bcon->tail);
+ #endif
+ 
+-	return 0;
++	return rc;
+ }
+ 
+ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index fbcea83..b9cf9a6 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1022,12 +1022,21 @@ int wmi_add_cipher_key(struct wil6210_priv *wil, u8 key_index,
+ 
+ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
+ {
++	static const char *const names[] = {
++		[WMI_FRAME_BEACON]	= "BEACON",
++		[WMI_FRAME_PROBE_REQ]	= "PROBE_REQ",
++		[WMI_FRAME_PROBE_RESP]	= "WMI_FRAME_PROBE_RESP",
++		[WMI_FRAME_ASSOC_REQ]	= "WMI_FRAME_ASSOC_REQ",
++		[WMI_FRAME_ASSOC_RESP]	= "WMI_FRAME_ASSOC_RESP",
++	};
+ 	int rc;
+ 	u16 len = sizeof(struct wmi_set_appie_cmd) + ie_len;
+ 	struct wmi_set_appie_cmd *cmd = kzalloc(len, GFP_KERNEL);
+ 
+-	if (!cmd)
+-		return -ENOMEM;
++	if (!cmd) {
++		rc = -ENOMEM;
++		goto out;
++	}
+ 	if (!ie)
+ 		ie_len = 0;
+ 
+@@ -1037,6 +1046,12 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
+ 	memcpy(cmd->ie_info, ie, ie_len);
+ 	rc = wmi_send(wil, WMI_SET_APPIE_CMDID, cmd, len);
+ 	kfree(cmd);
++out:
++	if (rc) {
++		const char *name = type < ARRAY_SIZE(names) ?
++				   names[type] : "??";
++		wil_err(wil, "set_ie(%d %s) failed : %d\n", type, name, rc);
++	}
+ 
+ 	return rc;
+ }
+-- 
+2.1.4
 
