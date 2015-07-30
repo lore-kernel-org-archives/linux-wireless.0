@@ -1,265 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30794 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752674AbbGaOSR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2015 10:18:17 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t6VEFABV023620
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2015 07:18:17 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1vv91rusec-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2015 07:18:17 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:56232 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751629AbbG3TvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2015 15:51:17 -0400
+From: Yaniv Machani <yanivma@ti.com>
 To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>, chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 3/3] mwifiex:fix unable to connect hidden SSID AP on DFS channel
-Date: Fri, 31 Jul 2015 07:17:51 -0700
-Message-ID: <1438352271-31827-1-git-send-email-akarwar@marvell.com> (sfid-20150731_161824_888306_424CB690)
+CC: <yanivma@ti.com>, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 1/2] ARM: dts: am335x-evm: add wilink8 wlan support
+Date: Thu, 30 Jul 2015 22:39:28 +0300
+Message-ID: <1438285169-338-1-git-send-email-yanivma@ti.com> (sfid-20150730_215120_436815_3D4EC1F8)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+From: Eliad Peller <eliad@wizery.com>
 
-We will check if any hidden SSID found in passive scan channels
-and do specific SSID active scan for those channels.
+   * enable mmc3 used for wlan
+   * configure the gpios used for wlan
+   * add fixed voltage regulator used for wlan power control
 
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Yaniv Machani <yanivma@ti.com>
 ---
- drivers/net/wireless/mwifiex/fw.h   |   1 +
- drivers/net/wireless/mwifiex/init.c |   2 +-
- drivers/net/wireless/mwifiex/main.h |   2 +
- drivers/net/wireless/mwifiex/scan.c | 124 ++++++++++++++++++++++++++++++++----
- 4 files changed, 117 insertions(+), 12 deletions(-)
+ arch/arm/boot/dts/am335x-evm.dts |   68 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 68 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 9a8c1832..3ec2ac8 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -685,6 +685,7 @@ struct mwifiex_fw_chan_stats {
- enum mwifiex_chan_scan_mode_bitmasks {
- 	MWIFIEX_PASSIVE_SCAN = BIT(0),
- 	MWIFIEX_DISABLE_CHAN_FILT = BIT(1),
-+	MWIFIEX_HIDDEN_SSID_REPORT = BIT(4),
+diff --git a/arch/arm/boot/dts/am335x-evm.dts b/arch/arm/boot/dts/am335x-evm.dts
+index dd03a2b..b690674 100644
+--- a/arch/arm/boot/dts/am335x-evm.dts
++++ b/arch/arm/boot/dts/am335x-evm.dts
+@@ -8,6 +8,7 @@
+ /dts-v1/;
+ 
+ #include "am33xx.dtsi"
++#include <dt-bindings/interrupt-controller/irq.h>
+ 
+ / {
+ 	model = "TI AM335x EVM";
+@@ -38,6 +39,20 @@
+ 		regulator-boot-on;
+ 	};
+ 
++	wlan_en_reg: fixedregulator@2 {
++		compatible = "regulator-fixed";
++		regulator-name = "wlan-en-regulator";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++
++		/* WLAN_EN GPIO for this board - Bank3, pin16 */
++		gpio = <&gpio1 16 0>;
++
++		/* WLAN card specific delay */
++		startup-delay-us = <70000>;
++		enable-active-high;
++	};
++
+ 	matrix_keypad: matrix_keypad@0 {
+ 		compatible = "gpio-matrix-keypad";
+ 		debounce-delay-ms = <5>;
+@@ -266,6 +281,27 @@
+ 		>;
+ 	};
+ 
++	/* wl12xx/wl18xx card on mmc3 */
++	mmc3_pins: pinmux_mmc3_pins {
++		pinctrl-single,pins = <
++			0x44 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_a1.mmc2_dat0, INPUT_PULLUP | MODE3 */
++			0x48 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_a2.mmc2_dat1, INPUT_PULLUP | MODE3 */
++			0x4C (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_a3.mmc2_dat2, INPUT_PULLUP | MODE3 */
++			0x78 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_ben1.mmc2_dat3, INPUT_PULLUP | MODE3 */
++			0x88 (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_csn3.mmc2_cmd, INPUT_PULLUP | MODE3 */
++			0x8C (PIN_INPUT_PULLUP | MUX_MODE3)	/* gpmc_clk.mmc2_clk, INPUT_PULLUP | MODE3 */
++		>;
++	};
++
++	/* wl12xx/wl18xx card enable/irq GPIOs. */
++	wlan_pins: pinmux_wlan_pins {
++		pinctrl-single,pins = <
++			0x40 (PIN_OUTPUT_PULLDOWN | MUX_MODE7)	/* gpmc_a0.gpio1_16 */
++			0x19C (PIN_INPUT | MUX_MODE7)		/* mcasp0_ahclkr.gpio3_17 */
++			0x1AC (PIN_OUTPUT_PULLDOWN | MUX_MODE7)	/* mcasp0_ahclkx.gpio3_21 */
++		>;
++	};
++
+ 	lcd_pins_s0: lcd_pins_s0 {
+ 		pinctrl-single,pins = <
+ 			0x20 (PIN_OUTPUT | MUX_MODE1)		/* gpmc_ad8.lcd_data23 */
+@@ -665,6 +701,38 @@
+ 	cd-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
  };
  
- struct mwifiex_chan_scan_param_set {
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 7a970c2..5d3ae63 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -301,7 +301,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->iface_limit.sta_intf = MWIFIEX_MAX_STA_NUM;
- 	adapter->iface_limit.uap_intf = MWIFIEX_MAX_UAP_NUM;
- 	adapter->iface_limit.p2p_intf = MWIFIEX_MAX_P2P_NUM;
--
-+	adapter->active_scan_triggered = false;
- 	setup_timer(&adapter->wakeup_timer, wakeup_timer_fn,
- 		    (unsigned long)adapter);
- }
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index face747..6b95121 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -666,6 +666,7 @@ struct mwifiex_private {
- 	struct mwifiex_11h_intf_state state_11h;
- 	struct mwifiex_ds_mem_rw mem_rw;
- 	struct sk_buff_head bypass_txq;
-+	struct mwifiex_user_scan_chan hidden_chan[MWIFIEX_USER_SCAN_CHAN_MAX];
++&mmc3 {
++	/* these are on the crossbar and are outlined in the
++	   xbar-event-map element */
++	dmas = <&edma 12
++		&edma 13>;
++	dma-names = "tx", "rx";
++	status = "okay";
++	vmmc-supply = <&wlan_en_reg>;
++	bus-width = <4>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc3_pins &wlan_pins>;
++	ti,non-removable;
++	ti,needs-special-hs-handling;
++	cap-power-off-card;
++	keep-power-in-suspend;
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@2 {
++		compatible = "ti,wl1835";
++		reg = <2>;
++		interrupt-parent = <&gpio3>;
++		interrupts = <17 IRQ_TYPE_LEVEL_HIGH>;
++		ref-clock-frequency = <38400000>;
++	};
++};
++
++&edma {
++	ti,edma-xbar-event-map = /bits/ 16 <1 12
++					    2 13>;
++};
++
+ &sham {
+ 	status = "okay";
  };
- 
- 
-@@ -986,6 +987,7 @@ struct mwifiex_adapter {
- 	u8 coex_tx_win_size;
- 	u8 coex_rx_win_size;
- 	bool drcs_enabled;
-+	u8 active_scan_triggered;
- };
- 
- void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index ef8da8e..e17fab6 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -527,7 +527,8 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
- 
- 			if (ch->flags & IEEE80211_CHAN_NO_IR)
- 				scan_chan_list[chan_idx].chan_scan_mode_bitmap
--					|= MWIFIEX_PASSIVE_SCAN;
-+					|= (MWIFIEX_PASSIVE_SCAN |
-+					    MWIFIEX_HIDDEN_SSID_REPORT);
- 			else
- 				scan_chan_list[chan_idx].chan_scan_mode_bitmap
- 					&= ~MWIFIEX_PASSIVE_SCAN;
-@@ -1049,7 +1050,8 @@ mwifiex_config_scan(struct mwifiex_private *priv,
- 			if (scan_type == MWIFIEX_SCAN_TYPE_PASSIVE)
- 				(scan_chan_list +
- 				 chan_idx)->chan_scan_mode_bitmap
--					|= MWIFIEX_PASSIVE_SCAN;
-+					|= (MWIFIEX_PASSIVE_SCAN |
-+					    MWIFIEX_HIDDEN_SSID_REPORT);
- 			else
- 				(scan_chan_list +
- 				 chan_idx)->chan_scan_mode_bitmap
-@@ -1600,6 +1602,46 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- 	return ret;
- }
- 
-+/* This function checks if any hidden SSID found in passive scan channels
-+ * and save those channels for specific SSID active scan
-+ */
-+static int mwifiex_save_hidden_ssid_channels(struct mwifiex_private *priv,
-+					     struct cfg80211_bss *bss)
-+{
-+	struct mwifiex_bssdescriptor *bss_desc;
-+	int ret;
-+	int chid;
-+	u8 null_ssid[IEEE80211_MAX_SSID_LEN] = {0};
-+
-+	/* Allocate and fill new bss descriptor */
-+	bss_desc = kzalloc(sizeof(*bss_desc), GFP_KERNEL);
-+	if (!bss_desc)
-+		return -ENOMEM;
-+
-+	ret = mwifiex_fill_new_bss_desc(priv, bss, bss_desc);
-+	if (ret)
-+		goto done;
-+
-+	if (!memcmp(bss_desc->ssid.ssid, null_ssid, bss_desc->ssid.ssid_len)) {
-+		mwifiex_dbg(priv->adapter, INFO, "found hidden SSID\n");
-+		for (chid = 0 ; chid < MWIFIEX_USER_SCAN_CHAN_MAX; chid++) {
-+			if (priv->hidden_chan[chid].chan_number == 0) {
-+				priv->hidden_chan[chid].chan_number =
-+					bss->channel->hw_value;
-+				priv->hidden_chan[chid].radio_type =
-+					bss->channel->band;
-+				priv->hidden_chan[chid].scan_type =
-+					MWIFIEX_SCAN_TYPE_ACTIVE;
-+				break;
-+			}
-+		}
-+	}
-+
-+done:
-+	kfree(bss_desc);
-+	return 0;
-+}
-+
- static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
- 					  struct cfg80211_bss *bss)
- {
-@@ -1789,6 +1831,14 @@ mwifiex_parse_single_response_buf(struct mwifiex_private *priv, u8 **bss_info,
- 				    .mac_address, ETH_ALEN))
- 				mwifiex_update_curr_bss_params(priv, bss);
- 			cfg80211_put_bss(priv->wdev.wiphy, bss);
-+
-+			if ((chan->flags & IEEE80211_CHAN_RADAR) ||
-+			    (chan->flags & IEEE80211_CHAN_NO_IR)) {
-+				mwifiex_dbg(adapter, INFO,
-+					    "radar or passive channel %d\n",
-+					    channel);
-+				mwifiex_save_hidden_ssid_channels(priv, bss);
-+			}
- 		}
- 	} else {
- 		mwifiex_dbg(adapter, WARN, "missing BSS channel IE\n");
-@@ -1812,6 +1862,54 @@ static void mwifiex_complete_scan(struct mwifiex_private *priv)
- 	}
- }
- 
-+/* This function checks if any hidden SSID found in passive scan channels
-+ * and do specific SSID active scan for those channels
-+ */
-+static int
-+mwifiex_active_scan_req_for_passive_chan(struct mwifiex_private *priv)
-+{
-+	int ret;
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	u8 id = 0;
-+	struct mwifiex_user_scan_cfg  *user_scan_cfg;
-+
-+	if (adapter->active_scan_triggered) {
-+		adapter->active_scan_triggered = false;
-+		return 0;
-+	}
-+
-+	if (priv->hidden_chan[0].chan_number == 0) {
-+		mwifiex_dbg(adapter, INFO, "No BSS with hidden SSID found on DFS channels\n");
-+		return 0;
-+	}
-+	user_scan_cfg = kzalloc(sizeof(*user_scan_cfg), GFP_KERNEL);
-+
-+	if (!user_scan_cfg)
-+		return -ENOMEM;
-+
-+	memset(user_scan_cfg, 0, sizeof(*user_scan_cfg));
-+
-+	for (id = 0; id < MWIFIEX_USER_SCAN_CHAN_MAX; id++)
-+		memcpy(&user_scan_cfg->chan_list[id],
-+		       &priv->hidden_chan[id],
-+		       sizeof(struct mwifiex_user_scan_chan));
-+
-+	adapter->active_scan_triggered = true;
-+	user_scan_cfg->num_ssids = priv->scan_request->n_ssids;
-+	user_scan_cfg->ssid_list = priv->scan_request->ssids;
-+
-+	ret = mwifiex_scan_networks(priv, user_scan_cfg);
-+	kfree(user_scan_cfg);
-+
-+	memset(&priv->hidden_chan, 0, sizeof(priv->hidden_chan));
-+
-+	if (ret) {
-+		dev_err(priv->adapter->dev, "scan failed: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
- static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- {
- 	struct mwifiex_adapter *adapter = priv->adapter;
-@@ -1825,6 +1923,8 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 		adapter->scan_processing = false;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
- 
-+		mwifiex_active_scan_req_for_passive_chan(priv);
-+
- 		if (!adapter->ext_scan)
- 			mwifiex_complete_scan(priv);
- 
-@@ -1851,15 +1951,17 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 		adapter->scan_processing = false;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
- 
--		if (priv->scan_request) {
--			mwifiex_dbg(adapter, INFO,
--				    "info: aborting scan\n");
--			cfg80211_scan_done(priv->scan_request, 1);
--			priv->scan_request = NULL;
--		} else {
--			priv->scan_aborting = false;
--			mwifiex_dbg(adapter, INFO,
--				    "info: scan already aborted\n");
-+		if (!adapter->active_scan_triggered) {
-+			if (priv->scan_request) {
-+				mwifiex_dbg(adapter, INFO,
-+					    "info: aborting scan\n");
-+				cfg80211_scan_done(priv->scan_request, 1);
-+				priv->scan_request = NULL;
-+			} else {
-+				priv->scan_aborting = false;
-+				mwifiex_dbg(adapter, INFO,
-+					    "info: scan already aborted\n");
-+			}
- 		}
- 	} else {
- 		/* Get scan command from scan_pending_q and put to
 -- 
-1.8.1.4
+1.7.9
 
