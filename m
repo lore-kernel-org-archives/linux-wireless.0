@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37317 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752724AbbGVSRw (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:35072 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754461AbbG3CMW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 14:17:52 -0400
-Received: by wibud3 with SMTP id ud3so184807848wib.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:51 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Wed, 29 Jul 2015 22:12:22 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/15] staging: vt6655: Fix tagSRxDesc -> buff_addr type
-Date: Wed, 22 Jul 2015 19:16:41 +0100
-Message-Id: <1437589007-5479-9-git-send-email-tvboxspy@gmail.com> (sfid-20150722_201759_096841_CBF4A640)
-In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
-References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH V4.2] rtlwifi: Fix NULL dereference when PCI driver used as an AP
+Date: Wed, 29 Jul 2015 21:11:20 -0500
+Message-Id: <1438222280-4146-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150730_041230_401417_755C47FD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Should always be __le32.
+From: Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+In commit 33511b157bbcebaef853cc1811992b664a2e5862 ("rtlwifi: add support to
+send beacon frame"), the mechanism for sending beacons was established. That
+patch works correctly for rtl8192cu, but there is a possibility of getting
+the following warnings in the PCI drivers:
+
+WARNING: CPU: 1 PID: 2439 at net/mac80211/driver-ops.h:12
+ieee80211_bss_info_change_notify+0x179/0x1d0 [mac80211]()
+wlp5s0:  Failed check-sdata-in-driver check, flags: 0x0
+
+The warning is followed by a NULL pointer dereference as follows:
+
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000006
+IP: [<ffffffffc073998e>] rtl_get_tcb_desc+0x5e/0x760 [rtlwifi]
+
+This problem was reported at http://thread.gmane.org/gmane.linux.kernel.wireless.general/138645,
+but no solution was found at that time.
+
+The problem was also reported at https://bugzilla.kernel.org/show_bug.cgi?id=9744
+and this solution was developed and tested there.
+
+The USB driver works with a NULL final argument in the adapter_tx() callback;
+however, the PCI drivers need a struct rtl_tcb_desc in that position.
+
+Signed-off-by: Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [3.19+]
 ---
- drivers/staging/vt6655/desc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 3302d0182..42e005a 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -208,7 +208,7 @@ SRDES1;
- typedef struct tagSRxDesc {
- 	volatile SRDES0 m_rd0RD0;
- 	volatile SRDES1 m_rd1RD1;
--	volatile u32    buff_addr;
-+	volatile __le32 buff_addr;
- 	volatile u32    next_desc;
- 	struct tagSRxDesc *next __aligned(8);
- 	volatile PDEVICE_RD_INFO pRDInfo __aligned(8);
+Kalle,
+
+I have marked this fix for V4.2, and I hope it will make it.
+
+Thanks,
+
+Larry
+---
+ drivers/net/wireless/rtlwifi/core.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index 3b3a88b..585d088 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -1015,9 +1015,12 @@ static void send_beacon_frame(struct ieee80211_hw *hw,
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
++	struct rtl_tcb_desc tcb_desc;
+ 
+-	if (skb)
+-		rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, NULL);
++	if (skb) {
++		memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
++		rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, &tcb_desc);
++	}
+ }
+ 
+ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
 -- 
 2.1.4
 
