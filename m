@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:20913 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751352AbbGLRG7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2015 13:06:59 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-06-15
-Date: Sun, 12 Jul 2015 17:06:56 +0000
-Message-ID: <1436720814.17999.2.camel@intel.com> (sfid-20150712_190704_133454_83F2D59A)
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33271 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071AbbG3Vff (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2015 17:35:35 -0400
+Received: by padck2 with SMTP id ck2so29368588pad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2015 14:35:35 -0700 (PDT)
+From: Filipe Brandenburger <filbranden@google.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Elliott Hughes <enh@google.com>,
+	Christopher Wiley <wiley@google.com>,
+	Filipe Brandenburger <filbranden@google.com>
+Subject: [PATCH 1/2] iw: fix references to libnl in Android.mk
+Date: Thu, 30 Jul 2015 14:35:14 -0700
+Message-Id: <1438292115-39495-2-git-send-email-filbranden@google.com> (sfid-20150730_233545_127471_5C56C461)
+In-Reply-To: <1438292115-39495-1-git-send-email-filbranden@google.com>
+References: <1438292115-39495-1-git-send-email-filbranden@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNClRoaXMgaXMgdGhlIGZpcnN0IHB1bGwgcmVxdWVzdCBvZiBmaXhlcyBmb3Ig
-NC4yLiBBIGZldyBvZiB0aGUgcGF0Y2hlcw0KaGVyZSBhcmUgQ0NlZCB0byBzdGFibGUuIEJlc2lk
-ZXMgZml4IGZvciAoaGFyZCB0byBoaXQpIGNyYXNoZXMgdGhlcmUgYXJlDQphIGJ1bmNoIG9mIGZp
-eGVzIGZvciA4MDAwIGRldmljZXMgd2hpY2ggYXJlIG5vdyB1bmRlcmdvaW5nIHRoZSBmaW5hbA0K
-cm91bmQgb2YgdGVzdHMuDQpMZXQgbWUga25vdyBpZiB5b3UgaGF2ZSBpc3N1ZXMhDQoNCmVtbWFu
-dWVsDQoNCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCBlMDQ1NjcxN2U0ODNi
-YjhhOTQzMWI4MGE1YmRjOTlhOTI4YjliMDAzOg0KDQogIE1lcmdlIGdpdDovL2dpdC5rZXJuZWwu
-b3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9kYXZlbS9uZXQtbmV4dCAoMjAxNS0wNi0yNCAx
-Njo0OTo0OSAtMDcwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6
-DQoNCiAgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaXds
-d2lmaS9pd2x3aWZpLWZpeGVzLmdpdCB0YWdzL2l3bHdpZmktZm9yLWthbGxlLTIwMTUtMDYtMTIN
-Cg0KZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvIGJlODhhMWFkYTliOTdiYjAxNjE5NmI3
-ZjRhMWZjMmZlMmY3OTg1Mjk6DQoNCiAgaXdsd2lmaTogbnZtOiByZW1vdmUgbWFjIGFkZHJlc3Mg
-Ynl0ZSBzd2FwcGluZyBpbiA4MDAwIGZhbWlseSAoMjAxNS0wNy0xMiAxOTo1NDoxOSArMDMwMCkN
-Cg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQ0KKiBidWcgZml4ZXMgc3BlY2lmaWMgZm9yIDgwMDAgc2VyaWVzDQoqIGZpeCBh
-IGNyYXNoIGluIHRpbWUgZXZlbnRzDQoqIGZpeCBhIGNyYXNoIGluIFBDSWUgdHJhbnNwb3J0DQoq
-IGZpeCBCVCBDb2V4IGNvZGUgdGhhdCBwcmV2ZW50ZWQgYXNzb2NpYXRpb24gb24gY2VydGFpbg0K
-ICAgICAgICBkZXZpY2VzICgzMTYwKS4NCiogcmV2ZXJ0IHRoZSBuZXcgUkJEIGFsbG9jYXRpb24g
-bW9kZWwgYmVjYXVzZSBpdCBpbnRyb2R1Y2VkDQoJYSBidWcgd2hlbiBydW5uaW5nIG9uIHdlYWsg
-Vk0gc2V0dXBzLg0KKiBhIG5ldyBkZXZpY2UgSURzDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkF2cmFoYW0gU3Rlcm4g
-KDEpOg0KICAgICAgaXdsd2lmaTogbXZtOiBBZGQgcHJlZW1wdGl2ZSBmbGFnIHRvIHNjaGV1bGRl
-ZCBzY2FuDQoNCkRyZXlmdXNzLCBIYWltICgxKToNCiAgICAgIGl3bHdpZmk6IHBjaWU6IEZpeCBi
-dWcgaW4gTklDJ3MgUE0gcmVnaXN0ZXJzIGFjY2Vzcw0KDQpFbW1hbnVlbCBHcnVtYmFjaCAoNCk6
-DQogICAgICBpd2x3aWZpOiBtdm06IGZpeCBhbnRlbm5hIHNlbGVjdGlvbiB3aGVuIEJUIGlzIGFj
-dGl2ZQ0KICAgICAgaXdsd2lmaTogcGNpZTogZG9uJ3QgcGFuaWMgaWYgcGNpZSB0cmFuc3BvcnQg
-YWxsb2MgZmFpbHMNCiAgICAgIGl3bHdpZmk6IHBjaWU6IHByZXBhcmUgdGhlIGRldmljZSBiZWZv
-cmUgYWNjZXNzaW5nIGl0DQogICAgICBSZXZlcnQgIml3bHdpZmk6IHBjaWU6IE5ldyBSQkQgYWxs
-b2NhdGlvbiBtb2RlbCINCg0KSm9oYW5uZXMgQmVyZyAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06
-IGNoZWNrIHRpbWUtZXZlbnQgdmlmIHRvIGF2b2lkIGJhZCBkZWxldGlvbg0KDQpMaWFkIEthdWZt
-YW4gKDEpOg0KICAgICAgaXdsd2lmaTogbnZtOiByZW1vdmUgbWFjIGFkZHJlc3MgYnl0ZSBzd2Fw
-cGluZyBpbiA4MDAwIGZhbWlseQ0KDQpNYXR0aSBHb3R0bGllYiAoMSk6DQogICAgICBpd2x3aWZp
-OiBtdm06IEF2b2lkIGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgd2hlbiBzZXR0aW5nIGlndGsNCg0K
-T3JlbiBHaXZvbiAoMSk6DQogICAgICBpd2x3aWZpOiBlZGl0IHRoZSAzMTY1IHNlcmllcyBhbmQg
-ODAwMCBzZXJpZXMgUENJIElEcw0KDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wt
-ZmguaCAgICAgICAgICB8ICAgNiArKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
-LW52bS1wYXJzZS5jICAgfCAgMTIgKystDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9t
-dm0vZnctYXBpLXNjYW4uaCB8ICAgMyArLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-bXZtL3NjYW4uYyAgICAgICAgfCAgIDMgKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-bXZtL3N0YS5jICAgICAgICAgfCAgIDMgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
-L212bS90aW1lLWV2ZW50LmMgIHwgICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9tdm0vdHguYyAgICAgICAgICB8ICAgMiArLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdp
-ZmkvcGNpZS9kcnYuYyAgICAgICAgfCAgIDUgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
-aWZpL3BjaWUvaW50ZXJuYWwuaCAgIHwgIDUxICsrLS0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9wY2llL3J4LmMgICAgICAgICB8IDQxNCArKysrKysrKysrKysrKysrKyst
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5j
-ICAgICAgfCAgNTIgKysrKysrKy0tLS0tDQogMTEgZmlsZXMgY2hhbmdlZCwgMTQzIGluc2VydGlv
-bnMoKyksIDQxMCBkZWxldGlvbnMoLSkNCg0K
+The latest AOSP refers to that library as libnl and not libnl_2.
+
+TEST=Built AOSP tree with this patchset, tested the generated iw binary.
+
+Signed-off-by: Filipe Brandenburger <filbranden@google.com>
+---
+ Android.mk | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Android.mk b/Android.mk
+index 735b236809ef..0820892c6c19 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -11,13 +11,13 @@ LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS)) android-nl.c
+ 
+ LOCAL_C_INCLUDES := \
+ 	$(LOCAL_PATH) \
+-	external/libnl-headers/
++	external/libnl/include
+ 
+ LOCAL_CFLAGS += -DCONFIG_LIBNL20
+ LOCAL_LDFLAGS := -Wl,--no-gc-sections
+ #LOCAL_MODULE_TAGS := optional
+ LOCAL_MODULE_TAGS := eng
+-LOCAL_STATIC_LIBRARIES := libnl_2
++LOCAL_STATIC_LIBRARIES := libnl
+ LOCAL_MODULE := iw
+ 
+ $(IW_SOURCE_DIR)/version.c:
+-- 
+2.5.0.rc2.392.g76e840b
+
