@@ -1,43 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:36126 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430AbbG2OHp (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64261 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755517AbbG3Kyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 10:07:45 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH] staging: wilc1000: host_interface.c: Fix build warning
-Date: Wed, 29 Jul 2015 19:36:59 +0530
-Message-Id: <1438178819-12740-1-git-send-email-csgorentla@gmail.com> (sfid-20150729_161115_318324_7D97C49A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Jul 2015 06:54:51 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 19/19] wil6210: support future boot loaders
+Date: Thu, 30 Jul 2015 13:52:07 +0300
+Message-Id: <1438253527-3372-20-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_125501_208990_FD2458C8)
+In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed - warning: ‘*((void *)&strHostIFmsg+4).pu8Head’ may be used uninitialized 
+Boot loader versions as backward compatible,
+starting from v1
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/main.c | 29 +++++++----------------------
+ 1 file changed, 7 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c089e73..f610903 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -7113,7 +7113,7 @@ s32 host_int_add_beacon(WILC_WFIDrvHandle hWFIDrv, u32 u32Interval,
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
--	tstrHostIFmsg strHostIFmsg;
-+	tstrHostIFmsg strHostIFmsg = {};
- 	tstrHostIFSetBeacon *pstrSetBeaconParam = &strHostIFmsg.uniHostIFmsgBody.strHostIFSetBeacon;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index d11a147..2fb04c5 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -643,37 +643,26 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
+ 	u8 *mac;
+ 	u16 rf_status;
  
- 	if (pstrWFIDrv == NULL)
+-	bl_ver = wil_r(wil, RGF_USER_BL +
+-		       offsetof(struct bl_dedicated_registers_v0,
+-				boot_loader_struct_version));
+-	switch (bl_ver) {
+-	case 0:
+-		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
+-				     sizeof(bl.bl0));
+-		le32_to_cpus(&bl.bl0.boot_loader_ready);
+-		le32_to_cpus(&bl.bl0.boot_loader_struct_version);
++	wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
++			     sizeof(bl));
++	bl_ver = le32_to_cpu(bl.bl0.boot_loader_struct_version);
++	mac = bl.bl0.mac_address;
++
++	if (bl_ver == 0) {
+ 		le32_to_cpus(&bl.bl0.rf_type);
+ 		le32_to_cpus(&bl.bl0.baseband_type);
+-		mac = bl.bl0.mac_address;
+ 		rf_status = 0; /* actually, unknown */
+ 		wil_info(wil,
+ 			 "Boot Loader struct v%d: MAC = %pM RF = 0x%08x bband = 0x%08x\n",
+ 			 bl_ver, mac,
+ 			 bl.bl0.rf_type, bl.bl0.baseband_type);
+ 		wil_info(wil, "Boot Loader build unknown for struct v0\n");
+-		break;
+-	case 1:
+-	case 2:
+-		wil_memcpy_fromio_32(&bl, wil->csr + HOSTADDR(RGF_USER_BL),
+-				     sizeof(bl.bl1));
+-		le32_to_cpus(&bl.bl1.boot_loader_ready);
+-		le32_to_cpus(&bl.bl1.boot_loader_struct_version);
++	} else {
+ 		le16_to_cpus(&bl.bl1.rf_type);
+ 		rf_status = le16_to_cpu(bl.bl1.rf_status);
+ 		le32_to_cpus(&bl.bl1.baseband_type);
+ 		le16_to_cpus(&bl.bl1.bl_version_subminor);
+ 		le16_to_cpus(&bl.bl1.bl_version_build);
+-		mac = bl.bl1.mac_address;
+ 		wil_info(wil,
+ 			 "Boot Loader struct v%d: MAC = %pM RF = 0x%04x (status 0x%04x) bband = 0x%08x\n",
+ 			 bl_ver, mac,
+@@ -682,10 +671,6 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
+ 		wil_info(wil, "Boot Loader build %d.%d.%d.%d\n",
+ 			 bl.bl1.bl_version_major, bl.bl1.bl_version_minor,
+ 			 bl.bl1.bl_version_subminor, bl.bl1.bl_version_build);
+-		break;
+-	default:
+-		wil_err(wil, "BL: unsupported struct version 0x%08x\n", bl_ver);
+-		return -EINVAL;
+ 	}
+ 
+ 	if (!is_valid_ether_addr(mac)) {
 -- 
-2.4.5
+2.1.4
 
