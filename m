@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37985 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752913AbbGQJ3A (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24801 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755455AbbG3Kyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 05:29:00 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: Su Kang Yin <paradyse@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>
-CC: "nbd@openwrt.org" <nbd@openwrt.org>
-Subject: RE: ath9k 4.1.2 freeze
-Date: Fri, 17 Jul 2015 09:28:57 +0000
-Message-ID: <9f46c4afaab64213bdbbffe8227fcf00@NASANEXM01E.na.qualcomm.com> (sfid-20150717_112906_527345_DE8859C2)
-References: <CAHjFwoB8N=uKrVv3qkFyr4BuPuY9L71kXqvJP3HZ+3qj=7z_ag@mail.gmail.com>
- <CAHjFwoAv2NA243S6UF=uK7ZoSxOWzdeayCAX5EOrVPP_NsGMMg@mail.gmail.com>
-In-Reply-To: <CAHjFwoAv2NA243S6UF=uK7ZoSxOWzdeayCAX5EOrVPP_NsGMMg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Thu, 30 Jul 2015 06:54:43 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 07/19] wil6210: skip HW version check for chip debugging
+Date: Thu, 30 Jul 2015 13:51:55 +0300
+Message-Id: <1438253527-3372-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150730_130716_003844_1225ACCE)
+In-Reply-To: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1438253527-3372-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-K0ZlbGl4DQoNClNlZW1zIHRoZSBuZXcgdmVyc2lvbiBtaXNzIHR3byBwYXRjaGVzLA0KDQpVcHN0
-cmVhbTogYTNlNmMxZWZmNTQ4Nzg1MDZiMmRkZGNjMjAyZGY5Y2M4MTgwZmFjYg0KaHR0cDovL2dp
-dC5vcGVud3J0Lm9yZy8/cD1vcGVud3J0LmdpdDthPWJsb2I7Zj10YXJnZXQvbGludXgvYXI3MXh4
-L3BhdGNoZXMtMy4xOC83MzYtTUlQUy1hdGg3OS1maXgtY2hhaW5lZC1pcnEtZGlzYWJsZS5wYXRj
-aDtoPThjYjM4ZDM5NzE2NzhlM2NmOTUxZDM2ZTZhYjJmNGIxNzBjZDFmMGM7aGI9SEVBRA0KDQot
-IE1pYW9xaW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBTdSBLYW5nIFlp
-biBbbWFpbHRvOnBhcmFkeXNlQGdtYWlsLmNvbV0gDQpTZW50OiBGcmlkYXksIEp1bHkgMTcsIDIw
-MTUgNDozNiBQTQ0KVG86IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgYXRoOWstZGV2
-ZWwNClN1YmplY3Q6IFJlOiBhdGg5ayA0LjEuMiBmcmVlemUNCg0KbG9nIGF0dGFjaGVkDQoNCk9u
-IDE3IEp1bHkgMjAxNSBhdCAxNjozNSwgU3UgS2FuZyBZaW4gPHBhcmFkeXNlQGdtYWlsLmNvbT4g
-d3JvdGU6DQo+IHJlc2VuZA0KPg0KPg0KPiBPbiAxNyBKdWx5IDIwMTUgYXQgMTY6MzMsIFN1IEth
-bmcgWWluIDxwYXJhZHlzZUBnbWFpbC5jb20+IHdyb3RlOg0KPj4NCj4+IEhpLA0KPj4NCj4+IEtl
-cm5lbCA0LjEuMiBhdGg5ayB3aXRoIGF0aGVyb3MgREIxMjAsIGRyaXZlciBsb2NrdXAgb24gImVu
-YWJsZSBJRVIiIA0KPj4gYWZ0ZXIgQUhCIGludGVyZmFjZSB1cCAoUENJIGludGVyZmFjZSBpcyBm
-aW5lKS4gTm8gcHJvYmxlbSBmb3VuZCBvbiBrZXJuZWwgMy4xMC4NCj4+DQo+PiAtIGNhbnRvbmEN
-Cj4+DQo+PiBbICAgODMuOTkwMDAwXSBhdGg6IHBoeTE6IHR4IGNoYWluIDE6IGlxIGNvcnIgY29l
-ZmY9NzQNCj4+IFsgICA4NC4wMDAwMDBdIGF0aDogcGh5MTogcnggY2hhaW4gMTogbWFnIGNvcnI9
-MCAgcGhhc2UgY29ycj0tMg0KPj4gWyAgIDg0LjAwMDAwMF0gYXRoOiBwaHkxOiByeCBjaGFpbiAx
-OiBpcSBjb3JyIGNvZWZmPTdlDQo+PiBbICAgODQuMDEwMDAwXSBhdGg6IHBoeTE6IERvaW5nIFR4
-IElRIENhbCBmb3IgY2hhaW4gMQ0KPj4gWyAgIDg0LjAxMDAwMF0gYXRoOiBwaHkxOiBJUV9SRVNb
-MF09MHhkMjQ4OTAwYiBJUV9SRVNbMV09MHhmZWZmDQo+PiBbICAgODQuMDIwMDAwXSBhdGg6IHBo
-eTE6IElRX1JFU1syXT0weGYwZjQ2NDk5IElRX1JFU1szXT0weDI2MmYNCj4+IFsgICA4NC4wMjAw
-MDBdIGF0aDogcGh5MTogSVFfUkVTWzRdPTB4NjZmYTlmZmYgSVFfUkVTWzVdPTB4ZmU4Mg0KPj4g
-WyAgIDg0LjAzMDAwMF0gYXRoOiBwaHkxOiBjaGFpbiAxOiBtYWcgbWlzbWF0Y2g9MCBwaGFzZSBt
-aXNtYXRjaD0wDQo+PiBbICAgODQuMDQwMDAwXSBhdGg6IHBoeTE6IHR4IGNoYWluIDE6IG1hZyBj
-b3JyPTAgIHBoYXNlIGNvcnI9LTEzDQo+PiBbICAgODQuMDQwMDAwXSBhdGg6IHBoeTE6IHR4IGNo
-YWluIDE6IGlxIGNvcnIgY29lZmY9NzMNCj4+IFsgICA4NC4wNTAwMDBdIGF0aDogcGh5MTogcngg
-Y2hhaW4gMTogbWFnIGNvcnI9MCAgcGhhc2UgY29ycj0tMw0KPj4gWyAgIDg0LjA1MDAwMF0gYXRo
-OiBwaHkxOiByeCBjaGFpbiAxOiBpcSBjb3JyIGNvZWZmPTdkDQo+PiBbICAgODQuMDYwMDAwXSBh
-dGg6IHBoeTE6IERvaW5nIFR4IElRIENhbCBmb3IgY2hhaW4gMQ0KPj4gWyAgIDg0LjA2MDAwMF0g
-YXRoOiBwaHkxOiBJUV9SRVNbMF09MHhjYzRlZDAxMSBJUV9SRVNbMV09MHhmZjJmDQo+PiBbICAg
-ODQuMDcwMDAwXSBhdGg6IHBoeTE6IElRX1JFU1syXT0weGVmZjMzNGZhIElRX1JFU1szXT0weDI5
-NWYNCj4+IFsgICA4NC4wNzAwMDBdIGF0aDogcGh5MTogSVFfUkVTWzRdPTB4OWJmYTFmZmQgSVFf
-UkVTWzVdPTB4ZmU0Mg0KPj4gWyAgIDg0LjA4MDAwMF0gYXRoOiBwaHkxOiBjaGFpbiAxOiBtYWcg
-bWlzbWF0Y2g9MCBwaGFzZSBtaXNtYXRjaD0wDQo+PiBbICAgODQuMDkwMDAwXSBhdGg6IHBoeTE6
-IHR4IGNoYWluIDE6IG1hZyBjb3JyPTAgIHBoYXNlIGNvcnI9LTE0DQo+PiBbICAgODQuMDkwMDAw
-XSBhdGg6IHBoeTE6IHR4IGNoYWluIDE6IGlxIGNvcnIgY29lZmY9NzINCj4+IFsgICA4NC4xMDAw
-MDBdIGF0aDogcGh5MTogcnggY2hhaW4gMTogbWFnIGNvcnI9MCAgcGhhc2UgY29ycj0tMg0KPj4g
-WyAgIDg0LjEwMDAwMF0gYXRoOiBwaHkxOiByeCBjaGFpbiAxOiBpcSBjb3JyIGNvZWZmPTdlDQo+
-PiBbICAgODQuMTEwMDAwXSBhdGg6IHBoeTE6IGVuYWJsaW5nIElRIENhbGlicmF0aW9uDQo+PiBb
-ICAgODQuMTEwMDAwXSBhdGg6IHBoeTE6IHN0YXJ0aW5nIElRIE1pc21hdGNoIENhbGlicmF0aW9u
-DQo+PiBbICAgODQuMTIwMDAwXSBhdGg6IHBoeTE6IEVuYWJsZWQgQkIgV2F0Y2hkb2cgdGltZW91
-dCAoMjUgbXMpDQo+PiBbICAgODQuMTIwMDAwXSBhdGg6IHBoeTE6IE5ldyBpbnRlcnJ1cHQgbWFz
-ayAweGY0MDAwNDczDQo+PiBbICAgODQuMTMwMDAwXSBhdGg6IHBoeTE6IG5ldyBJTVIgMHg4MTgw
-MDE3NQ0KPj4gWyAgIDg0LjEzMDAwMF0gYXRoOiBwaHkxOiBtYWNhZGRyOiAwMDoxMTphYTpkNDo3
-MzphMCwgYnNzaWQ6DQo+PiAwMDowMDowMDowMDowMDowMCwgYnNzaWRtYXNrOiBmZjpmZjpmZjpm
-ZjpmZjpmZg0KPj4gWyAgIDg0LjE0MDAwMF0gYXRoOiBwaHkxOiBFbmFibGUgTUlCIGNvdW50ZXJz
-DQo+PiBbICAgODQuMTUwMDAwXSBhdGg6IHBoeTE6IFJlc3RvcmUgaGlzdG9yeTogb3Btb2RlIDIg
-Y2hhbiAyNDEyIE1oeg0KPj4gaXNfc2Nhbm5pbmc9MCBvZmRtOjMgY2NrOjINCj4+IFsgICA4NC4x
-NTAwMDBdIGF0aDogcGh5MTogKioqKiBvZmRtbGV2ZWwgMz0+MywgcnNzaT0wW2xvPTcgaGk9NDBd
-DQo+PiBbICAgODQuMTYwMDAwXSBhdGg6IHBoeTE6ICoqKiogY2NrbGV2ZWwgMj0+MiwgcnNzaT0w
-W2xvPTcgaGk9NDBdDQo+PiBbICAgODQuMTcwMDAwXSBhdGg6IHBoeTE6IE5ldyBpbnRlcnJ1cHQg
-bWFzayAweGY0MDAwNDczDQo+PiBbICAgODQuMTcwMDAwXSBhdGg6IHBoeTE6IG5ldyBJTVIgMHg4
-MTgwMDE3NQ0KPj4gWyAgIDg0LjE3MDAwMF0gYXRoOiBwaHkxOiBlbmFibGUgSUVSDQo+PiA9PT09
-PT09PT09PT09PT09PT09PT09PTxGUkVFWkUgb24gd2xhbjEgDQo+PiAoQUhCKSk9PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQo+Pg0K
+When loading with debug_fw flag, do not bail out on
+unknown chipId
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index c77ae17..33a3e9b 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -738,9 +738,6 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 
+-	if (wil->hw_version == HW_VER_UNKNOWN)
+-		return -ENODEV;
+-
+ 	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 	WARN_ON(test_bit(wil_status_napi_en, wil->status));
+ 
+@@ -755,6 +752,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		return 0;
+ 	}
+ 
++	if (wil->hw_version == HW_VER_UNKNOWN)
++		return -ENODEV;
++
+ 	cancel_work_sync(&wil->disconnect_worker);
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+ 	wil_bcast_fini(wil);
+-- 
+2.1.4
+
