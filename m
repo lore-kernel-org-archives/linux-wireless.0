@@ -1,56 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:9116 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756208AbbHZUPT (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:51594 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070AbbGaWdv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 16:15:19 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 10/12] brcmfmac: remove ifidx parameter from brcmf_fws_txstatus_suppressed()
-Date: Wed, 26 Aug 2015 22:15:02 +0200
-Message-ID: <1440620104-2715-11-git-send-email-arend@broadcom.com> (sfid-20150826_221530_293812_E3BA8C16)
-In-Reply-To: <1440620104-2715-1-git-send-email-arend@broadcom.com>
-References: <1440620104-2715-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 31 Jul 2015 18:33:51 -0400
+Date: Fri, 31 Jul 2015 15:33:51 -0700 (PDT)
+Message-Id: <20150731.153351.1379367548373135190.davem@davemloft.net> (sfid-20150801_003359_027165_EB6E1F9A)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2015-07-31
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87r3no1o17.fsf@kamboji.qca.qualcomm.com>
+References: <87r3no1o17.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcmf_fws_txstatus_suppressed() function prototype specifies an
-ifidx parameter which is not used within the function implementation.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Fri, 31 Jul 2015 15:59:00 +0300
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> here's a pull request for 4.3. In this pull request there's I have one
+> revert in commit 360d9bb5ee2d ("Revert "ath9k: export HW random number
+> generator""), the data doesn't seem to be random enough. Please let me
+> know if you have any problems.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index dc4844c..ed12486 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1398,7 +1398,7 @@ done:
- }
- 
- static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
--					 struct sk_buff *skb, u8 ifidx,
-+					 struct sk_buff *skb,
- 					 u32 genbit, u16 seq)
- {
- 	struct brcmf_fws_mac_descriptor *entry = brcmf_skbcb(skb)->mac;
-@@ -1503,7 +1503,7 @@ brcmf_fws_txs_process(struct brcmf_fws_info *fws, u8 flags, u32 hslot,
- 		return -EINVAL;
- 	}
- 	if (!remove_from_hanger)
--		ret = brcmf_fws_txstatus_suppressed(fws, fifo, skb, ifp->ifidx,
-+		ret = brcmf_fws_txstatus_suppressed(fws, fifo, skb,
- 						    genbit, seq);
- 	if (remove_from_hanger || ret)
- 		brcmf_txfinalize(ifp, skb, true);
--- 
-1.9.1
-
+Pulled, thanks Kalle.
