@@ -1,67 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:53019 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758270AbbGHOXS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2015 10:23:18 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] mwifiex: drop condition with no effect
-Date: Wed,  8 Jul 2015 16:15:02 +0200
-Message-Id: <1436364902-28943-1-git-send-email-hofrat@osadl.org> (sfid-20150708_162329_351619_70CB2007)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:40283 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753061AbbGaIji convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2015 04:39:38 -0400
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Stephan Mueller <smueller@chronox.de>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
+	"Jacobson, David" <djacobso@qti.qualcomm.com>
+CC: Oleksij Rempel <linux@rempel-privat.de>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"nhorman@tuxdriver.com" <nhorman@tuxdriver.com>
+Subject: RE: [PATCH 2/2] ath9k: export HW random number generator
+Date: Fri, 31 Jul 2015 08:39:35 +0000
+Message-ID: <3ec13417acdc48628adaedb68d259b9c@NASANEXM01E.na.qualcomm.com> (sfid-20150731_104346_949074_DF9D0D46)
+References: <1436946847-10909-1-git-send-email-miaoqing@qca.qualcomm.com>
+	<a8b787bd17d94e8899bf1be6131165b2@NASANEXM01E.na.qualcomm.com>
+	<55B60BC9.8040800@rempel-privat.de>	<3945775.m5HblJPgiO@tauon.atsec.com>
+ <8738043ith.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <8738043ith.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-scanning for trivial bug-patters with coccinelle spatches returned:
-./drivers/net/wireless/mwifiex/sta_cmdresp.c:895
-        WARNING: condition with no effect (if branch == else)
++Pouyan & David.
 
-originally added in 'commit d8d2f19feb16 ("mwifiex: silence TDLS link
-delete failure for nonexistent link")' with dev_dbg/dev_err (though
-with the same message) to differentiate severity and then in 'commit
-acebe8c10a6e ("mwifiex: change dbg print func to mwifiex_dbg")' all
-dev_dbg,dev_warn and dev_err got converted to mwifiex_dbg which should
-thus probably drop this if/else as well.
+-----Original Message-----
+From: Kalle Valo [mailto:kvalo@codeaurora.org] 
+Sent: Friday, July 31, 2015 3:09 PM
+To: Stephan Mueller
+Cc: Oleksij Rempel; Pan, Miaoqing; linville@tuxdriver.com; linux-wireless@vger.kernel.org; Theodore Ts'o; linux-crypto@vger.kernel.org; nhorman@tuxdriver.com
+Subject: Re: [PATCH 2/2] ath9k: export HW random number generator
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+Stephan Mueller <smueller@chronox.de> writes:
 
-If dropping the if/else is not the right thing to do then commit 
-acebe8c10a6e "mwifiex: change dbg print func to mwifiex_dbg" probably
-needs a review as well.
+>>-rw-rw-r-- 1 lex lex 2564096 Jul 27 11:36 hwrng.out
+>>-rw-rw-r-- 1 lex lex 2468394 Jul 27 11:36 hwrng.out.bz2
+>>
+>>Do i understand it correctly, in case of hwrng bzip was able to find 
+>>enough pattern to compressed the data? Even with format overhead?
+>>
+>>I'm no an expert, help of an expert would be welcome, added some more 
+>>people to CC
+>
+> This one does not look good for a claim that the RNG produces white 
+> noise. An RNG that is wired up to /dev/hwrng should produce white 
+> noise. Either by having an appropriate noise source or by conditioning 
+> the output of the noise source.
+>
+> When conditioning the output, you have to be careful about the entropy claim. 
+> For example, you cannot state that the data stream from your noise 
+> source has close to one bit of entropy for each obtained bit. Thus, 
+> the conditioner must ensure that the data from the noise source is 
+> collected and its entropy is maintained and accumulated.
+>
+> However, the hwrandom framework does not provide any conditioning 
+> logic. And I would say that such conditioner logic should not reside 
+> in a driver either. I would say that the discussed RNG does not seem 
+> fit for hooking it up with the hwrandom framework.
 
-Patch was compile tested with x86_64_defconfig + CONFIG_MWIFIEX=m
+Based on the discussion I'm going to revert this patch, at least for now.
 
-Patch is against 4.2-rc1 (localversion-next is -next-20150708)
-
- drivers/net/wireless/mwifiex/sta_cmdresp.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index b645884..e58f900 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -892,14 +892,9 @@ static int mwifiex_ret_tdls_oper(struct mwifiex_private *priv,
- 	switch (action) {
- 	case ACT_TDLS_DELETE:
- 		if (reason) {
--			if (!node || reason == TDLS_ERR_LINK_NONEXISTENT)
--				mwifiex_dbg(priv->adapter, ERROR,
--					    "TDLS link delete for %pM failed: reason %d\n",
--					    cmd_tdls_oper->peer_mac, reason);
--			else
--				mwifiex_dbg(priv->adapter, ERROR,
--					    "TDLS link delete for %pM failed: reason %d\n",
--					    cmd_tdls_oper->peer_mac, reason);
-+			mwifiex_dbg(priv->adapter, ERROR,
-+				    "TDLS link delete for %pM failed: reason %d\n",
-+				    cmd_tdls_oper->peer_mac, reason);
- 		} else {
- 			mwifiex_dbg(priv->adapter, MSG,
- 				    "TDLS link delete for %pM successful\n",
--- 
-1.7.10.4
-
+--
+Kalle Valo
