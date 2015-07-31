@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:48399 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbbGOC0R (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44118 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991AbbGaHjD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 22:26:17 -0400
-Date: Tue, 14 Jul 2015 19:26:17 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] staging: vt6655: Fix missing power saving support
-Message-ID: <20150715022617.GA28660@kroah.com> (sfid-20150715_042621_021624_0F35B95D)
-References: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 31 Jul 2015 03:39:03 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 01/28] staging: wilc1000: change type of driver handler in host interface msg
+Date: Fri, 31 Jul 2015 16:38:09 +0900
+Message-ID: <1438328316-30197-2-git-send-email-tony.cho@atmel.com> (sfid-20150731_093908_586132_044B8740)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434881155-3464-1-git-send-email-tvboxspy@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 21, 2015 at 11:05:53AM +0100, Malcolm Priestley wrote:
-> Add IEEE80211_HW_SUPPORTS_PS to ieee80211_hw flags
-> enabling this feature.
-> 
-> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> ---
->  drivers/staging/vt6655/device_main.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-> index 0bfc939..b1357af 100644
-> --- a/drivers/staging/vt6655/device_main.c
-> +++ b/drivers/staging/vt6655/device_main.c
-> @@ -1819,7 +1819,8 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
->  	priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
->  		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
->  		IEEE80211_HW_SIGNAL_DBM |
-> -		IEEE80211_HW_TIMING_BEACON_ONLY;
-> +		IEEE80211_HW_TIMING_BEACON_ONLY |
-> +		IEEE80211_HW_SUPPORTS_PS;
->  
->  	priv->hw->max_signal = 100;
+From: glen lee <glen.lee@atmel.com>
 
-The api changed here, and this patch doesn't apply.  Can you respin it
-against the latest -rc tree and resend?
+This patch changes void pointer type of drvHandler with WILC_WFIDrvHandle
+type variable since the structure member drvHandler in tstrHostIFmsg is
+explicitly used to pass driver pointer as handler.
+The void pointer as argument is ambiguous for the functions to handle correctly.
 
-thanks,
+After this patch, ATWILC_WFIDrvHandle type will be used as handler type to
+interface with other functions which does not need to know all about wifi driver
+structre tstrATWILC_WFIDrv.
+As a consequence of this patch, several patches will be followed up to change
+type of parameter which take drvHandler as argument.
 
-greg k-h
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 02aaf39..fb4194a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -467,7 +467,7 @@ typedef union _tuniHostIFmsgBody {
+ typedef struct _tstrHostIFmsg {
+ 	u16 u16MsgId;                                           /*!< Message ID */
+ 	tuniHostIFmsgBody uniHostIFmsgBody;             /*!< Message body */
+-	void *drvHandler;
++	WILC_WFIDrvHandle drvHandler;
+ } tstrHostIFmsg;
+ 
+ #ifdef CONNECT_DIRECT
+-- 
+1.9.1
+
