@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:32872 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754968AbbGVFVj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44424 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756AbbGaHkn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 01:21:39 -0400
-Received: by obdeg2 with SMTP id eg2so32207867obd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2015 22:21:38 -0700 (PDT)
-From: ahmed.taahir@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Taahir Ahmed <ahmed.taahir@gmail.com>
-Subject: [PATCH 2/2] Small build system improvements.
-Date: Wed, 22 Jul 2015 00:21:24 -0500
-Message-Id: <1437542484-23409-3-git-send-email-ahmed.taahir@gmail.com> (sfid-20150722_072143_983442_A9F64C45)
-In-Reply-To: <1437542484-23409-1-git-send-email-ahmed.taahir@gmail.com>
-References: <1437542484-23409-1-git-send-email-ahmed.taahir@gmail.com>
+	Fri, 31 Jul 2015 03:40:43 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 16/28] staging: wilc1000: change type of variable
+Date: Fri, 31 Jul 2015 16:38:24 +0900
+Message-ID: <1438328316-30197-17-git-send-email-tony.cho@atmel.com> (sfid-20150731_094046_236609_B081C147)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Taahir Ahmed <ahmed.taahir@gmail.com>
+From: glen lee <glen.lee@atmel.com>
 
-Phony targets are properly declared.
+This patch changes gu8FlushedJoinReqDrvHandler of u32 type with WILC_WFIDrvHandle type.
+gu8FlushedJoinReqDrvHandler is used to hold driver handler for comparison but the
+type mismatches with it.
 
-User's CFLAGS are not clobbered with '-O2 -g' unless the user has set no
-cflags.
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- Makefile | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Makefile b/Makefile
-index 4ce900c..b5aa8e3 100644
---- a/Makefile
-+++ b/Makefile
-@@ -29,17 +29,19 @@ RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
- # utils/key2pub.py.  Python 2.7 and 3.x are supported.
- BUILDTIME_PYTHON ?= python
- 
--CFLAGS += -O2 -fpic
-+CFLAGS ?= -O2 -g
-+CFLAGS += -fPIC
- CFLAGS += -std=gnu99 -Wall -Werror -pedantic
--CFLAGS += -Wall -g
- LDLIBREG += -lreg
- LDLIBS += $(LDLIBREG)
- LDLIBS += -lm
- LIBREG += libreg.so
- LDFLAGS += -L ./
- 
-+.PHONY: all
- all: all_noverify verify
- 
-+.PHONY: all_noverify
- all_noverify: $(LIBREG) crda intersect regdbdump db2rd optimize
- 
- ifeq ($(USE_OPENSSL),1)
-@@ -122,11 +124,13 @@ $(LIBREG): regdb.h reglib.h reglib.c
- 	$(NQ) '  CC  ' $@
- 	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -shared -Wl,-soname,$(LIBREG) $^
- 
-+.PHONY: install-libreg-headers
- install-libreg-headers:
- 	$(NQ) '  INSTALL  libreg-headers'
- 	$(Q)mkdir -p $(DESTDIR)/$(INCLUDE_DIR)
- 	$(Q)cp *.h $(DESTDIR)/$(INCLUDE_DIR)/
- 
-+.PHONY: install-libreg
- install-libreg:
- 	$(NQ) '  INSTALL  libreg'
- 	$(Q)mkdir -p $(DESTDIR)/$(LIBDIR)
-@@ -167,6 +171,7 @@ verify: $(REG_BIN) regdbdump
- 	@$(NQ) ' GZIP' $<
- 	$(Q)gzip < $< > $@
- 
-+.PHONY: install
- install: install-libreg install-libreg-headers crda crda.8.gz regdbdump.8.gz
- 	$(NQ) '  INSTALL  crda'
- 	$(Q)$(MKDIR) $(DESTDIR)/$(SBINDIR)
-@@ -189,6 +194,7 @@ install: install-libreg install-libreg-headers crda crda.8.gz regdbdump.8.gz
- 	$(NQ) '  INSTALL  regdbdump.8.gz'
- 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
- 
-+.PHONY: clean
- clean:
- 	$(Q)rm -f $(LIBREG) crda regdbdump intersect db2rd optimize \
- 		*.o *~ *.pyc keys-*.h *.gz \
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 38d047d..d5bd23d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -579,7 +579,7 @@ u8 gu8Flushed11iMode;
+ u8 gu8FlushedAuthType;
+ u32 gu32FlushedJoinReqSize;
+ u32 gu32FlushedInfoElemAsocSize;
+-u32 gu8FlushedJoinReqDrvHandler;
++WILC_WFIDrvHandle gu8FlushedJoinReqDrvHandler;
+ #define REAL_JOIN_REQ 0
+ #define FLUSHED_JOIN_REQ 1
+ #define FLUSHED_BYTE_POS 79     /* Position the byte indicating flushing in the flushed request */
 -- 
-2.3.6
+1.9.1
 
