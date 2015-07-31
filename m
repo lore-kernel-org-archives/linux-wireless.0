@@ -1,43 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:38816 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752279AbbGVSRy (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44330 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbbGaHkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 14:17:54 -0400
-Received: by wibxm9 with SMTP id xm9so114887002wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2015 11:17:53 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/15] staging: vt6655: fix tagSRxDesc -> next_desc type
-Date: Wed, 22 Jul 2015 19:16:42 +0100
-Message-Id: <1437589007-5479-10-git-send-email-tvboxspy@gmail.com> (sfid-20150722_203715_592461_A3298BF0)
-In-Reply-To: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
-References: <1437589007-5479-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 31 Jul 2015 03:40:11 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/28] staging: wilc1000: fix incompatible type in assignment warning
+Date: Fri, 31 Jul 2015 16:38:19 +0900
+Message-ID: <1438328316-30197-12-git-send-email-tony.cho@atmel.com> (sfid-20150731_100716_436356_238AC665)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Should always be __le32
+From: glen lee <glen.lee@atmel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cast type to WILC_WFIDrvHandle before assignment from incompatible pointer type
+to fix the following warning.
+
+drivers/staging/wilc1000/host_interface.c:6916:27: warning: assignment from
+incompatible pointer type [enabled by default]
+   strHostIFmsg.drvHandler = pstrWFIDrv;
+
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/vt6655/desc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 42e005a..251f7bc 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -209,7 +209,7 @@ typedef struct tagSRxDesc {
- 	volatile SRDES0 m_rd0RD0;
- 	volatile SRDES1 m_rd1RD1;
- 	volatile __le32 buff_addr;
--	volatile u32    next_desc;
-+	volatile __le32 next_desc;
- 	struct tagSRxDesc *next __aligned(8);
- 	volatile PDEVICE_RD_INFO pRDInfo __aligned(8);
- } __attribute__ ((__packed__))
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 66565f6..e9cd77d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3981,7 +3981,7 @@ static void ListenTimerCB(void *pvArg)
+ 	/* prepare the Timer Callback message */
+ 	WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
+ 	strHostIFmsg.u16MsgId = HOST_IF_MSG_LISTEN_TIMER_FIRED;
+-	strHostIFmsg.drvHandler = pstrWFIDrv;
++	strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
+ 	strHostIFmsg.uniHostIFmsgBody.strHostIfRemainOnChan.u32ListenSessionID = pstrWFIDrv->strHostIfRemainOnChan.u32ListenSessionID;
+ 
+ 	/* send the message */
+@@ -6425,7 +6425,7 @@ void GetPeriodicRSSI(void *pvArg)
+ 		WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
+ 
+ 		strHostIFmsg.u16MsgId = HOST_IF_MSG_GET_RSSI;
+-		strHostIFmsg.drvHandler = pstrWFIDrv;
++		strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
+ 
+ 		/* send the message */
+ 		s32Error =	WILC_MsgQueueSend(&gMsgQHostIF, &strHostIFmsg, sizeof(tstrHostIFmsg), NULL);
+@@ -6779,7 +6779,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 	WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
+ 
+ 	strHostIFmsg.u16MsgId = HOST_IF_MSG_RCVD_NTWRK_INFO;
+-	strHostIFmsg.drvHandler = pstrWFIDrv;
++	strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
+ 
+ 	strHostIFmsg.uniHostIFmsgBody.strRcvdNetworkInfo.u32Length = u32Length;
+ 	strHostIFmsg.uniHostIFmsgBody.strRcvdNetworkInfo.pu8Buffer = (u8 *)WILC_MALLOC(u32Length); /* will be deallocated by the receiving thread */
+@@ -6841,7 +6841,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ 
+ 
+ 	strHostIFmsg.u16MsgId = HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO;
+-	strHostIFmsg.drvHandler = pstrWFIDrv;
++	strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
+ 
+ 
+ 	strHostIFmsg.uniHostIFmsgBody.strRcvdGnrlAsyncInfo.u32Length = u32Length;
+@@ -6890,7 +6890,7 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
+ 		WILC_memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
+ 
+ 		strHostIFmsg.u16MsgId = HOST_IF_MSG_RCVD_SCAN_COMPLETE;
+-		strHostIFmsg.drvHandler = pstrWFIDrv;
++		strHostIFmsg.drvHandler = (WILC_WFIDrvHandle)pstrWFIDrv;
+ 
+ 
+ 		/* will be deallocated by the receiving thread */
 -- 
-2.1.4
+1.9.1
 
