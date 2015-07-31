@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53194 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:38463 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611AbbGCKxI (ORCPT
+	with ESMTP id S1751302AbbGaGVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 06:53:08 -0400
+	Fri, 31 Jul 2015 02:21:39 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k_htc: introduce support for different fw versions
-References: <CAGRGNgUWJ-LDgdxe1TJw2YOroMKaYDj3ehUu7j_zoqX17BxbjQ@mail.gmail.com>
-	<1434394689-18781-1-git-send-email-linux@rempel-privat.de>
-	<55960A81.1040200@rempel-privat.de>
-Date: Fri, 03 Jul 2015 13:53:01 +0300
-In-Reply-To: <55960A81.1040200@rempel-privat.de> (Oleksij Rempel's message of
-	"Fri, 03 Jul 2015 06:07:29 +0200")
-Message-ID: <87k2uhzf5e.fsf@kamboji.qca.qualcomm.com> (sfid-20150703_125317_599863_06BB8201)
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2015-07-30
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7DC508@hasmsx107.ger.corp.intel.com>
+Date: Fri, 31 Jul 2015 09:21:33 +0300
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7DC508@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Thu, 30 Jul 2015 18:52:30 +0000")
+Message-ID: <87a8uc3l02.fsf@kamboji.qca.qualcomm.com> (sfid-20150731_082143_405042_5471AEE3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel <linux@rempel-privat.de> writes:
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-> Any updates here?
+> Here is another pull request for 4.2. Three small fixes this time.
+> Let me know if you have any issues.
+>
+> Note that my availability will be limited next week, and the week after
+> I'll be completely offline.
+> Thanks!
+>
+> The following changes since commit be88a1ada9b97bb016196b7f4a1fc2fe2f798529:
+>
+>   iwlwifi: nvm: remove mac address byte swapping in 8000 family
+> (2015-07-12 19:54:19 +0300)
+>
+> are available in the git repository at:
+>
+>  
+> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-07-30
 
-What do you mean? If you are asking why the patch isn't applied it's
-because merge window is still open. I'll start applying patches after
-net-next is open again.
+Thanks, pulled.
 
 -- 
 Kalle Valo
