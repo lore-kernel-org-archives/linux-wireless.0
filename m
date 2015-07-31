@@ -1,65 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:34420 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752218AbbGWX4J (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44239 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751658AbbGaHjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 19:56:09 -0400
-Received: by pdbbh15 with SMTP id bh15so3834533pdb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 16:56:09 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 3/3] staging: wilc1000: coreconfigurator.c: fix kmalloc error check
-Date: Fri, 24 Jul 2015 08:55:55 +0900
-Message-Id: <1437695755-9731-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150724_015613_786571_5412E7AD)
-In-Reply-To: <1437695755-9731-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1437695755-9731-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 31 Jul 2015 03:39:45 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/28] staging: wilc1000: remove unused variables
+Date: Fri, 31 Jul 2015 16:38:15 +0900
+Message-ID: <1438328316-30197-8-git-send-email-tony.cho@atmel.com> (sfid-20150731_093947_714048_94388ADE)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return -ENOMEM if memory allocation is failed.
+From: glen lee <glen.lee@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch removes unused variable pstrWFIDrv.
+
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-V2: Use ! operator instead of NULL comparison
-V3: this patch is rebased by previous modification
+ drivers/staging/wilc1000/host_interface.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
- drivers/staging/wilc1000/coreconfigurator.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 0ff9705..b2abd8b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -675,11 +675,8 @@ s32 CoreConfiguratorInit(void)
- 	sema_init(&SemHandlePktResp, 0);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c8ebf51..66565f6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -607,7 +607,6 @@ static s32 Handle_SetChannel(WILC_WFIDrvHandle drvHandler, tstrHostIFSetChan *ps
  
- 	gps8ConfigPacket = kmalloc(MAX_PACKET_BUFF_SIZE, GFP_KERNEL);
--	if (gps8ConfigPacket == NULL) {
--		PRINT_ER("failed in gps8ConfigPacket allocation\n");
--		s32Error = WILC_NO_MEM;
--		goto _fail_;
--	}
-+	if (!gps8ConfigPacket)
-+		return -ENOMEM;
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID	strWID;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
  
- 	WILC_memset((void *)gps8ConfigPacket, 0, MAX_PACKET_BUFF_SIZE);
+ 	/*prepare configuration packet*/
+ 	strWID.u16WIDid = (u16)WID_CURRENT_CHANNEL;
+@@ -733,7 +732,6 @@ s32 Handle_set_IPAddress(WILC_WFIDrvHandle drvHandler, u8 *pu8IPAddr, u8 idx)
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	char firmwareIPAddress[4] = {0};
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
  
-@@ -1032,10 +1029,8 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
+ 	if (pu8IPAddr[0] < 192)
+ 		pu8IPAddr[0] = 0;
+@@ -837,7 +835,6 @@ static s32 Handle_SetMacAddress(WILC_WFIDrvHandle drvHandler, tstrHostIfSetMacAd
  
- 	pstrSurveyResults = kmalloc_array(u32SurveyResultsCount,
- 				sizeof(wid_site_survey_reslts_s), GFP_KERNEL);
--	if (pstrSurveyResults == NULL) {
--		u32SurveyResultsCount = 0;
--		WILC_ERRORREPORT(s32Error, WILC_NO_MEM);
--	}
-+	if (!pstrSurveyResults)
-+		return -ENOMEM;
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID	strWID;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 	u8 *mac_buf = (u8 *)WILC_MALLOC(ETH_ALEN);
  
- 	WILC_memset((void *)(pstrSurveyResults), 0, u32SurveyResultsCount * sizeof(wid_site_survey_reslts_s));
+ 	if (mac_buf == NULL) {
+@@ -3161,7 +3158,6 @@ static s32 Switch_Log_Terminal(WILC_WFIDrvHandle drvHandler)
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	static char dummy = 9;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
  
+ 	strWID.u16WIDid = (u16)WID_LOGTerminal_Switch;
+ 	strWID.enuWIDtype = WID_CHAR;
+@@ -3438,7 +3434,6 @@ static void Handle_AddBeacon(WILC_WFIDrvHandle drvHandler, tstrHostIFSetBeacon *
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	u8 *pu8CurrByte;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Adding BEACON\n");
+ 
+@@ -3510,7 +3505,6 @@ static void Handle_DelBeacon(WILC_WFIDrvHandle drvHandler, tstrHostIFDelBeacon *
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	u8 *pu8CurrByte;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	strWID.u16WIDid = (u16)WID_DEL_BEACON;
+ 	strWID.enuWIDtype = WID_CHAR;
+@@ -3607,7 +3601,6 @@ static void Handle_AddStation(WILC_WFIDrvHandle drvHandler, tstrWILC_AddStaParam
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	u8 *pu8CurrByte;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Handling add station\n");
+ 	strWID.u16WIDid = (u16)WID_ADD_STA;
+@@ -3651,7 +3644,6 @@ static void Handle_DelAllSta(WILC_WFIDrvHandle drvHandler, tstrHostIFDelAllSta *
+ 
+ 	tstrWID strWID;
+ 	u8 *pu8CurrByte;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 	u8 i;
+ 	u8 au8Zero_Buff[6] = {0};
+ 
+@@ -3709,7 +3701,6 @@ static void Handle_DelStation(WILC_WFIDrvHandle drvHandler, tstrHostIFDelSta *ps
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	u8 *pu8CurrByte;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	strWID.u16WIDid = (u16)WID_REMOVE_STA;
+ 	strWID.enuWIDtype = WID_BIN;
+@@ -3754,7 +3745,6 @@ static void Handle_EditStation(WILC_WFIDrvHandle drvHandler, tstrWILC_AddStaPara
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	u8 *pu8CurrByte;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	strWID.u16WIDid = (u16)WID_EDIT_STA;
+ 	strWID.enuWIDtype = WID_BIN;
+@@ -3878,7 +3868,6 @@ static int Handle_RegisterFrame(WILC_WFIDrvHandle drvHandler, tstrHostIfRegister
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	u8 *pu8CurrByte;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Handling frame register Flag : %d FrameType: %d\n", pstrHostIfRegisterFrame->bReg, pstrHostIfRegisterFrame->u16FrameType);
+ 
+@@ -4021,7 +4010,6 @@ static void Handle_PowerManagement(WILC_WFIDrvHandle drvHandler, tstrHostIfPower
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	s8 s8PowerMode;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	strWID.u16WIDid = (u16)WID_POWER_MANAGEMENT;
+ 
+@@ -4118,7 +4106,6 @@ static s32 Handle_AddBASession(WILC_WFIDrvHandle drvHandler, tstrHostIfBASession
+ 	tstrWID strWID;
+ 	int AddbaTimeout = 100;
+ 	char *ptr = NULL;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	PRINT_D(HOSTINF_DBG, "Opening Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\nBufferSize == %d\nSessionTimeOut = %d\n",
+ 		strHostIfBASessionInfo->au8Bssid[0],
+@@ -4205,7 +4192,6 @@ static s32 Handle_DelBASession(WILC_WFIDrvHandle drvHandler, tstrHostIfBASession
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	char *ptr = NULL;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	PRINT_D(GENERIC_DBG, "Delete Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\n",
+ 		strHostIfBASessionInfo->au8Bssid[0],
+@@ -4275,7 +4261,6 @@ static s32 Handle_DelAllRxBASessions(WILC_WFIDrvHandle drvHandler, tstrHostIfBAS
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+ 	char *ptr = NULL;
+-	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+ 
+ 	PRINT_D(GENERIC_DBG, "Delete Block Ack session with\nBSSID = %.2x:%.2x:%.2x\nTID=%d\n",
+ 		strHostIfBASessionInfo->au8Bssid[0],
 -- 
 1.9.1
 
