@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6121 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753034AbbGEIqC (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49505 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755432AbbGaUsl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2015 04:46:02 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 00/13] wil6210 patches
-Date: Sun,  5 Jul 2015 10:24:27 +0300
-Message-Id: <1436081080-27305-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150705_104609_080173_15D763F2)
+	Fri, 31 Jul 2015 16:48:41 -0400
+Date: Fri, 31 Jul 2015 13:48:40 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 28/28] staging: wilc1000: change data type of variable
+Message-ID: <20150731204840.GB1650@kroah.com> (sfid-20150731_224848_878279_1DC86600)
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+ <1438328316-30197-29-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1438328316-30197-29-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several new features introduced:
-- TSO improves throughput on Tx side on systems with weak CPU
-- ACS chooses best channel automatically when starting AP
-- support for the new boot loader
+On Fri, Jul 31, 2015 at 04:38:36PM +0900, Tony Cho wrote:
+> From: glen lee <glen.lee@atmel.com>
+> 
+> drvHandler of u32 type is used to handle integer type pointer operation which
+> cause build warnings.
+> To use integer type varialbe as pointer, drvHandler data type need to be changed
+> with uintptr_t type.
+> 
+> drivers/staging/wilc1000/host_interface.c: In function ‘NetworkInfoReceived’:
+> drivers/staging/wilc1000/host_interface.c:6767:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+>   pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+>                ^
+> drivers/staging/wilc1000/host_interface.c: In function ‘GnrlAsyncInfoReceived’:
+> drivers/staging/wilc1000/host_interface.c:6819:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+>   pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+>                ^
+> drivers/staging/wilc1000/host_interface.c: In function ‘host_int_ScanCompleteReceived’:
+> drivers/staging/wilc1000/host_interface.c:6878:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+>   pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+> 
+> Signed-off-by: glen lee <glen.lee@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index b36f98c..668e47e 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -6760,7 +6760,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+>  {
+>  	s32 s32Error = WILC_SUCCESS;
+>  	tstrHostIFmsg strHostIFmsg;
+> -	u32 drvHandler;
+> +	uintptr_t drvHandler;
 
-Bug fixes:
-- "wait for del_station to complete"
-- "hold wil->mutex while managing vrings"
+This isn't a valid kernel type, use "unsigned int *" if that is what you mean.
 
-The rest are small fixes and improvements
+thanks,
 
-Dedy Lansky (1):
-  wil6210: treat "unhandled event" as warning instead of error
-
-Vladimir Kondratiev (12):
-  wil6210: support boot loader struct v0 & v1
-  wil6210: ACS implementation using QCA vendor command
-  wil6210: debugfs for channel survey
-  wil6210: count drops in Rx block ack reorder
-  wil6210: print "ulong" fields in hex format in the debugfs
-  wil6210: use <> vs. "" for global include
-  wil6210: wait for del_station to complete
-  wil6210: hold wil->mutex while managing vrings
-  wil6210: use wil_fw_error_recovery()
-  wil6210: skip HW version check for chip debugging
-  wil6210: TSO implementation
-  wil6210: improve mgmt frame handling
-
- drivers/net/wireless/ath/wil6210/boot_loader.h  |  57 ++++
- drivers/net/wireless/ath/wil6210/cfg80211.c     | 389 ++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/debugfs.c      |  64 +++-
- drivers/net/wireless/ath/wil6210/main.c         | 112 +++++--
- drivers/net/wireless/ath/wil6210/netdev.c       |   5 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c   |   2 +
- drivers/net/wireless/ath/wil6210/txrx.c         | 383 ++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/txrx.h         |   8 +
- drivers/net/wireless/ath/wil6210/wil6210.h      |  18 +-
- drivers/net/wireless/ath/wil6210/wil_platform.c |   2 +-
- drivers/net/wireless/ath/wil6210/wmi.c          | 129 ++++++--
- drivers/net/wireless/ath/wil6210/wmi.h          |  38 ++-
- 12 files changed, 1129 insertions(+), 78 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/boot_loader.h
-
--- 
-2.1.4
-
+greg k-h
