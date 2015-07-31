@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:54473 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750814AbbG2UD5 convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44594 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752283AbbGaHlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 16:03:57 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "apoc@keemail.me" <apoc@keemail.me>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: [linuxwifi] Random connection loss
-Date: Wed, 29 Jul 2015 20:03:40 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E7DB4D7@hasmsx107.ger.corp.intel.com> (sfid-20150729_220401_196082_04DFAFD2)
-References: <JvQNrDf----0@keemail.me>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 31 Jul 2015 03:41:42 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 25/28] staging: wilc1000: change cast type from pointer to uintptr_t
+Date: Fri, 31 Jul 2015 16:38:33 +0900
+Message-ID: <1438328316-30197-26-git-send-email-tony.cho@atmel.com> (sfid-20150731_100715_753306_62E5C05A)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: glen lee <glen.lee@atmel.com>
 
-On 07/29/2015 10:57 PM, apoc@keemail.me wrote:
-> I'm not quite sure how to trace the problem to its roots.
-> 
-> My wireless connection is disconnected and reconnects again. I can't
-> reproduce this nor can I tell at what rate it disconnects.
-> 
-> I didn't experience it before upgrading the kernel from 3.16.0-4 to 4.0.0-2.
-> The upgrade has been suggested in the **iwlwifi irc channel due to
-> another problem.
-> 
+To use drvHandler as integer operation, cast type to uintptr_t.
 
-I wasn't aware about this channel :)
+Here is the build warning.
+drivers/staging/wilc1000/wilc_wlan.c:1871:23: warning: cast from pointer to
+integer of different size [-Wpointer-to-int-cast]
+  int driver_handler = (u32)drvHandler;
 
-What does ethtool -i wlan0 say?
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> $ uname -a
-> Linux rytlock 4.0.0-2-amd64 #1 SMP Debian 4.0.8-2 (2015-07-22) x86_64
-> GNU/Linux
-> 
-> What logs may I look into, to find the issue?
-> 
-> regards,
-> apoc
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index ec80849..14c2071 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1056,7 +1056,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_n
+ 		goto _fail_;
+ 	}
+ 
+-	*(int *)c_val = (u32)pstrWFIDrv;
++	*(int *)c_val = (uintptr_t)pstrWFIDrv;
+ 
+ 	if (!g_linux_wlan->oup.wlan_cfg_set(1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
+ 		goto _fail_;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index f5075b26..2cc23d5 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1868,7 +1868,7 @@ static int wilc_wlan_cfg_commit(int type, WILC_WFIDrvHandle drvHandler)
+ 	wilc_cfg_frame_t *cfg = &p->cfg_frame;
+ 	int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
+ 	int seq_no = p->cfg_seq_no % 256;
+-	int driver_handler = (u32)drvHandler;
++	int driver_handler = (uintptr_t)drvHandler;
+ 
+ 
+ 	/**
+-- 
+1.9.1
+
