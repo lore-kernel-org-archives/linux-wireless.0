@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43400 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753657AbbG2I0W (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41593 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263AbbGaDtE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2015 04:26:22 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: suppress 'failed to process fft' warning messages.
-References: <1437490215-11214-1-git-send-email-kevin@darbyshire-bryant.me.uk>
-Date: Wed, 29 Jul 2015 11:25:46 +0300
-In-Reply-To: <1437490215-11214-1-git-send-email-kevin@darbyshire-bryant.me.uk>
-	(Kevin Darbyshire-Bryant's message of "Tue, 21 Jul 2015 15:50:15
-	+0100")
-Message-ID: <87lhdz74l1.fsf@kamboji.qca.qualcomm.com> (sfid-20150729_102744_821900_78598590)
+	Thu, 30 Jul 2015 23:49:04 -0400
+Date: Thu, 30 Jul 2015 20:49:02 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 0/5] 2nd patch for illegal coding style
+Message-ID: <20150731034902.GB8945@kroah.com> (sfid-20150731_054908_251199_1039266A)
+References: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk> writes:
+On Thu, Jul 30, 2015 at 06:10:09PM +0900, Tony Cho wrote:
+> This patch V2 includes only patches rejected. The rejected patch for the
+> following, #ifdef conditionals cover entire functions, introduced new error on
+> required space before the open parenthesis '('. This is my mistake while
+> rewriting codes.
+> 
+> The original 13th patch didn't include new fix introduced on the previous patch
+> due to no sync-up issue. The original 13th patch fixed the same warnings but
+> in different place. 
+> 
+> The 64bit compile warnings will be resolved after sending these patches. Then,
+> ambiguous sdio/spi parts including preprocessor conditionals will be tried.
 
-> When using DFS channels on Ath10k, kernel log has repeated warning message
-> 'failed to process fft: -22' typically under medium/heavy traffic.
->
-> This patch switches the warnings to driver debug (WMI events) mode only
-> thus reducing log file noise.
->
-> DFS and spectral scan share underlying HW mechanisms and enabling one
-> (DFS) enables the other (spectral scan) as far as event reporting from
-> firmware to driver is concerned. Spectral scan events take no part in
-> processing of DFS radar pulses which are delivered as distinct events,
-> so the fft (spectral event) warning is harmless and DFS interference
-> detection/protection still occurs.
->
-> Symptoms seen & fix tested in both debug & non-debug modes on TP-Link
-> Archer C7 v2 platform.
->
-> Signed-off-by: Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
+Again, please fix the build warnings first, they are much more important
+than coding style issues.
 
-Thanks, applied.
+thanks,
 
-In the future please use v2, v3 to mark different versions of the patch
-so that I can easily find the latest version:
-
-https://www.kernel.org/doc/Documentation/SubmittingPatches
-
--- 
-Kalle Valo
+greg k-h
