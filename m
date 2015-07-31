@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54083 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755279AbbGCSiF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2015 14:38:05 -0400
-Message-ID: <1435948682.2059.41.camel@sipsolutions.net> (sfid-20150703_203809_214964_C338CD56)
-Subject: Re: Q: iw - how to scan for a specific ssid / AP mode scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 03 Jul 2015 20:38:02 +0200
-In-Reply-To: <5596BDAB.4020001@neratec.com>
-References: <5596BDAB.4020001@neratec.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49486 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbbGaUqY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2015 16:46:24 -0400
+Date: Fri, 31 Jul 2015 13:46:23 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 01/28] staging: wilc1000: change type of driver handler
+ in host interface msg
+Message-ID: <20150731204623.GA1572@kroah.com> (sfid-20150731_224630_857592_31F13045)
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+ <1438328316-30197-2-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438328316-30197-2-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-07-03 at 18:51 +0200, Zefir Kurtisi wrote:
-> Folks,
+On Fri, Jul 31, 2015 at 04:38:09PM +0900, Tony Cho wrote:
+> From: glen lee <glen.lee@atmel.com>
 > 
-> I have difficulties using iw for a specific use case or fail to 
-> understand the documentation correctly.
+> This patch changes void pointer type of drvHandler with WILC_WFIDrvHandle
+> type variable since the structure member drvHandler in tstrHostIFmsg is
+> explicitly used to pass driver pointer as handler.
+> The void pointer as argument is ambiguous for the functions to handle correctly.
 > 
-> My platform is a recent OpenWRT, running ath9k.
+> After this patch, ATWILC_WFIDrvHandle type will be used as handler type to
+> interface with other functions which does not need to know all about wifi driver
+> structre tstrATWILC_WFIDrv.
+> As a consequence of this patch, several patches will be followed up to change
+> type of parameter which take drvHandler as argument.
 > 
-> First use case is scanning for a given ssid in managed mode. 
-> According do iw's documentation (and the attribute description in 
-> nl80211.h), issuing
+> Signed-off-by: glen lee <glen.lee@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> iw dev wlan0 scan flush ssid <SSID>
-> 
-> should do exactly this, but I keep receiving a full list of visible 
-> APs.
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 02aaf39..fb4194a 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -467,7 +467,7 @@ typedef union _tuniHostIFmsgBody {
+>  typedef struct _tstrHostIFmsg {
+>  	u16 u16MsgId;                                           /*!< Message ID */
+>  	tuniHostIFmsgBody uniHostIFmsgBody;             /*!< Message body */
+> -	void *drvHandler;
+> +	WILC_WFIDrvHandle drvHandler;
+>  } tstrHostIFmsg;
+>  
+>  #ifdef CONNECT_DIRECT
 
-This is telling it to scan for that particular network, and that's what
-it's going to do, but it's still going to report everything that it
-heard, for example when hearing beacons while scanning.
+This patch adds build warnings to the tree, which isn't ok.  Change the
+variable type and then fix up the places it is used in the same patch.
+Right now you have a bunch more "warning: assignment from incompatible
+pointer type [-Wincompatible-pointer-types]" added, which isn't ok.
 
-> The second issue is about scanning in AP mode. Where I want to go is
-> having two
-> APs operating on arbitrary DFS channels with periodic scans to 
-> discover each
-> other. What I observe is
-> a) passive scanning: iw dev wlan0 scan flush ap-force passive
->    => does not work - no scan results are provided
-> b) active scanning: iw dev wlan0 scan flush ap-force
->   * finds only a subset of APs compared to a scan in managed mode
->   * finds only APs on non-DFS channels
-> 
-> Again, I might be missing some relevant documentation, but to me the 
-> observed results look rather like 'not yet implemented' than inherent
-> limitations.
-> 
+Each patch in a series should do one logical thing, and never add more
+build warnings to the build.  Please rework this series to do this
+correctly.
 
-Not sure - but you do need to realize that the AP isn't really allowed
-to go off-channel for any period of time (like scanning) so this isn't
-really guaranteed to work well. Especially passive scanning seems like
-a really bad idea. As to why it's not actually working, I have no idea.
+thanks,
 
-johannes
+greg k-h
