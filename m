@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57682 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754968AbbGVGHM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2015 02:07:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
-References: <20150722103239.04995fda@canb.auug.org.au>
-Date: Wed, 22 Jul 2015 09:07:05 +0300
-In-Reply-To: <20150722103239.04995fda@canb.auug.org.au> (Stephen Rothwell's
-	message of "Wed, 22 Jul 2015 10:32:39 +1000")
-Message-ID: <871tg0n2t2.fsf@kamboji.qca.qualcomm.com> (sfid-20150722_080738_302862_A0BA3E0D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:1095 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750947AbbGaEnT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2015 00:43:19 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avraham Stern <avraham.stern@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/3] iwlwifi: mvm: Fix regular scan priority
+Date: Fri, 31 Jul 2015 07:43:12 +0300
+Message-Id: <1438317793-7435-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150731_064322_563806_408A9909)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7DC508@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7DC508@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephen,
+From: Avraham Stern <avraham.stern@intel.com>
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
+The code checks the total number of iterations to differentiate
+between regular scan and scheduled scan. However, regular scan has
+a total of one iteration, not zero. As a result, regular scan will
+have lower priority than it should have, and in case scheduled
+scan is already running when regular scan is requested, regular scan
+will be delayed until scheduled scan is aborted.
+Fix that by checking for total iterations number of one as an
+identifier for regular scan.
 
-> After merging the wireless-drivers-next tree, today's linux-next build
-> (x86_64 allmodconfig) failed like this:
->
-> ERROR: "of_default_bus_match_table" [drivers/bcma/bcma.ko] undefined!
->
-> Caused by commit
->
->   cae761b5a6bd ("bcma: populate bus DT subnodes as platform_device-s")
->
-> I have used the wireless-drivers-next tree from next-20150721 for today.
+Fixes: 133c8259f885 ("iwlwifi: mvm: rename generic_scan_cmd functions to dwell")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Sorry about that.
-
-Rafal, can you please send a patch to fix this? I'll apply it ASAP.
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 5000bfcd..5514ad6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1023,7 +1023,7 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ 	cmd->scan_priority =
+ 		iwl_mvm_scan_priority(mvm, IWL_SCAN_PRIORITY_EXT_6);
+ 
+-	if (iwl_mvm_scan_total_iterations(params) == 0)
++	if (iwl_mvm_scan_total_iterations(params) == 1)
+ 		cmd->ooc_priority =
+ 			iwl_mvm_scan_priority(mvm, IWL_SCAN_PRIORITY_EXT_6);
+ 	else
 -- 
-Kalle Valo
+2.1.4
+
