@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:34188 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbbGKRpq (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44523 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123AbbGaHlQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jul 2015 13:45:46 -0400
-Received: by lbnk3 with SMTP id k3so106856566lbn.1
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Jul 2015 10:45:44 -0700 (PDT)
+	Fri, 31 Jul 2015 03:41:16 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 21/28] staging: wilc1000: remove unwanted type cast
+Date: Fri, 31 Jul 2015 16:38:29 +0900
+Message-ID: <1438328316-30197-22-git-send-email-tony.cho@atmel.com> (sfid-20150731_094119_152883_7B5F39DC)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150710235917.GA31592@sesse.net>
-References: <20150710235917.GA31592@sesse.net>
-Date: Sat, 11 Jul 2015 20:45:44 +0300
-Message-ID: <CANUX_P0dNv15DW=ZQDx7rF++vsYC6s8DYoh1ZPhRabE1KONK-A@mail.gmail.com> (sfid-20150711_194549_369610_74C49F0D)
-Subject: Re: [BUG] 7260AC microcode hang
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 11, 2015 at 2:59 AM, Steinar H. Gunderson
-<sgunderson@bigfoot.com> wrote:
-> Hi,
->
-> I have a Lenovo X240 with an 7260AC (I upgraded it myself, but it is Lenovo
-> branded). This weekend I'm at an event where I run the Wi-Fi myself with
-> Cisco gear, mostly 2602i. I've had several instances only today where the
-> microcode hangs:
+From: glen lee <glen.lee@atmel.com>
 
-[snip]
+This patch removes (u32) type cast which makes build warning because
+the parameter of u32 type in the function host_int_set_wfi_drv_handler was
+changed with WILC_WFIDrvHandle. Not necessary to cast type.
 
-> At this point, my Wi-Fi is usually so hosed that I just have to reboot;
-> SSH lags etc., and then after a while all networking just hangs.
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-What kernel are you running?
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bc9195f..ab2e082 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6687,7 +6687,7 @@ s32 host_int_deinit(WILC_WFIDrvHandle hWFIDrv)
+ 	WILC_TimerDestroy(&(pstrWFIDrv->hRemainOnChannel), NULL);
+ 	#endif
+ 
+-	host_int_set_wfi_drv_handler((u32)NULL);
++	host_int_set_wfi_drv_handler(NULL);
+ 	down(&hSemDeinitDrvHandle);
+ 
+ 
+-- 
+1.9.1
 
->
-> Now, a different question is why Linux insists on using 2.4 GHz even though
-> it's super-congested and the APs have turned down the power significantly
-> (you can see it's asked to send at 4 dBm in the log there). But that's a
-> different and much broader story :-) (I don't have band-select on.)
->
-
-Not sure. This question should go to the supplicant folks.
-
-> /* Steinar */
-> --
-> Homepage: http://www.sesse.net/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
