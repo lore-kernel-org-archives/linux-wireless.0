@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:36822 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbbGXDxW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2015 23:53:22 -0400
-Received: by lbbqi7 with SMTP id qi7so7105217lbb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2015 20:53:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <loom.20150724T015627-838@post.gmane.org>
-References: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
-	<loom.20150724T015627-838@post.gmane.org>
-Date: Fri, 24 Jul 2015 06:53:20 +0300
-Message-ID: <CANUX_P03KBFk+TVNF78oW=PtxMJ_bwC4sF0UoyuFUjDV+p=wYQ@mail.gmail.com> (sfid-20150724_055328_614040_50378EA4)
-Subject: Re: [RFC 0/5] cfg80211 / mac80211: add support for Neighbor Awareness Networking
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: QH <qiumin.hu@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx4.wp.pl ([212.77.101.12]:53944 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750926AbbGaNLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2015 09:11:36 -0400
+From: Jakub Kicinski <moorray3@wp.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH -next 2/4] mt7601u: use correct ieee80211_rx variant
+Date: Fri, 31 Jul 2015 15:04:47 +0200
+Message-Id: <1438347889-14669-2-git-send-email-moorray3@wp.pl> (sfid-20150731_151139_856841_09DB1533)
+In-Reply-To: <1438347889-14669-1-git-send-email-moorray3@wp.pl>
+References: <1438347889-14669-1-git-send-email-moorray3@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 24, 2015 at 2:59 AM, QH <qiumin.hu@gmail.com> wrote:
->
-> Emmanuel Grumbach <emmanuel.grumbach@...> writes:
->
->
-> ++++++++++++++++++++++++++++++++++++++++++-
-> >  net/wireless/rdev-ops.h      |  57 +++++
-> >  net/wireless/trace.h         |  77 +++++++
-> >  net/wireless/util.c          |   9 +-
-> >  19 files changed, 1126 insertions(+), 11 deletions(-)
-> >
->
-> where can I get these patches?
->
-> thanks,
+From: Jakub Kicinski <kubakici@wp.pl>
 
-These patches were't merged because they were sent as an RFC only. The
-API towards the OS aren't clear (to me) yet, so it seems a bit
-premature to build the user space API for that. But this RFC series
-looks like a good start.
+Rx is run inside a tasklet so ieee80211_rx() should be used
+instead of ieee80211_rx_ni().
+
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+---
+ drivers/net/wireless/mediatek/mt7601u/dma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
+index 7217da4f1543..fb183e369d92 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/dma.c
++++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
+@@ -112,7 +112,7 @@ static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
+ 	if (!skb)
+ 		return;
+ 
+-	ieee80211_rx_ni(dev->hw, skb);
++	ieee80211_rx(dev->hw, skb);
+ }
+ 
+ static u16 mt7601u_rx_next_seg_len(u8 *data, u32 data_len)
+-- 
+2.1.0
+
