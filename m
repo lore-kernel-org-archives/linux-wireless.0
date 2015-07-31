@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:48301 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44175 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752996AbbG1IuY (ORCPT
+	with ESMTP id S1751562AbbGaHjZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 04:50:24 -0400
+	Fri, 31 Jul 2015 03:39:25 -0400
 From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -12,50 +12,58 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
 	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 21/21] staging: wilc1000: update TODO list of WILC1000
-Date: Tue, 28 Jul 2015 17:47:40 +0900
-Message-ID: <1438073261-28315-22-git-send-email-tony.cho@atmel.com> (sfid-20150728_105034_015677_BA1D2B73)
-In-Reply-To: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
-References: <1438073261-28315-1-git-send-email-tony.cho@atmel.com>
+Subject: [PATCH 04/28] staging: wilc1000: change type of argument 5 in SendConfigPkt
+Date: Fri, 31 Jul 2015 16:38:12 +0900
+Message-ID: <1438328316-30197-5-git-send-email-tony.cho@atmel.com> (sfid-20150731_093927_983361_E68C920B)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TODO list is updated for the WILC1000 kernel driver. The TODO list
-contains many items listed in time sequence.
+From: glen lee <glen.lee@atmel.com>
 
+This patch changes drvHandler of u32 type with WILC_WFIDrvHandle type since
+SendConfigPkt function gets WILC_WFIDrvHandle type driver Handler pointer as
+argument which makes compile warning.
+
+As the type of parameter changed, associate code will be changed in the next
+patches.
+
+Signed-off-by: glen lee <glen.lee@atmel.com>
 Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/TODO | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 2 +-
+ drivers/staging/wilc1000/coreconfigurator.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
-index 95199d8..6b745cd 100644
---- a/drivers/staging/wilc1000/TODO
-+++ b/drivers/staging/wilc1000/TODO
-@@ -1,14 +1,15 @@
- TODO:
--- remove the defined feature as kernel versions
--- remove OS wrapper functions
--- remove custom debug and tracing functions
-+- remove most of warnings reported by checkpatch.pl
-+- remove OS wrapper functions to use kernel API as is
- - rework comments and function headers(also coding style)
- - replace all semaphores with mutexes or completions
--- make spi and sdio components coexist in one build
-+- remove compile warnings related to 64 bit machine
- - turn compile-time platform configuration (BEAGLE_BOARD,
-   PANDA_BOARD, PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...)
-   into run-time options that are read from DT
--- support soft-ap and p2p mode
--- support resume/suspend function
-+- support soft-ap and p2p mode by updating the WILC1000 driver and fw
-+- support resume/suspend function by updating the WILC1000 driver and fw
- - replace SIOCDEVPRIVATE commands with generic API functions
- - use wext-core handling instead of private SIOCSIWPRIV implementation
-+- replace CamelCase to follow coding style
-+- remove the warnings, line over 80 characters
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 342a336..e1928cc 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -1986,7 +1986,7 @@ extern wilc_wlan_oup_t *gpstrWlanOps;
+  *  @version	1.0
+  */
+ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+-			  u32 u32WIDsCount, bool bRespRequired, u32 drvHandler)
++			  u32 u32WIDsCount, bool bRespRequired, WILC_WFIDrvHandle drvHandler)
+ {
+ 	s32 counter = 0, ret = 0;
+ 	if (gpstrWlanOps == NULL) {
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 56ff2ba..98b5c49 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -167,7 +167,7 @@ extern s32 CoreConfiguratorInit(void);
+ extern s32 CoreConfiguratorDeInit(void);
+ 
+ extern s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+-			 u32 u32WIDsCount, bool bRespRequired, u32 drvHandler);
++			 u32 u32WIDsCount, bool bRespRequired, WILC_WFIDrvHandle drvHandler);
+ extern s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
+ extern s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo);
+ 
 -- 
 1.9.1
 
