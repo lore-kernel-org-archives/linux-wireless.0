@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:41593 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbbGaDtE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38798 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752442AbbGaG0l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2015 23:49:04 -0400
-Date: Thu, 30 Jul 2015 20:49:02 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
-	leo.kim@atmel.com
-Subject: Re: [PATCH 0/5] 2nd patch for illegal coding style
-Message-ID: <20150731034902.GB8945@kroah.com> (sfid-20150731_054908_251199_1039266A)
-References: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
+	Fri, 31 Jul 2015 02:26:41 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
+Subject: Re: [V4.2] rtlwifi: Fix NULL dereference when PCI driver used as an AP
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1438222280-4146-1-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Message-Id: <20150731062640.B4461140A9B@smtp.codeaurora.org> (sfid-20150731_082652_247249_A7F56853)
+Date: Fri, 31 Jul 2015 06:26:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2015 at 06:10:09PM +0900, Tony Cho wrote:
-> This patch V2 includes only patches rejected. The rejected patch for the
-> following, #ifdef conditionals cover entire functions, introduced new error on
-> required space before the open parenthesis '('. This is my mistake while
-> rewriting codes.
+
+> From: Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>
 > 
-> The original 13th patch didn't include new fix introduced on the previous patch
-> due to no sync-up issue. The original 13th patch fixed the same warnings but
-> in different place. 
+> In commit 33511b157bbcebaef853cc1811992b664a2e5862 ("rtlwifi: add support to
+> send beacon frame"), the mechanism for sending beacons was established. That
+> patch works correctly for rtl8192cu, but there is a possibility of getting
+> the following warnings in the PCI drivers:
 > 
-> The 64bit compile warnings will be resolved after sending these patches. Then,
-> ambiguous sdio/spi parts including preprocessor conditionals will be tried.
+> WARNING: CPU: 1 PID: 2439 at net/mac80211/driver-ops.h:12
+> ieee80211_bss_info_change_notify+0x179/0x1d0 [mac80211]()
+> wlp5s0:  Failed check-sdata-in-driver check, flags: 0x0
+> 
+> The warning is followed by a NULL pointer dereference as follows:
+> 
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000006
+> IP: [<ffffffffc073998e>] rtl_get_tcb_desc+0x5e/0x760 [rtlwifi]
+> 
+> This problem was reported at http://thread.gmane.org/gmane.linux.kernel.wireless.general/138645,
+> but no solution was found at that time.
+> 
+> The problem was also reported at https://bugzilla.kernel.org/show_bug.cgi?id=9744
+> and this solution was developed and tested there.
+> 
+> The USB driver works with a NULL final argument in the adapter_tx() callback;
+> however, the PCI drivers need a struct rtl_tcb_desc in that position.
+> 
+> Fixes: 33511b157bbc ("rtlwifi: add support to send beacon frame.")
+> Signed-off-by: Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> [3.19+]
 
-Again, please fix the build warnings first, they are much more important
-than coding style issues.
+Thanks, applied to wireless-drivers.git.
 
-thanks,
+But I added Fixes line to make it clear what commit this fixes.
 
-greg k-h
+Kalle Valo
