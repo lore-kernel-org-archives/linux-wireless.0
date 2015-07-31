@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:35912 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbbG1RZF (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49515 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504AbbGaUuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2015 13:25:05 -0400
-Received: by igbij6 with SMTP id ij6so125705314igb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2015 10:25:04 -0700 (PDT)
+	Fri, 31 Jul 2015 16:50:20 -0400
+Date: Fri, 31 Jul 2015 13:50:19 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH 25/28] staging: wilc1000: change cast type from pointer
+ to uintptr_t
+Message-ID: <20150731205019.GC1650@kroah.com> (sfid-20150731_225026_881647_5C2F098F)
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+ <1438328316-30197-26-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
-	<CAJ-Vmom5v_Jb6f1ARoa3t99Ruht4zJMYiuS85ydHxCYoKV2n5g@mail.gmail.com>
-	<CAFBinCA_zNHgx+a+dikA46GN-xPtPMrtmnXeOHwMjr4FsNF=Cg@mail.gmail.com>
-	<CAJ-VmokJwqEvkUMf4BNkW9h-6BPdANjTrjgu0YJMD0RAYfQF2A@mail.gmail.com>
-	<CAFBinCCzTTdkENDZ5BVPnSqXV7uFUtBabAYFuT4-sd2M=KVxLg@mail.gmail.com>
-	<CAJ-Vmo=pmv6tMs1_AY=x-MS=Q1VAXy0Xrp2ac==Nsm0=njoE8g@mail.gmail.com>
-	<CAFBinCDwLBUZcwEh1QBofDg5urwviO9gWKAeiuVXHCyw+OdFfA@mail.gmail.com>
-Date: Tue, 28 Jul 2015 10:25:04 -0700
-Message-ID: <CAJ-Vmokfovc806T+Ja6nQhbGUDM=uU7MmKwad6Uc2hNYV+DDtA@mail.gmail.com> (sfid-20150728_192510_048176_F10082E3)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-From: Adrian Chadd <adrian@freebsd.org>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438328316-30197-26-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So the values aren't "bad" on the 1043nd - they're in 1/2 or 1/4dB,
-but there's no scalar quantity (ie, it's not in dBm.) The 1043nd
-calibrates down to around -95 or so, which "sounds" like it's in dBm
-but it isn't, and any similarity is just coincidence.
+On Fri, Jul 31, 2015 at 04:38:33PM +0900, Tony Cho wrote:
+> From: glen lee <glen.lee@atmel.com>
+> 
+> To use drvHandler as integer operation, cast type to uintptr_t.
+> 
+> Here is the build warning.
+> drivers/staging/wilc1000/wilc_wlan.c:1871:23: warning: cast from pointer to
+> integer of different size [-Wpointer-to-int-cast]
+>   int driver_handler = (u32)drvHandler;
+> 
+> Signed-off-by: glen lee <glen.lee@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/linux_wlan.c | 2 +-
+>  drivers/staging/wilc1000/wilc_wlan.c  | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+> index ec80849..14c2071 100644
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -1056,7 +1056,7 @@ static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_n
+>  		goto _fail_;
+>  	}
+>  
+> -	*(int *)c_val = (u32)pstrWFIDrv;
+> +	*(int *)c_val = (uintptr_t)pstrWFIDrv;
 
-It does sound like your AR9227 sees noise. can you fire up the
-spectral analysis stuff to plot what the NIC is seeing? (yes, the
-AR9287/AR9227 has spectral analysis mode, same as the AR9280, AR9285,
-and >= AR9300.)
+Why is the cast needed at all?
 
+>  
+>  	if (!g_linux_wlan->oup.wlan_cfg_set(1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
+>  		goto _fail_;
+> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+> index f5075b26..2cc23d5 100644
+> --- a/drivers/staging/wilc1000/wilc_wlan.c
+> +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> @@ -1868,7 +1868,7 @@ static int wilc_wlan_cfg_commit(int type, WILC_WFIDrvHandle drvHandler)
+>  	wilc_cfg_frame_t *cfg = &p->cfg_frame;
+>  	int total_len = p->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
+>  	int seq_no = p->cfg_seq_no % 256;
+> -	int driver_handler = (u32)drvHandler;
+> +	int driver_handler = (uintptr_t)drvHandler;
 
--adrian
+You can't cast a pointer to an integer, it does not work on all systems,
+which is what the compiler warnings is telling you.
+
+If this really is a pointer, use a pointer, otherwise, use an integer,
+but don't cast between the two.
+
+thanks,
+
+greg k-h
