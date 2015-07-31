@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:33802 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755068AbbGFRKa (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44632 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493AbbGaHly (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2015 13:10:30 -0400
-Received: by igcsj18 with SMTP id sj18so239790427igc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2015 10:10:30 -0700 (PDT)
-From: Wei Zhong <wzhong@google.com>
-To: seth.forshee@canonical.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Wei Zhong <wzhong@google.com>
-Subject: [PATCH] wireless-regdb: update CA rules for 5600 - 5650 mHz
-Date: Mon,  6 Jul 2015 10:09:53 -0700
-Message-Id: <1436202593-12701-1-git-send-email-wzhong@google.com> (sfid-20150706_191042_521011_22C21105)
+	Fri, 31 Jul 2015 03:41:54 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 27/28] staging: wilc1000: fix casting build warning
+Date: Fri, 31 Jul 2015 16:38:35 +0900
+Message-ID: <1438328316-30197-28-git-send-email-tony.cho@atmel.com> (sfid-20150731_094159_344157_9585EC02)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Related regulation:
-http://www.ic.gc.ca/eic/site/smt-gst.nsf/eng/sf10971.html#s6.2.3
+From: glen lee <glen.lee@atmel.com>
 
-Frequency Bands 5470-5600 MHz and 5650-5725 MHz
-Until further notice, devices subject to this section [i.e. Wifi device
-supporting 5 GHz bands] shall not be capable of transmitting in the band
-5600-5650 MHz. This restriction is for the protection of Environment
-Canada’s weather radars operating in this band.
+u32Mode type is u32 and it indicates integer type operation mode.
+So change (32)NULL with 0.
 
-Signed-off-by: Wei Zhong <wzhong@google.com>
+drivers/staging/wilc1000/host_interface.c:704:47: warning: cast from pointer
+to integer of different size [-Wpointer-to-int-cast]
+  if ((pstrHostIfSetOperationMode->u32Mode) == (u32)NULL)
+
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- db.txt | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 809cd3c..74bcf6b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -216,7 +216,8 @@ country CA: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
- 	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
-+	(5490 - 5590 @ 80), (24), DFS
-+	(5650 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c5db385..b36f98c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -700,7 +700,7 @@ static s32 Handle_SetOperationMode(WILC_WFIDrvHandle drvHandler, tstrHostIfSetOp
+ 	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, drvHandler);
  
- # Source:
+ 
+-	if ((pstrHostIfSetOperationMode->u32Mode) == (u32)NULL)
++	if ((pstrHostIfSetOperationMode->u32Mode) == 0)
+ 		up(&hSemDeinitDrvHandle);
+ 
+ 
 -- 
-2.4.3.573.g4eafbef
+1.9.1
 
