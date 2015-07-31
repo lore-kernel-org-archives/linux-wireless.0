@@ -1,51 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51940 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757414AbbGQJQx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2015 05:16:53 -0400
-Message-ID: <1437124610.1933.8.camel@sipsolutions.net> (sfid-20150717_111704_221979_4187B89F)
-Subject: Re: [PATCH 08/10] mac80211: shut down interfaces before destroying
- interface list
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 17 Jul 2015 11:16:50 +0200
-In-Reply-To: <1436359312-26533-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150708_144234_957308_D5968C26)
-References: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1436359312-26533-9-git-send-email-emmanuel.grumbach@intel.com>
-	 (sfid-20150708_144234_957308_D5968C26)
+Received: from eusmtp01.atmel.com ([212.144.249.243]:44659 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216AbbGaHmB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2015 03:42:01 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 28/28] staging: wilc1000: change data type of variable
+Date: Fri, 31 Jul 2015 16:38:36 +0900
+Message-ID: <1438328316-30197-29-git-send-email-tony.cho@atmel.com> (sfid-20150731_094205_584706_5E3B5499)
+In-Reply-To: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+References: <1438328316-30197-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-07-08 at 15:41 +0300, Emmanuel Grumbach wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If the hardware is unregistered while interfaces are up, mac80211 
-> will
-> unregister all interfaces, which in turns causes mac80211 to be 
-> called
-> again to remove them all from the driver and eventually shut down the
-> hardware.
-> 
-> During this shutdown, however, it's currently already unsafe to 
-> iterate
-> the list of interfaces atomically, as the list is manipulated in an
-> unsafe manner. This puts an undue burden on the driver - it must stop
-> all its activities before calling ieee80211_unregister_hw(), while in
-> the normal stop path it can do all cleanup in the stop method. If, 
-> for
-> example, it's using the iteration during RX for some reason, it would
-> have to stop RX before unregistering to avoid crashes.
-> 
-> Fix this problem by closing all interfaces before unregistering them.
-> This will cause the driver stop to have completed before we 
-> manipulate
-> the interface list, and after the driver is stopped *and* has called
-> ieee80211_unregister_hw() it really musn't be iterating any more as
-> the memory will be freed as well.
-> 
-Applied.
+From: glen lee <glen.lee@atmel.com>
 
-johannes
+drvHandler of u32 type is used to handle integer type pointer operation which
+cause build warnings.
+To use integer type varialbe as pointer, drvHandler data type need to be changed
+with uintptr_t type.
+
+drivers/staging/wilc1000/host_interface.c: In function ‘NetworkInfoReceived’:
+drivers/staging/wilc1000/host_interface.c:6767:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+  pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+               ^
+drivers/staging/wilc1000/host_interface.c: In function ‘GnrlAsyncInfoReceived’:
+drivers/staging/wilc1000/host_interface.c:6819:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+  pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+               ^
+drivers/staging/wilc1000/host_interface.c: In function ‘host_int_ScanCompleteReceived’:
+drivers/staging/wilc1000/host_interface.c:6878:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+  pstrWFIDrv = (tstrWILC_WFIDrv *)drvHandler;
+
+Signed-off-by: glen lee <glen.lee@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b36f98c..668e47e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6760,7 +6760,7 @@ void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrHostIFmsg strHostIFmsg;
+-	u32 drvHandler;
++	uintptr_t drvHandler;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
+ 
+ 	drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+@@ -6809,7 +6809,7 @@ void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrHostIFmsg strHostIFmsg;
+-	u32 drvHandler;
++	uintptr_t drvHandler;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
+ 
+ 	/*BugID_5348*/
+@@ -6871,7 +6871,7 @@ void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrHostIFmsg strHostIFmsg;
+-	u32 drvHandler;
++	uintptr_t drvHandler;
+ 	tstrWILC_WFIDrv *pstrWFIDrv = NULL;
+ 
+ 	drvHandler = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+-- 
+1.9.1
+
