@@ -1,168 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:36663 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813AbbGNMcQ (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41591 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216AbbGaDsX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2015 08:32:16 -0400
-Received: by igbij6 with SMTP id ij6so44850858igb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2015 05:32:15 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v3 3/5] mac80211: reorder mesh_plink to remove forward decl
-Date: Tue, 14 Jul 2015 08:31:57 -0400
-Message-Id: <1436877119-17577-4-git-send-email-me@bobcopeland.com> (sfid-20150714_143221_475965_7A920809)
-In-Reply-To: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
-References: <1436877119-17577-1-git-send-email-me@bobcopeland.com>
+	Thu, 30 Jul 2015 23:48:23 -0400
+Date: Thu, 30 Jul 2015 20:48:21 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "tony.cho" <tony.cho@atmel.com>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, robin.hwang@atmel.com, jude.lee@atmel.com,
+	leo.kim@atmel.com
+Subject: Re: [PATCH V2 1/5] staging: wilc1000: #ifdef conditionals cover
+ entire functions
+Message-ID: <20150731034821.GA8945@kroah.com> (sfid-20150731_054826_701329_7D0057E3)
+References: <1438247414-19708-1-git-send-email-tony.cho@atmel.com>
+ <1438247414-19708-2-git-send-email-tony.cho@atmel.com>
+ <20150730115647.GA12823@sudip-pc>
+ <55BAEB08.8090705@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <55BAEB08.8090705@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move mesh_plink_frame_tx() above the first caller to remove
-the forward declaration.
+On Fri, Jul 31, 2015 at 12:27:04PM +0900, tony.cho wrote:
+> 
+> 
+> On 2015년 07월 30일 20:56, Sudip Mukherjee wrote:
+> >On Thu, Jul 30, 2015 at 06:10:10PM +0900, Tony Cho wrote:
+> >>This patch lets preprocessor conditionals (#ifdef) related to
+> >>WILC_SDIO_IRQ_GPIO to compile out the entire functions. Compiling out
+> >>the entire functions is preferred rather than portions of functions or
+> >>expressions becausue doing so makes code harder to read.
+> >>
+> >>Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> >>---
+> ><snip>
+> >>+#ifdef WILC_SDIO_IRQ_GPIO
+> >>  static int sdio_clear_int(void)
+> >>  {
+> >>-#ifndef WILC_SDIO_IRQ_GPIO
+> >>-	/* uint32_t sts; */
+> >>-	sdio_cmd52_t cmd;
+> >>-
+> >>-	cmd.read_write = 0;
+> >>-	cmd.function = 1;
+> >>-	cmd.raw = 0;
+> >>-	cmd.address = 0x4;
+> >>-	cmd.data = 0;
+> >>-	g_sdio.sdio_cmd52(&cmd);
+> >>-	int_clrd++;
+> >>-
+> >>-	return cmd.data;
+> >>-#else
+> >>  	uint32_t reg;
+> >>  	if (!sdio_read_reg(WILC_HOST_RX_CTRL_0, &reg)) {
+> >>@@ -181,9 +168,23 @@ static int sdio_clear_int(void)
+> >>  	sdio_write_reg(WILC_HOST_RX_CTRL_0, reg);
+> >>  	int_clrd++;
+> >>  	return 1;
+> >>-#endif
+> >>+}
+> >>+#else
+> >>+static int sdio_clear_int(void)
+> >>+{
+> >>+	sdio_cmd52_t cmd;
+> >>+
+> >>+	cmd.read_write = 0;
+> >>+	cmd.function = 1;
+> >>+	cmd.raw = 0;
+> >>+	cmd.address = 0x4;
+> >>+	cmd.data = 0;
+> >>+	g_sdio.sdio_cmd52(&cmd);
+> >>+	int_clrd++;
+> >>+	return cmd.data;
+> >>  }
+> >>+#endif /* WILC_SDIO_IRQ_GPIO */
+> >instead of changing #ifndef to #ifdef i think the following would have
+> >been easier:
+> 
+> Yes, I agree with you.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
+Great!
 
-v3: unchanged from v1
+> I will rewrite them after important patches are accepted.
 
- net/mac80211/mesh_plink.c | 109 ++++++++++++++++++++++------------------------
- 1 file changed, 52 insertions(+), 57 deletions(-)
+This is the first patch in the series, I'm not going to take it if you
+are going to redo it later, please fix it correctly.
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index ac1029f28133..a5aa0345dd7e 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -53,11 +53,6 @@ static const char * const mplevents[] = {
- 	[CLS_IGNR] = "CLS_IGNR"
- };
- 
--static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
--			       enum ieee80211_self_protected_actioncode action,
--			       u8 *da, u16 llid, u16 plid, u16 reason);
--
--
- /* We only need a valid sta if user configured a minimum rssi_threshold. */
- static bool rssi_threshold_check(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta)
-@@ -204,58 +199,6 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
- 	return BSS_CHANGED_HT;
- }
- 
--/**
-- * __mesh_plink_deactivate - deactivate mesh peer link
-- *
-- * @sta: mesh peer link to deactivate
-- *
-- * All mesh paths with this peer as next hop will be flushed
-- * Returns beacon changed flag if the beacon content changed.
-- *
-- * Locking: the caller must hold sta->mesh->plink_lock
-- */
--static u32 __mesh_plink_deactivate(struct sta_info *sta)
--{
--	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	u32 changed = 0;
--
--	lockdep_assert_held(&sta->mesh->plink_lock);
--
--	if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
--		changed = mesh_plink_dec_estab_count(sdata);
--	sta->mesh->plink_state = NL80211_PLINK_BLOCKED;
--	mesh_path_flush_by_nexthop(sta);
--
--	ieee80211_mps_sta_status_update(sta);
--	changed |= ieee80211_mps_set_sta_local_pm(sta,
--			NL80211_MESH_POWER_UNKNOWN);
--
--	return changed;
--}
--
--/**
-- * mesh_plink_deactivate - deactivate mesh peer link
-- *
-- * @sta: mesh peer link to deactivate
-- *
-- * All mesh paths with this peer as next hop will be flushed
-- */
--u32 mesh_plink_deactivate(struct sta_info *sta)
--{
--	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	u32 changed;
--
--	spin_lock_bh(&sta->mesh->plink_lock);
--	changed = __mesh_plink_deactivate(sta);
--	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
--	mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
--			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
--			    sta->mesh->reason);
--	spin_unlock_bh(&sta->mesh->plink_lock);
--
--	return changed;
--}
--
- static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			       enum ieee80211_self_protected_actioncode action,
- 			       u8 *da, u16 llid, u16 plid, u16 reason)
-@@ -375,6 +318,58 @@ free:
- 	return err;
- }
- 
-+/**
-+ * __mesh_plink_deactivate - deactivate mesh peer link
-+ *
-+ * @sta: mesh peer link to deactivate
-+ *
-+ * All mesh paths with this peer as next hop will be flushed
-+ * Returns beacon changed flag if the beacon content changed.
-+ *
-+ * Locking: the caller must hold sta->mesh->plink_lock
-+ */
-+static u32 __mesh_plink_deactivate(struct sta_info *sta)
-+{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	u32 changed = 0;
-+
-+	lockdep_assert_held(&sta->mesh->plink_lock);
-+
-+	if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
-+		changed = mesh_plink_dec_estab_count(sdata);
-+	sta->mesh->plink_state = NL80211_PLINK_BLOCKED;
-+	mesh_path_flush_by_nexthop(sta);
-+
-+	ieee80211_mps_sta_status_update(sta);
-+	changed |= ieee80211_mps_set_sta_local_pm(sta,
-+			NL80211_MESH_POWER_UNKNOWN);
-+
-+	return changed;
-+}
-+
-+/**
-+ * mesh_plink_deactivate - deactivate mesh peer link
-+ *
-+ * @sta: mesh peer link to deactivate
-+ *
-+ * All mesh paths with this peer as next hop will be flushed
-+ */
-+u32 mesh_plink_deactivate(struct sta_info *sta)
-+{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	u32 changed;
-+
-+	spin_lock_bh(&sta->mesh->plink_lock);
-+	changed = __mesh_plink_deactivate(sta);
-+	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
-+	mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
-+			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
-+			    sta->mesh->reason);
-+	spin_unlock_bh(&sta->mesh->plink_lock);
-+
-+	return changed;
-+}
-+
- static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 			       struct sta_info *sta,
- 			       struct ieee802_11_elems *elems, bool insert)
--- 
-2.1.4
+I'll drop this series from my queue.
 
+thanks,
+
+greg k-h
