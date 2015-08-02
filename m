@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54367 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbbHMMZe (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36614 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbbHBQcm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 08:25:34 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 2 Aug 2015 12:32:42 -0400
+Date: Sun, 2 Aug 2015 09:32:40 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ting-Chih Hsiao <s894330@hotmail.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: fix coding style warnings reported
+ by checkpatch.pl.
+Message-ID: <20150802163240.GA7015@kroah.com> (sfid-20150802_183246_625667_6759C621)
+References: <BLU437-SMTP188F540F98A449B816EBADB9880@phx.gbl>
 MIME-Version: 1.0
-Subject: Re: ath9k_htc: match wait_for_completion_timeout return type
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1431617394-30725-1-git-send-email-hofrat@osadl.org>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Message-Id: <20150813122533.52E091402D5@smtp.codeaurora.org> (sfid-20150813_142550_432039_03EA732C)
-Date: Thu, 13 Aug 2015 12:25:33 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BLU437-SMTP188F540F98A449B816EBADB9880@phx.gbl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Aug 02, 2015 at 01:00:58PM +0800, Ting-Chih Hsiao wrote:
+> From 8c86ae927a38693f587826f51fca5d374e756768 Mon Sep 17 00:00:00 2001
+> From: Ting-Chih Hsiao <s894330@hotmail.com>
+> Date: Sun, 2 Aug 2015 12:32:19 +0800
 
-> Return type of wait_for_completion_timeout is unsigned long not int.
-> As time_left is exclusively used for wait_for_completion_timeout here its
-> type is simply changed to unsigned long.
-> 
-> API conformance testing for completions with coccinelle spatches are being
-> used to locate API usage inconsistencies:
-> ./drivers/net/wireless/ath/ath9k/htc_hst.c:171
-> 	int return assigned to unsigned long
-> ./drivers/net/wireless/ath/ath9k/htc_hst.c:277
-> 	int return assigned to unsigned long
-> ./drivers/net/wireless/ath/ath9k/htc_hst.c:206
-> 	int return assigned to unsigned long
-> 
-> Patch was compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-> CONFIG_ATH9K_HTC=m
-> 
-> Patch is against 4.1-rc3 (localversion-next is -next-20150514)
-> 
-> 
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Why is this information in the body of your email?
 
-Thanks, applied to wireless-drivers-next.git.
+And please use scripts/get_maintainer.pl to determine the correct
+mailing list to send patches to.
 
-Kalle Valo
+Please fix this up and resend.
+
+thanks,
+
+greg k-h
