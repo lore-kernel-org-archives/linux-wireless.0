@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:36615 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbbHPFam (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33497 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbbHBPzA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2015 01:30:42 -0400
-From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] staging: wilc1000: code style: fix macro with multiple statements
-Date: Sun, 16 Aug 2015 01:30:12 -0400
-Message-Id: <641be2615e97db253a306c766a48c2afccf338d7.1439702894.git.raphael.beamonte@gmail.com> (sfid-20150816_073133_767176_3563801A)
-In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
-References: <cover.1439702894.git.raphael.beamonte@gmail.com>
-In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
-References: <cover.1439702894.git.raphael.beamonte@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 2 Aug 2015 11:55:00 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH 1/3] drivers: staging: wilc1000: use 'void' for no arguments functions
+Date: Sun,  2 Aug 2015 21:23:51 +0530
+Message-Id: <1438530833-24640-2-git-send-email-csgorentla@gmail.com> (sfid-20150802_175600_832850_A8F73EA6)
+In-Reply-To: <1438530833-24640-1-git-send-email-csgorentla@gmail.com>
+References: <1438530833-24640-1-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Macros with multiple statements should be enclosed in a do - while loop
+Added 'void' keyword in the paranthesis of function definitions, when
+there are no arguments to the functions.  This fixes the checkpatch.pl
+error - "Bad function definition 'function()' should probably be
+function(void)".
 
-Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_exported_buf.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c  | 2 +-
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
-index 5294578..45c2c7e 100644
---- a/drivers/staging/wilc1000/wilc_exported_buf.c
-+++ b/drivers/staging/wilc1000/wilc_exported_buf.c
-@@ -12,11 +12,13 @@
- 	void *exported_ ## name = NULL;
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index d812a3b..65d60af 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -567,7 +567,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+  *  @date	12 JUL 2012
+  *  @version	1.0
+  */
+-int WILC_WFI_deinit_mon_interface()
++int WILC_WFI_deinit_mon_interface(void)
+ {
+ 	bool rollback_lock = false;
  
- #define MALLOC_WILC_BUFFER(name, size)	\
--	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
--	if (!exported_ ## name) {   \
--		printk("fail to alloc: %s memory\n", exported_ ## name);  \
--		return -ENOBUFS;	\
--	}
-+	do { \
-+		exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
-+		if (!exported_ ## name) {   \
-+			printk("fail to alloc: %s memory\n", exported_ ## name);  \
-+			return -ENOBUFS;	\
-+		}
-+	} while (0)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 5a794df..443be4e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -215,7 +215,7 @@ void printk_later(const char *format, ...)
+ }
  
- #define FREE_WILC_BUFFER(name)	\
- 	kfree(exported_ ## name);
-@@ -73,4 +75,4 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_AUTHOR("Tony Cho");
- MODULE_DESCRIPTION("WILC1xxx Memory Manager");
- pure_initcall(wilc_module_init);
--module_exit(wilc_module_deinit);
-\ No newline at end of file
-+module_exit(wilc_module_deinit);
+ 
+-void dump_logs()
++void dump_logs(void)
+ {
+ 	if (DebugBuffer[0]) {
+ 		DebugBuffer[DEGUG_BUFFER_LENGTH] = 0;
+@@ -229,7 +229,7 @@ void dump_logs()
+ 	}
+ }
+ 
+-void Reset_WatchDogdebugger()
++void Reset_WatchDogdebugger(void)
+ {
+ 	WatchDogdebuggerCounter = 0;
+ }
 -- 
-2.1.4
+2.5.0
 
