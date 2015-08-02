@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:33869 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863AbbHEKOz (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:38012 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031AbbHBLfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 06:14:55 -0400
-Received: by labow3 with SMTP id ow3so25447985lab.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 03:14:54 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Sun, 2 Aug 2015 07:35:04 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: don't remove peer that doesn't exist
-Date: Wed,  5 Aug 2015 12:15:23 +0200
-Message-Id: <1438769724-29438-1-git-send-email-michal.kazior@tieto.com> (sfid-20150805_121459_383625_7B99C151)
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] staging: vt6655: vnt_bss_info_changed check conf->beacon_rate is not NULL
+Date: Sun,  2 Aug 2015 12:34:46 +0100
+Message-Id: <1438515286-3316-1-git-send-email-tvboxspy@gmail.com> (sfid-20150802_133528_111120_75BB8F83)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If peer creation failed during offchannel Tx the
-driver attempted to delete the peer nonetheless.
-This caused the ar->num_peers counter to be
-incorrectly decremented. This subsequently could
-cause the counter to drop below 0 and also
-eventually lead to firmware crash because host
-would think there are less peer entries created in
-firmware then there really were.
+conf->beacon_rate can be NULL on association. So check conf->beacon_rate
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+BSS_CHANGED_BEACON_INFO needs to flagged in changed as the beacon_rate
+will appear later.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.19+
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/vt6655/device_main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index acd222f3b899..4f6dddac8e43 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3346,6 +3346,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 	int vdev_id;
- 	int ret;
- 	unsigned long time_left;
-+	bool tmp_peer_created = false;
- 
- 	/* FW requirement: We must create a peer before FW will send out
- 	 * an offchannel frame. Otherwise the frame will be stuck and
-@@ -3383,6 +3384,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 			if (ret)
- 				ath10k_warn(ar, "failed to create peer %pM on vdev %d: %d\n",
- 					    peer_addr, vdev_id, ret);
-+			tmp_peer_created = (ret == 0);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index c97353b..b74af8d 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1456,8 +1456,9 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
  		}
+ 	}
  
- 		spin_lock_bh(&ar->data_lock);
-@@ -3398,7 +3400,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 			ath10k_warn(ar, "timed out waiting for offchannel skb %p\n",
- 				    skb);
+-	if (changed & BSS_CHANGED_ASSOC && priv->op_mode != NL80211_IFTYPE_AP) {
+-		if (conf->assoc) {
++	if (changed & (BSS_CHANGED_ASSOC | BSS_CHANGED_BEACON_INFO) &&
++	    priv->op_mode != NL80211_IFTYPE_AP) {
++		if (conf->assoc && conf->beacon_rate) {
+ 			CARDbUpdateTSF(priv, conf->beacon_rate->hw_value,
+ 				       conf->sync_tsf);
  
--		if (!peer) {
-+		if (!peer && tmp_peer_created) {
- 			ret = ath10k_peer_delete(ar, vdev_id, peer_addr);
- 			if (ret)
- 				ath10k_warn(ar, "failed to delete peer %pM on vdev %d: %d\n",
 -- 
-2.1.4
+2.5.0
 
