@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34162 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751401AbbHEN1a convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 09:27:30 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [patch] mwifiex: usb: return an error if kmalloc fails
-Date: Wed, 5 Aug 2015 13:27:28 +0000
-Message-ID: <4204aa5c96fe44e7a6f5b6e25e6e31cd@SC-EXCH04.marvell.com> (sfid-20150805_152736_117036_BE24A121)
-References: <20150804074927.GD10867@mwanda>
-In-Reply-To: <20150804074927.GD10867@mwanda>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:35320 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754301AbbHCSyK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2015 14:54:10 -0400
+Received: by obbop1 with SMTP id op1so106251396obb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:54:09 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH NEXT 0/7] Make changes in rtlwifi and dependent drivers
+Date: Mon,  3 Aug 2015 13:53:45 -0500
+Message-Id: <1438628032-5865-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150803_205413_969564_8E91539E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+The Realtek engineers have suggested several improvements to this family
+of drivers. The changes include:
 
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Tuesday, August 04, 2015 1:19 PM
-> To: Amitkumar Karwar
-> Cc: Nishant Sarmukadam; Kalle Valo; linux-wireless@vger.kernel.org;
-> kernel-janitors@vger.kernel.org
-> Subject: [patch] mwifiex: usb: return an error if kmalloc fails
-> 
-> The current code returns success if kmalloc fails.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/mwifiex/usb.c
-> b/drivers/net/wireless/mwifiex/usb.c
-> index fbad99c..f866d5d 100644
-> --- a/drivers/net/wireless/mwifiex/usb.c
-> +++ b/drivers/net/wireless/mwifiex/usb.c
-> @@ -870,8 +870,10 @@ static int mwifiex_prog_fw_w_helper(struct
-> mwifiex_adapter *adapter,
-> 
->  	/* Allocate memory for transmit */
->  	fwdata = kzalloc(FW_DNLD_TX_BUF_SIZE, GFP_KERNEL);
-> -	if (!fwdata)
-> +	if (!fwdata) {
-> +		ret = -ENOMEM;
->  		goto fw_exit;
-> +	}
-> 
->  	/* Allocate memory for receive */
->  	recv_buff = kzalloc(FW_DNLD_RX_BUF_SIZE, GFP_KERNEL);
+1. Fix the 5G channel assignments to remove unused channels.
+2. Fix a potential race condition when updating CAM.
+3. Change retry limits to depend on vif type.
+4. Fix a race condition that could allow a change in the APOL key
+   before packet 4 of the handshaking sequence has been transmitted.
+   This problem affects rtl8192ee, rtl8723be, and rtl8821ae.
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Larry
 
-Regards,
-Amitkumar
+pkshih (6):
+  rtlwifi: Fix programming of CAM content
+  rtlwifi: Make retry limits depend on vif type
+  rtlwifi: Force disable key to wait until TX acked.
+  rtlwifi: rtl8192ee: Implement new rekey logic
+  rtlwifi: rtl8723be: Implement new rekey logic
+  rtlwifi: rtl8821ae: Implement new rekey logic
+
+timlee (1):
+  rtlwifi: rtl8821ae: Remove unsupported 5G channels
+
+ drivers/net/wireless/rtlwifi/base.c          | 183 ++++++++++++++++++++++-----
+ drivers/net/wireless/rtlwifi/base.h          |   7 +
+ drivers/net/wireless/rtlwifi/cam.c           |   6 +-
+ drivers/net/wireless/rtlwifi/core.c          |  22 +++-
+ drivers/net/wireless/rtlwifi/debug.h         |   1 +
+ drivers/net/wireless/rtlwifi/pci.c           |   8 +-
+ drivers/net/wireless/rtlwifi/ps.c            |   3 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  |   1 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |   8 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c  |   1 +
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c |   8 ++
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.h |  12 ++
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c  |  14 +-
+ drivers/net/wireless/rtlwifi/rtl8821ae/trx.c |   8 ++
+ drivers/net/wireless/rtlwifi/rtl8821ae/trx.h |  13 ++
+ drivers/net/wireless/rtlwifi/wifi.h          |   9 ++
+ 16 files changed, 255 insertions(+), 49 deletions(-)
+
+-- 
+2.1.4
+
