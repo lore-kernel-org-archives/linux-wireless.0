@@ -1,100 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33113 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752726AbbHRRCe (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:33886 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635AbbHCS16 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 13:02:34 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	dan.carpenter@oracle.com, Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH] staging: wilc1000: Set all options in region debugfs file
-Date: Tue, 18 Aug 2015 22:32:17 +0530
-Message-Id: <1439917337-18473-1-git-send-email-csgorentla@gmail.com> (sfid-20150818_190253_969638_C2D17F5E)
+	Mon, 3 Aug 2015 14:27:58 -0400
+Received: by oigu133 with SMTP id u133so32016283oig.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:27:58 -0700 (PDT)
+Date: Mon, 3 Aug 2015 13:27:30 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 1/5] wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz)
+ rules for Taiwan (TW)
+Message-ID: <20150803182730.GC21180@ubuntu-hedt> (sfid-20150803_202802_685852_9ADA1673)
+References: <1437622380-4154-1-git-send-email-wens@csie.org>
+ <1437622380-4154-2-git-send-email-wens@csie.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437622380-4154-2-git-send-email-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows setting all options in the module's debug region
-options file 'wilc_debug_region'.  This functionality allows the user
-to enable logging from all regions (initialization, locks, firmware
-etc.) of the driver.  Logging from the following regions is enabled
-during the driver initialization:
+On Thu, Jul 23, 2015 at 11:32:56AM +0800, Chen-Yu Tsai wrote:
+> Taiwan's Ministry of Transportation and Communications revised its
+> frequency allocation rules [1] on 2014/11/17, allowing usage of 5600 ~
+> 5650 MHz, previously allocated to weather radars, to U-NII applications
+> with DFS support.
+> 
+> Also, the technical regulations [2] show that for 5470 ~ 5725 MHz U-NII
+> applications, the peak transmit power shall not exceed the lesser of
+> 250 mW (slightly less than 24 dBm) or 11 dBm + 10log B, where B is the
+> 26dB emission bandwidth in MHz. This is slightly more than 23 dBm for
+> 20 MHz channels.
+> 
+> This patch updates both. Also add links to the two documents into the
+> database.
+> 
+> [1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
+> [2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+> 
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 
-INIT_DBG, GENERIC_DBG, CFG80211_DBG, FIRM_DBG and HOSTAPD_DBG
+Sorry for the slow response to these patches.
 
-Before this change, the numerical value set is equal first byte of 
-input minus 0x30 (ASCII value of '0').  Because of this, after a write 
-to this debugfs file, it is difficult to predict the regions on which
-logging is enabled.
+> ---
+>  db.txt | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/db.txt b/db.txt
+> index 982db34..5114557 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -1118,11 +1118,17 @@ country TT: DFS-FCC
+>  	(5490 - 5730 @ 160), (24), DFS
+>  	(5735 - 5835 @ 80), (30)
+>  
+> +# Source:
+> +# Table of Frequency Allocations of Republic of China (Taiwan) / Nov 2014:
+> +#   http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc& \
+> +#      filedisplay=Table+of+radio+frequency+allocation.doc
+> +# LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
+> +#   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+> +#   (section 3.10.1, 4.7)
+>  country TW: DFS-JP
+>  	(2402 - 2472 @ 40), (30)
+>  	(5270 - 5330 @ 40), (17), DFS
+> -	(5490 - 5590 @ 80), (30), DFS
+> -	(5650 - 5710 @ 40), (30), DFS
+> +	(5470 - 5725 @ 160), (23), DFS
 
-The DBG_REGION_ALL now includes 3 additional regions TCP_ENH, SPIN_DEBUG
-and FIRM_DBG.
-
-Before this change, the region flag FIRM_DBG is enabled during
-initialization but cleared after a write to the debugfs file.
-
-
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
-
-It is verified by code walk that while generating logs for the flags
-TCP_ENH and SPIN_DEBUG code does not try to print strings that are not
-terminated by NULL and variables do not try to access invalid
-memory locations.
-
- drivers/staging/wilc1000/wilc_debugfs.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index ae11186..70d98ee 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,7 +24,10 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | HOSTINF_DBG | CORECONFIG_DBG | CFG80211_DBG | INT_DBG | TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
-+#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | HOSTINF_DBG |	\
-+			CORECONFIG_DBG | CFG80211_DBG | INT_DBG |	\
-+			TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG |		\
-+			BUS_DBG | MEM_DBG | TCP_ENH | SPIN_DEBUG | FIRM_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- atomic_t REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
- atomic_t DEBUG_LEVEL = ATOMIC_INIT(ERR);
-@@ -87,23 +90,20 @@ static ssize_t wilc_debug_region_read(struct file *file, char __user *userbuf, s
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- 
--static ssize_t wilc_debug_region_write(struct file *filp, const char *buf, size_t count, loff_t *ppos)
-+static ssize_t wilc_debug_region_write(struct file *filp,
-+					const char __user *buf,
-+					size_t count, loff_t *ppos)
- {
--	char buffer[128] = {};
- 	int flag;
-+	int ret;
- 
--	if (count > sizeof(buffer))
--		return -EINVAL;
--
--	if (copy_from_user(buffer, buf, count)) {
--		return -EFAULT;
--	}
--
--	flag = buffer[0] - '0';
-+	ret = kstrtouint_from_user(buf, count, 16, &flag);
-+	if (ret)
-+		return ret;
- 
- 	if (flag > DBG_REGION_ALL) {
- 		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&REGION));
--		return -EFAULT;
-+		return -EINVAL;
- 	}
- 
- 	atomic_set(&REGION, (int)flag);
--- 
-2.5.0
-
+Based on [2], it looks like this range requires TPC, in which case the
+power limit should be dropped by 3 dB on account of our not supporting
+TPC.
