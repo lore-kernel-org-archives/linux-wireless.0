@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:33734 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754623AbbHFVri (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:32901 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755286AbbHCU4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 17:47:38 -0400
-Received: by wijp15 with SMTP id p15so38588666wij.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 14:47:37 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 1/4] mac80211: remove ieee80211_tx_info from rate_control_apply_mask signature
-Date: Thu,  6 Aug 2015 23:47:30 +0200
-Message-Id: <1438897653-4629-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150806_234742_809413_78217585)
-In-Reply-To: <1438897653-4629-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1438897653-4629-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Mon, 3 Aug 2015 16:56:25 -0400
+Received: by obdeg2 with SMTP id eg2so108400834obd.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 13:56:25 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH NEXT 0/6] rtlwifi: Fix firmware header issues
+Date: Mon,  3 Aug 2015 15:56:10 -0500
+Message-Id: <1438635376-28114-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150803_225630_785256_808461FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary ieee80211_tx_info pointer from rate_control_apply_mask
-signature. rate_control_apply_mask() will be used to define a ratemask in
-rate_control_set_rates() for station rate table
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- net/mac80211/rate.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+While fixing an endian issue introduced in commit e996db69833a,
+I realized that there were similar endian issues in several
+of the drivers. In addition, these drivers were all defining a
+similar struct. A single common definition is moved into the
+main header, and all drivers are converted to use it. This
+process exposed several endian issues that were not previously
+detected by Sparse.
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 03687d2..4f02e07 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -631,7 +631,6 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
- static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_sta *sta,
- 				    struct ieee80211_supported_band *sband,
--				    struct ieee80211_tx_info *info,
- 				    struct ieee80211_tx_rate *rates,
- 				    int max_rates)
- {
-@@ -647,8 +646,8 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
- 	 * default mask (allow all rates) is used to save some processing for
- 	 * the common case.
- 	 */
--	mask = sdata->rc_rateidx_mask[info->band];
--	has_mcs_mask = sdata->rc_has_mcs_mask[info->band];
-+	mask = sdata->rc_rateidx_mask[sband->band];
-+	has_mcs_mask = sdata->rc_has_mcs_mask[sband->band];
- 	rate_flags =
- 		ieee80211_chandef_rate_flags(&sdata->vif.bss_conf.chandef);
- 	for (i = 0; i < sband->n_bitrates; i++)
-@@ -659,14 +658,14 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	if (has_mcs_mask)
--		memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[info->band],
-+		memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[sband->band],
- 		       sizeof(mcs_mask));
- 	else
- 		memset(mcs_mask, 0xff, sizeof(mcs_mask));
- 
- 	if (sta) {
- 		/* Filter out rates that the STA does not support */
--		mask &= sta->supp_rates[info->band];
-+		mask &= sta->supp_rates[sband->band];
- 		for (i = 0; i < sizeof(mcs_mask); i++)
- 			mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
- 	}
-@@ -707,7 +706,7 @@ void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
- 	sband = sdata->local->hw.wiphy->bands[info->band];
- 
- 	if (ieee80211_is_data(hdr->frame_control))
--		rate_control_apply_mask(sdata, sta, sband, info, dest, max_rates);
-+		rate_control_apply_mask(sdata, sta, sband, dest, max_rates);
- 
- 	if (dest[0].idx < 0)
- 		__rate_control_send_low(&sdata->local->hw, sband, sta, info,
+Larry Finger (6):
+  irtlwifi: rtl8192ce: rtl8192cu: Fix endian issue
+  rtlwifi: rtl8723ae: rtl8723be: rtl8723com: Fix firmware header endian
+    issues
+  rtlwifi: rtl8821ae: Fix firmware endian issues
+  rtlwifi: rtl8192de: Fix firmware header endian issues
+  rtlwifi: rtl888ee: Fix firmware header endian issues
+  rtlwifi: rtl8192ee: Fix firmware header endian issues
+
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        | 10 ++++-----
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.h        | 21 +-----------------
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  | 12 +++++------
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h  | 19 ----------------
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.h        | 22 -------------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.c        | 12 +++++------
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.h        | 21 +-----------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  4 ++--
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c        |  4 ++--
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.c    | 10 ++++-----
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.h    | 19 ----------------
+ drivers/net/wireless/rtlwifi/rtl8821ae/fw.c        | 14 ++++++------
+ drivers/net/wireless/rtlwifi/rtl8821ae/fw.h        | 23 ++------------------
+ drivers/net/wireless/rtlwifi/wifi.h                | 25 +++++++++++++++++-----
+ 14 files changed, 57 insertions(+), 159 deletions(-)
+
 -- 
 2.1.4
 
