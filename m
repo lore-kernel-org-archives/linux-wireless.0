@@ -1,78 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25231 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041AbbHRH5w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 03:57:52 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/26] iwlwifi: mvm: revert to our old skip over dtim policy
-Date: Tue, 18 Aug 2015 10:57:14 +0300
-Message-Id: <1439884656-18146-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_095803_784380_AC802017)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:35511 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755399AbbHCU4h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2015 16:56:37 -0400
+Received: by obbop1 with SMTP id op1so108665415obb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 13:56:37 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH NEXT 4/6] rtlwifi: rtl8192de: Fix firmware header endian issues
+Date: Mon,  3 Aug 2015 15:56:14 -0500
+Message-Id: <1438635376-28114-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150803_225642_446046_E85FF059)
+In-Reply-To: <1438635376-28114-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1438635376-28114-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+This driver is converted to use the common firmware header struct.
+Because the old header definition failed to indicate that the multi-byte
+entries should be little endian, several problems were thus exposed.
+These are fixed.
 
-Our firmware scheduler used to suffer from false wake-up on 500 time units.
-We had to came up with a formula to address this buggy behavior.
-Now that our firmware is fixed, we can go back to our old policy.
-
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/mvm/power.c | 28 ++--------------------------
- 1 file changed, 2 insertions(+), 26 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.h | 22 ----------------------
+ 1 file changed, 22 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 506294f..c4e0890 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -288,27 +288,6 @@ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
- 	return true;
- }
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.h b/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
+index 1646e7c..8a38daa 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
+@@ -110,28 +110,6 @@
+ #define SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(__ph2ccmd, __val)	\
+ 	SET_BITS_TO_LE_1BYTE((__ph2ccmd) + 2, 0, 8, __val)
  
--static int iwl_mvm_power_get_skip_over_dtim(int dtimper, int bi)
--{
--	int numerator;
--	int dtim_interval = dtimper * bi;
+-struct rtl92d_firmware_header {
+-	u16 signature;
+-	u8 category;
+-	u8 function;
+-	u16 version;
+-	u8 subversion;
+-	u8 rsvd1;
 -
--	if (WARN_ON(!dtim_interval))
--		return 0;
+-	u8 month;
+-	u8 date;
+-	u8 hour;
+-	u8 minute;
+-	u16 ramcodeSize;
+-	u16 rsvd2;
 -
--	if (dtimper == 1) {
--		if (bi > 100)
--			numerator = 408;
--		else
--			numerator = 510;
--	} else if (dtimper < 10) {
--		numerator = 612;
--	} else {
--		return 0;
--	}
--	return max(1, (numerator / dtim_interval));
--}
+-	u32 svnindex;
+-	u32 rsvd3;
 -
- static bool iwl_mvm_power_is_radar(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_chanctx_conf *chanctx_conf;
-@@ -378,11 +357,8 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 	if (!radar_detect && (dtimper < 10) &&
- 	    (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_LP ||
- 	     mvm->cur_ucode == IWL_UCODE_WOWLAN)) {
--		cmd->skip_dtim_periods =
--			iwl_mvm_power_get_skip_over_dtim(dtimper, bi);
--		if (cmd->skip_dtim_periods)
--			cmd->flags |=
--				cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
-+		cmd->flags |= cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
-+		cmd->skip_dtim_periods = 3;
- 	}
- 
- 	if (mvm->cur_ucode != IWL_UCODE_WOWLAN) {
+-	u32 rsvd4;
+-	u32 rsvd5;
+-};
+-
+ int rtl92d_download_fw(struct ieee80211_hw *hw);
+ void rtl92d_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
+ 			 u32 cmd_len, u8 *p_cmdbuffer);
 -- 
 2.1.4
 
