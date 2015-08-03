@@ -1,72 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19841 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933770AbbHJKog (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:36726 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755489AbbHCU4k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 06:44:36 -0400
-Date: Mon, 10 Aug 2015 13:44:12 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, jude.lee@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH 5/5] staging: wilc1000: use id value as argument
-Message-ID: <20150810104412.GL5180@mwanda> (sfid-20150810_124450_136207_D945E2FC)
-References: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
- <1439186304-3480-6-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1439186304-3480-6-git-send-email-tony.cho@atmel.com>
+	Mon, 3 Aug 2015 16:56:40 -0400
+Received: by obnw1 with SMTP id w1so108117403obn.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 13:56:40 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH NEXT 6/6] rtlwifi: rtl8192ee: Fix firmware header endian issues
+Date: Mon,  3 Aug 2015 15:56:16 -0500
+Message-Id: <1438635376-28114-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150803_225648_915282_406AF5CB)
+In-Reply-To: <1438635376-28114-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1438635376-28114-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 02:58:24PM +0900, Tony Cho wrote:
-> +static u32 add_handler_in_list(tstrWILC_WFIDrv *handler)
+This driver is converted to use the common firmware header struct.
+Because the old header definition failed to indicate that the multi-byte
+entries should be little endian, several problems were thus exposed.
+These are fixed.
 
-I am suspicous of code which uses u32 for something where the hardware
-doesn't specify unsigned 32 bits.  Why not just return "int"?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.c | 12 ++++++------
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.h | 21 +--------------------
+ 2 files changed, 7 insertions(+), 26 deletions(-)
 
-> +{
-> +	u32 id;
-
-It looks like we have a case of u32 disease.  Prefer int over u32 unless
-there is a reason for it.
-
-> +
-> +	if (!handler)
-> +		return 0;
-
-Don't add NULL checks unless it makes sense.  How are we supposed to
-recover from this if handler is NULL?
-
-> +
-> +	for (id = 0; id < NUM_CONCURRENT_IFC; id++) {
-> +		if (!wfidrv_list[id]) {
-> +			wfidrv_list[id++] = handler;
-
-
-Ugh...  I don't like the ++ here.  Just use a zero offset array or we
-are going to have off by one bugs.
-
-> +			break;
-> +		}
-> +	}
-> +
-> +	if (id > NUM_CONCURRENT_IFC)
-> +		return 0;
-
-Well, that didn't take long, it's three lines later and we already have
-hit our first off by one bug.  This check can never be true.  Of course,
-no one checks the return value either...
-
-> +
-> +	return id;
-> +}
-
-I guess I would be fine with this patch if you changed it to use a zero
-offset array, ints instead of u32s and added some error handling.
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
+index 4091430..7bc0225 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
+@@ -198,7 +198,7 @@ int rtl92ee_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	struct rtl92c_firmware_header *pfwheader;
++	struct rtlwifi_firmware_header *pfwheader;
+ 	u8 *pfwdata;
+ 	u32 fwsize;
+ 	int err;
+@@ -207,8 +207,8 @@ int rtl92ee_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
+ 	if (!rtlhal->pfirmware)
+ 		return 1;
+ 
+-	pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
+-	rtlhal->fw_version = pfwheader->version;
++	pfwheader = (struct rtlwifi_firmware_header *)rtlhal->pfirmware;
++	rtlhal->fw_version = le16_to_cpu(pfwheader->version);
+ 	rtlhal->fw_subversion = pfwheader->subversion;
+ 	pfwdata = (u8 *)rtlhal->pfirmware;
+ 	fwsize = rtlhal->fwsize;
+@@ -219,10 +219,10 @@ int rtl92ee_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+ 			 "Firmware Version(%d), Signature(%#x),Size(%d)\n",
+ 			  pfwheader->version, pfwheader->signature,
+-			  (int)sizeof(struct rtl92c_firmware_header));
++			  (int)sizeof(struct rtlwifi_firmware_header));
+ 
+-		pfwdata = pfwdata + sizeof(struct rtl92c_firmware_header);
+-		fwsize = fwsize - sizeof(struct rtl92c_firmware_header);
++		pfwdata = pfwdata + sizeof(struct rtlwifi_firmware_header);
++		fwsize = fwsize - sizeof(struct rtlwifi_firmware_header);
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+ 			 "Firmware no Header, Signature(%#x)\n",
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.h b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.h
+index 3e2a48e..069da1e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.h
+@@ -33,7 +33,7 @@
+ #define FW_8192C_POLLING_TIMEOUT_COUNT		3000
+ 
+ #define IS_FW_HEADER_EXIST(_pfwhdr)	\
+-	((_pfwhdr->signature&0xFFF0) == 0x92E0)
++	((le16_to_cpu(_pfwhdr->signature) & 0xFFF0) == 0x92E0)
+ #define USE_OLD_WOWLAN_DEBUG_FW 0
+ 
+ #define H2C_92E_RSVDPAGE_LOC_LEN		5
+@@ -89,25 +89,6 @@
+ #define	FW_PWR_STATE_ACTIVE	((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))
+ #define	FW_PWR_STATE_RF_OFF	0
+ 
+-struct rtl92c_firmware_header {
+-	u16 signature;
+-	u8 category;
+-	u8 function;
+-	u16 version;
+-	u8 subversion;
+-	u8 rsvd1;
+-	u8 month;
+-	u8 date;
+-	u8 hour;
+-	u8 minute;
+-	u16 ramcodesize;
+-	u16 rsvd2;
+-	u32 svnindex;
+-	u32 rsvd3;
+-	u32 rsvd4;
+-	u32 rsvd5;
+-};
+-
+ enum rtl8192e_h2c_cmd {
+ 	H2C_92E_RSVDPAGE = 0,
+ 	H2C_92E_MSRRPT = 1,
+-- 
+2.1.4
 
