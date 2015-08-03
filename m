@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44945 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932245AbbHIIlx (ORCPT
+Received: from blu004-omc2s37.hotmail.com ([65.55.111.112]:59672 "EHLO
+	BLU004-OMC2S37.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752694AbbHCD6P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2015 04:41:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: linux-next: build failure after merge of the  wireless-drivers-next tree
-References: <20150807131615.535d4c04@canb.auug.org.au>
-Date: Sun, 09 Aug 2015 11:41:45 +0300
-In-Reply-To: <20150807131615.535d4c04@canb.auug.org.au> (Stephen Rothwell's
-	message of "Fri, 7 Aug 2015 13:16:15 +1000")
-Message-ID: <8737zszwdy.fsf@kamboji.qca.qualcomm.com> (sfid-20150809_104219_346007_BAC891C1)
+	Sun, 2 Aug 2015 23:58:15 -0400
+Message-ID: <BLU437-SMTP740B6DF13FC4BBDF43D824B9770@phx.gbl> (sfid-20150803_055827_147207_88040EE3)
+From: Ting-Chih Hsiao <s894330@hotmail.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: fix up coding style warnings reported by checkpatch.pl.
+Date: Mon, 3 Aug 2015 11:57:34 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephen,
+remove spaces at the start of a line
+align enum variable with other parameters
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
+Signed-off-by: Ting-Chih Hsiao <s894330@hotmail.com>
+---
+ drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> After merging the wireless-drivers-next tree, today's linux-next build
-> (x86_64 allmodconfig) failed like this:
->
-> drivers/net/wireless/ath/ath9k/debug_sta.c: In function 'read_file_node_aggr':
-> drivers/net/wireless/ath/ath9k/debug_sta.c:54:25: error: 'struct ath_node' has no member named 'ac'
->   for (acno = 0, ac = &an->ac[acno];
->                          ^
-
-[...]
-
-> Caused by commits
->
->   592fa228f213 ("ath9k: remove struct ath_atx_ac")
->   d70d848a75fd ("ath9k: remove the sched field in struct ath_atx_tid")
->
-> I have used the wireless-drivers-next tree from next-20150806 for today.
-
-Sorry about that, the commit below should fix the issue. This seems to
-be a frequent problem, I think I need to start running more extensive
-build tests before applying wireless-drivers patches.
-
-commit 12e035968191c05a574c9c20367cb3090bc7d99d
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Thu Aug 6 12:44:30 2015 +0200
-
-    ath9k: fix build with CONFIG_ATH9K_STATION_STATISTICS=y
-    
-    kbuild bot reported that commit 592fa228f213 ("ath9k: remove struct
-    ath_atx_ac") broke the build when CONFIG_ATH9K_STATION_STATISTICS is y.
-    
-    Reported-by: kbuild test robot <fengguang.wu@intel.com>
-    Fixes: 592fa228f213 ("ath9k: remove struct ath_atx_ac")
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
-
+diff --git a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+index 342dec3..a63c6cb 100644
+--- a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
++++ b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+@@ -21,7 +21,7 @@ odm_ConfigRFReg_8723A(
+ 	struct dm_odm_t *pDM_Odm,
+ 	u32					Addr,
+ 	u32					Data,
+-  enum RF_RADIO_PATH     RF_PATH,
++	enum RF_RADIO_PATH     RF_PATH,
+ 	u32				    RegAddr
+ 	)
+ {
 -- 
-Kalle Valo
+1.9.1
+
