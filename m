@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39621 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306AbbHZUPM (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:35066 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753741AbbHCSsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 16:15:12 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 00/12] brcmfmac: multiple interface rework and cleanup
-Date: Wed, 26 Aug 2015 22:14:52 +0200
-Message-ID: <1440620104-2715-1-git-send-email-arend@broadcom.com> (sfid-20150826_223108_446512_9260FC1C)
+	Mon, 3 Aug 2015 14:48:03 -0400
+Received: by oihn130 with SMTP id n130so7205920oih.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:48:02 -0700 (PDT)
+Date: Mon, 3 Aug 2015 13:47:34 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] wireless-regdb: Update 5GHz rules for US
+Message-ID: <20150803184734.GF21180@ubuntu-hedt> (sfid-20150803_204807_240863_0CF637C8)
+References: <1437622380-4154-1-git-send-email-wens@csie.org>
+ <1437622380-4154-5-git-send-email-wens@csie.org>
+ <20150803183422.GD21180@ubuntu-hedt>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150803183422.GD21180@ubuntu-hedt>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series contains the following:
-* rework code dealing with multiple interfaces.
-* allow logging firmware console using debug level.
-* fix crash in error path when probe fails.
-* fix memory leak in free net devices.
-* minor code cleanup.
+On Mon, Aug 03, 2015 at 01:34:22PM -0500, Seth Forshee wrote:
+> On Thu, Jul 23, 2015 at 11:32:59AM +0800, Chen-Yu Tsai wrote:
+> > The FCC increased the maximum conducted transmission power for the
+> > U-NII-1 (5150 ~ 5250 MHz) band to 30 dBm or 1 W for master devices
+> > and 24 dBm or 250 mW for mobile/portable devices.
+> > 
+> > Effective 6/2/2014.
+> > 
+> > See FCC KDB 905462 D06.
+> > 
+> > Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+> > ---
+> >  db.txt | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/db.txt b/db.txt
+> > index cadd52c..29ba4b6 100644
+> > --- a/db.txt
+> > +++ b/db.txt
+> > @@ -1160,7 +1160,7 @@ country UG: DFS-FCC
+> >  
+> >  country US: DFS-FCC
+> >  	(2402 - 2472 @ 40), (30)
+> > -	(5170 - 5250 @ 80), (17), AUTO-BW
+> > +	(5170 - 5250 @ 80), (30), AUTO-BW
+> 
+> The 30 dB limit is for devices in master mode, for clients the limit
+> seems to be 250 mW (about 24 dB). Given the TPC requirement for U-NII
+> devices the most it could be bumped up to is 21 dB, unless there's some
+> other reason I don't know about to keep it at 17 dB.
 
-The patch series is intended for v4.3 and applies to the master
-branch of the wireless-drivers-next repository.
-
-Arend van Spriel (12):
-  brcmfmac: consolidate ifp lookup in driver core
-  brcmfmac: make brcmf_proto_hdrpull() return struct brcmf_if instance
-  brcmfmac: change parameters for brcmf_remove_interface()
-  brcmfmac: only call brcmf_cfg80211_detach() when attach was successful
-  brcmfmac: correct detection of p2pdev interface event
-  brcmfmac: use brcmf_get_ifp() to map ifidx to struct brcmf_if instance
-  brcmfmac: pass struct brcmf_if instance in brcmf_txfinalize()
-  brcmfmac: add mapping for interface index to bsscfg index
-  brcmfmac: add dedicated debug level for firmware console logging
-  brcmfmac: remove ifidx parameter from brcmf_fws_txstatus_suppressed()
-  brcmfmac: change prototype for brcmf_fws_hdrpull()
-  brcmfmac: introduce brcmf_net_detach() function
-
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     | 28 +++----
- drivers/net/wireless/brcm80211/brcmfmac/btcoex.c   |  4 +-
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  7 +-
- drivers/net/wireless/brcm80211/brcmfmac/core.c     | 92 ++++++++++++++--------
- drivers/net/wireless/brcm80211/brcmfmac/core.h     | 10 +--
- drivers/net/wireless/brcm80211/brcmfmac/debug.h    |  3 +
- drivers/net/wireless/brcm80211/brcmfmac/feature.c  |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/flowring.c |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     | 19 +++--
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 57 +++++++-------
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h |  3 +-
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   | 18 ++---
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c     |  7 +-
- drivers/net/wireless/brcm80211/brcmfmac/proto.h    | 18 ++++-
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c     |  5 +-
- 16 files changed, 155 insertions(+), 122 deletions(-)
-
--- 
-1.9.1
-
+Oops, looks like I was mistaken, this range does not require TPC. 30 dBm
+still seems to be incorrect however.
