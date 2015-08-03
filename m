@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:6066 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752975AbbHEOM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 10:12:28 -0400
-From: "Shevchenko, Andriy" <andriy.shevchenko@intel.com>
-To: "heikki.krogerus@linux.intel.com" <heikki.krogerus@linux.intel.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Subject: Re: [PATCH 1/5] device property: helper macros for property entry
- creation
-Date: Wed, 5 Aug 2015 14:12:25 +0000
-Message-ID: <1438783944.29746.176.camel@intel.com> (sfid-20150805_161305_633645_09A9CCCA)
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
-	 <1438781947-7952-2-git-send-email-heikki.krogerus@linux.intel.com>
-	 <1438783338.29746.172.camel@linux.intel.com>
-In-Reply-To: <1438783338.29746.172.camel@linux.intel.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from rhcavspool01.kulnet.kuleuven.be ([134.58.240.193]:39053 "EHLO
+	cavspool01.kulnet.kuleuven.be" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752419AbbHCNvy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2015 09:51:54 -0400
+Received: from cavuit01.kulnet.kuleuven.be (rhcavuit01.kulnet.kuleuven.be [134.58.240.129])
+	by cavspool01.kulnet.kuleuven.be (Postfix) with ESMTP id F33651357A
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2015 15:46:16 +0200 (CEST)
+From: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+To: mcgrof@do-not-panic.com, linux-wireless@vger.kernel.org
+Cc: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+Subject: [PATCH 1/1] ath: Make ath_opmode_to_string understand OCB mode
+Date: Mon,  3 Aug 2015 15:45:41 +0200
+Message-Id: <1438609541-24239-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be> (sfid-20150803_155157_602798_9EC60525)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE1LTA4LTA1IGF0IDE3OjAyICswMzAwLCBBbmR5IFNoZXZjaGVua28gd3JvdGU6
-DQo+IE9uIFdlZCwgMjAxNS0wOC0wNSBhdCAxNjozOSArMDMwMCwgSGVpa2tpIEtyb2dlcnVzIHdy
-b3RlOg0KDQpbXQ0KDQo+ID4gKyNkZWZpbmUgUFJPUF9FTlRSWV9TVFJJTkcoX25hbWVfLCBfdmFs
-XykgeyBcDQo+IA0KPiDigKZfU1RSSU5HX0FSUkFZIEkgY2FuIG5vdGljZS4NCg0KcyAvIGNhbiAv
-IGNhbid0IC8NCg0KPiANCj4gPiArCS5uYW1lID0gX25hbWVfLCBcDQo+ID4gKwkudHlwZSA9IERF
-Vl9QUk9QX1NUUklORywgXA0KPiA+ICsJLm52YWwgPSAxLCBcDQo+ID4gKwkudmFsdWUuc3RyID0g
-KGNvbnN0IGNoYXIgKiopX3ZhbF8sIFwNCj4gPiArfQ0KPiA+ICsNCj4gPiAgLyoqDQo+ID4gICAq
-IHN0cnVjdCBwcm9wZXJ0eV9zZXQgLSBDb2xsZWN0aW9uIG9mICJidWlsdC1pbiIgZGV2aWNlIA0K
-PiA+IHByb3BlcnRpZXMuDQo+ID4gICAqIEBmd25vZGU6IEhhbmRsZSB0byBiZSBwb2ludGVkIHRv
-IGJ5IHRoZSBmd25vZGUgZmllbGQgb2Ygc3RydWN0IA0KPiA+IGRldmljZS4NCj4gDQoNCi0tIA0K
-QW5keSBTaGV2Y2hlbmtvIDxhbmRyaXkuc2hldmNoZW5rb0BpbnRlbC5jb20+DQpJbnRlbCBGaW5s
-YW5kIE95Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBGaW5sYW5kIE95ClJlZ2lzdGVyZWQgQWRkcmVzczog
-UEwgMjgxLCAwMDE4MSBIZWxzaW5raSAKQnVzaW5lc3MgSWRlbnRpdHkgQ29kZTogMDM1NzYwNiAt
-IDQgCkRvbWljaWxlZCBpbiBIZWxzaW5raSAKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVu
-dHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2Yg
-dGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkg
-b3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRl
-ZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29w
-aWVzLgo=
+Make ath_opmode_to_string return "OCB" for NL80211_IFTYPE_OCB. Currently
+it will return "UNKNOWN".
+
+Signed-off-by: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+---
+ drivers/net/wireless/ath/debug.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/debug.c b/drivers/net/wireless/ath/debug.c
+index 508eccf..d59d83e 100644
+--- a/drivers/net/wireless/ath/debug.c
++++ b/drivers/net/wireless/ath/debug.c
+@@ -40,6 +40,8 @@ const char *ath_opmode_to_string(enum nl80211_iftype opmode)
+ 		return "P2P-CLIENT";
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		return "P2P-GO";
++	case NL80211_IFTYPE_OCB:
++		return "OCB";
+ 	default:
+ 		return "UNKNOWN";
+ 	}
+-- 
+1.7.1
 
