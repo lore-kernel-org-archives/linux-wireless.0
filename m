@@ -1,125 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:13213 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457AbbHSVVU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 17:21:20 -0400
-Message-ID: <55D4F34D.2010505@broadcom.com> (sfid-20150819_232125_060118_747A0609)
-Date: Wed, 19 Aug 2015 23:21:17 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH v2 1/7] brcmfmac: Add support for host platform NVRAM
- loading.
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>	<1436553071-32423-2-git-send-email-arend@broadcom.com> <CACna6ryt8iVUt18fODjDMiD-c3RLM22T2J_PM8NtEvBvWm8yBg@mail.gmail.com>
-In-Reply-To: <CACna6ryt8iVUt18fODjDMiD-c3RLM22T2J_PM8NtEvBvWm8yBg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:37368 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932173AbbHDU7R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:59:17 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 37/37] iwlwifi: mvm: clean up fw-api-scan.h
+Date: Tue,  4 Aug 2015 23:43:27 +0300
+Message-Id: <1438721007-23283-37-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_225927_154374_EDA073EC)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-subject changed to v2. So let's go over your beef.
+From: David Spinadel <david.spinadel@intel.com>
 
-On 07/11/2015 07:09 PM, Rafał Miłecki wrote:
-> On 10 July 2015 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
->> @@ -146,7 +147,7 @@ brcmf_nvram_handle_value(struct nvram_parser *nvp)
->>          u32 cplen;
->>
->>          c = nvp->data[nvp->pos];
->> -       if (!is_nvram_char(c)) {
->> +       if (!is_nvram_char(c) && (c != ' ')) {
->
-> This is redundant, please drop this change.
-> See fc23e81eb8f4 ("brcmfmac: allow NVRAM values to contain spaces")
+Remove outdated and unused definitions
 
-done
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h | 129 -------------------------
+ 1 file changed, 129 deletions(-)
 
->> @@ -426,19 +428,34 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->>          struct brcmf_fw *fwctx = ctx;
->>          u32 nvram_length = 0;
->>          void *nvram = NULL;
->> +       u8 *data = NULL;
->
-> This can be const.
-
-done
-
->> +       size_t data_len;
->> +       bool raw_nvram;
->>
->>          brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
->> -       if (!fw && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->> -               goto fail;
->> +       if ((fw) && (fw->data)) {
->
-> I think I was already pointing similar coding issue to you. There is
-> no need for these extra braces. And if they are not needed, don't use
-> them. There is no point in using if (((foo))) schema just because it
-> works. You could be confused by macros where we sometimes need tricks
-> like this, but this is a standard part of code.
-
-No confusion, just paranoid. You clearly have never been on road of 
-chasing compiler issues with logical condition, but indeed it can be 
-removed although checkpatch does not seem to be bothered with it. Will 
-change it.
-
->> +               data = (u8 *)fw->data;
->
-> Don't cast to workaround const != const. You won't need casting after
-> making local "data" a const variable.
-
-done
-
->> +               data_len = fw->size;
->> +               raw_nvram = false;
->> +       } else {
->> +               data = bcm47xx_nvram_get_contents(&data_len);
->> +               if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->> +                       goto fail;
->> +               raw_nvram = true;
->> +       }
->>
->> -       if (fw) {
->> -               nvram = brcmf_fw_nvram_strip(fw->data, fw->size, &nvram_length,
->> +       if (data) {
->> +               nvram = brcmf_fw_nvram_strip(data, data_len, &nvram_length,
->>                                               fwctx->domain_nr, fwctx->bus_nr);
->> -               release_firmware(fw);
->> -               if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->> -                       goto fail;
->> +               if (raw_nvram)
->> +                       bcm47xx_nvram_release_contents(data);
->
-> This is cosmetical but maybe you could move above 2 lines next to the
-> release_firmware? So we have all freeing code at one please? Do you
-> think it would improve readability?
-> Nothing important thought. Feel free to ignore me here.
-
-confused! The release_firmware call is removed here, right?
-
->> @@ -473,15 +490,9 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
->>          if (!ret)
->>                  return;
->>
->> -       /* when nvram is optional call .done() callback here */
->> -       if (fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL) {
->> -               fwctx->done(fwctx->dev, fw, NULL, 0);
->> -               kfree(fwctx);
->> -               return;
->> -       }
->> +       brcmf_fw_request_nvram_done(NULL, fwctx);
->> +       return;
->
-> It gave me a 5 minutes headache ;) Could you add a short comment why
-> you call _done anyway? Something like
-> /* Even if we failed to init user space fw request we may get a platform one */
-
-For the resulting code I don't see value adding such comment. Reading 
-this patch you might want Hante to explain this change, but you figured 
-it out. Sorry for the headache ;-)
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+index 4787c32..be9b665 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+@@ -87,41 +87,6 @@ struct iwl_ssid_ie {
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ } __packed; /* SCAN_DIRECT_SSID_IE_API_S_VER_1 */
+ 
+-/* How many statistics are gathered for each channel */
+-#define SCAN_RESULTS_STATISTICS 1
+-
+-/**
+- * enum iwl_scan_complete_status - status codes for scan complete notifications
+- * @SCAN_COMP_STATUS_OK:  scan completed successfully
+- * @SCAN_COMP_STATUS_ABORT: scan was aborted by user
+- * @SCAN_COMP_STATUS_ERR_SLEEP: sending null sleep packet failed
+- * @SCAN_COMP_STATUS_ERR_CHAN_TIMEOUT: timeout before channel is ready
+- * @SCAN_COMP_STATUS_ERR_PROBE: sending probe request failed
+- * @SCAN_COMP_STATUS_ERR_WAKEUP: sending null wakeup packet failed
+- * @SCAN_COMP_STATUS_ERR_ANTENNAS: invalid antennas chosen at scan command
+- * @SCAN_COMP_STATUS_ERR_INTERNAL: internal error caused scan abort
+- * @SCAN_COMP_STATUS_ERR_COEX: medium was lost ot WiMax
+- * @SCAN_COMP_STATUS_P2P_ACTION_OK: P2P public action frame TX was successful
+- *	(not an error!)
+- * @SCAN_COMP_STATUS_ITERATION_END: indicates end of one repetition the driver
+- *	asked for
+- * @SCAN_COMP_STATUS_ERR_ALLOC_TE: scan could not allocate time events
+-*/
+-enum iwl_scan_complete_status {
+-	SCAN_COMP_STATUS_OK = 0x1,
+-	SCAN_COMP_STATUS_ABORT = 0x2,
+-	SCAN_COMP_STATUS_ERR_SLEEP = 0x3,
+-	SCAN_COMP_STATUS_ERR_CHAN_TIMEOUT = 0x4,
+-	SCAN_COMP_STATUS_ERR_PROBE = 0x5,
+-	SCAN_COMP_STATUS_ERR_WAKEUP = 0x6,
+-	SCAN_COMP_STATUS_ERR_ANTENNAS = 0x7,
+-	SCAN_COMP_STATUS_ERR_INTERNAL = 0x8,
+-	SCAN_COMP_STATUS_ERR_COEX = 0x9,
+-	SCAN_COMP_STATUS_P2P_ACTION_OK = 0xA,
+-	SCAN_COMP_STATUS_ITERATION_END = 0x0B,
+-	SCAN_COMP_STATUS_ERR_ALLOC_TE = 0x0C,
+-};
+-
+ /* scan offload */
+ #define IWL_SCAN_MAX_BLACKLIST_LEN	64
+ #define IWL_SCAN_SHORT_BLACKLIST_LEN	16
+@@ -144,71 +109,6 @@ enum scan_framework_client {
+ };
+ 
+ /**
+- * struct iwl_scan_offload_cmd - SCAN_REQUEST_FIXED_PART_API_S_VER_6
+- * @scan_flags:		see enum iwl_scan_flags
+- * @channel_count:	channels in channel list
+- * @quiet_time:		dwell time, in milliseconds, on quiet channel
+- * @quiet_plcp_th:	quiet channel num of packets threshold
+- * @good_CRC_th:	passive to active promotion threshold
+- * @rx_chain:		RXON rx chain.
+- * @max_out_time:	max TUs to be out of associated channel
+- * @suspend_time:	pause scan this TUs when returning to service channel
+- * @flags:		RXON flags
+- * @filter_flags:	RXONfilter
+- * @tx_cmd:		tx command for active scan; for 2GHz and for 5GHz.
+- * @direct_scan:	list of SSIDs for directed active scan
+- * @scan_type:		see enum iwl_scan_type.
+- * @rep_count:		repetition count for each scheduled scan iteration.
+- */
+-struct iwl_scan_offload_cmd {
+-	__le16 len;
+-	u8 scan_flags;
+-	u8 channel_count;
+-	__le16 quiet_time;
+-	__le16 quiet_plcp_th;
+-	__le16 good_CRC_th;
+-	__le16 rx_chain;
+-	__le32 max_out_time;
+-	__le32 suspend_time;
+-	/* RX_ON_FLAGS_API_S_VER_1 */
+-	__le32 flags;
+-	__le32 filter_flags;
+-	struct iwl_tx_cmd tx_cmd[2];
+-	/* SCAN_DIRECT_SSID_IE_API_S_VER_1 */
+-	struct iwl_ssid_ie direct_scan[PROBE_OPTION_MAX];
+-	__le32 scan_type;
+-	__le32 rep_count;
+-} __packed;
+-
+-enum iwl_scan_offload_channel_flags {
+-	IWL_SCAN_OFFLOAD_CHANNEL_ACTIVE		= BIT(0),
+-	IWL_SCAN_OFFLOAD_CHANNEL_NARROW		= BIT(22),
+-	IWL_SCAN_OFFLOAD_CHANNEL_FULL		= BIT(24),
+-	IWL_SCAN_OFFLOAD_CHANNEL_PARTIAL	= BIT(25),
+-};
+-
+-/* channel configuration for struct iwl_scan_offload_cfg. Each channels needs:
+- * __le32 type:	bitmap; bits 1-20 are for directed scan to i'th ssid and
+- *	see enum iwl_scan_offload_channel_flags.
+- * __le16 channel_number: channel number 1-13 etc.
+- * __le16 iter_count: repetition count for the channel.
+- * __le32 iter_interval: interval between two iterations on one channel.
+- * u8 active_dwell.
+- * u8 passive_dwell.
+- */
+-#define IWL_SCAN_CHAN_SIZE 14
+-
+-/**
+- * iwl_scan_offload_cfg - SCAN_OFFLOAD_CONFIG_API_S
+- * @scan_cmd:		scan command fixed part
+- * @data:		scan channel configuration and probe request frames
+- */
+-struct iwl_scan_offload_cfg {
+-	struct iwl_scan_offload_cmd scan_cmd;
+-	u8 data[0];
+-} __packed;
+-
+-/**
+  * iwl_scan_offload_blacklist - SCAN_OFFLOAD_BLACKLIST_S
+  * @ssid:		MAC address to filter out
+  * @reported_rssi:	AP rssi reported to the host
+@@ -298,35 +198,6 @@ enum iwl_scan_ebs_status {
+ };
+ 
+ /**
+- * iwl_scan_offload_complete - SCAN_OFFLOAD_COMPLETE_NTF_API_S_VER_1
+- * @last_schedule_line:		last schedule line executed (fast or regular)
+- * @last_schedule_iteration:	last scan iteration executed before scan abort
+- * @status:			enum iwl_scan_offload_compleate_status
+- * @ebs_status: last EBS status, see IWL_SCAN_EBS_*
+- */
+-struct iwl_scan_offload_complete {
+-	u8 last_schedule_line;
+-	u8 last_schedule_iteration;
+-	u8 status;
+-	u8 ebs_status;
+-} __packed;
+-
+-/**
+- * iwl_sched_scan_results - SCAN_OFFLOAD_MATCH_FOUND_NTF_API_S_VER_1
+- * @ssid_bitmap:	SSIDs indexes found in this iteration
+- * @client_bitmap:	clients that are active and wait for this notification
+- */
+-struct iwl_sched_scan_results {
+-	__le16 ssid_bitmap;
+-	u8 client_bitmap;
+-	u8 reserved;
+-};
+-
+-/* Unified LMAC scan API */
+-
+-#define IWL_MVM_BASIC_PASSIVE_DWELL 110
+-
+-/**
+  * iwl_scan_req_tx_cmd - SCAN_REQ_TX_CMD_API_S
+  * @tx_flags: combination of TX_CMD_FLG_*
+  * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
+-- 
+2.1.4
 
