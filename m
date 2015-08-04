@@ -1,121 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:11233 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752410AbbHZUPN (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:49591 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbbHDBcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 16:15:13 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 03/12] brcmfmac: change parameters for brcmf_remove_interface()
-Date: Wed, 26 Aug 2015 22:14:55 +0200
-Message-ID: <1440620104-2715-4-git-send-email-arend@broadcom.com> (sfid-20150826_223108_640253_6D0DC078)
-In-Reply-To: <1440620104-2715-1-git-send-email-arend@broadcom.com>
-References: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+	Mon, 3 Aug 2015 21:32:22 -0400
+Received: from mail-ig0-f178.google.com (mail-ig0-f178.google.com [209.85.213.178])
+	(Authenticated sender: b93043)
+	by smtp.csie.ntu.edu.tw (Postfix) with ESMTPSA id 6678D23893
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2015 09:32:19 +0800 (CST)
+Received: by igk11 with SMTP id 11so83478952igk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 18:32:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150803183422.GD21180@ubuntu-hedt>
+References: <1437622380-4154-1-git-send-email-wens@csie.org>
+ <1437622380-4154-5-git-send-email-wens@csie.org> <20150803183422.GD21180@ubuntu-hedt>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Tue, 4 Aug 2015 09:31:58 +0800
+Message-ID: <CAGb2v650TmbAtkvK8YWQvzcoxkgB21=Lr6LXZ4uOZe9OGzqSpw@mail.gmail.com> (sfid-20150804_033229_995784_1B430886)
+Subject: Re: [PATCH v2 4/5] wireless-regdb: Update 5GHz rules for US
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Chen-Yu Tsai <wens@csie.org>,
+	wireless-regdb <wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just pass the interface to be removed, ie. the struct brcmf_if instance.
+On Tue, Aug 4, 2015 at 2:34 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> On Thu, Jul 23, 2015 at 11:32:59AM +0800, Chen-Yu Tsai wrote:
+>> The FCC increased the maximum conducted transmission power for the
+>> U-NII-1 (5150 ~ 5250 MHz) band to 30 dBm or 1 W for master devices
+>> and 24 dBm or 250 mW for mobile/portable devices.
+>>
+>> Effective 6/2/2014.
+>>
+>> See FCC KDB 905462 D06.
+>>
+>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+>> ---
+>>  db.txt | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/db.txt b/db.txt
+>> index cadd52c..29ba4b6 100644
+>> --- a/db.txt
+>> +++ b/db.txt
+>> @@ -1160,7 +1160,7 @@ country UG: DFS-FCC
+>>
+>>  country US: DFS-FCC
+>>       (2402 - 2472 @ 40), (30)
+>> -     (5170 - 5250 @ 80), (17), AUTO-BW
+>> +     (5170 - 5250 @ 80), (30), AUTO-BW
+>
+> The 30 dB limit is for devices in master mode, for clients the limit
+> seems to be 250 mW (about 24 dB). Given the TPC requirement for U-NII
+> devices the most it could be bumped up to is 21 dB, unless there's some
+> other reason I don't know about to keep it at 17 dB.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/core.c     | 13 +++++++------
- drivers/net/wireless/brcm80211/brcmfmac/core.h     |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  2 +-
- 5 files changed, 11 insertions(+), 10 deletions(-)
+I suppose we have no way to differentiate between master mode and clients?
+I'll drop it down to 24 dBm and add a comment above it.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index a293275..0c29bf6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -4983,7 +4983,7 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
- 		brcmf_dbg(CONN, "AP mode link down\n");
- 		complete(&cfg->vif_disabled);
- 		if (ifp->vif->mbss)
--			brcmf_remove_interface(ifp->drvr, ifp->bssidx);
-+			brcmf_remove_interface(ifp);
- 		return 0;
- 	}
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index 1f65ce8..157f0d7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -887,12 +887,13 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
- 	}
- }
- 
--void brcmf_remove_interface(struct brcmf_pub *drvr, u32 bssidx)
-+void brcmf_remove_interface(struct brcmf_if *ifp)
- {
--	if (drvr->iflist[bssidx]) {
--		brcmf_fws_del_interface(drvr->iflist[bssidx]);
--		brcmf_del_if(drvr, bssidx);
--	}
-+	if (!ifp || WARN_ON(ifp->drvr->iflist[ifp->bssidx] != ifp))
-+		return;
-+
-+	brcmf_fws_del_interface(ifp);
-+	brcmf_del_if(ifp->drvr, ifp->bssidx);
- }
- 
- int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
-@@ -1122,7 +1123,7 @@ void brcmf_detach(struct device *dev)
- 
- 	/* make sure primary interface removed last */
- 	for (i = BRCMF_MAX_IFS-1; i > -1; i--)
--		brcmf_remove_interface(drvr, i);
-+		brcmf_remove_interface(drvr->iflist[i]);
- 
- 	brcmf_cfg80211_detach(drvr->config);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-index 1dc5b96..eb0c177 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-@@ -206,7 +206,7 @@ struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
- int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
- struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
- 			      char *name, u8 *mac_addr);
--void brcmf_remove_interface(struct brcmf_pub *drvr, u32 bssidx);
-+void brcmf_remove_interface(struct brcmf_if *ifp);
- int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
- void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 			  enum brcmf_netif_stop_reason reason, bool state);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index ec62492..4d4cc2c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -222,7 +222,7 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
- 
- 	if (ifp && ifevent->action == BRCMF_E_IF_DEL)
--		brcmf_remove_interface(drvr, ifevent->bssidx);
-+		brcmf_remove_interface(ifp);
- }
- 
- /**
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index a9ba775..6a70c06 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -2140,7 +2140,7 @@ static void brcmf_p2p_delete_p2pdev(struct brcmf_p2p_info *p2p,
- {
- 	cfg80211_unregister_wdev(&vif->wdev);
- 	p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
--	brcmf_remove_interface(vif->ifp->drvr, vif->ifp->bssidx);
-+	brcmf_remove_interface(vif->ifp);
- 	brcmf_free_vif(vif);
- }
- 
--- 
-1.9.1
+As for 17 dB, that was the original limit prior to the bump, as seen in
+the FCC KDB attachment "905462 D05 802.11 Channel Plans Old Rules v01".
 
+ChenYu
