@@ -1,28 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:34855 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792AbbHaQAn (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:34691 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932776AbbHDLw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 12:00:43 -0400
-Received: by wibq14 with SMTP id q14so4973967wib.0
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 09:00:42 -0700 (PDT)
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hans de Goede <hdegoede@redhat.com>
-From: poma <pomidorabelisima@gmail.com>
-Subject: RTL8189ETV
-Message-ID: <55E47A27.4090703@gmail.com> (sfid-20150831_180046_418588_537E1A8C)
-Date: Mon, 31 Aug 2015 18:00:39 +0200
+	Tue, 4 Aug 2015 07:52:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CANUX_P3x1soE8PV9ZH4ObzgEzz9aEft6gS7mcVhbHRGy7H5mGw@mail.gmail.com>
+References: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	<1438685233.29746.156.camel@linux.intel.com>
+	<CANUX_P3x1soE8PV9ZH4ObzgEzz9aEft6gS7mcVhbHRGy7H5mGw@mail.gmail.com>
+Date: Tue, 4 Aug 2015 14:52:27 +0300
+Message-ID: <CANUX_P202HpnSGbkPA=OT9=5GykhJ1u9u_Y2VwA3wnLi7=48_g@mail.gmail.com> (sfid-20150804_135237_938375_0F364FDF)
+Subject: Re: [PATCH 1/2] iwlwifi: convert hex_dump_to_buffer() to %*ph
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Aug 4, 2015 at 2:48 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Tue, Aug 4, 2015 at 1:47 PM, Andy Shevchenko
+> <andriy.shevchenko@linux.intel.com> wrote:
+>> On Thu, 2015-07-16 at 15:42 +0300, Andy Shevchenko wrote:
+>>> There is no need to use hex_dump_to_buffer() in the cases like this:
+>>>
+>>>       hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);      > /* len <= 16
+>>> */
+>>>       sprintf("%s\n", outbuf);
+>>>
+>>> since it maybe easily converted to simple:
+>>>
+>>>       sprintf("%*ph\n", len, buf);
+>>>
+>>> Note: it seems in one case the output is groupped by 2 bytes and
+>>> looks like a
+>>> typo. Thus, patch changes that to plain byte stream.
+>>
+>>
+>> Any comments on this, anyone?
+>>
+>> The idea is to minimize usage of hexdump_to_buffer(), i.e. not using it
+>> when it's an obvious overkill.
+>>
+>
+> Sorry for the delay, since the buffer is small (less than 16 bytes, it
+> should be fine).
 
-Hi Fi,
-
-What is this device, is it supported by
-https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
-
-$ modinfo rtl8189es
-modinfo: ERROR: Module rtl8189es not found.
-
+I applied it on our internal tree. Thank you.
