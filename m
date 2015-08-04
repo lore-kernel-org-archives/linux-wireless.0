@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36323 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753457AbbH0K5c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2015 06:57:32 -0400
-Received: by iodv127 with SMTP id v127so52236842iod.3
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2015 03:57:31 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
+Received: from mga09.intel.com ([134.134.136.24]:37379 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754691AbbHDU7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:59:06 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 0/3] mesh support for ath10k
-Date: Thu, 27 Aug 2015 06:57:01 -0400
-Message-Id: <1440673024-13696-1-git-send-email-me@bobcopeland.com> (sfid-20150827_125738_501652_D2DC6BAD)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/37] iwlwifi: pcie: don't warn on long MPDUs when supported
+Date: Tue,  4 Aug 2015 23:43:06 +0300
+Message-Id: <1438721007-23283-16-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_225913_832980_E9C0FC7D)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+In iwlmvm firmwares, the Byte count written in the scheduler
+byte count table is in DWORDs and not in bytes.
+We should check that this value fits in the 12 bits and
+the value can be either in bits of in DWORD or bytes
+depending on the firmware. Check the value after the
+translation to DWORDs is done (if needed).
 
-This was previously sent to ath10k ML, now adding linux-wireless for
-wider review.  Patch 3 gained a minor change since then to check for
-raw mode feature flag from the firmware.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-This patchset implements mesh support on ath10k.  There aren't many
-changes required to the driver, now that most of the required raw-mode
-support is upstream.
-
-I've tested VHT multihop on openwrt with the appropriate patches
-backported.
-
-Regarding performance: I currently get about 75 Mbps with udp iperf
-due to small aggregates, which leaves a lot to be desired.  Some users,
-however, have reported 300+ Mbps [1], so this is potentially solvable.
-
-[1] http://thread.gmane.org/gmane.linux.drivers.mesh.open80211s/3963
-
-Bob Copeland (3):
-  ath10k: enable monitor when OTHER_BSS requested
-  ath10k: check for encryption before adding MIC_LEN
-  ath10k: implement mesh support
-
- drivers/net/wireless/ath/ath10k/core.c   |  6 ++++++
- drivers/net/wireless/ath/ath10k/htt_tx.c |  3 ++-
- drivers/net/wireless/ath/ath10k/mac.c    | 34 +++++++++++++++++++++++++++-----
- 3 files changed, 37 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index c6572ff..90d02d5 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -219,8 +219,6 @@ static void iwl_pcie_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
+ 
+ 	scd_bc_tbl = trans_pcie->scd_bc_tbls.addr;
+ 
+-	WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX);
+-
+ 	sta_id = tx_cmd->sta_id;
+ 	sec_ctl = tx_cmd->sec_ctl;
+ 
+@@ -239,6 +237,9 @@ static void iwl_pcie_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
+ 	if (trans_pcie->bc_table_dword)
+ 		len = DIV_ROUND_UP(len, 4);
+ 
++	if (WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX))
++		return;
++
+ 	bc_ent = cpu_to_le16(len | (sta_id << 12));
+ 
+ 	scd_bc_tbl[txq_id].tfd_offset[write_ptr] = bc_ent;
 -- 
 2.1.4
 
