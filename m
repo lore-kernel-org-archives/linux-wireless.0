@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:32951 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753095AbbHTVL6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 17:11:58 -0400
-Date: Thu, 20 Aug 2015 14:11:52 -0700
-From: Brian Norris <computersforpeace@gmail.com>
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, Andrzej Hajda <a.hajda@samsung.com>,
-	linux-fbdev@vger.kernel.org,
-	Michael Hennerich <Michael.Hennerich@analog.com>,
-	linux-iio@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Lee Jones <lee.jones@linaro.org>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	linux-mtd@lists.infradead.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	=?iso-8859-1?Q?S=F8ren?= Andersen <san@rosetechnology.dk>,
-	devel@driverdev.osuosl.org, Randy Dunlap <rdunlap@infradead.org>,
-	Masanari Iida <standby24x7@gmail.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Devendra Naga <devendra.aaru@gmail.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Stephen Warren <swarren@nvidia.com>,
-	Urs =?iso-8859-1?Q?F=E4ssler?= <urs.fassler@bytesatwork.ch>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Aya Mahfouz <mahfouz.saif.elyazal@gmail.com>,
-	George McCollister <george.mccollister@gmail.com>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Manfred Schlaegl <manfred.schlaegl@gmx.at>,
-	linux-omap@vger.kernel.org, Hartmut Knaack <knaack.h@gmx.de>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Antonio Borneo <borneo.antonio@gmail.com>,
-	Andrea Galbusera <gizero@gmail.com>,
-	Michael Welling <mwelling@ieee.org>,
-	Fabian Frederick <fabf@skynet.be>,
-	Mark Brown <broonie@kernel.org>, linux-mmc@vger.kernel.org,
-	linux-spi@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>,
-	David Woodhouse <dwmw2@infradead.org>, netdev@vger.kernel.org,
-	linux-media@vger.kernel.org, Peter Meerwald <pmeerw@pmeerw.net>
-Subject: Re: [PATCH 00/18] Export SPI and OF module aliases in missing drivers
-Message-ID: <20150820211152.GI74600@google.com> (sfid-20150820_231214_040844_83CFC9F5)
-References: <1440054451-1223-1-git-send-email-javier@osg.samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440054451-1223-1-git-send-email-javier@osg.samsung.com>
+Received: from mga09.intel.com ([134.134.136.24]:37368 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752976AbbHDU65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:58:57 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/37] iwlwifi: pcie: Set scheduler to work on auto mode
+Date: Tue,  4 Aug 2015 23:42:56 +0300
+Message-Id: <1438721007-23283-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230049_054731_9ECBA7A5)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 20, 2015 at 09:07:13AM +0200, Javier Martinez Canillas wrote:
-> Patches #1 and #2 solves a), patches #3 to #8 solves b) and patches
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-^^^ I'm dying to know how this sentence ends :)
+During NIC initialization shared HW is reset and this disables the
+scheduler. Some HW platforms do not activate the scheduler after it.
+Consequently all HCMD sent by the driver stay at the queues which cause
+to queue stuck.
+Set the scheduler to work on auto active mode so it would be activated upon
+change over one of the queues' write pointer.
 
-> Patch #18 changes the logic of spi_uevent() to report an OF modalias if
-> the device was registered using OF. But this patch is included in the
-> series only as an RFC for illustration purposes since changing that
-> without first applying all the other patches in this series, will break
-> module autoloading for the drivers of devices registered using OF but
-> that lacks an of_match_table. I'll repost patch #18 once all the patches
-> in this series have landed.
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h | 1 +
+ drivers/net/wireless/iwlwifi/pcie/tx.c  | 1 +
+ 2 files changed, 2 insertions(+)
 
-On a more productive note, the patches I've looked at look good to me.
-The missing aliases are a problem enough that should be fixed (i.e.,
-part (b)). I'll leave the SPI framework changes to others to comment on.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 5af1c77..a846904 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -253,6 +253,7 @@
+ #define SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS	(16)
+ #define SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK	(0x007F0000)
+ #define SCD_GP_CTRL_ENABLE_31_QUEUES		BIT(0)
++#define SCD_GP_CTRL_AUTO_ACTIVE_MODE		BIT(18)
+ 
+ /* Context Data */
+ #define SCD_CONTEXT_MEM_LOWER_BOUND	(SCD_MEM_LOWER_BOUND + 0x600)
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 2b86c21..d711f0b 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -915,6 +915,7 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 		}
+ 	}
+ 
++	iwl_set_bits_prph(trans, SCD_GP_CTRL, SCD_GP_CTRL_AUTO_ACTIVE_MODE);
+ 	if (trans->cfg->base_params->num_of_queues > 20)
+ 		iwl_set_bits_prph(trans, SCD_GP_CTRL,
+ 				  SCD_GP_CTRL_ENABLE_31_QUEUES);
+-- 
+2.1.4
 
-Brian
