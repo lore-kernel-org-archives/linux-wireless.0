@@ -1,120 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15050 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49548 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753202AbbHENj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 09:39:29 -0400
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 5/5] net: rfkill: gpio: remove rfkill_gpio_platform_data
-Date: Wed,  5 Aug 2015 16:39:07 +0300
-Message-Id: <1438781947-7952-6-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20150805_153953_389934_04A5068D)
-In-Reply-To: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+	id S1752407AbbHDKeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 06:34:46 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Ting-Chih Hsiao <s894330@hotmail.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Subject: Re: [PATCH] staging: rtl8723au: fix up coding style warnings reported by checkpatch.pl.
+References: <BLU436-SMTP5616BB15727645C88DFE5EB9760@phx.gbl>
+Date: Tue, 04 Aug 2015 06:34:44 -0400
+In-Reply-To: <BLU436-SMTP5616BB15727645C88DFE5EB9760@phx.gbl> (Ting-Chih
+	Hsiao's message of "Tue, 4 Aug 2015 11:21:10 +0800")
+Message-ID: <wrfj1tfjcpff.fsf@carbonite.lan.trained-monkey.org> (sfid-20150804_123451_804290_13C13C0C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No more users for it.
+Ting-Chih Hsiao <s894330@hotmail.com> writes:
+> remove spaces at the start of a line
+> align enum variable with other parameters
+>
+> Signed-off-by: Ting-Chih Hsiao <s894330@hotmail.com>
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- include/linux/rfkill-gpio.h | 37 -------------------------------------
- net/rfkill/Kconfig          |  3 +--
- net/rfkill/rfkill-gpio.c    |  8 --------
- 3 files changed, 1 insertion(+), 47 deletions(-)
- delete mode 100644 include/linux/rfkill-gpio.h
 
-diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
-deleted file mode 100644
-index 20bcb55..0000000
---- a/include/linux/rfkill-gpio.h
-+++ /dev/null
-@@ -1,37 +0,0 @@
--/*
-- * Copyright (c) 2011, NVIDIA Corporation.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-- */
--
--
--#ifndef __RFKILL_GPIO_H
--#define __RFKILL_GPIO_H
--
--#include <linux/types.h>
--#include <linux/rfkill.h>
--
--/**
-- * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
-- * for unused gpio's, the expected value is -1.
-- * @name:		name for the gpio rf kill instance
-- */
--
--struct rfkill_gpio_platform_data {
--	char			*name;
--	enum rfkill_type	type;
--};
--
--#endif /* __RFKILL_GPIO_H */
-diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
-index 4c10e7e..6320890 100644
---- a/net/rfkill/Kconfig
-+++ b/net/rfkill/Kconfig
-@@ -40,5 +40,4 @@ config RFKILL_GPIO
- 	default n
- 	help
- 	  If you say yes here you get support of a generic gpio RFKILL
--	  driver. The platform should fill in the appropriate fields in the
--	  rfkill_gpio_platform_data structure and pass that to the driver.
-+	  driver.
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 07323c3..69d92e1 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -27,8 +27,6 @@
- #include <linux/acpi.h>
- #include <linux/gpio/consumer.h>
- 
--#include <linux/rfkill-gpio.h>
--
- struct rfkill_gpio_data {
- 	const char		*name;
- 	enum rfkill_type	type;
-@@ -89,7 +87,6 @@ static int rfkill_gpio_acpi_probe(struct device *dev,
- 
- static int rfkill_gpio_probe(struct platform_device *pdev)
- {
--	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
- 	struct rfkill_gpio_data *rfkill;
- 	struct gpio_desc *gpio;
- 	const char *type_name;
-@@ -111,11 +108,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
- 		if (ret)
- 			return ret;
--	} else if (pdata) {
--		rfkill->name = pdata->name;
--		rfkill->type = pdata->type;
--	} else {
--		return -ENODEV;
- 	}
- 
- 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
--- 
-2.4.6
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
+> ---
+>  drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+> index 342dec3..a63c6cb 100644
+> --- a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+> +++ b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+> @@ -21,7 +21,7 @@ odm_ConfigRFReg_8723A(
+>  	struct dm_odm_t *pDM_Odm,
+>  	u32					Addr,
+>  	u32					Data,
+> -  enum RF_RADIO_PATH     RF_PATH,
+> +	enum RF_RADIO_PATH     RF_PATH,
+>  	u32				    RegAddr
+>  	)
+>  {
