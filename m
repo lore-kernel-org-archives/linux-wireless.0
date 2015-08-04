@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fml.cs.pub.ro ([141.85.227.188]:41935 "EHLO vmail.cs.pub.ro"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933424AbbHLH2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2015 03:28:46 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by vmail.cs.pub.ro (Postfix) with ESMTP id D33D41A600BF
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2015 10:18:47 +0300 (EEST)
-Received: from vmail.cs.pub.ro ([127.0.0.1])
-	by localhost (vmail.cs.pub.ro [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id SBYTkY_9Smok for <linux-wireless@vger.kernel.org>;
-	Wed, 12 Aug 2015 10:18:47 +0300 (EEST)
-Received: from localhost (localhost [127.0.0.1])
-	by vmail.cs.pub.ro (Postfix) with ESMTP id A8DD21A600C0
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2015 10:18:47 +0300 (EEST)
-Received: from vmail.cs.pub.ro ([127.0.0.1])
-	by localhost (vmail.cs.pub.ro [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id MgfVnX3b3u4V for <linux-wireless@vger.kernel.org>;
-	Wed, 12 Aug 2015 10:18:47 +0300 (EEST)
-Received: from vmail.cs.pub.ro (vmail.cs.pub.ro [141.85.227.3])
-	by vmail.cs.pub.ro (Postfix) with ESMTP id 8ED161A600BF
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2015 10:18:47 +0300 (EEST)
-Date: Wed, 12 Aug 2015 10:18:47 +0300 (EEST)
-From: Vladimir Diaconescu <vladimir.diaconescu@cs.pub.ro>
+Received: from mga09.intel.com ([134.134.136.24]:37379 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754908AbbHDU7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:59:13 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Message-ID: <1402134600.51682.1439363927472.JavaMail.zimbra@cs.pub.ro> (sfid-20150812_092850_121067_5E5739B3)
-In-Reply-To: <1272385718.51672.1439363698417.JavaMail.zimbra@cs.pub.ro>
-Subject: [mac80211] Stopping and waking tx queues per vif without
- IEEE80211_HW_QUEUE_CONTROL
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/37] iwlwifi: mvm: update comment of power_scheme module parameter
+Date: Tue,  4 Aug 2015 23:43:14 +0300
+Message-Id: <1438721007-23283-24-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230716_236508_4715BEF7)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am currently trying to stop packets for specific vifs.
+From: Avri Altman <avri.altman@intel.com>
 
-This can easily be done if the IEEE80211_HW_QUEUE_CONTROL flag is set and using ieee80211_stop_vif_queues and ieee80211_wake_vif_queues from util.c. But some drivers/cards do not have this capability.
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mvm.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Currently, all vif queues map to the same hardware queues (since there's a single wireless device). Therefore, stopping and waking queues is a "global" action.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index d78af9f..767880b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -123,8 +123,7 @@ extern const struct ieee80211_ops iwl_mvm_hw_ops;
+  *	be up'ed after the INIT fw asserted. This is useful to be able to use
+  *	proprietary tools over testmode to debug the INIT fw.
+  * @tfd_q_hang_detect: enabled the detection of hung transmit queues
+- * @power_scheme: CAM(Continuous Active Mode)-1, BPS(Balanced Power
+- *	Save)-2(default), LP(Low Power)-3
++ * @power_scheme: one of enum iwl_power_scheme
+  */
+ struct iwl_mvm_mod_params {
+ 	bool init_dbg;
+-- 
+2.1.4
 
-What are my options? Do I "manually" stop the outgoing packets at the mac80211 level?
-
-Specifications:
-- kernel version 3.14
-- ath9k
-
-Regards,
-Vladimir
