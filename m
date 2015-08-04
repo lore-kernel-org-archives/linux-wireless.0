@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2478 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754739AbbHFKcA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 06:32:00 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: firmware in a bad state (module mwifiex)
-Date: Thu, 6 Aug 2015 10:31:56 +0000
-Message-ID: <c58f4984afe04cecb288bd5f7a48eaf5@SC-EXCH04.marvell.com> (sfid-20150806_123211_382370_D9D89129)
-References: <871tfzast5.fsf@free.fr>
-	<0e2dc4e2bd9f4486979cedb4c47e60f2@SC-EXCH04.marvell.com>
-	<87zj26z1pd.fsf_-_@free.fr>
-	<d74ef56802d24c8e90e1b82eb5003172@SC-EXCH04.marvell.com>
-	<87oaim85fq.fsf@free.fr>
-	<e4dd6d588a114db8894e0abbeb34fbc7@SC-EXCH04.marvell.com>
- <87wpx9nd3k.fsf@free.fr>
-In-Reply-To: <87wpx9nd3k.fsf@free.fr>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:37368 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932077AbbHDU7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:59:15 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 31/37] iwlwifi: pcie: reset write pointer on ict reset
+Date: Tue,  4 Aug 2015 23:43:21 +0300
+Message-Id: <1438721007-23283-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230717_348199_8170716D)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSnVsaWVuLA0KDQo+IEZyb206IEp1bGllbiBDdWJpem9sbGVzIFttYWlsdG86ai5jdWJpem9s
-bGVzQGZyZWUuZnJdDQo+IFNlbnQ6IFRodXJzZGF5LCBBdWd1c3QgMDYsIDIwMTUgMTI6MDAgUE0N
-Cj4gVG86IEFtaXRrdW1hciBLYXJ3YXINCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
-Lm9yZw0KPiBTdWJqZWN0OiBSZTogZmlybXdhcmUgaW4gYSBiYWQgc3RhdGUgKG1vZHVsZSBtd2lm
-aWV4KQ0KPiANCj4gQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4gd3JpdGVz
-Og0KPiANCj4gDQo+ID4gVGhhbmtzIGZvciByZXBvcnRpbmcgdGhpcy4gV2Ugd2lsbCB0YWtlIGEg
-bG9vayBhdCB0aGlzIHJpZ2h0IGF3YXkuDQo+ID4gV2UgZG9uJ3QgaGF2ZSBzaWduaWZpY2FudCBj
-aGFuZ2VzIGFmdGVyIDQuMi4wLXJjMy4NCj4gDQo+IFdlbGwgdGhlcmUgd2VyZSB0aGUgdHdvIHBh
-dGNoZXMgeW91IHBvaW50ZWQgYXQgdGhhdCBmaXhlZCBhIHZlcnkgc2VyaW91cw0KPiBwcm9ibGVt
-IGZvciBtZS4gQWN0dWFsbHkgYXJlIHRoZXNlIGluY2x1ZGVkIGluIHNvbWUgYnJhbmNoIG9mIHRo
-ZSBtYWluDQo+IGtlcm5lbCBnaXQgdHJlZcKgPyBJIGNvdWxkbid0IGZpbmQgdGhlIGNvbW1pdCBm
-b3INCj4gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9uZXRkZXYvbXNnMzM0MzY3Lmh0bWwg
-YXQNCj4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvdG9ydmFs
-ZHMvbGludXguZ2l0Lw0KPiANCg0KSSBqdXN0IHN1Ym1pdHRlZCB0aGlzIGNyaXRpY2FsIGZpeCBm
-b3Igc3RhYmxlIHJlbGVhc2UuDQoNClJlZ2FyZHMsDQpBbWl0DQo=
+From: Eliad Peller <eliad@wizery.com>
+
+Since the CSR_DRAM_INIT_TBL_WRITE_POINTER bit wasn't set
+on ict reset, in some flows (like disable ict followed by
+immediate reset ict) the driver and hardware went out
+of sync (the driver cleared the ict_index, while the hw
+kept it intact).
+
+Fix it by setting the flag when resetting ict.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-csr.h | 1 +
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 5 +++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index faa17f2..fa71661 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -422,6 +422,7 @@ enum {
+ 
+ /* DRAM INT TABLE */
+ #define CSR_DRAM_INT_TBL_ENABLE		(1 << 31)
++#define CSR_DRAM_INIT_TBL_WRITE_POINTER	(1 << 28)
+ #define CSR_DRAM_INIT_TBL_WRAP_CHECK	(1 << 27)
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 5561dee..454ef1d 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1443,8 +1443,9 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
+ 
+ 	val = trans_pcie->ict_tbl_dma >> ICT_SHIFT;
+ 
+-	val |= CSR_DRAM_INT_TBL_ENABLE;
+-	val |= CSR_DRAM_INIT_TBL_WRAP_CHECK;
++	val |= CSR_DRAM_INT_TBL_ENABLE |
++	       CSR_DRAM_INIT_TBL_WRAP_CHECK |
++	       CSR_DRAM_INIT_TBL_WRITE_POINTER;
+ 
+ 	IWL_DEBUG_ISR(trans, "CSR_DRAM_INT_TBL_REG =0x%x\n", val);
+ 
+-- 
+2.1.4
+
