@@ -1,82 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx01.archerlogic.com ([203.211.140.115]:34276 "EHLO
-	mx01.archerlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbbHUDkL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 23:40:11 -0400
-Received: from localhost (unknown [127.0.0.1])
-	by mx01.archerlogic.com (Postfix) with ESMTP id 70EA54695
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2015 03:40:09 +0000 (UTC)
-Received: from mx01.archerlogic.com ([127.0.0.1])
-	by localhost (mx01.archerlogic.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id CCqWLG6e2Zc7 for <linux-wireless@vger.kernel.org>;
-	Fri, 21 Aug 2015 11:40:02 +0800 (SGT)
-Received: from MaouShengXPS (unknown [118.189.9.215])
-	(Authenticated sender: maousheng.lee@archerlogic.com)
-	by mx01.archerlogic.com (Postfix) with ESMTPA id 5717A4699
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2015 11:40:01 +0800 (SGT)
-From: "Lee Maou Sheng" <maousheng.lee@archerlogic.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: 8712U driver for CentOS 6.6
-Date: Fri, 21 Aug 2015 11:40:01 +0800
-Message-ID: <002c01d0dbc3$0fc94a20$2f5bde60$@archerlogic.com> (sfid-20150821_054017_096850_8F10A57F)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:37362 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754285AbbHDU7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:59:11 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 23/37] iwlwifi: return error if d0i3 was aborted
+Date: Tue,  4 Aug 2015 23:43:13 +0300
+Message-Id: <1438721007-23283-23-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230716_705325_AE27D554)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi sir,
+From: Eliad Peller <eliad@wizery.com>
 
-I am from Singapore and currently our company is trying to install Prolink
-WN2001 wireless adapter into Dell PowerEdge T20 with Centos 6.6 installed. I
-am using https://github.com/chunkeey/rtl8192su for the driver.
+Allow the transport layer to return an error upon suspend.
 
-The information I have as below:
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h | 10 ++++++----
+ drivers/net/wireless/iwlwifi/mvm/d3.c    |  8 ++++++--
+ 2 files changed, 12 insertions(+), 6 deletions(-)
 
-uname -a
-Linux ts41 2.6.32-573.3.1.el6.x86_64 #1 SMP Thu Aug 13 22:55:16 UTC 2015
-x86_64 x86_64 x86_64 GNU/Linux
-
-lsusb
-Bus 001 Device 003: ID 07b8:8179 AboCom Systems Inc
-
-make
-[root@ts41 rtl8192su]# make
-make -C /lib/modules/2.6.32-573.3.1.el6.x86_64/build
-M=/var/tmp/rtl8192su/rtlwifi CONFIG_RTL_CARDS=y CONFIG_RTLWIFI=m
-CONFIG_RTLWIFI_DEBUG=y CONFIG_RTLWIFI_DEBUGFS=y CONFIG_RTLWIFI_USB=m
-CONFIG_RTLWIFI_PCI=m CONFIG_RTL8192SU=m CONFIG_RTL8192SE=m
-CONFIG_RTL8192S_COMMON=m CONFIG_RTL8192CU=n CONFIG_RTL8192DE=n
-CONFIG_RTL8192CE=n CONFIG_RTL8192C_COMMON=n CONFIG_RTL8723AE=n
-CONFIG_RTL8188EE=n  EXTRA_CFLAGS="-DDEBUG -DCONFIG_RTLWIFI_DEBUGFS=m"
-make[1]: Entering directory `/usr/src/kernels/2.6.32-573.3.1.el6.x86_64'
-  CC [M]  /var/tmp/rtl8192su/rtlwifi/usb.o
-/var/tmp/rtl8192su/rtlwifi/usb.c: In function '_rtl_prep_rx_urb':
-/var/tmp/rtl8192su/rtlwifi/usb.c:437: error: implicit declaration of
-function 'usb_alloc_coherent'
-/var/tmp/rtl8192su/rtlwifi/usb.c:438: warning: assignment makes pointer from
-integer without a cast
-/var/tmp/rtl8192su/rtlwifi/usb.c: In function '_rtl_usb_cleanup_rx':
-/var/tmp/rtl8192su/rtlwifi/usb.c:688: error: implicit declaration of
-function 'usb_free_coherent'
-make[2]: *** [/var/tmp/rtl8192su/rtlwifi/usb.o] Error 1
-make[1]: *** [_module_/var/tmp/rtl8192su/rtlwifi] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.32-573.3.1.el6.x86_64'
-make: *** [all] Error 2
-
-
-Wish I can get some guidance from you.
-
-Thank you!
-
-Best Regards,
-
-Lee Maou Sheng
-Software Engineer
-Archer Logic (S) Pte. Ltd.
-
-6 Ubi Road 1, Wintech Centre
-#05-01, Singapore 408726
-Tel: (65) 6785 9007 ext. 109
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 8f67004..e698ed5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -598,7 +598,7 @@ struct iwl_trans_ops {
+ 			      u32 value);
+ 	void (*ref)(struct iwl_trans *trans);
+ 	void (*unref)(struct iwl_trans *trans);
+-	void (*suspend)(struct iwl_trans *trans);
++	int  (*suspend)(struct iwl_trans *trans);
+ 	void (*resume)(struct iwl_trans *trans);
+ 
+ 	struct iwl_trans_dump_data *(*dump_data)(struct iwl_trans *trans);
+@@ -807,10 +807,12 @@ static inline void iwl_trans_unref(struct iwl_trans *trans)
+ 		trans->ops->unref(trans);
+ }
+ 
+-static inline void iwl_trans_suspend(struct iwl_trans *trans)
++static inline int iwl_trans_suspend(struct iwl_trans *trans)
+ {
+-	if (trans->ops->suspend)
+-		trans->ops->suspend(trans);
++	if (!trans->ops->suspend)
++		return 0;
++
++	return trans->ops->suspend(trans);
+ }
+ 
+ static inline void iwl_trans_resume(struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 246e60a..68d7218 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1168,13 +1168,17 @@ remove_notif:
+ int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	int ret;
++
++	ret = iwl_trans_suspend(mvm->trans);
++	if (ret)
++		return ret;
+ 
+-	iwl_trans_suspend(mvm->trans);
+ 	mvm->trans->wowlan_d0i3 = wowlan->any;
+ 	if (mvm->trans->wowlan_d0i3) {
+ 		/* 'any' trigger means d0i3 usage */
+ 		if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND) {
+-			int ret = iwl_mvm_enter_d0i3_sync(mvm);
++			ret = iwl_mvm_enter_d0i3_sync(mvm);
+ 
+ 			if (ret)
+ 				return ret;
+-- 
+2.1.4
 
