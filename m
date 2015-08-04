@@ -1,39 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35632 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750726AbbHGEAG convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34123 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083AbbHDFZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 00:00:06 -0400
-Received: by iodd187 with SMTP id d187so100928857iod.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 21:00:05 -0700 (PDT)
+	Tue, 4 Aug 2015 01:25:07 -0400
+From: Vivek Natarajan <nataraja@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH 2/2] ath10k: Enable MU MIMO txbf support for QCA99X0
+Date: Tue, 4 Aug 2015 10:45:12 +0530
+Message-ID: <1438665312-2768-2-git-send-email-nataraja@qti.qualcomm.com> (sfid-20150804_072512_148744_B08BEB0E)
+In-Reply-To: <1438665312-2768-1-git-send-email-nataraja@qti.qualcomm.com>
+References: <1438665312-2768-1-git-send-email-nataraja@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <loom.20150807T051418-51@post.gmane.org>
-References: <1431030535-11083-1-git-send-email-zajec5@gmail.com>
-	<554C81D2.8080602@broadcom.com>
-	<CACna6rxV_sR1WhrHRwtM8cjengsCbm_iUWzy0n_+fLYmxypmMw@mail.gmail.com>
-	<554C8D96.9030205@broadcom.com>
-	<CACna6rzR4r_dKjAT+EMNMU7fPuHxNa=VTdkNQ41uy5mKy4XgMw@mail.gmail.com>
-	<loom.20150807T051418-51@post.gmane.org>
-Date: Fri, 7 Aug 2015 06:00:05 +0200
-Message-ID: <CACna6ry-XQ2VKfHdEVKV1HaCaZUiq7VduUnA1e-zFYWbkKFe1Q@mail.gmail.com> (sfid-20150807_060010_792832_0491FCAE)
-Subject: Re: [PATCH RFC:rxctl wait timed out] brcmfmac: add BCM43526 USB support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hugo Denizart <thepoon@cartooncraft.fr>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 August 2015 at 05:19, Hugo Denizart <thepoon@cartooncraft.fr> wrote:
-> This thread is 3 months old.
+This patch enables MU-MIMO transmit beamforming support
+for QCA99X0 chipsets.
 
-But the answer was clear. I also updated wiki page:
-https://wireless.wiki.kernel.org/en/users/drivers/brcm80211#unsupported_chips
+Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 44 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  5 ++++
+ 2 files changed, 49 insertions(+)
 
-
-> Did you got BCM43526 working?
-
-No.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 4eb29aa..aaec5e2 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4046,6 +4046,43 @@ static u32 get_nss_from_chainmask(u16 chain_mask)
+ 	return 1;
+ }
+ 
++static int ath10k_mac_set_txbf_conf(struct ath10k_vif *arvif)
++{
++	u32 value = 0;
++	struct ath10k *ar = arvif->ar;
++
++	if (ath10k_wmi_get_txbf_conf_scheme(ar) != WMI_TXBF_CONF_BEFORE_ASSOC)
++		return 0;
++
++	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
++				IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE))
++		value |= SM((ar->num_rf_chains - 1), WMI_TXBF_STS_CAP_OFFSET);
++
++	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
++				IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE))
++		value |= SM((ar->num_rf_chains - 1), WMI_BF_SOUND_DIM_OFFSET);
++
++	if (!value)
++		return 0;
++
++	if (ar->vht_cap_info & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)
++		value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFER;
++
++	if (ar->vht_cap_info & IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)
++		value |= (WMI_VDEV_PARAM_TXBF_MU_TX_BFER |
++			  WMI_VDEV_PARAM_TXBF_SU_TX_BFER);
++
++	if (ar->vht_cap_info & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE)
++		value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFEE;
++
++	if (ar->vht_cap_info & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)
++		value |= (WMI_VDEV_PARAM_TXBF_MU_TX_BFEE |
++			  WMI_VDEV_PARAM_TXBF_SU_TX_BFEE);
++
++	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
++					 ar->wmi.vdev_param->txbf, value);
++}
++
+ /*
+  * TODO:
+  * Figure out how to handle WMI_VDEV_SUBTYPE_P2P_DEVICE,
+@@ -4272,6 +4309,13 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
++	ret = ath10k_mac_set_txbf_conf(arvif);
++	if (ret) {
++		ath10k_warn(ar, "failed to set txbf for vdev %d: %d\n",
++			    arvif->vdev_id, ret);
++		goto err_peer_delete;
++	}
++
+ 	ret = ath10k_mac_set_rts(arvif, ar->hw->wiphy->rts_threshold);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to set rts threshold for vdev %d: %d\n",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 754cc33..232500a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4628,6 +4628,11 @@ enum wmi_10_4_vdev_param {
+ #define WMI_VDEV_PARAM_TXBF_SU_TX_BFER BIT(2)
+ #define WMI_VDEV_PARAM_TXBF_MU_TX_BFER BIT(3)
+ 
++#define WMI_TXBF_STS_CAP_OFFSET_LSB	4
++#define WMI_TXBF_STS_CAP_OFFSET_MASK	0xf0
++#define WMI_BF_SOUND_DIM_OFFSET_LSB	8
++#define WMI_BF_SOUND_DIM_OFFSET_MASK	0xf00
++
+ /* slot time long */
+ #define WMI_VDEV_SLOT_TIME_LONG		0x1
+ /* slot time short */
 -- 
-Rafał
+1.9.1
+
