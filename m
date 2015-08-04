@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34590 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbHNG0V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 02:26:21 -0400
-Received: by paccq16 with SMTP id cq16so9991724pac.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 23:26:21 -0700 (PDT)
-Date: Fri, 14 Aug 2015 11:56:13 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	jude.lee@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH 2/5] staging: wilc1000: change void pointer type to real
- type
-Message-ID: <20150814062613.GB421@sudip-pc> (sfid-20150814_082624_887049_8341C41C)
-References: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
- <1439440883-16061-3-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1439440883-16061-3-git-send-email-tony.cho@atmel.com>
+Received: from mga09.intel.com ([134.134.136.24]:37379 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754756AbbHDU7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:59:03 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/37] iwlwifi: mvm: Do not sample the device time for session protection
+Date: Tue,  4 Aug 2015 23:43:03 +0300
+Message-Id: <1438721007-23283-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230043_937464_74B2E345)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 13, 2015 at 01:41:20PM +0900, Tony Cho wrote:
-> From: Johnny Kim <johnny.kim@atmel.com>
-> 
-> This patch changes the void pointer member of the tstrHostIFmsg to the
-> real data type because the void pointer type is ambiguous and not
-> readable.
-> 
-> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
-> ---
-This patch is introducing some new warnings like:
+From: Ilan Peer <ilan.peer@intel.com>
 
-drivers/staging/wilc1000/host_interface.c: In function ‘host_int_set_wfi_drv_handler’:
-drivers/staging/wilc1000/host_interface.c:5817:66: warning: assignment
-makes integer from pointer without a cast [enabled by default]
-  strHostIFmsg.uniHostIFmsgBody.strHostIfSetDrvHandler.u32Address = u32address;
+Since the time-event is sent with the immediate flag set, there is
+no need to sample the device time.
 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/time-event.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-regards
-sudip
+diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+index 6c05669..8fe7ecd 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+@@ -596,8 +596,7 @@ void iwl_mvm_protect_session(struct iwl_mvm *mvm,
+ 		cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id, mvmvif->color));
+ 	time_cmd.id = cpu_to_le32(TE_BSS_STA_AGGRESSIVE_ASSOC);
+ 
+-	time_cmd.apply_time =
+-		cpu_to_le32(iwl_read_prph(mvm->trans, DEVICE_SYSTEM_TIME_REG));
++	time_cmd.apply_time = cpu_to_le32(0);
+ 
+ 	time_cmd.max_frags = TE_V2_FRAG_NONE;
+ 	time_cmd.max_delay = cpu_to_le32(max_delay);
+-- 
+2.1.4
+
