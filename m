@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38080 "EHLO sipsolutions.net"
+Received: from mga09.intel.com ([134.134.136.24]:37368 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755222AbbHYJgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 05:36:52 -0400
-Message-ID: <1440495409.2192.16.camel@sipsolutions.net> (sfid-20150825_113659_245569_6956B4F3)
-Subject: Re: set channel from radiotap headers during injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Allan Matthew <allanm84@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 25 Aug 2015 11:36:49 +0200
-In-Reply-To: <CAEnVuW28F2g_x65UzvH-RGpLON+YR2KoJ7dM=3j7gP11VJ8WEg@mail.gmail.com> (sfid-20150825_024629_360431_CBDD71CD)
-References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
-	 <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com>
-	 <1439983495.2089.7.camel@sipsolutions.net>
-	 <CAEnVuW18e15hOjoMYRstjgu2cr5BFAtVHThAyZGqpMAdFUQrpQ@mail.gmail.com>
-	 <1440007745.2089.11.camel@sipsolutions.net>
-	 <CAEnVuW0m5jPMcQnC4inVF+8xubZbuyM-faP6Lebz26jvb4s-XA@mail.gmail.com>
-	 <1440013262.2089.13.camel@sipsolutions.net>
-	 <CAEnVuW21Ocie0RUGv-UZU1U=n=mTinJ_nJa2uHQqVZz-11AbWA@mail.gmail.com>
-	 <1440014031.2089.14.camel@sipsolutions.net>
-	 <CAEnVuW3LHHDUpJzaKoDAcYkBoT8B5ddQM2Va33xtxA-ORgLH3w@mail.gmail.com>
-	 <CAEnVuW28F2g_x65UzvH-RGpLON+YR2KoJ7dM=3j7gP11VJ8WEg@mail.gmail.com>
-	 (sfid-20150825_024629_360431_CBDD71CD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752351AbbHDU6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 16:58:55 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/37] iwlwifi: mvm: handle RX MPDUs separately
+Date: Tue,  4 Aug 2015 23:42:52 +0300
+Message-Id: <1438721007-23283-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230053_494078_74237834)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-08-24 at 17:46 -0700, Allan Matthew wrote:
-> 
-> Johannes- What about txpower?  Should this be configurable through 
-> the radiotap headers?
+From: Johannes Berg <johannes.berg@intel.com>
 
-It's ... complicated. First of all, it's currently not supported I
-believe, in general, since there's no parsing code. Obviously, parsing
-code can be changed, and I think there might even be patches floating
-around for that.
+There's no need to forward RX MPDUs to notification wait tests, nor
+do we need to check them for firmware dump triggers, nor could they
+be asynchronous. It's thus more efficient to handle them separately,
+before going into the regular RX handlers.
 
-However, not all hardware supports per-frame TX power control. Some
-might, most will not. Until fairly recently, there was also no API with
-drivers to allow setting TX power per frame. This changed with the
-addition of TX power control to rate control, of course.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-So I think similar to rate control the situation is that it could be
-done, but there are many corner cases where it won't work reliably. I'd
-apply clean patches that add the functionality while documenting the
-issues.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index e4fa500..8f896cd 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -221,7 +221,6 @@ struct iwl_rx_handlers {
+  * called from a worker with mvm->mutex held.
+  */
+ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+-	RX_HANDLER(REPLY_RX_MPDU_CMD, iwl_mvm_rx_rx_mpdu, false),
+ 	RX_HANDLER(REPLY_RX_PHY_CMD, iwl_mvm_rx_rx_phy_cmd, false),
+ 	RX_HANDLER(TX_CMD, iwl_mvm_rx_tx_cmd, false),
+ 	RX_HANDLER(BA_NOTIF, iwl_mvm_rx_ba_notif, false),
+@@ -716,6 +715,9 @@ static int iwl_mvm_rx_dispatch(struct iwl_op_mode *op_mode,
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 	u8 i;
+ 
++	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
++		return iwl_mvm_rx_rx_mpdu(mvm, rxb, cmd);
++
+ 	iwl_mvm_rx_check_trigger(mvm, pkt);
+ 
+ 	/*
+-- 
+2.1.4
 
-johannes
