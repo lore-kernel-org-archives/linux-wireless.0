@@ -1,119 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:8950 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898AbbHPGzx (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:49538 "EHLO
+	smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078AbbHDB0n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2015 02:55:53 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 1/7] brcmfmac: Add support for host platform NVRAM loading.
-Date: Sun, 16 Aug 2015 08:55:33 +0200
-Message-ID: <1439708139-7527-2-git-send-email-arend@broadcom.com> (sfid-20150816_085558_976469_F14D0A59)
-In-Reply-To: <1439708139-7527-1-git-send-email-arend@broadcom.com>
-References: <1439708139-7527-1-git-send-email-arend@broadcom.com>
+	Mon, 3 Aug 2015 21:26:43 -0400
+Received: from mail-io0-f172.google.com (mail-io0-f172.google.com [209.85.223.172])
+	(Authenticated sender: b93043)
+	by smtp.csie.ntu.edu.tw (Postfix) with ESMTPSA id 6EA8223815
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2015 09:26:41 +0800 (CST)
+Received: by ioii16 with SMTP id i16so2788891ioi.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 18:26:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20150803182730.GC21180@ubuntu-hedt>
+References: <1437622380-4154-1-git-send-email-wens@csie.org>
+ <1437622380-4154-2-git-send-email-wens@csie.org> <20150803182730.GC21180@ubuntu-hedt>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Tue, 4 Aug 2015 09:26:19 +0800
+Message-ID: <CAGb2v66U87FeBvE+PDAhz11=knyGBwaztoqqwcNQeceQsSN3pg@mail.gmail.com> (sfid-20150804_032648_496698_1401F4AA)
+Subject: Re: [PATCH v2 1/5] wireless-regdb: Update U-NII-2c (5470 ~ 5725 MHz)
+ rules for Taiwan (TW)
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Chen-Yu Tsai <wens@csie.org>,
+	wireless-regdb <wireless-regdb@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Tue, Aug 4, 2015 at 2:27 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> On Thu, Jul 23, 2015 at 11:32:56AM +0800, Chen-Yu Tsai wrote:
+>> Taiwan's Ministry of Transportation and Communications revised its
+>> frequency allocation rules [1] on 2014/11/17, allowing usage of 5600 ~
+>> 5650 MHz, previously allocated to weather radars, to U-NII applications
+>> with DFS support.
+>>
+>> Also, the technical regulations [2] show that for 5470 ~ 5725 MHz U-NII
+>> applications, the peak transmit power shall not exceed the lesser of
+>> 250 mW (slightly less than 24 dBm) or 11 dBm + 10log B, where B is the
+>> 26dB emission bandwidth in MHz. This is slightly more than 23 dBm for
+>> 20 MHz channels.
+>>
+>> This patch updates both. Also add links to the two documents into the
+>> database.
+>>
+>> [1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
+>> [2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+>>
+>> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+>
+> Sorry for the slow response to these patches.
+>
+>> ---
+>>  db.txt | 10 ++++++++--
+>>  1 file changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/db.txt b/db.txt
+>> index 982db34..5114557 100644
+>> --- a/db.txt
+>> +++ b/db.txt
+>> @@ -1118,11 +1118,17 @@ country TT: DFS-FCC
+>>       (5490 - 5730 @ 160), (24), DFS
+>>       (5735 - 5835 @ 80), (30)
+>>
+>> +# Source:
+>> +# Table of Frequency Allocations of Republic of China (Taiwan) / Nov 2014:
+>> +#   http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc& \
+>> +#      filedisplay=Table+of+radio+frequency+allocation.doc
+>> +# LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
+>> +#   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+>> +#   (section 3.10.1, 4.7)
+>>  country TW: DFS-JP
+>>       (2402 - 2472 @ 40), (30)
+>>       (5270 - 5330 @ 40), (17), DFS
+>> -     (5490 - 5590 @ 80), (30), DFS
+>> -     (5650 - 5710 @ 40), (30), DFS
+>> +     (5470 - 5725 @ 160), (23), DFS
+>
+> Based on [2], it looks like this range requires TPC, in which case the
+> power limit should be dropped by 3 dB on account of our not supporting
+> TPC.
 
-Host platforms such as routers supported by OpenWRT can
-support NVRAM reading directly from internal NVRAM store.
-With this patch the nvram load routines will fall back to
-this method when there is no nvram file and support is
-available in the kernel.
+Will fix.
 
-Cc: Rafał Miłecki <zajec5@gmail.com>
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-V2:
-- addressed comments from Rafał.
----
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 40 ++++++++++++++--------
- 1 file changed, 25 insertions(+), 15 deletions(-)
+Is there any plan to support multiple rules per band? Such as different
+power limits with vs without TPC, or something like DFS vs indoor only?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-index 743f16b..1296bb1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-@@ -19,6 +19,7 @@
- #include <linux/device.h>
- #include <linux/firmware.h>
- #include <linux/module.h>
-+#include <linux/bcm47xx_nvram.h>
- 
- #include "debug.h"
- #include "firmware.h"
-@@ -426,19 +427,34 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 	struct brcmf_fw *fwctx = ctx;
- 	u32 nvram_length = 0;
- 	void *nvram = NULL;
-+	u8 *data = NULL;
-+	size_t data_len;
-+	bool raw_nvram;
- 
- 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
--	if (!fw && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
--		goto fail;
-+	if ((fw) && (fw->data)) {
-+		data = (u8 *)fw->data;
-+		data_len = fw->size;
-+		raw_nvram = false;
-+	} else {
-+		data = bcm47xx_nvram_get_contents(&data_len);
-+		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
-+			goto fail;
-+		raw_nvram = true;
-+	}
- 
--	if (fw) {
--		nvram = brcmf_fw_nvram_strip(fw->data, fw->size, &nvram_length,
-+	if (data) {
-+		nvram = brcmf_fw_nvram_strip(data, data_len, &nvram_length,
- 					     fwctx->domain_nr, fwctx->bus_nr);
--		release_firmware(fw);
--		if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
--			goto fail;
-+		if (raw_nvram)
-+			bcm47xx_nvram_release_contents(data);
- 	}
- 
-+	if (fw)
-+		release_firmware(fw);
-+	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
-+		goto fail;
-+
- 	fwctx->done(fwctx->dev, fwctx->code, nvram, nvram_length);
- 	kfree(fwctx);
- 	return;
-@@ -473,15 +489,9 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- 	if (!ret)
- 		return;
- 
--	/* when nvram is optional call .done() callback here */
--	if (fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL) {
--		fwctx->done(fwctx->dev, fw, NULL, 0);
--		kfree(fwctx);
--		return;
--	}
-+	brcmf_fw_request_nvram_done(NULL, fwctx);
-+	return;
- 
--	/* failed nvram request */
--	release_firmware(fw);
- fail:
- 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
- 	device_release_driver(fwctx->dev);
--- 
-1.9.1
 
+ChenYu
