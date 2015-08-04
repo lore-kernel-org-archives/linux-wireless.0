@@ -1,44 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:32980 "EHLO
-	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752074AbbHYQJF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 12:09:05 -0400
-Received: by iods203 with SMTP id s203so192375107iod.0
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2015 09:09:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-Date: Tue, 25 Aug 2015 18:09:04 +0200
-Message-ID: <CACna6ryBL+bpBM4TekcNCotou-gey=k6_aYJVT+F-Sm0V0fuiw@mail.gmail.com> (sfid-20150825_180911_846168_DC6B76F7)
-Subject: Re: [PATCH V3 0/6] brcmfmac: nvram loading and code rework
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:29783 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932332AbbHDKtY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2015 06:49:24 -0400
+Message-ID: <1438685233.29746.156.camel@linux.intel.com> (sfid-20150804_124932_605442_5FBC6BAB)
+Subject: Re: [PATCH 1/2] iwlwifi: convert hex_dump_to_buffer() to %*ph
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Tue, 04 Aug 2015 13:47:13 +0300
+In-Reply-To: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 August 2015 at 22:06, Arend van Spriel <arend@broadcom.com> wrote:
-> This series comprises of following changes:
-> - support NVRAM loading for bcm47xx platform.
-> - revise announced interface combinations and validate against it.
-> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
-> - PCIe fix for handling queue overflow.
-> - support more firmware events (for bcm4339 firmware).
->
-> The series is intended for v4.3 kernel and applies to the master branch
-> of the wireless-drivers-next repository. Removed patch from this series
-> that reportedly has issue on OpenWrt platform.
+On Thu, 2015-07-16 at 15:42 +0300, Andy Shevchenko wrote:
+> There is no need to use hex_dump_to_buffer() in the cases like this:
+> 
+> 	hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);	> /* len <= 16 
+> */
+> 	sprintf("%s\n", outbuf);
+> 
+> since it maybe easily converted to simple:
+> 
+> 	sprintf("%*ph\n", len, buf);
+> 
+> Note: it seems in one case the output is groupped by 2 bytes and 
+> looks like a
+> typo. Thus, patch changes that to plain byte stream.
 
-I believe that V3 also got following patch dropped:
-brcmfmac: consolidate ifp lookup in driver core
-https://patchwork.kernel.org/patch/6767991/
 
-As we tracked regressing patch to be "brcmfmac: Increase nr of
-supported flowrings.", I believe you can safely re-submit above (ifp
-lookup) one. I tested it on top of wireless-drivers-next brcmfmac and
-it works fine (no regressions).
+Any comments on this, anyone?
 
-Thanks for your work!
+The idea is to minimize usage of hexdump_to_buffer(), i.e. not using it
+when it's an obvious overkill.
+
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/dvm/debugfs.c | 8 ++------
+>  drivers/net/wireless/iwlwifi/mvm/debugfs.c | 7 +------
+>  2 files changed, 3 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c 
+> b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+> index 0ffb6ff..b15e44f 100644
+> --- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+> +++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+> @@ -310,12 +310,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file 
+> *file,
+>  	pos += scnprintf(buf + pos, buf_size - pos,
+>  			 "NVM version: 0x%x\n", nvm_ver);
+>  	for (ofs = 0 ; ofs < eeprom_len ; ofs += 16) {
+> -		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x 
+> ", ofs);
+> -		hex_dump_to_buffer(ptr + ofs, 16 , 16, 2, buf + pos,
+> -				   buf_size - pos, 0);
+> -		pos += strlen(buf + pos);
+> -		if (buf_size - pos > 0)
+> -			buf[pos++] = '\n';
+> +		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x 
+> %16ph\n",
+> +				 ofs, ptr + ofs);
+>  	}
+>  
+>  	ret = simple_read_from_buffer(user_buf, count, ppos, buf, 
+> pos);
+> diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c 
+> b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+> index ffb4b5c..98abd31 100644
+> --- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+> +++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+> @@ -1200,12 +1200,7 @@ static ssize_t iwl_dbgfs_d3_sram_read(struct 
+> file *file, char __user *user_buf,
+>  	if (ptr) {
+>  		for (ofs = 0; ofs < len; ofs += 16) {
+>  			pos += scnprintf(buf + pos, bufsz - pos,
+> -					 "0x%.4x ", ofs);
+> -			hex_dump_to_buffer(ptr + ofs, 16, 16, 1, buf 
+> + pos,
+> -					   bufsz - pos, false);
+> -			pos += strlen(buf + pos);
+> -			if (bufsz - pos > 0)
+> -				buf[pos++] = '\n';
+> +					 "0x%.4x %16ph\n", ofs, ptr 
+> + ofs);
+>  		}
+>  	} else {
+>  		pos += scnprintf(buf + pos, bufsz - pos,
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
