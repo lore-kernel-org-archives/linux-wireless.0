@@ -1,57 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:37871 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679AbbHNV7V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 17:59:21 -0400
-Received: by wibhh20 with SMTP id hh20so33920984wib.0
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2015 14:59:20 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/6] staging: vt6655: struct tagDEVICE_TD_INFO remove dwHeaderLength
-Date: Fri, 14 Aug 2015 22:58:49 +0100
-Message-Id: <1439589531-3059-4-git-send-email-tvboxspy@gmail.com> (sfid-20150814_235929_977699_B239571E)
-In-Reply-To: <1439589531-3059-1-git-send-email-tvboxspy@gmail.com>
-References: <1439589531-3059-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:57224 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751269AbbHEOCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 10:02:23 -0400
+Message-ID: <1438783338.29746.172.camel@linux.intel.com> (sfid-20150805_160248_584547_63456FD9)
+Subject: Re: [PATCH 1/5] device property: helper macros for property entry
+ creation
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
+Date: Wed, 05 Aug 2015 17:02:18 +0300
+In-Reply-To: <1438781947-7952-2-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1438781947-7952-2-git-send-email-heikki.krogerus@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dwHeaderLength is assigned a value but that is never used.
+On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
+> Marcos for easier creation of build-in property entries.
+> 
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> ---
+>  include/linux/property.h | 35 +++++++++++++++++++++++++++++++++++
+>  1 file changed, 35 insertions(+)
+> 
+> diff --git a/include/linux/property.h b/include/linux/property.h
+> index 76ebde9..204d899 100644
+> --- a/include/linux/property.h
+> +++ b/include/linux/property.h
+> @@ -152,6 +152,41 @@ struct property_entry {
+>  	} value;
+>  };
+>  
+> +#define PROP_ENTRY_U8(_name_, _val_) { \
 
-Remove variable.
+PROP_ prefix is too generic.
+Maybe DEVPROP_ ? At least for the latter no records in the current
+sources.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/desc.h | 1 -
- drivers/staging/vt6655/rxtx.c | 1 -
- 2 files changed, 2 deletions(-)
+> +	.name = _name_, \
+> +	.type = DEV_PROP_U8, \
+> +	.nval = 1, \
+> +	.value.u8_data = _val_, \
+> +}
+> +
+> +#define PROP_ENTRY_U16(_name_, _val_) { \
+> +	.name = _name_, \
+> +	.type = DEV_PROP_U16, \
+> +	.nval = 1, \
+> +	.value.u16_data = _val_, \
+> +}
+> +
+> +#define PROP_ENTRY_U32(_name_, _val_) { \
+> +	.name = _name_, \
+> +	.type = DEV_PROP_U32, \
+> +	.nval = 1, \
+> +	.value.u32_data = _val_, \
+> +}
+> +
+> +#define PROP_ENTRY_U64(_name_, _val_) { \
+> +	.name = _name_, \
+> +	.type = DEV_PROP_U64, \
+> +	.nval = 1, \
+> +	.value.u64_data = _val_, \
+> +}
+> +
+> +#define PROP_ENTRY_STRING(_name_, _val_) { \
 
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index ab52c56..0b786cf 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -246,7 +246,6 @@ typedef struct tagDEVICE_TD_INFO {
- 	unsigned char *buf;
- 	dma_addr_t          buf_dma;
- 	u16 dwReqCount;
--	unsigned long dwHeaderLength;
- 	unsigned char byFlags;
- } DEVICE_TD_INFO,    *PDEVICE_TD_INFO;
- 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index f3f6b15..c918248 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -1201,7 +1201,6 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 	ptdCurr = (PSTxDesc)pHeadTD;
- 
- 	ptdCurr->pTDInfo->dwReqCount = (u16)cbReqCount;
--	ptdCurr->pTDInfo->dwHeaderLength = cbHeaderLength;
- 
- 	return cbHeaderLength;
- }
+…_STRING_ARRAY I can notice.
+
+> +	.name = _name_, \
+> +	.type = DEV_PROP_STRING, \
+> +	.nval = 1, \
+> +	.value.str = (const char **)_val_, \
+> +}
+> +
+>  /**
+>   * struct property_set - Collection of "built-in" device properties.
+>   * @fwnode: Handle to be pointed to by the fwnode field of struct 
+> device.
+
 -- 
-2.5.0
-
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
