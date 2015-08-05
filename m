@@ -1,30 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:34780 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753714AbbHSO1Y (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:35867 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403AbbHEQmd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 10:27:24 -0400
-Received: by wicne3 with SMTP id ne3so128580767wic.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 07:27:23 -0700 (PDT)
-Date: Wed, 19 Aug 2015 16:27:09 +0200
-From: Adrien Schildknecht <adrien+dev@schischi.me>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-	linville@tuxdriver.com, marex@denx.de, fzuuzf@googlemail.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new device ID
-Message-ID: <20150819162709.5138f8cc.adrien+dev@schischi.me> (sfid-20150819_162740_154441_D4B4E87F)
-In-Reply-To: <55D48EB5.604@lwfinger.net>
-References: <1439992291-24912-1-git-send-email-adrien+dev@schischi.me>
-	<55D48EB5.604@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 5 Aug 2015 12:42:33 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH v3 3/3] drivers: staging: wilc1000: remove space after '('
+Date: Wed,  5 Aug 2015 22:11:57 +0530
+Message-Id: <1438792917-9817-4-git-send-email-csgorentla@gmail.com> (sfid-20150805_184252_895289_F6043591)
+In-Reply-To: <1438792917-9817-3-git-send-email-csgorentla@gmail.com>
+References: <1438792917-9817-1-git-send-email-csgorentla@gmail.com>
+ <1438792917-9817-2-git-send-email-csgorentla@gmail.com>
+ <1438792917-9817-3-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Has this ID been tested with the Netgear device?
-Yes, I have been using the device and the patch for 2 days.
+The character ' ' is removed after the character '('.  This fixes the
+checkpatch.pl error - "space prohibited after that open
+parenthesis '('".
 
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 779ec5a..c886891 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1675,7 +1675,7 @@ static int WILC_WFI_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 		 * kernel version 3.0.0
+ 		 */
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
+-						BIT( NL80211_STA_INFO_RX_PACKETS) |
++						BIT(NL80211_STA_INFO_RX_PACKETS) |
+ 						BIT(NL80211_STA_INFO_TX_PACKETS) |
+ 						BIT(NL80211_STA_INFO_TX_FAILED) |
+ 						BIT(NL80211_STA_INFO_TX_BITRATE);
 -- 
-Adrien Schildknecht
+2.5.0
+
