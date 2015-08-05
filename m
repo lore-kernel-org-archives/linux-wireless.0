@@ -1,103 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1739 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:15050 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751308AbbHSTRr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 15:17:47 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
- TSO segment
-Date: Wed, 19 Aug 2015 19:17:37 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com> (sfid-20150819_211755_202918_95A4E3E8)
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
- <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1753202AbbHENj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 09:39:29 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 5/5] net: rfkill: gpio: remove rfkill_gpio_platform_data
+Date: Wed,  5 Aug 2015 16:39:07 +0300
+Message-Id: <1438781947-7952-6-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20150805_153953_389934_04A5068D)
+In-Reply-To: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+No more users for it.
 
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ include/linux/rfkill-gpio.h | 37 -------------------------------------
+ net/rfkill/Kconfig          |  3 +--
+ net/rfkill/rfkill-gpio.c    |  8 --------
+ 3 files changed, 1 insertion(+), 47 deletions(-)
+ delete mode 100644 include/linux/rfkill-gpio.h
 
-On 08/19/2015 05:24 PM, Eric Dumazet wrote:
-> On Wed, 2015-08-19 at 15:59 +0300, Emmanuel Grumbach wrote:
->> This allows to release the backpressure on the socket only
->> when the last segment is released.
->> Now the truesize looks like this:
->> if the truesize of the original skb is 65420, all the
->> segments will have a truesize of 704 (skb itself) and the
->> last one will have 65420.
->>
->> Change-Id: I3c894cf2afc0aedfe7b2a5b992ba41653ff79c0e
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> ---
->>  drivers/net/wireless/iwlwifi/mvm/tx.c | 17 ++++++++++++++++-
->>  1 file changed, 16 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
->> index 5046833..046e50d 100644
->> --- a/drivers/net/wireless/iwlwifi/mvm/tx.c
->> +++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
->> @@ -764,7 +764,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
->>  	bool ipv6 = skb_shinfo(skb_gso)->gso_type & SKB_GSO_TCPV6;
->>  	struct iwl_lso_splitter s = {};
->>  	struct page *hdr_page;
->> -	unsigned int mpdu_sz;
->> +	unsigned int mpdu_sz, sum_truesize = 0;
->>  	u8 *hdr_page_pos, *qc, tid;
->>  	int i, ret;
->>  
->> @@ -898,6 +898,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
->>  						mpdu_sz, tcp_hdrlen(skb_gso));
->>  
->>  	__skb_queue_tail(mpdus_skb, skb_gso);
->> +	sum_truesize += skb_gso->truesize;
->>  
->>  	/* mss bytes have been consumed from the data */
->>  	s.gso_payload_pos = s.mss;
->> @@ -1034,6 +1035,20 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
->>  		}
->>  
->>  		__skb_queue_tail(mpdus_skb, skb);
->> +		sum_truesize += skb->truesize;
->> +	}
->> +
->> +	/* Release the backpressure on the socket only when
->> +	 * the last segment is released.
->> +	 */
->> +	if (skb_gso->destructor == sock_wfree) {
->> +		struct sk_buff *tail = mpdus_skb->prev;
->> +
->> +		swap(tail->truesize, skb_gso->truesize);
->> +		swap(tail->destructor, skb_gso->destructor);
->> +		swap(tail->sk, skb_gso->sk);
->> +                atomic_add(sum_truesize - skb_gso->truesize,
->> +                           &skb_gso->sk->sk_wmem_alloc);
->>  	}
->>  
->>  	ret = 0;
-> 
-> Using existing net/core/tso.c helpers would avoid using this.
+diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+deleted file mode 100644
+index 20bcb55..0000000
+--- a/include/linux/rfkill-gpio.h
++++ /dev/null
+@@ -1,37 +0,0 @@
+-/*
+- * Copyright (c) 2011, NVIDIA Corporation.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+- */
+-
+-
+-#ifndef __RFKILL_GPIO_H
+-#define __RFKILL_GPIO_H
+-
+-#include <linux/types.h>
+-#include <linux/rfkill.h>
+-
+-/**
+- * struct rfkill_gpio_platform_data - platform data for rfkill gpio device.
+- * for unused gpio's, the expected value is -1.
+- * @name:		name for the gpio rf kill instance
+- */
+-
+-struct rfkill_gpio_platform_data {
+-	char			*name;
+-	enum rfkill_type	type;
+-};
+-
+-#endif /* __RFKILL_GPIO_H */
+diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
+index 4c10e7e..6320890 100644
+--- a/net/rfkill/Kconfig
++++ b/net/rfkill/Kconfig
+@@ -40,5 +40,4 @@ config RFKILL_GPIO
+ 	default n
+ 	help
+ 	  If you say yes here you get support of a generic gpio RFKILL
+-	  driver. The platform should fill in the appropriate fields in the
+-	  rfkill_gpio_platform_data structure and pass that to the driver.
++	  driver.
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 07323c3..69d92e1 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -27,8 +27,6 @@
+ #include <linux/acpi.h>
+ #include <linux/gpio/consumer.h>
+ 
+-#include <linux/rfkill-gpio.h>
+-
+ struct rfkill_gpio_data {
+ 	const char		*name;
+ 	enum rfkill_type	type;
+@@ -89,7 +87,6 @@ static int rfkill_gpio_acpi_probe(struct device *dev,
+ 
+ static int rfkill_gpio_probe(struct platform_device *pdev)
+ {
+-	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 	struct rfkill_gpio_data *rfkill;
+ 	struct gpio_desc *gpio;
+ 	const char *type_name;
+@@ -111,11 +108,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
+ 		if (ret)
+ 			return ret;
+-	} else if (pdata) {
+-		rfkill->name = pdata->name;
+-		rfkill->type = pdata->type;
+-	} else {
+-		return -ENODEV;
+ 	}
+ 
+ 	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
+-- 
+2.4.6
 
-Hm.. how would net/core/tso.c avoid this?
-I can't see anything related to truesize there.
-Note that this work since it is guaranteed that we release the skbs in
-order.
-
-> 
-> (BTW TCP packets do not have sock_wfree as destructor but tcp_wfree(),
-> yet we want backpressure mostly for TCP stack (TCP Small Queues))
-> 
-> 
-
-I am not sure I follow here.
-You want me to test:
-if (skb_gso->destructor == tcp_wfree) ?
-
-I checked that code using iperf and saw that I don't get into this if,
-but I (probably wrongly) assumed that other applications would set a
-flag on the socket (forgive my ignorance) that would make this if be taken.
