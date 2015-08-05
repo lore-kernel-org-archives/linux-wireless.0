@@ -1,59 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33648 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753732AbbHSOWM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 10:22:12 -0400
-Message-ID: <1439994127.6610.12.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150819_162221_736435_FAB9A070)
-Subject: Re: [RFC v2 1/3] iwlwifi: mvm: add real TSO implementation
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, ido@wizery.com,
-	netdev@vger.kernel.org
-Date: Wed, 19 Aug 2015 07:22:07 -0700
-In-Reply-To: <1439993864.6610.11.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439989181-4444-2-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439993864.6610.11.camel@edumazet-glaptop2.roam.corp.google.com>
+Received: from mga09.intel.com ([134.134.136.24]:45661 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751456AbbHEOPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 10:15:35 -0400
+Message-ID: <1438784128.29746.177.camel@linux.intel.com> (sfid-20150805_161539_416456_A8F4A1EC)
+Subject: Re: [PATCH 5/5] net: rfkill: gpio: remove rfkill_gpio_platform_data
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
+Date: Wed, 05 Aug 2015 17:15:28 +0300
+In-Reply-To: <1438781947-7952-6-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1438781947-7952-6-git-send-email-heikki.krogerus@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-08-19 at 07:17 -0700, Eric Dumazet wrote:
-> On Wed, 2015-08-19 at 15:59 +0300, Emmanuel Grumbach wrote:
-> > The segmentation is done completely in software. The
-> > driver creates several MPDUs out of a single large send.
-> > Each MPDU is a newly allocated SKB.
-> > A page is allocated to create the headers that need to be
-> > duplicated (SNAP / IP / TCP). The WiFi header is in the
-> > header of the newly created SKBs.
-> > 
-> > type=feature
-> > 
-> > Change-Id: I238ffa79cacc5bbdacdfbf3e9673c8d4f02b462a
-> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/mvm/tx.c | 513 +++++++++++++++++++++++++++++++---
-> >  1 file changed, 481 insertions(+), 32 deletions(-)
+On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
+> No more users for it.
 > 
-> Ouch dynamic allocations while doing xmit are certainly not needed.
-> Your driver should pre-allocated space for headers.
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> ---
+>  include/linux/rfkill-gpio.h | 37 -----------------------------------
+> --
+>  net/rfkill/Kconfig          |  3 +--
+>  net/rfkill/rfkill-gpio.c    |  8 --------
+>  3 files changed, 1 insertion(+), 47 deletions(-)
+>  delete mode 100644 include/linux/rfkill-gpio.h
 > 
-> Drivers willing to implement tso have to use net/core/tso.c provided
-> helpers.
-> 
-> $ git grep -n tso_build_hdr
-> drivers/net/ethernet/cavium/thunder/nicvf_queues.c:1030:                tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
-> drivers/net/ethernet/freescale/fec_main.c:729:          tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
-> drivers/net/ethernet/marvell/mv643xx_eth.c:842:         tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
-> drivers/net/ethernet/marvell/mvneta.c:1650:             tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
-> include/net/tso.h:15:void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
-> net/core/tso.c:14:void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
-> net/core/tso.c:37:EXPORT_SYMBOL(tso_build_hdr);
-> 
+> diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill
+> -gpio.h
+> deleted file mode 100644
+> index 20bcb55..0000000
+> --- a/include/linux/rfkill-gpio.h
+> +++ /dev/null
+> @@ -1,37 +0,0 @@
+> -/*
+> - * Copyright (c) 2011, NVIDIA Corporation.
+> - *
+> - * This program is free software; you can redistribute it and/or 
+> modify
+> - * it under the terms of the GNU General Public License as published 
+> by
+> - * the Free Software Foundation; either version 2 of the License, or
+> - * (at your option) any later version.
+> - *
+> - * This program is distributed in the hope that it will be useful, 
+> but WITHOUT
+> - * ANY WARRANTY; without even the implied warranty of 
+> MERCHANTABILITY or
+> - * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public 
+> License for
+> - * more details.
+> - *
+> - * You should have received a copy of the GNU General Public License 
+> along
+> - * with this program; if not, write to the Free Software Foundation, 
+> Inc.,
+> - * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+> - */
+> -
+> -
+> -#ifndef __RFKILL_GPIO_H
+> -#define __RFKILL_GPIO_H
+> -
+> -#include <linux/types.h>
+> -#include <linux/rfkill.h>
+> -
+> -/**
+> - * struct rfkill_gpio_platform_data - platform data for rfkill gpio 
+> device.
+> - * for unused gpio's, the expected value is -1.
+> - * @name:		name for the gpio rf kill instance
+> - */
+> -
+> -struct rfkill_gpio_platform_data {
+> -	char			*name;
+> -	enum rfkill_type	type;
+> -};
+> -
+> -#endif /* __RFKILL_GPIO_H */
+> diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
+> index 4c10e7e..6320890 100644
+> --- a/net/rfkill/Kconfig
+> +++ b/net/rfkill/Kconfig
+> @@ -40,5 +40,4 @@ config RFKILL_GPIO
+>  	default n
+>  	help
+>  	  If you say yes here you get support of a generic gpio 
+> RFKILL
+> -	  driver. The platform should fill in the appropriate fields 
+> in the
+> -	  rfkill_gpio_platform_data structure and pass that to the 
+> driver.
+> +	  driver.
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 07323c3..69d92e1 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -27,8 +27,6 @@
+>  #include <linux/acpi.h>
+>  #include <linux/gpio/consumer.h>
+>  
+> -#include <linux/rfkill-gpio.h>
+> -
+>  struct rfkill_gpio_data {
+>  	const char		*name;
+>  	enum rfkill_type	type;
+> @@ -89,7 +87,6 @@ static int rfkill_gpio_acpi_probe(struct device 
+> *dev,
+>  
+>  static int rfkill_gpio_probe(struct platform_device *pdev)
+>  {
+> -	struct rfkill_gpio_platform_data *pdata = pdev
+> ->dev.platform_data;
+>  	struct rfkill_gpio_data *rfkill;
+>  	struct gpio_desc *gpio;
+>  	const char *type_name;
+> @@ -111,11 +108,6 @@ static int rfkill_gpio_probe(struct 
+> platform_device *pdev)
+>  		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
+>  		if (ret)
+>  			return ret;
+> -	} else if (pdata) {
+> -		rfkill->name = pdata->name;
+> -		rfkill->type = pdata->type;
+> -	} else {
+> -		return -ENODEV;
 
-Look at commit 2adb719d74f6e174071e5c913290b9bbd8c2c0e8 for a typical
-use of these helpers.
+Shouldn't we leave the error path and modify to check if we have device
+property set set?
 
+>  	}
+>  
+>  	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
 
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
