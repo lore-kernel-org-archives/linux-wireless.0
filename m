@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33497 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbbHBPzA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2015 11:55:00 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH 1/3] drivers: staging: wilc1000: use 'void' for no arguments functions
-Date: Sun,  2 Aug 2015 21:23:51 +0530
-Message-Id: <1438530833-24640-2-git-send-email-csgorentla@gmail.com> (sfid-20150802_175600_832850_A8F73EA6)
-In-Reply-To: <1438530833-24640-1-git-send-email-csgorentla@gmail.com>
-References: <1438530833-24640-1-git-send-email-csgorentla@gmail.com>
+Received: from ns.iliad.fr ([212.27.33.1]:44688 "EHLO ns.iliad.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752249AbbHEOVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 10:21:43 -0400
+Date: Wed, 5 Aug 2015 16:21:40 +0200
+From: Maxime Bizon <mbizon@freebox.fr>
+To: Chor Teck Law <ctlaw@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, David Lin <dlin@marvell.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
+Message-ID: <20150805142140.GB36260@sakura.staff.proxad.net> (sfid-20150805_162146_295261_3865A962)
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+ <1436455659.36587.131.camel@sakura.staff.proxad.net>
+ <87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
+ <20150804220956.GA28583@sakura.staff.proxad.net>
+ <1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added 'void' keyword in the paranthesis of function definitions, when
-there are no arguments to the functions.  This fixes the checkpatch.pl
-error - "Bad function definition 'function()' should probably be
-function(void)".
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- drivers/staging/wilc1000/linux_mon.c  | 2 +-
- drivers/staging/wilc1000/linux_wlan.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On Wednesday 05 Aug 2015 à 08:39:28 (+0000), Chor Teck Law wrote:
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index d812a3b..65d60af 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -567,7 +567,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
-  *  @date	12 JUL 2012
-  *  @version	1.0
-  */
--int WILC_WFI_deinit_mon_interface()
-+int WILC_WFI_deinit_mon_interface(void)
- {
- 	bool rollback_lock = false;
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 5a794df..443be4e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -215,7 +215,7 @@ void printk_later(const char *format, ...)
- }
- 
- 
--void dump_logs()
-+void dump_logs(void)
- {
- 	if (DebugBuffer[0]) {
- 		DebugBuffer[DEGUG_BUFFER_LENGTH] = 0;
-@@ -229,7 +229,7 @@ void dump_logs()
- 	}
- }
- 
--void Reset_WatchDogdebugger()
-+void Reset_WatchDogdebugger(void)
- {
- 	WatchDogdebuggerCounter = 0;
- }
+> Last words, The mwl8k series had its history, since 2009 with the
+> Topdog series (Beyond our scope to comment). The mwlwifi have been
+> developed over past year or so for the Avastar AP chips, being
+
+incorrect, mwl8k also support Avastar AP (88W8764)
+
+one of the mwlwifi feedback was that the Kconfig description was
+inaccurate, and because of overlap with mwifiex, everyone did scratch
+their heads trying to describe what each driver actually supports.
+
+feel free to correct me on that, but from the outside it looks like
+there are multiple wifi teams at Marvell, each one working on its own
+firmware/driver set, sometimes for the same chipset as the other
+teams, and they don't talk to each other.
+
+so anyway I'm in no position to NAK your driver submission since I'm
+not a linux wireless maintainer, I just want them to be aware of what
+they are merging.
+
 -- 
-2.5.0
-
+Maxime
