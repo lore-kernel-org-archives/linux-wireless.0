@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:35573 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbbHMVIk (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:19633 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751361AbbHENIK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 17:08:40 -0400
-Received: by ykek5 with SMTP id k5so802044yke.2
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 14:08:40 -0700 (PDT)
-Content-Type: text/plain; charset=us-ascii
-From: S Prasad Kandregula <sprasad.kandregula@gmail.com>
-Mime-Version: 1.0 (1.0)
-Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
-Date: Thu, 13 Aug 2015 17:01:23 -0400
-Message-Id: <4670C821-E536-47CF-BBC4-CC83F54BAE86@gmail.com> (sfid-20150813_230844_231857_75BE2550)
-References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com> <CA+BoTQkFSQe0di1vqqB5cAPKaizRkBT5cu4fA8dQ_uR_a2HdJw@mail.gmail.com> <CAJa-X96spUg7+EZqH-Mv3s7OzbHzmXmcZ7uOw1KvPShexW6D_w@mail.gmail.com> <CA+BoTQ=Qpws=928TZe22Ds-UO_qQJ2Om+=DW=VUNUS59o1BQAA@mail.gmail.com> <CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com> <CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com> <CAJa-X945Xvn0jHQVcKn-pyYQVNpxXnqjOH_VHJv8pVwR4kFXcw@mail.gmail.com> <CA+BoTQmLFGAn2z=E3J1C2qfNP34v57B7-rtALUQhNXrHqJeA6Q@mail.gmail.com> <55521102.9020306@candelatech.com> <CAJa-X97Av+FKwy5Q3x3jnC=KPmqFt_JfsaVQ6J3bScM-SEKnYg@mail.gmail.com> <55CD0176.5080003@candelatech.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <55CD0176.5080003@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
+	Wed, 5 Aug 2015 09:08:10 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Paul Stewart <pstew@chromium.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Jeff CF Chen <jeffc@marvell.com>
+Subject: RE: [PATCH v2 3/3] mwifiex: fix unable to connect hidden SSID AP on
+ DFS channel
+Date: Wed, 5 Aug 2015 13:08:07 +0000
+Message-ID: <2bd1e852eff74c25a48f1a22eee2b980@SC-EXCH04.marvell.com> (sfid-20150805_150814_553976_E511CC68)
+References: <1438691431-3462-1-git-send-email-akarwar@marvell.com>
+	<1438691431-3462-3-git-send-email-akarwar@marvell.com>
+ <CAMcMvsh=pqCzLbqu2a-uO=7AuiTbKwACoWMP5Go_SbTEQM6WPw@mail.gmail.com>
+In-Reply-To: <CAMcMvsh=pqCzLbqu2a-uO=7AuiTbKwACoWMP5Go_SbTEQM6WPw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you Ben for immediate response,
-
-Don't mind, could you please share your firmware path. 
-
-Sorry I didn't change old subject line.
-
-Thanks & Regards,
-S Prasad
-
-> On Aug 13, 2015, at 4:43 PM, Ben Greear <greearb@candelatech.com> wrote:
-> 
->> On 08/13/2015 01:35 PM, s prasad wrote:
->> Hi Ben,
->> 
->> did you get a chance to look into this issue(injecting frames when
->> device in monitor mode).
-> 
-> Injection works in a limited fashion in my latest firmware.
-> 
-> I'd like to figure out how to pass rate-ctrl (and other info?) down to the
-> firmware on a per-pkt basis..but I don't see a way yet.
-> 
-> Probably I have to hack the htt header or something like that
-> to give some extra space.  That sort of thing might allow a host-based
-> rate-ctrl algorithm to be used....if someone is interested in working on
-> the driver/kernel side of things for this effort let me know.
-> 
-> I am not aware of any crashes related to monitor mode in my
-> firmware..but if you can crash it, send me the crash dump and
-> I'll take a look.
-> 
-> Thanks,
-> Ben
-> 
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
+SGkgUGF1bCwNCg0KPiA+ICsgICAgICAgaWYgKG13aWZpZXhfaXNfaGlkZGVuX3NzaWQoJmJzc19k
+ZXNjLT5zc2lkKSkgew0KPiA+ICsgICAgICAgICAgICAgICBtd2lmaWV4X2RiZyhwcml2LT5hZGFw
+dGVyLCBJTkZPLCAiZm91bmQgaGlkZGVuDQo+IFNTSURcbiIpOw0KPiA+ICsgICAgICAgICAgICAg
+ICBmb3IgKGNoaWQgPSAwIDsgY2hpZCA8IE1XSUZJRVhfVVNFUl9TQ0FOX0NIQU5fTUFYOw0KPiBj
+aGlkKyspIHsNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBpZiAocHJpdi0+aGlkZGVuX2No
+YW5bY2hpZF0uY2hhbl9udW1iZXIgPT0gMCkNCj4gew0KPiA+ICsgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgcHJpdi0+aGlkZGVuX2NoYW5bY2hpZF0uY2hhbl9udW1iZXIgPQ0KPiA+ICsg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBic3MtPmNoYW5uZWwtPmh3X3Zh
+bHVlOw0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcHJpdi0+aGlkZGVuX2No
+YW5bY2hpZF0ucmFkaW9fdHlwZSA9DQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIGJzcy0+Y2hhbm5lbC0+YmFuZDsNCj4gPiArICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIHByaXYtPmhpZGRlbl9jaGFuW2NoaWRdLnNjYW5fdHlwZSA9DQo+ID4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1XSUZJRVhfU0NBTl9UWVBFX0FDVElW
+RTsNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KPiBEb2VzIHRo
+aXMgbWVhbiBhbiBlbnRyeSB3aWxsIGJlIGNyZWF0ZWQgaW4gcHJpdi0+aGlkZGVuX2NoYW4gZm9y
+IGVhY2gNCj4gaGlkZGVuIEJTUywgZXZlbiBpZiBtdWx0aXBsZSBvZiB0aGVtIGV4aXN0IG9uIG9u
+ZSBjaGFubmVsPw0KDQpZZXMuIFRoYW5rcyBmb3IgcG9pbnRpbmcgdGhpcyBvdXQuIEkgd2lsbCBz
+ZW5kIHVwZGF0ZWQgdmVyc2lvbiB3aXRoIGNvdXBsZSBvZiBvdGhlciBjb3JyZWN0aW9ucy4NCg0K
+UmVnYXJkcywNCkFtaXQNCg==
