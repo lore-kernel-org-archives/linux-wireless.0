@@ -1,80 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:56069 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831AbbHZUk3 (ORCPT
+Received: from rhcavuit01.kulnet.kuleuven.be ([134.58.240.129]:58429 "EHLO
+	cavuit01.kulnet.kuleuven.be" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753308AbbHEOCr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 16:40:29 -0400
-Message-ID: <55DE243A.4000806@broadcom.com> (sfid-20150826_224056_650785_0C63B00C)
-Date: Wed, 26 Aug 2015 22:40:26 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Do not use sizeof() on pointer type
-References: <1440584534-27251-1-git-send-email-thierry.reding@gmail.com> <55DE203B.1030800@broadcom.com>
-In-Reply-To: <55DE203B.1030800@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 5 Aug 2015 10:02:47 -0400
+From: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+Subject: [PATCH 4/5] mac80211: Only accept data frames in OCB mode
+Date: Wed,  5 Aug 2015 16:02:42 +0200
+Message-Id: <1438783362-9140-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be> (sfid-20150805_160251_721011_A675E545)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/26/2015 10:23 PM, Arend van Spriel wrote:
-> On 08/26/2015 12:22 PM, Thierry Reding wrote:
->> From: Thierry Reding <treding@nvidia.com>
->>
->> The rate_control_cap_mask() function takes a parameter mcs_mask, which
->> GCC will take to be u8 * even though it was declared with a fixed size.
->> This causes the following warning:
->>
->>     net/mac80211/rate.c: In function 'rate_control_cap_mask':
->>     net/mac80211/rate.c:719:25: warning: 'sizeof' on array function
->> parameter 'mcs_mask' will return size of 'u8 * {aka unsigned char *}'
->> [-Wsizeof-array-argument]
->>        for (i = 0; i < sizeof(mcs_mask); i++)
->>                              ^
->>     net/mac80211/rate.c:684:10: note: declared here
->>            u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN],
->>               ^
->>
->> This can be easily fixed by using the IEEE80211_HT_MCS_MASK_LEN directly
->> within the loop condition.
->
-> Or use ARRAY_SIZE(mcs_mask).
+Currently OCB mode accepts frames with bssid==broadcast and type!=beacon.
+Some non-data frames are sent matching this, for example probe responses.
+This results in unnecessary creation of STA entries.
 
-Better not. Missed the 'function parameter' bit. Sorry for the noise.
+Signed-off-by: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+---
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-Arend
-
-> Regards,
-> Arend
->
->> Signed-off-by: Thierry Reding <treding@nvidia.com>
->> ---
->>   net/mac80211/rate.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
->> index 9857693b91ec..9ce8883d5f44 100644
->> --- a/net/mac80211/rate.c
->> +++ b/net/mac80211/rate.c
->> @@ -716,7 +716,7 @@ static bool rate_control_cap_mask(struct
->> ieee80211_sub_if_data *sdata,
->>
->>           /* Filter out rates that the STA does not support */
->>           *mask &= sta->supp_rates[sband->band];
->> -        for (i = 0; i < sizeof(mcs_mask); i++)
->> +        for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
->>               mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
->>
->>           sta_vht_cap = sta->vht_cap.vht_mcs.rx_mcs_map;
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f673304..4d217d3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3316,7 +3316,7 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 	case NL80211_IFTYPE_OCB:
+ 		if (!bssid)
+ 			return false;
+-		if (ieee80211_is_beacon(hdr->frame_control))
++		if (!ieee80211_is_data_present(hdr->frame_control))
+ 			return false;
+ 		if (!is_broadcast_ether_addr(bssid))
+ 			return false;
+-- 
+1.9.1
 
