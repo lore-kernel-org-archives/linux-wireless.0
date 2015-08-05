@@ -1,71 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:34108 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992538AbbHHQxz (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34030 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433AbbHEQSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2015 12:53:55 -0400
-Received: by obbfr1 with SMTP id fr1so61845648obb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2015 09:53:54 -0700 (PDT)
+	Wed, 5 Aug 2015 12:18:53 -0400
+Received: by oip136 with SMTP id 136so22905709oip.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 09:18:53 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
 	shaofu <shaofu@realtek.com>,
 	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V3 NEXT 5/7] rtlwifi: rtl8192ee: Implement new rekey logic
-Date: Sat,  8 Aug 2015 11:53:37 -0500
-Message-Id: <1439052819-30196-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150808_185400_437130_76E40928)
-In-Reply-To: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
+Subject: [PATCH V2 NEXT 3/7] rtlwifi: Make retry limits depend on vif type
+Date: Wed,  5 Aug 2015 11:18:36 -0500
+Message-Id: <1438791520-13216-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150805_181857_283850_9885E4D7)
+In-Reply-To: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: pkshih <pkshih@realtek.com>
 
-Use the new capability in rtlwifi to prevent rekeying before EAPOL msg 4/4
-has been sent.
+Making the retry limits depend on the vif type can boost performance.
 
 Signed-off-by: pkshih <pkshih@realtek.com>
 Signed-off-by: shaofu <shaofu@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
 V2 - no changes
-V3 - no changes
 ---
- drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  | 1 +
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 8 ++++++++
- 2 files changed, 9 insertions(+)
+ drivers/net/wireless/rtlwifi/core.c | 19 +++++++++++++++----
+ drivers/net/wireless/rtlwifi/pci.c  |  8 +++++++-
+ drivers/net/wireless/rtlwifi/ps.c   |  3 +++
+ 3 files changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-index 232865c..4091430 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-@@ -859,6 +859,7 @@ static void _rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 	case C2H_8192E_TX_REPORT:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE ,
- 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
-+		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index 3b3a88b..19729ed 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -238,6 +238,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	int err = 0;
++	u8 retry_limit = 0x30;
+ 
+ 	if (mac->vif) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+@@ -275,7 +276,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 			mac->basic_rates = 0xff0;
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
+ 				(u8 *)(&mac->basic_rates));
+-
++		retry_limit = 0x07;
  		break;
- 	case C2H_8192E_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-index d39ee67..49aec97 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-@@ -731,6 +731,14 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 		}
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		mac->p2p = P2P_ROLE_GO;
+@@ -292,6 +293,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 			mac->basic_rates = 0xff0;
+ 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
+ 					      (u8 *)(&mac->basic_rates));
++		retry_limit = 0x07;
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+@@ -326,6 +328,10 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
+ 	memcpy(mac->mac_addr, vif->addr, ETH_ALEN);
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
  
-+		/* tx report */
-+		if (ptcb_desc->use_spe_rpt) {
-+			u16 sn = rtl_get_tx_report_sn(hw);
-+
-+			SET_TX_DESC_SPE_RPT(pdesc, 1);
-+			SET_TX_DESC_SW_DEFINE(pdesc, sn);
++	mac->retry_long = retry_limit;
++	mac->retry_short = retry_limit;
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++				      (u8 *)(&retry_limit));
+ out:
+ 	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ 	return err;
+@@ -650,10 +656,15 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+ 			 "IEEE80211_CONF_CHANGE_RETRY_LIMITS %x\n",
+ 			 hw->conf.long_frame_max_tx_count);
+-		mac->retry_long = hw->conf.long_frame_max_tx_count;
+-		mac->retry_short = hw->conf.long_frame_max_tx_count;
+-		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++		/* On first open, everything changes (changed == ~0),
++		 * so use our default value instead of wiphy's one.
++		 */
++		if (changed != ~0) {
++			mac->retry_long = hw->conf.long_frame_max_tx_count;
++			mac->retry_short = hw->conf.long_frame_max_tx_count;
++			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
+ 				(u8 *)(&hw->conf.long_frame_max_tx_count));
 +		}
-+
- 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
+ 	}
  
- 		if (ieee80211_is_mgmt(fc)) {
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index f46c9d7..a621d7d 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1227,6 +1227,10 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+ 	mac->current_ampdu_density = 7;
+ 	mac->current_ampdu_factor = 3;
+ 
++	/* Retry Limit */
++	mac->retry_short = 7;
++	mac->retry_long = 7;
++
+ 	/*QOS*/
+ 	rtlpci->acm_method = EACMWAY2_SW;
+ 
+@@ -1833,7 +1837,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-
++	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
+ 	int err;
+ 
+ 	rtl_pci_reset_trx_ring(hw);
+@@ -1850,6 +1854,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ 			 "Failed to config hardware!\n");
+ 		return err;
+ 	}
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++				      &rtlmac->retry_long);
+ 
+ 	rtlpriv->cfg->ops->enable_interrupt(hw);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "enable_interrupt OK\n");
+diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+index b69321d..b6b6834 100644
+--- a/drivers/net/wireless/rtlwifi/ps.c
++++ b/drivers/net/wireless/rtlwifi/ps.c
+@@ -34,6 +34,7 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
+ 
+ 	/*<1> reset trx ring */
+ 	if (rtlhal->interface == INTF_PCI)
+@@ -46,6 +47,8 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+ 	/*<2> Enable Adapter */
+ 	if (rtlpriv->cfg->ops->hw_init(hw))
+ 		return false;
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++				      &rtlmac->retry_long);
+ 	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+ 
+ 	/*<3> Enable Interrupt */
 -- 
 2.1.4
 
