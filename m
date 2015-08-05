@@ -1,109 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:43074 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbbHQTlN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 15:41:13 -0400
-Message-ID: <55D238D4.20800@broadcom.com> (sfid-20150817_214129_266022_3864BB91)
-Date: Mon, 17 Aug 2015 21:41:08 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFwaGHDq2wgQmVhbW9udGU=?= <raphael.beamonte@gmail.com>,
-	"Johnny Kim" <johnny.kim@atmel.com>
-CC: Rachel Kim <rachel.kim@atmel.com>, Dean Lee <dean.lee@atmel.com>,
-	"Chris Park" <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-	<linux-kernel@vger.kernel.org>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCHv2 5/5] staging: wilc1000: replace MALLOC_WILC_BUFFER()
- macro to avoid possible memory leak
-References: <cover.1439838526.git.raphael.beamonte@gmail.com> <339fc87526f51233b262315b2297f68e3b00c7b6.1439838526.git.raphael.beamonte@gmail.com>
-In-Reply-To: <339fc87526f51233b262315b2297f68e3b00c7b6.1439838526.git.raphael.beamonte@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:15656 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753222AbbHEOHe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 10:07:34 -0400
+Message-ID: <1438783649.29746.175.camel@linux.intel.com> (sfid-20150805_160739_100285_530A87D7)
+Subject: Re: [PATCH 2/5] net: rfkill: add rfkill_find_type function
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
+Date: Wed, 05 Aug 2015 17:07:29 +0300
+In-Reply-To: <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/17/2015 09:28 PM, Raphaël Beamonte wrote:
-> The MACRO_WILC_BUFFER() macro was using a return statement, and didn't
-
-Probable MACRO_WILC_BUFFER should be MALLOC_WILC_BUFFER here.
-
-> take care of possible memory leaks and subsequent bugs when it was failing
-> after succeeding some allocations. This patch corrects this behavior.
->
-> Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
+> Helper for finding the type based on name. Useful if the
+> type needs to be determined based on device property.
+> 
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 > ---
->   drivers/staging/wilc1000/wilc_exported_buf.c | 37 ++++++++++++++++++++--------
->   1 file changed, 27 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
-> index c9a5943..0f3bdad 100644
-> --- a/drivers/staging/wilc1000/wilc_exported_buf.c
-> +++ b/drivers/staging/wilc1000/wilc_exported_buf.c
-> @@ -8,13 +8,6 @@
->   #define LINUX_TX_SIZE	(64 * 1024)
->   #define WILC1000_FW_SIZE (4 * 1024)
->
-> -#define MALLOC_WILC_BUFFER(name, size)	\
-> -	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
-> -	if (!exported_ ## name) {   \
-> -		printk("fail to alloc: %s memory\n", exported_ ## name);  \
-> -		return -ENOBUFS;	\
-> -	}
+>  include/linux/rfkill.h | 15 +++++++++++++
+>  net/rfkill/core.c      | 57 +++++++++++++++++++++++++---------------
+> ----------
+>  2 files changed, 44 insertions(+), 28 deletions(-)
+> 
+> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> index d901078..02f563c 100644
+> --- a/include/linux/rfkill.h
+> +++ b/include/linux/rfkill.h
+> @@ -212,6 +212,15 @@ void rfkill_set_states(struct rfkill *rfkill, 
+> bool sw, bool hw);
+>   * @rfkill: rfkill struct to query
+>   */
+>  bool rfkill_blocked(struct rfkill *rfkill);
+> +
+> +/**
+> + * rfkill_find_type - Helpper for finding rfkill type by name
+> + * @name: the name of the type
+> + *
+> + * Returns enum rfkill_type that conrresponds the name.
+> + */
+> +enum rfkill_type rfkill_find_type(const char *name);
+> +
+>  #else /* !RFKILL */
+>  static inline struct rfkill * __must_check
+>  rfkill_alloc(const char *name,
+> @@ -268,6 +277,12 @@ static inline bool rfkill_blocked(struct rfkill 
+> *rfkill)
+>  {
+>  	return false;
+>  }
+> +
+> +static inline enum rfkill_type rfkill_find_type(const char *name)
+> +{
+> +	return 0;
+
+Hmm… Besides 0 is implicitly casted to enum type the issue with enums
+that you rather have to supply existing enum entry. I would suggest to
+add RFKILL_TYPE_UNKNOWN if _ALL is reserved for some use cases.
+
+> +}
+> +
+>  #endif /* RFKILL || RFKILL_MODULE */
+>  
+>  
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> index f12149a..53d7a97e 100644
+> --- a/net/rfkill/core.c
+> +++ b/net/rfkill/core.c
+> @@ -574,6 +574,33 @@ void rfkill_set_states(struct rfkill *rfkill, 
+> bool sw, bool hw)
+>  }
+>  EXPORT_SYMBOL(rfkill_set_states);
+>  
+> +static const char *rfkill_types[NUM_RFKILL_TYPES] = {
+> +	[RFKILL_TYPE_WLAN]	= "wlan",
+> +	[RFKILL_TYPE_BLUETOOTH]	= "bluetooth",
+> +	[RFKILL_TYPE_UWB]	= "ultrawideband",
+> +	[RFKILL_TYPE_WIMAX]	= "wimax",
+> +	[RFKILL_TYPE_WWAN]	= "wwan",
+> +	[RFKILL_TYPE_GPS]	= "gps",
+> +	[RFKILL_TYPE_FM]	= "fm",
+> +	[RFKILL_TYPE_NFC]	= "nfc",
+> +};
+> +
+> +enum rfkill_type rfkill_find_type(const char *name)
+> +{
+> +	int i;
+> +
+> +	BUILD_BUG_ON(NUM_RFKILL_TYPES != RFKILL_TYPE_NFC + 1);
+> +
+> +	if (!name)
+> +		return RFKILL_TYPE_ALL;
+> +
+> +	for (i = 1; i < NUM_RFKILL_TYPES; i++)
+> +		if (!strcmp(name, rfkill_types[i]))
+> +			return i;
+> +	return RFKILL_TYPE_ALL;
+> +}
+> +EXPORT_SYMBOL(rfkill_find_type);
+> +
+>  static ssize_t name_show(struct device *dev, struct device_attribute 
+> *attr,
+>  			 char *buf)
+>  {
+> @@ -583,38 +610,12 @@ static ssize_t name_show(struct device *dev, 
+> struct device_attribute *attr,
+>  }
+>  static DEVICE_ATTR_RO(name);
+>  
+> -static const char *rfkill_get_type_str(enum rfkill_type type)
+> -{
+> -	BUILD_BUG_ON(NUM_RFKILL_TYPES != RFKILL_TYPE_NFC + 1);
 > -
->   /*
->    * Add necessary buffer pointers
->    */
-> @@ -45,11 +38,35 @@ static int __init wilc_module_init(void)
->   	/*
->   	 * alloc necessary memory
->   	 */
-> -	MALLOC_WILC_BUFFER(g_tx_buf, LINUX_TX_SIZE)
-> -	MALLOC_WILC_BUFFER(g_rx_buf, LINUX_RX_SIZE)
-> -	MALLOC_WILC_BUFFER(g_fw_buf, WILC1000_FW_SIZE)
-> +	exported_g_tx_buf = kmalloc(LINUX_TX_SIZE, GFP_KERNEL);
-> +	if (!exported_g_tx_buf) {
-> +		pr_err("fail to alloc tx buf");
+> -	switch (type) {
+> -	case RFKILL_TYPE_WLAN:
+> -		return "wlan";
+> -	case RFKILL_TYPE_BLUETOOTH:
+> -		return "bluetooth";
+> -	case RFKILL_TYPE_UWB:
+> -		return "ultrawideband";
+> -	case RFKILL_TYPE_WIMAX:
+> -		return "wimax";
+> -	case RFKILL_TYPE_WWAN:
+> -		return "wwan";
+> -	case RFKILL_TYPE_GPS:
+> -		return "gps";
+> -	case RFKILL_TYPE_FM:
+> -		return "fm";
+> -	case RFKILL_TYPE_NFC:
+> -		return "nfc";
+> -	default:
+> -		BUG();
+> -	}
+> -}
+> -
+>  static ssize_t type_show(struct device *dev, struct device_attribute 
+> *attr,
+>  			 char *buf)
+>  {
+>  	struct rfkill *rfkill = to_rfkill(dev);
+>  
+> -	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill
+> ->type));
+> +	return sprintf(buf, "%s\n", rfkill_types[rfkill->type]);
+>  }
+>  static DEVICE_ATTR_RO(type);
+>  
+> @@ -760,7 +761,7 @@ static int rfkill_dev_uevent(struct device *dev, 
+> struct kobj_uevent_env *env)
+>  	if (error)
+>  		return error;
+>  	error = add_uevent_var(env, "RFKILL_TYPE=%s",
+> -			       rfkill_get_type_str(rfkill->type));
+> +			       rfkill_types[rfkill->type]);
+>  	if (error)
+>  		return error;
+>  	spin_lock_irqsave(&rfkill->lock, flags);
 
-There is really no need to print an error message here. kmalloc will 
-blurb enough info when it fails.
-
-So these buffers are globals? So does this driver support multiple 
-devices, ie. how are these used when two wilc1000 supported devices are 
-present.
-
-Regards,
-Arend
-
-> +		return -ENOMEM;
-> +	}
-> +
-> +	exported_g_rx_buf = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
-> +	if (!exported_g_rx_buf) {
-> +		pr_err("fail to alloc rx buf");
-> +		goto free_g_tx_buf;
-> +	}
-> +
-> +	exported_g_fw_buf = kmalloc(WILC1000_FW_SIZE, GFP_KERNEL);
-> +	if (!exported_g_fw_buf) {
-> +		pr_err("fail to alloc fw buf");
-> +		goto free_g_rx_buf;
-> +	}
->
->   	return 0;
-> +
-> +free_g_rx_buf:
-> +	kfree(exported_g_rx_buf);
-> +	exported_g_rx_buf = NULL;
-> +
-> +free_g_tx_buf:
-> +	kfree(exported_g_tx_buf);
-> +	exported_g_tx_buf = NULL;
-> +
-> +	return -ENOMEM;
->   }
->
->   static void __exit wilc_module_deinit(void)
->
-
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
