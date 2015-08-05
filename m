@@ -1,148 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:39829 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752533AbbH2FZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Aug 2015 01:25:09 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ZVYdU-0006BE-BF
-	for linux-wireless@vger.kernel.org; Sat, 29 Aug 2015 07:25:04 +0200
-Received: from 64.129.254.235 ([64.129.254.235])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2015 07:25:04 +0200
-Received: from keeler by 64.129.254.235 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2015 07:25:04 +0200
-To: linux-wireless@vger.kernel.org
-From: John Keeler <keeler@airintech.com>
-Subject: Ubuntu 14.04 and the intel 3160 chip monitor mode support 
-Date: Sat, 29 Aug 2015 05:20:44 +0000 (UTC)
-Message-ID: <loom.20150829T071838-73@post.gmane.org> (sfid-20150829_072514_374804_0B0816B0)
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59904 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753096AbbHEQ0U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 12:26:20 -0400
+Date: Wed, 5 Aug 2015 09:26:19 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chandra S Gorentla <csgorentla@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] drivers: staging: wilc1000: use 'void' for no
+ arguments functions
+Message-ID: <20150805162619.GA21870@kroah.com> (sfid-20150805_182638_534574_BC1BF8C6)
+References: <1438791182-9178-1-git-send-email-csgorentla@gmail.com>
+ <1438791182-9178-2-git-send-email-csgorentla@gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438791182-9178-2-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 05, 2015 at 09:43:00PM +0530, Chandra S Gorentla wrote:
+> Added 'void' keyword in the paranthesis of function definitions, when
+> there are no arguments to the functions.  This fixes the checkpatch.pl
+> error - "Bad function definition 'function()' should probably be
+> function(void)".
+> 
+> ---
+>  drivers/staging/wilc1000/linux_mon.c  | 2 +-
+>  drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+
 Hi,
-I am having issues with monitor mode with ubuntu 14.04 and the intel 3160
-chip. I am having similar issues with 3.13 and a 7265 chip on a intel NUC
-Monitor mode says it takes but it captures no packets 
 
-and help would be appreciated
- 
-Thanks
-John
- 
-Commands that trigger the crash :
+This is the friendly patch-bot of Greg Kroah-Hartman.  You have sent him
+a patch that has triggered this response.  He used to manually respond
+to these common problems, but in order to save his sanity (he kept
+writing the same thing over and over, yet to different people), I was
+created.  Hopefully you will not take offence and will fix the problem
+in your patch and resubmit it so that it can be accepted into the Linux
+kernel tree.
 
-sudo ifconfig wlan0 down
-sudo iwconfig wlan0 mode monitor
-sudo ifconfig wlan0 up
+You are receiving this message because of the following common error(s)
+as indicated below:
 
- 
-Ubuntu 14.04.3 LTS
- 
-uname -a:
-Linux 3.13.0-62-generic #102-Ubuntu SMP Tue Aug 11 14:29:36 UTC 2015 x86_64
-x86_64 x86_64 GNU/Linux
- 
-lspci -k :
-03:00.0 Network controller: Intel Corporation Wireless 3160 (rev 83)
-    Subsystem: Intel Corporation Dual Band Wireless-AC 3160
-    Kernel driver in use: iwlwifi
+- Your patch does not have a Signed-off-by: line.  Please read the
+  kernel file, Documentation/SubmittingPatches and resend it after
+  adding that line.  Note, the line needs to be in the body of the
+  email, before the patch, not at the bottom of the patch or in the
+  email signature.
 
- 
- 
- 
-dmesg:
-[ 2481.330395] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
-[ 2481.330722] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
-[ 2481.344124] iwlwifi 0000:03:00.0: Microcode SW error detected. 
-Restarting 0x2000000.
-[ 2481.344133] iwlwifi 0000:03:00.0: CSR values:
-[ 2481.344136] iwlwifi 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is
-CSR_INT_PERIODIC_REG)
-[ 2481.344143] iwlwifi 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00c89204
-[ 2481.344148] iwlwifi 0000:03:00.0:          CSR_INT_COALESCING: 0X8000ff40
-[ 2481.344154] iwlwifi 0000:03:00.0:                     CSR_INT: 0X00000000
-[ 2481.344160] iwlwifi 0000:03:00.0:                CSR_INT_MASK: 0X00000000
-[ 2481.344165] iwlwifi 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
-[ 2481.344170] iwlwifi 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
-[ 2481.344176] iwlwifi 0000:03:00.0:                   CSR_RESET: 0X00000000
-[ 2481.344182] iwlwifi 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
-[ 2481.344187] iwlwifi 0000:03:00.0:                  CSR_HW_REV: 0X00000164
-[ 2481.344193] iwlwifi 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
-[ 2481.344198] iwlwifi 0000:03:00.0:               CSR_EEPROM_GP: 0X80000000
-[ 2481.344204] iwlwifi 0000:03:00.0:              CSR_OTP_GP_REG: 0X803a0000
-[ 2481.344209] iwlwifi 0000:03:00.0:                 CSR_GIO_REG: 0X00080044
-[ 2481.344215] iwlwifi 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00000000
-[ 2481.344220] iwlwifi 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
-[ 2481.344225] iwlwifi 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-[ 2481.344231] iwlwifi 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-[ 2481.344236] iwlwifi 0000:03:00.0:                 CSR_LED_REG: 0X00000060
-[ 2481.344242] iwlwifi 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X881f6fb6
-[ 2481.344247] iwlwifi 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-[ 2481.344253] iwlwifi 0000:03:00.0:             CSR_ANA_PLL_CFG: 0Xd55555d5
-[ 2481.344258] iwlwifi 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-[ 2481.344263] iwlwifi 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
-[ 2481.344267] iwlwifi 0000:03:00.0: FH register values:
-[ 2481.344281] iwlwifi 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG:
-0X21084000
-[ 2481.344295] iwlwifi 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG:
-0X01f5c740
-[ 2481.344309] iwlwifi 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR:
-0X00000018
-[ 2481.344323] iwlwifi 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG:
-0X80801114
-[ 2481.344337] iwlwifi 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG:
-0X000000fc
-[ 2481.344351] iwlwifi 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG:
-0X07030000
-[ 2481.344365] iwlwifi 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV:
-0X00000000
-[ 2481.344379] iwlwifi 0000:03:00.0:                FH_TSSR_TX_STATUS_REG:
-0X07ff0001
-[ 2481.344394] iwlwifi 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG:
-0X00000000
-[ 2481.344507] iwlwifi 0000:03:00.0: Start IWL Error Log Dump:
-[ 2481.344511] iwlwifi 0000:03:00.0: Status: 0x00000000, count: 6
-[ 2481.344514] iwlwifi 0000:03:00.0: Loaded firmware version: 22.24.8.0
-[ 2481.344518] iwlwifi 0000:03:00.0: 0x00000103 | ADVANCED_SYSASSERT          
-[ 2481.344521] iwlwifi 0000:03:00.0: 0x000002F0 | uPc
-[ 2481.344524] iwlwifi 0000:03:00.0: 0x00000000 | branchlink1
-[ 2481.344527] iwlwifi 0000:03:00.0: 0x00000BEA | branchlink2
-[ 2481.344529] iwlwifi 0000:03:00.0: 0x00014218 | interruptlink1
-[ 2481.344532] iwlwifi 0000:03:00.0: 0x0029E0D2 | interruptlink2
-[ 2481.344535] iwlwifi 0000:03:00.0: 0xDEADBEEF | data1
-[ 2481.344538] iwlwifi 0000:03:00.0: 0xDEADBEEF | data2
-[ 2481.344541] iwlwifi 0000:03:00.0: 0xDEADBEEF | data3
-[ 2481.344543] iwlwifi 0000:03:00.0: 0x003FE7E9 | beacon time
-[ 2481.344546] iwlwifi 0000:03:00.0: 0x00001816 | tsf low
-[ 2481.344549] iwlwifi 0000:03:00.0: 0x00000000 | tsf hi
-[ 2481.344552] iwlwifi 0000:03:00.0: 0x00000000 | time gp1
-[ 2481.344555] iwlwifi 0000:03:00.0: 0x00001816 | time gp2
-[ 2481.344557] iwlwifi 0000:03:00.0: 0x00000000 | time gp3
-[ 2481.344560] iwlwifi 0000:03:00.0: 0x00041618 | uCode version
-[ 2481.344563] iwlwifi 0000:03:00.0: 0x00000164 | hw version
-[ 2481.344566] iwlwifi 0000:03:00.0: 0x00C89204 | board version
-[ 2481.344569] iwlwifi 0000:03:00.0: 0x091C002C | hcmd
-[ 2481.344571] iwlwifi 0000:03:00.0: 0x00022000 | isr0
-[ 2481.344574] iwlwifi 0000:03:00.0: 0x00000000 | isr1
-[ 2481.344577] iwlwifi 0000:03:00.0: 0x00000002 | isr2
-[ 2481.344580] iwlwifi 0000:03:00.0: 0x0040DCC0 | isr3
-[ 2481.344582] iwlwifi 0000:03:00.0: 0x00000000 | isr4
-[ 2481.344585] iwlwifi 0000:03:00.0: 0x00000110 | isr_pref
-[ 2481.344588] iwlwifi 0000:03:00.0: 0x00000000 | wait_event
-[ 2481.344591] iwlwifi 0000:03:00.0: 0x00000080 | l2p_control
-[ 2481.344594] iwlwifi 0000:03:00.0: 0x00000020 | l2p_duration
-[ 2481.344596] iwlwifi 0000:03:00.0: 0x00000000 | l2p_mhvalid
-[ 2481.344599] iwlwifi 0000:03:00.0: 0x00008000 | l2p_addr_match
-[ 2481.344602] iwlwifi 0000:03:00.0: 0x00000005 | lmpm_pmg_sel
-[ 2481.344605] iwlwifi 0000:03:00.0: 0x23021719 | timestamp
-[ 2481.344608] iwlwifi 0000:03:00.0: 0x00001828 | flow_handler
-[ 2481.344613] ieee80211 phy2: Hardware restart was requested
-[ 2481.345296] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
-[ 2481.345668] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
+If you wish to discuss this problem further, or you have questions about
+how to resolve this issue, please feel free to respond to this email and
+Greg will reply once he has dug out from the pending patches received
+from other developers.
 
+thanks,
 
+greg k-h's patch email bot
