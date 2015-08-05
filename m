@@ -1,150 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:10645 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773AbbHFHWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 03:22:18 -0400
-Date: Thu, 6 Aug 2015 10:22:14 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 5/5] net: rfkill: gpio: remove rfkill_gpio_platform_data
-Message-ID: <20150806072214.GG7675@kuha.fi.intel.com> (sfid-20150806_092329_679332_FC756A3C)
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
- <1438781947-7952-6-git-send-email-heikki.krogerus@linux.intel.com>
- <1438784128.29746.177.camel@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438784128.29746.177.camel@linux.intel.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:36706 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585AbbHEQS6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 12:18:58 -0400
+Received: by obnw1 with SMTP id w1so35263714obn.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 09:18:57 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
+	shaofu <shaofu@realtek.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH V2 NEXT 6/7] rtlwifi: rtl8723be: Implement new rekey logic
+Date: Wed,  5 Aug 2015 11:18:39 -0500
+Message-Id: <1438791520-13216-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150805_181905_090965_4977819F)
+In-Reply-To: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 05, 2015 at 05:15:28PM +0300, Andy Shevchenko wrote:
-> On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
-> > No more users for it.
-> > 
-> > Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> > ---
-> >  include/linux/rfkill-gpio.h | 37 -----------------------------------
-> > --
-> >  net/rfkill/Kconfig          |  3 +--
-> >  net/rfkill/rfkill-gpio.c    |  8 --------
-> >  3 files changed, 1 insertion(+), 47 deletions(-)
-> >  delete mode 100644 include/linux/rfkill-gpio.h
-> > 
-> > diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill
-> > -gpio.h
-> > deleted file mode 100644
-> > index 20bcb55..0000000
-> > --- a/include/linux/rfkill-gpio.h
-> > +++ /dev/null
-> > @@ -1,37 +0,0 @@
-> > -/*
-> > - * Copyright (c) 2011, NVIDIA Corporation.
-> > - *
-> > - * This program is free software; you can redistribute it and/or 
-> > modify
-> > - * it under the terms of the GNU General Public License as published 
-> > by
-> > - * the Free Software Foundation; either version 2 of the License, or
-> > - * (at your option) any later version.
-> > - *
-> > - * This program is distributed in the hope that it will be useful, 
-> > but WITHOUT
-> > - * ANY WARRANTY; without even the implied warranty of 
-> > MERCHANTABILITY or
-> > - * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public 
-> > License for
-> > - * more details.
-> > - *
-> > - * You should have received a copy of the GNU General Public License 
-> > along
-> > - * with this program; if not, write to the Free Software Foundation, 
-> > Inc.,
-> > - * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-> > - */
-> > -
-> > -
-> > -#ifndef __RFKILL_GPIO_H
-> > -#define __RFKILL_GPIO_H
-> > -
-> > -#include <linux/types.h>
-> > -#include <linux/rfkill.h>
-> > -
-> > -/**
-> > - * struct rfkill_gpio_platform_data - platform data for rfkill gpio 
-> > device.
-> > - * for unused gpio's, the expected value is -1.
-> > - * @name:		name for the gpio rf kill instance
-> > - */
-> > -
-> > -struct rfkill_gpio_platform_data {
-> > -	char			*name;
-> > -	enum rfkill_type	type;
-> > -};
-> > -
-> > -#endif /* __RFKILL_GPIO_H */
-> > diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
-> > index 4c10e7e..6320890 100644
-> > --- a/net/rfkill/Kconfig
-> > +++ b/net/rfkill/Kconfig
-> > @@ -40,5 +40,4 @@ config RFKILL_GPIO
-> >  	default n
-> >  	help
-> >  	  If you say yes here you get support of a generic gpio 
-> > RFKILL
-> > -	  driver. The platform should fill in the appropriate fields 
-> > in the
-> > -	  rfkill_gpio_platform_data structure and pass that to the 
-> > driver.
-> > +	  driver.
-> > diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> > index 07323c3..69d92e1 100644
-> > --- a/net/rfkill/rfkill-gpio.c
-> > +++ b/net/rfkill/rfkill-gpio.c
-> > @@ -27,8 +27,6 @@
-> >  #include <linux/acpi.h>
-> >  #include <linux/gpio/consumer.h>
-> >  
-> > -#include <linux/rfkill-gpio.h>
-> > -
-> >  struct rfkill_gpio_data {
-> >  	const char		*name;
-> >  	enum rfkill_type	type;
-> > @@ -89,7 +87,6 @@ static int rfkill_gpio_acpi_probe(struct device 
-> > *dev,
-> >  
-> >  static int rfkill_gpio_probe(struct platform_device *pdev)
-> >  {
-> > -	struct rfkill_gpio_platform_data *pdata = pdev
-> > ->dev.platform_data;
-> >  	struct rfkill_gpio_data *rfkill;
-> >  	struct gpio_desc *gpio;
-> >  	const char *type_name;
-> > @@ -111,11 +108,6 @@ static int rfkill_gpio_probe(struct 
-> > platform_device *pdev)
-> >  		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
-> >  		if (ret)
-> >  			return ret;
-> > -	} else if (pdata) {
-> > -		rfkill->name = pdata->name;
-> > -		rfkill->type = pdata->type;
-> > -	} else {
-> > -		return -ENODEV;
-> 
-> Shouldn't we leave the error path and modify to check if we have device
-> property set set?
+From: pkshih <pkshih@realtek.com>
 
-We already check them before this point. After this ACPI will be the
-only "special" case where we know the needed information does not come
-from device property and needs separate handling. Otherwise, if the
-device properties are not set, we cracefully fail.
+Use the new capability in rtlwifi to prevent rekeying before EAPOL msg 4/4
+has been sent.
 
+Signed-off-by: pkshih <pkshih@realtek.com>
+Signed-off-by: shaofu <shaofu@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+V2 - no changes
+---
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c  |  1 +
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c |  8 ++++++++
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.h | 12 ++++++++++++
+ 3 files changed, 21 insertions(+)
 
-Thanks,
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+index d5da0f3..be15d3d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/fw.c
+@@ -600,6 +600,7 @@ static void _rtl8723be_c2h_content_parsing(struct ieee80211_hw *hw,
+ 	case C2H_8723B_TX_REPORT:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
++		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	case C2H_8723B_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+index 338ec9a..fe8e3f4 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
+@@ -488,6 +488,14 @@ void rtl8723be_tx_fill_desc(struct ieee80211_hw *hw,
+ 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
+ 		}
+ 
++		/* tx report */
++		if (ptcb_desc->use_spe_rpt) {
++			u16 sn = rtl_get_tx_report_sn(hw);
++
++			SET_TX_DESC_SPE_RPT(pdesc, 1);
++			SET_TX_DESC_SW_DEFINE(pdesc, sn);
++		}
++
+ 		/* ptcb_desc->use_driver_rate = true; */
+ 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
+ 		if (ptcb_desc->hw_rate > DESC92C_RATEMCS0)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/trx.h b/drivers/net/wireless/rtlwifi/rtl8723be/trx.h
+index 45949ac..c20fb45 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/trx.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/trx.h
+@@ -187,6 +187,18 @@
+ #define SET_TX_DESC_RTS_SC(__pdesc, __val)		\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+20, 13, 4, __val)
+ 
++#define SET_TX_DESC_SW_DEFINE(__pdesc, __val)		\
++	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 0, 12, __val)
++#define SET_TX_DESC_MBSSID(__pdesc, __val)		\
++	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 12, 4, __val)
++#define SET_TX_DESC_ANTSEL_A(__pdesc, __val)		\
++	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 16, 3, __val)
++#define SET_TX_DESC_ANTSEL_B(__pdesc, __val)		\
++	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 19, 3, __val)
++#define SET_TX_DESC_ANTSEL_C(__pdesc, __val)		\
++	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 22, 3, __val)
++#define SET_TX_DESC_ANTSEL_D(__pdesc, __val)		\
++	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 25, 3, __val)
+ 
+ #define SET_TX_DESC_TX_BUFFER_SIZE(__pdesc, __val)	\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+28, 0, 16, __val)
 -- 
-heikki
+2.1.4
+
