@@ -1,83 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:33485 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992511AbbHHQx6 (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:35055 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754145AbbHEQN5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2015 12:53:58 -0400
-Received: by obbhe7 with SMTP id he7so2437512obb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2015 09:53:57 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
-	shaofu <shaofu@realtek.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V3 NEXT 7/7] rtlwifi: rtl8821ae: Implement new rekey logic
-Date: Sat,  8 Aug 2015 11:53:39 -0500
-Message-Id: <1439052819-30196-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150808_185402_095651_DC7BF4B0)
-In-Reply-To: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 5 Aug 2015 12:13:57 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH v2 3/3] drivers: staging: wilc1000: remove space after '('
+Date: Wed,  5 Aug 2015 21:43:02 +0530
+Message-Id: <1438791182-9178-4-git-send-email-csgorentla@gmail.com> (sfid-20150805_181405_271511_A2B39006)
+In-Reply-To: <1438791182-9178-3-git-send-email-csgorentla@gmail.com>
+References: <1438791182-9178-1-git-send-email-csgorentla@gmail.com>
+ <1438791182-9178-2-git-send-email-csgorentla@gmail.com>
+ <1438791182-9178-3-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: pkshih <pkshih@realtek.com>
+The character ' ' is removed after the character '('.  This fixes the
+checkpatch.pl error - "space prohibited after that open
+parenthesis '('".
 
-Use the new capability in rtlwifi to prevent rekeying before EAPOL msg 4/4
-has been sent.
-
-Signed-off-by: pkshih <pkshih@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-V2 - no changes
-V3 - no changes
----
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.c |  8 ++++++++
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.h | 13 +++++++++++++
- 2 files changed, 21 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c
-index 174743a..a03015c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c
-@@ -740,6 +740,14 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
- 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 		}
- 
-+		/* tx report */
-+		if (ptcb_desc->use_spe_rpt) {
-+			u16 sn = rtl_get_tx_report_sn(hw);
-+
-+			SET_TX_DESC_SPE_RPT(pdesc, 1);
-+			SET_TX_DESC_SW_DEFINE(pdesc, sn);
-+		}
-+
- 		/* ptcb_desc->use_driver_rate = true; */
- 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
- 		if (ptcb_desc->hw_rate > DESC_RATEMCS0)
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/trx.h b/drivers/net/wireless/rtlwifi/rtl8821ae/trx.h
-index 3140904..4717801 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/trx.h
-@@ -185,6 +185,19 @@
- #define SET_TX_DESC_RTS_SC(__pdesc, __val)	\
- 	SET_BITS_TO_LE_4BYTE(__pdesc+20, 13, 4, __val)
- 
-+#define SET_TX_DESC_SW_DEFINE(__pdesc, __val)	\
-+	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 0, 12, __val)
-+#define SET_TX_DESC_ANTSEL_A(__pdesc, __val)	\
-+	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 16, 3, __val)
-+#define SET_TX_DESC_ANTSEL_B(__pdesc, __val)	\
-+	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 19, 3, __val)
-+#define SET_TX_DESC_ANTSEL_C(__pdesc, __val)	\
-+	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 22, 3, __val)
-+#define SET_TX_DESC_ANTSEL_D(__pdesc, __val)	\
-+	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 25, 3, __val)
-+#define SET_TX_DESC_MBSSID(__pdesc, __val)	\
-+	SET_BITS_TO_LE_4BYTE(__pdesc + 24, 12, 4, __val)
-+
- #define SET_TX_DESC_TX_BUFFER_SIZE(__pdesc, __val)	\
- 	SET_BITS_TO_LE_4BYTE(__pdesc+28, 0, 16, __val)
- 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 779ec5a..c886891 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1675,7 +1675,7 @@ static int WILC_WFI_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 		 * kernel version 3.0.0
+ 		 */
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
+-						BIT( NL80211_STA_INFO_RX_PACKETS) |
++						BIT(NL80211_STA_INFO_RX_PACKETS) |
+ 						BIT(NL80211_STA_INFO_TX_PACKETS) |
+ 						BIT(NL80211_STA_INFO_TX_FAILED) |
+ 						BIT(NL80211_STA_INFO_TX_BITRATE);
 -- 
-2.1.4
+2.5.0
 
