@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:35282 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159AbbHYAow convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2015 20:44:52 -0400
-Received: by ykbi184 with SMTP id i184so140219319ykb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2015 17:44:52 -0700 (PDT)
+Received: from arrakis.dune.hu ([78.24.191.176]:53727 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751196AbbHEMVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 08:21:22 -0400
+Subject: Re: [PATCH] ath10k: Add QCA99X0 to supported device list
+To: ath10k@lists.infradead.org
+References: <1437478567-11339-1-git-send-email-vthiagar@qti.qualcomm.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <55C1FFBC.7070905@openwrt.org> (sfid-20150805_142139_789114_6AADC7C2)
+Date: Wed, 5 Aug 2015 14:21:16 +0200
 MIME-Version: 1.0
-In-Reply-To: <1440462512.2670.83.camel@perches.com>
-References: <1440432084-20928-1-git-send-email-jprvita@endlessm.com> <1440462512.2670.83.camel@perches.com>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 24 Aug 2015 20:44:12 -0400
-Message-ID: <CA+A7VXVSKB7-4=km0EoGfPAtx8UOHFCAwAd8Vbk-=f6u1KVFzA@mail.gmail.com> (sfid-20150825_024456_133279_5BEAE439)
-Subject: Re: [PATCH] rfkill: Copy "all" global state to other types
-To: Joe Perches <joe@perches.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1437478567-11339-1-git-send-email-vthiagar@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Joe, thanks for your review.
+On 2015-07-21 13:36, Vasanthakumar Thiagarajan wrote:
+> Add vendor/device id of QCA99X0 V2.0 to pci id table and
+> QCA99X0_HW_2_0_CHIP_ID_REV to ath10k_pci_supp_chips[] for
+> QCA99X0 to get detected by the driver.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+I just tested a 99X0 card, and I'm getting this:
 
-On 24 August 2015 at 20:28, Joe Perches <joe@perches.com> wrote:
-> On Mon, 2015-08-24 at 12:01 -0400, João Paulo Rechi Vita wrote:
->> When switching the state of all RFKill switches of type all we need to
->> replicate the RFKILL_TYPE_ALL global state to all the other types global
->> state, so it is used to initialize persistent RFKill switches on
->> register.
-> []
->> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> []
->> @@ -341,7 +341,14 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
->>  {
->>       struct rfkill *rfkill;
->>
->> -     rfkill_global_states[type].cur = blocked;
->> +     if (type == RFKILL_TYPE_ALL) {
->> +             enum rfkill_type i;
->
-> Does it really make sense to use an enum here?
->
->> +             for (i = 0; i < NUM_RFKILL_TYPES; i++)
->> +                     rfkill_global_states[i].cur = blocked;
->
-> increment it and then use it as an index?
->
-> Most every other loop use of NUM_RFKILL_TYPES is int
->
+[    8.742514] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142)
+[    8.747173] ath10k_pci 0000:01:00.0: pci irq msi interrupts 1 irq_mode 0 reset_mode 0
+[   11.793314] ath10k_pci 0000:01:00.0: failed to receive initialized event from target: 00000000
+[   11.793344] ath10k_pci 0000:01:00.0: failed to wait for target after cold reset: -110
+[   11.800814] ath10k_pci 0000:01:00.0: failed to reset chip: -110
+[   11.809228] ath10k_pci: probe of 0000:01:00.0 failed with error -110
 
-I don't have a preference whether to the iterator here is an integer
-or an enum, I've simply followed what is done in rfkill_fop_write(). I
-can send an updated version.
+This is on an AP148 board with Linux 3.18, backports generated from
+latest wireless-testing (2015-08-03) + all patches from kvalo's ath
+tree.
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+- Felix
