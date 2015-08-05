@@ -1,27 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:6319 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbbHMKbx (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:33584 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754052AbbHEQNs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 06:31:53 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: ath10k: first qca6174 hw2.1 firmware released
-Date: Thu, 13 Aug 2015 13:31:42 +0300
-Message-ID: <874mk3pjht.fsf@kamboji.qca.qualcomm.com> (sfid-20150813_123202_662395_A24E8D28)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 5 Aug 2015 12:13:48 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH v2 1/3] drivers: staging: wilc1000: use 'void' for no arguments functions
+Date: Wed,  5 Aug 2015 21:43:00 +0530
+Message-Id: <1438791182-9178-2-git-send-email-csgorentla@gmail.com> (sfid-20150805_181444_175112_C950B650)
+In-Reply-To: <1438791182-9178-1-git-send-email-csgorentla@gmail.com>
+References: <1438791182-9178-1-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Added 'void' keyword in the paranthesis of function definitions, when
+there are no arguments to the functions.  This fixes the checkpatch.pl
+error - "Bad function definition 'function()' should probably be
+function(void)".
 
-I just pushed the first qca6174  hw2.1 firmware to ath10k-firmware.git:
+---
+ drivers/staging/wilc1000/linux_mon.c  | 2 +-
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-https://github.com/kvalo/ath10k-firmware/commit/7f7e7dda33676ced293de477b03711199ffe5256
-
-Please test and provide feedback.
-
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index aa20421..123468a 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -558,7 +558,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+  *  @date	12 JUL 2012
+  *  @version	1.0
+  */
+-int WILC_WFI_deinit_mon_interface()
++int WILC_WFI_deinit_mon_interface(void)
+ {
+ 	bool rollback_lock = false;
+ 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3e55a8a..0a8052e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -202,7 +202,7 @@ void printk_later(const char *format, ...)
+ 
+ }
+ 
+-void dump_logs()
++void dump_logs(void)
+ {
+ 	if (DebugBuffer[0]) {
+ 		DebugBuffer[DEGUG_BUFFER_LENGTH] = 0;
+@@ -216,7 +216,7 @@ void dump_logs()
+ 	}
+ }
+ 
+-void Reset_WatchDogdebugger()
++void Reset_WatchDogdebugger(void)
+ {
+ 	WatchDogdebuggerCounter = 0;
+ }
 -- 
-Kalle Valo
+2.5.0
+
