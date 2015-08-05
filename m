@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:38012 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031AbbHBLfE (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:33857 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925AbbHEKII (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2015 07:35:04 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Wed, 5 Aug 2015 06:08:08 -0400
+Received: by labow3 with SMTP id ow3so25342235lab.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 03:08:06 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] staging: vt6655: vnt_bss_info_changed check conf->beacon_rate is not NULL
-Date: Sun,  2 Aug 2015 12:34:46 +0100
-Message-Id: <1438515286-3316-1-git-send-email-tvboxspy@gmail.com> (sfid-20150802_133528_111120_75BB8F83)
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix hw reconfig on wow failure
+Date: Wed,  5 Aug 2015 12:08:38 +0200
+Message-Id: <1438769318-27373-1-git-send-email-michal.kazior@tieto.com> (sfid-20150805_120812_563536_A7C59148)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-conf->beacon_rate can be NULL on association. So check conf->beacon_rate
+When WoWLAN resume fails with retval 1 mac80211
+will attempt to reconfig the device in a similar
+manner when hw restart is requested. This wasn't
+handled properly and yielded call trace warnings
+and the device ended up not working.
 
-BSS_CHANGED_BEACON_INFO needs to flagged in changed as the beacon_rate
-will appear later.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org> # v3.19+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6655/device_main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/wow.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index c97353b..b74af8d 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1456,8 +1456,9 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
+index a68d8fd853a3..8e02b381990f 100644
+--- a/drivers/net/wireless/ath/ath10k/wow.c
++++ b/drivers/net/wireless/ath/ath10k/wow.c
+@@ -301,8 +301,26 @@ int ath10k_wow_op_resume(struct ieee80211_hw *hw)
+ 		ath10k_warn(ar, "failed to wakeup from wow: %d\n", ret);
  
--	if (changed & BSS_CHANGED_ASSOC && priv->op_mode != NL80211_IFTYPE_AP) {
--		if (conf->assoc) {
-+	if (changed & (BSS_CHANGED_ASSOC | BSS_CHANGED_BEACON_INFO) &&
-+	    priv->op_mode != NL80211_IFTYPE_AP) {
-+		if (conf->assoc && conf->beacon_rate) {
- 			CARDbUpdateTSF(priv, conf->beacon_rate->hw_value,
- 				       conf->sync_tsf);
+ exit:
++	if (ret) {
++		switch (ar->state) {
++		case ATH10K_STATE_ON:
++			ar->state = ATH10K_STATE_RESTARTING;
++			ret = 1;
++			break;
++		case ATH10K_STATE_OFF:
++		case ATH10K_STATE_RESTARTING:
++		case ATH10K_STATE_RESTARTED:
++		case ATH10K_STATE_UTF:
++		case ATH10K_STATE_WEDGED:
++			ath10k_warn(ar, "encountered unexpected device state %d on resume, cannot recover\n",
++				    ar->state);
++			ret = -EIO;
++			break;
++		}
++	}
++
+ 	mutex_unlock(&ar->conf_mutex);
+-	return ret ? 1 : 0;
++	return ret;
+ }
  
+ int ath10k_wow_init(struct ath10k *ar)
 -- 
-2.5.0
+2.1.4
 
