@@ -1,48 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35170 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753034AbbHGNI6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 09:08:58 -0400
-Date: Fri, 7 Aug 2015 14:08:55 +0100
-From: Johannes Postma <jgmpostma@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warning: cast to
- restricted __le16
-Message-ID: <20150807130855.GA9880@goofy_linux.Home> (sfid-20150807_150920_428950_A1D349ED)
-References: <1438860112-1786-1-git-send-email-jgmpostma@gmail.com>
- <wrfjpp30bo9s.fsf@redhat.com>
- <20150807083707.GA3923@goofy_linux.Home>
- <wrfj1tff2sjq.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <wrfj1tff2sjq.fsf@redhat.com>
+Received: from mga01.intel.com ([192.55.52.88]:15050 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753119AbbHENj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 09:39:26 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: [PATCH 4/5] ARM: tegra: use build-in device properties with rfkill_gpio
+Date: Wed,  5 Aug 2015 16:39:06 +0300
+Message-Id: <1438781947-7952-5-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20150805_154055_228914_04C530FD)
+In-Reply-To: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/15 at 08:26am, Jes Sorensen wrote:
-> Johannes Postma <jgmpostma@gmail.com> writes:
-> > On 06/08/15 at 08:21am, Jes Sorensen wrote:
-> >> 
-> >> Looks OK to me. Probably worth changing the *(usPtr + index) to be
-> >> usPtr[index] as well to make the code easier to read.
-> >> 
-> >> Jes
-> >> 
-> >
-> > Thank you for reviewing.  I will make a seperate patch for that.  I will
-> > send it after this one is accepted.  Or should I combine them into a
-> > patch serie?
-> 
-> Either is fine with me.
-> 
-> Jes
+Pass the rfkill name and type to the device with properties
+instead of driver specific platform data.
 
-Ok, I have sent it as a separate patch.  Since it doesn't depend on this
-patch and should apply cleanly I have already sent it in.
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+CC: Alexandre Courbot <gnurou@gmail.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: Stephen Warren <swarren@wwwdotorg.org>
+---
+ arch/arm/mach-tegra/board-paz00.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-	Johannes
+diff --git a/arch/arm/mach-tegra/board-paz00.c b/arch/arm/mach-tegra/board-paz00.c
+index fbe74c6..5d8d3a4 100644
+--- a/arch/arm/mach-tegra/board-paz00.c
++++ b/arch/arm/mach-tegra/board-paz00.c
+@@ -17,23 +17,25 @@
+  *
+  */
+ 
++#include <linux/property.h>
+ #include <linux/gpio/machine.h>
+ #include <linux/platform_device.h>
+-#include <linux/rfkill-gpio.h>
+ 
+ #include "board.h"
+ 
+-static struct rfkill_gpio_platform_data wifi_rfkill_platform_data = {
+-	.name	= "wifi_rfkill",
+-	.type	= RFKILL_TYPE_WLAN,
++static struct property_entry wifi_rfkill_prop[] = {
++	PROP_ENTRY_STRING("name", "wifi_rfkill"),
++	PROP_ENTRY_STRING("type", "wlan"),
++	{ },
++};
++
++static struct property_set wifi_rfkill_pset = {
++	.properties = wifi_rfkill_prop,
+ };
+ 
+ static struct platform_device wifi_rfkill_device = {
+ 	.name	= "rfkill_gpio",
+ 	.id	= -1,
+-	.dev	= {
+-		.platform_data = &wifi_rfkill_platform_data,
+-	},
+ };
+ 
+ static struct gpiod_lookup_table wifi_gpio_lookup = {
+@@ -47,6 +49,7 @@ static struct gpiod_lookup_table wifi_gpio_lookup = {
+ 
+ void __init tegra_paz00_wifikill_init(void)
+ {
++	device_add_property_set(&wifi_rfkill_device.dev, &wifi_rfkill_pset);
+ 	gpiod_add_lookup_table(&wifi_gpio_lookup);
+ 	platform_device_register(&wifi_rfkill_device);
+ }
+-- 
+2.4.6
+
