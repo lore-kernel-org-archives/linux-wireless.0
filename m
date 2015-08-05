@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37368 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:6066 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932077AbbHDU7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 16:59:15 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 31/37] iwlwifi: pcie: reset write pointer on ict reset
-Date: Tue,  4 Aug 2015 23:43:21 +0300
-Message-Id: <1438721007-23283-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230717_348199_8170716D)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+	id S1752975AbbHEOM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2015 10:12:28 -0400
+From: "Shevchenko, Andriy" <andriy.shevchenko@intel.com>
+To: "heikki.krogerus@linux.intel.com" <heikki.krogerus@linux.intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH 1/5] device property: helper macros for property entry
+ creation
+Date: Wed, 5 Aug 2015 14:12:25 +0000
+Message-ID: <1438783944.29746.176.camel@intel.com> (sfid-20150805_161305_633645_09A9CCCA)
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1438781947-7952-2-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1438783338.29746.172.camel@linux.intel.com>
+In-Reply-To: <1438783338.29746.172.camel@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
-
-Since the CSR_DRAM_INIT_TBL_WRITE_POINTER bit wasn't set
-on ict reset, in some flows (like disable ict followed by
-immediate reset ict) the driver and hardware went out
-of sync (the driver cleared the ict_index, while the hw
-kept it intact).
-
-Fix it by setting the flag when resetting ict.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-csr.h | 1 +
- drivers/net/wireless/iwlwifi/pcie/rx.c | 5 +++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index faa17f2..fa71661 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -422,6 +422,7 @@ enum {
- 
- /* DRAM INT TABLE */
- #define CSR_DRAM_INT_TBL_ENABLE		(1 << 31)
-+#define CSR_DRAM_INIT_TBL_WRITE_POINTER	(1 << 28)
- #define CSR_DRAM_INIT_TBL_WRAP_CHECK	(1 << 27)
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 5561dee..454ef1d 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -1443,8 +1443,9 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
- 
- 	val = trans_pcie->ict_tbl_dma >> ICT_SHIFT;
- 
--	val |= CSR_DRAM_INT_TBL_ENABLE;
--	val |= CSR_DRAM_INIT_TBL_WRAP_CHECK;
-+	val |= CSR_DRAM_INT_TBL_ENABLE |
-+	       CSR_DRAM_INIT_TBL_WRAP_CHECK |
-+	       CSR_DRAM_INIT_TBL_WRITE_POINTER;
- 
- 	IWL_DEBUG_ISR(trans, "CSR_DRAM_INT_TBL_REG =0x%x\n", val);
- 
--- 
-2.1.4
+T24gV2VkLCAyMDE1LTA4LTA1IGF0IDE3OjAyICswMzAwLCBBbmR5IFNoZXZjaGVua28gd3JvdGU6
+DQo+IE9uIFdlZCwgMjAxNS0wOC0wNSBhdCAxNjozOSArMDMwMCwgSGVpa2tpIEtyb2dlcnVzIHdy
+b3RlOg0KDQpbXQ0KDQo+ID4gKyNkZWZpbmUgUFJPUF9FTlRSWV9TVFJJTkcoX25hbWVfLCBfdmFs
+XykgeyBcDQo+IA0KPiDigKZfU1RSSU5HX0FSUkFZIEkgY2FuIG5vdGljZS4NCg0KcyAvIGNhbiAv
+IGNhbid0IC8NCg0KPiANCj4gPiArCS5uYW1lID0gX25hbWVfLCBcDQo+ID4gKwkudHlwZSA9IERF
+Vl9QUk9QX1NUUklORywgXA0KPiA+ICsJLm52YWwgPSAxLCBcDQo+ID4gKwkudmFsdWUuc3RyID0g
+KGNvbnN0IGNoYXIgKiopX3ZhbF8sIFwNCj4gPiArfQ0KPiA+ICsNCj4gPiAgLyoqDQo+ID4gICAq
+IHN0cnVjdCBwcm9wZXJ0eV9zZXQgLSBDb2xsZWN0aW9uIG9mICJidWlsdC1pbiIgZGV2aWNlIA0K
+PiA+IHByb3BlcnRpZXMuDQo+ID4gICAqIEBmd25vZGU6IEhhbmRsZSB0byBiZSBwb2ludGVkIHRv
+IGJ5IHRoZSBmd25vZGUgZmllbGQgb2Ygc3RydWN0IA0KPiA+IGRldmljZS4NCj4gDQoNCi0tIA0K
+QW5keSBTaGV2Y2hlbmtvIDxhbmRyaXkuc2hldmNoZW5rb0BpbnRlbC5jb20+DQpJbnRlbCBGaW5s
+YW5kIE95Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBGaW5sYW5kIE95ClJlZ2lzdGVyZWQgQWRkcmVzczog
+UEwgMjgxLCAwMDE4MSBIZWxzaW5raSAKQnVzaW5lc3MgSWRlbnRpdHkgQ29kZTogMDM1NzYwNiAt
+IDQgCkRvbWljaWxlZCBpbiBIZWxzaW5raSAKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVu
+dHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2Yg
+dGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkg
+b3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRl
+ZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29w
+aWVzLgo=
 
