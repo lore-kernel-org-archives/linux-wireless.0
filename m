@@ -1,59 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:36615 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498AbbHEQSv (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:37486 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756287AbbHFVrl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 12:18:51 -0400
-Received: by obnw1 with SMTP id w1so35261175obn.3
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 09:18:51 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
-	shaofu <shaofu@realtek.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V2 NEXT 2/7] rtlwifi: Fix programming of CAM content
-Date: Wed,  5 Aug 2015 11:18:35 -0500
-Message-Id: <1438791520-13216-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150805_181855_448222_D9A14A06)
-In-Reply-To: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 6 Aug 2015 17:47:41 -0400
+Received: by wibhh20 with SMTP id hh20so41708416wib.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 14:47:40 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 3/4] mac80211: define rate_control_apply_mask_ratetbl()
+Date: Thu,  6 Aug 2015 23:47:32 +0200
+Message-Id: <1438897653-4629-4-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150806_234746_945049_FBA90E49)
+In-Reply-To: <1438897653-4629-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1438897653-4629-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: pkshih <pkshih@realtek.com>
+Define rate_control_apply_mask_ratetbl() in order to apply ratemask in
+rate_control_set_rates() for station rate table
 
-There is a potential race condition when the control byte of a CAM entry
-is written first.
-
-Signed-off-by: pkshih <pkshih@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
-V2 - Removed a udelay() statement introduced because of a merge error
+ net/mac80211/rate.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
----
- drivers/net/wireless/rtlwifi/cam.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-index 8fe8b4c..cc7acbf 100644
---- a/drivers/net/wireless/rtlwifi/cam.c
-+++ b/drivers/net/wireless/rtlwifi/cam.c
-@@ -45,12 +45,13 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 4f61ca0..7e71de9 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -651,6 +651,30 @@ static bool rate_control_cap_mask(struct ieee80211_sub_if_data *sdata,
+ 	return true;
+ }
  
- 	u32 target_command;
- 	u32 target_content = 0;
--	u8 entry_i;
-+	s8 entry_i;
++static void
++rate_control_apply_mask_ratetbl(struct sta_info *sta,
++				struct ieee80211_supported_band *sband,
++				struct ieee80211_sta_rates *rates)
++{
++	int i;
++	u32 mask;
++	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
++	enum nl80211_chan_width chan_width;
++
++	if (!rate_control_cap_mask(sta->sdata, sband, &sta->sta, &mask,
++				   mcs_mask))
++		return;
++
++	chan_width = sta->sdata->vif.bss_conf.chandef.width;
++	for (i = 0; i < IEEE80211_TX_RATE_TABLE_SIZE; i++) {
++		if (rates->rate[i].idx < 0)
++			break;
++
++		rate_idx_match_mask(&rates->rate[i].idx, &rates->rate[i].flags,
++				    sband, chan_width, mask, mcs_mask);
++	}
++}
++
+ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
+ 				    struct ieee80211_sta *sta,
+ 				    struct ieee80211_supported_band *sband,
+@@ -766,7 +790,10 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sta_rates *old;
++	struct ieee80211_supported_band *sband;
  
- 	RT_PRINT_DATA(rtlpriv, COMP_SEC, DBG_DMESG, "Key content :",
- 		      key_cont_128, 16);
- 
--	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
-+	/* 2-5 fill 128key,6-7 are reserved */
-+	for (entry_i = CAM_CONTENT_COUNT - 3; entry_i >= 0; entry_i--) {
- 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
- 		target_command = target_command | BIT(31) | BIT(16);
- 
++	sband = hw->wiphy->bands[ieee80211_get_sdata_band(sta->sdata)];
++	rate_control_apply_mask_ratetbl(sta, sband, rates);
+ 	/*
+ 	 * mac80211 guarantees that this function will not be called
+ 	 * concurrently, so the following RCU access is safe, even without
 -- 
 2.1.4
 
