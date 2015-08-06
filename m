@@ -1,90 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:34151 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbbHOGxy (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:34255 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753988AbbHFQAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2015 02:53:54 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
+	Thu, 6 Aug 2015 12:00:08 -0400
+Date: Thu, 6 Aug 2015 21:29:44 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
 	chris.park@atmel.com, linux-wireless@vger.kernel.org,
 	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	dan.carpenter@oracle.com, Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH v3] staging: wilc1000: Process WARN, INFO options of debug levels from user
-Date: Sat, 15 Aug 2015 12:23:31 +0530
-Message-Id: <1439621611-31599-1-git-send-email-csgorentla@gmail.com> (sfid-20150815_085358_904273_6FF8652E)
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: Re: [PATCH v3 2/3] drivers: staging: wilc1000: move { to previous
+ line
+Message-ID: <20150806155939.GA18397@gcs-HP-Compaq-nx6320> (sfid-20150806_180036_582550_03B25E5B)
+References: <1438792917-9817-1-git-send-email-csgorentla@gmail.com>
+ <1438792917-9817-2-git-send-email-csgorentla@gmail.com>
+ <1438792917-9817-3-git-send-email-csgorentla@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438792917-9817-3-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables setting the module's debug options WARN and INFO in the
-debugfs file 'wilc_debug_level'.  This functionality allows the user to
-enable logging of warnings and other information.  Before this change,
-writes to this debugfs file set only one option - DEBUG.  Another option
-that is enabled by default is ERR.
+On Wed, Aug 05, 2015 at 10:11:56PM +0530, Chandra S Gorentla wrote:
+> Moved the opening brace of code blocks to the previous lines.  This
+> fixes the checkpatch.pl error - "that open brace { should be on the
+> previous line".
+> 
+> Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index c2ef46f..779ec5a 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -1205,8 +1205,7 @@ static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
+>  
+>  
+>  
+> -			if (!pairwise)
+> -			{
+> +			if (!pairwise) {
+>  				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+>  					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
+>  				else
+> @@ -1304,8 +1303,7 @@ static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
+>  
+>  		{
+>  			u8mode = 0;
+> -			if (!pairwise)
+> -			{
+> +			if (!pairwise) {
+>  				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+>  					/* swap the tx mic by rx mic */
+>  					pu8RxMic = params->key + 24;
+> @@ -1531,8 +1529,7 @@ static int WILC_WFI_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
+>  	priv = wiphy_priv(wiphy);
+>  
+>  
+> -	if (!pairwise)
+> -	{
+> +	if (!pairwise) {
+>  		PRINT_D(CFG80211_DBG, "Getting group key idx: %x\n", key_index);
+>  
+>  		key_params.key = priv->wilc_gtk[key_index]->key;
+> -- 
+> 2.5.0
+> 
 
-As a side effect, this patch removes the 'sparse' warning -
-'warning: incorrect type in argument 2 (different address spaces)'.
-
-
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
-
-Changes in v3: Added back a printk that was removed from v1
-
-Changes in v2: Replaced copy_from_user and kstrtoint (added in v1) with
-               kstrtouint_from_user
-
- drivers/staging/wilc1000/wilc_debugfs.c | 24 ++++++++----------------
- 1 file changed, 8 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index be2e901..ae11186 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -48,28 +48,19 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf, si
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
+Hello Greg, 
  
--static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t count, loff_t *ppos)
-+static ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+					size_t count, loff_t *ppos)
- {
--	char buffer[128] = {};
- 	int flag = 0;
-+	int ret;
+I sent 3 patches in this series.  The subject lines of other 2 are -
  
--	if (count > sizeof(buffer))
--		return -EINVAL;
--
--	if (copy_from_user(buffer, buf, count)) {
--		return -EFAULT;
--	}
--
--	flag = buffer[0] - '0';
--
--	if (flag > 0)
--		flag = DEBUG | ERR;
--	else if (flag < 0)
--		flag = 100;
-+	ret = kstrtouint_from_user(buf, count, 16, &flag);
-+	if (ret)
-+		return ret;
- 
- 	if (flag > DBG_LEVEL_ALL) {
- 		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&DEBUG_LEVEL));
--		return -EFAULT;
-+		return -EINVAL;
- 	}
- 
- 	atomic_set(&DEBUG_LEVEL, (int)flag);
-@@ -78,6 +69,7 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t
- 		printk("Debug-level disabled\n");
- 	else
- 		printk("Debug-level enabled\n");
-+
- 	return count;
- }
- 
--- 
-2.5.0
+[PATCH v3 3/3] drivers: staging: wilc1000: remove space after '('
+[PATCH v3 1/3] drivers: staging: wilc1000: use 'void' for no arguments
+functions
+
+These two patches (1/3 and 3/3) were accepted but not the patch (2/3) in this 
+mail.  Any reason for not accepting?  Is any thing wrong with this patch - 2/3?
+If so, I can correct and send again.
+
+Thanks,
+chandra
 
