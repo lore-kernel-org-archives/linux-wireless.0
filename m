@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40353 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753887AbbHUKQ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2015 06:16:28 -0400
-Message-ID: <1440152186.2107.14.camel@sipsolutions.net> (sfid-20150821_121645_953932_01D78771)
-Subject: Re: linux-only "freshness" auth problem??
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Tokarev <mjt@tls.msk.ru>, linux-wireless@vger.kernel.org
-Date: Fri, 21 Aug 2015 12:16:26 +0200
-In-Reply-To: <55D6F0DB.5050505@msgid.tls.msk.ru> (sfid-20150821_114437_353307_BC6FA2E1)
-References: <55D6F0DB.5050505@msgid.tls.msk.ru>
-	 (sfid-20150821_114437_353307_BC6FA2E1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:51333 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbbHFHLy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2015 03:11:54 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [v3,1/4] ath9k: advertise p2p dev support when chanctx
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1437469903-32362-1-git-send-email-janusz.dziedzic@tieto.com>
+To: Janusz.Dziedzic@tieto.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	nbd@openwrt.org, sujith@msujith.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Message-Id: <20150806071154.5BF26141F57@smtp.codeaurora.org> (sfid-20150806_091157_059444_3F40C915)
+Date: Thu,  6 Aug 2015 07:11:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-08-21 at 12:35 +0300, Michael Tokarev wrote:
+
+> Advertise p2p device support when ath9k loaded with
+> use_chanctx=1.
 > 
-> Aug 21 11:31:49 x200la kernel: wlan0: authenticated
-> Aug 21 11:31:49 x200la kernel: wlan0: waiting for beacon from c0:4a:00:49:1b:f2
+> This will fix problem, when first interface is an AP
+> and next we would like to run p2p_find.
+> Before p2p find (scan phase) failed with EOPNOTSUPP.
+> 
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-Do you see any *kernel* messages after this? I'm half expecting to see
-that the beacon never arrives, or something like that?
+Thanks, 4 patches applied to wireless-drivers-next.git:
 
-Are the hotels running similar equipment perhaps? If rebooting the AP
-helps then perhaps the APs aren't actually beaconing quite properly -
-maybe you could put the card into sniffer mode (monitor mode) and
-capture what's going on over the air for a bit after this happened?
+eb61f9f623f7 ath9k: advertise p2p dev support when chanctx
+d83520b7cd6e ath9k: handle RoC cancel correctly
+f3771c08282a ath9k: setup rxfilter for all chanctx
+1738203ee729 ath9k: setup rxfilter when offchannel
 
-johannes
+Kalle Valo
