@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47951 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752054AbbHaNHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 09:07:49 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: jes.sorensen@redhat.com, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Subject: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
-Date: Sun, 30 Aug 2015 17:02:53 -0400
-Message-Id: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20150831_150801_358390_16ADC529)
+Received: from mail-la0-f52.google.com ([209.85.215.52]:32926 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755060AbbHFLbe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2015 07:31:34 -0400
+Received: by labjt7 with SMTP id jt7so29405841lab.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 04:31:33 -0700 (PDT)
+Subject: Re: [PATCH 2/5] net: rfkill: add rfkill_find_type function
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <55C34593.8010907@cogentembedded.com> (sfid-20150806_133154_628451_E65C3669)
+Date: Thu, 6 Aug 2015 14:31:31 +0300
+MIME-Version: 1.0
+In-Reply-To: <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hello.
 
-Hi,
+On 8/5/2015 4:39 PM, Heikki Krogerus wrote:
 
-I finally found some time to work on rtl8xxxu again. Since the
-previously version posted some months ago, I fixed up a number of
-bugs. I also added support for a range of other Realtek based USB
-devices. The driver now supports rtl8723au, rtl8188cu, rtl8188ru, and
-rtl8192cu. It should work on rtl8191cu devices as well.
+> Helper for finding the type based on name. Useful if the
+> type needs to be determined based on device property.
 
-Per default only devices I have actually tested will be enabled. If
-you are interested in trying it out with other 8188cu/8188ru/819[12]cu
-dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
-test results back to me.
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> ---
+>   include/linux/rfkill.h | 15 +++++++++++++
+>   net/rfkill/core.c      | 57 +++++++++++++++++++++++++-------------------------
+>   2 files changed, 44 insertions(+), 28 deletions(-)
 
-Note if you enable this driver, it may clash with CONFIG_RTL8192U,
-CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
-to which module you load and/or use modprobe blacklists.
+> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> index d901078..02f563c 100644
+> --- a/include/linux/rfkill.h
+> +++ b/include/linux/rfkill.h
+[...]
+> @@ -268,6 +277,12 @@ static inline bool rfkill_blocked(struct rfkill *rfkill)
+>   {
+>   	return false;
+>   }
+> +
+> +static inline enum rfkill_type rfkill_find_type(const char *name)
+> +{
+> +	return 0;
+ > +}
+ > +
 
-This driver is still work in progress. I have used it as my primary
-driver for the last six months, and I find it to be very stable. It
-seems suitable for mainline inclusion at this point.
+    Shouldn't it return some member of 'enum rfkill_type' instead?
 
-v2 of this patch contains fixes for issues reported by Larry Finger.
-I checked include/net/mac80211.h and the .tx function does indeed have
-to be atomic. In addition I found a race condition in
-rtl8723a_h2c_cmd() which may explain the mutex issue Larry saw.
+[...]
 
-Cheers,
-Jes
-
-
-Jes Sorensen (1):
-  New driver: rtl8xxxu (mac80211)
-
- MAINTAINERS                          |    7 +
- drivers/net/wireless/Kconfig         |   32 +
- drivers/net/wireless/Makefile        |    2 +
- drivers/net/wireless/rtl8xxxu.c      | 5829 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/rtl8xxxu.h      |  597 ++++
- drivers/net/wireless/rtl8xxxu_regs.h |  980 ++++++
- 6 files changed, 7447 insertions(+)
- create mode 100644 drivers/net/wireless/rtl8xxxu.c
- create mode 100644 drivers/net/wireless/rtl8xxxu.h
- create mode 100644 drivers/net/wireless/rtl8xxxu_regs.h
-
--- 
-2.1.0
+MBR, Sergei
 
