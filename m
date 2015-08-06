@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:34359 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754232AbbHCSyR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2015 14:54:17 -0400
-Received: by oigu133 with SMTP id u133so32404227oig.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:54:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, timlee <timlee@realtek.com>,
-	shaofu <shaofu@realtek.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH NEXT 1/7] rtlwifi: rtl8821ae: Remove unsupported 5G channels
-Date: Mon,  3 Aug 2015 13:53:46 -0500
-Message-Id: <1438628032-5865-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150803_205420_224131_339758C1)
-In-Reply-To: <1438628032-5865-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1438628032-5865-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:33526 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752526AbbHFWAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2015 18:00:45 -0400
+Subject: Re: [PATCH] ath10k: Add QCA99X0 to supported device list
+To: Peter Oh <poh@codeaurora.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org
+References: <1437478567-11339-1-git-send-email-vthiagar@qti.qualcomm.com>
+ <55C1FFBC.7070905@openwrt.org> <55C31039.6030201@qti.qualcomm.com>
+ <55C313D3.4080004@openwrt.org> <55C3AB2F.9030904@codeaurora.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <55C3D905.6090207@openwrt.org> (sfid-20150807_000048_201695_FEA6CC6C)
+Date: Fri, 7 Aug 2015 00:00:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <55C3AB2F.9030904@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: timlee <timlee@realtek.com>
+On 2015-08-06 20:45, Peter Oh wrote:
+> 
+> On 08/06/2015 12:59 AM, Felix Fietkau wrote:
+>> On 2015-08-06 09:43, Vasanthakumar Thiagarajan wrote:
+>>> On Wednesday 05 August 2015 05:51 PM, Felix Fietkau wrote:
+>>>> On 2015-07-21 13:36, Vasanthakumar Thiagarajan wrote:
+>>>>> Add vendor/device id of QCA99X0 V2.0 to pci id table and
+>>>>> QCA99X0_HW_2_0_CHIP_ID_REV to ath10k_pci_supp_chips[] for
+>>>>> QCA99X0 to get detected by the driver.
+>>>>>
+>>>>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+>>>> I just tested a 99X0 card, and I'm getting this:
+>>>>
+>>>> [    8.742514] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142)
+>>>> [    8.747173] ath10k_pci 0000:01:00.0: pci irq msi interrupts 1
+>> irq_mode 0 reset_mode 0
+>>>> [   11.793314] ath10k_pci 0000:01:00.0: failed to receive initialized
+>> event from target: 00000000
+>>>> [   11.793344] ath10k_pci 0000:01:00.0: failed to wait for target after
+>> cold reset: -110
+>>>> [   11.800814] ath10k_pci 0000:01:00.0: failed to reset chip: -110
+>>>> [   11.809228] ath10k_pci: probe of 0000:01:00.0 failed with error -110
+>>>>
+>>>> This is on an AP148 board with Linux 3.18, backports generated from
+>>>> latest wireless-testing (2015-08-03) + all patches from kvalo's ath
+>>>> tree.
+>>> Any idea about the version of AP148 that you are using?. By any chance
+>> did
+>>> you check if QCA988X is working on the same board?.
+>> No idea about the version, but QCA988X is working in the same slot.
+> QCA99X0 uses a different version of firmware from QCA988X.
+> Could you verify which firmware version or file name is using?
+ath10k/QCA99X0/hw2.0/firmware-5.bin_10.4.1.00007-1 from git is
+/lib/firmware/ath10k/QCA99X0/hw2.0/firmware-5.bin on the device.
 
-The 5G channel list contains channels that are not supported.
+However, this error shows up even before it gets to the point of loading
+the firmware.
 
-Signed-off-by: timlee <timlee@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-index b7f18e21..53d67a9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-@@ -2856,13 +2856,13 @@ static void _rtl8821ae_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
- 	struct txpower_info_2g pwrinfo24g;
- 	struct txpower_info_5g pwrinfo5g;
- 	u8 channel5g[CHANNEL_MAX_NUMBER_5G] = {
--		36, 38, 40, 42, 44, 46, 48, 50, 52, 54,
--		56, 58, 60, 62, 64, 100, 102, 104, 106,
--		108, 110, 112, 114, 116, 118, 120, 122,
--		124, 126, 128, 130, 132, 134, 136, 138,
--		140, 142, 144, 149, 151, 153, 155, 157,
--		159, 161, 163, 165, 167, 168, 169, 171,
--		173, 175, 177};
-+		36, 38, 40, 42, 44, 46, 48,		/* Band 1 */
-+		52, 54, 56, 58, 60, 62, 64,		/* Band 2 */
-+		100, 102, 104, 106, 108, 110, 112,	/* Band 3 */
-+		116, 118, 120, 122, 124, 126, 128,	/* Band 3 */
-+		132, 134, 136, 138, 140, 142, 144,	/* Band 3 */
-+		149, 151, 153, 155, 157, 159, 161,	/* Band 4 */
-+		165, 167, 169, 171, 173, 175, 177};	/* Band 4 */
- 	u8 channel5g_80m[CHANNEL_MAX_NUMBER_5G_80M] = {
- 		42, 58, 106, 122, 138, 155, 171};
- 	u8 rf_path, index;
--- 
-2.1.4
-
+- Felix
