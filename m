@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f173.google.com ([209.85.160.173]:36491 "EHLO
-	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750871AbbHRRG7 convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42491 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754744AbbHFK1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 13:06:59 -0400
+	Thu, 6 Aug 2015 06:27:25 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	<stable@vger.kernel.org>, Zhaoyang Liu <liuzy@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 4.2 3/3] mwifiex: fix system crash observed during initialisation
+Date: Thu, 6 Aug 2015 03:26:15 -0700
+Message-ID: <1438856775-3666-3-git-send-email-akarwar@marvell.com> (sfid-20150806_122734_579175_D5B50F3C)
+In-Reply-To: <1438856775-3666-1-git-send-email-akarwar@marvell.com>
+References: <1438856775-3666-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20150818091530.GH5610@mwanda>
-References: <55D238D4.20800@broadcom.com> <ba3c67af8cbe5658154084a165785c637e5a2bc8.1439853139.git.raphael.beamonte@gmail.com>
- <20150817234628.GK5558@mwanda> <20150818091530.GH5610@mwanda>
-From: =?UTF-8?Q?Rapha=C3=ABl_Beamonte?= <raphael.beamonte@gmail.com>
-Date: Tue, 18 Aug 2015 13:06:39 -0400
-Message-ID: <CAE_Gge0EDaE=zQp9YBDJSd_1VjU1a8-zoPkyKxqPc2THi2b=eQ@mail.gmail.com> (sfid-20150818_190728_576954_DD35C23C)
-Subject: Re: [PATCHv3] staging: wilc1000: replace MALLOC_WILC_BUFFER() macro
- to avoid possible memory leak
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org, Arend van Spriel <arend@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-08-18 5:15 GMT-04:00 Dan Carpenter <dan.carpenter@oracle.com>:
-> To be honest, I have lost track of this patchset.  If you are planning
-> to redo the other patches can you send it in a new thread?
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-Actually, Greg already included the "return statement" and
-"DECLARE_WILC_BUFFER" ones.
-The replacement of printk by netdev_* needs more work on my side to
-get the net_device to be able to use the netdev_* functions.
-And apparently Greg already received another patch with the
-"FREE_WILC_BUFFER" replacement, though I don't see it in the
-staging-testing tree yet.
+System crash was observed if one of the driver initialisation
+commands is timed out. The reason is our timeout handler triggers
+firmware dump, meanwhile driver initialisation error paths have
+already freed the adapter structure.
 
-So, I think this patch is the last one of this patchset that has to be
-treated! That's why I rebased it on top of the current staging-testing
-tree on my last send.
+Firmware hasn't yet completely initialized. So collecting firmware
+dump is not needed in this case. Command timeout handler is
+modified in this patch to fix the crash issue.
 
-Thanks,
-Raphaël
+Cc: stable@vger.kernel.org # 3.19+
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 27b778d..45ae38e 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -979,8 +979,10 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+ 			mwifiex_cancel_pending_ioctl(adapter);
+ 		}
+ 	}
+-	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
++	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING) {
+ 		mwifiex_init_fw_complete(adapter);
++		return;
++	}
+ 
+ 	if (adapter->if_ops.device_dump)
+ 		adapter->if_ops.device_dump(adapter);
+-- 
+1.8.1.4
+
