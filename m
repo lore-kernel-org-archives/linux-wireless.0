@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:36504 "EHLO
-	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753974AbbHYXZg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50504 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753167AbbHFHGL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 19:25:36 -0400
-Received: by qkda128 with SMTP id a128so60390975qkd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2015 16:25:36 -0700 (PDT)
-From: Sreenath Madasu <sreenath.madasu@gmail.com>
-Date: Tue, 25 Aug 2015 19:25:03 -0400
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Getting started on switching rtl8188eu staging driver to
- LIB80211/MAC80211
-Message-ID: <20150825232503.GA3342@sreenath-gentoo.lan> (sfid-20150826_012540_001525_BB751571)
-References: <loom.20150824T013723-25@post.gmane.org>
- <55DB2D62.6090002@lwfinger.net>
+	Thu, 6 Aug 2015 03:06:11 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55DB2D62.6090002@lwfinger.net>
+Subject: Re: mwifiex: sdio: reset adapter using mmc_hw_reset
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1437065401-20245-1-git-send-email-afenkart@gmail.com>
+To: Andreas Fenkart <afenkart@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Andreas Fenkart <afenkart@gmail.com>
+Message-Id: <20150806070612.242A2141E99@smtp.codeaurora.org> (sfid-20150806_090618_333752_D51CDDD1)
+Date: Thu,  6 Aug 2015 07:06:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Larry,
-I will look at those drivers
-Sreenath
-On Mon, Aug 24, 2015 at 09:42:42AM -0500, Larry Finger wrote:
-> On 08/23/2015 06:40 PM, Sreenath Madasu wrote:
-> > Hi all,
-> > I want to work on the TODO tasks
-> >
-> > - switch to use LIB80211
-> > - switch to use MAC80211
-> >
-> > for staging driver rtl8188eu.
-> >
-> > How can I start? Where is the documentation?
+
+> Since 1fb654fd97ff("mmc: sdio: add reset callback to bus operations"),
+> sdio cards can be power cycled using mmc_hw_reset.
+> The use mmc_remove_host/mmc_add_host is discouraged, because these are
+> internal functions to the mmc core and should only be used by mmc hosts
 > 
-> There is no specific documentation for this device, only what is available in 
-> the mac80211, cfg80211, and nl80211 code. You could also look at the drivers in 
-> drivers/net/wireless/ for ideas. The driver must be rewritten. You could 
-> consider Jes Sorensen's work on producing a mac80211 driver for the RTL8723AU 
-> that has been posted on this mailing list. He started with a Realtek USB driver 
-> that is similar to r8188eu.
-> 
-> Larry
-> 
-> 
+> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+
+Thanks, applied to wireless-drivers-next.git.
+
+Kalle Valo
