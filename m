@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:35066 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753741AbbHCSsD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49636 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755679AbbHFSpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2015 14:48:03 -0400
-Received: by oihn130 with SMTP id n130so7205920oih.2
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:48:02 -0700 (PDT)
-Date: Mon, 3 Aug 2015 13:47:34 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] wireless-regdb: Update 5GHz rules for US
-Message-ID: <20150803184734.GF21180@ubuntu-hedt> (sfid-20150803_204807_240863_0CF637C8)
-References: <1437622380-4154-1-git-send-email-wens@csie.org>
- <1437622380-4154-5-git-send-email-wens@csie.org>
- <20150803183422.GD21180@ubuntu-hedt>
+	Thu, 6 Aug 2015 14:45:45 -0400
+Message-ID: <55C3AB2F.9030904@codeaurora.org> (sfid-20150806_204548_542749_F7FFE2B1)
+Date: Thu, 06 Aug 2015 11:45:03 -0700
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150803183422.GD21180@ubuntu-hedt>
+To: Felix Fietkau <nbd@openwrt.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Add QCA99X0 to supported device list
+References: <1437478567-11339-1-git-send-email-vthiagar@qti.qualcomm.com> <55C1FFBC.7070905@openwrt.org> <55C31039.6030201@qti.qualcomm.com> <55C313D3.4080004@openwrt.org>
+In-Reply-To: <55C313D3.4080004@openwrt.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 03, 2015 at 01:34:22PM -0500, Seth Forshee wrote:
-> On Thu, Jul 23, 2015 at 11:32:59AM +0800, Chen-Yu Tsai wrote:
-> > The FCC increased the maximum conducted transmission power for the
-> > U-NII-1 (5150 ~ 5250 MHz) band to 30 dBm or 1 W for master devices
-> > and 24 dBm or 250 mW for mobile/portable devices.
-> > 
-> > Effective 6/2/2014.
-> > 
-> > See FCC KDB 905462 D06.
-> > 
-> > Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-> > ---
-> >  db.txt | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/db.txt b/db.txt
-> > index cadd52c..29ba4b6 100644
-> > --- a/db.txt
-> > +++ b/db.txt
-> > @@ -1160,7 +1160,7 @@ country UG: DFS-FCC
-> >  
-> >  country US: DFS-FCC
-> >  	(2402 - 2472 @ 40), (30)
-> > -	(5170 - 5250 @ 80), (17), AUTO-BW
-> > +	(5170 - 5250 @ 80), (30), AUTO-BW
-> 
-> The 30 dB limit is for devices in master mode, for clients the limit
-> seems to be 250 mW (about 24 dB). Given the TPC requirement for U-NII
-> devices the most it could be bumped up to is 21 dB, unless there's some
-> other reason I don't know about to keep it at 17 dB.
 
-Oops, looks like I was mistaken, this range does not require TPC. 30 dBm
-still seems to be incorrect however.
+On 08/06/2015 12:59 AM, Felix Fietkau wrote:
+> On 2015-08-06 09:43, Vasanthakumar Thiagarajan wrote:
+>> On Wednesday 05 August 2015 05:51 PM, Felix Fietkau wrote:
+>>> On 2015-07-21 13:36, Vasanthakumar Thiagarajan wrote:
+>>>> Add vendor/device id of QCA99X0 V2.0 to pci id table and
+>>>> QCA99X0_HW_2_0_CHIP_ID_REV to ath10k_pci_supp_chips[] for
+>>>> QCA99X0 to get detected by the driver.
+>>>>
+>>>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+>>> I just tested a 99X0 card, and I'm getting this:
+>>>
+>>> [    8.742514] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142)
+>>> [    8.747173] ath10k_pci 0000:01:00.0: pci irq msi interrupts 1
+> irq_mode 0 reset_mode 0
+>>> [   11.793314] ath10k_pci 0000:01:00.0: failed to receive initialized
+> event from target: 00000000
+>>> [   11.793344] ath10k_pci 0000:01:00.0: failed to wait for target after
+> cold reset: -110
+>>> [   11.800814] ath10k_pci 0000:01:00.0: failed to reset chip: -110
+>>> [   11.809228] ath10k_pci: probe of 0000:01:00.0 failed with error -110
+>>>
+>>> This is on an AP148 board with Linux 3.18, backports generated from
+>>> latest wireless-testing (2015-08-03) + all patches from kvalo's ath
+>>> tree.
+>> Any idea about the version of AP148 that you are using?. By any chance
+> did
+>> you check if QCA988X is working on the same board?.
+> No idea about the version, but QCA988X is working in the same slot.
+QCA99X0 uses a different version of firmware from QCA988X.
+Could you verify which firmware version or file name is using?
+> - Felix
+>
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
+Thanks,
+Peter
