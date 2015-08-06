@@ -1,165 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37379 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932092AbbHDU7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 16:59:15 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Nicholas Krause <xerofoify@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 33/37] iwlwifi: make various functions void in the file rs.c
-Date: Tue,  4 Aug 2015 23:43:23 +0300
-Message-Id: <1438721007-23283-33-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230716_112650_4298766C)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:37004 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253AbbHFQUX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2015 12:20:23 -0400
+Received: by igbpg9 with SMTP id pg9so14923138igb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 09:20:22 -0700 (PDT)
+Date: Thu, 6 Aug 2015 12:19:59 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Brady Lyles <lyles.brady@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: lenovo t400 atheros ar242x ath5k bug
+Message-ID: <20150806161958.GA20514@localhost> (sfid-20150806_182026_314288_9868EB6A)
+References: <CANR9swOiEVT6PvKv0V1Ytwm0GsN0_2HXqFpdmGAPzFoQG5T2Cg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANR9swOiEVT6PvKv0V1Ytwm0GsN0_2HXqFpdmGAPzFoQG5T2Cg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nicholas Krause <xerofoify@gmail.com>
+On Thu, Aug 06, 2015 at 10:06:07AM -0600, Brady Lyles wrote:
+> Hello all,
+> I was recommended by the qubes-users list to ask here about an ath5k bug.
+> It looks like my fedora 20 networking virtual machine (netvm) is
+> trying to load the ath5k driver for the qualcomm atheros ar242x wifi
+> module in my lenovo t400, but is choking.
+> Here's an excerpt from netvm dmesg:
+> 
+> [    5.399092] ath5k 0000:00:01.0: Xen PCI mapped GSI17 to IRQ39
+> [    5.399311] ath5k 0000:00:01.0: registered as 'phy0'
+> [    5.401297] PGD 12536067 PUD 12537067 PMD 126f5067 PTE 8010000000000464
+> [    5.401309] Oops: 0003 [#1] SMP
+> [    5.401315] Modules linked in: ath5k(+) ath mac80211 cfg80211
+> rfkill e1000e ptp pps_core pcspkr coretemp hwmon dummy_hcd nfsd
+> udc_core usbcore auth_rpcgss oid_registry usb_common exportfs nfs_acl
+> lockd sunrpc u2mfn(O) xen_blkback binfmt_misc ext4 crc16 jbd2
+> dm_snapshot xen_blkfront autofs4
+> [    5.401356] CPU: 1 PID: 353 Comm: systemd-udevd Tainted: G
+>  O 3.12.40-1.pvops.qubes.x86_64 #1
 
-This makes various functions in the file rs.c void due to these
-functions never returning a error code to signal to their callers
-if and how they have failed to complete their intended work.
+My wild guess (not being too familiar with qubes) is that passthrough is not
+working properly -- this:
 
-Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/rs.c | 51 +++++++++++++++--------------------
- 1 file changed, 21 insertions(+), 30 deletions(-)
+> [    5.401276] BUG: unable to handle kernel paging request at ffffc90000900014
+> [    5.401287] IP: [<ffffffff81268928>] iowrite32+0x38/0x40
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.c b/drivers/net/wireless/iwlwifi/dvm/rs.c
-index 3bd7c86..cef921c 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rs.c
-@@ -1416,11 +1416,11 @@ static int rs_switch_to_siso(struct iwl_priv *priv,
- /*
-  * Try to switch to new modulation mode from legacy
-  */
--static int rs_move_legacy_other(struct iwl_priv *priv,
--				struct iwl_lq_sta *lq_sta,
--				struct ieee80211_conf *conf,
--				struct ieee80211_sta *sta,
--				int index)
-+static void rs_move_legacy_other(struct iwl_priv *priv,
-+				 struct iwl_lq_sta *lq_sta,
-+				 struct ieee80211_conf *conf,
-+				 struct ieee80211_sta *sta,
-+				 int index)
- {
- 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
- 	struct iwl_scale_tbl_info *search_tbl =
-@@ -1575,7 +1575,7 @@ static int rs_move_legacy_other(struct iwl_priv *priv,
- 
- 	}
- 	search_tbl->lq_type = LQ_NONE;
--	return 0;
-+	return;
- 
- out:
- 	lq_sta->search_better_tbl = 1;
-@@ -1584,17 +1584,15 @@ out:
- 		tbl->action = IWL_LEGACY_SWITCH_ANTENNA1;
- 	if (update_search_tbl_counter)
- 		search_tbl->action = tbl->action;
--	return 0;
--
- }
- 
- /*
-  * Try to switch to new modulation mode from SISO
-  */
--static int rs_move_siso_to_other(struct iwl_priv *priv,
--				 struct iwl_lq_sta *lq_sta,
--				 struct ieee80211_conf *conf,
--				 struct ieee80211_sta *sta, int index)
-+static void rs_move_siso_to_other(struct iwl_priv *priv,
-+				  struct iwl_lq_sta *lq_sta,
-+				  struct ieee80211_conf *conf,
-+				  struct ieee80211_sta *sta, int index)
- {
- 	u8 is_green = lq_sta->is_green;
- 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
-@@ -1747,7 +1745,7 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
- 			break;
- 	}
- 	search_tbl->lq_type = LQ_NONE;
--	return 0;
-+	return;
- 
-  out:
- 	lq_sta->search_better_tbl = 1;
-@@ -1756,17 +1754,15 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
- 		tbl->action = IWL_SISO_SWITCH_ANTENNA1;
- 	if (update_search_tbl_counter)
- 		search_tbl->action = tbl->action;
--
--	return 0;
- }
- 
- /*
-  * Try to switch to new modulation mode from MIMO2
-  */
--static int rs_move_mimo2_to_other(struct iwl_priv *priv,
--				 struct iwl_lq_sta *lq_sta,
--				 struct ieee80211_conf *conf,
--				 struct ieee80211_sta *sta, int index)
-+static void rs_move_mimo2_to_other(struct iwl_priv *priv,
-+				   struct iwl_lq_sta *lq_sta,
-+				   struct ieee80211_conf *conf,
-+				   struct ieee80211_sta *sta, int index)
- {
- 	s8 is_green = lq_sta->is_green;
- 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
-@@ -1917,7 +1913,7 @@ static int rs_move_mimo2_to_other(struct iwl_priv *priv,
- 			break;
- 	}
- 	search_tbl->lq_type = LQ_NONE;
--	return 0;
-+	return;
-  out:
- 	lq_sta->search_better_tbl = 1;
- 	tbl->action++;
-@@ -1926,17 +1922,15 @@ static int rs_move_mimo2_to_other(struct iwl_priv *priv,
- 	if (update_search_tbl_counter)
- 		search_tbl->action = tbl->action;
- 
--	return 0;
--
- }
- 
- /*
-  * Try to switch to new modulation mode from MIMO3
-  */
--static int rs_move_mimo3_to_other(struct iwl_priv *priv,
--				 struct iwl_lq_sta *lq_sta,
--				 struct ieee80211_conf *conf,
--				 struct ieee80211_sta *sta, int index)
-+static void rs_move_mimo3_to_other(struct iwl_priv *priv,
-+				   struct iwl_lq_sta *lq_sta,
-+				   struct ieee80211_conf *conf,
-+				   struct ieee80211_sta *sta, int index)
- {
- 	s8 is_green = lq_sta->is_green;
- 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
-@@ -2093,7 +2087,7 @@ static int rs_move_mimo3_to_other(struct iwl_priv *priv,
- 			break;
- 	}
- 	search_tbl->lq_type = LQ_NONE;
--	return 0;
-+	return;
-  out:
- 	lq_sta->search_better_tbl = 1;
- 	tbl->action++;
-@@ -2101,9 +2095,6 @@ static int rs_move_mimo3_to_other(struct iwl_priv *priv,
- 		tbl->action = IWL_MIMO3_SWITCH_ANTENNA1;
- 	if (update_search_tbl_counter)
- 		search_tbl->action = tbl->action;
--
--	return 0;
--
- }
- 
- /*
+...looks like a pci write to an unusual address.
+
+What does output of lspci -vnn look like, run as root in the guest?
+
 -- 
-2.1.4
-
+Bob Copeland %% http://bobcopeland.com/
