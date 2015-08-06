@@ -1,337 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22395 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbbHQRrF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 13:47:05 -0400
-Date: Mon, 17 Aug 2015 20:47:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/5] staging: wilc1000: use pr_* instead of printk
-Message-ID: <20150817174707.GE5610@mwanda> (sfid-20150817_194731_253549_03F201CC)
-References: <CAE_Gge0m4KRC7UJntqnsXPeO9HZ7dg9UexLAi__2EN+ouGGw9w@mail.gmail.com>
- <cover.1439827537.git.raphael.beamonte@gmail.com>
- <4feb986f253ce20790cafabbf2262c0cc1f2be92.1439827537.git.raphael.beamonte@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:44407 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755225AbbHFIca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2015 04:32:30 -0400
+Date: Thu, 6 Aug 2015 11:30:04 +0300
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 2/5] net: rfkill: add rfkill_find_type function
+Message-ID: <20150806083004.GI7675@kuha.fi.intel.com> (sfid-20150806_103255_542649_F78F3D91)
+References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
+ <1438783649.29746.175.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4feb986f253ce20790cafabbf2262c0cc1f2be92.1439827537.git.raphael.beamonte@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1438783649.29746.175.camel@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 12:08:36PM -0400, Raphaël Beamonte wrote:
-> Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c  |  4 ++--
->  drivers/staging/wilc1000/linux_wlan.c        |  8 +++----
->  drivers/staging/wilc1000/linux_wlan_common.h | 32 ++++++++++++++--------------
->  drivers/staging/wilc1000/linux_wlan_sdio.c   |  2 +-
->  drivers/staging/wilc1000/linux_wlan_spi.c    |  2 +-
->  drivers/staging/wilc1000/wilc_debugfs.c      | 16 +++++++-------
->  drivers/staging/wilc1000/wilc_exported_buf.c |  6 +++---
->  7 files changed, 35 insertions(+), 35 deletions(-)
+On Wed, Aug 05, 2015 at 05:07:29PM +0300, Andy Shevchenko wrote:
+> On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
+> > Helper for finding the type based on name. Useful if the
+> > type needs to be determined based on device property.
+> > 
+> > Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> > ---
+> >  include/linux/rfkill.h | 15 +++++++++++++
+> >  net/rfkill/core.c      | 57 +++++++++++++++++++++++++---------------
+> > ----------
+> >  2 files changed, 44 insertions(+), 28 deletions(-)
+> > 
+> > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> > index d901078..02f563c 100644
+> > --- a/include/linux/rfkill.h
+> > +++ b/include/linux/rfkill.h
+> > @@ -212,6 +212,15 @@ void rfkill_set_states(struct rfkill *rfkill, 
+> > bool sw, bool hw);
+> >   * @rfkill: rfkill struct to query
+> >   */
+> >  bool rfkill_blocked(struct rfkill *rfkill);
+> > +
+> > +/**
+> > + * rfkill_find_type - Helpper for finding rfkill type by name
+> > + * @name: the name of the type
+> > + *
+> > + * Returns enum rfkill_type that conrresponds the name.
+> > + */
+> > +enum rfkill_type rfkill_find_type(const char *name);
+> > +
+> >  #else /* !RFKILL */
+> >  static inline struct rfkill * __must_check
+> >  rfkill_alloc(const char *name,
+> > @@ -268,6 +277,12 @@ static inline bool rfkill_blocked(struct rfkill 
+> > *rfkill)
+> >  {
+> >  	return false;
+> >  }
+> > +
+> > +static inline enum rfkill_type rfkill_find_type(const char *name)
+> > +{
+> > +	return 0;
 > 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index c81c41d..0cbf4a9c 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -2007,7 +2007,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
->  							pstrWIDs[counter].u16WIDid,
->  							(counter == u32WIDsCount - 1), drvHandler)) {
->  				ret = -1;
-> -				printk("[Sendconfigpkt]Get Timed out\n");
-> +				pr_debug("[Sendconfigpkt]Get Timed out\n");
+> Hmmâ€¦ Besides 0 is implicitly casted to enum type the issue with enums
+> that you rather have to supply existing enum entry. I would suggest to
+> add RFKILL_TYPE_UNKNOWN if _ALL is reserved for some use cases.
+
+Why would you add a new type just for this? You do realize it would
+require adding specific handling all over the place? RFKILL_TYPE_ALL
+(0) is already handled as an invalid type. Confused?
+
+I'll change this and return RFKILL_TYPE_ALL instead of 0.
 
 
-Possibly pr_err()?
+Thanks,
 
-
->  				break;
->  			}
->  		}
-> @@ -2029,7 +2029,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
->  							pstrWIDs[counter].s32ValueSize,
->  							(counter == u32WIDsCount - 1), drvHandler)) {
->  				ret = -1;
-> -				printk("[Sendconfigpkt]Set Timed out\n");
-> +				pr_debug("[Sendconfigpkt]Set Timed out\n");
->  				break;
->  			}
->  		}
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 040e55d..1f32c36 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -1306,7 +1306,7 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
->  
->  	if (g_linux_wlan->wilc1000_initialized)	{
->  
-> -		printk("Deinitializing wilc1000  ...\n");
-> +		pr_info("Deinitializing wilc1000  ...\n");
-
-debug.
-
->  
->  		if (nic == NULL) {
->  			PRINT_ER("nic is NULL\n");
-> @@ -2565,8 +2565,8 @@ static int __init init_wilc_driver(void)
->  	}
->  #endif
->  
-> -	printk("IN INIT FUNCTION\n");
-> -	printk("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
-> +	pr_info("IN INIT FUNCTION\n");
-
-debug.
-
-> +	pr_info("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
->  
->  	linux_wlan_device_power(1);
->  	msleep(100);
-> @@ -2662,7 +2662,7 @@ static void __exit exit_wilc_driver(void)
->  			kfree(g_linux_wlan);
->  			g_linux_wlan = NULL;
->  		}
-> -		printk("Module_exit Done.\n");
-> +		pr_info("Module_exit Done.\n");
-
-debug.
-
->  
->  #if defined(WILC_DEBUGFS)
->  		wilc_debugfs_remove();
-> diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-> index e6ebf3e..14743ae 100644
-> --- a/drivers/staging/wilc1000/linux_wlan_common.h
-> +++ b/drivers/staging/wilc1000/linux_wlan_common.h
-> @@ -54,8 +54,8 @@ extern atomic_t DEBUG_LEVEL;
->  	do {								\
->  		if ((atomic_read(&DEBUG_LEVEL) & DEBUG) &&		\
->  		   ((atomic_read(&REGION)) & (region))) {		\
-> -			printk("DBG [%s: %d]", __func__, __LINE__);	\
-> -			printk(__VA_ARGS__);				\
-> +			pr_debug("DBG [%s: %d]", __func__, __LINE__);	\
-> +			pr_debug(__VA_ARGS__);				\
-
-This is a behavior change, I think.  pr_debug() needs to be turned on?
-
->  		}							\
->  	} while (0)
->  
-> @@ -63,8 +63,8 @@ extern atomic_t DEBUG_LEVEL;
->  	do {								\
->  		if ((atomic_read(&DEBUG_LEVEL) & INFO) &&		\
->  		   ((atomic_read(&REGION)) & (region))) {		\
-> -			printk("INFO [%s]", __func__);			\
-> -			printk(__VA_ARGS__);				\
-> +			pr_info("INFO [%s]", __func__);			\
-> +			pr_info(__VA_ARGS__);				\
->  		}							\
->  	} while (0)
->  
-> @@ -72,16 +72,16 @@ extern atomic_t DEBUG_LEVEL;
->  	do {								\
->  		if ((atomic_read(&DEBUG_LEVEL) & WRN) &&		\
->  		   ((atomic_read(&REGION)) & (region))) {		\
-> -			printk("WRN [%s: %d]", __func__, __LINE__);	\
-> -			printk(__VA_ARGS__);				\
-> +			pr_warning("WRN [%s: %d]", __func__, __LINE__);	\
-> +			pr_warning(__VA_ARGS__);				\
->  		}							\
->  	} while (0)
->  
->  #define PRINT_ER(...)							\
->  	do {								\
->  		if ((atomic_read(&DEBUG_LEVEL) & ERR)) {		\
-> -			printk("ERR [%s: %d]", __func__, __LINE__);	\
-> -			printk(__VA_ARGS__);				\
-> +			pr_err("ERR [%s: %d]", __func__, __LINE__);	\
-> +			pr_err(__VA_ARGS__);				\
->  		}							\
->  	} while (0)
->  
-> @@ -96,31 +96,31 @@ extern atomic_t DEBUG_LEVEL;
->  #define PRINT_D(region, ...)						\
->  	do {								\
->  		if (DEBUG == 1 && ((REGION)&(region))) {		\
-> -			printk("DBG [%s: %d]", __func__, __LINE__);	\
-> -			printk(__VA_ARGS__);				\
-> +			pr_debug("DBG [%s: %d]", __func__, __LINE__);	\
-> +			pr_debug(__VA_ARGS__);				\
->  		}							\
->  	} while (0)
->  
->  #define PRINT_INFO(region, ...)						\
->  	do {								\
->  		if (INFO == 1 && ((REGION)&(region))) {			\
-> -			printk("INFO [%s]", __func__);			\
-> -			printk(__VA_ARGS__);				\
-> +			pr_info("INFO [%s]", __func__);			\
-> +			pr_info(__VA_ARGS__);				\
->  		}							\
->  	} while (0)
->  
->  #define PRINT_WRN(region, ...)						\
->  	do {								\
->  		if (WRN == 1 && ((REGION)&(region))) {			\
-> -			printk("WRN [%s: %d]", __func__, __LINE__);	\
-> -			printk(__VA_ARGS__);				\
-> +			pr_warning("WRN [%s: %d]", __func__, __LINE__);	\
-> +			pr_warning(__VA_ARGS__);				\
->  		}							\
->  	} while (0)
->  
->  #define PRINT_ER(...)							\
->  	do {								\
-> -		printk("ERR [%s: %d]", __func__, __LINE__);		\
-> -		printk(__VA_ARGS__);					\
-> +		pr_err("ERR [%s: %d]", __func__, __LINE__);		\
-> +		pr_err(__VA_ARGS__);					\
->  	} while (0)
->  #endif
->  
-> diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-> index 37f31f4..13d7f84 100644
-> --- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-> +++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-> @@ -136,7 +136,7 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
->  		return -1;
->  	}
->  
-> -	printk("Driver Initializing success\n");
-> +	pr_info("Driver Initializing success\n");
->  	return 0;
->  }
->  
-> diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-> index 236669c..0bb68a5 100644
-> --- a/drivers/staging/wilc1000/linux_wlan_spi.c
-> +++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-> @@ -50,7 +50,7 @@ static int __init wilc_bus_probe(struct spi_device *spi)
->  	PRINT_D(BUS_DBG, "spiMax-Speed: %d\n", spi->max_speed_hz);
->  	wilc_spi_dev = spi;
->  
-> -	printk("Driver Initializing success\n");
-> +	pr_info("Driver Initializing success\n");
->  	return 0;
->  }
->  
-> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-> index be2e901..588b167 100644
-> --- a/drivers/staging/wilc1000/wilc_debugfs.c
-> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
-> @@ -68,16 +68,16 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t
->  		flag = 100;
->  
->  	if (flag > DBG_LEVEL_ALL) {
-> -		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&DEBUG_LEVEL));
-> +		pr_err("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&DEBUG_LEVEL));
->  		return -EFAULT;
->  	}
->  
->  	atomic_set(&DEBUG_LEVEL, (int)flag);
->  
->  	if (flag == 0)
-> -		printk("Debug-level disabled\n");
-> +		pr_info("Debug-level disabled\n");
->  	else
-> -		printk("Debug-level enabled\n");
-> +		pr_info("Debug-level enabled\n");
-
-Ugh...  I guess debug?  Eventually we will want to remove most of this
-debug code.  It's just lazy and messy.
-
-
->  	return count;
->  }
->  
-> @@ -110,12 +110,12 @@ static ssize_t wilc_debug_region_write(struct file *filp, const char *buf, size_
->  	flag = buffer[0] - '0';
->  
->  	if (flag > DBG_REGION_ALL) {
-> -		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&REGION));
-> +		pr_err("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&REGION));
->  		return -EFAULT;
->  	}
->  
->  	atomic_set(&REGION, (int)flag);
-> -	printk("new debug-region is %x\n", atomic_read(&REGION));
-> +	pr_info("new debug-region is %x\n", atomic_read(&REGION));
-
-debug.
-
->  
->  	return count;
->  }
-> @@ -154,12 +154,12 @@ int wilc_debugfs_init(void)
->  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
->  	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
->  		/* it's not error. the debugfs is just not being enabled. */
-> -		printk("ERR, kernel has built without debugfs support\n");
-> +		pr_err("kernel has built without debugfs support\n");
->  		return 0;
->  	}
->  
->  	if (!wilc_dir) {
-> -		printk("ERR, debugfs create dir\n");
-> +		pr_err("debugfs create dir\n");
->  		return -1;
->  	}
->  
-> @@ -172,7 +172,7 @@ int wilc_debugfs_init(void)
->  						    &info->fops);
->  
->  		if (!debugfs_files) {
-> -			printk("ERR fail to create the debugfs file, %s\n", info->name);
-> +			pr_err("fail to create the debugfs file, %s\n", info->name);
->  			debugfs_remove_recursive(wilc_dir);
->  			return -1;
->  		}
-> diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
-> index c3aff9a..ceacfe2 100644
-> --- a/drivers/staging/wilc1000/wilc_exported_buf.c
-> +++ b/drivers/staging/wilc1000/wilc_exported_buf.c
-> @@ -37,7 +37,7 @@ static inline int kmalloc_wilc_buffer(void *buf, int size)
->  {
->  	buf = kmalloc(size, GFP_KERNEL);
->  	if (!buf) {
-> -		printk("fail to alloc memory\n");
-> +		pr_err("fail to alloc memory\n");
-
-Delete this.
-
->  		return -ENOBUFS;
->  	}
->  	return 0;
-> @@ -45,7 +45,7 @@ static inline int kmalloc_wilc_buffer(void *buf, int size)
->  
->  static int __init wilc_module_init(void)
->  {
-> -	printk("wilc_module_init\n");
-> +	pr_info("wilc_module_init\n");
-
-Delete this.  We have ftrae.
-
->  	/*
->  	 * alloc necessary memory
->  	 */
-> @@ -74,7 +74,7 @@ error_g_tx_buf:
->  
->  static void __exit wilc_module_deinit(void)
->  {
-> -	printk("wilc_module_deinit\n");
-> +	pr_info("wilc_module_deinit\n");
-
-Delete this.
-
->  
->  	kfree(exported_g_tx_buf);
->  	exported_g_tx_buf = NULL;
-> -- 
-> 2.1.4
+-- 
+heikki
