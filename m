@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31589 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683AbbHTBVy (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:55725
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755135AbbHFKoh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 21:21:54 -0400
-From: <miaoqing@qti.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH v2 1/2] ath9k: fix AR_RX_FILTER for ar9462/ar9565 when rx stopped
-Date: Thu, 20 Aug 2015 09:21:38 +0800
-Message-ID: <1440033699-11121-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150820_032157_881188_3843B317)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 6 Aug 2015 06:44:37 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH] ath9k: fix build with CONFIG_ATH9K_STATION_STATISTICS=y
+Date: Thu,  6 Aug 2015 12:44:30 +0200
+Message-Id: <1438857870-18580-1-git-send-email-nbd@openwrt.org> (sfid-20150806_124439_941279_CE263918)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-
-When rx stopped, AR_RX_FILTER should be cleared, but in
-ath9k_hw_setrxfilter(), ATH9K_RX_FILTER_CONTROL_WRAPPER will always
-be set for ar9462/ar9565.
-
-Fix this by moving the code in ath9k_hw_setrxfilter() to
-ath_calcrxfilter().
-
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+Fixes: 592fa228f213 ("ath9k: remove struct ath_atx_ac")
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   | 3 ---
- drivers/net/wireless/ath/ath9k/recv.c | 3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug_sta.c | 20 +++-----------------
+ 1 file changed, 3 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a31a680..0e2b28c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2760,9 +2760,6 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
+diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/wireless/ath/ath9k/debug_sta.c
+index ffca918..c2ca57a 100644
+--- a/drivers/net/wireless/ath/ath9k/debug_sta.c
++++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
+@@ -26,12 +26,11 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
+ 	struct ath_node *an = file->private_data;
+ 	struct ath_softc *sc = an->sc;
+ 	struct ath_atx_tid *tid;
+-	struct ath_atx_ac *ac;
+ 	struct ath_txq *txq;
+ 	u32 len = 0, size = 4096;
+ 	char *buf;
+ 	size_t retval;
+-	int tidno, acno;
++	int tidno;
  
- 	ENABLE_REGWRITE_BUFFER(ah);
+ 	buf = kzalloc(size, GFP_KERNEL);
+ 	if (buf == NULL)
+@@ -49,26 +48,13 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
+ 			 an->mpdudensity);
  
--	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
--		bits |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
+ 	len += scnprintf(buf + len, size - len,
+-			 "%2s%7s\n", "AC", "SCHED");
 -
- 	REG_WRITE(ah, AR_RX_FILTER, bits);
+-	for (acno = 0, ac = &an->ac[acno];
+-	     acno < IEEE80211_NUM_ACS; acno++, ac++) {
+-		txq = ac->txq;
+-		ath_txq_lock(sc, txq);
+-		len += scnprintf(buf + len, size - len,
+-				 "%2d%7d\n",
+-				 acno, ac->sched);
+-		ath_txq_unlock(sc, txq);
+-	}
+-
+-	len += scnprintf(buf + len, size - len,
+ 			 "\n%3s%11s%10s%10s%10s%10s%9s%6s%8s\n",
+ 			 "TID", "SEQ_START", "SEQ_NEXT", "BAW_SIZE",
+ 			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED", "PAUSED");
  
- 	phybits = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index d3189da..0689f6b 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -424,6 +424,9 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	    AR_SREV_9561(sc->sc_ah))
- 		rfilt |= ATH9K_RX_FILTER_4ADDRESS;
- 
-+	if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
-+		rfilt |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
-+
- 	if (ath9k_is_chanctx_enabled() &&
- 	    test_bit(ATH_OP_SCANNING, &common->op_flags))
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
+ 	for (tidno = 0, tid = &an->tid[tidno];
+ 	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
+-		txq = tid->ac->txq;
++		txq = tid->txq;
+ 		ath_txq_lock(sc, txq);
+ 		if (tid->active) {
+ 			len += scnprintf(buf + len, size - len,
+@@ -80,7 +66,7 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
+ 					 tid->baw_head,
+ 					 tid->baw_tail,
+ 					 tid->bar_index,
+-					 tid->sched);
++					 !list_empty(&tid->list));
+ 		}
+ 		ath_txq_unlock(sc, txq);
+ 	}
 -- 
-1.9.1
+2.2.2
 
