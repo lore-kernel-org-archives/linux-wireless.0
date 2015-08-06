@@ -1,97 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:35749 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752124AbbHQT2u (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61864 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753537AbbHFHoL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 15:28:50 -0400
-From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCHv2 5/5] staging: wilc1000: replace MALLOC_WILC_BUFFER() macro to avoid possible memory leak
-Date: Mon, 17 Aug 2015 15:28:30 -0400
-Message-Id: <339fc87526f51233b262315b2297f68e3b00c7b6.1439838526.git.raphael.beamonte@gmail.com> (sfid-20150817_212942_231781_AADFB681)
-In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
-References: <cover.1439838526.git.raphael.beamonte@gmail.com>
-In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
-References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+	Thu, 6 Aug 2015 03:44:11 -0400
+Message-ID: <55C31039.6030201@qti.qualcomm.com> (sfid-20150806_094415_049219_2FD5699A)
+Date: Thu, 6 Aug 2015 13:13:53 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>, <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH] ath10k: Add QCA99X0 to supported device list
+References: <1437478567-11339-1-git-send-email-vthiagar@qti.qualcomm.com> <55C1FFBC.7070905@openwrt.org>
+In-Reply-To: <55C1FFBC.7070905@openwrt.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MACRO_WILC_BUFFER() macro was using a return statement, and didn't
-take care of possible memory leaks and subsequent bugs when it was failing
-after succeeding some allocations. This patch corrects this behavior.
+On Wednesday 05 August 2015 05:51 PM, Felix Fietkau wrote:
+> On 2015-07-21 13:36, Vasanthakumar Thiagarajan wrote:
+>> Add vendor/device id of QCA99X0 V2.0 to pci id table and
+>> QCA99X0_HW_2_0_CHIP_ID_REV to ath10k_pci_supp_chips[] for
+>> QCA99X0 to get detected by the driver.
+>>
+>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> I just tested a 99X0 card, and I'm getting this:
+>
+> [    8.742514] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142)
+> [    8.747173] ath10k_pci 0000:01:00.0: pci irq msi interrupts 1 irq_mode 0 reset_mode 0
+> [   11.793314] ath10k_pci 0000:01:00.0: failed to receive initialized event from target: 00000000
+> [   11.793344] ath10k_pci 0000:01:00.0: failed to wait for target after cold reset: -110
+> [   11.800814] ath10k_pci 0000:01:00.0: failed to reset chip: -110
+> [   11.809228] ath10k_pci: probe of 0000:01:00.0 failed with error -110
+>
+> This is on an AP148 board with Linux 3.18, backports generated from
+> latest wireless-testing (2015-08-03) + all patches from kvalo's ath
+> tree.
 
-Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
----
- drivers/staging/wilc1000/wilc_exported_buf.c | 37 ++++++++++++++++++++--------
- 1 file changed, 27 insertions(+), 10 deletions(-)
+Any idea about the version of AP148 that you are using?. By any chance did
+you check if QCA988X is working on the same board?.
 
-diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
-index c9a5943..0f3bdad 100644
---- a/drivers/staging/wilc1000/wilc_exported_buf.c
-+++ b/drivers/staging/wilc1000/wilc_exported_buf.c
-@@ -8,13 +8,6 @@
- #define LINUX_TX_SIZE	(64 * 1024)
- #define WILC1000_FW_SIZE (4 * 1024)
- 
--#define MALLOC_WILC_BUFFER(name, size)	\
--	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
--	if (!exported_ ## name) {   \
--		printk("fail to alloc: %s memory\n", exported_ ## name);  \
--		return -ENOBUFS;	\
--	}
--
- /*
-  * Add necessary buffer pointers
-  */
-@@ -45,11 +38,35 @@ static int __init wilc_module_init(void)
- 	/*
- 	 * alloc necessary memory
- 	 */
--	MALLOC_WILC_BUFFER(g_tx_buf, LINUX_TX_SIZE)
--	MALLOC_WILC_BUFFER(g_rx_buf, LINUX_RX_SIZE)
--	MALLOC_WILC_BUFFER(g_fw_buf, WILC1000_FW_SIZE)
-+	exported_g_tx_buf = kmalloc(LINUX_TX_SIZE, GFP_KERNEL);
-+	if (!exported_g_tx_buf) {
-+		pr_err("fail to alloc tx buf");
-+		return -ENOMEM;
-+	}
-+
-+	exported_g_rx_buf = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
-+	if (!exported_g_rx_buf) {
-+		pr_err("fail to alloc rx buf");
-+		goto free_g_tx_buf;
-+	}
-+
-+	exported_g_fw_buf = kmalloc(WILC1000_FW_SIZE, GFP_KERNEL);
-+	if (!exported_g_fw_buf) {
-+		pr_err("fail to alloc fw buf");
-+		goto free_g_rx_buf;
-+	}
- 
- 	return 0;
-+
-+free_g_rx_buf:
-+	kfree(exported_g_rx_buf);
-+	exported_g_rx_buf = NULL;
-+
-+free_g_tx_buf:
-+	kfree(exported_g_tx_buf);
-+	exported_g_tx_buf = NULL;
-+
-+	return -ENOMEM;
- }
- 
- static void __exit wilc_module_deinit(void)
--- 
-2.1.4
+Vasanth
 
