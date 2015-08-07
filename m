@@ -1,43 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhcavuit02.kulnet.kuleuven.be ([134.58.240.130]:48173 "EHLO
-	cavuit02.kulnet.kuleuven.be" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753308AbbHEOCp (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:46026 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754084AbbHGGyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 10:02:45 -0400
-From: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
-Subject: [PATCH 3/5] mac80211: Create STA when transmitting to unknown station in OCB mode
-Date: Wed,  5 Aug 2015 16:02:33 +0200
-Message-Id: <1438783353-5685-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be> (sfid-20150805_160249_759695_FCB65F13)
+	Fri, 7 Aug 2015 02:54:03 -0400
+Date: Thu, 06 Aug 2015 23:54:02 -0700 (PDT)
+Message-Id: <20150806.235402.1653217722715506389.davem@davemloft.net> (sfid-20150807_085427_501616_C6B8883E)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2015-08-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87zj27yoy6.fsf@kamboji.qca.qualcomm.com>
+References: <87zj27yoy6.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a new STA when requested to unicast a frame to an unknown station.
-This is needed to make ratecontrol work in the case where data is sent
-from sta A to B and sta B never replies. Currently, sta B will stay unknown
-to mac80211 and the default rate will always be used.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Tue, 04 Aug 2015 19:54:09 +0300
 
-Signed-off-by: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
----
- net/mac80211/tx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> here are few small fixes I would like to get to 4.2. Please let me know
+> if there are any problems.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 84e0e8c..eb8dba6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1209,6 +1209,10 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 	} else
- 		tx->flags |= IEEE80211_TX_UNICAST;
- 
-+	if ((sdata->vif.type == NL80211_IFTYPE_OCB) && (!tx->sta) &&
-+	    (tx->flags & IEEE80211_TX_UNICAST))
-+		ieee80211_ocb_rx_no_sta(sdata, NULL, hdr->addr1, 0);
-+
- 	if (!(info->flags & IEEE80211_TX_CTL_DONTFRAG)) {
- 		if (!(tx->flags & IEEE80211_TX_UNICAST) ||
- 		    skb->len + FCS_LEN <= local->hw.wiphy->frag_threshold ||
--- 
-1.9.1
-
+Pulled, thanks.
