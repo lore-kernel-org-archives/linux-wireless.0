@@ -1,49 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:30579 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753375AbbHSPHc convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:33942 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822AbbHGACY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 11:07:32 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC v2 0/3] add TSO / A-MSDU TX for iwlwifi
-Date: Wed, 19 Aug 2015 15:07:09 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8250B6@hasmsx107.ger.corp.intel.com> (sfid-20150819_170740_497173_D392339F)
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
- <1439993647.6610.8.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 6 Aug 2015 20:02:24 -0400
+Received: by pdber20 with SMTP id er20so37830919pdb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 17:02:23 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/4] staging: wilc1000: remove WILC_memset function
+Date: Fri,  7 Aug 2015 09:02:02 +0900
+Message-Id: <1438905724-26810-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150807_020227_502909_1E5C24FC)
+In-Reply-To: <1438905724-26810-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1438905724-26810-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eric,
+Remove WILC_memset function because it is changed to memset.
 
-First, thank you a lot for your comments.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_strutils.c |  9 ---------
+ drivers/staging/wilc1000/wilc_strutils.h | 12 ------------
+ 2 files changed, 21 deletions(-)
 
-On 08/19/2015 05:14 PM, Eric Dumazet wrote:
-> On Wed, 2015-08-19 at 15:59 +0300, Emmanuel Grumbach wrote:
-> 
->> We could have enabled A-MSDU based on xmit-more, but the
->> rationale of using LSO is that when using pfifo-fast,
->> the Qdisc gets one packet and dequeues is straight away
->> which limits the possibility to get a lot of packets at
->> once. (Am I right here?).
-> 
-> No, you are not ;)
-> 
-> Key point for xmit_more is BQL being implemented in your driver.
-> 
-> Relevant code is in try_bulk_dequeue_skb()
-> 
+diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
+index e014595..c15375e 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.c
++++ b/drivers/staging/wilc1000/wilc_strutils.c
+@@ -25,15 +25,6 @@ void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count)
+ 	memcpy(pvTarget, pvSource, u32Count);
+ }
+ 
+-/*!
+- *  @author	syounan
+- *  @date	18 Aug 2010
+- *  @version	1.0
+- */
+-void *WILC_memset(void *pvTarget, u8 u8SetValue, u32 u32Count)
+-{
+-	return memset(pvTarget, u8SetValue, u32Count);
+-}
+ 
+ /*!
+  *  @author	syounan
+diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
+index d144557..acc0ca4 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.h
++++ b/drivers/staging/wilc1000/wilc_strutils.h
+@@ -71,18 +71,6 @@ static WILC_ErrNo WILC_memcpy(void *pvTarget, const void *pvSource, u32 u32Count
+ 	}
+ }
+ 
+-/*!
+- *  @brief	Sets the contents of a memory buffer with the given value
+- *  @param[in]	pvTarget the target buffer which contsnts will be set
+- *  @param[in]	u8SetValue the value to be used
+- *  @param[in]	u32Count the size of the memory buffer
+- *  @return	value of pvTarget
+- *  @note	this function repeats the functionality of standard memset
+- *  @author	syounan
+- *  @date	18 Aug 2010
+- *  @version	1.0
+- */
+-void *WILC_memset(void *pvTarget, u8 u8SetValue, u32 u32Count);
+ 
+ /*!
+  *  @brief	copies the contents of source string into the target string
+-- 
+1.9.1
 
-I'll look at it.
-I was almost starting to implement that but then I thought with another
-(good?) reason to use LSO. LSO gives me the guarantee that the packet is
-directed to one peer, which might not be the case with xmit_more since
-we have one Qdisc for several clients in case we are in AP mode.
-Building an A-MSDU for several clients is not possible, at least not for
-several client in the L2 (different MAC addresses).
-LSO avoids this problem completely.
