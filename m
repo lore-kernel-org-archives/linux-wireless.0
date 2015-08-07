@@ -1,153 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:36368 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992538AbbHHQxw (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33181 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137AbbHGI0K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2015 12:53:52 -0400
-Received: by oiev193 with SMTP id v193so39428026oie.3
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2015 09:53:51 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
-	shaofu <shaofu@realtek.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V3 NEXT 3/7] rtlwifi: Make retry limits depend on vif type
-Date: Sat,  8 Aug 2015 11:53:35 -0500
-Message-Id: <1439052819-30196-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150808_185357_278384_A4288758)
-In-Reply-To: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 7 Aug 2015 04:26:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	<stable@vger.kernel.org>, Reyad Attiyat <reyad.attiyat@gmail.com>
+Subject: Re: [PATCH 4.2 1/3] mwifiex: usb: Fix double add error when submitting rx urb
+References: <1438856775-3666-1-git-send-email-akarwar@marvell.com>
+Date: Fri, 07 Aug 2015 11:26:02 +0300
+In-Reply-To: <1438856775-3666-1-git-send-email-akarwar@marvell.com> (Amitkumar
+	Karwar's message of "Thu, 6 Aug 2015 03:26:13 -0700")
+Message-ID: <877fp7zeqt.fsf@kamboji.qca.qualcomm.com> (sfid-20150807_102621_622562_4F3C09BF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: pkshih <pkshih@realtek.com>
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-Making the retry limits depend on the vif type can boost performance.
+> From: Reyad Attiyat <reyad.attiyat@gmail.com>
+>
+> There is an error that can occur where the driver adds the same URB to USB submission list twice.
+> This happens since mwifiex_usb_submit_rem_rx can submit packets at same time as an rx urb complete callback.
+> This causes list corruption and is fixed by not setting the skb to NULL when submitting an rx packet.
+>
+> [   84.461242] WARNING: CPU: 1 PID: 748 at lib/list_debug.c:36 __list_add+0xcb/0xd0()
+> [   84.461245] list_add double add: new=ffff8800c92b0c50, prev=ffff8800c92b0c50, next=ffff8800ced6c430.
+> [   84.461247] Modules linked in: rfcomm fuse cmac nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 xt_conntrack ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack bnep iptable_mangle iptable_security iptable_raw btusb btintel bluetooth mwifiex_usb mwifiex x86_pkg_temp_thermal cfg80211 coretemp r8712u(C) kvm_intel kvm hid_sensor_als hid_sensor_incl_3d hid_sensor_rotation hid_sensor_magn_3d hid_sensor_accel_3d hid_sensor_gyro_3d hid_sensor_trigger hid_sensor_iio_common industrialio_triggered_buffer kfifo_buf rfkill iTCO_wdt industrialio iTCO_vendor_support
+> [   84.461316]  crc32_pclmul crc32c_intel ghash_clmulni_intel microcode snd_hda_codec_realtek vfat snd_hda_codec_generic fat snd_hda_codec_hdmi snd_hda_intel snd_hda_controller uvcvideo snd_hda_codec videobuf2_vmalloc videobuf2_memops snd_hwdep videobuf2_core snd_hda_core joydev v4l2_common videodev hid_sensor_hub snd_seq hid_multitouch media snd_seq_device snd_pcm snd_timer mei_me snd i2c_i801 lpc_ich mei soundcore tpm_infineon tpm_tis tpm i2c_hid i2c_designware_platform i2c_designware_core nfsd auth_rpcgss nfs_acl lockd grace sunrpc sch_fq_codel i915 i2c_algo_bit drm_kms_helper drm xhci_pci xhci_hcd ehci_pci sd_mod ehci_hcd video
+> [   84.461383] CPU: 1 PID: 748 Comm: kworker/u9:0 Tainted: G         C      4.1.0-rc5+ #163
+> [   84.461386] Hardware name: Microsoft Corporation Surface Pro 2/Surface Pro 2, BIOS 2.05.0250 04/10/2015
+> [   84.461396] Workqueue: MWIFIEX_RX_WORK_QUEUE mwifiex_rx_work_queue [mwifiex]
+> [   84.461399]  ffffffff81a8150e ffff8801174cf8e8 ffffffff817df830 0000000000000000
+> [   84.461405]  ffff8801174cf938 ffff8801174cf928 ffffffff810a54ba ffff8800c86bd750
+> [   84.461410]  ffff8800c92b0c50 ffff8800c92b0c50 ffff8800ced6c430 ffff88010c057178
+> [   84.461416] Call Trace:
+> [   84.461421]  [<ffffffff817df830>] dump_stack+0x4f/0x7b
+> [   84.461428]  [<ffffffff810a54ba>] warn_slowpath_common+0x8a/0xc0
+> [   84.461432]  [<ffffffff810a5536>] warn_slowpath_fmt+0x46/0x50
+> [   84.461436]  [<ffffffff814109fb>] __list_add+0xcb/0xd0
+> [   84.461442]  [<ffffffff815c551a>] ? usb_hcd_link_urb_to_ep+0x2a/0xa0
+> [   84.461446]  [<ffffffff815c5570>] usb_hcd_link_urb_to_ep+0x80/0xa0
+> [   84.461459]  [<ffffffffa004318a>] prepare_transfer+0xaa/0x130 [xhci_hcd]
+> [   84.461470]  [<ffffffffa0044cf7>] xhci_queue_bulk_tx+0xb7/0x7a0 [xhci_hcd]
+> [   84.461480]  [<ffffffffa003b67f>] ? xhci_urb_enqueue+0x50f/0x660 [xhci_hcd]
+> [   84.461489]  [<ffffffffa003b67f>] ? xhci_urb_enqueue+0x50f/0x660 [xhci_hcd]
+> [   84.461498]  [<ffffffffa003b735>] xhci_urb_enqueue+0x5c5/0x660 [xhci_hcd]
+> [   84.461503]  [<ffffffff815c7ad3>] usb_hcd_submit_urb+0x93/0xa70
+> [   84.461507]  [<ffffffff8168dde8>] ? __alloc_skb+0x78/0x1f0
+> [   84.461511]  [<ffffffff8168d301>] ? __kmalloc_reserve.isra.26+0x31/0x90
+> [   84.461515]  [<ffffffff8168ddbc>] ? __alloc_skb+0x4c/0x1f0
+> [   84.461519]  [<ffffffff8168ddfc>] ? __alloc_skb+0x8c/0x1f0
+> [   84.461523]  [<ffffffff8168badd>] ? skb_dequeue+0x5d/0x80
+> [   84.461527]  [<ffffffff815c987e>] usb_submit_urb+0x42e/0x5f0
+> [   84.461531]  [<ffffffff816931d9>] ? __alloc_rx_skb+0x39/0x100
+> [   84.461536]  [<ffffffffa05aa372>] mwifiex_usb_submit_rx_urb+0xb2/0x170 [mwifiex_usb]
+> [   84.461542]  [<ffffffffa05aa5f5>] mwifiex_usb_submit_rem_rx_urbs+0x45/0x50 [mwifiex_usb]
+> [   84.461550]  [<ffffffffa07094be>] mwifiex_rx_work_queue+0x10e/0x140 [mwifiex]
+> [   84.461556]  [<ffffffff810c4429>] process_one_work+0x229/0x890
+> [   84.461559]  [<ffffffff810c438c>] ? process_one_work+0x18c/0x890
+> [   84.461565]  [<ffffffff810c4ae3>] worker_thread+0x53/0x470
+> [   84.461569]  [<ffffffff810c4a90>] ? process_one_work+0x890/0x890
+> [   84.461572]  [<ffffffff810cb162>] kthread+0xf2/0x110
+> [   84.461577]  [<ffffffff811031ad>] ? trace_hardirqs_on+0xd/0x10
+> [   84.461581]  [<ffffffff810cb070>] ? kthread_create_on_node+0x230/0x230
+> [   84.461586]  [<ffffffff817e9662>] ret_from_fork+0x42/0x70
+> [   84.461590]  [<ffffffff810cb070>] ? kthread_create_on_node+0x230/0x230
+> [   84.461593] ---[ end trace 65103af5e6fb3444 ]---
+>
+> Cc: stable@vger.kernel.org # 3.19+
+> Signed-off-by: Reyad Attiyat <reyad.attiyat@gmail.com>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Signed-off-by: pkshih <pkshih@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-V2 - no changes
-V3 - no changes
----
- drivers/net/wireless/rtlwifi/core.c | 19 +++++++++++++++----
- drivers/net/wireless/rtlwifi/pci.c  |  8 +++++++-
- drivers/net/wireless/rtlwifi/ps.c   |  3 +++
- 3 files changed, 25 insertions(+), 5 deletions(-)
+What do you want to do with these patches exactly? These three are
+already in wireless-drivers-next so I cannot apply to wireless-drivers
+anymore (and that's why I cannot push them to 4.2).
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index 3b3a88b..19729ed 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -238,6 +238,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	int err = 0;
-+	u8 retry_limit = 0x30;
- 
- 	if (mac->vif) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-@@ -275,7 +276,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
- 			mac->basic_rates = 0xff0;
- 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
- 				(u8 *)(&mac->basic_rates));
--
-+		retry_limit = 0x07;
- 		break;
- 	case NL80211_IFTYPE_P2P_GO:
- 		mac->p2p = P2P_ROLE_GO;
-@@ -292,6 +293,7 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
- 			mac->basic_rates = 0xff0;
- 		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
- 					      (u8 *)(&mac->basic_rates));
-+		retry_limit = 0x07;
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
-@@ -326,6 +328,10 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
- 	memcpy(mac->mac_addr, vif->addr, ETH_ALEN);
- 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
- 
-+	mac->retry_long = retry_limit;
-+	mac->retry_short = retry_limit;
-+	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
-+				      (u8 *)(&retry_limit));
- out:
- 	mutex_unlock(&rtlpriv->locks.conf_mutex);
- 	return err;
-@@ -650,10 +656,15 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
- 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 			 "IEEE80211_CONF_CHANGE_RETRY_LIMITS %x\n",
- 			 hw->conf.long_frame_max_tx_count);
--		mac->retry_long = hw->conf.long_frame_max_tx_count;
--		mac->retry_short = hw->conf.long_frame_max_tx_count;
--		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
-+		/* On first open, everything changes (changed == ~0),
-+		 * so use our default value instead of wiphy's one.
-+		 */
-+		if (changed != ~0) {
-+			mac->retry_long = hw->conf.long_frame_max_tx_count;
-+			mac->retry_short = hw->conf.long_frame_max_tx_count;
-+			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
- 				(u8 *)(&hw->conf.long_frame_max_tx_count));
-+		}
- 	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index f46c9d7..a621d7d 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1227,6 +1227,10 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
- 	mac->current_ampdu_density = 7;
- 	mac->current_ampdu_factor = 3;
- 
-+	/* Retry Limit */
-+	mac->retry_short = 7;
-+	mac->retry_long = 7;
-+
- 	/*QOS*/
- 	rtlpci->acm_method = EACMWAY2_SW;
- 
-@@ -1833,7 +1837,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--
-+	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
- 	int err;
- 
- 	rtl_pci_reset_trx_ring(hw);
-@@ -1850,6 +1854,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
- 			 "Failed to config hardware!\n");
- 		return err;
- 	}
-+	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
-+				      &rtlmac->retry_long);
- 
- 	rtlpriv->cfg->ops->enable_interrupt(hw);
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "enable_interrupt OK\n");
-diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-index b69321d..b6b6834 100644
---- a/drivers/net/wireless/rtlwifi/ps.c
-+++ b/drivers/net/wireless/rtlwifi/ps.c
-@@ -34,6 +34,7 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
- 
- 	/*<1> reset trx ring */
- 	if (rtlhal->interface == INTF_PCI)
-@@ -46,6 +47,8 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
- 	/*<2> Enable Adapter */
- 	if (rtlpriv->cfg->ops->hw_init(hw))
- 		return false;
-+	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
-+				      &rtlmac->retry_long);
- 	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
- 
- 	/*<3> Enable Interrupt */
 -- 
-2.1.4
-
+Kalle Valo
