@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37368 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753596AbbHDU65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 16:58:57 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/37] iwlwifi: dvm: start HW before running FW
-Date: Tue,  4 Aug 2015 23:42:54 +0300
-Message-Id: <1438721007-23283-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230055_221156_0E82E317)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:38709 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752948AbbHGNGo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2015 09:06:44 -0400
+From: Johannes Postma <jgmpostma@gmail.com>
+To: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org
+Cc: Johannes Postma <jgmpostma@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH] staging: rtl8723au: rtl8723a_hal_init: Improve code readability
+Date: Fri,  7 Aug 2015 14:04:34 +0100
+Message-Id: <1438952674-9823-1-git-send-email-jgmpostma@gmail.com> (sfid-20150807_150659_754352_FB10E1EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new locking in PCIe transport requires to start_hw
-before start_fw. This uncovered a bug in dvm which failed
-to do so.
-Fix that.
+This patch improves code readability in the function
+rtl8723a_cal_txdesc_chksum.  It improves the readability of the argument
+of the function le16_to_cpu.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Postma <jgmpostma@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index 7acaa26..f603fb3 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -250,12 +250,24 @@ static int __iwl_up(struct iwl_priv *priv)
- 		}
- 	}
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+index eb76ac4..cf2388f 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+@@ -1847,7 +1847,7 @@ static void rtl8723a_cal_txdesc_chksum(struct tx_desc *ptxdesc)
+ 	ptxdesc->txdw7 &= cpu_to_le32(0xffff0000);
  
-+	ret = iwl_trans_start_hw(priv->trans);
-+	if (ret) {
-+		IWL_ERR(priv, "Failed to start HW: %d\n", ret);
-+		goto error;
-+	}
-+
- 	ret = iwl_run_init_ucode(priv);
- 	if (ret) {
- 		IWL_ERR(priv, "Failed to run INIT ucode: %d\n", ret);
- 		goto error;
- 	}
+ 	for (index = 0; index < count; index++)
+-		checksum ^= le16_to_cpu(*(usPtr + index));
++		checksum ^= le16_to_cpu(usPtr[index]);
  
-+	ret = iwl_trans_start_hw(priv->trans);
-+	if (ret) {
-+		IWL_ERR(priv, "Failed to start HW: %d\n", ret);
-+		goto error;
-+	}
-+
- 	ret = iwl_load_ucode_wait_alive(priv, IWL_UCODE_REGULAR);
- 	if (ret) {
- 		IWL_ERR(priv, "Failed to start RT ucode: %d\n", ret);
+ 	ptxdesc->txdw7 |= cpu_to_le32(checksum & 0x0000ffff);
+ }
 -- 
-2.1.4
+2.5.0
 
