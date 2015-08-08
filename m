@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:36639 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680AbbHBSY2 (ORCPT
+Received: from mail-pd0-f195.google.com ([209.85.192.195]:33048 "EHLO
+	mail-pd0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932814AbbHHMMk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2015 14:24:28 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH -4.2] rtlwifi: rtl8723be: Add module parameter for MSI interrupts
-Date: Sun,  2 Aug 2015 13:24:13 -0500
-Message-Id: <1438539853-29619-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150802_202436_865633_5FBD5BCA)
+	Sat, 8 Aug 2015 08:12:40 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH 1/4] staging: wilc1000: Add space between the braces
+Date: Sat,  8 Aug 2015 17:41:33 +0530
+Message-Id: <1439035896-15213-2-git-send-email-csgorentla@gmail.com> (sfid-20150808_141321_345266_B5E82299)
+In-Reply-To: <1439035896-15213-1-git-send-email-csgorentla@gmail.com>
+References: <1439035896-15213-1-git-send-email-csgorentla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver code allows for the disabling of MSI interrupts; however the
-module_parm line was missed and the option fails to show with modinfo.
+Inserted space between nested braces.  This fixes the checkpatch.pl
+error - space required after that close brace '}'.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [3.15+]
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
 ---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Kalle,
-
-This one-liner should be applied as soon as possible.
-
-Thanks,
-
-Larry
----
- drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-index 1017f02..7bf88d9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-@@ -385,6 +385,7 @@ module_param_named(debug, rtl8723be_mod_params.debug, int, 0444);
- module_param_named(ips, rtl8723be_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
-+module_param_named(msi, rtl8723be_mod_params.msi_support, bool, 0444);
- module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
- 		   bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3d12a44..3525145 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3331,7 +3331,7 @@ static int  WILC_WFI_add_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+-	tstrWILC_AddStaParam strStaParams = {{0}};
++	tstrWILC_AddStaParam strStaParams = { {0} };
+ 	perInterface_wlan_t *nic;
+ 
+ 
+@@ -3462,7 +3462,7 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+-	tstrWILC_AddStaParam strStaParams = {{0}};
++	tstrWILC_AddStaParam strStaParams = { {0} };
+ 	perInterface_wlan_t *nic;
+ 
+ 
 -- 
-2.1.4
+2.5.0
 
