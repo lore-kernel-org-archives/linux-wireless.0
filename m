@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:35801 "EHLO
-	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752756AbbHTP7x convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:34108 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992538AbbHHQxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 11:59:53 -0400
-Received: by iodt126 with SMTP id t126so51315283iod.2
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2015 08:59:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55D4F34D.2010505@broadcom.com>
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-	<1436553071-32423-2-git-send-email-arend@broadcom.com>
-	<CACna6ryt8iVUt18fODjDMiD-c3RLM22T2J_PM8NtEvBvWm8yBg@mail.gmail.com>
-	<55D4F34D.2010505@broadcom.com>
-Date: Thu, 20 Aug 2015 17:59:52 +0200
-Message-ID: <CACna6rw9o3_mG3ZoDuRoBmVpVKuso52KXeeHr6R8nDotD4mwPQ@mail.gmail.com> (sfid-20150820_175956_462367_CCD13859)
-Subject: Re: [PATCH v2 1/7] brcmfmac: Add support for host platform NVRAM loading.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 8 Aug 2015 12:53:55 -0400
+Received: by obbfr1 with SMTP id fr1so61845648obb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2015 09:53:54 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
+	shaofu <shaofu@realtek.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH V3 NEXT 5/7] rtlwifi: rtl8192ee: Implement new rekey logic
+Date: Sat,  8 Aug 2015 11:53:37 -0500
+Message-Id: <1439052819-30196-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150808_185400_437130_76E40928)
+In-Reply-To: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 August 2015 at 23:21, Arend van Spriel <arend@broadcom.com> wrote:
-> subject changed to v2. So let's go over your beef.
+From: pkshih <pkshih@realtek.com>
 
-I really hope none of my comment was mean or anything :)
+Use the new capability in rtlwifi to prevent rekeying before EAPOL msg 4/4
+has been sent.
 
+Signed-off-by: pkshih <pkshih@realtek.com>
+Signed-off-by: shaofu <shaofu@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+V2 - no changes
+V3 - no changes
+---
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  | 1 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 8 ++++++++
+ 2 files changed, 9 insertions(+)
 
-> On 07/11/2015 07:09 PM, Rafał Miłecki wrote:
->>
->> On 10 July 2015 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
->>> +               data_len = fw->size;
->>> +               raw_nvram = false;
->>> +       } else {
->>> +               data = bcm47xx_nvram_get_contents(&data_len);
->>> +               if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->>> +                       goto fail;
->>> +               raw_nvram = true;
->>> +       }
->>>
->>> -       if (fw) {
->>> -               nvram = brcmf_fw_nvram_strip(fw->data, fw->size,
->>> &nvram_length,
->>> +       if (data) {
->>> +               nvram = brcmf_fw_nvram_strip(data, data_len,
->>> &nvram_length,
->>>                                               fwctx->domain_nr,
->>> fwctx->bus_nr);
->>> -               release_firmware(fw);
->>> -               if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->>> -                       goto fail;
->>> +               if (raw_nvram)
->>> +                       bcm47xx_nvram_release_contents(data);
->>
->>
->> This is cosmetical but maybe you could move above 2 lines next to the
->> release_firmware? So we have all freeing code at one please? Do you
->> think it would improve readability?
->> Nothing important thought. Feel free to ignore me here.
->
->
-> confused! The release_firmware call is removed here, right?
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
+index 232865c..4091430 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
+@@ -859,6 +859,7 @@ static void _rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+ 	case C2H_8192E_TX_REPORT:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE ,
+ 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
++		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	case C2H_8192E_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+index d39ee67..49aec97 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+@@ -731,6 +731,14 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
+ 		}
+ 
++		/* tx report */
++		if (ptcb_desc->use_spe_rpt) {
++			u16 sn = rtl_get_tx_report_sn(hw);
++
++			SET_TX_DESC_SPE_RPT(pdesc, 1);
++			SET_TX_DESC_SW_DEFINE(pdesc, sn);
++		}
++
+ 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
+ 
+ 		if (ieee80211_is_mgmt(fc)) {
+-- 
+2.1.4
 
-Yes, you removed it from the "if (data) {" condition body but also
-re-added right after it. AFAIR I got an impression it may make more
-sense to have something like:
-if (raw_nvram)
-        bcm47xx_nvram_release_contents(data);
-if (fw)
-        release_firmware(fw);
-but you can just ignore it if it doesn't sound clear.
