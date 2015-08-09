@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:34682 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753656AbbH3Rn3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44945 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932245AbbHIIlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2015 13:43:29 -0400
-Received: by oiex83 with SMTP id x83so53733577oie.1
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2015 10:43:28 -0700 (PDT)
+	Sun, 9 Aug 2015 04:41:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: linux-next: build failure after merge of the  wireless-drivers-next tree
+References: <20150807131615.535d4c04@canb.auug.org.au>
+Date: Sun, 09 Aug 2015 11:41:45 +0300
+In-Reply-To: <20150807131615.535d4c04@canb.auug.org.au> (Stephen Rothwell's
+	message of "Fri, 7 Aug 2015 13:16:15 +1000")
+Message-ID: <8737zszwdy.fsf@kamboji.qca.qualcomm.com> (sfid-20150809_104219_346007_BAC891C1)
 MIME-Version: 1.0
-In-Reply-To: <20150829222531.GA8604@localhost>
-References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
-	<1440673024-13696-4-git-send-email-me@bobcopeland.com>
-	<CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com>
-	<20150829222531.GA8604@localhost>
-Date: Mon, 31 Aug 2015 01:43:28 +0800
-Message-ID: <CAEFj987gvasYnRq8tiFeQitbBmoXAr77hXU2cUW_TsH+viUn8g@mail.gmail.com> (sfid-20150830_194333_659814_BD49353B)
-Subject: Re: [PATCH 3/3] ath10k: implement mesh support
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jason Andryuk <jandryuk@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Bob
+Hi Stephen,
 
-> Yes: you don't want to enable raw mode TX / RX decap in the normal
-> case because it's fairly inefficient compared to "native" wifi mode,
-> according to my understanding.  The latter doesn't support mesh framing
-> however.
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
+
+> After merging the wireless-drivers-next tree, today's linux-next build
+> (x86_64 allmodconfig) failed like this:
 >
+> drivers/net/wireless/ath/ath9k/debug_sta.c: In function 'read_file_node_aggr':
+> drivers/net/wireless/ath/ath9k/debug_sta.c:54:25: error: 'struct ath_node' has no member named 'ac'
+>   for (acno = 0, ac = &an->ac[acno];
+>                          ^
 
-The native WiFi mode doesn't support mesh framing. Can you elaborate
-more on this?
+[...]
 
-Thanks
+> Caused by commits
+>
+>   592fa228f213 ("ath9k: remove struct ath_atx_ac")
+>   d70d848a75fd ("ath9k: remove the sched field in struct ath_atx_tid")
+>
+> I have used the wireless-drivers-next tree from next-20150806 for today.
 
-----
-Chun-Yeow
+Sorry about that, the commit below should fix the issue. This seems to
+be a frequent problem, I think I need to start running more extensive
+build tests before applying wireless-drivers patches.
+
+commit 12e035968191c05a574c9c20367cb3090bc7d99d
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Thu Aug 6 12:44:30 2015 +0200
+
+    ath9k: fix build with CONFIG_ATH9K_STATION_STATISTICS=y
+    
+    kbuild bot reported that commit 592fa228f213 ("ath9k: remove struct
+    ath_atx_ac") broke the build when CONFIG_ATH9K_STATION_STATISTICS is y.
+    
+    Reported-by: kbuild test robot <fengguang.wu@intel.com>
+    Fixes: 592fa228f213 ("ath9k: remove struct ath_atx_ac")
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+
+-- 
+Kalle Valo
