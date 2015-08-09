@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55661 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbbHMMhO (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36439 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932990AbbHIPfg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 08:37:14 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: orinoco: Do not call wiphy_unregister() from free_orinocodev()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1438879591-2849-1-git-send-email-Jes.Sorensen@redhat.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, mahfouz.saif.elyazal@gmail.com
-Message-Id: <20150813123713.B897014064A@smtp.codeaurora.org> (sfid-20150813_143718_747643_BBDAE072)
-Date: Thu, 13 Aug 2015 12:37:13 +0000 (UTC)
+	Sun, 9 Aug 2015 11:35:36 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH v2] staging: wilc1000: Remove pointer and integer comparision
+Date: Sun,  9 Aug 2015 21:05:11 +0530
+Message-Id: <1439134511-9931-1-git-send-email-csgorentla@gmail.com> (sfid-20150809_173613_380202_10A18F9B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Removed pointer check with integer; this fixes 'sparse' error -
+error: incompatible types for operation (>)
+   left side has type unsigned char [usertype] *[usertype] pu8Tail
+   right side has type int
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> 
-> alloc_orinocodev() would allocate the wiphy entry, but it would only get
-> registered much later in orinoco_init(). If something failed in the init
-> process inbetween the call to alloc_orinocodev() and the completion
-> of orinoco_init(), the drivers would end up calling wiphy_unregister()
-> with a NULL pointer causing beautiful OOPS fireworks.
-> 
-> Explicitly call wiphy_unregister() instead in the right places.
-> 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+---
+Changes in v2: Subject line corrected wilc100 -> wilc1000
 
-Thanks, applied to wireless-drivers-next.git.
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Kalle Valo
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index cc549c2..4ba1ad7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3471,7 +3471,7 @@ static void Handle_AddBeacon(void *drvHandler, tstrHostIFSetBeacon *pstrSetBeaco
+ 	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 24) & 0xFF);
+ 
+ 	/* Bug 4599 : if tail length = 0 skip copying */
+-	if (pstrSetBeaconParam->pu8Tail > 0)
++	if (pstrSetBeaconParam->pu8Tail != NULL)
+ 		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->u32TailLen);
+ 	pu8CurrByte += pstrSetBeaconParam->u32TailLen;
+ 
+-- 
+2.5.0
+
