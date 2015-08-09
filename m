@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:61912 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbbHYNsO (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:33978 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933050AbbHIQVm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 09:48:14 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Anish Tondwalkar <twilightrook@gmail.com>,
-	Victor van Poppelen <vvanpo@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Oscar Rydberg <oscarrydberg@gmail.com>,
-	Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: Re: [PATCH/RFT 0/2] ath10k: add qca6164 support
-Date: Tue, 25 Aug 2015 15:47:45 +0200
-Message-ID: <1901727.3ECHUBE5WW@wuerfel> (sfid-20150825_154817_795224_F9A4CE48)
-In-Reply-To: <CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com>
-References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com> <1889302.bvZ6s0xNZC@wuerfel> <CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com>
+	Sun, 9 Aug 2015 12:21:42 -0400
+Subject: Re: [PATCH] Add space after ,
+To: Swee Hua Law <sweehua81@gmail.com>, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org
+References: <1439136530-4415-1-git-send-email-sweehua81@gmail.com>
+Cc: aybuke.147@gmail.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <55C77E13.8060300@lwfinger.net> (sfid-20150809_182202_217474_0CD4680B)
+Date: Sun, 9 Aug 2015 11:21:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1439136530-4415-1-git-send-email-sweehua81@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 25 August 2015 15:09:45 Michal Kazior wrote:
-> 
-> This is some weird regression with MSI ranges and we still haven't
-> figured this out.
-> 
-> For the time being add "irq_mode=1" parameter when loading ath10k_pci
-> module, please.
+On 08/09/2015 11:08 AM, Swee Hua Law wrote:
+> add space after , to fix coding style issue
+>
+> Signed-off-by: Swee Hua Law <sweehua81@gmail.com>
+> ---
+>   drivers/staging/rtl8723au/core/rtw_sreset.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_sreset.c b/drivers/staging/rtl8723au/core/rtw_sreset.c
+> index 29a29d9..48b7723 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_sreset.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_sreset.c
+> @@ -71,7 +71,7 @@ static void sreset_restore_security_station(struct rtw_adapter *padapter)
+>   			/* pairwise key */
+>   			rtw_setstakey_cmd23a(padapter, (unsigned char *)psta, true);
+>   			/* group key */
+> -			rtw_set_key23a(padapter,&padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
+> +			rtw_set_key23a(padapter, &padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
+>   		}
+>   	}
+>   }
+>
 
-Ok, that gets the device to show up without errors. I have no
-time to test whether I can actually use it at the moment, will
-report back later.
+There are at least three problems with this patch. The first is that your 
+subject is really awful. You need to say that you are fixing a checkpatch 
+warning, and then say exactly what is happening. The second probalm also 
+concerns the subject, which needs to specify what component is being changed. 
+For drivers in staging, the usual way to do this is to start the subject line 
+with "staging: rtl8723au: ...". The third problem is that you should fix *ALL* 
+the problems with a given line whenever you touch it. That line is clearly over 
+the 80-character limit.
 
-Thanks!
+NACK
 
-	Arnd
+Larry
+
