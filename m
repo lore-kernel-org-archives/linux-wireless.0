@@ -1,51 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35926 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212AbbHRGK6 (ORCPT
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:34392 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933108AbbHIRWz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 02:10:58 -0400
-Date: Tue, 18 Aug 2015 11:40:50 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCHv3] staging: wilc1000: use netdev_* instead of printk
-Message-ID: <20150818061050.GG2941@sudip-pc> (sfid-20150818_081121_411494_D4A38CBB)
-References: <20150817195542.GB6591@kroah.com>
- <b5c4c3dd4babd0cd4daef51626816e95c6d8ee9d.1439852779.git.raphael.beamonte@gmail.com>
- <20150818042417.GA2941@sudip-pc>
- <CAE_Gge0YiZVQi66L3dNUoMg+W-K2KyJ0EJpgeia8=TJ57094QA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE_Gge0YiZVQi66L3dNUoMg+W-K2KyJ0EJpgeia8=TJ57094QA@mail.gmail.com>
+	Sun, 9 Aug 2015 13:22:55 -0400
+Received: by qgeg42 with SMTP id g42so67929254qge.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 10:22:55 -0700 (PDT)
+From: Jacob Kiefer <jtk54@cornell.edu>
+Cc: Jacob Kiefer <jtk54@cornell.edu>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"M. Vefa Bicakci" <m.v.b@runbox.com>,
+	Greg Donald <gdonald@gmail.com>, Joe Perches <joe@perches.com>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	linux-wireless@vger.kernel.org (open list:STAGING - REALTEK RTL8723U
+	WIRELESS DRIVER),
+	devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] type assignment and restricted type cast error fixes for rtl8723au/core/rtw_security.c
+Date: Sun,  9 Aug 2015 13:22:20 -0400
+Message-Id: <1439140941-16008-1-git-send-email-jtk54@cornell.edu> (sfid-20150809_192300_227537_0B33C3F4)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 18, 2015 at 01:27:31AM -0400, Raphaël Beamonte wrote:
-> 2015-08-18 0:24 GMT-04:00 Sudip Mukherjee <sudipm.mukherjee@gmail.com>:
-> >> +                             netdev_err("[Sendconfigpkt]Get Timed out\n");
-> > This will not compile. you can not just replace printk with
-> > netdev_*, you need to mention a net_device.
-> 
-> You're right! I'm making a lot of mistakes. It seems I called the make
-> command in the wrong git tree... Thanks for catching that, and taking
-> time to review!
-> I just saw there isn't any netdev_debug available. Do you know the
-> reason for that? Is there a replacement besides pr_debug?
-netdev_dbg
-> Also, it seems that in all the functions where it's another netdev
-> that's available that I could use, I don't have access to the
-> net_device struct. Is there a general way to get that device
-> information? I saw an old lkml post talking about dev_*() functions to
-> do that? Would you have some hint on the matter?
-If the function is not having the net_device try to see if you can
-pass it the struct as an argument. if not possible then in any way then
-no other way but to use pr_*
+This patch fixes the following sparse errors:
 
-regards
-sudip
+  CHECK   drivers/staging/rtl8723au/core/rtw_security.c
+drivers/staging/rtl8723au/core/rtw_security.c:189:39: \
+  warning: incorrect type in assignment (different base types)
+drivers/staging/rtl8723au/core/rtw_security.c:189:39:    \
+  expected unsigned int [unsigned] [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:189:39:    \
+  got restricted __le32 [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:197:39: \
+  warning: incorrect type in assignment (different base types)
+drivers/staging/rtl8723au/core/rtw_security.c:197:39:    \
+  expected unsigned int [unsigned] [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:197:39:    \
+  got restricted __le32 [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:246:22: \
+  warning: cast to restricted __le32
+drivers/staging/rtl8723au/core/rtw_security.c:247:24: \
+  warning: cast to restricted __le32
+drivers/staging/rtl8723au/core/rtw_security.c:682:39: \
+  warning: incorrect type in assignment (different base types)
+drivers/staging/rtl8723au/core/rtw_security.c:682:39:    \
+  expected unsigned int [unsigned] [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:682:39:    \
+  got restricted __le32 [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:694:39: \
+  warning: incorrect type in assignment (different base types)
+drivers/staging/rtl8723au/core/rtw_security.c:694:39:    \
+  expected unsigned int [unsigned] [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:694:39:    \
+  got restricted __le32 [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_security.c:772:22: \
+  warning: cast to restricted __le32
+drivers/staging/rtl8723au/core/rtw_security.c:773:24: \
+  warning: cast to restricted __le32
+
+Signed-off-by: Jacob Kiefer <jtk54@cornell.edu>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index af53c92..004e7c9 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -186,7 +186,7 @@ void rtw_wep_encrypt23a(struct rtw_adapter *padapter,
+ 			length = pattrib->last_txcmdsz - pattrib->hdrlen -
+ 				pattrib->iv_len - pattrib->icv_len;
+ 
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
++			*((u32 *)crc) = getcrc32(payload, length);
+ 
+ 			arcfour_init(&mycontext, wepkey, 3 + keylength);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+@@ -194,7 +194,7 @@ void rtw_wep_encrypt23a(struct rtw_adapter *padapter,
+ 		} else {
+ 			length = pxmitpriv->frag_len - pattrib->hdrlen -
+ 				pattrib->iv_len - pattrib->icv_len;
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
++			*((u32 *)crc) = getcrc32(payload, length);
+ 			arcfour_init(&mycontext, wepkey, 3 + keylength);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+ 			arcfour_encrypt(&mycontext, payload + length, crc, 4);
+@@ -243,8 +243,8 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
+ 	arcfour_encrypt(&mycontext, payload, payload, length);
+ 
+ 	/* calculate icv and compare the icv */
+-	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
+-	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
++	actual_crc = getcrc32(payload, length - 4);
++	expected_crc = get_unaligned_le32(&payload[length - 4]);
+ 
+ 	if (actual_crc != expected_crc) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+@@ -679,7 +679,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 				 "pattrib->iv_len =%x, pattrib->icv_len =%x\n",
+ 				 pattrib->iv_len,
+ 				 pattrib->icv_len);
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
++			*((u32 *)crc) = getcrc32(payload, length);
+ 
+ 			arcfour_init(&mycontext, rc4key, 16);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+@@ -691,7 +691,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 				  pattrib->iv_len -
+ 				  pattrib->icv_len);
+ 
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
++			*((u32 *)crc) = getcrc32(payload, length);
+ 			arcfour_init(&mycontext, rc4key, 16);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+ 			arcfour_encrypt(&mycontext, payload + length, crc, 4);
+@@ -769,8 +769,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 	arcfour_init(&mycontext, rc4key, 16);
+ 	arcfour_encrypt(&mycontext, payload, payload, length);
+ 
+-	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
+-	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
++	actual_crc = getcrc32(payload, length - 4);
++	expected_crc = get_unaligned_le32(&payload[length - 4]);
+ 
+ 	if (actual_crc != expected_crc) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-- 
+1.8.3.2
+
