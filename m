@@ -1,54 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33144 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbbHTONW (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36777 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503AbbHJRkz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 10:13:22 -0400
-Message-ID: <1440079999.6610.48.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150820_161330_808162_39FEBC18)
-Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
- TSO segment
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Date: Thu, 20 Aug 2015 07:13:19 -0700
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E82654B@hasmsx107.ger.corp.intel.com>
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
-	 <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
-	 <1440076269.6610.39.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E82654B@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 10 Aug 2015 13:40:55 -0400
+Date: Mon, 10 Aug 2015 23:10:34 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
+	dean.lee@atmel.com, chris.park@atmel.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
+	sudipm.mukherjee@gmail.com, csgorentla@gmail.com
+Subject: Re: [PATCH] staging: wilc100: Remove pointer and integer comparision
+Message-ID: <20150810174034.GA14776@gcs-HP-Compaq-nx6320> (sfid-20150810_194111_813782_CB71BF7A)
+References: <1439133602-9654-1-git-send-email-csgorentla@gmail.com>
+ <20150810093943.GI5180@mwanda>
+ <20150810152943.GA12993@gcs-HP-Compaq-nx6320>
+ <20150810155614.GK5096@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150810155614.GK5096@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-08-20 at 13:53 +0000, Grumbach, Emmanuel wrote:
-
-> I do keep the original skb: it becomes the first 802.11 packet generated
-> from that LSO skb. Thing is that it will be freed first and I wanted the
-> *last packet* to release the pressure on the socket.
-
-Just change this to free it last. It is that simple.
-
-> So I guess that skb_still_in_host_queue will still find it and avoid
-> retransmissions at least until the first skb of the LSO is freed.
-> But unless you are fine with releasing the pressing on the socket as
-> soon as the *first* 802.11 skb is freed, I need that code.
+On Mon, Aug 10, 2015 at 07:27:13PM +0300, Dan Carpenter wrote:
+> On Mon, Aug 10, 2015 at 08:59:43PM +0530, Chandra Gorentla wrote:
+> > I agree with your suggestion
+> > that we need to take a broader look.  Please help in understanding
+> > how does that broader look is suggesting that the patch is not
+> > addressing a right problem.  The gcc version I am using is - 4.8.2.
+> > 
+> > In the later part of your reply - you felt that there may be a
+> > case in which more than the allocated number of bytes may be
+> > copied in to the memory pointed to by 'pu8CurrByte' and memory
+> > may get corrupted.  From the code in the function I am not seeing
+> > that happening.  In the beginning of the function, this pointer
+> > variable is assigned a block of memory whose size is
+> > '->u32HeadLen' + '->u32TailLen' + 16.
+> > 
+> > The function is copying 16 individual bytes to this memory;
+> > a smaller block of memory of size '->u32HeadLen' is being copied;
+> > and an another smaller block of memory of size '->u32TailLen' may
+> > be copied based on a condition.  After this last copy, the
+> > function increments the pointer by '->u32TailLen' irrespective
+> > of last copy takes place or not.  Hence I am not seeing any
+> > corruption of the memory.
 > 
-> I'll try to look at dev->gso_max_size that you mentioned below. This can
-> really be a game changer for me.
+> It is an integer overflow.  Try the test.c file I'll include below.
+> 
+> > 
+> > It looks like that the last increment is just an operation that
+> > does no harm.  In addition to this the pointer variable
+> > 'pu8CurrByte' is just a local variable and it is not being used
+> > after the last increment operation of the pointer.
+> 
+> It's a pointer to allocated memory.  We call WILC_MALLOC().
+> 
+> This function allocates a buffer, then it copies memory over with the
+> memcpy().  The "*pu8CurrByte++ = " statements are copying memory but
+> doing endian conversion as well.  (This is not the correct way to do
+> endian conversion).
+> 
+> > 
+> > After making the change in this patch I just did a 'make'.
+> > I do not have the hardware which this driver supports.  So at
+> > this point of time, I cannot test your suggestions on wilc1000
+> > hardware.  Is there any way I can test this driver code on a
+> > old notebook computer?
+> 
+> Don't worry too much about testing this.  Just write small test programs
+> to help you understand as much as possible.  We are good at reviewing so
+> you aren't going to break the code.
+> 
+> #include <stdio.h>
+> 
+> int main(void)
+> {
+> 	unsigned int u32HeadLen;
+> 	unsigned int u32TailLen;
+> 	int s32ValueSize;
+> 
+> 	u32HeadLen = 1000;
+> 	u32TailLen = -1U - 500 - 16 + 1;
+> 	s32ValueSize = u32HeadLen + u32TailLen + 16;
+> 
+> 	printf("Allocating %d bytes.\n", s32ValueSize);
+> 	printf("Copying %u bytes into a %d byte buffer will corrupt memory.\n",
+> 		u32HeadLen, s32ValueSize);
+> 
+> 	return 0;
+> }
+> 
+> regards,
+> dan carpenter
 
-Honestly, if your TSO patches do not use existing infra, I will NACK
-them.
+If the incoming parameters '->u32HeadLen' and '->u32TailLen' are not correct,
+they can cause corruption of memory.  Is it not a different problem what the
+patch trying to fix?
 
-If existing infra is not good enough, you have the power to change it.
-
-Fully re-implementing TSO (or GRO) in a device driver is a non starter.
-
-
+Thanks,
+chandra
