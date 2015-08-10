@@ -1,82 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44407 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755225AbbHFIca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 04:32:30 -0400
-Date: Thu, 6 Aug 2015 11:30:04 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 2/5] net: rfkill: add rfkill_find_type function
-Message-ID: <20150806083004.GI7675@kuha.fi.intel.com> (sfid-20150806_103255_542649_F78F3D91)
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
- <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
- <1438783649.29746.175.camel@linux.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60994 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754218AbbHJTWO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2015 15:22:14 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1438783649.29746.175.camel@linux.intel.com>
+Subject: Re: [1/1] ath: Make ath_opmode_to_string understand OCB mode
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1438609541-24239-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+To: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+Cc: mcgrof@do-not-panic.com, linux-wireless@vger.kernel.org,
+	Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
+Message-Id: <20150810192213.C67FC1411B4@smtp.codeaurora.org> (sfid-20150810_212217_660890_CC338D6A)
+Date: Mon, 10 Aug 2015 19:22:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 05, 2015 at 05:07:29PM +0300, Andy Shevchenko wrote:
-> On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
-> > Helper for finding the type based on name. Useful if the
-> > type needs to be determined based on device property.
-> > 
-> > Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> > ---
-> >  include/linux/rfkill.h | 15 +++++++++++++
-> >  net/rfkill/core.c      | 57 +++++++++++++++++++++++++---------------
-> > ----------
-> >  2 files changed, 44 insertions(+), 28 deletions(-)
-> > 
-> > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> > index d901078..02f563c 100644
-> > --- a/include/linux/rfkill.h
-> > +++ b/include/linux/rfkill.h
-> > @@ -212,6 +212,15 @@ void rfkill_set_states(struct rfkill *rfkill, 
-> > bool sw, bool hw);
-> >   * @rfkill: rfkill struct to query
-> >   */
-> >  bool rfkill_blocked(struct rfkill *rfkill);
-> > +
-> > +/**
-> > + * rfkill_find_type - Helpper for finding rfkill type by name
-> > + * @name: the name of the type
-> > + *
-> > + * Returns enum rfkill_type that conrresponds the name.
-> > + */
-> > +enum rfkill_type rfkill_find_type(const char *name);
-> > +
-> >  #else /* !RFKILL */
-> >  static inline struct rfkill * __must_check
-> >  rfkill_alloc(const char *name,
-> > @@ -268,6 +277,12 @@ static inline bool rfkill_blocked(struct rfkill 
-> > *rfkill)
-> >  {
-> >  	return false;
-> >  }
-> > +
-> > +static inline enum rfkill_type rfkill_find_type(const char *name)
-> > +{
-> > +	return 0;
+
+> Make ath_opmode_to_string return "OCB" for NL80211_IFTYPE_OCB. Currently
+> it will return "UNKNOWN".
 > 
-> Hmm… Besides 0 is implicitly casted to enum type the issue with enums
-> that you rather have to supply existing enum entry. I would suggest to
-> add RFKILL_TYPE_UNKNOWN if _ALL is reserved for some use cases.
+> Signed-off-by: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
 
-Why would you add a new type just for this? You do realize it would
-require adding specific handling all over the place? RFKILL_TYPE_ALL
-(0) is already handled as an invalid type. Confused?
+Thanks, applied to wireless-drivers-next.git.
 
-I'll change this and return RFKILL_TYPE_ALL instead of 0.
-
-
-Thanks,
-
--- 
-heikki
+Kalle Valo
