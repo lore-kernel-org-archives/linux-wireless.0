@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:34067 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbbHSP7G (ORCPT
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:33907 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752487AbbHJCdf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 11:59:06 -0400
-Subject: Re: [PATCH v2] rtlwifi: rtl8192cu: Add new device ID
-To: Adrien Schildknecht <adrien+dev@schischi.me>,
-	chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-	linville@tuxdriver.com, marex@denx.de, fzuuzf@googlemail.com
-References: <55D495C8.6030906@lwfinger.net>
- <1439998392-2979-1-git-send-email-adrien+dev@schischi.me>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55D4A7C0.6050409@lwfinger.net> (sfid-20150819_175928_653410_4B1EF31B)
-Date: Wed, 19 Aug 2015 10:58:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <1439998392-2979-1-git-send-email-adrien+dev@schischi.me>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Sun, 9 Aug 2015 22:33:35 -0400
+Received: by pdbfa8 with SMTP id fa8so25731251pdb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:34 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 02/11] staging: wilc1000: use strlen instead of WILC_strlen
+Date: Mon, 10 Aug 2015 11:33:13 +0900
+Message-Id: <1439174002-7365-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043348_959456_CCEDAC94)
+In-Reply-To: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/19/2015 10:33 AM, Adrien Schildknecht wrote:
-> The v2 of NetGear WNA1000M uses a different idProduct: USB ID 0846:9043
->
-> Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
-> Cc: Stable <stable@vger.kernel.org>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
->   1 file changed, 1 insertion(+)
+Use strlen instead of WILC_strlen that is a custom function.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
-
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> index 23806c2..fd4a535 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -321,6 +321,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->   	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
->   	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
->   	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
-> +	{RTL_USB_DEVICE(0x0846, 0x9043, rtl92cu_hal_cfg)}, /*NG WNA1000Mv2*/
->   	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
->   	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
->   	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
->
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index a88b796..c59d9ba 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -1577,8 +1577,8 @@ s32 further_process_response(u8 *resp,
+ 	case WID_ADR:
+ 		create_mac_addr(cfg_str, resp + idx);
+ 
+-		WILC_strncpy(pstrWIDresult->ps8WidVal, cfg_str, WILC_strlen(cfg_str));
+-		pstrWIDresult->ps8WidVal[WILC_strlen(cfg_str)] = '\0';
++		WILC_strncpy(pstrWIDresult->ps8WidVal, cfg_str, strlen(cfg_str));
++		pstrWIDresult->ps8WidVal[strlen(cfg_str)] = '\0';
+ 		break;
+ 
+ 	case WID_IP:
+-- 
+1.9.1
 
