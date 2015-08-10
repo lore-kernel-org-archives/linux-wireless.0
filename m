@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35355 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753585AbbHaRHz (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:34038 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752637AbbHJCd5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 13:07:55 -0400
-Received: by wibq14 with SMTP id q14so6785519wib.0
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 10:07:54 -0700 (PDT)
-Message-ID: <55E489EC.3000209@gmail.com> (sfid-20150831_190758_126120_5964E1EB)
-Date: Mon, 31 Aug 2015 19:07:56 +0200
-From: Arend van Spriel <aspriel@gmail.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: NetworkManager crashing
-References: <55DF3E75.1080305@gmail.com> <1441035810.2718.6.camel@redhat.com>
-In-Reply-To: <1441035810.2718.6.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
+	Sun, 9 Aug 2015 22:33:57 -0400
+Received: by pdbfa8 with SMTP id fa8so25734332pdb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:57 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/11] staging: wilc1000: remove WILC_memcpy_INTERNAL
+Date: Mon, 10 Aug 2015 11:33:21 +0900
+Message-Id: <1439174002-7365-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043404_506500_F54B7311)
+In-Reply-To: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove WILC_memcpy_INTERNAL that is used in the WILC_memcpy
+because WILC_memcpy is replaced by memcpy.
 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_strutils.c |  9 ---------
+ drivers/staging/wilc1000/wilc_strutils.h | 11 -----------
+ 2 files changed, 20 deletions(-)
 
-On 31-08-15 17:43, Dan Williams wrote:
-> On Thu, 2015-08-27 at 18:44 +0200, Arend van Spriel wrote:
->> Hi Dan,
->>
->> I ran into issue when NetworkManager keeps crashing/respawning. I have
->> no idea what happened. My laptop was rebooted (might been my sons work)
->> and this was the situation I stumbled upon. Running 4.1 kernel on Linux
->> Mint. NetworkManager version is 0.9.8.8.
-> 
-> Odd, can you get any more log messages out of the machine?  Or perhaps a
-> backtrace?  Looks like it's happening quite early in boot, before
-> anything would really get configured...
+diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
+index cc4e9fe..ebc8668 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.c
++++ b/drivers/staging/wilc1000/wilc_strutils.c
+@@ -6,15 +6,6 @@
+ 
+ 
+ 
+-/*!
+- *  @author	syounan
+- *  @date	18 Aug 2010
+- *  @version	1.0
+- */
+-void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count)
+-{
+-	memcpy(pvTarget, pvSource, u32Count);
+-}
+ 
+ 
+ 
+diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
+index dbca73d..bb7b61d 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.h
++++ b/drivers/staging/wilc1000/wilc_strutils.h
+@@ -15,17 +15,6 @@
+ #include "wilc_errorsupport.h"
+ 
+ 
+-/*!
+- *  @brief	Internal implementation for memory copy
+- *  @param[in]	pvTarget the target buffer to which the data is copied into
+- *  @param[in]	pvSource pointer to the second memory location
+- *  @param[in]	u32Count the size of the data to copy
+- *  @note	this function should not be used directly, use WILC_memcpy instead
+- *  @author	syounan
+- *  @date	18 Aug 2010
+- *  @version	1.0
+- */
+-void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count);
+ 
+ 
+ 
+-- 
+1.9.1
 
-Ran NetworkManager manually on the machine. On every run the following
-shows up in dmesg
-
-[19456.972855] traps: NetworkManager[5497] general protection ip:469f8e
-sp:7ffeab94c1f0 error:0 in NetworkManager[400000+10c000]
-
-and in the terminal:
-
-(NetworkManager:5508): GLib-WARNING **: GError set over the top of a
-previous GError or uninitialized memory.
-This indicates a bug in someone's code. You must ensure an error is NULL
-before it's set.
-The overwriting error message was: Key file does not have group
-'connectivity'
-
-Not sure which key file it is talking about so no idea where to look.
-
-Regards,
-Arend
