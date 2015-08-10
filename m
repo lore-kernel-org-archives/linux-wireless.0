@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27417 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751523AbbHJJkR (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:34769 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804AbbHJF6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 05:40:17 -0400
-Date: Mon, 10 Aug 2015 12:39:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Chandra S Gorentla <csgorentla@gmail.com>
-Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
-	dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc100: Remove pointer and integer comparision
-Message-ID: <20150810093943.GI5180@mwanda> (sfid-20150810_114034_695003_717EDED3)
-References: <1439133602-9654-1-git-send-email-csgorentla@gmail.com>
+	Mon, 10 Aug 2015 01:58:50 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<glen.lee@atmel.com>, <leo.kim@atmel.com>, <jude.lee@atmel.com>,
+	<robin.hwang@atmel.com>, <tony.cho@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 2/5] staging: wilc1000: change void pointer type to real type
+Date: Mon, 10 Aug 2015 14:58:21 +0900
+Message-ID: <1439186304-3480-3-git-send-email-tony.cho@atmel.com> (sfid-20150810_075852_930987_5E8BCE98)
+In-Reply-To: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
+References: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1439133602-9654-1-git-send-email-csgorentla@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 09, 2015 at 08:50:02PM +0530, Chandra S Gorentla wrote:
-> Removed pointer check with integer; this fixes 'sparse' error -
-> error: incompatible types for operation (>)
->    left side has type unsigned char [usertype] *[usertype] pu8Tail
->    right side has type int
-> 
-> Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index cc549c2..4ba1ad7 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -3471,7 +3471,7 @@ static void Handle_AddBeacon(void *drvHandler, tstrHostIFSetBeacon *pstrSetBeaco
->  	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 24) & 0xFF);
->  
->  	/* Bug 4599 : if tail length = 0 skip copying */
-> -	if (pstrSetBeaconParam->pu8Tail > 0)
-> +	if (pstrSetBeaconParam->pu8Tail != NULL)
->  		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->u32TailLen);
->  	pu8CurrByte += pstrSetBeaconParam->u32TailLen;
+From: Johnny Kim <johnny.kim@atmel.com>
 
-Warnings are a precious thing, because they show you where people are
-lost.  It's better to take a broader look at the code instead of *just*
-silencing the warning.
+This patch changes the void pointer member of the tstrHostIFmsg to the
+real data type because the void pointer type is ambiguous and not
+readable.
 
-For example, the comment is nonsense.  memcpy(anything, anything, 0);
-is a no-op so it already would skip copying in that case.  I wonder what
-bug 4599 actually means...
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Also the next line is quite suspect.  Even though we don't copy then we
-are still incrementing the pu8CurrByte count?  That seems wrong.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 20a554f..b5afc82 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -466,7 +466,7 @@ typedef union _tuniHostIFmsgBody {
+ typedef struct _tstrHostIFmsg {
+ 	u16 u16MsgId;                                           /*!< Message ID */
+ 	tuniHostIFmsgBody uniHostIFmsgBody;             /*!< Message body */
+-	void *drvHandler;
++	tstrWILC_WFIDrv *drvHandler;
+ } tstrHostIFmsg;
+ 
+ #ifdef CONNECT_DIRECT
+-- 
+1.9.1
 
-So now let's consider if the memcpy() is correct.  pu8CurrByte is
-allocated at the start of the function.  It should have space for
-->u32TailLen bytes, except for they seem to have forgotten about integer
-overflow.  I think ->u32TailLen is not trusted data so this could be a
-security bug.  Maybe you could exploit it by setting ->u32HeadLen to the
-amount of memory you want to corrupt.  Set ->u32TailLen to a high
-number so it triggers an integer overflow.  Set >pu8Tail to NULL so it
-is doesn't just corrupt everything (DoS attack instead of privilege
-escalation).
-
-I have just looked at the code so I don't know if this is true, but this
-is how I read that warning.
-
-regards,
-dan carpenter
