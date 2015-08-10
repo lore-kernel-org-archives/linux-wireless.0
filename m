@@ -1,44 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:38709 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbbHGNGo (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:34842 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752984AbbHJF7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 09:06:44 -0400
-From: Johannes Postma <jgmpostma@gmail.com>
-To: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org
-Cc: Johannes Postma <jgmpostma@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH] staging: rtl8723au: rtl8723a_hal_init: Improve code readability
-Date: Fri,  7 Aug 2015 14:04:34 +0100
-Message-Id: <1438952674-9823-1-git-send-email-jgmpostma@gmail.com> (sfid-20150807_150659_754352_FB10E1EF)
+	Mon, 10 Aug 2015 01:59:06 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<glen.lee@atmel.com>, <leo.kim@atmel.com>, <jude.lee@atmel.com>,
+	<robin.hwang@atmel.com>, <tony.cho@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 4/5] staging: wilc1000: use the real data type
+Date: Mon, 10 Aug 2015 14:58:23 +0900
+Message-ID: <1439186304-3480-5-git-send-email-tony.cho@atmel.com> (sfid-20150810_075910_668033_43BD284C)
+In-Reply-To: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
+References: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch improves code readability in the function
-rtl8723a_cal_txdesc_chksum.  It improves the readability of the argument
-of the function le16_to_cpu.
+From: Johnny Kim <johnny.kim@atmel.com>
 
-Signed-off-by: Johannes Postma <jgmpostma@gmail.com>
+This patch changes the type of gu8FlushedJoinReqDrvHandler with his real
+data type becasue typecasting is not necessary. In result, typecasting
+which is not necessary and some building warnings is removed.
+
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-index eb76ac4..cf2388f 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-@@ -1847,7 +1847,7 @@ static void rtl8723a_cal_txdesc_chksum(struct tx_desc *ptxdesc)
- 	ptxdesc->txdw7 &= cpu_to_le32(0xffff0000);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 1c2d924..c4e27c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -578,7 +578,7 @@ u8 gu8Flushed11iMode;
+ u8 gu8FlushedAuthType;
+ u32 gu32FlushedJoinReqSize;
+ u32 gu32FlushedInfoElemAsocSize;
+-u32 gu8FlushedJoinReqDrvHandler;
++tstrWILC_WFIDrv *gu8FlushedJoinReqDrvHandler;
+ #define REAL_JOIN_REQ 0
+ #define FLUSHED_JOIN_REQ 1
+ #define FLUSHED_BYTE_POS 79     /* Position the byte indicating flushing in the flushed request */
+@@ -1940,7 +1940,7 @@ static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler, tstrHostIFconnectAttr *ps
+ 	/*BugID_5137*/
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
+ 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
+-		gu8FlushedJoinReqDrvHandler = (u32)pstrWFIDrv;
++		gu8FlushedJoinReqDrvHandler = pstrWFIDrv;
+ 	}
  
- 	for (index = 0; index < count; index++)
--		checksum ^= le16_to_cpu(*(usPtr + index));
-+		checksum ^= le16_to_cpu(usPtr[index]);
+ 	PRINT_D(GENERIC_DBG, "send HOST_IF_WAITING_CONN_RESP\n");
+@@ -2191,11 +2191,11 @@ static s32 Handle_ConnectTimeout(tstrWILC_WFIDrv *drvHandler)
+ 	memset(u8ConnectedSSID, 0, ETH_ALEN);
+ 	/*BugID_5213*/
+ 	/*Freeing flushed join request params on connect timeout*/
+-	if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++	if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 		WILC_FREE(gu8FlushedJoinReq);
+ 		gu8FlushedJoinReq = NULL;
+ 	}
+-	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 		WILC_FREE(gu8FlushedInfoElemAsoc);
+ 		gu8FlushedInfoElemAsoc = NULL;
+ 	}
+@@ -2616,11 +2616,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
+ 			/*BugID_5213*/
+ 			/*Freeing flushed join request params on receiving*/
+ 			/*MAC_DISCONNECTED while connected*/
+-			if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++			if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 				WILC_FREE(gu8FlushedJoinReq);
+ 				gu8FlushedJoinReq = NULL;
+ 			}
+-			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 				WILC_FREE(gu8FlushedInfoElemAsoc);
+ 				gu8FlushedInfoElemAsoc = NULL;
+ 			}
+@@ -3116,11 +3116,11 @@ static void Handle_Disconnect(tstrWILC_WFIDrv *drvHandler)
  
- 	ptxdesc->txdw7 |= cpu_to_le32(checksum & 0x0000ffff);
- }
+ 
+ 		/*BugID_5137*/
+-		if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++		if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 			WILC_FREE(gu8FlushedJoinReq);
+ 			gu8FlushedJoinReq = NULL;
+ 		}
+-		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 			WILC_FREE(gu8FlushedInfoElemAsoc);
+ 			gu8FlushedInfoElemAsoc = NULL;
+ 		}
 -- 
-2.5.0
+1.9.1
 
