@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64591 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824AbbHQNq7 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:19841 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933770AbbHJKog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 09:46:59 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: Fix invalid survey reporting for QCA99X0
-References: <1439376845-17245-1-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Mon, 17 Aug 2015 16:46:53 +0300
-In-Reply-To: <1439376845-17245-1-git-send-email-vthiagar@qti.qualcomm.com>
-	(Vasanthakumar Thiagarajan's message of "Wed, 12 Aug 2015 16:24:04
-	+0530")
-Message-ID: <87twrydo36.fsf@kamboji.qca.qualcomm.com> (sfid-20150817_154702_408467_5B511DE5)
+	Mon, 10 Aug 2015 06:44:36 -0400
+Date: Mon, 10 Aug 2015 13:44:12 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	rachel.kim@atmel.com, chris.park@atmel.com, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	Nicolas.FERRE@atmel.com, jude.lee@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 5/5] staging: wilc1000: use id value as argument
+Message-ID: <20150810104412.GL5180@mwanda> (sfid-20150810_124450_136207_D945E2FC)
+References: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
+ <1439186304-3480-6-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439186304-3480-6-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+On Mon, Aug 10, 2015 at 02:58:24PM +0900, Tony Cho wrote:
+> +static u32 add_handler_in_list(tstrWILC_WFIDrv *handler)
 
-> There are three WMI_CHAN_INFO events reported per channel
-> in QCA99X0 firmware. First one is a notification at the begining
-> of the channel dwell time with cmd_flag as CHAN_INFO_START(cmd_flag = 0),
-> second one is a notification at the end of the dwell time with cmd_flag
-> CHAN_INFO_PRE_COMPLETE (cmd_flag = 2) and the third is the indication
-> with CHAN_INFO_COMPLETE (cmd_flag = 1) which is the last indication for
-> the channel. Since there is a new state before the completion, the handler
-> is to fixed so that the counts are deducted from the ones reported with
-> CHAN_INFO_START rather than the ones reported with CHAN_INFO_PRE_COMPLETE.
-> Without this fix there will be lots of 0 msecs reported as active
-> and busy time.
->
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+I am suspicous of code which uses u32 for something where the hardware
+doesn't specify unsigned 32 bits.  Why not just return "int"?
 
-Thanks, both applied.
+> +{
+> +	u32 id;
 
--- 
-Kalle Valo
+It looks like we have a case of u32 disease.  Prefer int over u32 unless
+there is a reason for it.
+
+> +
+> +	if (!handler)
+> +		return 0;
+
+Don't add NULL checks unless it makes sense.  How are we supposed to
+recover from this if handler is NULL?
+
+> +
+> +	for (id = 0; id < NUM_CONCURRENT_IFC; id++) {
+> +		if (!wfidrv_list[id]) {
+> +			wfidrv_list[id++] = handler;
+
+
+Ugh...  I don't like the ++ here.  Just use a zero offset array or we
+are going to have off by one bugs.
+
+> +			break;
+> +		}
+> +	}
+> +
+> +	if (id > NUM_CONCURRENT_IFC)
+> +		return 0;
+
+Well, that didn't take long, it's three lines later and we already have
+hit our first off by one bug.  This check can never be true.  Of course,
+no one checks the return value either...
+
+> +
+> +	return id;
+> +}
+
+I guess I would be fine with this patch if you changed it to use a zero
+offset array, ints instead of u32s and added some error handling.
+
+regards,
+dan carpenter
+
