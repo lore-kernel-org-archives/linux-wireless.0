@@ -1,59 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:34962 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751937AbbHYKfL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58299 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753876AbbHJQPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 06:35:11 -0400
-Received: by wicne3 with SMTP id ne3so10740374wic.0
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2015 03:35:10 -0700 (PDT)
-Date: Tue, 25 Aug 2015 12:35:04 +0200 (CEST)
-From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-To: Sreenath Madasu <Sreenath.Madasu@gmail.com>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: Getting started on switching rtl8188eu staging driver to
- LIB80211/MAC80211
-In-Reply-To: <loom.20150824T013723-25@post.gmane.org>
-Message-ID: <alpine.LNX.2.00.1508251226170.16623@T520.work> (sfid-20150825_123517_041593_D2EC0AD5)
-References: <loom.20150824T013723-25@post.gmane.org>
+	Mon, 10 Aug 2015 12:15:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mwl8k: refactor some conditionals for clarity
+Date: Mon, 10 Aug 2015 12:05:39 -0400
+Message-Id: <1439222739-24545-1-git-send-email-linville@tuxdriver.com> (sfid-20150810_181525_931540_024DA456)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+  CC [M]  drivers/net/wireless/mwl8k.o
+drivers/net/wireless/mwl8k.c: In function ‘mwl8k_bss_info_changed’:
+drivers/net/wireless/mwl8k.c:3290:2: warning: ‘ap_mcs_rates’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+  memcpy(cmd->mcs_set, mcs_rates, 16);
+  ^
+drivers/net/wireless/mwl8k.c:4987:5: note: ‘ap_mcs_rates’ was declared here
+  u8 ap_mcs_rates[16];
+     ^
 
-On Sun, 23 Aug 2015, Sreenath Madasu wrote:
+The warning was bogus.  But the conditionals were rather complicated,
+with multiple redundant checks.  This consolidates the checking and
+makes it more readable IMHO.
 
-> Hi all,
-> I want to work on the TODO tasks
-> 
-> - switch to use LIB80211
-> - switch to use MAC80211
-> 
-> for staging driver rtl8188eu.
-> 
-> How can I start? Where is the documentation?
-> Thanks
-> Sreenath
-> 
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Compile tested only.  Sorry for any duplicates -- I sent the first
+one to the wrong list address!
 
-I have the same problems with my RTL8821AU driver.
-But I'm currently switching to rtlwifi-lib and of course 
-LIB80211/MAC80211.
+ drivers/net/wireless/mwl8k.c | 49 ++++++++++++++++++++++----------------------
+ 1 file changed, 25 insertions(+), 24 deletions(-)
 
-Take the rtl8188ee as an example to rewrite/rename all functions in 
-hal/
-os_dep/
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 77361af68b18..9420fc61c2e6 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5019,35 +5019,36 @@ mwl8k_bss_info_changed_sta(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		memcpy(ap_mcs_rates, ap->ht_cap.mcs.rx_mask, 16);
+ 
+ 		rcu_read_unlock();
+-	}
+ 
+-	if ((changed & BSS_CHANGED_ASSOC) && vif->bss_conf.assoc &&
+-	    !priv->ap_fw) {
+-		rc = mwl8k_cmd_set_rate(hw, vif, ap_legacy_rates, ap_mcs_rates);
+-		if (rc)
+-			goto out;
++		if (changed & BSS_CHANGED_ASSOC) {
++			if (!priv->ap_fw) {
++				rc = mwl8k_cmd_set_rate(hw, vif,
++							ap_legacy_rates,
++							ap_mcs_rates);
++				if (rc)
++					goto out;
+ 
+-		rc = mwl8k_cmd_use_fixed_rate_sta(hw);
+-		if (rc)
+-			goto out;
+-	} else {
+-		if ((changed & BSS_CHANGED_ASSOC) && vif->bss_conf.assoc &&
+-		    priv->ap_fw) {
+-			int idx;
+-			int rate;
++				rc = mwl8k_cmd_use_fixed_rate_sta(hw);
++				if (rc)
++					goto out;
++			} else {
++				int idx;
++				int rate;
+ 
+-			/* Use AP firmware specific rate command.
+-			 */
+-			idx = ffs(vif->bss_conf.basic_rates);
+-			if (idx)
+-				idx--;
++				/* Use AP firmware specific rate command.
++				 */
++				idx = ffs(vif->bss_conf.basic_rates);
++				if (idx)
++					idx--;
+ 
+-			if (hw->conf.chandef.chan->band == IEEE80211_BAND_2GHZ)
+-				rate = mwl8k_rates_24[idx].hw_value;
+-			else
+-				rate = mwl8k_rates_50[idx].hw_value;
++				if (hw->conf.chandef.chan->band ==
++				    IEEE80211_BAND_2GHZ)
++					rate = mwl8k_rates_24[idx].hw_value;
++				else
++					rate = mwl8k_rates_50[idx].hw_value;
+ 
+-			mwl8k_cmd_use_fixed_rate_ap(hw, rate, rate);
++				mwl8k_cmd_use_fixed_rate_ap(hw, rate, rate);
++			}
+ 		}
+ 	}
+ 
+-- 
+2.4.3
 
-You can also look at my repo at
-github.com/ulli-kroll/rtl8821au.git
-
-Greeting form Cologne
-Hasn Ulli Kroll
-
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
