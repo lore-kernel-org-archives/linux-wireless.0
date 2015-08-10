@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:33013 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752192AbbHSOmZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57233 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932256AbbHJSJN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 10:42:25 -0400
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new device ID
-To: Adrien Schildknecht <adrien+dev@schischi.me>,
-	chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-	linville@tuxdriver.com, marex@denx.de, fzuuzf@googlemail.com
-References: <1439992291-24912-1-git-send-email-adrien+dev@schischi.me>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55D495C8.6030906@lwfinger.net> (sfid-20150819_164242_830164_09C04962)
-Date: Wed, 19 Aug 2015 09:42:16 -0500
+	Mon, 10 Aug 2015 14:09:13 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Guy Mishol <guym@ti.com>
+Cc: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
+Subject: Re: [PATCH 1/2] wl18xx: update statistics acx and debugfs files
+References: <1437985215-20400-1-git-send-email-guym@ti.com>
+Date: Mon, 10 Aug 2015 21:09:04 +0300
+In-Reply-To: <1437985215-20400-1-git-send-email-guym@ti.com> (Guy Mishol's
+	message of "Mon, 27 Jul 2015 11:20:15 +0300")
+Message-ID: <87h9o7uibj.fsf@kamboji.qca.qualcomm.com> (sfid-20150810_200917_179291_11546918)
 MIME-Version: 1.0
-In-Reply-To: <1439992291-24912-1-git-send-email-adrien+dev@schischi.me>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/19/2015 08:51 AM, Adrien Schildknecht wrote:
-> The v2 of NetGear WNA1000M uses a different idProduct: USB ID 0846:9043
+Guy Mishol <guym@ti.com> writes:
+
+> From: Eliad Peller <eliad@wizery.com>
 >
-> Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
-
-Add a "Cc: Stable <stable@vger.kernel.org>" line here. That way the new ID will 
-be available with older kernels.
-
-The new line exceeds 80 characters. You might abbreviate Netgear as NG.
-
-When you resubmit, do so as "[PATCH V2]".
-
-Thanks,
-
-Larry
-
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
->   1 file changed, 1 insertion(+)
+> Sync the driver statistics acx and debugfs representation
+> with the current fw api.
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> index 23806c2..8b4238a 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -321,6 +321,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->   	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
->   	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
->   	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
-> +	{RTL_USB_DEVICE(0x0846, 0x9043, rtl92cu_hal_cfg)}, /*NetGear WNA1000Mv2*/
->   	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
->   	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
->   	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
->
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
 
+The patch 1 was submitted three times and I don't know which one to take
+and that's why I drop these. Please resubmit the whole series and mark
+it as v2.
+
+-- 
+Kalle Valo
