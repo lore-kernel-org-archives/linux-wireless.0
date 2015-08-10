@@ -1,72 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:11337 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753093AbbHSM74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 08:59:56 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: ido@wizery.com, netdev@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [RFC v2 0/3] add TSO / A-MSDU TX for iwlwifi
-Date: Wed, 19 Aug 2015 15:59:38 +0300
-Message-Id: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150819_150050_329918_8FAC69B0)
+Received: from zimbra.real-time.com ([63.170.91.9]:52084 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698AbbHJE0r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2015 00:26:47 -0400
+Date: Mon, 10 Aug 2015 14:19:57 +1000
+From: James Cameron <quozl@laptop.org>
+To: AceLan Kao <acelan.kao@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8723be: disable FW control power save
+Message-ID: <20150810041957.GA7681@us.netrek.org> (sfid-20150810_062702_565452_0808A06C)
+References: <1438917073-5720-1-git-send-email-acelan.kao@canonical.com>
+ <55C4DDF5.6010901@lwfinger.net>
+ <CAFv23Qk285G47pPVrfUn5izfZyrc-vCSPqJamnoxQMm6Ae9zpQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFv23Qk285G47pPVrfUn5izfZyrc-vCSPqJamnoxQMm6Ae9zpQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We enable TSO to get a lot of data at once to build A-MSDUs.
-Our hardware doesn't have (yet) TCP CSUM offload, so we do
-it manually. TSO won't be enabled on hardware that don't
-support CSUM offload in release code, computing TCP CSUM
-in the driver is just a way to start coding the flows.
-This is why the "CSUM offload" implementation in the driver
-in so bad in terms of efficiency. I preferred to have the
-flows as close as they will be when the hardware will be
-able to the CSUM than to try to seek efficiency.
-The hardware that will have CSUM offload will still require
-the driver to split the skb in software including the
-IP / TCP header copy and update etc...
+On Mon, Aug 10, 2015 at 11:38:09AM +0800, AceLan Kao wrote:
+> I tried using "ips=0" today and found it's not working.
+> I ping 8.8.8.8 and got below message within one hour.
+>    ping: sendmsg: No buffer space available
 
-We could have enabled A-MSDU based on xmit-more, but the
-rationale of using LSO is that when using pfifo-fast,
-the Qdisc gets one packet and dequeues is straight away
-which limits the possibility to get a lot of packets at
-once. (Am I right here?).
+I use both ips=0 and fwlps=0 with Ubuntu kernel and with 4.1, and the
+connection remains stable.
 
-A note about A-MSDUs for non-wireless people:
-*********************************************
-An A-MSDU is a aggregated frame. It is one big 802.11
-packet that contains several subframes. Each subframe
-is a TCP segment. One A-MSDU is represented by one single
-skb which means that we need to copy / duplicate the TCP
-/ IP / SNAP headers in one single skb. This is why those
-headers are copied to a separate page: that page is added
-multiple times to the skb with different offsets. Each
-subframes needs at least 2 frags: 1 for the headers, 1 (or
-more) for the payload.
+fwlps=0 alone was not enough.
 
-I am quite a newbie in skb handling, so I guess that this
-code can be improved. I have tested it decently using iperf,
-but this doesn't mean that there are no issues using other
-applications. We are enabling pktgen on TCP (using patches
-that were sent a year ago or so) to test the different
-layouts of the skb (payload partition amongst the header
-and the different frags).
+ips=0 alone was not enough.
 
-I'll be very happy to get comments on that code, this is
-why I am sending it to netdev as well since the TSO experts
-are there :)
-
-Emmanuel Grumbach (3):
-  iwlwifi: mvm: add real TSO implementation
-  iwlwifi: mvm: allow to create A-MSDUs from a large send
-  iwlwifi: mvm: transfer the truesize to the last TSO segment
-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |   3 +-
- drivers/net/wireless/iwlwifi/mvm/sta.c      |   4 +-
- drivers/net/wireless/iwlwifi/mvm/sta.h      |   6 +-
- drivers/net/wireless/iwlwifi/mvm/tx.c       | 669 ++++++++++++++++++++++++++--
- 4 files changed, 647 insertions(+), 35 deletions(-)
+Hope that helps.
 
 -- 
-2.1.4
-
+James Cameron
+http://quozl.linux.org.au/
