@@ -1,29 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47844 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345AbbHML4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 07:56:51 -0400
-Message-ID: <1439467008.2114.23.camel@sipsolutions.net> (sfid-20150813_135654_294748_48739594)
-Subject: Re: [PATCH] cfg80211: propagate set_wiphy failure to userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 13 Aug 2015 13:56:48 +0200
-In-Reply-To: <1438592124-30803-1-git-send-email-michal.kazior@tieto.com> (sfid-20150803_105503_295981_6EA4DF93)
-References: <1438592124-30803-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150803_105503_295981_6EA4DF93)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:34691 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbbHJF6d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2015 01:58:33 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
+	<glen.lee@atmel.com>, <leo.kim@atmel.com>, <jude.lee@atmel.com>,
+	<robin.hwang@atmel.com>, <tony.cho@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 0/5] 64 bit build patch
+Date: Mon, 10 Aug 2015 14:58:19 +0900
+Message-ID: <1439186304-3480-1-git-send-email-tony.cho@atmel.com> (sfid-20150810_075836_843727_2F9E3695)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-08-03 at 10:55 +0200, Michal Kazior wrote:
-> If driver failed to setup wiphy params (e.g. rts
-> threshold, fragmentation treshold) userspace
-> wasn't properly notified about this. This could
-> lead to user confusion who would think the command
-> succeeded even if that wasn't the case.
-> 
-Applied.
+This series of patch includes new design for 64 bits. The driver uses the
+redundant typecasting to communicate with the chipset, which causes several
+compile warnings.  
 
-johannes
+However, this patch uses the real data type and removes unnecessary typecasting.
+Also, the driver allocates the ID value to the pointer address representing
+the handlers and adds it into the data frames instead of the pointer address. 
+In results, the driver sends and gets the data frame to/from the chipset
+together with ID value instead of pointer address as a handler. This series of
+patch removes the warnings which 64 bit issues cause as well.
+
+Johnny Kim (5):
+  staging: wilc1000: replace WILC_WFIDrvHandle by tstrWILC_WFIDrv
+  staging: wilc1000: change void pointer type to real type
+  staging: wilc1000: clarify the argument type
+  staging: wilc1000: use the real data type
+  staging: wilc1000: use id value as argument
+
+ drivers/staging/wilc1000/host_interface.c         | 464 ++++++++++++++--------
+ drivers/staging/wilc1000/host_interface.h         | 109 ++---
+ drivers/staging/wilc1000/linux_wlan.c             |  16 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  22 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   5 +-
+ 5 files changed, 366 insertions(+), 250 deletions(-)
+
+-- 
+1.9.1
+
