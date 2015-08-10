@@ -1,52 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:34769 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804AbbHJF6u (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:35108 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbbHJCdt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 01:58:50 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <austin.shin@atmel.com>,
-	<glen.lee@atmel.com>, <leo.kim@atmel.com>, <jude.lee@atmel.com>,
-	<robin.hwang@atmel.com>, <tony.cho@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 2/5] staging: wilc1000: change void pointer type to real type
-Date: Mon, 10 Aug 2015 14:58:21 +0900
-Message-ID: <1439186304-3480-3-git-send-email-tony.cho@atmel.com> (sfid-20150810_075852_930987_5E8BCE98)
-In-Reply-To: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
-References: <1439186304-3480-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 9 Aug 2015 22:33:49 -0400
+Received: by pacgr6 with SMTP id gr6so15836939pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:48 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 07/11] staging: wilc1000: remove WILC_strncmp function
+Date: Mon, 10 Aug 2015 11:33:18 +0900
+Message-Id: <1439174002-7365-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043357_763012_FF938BD8)
+In-Reply-To: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johnny Kim <johnny.kim@atmel.com>
+Remove WILC_strncmp function that is changed to strncmp.
 
-This patch changes the void pointer member of the tstrHostIFmsg to the
-real data type because the void pointer type is ambiguous and not
-readable.
-
-Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_strutils.c | 21 ---------------------
+ drivers/staging/wilc1000/wilc_strutils.h | 20 --------------------
+ 2 files changed, 41 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 20a554f..b5afc82 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -466,7 +466,7 @@ typedef union _tuniHostIFmsgBody {
- typedef struct _tstrHostIFmsg {
- 	u16 u16MsgId;                                           /*!< Message ID */
- 	tuniHostIFmsgBody uniHostIFmsgBody;             /*!< Message body */
--	void *drvHandler;
-+	tstrWILC_WFIDrv *drvHandler;
- } tstrHostIFmsg;
+diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
+index 337e62f..cc4e9fe 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.c
++++ b/drivers/staging/wilc1000/wilc_strutils.c
+@@ -18,25 +18,4 @@ void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count)
  
- #ifdef CONNECT_DIRECT
+ 
+ 
+-s32 WILC_strncmp(const char *pcStr1, const char *pcStr2,
+-			 u32 u32Count)
+-{
+-	s32 s32Result;
+-
+-	if (pcStr1 == NULL && pcStr2 == NULL)	{
+-		s32Result = 0;
+-	} else if (pcStr1 == NULL)	   {
+-		s32Result = -1;
+-	} else if (pcStr2 == NULL)	   {
+-		s32Result = 1;
+-	} else {
+-		s32Result = strncmp(pcStr1, pcStr2, u32Count);
+-		if (s32Result < 0)
+-			s32Result = -1;
+-		else if (s32Result > 0)
+-			s32Result = 1;
+-	}
+-
+-	return s32Result;
+-}
+ 
+diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
+index 86728d2..03f4938 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.h
++++ b/drivers/staging/wilc1000/wilc_strutils.h
+@@ -60,26 +60,6 @@ static WILC_ErrNo WILC_memcpy(void *pvTarget, const void *pvSource, u32 u32Count
+ 
+ 
+ 
+-/*!
+- *  @brief	Compares two strings up to u32Count characters
+- *  @details	Compares 2 strings reporting which is bigger, NULL is considered
+- *              the smallest string, then a zero length string then all other
+- *              strings depending on thier ascii characters order with small case
+- *              converted to uppder case
+- *  @param[in]	pcStr1 the first string, NULL is valid and considered smaller
+- *              than any other non-NULL string (incliding zero lenght strings)
+- *  @param[in]	pcStr2 the second string, NULL is valid and considered smaller
+- *              than any other non-NULL string (incliding zero lenght strings)
+- *  @param[in]	u32Count copying will proceed until a null character in pcStr1 or
+- *              pcStr2 is encountered or u32Count of bytes copied
+- *  @return	0 if the 2 strings are equal, 1 if pcStr1 is bigger than pcStr2,
+- *              -1 if pcStr1 smaller than pcStr2
+- *  @author	aabozaeid
+- *  @date	7 Dec 2010
+- *  @version	1.0
+- */
+-s32 WILC_strncmp(const char *pcStr1, const char *pcStr2,
+-			 u32 u32Count);
+ 
+ 
+ #endif
 -- 
 1.9.1
 
