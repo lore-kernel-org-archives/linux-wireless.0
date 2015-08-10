@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47766 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486AbbHYM3O (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35046 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbbHJCdn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 08:29:14 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] mwifiex: fix mwifiex_rdeeprom_read()
-References: <20150820103037.GA5521@mwanda>
-Date: Tue, 25 Aug 2015 15:29:07 +0300
-In-Reply-To: <20150820103037.GA5521@mwanda> (Dan Carpenter's message of "Thu,
-	20 Aug 2015 13:30:37 +0300")
-Message-ID: <87lhcz5z70.fsf@kamboji.qca.qualcomm.com> (sfid-20150825_142919_050473_CBAFAC41)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 9 Aug 2015 22:33:43 -0400
+Received: by pacgr6 with SMTP id gr6so15835390pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:43 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 05/11] staging: wilc1000: remove WILC_strncpy function
+Date: Mon, 10 Aug 2015 11:33:16 +0900
+Message-Id: <1439174002-7365-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043353_122695_3CF8B2F6)
+In-Reply-To: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+Remove WILC_strncpy function that is changed to strncpy.
 
-> There were several bugs here.
->
-> 1)  The done label was in the wrong place so we didn't copy any
->     information out when there was no command given.
->
-> 2)  We were using PAGE_SIZE as the size of the buffer instead of
->     "PAGE_SIZE - pos".
->
-> 3)  snprintf() returns the number of characters that would have been
->     printed if there were enough space.  If there was not enough space
->     (and we had fixed the memory corruption bug #2) then it would result
->     in an information leak when we do simple_read_from_buffer().  I've
->     changed it to use scnprintf() instead.
->
-> I also removed the initialization at the start of the function, because
-> I thought it made the code a little more clear.
->
-> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell mwifiex driver')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_strutils.c | 10 ----------
+ drivers/staging/wilc1000/wilc_strutils.h | 14 --------------
+ 2 files changed, 24 deletions(-)
 
-I see a new warning:
-
-drivers/net/wireless/mwifiex/debugfs.c:760:31: warning: pos may be used uninitialized in this function [-Wuninitialized]
-
-Is it a valid warning or should I apply the patch anyway?
-
+diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
+index 205a06a..337e62f 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.c
++++ b/drivers/staging/wilc1000/wilc_strutils.c
+@@ -17,16 +17,6 @@ void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count)
+ }
+ 
+ 
+-/*!
+- *  @author	syounan
+- *  @date	18 Aug 2010
+- *  @version	1.0
+- */
+-char *WILC_strncpy(char *pcTarget, const char *pcSource,
+-			u32 u32Count)
+-{
+-	return strncpy(pcTarget, pcSource, u32Count);
+-}
+ 
+ s32 WILC_strncmp(const char *pcStr1, const char *pcStr2,
+ 			 u32 u32Count)
+diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
+index 7c38e14..86728d2 100644
+--- a/drivers/staging/wilc1000/wilc_strutils.h
++++ b/drivers/staging/wilc1000/wilc_strutils.h
+@@ -59,20 +59,6 @@ static WILC_ErrNo WILC_memcpy(void *pvTarget, const void *pvSource, u32 u32Count
+ }
+ 
+ 
+-/*!
+- *  @brief	copies the contents of source string into the target string
+- *  @param[in]	pcTarget the target string buffer
+- *  @param[in]	pcSource the source string the will be copied
+- *  @param[in]	u32Count copying will proceed until a null character in pcSource
+- *              is encountered or u32Count of bytes copied
+- *  @return	value of pcTarget
+- *  @note	this function repeats the functionality of standard strncpy
+- *  @author	syounan
+- *  @date	18 Aug 2010
+- *  @version	1.0
+- */
+-char *WILC_strncpy(char *pcTarget, const char *pcSource,
+-			u32 u32Count);
+ 
+ /*!
+  *  @brief	Compares two strings up to u32Count characters
 -- 
-Kalle Valo
+1.9.1
+
