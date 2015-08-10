@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:36743 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbbHCJQO (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:35824 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752216AbbHJCdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2015 05:16:14 -0400
-Received: by lbbud7 with SMTP id ud7so70412244lbb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 02:16:11 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: remove futile fragmentation threshold config
-Date: Mon,  3 Aug 2015 11:16:42 +0200
-Message-Id: <1438593403-316-1-git-send-email-michal.kazior@tieto.com> (sfid-20150803_111621_994767_AD89C919)
+	Sun, 9 Aug 2015 22:33:32 -0400
+Received: by pdrg1 with SMTP id g1so65850022pdr.2
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:31 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/11] staging: wilc1000: remove commented code
+Date: Mon, 10 Aug 2015 11:33:12 +0900
+Message-Id: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043347_405463_63FF4356)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 1010ba4c5d1c ("ath10k: unregister and
-remove frag_threshold callback") didn't remove all
-instances of (futile) fragmentation threshold
-configuration. No known firmware supports the
-parameter so don't even bother setting it.
+Remove commented code that is not used.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 21 ---------------------
- 1 file changed, 21 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 1 -
+ drivers/staging/wilc1000/host_interface.c   | 2 --
+ 2 files changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index acd222f3b899..879af9c3bd4a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -678,20 +678,6 @@ static int ath10k_mac_set_rts(struct ath10k_vif *arvif, u32 value)
- 	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param, value);
- }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 72ff7d4..a88b796 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -1332,7 +1332,6 @@ void ProcessStrWid(char *pcPacket, s32 *ps32PktLen,
  
--static int ath10k_mac_set_frag(struct ath10k_vif *arvif, u32 value)
--{
--	struct ath10k *ar = arvif->ar;
--	u32 vdev_param;
--
--	if (value != 0xFFFFFFFF)
--		value = clamp_t(u32, arvif->ar->hw->wiphy->frag_threshold,
--				ATH10K_FRAGMT_THRESHOLD_MIN,
--				ATH10K_FRAGMT_THRESHOLD_MAX);
--
--	vdev_param = ar->wmi.vdev_param->fragmentation_threshold;
--	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param, value);
--}
--
- static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+ 	if (g_oper_mode == SET_CFG) {
+ 		/* Message Length */
+-		/* u16MsgLen = WILC_strlen(pu8val); */
+ 		u16MsgLen = (u16)s32ValueSize;
+ 
+ 		/* Length */
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index cc549c2..31790a3d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -5159,9 +5159,7 @@ s32 host_int_set_RSNAConfigPSKPassPhrase(WILC_WFIDrvHandle hWFIDrv, u8 *pu8PassP
  {
- 	int ret;
-@@ -4276,13 +4262,6 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		goto err_peer_delete;
- 	}
+ 	s32 s32Error = WILC_SUCCESS;
+ 	tstrWID strWID;
+-	/* tstrWILC_WFIDrv * pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv; */
  
--	ret = ath10k_mac_set_frag(arvif, ar->hw->wiphy->frag_threshold);
--	if (ret) {
--		ath10k_warn(ar, "failed to set frag threshold for vdev %d: %d\n",
--			    arvif->vdev_id, ret);
--		goto err_peer_delete;
--	}
--
- 	arvif->txpower = vif->bss_conf.txpower;
- 	ret = ath10k_mac_txpower_recalc(ar);
- 	if (ret) {
+-	/* u8 u8Psklength = WILC_strlen(pu8PassPhrase); */
+ 	/*validating psk length*/
+ 	if ((u8Psklength > 7) && (u8Psklength < 65)) {
+ 		strWID.u16WIDid	= (u16)WID_11I_PSK;
 -- 
-2.1.4
+1.9.1
 
