@@ -1,178 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61700 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbbHMNiS (ORCPT
+Received: from mail-vk0-f49.google.com ([209.85.213.49]:33286 "EHLO
+	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932292AbbHJKyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 09:38:18 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH v2 2/2] ath10k: handle 10.4 firmware phyerr event
-Date: Thu, 13 Aug 2015 19:07:13 +0530
-Message-ID: <1439473033-14724-2-git-send-email-rmani@qti.qualcomm.com> (sfid-20150813_153820_653390_D1D2E0E4)
-In-Reply-To: <1439473033-14724-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1439473033-14724-1-git-send-email-rmani@qti.qualcomm.com>
+	Mon, 10 Aug 2015 06:54:08 -0400
+Received: by vkbc123 with SMTP id c123so8897719vkb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2015 03:54:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150810041957.GA7681@us.netrek.org>
+References: <1438917073-5720-1-git-send-email-acelan.kao@canonical.com>
+	<55C4DDF5.6010901@lwfinger.net>
+	<CAFv23Qk285G47pPVrfUn5izfZyrc-vCSPqJamnoxQMm6Ae9zpQ@mail.gmail.com>
+	<20150810041957.GA7681@us.netrek.org>
+Date: Mon, 10 Aug 2015 18:47:05 +0800
+Message-ID: <CAAd53p5Lwm-2qDh=hc8Kp8XYUafxksyQn9ouOjHW_PymPQ-i9w@mail.gmail.com> (sfid-20150810_125413_609080_F26051EC)
+Subject: Re: [PATCH] rtlwifi: rtl8723be: disable FW control power save
+From: Kai Heng Feng <kai.heng.feng@canonical.com>
+To: James Cameron <quozl@laptop.org>
+Cc: AceLan Kao <acelan.kao@canonical.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Header format of 10.4 firmware phyerr event is not alligned
-with pre 10.4 firmware. Introduce new wmi handlers to parse
-10.4 firmware specific phyerror event header.
+Hi James,
 
-With changes covered in this patch, radar detection works on
-qca9x0 hw 2.0 which uses 10.4 firmware.
+Do you use Ubuntu Trusty (14.04)?
+The rtl8723be firmware is not up-to-date in Trusty's linux-firmware.
+You can grab the newer one from the upstream linux-firmware.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
+Thanks,
+Kai-Heng Feng
 
-v2 changes:
 
- - Fixed below sparse warnings,
-     wmi.c:3620:33: warning: restricted __le32 degrades to integer
-     wmi.c:3622:38: warning: restricted __le32 degrades to integer
-     wmi.c:3594:5: warning: symbol 'ath10k_wmi_10_4_op_pull_phyerr_ev' was not declared. Should it be static?
-
- drivers/net/wireless/ath/ath10k/wmi.c | 64 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h | 20 +++++++++++
- 2 files changed, 84 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 37dfa34..aad16eb 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3527,6 +3527,26 @@ static int ath10k_wmi_op_pull_phyerr_ev_hdr(struct ath10k *ar,
- 	return 0;
- }
- 
-+static int ath10k_wmi_10_4_op_pull_phyerr_ev_hdr(struct ath10k *ar,
-+						 struct sk_buff *skb,
-+						 struct wmi_phyerr_hdr_arg *arg)
-+{
-+	struct wmi_10_4_phyerr_event *ev = (void *)skb->data;
-+
-+	if (skb->len < sizeof(*ev))
-+		return -EPROTO;
-+
-+	/* 10.4 firmware always reports only one phyerr */
-+	arg->num_phyerrs = 1;
-+
-+	arg->tsf_l32 = __le32_to_cpu(ev->tsf_l32);
-+	arg->tsf_u32 = __le32_to_cpu(ev->tsf_u32);
-+	arg->buf_len = skb->len;
-+	arg->phyerrs = skb->data;
-+
-+	return 0;
-+}
-+
- int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar,
- 				 const void *phyerr_buf,
- 				 int left_len,
-@@ -3571,6 +3591,45 @@ int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar,
- 	return 0;
- }
- 
-+static int ath10k_wmi_10_4_op_pull_phyerr_ev(struct ath10k *ar,
-+					     const void *phyerr_buf,
-+					     int left_len,
-+					     struct wmi_phyerr_ev_arg *arg)
-+{
-+	const struct wmi_10_4_phyerr_event *phyerr = phyerr_buf;
-+	u32 phy_err_mask;
-+	int i;
-+
-+	if (left_len < sizeof(*phyerr)) {
-+		ath10k_warn(ar, "wrong phyerr event head len %d (need: >=%d)\n",
-+			    left_len, sizeof(*phyerr));
-+		return -EINVAL;
-+	}
-+
-+	arg->tsf_timestamp = __le32_to_cpu(phyerr->tsf_timestamp);
-+	arg->freq1 = __le16_to_cpu(phyerr->freq1);
-+	arg->freq2 = __le16_to_cpu(phyerr->freq2);
-+	arg->rssi_combined = phyerr->rssi_combined;
-+	arg->chan_width_mhz = phyerr->chan_width_mhz;
-+	arg->buf_len = __le32_to_cpu(phyerr->buf_len);
-+	arg->buf = phyerr->buf;
-+	arg->hdr_len = sizeof(*phyerr);
-+
-+	for (i = 0; i < 4; i++)
-+		arg->nf_chains[i] = __le16_to_cpu(phyerr->nf_chains[i]);
-+
-+	phy_err_mask = __le32_to_cpu(phyerr->phy_err_mask[0]);
-+
-+	if (phy_err_mask & PHY_ERROR_10_4_SPECTRAL_SCAN_MASK)
-+		arg->phy_err_code = PHY_ERROR_SPECTRAL_SCAN;
-+	else if (phy_err_mask & PHY_ERROR_10_4_RADAR_MASK)
-+		arg->phy_err_code = PHY_ERROR_RADAR;
-+	else
-+		arg->phy_err_code = PHY_ERROR_UNKNOWN;
-+
-+	return 0;
-+}
-+
- void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_phyerr_hdr_arg hdr_arg = {};
-@@ -4528,6 +4587,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_4_CHAN_INFO_EVENTID:
- 		ath10k_wmi_event_chan_info(ar, skb);
- 		break;
-+	case WMI_10_4_PHYERR_EVENTID:
-+		ath10k_wmi_event_phyerr(ar, skb);
-+		break;
- 	case WMI_10_4_READY_EVENTID:
- 		ath10k_wmi_event_ready(ar, skb);
- 		break;
-@@ -6491,6 +6553,8 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.pull_vdev_start = ath10k_wmi_op_pull_vdev_start_ev,
- 	.pull_peer_kick = ath10k_wmi_op_pull_peer_kick_ev,
- 	.pull_swba = ath10k_wmi_10_4_op_pull_swba_ev,
-+	.pull_phyerr_hdr = ath10k_wmi_10_4_op_pull_phyerr_ev_hdr,
-+	.pull_phyerr = ath10k_wmi_10_4_op_pull_phyerr_ev,
- 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
- 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0ed3cfe..c5d10db 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2977,6 +2977,9 @@ struct wmi_10_4_mgmt_rx_event {
- #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
- #define PHY_ERROR_GEN_RADAR			0x05
- 
-+#define PHY_ERROR_10_4_RADAR_MASK               0x4
-+#define PHY_ERROR_10_4_SPECTRAL_SCAN_MASK       0x4000000
-+
- enum phy_err_type {
- 	PHY_ERROR_UNKNOWN,
- 	PHY_ERROR_SPECTRAL_SCAN,
-@@ -3005,6 +3008,23 @@ struct wmi_phyerr_event {
- 	struct wmi_phyerr phyerrs[0];
- } __packed;
- 
-+struct wmi_10_4_phyerr_event {
-+	__le32 tsf_l32;
-+	__le32 tsf_u32;
-+	__le16 freq1;
-+	__le16 freq2;
-+	u8 rssi_combined;
-+	u8 chan_width_mhz;
-+	u8 phy_err_code;
-+	u8 rsvd0;
-+	__le32 rssi_chains[4];
-+	__le16 nf_chains[4];
-+	__le32 phy_err_mask[2];
-+	__le32 tsf_timestamp;
-+	__le32 buf_len;
-+	u8 buf[0];
-+} __packed;
-+
- #define PHYERR_TLV_SIG				0xBB
- #define PHYERR_TLV_TAG_SEARCH_FFT_REPORT	0xFB
- #define PHYERR_TLV_TAG_RADAR_PULSE_SUMMARY	0xF8
--- 
-1.8.1.2
-
+On Mon, Aug 10, 2015 at 12:19 PM, James Cameron <quozl@laptop.org> wrote:
+> On Mon, Aug 10, 2015 at 11:38:09AM +0800, AceLan Kao wrote:
+>> I tried using "ips=0" today and found it's not working.
+>> I ping 8.8.8.8 and got below message within one hour.
+>>    ping: sendmsg: No buffer space available
+>
+> I use both ips=0 and fwlps=0 with Ubuntu kernel and with 4.1, and the
+> connection remains stable.
+>
+> fwlps=0 alone was not enough.
+>
+> ips=0 alone was not enough.
+>
+> Hope that helps.
+>
+> --
+> James Cameron
+> http://quozl.linux.org.au/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
