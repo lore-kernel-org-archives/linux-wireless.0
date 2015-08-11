@@ -1,44 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:49719 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752195AbbHRH6a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 03:58:30 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/26] iwlwifi: mvm: support TDLS wider-bandwidth
-Date: Tue, 18 Aug 2015 10:57:30 +0300
-Message-Id: <1439884656-18146-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100110_495602_06BBCF5B)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+	id S1755088AbbHKHPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Aug 2015 03:15:10 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id t7B7FAFP001363
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2015 02:15:10 -0500
+Received: from DLEE70.ent.ti.com (dlee70.ent.ti.com [157.170.170.113])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id t7B7FAeK024392
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2015 02:15:10 -0500
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>
+Subject: [PATCH 2/2 V2] wl18xx: add diversity statistics
+Date: Tue, 11 Aug 2015 10:02:57 +0300
+Message-ID: <1439276577-9585-2-git-send-email-guym@ti.com> (sfid-20150811_091526_463462_9995565A)
+In-Reply-To: <1439276577-9585-1-git-send-email-guym@ti.com>
+References: <1439276577-9585-1-git-send-email-guym@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Add diversity statistics and sync the driver
+statistics acx and debugfs representation
+with the current fw api.
 
-When TDLS support is declared by the FW, set the bit indicating wider-BW
-support as well.
-
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Guy Mishol <guym@ti.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+V2: Resubmitted again due to previous multiple submission
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 08dd674..537a157 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -641,6 +641,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 			IWL_UCODE_TLV_CAPA_TDLS_SUPPORT)) {
- 		IWL_DEBUG_TDLS(mvm, "TDLS supported\n");
- 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
-+		ieee80211_hw_set(hw, TDLS_WIDER_BW);
- 	}
+ drivers/net/wireless/ti/wl18xx/acx.h     |   47 ++++-------------------------
+ drivers/net/wireless/ti/wl18xx/debugfs.c |   21 ++++++-------
+ 2 files changed, 16 insertions(+), 52 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+index 6c5fef3..342a299 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.h
++++ b/drivers/net/wireless/ti/wl18xx/acx.h
+@@ -112,20 +112,6 @@ struct wl18xx_acx_error_stats {
+ 	u32 tbc_exch_mismatch;
+ } __packed;
  
- 	if (fw_has_capa(&mvm->fw->ucode_capa,
+-struct wl18xx_acx_debug_stats {
+-	u32 debug1;
+-	u32 debug2;
+-	u32 debug3;
+-	u32 debug4;
+-	u32 debug5;
+-	u32 debug6;
+-} __packed;
+-
+-struct wl18xx_acx_ring_stats {
+-	u32 prepared_descs;
+-	u32 tx_cmplt;
+-} __packed;
+-
+ #define NUM_OF_RATES_INDEXES 30
+ struct wl18xx_acx_tx_stats {
+ 	u32 tx_prepared_descs;
+@@ -215,21 +201,6 @@ struct wl18xx_acx_pwr_stats {
+ 	u32 ap_sleep_counter;
+ } __packed;
+ 
+-struct wl18xx_acx_event_stats {
+-	u32 calibration;
+-	u32 rx_mismatch;
+-	u32 rx_mem_empty;
+-} __packed;
+-
+-struct wl18xx_acx_ps_poll_stats {
+-	u32 ps_poll_timeouts;
+-	u32 upsd_timeouts;
+-	u32 upsd_max_ap_turn;
+-	u32 ps_poll_max_ap_turn;
+-	u32 ps_poll_utilization;
+-	u32 upsd_utilization;
+-} __packed;
+-
+ struct wl18xx_acx_rx_filter_stats {
+ 	u32 beacon_filter;
+ 	u32 arp_filter;
+@@ -260,8 +231,6 @@ struct wl18xx_acx_aggr_stats {
+ struct wl18xx_acx_pipeline_stats {
+ 	u32 hs_tx_stat_fifo_int;
+ 	u32 hs_rx_stat_fifo_int;
+-	u32 tcp_tx_stat_fifo_int;
+-	u32 tcp_rx_stat_fifo_int;
+ 	u32 enc_tx_stat_fifo_int;
+ 	u32 enc_rx_stat_fifo_int;
+ 	u32 rx_complete_stat_fifo_int;
+@@ -269,22 +238,19 @@ struct wl18xx_acx_pipeline_stats {
+ 	u32 post_proc_swi;
+ 	u32 sec_frag_swi;
+ 	u32 pre_to_defrag_swi;
+-	u32 defrag_to_csum_swi;
+-	u32 csum_to_rx_xfer_swi;
++	u32 defrag_to_rx_xfer_swi;
+ 	u32 dec_packet_in;
+ 	u32 dec_packet_in_fifo_full;
+ 	u32 dec_packet_out;
+-	u32 cs_rx_packet_in;
+-	u32 cs_rx_packet_out;
+ 	u16 pipeline_fifo_full[PIPE_STATS_HW_FIFO];
+ 	u16 padding;
+ } __packed;
+ 
+-struct wl18xx_acx_mem_stats {
+-	u32 rx_free_mem_blks;
+-	u32 tx_free_mem_blks;
+-	u32 fwlog_free_mem_blks;
+-	u32 fw_gen_free_mem_blks;
++#define DIVERSITY_STATS_NUM_OF_ANT	2
++
++struct wl18xx_acx_diversity_stats {
++	u32 num_of_packets_per_ant[DIVERSITY_STATS_NUM_OF_ANT];
++	u32 total_num_of_toggles;
+ } __packed;
+ 
+ struct wl18xx_acx_thermal_stats {
+@@ -322,6 +288,7 @@ struct wl18xx_acx_statistics {
+ 	struct wl18xx_acx_rx_rate_stats		rx_rate;
+ 	struct wl18xx_acx_aggr_stats		aggr_size;
+ 	struct wl18xx_acx_pipeline_stats	pipeline;
++	struct wl18xx_acx_diversity_stats	diversity;
+ 	struct wl18xx_acx_thermal_stats		thermal;
+ 	struct wl18xx_acx_calib_failure_stats	calib;
+ 	struct wl18xx_roaming_stats		roaming;
+diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
+index cf71005..4edfe28 100644
+--- a/drivers/net/wireless/ti/wl18xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
+@@ -153,8 +153,6 @@ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(aggr_size, rx_size,
+ 				  AGGR_STATS_RX_SIZE_LEN);
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, hs_tx_stat_fifo_int, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, tcp_tx_stat_fifo_int, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, tcp_rx_stat_fifo_int, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, enc_tx_stat_fifo_int, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, enc_rx_stat_fifo_int, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, rx_complete_stat_fifo_int, "%u");
+@@ -162,17 +160,18 @@ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, pre_proc_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, post_proc_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, sec_frag_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, pre_to_defrag_swi, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, defrag_to_csum_swi, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, csum_to_rx_xfer_swi, "%u");
++WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, defrag_to_rx_xfer_swi, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, dec_packet_in, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, dec_packet_in_fifo_full, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, dec_packet_out, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, cs_rx_packet_in, "%u");
+-WL18XX_DEBUGFS_FWSTATS_FILE(pipeline, cs_rx_packet_out, "%u");
+ 
+ WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(pipeline, pipeline_fifo_full,
+ 				  PIPE_STATS_HW_FIFO);
+ 
++WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(diversity, num_of_packets_per_ant,
++				  DIVERSITY_STATS_NUM_OF_ANT);
++WL18XX_DEBUGFS_FWSTATS_FILE(diversity, total_num_of_toggles, "%u");
++
+ WL18XX_DEBUGFS_FWSTATS_FILE(thermal, irq_thr_low, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(thermal, irq_thr_high, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(thermal, tx_stop, "%u");
+@@ -478,8 +477,6 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(aggr_size, rx_size);
+ 
+ 	DEBUGFS_FWSTATS_ADD(pipeline, hs_tx_stat_fifo_int);
+-	DEBUGFS_FWSTATS_ADD(pipeline, tcp_tx_stat_fifo_int);
+-	DEBUGFS_FWSTATS_ADD(pipeline, tcp_rx_stat_fifo_int);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, enc_tx_stat_fifo_int);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, enc_rx_stat_fifo_int);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, rx_complete_stat_fifo_int);
+@@ -487,15 +484,15 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(pipeline, post_proc_swi);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, sec_frag_swi);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, pre_to_defrag_swi);
+-	DEBUGFS_FWSTATS_ADD(pipeline, defrag_to_csum_swi);
+-	DEBUGFS_FWSTATS_ADD(pipeline, csum_to_rx_xfer_swi);
++	DEBUGFS_FWSTATS_ADD(pipeline, defrag_to_rx_xfer_swi);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, dec_packet_in);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, dec_packet_in_fifo_full);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, dec_packet_out);
+-	DEBUGFS_FWSTATS_ADD(pipeline, cs_rx_packet_in);
+-	DEBUGFS_FWSTATS_ADD(pipeline, cs_rx_packet_out);
+ 	DEBUGFS_FWSTATS_ADD(pipeline, pipeline_fifo_full);
+ 
++	DEBUGFS_FWSTATS_ADD(diversity, num_of_packets_per_ant);
++	DEBUGFS_FWSTATS_ADD(diversity, total_num_of_toggles);
++
+ 	DEBUGFS_FWSTATS_ADD(thermal, irq_thr_low);
+ 	DEBUGFS_FWSTATS_ADD(thermal, irq_thr_high);
+ 	DEBUGFS_FWSTATS_ADD(thermal, tx_stop);
 -- 
-2.1.4
+1.7.0.4
 
