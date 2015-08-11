@@ -1,260 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:46142 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752682AbbHMWWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 18:22:06 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: kvalo@codeaurora.org
-Cc: linus.walleij@linaro.org, zajec5@gmail.com, nbd@openwrt.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
-Date: Fri, 14 Aug 2015 00:21:45 +0200
-Message-Id: <1439504505-20314-1-git-send-email-hauke@hauke-m.de> (sfid-20150814_002220_936041_BD3B4A84)
+Received: from mail-pd0-f193.google.com ([209.85.192.193]:35432 "EHLO
+	mail-pd0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965062AbbHKPU4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Aug 2015 11:20:56 -0400
+Date: Tue, 11 Aug 2015 20:37:59 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
+	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com,
+	csgorentla@gmail.com
+Subject: Re: [PATCH] staging: wilc100: Remove pointer and integer comparision
+Message-ID: <20150811150759.GA16442@gcs-HP-Compaq-nx6320> (sfid-20150811_172119_614087_2E46F655)
+References: <1439133602-9654-1-git-send-email-csgorentla@gmail.com>
+ <20150810093943.GI5180@mwanda>
+ <20150810152943.GA12993@gcs-HP-Compaq-nx6320>
+ <20150810155614.GK5096@mwanda>
+ <20150810174034.GA14776@gcs-HP-Compaq-nx6320>
+ <20150810183856.GM5180@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150810183856.GM5180@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Linus Walleij <linus.walleij@linaro.org>
+On Mon, Aug 10, 2015 at 09:38:56PM +0300, Dan Carpenter wrote:
+> Warnings are not a bad thing they are a valuable marker to let us know
+> which code is broken.  If we just silence the warning in the laziest
+> possible way then we are throwing away valuable information.  It's
+> better to leave the warning there so that the next person can fix it
+> properly.
+> 
+> If you want to leave the code as-is that is absolutely fine with me, but
+> don't remove the warning until someone can look at this a bit carefully.
+> 
+> regards,
+> dan carpenter
+> 
 
-This switches the BCMA GPIO driver to use GPIOLIB_IRQCHIP to
-handle its interrupts instead of rolling its own copy of the
-irqdomain handling etc.
+Thank you.
 
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
+It looks like it needs more knowledge of wireless networking to
+conclude if there was any problem and to fix if any problem exists.
 
-changes since:
-v2:
- * use bcma_bus_get_host_dev()
+I will come back to this problem in near future, if the error was
+still observed then.
 
-v1:
- * I fixed some bugs in the original patch, some of them are compile 
-   errors and others caused some runtime problems.
-
- drivers/bcma/Kconfig                        |  2 +-
- drivers/bcma/driver_gpio.c                  | 92 ++++++++++-------------------
- include/linux/bcma/bcma_driver_chipcommon.h |  1 -
- 3 files changed, 31 insertions(+), 64 deletions(-)
-
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index be5fffb..023d448 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -92,7 +92,7 @@ config BCMA_DRIVER_GMAC_CMN
- config BCMA_DRIVER_GPIO
- 	bool "BCMA GPIO driver"
- 	depends on BCMA && GPIOLIB
--	select IRQ_DOMAIN if BCMA_HOST_SOC
-+	select GPIOLIB_IRQCHIP if BCMA_HOST_SOC
- 	help
- 	  Driver to provide access to the GPIO pins of the bcma bus.
- 
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 5f6018e..504899a7 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -8,10 +8,8 @@
-  * Licensed under the GNU/GPL. See COPYING for details.
-  */
- 
--#include <linux/gpio.h>
--#include <linux/irq.h>
-+#include <linux/gpio/driver.h>
- #include <linux/interrupt.h>
--#include <linux/irqdomain.h>
- #include <linux/export.h>
- #include <linux/bcma/bcma.h>
- 
-@@ -79,19 +77,11 @@ static void bcma_gpio_free(struct gpio_chip *chip, unsigned gpio)
- }
- 
- #if IS_BUILTIN(CONFIG_BCM47XX) || IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
--static int bcma_gpio_to_irq(struct gpio_chip *chip, unsigned gpio)
--{
--	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
--
--	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
--		return irq_find_mapping(cc->irq_domain, gpio);
--	else
--		return -EINVAL;
--}
- 
- static void bcma_gpio_irq_unmask(struct irq_data *d)
- {
--	struct bcma_drv_cc *cc = irq_data_get_irq_chip_data(d);
-+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
-+	struct bcma_drv_cc *cc = bcma_gpio_get_cc(gc);
- 	int gpio = irqd_to_hwirq(d);
- 	u32 val = bcma_chipco_gpio_in(cc, BIT(gpio));
- 
-@@ -101,7 +91,8 @@ static void bcma_gpio_irq_unmask(struct irq_data *d)
- 
- static void bcma_gpio_irq_mask(struct irq_data *d)
- {
--	struct bcma_drv_cc *cc = irq_data_get_irq_chip_data(d);
-+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
-+	struct bcma_drv_cc *cc = bcma_gpio_get_cc(gc);
- 	int gpio = irqd_to_hwirq(d);
- 
- 	bcma_chipco_gpio_intmask(cc, BIT(gpio), 0);
-@@ -116,6 +107,7 @@ static struct irq_chip bcma_gpio_irq_chip = {
- static irqreturn_t bcma_gpio_irq_handler(int irq, void *dev_id)
- {
- 	struct bcma_drv_cc *cc = dev_id;
-+	struct gpio_chip *gc = &cc->gpio;
- 	u32 val = bcma_cc_read32(cc, BCMA_CC_GPIOIN);
- 	u32 mask = bcma_cc_read32(cc, BCMA_CC_GPIOIRQ);
- 	u32 pol = bcma_cc_read32(cc, BCMA_CC_GPIOPOL);
-@@ -125,81 +117,58 @@ static irqreturn_t bcma_gpio_irq_handler(int irq, void *dev_id)
- 	if (!irqs)
- 		return IRQ_NONE;
- 
--	for_each_set_bit(gpio, &irqs, cc->gpio.ngpio)
--		generic_handle_irq(bcma_gpio_to_irq(&cc->gpio, gpio));
-+	for_each_set_bit(gpio, &irqs, gc->ngpio)
-+		generic_handle_irq(irq_find_mapping(gc->irqdomain, gpio));
- 	bcma_chipco_gpio_polarity(cc, irqs, val & irqs);
- 
- 	return IRQ_HANDLED;
- }
- 
--static int bcma_gpio_irq_domain_init(struct bcma_drv_cc *cc)
-+static int bcma_gpio_irq_init(struct bcma_drv_cc *cc)
- {
- 	struct gpio_chip *chip = &cc->gpio;
--	int gpio, hwirq, err;
-+	int hwirq, err;
- 
- 	if (cc->core->bus->hosttype != BCMA_HOSTTYPE_SOC)
- 		return 0;
- 
--	cc->irq_domain = irq_domain_add_linear(NULL, chip->ngpio,
--					       &irq_domain_simple_ops, cc);
--	if (!cc->irq_domain) {
--		err = -ENODEV;
--		goto err_irq_domain;
--	}
--	for (gpio = 0; gpio < chip->ngpio; gpio++) {
--		int irq = irq_create_mapping(cc->irq_domain, gpio);
--
--		irq_set_chip_data(irq, cc);
--		irq_set_chip_and_handler(irq, &bcma_gpio_irq_chip,
--					 handle_simple_irq);
--	}
--
- 	hwirq = bcma_core_irq(cc->core, 0);
- 	err = request_irq(hwirq, bcma_gpio_irq_handler, IRQF_SHARED, "gpio",
- 			  cc);
- 	if (err)
--		goto err_req_irq;
-+		return err;
- 
- 	bcma_chipco_gpio_intmask(cc, ~0, 0);
- 	bcma_cc_set32(cc, BCMA_CC_IRQMASK, BCMA_CC_IRQ_GPIO);
- 
--	return 0;
--
--err_req_irq:
--	for (gpio = 0; gpio < chip->ngpio; gpio++) {
--		int irq = irq_find_mapping(cc->irq_domain, gpio);
--
--		irq_dispose_mapping(irq);
-+	err =  gpiochip_irqchip_add(chip,
-+				    &bcma_gpio_irq_chip,
-+				    0,
-+				    handle_simple_irq,
-+				    IRQ_TYPE_NONE);
-+	if (err) {
-+		free_irq(hwirq, cc);
-+		return err;
- 	}
--	irq_domain_remove(cc->irq_domain);
--err_irq_domain:
--	return err;
-+
-+	return 0;
- }
- 
--static void bcma_gpio_irq_domain_exit(struct bcma_drv_cc *cc)
-+static void bcma_gpio_irq_exit(struct bcma_drv_cc *cc)
- {
--	struct gpio_chip *chip = &cc->gpio;
--	int gpio;
--
- 	if (cc->core->bus->hosttype != BCMA_HOSTTYPE_SOC)
- 		return;
- 
- 	bcma_cc_mask32(cc, BCMA_CC_IRQMASK, ~BCMA_CC_IRQ_GPIO);
- 	free_irq(bcma_core_irq(cc->core, 0), cc);
--	for (gpio = 0; gpio < chip->ngpio; gpio++) {
--		int irq = irq_find_mapping(cc->irq_domain, gpio);
--
--		irq_dispose_mapping(irq);
--	}
--	irq_domain_remove(cc->irq_domain);
- }
- #else
--static int bcma_gpio_irq_domain_init(struct bcma_drv_cc *cc)
-+static int bcma_gpio_irq_init(struct bcma_drv_cc *cc)
- {
- 	return 0;
- }
- 
--static void bcma_gpio_irq_domain_exit(struct bcma_drv_cc *cc)
-+static void bcma_gpio_irq_exit(struct bcma_drv_cc *cc)
- {
- }
- #endif
-@@ -218,9 +187,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- 	chip->set		= bcma_gpio_set_value;
- 	chip->direction_input	= bcma_gpio_direction_input;
- 	chip->direction_output	= bcma_gpio_direction_output;
--#if IS_BUILTIN(CONFIG_BCM47XX) || IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
--	chip->to_irq		= bcma_gpio_to_irq;
--#endif
-+	chip->owner		= THIS_MODULE;
-+	chip->dev		= bcma_bus_get_host_dev(bus);
- #if IS_BUILTIN(CONFIG_OF)
- 	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
- 		chip->of_node	= cc->core->dev.of_node;
-@@ -248,13 +216,13 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- 	else
- 		chip->base		= -1;
- 
--	err = bcma_gpio_irq_domain_init(cc);
-+	err = gpiochip_add(chip);
- 	if (err)
- 		return err;
- 
--	err = gpiochip_add(chip);
-+	err = bcma_gpio_irq_init(cc);
- 	if (err) {
--		bcma_gpio_irq_domain_exit(cc);
-+		gpiochip_remove(chip);
- 		return err;
- 	}
- 
-@@ -263,7 +231,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- 
- int bcma_gpio_unregister(struct bcma_drv_cc *cc)
- {
--	bcma_gpio_irq_domain_exit(cc);
-+	bcma_gpio_irq_exit(cc);
- 	gpiochip_remove(&cc->gpio);
- 	return 0;
- }
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 6cceedf..cf03843 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -640,7 +640,6 @@ struct bcma_drv_cc {
- 	spinlock_t gpio_lock;
- #ifdef CONFIG_BCMA_DRIVER_GPIO
- 	struct gpio_chip gpio;
--	struct irq_domain *irq_domain;
- #endif
- };
- 
--- 
-2.1.4
-
+chandra
