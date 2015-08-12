@@ -1,383 +1,528 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:38439 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752698AbbHERwk convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:30137 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881AbbHLJ5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 13:52:40 -0400
-Received: by wibxm9 with SMTP id xm9so77790848wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 10:52:39 -0700 (PDT)
+	Wed, 12 Aug 2015 05:57:08 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: refactor phyerr event handlers
+Date: Wed, 12 Aug 2015 15:26:35 +0530
+Message-ID: <1439373396-10828-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150812_115713_194321_FC867901)
 MIME-Version: 1.0
-In-Reply-To: <CAMQd7mZm7LG2-iCQe2-KJLtA3Y7NwzAk_0N9JN3Cn3qjSC7GpA@mail.gmail.com>
-References: <CAMQd7mbWC7rj8-eU7Jv21ehT8KrpC=L=xWxzDQxHEU_ePNSdUg@mail.gmail.com>
-	<CA+BoTQmd0Uoi=2MNMsDXYe1yKsYa3P8uvVzWwXoMynQGtjeD4w@mail.gmail.com>
-	<CAMQd7maioLviTaLHp+f03HafABijKD_d92K_SRO8XS51poKGqg@mail.gmail.com>
-	<CA+BoTQkA0k1RBwzKFchcWebuWUmdoaqvaAq4BRz2o3C-GGUCog@mail.gmail.com>
-	<CAMQd7ma7hehYLBf-5hUD0sViUwWGX8vy7ENXuBi8Q49F88A45Q@mail.gmail.com>
-	<CA+BoTQkqttvPkk6qk6YV8SYPVnEcADfcUkLBCpjFoZBab81Byg@mail.gmail.com>
-	<871tfr8ne9.fsf@kamboji.qca.qualcomm.com>
-	<CAMQd7mY+upL+t9q0yJ0uL_jw_STEKL+hhe1PF_D5yPwfTkcgZg@mail.gmail.com>
-	<874mkn71ls.fsf@kamboji.qca.qualcomm.com>
-	<CAMQd7mYa4egNdyRq+8Wnv96L1aEU2esyfb0EEDjkbKO7O-9qDQ@mail.gmail.com>
-	<CAMQd7mZm7LG2-iCQe2-KJLtA3Y7NwzAk_0N9JN3Cn3qjSC7GpA@mail.gmail.com>
-Date: Wed, 5 Aug 2015 19:52:39 +0200
-Message-ID: <CAMQd7mZfkLiML3QgPfi9Kjh0=fRdOu-C=5tB0FBzdH_Na7xWnw@mail.gmail.com> (sfid-20150805_195244_483132_D5DF4C22)
-Subject: Re: QCA6174 hw2.1 irq_mode=0 broken on 4.2-rc3, working on 4.1.2
-From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bisect is done, unfortunately I think there is no good news
+Existing phyerr event handlers directly uses phyerr header format
+(ie, struct wmi_phyerr and struct wmi_phyerr_event) in the code
+exactly on how firmware packs it. This is the problem in 10.4 fw
+specific phyerr event handling where it uses different phyerror
+header format. Before adding 10.4 specific handler, little bit of
+refactor is done in existing phyerr handlers.
 
-$ git bisect log
-git bisect start '--' 'drivers/net/wireless/ath/ath10k/'
-# bad: [86ea07ca846a7c352f39dd0b7d81f15f403c7db8] Merge branch
-'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/s390/linux
-git bisect bad 86ea07ca846a7c352f39dd0b7d81f15f403c7db8
-# good: [b953c0d234bc72e8489d3bf51a276c5c4ec85345] Linux 4.1
-git bisect good b953c0d234bc72e8489d3bf51a276c5c4ec85345
-# good: [8e9904f5b9e5e0a126020211218c401d601ef74b] ath10k: mac: match
-wait_for_completion_timeout return type
-git bisect good 8e9904f5b9e5e0a126020211218c401d601ef74b
-# good: [8e9904f5b9e5e0a126020211218c401d601ef74b] ath10k: mac: match
-wait_for_completion_timeout return type
-git bisect good 8e9904f5b9e5e0a126020211218c401d601ef74b
-# good: [0cd9bc147f0b8d805972cbb4b7b5e5529f9624e0] ath10k: enable ibss-rsn
-git bisect good 0cd9bc147f0b8d805972cbb4b7b5e5529f9624e0
-# good: [48f4ca34f36bb947d8a7cd4ff8c8e282f14d51e6] ath10k: add new
-4addr related fw_feature
-git bisect good 48f4ca34f36bb947d8a7cd4ff8c8e282f14d51e6
-# good: [163f52647a0f7e34e803b51456c60deedd26ca1d] ath10k: bypass PLL
-setting on target init for QCA9888
-git bisect good 163f52647a0f7e34e803b51456c60deedd26ca1d
-# good: [d7bf4b4aba056f3e7eb88a3d8d45ee1a6f4873e9] ath10k: fix
-ar->rx_channel updating logic
-git bisect good d7bf4b4aba056f3e7eb88a3d8d45ee1a6f4873e9
-# good: [0e6eb417fc1facda1c9a9189be85f16cb5b8b69f] ath10k: fix channel switching
-git bisect good 0e6eb417fc1facda1c9a9189be85f16cb5b8b69f
-# good: [30686bf7f5b3c30831761e188a6e3cb33580fa48] mac80211: convert
-HW flags to unsigned long bitmap
-git bisect good 30686bf7f5b3c30831761e188a6e3cb33580fa48
-# good: [469d479f91b8277cc921d7525f31c832b25d9efb] ath10k: prevent
-memory leak in wmi rx ops
-git bisect good 469d479f91b8277cc921d7525f31c832b25d9efb
-# good: [fa433354f042105fc7a299253f904bb48dae0950] Merge tag
-'wireless-drivers-next-for-davem-2015-06-18' of
-git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next
-git bisect good fa433354f042105fc7a299253f904bb48dae0950
+Two new abstracted structures (struct wmi_phyerr_ev_hdr_arg and
+struct wmi_phyerr_ev_arg) are introduced to remove dependency of using
+firmware specific header format in the code. So that firmware specific
+phyerror handlers can populate values to abstracted structures and
+the following code can use abstracted struct for further operation.
 
-as you can see I tried to restrict the bisect to the ath10k folder
-only and none of the commit was faulty. Probably because all the
-commit were actually still on kernel 4.1 rc, none of them was on 4.2
-except the starting bad one (which was the latest when I cloned the
-repo for rc4).
+.pull_phyerr_hdr is added newly to pull common phyerr header info
+like tsf, buf_len, number of phyerr packed. Existing .pull_phyerr
+handler is changed and called to parse every sub phyerrs in the event.
 
-So I guess we are switching to plan B here and bisecting the entire
-tree right? If so, starting from the same bad commit as for this one
-and using the newest good commit I tested (so last entry in the bisect
-I just did)
+Validated these refactoring on qca988x hw2.0 using fw 10.2.4 version.
 
-$ git bisect good fa433354f042105fc7a299253f904bb48dae0950
-Bisecting: 6373 revisions left to test after this (roughly 13 steps)
-[4aa705b18bf17c4ff33ff7bbcd3f0c596443fa81] Merge tag 'armsoc-soc' of
-git://git.kernel.org/pub/scm/linux/kernel/git/arm/arm-soc
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/spectral.c |   9 +--
+ drivers/net/wireless/ath/ath10k/spectral.h |   4 +-
+ drivers/net/wireless/ath/ath10k/wmi-ops.h  |  22 ++++--
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c  |  17 ++--
+ drivers/net/wireless/ath/ath10k/wmi.c      | 121 ++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/wmi.h      |  43 +++++++---
+ 6 files changed, 149 insertions(+), 67 deletions(-)
 
-13 steps are not crazy.... sigh. Give me enough days, in the weekend
-I'll be on the road the I'll see if I can get few quiet hours to get
-this done.
+diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
+index 8dcd424..e4219b1 100644
+--- a/drivers/net/wireless/ath/ath10k/spectral.c
++++ b/drivers/net/wireless/ath/ath10k/spectral.c
+@@ -57,7 +57,7 @@ static uint8_t get_max_exp(s8 max_index, u16 max_magnitude, size_t bin_len,
+ }
+ 
+ int ath10k_spectral_process_fft(struct ath10k *ar,
+-				const struct wmi_phyerr *phyerr,
++				struct wmi_phyerr_ev_arg *phyerr,
+ 				const struct phyerr_fft_report *fftr,
+ 				size_t bin_len, u64 tsf)
+ {
+@@ -118,15 +118,14 @@ int ath10k_spectral_process_fft(struct ath10k *ar,
+ 	fft_sample->total_gain_db = __cpu_to_be16(total_gain_db);
+ 	fft_sample->base_pwr_db = __cpu_to_be16(base_pwr_db);
+ 
+-	freq1 = __le16_to_cpu(phyerr->freq1);
+-	freq2 = __le16_to_cpu(phyerr->freq2);
++	freq1 = phyerr->freq1;
++	freq2 = phyerr->freq2;
+ 	fft_sample->freq1 = __cpu_to_be16(freq1);
+ 	fft_sample->freq2 = __cpu_to_be16(freq2);
+ 
+ 	chain_idx = MS(reg0, SEARCH_FFT_REPORT_REG0_FFT_CHN_IDX);
+ 
+-	fft_sample->noise = __cpu_to_be16(
+-			__le16_to_cpu(phyerr->nf_chains[chain_idx]));
++	fft_sample->noise = __cpu_to_be16(phyerr->nf_chains[chain_idx]);
+ 
+ 	bins = (u8 *)fftr;
+ 	bins += sizeof(*fftr);
+diff --git a/drivers/net/wireless/ath/ath10k/spectral.h b/drivers/net/wireless/ath/ath10k/spectral.h
+index 042f5b3..89b0ad7 100644
+--- a/drivers/net/wireless/ath/ath10k/spectral.h
++++ b/drivers/net/wireless/ath/ath10k/spectral.h
+@@ -47,7 +47,7 @@ enum ath10k_spectral_mode {
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ 
+ int ath10k_spectral_process_fft(struct ath10k *ar,
+-				const struct wmi_phyerr *phyerr,
++				struct wmi_phyerr_ev_arg *phyerr,
+ 				const struct phyerr_fft_report *fftr,
+ 				size_t bin_len, u64 tsf);
+ int ath10k_spectral_start(struct ath10k *ar);
+@@ -59,7 +59,7 @@ void ath10k_spectral_destroy(struct ath10k *ar);
+ 
+ static inline int
+ ath10k_spectral_process_fft(struct ath10k *ar,
+-			    const struct wmi_phyerr *phyerr,
++			    struct wmi_phyerr_ev_arg *phyerr,
+ 			    const struct phyerr_fft_report *fftr,
+ 			    size_t bin_len, u64 tsf)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 47fe2e7..01629c9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -37,8 +37,10 @@ struct wmi_ops {
+ 			      struct wmi_peer_kick_ev_arg *arg);
+ 	int (*pull_swba)(struct ath10k *ar, struct sk_buff *skb,
+ 			 struct wmi_swba_ev_arg *arg);
+-	int (*pull_phyerr)(struct ath10k *ar, struct sk_buff *skb,
+-			   struct wmi_phyerr_ev_arg *arg);
++	int (*pull_phyerr_hdr)(struct ath10k *ar, struct sk_buff *skb,
++			       struct wmi_phyerr_hdr_arg *arg);
++	int (*pull_phyerr)(struct ath10k *ar, const void *phyerr_buf,
++			   int left_len, struct wmi_phyerr_ev_arg *arg);
+ 	int (*pull_svc_rdy)(struct ath10k *ar, struct sk_buff *skb,
+ 			    struct wmi_svc_rdy_ev_arg *arg);
+ 	int (*pull_rdy)(struct ath10k *ar, struct sk_buff *skb,
+@@ -260,13 +262,23 @@ ath10k_wmi_pull_swba(struct ath10k *ar, struct sk_buff *skb,
+ }
+ 
+ static inline int
+-ath10k_wmi_pull_phyerr(struct ath10k *ar, struct sk_buff *skb,
+-		       struct wmi_phyerr_ev_arg *arg)
++ath10k_wmi_pull_phyerr_hdr(struct ath10k *ar, struct sk_buff *skb,
++			   struct wmi_phyerr_hdr_arg *arg)
++{
++	if (!ar->wmi.ops->pull_phyerr_hdr)
++		return -EOPNOTSUPP;
++
++	return ar->wmi.ops->pull_phyerr_hdr(ar, skb, arg);
++}
++
++static inline int
++ath10k_wmi_pull_phyerr(struct ath10k *ar, const void *phyerr_buf,
++		       int left_len, struct wmi_phyerr_ev_arg *arg)
+ {
+ 	if (!ar->wmi.ops->pull_phyerr)
+ 		return -EOPNOTSUPP;
+ 
+-	return ar->wmi.ops->pull_phyerr(ar, skb, arg);
++	return ar->wmi.ops->pull_phyerr(ar, phyerr_buf, left_len, arg);
+ }
+ 
+ static inline int
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 567b797..64e2a70 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -838,9 +838,9 @@ static int ath10k_wmi_tlv_op_pull_swba_ev(struct ath10k *ar,
+ 	return 0;
+ }
+ 
+-static int ath10k_wmi_tlv_op_pull_phyerr_ev(struct ath10k *ar,
+-					    struct sk_buff *skb,
+-					    struct wmi_phyerr_ev_arg *arg)
++static int ath10k_wmi_tlv_op_pull_phyerr_ev_hdr(struct ath10k *ar,
++						struct sk_buff *skb,
++						struct wmi_phyerr_hdr_arg *arg)
+ {
+ 	const void **tb;
+ 	const struct wmi_tlv_phyerr_ev *ev;
+@@ -862,10 +862,10 @@ static int ath10k_wmi_tlv_op_pull_phyerr_ev(struct ath10k *ar,
+ 		return -EPROTO;
+ 	}
+ 
+-	arg->num_phyerrs  = ev->num_phyerrs;
+-	arg->tsf_l32 = ev->tsf_l32;
+-	arg->tsf_u32 = ev->tsf_u32;
+-	arg->buf_len = ev->buf_len;
++	arg->num_phyerrs  = __le32_to_cpu(ev->num_phyerrs);
++	arg->tsf_l32 = __le32_to_cpu(ev->tsf_l32);
++	arg->tsf_u32 = __le32_to_cpu(ev->tsf_u32);
++	arg->buf_len = __le32_to_cpu(ev->buf_len);
+ 	arg->phyerrs = phyerrs;
+ 
+ 	kfree(tb);
+@@ -3402,7 +3402,8 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	.pull_vdev_start = ath10k_wmi_tlv_op_pull_vdev_start_ev,
+ 	.pull_peer_kick = ath10k_wmi_tlv_op_pull_peer_kick_ev,
+ 	.pull_swba = ath10k_wmi_tlv_op_pull_swba_ev,
+-	.pull_phyerr = ath10k_wmi_tlv_op_pull_phyerr_ev,
++	.pull_phyerr_hdr = ath10k_wmi_tlv_op_pull_phyerr_ev_hdr,
++	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_svc_rdy = ath10k_wmi_tlv_op_pull_svc_rdy_ev,
+ 	.pull_rdy = ath10k_wmi_tlv_op_pull_rdy_ev,
+ 	.pull_fw_stats = ath10k_wmi_tlv_op_pull_fw_stats,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index e6d6b42..37dfa34 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3264,7 +3264,7 @@ void ath10k_wmi_event_tbttoffset_update(struct ath10k *ar, struct sk_buff *skb)
+ }
+ 
+ static void ath10k_dfs_radar_report(struct ath10k *ar,
+-				    const struct wmi_phyerr *phyerr,
++				    struct wmi_phyerr_ev_arg *phyerr,
+ 				    const struct phyerr_radar_report *rr,
+ 				    u64 tsf)
+ {
+@@ -3308,7 +3308,7 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
+ 	}
+ 
+ 	/* report event to DFS pattern detector */
+-	tsf32l = __le32_to_cpu(phyerr->tsf_timestamp);
++	tsf32l = phyerr->tsf_timestamp;
+ 	tsf64 = tsf & (~0xFFFFFFFFULL);
+ 	tsf64 |= tsf32l;
+ 
+@@ -3353,7 +3353,7 @@ radar_detected:
+ }
+ 
+ static int ath10k_dfs_fft_report(struct ath10k *ar,
+-				 const struct wmi_phyerr *phyerr,
++				 struct wmi_phyerr_ev_arg *phyerr,
+ 				 const struct phyerr_fft_report *fftr,
+ 				 u64 tsf)
+ {
+@@ -3391,7 +3391,7 @@ static int ath10k_dfs_fft_report(struct ath10k *ar,
+ }
+ 
+ void ath10k_wmi_event_dfs(struct ath10k *ar,
+-			  const struct wmi_phyerr *phyerr,
++			  struct wmi_phyerr_ev_arg *phyerr,
+ 			  u64 tsf)
+ {
+ 	int buf_len, tlv_len, res, i = 0;
+@@ -3400,11 +3400,11 @@ void ath10k_wmi_event_dfs(struct ath10k *ar,
+ 	const struct phyerr_fft_report *fftr;
+ 	const u8 *tlv_buf;
+ 
+-	buf_len = __le32_to_cpu(phyerr->buf_len);
++	buf_len = phyerr->buf_len;
+ 	ath10k_dbg(ar, ATH10K_DBG_REGULATORY,
+ 		   "wmi event dfs err_code %d rssi %d tsfl 0x%X tsf64 0x%llX len %d\n",
+ 		   phyerr->phy_err_code, phyerr->rssi_combined,
+-		   __le32_to_cpu(phyerr->tsf_timestamp), tsf, buf_len);
++		   phyerr->tsf_timestamp, tsf, buf_len);
+ 
+ 	/* Skip event if DFS disabled */
+ 	if (!config_enabled(CONFIG_ATH10K_DFS_CERTIFIED))
+@@ -3456,7 +3456,7 @@ void ath10k_wmi_event_dfs(struct ath10k *ar,
+ }
+ 
+ void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
+-				    const struct wmi_phyerr *phyerr,
++				    struct wmi_phyerr_ev_arg *phyerr,
+ 				    u64 tsf)
+ {
+ 	int buf_len, tlv_len, res, i = 0;
+@@ -3465,7 +3465,7 @@ void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
+ 	const struct phyerr_fft_report *fftr;
+ 	size_t fftr_len;
+ 
+-	buf_len = __le32_to_cpu(phyerr->buf_len);
++	buf_len = phyerr->buf_len;
+ 
+ 	while (i < buf_len) {
+ 		if (i + sizeof(*tlv) > buf_len) {
+@@ -3509,65 +3509,110 @@ void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
+ 	}
+ }
+ 
+-static int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar, struct sk_buff *skb,
+-					struct wmi_phyerr_ev_arg *arg)
++static int ath10k_wmi_op_pull_phyerr_ev_hdr(struct ath10k *ar,
++					    struct sk_buff *skb,
++					    struct wmi_phyerr_hdr_arg *arg)
+ {
+ 	struct wmi_phyerr_event *ev = (void *)skb->data;
+ 
+ 	if (skb->len < sizeof(*ev))
+ 		return -EPROTO;
+ 
+-	arg->num_phyerrs = ev->num_phyerrs;
+-	arg->tsf_l32 = ev->tsf_l32;
+-	arg->tsf_u32 = ev->tsf_u32;
+-	arg->buf_len = __cpu_to_le32(skb->len - sizeof(*ev));
++	arg->num_phyerrs = __le32_to_cpu(ev->num_phyerrs);
++	arg->tsf_l32 = __le32_to_cpu(ev->tsf_l32);
++	arg->tsf_u32 = __le32_to_cpu(ev->tsf_u32);
++	arg->buf_len = skb->len - sizeof(*ev);
+ 	arg->phyerrs = ev->phyerrs;
+ 
+ 	return 0;
+ }
+ 
++int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar,
++				 const void *phyerr_buf,
++				 int left_len,
++				 struct wmi_phyerr_ev_arg *arg)
++{
++	const struct wmi_phyerr *phyerr = phyerr_buf;
++	int i;
++
++	if (left_len < sizeof(*phyerr)) {
++		ath10k_warn(ar, "wrong phyerr event head len %d (need: >=%d)\n",
++			    left_len, sizeof(*phyerr));
++		return -EINVAL;
++	}
++
++	arg->tsf_timestamp = __le32_to_cpu(phyerr->tsf_timestamp);
++	arg->freq1 = __le16_to_cpu(phyerr->freq1);
++	arg->freq2 = __le16_to_cpu(phyerr->freq2);
++	arg->rssi_combined = phyerr->rssi_combined;
++	arg->chan_width_mhz = phyerr->chan_width_mhz;
++	arg->buf_len = __le32_to_cpu(phyerr->buf_len);
++	arg->buf = phyerr->buf;
++	arg->hdr_len = sizeof(*phyerr);
++
++	for (i = 0; i < 4; i++)
++		arg->nf_chains[i] = __le16_to_cpu(phyerr->nf_chains[i]);
++
++	switch (phyerr->phy_err_code) {
++	case PHY_ERROR_GEN_SPECTRAL_SCAN:
++		arg->phy_err_code = PHY_ERROR_SPECTRAL_SCAN;
++		break;
++	case PHY_ERROR_GEN_FALSE_RADAR_EXT:
++		arg->phy_err_code = PHY_ERROR_FALSE_RADAR_EXT;
++		break;
++	case PHY_ERROR_GEN_RADAR:
++		arg->phy_err_code = PHY_ERROR_RADAR;
++		break;
++	default:
++		arg->phy_err_code = PHY_ERROR_UNKNOWN;
++		break;
++	}
++
++	return 0;
++}
++
+ void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
+ {
+-	struct wmi_phyerr_ev_arg arg = {};
+-	const struct wmi_phyerr *phyerr;
++	struct wmi_phyerr_hdr_arg hdr_arg = {};
++	struct wmi_phyerr_ev_arg phyerr_arg = {};
++	const void *phyerr;
+ 	u32 count, i, buf_len, phy_err_code;
+ 	u64 tsf;
+ 	int left_len, ret;
+ 
+ 	ATH10K_DFS_STAT_INC(ar, phy_errors);
+ 
+-	ret = ath10k_wmi_pull_phyerr(ar, skb, &arg);
++	ret = ath10k_wmi_pull_phyerr_hdr(ar, skb, &hdr_arg);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to parse phyerr event: %d\n", ret);
++		ath10k_warn(ar, "failed to parse phyerr event hdr: %d\n", ret);
+ 		return;
+ 	}
+ 
+-	left_len = __le32_to_cpu(arg.buf_len);
+-
+ 	/* Check number of included events */
+-	count = __le32_to_cpu(arg.num_phyerrs);
++	count = hdr_arg.num_phyerrs;
+ 
+-	tsf = __le32_to_cpu(arg.tsf_u32);
++	left_len = hdr_arg.buf_len;
++
++	tsf = hdr_arg.tsf_u32;
+ 	tsf <<= 32;
+-	tsf |= __le32_to_cpu(arg.tsf_l32);
++	tsf |= hdr_arg.tsf_l32;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI,
+ 		   "wmi event phyerr count %d tsf64 0x%llX\n",
+ 		   count, tsf);
+ 
+-	phyerr = arg.phyerrs;
++	phyerr = hdr_arg.phyerrs;
+ 	for (i = 0; i < count; i++) {
+-		/* Check if we can read event header */
+-		if (left_len < sizeof(*phyerr)) {
+-			ath10k_warn(ar, "single event (%d) wrong head len\n",
++		ret = ath10k_wmi_pull_phyerr(ar, phyerr, left_len, &phyerr_arg);
++		if (ret) {
++			ath10k_warn(ar, "failed to parse phyerr event (%d)\n",
+ 				    i);
+ 			return;
+ 		}
+ 
+-		left_len -= sizeof(*phyerr);
+-
+-		buf_len = __le32_to_cpu(phyerr->buf_len);
+-		phy_err_code = phyerr->phy_err_code;
++		left_len -= phyerr_arg.hdr_len;
++		buf_len = phyerr_arg.buf_len;
++		phy_err_code = phyerr_arg.phy_err_code;
+ 
+ 		if (left_len < buf_len) {
+ 			ath10k_warn(ar, "single event (%d) wrong buf len\n", i);
+@@ -3578,20 +3623,20 @@ void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 		switch (phy_err_code) {
+ 		case PHY_ERROR_RADAR:
+-			ath10k_wmi_event_dfs(ar, phyerr, tsf);
++			ath10k_wmi_event_dfs(ar, &phyerr_arg, tsf);
+ 			break;
+ 		case PHY_ERROR_SPECTRAL_SCAN:
+-			ath10k_wmi_event_spectral_scan(ar, phyerr, tsf);
++			ath10k_wmi_event_spectral_scan(ar, &phyerr_arg, tsf);
+ 			break;
+ 		case PHY_ERROR_FALSE_RADAR_EXT:
+-			ath10k_wmi_event_dfs(ar, phyerr, tsf);
+-			ath10k_wmi_event_spectral_scan(ar, phyerr, tsf);
++			ath10k_wmi_event_dfs(ar, &phyerr_arg, tsf);
++			ath10k_wmi_event_spectral_scan(ar, &phyerr_arg, tsf);
+ 			break;
+ 		default:
+ 			break;
+ 		}
+ 
+-		phyerr = (void *)phyerr + sizeof(*phyerr) + buf_len;
++		phyerr = phyerr + phyerr_arg.hdr_len + buf_len;
+ 	}
+ }
+ 
+@@ -6190,6 +6235,7 @@ static const struct wmi_ops wmi_ops = {
+ 	.pull_vdev_start = ath10k_wmi_op_pull_vdev_start_ev,
+ 	.pull_peer_kick = ath10k_wmi_op_pull_peer_kick_ev,
+ 	.pull_swba = ath10k_wmi_op_pull_swba_ev,
++	.pull_phyerr_hdr = ath10k_wmi_op_pull_phyerr_ev_hdr,
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+@@ -6261,6 +6307,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.pull_vdev_start = ath10k_wmi_op_pull_vdev_start_ev,
+ 	.pull_peer_kick = ath10k_wmi_op_pull_peer_kick_ev,
+ 	.pull_swba = ath10k_wmi_op_pull_swba_ev,
++	.pull_phyerr_hdr = ath10k_wmi_op_pull_phyerr_ev_hdr,
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+ 	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+@@ -6326,6 +6373,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.pull_vdev_start = ath10k_wmi_op_pull_vdev_start_ev,
+ 	.pull_peer_kick = ath10k_wmi_op_pull_peer_kick_ev,
+ 	.pull_swba = ath10k_wmi_op_pull_swba_ev,
++	.pull_phyerr_hdr = ath10k_wmi_op_pull_phyerr_ev_hdr,
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+ 	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+@@ -6387,6 +6435,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	.pull_vdev_start = ath10k_wmi_op_pull_vdev_start_ev,
+ 	.pull_peer_kick = ath10k_wmi_op_pull_peer_kick_ev,
+ 	.pull_swba = ath10k_wmi_op_pull_swba_ev,
++	.pull_phyerr_hdr = ath10k_wmi_op_pull_phyerr_ev_hdr,
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+ 	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 0d4efc9..0ed3cfe 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2973,9 +2973,16 @@ struct wmi_10_4_mgmt_rx_event {
+ #define WMI_RX_STATUS_ERR_MIC			0x10
+ #define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
+ 
+-#define PHY_ERROR_SPECTRAL_SCAN		0x26
+-#define PHY_ERROR_FALSE_RADAR_EXT		0x24
+-#define PHY_ERROR_RADAR				0x05
++#define PHY_ERROR_GEN_SPECTRAL_SCAN		0x26
++#define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
++#define PHY_ERROR_GEN_RADAR			0x05
++
++enum phy_err_type {
++	PHY_ERROR_UNKNOWN,
++	PHY_ERROR_SPECTRAL_SCAN,
++	PHY_ERROR_FALSE_RADAR_EXT,
++	PHY_ERROR_RADAR
++};
+ 
+ struct wmi_phyerr {
+ 	__le32 tsf_timestamp;
+@@ -5783,11 +5790,24 @@ struct wmi_swba_ev_arg {
+ };
+ 
+ struct wmi_phyerr_ev_arg {
+-	__le32 num_phyerrs;
+-	__le32 tsf_l32;
+-	__le32 tsf_u32;
+-	__le32 buf_len;
+-	const struct wmi_phyerr *phyerrs;
++	u32 tsf_timestamp;
++	u16 freq1;
++	u16 freq2;
++	u8 rssi_combined;
++	u8 chan_width_mhz;
++	u8 phy_err_code;
++	u16 nf_chains[4];
++	u32 buf_len;
++	const u8 *buf;
++	u8 hdr_len;
++};
++
++struct wmi_phyerr_hdr_arg {
++	u32 num_phyerrs;
++	u32 tsf_l32;
++	u32 tsf_u32;
++	u32 buf_len;
++	const void *phyerrs;
+ };
+ 
+ struct wmi_svc_rdy_ev_arg {
+@@ -6059,9 +6079,9 @@ void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_tbttoffset_update(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_dfs(struct ath10k *ar,
+-			  const struct wmi_phyerr *phyerr, u64 tsf);
++			  struct wmi_phyerr_ev_arg *phyerr, u64 tsf);
+ void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
+-				    const struct wmi_phyerr *phyerr,
++				    struct wmi_phyerr_ev_arg *phyerr,
+ 				    u64 tsf);
+ void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_roam(struct ath10k *ar, struct sk_buff *skb);
+@@ -6090,5 +6110,6 @@ void ath10k_wmi_event_vdev_standby_req(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_vdev_resume_req(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb);
+-
++int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar, const void *phyerr_buf,
++				 int left_len, struct wmi_phyerr_ev_arg *arg);
+ #endif /* _WMI_H_ */
+-- 
+1.8.1.2
 
-Any last minute advise or question before I reset this bisect?
-
-On 1 August 2015 at 14:30, Enrico Tagliavini
-<enrico.tagliavini@gmail.com> wrote:
-> Hi there,
->
-> I got 4.2 rc4 running and I'm going to start the bisect. Before
-> compiling I enabled ath10k debug and this is the output for with
-> default irq_mode:
->
-> enrico@alientux ~ $ dmesg | grep ath
-> [   16.234853] ath10k_pci 0000:03:00.0: enabling device (0000 -> 0002)
-> [   16.234979] ath10k_pci 0000:03:00.0: boot pci_mem 0xffffc90002000000
-> [   16.235351] ath10k_pci 0000:03:00.0: pci irq msi-x interrupts 8
-> irq_mode 0 reset_mode 0
-> [   16.235517] ath10k_pci 0000:03:00.0: boot qca6174 chip reset
-> [   16.235518] ath10k_pci 0000:03:00.0: boot cold reset
-> [   16.239030] ath10k_pci 0000:03:00.0: boot cold reset complete
-> [   16.239032] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   16.239037] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   16.249046] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   16.249055] ath10k_pci 0000:03:00.0: boot target initialised
-> [   16.249057] ath10k_pci 0000:03:00.0: boot warm reset
-> [   16.271106] ath10k_pci 0000:03:00.0: boot init ce src ring id 0
-> entries 16 base_addr ffff88003f00a000
-> [   16.271128] ath10k_pci 0000:03:00.0: boot ce dest ring id 1 entries
-> 512 base_addr ffff88003f3c8000
-> [   16.271146] ath10k_pci 0000:03:00.0: boot ce dest ring id 2 entries
-> 128 base_addr ffff88003eb6a000
-> [   16.271166] ath10k_pci 0000:03:00.0: boot init ce src ring id 3
-> entries 32 base_addr ffff88003f349000
-> [   16.271187] ath10k_pci 0000:03:00.0: boot init ce src ring id 4
-> entries 4096 base_addr ffff8800ba940000
-> [   16.271207] ath10k_pci 0000:03:00.0: boot init ce src ring id 7
-> entries 2 base_addr ffff8800c4888000
-> [   16.271223] ath10k_pci 0000:03:00.0: boot ce dest ring id 7 entries
-> 2 base_addr ffff8800ba889000
-> [   16.271224] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   16.271229] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   16.281316] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   16.281373] ath10k_pci 0000:03:00.0: boot target initialised
-> [   16.292100] ath10k_pci 0000:03:00.0: boot init ce src ring id 0
-> entries 16 base_addr ffff88003f00a000
-> [   16.292169] ath10k_pci 0000:03:00.0: boot ce dest ring id 1 entries
-> 512 base_addr ffff88003f3c8000
-> [   16.292186] ath10k_pci 0000:03:00.0: boot ce dest ring id 2 entries
-> 128 base_addr ffff88003eb6a000
-> [   16.292206] ath10k_pci 0000:03:00.0: boot init ce src ring id 3
-> entries 32 base_addr ffff88003f349000
-> [   16.292228] ath10k_pci 0000:03:00.0: boot init ce src ring id 4
-> entries 4096 base_addr ffff8800ba940000
-> [   16.292248] ath10k_pci 0000:03:00.0: boot init ce src ring id 7
-> entries 2 base_addr ffff8800c4888000
-> [   16.292265] ath10k_pci 0000:03:00.0: boot ce dest ring id 7 entries
-> 2 base_addr ffff8800ba889000
-> [   16.292267] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   16.292272] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   16.302326] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   16.302335] ath10k_pci 0000:03:00.0: boot target initialised
-> [   16.302336] ath10k_pci 0000:03:00.0: boot warm reset complete
-> [   16.302337] ath10k_pci 0000:03:00.0: boot qca6174 chip reset complete (cold)
-> [   16.302350] ath10k_pci 0000:03:00.0: boot hif power up
-> [   16.302408] ath10k_pci 0000:03:00.0: boot qca6174 chip reset
-> [   16.302409] ath10k_pci 0000:03:00.0: boot cold reset
-> [   16.306030] ath10k_pci 0000:03:00.0: boot cold reset complete
-> [   16.306033] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   16.306037] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   16.316044] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   16.316056] ath10k_pci 0000:03:00.0: boot target initialised
-> [   16.316057] ath10k_pci 0000:03:00.0: boot warm reset
-> [   16.338057] ath10k_pci 0000:03:00.0: boot init ce src ring id 0
-> entries 16 base_addr ffff88003f00a000
-> [   16.338075] ath10k_pci 0000:03:00.0: boot ce dest ring id 1 entries
-> 512 base_addr ffff88003f3c8000
-> [   16.338092] ath10k_pci 0000:03:00.0: boot ce dest ring id 2 entries
-> 128 base_addr ffff88003eb6a000
-> [   16.338111] ath10k_pci 0000:03:00.0: boot init ce src ring id 3
-> entries 32 base_addr ffff88003f349000
-> [   16.338132] ath10k_pci 0000:03:00.0: boot init ce src ring id 4
-> entries 4096 base_addr ffff8800ba940000
-> [   16.338152] ath10k_pci 0000:03:00.0: boot init ce src ring id 7
-> entries 2 base_addr ffff8800c4888000
-> [   16.338169] ath10k_pci 0000:03:00.0: boot ce dest ring id 7 entries
-> 2 base_addr ffff8800ba889000
-> [   16.338169] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   16.338174] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   16.348187] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   16.348196] ath10k_pci 0000:03:00.0: boot target initialised
-> [   16.359038] ath10k_pci 0000:03:00.0: boot init ce src ring id 0
-> entries 16 base_addr ffff88003f00a000
-> [   16.359055] ath10k_pci 0000:03:00.0: boot ce dest ring id 1 entries
-> 512 base_addr ffff88003f3c8000
-> [   16.359072] ath10k_pci 0000:03:00.0: boot ce dest ring id 2 entries
-> 128 base_addr ffff88003eb6a000
-> [   16.359092] ath10k_pci 0000:03:00.0: boot init ce src ring id 3
-> entries 32 base_addr ffff88003f349000
-> [   16.359113] ath10k_pci 0000:03:00.0: boot init ce src ring id 4
-> entries 4096 base_addr ffff8800ba940000
-> [   16.359133] ath10k_pci 0000:03:00.0: boot init ce src ring id 7
-> entries 2 base_addr ffff8800c4888000
-> [   16.359149] ath10k_pci 0000:03:00.0: boot ce dest ring id 7 entries
-> 2 base_addr ffff8800ba889000
-> [   16.359150] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   16.359155] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   16.369166] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   16.369174] ath10k_pci 0000:03:00.0: boot target initialised
-> [   16.369175] ath10k_pci 0000:03:00.0: boot warm reset complete
-> [   16.369175] ath10k_pci 0000:03:00.0: boot qca6174 chip reset complete (cold)
-> [   16.369195] ath10k_pci 0000:03:00.0: boot init ce src ring id 0
-> entries 16 base_addr ffff88003f00a000
-> [   16.369212] ath10k_pci 0000:03:00.0: boot ce dest ring id 1 entries
-> 512 base_addr ffff88003f3c8000
-> [   16.369228] ath10k_pci 0000:03:00.0: boot ce dest ring id 2 entries
-> 128 base_addr ffff88003eb6a000
-> [   16.369248] ath10k_pci 0000:03:00.0: boot init ce src ring id 3
-> entries 32 base_addr ffff88003f349000
-> [   16.369268] ath10k_pci 0000:03:00.0: boot init ce src ring id 4
-> entries 4096 base_addr ffff8800ba940000
-> [   16.369288] ath10k_pci 0000:03:00.0: boot init ce src ring id 7
-> entries 2 base_addr ffff8800c4888000
-> [   16.369304] ath10k_pci 0000:03:00.0: boot ce dest ring id 7 entries
-> 2 base_addr ffff8800ba889000
-> [   16.380484] ath10k_pci 0000:03:00.0: bmi get target info
-> [   16.380731] ath10k_pci 0000:03:00.0: Hardware name qca6174 hw2.1
-> version 0x5010000
-> [   16.381072] ath10k_pci 0000:03:00.0: Direct firmware load for
-> ath10k/cal-pci-0000:03:00.0.bin failed with error -2
-> [   16.382103] ath10k_pci 0000:03:00.0: Direct firmware load for
-> ath10k/QCA6174/hw2.1/board-pci-168c:003e:1a56:1525.bin failed with
-> error -2
-> [   16.382107] ath10k_pci 0000:03:00.0: failed to load spec board
-> file, falling back to generic: -2
-> [   16.383013] ath10k_pci 0000:03:00.0: trying fw api 5
-> [   16.383028] ath10k_pci 0000:03:00.0: Direct firmware load for
-> ath10k/QCA6174/hw2.1/firmware-5.bin failed with error -2
-> [   16.383030] ath10k_pci 0000:03:00.0: could not fetch firmware file
-> 'ath10k/QCA6174/hw2.1/firmware-5.bin': -2
-> [   16.383032] ath10k_pci 0000:03:00.0: trying fw api 4
-> [   16.384382] ath10k_pci 0000:03:00.0: found fw version killer-n1525-fw
-> [   16.384384] ath10k_pci 0000:03:00.0: found firmware features ie (4 B)
-> [   16.384385] ath10k_pci 0000:03:00.0: features
-> [   16.384387] ath10k_pci 0000:03:00.0: 00000000: 00 00 00 00 00 00 00
-> 00                          ........
-> [   16.384388] ath10k_pci 0000:03:00.0: found fw ie wmi op version 4
-> [   16.384390] ath10k_pci 0000:03:00.0: found fw image ie (464383 B)
-> [   16.384391] ath10k_pci 0000:03:00.0: found otp image ie (29533 B)
-> [   16.384392] ath10k_pci 0000:03:00.0: using fw api 4
-> [   16.384394] ath10k_pci 0000:03:00.0: bmi start
-> [   16.384395] ath10k_pci 0000:03:00.0: bmi write address 0x400800 length 4
-> [   16.384414] ath10k_pci 0000:03:00.0: bmi read address 0x400810 length 4
-> [   16.384497] ath10k_pci 0000:03:00.0: bmi write address 0x400810 length 4
-> [   16.384507] ath10k_pci 0000:03:00.0: bmi write address 0x400844 length 4
-> [   16.384556] ath10k_pci 0000:03:00.0: bmi write address 0x400904 length 4
-> [   16.384598] ath10k_pci 0000:03:00.0: boot did not find a
-> calibration file, try DT next: -2
-> [   16.384600] ath10k_pci 0000:03:00.0: boot did not find DT entry,
-> try OTP next: -2
-> [   16.384601] ath10k_pci 0000:03:00.0: bmi read address 0x4008ac length 4
-> [   16.384678] ath10k_pci 0000:03:00.0: boot push board extended data addr 0x0
-> [   16.384679] ath10k_pci 0000:03:00.0: bmi read address 0x400854 length 4
-> [   16.384732] ath10k_pci 0000:03:00.0: bmi write address 0x401d40 length 8124
-> [   16.400967] ath10k_pci 0000:03:00.0: bmi write address 0x400858 length 4
-> [   16.401133] ath10k_pci 0000:03:00.0: boot upload otp to 0x1234 len 29533
-> [   16.401134] ath10k_pci 0000:03:00.0: bmi fast download address
-> 0x1234 buffer 0xffffc9000166f64c length 29533
-> [   16.401135] ath10k_pci 0000:03:00.0: bmi lz stream start address 0x1234
-> [   16.401173] ath10k_pci 0000:03:00.0: bmi lz data buffer
-> 0xffffc9000166f64c length 29532
-> [   16.463523] ath10k_pci 0000:03:00.0: bmi lz data buffer
-> 0xffff8800c4763d2c length 4
-> [   16.463602] ath10k_pci 0000:03:00.0: bmi lz stream start address 0x0
-> [   16.463647] ath10k_pci 0000:03:00.0: bmi execute address 0x1234 param 0x0
-> [   16.465226] ath10k_pci 0000:03:00.0: bmi execute result 0x3
-> [   16.465231] ath10k_pci 0000:03:00.0: boot otp execute result 3
-> [   16.465232] ath10k_pci 0000:03:00.0: boot using calibration mode otp
-> [   16.465234] ath10k_pci 0000:03:00.0: boot uploading firmware image
-> ffffc900015fe044 len 464383 mode normal
-> [   16.465235] ath10k_pci 0000:03:00.0: bmi fast download address
-> 0x1234 buffer 0xffffc900015fe044 length 464383
-> [   16.465237] ath10k_pci 0000:03:00.0: bmi lz stream start address 0x1234
-> [   16.465257] ath10k_pci 0000:03:00.0: bmi lz data buffer
-> 0xffffc900015fe044 length 464380
-> [   17.548533] ath10k_pci 0000:03:00.0: bmi lz data buffer
-> 0xffff8800c4763d2c length 4
-> [   17.548792] ath10k_pci 0000:03:00.0: bmi lz stream start address 0x0
-> [   17.548837] ath10k_pci 0000:03:00.0: bmi write address 0x400814 length 4
-> [   17.548871] ath10k_pci 0000:03:00.0: bmi done
-> [   17.548913] ath10k_pci 0000:03:00.0: htt tx max num pending tx 1056
-> [   17.548922] ath10k_pci 0000:03:00.0: htt rx ring size 2048 fill_level 1023
-> [   17.548923] ath10k_pci 0000:03:00.0: boot hif start
-> [   17.548959] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
-> [   17.548981] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
-> [   18.549028] ath10k_pci 0000:03:00.0: failed to receive control
-> response completion, polling..
-> [   18.549192] ath10k_pci 0000:03:00.0: boot htc service 'Control' ul
-> pipe 0 dl pipe 1 eid 0 ready
-> [   18.549193] ath10k_pci 0000:03:00.0: boot htc ep 0 ul polled 0 dl polled 0
-> [   18.549194] ath10k_pci 0000:03:00.0: boot htc service 'Control' eid
-> 0 TX flow control disabled
-> [   18.549195] ath10k_pci 0000:03:00.0: boot htc service HTT Data does
-> not allocate target credits
-> [   18.549280] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
-> [   18.549294] ath10k_pci 0000:03:00.0: received unsolicited fw crash interrupt
-> [   19.549038] ath10k_pci 0000:03:00.0: Service connect timeout
-> [   19.549042] ath10k_pci 0000:03:00.0: failed to connect htt (-110)
-> [   19.549044] ath10k_pci 0000:03:00.0: boot hif stop
-> [   19.549045] ath10k_pci 0000:03:00.0: boot warm reset
-> [   19.571100] ath10k_pci 0000:03:00.0: boot init ce src ring id 0
-> entries 16 base_addr ffff88003f00a000
-> [   19.571117] ath10k_pci 0000:03:00.0: boot ce dest ring id 1 entries
-> 512 base_addr ffff88003f3c8000
-> [   19.571133] ath10k_pci 0000:03:00.0: boot ce dest ring id 2 entries
-> 128 base_addr ffff88003eb6a000
-> [   19.571153] ath10k_pci 0000:03:00.0: boot init ce src ring id 3
-> entries 32 base_addr ffff88003f349000
-> [   19.571172] ath10k_pci 0000:03:00.0: boot init ce src ring id 4
-> entries 4096 base_addr ffff8800ba940000
-> [   19.571190] ath10k_pci 0000:03:00.0: boot init ce src ring id 7
-> entries 2 base_addr ffff8800c4888000
-> [   19.571206] ath10k_pci 0000:03:00.0: boot ce dest ring id 7 entries
-> 2 base_addr ffff8800ba889000
-> [   19.571207] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   19.571212] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   19.581273] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   19.581282] ath10k_pci 0000:03:00.0: boot target initialised
-> [   19.592126] ath10k_pci 0000:03:00.0: boot init ce src ring id 0
-> entries 16 base_addr ffff88003f00a000
-> [   19.592202] ath10k_pci 0000:03:00.0: boot ce dest ring id 1 entries
-> 512 base_addr ffff88003f3c8000
-> [   19.592222] ath10k_pci 0000:03:00.0: boot ce dest ring id 2 entries
-> 128 base_addr ffff88003eb6a000
-> [   19.592245] ath10k_pci 0000:03:00.0: boot init ce src ring id 3
-> entries 32 base_addr ffff88003f349000
-> [   19.592269] ath10k_pci 0000:03:00.0: boot init ce src ring id 4
-> entries 4096 base_addr ffff8800ba940000
-> [   19.592294] ath10k_pci 0000:03:00.0: boot init ce src ring id 7
-> entries 2 base_addr ffff8800c4888000
-> [   19.592314] ath10k_pci 0000:03:00.0: boot ce dest ring id 7 entries
-> 2 base_addr ffff8800ba889000
-> [   19.592316] ath10k_pci 0000:03:00.0: boot waiting target to initialise
-> [   19.592321] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   19.602378] ath10k_pci 0000:03:00.0: boot target indicator 0
-> [   19.612445] ath10k_pci 0000:03:00.0: boot target indicator 2
-> [   19.612455] ath10k_pci 0000:03:00.0: boot target initialised
-> [   19.612456] ath10k_pci 0000:03:00.0: boot warm reset complete
-> [   19.612779] ath10k_pci 0000:03:00.0: could not init core (-110)
-> [   19.612810] ath10k_pci 0000:03:00.0: boot hif power down
-> [   19.612811] ath10k_pci 0000:03:00.0: could not probe fw (-110)
->
-> Maybe this trigger some bell.
->
-> On 29 July 2015 at 16:22, Enrico Tagliavini <enrico.tagliavini@gmail.com> wrote:
->> Sound! I'll keep a copy of the log then. If the bisect on ath10k
->> folder will lead nowhere I'll see if I can make it over the whole
->> tree. At least by doing it on the ath10k tree I hope to narrow down
->> the number of commit.
->>
->> Ok then I'll use Linus' master, no problem with this.
->>
->> I hope to at least get started this weekend.
->>
->> On 29 July 2015 at 11:30, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>> Enrico Tagliavini <enrico.tagliavini@gmail.com> writes:
->>>
->>>> Yeah that's what I meant. My idea was to first bisect only the ath10k
->>>> directory, so restricting the bisect on the commits touching stuff
->>>> there. I guess if the issue is more broad it will come up somewhere
->>>> else as well, so this is a good starting point, I hope. Thank you for
->>>> pointing it out though, this will actually be the first time I do a
->>>> proper bisect.
->>>
->>> And remember to always to mention if you have restricted the bisect
->>> somehow, that's important information. And better if you provide 'git
->>> bisect log' output as well.
->>>
->>>> Also do you want me to bisect Kalle's sources or Linus' master? By
->>>> what Michał said I guess Kalle's but I ask to be sure.
->>>>
->>>> Also to be clear: I'm using Linus' sources at the moment, as provided
->>>> by Fedora rawhide.
->>>>
->>>> For me it's the same, so let me know what you prefer and is more
->>>> useful to solve this issue.
->>>
->>> Good that you brought this up. As ath.git master branch gets rebased
->>> every rc1 release you really cannot use that for bisect. Either you
->>> should use ath.git ath-next branch or Linus' tree. To be on the safe
->>> side I always recommend to use Linus' tree if at all possible.
->>>
->>> --
->>> Kalle Valo
