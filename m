@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:37836 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751273AbbHWXpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2015 19:45:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ZTewj-0001ki-3P
-	for linux-wireless@vger.kernel.org; Mon, 24 Aug 2015 01:45:05 +0200
-Received: from 107.15.96.217 ([107.15.96.217])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2015 01:45:05 +0200
-Received: from Sreenath.Madasu by 107.15.96.217 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2015 01:45:05 +0200
-To: linux-wireless@vger.kernel.org
-From: Sreenath Madasu <Sreenath.Madasu@gmail.com>
-Subject: Getting started on switching rtl8188eu staging driver to LIB80211/MAC80211
-Date: Sun, 23 Aug 2015 23:40:17 +0000 (UTC)
-Message-ID: <loom.20150824T013723-25@post.gmane.org> (sfid-20150824_014511_838932_8B039A50)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4519 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933267AbbHLGUz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2015 02:20:55 -0400
+From: <miaoqing@qti.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: add correct MAC/BB name for ar9561
+Date: Wed, 12 Aug 2015 14:20:46 +0800
+Message-ID: <1439360446-31422-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150812_082104_980228_859E9EDC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-I want to work on the TODO tasks
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-- switch to use LIB80211
-- switch to use MAC80211
+MAC/BB name is"????" if the MAC/BB is unknown.
 
-for staging driver rtl8188eu.
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-How can I start? Where is the documentation?
-Thanks
-Sreenath
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a31a680..1dd0339 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3186,6 +3186,7 @@ static struct {
+ 	{ AR_SREV_VERSION_9550,         "9550" },
+ 	{ AR_SREV_VERSION_9565,         "9565" },
+ 	{ AR_SREV_VERSION_9531,         "9531" },
++	{ AR_SREV_VERSION_9561,         "9561" },
+ };
+ 
+ /* For devices with external radios */
+-- 
+1.9.1
 
