@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24213 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751887AbbHZJed (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 05:34:33 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Raja Mani <rmani@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix compilation warnings in wmi phyerr pull function
-References: <1440162756-4025-1-git-send-email-rmani@qti.qualcomm.com>
-Date: Wed, 26 Aug 2015 12:34:26 +0300
-In-Reply-To: <1440162756-4025-1-git-send-email-rmani@qti.qualcomm.com> (Raja
-	Mani's message of "Fri, 21 Aug 2015 18:42:36 +0530")
-Message-ID: <87fv361jh9.fsf@kamboji.qca.qualcomm.com> (sfid-20150826_113438_485178_47CE9449)
+Received: from mx1.redhat.com ([209.132.183.28]:54319 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932798AbbHLJBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2015 05:01:10 -0400
+Date: Wed, 12 Aug 2015 11:00:24 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Adrien Schildknecht <adrien+dev@schischi.me>
+Cc: helmut.schaa@googlemail.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: adjust EEPROM_SIZE for rt2500usb
+Message-ID: <20150812090023.GA1862@redhat.com> (sfid-20150812_110118_222758_DD741A68)
+References: <1439245553-2840-1-git-send-email-adrien+dev@schischi.me>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439245553-2840-1-git-send-email-adrien+dev@schischi.me>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Raja Mani <rmani@qti.qualcomm.com> writes:
+On Tue, Aug 11, 2015 at 12:25:53AM +0200, Adrien Schildknecht wrote:
+> rt2500usb_validate_eeprom() read data up to 0x6e (EEPROM_CALIBRATE_OFFSET)
+> but only 0x6a bytes has been allocated and read from the eeprom.
+> 
+> This lead to out-of-bound accesses and invalid values for
+> EEPROM_BBPTUNE_R17 and EEPROM_CALIBRATE_OFFSET.
+> 
+> Change the EEPROM_SIZE to 0x6e in order to retrieve all the fields.
+> 
+> Tested with a rt2570 device.
+> 
+> Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
 
-> Below compilation warnings are observed in gcc version 4.8.2.
-> Even though it's not seen in bit older gcc versions (for ex, 4.7.3),
-> It's good to fix it by changing format specifier from %d to
-> %zd in wmi pull phyerr functions.
->
-> wmi.c: In function 'ath10k_wmi_op_pull_phyerr_ev':
-> wmi.c:3567:8: warning: format '%d' expects argument of type 'int',
->               but argument 4 has type 'long unsigned int' [-Wformat=]
->               left_len, sizeof(*phyerr));
->                         ^
-> wmi.c: In function 'ath10k_wmi_10_4_op_pull_phyerr_ev':
-> wmi.c:3612:8: warning: format '%d' expects argument of type 'int',
-> 	      but argument 4 has type 'long unsigned int' [-Wformat=]
->               left_len, sizeof(*phyerr));
->                         ^
-> Fixes: 991adf71a6cd ("ath10k: refactor phyerr event handlers")
-> Fixes: 2b0a2e0d7c2f ("ath10k: handle 10.4 firmware phyerr event")
->
-> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
-
-Thanks, applied.
-
--- 
-Kalle Valo
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
