@@ -1,66 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:35395 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbbHPFaq (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:2734 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965077AbbHLI6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2015 01:30:46 -0400
-From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] staging: wilc1000: code style: fix open brace { on wrong line
-Date: Sun, 16 Aug 2015 01:30:14 -0400
-Message-Id: <4ff9d3514f6e035a1e872ade6ae78e5f87c6aff2.1439702894.git.raphael.beamonte@gmail.com> (sfid-20150816_073128_788590_0F3F1093)
-In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
-References: <cover.1439702894.git.raphael.beamonte@gmail.com>
-In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
-References: <cover.1439702894.git.raphael.beamonte@gmail.com>
+	Wed, 12 Aug 2015 04:58:53 -0400
+Message-ID: <55CB0ACA.3000109@broadcom.com> (sfid-20150812_105919_306789_875CA8B8)
+Date: Wed, 12 Aug 2015 10:58:50 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
+References: <1436553071-32423-1-git-send-email-arend@broadcom.com>	<CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>	<55AD2C8F.9010509@broadcom.com> <CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>
+In-Reply-To: <CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Open braces should be on the same line as if and for statements.
+On 07/26/2015 05:40 PM, Rafał Miłecki wrote:
+> On 20 July 2015 at 19:14, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 07/19/2015 05:05 PM, Rafał Miłecki wrote:
+>>>
+>>> On 10 July 2015 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
+>>>>
+>>>> This series comprises of following changes:
+>>>> - support NVRAM loading for bcm47xx platform.
+>>>> - revise announced interface combinations and validate against it.
+>>>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
+>>>> - couple of PCIe fixes.
+>>>> - rework dealing with interface instances.
+>>>
+>>>
+>>> I'm not sure which patch has caused this (I applied all of them except
+>>> for the 1st one) but now brcmfmac fails totally:
+>>>>
+>>>> Unable to handle kernel NULL pointer dereference at virtual address
+>>>> 00000014
+>>>
+>>>
+>>> I'm afraid I won't be able to spend any more time of this soon, so can
+>>> you try to reproduce this problem, please?
 
-Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c             | 3 +--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+You did a warm reboot of the device, right? There seems to be an issue 
+because on OpenWrt the brcmfmac is not unloaded upon warm reboot, which 
+makes the device unaccessible. Because on OpenWrt the firmware request 
+is synchronous (OpenWrt patch on top of upstream brcmfmac) it results in 
+probe failing on invalid access making the issue OpenWrt specific. Hante 
+created a fix for the warm reboot issue.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 7eacc2f..040e55d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2103,8 +2103,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 	}
- 
- 	/* Store all of the multicast addresses in the hardware filter */
--	netdev_for_each_mc_addr(ha, dev)
--	{
-+	netdev_for_each_mc_addr(ha, dev) {
- 		memcpy(gau8MulticastMacAddrList[i], ha->addr, ETH_ALEN);
- 		PRINT_D(INIT_DBG, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i,
- 			gau8MulticastMacAddrList[i][0], gau8MulticastMacAddrList[i][1], gau8MulticastMacAddrList[i][2], gau8MulticastMacAddrList[i][3], gau8MulticastMacAddrList[i][4], gau8MulticastMacAddrList[i][5]);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c2f8d60..29f43d6 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1527,8 +1527,7 @@ static int WILC_WFI_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 	priv = wiphy_priv(wiphy);
- 
- 
--	if (!pairwise)
--	{
-+	if (!pairwise) {
- 		PRINT_D(CFG80211_DBG, "Getting group key idx: %x\n", key_index);
- 
- 		key_params.key = priv->wilc_gtk[key_index]->key;
--- 
-2.1.4
+Regards,
+Arend
+
+>> So what is your scenario for this issue. Multiple AP interfaces?
+>
+> Sorry for missing this question. Yes. This is my standard OpenWrt testing:
+>
+> uci set wireless.radio0.disabled=0
+> uci set wireless.@wifi-iface[-1].ssid="OpenWrtA"
+> uci set wireless.@wifi-iface[-1].encryption="psk2"
+> uci set wireless.@wifi-iface[-1].key="password123"
+> uci add wireless wifi-iface
+> uci set wireless.@wifi-iface[-1].device="radio0"
+> uci set wireless.@wifi-iface[-1].network="lan"
+> uci set wireless.@wifi-iface[-1].mode="ap"
+> uci set wireless.@wifi-iface[-1].ssid="OpenWrtB"
+> uci set wireless.@wifi-iface[-1].encryption="psk2"
+> uci set wireless.@wifi-iface[-1].key="password123"
+> uci add wireless wifi-iface
+> uci set wireless.@wifi-iface[-1].device="radio0"
+> uci set wireless.@wifi-iface[-1].network="lan"
+> uci set wireless.@wifi-iface[-1].mode="ap"
+> uci set wireless.@wifi-iface[-1].ssid="OpenWrtC"
+> uci set wireless.@wifi-iface[-1].encryption="psk2"
+> uci set wireless.@wifi-iface[-1].key="password123"
+> uci commit wireless
+> /etc/init.d/network reload
+>
 
