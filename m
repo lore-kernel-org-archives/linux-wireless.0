@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:35700 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbbHWPP7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2015 11:15:59 -0400
-Received: by labtq9 with SMTP id tq9so3556904lab.2
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2015 08:15:58 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sun, 23 Aug 2015 18:15:58 +0300
-Message-ID: <CANfLQrbXn2pLjVY8DVC=xs9oWZC2nX3VcEZQMLh1zQa7i4EHCg@mail.gmail.com> (sfid-20150823_171619_817045_69BAF548)
-Subject: bcmdhd: Concurrent use of wlan0 and virtual interface in managed mode
-From: Gucea Doru <gucea.doru@gmail.com>
-To: eccopark@broadcom.com, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:49564 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753174AbbHMSdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 14:33:10 -0400
+Message-ID: <1439490787.2114.36.camel@sipsolutions.net> (sfid-20150813_203316_706932_3EAB1269)
+Subject: Re: [PATCH 0/2] iw: fixes to Android.mk to include "iw" in AOSP
+ builds
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Filipe Brandenburger <filbranden@google.com>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Elliott Hughes <enh@google.com>,
+	Christopher Wiley <wiley@google.com>,
+	Ying Wang <wangying@google.com>
+Date: Thu, 13 Aug 2015 20:33:07 +0200
+In-Reply-To: <CADU+-uDS2C4w-dcbR8Rxx+jRfG7kNvu8JTncH-fxDnSp5NOBfQ@mail.gmail.com> (sfid-20150813_185558_560372_445AA122)
+References: <1438292115-39495-1-git-send-email-filbranden@google.com>
+	 <1439456484.2114.6.camel@sipsolutions.net>
+	 <CADU+-uDS2C4w-dcbR8Rxx+jRfG7kNvu8JTncH-fxDnSp5NOBfQ@mail.gmail.com>
+	 (sfid-20150813_185558_560372_445AA122)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, community
+On Thu, 2015-08-13 at 09:55 -0700, Filipe Brandenburger wrote:
 
-I'm a Master student doing my research on a subject related to Android
-and multiple paths between two nodes. What I try to do now is to allow
-a client to connect to multiple APs (Access Points).
+> Long term, considering this is in AOSP and is part of eng/userdebug
+> builds, it's likely to be automatically available in future versions
+> of Android.
 
-I started with the simplest use-case where I have only two APs (AP1
-and AP2) and an Android client  - a Nexus 5 device running the Kernel
-from [1]. For the connection with AP1 I used the already present
-interface wlan0. For the connection with AP2 I tried to use a newly
-created virtual interface but the wpa_supplicant connection is not
-successful. I'm not sure if this is a driver limitation or a driver
-bug.
+Yeah, but most vendors don't actually build/run/ship AOSP nor
+necessarily an unmodified iw, so it's likely not all that helpful.
 
-I will detail what I've done. After killing the wpa_supplicant process
-I followed the steps:
---- Created a virtual interface in the station mode ---
-root@hammerhead:/ # iw phy phy0 interface add vif_AP2 type station
-root@hammerhead:/ # ip link set dev vif_AP2 address 64:89:9a:81:0f:22
-root@hammerhead:/ # ip link set dev vif_AP2 up
+> We ended up having to tweak the Android.mk again in the AOSP tree,
+> since the current one is doing an "include" of the external Makefile,
+> which in turns overrides the default "clean" rule and leaks some
+> pattern rules such as %.o, etc. which affect the rest of Android
+> build. For more details, please take a look at this Gerrit:
+> https://android-review.googlesource.com/166104
+> 
+> I'm cc'ing Ying who spotted the problem and suggested the changes.
 
----- Connection to AP1 - SUCCESS ----
-root@hammerhead:/data # wpa_supplicant -iwlan0 -c/data/tmp/preshared_key_AP1
-The dmesg log from [2] proved that the connection was successful.
+Thanks, but I'm not going to apply that patch in my tree - I don't want
+to have to worry about the duplication of LOCAL_SRC_FILES.
 
----- Connection to AP2 - FAILED ----
-root@hammerhead:/ # wpa_supplicant -ivif_AP2 -c/data/tmp/preshared_key_AP2
-The dmesg log from [3] proved that the connection failed.
+> One problem with the current approach is that there's duplication of
+> the names of the source files between Android.mk and Makefile, I was
+> thinking perhaps we could introduce a common.mk or sources.mk that's
+> included from both and only has the variables that can be used by
+> both? Suggestions are welcome.
 
-It seems that the connection error is due to a failed PNO setup [3].
-Also, the failed PNO setup seems to prevent the AP scanning process
-from running. More accurate, what is this PNO setup? I looked into the
-Kernel code [4] but I can't figure it out how I could avoid this
-error.
+That seems reasonable.
 
-[1] https://github.com/gdetal/mptcp_nexus5
-[2] https://drive.google.com/file/d/0B5SBH08PU_ChYzNIV3VxUWlqWGs/view?usp=sharing
-[3] https://drive.google.com/file/d/0B5SBH08PU_ChNHdOck5UbjNERjQ/view?usp=sharing
-[4] https://github.com/gdetal/mptcp_nexus5/blob/master/drivers/net/wireless/bcmdhd/dhd_pno.c
+> As mentioned in the initial thread, one option is to drop Android.mk
+> from upstream altogether and maintain it in our AOSP downstream.
 
-Any help is greatly appreciated,
-Doru
+Given what I just said above about vendor builds etc. not being AOSP,
+that probably wouldn't be all that helpful; I'm pretty sure it'd make
+our life more difficult so I don't really like that idea much.
+
+johannes
