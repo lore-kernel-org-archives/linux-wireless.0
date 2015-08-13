@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:58266 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbbHYQmb (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:37984 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbbHMElg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 12:42:31 -0400
-Message-ID: <55DC9AF0.3040304@broadcom.com> (sfid-20150825_184235_043499_FFBDBC4C)
-Date: Tue, 25 Aug 2015 18:42:24 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 13 Aug 2015 00:41:36 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <jude.lee@atmel.com>, <robin.hwang@atmel.com>
+Subject: [PATCH 0/5] staging: wilc1000: 64bit build patch
+Date: Thu, 13 Aug 2015 13:41:18 +0900
+Message-ID: <1439440883-16061-1-git-send-email-tony.cho@atmel.com> (sfid-20150813_064153_794413_0CBABF86)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V3 0/6] brcmfmac: nvram loading and code rework
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com> <CACna6ryBL+bpBM4TekcNCotou-gey=k6_aYJVT+F-Sm0V0fuiw@mail.gmail.com>
-In-Reply-To: <CACna6ryBL+bpBM4TekcNCotou-gey=k6_aYJVT+F-Sm0V0fuiw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2015 06:09 PM, Rafał Miłecki wrote:
-> On 20 August 2015 at 22:06, Arend van Spriel <arend@broadcom.com> wrote:
->> This series comprises of following changes:
->> - support NVRAM loading for bcm47xx platform.
->> - revise announced interface combinations and validate against it.
->> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
->> - PCIe fix for handling queue overflow.
->> - support more firmware events (for bcm4339 firmware).
->>
->> The series is intended for v4.3 kernel and applies to the master branch
->> of the wireless-drivers-next repository. Removed patch from this series
->> that reportedly has issue on OpenWrt platform.
->
-> I believe that V3 also got following patch dropped:
-> brcmfmac: consolidate ifp lookup in driver core
-> https://patchwork.kernel.org/patch/6767991/
->
-> As we tracked regressing patch to be "brcmfmac: Increase nr of
-> supported flowrings.", I believe you can safely re-submit above (ifp
-> lookup) one. I tested it on top of wireless-drivers-next brcmfmac and
-> it works fine (no regressions).
+This series of patch includes new design for 64 bits. The driver uses the
+redundant typecasting to communicate with the chipset, which causes several
+compile warnings.
 
-That patch was already dropped from V2 (if my memory is right). Let's 
-not confuse our maintainer. I will resubmit that patch. Hopefully it 
-will make it in 4.3. What is the deadline, Kalle.
+However, this patch uses the real data type and removes unnecessary typecasting.
+Also, the driver allocates the ID value to the pointer address representing
+the handlers and adds it into the data frames instead of the pointer address.
+In results, the driver sends and gets the data frame to/from the chipset
+together with ID value instead of pointer address as a handler. This series of
+patch removes the warnings which 64 bit issues cause as well.
 
-Regards,
-Arend
+change log
+
+- v2
+ This version 2 updated only "use id value as argument" patch
+ : Add return error code in newly added function.
+ : Add error handling as the return error code
+ : Remove ++ operrator
+
+Johnny Kim (5):
+  staging: wilc1000: replace WILC_WFIDrvHandle by tstrWILC_WFIDrv
+  staging: wilc1000: change void pointer type to real type
+  staging: wilc1000: clarify the argument type
+  staging: wilc1000: use the real data type
+  staging: wilc1000: use id value as argument
+
+ drivers/staging/wilc1000/host_interface.c         | 471 ++++++++++++++--------
+ drivers/staging/wilc1000/host_interface.h         | 109 ++---
+ drivers/staging/wilc1000/linux_wlan.c             |  16 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  22 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   5 +-
+ 5 files changed, 372 insertions(+), 251 deletions(-)
+
+-- 
+1.9.1
 
