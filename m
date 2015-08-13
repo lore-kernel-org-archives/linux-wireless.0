@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36786 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbbHREY3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 00:24:29 -0400
-Date: Tue, 18 Aug 2015 09:54:17 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
-	linux-kernel@vger.kernel.org,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCHv3] staging: wilc1000: use netdev_* instead of printk
-Message-ID: <20150818042417.GA2941@sudip-pc> (sfid-20150818_062445_443036_6A5BD0A5)
-References: <20150817195542.GB6591@kroah.com>
- <b5c4c3dd4babd0cd4daef51626816e95c6d8ee9d.1439852779.git.raphael.beamonte@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <b5c4c3dd4babd0cd4daef51626816e95c6d8ee9d.1439852779.git.raphael.beamonte@gmail.com>
+Received: from mout.gmx.net ([212.227.15.18]:59382 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753125AbbHMSV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 14:21:59 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@venema.h4ckr.net, dan.carpenter@oracle.com,
+	Sujith.Manoharan@atheros.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <external.Oleksij.Rempel@de.bosch.com>
+Subject: [PATCH] ath9k_htc: do ani shortcalibratio if we got -ETIMEDOUT
+Date: Thu, 13 Aug 2015 20:21:38 +0200
+Message-Id: <1439490098-12479-1-git-send-email-linux@rempel-privat.de> (sfid-20150813_202203_204534_81DC53B4)
+In-Reply-To: <20150811214324.GA30816@mwanda>
+References: <20150811214324.GA30816@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 07:06:40PM -0400, Raphaël Beamonte wrote:
-> Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c  |  4 ++--
->  drivers/staging/wilc1000/linux_wlan.c        |  8 ++++----
->  drivers/staging/wilc1000/linux_wlan_common.h | 28 ++++++++++++++--------------
->  drivers/staging/wilc1000/linux_wlan_sdio.c   |  2 +-
->  drivers/staging/wilc1000/linux_wlan_spi.c    |  2 +-
->  drivers/staging/wilc1000/wilc_debugfs.c      | 16 ++++++++--------
->  drivers/staging/wilc1000/wilc_exported_buf.c |  2 --
->  7 files changed, 30 insertions(+), 32 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index 16a0abc..9a36b78 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -2001,7 +2001,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
->  							pstrWIDs[counter].u16WIDid,
->  							(counter == u32WIDsCount - 1), drvHandler)) {
->  				ret = -1;
-> -				printk("[Sendconfigpkt]Get Timed out\n");
-> +				netdev_err("[Sendconfigpkt]Get Timed out\n");
-This will not compile. you can not just replace printk with
-netdev_*, you need to mention a net_device.
+From: Oleksij Rempel <external.Oleksij.Rempel@de.bosch.com>
 
-regards
-sudip
+current code will handle -ETIMEDOUT as success which is probalbly wrong.
+
+According to this comment I assume it is safe to handle -ETIMEDOUT as false:
+drivers/net/wireless/ath/ath9k/calib.c
+290         /*
+291          * We timed out waiting for the noisefloor to load, probably due to an
+292          * in-progress rx. Simply return here and allow the load plenty of time
+293          * to complete before the next calibration interval.  We need to avoid
+294          * trying to load -50 (which happens below) while the previous load is
+295          * still in progress as this can cause rx deafness. Instead by returning
+296          * here, the baseband nf cal will just be capped by our present
+297          * noisefloor until the next calibration timer.
+298          */
+
+Since no other error wariants are present, this patch is checking only
+for (ret <= 0).
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Oleksij Rempel <external.Oleksij.Rempel@de.bosch.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index dab1323..172a9ff 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -794,8 +794,11 @@ void ath9k_htc_ani_work(struct work_struct *work)
+ 		common->ani.longcal_timer = timestamp;
+ 	}
+ 
+-	/* Short calibration applies only while caldone is false */
+-	if (!common->ani.caldone) {
++	/*
++	 * Short calibration applies only while caldone
++	 * is false or -ETIMEDOUT
++	 */
++	if (common->ani.caldone <= 0) {
+ 		if ((timestamp - common->ani.shortcal_timer) >=
+ 		    short_cal_interval) {
+ 			shortcal = true;
+@@ -844,7 +847,11 @@ set_timer:
+ 	*/
+ 	cal_interval = ATH_LONG_CALINTERVAL;
+ 	cal_interval = min(cal_interval, (u32)ATH_ANI_POLLINTERVAL);
+-	if (!common->ani.caldone)
++	/*
++	 * Short calibration applies only while caldone
++	 * is false or -ETIMEDOUT
++	 */
++	if (common->ani.caldone <= 0)
+ 		cal_interval = min(cal_interval, (u32)short_cal_interval);
+ 
+ 	ieee80211_queue_delayed_work(common->hw, &priv->ani_work,
+-- 
+2.1.4
+
