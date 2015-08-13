@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:33120 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753493AbbHVK6l (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34274 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773AbbHMMC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2015 06:58:41 -0400
-Received: by pdrh1 with SMTP id h1so36038740pdr.0
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2015 03:58:40 -0700 (PDT)
-From: Shraddha Barke <shraddha.6596@gmail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Donald <gdonald@gmail.com>,
-	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>
-Cc: Shraddha Barke <shraddha.6596@gmail.com>
-Subject: [PATCH 2/4] Staging: rtl8192e: r8192E_dev.c: Remove unused variable
-Date: Sat, 22 Aug 2015 16:28:12 +0530
-Message-Id: <1440241094-5927-2-git-send-email-shraddha.6596@gmail.com> (sfid-20150822_125856_676821_B573EE36)
-In-Reply-To: <1440241094-5927-1-git-send-email-shraddha.6596@gmail.com>
-References: <1440241094-5927-1-git-send-email-shraddha.6596@gmail.com>
+	Thu, 13 Aug 2015 08:02:59 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: refactor phyerr event handlers
+References: <1439373396-10828-1-git-send-email-rmani@qti.qualcomm.com>
+	<87si7nmnjw.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 13 Aug 2015 15:02:47 +0300
+In-Reply-To: <87si7nmnjw.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Thu, 13 Aug 2015 14:32:19 +0300")
+Message-ID: <87oaibmm54.fsf@kamboji.qca.qualcomm.com> (sfid-20150813_140303_659847_79FE592B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch discards the variable as it is not used anywhere throughout
-the kernel.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Build tested it.
+> Raja Mani <rmani@qti.qualcomm.com> writes:
+>
+>> Existing phyerr event handlers directly uses phyerr header format
+>> (ie, struct wmi_phyerr and struct wmi_phyerr_event) in the code
+>> exactly on how firmware packs it. This is the problem in 10.4 fw
+>> specific phyerr event handling where it uses different phyerror
+>> header format. Before adding 10.4 specific handler, little bit of
+>> refactor is done in existing phyerr handlers.
+>>
+>> Two new abstracted structures (struct wmi_phyerr_ev_hdr_arg and
+>> struct wmi_phyerr_ev_arg) are introduced to remove dependency of using
+>> firmware specific header format in the code. So that firmware specific
+>> phyerror handlers can populate values to abstracted structures and
+>> the following code can use abstracted struct for further operation.
+>>
+>> .pull_phyerr_hdr is added newly to pull common phyerr header info
+>> like tsf, buf_len, number of phyerr packed. Existing .pull_phyerr
+>> handler is changed and called to parse every sub phyerrs in the event.
+>>
+>> Validated these refactoring on qca988x hw2.0 using fw 10.2.4 version.
+>>
+>> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+>
+> Thanks, applied.
 
-Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
----
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 3 ---
- 1 file changed, 3 deletions(-)
+Actually I'll take it back, I dropped these as I see new warnings:
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index c28cabc..353e3fe 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -108,7 +108,6 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
- 	case HW_VAR_MEDIA_STATUS:
- 	{
- 		enum rt_op_mode OpMode = *((enum rt_op_mode *)(val));
--		enum led_ctl_mode LedAction = LED_CTL_NO_LINK;
- 		u8 btMsr = rtl92e_readb(dev, MSR);
- 
- 		btMsr &= 0xfc;
-@@ -116,7 +115,6 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
- 		switch (OpMode) {
- 		case RT_OP_MODE_INFRASTRUCTURE:
- 			btMsr |= MSR_INFRA;
--			LedAction = LED_CTL_LINK;
- 			break;
- 
- 		case RT_OP_MODE_IBSS:
-@@ -125,7 +123,6 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
- 
- 		case RT_OP_MODE_AP:
- 			btMsr |= MSR_AP;
--			LedAction = LED_CTL_LINK;
- 			break;
- 
- 		default:
+drivers/net/wireless/ath/ath10k/wmi.c:3625:33: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:3627:38: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:3599:5: warning: symbol 'ath10k_wmi_10_4_op_pull_phyerr_ev' was not declared. Should it be static?
+
 -- 
-2.1.4
-
+Kalle Valo
