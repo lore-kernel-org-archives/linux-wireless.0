@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57109 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49874 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753608AbbHSLY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 07:24:58 -0400
-Message-ID: <1439983495.2089.7.camel@sipsolutions.net> (sfid-20150819_132501_583342_4DCC98F6)
-Subject: Re: set channel from radiotap headers during injection
+	id S1752728AbbHMUBX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 16:01:23 -0400
+Message-ID: <1439496080.2114.39.camel@sipsolutions.net> (sfid-20150813_220126_365715_302C2848)
+Subject: Re: [PATCH 0/2] iw: fixes to Android.mk to include "iw" in AOSP
+ builds
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Allan Matthew <allanm84@gmail.com>, linux-wireless@vger.kernel.org
-Date: Wed, 19 Aug 2015 13:24:55 +0200
-In-Reply-To: <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com> (sfid-20150814_234019_925894_43212D3A)
-References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
-	 <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com>
-	 (sfid-20150814_234019_925894_43212D3A)
+To: enh <enh@google.com>
+Cc: Filipe Brandenburger <filbranden@google.com>,
+	Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Christopher Wiley <wiley@google.com>,
+	Ying Wang <wangying@google.com>
+Date: Thu, 13 Aug 2015 22:01:20 +0200
+In-Reply-To: <CAJgzZoo3ifnocO84uMLa1=LKQjGWm_J3WTsw0xO2skPG9gDtng@mail.gmail.com> (sfid-20150813_214845_594323_9D52C4AB)
+References: <1438292115-39495-1-git-send-email-filbranden@google.com>
+	 <1439456484.2114.6.camel@sipsolutions.net>
+	 <CADU+-uDS2C4w-dcbR8Rxx+jRfG7kNvu8JTncH-fxDnSp5NOBfQ@mail.gmail.com>
+	 <1439490787.2114.36.camel@sipsolutions.net>
+	 <CAJgzZoo3ifnocO84uMLa1=LKQjGWm_J3WTsw0xO2skPG9gDtng@mail.gmail.com>
+	 (sfid-20150813_214845_594323_9D52C4AB)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-08-14 at 14:39 -0700, Allan Matthew wrote:
-> Anyone have any thoughts on this?
+On Thu, 2015-08-13 at 12:48 -0700, enh wrote:
 > 
-> Is it possible with channel context enabled somehow?
-> 
+> i think you misunderstand what AOSP is. this code is currently in 
+> AOSP master, and thus in internal master, and thus in a future 
+> release.
 
-I don't think it's possible - per-packet configuration would have to be
-basically instantaneous (cannot sleep etc.) and setting the channel is
-necessarily a much longer operation.
+Great, but as I understand it, vendors are under no obligation to
+actually ship that code on their devices.
 
-If your device supports channel contexts, you might be able to *pick*
-the channel you want to inject on, but you could probably achieve that
-through the existing MAC address selection that picks an interface.
-It's also not clear how monitor + chanctx would work at all, since
-monitor expects to be on the channel all the time.
+If a vendor needs to have an iw that, for example, supports their own
+vendor commands (which, as I understand from the wifihal etc., Google
+is basically forcing vendors to have!), then the AOSP iw is useless and
+an own version needs to be built.
 
-You could possibly select other parameters like the bitrate, but the
-channel width - especially 5/10 MHz - doesn't seem feasible.
 
 johannes
