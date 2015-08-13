@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:36140 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbbHEQm3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 12:42:29 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH v3 2/3] drivers: staging: wilc1000: move { to previous line
-Date: Wed,  5 Aug 2015 22:11:56 +0530
-Message-Id: <1438792917-9817-3-git-send-email-csgorentla@gmail.com> (sfid-20150805_184306_638918_E85449D8)
-In-Reply-To: <1438792917-9817-2-git-send-email-csgorentla@gmail.com>
-References: <1438792917-9817-1-git-send-email-csgorentla@gmail.com>
- <1438792917-9817-2-git-send-email-csgorentla@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:46964 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751514AbbHMJB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 05:01:28 -0400
+Message-ID: <1439456484.2114.6.camel@sipsolutions.net> (sfid-20150813_110154_717700_605888F8)
+Subject: Re: [PATCH 0/2] iw: fixes to Android.mk to include "iw" in AOSP
+ builds
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Filipe Brandenburger <filbranden@google.com>,
+	Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Elliott Hughes <enh@google.com>,
+	Christopher Wiley <wiley@google.com>
+Date: Thu, 13 Aug 2015 11:01:24 +0200
+In-Reply-To: <1438292115-39495-1-git-send-email-filbranden@google.com> (sfid-20150730_233636_420641_73AD4AC6)
+References: <1438292115-39495-1-git-send-email-filbranden@google.com>
+	 (sfid-20150730_233636_420641_73AD4AC6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moved the opening brace of code blocks to the previous lines.  This
-fixes the checkpatch.pl error - "that open brace { should be on the
-previous line".
+On Thu, 2015-07-30 at 14:35 -0700, Filipe Brandenburger wrote:
+> Hi,
+> 
+> I'm working on including "iw" on Android AOSP eng builds and it turns 
+> out we
+> need some fixes to Android.mk to make it build on a current AOSP 
+> tree.
+> 
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+We have a very similar patch internally as well (that I was still
+evualating/reviewing) but it was less complete, so I've applied this
+despite Arik's objections.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c2ef46f..779ec5a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1205,8 +1205,7 @@ static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 
- 
- 
--			if (!pairwise)
--			{
-+			if (!pairwise) {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
- 					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
-@@ -1304,8 +1303,7 @@ static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 
- 		{
- 			u8mode = 0;
--			if (!pairwise)
--			{
-+			if (!pairwise) {
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					/* swap the tx mic by rx mic */
- 					pu8RxMic = params->key + 24;
-@@ -1531,8 +1529,7 @@ static int WILC_WFI_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 	priv = wiphy_priv(wiphy);
- 
- 
--	if (!pairwise)
--	{
-+	if (!pairwise) {
- 		PRINT_D(CFG80211_DBG, "Getting group key idx: %x\n", key_index);
- 
- 		key_params.key = priv->wilc_gtk[key_index]->key;
--- 
-2.5.0
+I think that if anyone needs to build against older Android, which is
+very well possible, we can partially revert this and maybe provide some
+environment variable they can control from their BSP, but until
+somebody really shows up with that I'll leave it as is and assume that
+older Android builds will also use older iw.
 
+johannes
