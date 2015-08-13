@@ -1,145 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45661 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751456AbbHEOPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 10:15:35 -0400
-Message-ID: <1438784128.29746.177.camel@linux.intel.com> (sfid-20150805_161539_416456_A8F4A1EC)
-Subject: Re: [PATCH 5/5] net: rfkill: gpio: remove rfkill_gpio_platform_data
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Date: Wed, 05 Aug 2015 17:15:28 +0300
-In-Reply-To: <1438781947-7952-6-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
-	 <1438781947-7952-6-git-send-email-heikki.krogerus@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:35559 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbbHMMKU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 08:10:20 -0400
+Received: by lbcbn3 with SMTP id bn3so25641832lbc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 05:10:19 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: split ap/ibss wep key install process
+Date: Thu, 13 Aug 2015 14:10:46 +0200
+Message-Id: <1439467846-8351-1-git-send-email-michal.kazior@tieto.com> (sfid-20150813_141023_942572_45918B0E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
-> No more users for it.
-> 
-> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> ---
->  include/linux/rfkill-gpio.h | 37 -----------------------------------
-> --
->  net/rfkill/Kconfig          |  3 +--
->  net/rfkill/rfkill-gpio.c    |  8 --------
->  3 files changed, 1 insertion(+), 47 deletions(-)
->  delete mode 100644 include/linux/rfkill-gpio.h
-> 
-> diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill
-> -gpio.h
-> deleted file mode 100644
-> index 20bcb55..0000000
-> --- a/include/linux/rfkill-gpio.h
-> +++ /dev/null
-> @@ -1,37 +0,0 @@
-> -/*
-> - * Copyright (c) 2011, NVIDIA Corporation.
-> - *
-> - * This program is free software; you can redistribute it and/or 
-> modify
-> - * it under the terms of the GNU General Public License as published 
-> by
-> - * the Free Software Foundation; either version 2 of the License, or
-> - * (at your option) any later version.
-> - *
-> - * This program is distributed in the hope that it will be useful, 
-> but WITHOUT
-> - * ANY WARRANTY; without even the implied warranty of 
-> MERCHANTABILITY or
-> - * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public 
-> License for
-> - * more details.
-> - *
-> - * You should have received a copy of the GNU General Public License 
-> along
-> - * with this program; if not, write to the Free Software Foundation, 
-> Inc.,
-> - * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-> - */
-> -
-> -
-> -#ifndef __RFKILL_GPIO_H
-> -#define __RFKILL_GPIO_H
-> -
-> -#include <linux/types.h>
-> -#include <linux/rfkill.h>
-> -
-> -/**
-> - * struct rfkill_gpio_platform_data - platform data for rfkill gpio 
-> device.
-> - * for unused gpio's, the expected value is -1.
-> - * @name:		name for the gpio rf kill instance
-> - */
-> -
-> -struct rfkill_gpio_platform_data {
-> -	char			*name;
-> -	enum rfkill_type	type;
-> -};
-> -
-> -#endif /* __RFKILL_GPIO_H */
-> diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
-> index 4c10e7e..6320890 100644
-> --- a/net/rfkill/Kconfig
-> +++ b/net/rfkill/Kconfig
-> @@ -40,5 +40,4 @@ config RFKILL_GPIO
->  	default n
->  	help
->  	  If you say yes here you get support of a generic gpio 
-> RFKILL
-> -	  driver. The platform should fill in the appropriate fields 
-> in the
-> -	  rfkill_gpio_platform_data structure and pass that to the 
-> driver.
-> +	  driver.
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index 07323c3..69d92e1 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -27,8 +27,6 @@
->  #include <linux/acpi.h>
->  #include <linux/gpio/consumer.h>
->  
-> -#include <linux/rfkill-gpio.h>
-> -
->  struct rfkill_gpio_data {
->  	const char		*name;
->  	enum rfkill_type	type;
-> @@ -89,7 +87,6 @@ static int rfkill_gpio_acpi_probe(struct device 
-> *dev,
->  
->  static int rfkill_gpio_probe(struct platform_device *pdev)
->  {
-> -	struct rfkill_gpio_platform_data *pdata = pdev
-> ->dev.platform_data;
->  	struct rfkill_gpio_data *rfkill;
->  	struct gpio_desc *gpio;
->  	const char *type_name;
-> @@ -111,11 +108,6 @@ static int rfkill_gpio_probe(struct 
-> platform_device *pdev)
->  		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
->  		if (ret)
->  			return ret;
-> -	} else if (pdata) {
-> -		rfkill->name = pdata->name;
-> -		rfkill->type = pdata->type;
-> -	} else {
-> -		return -ENODEV;
+Apparently it's not safe to install both pairwise
+and groupwise keys on AP vdevs as it can cause
+traffic to stop working in some multi-vif
+(WPA+WEP) cases.
 
-Shouldn't we leave the error path and modify to check if we have device
-property set set?
+Fixes: ce90b27128c2 ("ath10k: fix multiple key static wep with ibss")
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 44 +++++++++++++++++++++++++----------
+ 1 file changed, 32 insertions(+), 12 deletions(-)
 
->  	}
->  
->  	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index acd222f3b899..eabfe68a1c48 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -247,6 +247,10 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	if (WARN_ON(arvif->vif->type != NL80211_IFTYPE_AP &&
++		    arvif->vif->type != NL80211_IFTYPE_ADHOC))
++		return -EINVAL;
++
+ 	spin_lock_bh(&ar->data_lock);
+ 	peer = ath10k_peer_find(ar, arvif->vdev_id, addr);
+ 	spin_unlock_bh(&ar->data_lock);
+@@ -258,21 +262,34 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
+ 		if (arvif->wep_keys[i] == NULL)
+ 			continue;
+ 
+-		flags = 0;
+-		flags |= WMI_KEY_PAIRWISE;
++		switch (arvif->vif->type) {
++		case NL80211_IFTYPE_AP:
++			flags = WMI_KEY_PAIRWISE;
+ 
+-		ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
+-					 addr, flags);
+-		if (ret < 0)
+-			return ret;
++			if (arvif->def_wep_key_idx == i)
++				flags |= WMI_KEY_TX_USAGE;
+ 
+-		flags = 0;
+-		flags |= WMI_KEY_GROUP;
++			ret = ath10k_install_key(arvif, arvif->wep_keys[i],
++						 SET_KEY, addr, flags);
++			if (ret < 0)
++				return ret;
++			break;
++		case NL80211_IFTYPE_ADHOC:
++			ret = ath10k_install_key(arvif, arvif->wep_keys[i],
++						 SET_KEY, addr,
++						 WMI_KEY_PAIRWISE);
++			if (ret < 0)
++				return ret;
+ 
+-		ret = ath10k_install_key(arvif, arvif->wep_keys[i], SET_KEY,
+-					 addr, flags);
+-		if (ret < 0)
+-			return ret;
++			ret = ath10k_install_key(arvif, arvif->wep_keys[i],
++						 SET_KEY, addr, WMI_KEY_GROUP);
++			if (ret < 0)
++				return ret;
++			break;
++		default:
++			WARN_ON(1);
++			return -EINVAL;
++		}
+ 
+ 		spin_lock_bh(&ar->data_lock);
+ 		peer->keys[i] = arvif->wep_keys[i];
+@@ -287,6 +304,9 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
+ 	 *
+ 	 * FIXME: Revisit. Perhaps this can be done in a less hacky way.
+ 	 */
++	if (arvif->vif->type != NL80211_IFTYPE_ADHOC)
++		return 0;
++
+ 	if (arvif->def_wep_key_idx == -1)
+ 		return 0;
+ 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.1.4
+
