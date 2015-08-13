@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:38031 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752082AbbHMMhx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 08:37:53 -0400
-Date: Thu, 13 Aug 2015 15:37:48 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 2/5] net: rfkill: add rfkill_find_type function
-Message-ID: <20150813123748.GB29796@kuha.fi.intel.com> (sfid-20150813_143821_448169_2B314BD9)
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
- <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
- <1439458066.2114.13.camel@sipsolutions.net>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:35582 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381AbbHMLSk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 07:18:40 -0400
+Received: by oiew67 with SMTP id w67so6057475oie.2
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 04:18:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1439458066.2114.13.camel@sipsolutions.net>
+In-Reply-To: <1438538405-9133-1-git-send-email-hauke@hauke-m.de>
+References: <1437512677-6153-1-git-send-email-linus.walleij@linaro.org>
+	<1438538405-9133-1-git-send-email-hauke@hauke-m.de>
+Date: Thu, 13 Aug 2015 13:18:40 +0200
+Message-ID: <CACRpkdbprBcAajO=uggd5nQ27NFnZgrPf_JfUpBuzP8fYuL5dA@mail.gmail.com> (sfid-20150813_131845_074265_F620E0E2)
+Subject: Re: [PATCH v2] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, Aug 2, 2015 at 8:00 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
 
-On Thu, Aug 13, 2015 at 11:27:46AM +0200, Johannes Berg wrote:
-> On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
-> > 
-> > +static const char *rfkill_types[NUM_RFKILL_TYPES] = {
-> > +	[RFKILL_TYPE_WLAN]	= "wlan",
-> > +	[RFKILL_TYPE_BLUETOOTH]	= "bluetooth",
-> > +	[RFKILL_TYPE_UWB]	= "ultrawideband",
-> > +	[RFKILL_TYPE_WIMAX]	= "wimax",
-> > +	[RFKILL_TYPE_WWAN]	= "wwan",
-> > +	[RFKILL_TYPE_GPS]	= "gps",
-> > +	[RFKILL_TYPE_FM]	= "fm",
-> > +	[RFKILL_TYPE_NFC]	= "nfc",
-> > +};
-> > +
-> > +enum rfkill_type rfkill_find_type(const char *name)
-> > +{
-> > +	int i;
-> > +
-> > +	BUILD_BUG_ON(NUM_RFKILL_TYPES != RFKILL_TYPE_NFC + 1);
-> > 
-> That BUILD_BUG_ON() is now less useful - previously it pointed to the
-> code that needed to change, now you're left wondering if you don't look
-> up since it isn't quite that obvious from the code what this does.
-> 
-> Something like
-> 
-> 	BUILD_BUG_ON(rfkill_types[NUM_RFKILL_TYPES - 1] == NULL);
-> 
-> would be better. As we only add here, that would be safe enough - I've
-> done something similar in the past that a bit more complicated.
+> From: Linus Walleij <linus.walleij@linaro.org>
+>
+> This switches the BCMA GPIO driver to use GPIOLIB_IRQCHIP to
+> handle its interrupts instead of rolling its own copy of the
+> irqdomain handling etc.
+>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>
+> I fixed some bugs in the original patch, some of them are compile
+> errors and others caused some runtime problems. This patch worked on my
+> BCM4708 based device, I was able to receive an IRQ for a GPIO change
+> (button press).
 
-OK, I'll change it.
+Thanks a *LOT* for spending the effort of fixing up my
+uglyhack.
 
-> With that and the static inline fixed (which maybe you could even
-> remove) I'm fine with all these rfkill patches, but I'm not sure how to
-> merge them since they affect all kinds of other trees. If desired, I
-> can apply them, but an ACK from the tegra maintainer would be good :)
+> I think this should go through the wireless tree.
+>
+> @Linus could you please check if the changes I did are correct?
 
-Andy and Mika are preparing some changes to the device property
-handling. I'll wait for their proposal and prepare next version these
-after that.
+LooksGoodToMe(TM)
 
-
-Thanks,
-
--- 
-heikki
+Yours,
+Linus Walleij
