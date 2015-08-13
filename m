@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:33144 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949AbbHLOHj convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54749 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbbHMM1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2015 10:07:39 -0400
-Received: by iods203 with SMTP id s203so20717414iod.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2015 07:07:38 -0700 (PDT)
+	Thu, 13 Aug 2015 08:27:31 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <55CB0ACA.3000109@broadcom.com>
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-	<CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>
-	<55AD2C8F.9010509@broadcom.com>
-	<CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>
-	<55CB0ACA.3000109@broadcom.com>
-Date: Wed, 12 Aug 2015 16:07:38 +0200
-Message-ID: <CACna6rz0g8_F8VziRZXaPq-D0_zEmpiZkD6Xo0jwr8M6Nq+Q3A@mail.gmail.com> (sfid-20150812_160742_698944_67FBC493)
-Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: ath9k: match wait_for_completion_timeout return type
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1431622576-9183-1-git-send-email-hofrat@osadl.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Message-Id: <20150813122730.D34061403CD@smtp.codeaurora.org> (sfid-20150813_142750_751342_2D6D98B7)
+Date: Thu, 13 Aug 2015 12:27:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 August 2015 at 10:58, Arend van Spriel <arend@broadcom.com> wrote:
-> On 07/26/2015 05:40 PM, Rafał Miłecki wrote:
->>
->> On 20 July 2015 at 19:14, Arend van Spriel <arend@broadcom.com> wrote:
->>>
->>> On 07/19/2015 05:05 PM, Rafał Miłecki wrote:
->>>>
->>>>
->>>> On 10 July 2015 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
->>>>>
->>>>>
->>>>> This series comprises of following changes:
->>>>> - support NVRAM loading for bcm47xx platform.
->>>>> - revise announced interface combinations and validate against it.
->>>>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
->>>>> - couple of PCIe fixes.
->>>>> - rework dealing with interface instances.
->>>>
->>>>
->>>>
->>>> I'm not sure which patch has caused this (I applied all of them except
->>>> for the 1st one) but now brcmfmac fails totally:
->>>>>
->>>>>
->>>>> Unable to handle kernel NULL pointer dereference at virtual address
->>>>> 00000014
->>>>
->>>>
->>>>
->>>> I'm afraid I won't be able to spend any more time of this soon, so can
->>>> you try to reproduce this problem, please?
->
->
-> You did a warm reboot of the device, right? There seems to be an issue
-> because on OpenWrt the brcmfmac is not unloaded upon warm reboot, which
-> makes the device unaccessible. Because on OpenWrt the firmware request is
-> synchronous (OpenWrt patch on top of upstream brcmfmac) it results in probe
-> failing on invalid access making the issue OpenWrt specific. Hante created a
-> fix for the warm reboot issue.
 
-I'm not sure about this, it was too long time ago. I'm coming back
-home on next Tuesday, so I should be able to work on this again soon.
+> Return type of wait_for_completion_timeout is unsigned long not int.
+> As time_left is exclusively used for wait_for_completion_timeout here its
+> type is simply changed to unsigned long.
+> 
+> API conformance testing for completions with coccinelle spatches are being
+> used to locate API usage inconsistencies:
+> ./drivers/net/wireless/ath/ath9k/link.c:197
+>         int return assigned to unsigned long
+> 
+> Patch was compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+> 
+> Patch is against 4.1-rc3 (localversion-next is -next-20150514)
+> 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
--- 
-Rafał
+Thanks, applied to wireless-drivers-next.git.
+
+Kalle Valo
