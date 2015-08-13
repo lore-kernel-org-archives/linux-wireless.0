@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36614 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584AbbHBQcm (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:36477 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753040AbbHMRaD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2015 12:32:42 -0400
-Date: Sun, 2 Aug 2015 09:32:40 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Ting-Chih Hsiao <s894330@hotmail.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: fix coding style warnings reported
- by checkpatch.pl.
-Message-ID: <20150802163240.GA7015@kroah.com> (sfid-20150802_183246_625667_6759C621)
-References: <BLU437-SMTP188F540F98A449B816EBADB9880@phx.gbl>
+	Thu, 13 Aug 2015 13:30:03 -0400
+Received: by igxp17 with SMTP id p17so25436830igx.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 10:30:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BLU437-SMTP188F540F98A449B816EBADB9880@phx.gbl>
+In-Reply-To: <55CCD13C.7010006@redhat.com>
+References: <55CCD13C.7010006@redhat.com>
+Date: Thu, 13 Aug 2015 19:30:02 +0200
+Message-ID: <CACna6rxm7MbEhnke91G8M+wPNfzCo6RkCm2OdyKrEshd1FN_EA@mail.gmail.com> (sfid-20150813_193014_898122_68E4B7CE)
+Subject: Re: b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 12, Type 11 (AC),
+ Revision 1)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Sean Richards <ft86drifter@cox.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 02, 2015 at 01:00:58PM +0800, Ting-Chih Hsiao wrote:
-> From 8c86ae927a38693f587826f51fca5d374e756768 Mon Sep 17 00:00:00 2001
-> From: Ting-Chih Hsiao <s894330@hotmail.com>
-> Date: Sun, 2 Aug 2015 12:32:19 +0800
+On 13 August 2015 at 19:17, Hans de Goede <hdegoede@redhat.com> wrote:
+> I'm trying to help a Fedora user to get his wifi to work on a
+> Lenovo Yoga 3 14, ad currently we are stuck with the
+> b43 driving giving the error from $subject,
+> is there anyone who can help with this ?
 
-Why is this information in the body of your email?
+Well, the $subject says everything. There is noone really working on
+it right now.
 
-And please use scripts/get_maintainer.pl to determine the correct
-mailing list to send patches to.
-
-Please fix this up and resend.
-
-thanks,
-
-greg k-h
+-- 
+Rafał
