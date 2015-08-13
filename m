@@ -1,48 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40302 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673AbbHQJIz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 05:08:55 -0400
-Date: Mon, 17 Aug 2015 12:08:52 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/3] staging: wilc1000: code style: fix macro with
- multiple statements
-Message-ID: <20150817090828.GB5558@mwanda> (sfid-20150817_110916_466886_3D93ABF0)
-References: <cover.1439702894.git.raphael.beamonte@gmail.com>
- <641be2615e97db253a306c766a48c2afccf338d7.1439702894.git.raphael.beamonte@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <641be2615e97db253a306c766a48c2afccf338d7.1439702894.git.raphael.beamonte@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47861 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752311AbbHMMAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 08:00:36 -0400
+Message-ID: <1439467233.2114.24.camel@sipsolutions.net> (sfid-20150813_140051_132448_F66BEAB7)
+Subject: Re: [PATCH 2/5] mac80211: Set txrc.bss to true for OCB interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 13 Aug 2015 14:00:33 +0200
+In-Reply-To: <1438783348-1427-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+References: <1438783348-1427-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 16, 2015 at 01:30:12AM -0400, Raphaël Beamonte wrote:
->  #define MALLOC_WILC_BUFFER(name, size)	\
-> -	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
-> -	if (!exported_ ## name) {   \
-> -		printk("fail to alloc: %s memory\n", exported_ ## name);  \
-> -		return -ENOBUFS;	\
-> -	}
-> +	do { \
-> +		exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
-> +		if (!exported_ ## name) {   \
-> +			printk("fail to alloc: %s memory\n", exported_ ## name);  \
-> +			return -ENOBUFS;	\
-> +		}
-> +	} while (0)
+On Wed, 2015-08-05 at 16:02 +0200, Bertold Van den Bergh wrote:
+> To make mac80211 accept the multicast rate requested by the user the
+> rate control should be told that it is operating in BSS mode.
+> Without this, the default rate is selected in rate_control_send_low
+> (!pubsta and !txrc->bss)
+> 
+Applied 1 and 2, although the 'bss' variable is somewhat misnamed I
+guess.
 
-Pull it in one indent level...  But actually this macro has a return in
-the middle of it, so it just introduces bugs all over the place like
-eating cookies in bed.  We should just delete it instead.
-
-regards,
-dan carpenter
-
+johannes
