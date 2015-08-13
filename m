@@ -1,187 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:44346 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbbHaOUE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61700 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210AbbHMNiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 10:20:04 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-	Tue, 1 Sep 2015 00:20:02 +1000
-Message-ID: <1441030735.2647.70.camel@linux.vnet.ibm.com> (sfid-20150831_162059_747644_6D095063)
-Subject: Re: Linux Firmware Signing
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Kees Cook <keescook@chromium.org>,
-	"Roberts, William C" <william.c.roberts@intel.com>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Paul Moore <paul@paul-moore.com>,
-	Eric Paris <eparis@parisplace.org>, selinux@tycho.nsa.gov,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
-	=?UTF-8?Q?=22Vojt=C4=9Bch_Pavl=C3=ADk=22?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Date: Mon, 31 Aug 2015 10:18:55 -0400
-In-Reply-To: <20150829021659.GN8051@wotan.suse.de>
-References: <476DC76E7D1DF2438D32BFADF679FC5601058E78@ORSMSX103.amr.corp.intel.com>
-	 <CAGXu5jJuwPfnQhu9u4-90UkmjWTBF_GLpJ7J1VaaT2D0d_-Mhg@mail.gmail.com>
-	 <1440462367.2737.4.camel@linux.vnet.ibm.com>
-	 <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
-	 <1440464705.2737.36.camel@linux.vnet.ibm.com>
-	 <14540.1440599584@warthog.procyon.org.uk>
-	 <31228.1440671938@warthog.procyon.org.uk>
-	 <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
-	 <20150827212907.GF8051@wotan.suse.de>
-	 <1440719673.2118.84.camel@linux.vnet.ibm.com>
-	 <20150829021659.GN8051@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 13 Aug 2015 09:38:18 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH v2 2/2] ath10k: handle 10.4 firmware phyerr event
+Date: Thu, 13 Aug 2015 19:07:13 +0530
+Message-ID: <1439473033-14724-2-git-send-email-rmani@qti.qualcomm.com> (sfid-20150813_153820_653390_D1D2E0E4)
+In-Reply-To: <1439473033-14724-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1439473033-14724-1-git-send-email-rmani@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-08-29 at 04:16 +0200, Luis R. Rodriguez wrote:
-> On Thu, Aug 27, 2015 at 07:54:33PM -0400, Mimi Zohar wrote:
-> > On Thu, 2015-08-27 at 23:29 +0200, Luis R. Rodriguez wrote:
-> > > On Thu, Aug 27, 2015 at 10:57:23AM -0000, David Woodhouse wrote:
-> > > > > Luis R. Rodriguez <mcgrof@suse.com> wrote:
+Header format of 10.4 firmware phyerr event is not alligned
+with pre 10.4 firmware. Introduce new wmi handlers to parse
+10.4 firmware specific phyerror event header.
 
-> > > > In conversation with Mimi last week she was very keen on the model where
-> > > > we load modules & firmware in such a fashion that the kernel has access to
-> > > > the original inode -- by passing in a fd,
-> > > 
-> > > Sure, so let's be specific to ensure what Mimi needs is there. I though there
-> > > was work needed on modules but that seems covered and work then seems only
-> > > needed for kexec and SELinux policy files (and a review of other possible file
-> > > consumers in the kernel) for what you describe. 
-> 
-> Correct me if I'm wrong:
-> 
-> > At last year's LSS linux-integrity status update, I mentioned 6
-> > measurement/appraisal gaps, kernel modules (linux-3.7), 
-> 
-> Done.
-> 
-> > firmware (linux-3.17), 
-> 
-> I'm working on it, but as far as LSMs are concerned the LSM hook
-> is in place.
+With changes covered in this patch, radar detection works on
+qca9x0 hw 2.0 which uses 10.4 firmware.
 
-Right, the LSM hooks are used by LSMs, but also used by the integrity
-subsystem, like here, to measure the file and verify the integrity of
-the file.    
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
 
- int security_kernel_fw_from_file(struct file *file, char *buf, size_t size)
-{
-        int ret;
+v2 changes:
 
-        ret = call_int_hook(kernel_fw_from_file, 0, file, buf, size);
-        if (ret)
-                return ret;
-        return ima_fw_from_file(file, buf, size);
-}
+ - Fixed below sparse warnings,
+     wmi.c:3620:33: warning: restricted __le32 degrades to integer
+     wmi.c:3622:38: warning: restricted __le32 degrades to integer
+     wmi.c:3594:5: warning: symbol 'ath10k_wmi_10_4_op_pull_phyerr_ev' was not declared. Should it be static?
 
-> > kexec,
-> 
-> I'll note kexec has both a kernel and initramfs :) so just keep that
-> in mind. Technically it should vet for both. It seems we just need
-> an LSM hook there.
+ drivers/net/wireless/ath/ath10k/wmi.c | 64 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h | 20 +++++++++++
+ 2 files changed, 84 insertions(+)
 
-Distros build the initramfs on the target system, so the initramfs can't
-come signed.  But for those systems that the initramfs can be signed, we
-should be verifying it.
-
-> > initramfs, 
-> 
-> Hm, what code path?
-
-In addition, the files within the initramfs should be measured and
-verified.   There isn't a need for a new hook, but for xattr support in
-CPIO.  I started adding that support last winter -
-http://lwn.net/Articles/630101/ .   Others have requested other changes,
-not related to xattrs, before bumping the CPIO magic number.   There
-should be a discussion as to what else needs to be done.
-
-> > eBPF/seccomp 
-> 
-> Same here, where's this?
-> 
-> > and policies,
-> 
-> Which ones?
-> 
-> >  that have
-> > been or need to be addressed.  Since then, a new kexec syscall, file
-> > descriptor based, was upstreamed that appraises the image.  Until we can
-> > preserve the measurement list across kexec,
-> 
-> I'm sorry I do not follow, can you elaborate on what you mean by this.
-> Its not clear to me what you mean by the measurement list. Do you mean
-> all the above items?
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 37dfa34..aad16eb 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3527,6 +3527,26 @@ static int ath10k_wmi_op_pull_phyerr_ev_hdr(struct ath10k *ar,
+ 	return 0;
+ }
  
-A measurement is a hash of the file which is stored in the measurement
-list <securityfs>/ima/ascii_runtime_measurements and is used to extend
-the TPM (eg. PCR 10).   The measurement list, in conjunction with a
-quote of the TPM PCRs, can be used to remotely detect whether a system
-has been compromised.
-
-David Safford's white paper "An Overview of the Linux Integrity
-subsystem" -
-http://downloads.sf.net/project/linux-ima/linux-ima/Integrity_overview.pdf  goes into details of the different terms and concepts. (The IMA wiki is dated.) There's also a ic2e paper titled "Scalable Attestation: a step toward secure and trusted cloud".
-
-> > it doesn't make sense to
-> > measure the image just to have it thrown away.  (skipping initramfs as
-> > that isn't related to LSM hooks
-> 
-> Hrm, it can be, I mean at least for the kexec case its a fd that is passed
-> as part of the syscall, not sure of the other case you mentioned yet
-> as I haven't reviewed that code yet.
-
-Right, in those situations that the initramfs can be signed, it should
-be verified.
-
-> >.)  Lastly, measuring/appraising policies
-> > (eg. IMA, SELinux, Smack, iptables/ebtables) 
-> 
-> OK for each of these:
-> 
-> how do we load the data? 
-
-I'm not real happy about it, but since we can't break the existing ABI
-of loading data into the kernel via a buffer, a stop gap method of
-signing and verifying a buffer would be needed.
-
-> Is that the full list? Note we should
-> be able to use grammar rules to hunt these down, I just haven't
-> sat down to write them but if this is important well we should.
-> 
-> > or any other files consumed
-> > by the kernel.
-> 
-> :D likewise
-
-< skip >
-
-> It'd be good for us to do a further review to really vet *all* areas.
-> I am not convinced we've covered them all.
-
-Agreed
-
-Mimi
++static int ath10k_wmi_10_4_op_pull_phyerr_ev_hdr(struct ath10k *ar,
++						 struct sk_buff *skb,
++						 struct wmi_phyerr_hdr_arg *arg)
++{
++	struct wmi_10_4_phyerr_event *ev = (void *)skb->data;
++
++	if (skb->len < sizeof(*ev))
++		return -EPROTO;
++
++	/* 10.4 firmware always reports only one phyerr */
++	arg->num_phyerrs = 1;
++
++	arg->tsf_l32 = __le32_to_cpu(ev->tsf_l32);
++	arg->tsf_u32 = __le32_to_cpu(ev->tsf_u32);
++	arg->buf_len = skb->len;
++	arg->phyerrs = skb->data;
++
++	return 0;
++}
++
+ int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar,
+ 				 const void *phyerr_buf,
+ 				 int left_len,
+@@ -3571,6 +3591,45 @@ int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar,
+ 	return 0;
+ }
+ 
++static int ath10k_wmi_10_4_op_pull_phyerr_ev(struct ath10k *ar,
++					     const void *phyerr_buf,
++					     int left_len,
++					     struct wmi_phyerr_ev_arg *arg)
++{
++	const struct wmi_10_4_phyerr_event *phyerr = phyerr_buf;
++	u32 phy_err_mask;
++	int i;
++
++	if (left_len < sizeof(*phyerr)) {
++		ath10k_warn(ar, "wrong phyerr event head len %d (need: >=%d)\n",
++			    left_len, sizeof(*phyerr));
++		return -EINVAL;
++	}
++
++	arg->tsf_timestamp = __le32_to_cpu(phyerr->tsf_timestamp);
++	arg->freq1 = __le16_to_cpu(phyerr->freq1);
++	arg->freq2 = __le16_to_cpu(phyerr->freq2);
++	arg->rssi_combined = phyerr->rssi_combined;
++	arg->chan_width_mhz = phyerr->chan_width_mhz;
++	arg->buf_len = __le32_to_cpu(phyerr->buf_len);
++	arg->buf = phyerr->buf;
++	arg->hdr_len = sizeof(*phyerr);
++
++	for (i = 0; i < 4; i++)
++		arg->nf_chains[i] = __le16_to_cpu(phyerr->nf_chains[i]);
++
++	phy_err_mask = __le32_to_cpu(phyerr->phy_err_mask[0]);
++
++	if (phy_err_mask & PHY_ERROR_10_4_SPECTRAL_SCAN_MASK)
++		arg->phy_err_code = PHY_ERROR_SPECTRAL_SCAN;
++	else if (phy_err_mask & PHY_ERROR_10_4_RADAR_MASK)
++		arg->phy_err_code = PHY_ERROR_RADAR;
++	else
++		arg->phy_err_code = PHY_ERROR_UNKNOWN;
++
++	return 0;
++}
++
+ void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_phyerr_hdr_arg hdr_arg = {};
+@@ -4528,6 +4587,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_10_4_CHAN_INFO_EVENTID:
+ 		ath10k_wmi_event_chan_info(ar, skb);
+ 		break;
++	case WMI_10_4_PHYERR_EVENTID:
++		ath10k_wmi_event_phyerr(ar, skb);
++		break;
+ 	case WMI_10_4_READY_EVENTID:
+ 		ath10k_wmi_event_ready(ar, skb);
+ 		break;
+@@ -6491,6 +6553,8 @@ static const struct wmi_ops wmi_10_4_ops = {
+ 	.pull_vdev_start = ath10k_wmi_op_pull_vdev_start_ev,
+ 	.pull_peer_kick = ath10k_wmi_op_pull_peer_kick_ev,
+ 	.pull_swba = ath10k_wmi_10_4_op_pull_swba_ev,
++	.pull_phyerr_hdr = ath10k_wmi_10_4_op_pull_phyerr_ev_hdr,
++	.pull_phyerr = ath10k_wmi_10_4_op_pull_phyerr_ev,
+ 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 0ed3cfe..c5d10db 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2977,6 +2977,9 @@ struct wmi_10_4_mgmt_rx_event {
+ #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
+ #define PHY_ERROR_GEN_RADAR			0x05
+ 
++#define PHY_ERROR_10_4_RADAR_MASK               0x4
++#define PHY_ERROR_10_4_SPECTRAL_SCAN_MASK       0x4000000
++
+ enum phy_err_type {
+ 	PHY_ERROR_UNKNOWN,
+ 	PHY_ERROR_SPECTRAL_SCAN,
+@@ -3005,6 +3008,23 @@ struct wmi_phyerr_event {
+ 	struct wmi_phyerr phyerrs[0];
+ } __packed;
+ 
++struct wmi_10_4_phyerr_event {
++	__le32 tsf_l32;
++	__le32 tsf_u32;
++	__le16 freq1;
++	__le16 freq2;
++	u8 rssi_combined;
++	u8 chan_width_mhz;
++	u8 phy_err_code;
++	u8 rsvd0;
++	__le32 rssi_chains[4];
++	__le16 nf_chains[4];
++	__le32 phy_err_mask[2];
++	__le32 tsf_timestamp;
++	__le32 buf_len;
++	u8 buf[0];
++} __packed;
++
+ #define PHYERR_TLV_SIG				0xBB
+ #define PHYERR_TLV_TAG_SEARCH_FFT_REPORT	0xFB
+ #define PHYERR_TLV_TAG_RADAR_PULSE_SUMMARY	0xF8
+-- 
+1.8.1.2
 
