@@ -1,33 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49335 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754122AbbHXTww (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2015 15:52:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2015-08-23
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
-Date: Mon, 24 Aug 2015 22:52:46 +0300
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Sun, 23 Aug 2015 10:05:13 +0000")
-Message-ID: <874mjo79bl.fsf@kamboji.qca.qualcomm.com> (sfid-20150824_215300_004066_5CD8AF87)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:46980 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751892AbbHMJJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 05:09:19 -0400
+Message-ID: <1439456956.2114.8.camel@sipsolutions.net> (sfid-20150813_110943_152676_58A412B6)
+Subject: Re: [PATCH] mac80211: Fix oops in OCB mode when receiving data when
+ not joined
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 13 Aug 2015 11:09:16 +0200
+In-Reply-To: <1438781899-600-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+References: <1438781899-600-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On Wed, 2015-08-05 at 15:38 +0200, Bertold Van den Bergh wrote:
+> The current implementation in ocb.c can cause a kernel oops when the
+> interface is up, but no ocb has been joined. When data is received
+> with the broadcast BSSID rx_no_sta is called. This function uses
+> uninitialized variables because the join function has not yet been 
+> used.
+> 
+> Signed-off-by: Bertold Van den Bergh <
+> bertold.vandenbergh@esat.kuleuven.be>
+> ---
+>  net/mac80211/ocb.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/net/mac80211/ocb.c b/net/mac80211/ocb.c
+> index 573b81a..5da2bd3 100644
+> --- a/net/mac80211/ocb.c
+> +++ b/net/mac80211/ocb.c
+> @@ -50,6 +50,9 @@ void ieee80211_ocb_rx_no_sta(struct 
+> ieee80211_sub_if_data *sdata,
+>  	struct sta_info *sta;
+>  	int band;
+>  
+> +	if (!ifocb->joined)
+> +		return;
+> 
+Wouldn't it make more sense to put this check into
+ieee80211_accept_frame() and, in addition to not doing any station
+processing, simply dropping the frame completely? Like such:
 
-> one very last pull request for 4.3 before the merge windows opens. I
-> hope it will make it. Let me know if you have issues with it.
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3314,6 +3314,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 		}
+ 		return true;
+ 	case NL80211_IFTYPE_OCB:
++		if (!sdata->u.ocb.joined)
++			return false;
+ 		if (!bssid)
+ 			return false;
+ 		if (ieee80211_is_beacon(hdr->frame_control))
 
-We got lucky as Linus released rc8 so we have few more days before the
-merge window :)
-
-But what about the patches, are they reviewed on linux-wireless or what?
-I do not want to pull anything which is not reviewed publically.
-
--- 
-Kalle Valo
+johannes
