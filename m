@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45457 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbbHQTzn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 15:55:43 -0400
-Date: Mon, 17 Aug 2015 12:55:42 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCHv2 2/5] staging: wilc1000: use pr_* instead of printk
-Message-ID: <20150817195542.GB6591@kroah.com> (sfid-20150817_215558_822192_DFDEFEBA)
-References: <cover.1439838526.git.raphael.beamonte@gmail.com>
- <6c2cf9ae657db1d6222551a81aa011422f079b96.1439838526.git.raphael.beamonte@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <6c2cf9ae657db1d6222551a81aa011422f079b96.1439838526.git.raphael.beamonte@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47093 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752661AbbHMJbb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 05:31:31 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] iwlwifi: mvm: don't set K1/K2 for AES-CMAC
+Date: Thu, 13 Aug 2015 11:31:27 +0200
+Message-Id: <1439458287-22939-1-git-send-email-johannes@sipsolutions.net> (sfid-20150813_113139_150189_2E21FD63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 03:28:27PM -0400, Raphaël Beamonte wrote:
-> Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c  |  4 ++--
->  drivers/staging/wilc1000/linux_wlan.c        |  8 ++++----
->  drivers/staging/wilc1000/linux_wlan_common.h | 28 ++++++++++++++--------------
->  drivers/staging/wilc1000/linux_wlan_sdio.c   |  2 +-
->  drivers/staging/wilc1000/linux_wlan_spi.c    |  2 +-
->  drivers/staging/wilc1000/wilc_debugfs.c      | 16 ++++++++--------
->  drivers/staging/wilc1000/wilc_exported_buf.c |  2 --
->  7 files changed, 30 insertions(+), 32 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index 1a5b165..8a0ebba 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -2005,7 +2005,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
->  							pstrWIDs[counter].u16WIDid,
->  							(counter == u32WIDsCount - 1), drvHandler)) {
->  				ret = -1;
-> -				printk("[Sendconfigpkt]Get Timed out\n");
-> +				pr_err("[Sendconfigpkt]Get Timed out\n");
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is a network driver, please use the proper logging statement for
-such a thing (i.e. netdev_err()).
+According to firmware engineers, the firmware has never required
+these fields and the values have always been calculated, they were
+just leftovers from a previous implementation.
 
-thanks,
+Therefore remove the unnecessary calculation.
 
-greg k-h
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+I'll apply this to my tree to remove the mac80211 function.
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h | 4 ++--
+ drivers/net/wireless/iwlwifi/mvm/sta.c        | 2 --
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
+index 21dd5b771660..493a8bdfbc9e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
+@@ -366,8 +366,8 @@ struct iwl_mvm_rm_sta_cmd {
+  * ( MGMT_MCAST_KEY = 0x1f )
+  * @ctrl_flags: %iwl_sta_key_flag
+  * @IGTK:
+- * @K1: IGTK master key
+- * @K2: IGTK sub key
++ * @K1: unused
++ * @K2: unused
+  * @sta_id: station ID that support IGTK
+  * @key_id:
+  * @receive_seq_cnt: initial RSC/PN needed for replay check
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index d68dc697a4a0..3d2fbf1bc226 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -1277,8 +1277,6 @@ static int iwl_mvm_send_sta_igtk(struct iwl_mvm *mvm,
+ 		const u8 *pn;
+ 
+ 		memcpy(igtk_cmd.IGTK, keyconf->key, keyconf->keylen);
+-		ieee80211_aes_cmac_calculate_k1_k2(keyconf,
+-						   igtk_cmd.K1, igtk_cmd.K2);
+ 		ieee80211_get_key_rx_seq(keyconf, 0, &seq);
+ 		pn = seq.aes_cmac.pn;
+ 		igtk_cmd.receive_seq_cnt = cpu_to_le64(((u64) pn[5] << 0) |
+-- 
+2.1.4
+
