@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:36105 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755216AbbHGHHx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24095 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751590AbbHML3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 03:07:53 -0400
-Received: by lbbpu9 with SMTP id pu9so28321324lbb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2015 00:07:51 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: wake up queue upon vif creation
-Date: Fri,  7 Aug 2015 09:08:21 +0200
-Message-Id: <1438931301-27081-1-git-send-email-michal.kazior@tieto.com> (sfid-20150807_090757_445294_2B56D83B)
+	Thu, 13 Aug 2015 07:29:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix hw reconfig on wow failure
+References: <1438769318-27373-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 13 Aug 2015 14:29:00 +0300
+In-Reply-To: <1438769318-27373-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 5 Aug 2015 12:08:38 +0200")
+Message-ID: <871tf7o29v.fsf@kamboji.qca.qualcomm.com> (sfid-20150813_132917_066452_E47CD4A7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vif's vdev_id is used as queue number. However due
-to the tx pausing design in ath10k it was possible
-for a new interface to be created with its tx
-queue stopped (via ieee80211_stop_queues). This
-could in turn leave the interface inoperable until
-ath10k_mac_tx_unlock() was called.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This problem only affected multi-vif scenarios when
-new interfaces were created some time later after
-other interfaces have been running for some time
-and had Tx queue full at some point prior.
+> When WoWLAN resume fails with retval 1 mac80211
+> will attempt to reconfig the device in a similar
+> manner when hw restart is requested. This wasn't
+> handled properly and yielded call trace warnings
+> and the device ended up not working.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Possible manifestation of the bug was
-authentication timeout for a client vif.
+Thanks, applied.
 
-Fixes: 96d828d45e16 ("ath10k: rework tx queue locking")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index acd222f3b899..03e498cb64b4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4299,6 +4299,11 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	spin_lock_bh(&ar->htt.tx_lock);
-+	if (!ar->tx_paused)
-+		ieee80211_wake_queue(ar->hw, arvif->vdev_id);
-+	spin_unlock_bh(&ar->htt.tx_lock);
-+
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
- 
 -- 
-2.1.4
-
+Kalle Valo
