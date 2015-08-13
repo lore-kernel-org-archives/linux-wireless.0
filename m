@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:35287 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbbHMRlE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 13:41:04 -0400
-Received: by obbop1 with SMTP id op1so42883084obb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 10:41:03 -0700 (PDT)
-Subject: Re: b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 12, Type 11 (AC),
- Revision 1)
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>
-References: <55CCD13C.7010006@redhat.com>
- <CACna6rxm7MbEhnke91G8M+wPNfzCo6RkCm2OdyKrEshd1FN_EA@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sean Richards <ft86drifter@cox.net>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55CCD679.9070409@lwfinger.net> (sfid-20150813_194109_719061_5856540F)
-Date: Thu, 13 Aug 2015 12:40:09 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACna6rxm7MbEhnke91G8M+wPNfzCo6RkCm2OdyKrEshd1FN_EA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:47865 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752162AbbHMMBG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 08:01:06 -0400
+Message-ID: <1439467263.2114.26.camel@sipsolutions.net> (sfid-20150813_140109_986682_47529277)
+Subject: Re: [PATCH 3/5] mac80211: Create STA when transmitting to unknown
+ station in OCB mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 13 Aug 2015 14:01:03 +0200
+In-Reply-To: <1438783353-5685-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+References: <1438783353-5685-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/13/2015 12:30 PM, Rafał Miłecki wrote:
-> On 13 August 2015 at 19:17, Hans de Goede <hdegoede@redhat.com> wrote:
->> I'm trying to help a Fedora user to get his wifi to work on a
->> Lenovo Yoga 3 14, ad currently we are stuck with the
->> b43 driving giving the error from $subject,
->> is there anyone who can help with this ?
->
-> Well, the $subject says everything. There is noone really working on
-> it right now.
+On Wed, 2015-08-05 at 16:02 +0200, Bertold Van den Bergh wrote:
+> Create a new STA when requested to unicast a frame to an unknown 
+> station.
+> This is needed to make ratecontrol work in the case where data is 
+> sent
+> from sta A to B and sta B never replies. Currently, sta B will stay 
+> unknown
+> to mac80211 and the default rate will always be used.
+> 
+> Signed-off-by: Bertold Van den Bergh <
+> bertold.vandenbergh@esat.kuleuven.be>
+> ---
+>  net/mac80211/tx.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 84e0e8c..eb8dba6 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1209,6 +1209,10 @@ ieee80211_tx_prepare(struct 
+> ieee80211_sub_if_data *sdata,
+>  	} else
+>  		tx->flags |= IEEE80211_TX_UNICAST;
+>  
+> +	if ((sdata->vif.type == NL80211_IFTYPE_OCB) && (!tx->sta) &&
+> +	    (tx->flags & IEEE80211_TX_UNICAST))
+> +		ieee80211_ocb_rx_no_sta(sdata, NULL, hdr->addr1, 0);
 
-For b43 to support that device would require a major reverse-engineering effort 
-that none of us are willing to do, at least at this time. There was an E-mail 
-exchange (http://marc.info/?l=linux-wireless&m=143947632524690&w=2) with Sean 
-yesterday about this issue. To summarize, this device needs to use the Broadcom 
-hybrid driver wl with the non-GPL kernel taint and all.
+It seems that this could be in a place that's already OCB specific,
+perhaps earlier.
 
-Larry
+Also, it seems you should then actually use the station and assign it
+to tx->sta, and rename the function to be more indicative of what it's
+doing now.
 
+And code-style wise - you don't need all those parentheses.
 
+johannes
