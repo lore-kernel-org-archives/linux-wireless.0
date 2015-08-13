@@ -1,97 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56198 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbbHDQyR (ORCPT
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:34660 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753524AbbHMQz5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 12:54:17 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-08-04
-Date: Tue, 04 Aug 2015 19:54:09 +0300
-Message-ID: <87zj27yoy6.fsf@kamboji.qca.qualcomm.com> (sfid-20150804_185436_964417_BF172AD1)
+	Thu, 13 Aug 2015 12:55:57 -0400
+Received: by ykdt205 with SMTP id t205so46600424ykd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 09:55:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439456484.2114.6.camel@sipsolutions.net>
+References: <1438292115-39495-1-git-send-email-filbranden@google.com>
+	<1439456484.2114.6.camel@sipsolutions.net>
+Date: Thu, 13 Aug 2015 09:55:56 -0700
+Message-ID: <CADU+-uDS2C4w-dcbR8Rxx+jRfG7kNvu8JTncH-fxDnSp5NOBfQ@mail.gmail.com> (sfid-20150813_185604_792307_6D7B7C75)
+Subject: Re: [PATCH 0/2] iw: fixes to Android.mk to include "iw" in AOSP builds
+From: Filipe Brandenburger <filbranden@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Elliott Hughes <enh@google.com>,
+	Christopher Wiley <wiley@google.com>,
+	Ying Wang <wangying@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Hi Johannes,
 
-here are few small fixes I would like to get to 4.2. Please let me know
-if there are any problems.
+On Thu, Aug 13, 2015 at 2:01 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> We have a very similar patch internally as well (that I was still
+> evualating/reviewing) but it was less complete, so I've applied this
+> despite Arik's objections.
 
-Kalle
+Thank you!
 
-The following changes since commit df2cd4586f177acf9493dee079fc7d18268c5f54:
+> I think that if anyone needs to build against older Android, which is
+> very well possible, we can partially revert this and maybe provide some
+> environment variable they can control from their BSP, but until
+> somebody really shows up with that I'll leave it as is and assume that
+> older Android builds will also use older iw.
 
-  Merge tag 'iwlwifi-for-kalle-2015-06-12' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-07-17 11:19:08 +0300)
+Short term, yes, whoever wants to build this against KitKat can just
+revert this locally.
 
-are available in the git repository at:
+Long term, considering this is in AOSP and is part of eng/userdebug
+builds, it's likely to be automatically available in future versions
+of Android.
 
+We ended up having to tweak the Android.mk again in the AOSP tree,
+since the current one is doing an "include" of the external Makefile,
+which in turns overrides the default "clean" rule and leaks some
+pattern rules such as %.o, etc. which affect the rest of Android
+build. For more details, please take a look at this Gerrit:
+https://android-review.googlesource.com/166104
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-08-04
+I'm cc'ing Ying who spotted the problem and suggested the changes.
 
-for you to fetch changes up to 741e3b9902d11585e18bfc7f8d47e913616bb070:
+One problem with the current approach is that there's duplication of
+the names of the source files between Android.mk and Makefile, I was
+thinking perhaps we could introduce a common.mk or sources.mk that's
+included from both and only has the variables that can be used by
+both? Suggestions are welcome.
 
-  rtlwifi: rtl8723be: Add module parameter for MSI interrupts (2015-08-03 11:26:24 +0300)
+As mentioned in the initial thread, one option is to drop Android.mk
+from upstream altogether and maintain it in our AOSP downstream.
 
-----------------------------------------------------------------
-iwlwifi:
-
-* a fix for the stuck TFD queue mechanism - it was producing
-  noisy false alarms
-* a fix for the NIC prepare flow that prevented the driver
-  from being able to access the device on certain systems
-* a fix for the scan prority handling which allows the
-  regular scan to run even if a scheduled scan is already
-  running
-
-rsi:
-
-* fix firmware load DMA regression
-
-b43:
-
-* fix extpa_gain check for 2GHz
-
-rtlwifi:
-
-* fix NULL dereference when PCI driver used as an AP
-* add missing module parameter declaration for rtl8723be_mod_params.msi_support
-
-----------------------------------------------------------------
-Avraham Stern (1):
-      iwlwifi: mvm: Fix regular scan priority
-
-Emmanuel Grumbach (2):
-      iwlwifi: pcie: fix prepare card flow
-      iwlwifi: pcie: fix stuck queue detection for sleeping clients
-
-Hauke Mehrtens (1):
-      b43: fix extpa_gain check for 2GHz
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2015-07-30' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Larry Finger (1):
-      rtlwifi: rtl8723be: Add module parameter for MSI interrupts
-
-Luis Felipe Dominguez Vega (1):
-      rtlwifi: Fix NULL dereference when PCI driver used as an AP
-
-Mike Looijmans (1):
-      rsi: Fix failure to load firmware after memory leak fix and fix the leak
-
- drivers/net/wireless/b43/tables_nphy.c      |    2 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c     |    2 +-
- drivers/net/wireless/iwlwifi/pcie/trans.c   |   22 +++++++++++++++++++---
- drivers/net/wireless/iwlwifi/pcie/tx.c      |   15 +++++++++++++--
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |    8 +++++++-
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |    4 ++++
- drivers/net/wireless/rtlwifi/core.c         |    7 +++++--
- drivers/net/wireless/rtlwifi/rtl8723be/sw.c |    1 +
- 8 files changed, 51 insertions(+), 10 deletions(-)
-
--- 
-Kalle Valo
+Thanks!
+Filipe
