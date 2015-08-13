@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40023 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38365 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752276AbbHaIzo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 04:55:44 -0400
-Date: Mon, 31 Aug 2015 10:55:05 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Coates <michlinux@hotmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] rt2800usb: add usb ID 1b75:3070 for Airlive WT-2000USB
-Message-ID: <20150831085504.GA2961@redhat.com> (sfid-20150831_105547_476037_A576EAA0)
+	id S1752202AbbHMRRu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 13:17:50 -0400
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Sean Richards <ft86drifter@cox.net>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 12, Type 11 (AC),
+ Revision 1)
+Message-ID: <55CCD13C.7010006@redhat.com> (sfid-20150813_191753_847042_1EC8C1CF)
+Date: Thu, 13 Aug 2015 19:17:48 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brand: Airlive (Ovislink Corp.)
-Name: Turbo-G USB Adaptor
-Model: WT-2000USB
-USB ID: 1b75:3070
+Hi All,
 
-Reported-and-tested-by: Michael Coates <michlinux@hotmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I'm trying to help a Fedora user to get his wifi to work on a
+Lenovo Yoga 3 14, ad currently we are stuck with the
+b43 driving giving the error from $subject,
+is there anyone who can help with this ?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 5932306..bf9afbf 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1114,6 +1114,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0db0, 0x871c) },
- 	{ USB_DEVICE(0x0db0, 0x899a) },
- 	/* Ovislink */
-+	{ USB_DEVICE(0x1b75, 0x3070) },
- 	{ USB_DEVICE(0x1b75, 0x3071) },
- 	{ USB_DEVICE(0x1b75, 0x3072) },
- 	{ USB_DEVICE(0x1b75, 0xa200) },
--- 
-1.7.1
+For the bug-report in question see:
+https://bugzilla.redhat.com/show_bug.cgi?id=1239050
+
+Note this specific problem is discussed at the end of the
+comments on that bug.
+
+Thanks & Regards,
+
+Hans
