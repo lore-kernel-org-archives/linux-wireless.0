@@ -1,411 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:38037 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbbHMEmA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 00:42:00 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <jude.lee@atmel.com>, <robin.hwang@atmel.com>
-Subject: [PATCH 3/5] staging: wilc1000: clarify the argument type
-Date: Thu, 13 Aug 2015 13:41:21 +0900
-Message-ID: <1439440883-16061-4-git-send-email-tony.cho@atmel.com> (sfid-20150813_064204_379384_309EAEFC)
-In-Reply-To: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
-References: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:46997 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752426AbbHMJLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2015 05:11:53 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: use DECLARE_EWMA
+Date: Thu, 13 Aug 2015 11:11:49 +0200
+Message-Id: <1439457109-21833-2-git-send-email-johannes@sipsolutions.net> (sfid-20150813_111213_001263_A8B65921)
+In-Reply-To: <1439457109-21833-1-git-send-email-johannes@sipsolutions.net>
+References: <1439457109-21833-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johnny Kim <johnny.kim@atmel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch replaces the void pointer type in the host interface
-functions which process the message from host thread by the real data
-type, tstrWILC_WFIDrv because the void pointer type as the arguments
-is not clear and concise. In addition, typecasting to the void pointer
-type is removed becasue it is not necessary.
+Instead of using the out-of-line average calculation, use the new
+DECLARE_EWMA() macro to declare a signal EWMA, and use that.
 
-Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+This actually *reduces* the code size slightly (on x86-64) while
+also reducing the station info size by 80 bytes.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 78 +++++++++++++++----------------
- drivers/staging/wilc1000/host_interface.h |  4 +-
- 2 files changed, 41 insertions(+), 41 deletions(-)
+ net/mac80211/Kconfig      | 1 -
+ net/mac80211/mesh_plink.c | 2 +-
+ net/mac80211/rx.c         | 4 ++--
+ net/mac80211/sta_info.c   | 9 +++++----
+ net/mac80211/sta_info.h   | 6 ++++--
+ 5 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b5afc82..1c2d924 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -601,7 +601,7 @@ extern int linux_wlan_get_num_conn_ifcs(void);
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_SetChannel(void *drvHandler, tstrHostIFSetChan *pstrHostIFSetChan)
-+static s32 Handle_SetChannel(tstrWILC_WFIDrv *drvHandler, tstrHostIFSetChan *pstrHostIFSetChan)
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 086de496a4c1..3891cbd2adea 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -7,7 +7,6 @@ config MAC80211
+ 	select CRYPTO_CCM
+ 	select CRYPTO_GCM
+ 	select CRC32
+-	select AVERAGE
+ 	---help---
+ 	  This option enables the hardware independent IEEE 802.11
+ 	  networking stack.
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 1a7d98398626..6fa6606fce55 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -64,7 +64,7 @@ static bool rssi_threshold_check(struct ieee80211_sub_if_data *sdata,
  {
+ 	s32 rssi_threshold = sdata->u.mesh.mshcfg.rssi_threshold;
+ 	return rssi_threshold == 0 ||
+-	       (sta && (s8) -ewma_read(&sta->avg_signal) > rssi_threshold);
++	       (sta && (s8) -ewma_signal_read(&sta->avg_signal) > rssi_threshold);
+ }
  
- 	s32 s32Error = WILC_SUCCESS;
-@@ -681,7 +681,7 @@ static s32 Handle_SetWfiDrvHandler(tstrHostIfSetDrvHandler *pstrHostIfSetDrvHand
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_SetOperationMode(void *drvHandler, tstrHostIfSetOperationMode *pstrHostIfSetOperationMode)
-+static s32 Handle_SetOperationMode(tstrWILC_WFIDrv *drvHandler, tstrHostIfSetOperationMode *pstrHostIfSetOperationMode)
- {
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3a1462810c8e..e3cff02bde07 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1428,7 +1428,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	sta->rx_bytes += rx->skb->len;
+ 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		sta->last_signal = status->signal;
+-		ewma_add(&sta->avg_signal, -status->signal);
++		ewma_signal_add(&sta->avg_signal, -status->signal);
+ 	}
  
- 	s32 s32Error = WILC_SUCCESS;
-@@ -726,7 +726,7 @@ static s32 Handle_SetOperationMode(void *drvHandler, tstrHostIfSetOperationMode
-  *  @date
-  *  @version	1.0
-  */
--s32 Handle_set_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
-+s32 Handle_set_IPAddress(tstrWILC_WFIDrv *drvHandler, u8 *pu8IPAddr, u8 idx)
- {
+ 	if (status->chains) {
+@@ -1440,7 +1440,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 				continue;
  
- 	s32 s32Error = WILC_SUCCESS;
-@@ -778,7 +778,7 @@ s32 Handle_set_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
-  *  @date
-  *  @version	1.0
-  */
--s32 Handle_get_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
-+s32 Handle_get_IPAddress(tstrWILC_WFIDrv *drvHandler, u8 *pu8IPAddr, u8 idx)
- {
+ 			sta->chain_signal_last[i] = signal;
+-			ewma_add(&sta->chain_signal_avg[i], -signal);
++			ewma_signal_add(&sta->chain_signal_avg[i], -signal);
+ 		}
+ 	}
  
- 	s32 s32Error = WILC_SUCCESS;
-@@ -831,7 +831,7 @@ s32 Handle_get_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
-  *  @date		November 2013
-  *  @version	7.0
-  */
--static s32 Handle_SetMacAddress(void *drvHandler, tstrHostIfSetMacAddress *pstrHostIfSetMacAddress)
-+static s32 Handle_SetMacAddress(tstrWILC_WFIDrv *drvHandler, tstrHostIfSetMacAddress *pstrHostIfSetMacAddress)
- {
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 9da7d2bc271a..dd9541c51de1 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -341,9 +341,9 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
  
- 	s32 s32Error = WILC_SUCCESS;
-@@ -877,7 +877,7 @@ static s32 Handle_SetMacAddress(void *drvHandler, tstrHostIfSetMacAddress *pstrH
-  *  @date		JAN 2013
-  *  @version	8.0
-  */
--static s32 Handle_GetMacAddress(void *drvHandler, tstrHostIfGetMacAddress *pstrHostIfGetMacAddress)
-+static s32 Handle_GetMacAddress(tstrWILC_WFIDrv *drvHandler, tstrHostIfGetMacAddress *pstrHostIfGetMacAddress)
- {
+ 	ktime_get_ts(&uptime);
+ 	sta->last_connected = uptime.tv_sec;
+-	ewma_init(&sta->avg_signal, 1024, 8);
++	ewma_signal_init(&sta->avg_signal);
+ 	for (i = 0; i < ARRAY_SIZE(sta->chain_signal_avg); i++)
+-		ewma_init(&sta->chain_signal_avg[i], 1024, 8);
++		ewma_signal_init(&sta->chain_signal_avg[i]);
  
- 	s32 s32Error = WILC_SUCCESS;
-@@ -914,7 +914,7 @@ static s32 Handle_GetMacAddress(void *drvHandler, tstrHostIfGetMacAddress *pstrH
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_CfgParam(void *drvHandler, tstrHostIFCfgParamAttr *strHostIFCfgParamAttr)
-+static s32 Handle_CfgParam(tstrWILC_WFIDrv *drvHandler, tstrHostIFCfgParamAttr *strHostIFCfgParamAttr)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWIDList[32];
-@@ -1238,7 +1238,7 @@ static s32 Handle_wait_msg_q_empty(void)
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_Scan(void *drvHandler, tstrHostIFscanAttr *pstrHostIFscanAttr)
-+static s32 Handle_Scan(tstrWILC_WFIDrv *drvHandler, tstrHostIFscanAttr *pstrHostIFscanAttr)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWIDList[5];
-@@ -1408,7 +1408,7 @@ static s32 Handle_Scan(void *drvHandler, tstrHostIFscanAttr *pstrHostIFscanAttr)
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_ScanDone(void *drvHandler, tenuScanEvent enuEvent)
-+static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 
-@@ -1468,7 +1468,7 @@ static s32 Handle_ScanDone(void *drvHandler, tenuScanEvent enuEvent)
-  *  @version	1.0
-  */
- u8 u8ConnectedSSID[6] = {0};
--static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFconnectAttr)
-+static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler, tstrHostIFconnectAttr *pstrHostIFconnectAttr)
- {
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *) drvHandler;
- 	s32 s32Error = WILC_SUCCESS;
-@@ -2037,7 +2037,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
-  *  @version		8.0
-  */
- 
--static s32 Handle_FlushConnect(void *drvHandler)
-+static s32 Handle_FlushConnect(tstrWILC_WFIDrv *drvHandler)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWIDList[5];
-@@ -2104,7 +2104,7 @@ static s32 Handle_FlushConnect(void *drvHandler)
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_ConnectTimeout(void *drvHandler)
-+static s32 Handle_ConnectTimeout(tstrWILC_WFIDrv *drvHandler)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrConnectInfo strConnectInfo;
-@@ -2212,7 +2212,7 @@ static s32 Handle_ConnectTimeout(void *drvHandler)
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_RcvdNtwrkInfo(void *drvHandler, tstrRcvdNetworkInfo *pstrRcvdNetworkInfo)
-+static s32 Handle_RcvdNtwrkInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdNetworkInfo *pstrRcvdNetworkInfo)
- {
- 	u32 i;
- 	bool bNewNtwrkFound;
-@@ -2334,7 +2334,7 @@ done:
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_RcvdGnrlAsyncInfo(void *drvHandler, tstrRcvdGnrlAsyncInfo *pstrRcvdGnrlAsyncInfo)
-+static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsyncInfo *pstrRcvdGnrlAsyncInfo)
- {
- 	/* TODO: mostafa: till now, this function just handles only the received mac status msg, */
- 	/*				 which carries only 1 WID which have WID ID = WID_STATUS */
-@@ -2635,7 +2635,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(void *drvHandler, tstrRcvdGnrlAsyncInfo *pst
- 			/*Abort the running scan*/
- 			WILC_TimerStop(&(pstrWFIDrv->hScanTimer), NULL);
- 			if (pstrWFIDrv->strWILC_UsrScanReq.pfUserScanResult)
--				Handle_ScanDone((void *)pstrWFIDrv, SCAN_EVENT_ABORTED);
-+				Handle_ScanDone(pstrWFIDrv, SCAN_EVENT_ABORTED);
- 
+ 	if (local->ops->wake_tx_queue) {
+ 		void *txq_data;
+@@ -1899,7 +1899,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
  		}
  
-@@ -2664,7 +2664,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(void *drvHandler, tstrRcvdGnrlAsyncInfo *pst
-  *  @date
-  *  @version	1.0
-  */
--static int Handle_Key(void *drvHandler, tstrHostIFkeyAttr *pstrHostIFkeyAttr)
-+static int Handle_Key(tstrWILC_WFIDrv *drvHandler, tstrHostIFkeyAttr *pstrHostIFkeyAttr)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3026,7 +3026,7 @@ _WPAPtk_end_case_:
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_Disconnect(void *drvHandler)
-+static void Handle_Disconnect(tstrWILC_WFIDrv *drvHandler)
- {
- 	tstrWID strWID;
- 
-@@ -3139,7 +3139,7 @@ static void Handle_Disconnect(void *drvHandler)
- }
- 
- 
--void resolve_disconnect_aberration(void *drvHandler)
-+void resolve_disconnect_aberration(tstrWILC_WFIDrv *drvHandler)
- {
- 	tstrWILC_WFIDrv *pstrWFIDrv;
- 
-@@ -3151,7 +3151,7 @@ void resolve_disconnect_aberration(void *drvHandler)
- 		host_int_disconnect(pstrWFIDrv, 1);
+ 		if (!(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL_AVG))) {
+-			sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
++			sinfo->signal_avg =
++				(s8) -ewma_signal_read(&sta->avg_signal);
+ 			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL_AVG);
+ 		}
  	}
- }
--static s32 Switch_Log_Terminal(void *drvHandler)
-+static s32 Switch_Log_Terminal(tstrWILC_WFIDrv *drvHandler)
- {
+@@ -1914,7 +1915,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		for (i = 0; i < ARRAY_SIZE(sinfo->chain_signal); i++) {
+ 			sinfo->chain_signal[i] = sta->chain_signal_last[i];
+ 			sinfo->chain_signal_avg[i] =
+-				(s8) -ewma_read(&sta->chain_signal_avg[i]);
++				(s8) -ewma_signal_read(&sta->chain_signal_avg[i]);
+ 		}
+ 	}
  
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 6dcb33484eac..1c5333448bde 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -318,6 +318,8 @@ struct mesh_sta {
+ 	unsigned int fail_avg;
+ };
  
-@@ -3195,7 +3195,7 @@ static s32 Switch_Log_Terminal(void *drvHandler)
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_GetChnl(void *drvHandler)
-+static s32 Handle_GetChnl(tstrWILC_WFIDrv *drvHandler)
- {
++DECLARE_EWMA(signal, 1024, 8)
++
+ /**
+  * struct sta_info - STA information
+  *
+@@ -460,12 +462,12 @@ struct sta_info {
+ 	unsigned long rx_fragments;
+ 	unsigned long rx_dropped;
+ 	int last_signal;
+-	struct ewma avg_signal;
++	struct ewma_signal avg_signal;
+ 	int last_ack_signal;
  
- 	s32 s32Error = WILC_SUCCESS;
-@@ -3240,7 +3240,7 @@ static s32 Handle_GetChnl(void *drvHandler)
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_GetRssi(void *drvHandler)
-+static void Handle_GetRssi(tstrWILC_WFIDrv *drvHandler)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3270,7 +3270,7 @@ static void Handle_GetRssi(void *drvHandler)
- }
+ 	u8 chains;
+ 	s8 chain_signal_last[IEEE80211_MAX_CHAINS];
+-	struct ewma chain_signal_avg[IEEE80211_MAX_CHAINS];
++	struct ewma_signal chain_signal_avg[IEEE80211_MAX_CHAINS];
  
- 
--static void Handle_GetLinkspeed(void *drvHandler)
-+static void Handle_GetLinkspeed(tstrWILC_WFIDrv *drvHandler)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3300,7 +3300,7 @@ static void Handle_GetLinkspeed(void *drvHandler)
- 
- }
- 
--s32 Handle_GetStatistics(void *drvHandler, tstrStatistics *pstrStatistics)
-+s32 Handle_GetStatistics(tstrWILC_WFIDrv *drvHandler, tstrStatistics *pstrStatistics)
- {
- 	tstrWID strWIDList[5];
- 	uint32_t u32WidsCount = 0, s32Error = 0;
-@@ -3361,7 +3361,7 @@ s32 Handle_GetStatistics(void *drvHandler, tstrStatistics *pstrStatistics)
-  *  @date
-  *  @version	1.0
-  */
--static s32 Handle_Get_InActiveTime(void *drvHandler, tstrHostIfStaInactiveT *strHostIfStaInactiveT)
-+static s32 Handle_Get_InActiveTime(tstrWILC_WFIDrv *drvHandler, tstrHostIfStaInactiveT *strHostIfStaInactiveT)
- {
- 
- 	s32 s32Error = WILC_SUCCESS;
-@@ -3430,7 +3430,7 @@ static s32 Handle_Get_InActiveTime(void *drvHandler, tstrHostIfStaInactiveT *str
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_AddBeacon(void *drvHandler, tstrHostIFSetBeacon *pstrSetBeaconParam)
-+static void Handle_AddBeacon(tstrWILC_WFIDrv *drvHandler, tstrHostIFSetBeacon *pstrSetBeaconParam)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3502,7 +3502,7 @@ static void Handle_AddBeacon(void *drvHandler, tstrHostIFSetBeacon *pstrSetBeaco
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_DelBeacon(void *drvHandler, tstrHostIFDelBeacon *pstrDelBeacon)
-+static void Handle_DelBeacon(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelBeacon *pstrDelBeacon)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3599,7 +3599,7 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer, tstrWILC_AddStaParam *pstrSta
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_AddStation(void *drvHandler, tstrWILC_AddStaParam *pstrStationParam)
-+static void Handle_AddStation(tstrWILC_WFIDrv *drvHandler, tstrWILC_AddStaParam *pstrStationParam)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3642,7 +3642,7 @@ static void Handle_AddStation(void *drvHandler, tstrWILC_AddStaParam *pstrStatio
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_DelAllSta(void *drvHandler, tstrHostIFDelAllSta *pstrDelAllStaParam)
-+static void Handle_DelAllSta(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelAllSta *pstrDelAllStaParam)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 
-@@ -3701,7 +3701,7 @@ static void Handle_DelAllSta(void *drvHandler, tstrHostIFDelAllSta *pstrDelAllSt
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_DelStation(void *drvHandler, tstrHostIFDelSta *pstrDelStaParam)
-+static void Handle_DelStation(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelSta *pstrDelStaParam)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3746,7 +3746,7 @@ static void Handle_DelStation(void *drvHandler, tstrHostIFDelSta *pstrDelStaPara
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_EditStation(void *drvHandler, tstrWILC_AddStaParam *pstrStationParam)
-+static void Handle_EditStation(tstrWILC_WFIDrv *drvHandler, tstrWILC_AddStaParam *pstrStationParam)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3791,7 +3791,7 @@ static void Handle_EditStation(void *drvHandler, tstrWILC_AddStaParam *pstrStati
-  *  @date
-  *  @version	1.0
-  */
--static int Handle_RemainOnChan(void *drvHandler, tstrHostIfRemainOnChan *pstrHostIfRemainOnChan)
-+static int Handle_RemainOnChan(tstrWILC_WFIDrv *drvHandler, tstrHostIfRemainOnChan *pstrHostIfRemainOnChan)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	u8 u8remain_on_chan_flag;
-@@ -3870,7 +3870,7 @@ static int Handle_RemainOnChan(void *drvHandler, tstrHostIfRemainOnChan *pstrHos
-  *  @date
-  *  @version	1.0
-  */
--static int Handle_RegisterFrame(void *drvHandler, tstrHostIfRegisterFrame *pstrHostIfRegisterFrame)
-+static int Handle_RegisterFrame(tstrWILC_WFIDrv *drvHandler, tstrHostIfRegisterFrame *pstrHostIfRegisterFrame)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -3922,7 +3922,7 @@ static int Handle_RegisterFrame(void *drvHandler, tstrHostIfRegisterFrame *pstrH
-  *  @version		1.0
-  */
- #define FALSE_FRMWR_CHANNEL 100
--static u32 Handle_ListenStateExpired(void *drvHandler, tstrHostIfRemainOnChan *pstrHostIfRemainOnChan)
-+static u32 Handle_ListenStateExpired(tstrWILC_WFIDrv *drvHandler, tstrHostIfRemainOnChan *pstrHostIfRemainOnChan)
- {
- 	u8 u8remain_on_chan_flag;
- 	tstrWID strWID;
-@@ -4013,7 +4013,7 @@ static void ListenTimerCB(void *pvArg)
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_PowerManagement(void *drvHandler, tstrHostIfPowerMgmtParam *strPowerMgmtParam)
-+static void Handle_PowerManagement(tstrWILC_WFIDrv *drvHandler, tstrHostIfPowerMgmtParam *strPowerMgmtParam)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -4054,7 +4054,7 @@ static void Handle_PowerManagement(void *drvHandler, tstrHostIfPowerMgmtParam *s
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_SetMulticastFilter(void *drvHandler, tstrHostIFSetMulti *strHostIfSetMulti)
-+static void Handle_SetMulticastFilter(tstrWILC_WFIDrv *drvHandler, tstrHostIFSetMulti *strHostIfSetMulti)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -4108,7 +4108,7 @@ static void Handle_SetMulticastFilter(void *drvHandler, tstrHostIFSetMulti *strH
-  *  @date			Feb. 2014
-  *  @version		9.0
-  */
--static s32 Handle_AddBASession(void *drvHandler, tstrHostIfBASessionInfo *strHostIfBASessionInfo)
-+static s32 Handle_AddBASession(tstrWILC_WFIDrv *drvHandler, tstrHostIfBASessionInfo *strHostIfBASessionInfo)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -4196,7 +4196,7 @@ static s32 Handle_AddBASession(void *drvHandler, tstrHostIfBASessionInfo *strHos
-  *  @date			Feb. 2013
-  *  @version		9.0
-  */
--static s32 Handle_DelBASession(void *drvHandler, tstrHostIfBASessionInfo *strHostIfBASessionInfo)
-+static s32 Handle_DelBASession(tstrWILC_WFIDrv *drvHandler, tstrHostIfBASessionInfo *strHostIfBASessionInfo)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -4266,7 +4266,7 @@ static s32 Handle_DelBASession(void *drvHandler, tstrHostIfBASessionInfo *strHos
-  *  @date			Feb. 2013
-  *  @version		9.0
-  */
--static s32 Handle_DelAllRxBASessions(void *drvHandler, tstrHostIfBASessionInfo *strHostIfBASessionInfo)
-+static s32 Handle_DelAllRxBASessions(tstrWILC_WFIDrv *drvHandler, tstrHostIfBASessionInfo *strHostIfBASessionInfo)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	tstrWID strWID;
-@@ -7678,7 +7678,7 @@ void host_int_freeJoinParams(void *pJoinParams)
-  *  @date
-  *  @version		1.0**/
- 
--static int host_int_addBASession(WILC_WFIDrvHandle hWFIDrv, char *pBSSID, char TID, short int BufferSize,
-+static int host_int_addBASession(tstrWILC_WFIDrv *hWFIDrv, char *pBSSID, char TID, short int BufferSize,
- 				 short int SessionTimeout, void *drvHandler)
- {
- 	s32 s32Error = WILC_SUCCESS;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 2d97e9f..5ac5563 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -1262,9 +1262,9 @@ s32 host_int_frame_register(tstrWILC_WFIDrv *hWFIDrv, u16 u16FrameType, bool bRe
- s32 host_int_set_wfi_drv_handler(tstrWILC_WFIDrv *u32address);
- s32 host_int_set_operation_mode(tstrWILC_WFIDrv *hWFIDrv, u32 u32mode);
- 
--static s32 Handle_ScanDone(void *drvHandler, tenuScanEvent enuEvent);
-+static s32 Handle_ScanDone(tstrWILC_WFIDrv *drvHandler, tenuScanEvent enuEvent);
- 
--static int host_int_addBASession(WILC_WFIDrvHandle hWFIDrv, char *pBSSID, char TID, short int BufferSize,
-+static int host_int_addBASession(tstrWILC_WFIDrv *hWFIDrv, char *pBSSID, char TID, short int BufferSize,
- 				 short int SessionTimeout, void *drvHandler);
- 
- 
+ 	/* Plus 1 for non-QoS frames */
+ 	__le16 last_seq_ctrl[IEEE80211_NUM_TIDS + 1];
 -- 
-1.9.1
+2.1.4
 
