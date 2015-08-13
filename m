@@ -1,29 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33075 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbbHGIVc (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49407 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460AbbHMLUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 04:21:32 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 13 Aug 2015 07:20:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: remove futile fragmentation threshold config
+References: <1438593403-316-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 13 Aug 2015 14:20:38 +0300
+In-Reply-To: <1438593403-316-1-git-send-email-michal.kazior@tieto.com> (Michal
+	Kazior's message of "Mon, 3 Aug 2015 11:16:42 +0200")
+Message-ID: <87egj7o2nt.fsf@kamboji.qca.qualcomm.com> (sfid-20150813_132054_214036_B61FD87C)
 MIME-Version: 1.0
-Subject: Re: ath9k: fix build with CONFIG_ATH9K_STATION_STATISTICS=y
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1438857870-18580-1-git-send-email-nbd@openwrt.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20150807082131.5C0881401BE@smtp.codeaurora.org> (sfid-20150807_102138_783797_3664AE29)
-Date: Fri,  7 Aug 2015 08:21:31 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> kbuild bot reported that commit 592fa228f213 ("ath9k: remove struct
-> ath_atx_ac") broke the build when CONFIG_ATH9K_STATION_STATISTICS is y.
-> 
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Fixes: 592fa228f213 ("ath9k: remove struct ath_atx_ac")
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Commit 1010ba4c5d1c ("ath10k: unregister and
+> remove frag_threshold callback") didn't remove all
+> instances of (futile) fragmentation threshold
+> configuration. No known firmware supports the
+> parameter so don't even bother setting it.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Thanks, applied to wireless-drivers-next.git.
+Thanks, both patches applied.
 
+-- 
 Kalle Valo
