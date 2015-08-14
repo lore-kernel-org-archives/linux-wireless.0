@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:33978 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933050AbbHIQVm (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:29340 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751660AbbHNEcD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2015 12:21:42 -0400
-Subject: Re: [PATCH] Add space after ,
-To: Swee Hua Law <sweehua81@gmail.com>, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org
-References: <1439136530-4415-1-git-send-email-sweehua81@gmail.com>
-Cc: aybuke.147@gmail.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55C77E13.8060300@lwfinger.net> (sfid-20150809_182202_217474_0CD4680B)
-Date: Sun, 9 Aug 2015 11:21:39 -0500
+	Fri, 14 Aug 2015 00:32:03 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Adrien Schildknecht <adrien+dev@schischi.me>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: out-of-bounds access in iwl_init_sband_channels
+Date: Fri, 14 Aug 2015 04:31:55 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E7EA2CE@hasmsx107.ger.corp.intel.com> (sfid-20150814_063230_043172_C765F948)
+References: <1439512532-7901-1-git-send-email-adrien+dev@schischi.me>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1439136530-4415-1-git-send-email-sweehua81@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2015 11:08 AM, Swee Hua Law wrote:
-> add space after , to fix coding style issue
->
-> Signed-off-by: Swee Hua Law <sweehua81@gmail.com>
+Hi,
+
+On 08/14/2015 03:36 AM, Adrien Schildknecht wrote:
+> Both loops of this function compare data from the 'chan' array and then
+> check if the index is valid.
+> 
+> The 2 conditions should be inverted to avoid an out-of-bounds access.
+> 
+
+Was that found by a static analyzer or any other automated tool, or was
+that the result of your very careful review?
+
+> Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
 > ---
->   drivers/staging/rtl8723au/core/rtw_sreset.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_sreset.c b/drivers/staging/rtl8723au/core/rtw_sreset.c
-> index 29a29d9..48b7723 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_sreset.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_sreset.c
-> @@ -71,7 +71,7 @@ static void sreset_restore_security_station(struct rtw_adapter *padapter)
->   			/* pairwise key */
->   			rtw_setstakey_cmd23a(padapter, (unsigned char *)psta, true);
->   			/* group key */
-> -			rtw_set_key23a(padapter,&padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
-> +			rtw_set_key23a(padapter, &padapter->securitypriv, padapter->securitypriv.dot118021XGrpKeyid, 0);
->   		}
->   	}
->   }
->
+>  drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+> index 21302b6..acc3d18 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+> @@ -713,12 +713,12 @@ int iwl_init_sband_channels(struct iwl_nvm_data *data,
+>  	struct ieee80211_channel *chan = &data->channels[0];
+>  	int n = 0, idx = 0;
+>  
+> -	while (chan->band != band && idx < n_channels)
+> +	while (idx < n_channels && chan->band != band)
+>  		chan = &data->channels[++idx];
+>  
+>  	sband->channels = &data->channels[idx];
+>  
+> -	while (chan->band == band && idx < n_channels) {
+> +	while (idx < n_channels && chan->band == band) {
+>  		chan = &data->channels[++idx];
+>  		n++;
+>  	}
+> 
 
-There are at least three problems with this patch. The first is that your 
-subject is really awful. You need to say that you are fixing a checkpatch 
-warning, and then say exactly what is happening. The second probalm also 
-concerns the subject, which needs to specify what component is being changed. 
-For drivers in staging, the usual way to do this is to start the subject line 
-with "staging: rtl8723au: ...". The third problem is that you should fix *ALL* 
-the problems with a given line whenever you touch it. That line is clearly over 
-the 80-character limit.
-
-NACK
-
-Larry
-
+Looks fine - I'll pick it up.
