@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39143 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753280AbbHYQxe convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:36249 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751936AbbHNVkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 12:53:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V3 0/6] brcmfmac: nvram loading and code rework
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-	<CACna6ryBL+bpBM4TekcNCotou-gey=k6_aYJVT+F-Sm0V0fuiw@mail.gmail.com>
-	<55DC9AF0.3040304@broadcom.com>
-Date: Tue, 25 Aug 2015 19:53:26 +0300
-In-Reply-To: <55DC9AF0.3040304@broadcom.com> (Arend van Spriel's message of
-	"Tue, 25 Aug 2015 18:42:24 +0200")
-Message-ID: <87h9nn48e1.fsf@kamboji.qca.qualcomm.com> (sfid-20150825_185337_837764_7D3E2C8D)
+	Fri, 14 Aug 2015 17:40:11 -0400
+Received: by wicja10 with SMTP id ja10so29427637wic.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2015 14:40:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
+References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
+From: Allan Matthew <allanm84@gmail.com>
+Date: Fri, 14 Aug 2015 14:39:50 -0700
+Message-ID: <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com> (sfid-20150814_234019_925894_43212D3A)
+Subject: Re: set channel from radiotap headers during injection
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+Anyone have any thoughts on this?
 
-> On 08/25/2015 06:09 PM, Rafał Miłecki wrote:
->> On 20 August 2015 at 22:06, Arend van Spriel <arend@broadcom.com> wrote:
->>> This series comprises of following changes:
->>> - support NVRAM loading for bcm47xx platform.
->>> - revise announced interface combinations and validate against it.
->>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
->>> - PCIe fix for handling queue overflow.
->>> - support more firmware events (for bcm4339 firmware).
->>>
->>> The series is intended for v4.3 kernel and applies to the master branch
->>> of the wireless-drivers-next repository. Removed patch from this series
->>> that reportedly has issue on OpenWrt platform.
->>
->> I believe that V3 also got following patch dropped:
->> brcmfmac: consolidate ifp lookup in driver core
->> https://patchwork.kernel.org/patch/6767991/
->>
->> As we tracked regressing patch to be "brcmfmac: Increase nr of
->> supported flowrings.", I believe you can safely re-submit above (ifp
->> lookup) one. I tested it on top of wireless-drivers-next brcmfmac and
->> it works fine (no regressions).
+Is it possible with channel context enabled somehow?
+
+On Thu, Aug 13, 2015 at 11:22 AM, Allan Matthew <allanm84@gmail.com> wrote:
+> I'd like to be able to set the channel information on a per-packet
+> basis during monitor-mode injection.  Specifically, I would like to be
+> able to change the channel bandwidth down to half and quarter rates
+> (my PHY supports this) based on the radiotap header information.
+> Additionally, if its possible to change the channel itself that would
+> be desirable.
 >
-> That patch was already dropped from V2 (if my memory is right). Let's
-> not confuse our maintainer. I will resubmit that patch. Hopefully it
-> will make it in 4.3. What is the deadline, Kalle.
-
-Now :) And even when I can't promise anything...
-
--- 
-Kalle Valo
+> I've been able to add rate and FEC control to
+> ieee80211_parse_tx_radiotap, but I'm not sure where to start with
+> setting channel information. Has anyone been able to do this?  If not,
+> what do I need to set in order to get per-packet channel control?
