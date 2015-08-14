@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:35821 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554AbbHBPzH (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35740 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbbHNSFq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2015 11:55:07 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH 2/3] drivers: staging: wilc1000: move { to previous line
-Date: Sun,  2 Aug 2015 21:23:52 +0530
-Message-Id: <1438530833-24640-3-git-send-email-csgorentla@gmail.com> (sfid-20150802_175554_772083_9C21BCE9)
-In-Reply-To: <1438530833-24640-2-git-send-email-csgorentla@gmail.com>
-References: <1438530833-24640-1-git-send-email-csgorentla@gmail.com>
- <1438530833-24640-2-git-send-email-csgorentla@gmail.com>
+	Fri, 14 Aug 2015 14:05:46 -0400
+Received: by oiew67 with SMTP id w67so29795412oie.2
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2015 11:05:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1439414913.15847.1.camel@sipsolutions.net>
+References: <CAF7g2RHhY_aEHF7nr4VdzVrUf+_cdoKxXbUkajQcx_LxpvvFSA@mail.gmail.com>
+ <1439413727.15847.0.camel@sipsolutions.net> <CAF7g2RGORavCuvoYzese0usNatsie5tjyN_7J_JgFDK9zurzLQ@mail.gmail.com>
+ <1439414913.15847.1.camel@sipsolutions.net>
+From: Kobi Cohen-Arazi <kobi.cohenarazi@gmail.com>
+Date: Fri, 14 Aug 2015 11:05:05 -0700
+Message-ID: <CAF7g2RFfcrJD6M8oGKF3E-a4+fehdCOC=ocxdnDVww0nBiaPfQ@mail.gmail.com> (sfid-20150814_200551_302941_CCAB5604)
+Subject: Re: iw coalesce show - disabled at init?
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moved the opening brace of code blocks to the previous lines.  This
-fixes the checkpatch.pl error - "that open brace { should be on the
-previous line".
+On Wed, Aug 12, 2015 at 2:28 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2015-08-12 at 14:13 -0700, Kobi Cohen-Arazi wrote:
+>>
+>> So what you're saying is that at startup, drivers should have
+>> coalesce _disabled_ (i.e. no rules for coalesce) ?
+>>
+>
+> I think so, yes. It's a service that should be actively enabled, with
+> user-configured rules. Mechanism vs. policy, and all that ...
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+I think that in most (if not all) NICs, this specific service is
+enabled by default.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 1d0b7f8..b995056 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1205,8 +1205,7 @@ static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 
- 
- 
--			if (!pairwise)
--			{
-+			if (!pairwise) {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
- 					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
-@@ -1304,8 +1303,7 @@ static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 
- 		{
- 			u8mode = 0;
--			if (!pairwise)
--			{
-+			if (!pairwise) {
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					/* swap the tx mic by rx mic */
- 					pu8RxMic = params->key + 24;
-@@ -1531,8 +1529,7 @@ static int WILC_WFI_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 	priv = wiphy_priv(wiphy);
- 
- 
--	if (!pairwise)
--	{
-+	if (!pairwise) {
- 		PRINT_D(CFG80211_DBG, "Getting group key idx: %x\n", key_index);
- 
- 		key_params.key = priv->wilc_gtk[key_index]->key;
--- 
-2.5.0
-
+Kobi
