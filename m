@@ -1,66 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:36190 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824AbbHTV0M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 17:26:12 -0400
-Received: by iodv127 with SMTP id v127so61372398iod.3
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2015 14:26:11 -0700 (PDT)
+Received: from mout.gmx.net ([212.227.17.22]:56540 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751560AbbHNFK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Aug 2015 01:10:26 -0400
+Message-ID: <55CD7828.8020904@rempel-privat.de> (sfid-20150814_071030_818381_979FBE45)
+Date: Fri, 14 Aug 2015 07:10:00 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-In-Reply-To: <55D64555.2090207@broadcom.com>
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-	<CACna6rxtHaj-czX6z28UL8LL5VAyxVrEgimn5fVz8NpU5DOwgw@mail.gmail.com>
-	<55D64555.2090207@broadcom.com>
-Date: Thu, 20 Aug 2015 23:26:11 +0200
-Message-ID: <CACna6rzE=3wG0dMtFUY-i188bSba=SPzw_tAS4iJsX6z96fTbQ@mail.gmail.com> (sfid-20150820_232615_412471_DD038F6D)
-Subject: Re: [PATCH V3 0/6] brcmfmac: nvram loading and code rework
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: ath9k-devel@venema.h4ckr.net, dan.carpenter@oracle.com,
+	Sujith.Manoharan@atheros.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org
+CC: Oleksij Rempel <external.Oleksij.Rempel@de.bosch.com>
+Subject: Re: [ath9k-devel] [PATCH] ath9k_htc: do ani shortcalibratio if we
+ got -ETIMEDOUT
+References: <20150811214324.GA30816@mwanda> <1439490098-12479-1-git-send-email-linux@rempel-privat.de>
+In-Reply-To: <1439490098-12479-1-git-send-email-linux@rempel-privat.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="pLbmhmc38cIVCbhALck6tPoPa3KooQsJQ"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 August 2015 at 23:23, Arend van Spriel <arend@broadcom.com> wrote:
-> On 08/20/2015 11:20 PM, Rafał Miłecki wrote:
->>
->> On 20 August 2015 at 22:06, Arend van Spriel <arend@broadcom.com> wrote:
->>>
->>> This series comprises of following changes:
->>> - support NVRAM loading for bcm47xx platform.
->>> - revise announced interface combinations and validate against it.
->>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
->>> - PCIe fix for handling queue overflow.
->>> - support more firmware events (for bcm4339 firmware).
->>>
->>> The series is intended for v4.3 kernel and applies to the master branch
->>> of the wireless-drivers-next repository. Removed patch from this series
->>> that reportedly has issue on OpenWrt platform.
->>
->>
->> Tested-by: Rafał Miłecki <zajec5@gmail.com>
->>
->> No regression with this version, getting platform NVRAM works.
->
->
-> Thanks, Rafał
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--pLbmhmc38cIVCbhALck6tPoPa3KooQsJQ
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for your work! :)
+Opps wrong email address. I'll resend the patch
+
+Am 13.08.2015 um 20:21 schrieb Oleksij Rempel:
+> From: Oleksij Rempel <external.Oleksij.Rempel@de.bosch.com>
+>=20
+> current code will handle -ETIMEDOUT as success which is probalbly wrong=
+=2E
+>=20
+> According to this comment I assume it is safe to handle -ETIMEDOUT as f=
+alse:
+> drivers/net/wireless/ath/ath9k/calib.c
+> 290         /*
+> 291          * We timed out waiting for the noisefloor to load, probabl=
+y due to an
+> 292          * in-progress rx. Simply return here and allow the load pl=
+enty of time
+> 293          * to complete before the next calibration interval.  We ne=
+ed to avoid
+> 294          * trying to load -50 (which happens below) while the previ=
+ous load is
+> 295          * still in progress as this can cause rx deafness. Instead=
+ by returning
+> 296          * here, the baseband nf cal will just be capped by our pre=
+sent
+> 297          * noisefloor until the next calibration timer.
+> 298          */
+>=20
+> Since no other error wariants are present, this patch is checking only
+> for (ret <=3D 0).
+>=20
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Oleksij Rempel <external.Oleksij.Rempel@de.bosch.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 13 ++++++++++---
+>  1 file changed, 10 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/ne=
+t/wireless/ath/ath9k/htc_drv_main.c
+> index dab1323..172a9ff 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -794,8 +794,11 @@ void ath9k_htc_ani_work(struct work_struct *work)
+>  		common->ani.longcal_timer =3D timestamp;
+>  	}
+> =20
+> -	/* Short calibration applies only while caldone is false */
+> -	if (!common->ani.caldone) {
+> +	/*
+> +	 * Short calibration applies only while caldone
+> +	 * is false or -ETIMEDOUT
+> +	 */
+> +	if (common->ani.caldone <=3D 0) {
+>  		if ((timestamp - common->ani.shortcal_timer) >=3D
+>  		    short_cal_interval) {
+>  			shortcal =3D true;
+> @@ -844,7 +847,11 @@ set_timer:
+>  	*/
+>  	cal_interval =3D ATH_LONG_CALINTERVAL;
+>  	cal_interval =3D min(cal_interval, (u32)ATH_ANI_POLLINTERVAL);
+> -	if (!common->ani.caldone)
+> +	/*
+> +	 * Short calibration applies only while caldone
+> +	 * is false or -ETIMEDOUT
+> +	 */
+> +	if (common->ani.caldone <=3D 0)
+>  		cal_interval =3D min(cal_interval, (u32)short_cal_interval);
+> =20
+>  	ieee80211_queue_delayed_work(common->hw, &priv->ani_work,
+>=20
 
 
-> Kalle,
->
-> Will you add the "Tested-by:" or should I?
-
-If you won't, I won't mind. I know patchwork still doesn't like my name ;)
+--=20
+Regards,
+Oleksij
 
 
-One note: this patchset should be applied after:
-[PATCH] brcmfmac: check all combinations when setting wiphy's addresses
-Otherwise /sys/class/ieee80211/phy0/addresses may start reporting only
-2 MACs (despite BCM43602 hardware & firmware supporting 4 AP
-interfaces).
+--pLbmhmc38cIVCbhALck6tPoPa3KooQsJQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
--- 
-Rafał
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlXNeDAACgkQHwImuRkmbWnJHQD+LtCtNAHiRw34V8pkN0WVzSwJ
+4/hy291npxgBjiDHbi0A/iplkGfftbWtLhtg891zyseW+0sZr+U1niPDj1GRRDAX
+=s+Re
+-----END PGP SIGNATURE-----
+
+--pLbmhmc38cIVCbhALck6tPoPa3KooQsJQ--
