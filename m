@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36170 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754751AbbHQNor (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:37821 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332AbbHNHES (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 09:44:47 -0400
-Received: by pawq9 with SMTP id q9so11368252paw.3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2015 06:44:47 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/4] staging: wilc1000: return -EINVAL for invalid argument checking
-Date: Mon, 17 Aug 2015 22:44:31 +0900
-Message-Id: <1439819071-30000-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150817_154450_961208_906A9C65)
-In-Reply-To: <1439819071-30000-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1439819071-30000-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 14 Aug 2015 03:04:18 -0400
+Received: by wibhh20 with SMTP id hh20so10460141wib.0
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2015 00:04:16 -0700 (PDT)
+Date: Fri, 14 Aug 2015 09:04:08 +0200
+From: Adrien Schildknecht <adrien+dev@schischi.me>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: out-of-bounds access in
+ iwl_init_sband_channels
+Message-ID: <20150814090408.1521e8fe.adrien+dev@schischi.me> (sfid-20150814_090422_315956_7EAD22B7)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7EA2CE@hasmsx107.ger.corp.intel.com>
+References: <1439512532-7901-1-git-send-email-adrien+dev@schischi.me>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E7EA2CE@hasmsx107.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses -EINVAL for invalid argument checking instead of using
-WILC_ERRORREPORT with WILC_INVALID_ARGUMENT.
+Hi,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> On 08/14/2015 03:36 AM, Adrien Schildknecht wrote:
+> > Both loops of this function compare data from the 'chan' array and
+> > then check if the index is valid.
+> > 
+> > The 2 conditions should be inverted to avoid an out-of-bounds
+> > access.
+> > 
+> 
+> Was that found by a static analyzer or any other automated tool, or
+> was that the result of your very careful review?
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index dd87448..561ff88 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -61,7 +61,7 @@ s32 WILC_MsgQueueSend(WILC_MsgQueueHandle *pHandle,
- 	Message *pstrMessage = NULL;
- 
- 	if ((pHandle == NULL) || (u32SendBufferSize == 0) || (pvSendBuffer == NULL)) {
--		WILC_ERRORREPORT(s32RetStatus, WILC_INVALID_ARGUMENT);
-+		return -EINVAL;
- 	}
- 
- 	if (pHandle->bExiting == true) {
-@@ -128,7 +128,7 @@ s32 WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
- 	unsigned long flags;
- 	if ((pHandle == NULL) || (u32RecvBufferSize == 0)
- 	    || (pvRecvBuffer == NULL) || (pu32ReceivedLength == NULL)) {
--		WILC_ERRORREPORT(s32RetStatus, WILC_INVALID_ARGUMENT);
-+		return -EINVAL;
- 	}
- 
- 	if (pHandle->bExiting == true) {
+The error has been reported by KASan:
+==================================================================
+BUG: KASan: out of bounds access in iwl_init_sband_channels+0x207/0x260 [iwlwifi] at addr ffff8800c2d0aac8
+Read of size 4 by task modprobe/329
+==================================================================
+
 -- 
-1.9.1
-
+Adrien Schildknecht
