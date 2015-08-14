@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:26870 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752527AbbHTUGa (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:34597 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398AbbHNJGD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 16:06:30 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V3 4/6] brcmfmac: block the correct flowring when backup queue overflow
-Date: Thu, 20 Aug 2015 22:06:06 +0200
-Message-ID: <1440101168-2252-5-git-send-email-arend@broadcom.com> (sfid-20150820_220632_937532_E1A2D062)
-In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 14 Aug 2015 05:06:03 -0400
+Received: by wicne3 with SMTP id ne3so12661032wic.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2015 02:06:00 -0700 (PDT)
+From: Adrien Schildknecht <adrien+dev@schischi.me>
+To: johannes.berg@intel.com, emmanuel.grumbach@intel.com
+Cc: ilw@linux.intel.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Adrien Schildknecht <adrien+dev@schischi.me>
+Subject: [PATCH v2] iwlwifi: out-of-bounds access in iwl_init_sband_channels
+Date: Fri, 14 Aug 2015 11:05:46 +0200
+Message-Id: <1439543146-18938-1-git-send-email-adrien+dev@schischi.me> (sfid-20150814_110640_191108_23F8DD83)
+In-Reply-To: <87h9o2l4ts.fsf@kamboji.qca.qualcomm.com>
+References: <87h9o2l4ts.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+KASan error report:
+==================================================================
+BUG: KASan: out of bounds access in iwl_init_sband_channels+0x207/0x260 [iwlwifi] at addr ffff8800c2d0aac8
+Read of size 4 by task modprobe/329
+==================================================================
 
-brcmf_flowring_block blocks the last active flowring under the same
-interface instead of the one provided by caller. This could lead to a
-dead lock of netif stop if there are more than one flowring under the
-interface and the traffic is high enough so brcmf_flowring_enqueue can
-not unblock the ring right away.
+Both loops of this function compare data from the 'chan' array and then
+check if the index is valid.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The 2 conditions should be inverted to avoid an out-of-bounds access.
+
+Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/flowring.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-index 5944063..8d1ab4a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-@@ -194,11 +194,15 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u8 flowid,
- 	spin_lock_irqsave(&flow->block_lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+index 21302b6..acc3d18 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+@@ -713,12 +713,12 @@ int iwl_init_sband_channels(struct iwl_nvm_data *data,
+ 	struct ieee80211_channel *chan = &data->channels[0];
+ 	int n = 0, idx = 0;
  
- 	ring = flow->rings[flowid];
-+	if (ring->blocked == blocked) {
-+		spin_unlock_irqrestore(&flow->block_lock, flags);
-+		return;
-+	}
- 	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
+-	while (chan->band != band && idx < n_channels)
++	while (idx < n_channels && chan->band != band)
+ 		chan = &data->channels[++idx];
  
- 	currently_blocked = false;
- 	for (i = 0; i < flow->nrofrings; i++) {
--		if (flow->rings[i]) {
-+		if ((flow->rings[i]) && (i != flowid)) {
- 			ring = flow->rings[i];
- 			if ((ring->status == RING_OPEN) &&
- 			    (brcmf_flowring_ifidx_get(flow, i) == ifidx)) {
-@@ -209,8 +213,8 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u8 flowid,
- 			}
- 		}
- 	}
--	ring->blocked = blocked;
--	if (currently_blocked == blocked) {
-+	flow->rings[flowid]->blocked = blocked;
-+	if (currently_blocked) {
- 		spin_unlock_irqrestore(&flow->block_lock, flags);
- 		return;
+ 	sband->channels = &data->channels[idx];
+ 
+-	while (chan->band == band && idx < n_channels) {
++	while (idx < n_channels && chan->band == band) {
+ 		chan = &data->channels[++idx];
+ 		n++;
  	}
 -- 
-1.9.1
+2.5.0
 
