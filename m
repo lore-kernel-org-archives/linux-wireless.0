@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12283 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750809AbbHEIkR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 04:40:17 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Nishant Sarmukadam" <nishants@marvell.com>
-Subject: RE: firmware in a bad state (module mwifiex)
-Date: Wed, 5 Aug 2015 08:40:12 +0000
-Message-ID: <d74ef56802d24c8e90e1b82eb5003172@SC-EXCH04.marvell.com> (sfid-20150805_104023_192315_F83B4D64)
-References: <871tfzast5.fsf@free.fr>
-	<0e2dc4e2bd9f4486979cedb4c47e60f2@SC-EXCH04.marvell.com>
- <87zj26z1pd.fsf_-_@free.fr>
-In-Reply-To: <87zj26z1pd.fsf_-_@free.fr>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35212 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbbHOCEK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Aug 2015 22:04:10 -0400
+Date: Fri, 14 Aug 2015 19:04:10 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Tony Cho <tony.cho@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, jude.lee@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 4/5] staging: wilc1000: use the real data type
+Message-ID: <20150815020410.GA25681@kroah.com> (sfid-20150815_040414_135274_BFA45C99)
+References: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
+ <1439440883-16061-5-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439440883-16061-5-git-send-email-tony.cho@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julien,
+On Thu, Aug 13, 2015 at 01:41:22PM +0900, Tony Cho wrote:
+> From: Johnny Kim <johnny.kim@atmel.com>
+> 
+> This patch changes the type of gu8FlushedJoinReqDrvHandler with his real
+> data type becasue typecasting is not necessary. In result, typecasting
+> which is not necessary and some building warnings is removed.
+> 
+> Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
 
-> From: Julien Cubizolles [mailto:j.cubizolles@free.fr]
-> Sent: Wednesday, August 05, 2015 12:01 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org
-> Subject: firmware in a bad state (module mwifiex)
-> 
-> 
-> I'm running kernel 4.2.0-rc3 with the following patches to the mwifiex
-> driver, thanks to your advice.
-> 
-> > Do you have following USB chipset specific fixes included?
-> > http://www.spinics.net/lists/linux-wireless/msg129129.html
-> > http://www.spinics.net/lists/netdev/msg334367.html
-> 
-> I've recently noticed that the connection is lost (and the driver too
-> only rebooting makes the card usable again) when I connect to certain
-> websites (github for instance)
-> I've set debugging up with the following command, and attached the
-> output from dmesg.
+This patch doesn't apply to my tree anymore due to patches from other
+people touching the same area.  Please rebase it, and fix up the 5/5
+patch, and resend both of them as a new series.
 
-This looks like a command timeout problem probably caused due to a bug in firmware.
-How frequently do you see this problem? Are there any specific steps to recreate it?
+thanks,
 
-Regards,
-Amit
+greg k-h
