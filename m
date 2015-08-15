@@ -1,91 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56233 "EHLO mx2.suse.de"
+Received: from mga11.intel.com ([192.55.52.93]:29273 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750896AbbH2CDE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2015 22:03:04 -0400
-Date: Sat, 29 Aug 2015 04:03:01 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Paul Moore <paul@paul-moore.com>
-Cc: "Roberts, William C" <william.c.roberts@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Kees Cook <keescook@chromium.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Eric Paris <eparis@parisplace.org>,
-	"selinux@tycho.nsa.gov" <selinux@tycho.nsa.gov>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
-	Vojtech =?iso-8859-1?Q?Pavl=EDk?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Linux Firmware Signing
-Message-ID: <20150829020301.GM8051@wotan.suse.de> (sfid-20150829_040327_582345_69952F47)
-References: <1440462367.2737.4.camel@linux.vnet.ibm.com>
- <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
- <1440464705.2737.36.camel@linux.vnet.ibm.com>
- <14540.1440599584@warthog.procyon.org.uk>
- <31228.1440671938@warthog.procyon.org.uk>
- <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
- <20150827212907.GF8051@wotan.suse.de>
- <CAHC9VhQFDcMtvn1JU3E1rJ=9CCXT7ibUocgGS4tzfcy8oVUUMA@mail.gmail.com>
- <476DC76E7D1DF2438D32BFADF679FC560105ABD6@ORSMSX103.amr.corp.intel.com>
- <CAHC9VhRF-39ZbwawkM-aR+th2nRPEVF9-nR1NEHDPDmakpt4FQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHC9VhRF-39ZbwawkM-aR+th2nRPEVF9-nR1NEHDPDmakpt4FQ@mail.gmail.com>
+	id S1751686AbbHOTkL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Aug 2015 15:40:11 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 0/9] various patches from our internal tree
+Date: Sat, 15 Aug 2015 22:39:45 +0300
+Message-Id: <1439667594-13632-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150815_214019_913078_F819CA38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 28, 2015 at 06:26:05PM -0400, Paul Moore wrote:
-> On Fri, Aug 28, 2015 at 7:20 AM, Roberts, William C
-> <william.c.roberts@intel.com> wrote:
-> > Even triggered updates make sense, since you can at least have some form of trust
-> > of where that binary policy came from.
-> 
-> It isn't always that simple, see my earlier comments about
-> customization and manipulation by the policy loading tools.
+Hi Johannes,
 
-If the customization of the data is done in kernel then the kernel
-can *first* verify the file's signature prior to doing any data
-modification. If userspace does the modification then the signature
-stuff won't work unless the tool will have access to the MOK and can
-sign it pre-flight to the kernel selinuxfs.
+Just came back from my vacation as well.
+Here are a few patches we have on our internal tree.
+I started to send the patch from Andrei (on HW scan vs.
+the iface work) and ended up with a quite a few, so
+here they are.
+You've seen all of them internally already.
 
-> > Huh, not following? Perhaps, I am not following what your laying down here.
-> >
-> >  Right now there is no signing on the selinux policy file. We should be able
-> > to just use the firmware signing api's as is (I have not looked on linux-next yet)
-> > to unpack the blob.
-> 
-> I haven't looked at the existing fw signing hook in any detail to be
-> able to comment on its use as a policy verification hook.  As long as
-> we preserve backwards compatibility and don't introduce a new
-> mechanism/API for loading SELinux policy I doubt I would have any
-> objections.
+For those out there who would like to see what we
+have in our internal tree, I've started to push it
+on a weekly basis to korg:
 
-You'd just have to implement a permissive model as we are with the
-fw signing. No radical customizations, except one thing to note is
-that on the fw signing side of things we're going to have the signature
-of the file *detached* in separate file. I think what you're alluding
-to is the issue of where that signature would be stuff in the SELinux
-policy file and its correct that you'd need to address that. You could
-just borrow the kernel's model and reader / sucker that strips out the
-signature. Another possibility would be two files but then I guess
-you'd need a trigger to annotate both are in place.
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
 
-  Luis
+Note that patches can be rebased, squashed etc... before
+they are sent to the ML.
+
+Andrei Otcheretianski (1):
+  mac80211: Introduce per vif frame registration API
+
+Arik Nemtsov (4):
+  mac80211: debugfs: add file to disallow TDLS wider-bw
+  mac80211: TDLS: add proper HT-oper IE
+  mac80211: TDLS: check reg with IR-relax on chandef upgrade
+  mac80211: avoid VHT usage with no 80MHz chans allowed
+
+Emmanuel Grumbach (2):
+  mac80211: allow the driver to advertise A-MSDU within A-MPDU Rx
+    support
+  mac80211: allow to transmit A-MSDU within A-MPDU
+
+Johannes Berg (2):
+  nl80211: support vendor dumpit commands
+  mac80211: remove direct probe step before authentication
+
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |   2 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   2 +-
+ drivers/net/wireless/mac80211_hwsim.c       |   2 +-
+ include/linux/ieee80211.h                   |   1 +
+ include/net/cfg80211.h                      |   9 ++
+ include/net/mac80211.h                      |  28 +++-
+ net/mac80211/agg-rx.c                       |   8 +-
+ net/mac80211/agg-tx.c                       |  15 ++-
+ net/mac80211/cfg.c                          |  23 +++-
+ net/mac80211/debugfs.c                      |   1 +
+ net/mac80211/debugfs_netdev.c               |  29 +++++
+ net/mac80211/driver-ops.h                   |  23 +++-
+ net/mac80211/ibss.c                         |   2 +-
+ net/mac80211/ieee80211_i.h                  |   3 +-
+ net/mac80211/mesh.c                         |   3 +-
+ net/mac80211/mlme.c                         |  98 ++++++--------
+ net/mac80211/sta_info.h                     |   2 +
+ net/mac80211/tdls.c                         |  21 ++-
+ net/mac80211/trace.h                        |  40 +++++-
+ net/mac80211/util.c                         |   5 +-
+ net/mac80211/vht.c                          |  15 +++
+ net/wireless/nl80211.c                      | 192 ++++++++++++++++++++++++++++
+ 22 files changed, 432 insertions(+), 92 deletions(-)
+
+-- 
+2.1.4
+
