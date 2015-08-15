@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33584 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754052AbbHEQNs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 12:13:48 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH v2 1/3] drivers: staging: wilc1000: use 'void' for no arguments functions
-Date: Wed,  5 Aug 2015 21:43:00 +0530
-Message-Id: <1438791182-9178-2-git-send-email-csgorentla@gmail.com> (sfid-20150805_181444_175112_C950B650)
-In-Reply-To: <1438791182-9178-1-git-send-email-csgorentla@gmail.com>
-References: <1438791182-9178-1-git-send-email-csgorentla@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:10293 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754151AbbHOTEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Aug 2015 15:04:11 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: process skb_queue while scanning in HW
+Date: Sat, 15 Aug 2015 22:04:01 +0300
+Message-Id: <1439665441-4406-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150815_210420_709979_744DD5A5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added 'void' keyword in the paranthesis of function definitions, when
-there are no arguments to the functions.  This fixes the checkpatch.pl
-error - "Bad function definition 'function()' should probably be
-function(void)".
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
+Queued frames aren't processed during scan, which results in an inability
+to complete the BA session establishment until the scan ends. Since we
+can't tx frames until the BA agreement setup is complete, it might result
+in a very large latency during scan.
+Fix this by allowing to process queued skbs while scanning in HW. This
+should be ok since the devices which support hw scan should be able
+to handle tx/rx while scanning.
+During SW scan, mac80211 drops any txed frames besides probes and NDPs,
+so it is still needed to delay processing of the queued frames till the
+SW scan is done.
+
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/linux_mon.c  | 2 +-
- drivers/staging/wilc1000/linux_wlan.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/iface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index aa20421..123468a 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -558,7 +558,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
-  *  @date	12 JUL 2012
-  *  @version	1.0
-  */
--int WILC_WFI_deinit_mon_interface()
-+int WILC_WFI_deinit_mon_interface(void)
- {
- 	bool rollback_lock = false;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 553ac6d..1e1829f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1204,7 +1204,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
  
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3e55a8a..0a8052e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -202,7 +202,7 @@ void printk_later(const char *format, ...)
+-	if (local->scanning)
++	if (test_bit(SCAN_SW_SCANNING, &local->scanning))
+ 		return;
  
- }
- 
--void dump_logs()
-+void dump_logs(void)
- {
- 	if (DebugBuffer[0]) {
- 		DebugBuffer[DEGUG_BUFFER_LENGTH] = 0;
-@@ -216,7 +216,7 @@ void dump_logs()
- 	}
- }
- 
--void Reset_WatchDogdebugger()
-+void Reset_WatchDogdebugger(void)
- {
- 	WatchDogdebuggerCounter = 0;
- }
+ 	if (!ieee80211_can_run_worker(local))
 -- 
-2.5.0
+2.1.4
 
