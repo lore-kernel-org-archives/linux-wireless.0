@@ -1,66 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36600 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbbHTNLM (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:36709 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754156AbbHOU6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 09:11:12 -0400
-Message-ID: <1440076269.6610.39.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150820_151120_465415_155D2EBB)
-Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
- TSO segment
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Date: Thu, 20 Aug 2015 06:11:09 -0700
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
-	 <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 15 Aug 2015 16:58:06 -0400
+Received: by wicja10 with SMTP id ja10so43297583wic.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2015 13:58:05 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/4] staging: vt6655: replace typedef struct tagRDES1
+Date: Sat, 15 Aug 2015 21:57:33 +0100
+Message-Id: <1439672255-2548-2-git-send-email-tvboxspy@gmail.com> (sfid-20150815_225813_242277_9C264301)
+In-Reply-To: <1439672255-2548-1-git-send-email-tvboxspy@gmail.com>
+References: <1439672255-2548-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-08-20 at 06:21 +0000, Grumbach, Emmanuel wrote:
-> 
-> On 08/19/2015 11:39 PM, Eric Dumazet wrote:
-> > On Wed, 2015-08-19 at 19:17 +0000, Grumbach, Emmanuel wrote:
-> > 
-> >> Hm.. how would net/core/tso.c avoid this?
-> > 
-> > Because a driver using these helpers keep around the original LSO packet
-> > and frees it normally at TX completion time.
-> > 
-> 
-> Which is why I can't really use it. The complexity is that I have to
-> (ieee802.11 specification) split an LSO is several 802.11 packets. The
-> maximal 802.11 packet I can send under ideal condition is 11K long or
-> so. So I *must* generate several 802.11 frames from one single LSO
-> packet. OTOH, I can have more than MSS bytes in a 802.11 A-MSDU.
-> 
+with struct vnt_rdes1 and members
+wReqCount -> req_count
+wReserved -> reserved
 
-Who said you had to free original packet ? Just keep it around.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c        |  4 ++--
+ drivers/staging/vt6655/desc.h        | 11 +++++------
+ drivers/staging/vt6655/device_main.c |  2 +-
+ drivers/staging/vt6655/dpc.c         |  2 +-
+ 4 files changed, 9 insertions(+), 10 deletions(-)
 
-TCP will work better ( check skb_still_in_host_queue() helper if you
-want to know why)
-
-> Maybe what would help would be to be able to dynamically change the
-> maximal size of an LSO packet. That would allow the wifi driver to
-> ensure that the LSO can fit in a single 802.11 packet. Note that since
-> the maximal length of the A-MSDU can vary based on link conditions
-> (since there is only one CRC for the whole A-MSDU, you don't want long
-> A-MSDUs in bad link conditions) the driver would need to be able to tell
-> the TCP stack to modify the length of an LSO packet.
-> To me, this sounds to be ... an overkill?
-
-It is already doable. Check dev->gso_max_size ( and
-netif_set_gso_max_size())
-
-Make sure you do not reinvent the wheel ;)
-
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index ab632e0..7a30ba2 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -575,7 +575,7 @@ CARDvSafeResetRx(
+ 		pDesc = &(pDevice->aRD0Ring[uu]);
+ 		pDesc->rd0.res_count = cpu_to_le16(pDevice->rx_buf_sz);
+ 		pDesc->rd0.owner = OWNED_BY_NIC;
+-		pDesc->m_rd1RD1.wReqCount = cpu_to_le16(pDevice->rx_buf_sz);
++		pDesc->rd1.req_count = cpu_to_le16(pDevice->rx_buf_sz);
+ 	}
+ 
+ 	/* init state, all RD is chip's */
+@@ -583,7 +583,7 @@ CARDvSafeResetRx(
+ 		pDesc = &(pDevice->aRD1Ring[uu]);
+ 		pDesc->rd0.res_count = cpu_to_le16(pDevice->rx_buf_sz);
+ 		pDesc->rd0.owner = OWNED_BY_NIC;
+-		pDesc->m_rd1RD1.wReqCount = cpu_to_le16(pDevice->rx_buf_sz);
++		pDesc->rd1.req_count = cpu_to_le16(pDevice->rx_buf_sz);
+ 	}
+ 
+ 	/* set perPkt mode */
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index 68b3121..eb0c7c3 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -189,16 +189,15 @@ struct vnt_rdes0 {
+ #endif
+ } __packed;
+ 
+-typedef struct tagRDES1 {
+-	__le16	       wReqCount;
+-	unsigned short wReserved;
+-} __attribute__ ((__packed__))
+-SRDES1;
++struct vnt_rdes1 {
++	__le16 req_count;
++	u16 reserved;
++} __packed;
+ 
+ /* Rx descriptor*/
+ typedef struct tagSRxDesc {
+ 	volatile struct vnt_rdes0 rd0;
+-	volatile SRDES1 m_rd1RD1;
++	volatile struct vnt_rdes1 rd1;
+ 	volatile __le32 buff_addr;
+ 	volatile __le32 next_desc;
+ 	struct tagSRxDesc *next __aligned(8);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 37c2be2..22c1957 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -818,7 +818,7 @@ static bool device_alloc_rx_buf(struct vnt_private *pDevice, PSRxDesc pRD)
+ 
+ 	pRD->rd0.res_count = cpu_to_le16(pDevice->rx_buf_sz);
+ 	pRD->rd0.owner = OWNED_BY_NIC;
+-	pRD->m_rd1RD1.wReqCount = cpu_to_le16(pDevice->rx_buf_sz);
++	pRD->rd1.req_count = cpu_to_le16(pDevice->rx_buf_sz);
+ 	pRD->buff_addr = cpu_to_le32(pRDInfo->skb_dma);
+ 
+ 	return true;
+diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
+index dbaaeeb..ef39cbe 100644
+--- a/drivers/staging/vt6655/dpc.c
++++ b/drivers/staging/vt6655/dpc.c
+@@ -143,7 +143,7 @@ bool vnt_receive_frame(struct vnt_private *priv, PSRxDesc curr_rd)
+ 	dma_unmap_single(&priv->pcid->dev, rd_info->skb_dma,
+ 			 priv->rx_buf_sz, DMA_FROM_DEVICE);
+ 
+-	frame_size = le16_to_cpu(curr_rd->m_rd1RD1.wReqCount)
++	frame_size = le16_to_cpu(curr_rd->rd1.req_count)
+ 			- le16_to_cpu(curr_rd->rd0.res_count);
+ 
+ 	if ((frame_size > 2364) || (frame_size < 33)) {
+-- 
+2.5.0
 
