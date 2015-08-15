@@ -1,112 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:26870 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692AbbHTUGa (ORCPT
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:34151 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804AbbHOGxy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 16:06:30 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V3 2/6] brcmfmac: add debugfs entry for msgbuf statistics
-Date: Thu, 20 Aug 2015 22:06:04 +0200
-Message-ID: <1440101168-2252-3-git-send-email-arend@broadcom.com> (sfid-20150820_220636_636888_2ADD559B)
-In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 15 Aug 2015 02:53:54 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	dan.carpenter@oracle.com, Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH v3] staging: wilc1000: Process WARN, INFO options of debug levels from user
+Date: Sat, 15 Aug 2015 12:23:31 +0530
+Message-Id: <1439621611-31599-1-git-send-email-csgorentla@gmail.com> (sfid-20150815_085358_904273_6FF8652E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+This patch enables setting the module's debug options WARN and INFO in the
+debugfs file 'wilc_debug_level'.  This functionality allows the user to
+enable logging of warnings and other information.  Before this change,
+writes to this debugfs file set only one option - DEBUG.  Another option
+that is enabled by default is ERR.
 
-Expose ring buffer read/write pointers and other useful statistics
-through debugfs.
+As a side effect, this patch removes the 'sparse' warning -
+'warning: incorrect type in argument 2 (different address spaces)'.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 56 ++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 898c380..7b2136c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -1360,6 +1360,60 @@ void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid)
- 	}
+Changes in v3: Added back a printk that was removed from v1
+
+Changes in v2: Replaced copy_from_user and kstrtoint (added in v1) with
+               kstrtouint_from_user
+
+ drivers/staging/wilc1000/wilc_debugfs.c | 24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index be2e901..ae11186 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -48,28 +48,19 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf, si
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
  }
  
-+#ifdef DEBUG
-+static int brcmf_msgbuf_stats_read(struct seq_file *seq, void *data)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(seq->private);
-+	struct brcmf_pub *drvr = bus_if->drvr;
-+	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
-+	struct brcmf_commonring *commonring;
-+	u16 i;
-+	struct brcmf_flowring_ring *ring;
-+	struct brcmf_flowring_hash *hash;
-+
-+	commonring = msgbuf->commonrings[BRCMF_H2D_MSGRING_CONTROL_SUBMIT];
-+	seq_printf(seq, "h2d_ctl_submit: rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_H2D_MSGRING_RXPOST_SUBMIT];
-+	seq_printf(seq, "h2d_rx_submit:  rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_D2H_MSGRING_CONTROL_COMPLETE];
-+	seq_printf(seq, "d2h_ctl_cmplt:  rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_D2H_MSGRING_TX_COMPLETE];
-+	seq_printf(seq, "d2h_tx_cmplt:   rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+	commonring = msgbuf->commonrings[BRCMF_D2H_MSGRING_RX_COMPLETE];
-+	seq_printf(seq, "d2h_rx_cmplt:   rp %4u, wp %4u, depth %4u\n",
-+		   commonring->r_ptr, commonring->w_ptr, commonring->depth);
-+
-+	seq_printf(seq, "\nh2d_flowrings: depth %u\n",
-+		   BRCMF_H2D_TXFLOWRING_MAX_ITEM);
-+	seq_puts(seq, "Active flowrings:\n");
-+	hash = msgbuf->flow->hash;
-+	for (i = 0; i < msgbuf->flow->nrofrings; i++) {
-+		if (!msgbuf->flow->rings[i])
-+			continue;
-+		ring = msgbuf->flow->rings[i];
-+		if (ring->status != RING_OPEN)
-+			continue;
-+		commonring = msgbuf->flowrings[i];
-+		hash = &msgbuf->flow->hash[ring->hash_id];
-+		seq_printf(seq, "id %3u: rp %4u, wp %4u, qlen %4u, blocked %u\n"
-+				"        ifidx %u, fifo %u, da %pM\n",
-+				i, commonring->r_ptr, commonring->w_ptr,
-+				skb_queue_len(&ring->skblist), ring->blocked,
-+				hash->ifidx, hash->fifo, hash->mac);
-+	}
-+
-+	return 0;
-+}
-+#else
-+static int brcmf_msgbuf_stats_read(struct seq_file *seq, void *data)
-+{
-+	return 0;
-+}
-+#endif
- 
- int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
+-static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t count, loff_t *ppos)
++static ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
++					size_t count, loff_t *ppos)
  {
-@@ -1460,6 +1514,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	spin_lock_init(&msgbuf->flowring_work_lock);
- 	INIT_LIST_HEAD(&msgbuf->work_queue);
+-	char buffer[128] = {};
+ 	int flag = 0;
++	int ret;
  
-+	brcmf_debugfs_add_entry(drvr, "msgbuf_stats", brcmf_msgbuf_stats_read);
+-	if (count > sizeof(buffer))
+-		return -EINVAL;
+-
+-	if (copy_from_user(buffer, buf, count)) {
+-		return -EFAULT;
+-	}
+-
+-	flag = buffer[0] - '0';
+-
+-	if (flag > 0)
+-		flag = DEBUG | ERR;
+-	else if (flag < 0)
+-		flag = 100;
++	ret = kstrtouint_from_user(buf, count, 16, &flag);
++	if (ret)
++		return ret;
+ 
+ 	if (flag > DBG_LEVEL_ALL) {
+ 		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&DEBUG_LEVEL));
+-		return -EFAULT;
++		return -EINVAL;
+ 	}
+ 
+ 	atomic_set(&DEBUG_LEVEL, (int)flag);
+@@ -78,6 +69,7 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t
+ 		printk("Debug-level disabled\n");
+ 	else
+ 		printk("Debug-level enabled\n");
 +
- 	return 0;
+ 	return count;
+ }
  
- fail:
 -- 
-1.9.1
+2.5.0
 
