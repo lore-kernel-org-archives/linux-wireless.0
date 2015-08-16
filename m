@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:32886 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946747AbbHHR6q (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:31215 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035AbbHPGzx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2015 13:58:46 -0400
-Date: Sat, 8 Aug 2015 20:00:07 +0200
-From: Daniel Machon <dmachon.dev@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/1] Staging: wilc1000: wilc_platform.h: Fixed include guard
- spelling error
-Message-ID: <20150808180003.GA6839@gmail.com> (sfid-20150808_195902_477777_83C47FFB)
+	Sun, 16 Aug 2015 02:55:53 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 6/7] brcmfmac: block the correct flowring when backup queue overflow
+Date: Sun, 16 Aug 2015 08:55:38 +0200
+Message-ID: <1439708139-7527-7-git-send-email-arend@broadcom.com> (sfid-20150816_085611_707836_D84045BD)
+In-Reply-To: <1439708139-7527-1-git-send-email-arend@broadcom.com>
+References: <1439708139-7527-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed spelling error
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Daniel Machon <dmachon.dev@gmail.com>
+brcmf_flowring_block blocks the last active flowring under the same
+interface instead of the one provided by caller. This could lead to a
+dead lock of netif stop if there are more than one flowring under the
+interface and the traffic is high enough so brcmf_flowring_enqueue can
+not unblock the ring right away.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/wilc_platform.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
-index d03532c..ccceaae 100644
---- a/drivers/staging/wilc1000/wilc_platform.h
-+++ b/drivers/staging/wilc1000/wilc_platform.h
-@@ -1,5 +1,5 @@
--#ifndef __WILC_platfrom_H__
--#define __WILC_platfrom_H__
-+#ifndef __WILC_platform_H__
-+#define __WILC_platform_H__
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+index e30f8fa..5b7a8ee 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+@@ -198,11 +198,15 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 	spin_lock_irqsave(&flow->block_lock, flags);
  
- #include <linux/kthread.h>
- #include <linux/semaphore.h>
+ 	ring = flow->rings[flowid];
++	if (ring->blocked == blocked) {
++		spin_unlock_irqrestore(&flow->block_lock, flags);
++		return;
++	}
+ 	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
+ 
+ 	currently_blocked = false;
+ 	for (i = 0; i < flow->nrofrings; i++) {
+-		if (flow->rings[i]) {
++		if ((flow->rings[i]) && (i != flowid)) {
+ 			ring = flow->rings[i];
+ 			if ((ring->status == RING_OPEN) &&
+ 			    (brcmf_flowring_ifidx_get(flow, i) == ifidx)) {
+@@ -213,8 +217,8 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 			}
+ 		}
+ 	}
+-	ring->blocked = blocked;
+-	if (currently_blocked == blocked) {
++	flow->rings[flowid]->blocked = blocked;
++	if (currently_blocked) {
+ 		spin_unlock_irqrestore(&flow->block_lock, flags);
+ 		return;
+ 	}
 -- 
-2.1.4
+1.9.1
 
