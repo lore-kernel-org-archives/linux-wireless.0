@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48991 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755574AbbHNP5c (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39907 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbbHPGzx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 11:57:32 -0400
-Message-ID: <55CE0FEB.7080303@candelatech.com> (sfid-20150814_175741_246652_E96917D9)
-Date: Fri, 14 Aug 2015 08:57:31 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 16 Aug 2015 02:55:53 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 0/7] brcmfmac: nvram loading and code rework
+Date: Sun, 16 Aug 2015 08:55:32 +0200
+Message-ID: <1439708139-7527-1-git-send-email-arend@broadcom.com> (sfid-20150816_085609_376528_D1417DF4)
 MIME-Version: 1.0
-To: S Prasad Kandregula <sprasad.kandregula@gmail.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
-References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com> <CA+BoTQkFSQe0di1vqqB5cAPKaizRkBT5cu4fA8dQ_uR_a2HdJw@mail.gmail.com> <CAJa-X96spUg7+EZqH-Mv3s7OzbHzmXmcZ7uOw1KvPShexW6D_w@mail.gmail.com> <CA+BoTQ=Qpws=928TZe22Ds-UO_qQJ2Om+=DW=VUNUS59o1BQAA@mail.gmail.com> <CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com> <CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com> <CAJa-X945Xvn0jHQVcKn-pyYQVNpxXnqjOH_VHJv8pVwR4kFXcw@mail.gmail.com> <CA+BoTQmLFGAn2z=E3J1C2qfNP34v57B7-rtALUQhNXrHqJeA6Q@mail.gmail.com> <55521102.9020306@candelatech.com> <CAJa-X97Av+FKwy5Q3x3jnC=KPmqFt_JfsaVQ6J3bScM-SEKnYg@mail.gmail.com> <55CD0176.5080003@candelatech.com> <4670C821-E536-47CF-BBC4-CC83F54BAE86@gmail.com>
-In-Reply-To: <4670C821-E536-47CF-BBC4-CC83F54BAE86@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/13/2015 02:01 PM, S Prasad Kandregula wrote:
-> Thank you Ben for immediate response,
-> 
-> Don't mind, could you please share your firmware path. 
+This series comprises of following changes:
+- support NVRAM loading for bcm47xx platform.
+- revise announced interface combinations and validate against it.
+- new debugfs entry for msgbuf protocol layer used with PCIe devices.
+- couple of PCIe fixes.
+- support more firmware events (for bcm4339 firmware).
 
-Grab one of the beta-15 builds linked from this page:
+The series is intended for v4.3 kernel and applies to the master branch
+of the wireless-drivers-next repository.
 
-http://www.candelatech.com/ath10k.php
+Arend van Spriel (3):
+  brcmfmac: correct interface combination info
+  brcmfmac: make use of cfg80211_check_combinations()
+  brcmfmac: bump highest event number for 4339 firmware
 
-If you want the mgt-htt version, be sure to patch your kernel per
-the release notes or use one of my kernels also linked from the page.
+Franky Lin (2):
+  brcmfmac: add debugfs entry for msgbuf statistics
+  brcmfmac: block the correct flowring when backup queue overflow
 
-Thanks,
-Ben
+Hante Meuleman (2):
+  brcmfmac: Add support for host platform NVRAM loading.
+  brcmfmac: Increase nr of supported flowrings.
 
-> 
-> Sorry I didn't change old subject line.
-> 
-> Thanks & Regards,
-> S Prasad
-> 
->> On Aug 13, 2015, at 4:43 PM, Ben Greear <greearb@candelatech.com> wrote:
->>
->>> On 08/13/2015 01:35 PM, s prasad wrote:
->>> Hi Ben,
->>>
->>> did you get a chance to look into this issue(injecting frames when
->>> device in monitor mode).
->>
->> Injection works in a limited fashion in my latest firmware.
->>
->> I'd like to figure out how to pass rate-ctrl (and other info?) down to the
->> firmware on a per-pkt basis..but I don't see a way yet.
->>
->> Probably I have to hack the htt header or something like that
->> to give some extra space.  That sort of thing might allow a host-based
->> rate-ctrl algorithm to be used....if someone is interested in working on
->> the driver/kernel side of things for this effort let me know.
->>
->> I am not aware of any crashes related to monitor mode in my
->> firmware..but if you can crash it, send me the crash dump and
->> I'll take a look.
->>
->> Thanks,
->> Ben
->>
->>
->> -- 
->> Ben Greear <greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
-> 
-
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 195 ++++++++++++++++-----
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c |  40 +++--
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.c |  48 ++---
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.h |  20 +--
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |  10 +-
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   |  67 ++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h   |   2 +-
+ 7 files changed, 289 insertions(+), 93 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
