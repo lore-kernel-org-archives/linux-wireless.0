@@ -1,59 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47068 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751943AbbHMJ1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 05:27:50 -0400
-Message-ID: <1439458066.2114.13.camel@sipsolutions.net> (sfid-20150813_112810_427751_E8C08D24)
-Subject: Re: [PATCH 2/5] net: rfkill: add rfkill_find_type function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Date: Thu, 13 Aug 2015 11:27:46 +0200
-In-Reply-To: <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
-	 <1438781947-7952-3-git-send-email-heikki.krogerus@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:34334 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246AbbHPFao (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Aug 2015 01:30:44 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] staging: wilc1000: code style: fix globals initialized to false
+Date: Sun, 16 Aug 2015 01:30:13 -0400
+Message-Id: <f2aa32ae321011c30cb9af96ff32fcc56c5faf0e.1439702894.git.raphael.beamonte@gmail.com> (sfid-20150816_073110_825970_3BB29BF8)
+In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
+References: <cover.1439702894.git.raphael.beamonte@gmail.com>
+In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
+References: <cover.1439702894.git.raphael.beamonte@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
-> 
-> +static const char *rfkill_types[NUM_RFKILL_TYPES] = {
-> +	[RFKILL_TYPE_WLAN]	= "wlan",
-> +	[RFKILL_TYPE_BLUETOOTH]	= "bluetooth",
-> +	[RFKILL_TYPE_UWB]	= "ultrawideband",
-> +	[RFKILL_TYPE_WIMAX]	= "wimax",
-> +	[RFKILL_TYPE_WWAN]	= "wwan",
-> +	[RFKILL_TYPE_GPS]	= "gps",
-> +	[RFKILL_TYPE_FM]	= "fm",
-> +	[RFKILL_TYPE_NFC]	= "nfc",
-> +};
-> +
-> +enum rfkill_type rfkill_find_type(const char *name)
-> +{
-> +	int i;
-> +
-> +	BUILD_BUG_ON(NUM_RFKILL_TYPES != RFKILL_TYPE_NFC + 1);
-> 
-That BUILD_BUG_ON() is now less useful - previously it pointed to the
-code that needed to change, now you're left wondering if you don't look
-up since it isn't quite that obvious from the code what this does.
+Globals should not be initialized to 0 or NULL.
 
-Something like
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c      | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-	BUILD_BUG_ON(rfkill_types[NUM_RFKILL_TYPES - 1] == NULL);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bab5319..53c4ca9 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -536,7 +536,7 @@ typedef enum {
+ tstrWILC_WFIDrv *terminated_handle;
+ tstrWILC_WFIDrv *gWFiDrvHandle;
+ #ifdef DISABLE_PWRSAVE_AND_SCAN_DURING_IP
+-bool g_obtainingIP = false;
++bool g_obtainingIP;
+ #endif
+ u8 P2P_LISTEN_STATE;
+ static struct task_struct *HostIFthreadHandler;
+@@ -558,7 +558,7 @@ static u8 gapu8RcvdSurveyResults[2][MAX_SURVEY_RESULT_FRAG_SIZE];
+ 
+ static u8 gapu8RcvdAssocResp[MAX_ASSOC_RESP_FRAME_SIZE];
+ 
+-bool gbScanWhileConnected = false;
++bool gbScanWhileConnected;
+ 
+ static s8 gs8Rssi;
+ static s8 gs8lnkspd;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index fac16db..4c40955 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -482,7 +482,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(void)
+ #endif
+ 
+ #ifdef TCP_ENHANCEMENTS
+-bool EnableTCPAckFilter = false;
++bool EnableTCPAckFilter;
+ 
+ void Enable_TCP_ACK_Filter(bool value)
+ {
+-- 
+2.1.4
 
-would be better. As we only add here, that would be safe enough - I've
-done something similar in the past that a bit more complicated.
-
-With that and the static inline fixed (which maybe you could even
-remove) I'm fine with all these rfkill patches, but I'm not sure how to
-merge them since they affect all kinds of other trees. If desired, I
-can apply them, but an ACK from the tegra maintainer would be good :)
-
-johannes
