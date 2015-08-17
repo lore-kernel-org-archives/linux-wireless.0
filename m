@@ -1,90 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:57542 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbbHRDLg (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45765 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257AbbHQUBD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 23:11:36 -0400
-Message-ID: <55D2A23D.2080209@atmel.com> (sfid-20150818_051139_724676_059F8BC4)
-Date: Tue, 18 Aug 2015 12:10:53 +0900
-From: Johnny Kim <johnny.kim@atmel.com>
+	Mon, 17 Aug 2015 16:01:03 -0400
+Date: Mon, 17 Aug 2015 13:01:02 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCHv2 4/5] staging: wilc1000: remove FREE_WILC_BUFFER()
+Message-ID: <20150817200102.GA28880@kroah.com> (sfid-20150817_220125_692376_40B3D365)
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+ <1ed2c34e8fde92cd4813ae549ba0a0a3fd92afd0.1439838526.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-	Tony Cho <tony.cho@atmel.com>
-CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<rachel.kim@atmel.com>, <chris.park@atmel.com>,
-	<linux-wireless@vger.kernel.org>, <jude.lee@atmel.com>,
-	<leo.kim@atmel.com>
-Subject: Re: [PATCH 5/5] staging: wilc1000: use id value as argument
-References: <1439440883-16061-1-git-send-email-tony.cho@atmel.com> <1439440883-16061-6-git-send-email-tony.cho@atmel.com> <20150813144907.GA4484@mwanda>
-In-Reply-To: <20150813144907.GA4484@mwanda>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1ed2c34e8fde92cd4813ae549ba0a0a3fd92afd0.1439838526.git.raphael.beamonte@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Dan.
+On Mon, Aug 17, 2015 at 03:28:29PM -0400, Rapha�l Beamonte wrote:
+> It was just a wrapper around kfree(), so call that instead.
 
-On 2015년 08월 13일 23:49, Dan Carpenter wrote:
-> On Thu, Aug 13, 2015 at 01:41:23PM +0900, Tony Cho wrote:
->> +static u32 get_id_from_handler(tstrWILC_WFIDrv *handler)
->> +{
->> +	u32 id;
->> +
->> +	if (!handler)
->> +		return 0;
->> +
->> +	for (id = 0; id < NUM_CONCURRENT_IFC; id++) {
->> +		if (wfidrv_list[id] == handler) {
->> +			id += 1;
->> +			break;
->> +		}
->> +	}
->> +
->> +	if (id > NUM_CONCURRENT_IFC)
->> +		return 0;
->> +	else
->> +		return id;
->> +}
->> +
-> This still has an off by one bug.  Just use zero offset arrays
-> throughout.
->
-> static int get_id_from_handler(tstrWILC_WFIDrv *handler)
-> {
-> 	int id;
->
-> 	if (!handler)
-> 		return -ENOBUFS;
->
-> 	for (id = 0; id < NUM_CONCURRENT_IFC; id++) {
-> 		if (wfidrv_list[id] == handler)
-> 			return id;
-> 	}
->
-> 	return -ENOBUFS;
-> }
-Thanks for your review. The return value of this function has from 0 till 2.
-1 and 2 value is real ID value. only 0 value is reserved to remove a 
-registered id.
-But I also think that error handling should be added about the 
-overflowed value
-as your opinion.
->> +static tstrWILC_WFIDrv *get_handler_from_id(u32 id)
->> +{
->> +	if (id > 0 && id <= NUM_CONCURRENT_IFC)
->> +		return wfidrv_list[id - 1];
->> +	else
->> +		return NULL;
->> +}
-> static tstrWILC_WFIDrv *get_handler_from_id(int id)
-> {
-> 	if (id < 0 || id >= NUM_CONCURRENT_IFC)
-> 		return NULL;
-> 	return wfidrv_list[id];
-> }
->
-> regards,
-> dan carpenter
->
+Someone else already did this, sorry.
 
-Regards.
-Johnny Kim.
+greg k-h
