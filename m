@@ -1,58 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56607 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972AbbHDRC3 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:18217 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892AbbHQOXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 13:02:29 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: mbizon@freebox.fr
-Cc: David Lin <dlin@marvell.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
-	<1436455659.36587.131.camel@sakura.staff.proxad.net>
-Date: Tue, 04 Aug 2015 20:02:23 +0300
-In-Reply-To: <1436455659.36587.131.camel@sakura.staff.proxad.net> (Maxime
-	Bizon's message of "Thu, 09 Jul 2015 17:27:39 +0200")
-Message-ID: <87vbcvyokg.fsf@kamboji.qca.qualcomm.com> (sfid-20150804_190234_092136_D6298EC0)
+	Mon, 17 Aug 2015 10:23:46 -0400
+Date: Mon, 17 Aug 2015 17:23:50 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
+	dean.lee@atmel.com, chris.park@atmel.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com
+Subject: Re: [PATCH 3/4] staging: wilc1000: remove WILC_ErrNo
+Message-ID: <20150817142350.GG5558@mwanda> (sfid-20150817_162349_397853_B3A197FC)
+References: <1439819071-30000-1-git-send-email-chaehyun.lim@gmail.com>
+ <1439819071-30000-3-git-send-email-chaehyun.lim@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439819071-30000-3-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxime Bizon <mbizon@freebox.fr> writes:
+On Mon, Aug 17, 2015 at 10:44:30PM +0900, Chaehyun Lim wrote:
+> WILC_ErrNo is replaced by s32, then WILC_ErrNo typedef is removed.
+> 
 
-> On Fri, 2015-07-03 at 06:10 +0000, David Lin wrote:
->
-> Hello,
->
->> The Linux driver for WRT1900AC. The work was initially developed as
->> part of openwrt effort and maintained on
->> https://github.com/kaloz/mwlwifi.
->
-> I see *massive* code duplication with the mwl8k driver.
+s32 is a weirdo type.  You should only specify the number of bit when it
+is something required by the hardware.  Just use int.
 
-I haven't looked at the driver myself yet. Do you have any estimates how
-much duplication there is?
+regards,
+dan carpenter
 
-> This is, I guess, not a surprise since the supported chipset are an
-> evolution of the ones supported by mwl8k, just look at how close/similar
-> the descriptor format is.
->
-> The problem is that each new Marvell chipset comes with a new firmware
-> version, and there is no effort to have a common firmware API or code
-> base that supports multiple chipsets.
->
-> That pushes the bloat on the kernel side, do we really agree on that ?
-
-That is a very good question. The kernel should not be a dumping ground
-for random drivers which duplicate lots of code but this is a sort of
-gray area and depends on the case.
-
-Did Marvell reply to this? I didn't find any comments about this.
-
--- 
-Kalle Valo
