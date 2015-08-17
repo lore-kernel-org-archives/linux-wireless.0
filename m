@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10293 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754151AbbHOTEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2015 15:04:11 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: process skb_queue while scanning in HW
-Date: Sat, 15 Aug 2015 22:04:01 +0300
-Message-Id: <1439665441-4406-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150815_210420_709979_744DD5A5)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33496 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbbHQNpU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2015 09:45:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: wake up queue upon vif creation
+References: <1438931301-27081-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 17 Aug 2015 16:45:08 +0300
+In-Reply-To: <1438931301-27081-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 7 Aug 2015 09:08:21 +0200")
+Message-ID: <87y4hado63.fsf@kamboji.qca.qualcomm.com> (sfid-20150817_154529_081458_D814B8CB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Queued frames aren't processed during scan, which results in an inability
-to complete the BA session establishment until the scan ends. Since we
-can't tx frames until the BA agreement setup is complete, it might result
-in a very large latency during scan.
-Fix this by allowing to process queued skbs while scanning in HW. This
-should be ok since the devices which support hw scan should be able
-to handle tx/rx while scanning.
-During SW scan, mac80211 drops any txed frames besides probes and NDPs,
-so it is still needed to delay processing of the queued frames till the
-SW scan is done.
+> Vif's vdev_id is used as queue number. However due
+> to the tx pausing design in ath10k it was possible
+> for a new interface to be created with its tx
+> queue stopped (via ieee80211_stop_queues). This
+> could in turn leave the interface inoperable until
+> ath10k_mac_tx_unlock() was called.
+>
+> This problem only affected multi-vif scenarios when
+> new interfaces were created some time later after
+> other interfaces have been running for some time
+> and had Tx queue full at some point prior.
+>
+> Possible manifestation of the bug was
+> authentication timeout for a client vif.
+>
+> Fixes: 96d828d45e16 ("ath10k: rework tx queue locking")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/iface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks, applied.
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 553ac6d..1e1829f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1204,7 +1204,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
- 
--	if (local->scanning)
-+	if (test_bit(SCAN_SW_SCANNING, &local->scanning))
- 		return;
- 
- 	if (!ieee80211_can_run_worker(local))
 -- 
-2.1.4
-
+Kalle Valo
