@@ -1,75 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27331 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbbHTE7b (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:34664 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716AbbHQXMz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 00:59:31 -0400
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Add spectral scan support for 10.4 fw
-Date: Thu, 20 Aug 2015 10:29:05 +0530
-Message-ID: <1440046745-428-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150820_065934_864921_7F49FF27)
+	Mon, 17 Aug 2015 19:12:55 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCHv3] staging: wilc1000: replace MALLOC_WILC_BUFFER() macro to avoid possible memory leak
+Date: Mon, 17 Aug 2015 19:12:47 -0400
+Message-Id: <ba3c67af8cbe5658154084a165785c637e5a2bc8.1439853139.git.raphael.beamonte@gmail.com> (sfid-20150818_011327_342765_2489121F)
+In-Reply-To: <55D238D4.20800@broadcom.com>
+References: <55D238D4.20800@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To enable/configure spectral scan parameters in 10.4 firmware, existing
-wmi spectral related functions can be reused. Link those functions in
-10.4 wmi ops table.
+The MALLOC_WILC_BUFFER() macro was using a return statement, and didn't
+take care of possible memory leaks and subsequent bugs when it was failing
+after succeeding some allocations. This patch corrects this behavior.
 
-In addition, adjust bin size (only when size is 68 bytes) before reporting
-bin samples to user space. The background for this adjustment is that
-qca99x0 reports bin size as 68 bytes (64 bytes + 4 bytes) in report
-mode 2. First 64 bytes carries in-band tones (-32 to +31) and last 4 byte
-carries band edge detection data (+32) mainly used in radar detection
-purpose. Additional last 4 bytes are stripped to make bin size valid one.
-
-This bin size adjustment will happen only for qca99x0, all other chipsets
-will report proper bin sizes (64/128) without extra 4 bytes being added
-at the end. The changes are validated in qca99x0 using 10.4 firmware.
-
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/spectral.c | 9 +++++++++
- drivers/net/wireless/ath/ath10k/wmi.c      | 2 ++
- 2 files changed, 11 insertions(+)
+ drivers/staging/wilc1000/wilc_exported_buf.c | 31 +++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
-index e4219b1..4671cfb 100644
---- a/drivers/net/wireless/ath/ath10k/spectral.c
-+++ b/drivers/net/wireless/ath/ath10k/spectral.c
-@@ -73,6 +73,15 @@ int ath10k_spectral_process_fft(struct ath10k *ar,
- 	if (bin_len < 64 || bin_len > SPECTRAL_ATH10K_MAX_NUM_BINS)
- 		return -EINVAL;
+diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+index c3f6a0a..ec8d8e5 100644
+--- a/drivers/staging/wilc1000/wilc_exported_buf.c
++++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+@@ -8,13 +8,6 @@
+ #define LINUX_TX_SIZE	(64 * 1024)
+ #define WILC1000_FW_SIZE (4 * 1024)
  
-+	/* qca99x0 reports bin size as 68 bytes (64 bytes + 4 bytes) in
-+	 * report mode 2. First 64 bytes carries inband tones (-32 to +31)
-+	 * and last 4 byte carries band edge detection data (+32) mainly
-+	 * used in radar detection purpose. Strip last 4 byte to make bin
-+	 * size is valid one.
-+	 */
-+	if (bin_len == 68)
-+		bin_len -= 4;
+-#define MALLOC_WILC_BUFFER(name, size)	\
+-	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+-	if (!exported_ ## name) {   \
+-		printk("fail to alloc: %s memory\n", exported_ ## name);  \
+-		return -ENOBUFS;	\
+-	}
+-
+ #define FREE_WILC_BUFFER(name)	\
+ 	kfree(exported_ ## name);
+ 
+@@ -49,11 +42,29 @@ static int __init wilc_module_init(void)
+ 	/*
+ 	 * alloc necessary memory
+ 	 */
+-	MALLOC_WILC_BUFFER(g_tx_buf, LINUX_TX_SIZE)
+-	MALLOC_WILC_BUFFER(g_rx_buf, LINUX_RX_SIZE)
+-	MALLOC_WILC_BUFFER(g_fw_buf, WILC1000_FW_SIZE)
++	exported_g_tx_buf = kmalloc(LINUX_TX_SIZE, GFP_KERNEL);
++	if (!exported_g_tx_buf)
++		return -ENOMEM;
 +
- 	reg0 = __le32_to_cpu(fftr->reg0);
- 	reg1 = __le32_to_cpu(fftr->reg1);
++	exported_g_rx_buf = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
++	if (!exported_g_rx_buf)
++		goto free_g_tx_buf;
++
++	exported_g_fw_buf = kmalloc(WILC1000_FW_SIZE, GFP_KERNEL);
++	if (!exported_g_fw_buf)
++		goto free_g_rx_buf;
  
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 42c0aba..5d19c87 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -6581,6 +6581,8 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.gen_vdev_down = ath10k_wmi_op_gen_vdev_down,
- 	.gen_vdev_set_param = ath10k_wmi_op_gen_vdev_set_param,
- 	.gen_vdev_install_key = ath10k_wmi_op_gen_vdev_install_key,
-+	.gen_vdev_spectral_conf = ath10k_wmi_op_gen_vdev_spectral_conf,
-+	.gen_vdev_spectral_enable = ath10k_wmi_op_gen_vdev_spectral_enable,
- 	.gen_peer_create = ath10k_wmi_op_gen_peer_create,
- 	.gen_peer_delete = ath10k_wmi_op_gen_peer_delete,
- 	.gen_peer_flush = ath10k_wmi_op_gen_peer_flush,
+ 	return 0;
++
++free_g_rx_buf:
++	kfree(exported_g_rx_buf);
++	exported_g_rx_buf = NULL;
++
++free_g_tx_buf:
++	kfree(exported_g_tx_buf);
++	exported_g_tx_buf = NULL;
++
++	return -ENOMEM;
+ }
+ 
+ static void __exit wilc_module_deinit(void)
 -- 
-1.8.1.2
+2.1.4
 
