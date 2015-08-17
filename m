@@ -1,57 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46334 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752447AbbHTN14 convert rfc822-to-8bit (ORCPT
+Received: from mail-io0-f180.google.com ([209.85.223.180]:35749 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752124AbbHQT2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 09:27:56 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC v3 1/3] iwlwifi: mvm: add real TSO implementation
-Date: Thu, 20 Aug 2015 13:27:48 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8264A2@hasmsx107.ger.corp.intel.com> (sfid-20150820_152803_523749_FD486BE2)
-References: <1440058544-20342-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1440058544-20342-2-git-send-email-emmanuel.grumbach@intel.com>
- <1440076363.6610.40.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 17 Aug 2015 15:28:50 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCHv2 5/5] staging: wilc1000: replace MALLOC_WILC_BUFFER() macro to avoid possible memory leak
+Date: Mon, 17 Aug 2015 15:28:30 -0400
+Message-Id: <339fc87526f51233b262315b2297f68e3b00c7b6.1439838526.git.raphael.beamonte@gmail.com> (sfid-20150817_212942_231781_AADFB681)
+In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The MACRO_WILC_BUFFER() macro was using a return statement, and didn't
+take care of possible memory leaks and subsequent bugs when it was failing
+after succeeding some allocations. This patch corrects this behavior.
 
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_exported_buf.c | 37 ++++++++++++++++++++--------
+ 1 file changed, 27 insertions(+), 10 deletions(-)
 
-On 08/20/2015 04:13 PM, Eric Dumazet wrote:
-> On Thu, 2015-08-20 at 11:15 +0300, Emmanuel Grumbach wrote:
->> The segmentation is done completely in software. The
->> driver creates several MPDUs out of a single large send.
->> Each MPDU is a newly allocated SKB.
->> A page is allocated to create the headers that need to be
->> duplicated (SNAP / IP / TCP). The WiFi header is in the
->> header of the newly created SKBs.
->>
->> type=feature
->>
->> Change-Id: I238ffa79cacc5bbdacdfbf3e9673c8d4f02b462a
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> ---
->>  drivers/net/wireless/iwlwifi/mvm/tx.c | 513 +++++++++++++++++++++++++++++++---
->>  1 file changed, 481 insertions(+), 32 deletions(-)
-> 
-> 
-> Ouch again.
-> 
-> This will be a NACK. Sorry.
-> 
-> 
+diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+index c9a5943..0f3bdad 100644
+--- a/drivers/staging/wilc1000/wilc_exported_buf.c
++++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+@@ -8,13 +8,6 @@
+ #define LINUX_TX_SIZE	(64 * 1024)
+ #define WILC1000_FW_SIZE (4 * 1024)
+ 
+-#define MALLOC_WILC_BUFFER(name, size)	\
+-	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+-	if (!exported_ ## name) {   \
+-		printk("fail to alloc: %s memory\n", exported_ ## name);  \
+-		return -ENOBUFS;	\
+-	}
+-
+ /*
+  * Add necessary buffer pointers
+  */
+@@ -45,11 +38,35 @@ static int __init wilc_module_init(void)
+ 	/*
+ 	 * alloc necessary memory
+ 	 */
+-	MALLOC_WILC_BUFFER(g_tx_buf, LINUX_TX_SIZE)
+-	MALLOC_WILC_BUFFER(g_rx_buf, LINUX_RX_SIZE)
+-	MALLOC_WILC_BUFFER(g_fw_buf, WILC1000_FW_SIZE)
++	exported_g_tx_buf = kmalloc(LINUX_TX_SIZE, GFP_KERNEL);
++	if (!exported_g_tx_buf) {
++		pr_err("fail to alloc tx buf");
++		return -ENOMEM;
++	}
++
++	exported_g_rx_buf = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
++	if (!exported_g_rx_buf) {
++		pr_err("fail to alloc rx buf");
++		goto free_g_tx_buf;
++	}
++
++	exported_g_fw_buf = kmalloc(WILC1000_FW_SIZE, GFP_KERNEL);
++	if (!exported_g_fw_buf) {
++		pr_err("fail to alloc fw buf");
++		goto free_g_rx_buf;
++	}
+ 
+ 	return 0;
++
++free_g_rx_buf:
++	kfree(exported_g_rx_buf);
++	exported_g_rx_buf = NULL;
++
++free_g_tx_buf:
++	kfree(exported_g_tx_buf);
++	exported_g_tx_buf = NULL;
++
++	return -ENOMEM;
+ }
+ 
+ static void __exit wilc_module_deinit(void)
+-- 
+2.1.4
 
-To be honest, I don't see why. No matter how you look at it, you need to
-add headers. And these headers need to sit on some memory that is not
-yet allocated. skb_gso_segment allocates new skb which is a memory
-allocation.
-
-I looked at ethernet/marvell/mvneta.c (which uses net/core/tso.c) and
-they pre-allocate DMA coherent memory for the additional headers they
-create. I can have pre-allocated pages if you want.
