@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47101 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751934AbbHMJc2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 05:32:28 -0400
-Message-ID: <1439458345.2114.14.camel@sipsolutions.net> (sfid-20150813_113231_054279_298C911A)
-Subject: Re: [PATCH 06/10] mac80211: remove
- ieee80211_aes_cmac_calculate_k1_k2()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 13 Aug 2015 11:32:25 +0200
-In-Reply-To: <1437140619.1933.21.camel@sipsolutions.net> (sfid-20150717_154345_215380_045B45B2)
-References: <1436359312-26533-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1436359312-26533-7-git-send-email-emmanuel.grumbach@intel.com>
-	 (sfid-20150708_144254_350866_ECD76AB0) <1437140619.1933.21.camel@sipsolutions.net>
-	 (sfid-20150717_154345_215380_045B45B2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28278 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755650AbbHQOhX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2015 10:37:23 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: split ap/ibss wep key install process
+References: <1439467846-8351-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 17 Aug 2015 17:37:15 +0300
+In-Reply-To: <1439467846-8351-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 13 Aug 2015 14:10:46 +0200")
+Message-ID: <87pp2mdlr8.fsf@kamboji.qca.qualcomm.com> (sfid-20150817_163731_969431_B4CE0F5D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-07-17 at 15:43 +0200, Johannes Berg wrote:
-> On Wed, 2015-07-08 at 15:41 +0300, Emmanuel Grumbach wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > The iwlwifi driver was the only driver that used this, but as
-> > it turns out it never needed it, so we can remove it.
-> > 
-> I'm not applying this for now since it depends on the iwlwifi patch 
-> to remove usage thereof :)
-> 
-> I think we said I'd apply that one also through my tree, but since 
-> it's not urgent I'll sort it out later.
-> 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Which I've done now - so this is also in now.
+> Apparently it's not safe to install both pairwise
+> and groupwise keys on AP vdevs as it can cause
+> traffic to stop working in some multi-vif
+> (WPA+WEP) cases.
+>
+> Fixes: ce90b27128c2 ("ath10k: fix multiple key static wep with ibss")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-johannes
+Thanks, applied.
+
+-- 
+Kalle Valo
