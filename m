@@ -1,117 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34389 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932864AbbHKBdA (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:33922 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbbHQSG4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 21:33:00 -0400
-Received: by pawu10 with SMTP id u10so151921743paw.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2015 18:33:00 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/4] staging: wilc1000: wilc_memory.h: remove unused define
-Date: Tue, 11 Aug 2015 10:32:39 +0900
-Message-Id: <1439256762-16711-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150811_033309_410275_AD63B7A9)
+	Mon, 17 Aug 2015 14:06:56 -0400
+Date: Mon, 17 Aug 2015 21:06:57 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/5] staging: wilc1000: use pr_* instead of printk
+Message-ID: <20150817180657.GF5610@mwanda> (sfid-20150817_200744_587370_5F774FB2)
+References: <CAE_Gge0m4KRC7UJntqnsXPeO9HZ7dg9UexLAi__2EN+ouGGw9w@mail.gmail.com>
+ <cover.1439827537.git.raphael.beamonte@gmail.com>
+ <4feb986f253ce20790cafabbf2262c0cc1f2be92.1439827537.git.raphael.beamonte@gmail.com>
+ <20150817174707.GE5610@mwanda>
+ <CAE_Gge0BYV2Zf2HiP_xf4a5pdjv81x-L_+TEFLVdRR3yi9Ph1w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE_Gge0BYV2Zf2HiP_xf4a5pdjv81x-L_+TEFLVdRR3yi9Ph1w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused define macro that is never used.
+On Mon, Aug 17, 2015 at 01:59:44PM -0400, Raphaël Beamonte wrote:
+> 2015-08-17 13:47 GMT-04:00 Dan Carpenter <dan.carpenter@oracle.com>:
+> >> -                             printk("[Sendconfigpkt]Get Timed out\n");
+> >> +                             pr_debug("[Sendconfigpkt]Get Timed out\n");
+> >
+> >
+> > Possibly pr_err()?
+> 
+> Yep. My mistake. I'll do the same for Set Timed Out also!
+> 
+> >> -                     printk("DBG [%s: %d]", __func__, __LINE__);     \
+> >> -                     printk(__VA_ARGS__);                            \
+> >> +                     pr_debug("DBG [%s: %d]", __func__, __LINE__);   \
+> >> +                     pr_debug(__VA_ARGS__);                          \
+> >
+> > This is a behavior change, I think.  pr_debug() needs to be turned on?
+> 
+> Yes... I didn't pay attention to that! pr_debug needs -DDEBUG in the makefile.
+> Should I use pr_info here? Or just acknowledge the behavior change for
+> the moment,
+> as the next aim is probably, as you said, to remove all the local
+> debug code? (it is
+> actually part of the TODO of this driver... So I could just work on that next.)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_memory.h | 51 ----------------------------------
- 1 file changed, 51 deletions(-)
+I would probably just do the rest and leave this part as-is since you're
+planning to redo it all anyway.  I guess just do stuff which is obvious
+and hopefully more and more stuff will become obvious as you go along.
+This is a lazy answer but I don't want to think about this driver very
+hard...  :P
 
-diff --git a/drivers/staging/wilc1000/wilc_memory.h b/drivers/staging/wilc1000/wilc_memory.h
-index 372d705..e3be567 100644
---- a/drivers/staging/wilc1000/wilc_memory.h
-+++ b/drivers/staging/wilc1000/wilc_memory.h
-@@ -126,20 +126,8 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
- 	(WILC_MemoryAlloc( \
- 		 (__size__), __attrs__, NULL, 0))
- 
--/*!
-- * @brief	standrad calloc wrapper with custom attributes
-- */
--	#define WILC_CALLOC_EX(__size__, __attrs__) \
--	(WILC_MemoryCalloc( \
--		 (__size__), __attrs__, NULL, 0))
- 
- /*!
-- * @brief	standrad realloc wrapper with custom attributes
-- */
--	#define WILC_REALLOC_EX(__ptr__, __new_size__, __attrs__) \
--	(WILC_MemoryRealloc( \
--		 (__ptr__), (__new_size__), __attrs__, NULL, 0))
--/*!
-  * @brief	standrad free wrapper with custom attributes
-  */
- 	#define WILC_FREE_EX(__ptr__, __attrs__) \
-@@ -154,24 +142,7 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
- 	((__struct_type__ *)WILC_MALLOC_EX( \
- 		 sizeof(__struct_type__) * (u32)(__n_structs__), __attrs__))
- 
--/*!
-- * @brief	Allocates a block (with custom attributes) of given type and number of
-- * elements and Zero-fills it
-- */
--#define WILC_NEW_0_EX(__struct_type__, __n_structs__, __attrs__) \
--	((__struct_type__ *)WILC_CALLOC_EX( \
--		 sizeof(__struct_type__) * (u32)(__n_structs__), __attrs__))
- 
--/*!
-- * @brief	Frees a block (with custom attributes), also setting the original pointer
-- * to NULL
-- */
--#define WILC_FREE_SET_NULL_EX(__ptr__, __attrs__) do { \
--		if (__ptr__ != NULL) { \
--			WILC_FREE_EX(__ptr__, __attrs__); \
--			__ptr__ = NULL; \
--		} \
--} while (0)
- 
- /*!
-  * @brief	Frees a block (with custom attributes) if the pointer expression evaluates
-@@ -189,17 +160,7 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
- #define WILC_MALLOC(__size__) \
- 	WILC_MALLOC_EX(__size__, NULL)
- 
--/*!
-- * @brief	standrad calloc wrapper with default attributes
-- */
--#define WILC_CALLOC(__size__) \
--	WILC_CALLOC_EX(__size__, NULL)
- 
--/*!
-- * @brief	standrad realloc wrapper with default attributes
-- */
--#define WILC_REALLOC(__ptr__, __new_size__) \
--	WILC_REALLOC_EX(__ptr__, __new_size__, NULL)
- 
- /*!
-  * @brief	standrad free wrapper with default attributes
-@@ -214,19 +175,7 @@ void WILC_MemoryFree(const void *pvBlock, tstrWILC_MemoryAttrs *strAttrs,
- #define WILC_NEW(__struct_type__, __n_structs__) \
- 	WILC_NEW_EX(__struct_type__, __n_structs__, NULL)
- 
--/*!
-- * @brief	Allocates a block (with default attributes) of given type and number of
-- * elements and Zero-fills it
-- */
--#define WILC_NEW_0(__struct_type__, __n_structs__) \
--	WILC_NEW_O_EX(__struct_type__, __n_structs__, NULL)
- 
--/*!
-- * @brief	Frees a block (with default attributes), also setting the original pointer
-- * to NULL
-- */
--#define WILC_FREE_SET_NULL(__ptr__) \
--	WILC_FREE_SET_NULL_EX(__ptr__, NULL)
- 
- /*!
-  * @brief	Frees a block (with default attributes) if the pointer expression evaluates
--- 
-1.9.1
+Also always try to order your patches from least controversial to most
+controversial.  It makes it easier to redo things or sometimes Greg
+applies the first part of a patch series.
+
+regards,
+dan carpenter
 
