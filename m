@@ -1,99 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:35767 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbbHaVZP (ORCPT
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:33938 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566AbbHQCF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 17:25:15 -0400
-Received: by obcbp4 with SMTP id bp4so31695585obc.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 14:25:14 -0700 (PDT)
-Subject: Re: RTL8189ETV
-To: poma <pomidorabelisima@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hans de Goede <hdegoede@redhat.com>
-References: <55E47A27.4090703@gmail.com> <55E48988.1000803@gmail.com>
- <55E49415.7090807@lwfinger.net> <55E4B9A2.8060109@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55E4C638.7010704@lwfinger.net> (sfid-20150831_232520_252559_CCE76DC4)
-Date: Mon, 31 Aug 2015 16:25:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <55E4B9A2.8060109@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Sun, 16 Aug 2015 22:05:26 -0400
+Received: by pdbfa8 with SMTP id fa8so50080305pdb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2015 19:05:25 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/6] staging: wilc1000: remove WILC_NEW and WILC_NEW_EX
+Date: Mon, 17 Aug 2015 11:05:11 +0900
+Message-Id: <1439777115-25861-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150817_040528_998122_E4CDEE93)
+In-Reply-To: <1439777115-25861-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439777115-25861-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/2015 03:31 PM, poma wrote:
-> On 31.08.2015 19:51, Larry Finger wrote:
->> On 08/31/2015 12:06 PM, poma wrote:
->>> On 31.08.2015 18:00, poma wrote:
->>>>
->>>> Hi Fi,
->>>>
->>>> What is this device, is it supported by
->>>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
->>>>
->>>> $ modinfo rtl8189es
->>>> modinfo: ERROR: Module rtl8189es not found.
->>>>
->>>
->>> or is it supported by
->>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8188eu
->>> https://github.com/lwfinger/rtl8188eu
->>> as RTL8188ETV is
->>>
->>> $ modinfo rtl8188eu
->>> modinfo: ERROR: Module rtl8188eu not found.
->>>
->>>
->>> However RTL8188ETV is USB 2.0 device,
->>> eeeeeeeeeeeeeeeeeee not again!
->>
->> That last comment does not help.
->>
->> If rtl8188eu is not available, that is the fault of your distro, not anything
->> that driver maintainers can help. That driver is in the staging directory, and
->> some distros do not include any of those drivers in their kernels.
->>
->> eeeeeeeeeeeeeeeeeee not again! Someone posts about a USB device not found, and
->> they refuse/fail to provide the USB ID. Why, I do not know when the lsusb
->> command provides this info so easily.
->>
->> Larry
->>
->>
->
->
-> What's the hurry, Larry.
-> Let's see if Hans knows what type of this device is RTL8189ETV.
->
-> According to what is written here
-> http://linux-sunxi.org/Xunlong_Orange_Pi#Variants
-> http://www.orangepi.org/orangepi2
-> RTL8189ETV, whatever it is, is an integral part of some "O-Pi" variants.
->
-> About rtl8188etv can be read here
-> http://www.orangepi.org/orangepibbsen/forum.php?mod=viewthread&tid=25&highlight=wifi
-> but there is no mention of RTL8189ETV.
->
-> WikiDevi also returns nothing
-> https://wikidevi.com/wiki/Main_Page
->    "Search results
->    ...
->    There were no results matching the query.
->
->    Create the page "RTL8189ETV" on this wiki!"
->
-> I'm trying to determine in advance,
-> what components are supported,
-> what components are not supported,
-> what components will never be supported,
-> what components will never be supported in mainline kernel.
->
-> Therefore, I can not show 'lsusb' output. :)
->
-> "Distro" is not decisive in this matter, moreover dunno what are you referring with "your distro".
->
-> eeeeeeeeeeeeeeeeeeeeee not again!
+This patch removes WILC_NEW and WILC_NEW_EX defines that are not used anywhere.
 
-Silly me. I thought you were trying to get help implemetiing that device.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_memory.h | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/wilc_memory.h b/drivers/staging/wilc1000/wilc_memory.h
+index 877617c..f19cec1 100644
+--- a/drivers/staging/wilc1000/wilc_memory.h
++++ b/drivers/staging/wilc1000/wilc_memory.h
+@@ -38,8 +38,6 @@ typedef struct {
+  *  @sa		sttrWILC_MemoryAttrs
+  *  @sa		WILC_MALLOC
+  *  @sa		WILC_MALLOC_EX
+- *  @sa		WILC_NEW
+- *  @sa		WILC_NEW_EX
+  *  @author	syounan
+  *  @date	16 Aug 2010
+  *  @version	1.0
+@@ -54,13 +52,6 @@ void *WILC_MemoryAlloc(u32 u32Size, tstrWILC_MemoryAttrs *strAttrs,
+ 	(WILC_MemoryAlloc( \
+ 		 (__size__), __attrs__, NULL, 0))
+ 
+-/*!
+- * @brief	Allocates a block (with custom attributes) of given type and number of
+- * elements
+- */
+-#define WILC_NEW_EX(__struct_type__, __n_structs__, __attrs__) \
+-	((__struct_type__ *)WILC_MALLOC_EX( \
+-		 sizeof(__struct_type__) * (u32)(__n_structs__), __attrs__))
+ 
+ /*!
+  * @brief	standrad malloc wrapper with default attributes
+@@ -71,11 +62,5 @@ void *WILC_MemoryAlloc(u32 u32Size, tstrWILC_MemoryAttrs *strAttrs,
+ 
+ 
+ 
+-/*!
+- * @brief	Allocates a block (with default attributes) of given type and number of
+- * elements
+- */
+-#define WILC_NEW(__struct_type__, __n_structs__) \
+-	WILC_NEW_EX(__struct_type__, __n_structs__, NULL)
+ 
+ #endif
+-- 
+1.9.1
 
