@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42244 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522AbbHCI04 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:40302 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbbHQJIz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2015 04:26:56 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 17 Aug 2015 05:08:55 -0400
+Date: Mon, 17 Aug 2015 12:08:52 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/3] staging: wilc1000: code style: fix macro with
+ multiple statements
+Message-ID: <20150817090828.GB5558@mwanda> (sfid-20150817_110916_466886_3D93ABF0)
+References: <cover.1439702894.git.raphael.beamonte@gmail.com>
+ <641be2615e97db253a306c766a48c2afccf338d7.1439702894.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [-4.2] rtlwifi: rtl8723be: Add module parameter for MSI interrupts
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1438539853-29619-1-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Message-Id: <20150803082655.DBE83140035@smtp.codeaurora.org> (sfid-20150803_102705_850669_C98A857F)
-Date: Mon,  3 Aug 2015 08:26:55 +0000 (UTC)
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <641be2615e97db253a306c766a48c2afccf338d7.1439702894.git.raphael.beamonte@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Aug 16, 2015 at 01:30:12AM -0400, Raphaël Beamonte wrote:
+>  #define MALLOC_WILC_BUFFER(name, size)	\
+> -	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+> -	if (!exported_ ## name) {   \
+> -		printk("fail to alloc: %s memory\n", exported_ ## name);  \
+> -		return -ENOBUFS;	\
+> -	}
+> +	do { \
+> +		exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+> +		if (!exported_ ## name) {   \
+> +			printk("fail to alloc: %s memory\n", exported_ ## name);  \
+> +			return -ENOBUFS;	\
+> +		}
+> +	} while (0)
 
-> The driver code allows for the disabling of MSI interrupts; however the
-> module_parm line was missed and the option fails to show with modinfo.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [3.15+]
+Pull it in one indent level...  But actually this macro has a return in
+the middle of it, so it just introduces bugs all over the place like
+eating cookies in bed.  We should just delete it instead.
 
-Thanks, applied to wireless-drivers.git.
+regards,
+dan carpenter
 
-Kalle Valo
