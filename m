@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:35066 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753772AbbHXOmt (ORCPT
+Received: from mail-io0-f182.google.com ([209.85.223.182]:35683 "EHLO
+	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbbHQT2r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2015 10:42:49 -0400
-Received: by oiew67 with SMTP id w67so81621366oie.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2015 07:42:49 -0700 (PDT)
-Subject: Re: Getting started on switching rtl8188eu staging driver to
- LIB80211/MAC80211
-To: Sreenath Madasu <Sreenath.Madasu@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <loom.20150824T013723-25@post.gmane.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55DB2D62.6090002@lwfinger.net> (sfid-20150824_164303_403245_1B9A9826)
-Date: Mon, 24 Aug 2015 09:42:42 -0500
+	Mon, 17 Aug 2015 15:28:47 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCHv2 3/5] staging: wilc1000: remove DECLARE_WILC_BUFFER()
+Date: Mon, 17 Aug 2015 15:28:28 -0400
+Message-Id: <a4e996047a4c02c44168a7b8794ad6a63ea11bcc.1439838526.git.raphael.beamonte@gmail.com> (sfid-20150817_213036_463664_0225F5BA)
+In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <loom.20150824T013723-25@post.gmane.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/23/2015 06:40 PM, Sreenath Madasu wrote:
-> Hi all,
-> I want to work on the TODO tasks
->
-> - switch to use LIB80211
-> - switch to use MAC80211
->
-> for staging driver rtl8188eu.
->
-> How can I start? Where is the documentation?
+It was just a wrapper to initialize a variable. Initialize it
+directly instead.
 
-There is no specific documentation for this device, only what is available in 
-the mac80211, cfg80211, and nl80211 code. You could also look at the drivers in 
-drivers/net/wireless/ for ideas. The driver must be rewritten. You could 
-consider Jes Sorensen's work on producing a mac80211 driver for the RTL8723AU 
-that has been posted on this mailing list. He started with a Realtek USB driver 
-that is similar to r8188eu.
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_exported_buf.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-Larry
-
+diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+index 55b6232..148d608 100644
+--- a/drivers/staging/wilc1000/wilc_exported_buf.c
++++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+@@ -8,9 +8,6 @@
+ #define LINUX_TX_SIZE	(64 * 1024)
+ #define WILC1000_FW_SIZE (4 * 1024)
+ 
+-#define DECLARE_WILC_BUFFER(name)	\
+-	void *exported_ ## name = NULL;
+-
+ #define MALLOC_WILC_BUFFER(name, size)	\
+ 	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+ 	if (!exported_ ## name) {   \
+@@ -24,9 +21,9 @@
+ /*
+  * Add necessary buffer pointers
+  */
+-DECLARE_WILC_BUFFER(g_tx_buf)
+-DECLARE_WILC_BUFFER(g_rx_buf)
+-DECLARE_WILC_BUFFER(g_fw_buf)
++void *exported_g_tx_buf;
++void *exported_g_rx_buf;
++void *exported_g_fw_buf;
+ 
+ void *get_tx_buffer(void)
+ {
+-- 
+2.1.4
 
