@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:34479 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbbHQSAF (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:38624 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035AbbHQT2s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 14:00:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150817174707.GE5610@mwanda>
-References: <CAE_Gge0m4KRC7UJntqnsXPeO9HZ7dg9UexLAi__2EN+ouGGw9w@mail.gmail.com>
- <cover.1439827537.git.raphael.beamonte@gmail.com> <4feb986f253ce20790cafabbf2262c0cc1f2be92.1439827537.git.raphael.beamonte@gmail.com>
- <20150817174707.GE5610@mwanda>
-From: =?UTF-8?Q?Rapha=C3=ABl_Beamonte?= <raphael.beamonte@gmail.com>
-Date: Mon, 17 Aug 2015 13:59:44 -0400
-Message-ID: <CAE_Gge0BYV2Zf2HiP_xf4a5pdjv81x-L_+TEFLVdRR3yi9Ph1w@mail.gmail.com> (sfid-20150817_200036_391626_76C96DEE)
-Subject: Re: [PATCH 4/5] staging: wilc1000: use pr_* instead of printk
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Mon, 17 Aug 2015 15:28:48 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
 	Rachel Kim <rachel.kim@atmel.com>,
 	Dean Lee <dean.lee@atmel.com>,
 	Chris Park <chris.park@atmel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCHv2 4/5] staging: wilc1000: remove FREE_WILC_BUFFER()
+Date: Mon, 17 Aug 2015 15:28:29 -0400
+Message-Id: <1ed2c34e8fde92cd4813ae549ba0a0a3fd92afd0.1439838526.git.raphael.beamonte@gmail.com> (sfid-20150817_212931_852574_53F65226)
+In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+In-Reply-To: <cover.1439838526.git.raphael.beamonte@gmail.com>
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-08-17 13:47 GMT-04:00 Dan Carpenter <dan.carpenter@oracle.com>:
->> -                             printk("[Sendconfigpkt]Get Timed out\n");
->> +                             pr_debug("[Sendconfigpkt]Get Timed out\n");
->
->
-> Possibly pr_err()?
+It was just a wrapper around kfree(), so call that instead.
 
-Yep. My mistake. I'll do the same for Set Timed Out also!
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_exported_buf.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
->> -                     printk("DBG [%s: %d]", __func__, __LINE__);     \
->> -                     printk(__VA_ARGS__);                            \
->> +                     pr_debug("DBG [%s: %d]", __func__, __LINE__);   \
->> +                     pr_debug(__VA_ARGS__);                          \
->
-> This is a behavior change, I think.  pr_debug() needs to be turned on?
+diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+index 148d608..c9a5943 100644
+--- a/drivers/staging/wilc1000/wilc_exported_buf.c
++++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+@@ -15,9 +15,6 @@
+ 		return -ENOBUFS;	\
+ 	}
+ 
+-#define FREE_WILC_BUFFER(name)	\
+-	kfree(exported_ ## name);
+-
+ /*
+  * Add necessary buffer pointers
+  */
+@@ -57,9 +54,9 @@ static int __init wilc_module_init(void)
+ 
+ static void __exit wilc_module_deinit(void)
+ {
+-	FREE_WILC_BUFFER(g_tx_buf)
+-	FREE_WILC_BUFFER(g_rx_buf)
+-	FREE_WILC_BUFFER(g_fw_buf)
++	kfree(exported_g_tx_buf);
++	kfree(exported_g_rx_buf);
++	kfree(exported_g_fw_buf);
+ }
+ 
+ MODULE_LICENSE("Dual BSD/GPL");
+-- 
+2.1.4
 
-Yes... I didn't pay attention to that! pr_debug needs -DDEBUG in the makefile.
-Should I use pr_info here? Or just acknowledge the behavior change for
-the moment,
-as the next aim is probably, as you said, to remove all the local
-debug code? (it is
-actually part of the TODO of this driver... So I could just work on that next.)
-
-I'll include your other log level advices and send a new version.
-Thanks for your
-reviewing time!
