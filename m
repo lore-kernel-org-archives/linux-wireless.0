@@ -1,80 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45172 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032AbbHTKat (ORCPT
+Received: from mail-yk0-f170.google.com ([209.85.160.170]:34178 "EHLO
+	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875AbbHQXQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 06:30:49 -0400
-Date: Thu, 20 Aug 2015 13:30:37 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mwifiex: fix mwifiex_rdeeprom_read()
-Message-ID: <20150820103037.GA5521@mwanda> (sfid-20150820_123055_681774_34E1CBE9)
+	Mon, 17 Aug 2015 19:16:17 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55D238D4.20800@broadcom.com>
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+ <339fc87526f51233b262315b2297f68e3b00c7b6.1439838526.git.raphael.beamonte@gmail.com>
+ <55D238D4.20800@broadcom.com>
+From: =?UTF-8?Q?Rapha=C3=ABl_Beamonte?= <raphael.beamonte@gmail.com>
+Date: Mon, 17 Aug 2015 19:15:57 -0400
+Message-ID: <CAE_Gge1n9LGY=4EOzJsvKNWpKqz5E0hwysddn76VLWB6qqnLUw@mail.gmail.com> (sfid-20150818_011633_162352_18719762)
+Subject: Re: [PATCHv2 5/5] staging: wilc1000: replace MALLOC_WILC_BUFFER()
+ macro to avoid possible memory leak
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were several bugs here.
+2015-08-17 15:41 GMT-04:00 Arend van Spriel <arend@broadcom.com>:
+> Probable MACRO_WILC_BUFFER should be MALLOC_WILC_BUFFER here.
 
-1)  The done label was in the wrong place so we didn't copy any
-    information out when there was no command given.
+Good catch!
 
-2)  We were using PAGE_SIZE as the size of the buffer instead of
-    "PAGE_SIZE - pos".
+> There is really no need to print an error message here. kmalloc will blurb
+> enough info when it fails.
 
-3)  snprintf() returns the number of characters that would have been
-    printed if there were enough space.  If there was not enough space
-    (and we had fixed the memory corruption bug #2) then it would result
-    in an information leak when we do simple_read_from_buffer().  I've
-    changed it to use scnprintf() instead.
+Ok!
 
-I also removed the initialization at the start of the function, because
-I thought it made the code a little more clear.
+> So these buffers are globals? So does this driver support multiple devices,
+> ie. how are these used when two wilc1000 supported devices are present.
 
-Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell mwifiex driver')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Not sure. I mostly did code refactoring to have a clearer source code
+and try to respect the kernel code style. I don't have a compatible
+device to try and test it unfortunately.
 
-diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
-index 5a0636d4..bd2f5d2 100644
---- a/drivers/net/wireless/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/mwifiex/debugfs.c
-@@ -731,7 +731,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
- 		(struct mwifiex_private *) file->private_data;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *) addr;
--	int pos = 0, ret = 0, i;
-+	int pos, ret, i;
- 	u8 value[MAX_EEPROM_DATA];
- 
- 	if (!buf)
-@@ -739,7 +739,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
- 
- 	if (saved_offset == -1) {
- 		/* No command has been given */
--		pos += snprintf(buf, PAGE_SIZE, "0");
-+		pos = snprintf(buf, PAGE_SIZE, "0");
- 		goto done;
- 	}
- 
-@@ -751,14 +751,14 @@ mwifiex_rdeeprom_read(struct file *file, char __user *ubuf,
- 		goto done;
- 	}
- 
--	pos += snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset, saved_bytes);
-+	pos = snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset, saved_bytes);
- 
- 	for (i = 0; i < saved_bytes; i++)
--		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ", value[i]);
-+		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "%d ", value[i]);
- 
-+done:
- 	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
- 
--done:
- 	free_page(addr);
- 	return ret;
- }
+Thanks for the feedback. I just sent a revised version of the patch
+taking your comments into account.
