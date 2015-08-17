@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11731 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751982AbbHZJK7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 05:10:59 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <arnd@arndb.de>,
-	<linux-wireless@vger.kernel.org>, <twilightrook@gmail.com>,
-	<oscarrydberg@gmail.com>, <vvanpo@gmail.com>,
-	<joseph.salisbury@canonical.com>
-Subject: Re: [PATCH/RFT 2/2] ath10k: rename qca6174 to qca61x4
-References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com>
-	<1439469147-9408-3-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 26 Aug 2015 12:10:51 +0300
-In-Reply-To: <1439469147-9408-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 13 Aug 2015 14:32:27 +0200")
-Message-ID: <87vbc21kkk.fsf@kamboji.qca.qualcomm.com> (sfid-20150826_111102_820686_C3CD4175)
+Received: from mga14.intel.com ([192.55.52.115]:42915 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753287AbbHQBs2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Aug 2015 21:48:28 -0400
+Message-ID: <55D13D66.1050500@linux.intel.com> (sfid-20150817_034928_736738_CEB3FC12)
+Date: Mon, 17 Aug 2015 09:48:22 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net/wireless: enable wiphy device to suspend/resume asynchronously
+References: <55B9B3BA.6080406@linux.intel.com> <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com>
+In-Reply-To: <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
 
-> This cleans up the naming a little bit. Both
-> QCA6174 and QCA6164 are in practice the same as
-> far as driving them is concerned.
+
+On 2015/7/30 13:55, Emmanuel Grumbach wrote:
+> On Thu, Jul 30, 2015 at 8:18 AM, Fu, Zhonghui
+> <zhonghui.fu@linux.intel.com> wrote:
+>> Enable wiphy device to suspend/resume asynchronously. This can improve
+>> system suspend/resume speed.
+>>
+> How will that impact the timing with respect to the suspend call
+> coming from the bus?
+> I think that a few drivers rely on the suspend call of the wiphy
+> device happening before the suspend call to the bus device.
+> Not sure though.
+
+Sorry for late reply.
+
+The suspend/resume timing of wiphy device and related devices will be ensured by their parent/child relationship. So, enabling wiphy device to suspend/resume asynchronously does not change any  dependency. It can only take advantage of multicore and improve system suspend/resume speed.
+
+
+Thanks,
+Zhonghui
 >
-> Unfortunately firmware paths will need to stay
-> untouched, i.e. QCA6164 firmware will still be
-> looked for in QCA6174 to avoid breaking backward
-> compatibility with older /lib/firmware setups.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+>> ---
+>>  net/wireless/core.c |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/wireless/core.c b/net/wireless/core.c
+>> index 2a0bbd2..bc5e68f 100644
+>> --- a/net/wireless/core.c
+>> +++ b/net/wireless/core.c
+>> @@ -416,6 +416,7 @@ use_default_name:
+>>         device_initialize(&rdev->wiphy.dev);
+>>         rdev->wiphy.dev.class = &ieee80211_class;
+>>         rdev->wiphy.dev.platform_data = rdev;
+>> +       device_enable_async_suspend(&rdev->wiphy.dev);
+>>
+>>         INIT_LIST_HEAD(&rdev->destroy_list);
+>>         spin_lock_init(&rdev->destroy_list_lock);
+>> -- 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Based on my previous comments I'll drop this.
-
--- 
-Kalle Valo
