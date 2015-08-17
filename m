@@ -1,95 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:36840 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbbHLR6T (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:22395 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbbHQRrF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2015 13:58:19 -0400
-Received: by oiev193 with SMTP id v193so13291876oie.3
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2015 10:58:18 -0700 (PDT)
-Subject: Re: Wireless driver issue
-To: "Richards, Sean" <srichards@gpo.gov>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <BY1PR09MB061612E4649D00B899E62DF9B57E0@BY1PR09MB0616.namprd09.prod.outlook.com>
-Cc: "ft86drifter@cox.net" <ft86drifter@cox.net>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55CB88DC.9070502@lwfinger.net> (sfid-20150812_195823_182939_6CB0557F)
-Date: Wed, 12 Aug 2015 12:56:44 -0500
+	Mon, 17 Aug 2015 13:47:05 -0400
+Date: Mon, 17 Aug 2015 20:47:07 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/5] staging: wilc1000: use pr_* instead of printk
+Message-ID: <20150817174707.GE5610@mwanda> (sfid-20150817_194731_253549_03F201CC)
+References: <CAE_Gge0m4KRC7UJntqnsXPeO9HZ7dg9UexLAi__2EN+ouGGw9w@mail.gmail.com>
+ <cover.1439827537.git.raphael.beamonte@gmail.com>
+ <4feb986f253ce20790cafabbf2262c0cc1f2be92.1439827537.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <BY1PR09MB061612E4649D00B899E62DF9B57E0@BY1PR09MB0616.namprd09.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4feb986f253ce20790cafabbf2262c0cc1f2be92.1439827537.git.raphael.beamonte@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2015 12:05 PM, Richards, Sean wrote:
-> https://bugzilla.redhat.com/show_bug.cgi?id=1239050
->
-> Here is some of the information I copied from bugzilla
->
->
-> Product version:  Lenovo Yoga 3 Pro-1370
-> Vendor: Lenovo
->
-> # rfkill list
-> 0: ideapad_wlan: Wireless LAN
-> 	Soft blocked: no
-> 	Hard blocked: no
-> 1: ideapad_bluetooth: Bluetooth
-> 	Soft blocked: no
-> 	Hard blocked: no
-> 3: hci0: Bluetooth
-> 	Soft blocked: no
-> 	Hard blocked: no
->
-> # lspci
-> 01:00.0 Network controller:  Broadcom Corportion BCM4352 801.11ac Wireless Netwrok Adapter (Rev 03)
->
-> #cat dmesg.log
->
-> [    7.829696] intel_rapl: Found RAPL domain package
-> [    7.829700] intel_rapl: Found RAPL domain core
-> [    7.829703] intel_rapl: Found RAPL domain dram
-> [    7.860817] b43-phy0: Broadcom 4352 WLAN found (core revision 42)
-> [    7.884409] bcma: bus0: HT force timeout
-> [    8.034006] bcma: bus0: PLL enable timeout
-> [    8.034053] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 12, Type 11 (AC), Revision 1)
-> [    8.034066] b43: probe of bcma0:1 failed with error -95
-> [    8.034085] Broadcom 43xx driver loaded [ Features: PMNLS ]
-> [    8.801760] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
-> [    8.801764] Bluetooth: BNEP filters: protocol multicast
-> [    8.801768] Bluetooth: BNEP socket layer initialized
-> [    8.972838] nf_conntrack version 0.5.0 (65536 buckets, 262144 max)
->
-> # lspci -nn
-> 00:00.0 Host bridge [0600]: Intel Corporation Broadwell-U Host Bridge -OPI [8086:1604] (rev 08)
-> 00:02.0 VGA compatible controller [0300]: Intel Corporation Broadwell-U Integrated Graphics [8086:161e] (rev 08)
-> 00:03.0 Audio device [0403]: Intel Corporation Broadwell-U Audio Controller [8086:160c] (rev 08)
-> 00:04.0 Signal processing controller [1180]: Intel Corporation Broadwell-U Camarillo Device [8086:1603] (rev 08)
-> 00:14.0 USB controller [0c03]: Intel Corporation Wildcat Point-LP USB xHCI Controller [8086:9cb1] (rev 03)
-> 00:16.0 Communication controller [0780]: Intel Corporation Wildcat Point-LP MEI Controller #1 [8086:9cba] (rev 03)
-> 00:1b.0 Audio device [0403]: Intel Corporation Wildcat Point-LP High Definition Audio Controller [8086:9ca0] (rev 03)
-> 00:1c.0 PCI bridge [0604]: Intel Corporation Wildcat Point-LP PCI Express Root Port #3 [8086:9c94] (rev e3)
-> 00:1f.0 ISA bridge [0601]: Intel Corporation Wildcat Point-LP LPC Controller [8086:9cc7] (rev 03)
-> 00:1f.2 SATA controller [0106]: Intel Corporation Wildcat Point-LP SATA Controller [AHCI Mode] [8086:9c83] (rev 03)
-> 00:1f.3 SMBus [0c05]: Intel Corporation Wildcat Point-LP SMBus Controller [8086:9ca2] (rev 03)
-> 00:1f.6 Signal processing controller [1180]: Intel Corporation Wildcat Point-LP Thermal Management Controller [8086:9ca4] (rev 03)
-> 01:00.0 Network controller [0280]: Broadcom Corporation BCM4352 802.11ac Wireless Network Adapter [14e4:43b1] (rev 03)
->
->
-> Sean Richards
-> Accelera | GPO Contractor
-> Citrix | VMware | M.S.
-> Ext. 20306
-
-I would think that "> [    8.034053] b43-phy0 ERROR: FOUND UNSUPPORTED PHY 
-(Analog 12, Type 11 (AC), Revision 1)" would be self explanatory. Obviously, b43 
-does not support that device, and I doubt that it ever will. Reverse engineering 
-802.11g was difficult, 802.11n was much harder, and I suspect that 802.11ac 
-would be impossible.
-
-Your only option is to use the Broadcom hybrid (proprietary) driver. It will 
-taint your kernel, and we do not support it here, but it is your only choice.
-
-Larry
+On Mon, Aug 17, 2015 at 12:08:36PM -0400, Raphaël Beamonte wrote:
+> Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.c  |  4 ++--
+>  drivers/staging/wilc1000/linux_wlan.c        |  8 +++----
+>  drivers/staging/wilc1000/linux_wlan_common.h | 32 ++++++++++++++--------------
+>  drivers/staging/wilc1000/linux_wlan_sdio.c   |  2 +-
+>  drivers/staging/wilc1000/linux_wlan_spi.c    |  2 +-
+>  drivers/staging/wilc1000/wilc_debugfs.c      | 16 +++++++-------
+>  drivers/staging/wilc1000/wilc_exported_buf.c |  6 +++---
+>  7 files changed, 35 insertions(+), 35 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+> index c81c41d..0cbf4a9c 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.c
+> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+> @@ -2007,7 +2007,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+>  							pstrWIDs[counter].u16WIDid,
+>  							(counter == u32WIDsCount - 1), drvHandler)) {
+>  				ret = -1;
+> -				printk("[Sendconfigpkt]Get Timed out\n");
+> +				pr_debug("[Sendconfigpkt]Get Timed out\n");
 
 
+Possibly pr_err()?
 
+
+>  				break;
+>  			}
+>  		}
+> @@ -2029,7 +2029,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+>  							pstrWIDs[counter].s32ValueSize,
+>  							(counter == u32WIDsCount - 1), drvHandler)) {
+>  				ret = -1;
+> -				printk("[Sendconfigpkt]Set Timed out\n");
+> +				pr_debug("[Sendconfigpkt]Set Timed out\n");
+>  				break;
+>  			}
+>  		}
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+> index 040e55d..1f32c36 100644
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -1306,7 +1306,7 @@ void wilc1000_wlan_deinit(linux_wlan_t *nic)
+>  
+>  	if (g_linux_wlan->wilc1000_initialized)	{
+>  
+> -		printk("Deinitializing wilc1000  ...\n");
+> +		pr_info("Deinitializing wilc1000  ...\n");
+
+debug.
+
+>  
+>  		if (nic == NULL) {
+>  			PRINT_ER("nic is NULL\n");
+> @@ -2565,8 +2565,8 @@ static int __init init_wilc_driver(void)
+>  	}
+>  #endif
+>  
+> -	printk("IN INIT FUNCTION\n");
+> -	printk("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
+> +	pr_info("IN INIT FUNCTION\n");
+
+debug.
+
+> +	pr_info("*** WILC1000 driver VERSION=[10.2] FW_VER=[10.2] ***\n");
+>  
+>  	linux_wlan_device_power(1);
+>  	msleep(100);
+> @@ -2662,7 +2662,7 @@ static void __exit exit_wilc_driver(void)
+>  			kfree(g_linux_wlan);
+>  			g_linux_wlan = NULL;
+>  		}
+> -		printk("Module_exit Done.\n");
+> +		pr_info("Module_exit Done.\n");
+
+debug.
+
+>  
+>  #if defined(WILC_DEBUGFS)
+>  		wilc_debugfs_remove();
+> diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+> index e6ebf3e..14743ae 100644
+> --- a/drivers/staging/wilc1000/linux_wlan_common.h
+> +++ b/drivers/staging/wilc1000/linux_wlan_common.h
+> @@ -54,8 +54,8 @@ extern atomic_t DEBUG_LEVEL;
+>  	do {								\
+>  		if ((atomic_read(&DEBUG_LEVEL) & DEBUG) &&		\
+>  		   ((atomic_read(&REGION)) & (region))) {		\
+> -			printk("DBG [%s: %d]", __func__, __LINE__);	\
+> -			printk(__VA_ARGS__);				\
+> +			pr_debug("DBG [%s: %d]", __func__, __LINE__);	\
+> +			pr_debug(__VA_ARGS__);				\
+
+This is a behavior change, I think.  pr_debug() needs to be turned on?
+
+>  		}							\
+>  	} while (0)
+>  
+> @@ -63,8 +63,8 @@ extern atomic_t DEBUG_LEVEL;
+>  	do {								\
+>  		if ((atomic_read(&DEBUG_LEVEL) & INFO) &&		\
+>  		   ((atomic_read(&REGION)) & (region))) {		\
+> -			printk("INFO [%s]", __func__);			\
+> -			printk(__VA_ARGS__);				\
+> +			pr_info("INFO [%s]", __func__);			\
+> +			pr_info(__VA_ARGS__);				\
+>  		}							\
+>  	} while (0)
+>  
+> @@ -72,16 +72,16 @@ extern atomic_t DEBUG_LEVEL;
+>  	do {								\
+>  		if ((atomic_read(&DEBUG_LEVEL) & WRN) &&		\
+>  		   ((atomic_read(&REGION)) & (region))) {		\
+> -			printk("WRN [%s: %d]", __func__, __LINE__);	\
+> -			printk(__VA_ARGS__);				\
+> +			pr_warning("WRN [%s: %d]", __func__, __LINE__);	\
+> +			pr_warning(__VA_ARGS__);				\
+>  		}							\
+>  	} while (0)
+>  
+>  #define PRINT_ER(...)							\
+>  	do {								\
+>  		if ((atomic_read(&DEBUG_LEVEL) & ERR)) {		\
+> -			printk("ERR [%s: %d]", __func__, __LINE__);	\
+> -			printk(__VA_ARGS__);				\
+> +			pr_err("ERR [%s: %d]", __func__, __LINE__);	\
+> +			pr_err(__VA_ARGS__);				\
+>  		}							\
+>  	} while (0)
+>  
+> @@ -96,31 +96,31 @@ extern atomic_t DEBUG_LEVEL;
+>  #define PRINT_D(region, ...)						\
+>  	do {								\
+>  		if (DEBUG == 1 && ((REGION)&(region))) {		\
+> -			printk("DBG [%s: %d]", __func__, __LINE__);	\
+> -			printk(__VA_ARGS__);				\
+> +			pr_debug("DBG [%s: %d]", __func__, __LINE__);	\
+> +			pr_debug(__VA_ARGS__);				\
+>  		}							\
+>  	} while (0)
+>  
+>  #define PRINT_INFO(region, ...)						\
+>  	do {								\
+>  		if (INFO == 1 && ((REGION)&(region))) {			\
+> -			printk("INFO [%s]", __func__);			\
+> -			printk(__VA_ARGS__);				\
+> +			pr_info("INFO [%s]", __func__);			\
+> +			pr_info(__VA_ARGS__);				\
+>  		}							\
+>  	} while (0)
+>  
+>  #define PRINT_WRN(region, ...)						\
+>  	do {								\
+>  		if (WRN == 1 && ((REGION)&(region))) {			\
+> -			printk("WRN [%s: %d]", __func__, __LINE__);	\
+> -			printk(__VA_ARGS__);				\
+> +			pr_warning("WRN [%s: %d]", __func__, __LINE__);	\
+> +			pr_warning(__VA_ARGS__);				\
+>  		}							\
+>  	} while (0)
+>  
+>  #define PRINT_ER(...)							\
+>  	do {								\
+> -		printk("ERR [%s: %d]", __func__, __LINE__);		\
+> -		printk(__VA_ARGS__);					\
+> +		pr_err("ERR [%s: %d]", __func__, __LINE__);		\
+> +		pr_err(__VA_ARGS__);					\
+>  	} while (0)
+>  #endif
+>  
+> diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
+> index 37f31f4..13d7f84 100644
+> --- a/drivers/staging/wilc1000/linux_wlan_sdio.c
+> +++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
+> @@ -136,7 +136,7 @@ static int linux_sdio_probe(struct sdio_func *func, const struct sdio_device_id
+>  		return -1;
+>  	}
+>  
+> -	printk("Driver Initializing success\n");
+> +	pr_info("Driver Initializing success\n");
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+> index 236669c..0bb68a5 100644
+> --- a/drivers/staging/wilc1000/linux_wlan_spi.c
+> +++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+> @@ -50,7 +50,7 @@ static int __init wilc_bus_probe(struct spi_device *spi)
+>  	PRINT_D(BUS_DBG, "spiMax-Speed: %d\n", spi->max_speed_hz);
+>  	wilc_spi_dev = spi;
+>  
+> -	printk("Driver Initializing success\n");
+> +	pr_info("Driver Initializing success\n");
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+> index be2e901..588b167 100644
+> --- a/drivers/staging/wilc1000/wilc_debugfs.c
+> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
+> @@ -68,16 +68,16 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t
+>  		flag = 100;
+>  
+>  	if (flag > DBG_LEVEL_ALL) {
+> -		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&DEBUG_LEVEL));
+> +		pr_err("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&DEBUG_LEVEL));
+>  		return -EFAULT;
+>  	}
+>  
+>  	atomic_set(&DEBUG_LEVEL, (int)flag);
+>  
+>  	if (flag == 0)
+> -		printk("Debug-level disabled\n");
+> +		pr_info("Debug-level disabled\n");
+>  	else
+> -		printk("Debug-level enabled\n");
+> +		pr_info("Debug-level enabled\n");
+
+Ugh...  I guess debug?  Eventually we will want to remove most of this
+debug code.  It's just lazy and messy.
+
+
+>  	return count;
+>  }
+>  
+> @@ -110,12 +110,12 @@ static ssize_t wilc_debug_region_write(struct file *filp, const char *buf, size_
+>  	flag = buffer[0] - '0';
+>  
+>  	if (flag > DBG_REGION_ALL) {
+> -		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&REGION));
+> +		pr_err("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&REGION));
+>  		return -EFAULT;
+>  	}
+>  
+>  	atomic_set(&REGION, (int)flag);
+> -	printk("new debug-region is %x\n", atomic_read(&REGION));
+> +	pr_info("new debug-region is %x\n", atomic_read(&REGION));
+
+debug.
+
+>  
+>  	return count;
+>  }
+> @@ -154,12 +154,12 @@ int wilc_debugfs_init(void)
+>  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+>  	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
+>  		/* it's not error. the debugfs is just not being enabled. */
+> -		printk("ERR, kernel has built without debugfs support\n");
+> +		pr_err("kernel has built without debugfs support\n");
+>  		return 0;
+>  	}
+>  
+>  	if (!wilc_dir) {
+> -		printk("ERR, debugfs create dir\n");
+> +		pr_err("debugfs create dir\n");
+>  		return -1;
+>  	}
+>  
+> @@ -172,7 +172,7 @@ int wilc_debugfs_init(void)
+>  						    &info->fops);
+>  
+>  		if (!debugfs_files) {
+> -			printk("ERR fail to create the debugfs file, %s\n", info->name);
+> +			pr_err("fail to create the debugfs file, %s\n", info->name);
+>  			debugfs_remove_recursive(wilc_dir);
+>  			return -1;
+>  		}
+> diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+> index c3aff9a..ceacfe2 100644
+> --- a/drivers/staging/wilc1000/wilc_exported_buf.c
+> +++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+> @@ -37,7 +37,7 @@ static inline int kmalloc_wilc_buffer(void *buf, int size)
+>  {
+>  	buf = kmalloc(size, GFP_KERNEL);
+>  	if (!buf) {
+> -		printk("fail to alloc memory\n");
+> +		pr_err("fail to alloc memory\n");
+
+Delete this.
+
+>  		return -ENOBUFS;
+>  	}
+>  	return 0;
+> @@ -45,7 +45,7 @@ static inline int kmalloc_wilc_buffer(void *buf, int size)
+>  
+>  static int __init wilc_module_init(void)
+>  {
+> -	printk("wilc_module_init\n");
+> +	pr_info("wilc_module_init\n");
+
+Delete this.  We have ftrae.
+
+>  	/*
+>  	 * alloc necessary memory
+>  	 */
+> @@ -74,7 +74,7 @@ error_g_tx_buf:
+>  
+>  static void __exit wilc_module_deinit(void)
+>  {
+> -	printk("wilc_module_deinit\n");
+> +	pr_info("wilc_module_deinit\n");
+
+Delete this.
+
+>  
+>  	kfree(exported_g_tx_buf);
+>  	exported_g_tx_buf = NULL;
+> -- 
+> 2.1.4
