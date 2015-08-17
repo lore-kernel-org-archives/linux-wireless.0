@@ -1,89 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1725 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752442AbbHOTkn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2015 15:40:43 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 6/9] mac80211: allow the driver to advertise A-MSDU within A-MPDU Rx support
-Date: Sat, 15 Aug 2015 22:39:51 +0300
-Message-Id: <1439667594-13632-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150815_214047_355565_51CFD4EE)
-In-Reply-To: <1439667594-13632-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1439667594-13632-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:35581 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755834AbbHQQIy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2015 12:08:54 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH 3/5] staging: wilc1000: replace MALLOC_WILC_BUFFER() macro to avoid possible memory leak
+Date: Mon, 17 Aug 2015 12:08:35 -0400
+Message-Id: <c8b8d96496a5502d6f02ff53f319f16bc612ff30.1439827537.git.raphael.beamonte@gmail.com> (sfid-20150817_180937_125214_5DF33E33)
+In-Reply-To: <cover.1439827537.git.raphael.beamonte@gmail.com>
+References: <cover.1439827537.git.raphael.beamonte@gmail.com>
+In-Reply-To: <cover.1439827537.git.raphael.beamonte@gmail.com>
+References: <CAE_Gge0m4KRC7UJntqnsXPeO9HZ7dg9UexLAi__2EN+ouGGw9w@mail.gmail.com> <cover.1439827537.git.raphael.beamonte@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers may be interested in receiving A-MSDU within A-MDPU.
-Not all the devices may be able to do so, make it configurable.
+The MACRO_WILC_BUFFER() macro was using a return statement, and didn't
+take care of possible memory leaks and subsequent bugs when it was failing
+after succeeding some allocations. This patch corrects this behavior.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
 ---
- include/net/mac80211.h | 7 +++++++
- net/mac80211/agg-rx.c  | 4 +++-
- net/mac80211/debugfs.c | 1 +
- 3 files changed, 11 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_exported_buf.c | 39 +++++++++++++++++++++-------
+ 1 file changed, 29 insertions(+), 10 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 16786450..344424c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1897,6 +1897,12 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_TDLS_WIDER_BW: The device/driver supports wider bandwidth
-  *	than then BSS bandwidth for a TDLS link on the base channel.
-  *
-+ * @IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU:
-+ *	Hardware supports A-MSDU within A-MPDU.
-+ *
-+ * @IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU:
-+ *	Hardware supports A-MSDU within A-MPDU.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+index bf392fb..c3aff9a 100644
+--- a/drivers/staging/wilc1000/wilc_exported_buf.c
++++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+@@ -8,13 +8,6 @@
+ #define LINUX_TX_SIZE	(64 * 1024)
+ #define WILC1000_FW_SIZE (4 * 1024)
+ 
+-#define MALLOC_WILC_BUFFER(name, size)	\
+-	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+-	if (!exported_ ## name) {   \
+-		printk("fail to alloc: %s memory\n", exported_ ## name);  \
+-		return -ENOBUFS;	\
+-	}
+-
+ /*
+  * Add necessary buffer pointers
   */
- enum ieee80211_hw_flags {
-@@ -1930,6 +1936,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_CLONED_SKBS,
- 	IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS,
- 	IEEE80211_HW_TDLS_WIDER_BW,
-+	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
+@@ -40,17 +33,43 @@ void *get_fw_buffer(void)
+ }
+ EXPORT_SYMBOL(get_fw_buffer);
  
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 5c564a6..78de79b 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -189,6 +189,7 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
-+	bool amsdu = ieee80211_hw_check(&local->hw, SUPPORTS_AMSDU_IN_AMPDU);
- 	u16 capab;
++static inline int kmalloc_wilc_buffer(void *buf, int size)
++{
++	buf = kmalloc(size, GFP_KERNEL);
++	if (!buf) {
++		printk("fail to alloc memory\n");
++		return -ENOBUFS;
++	}
++	return 0;
++}
++
+ static int __init wilc_module_init(void)
+ {
+ 	printk("wilc_module_init\n");
+ 	/*
+ 	 * alloc necessary memory
+ 	 */
+-	MALLOC_WILC_BUFFER(g_tx_buf, LINUX_TX_SIZE)
+-	MALLOC_WILC_BUFFER(g_rx_buf, LINUX_RX_SIZE)
+-	MALLOC_WILC_BUFFER(g_fw_buf, WILC1000_FW_SIZE)
++	if (kmalloc_wilc_buffer(exported_g_tx_buf, LINUX_TX_SIZE))
++		goto error_g_tx_buf;
++
++	if (kmalloc_wilc_buffer(exported_g_rx_buf, LINUX_RX_SIZE))
++		goto error_g_rx_buf;
++
++	if (kmalloc_wilc_buffer(exported_g_fw_buf, WILC1000_FW_SIZE))
++		goto error_g_fw_buf;
  
- 	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
-@@ -217,7 +218,8 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
- 	mgmt->u.action.u.addba_resp.action_code = WLAN_ACTION_ADDBA_RESP;
- 	mgmt->u.action.u.addba_resp.dialog_token = dialog_token;
+ 	return 0;
++
++error_g_fw_buf:
++	kfree(exported_g_rx_buf);
++	exported_g_rx_buf = NULL;
++
++error_g_rx_buf:
++	kfree(exported_g_tx_buf);
++	exported_g_tx_buf = NULL;
++
++error_g_tx_buf:
++	return -ENOBUFS;
+ }
  
--	capab = (u16)(policy << 1);	/* bit 1 aggregation policy */
-+	capab = (u16)(amsdu << 0);	/* bit 0 A-MSDU support */
-+	capab |= (u16)(policy << 1);	/* bit 1 aggregation policy */
- 	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
- 	capab |= (u16)(buf_size << 6);	/* bit 15:6 max size of aggregation */
- 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index ced6bf3..41726fd 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -123,6 +123,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
- 	FLAG(SUPPORTS_CLONED_SKBS),
- 	FLAG(SINGLE_SCAN_ON_ALL_BANDS),
- 	FLAG(TDLS_WIDER_BW),
-+	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
- 
- 	/* keep last for the build bug below */
- 	(void *)0x1
+ static void __exit wilc_module_deinit(void)
 -- 
 2.1.4
 
