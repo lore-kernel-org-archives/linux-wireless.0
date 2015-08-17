@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:1957 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbbHTTlw (ORCPT
+Received: from mail-vk0-f41.google.com ([209.85.213.41]:36620 "EHLO
+	mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbbHQBXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 15:41:52 -0400
-Message-ID: <55D62D7C.8000304@broadcom.com> (sfid-20150820_214155_649474_6713B253)
-Date: Thu, 20 Aug 2015 21:41:48 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Sun, 16 Aug 2015 21:23:46 -0400
+Received: by vkbf67 with SMTP id f67so48377861vkb.3
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2015 18:23:45 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>	<CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>	<55AD2C8F.9010509@broadcom.com>	<CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>	<55CB0ACA.3000109@broadcom.com>	<CACna6ryZ6qJY7t12CQjyD1kvkXa5kpQp3J+eyEq4Gn0DVR9TMA@mail.gmail.com>	<55D5AAA5.1080700@broadcom.com> <CACna6rxVuhgea8C7KeWbfv31qGn=n=MxnJ+HBW2FHcVbviiYgQ@mail.gmail.com>
-In-Reply-To: <CACna6rxVuhgea8C7KeWbfv31qGn=n=MxnJ+HBW2FHcVbviiYgQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <CAFv23Qk-d182BinKR2NLCxBXgFCMvL7NyuqMY+iPgE8V2NH1vw@mail.gmail.com>
+References: <1438917073-5720-1-git-send-email-acelan.kao@canonical.com>
+	<55C4DDF5.6010901@lwfinger.net>
+	<CAFv23Qk285G47pPVrfUn5izfZyrc-vCSPqJamnoxQMm6Ae9zpQ@mail.gmail.com>
+	<20150810041957.GA7681@us.netrek.org>
+	<CAAd53p5Lwm-2qDh=hc8Kp8XYUafxksyQn9ouOjHW_PymPQ-i9w@mail.gmail.com>
+	<20150810120154.GA22283@us.netrek.org>
+	<CAAd53p7rskK4a=mX4Gxk+6MBjmPpuMWW50XiciBLiZoT0JfyKQ@mail.gmail.com>
+	<CAFv23Qk-d182BinKR2NLCxBXgFCMvL7NyuqMY+iPgE8V2NH1vw@mail.gmail.com>
+Date: Sun, 16 Aug 2015 21:16:36 -0400
+Message-ID: <CAFv23QkVZWf2oEOvQD3vjvOw6GCP8ZueDb46OfB7RAZ6wLpgyA@mail.gmail.com> (sfid-20150817_032403_309321_22BD36CE)
+Subject: Re: [PATCH] rtlwifi: rtl8723be: disable FW control power save
+From: AceLan Kao <acelan.kao@canonical.com>
+To: Kai Heng Feng <kai.heng.feng@canonical.com>
+Cc: James Cameron <quozl@laptop.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/20/2015 05:51 PM, Rafał Miłecki wrote:
-> On 20 August 2015 at 12:23, Arend van Spriel <arend@broadcom.com> wrote:
->> On 08/20/2015 01:06 AM, Rafał Miłecki wrote:
->>>
->>> On 12 August 2015 at 10:58, Arend van Spriel <arend@broadcom.com> wrote:
->>>>
->>>> You did a warm reboot of the device, right? There seems to be an issue
->>>> because on OpenWrt the brcmfmac is not unloaded upon warm reboot, which
->>>> makes the device unaccessible. Because on OpenWrt the firmware request is
->>>> synchronous (OpenWrt patch on top of upstream brcmfmac) it results in
->>>> probe
->>>> failing on invalid access making the issue OpenWrt specific. Hante
->>>> created a
->>>> fix for the warm reboot issue.
->>>
->>>
->>> Hante could you share your fix?
->>
->>
->> Hi Rafał,
->>
->> Just sent you the patch privately.
+Sorry, no luck, this issue happens from time to time, and always
+happens when playing youtube video within a day.
+We need Realtek guys give us some hints, I can do some tests for it.
+
+
+2015-08-11 21:17 GMT-04:00 AceLan Kao <acelan.kao@canonical.com>:
+> Hi all,
 >
-> Seems to be working nice, thanks! I hope you'll be able to publish it soon :)
-
-Not before monday and I suspect a merge window coming up, but I might be 
-just paranoid ;-)
-
-Regards,
-Arend
-
+> I have some new findings that doesn't need to modify the parameter.
+> I'm still testing the new driver and will submit the patch later.
+>
+> Best regards,
+> AceLan Kao.
+>
+> 2015-08-11 9:45 GMT+08:00 Kai Heng Feng <kai.heng.feng@canonical.com>:
+>> Hi James,
+>>
+>> I think the newer firmware in conjunction with "fwlps=0"
+>> should work fine in my (limited) testing.
+>>
+>> Thanks,
+>> Kai-Heng Feng
+>>
+>>
+>> On Mon, Aug 10, 2015 at 8:01 PM, James Cameron <quozl@laptop.org> wrote:
+>>> On Mon, Aug 10, 2015 at 06:47:05PM +0800, Kai Heng Feng wrote:
+>>>> Do you use Ubuntu Trusty (14.04)?
+>>>
+>>> Yes, that's what I'm using.
+>>>
+>>>> The rtl8723be firmware is not up-to-date in Trusty's linux-firmware.
+>>>> You can grab the newer one from the upstream linux-firmware.
+>>>
+>>> Thanks, but both seem to work fine (apart from the issue in this
+>>> thread), and I don't have a list of what has changed.
+>>>
+>>> --
+>>> James Cameron
+>>> http://quozl.linux.org.au/
