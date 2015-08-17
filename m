@@ -1,100 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f49.google.com ([209.85.213.49]:34320 "EHLO
-	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754175AbbHMUng convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:36894 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755438AbbHQQIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 16:43:36 -0400
-Received: by vkhl6 with SMTP id l6so22206129vkh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 13:43:36 -0700 (PDT)
+	Mon, 17 Aug 2015 12:08:51 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH 1/5] staging: wilc1000: remove DECLARE_WILC_BUFFER()
+Date: Mon, 17 Aug 2015 12:08:33 -0400
+Message-Id: <1236fc150aeaea845ffe8761fb3568beeba82964.1439827537.git.raphael.beamonte@gmail.com> (sfid-20150817_180855_780679_FEF69CBF)
+In-Reply-To: <cover.1439827537.git.raphael.beamonte@gmail.com>
+References: <cover.1439827537.git.raphael.beamonte@gmail.com>
+In-Reply-To: <cover.1439827537.git.raphael.beamonte@gmail.com>
+References: <CAE_Gge0m4KRC7UJntqnsXPeO9HZ7dg9UexLAi__2EN+ouGGw9w@mail.gmail.com> <cover.1439827537.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <55521102.9020306@candelatech.com>
-References: <CAJa-X95EBdGASnz3KAdYz5R6w5g-a=dBy5VCZYwHp6SzQ+gUSw@mail.gmail.com>
-	<CA+BoTQkFSQe0di1vqqB5cAPKaizRkBT5cu4fA8dQ_uR_a2HdJw@mail.gmail.com>
-	<CAJa-X96spUg7+EZqH-Mv3s7OzbHzmXmcZ7uOw1KvPShexW6D_w@mail.gmail.com>
-	<CA+BoTQ=Qpws=928TZe22Ds-UO_qQJ2Om+=DW=VUNUS59o1BQAA@mail.gmail.com>
-	<CAJa-X96KPw6dY0pK1zc8UD4TdQcG0KuA3m6DSueVVyK-VPhn9g@mail.gmail.com>
-	<CA+BoTQ=bqHPrdgGVfSfdJa5vobDBRdxRwMR_wJzUj4Z9WjotoQ@mail.gmail.com>
-	<CAJa-X945Xvn0jHQVcKn-pyYQVNpxXnqjOH_VHJv8pVwR4kFXcw@mail.gmail.com>
-	<CA+BoTQmLFGAn2z=E3J1C2qfNP34v57B7-rtALUQhNXrHqJeA6Q@mail.gmail.com>
-	<55521102.9020306@candelatech.com>
-Date: Thu, 13 Aug 2015 16:35:50 -0400
-Message-ID: <CAJa-X97Av+FKwy5Q3x3jnC=KPmqFt_JfsaVQ6J3bScM-SEKnYg@mail.gmail.com> (sfid-20150813_224340_363978_89406B8C)
-Subject: Re: Ath10 firmware crashing in Monitor mode(Sniffer mode)
-From: s prasad <sprasad.kandregula@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+It was just a wrapper to initialize a variable. Initialize it
+directly instead.
 
-did you get a chance to look into this issue(injecting frames when
-device in monitor mode).
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_exported_buf.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-Thanks and Regards,
-S Prasad
-
-On Tue, May 12, 2015 at 10:41 AM, Ben Greear <greearb@candelatech.com> wrote:
->
->
-> On 05/12/2015 03:14 AM, Michal Kazior wrote:
->>
->> On 12 May 2015 at 11:31, s prasad <sprasad.kandregula@gmail.com> wrote:
->>>
->>> May I know, is this firmware or driver constraint?
->>> If somebody have patch for this, am ready to test it.
->>
->>
->> Short answer: There's nothing, yet.
->>
->> Long answer:
->>
->>  From what I know official firmware doesn't support injecting packets
->> via monitor vdev. This is a firmware limitation.
->>
->> A way around this may be creating and using an additional vdev, e.g.
->> AP. This will be rather ugly but may work. There's no patch for it.
->>
->> An alternative would be to ask Ben to modify his CT-firmware branch.
->
->
-> I gave this a decent try a month or two ago, and had no luck.  The hardware
-> (from what I can tell), just will not send a frame to an unknown peer.
->
-> I noticed the other day that ANQP will not work on ath10k, and I suspect
-> similar issues..so I will be in that code again.  Maybe I'll learn
-> how to trick it into sending arbitrary frames.
->
-> All that said, there is no way to specify rate-ctrl info on a per-pkt
-> basis when injecting frames, so I don't know what good injecting frames
-> on a mgt device will accomplish.
->
-> Thanks,
-> Ben
->
->> Also there's a problem with submitting raw 802.11 frames to firmware.
->> There's some work ongoing [1].
->>
->> [1]: http://lists.infradead.org/pipermail/ath10k/2015-May/005144.html
->>
->>
->> Michał
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-
-
-
+diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+index 5294578..985b0e1 100644
+--- a/drivers/staging/wilc1000/wilc_exported_buf.c
++++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+@@ -8,9 +8,6 @@
+ #define LINUX_TX_SIZE	(64 * 1024)
+ #define WILC1000_FW_SIZE (4 * 1024)
+ 
+-#define DECLARE_WILC_BUFFER(name)	\
+-	void *exported_ ## name = NULL;
+-
+ #define MALLOC_WILC_BUFFER(name, size)	\
+ 	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+ 	if (!exported_ ## name) {   \
+@@ -24,9 +21,9 @@
+ /*
+  * Add necessary buffer pointers
+  */
+-DECLARE_WILC_BUFFER(g_tx_buf)
+-DECLARE_WILC_BUFFER(g_rx_buf)
+-DECLARE_WILC_BUFFER(g_fw_buf)
++void *exported_g_tx_buf;
++void *exported_g_rx_buf;
++void *exported_g_fw_buf;
+ 
+ void *get_tx_buffer(void)
+ {
+@@ -73,4 +70,4 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_AUTHOR("Tony Cho");
+ MODULE_DESCRIPTION("WILC1xxx Memory Manager");
+ pure_initcall(wilc_module_init);
+-module_exit(wilc_module_deinit);
+\ No newline at end of file
++module_exit(wilc_module_deinit);
 -- 
-S Prasad Kandregula
+2.1.4
+
