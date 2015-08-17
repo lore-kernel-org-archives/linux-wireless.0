@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:36589 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554AbbHBPzR (ORCPT
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:37261 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751874AbbHQOZE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2015 11:55:17 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH 3/3] drivers: staging: wilc1000: remove space after '('
-Date: Sun,  2 Aug 2015 21:23:53 +0530
-Message-Id: <1438530833-24640-4-git-send-email-csgorentla@gmail.com> (sfid-20150802_175546_775815_35E94707)
-In-Reply-To: <1438530833-24640-3-git-send-email-csgorentla@gmail.com>
-References: <1438530833-24640-1-git-send-email-csgorentla@gmail.com>
- <1438530833-24640-2-git-send-email-csgorentla@gmail.com>
- <1438530833-24640-3-git-send-email-csgorentla@gmail.com>
+	Mon, 17 Aug 2015 10:25:04 -0400
+Received: by igui7 with SMTP id i7so56301450igu.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2015 07:25:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <55D194EA.5070907@broadcom.com>
+References: <1439708139-7527-1-git-send-email-arend@broadcom.com>
+	<CACna6rxgTFan=xfidvfzFVRLBuJOWtDCyWe-unc-VeETrU_JQA@mail.gmail.com>
+	<55D194EA.5070907@broadcom.com>
+Date: Mon, 17 Aug 2015 16:25:03 +0200
+Message-ID: <CACna6rwur0X06Yo68UU8XW7tg9Lk41fsPRdLE39=D+pLxQb9oQ@mail.gmail.com> (sfid-20150817_162508_472079_6D43A299)
+Subject: Re: [PATCH V2 0/7] brcmfmac: nvram loading and code rework
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The character ' ' is removed after the character '('.  This fixes the
-checkpatch.pl error - "space prohibited after that open
-parenthesis '('".
+On 17 August 2015 at 10:01, Arend van Spriel <arend@broadcom.com> wrote:
+> On 08/16/2015 05:10 PM, Rafał Miłecki wrote:
+>>
+>> On 16 August 2015 at 08:55, Arend van Spriel <arend@broadcom.com> wrote:
+>>>
+>>> This series comprises of following changes:
+>>> - support NVRAM loading for bcm47xx platform.
+>>> - revise announced interface combinations and validate against it.
+>>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
+>>> - couple of PCIe fixes.
+>>> - support more firmware events (for bcm4339 firmware).
+>>>
+>>> The series is intended for v4.3 kernel and applies to the master branch
+>>> of the wireless-drivers-next repository.
+>>
+>>
+>> Thanks! I'll be happy to test it with BCM43602 for regressions in 3-4
+>> days if you can wait that much.
+>
+>
+> You can still expect issues with multiple AP interfaces. I left one patch
+> out of this series, because I am still investigating it.
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for info. If it's an old issue, that's fine. If it's going to
+be a regression, then we shouldn't push these changes.
+As I said, I just want to check for regressions :)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index b995056..c3be9ed 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1675,7 +1675,7 @@ static int WILC_WFI_get_station(struct wiphy *wiphy, struct net_device *dev,
- 		 * kernel version 3.0.0
- 		 */
- 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
--						BIT( NL80211_STA_INFO_RX_PACKETS) |
-+						BIT(NL80211_STA_INFO_RX_PACKETS) |
- 						BIT(NL80211_STA_INFO_TX_PACKETS) |
- 						BIT(NL80211_STA_INFO_TX_FAILED) |
- 						BIT(NL80211_STA_INFO_TX_BITRATE);
 -- 
-2.5.0
-
+Rafał
