@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53275 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142AbbHFHbU (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45457 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbbHQTzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 03:31:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2015-08-04
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-Date: Thu, 06 Aug 2015 10:31:12 +0300
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Tue, 4 Aug 2015 20:36:54 +0000")
-Message-ID: <87bnekzxdr.fsf@kamboji.qca.qualcomm.com> (sfid-20150806_093123_338340_EE9A0B44)
+	Mon, 17 Aug 2015 15:55:43 -0400
+Date: Mon, 17 Aug 2015 12:55:42 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCHv2 2/5] staging: wilc1000: use pr_* instead of printk
+Message-ID: <20150817195542.GB6591@kroah.com> (sfid-20150817_215558_822192_DFDEFEBA)
+References: <cover.1439838526.git.raphael.beamonte@gmail.com>
+ <6c2cf9ae657db1d6222551a81aa011422f079b96.1439838526.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <6c2cf9ae657db1d6222551a81aa011422f079b96.1439838526.git.raphael.beamonte@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On Mon, Aug 17, 2015 at 03:28:27PM -0400, Raphaël Beamonte wrote:
+> Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.c  |  4 ++--
+>  drivers/staging/wilc1000/linux_wlan.c        |  8 ++++----
+>  drivers/staging/wilc1000/linux_wlan_common.h | 28 ++++++++++++++--------------
+>  drivers/staging/wilc1000/linux_wlan_sdio.c   |  2 +-
+>  drivers/staging/wilc1000/linux_wlan_spi.c    |  2 +-
+>  drivers/staging/wilc1000/wilc_debugfs.c      | 16 ++++++++--------
+>  drivers/staging/wilc1000/wilc_exported_buf.c |  2 --
+>  7 files changed, 30 insertions(+), 32 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+> index 1a5b165..8a0ebba 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.c
+> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+> @@ -2005,7 +2005,7 @@ s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
+>  							pstrWIDs[counter].u16WIDid,
+>  							(counter == u32WIDsCount - 1), drvHandler)) {
+>  				ret = -1;
+> -				printk("[Sendconfigpkt]Get Timed out\n");
+> +				pr_err("[Sendconfigpkt]Get Timed out\n");
 
-> It comes late, but this is the first pull request for 4.3.
-> I have quite a bit for the next one that will come after this one.
->
-> Please pull - thanks!
->
-> emmanuel
->
-> The following changes since commit e0456717e483bb8a9431b80a5bdc99a928b9b003:
->
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next
-> (2015-06-24 16:49:49 -0700)
->
-> are available in the git repository at:
->
->  
-> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
-> tags/iwlwifi-next-for-kalle-2015-08-04
+This is a network driver, please use the proper logging statement for
+such a thing (i.e. netdev_err()).
 
-BTW, it's a good idea to keep the tag name in the same line as the URL.
-I almost missed the tag name because of the newline when copy pasting it
-to my terminal :)
+thanks,
 
-> for you to fetch changes up to 75118fdb63496e4611ab50380499ddd62b9de69f:
->
->   iwlwifi: mvm: clean up fw-api-scan.h (2015-08-04 21:29:37 +0300)
->
-> ----------------------------------------------------------------
-> * Deprecate -10.ucode
-> * Clean ups towards multiple Rx queues
-> * Add support for longer CMD IDs. This will be required by new
->     firmwares since we are getting close to the u8 limit.
-> * bugfixes for the D0i3 power state
-> * Add basic support for FTM
-> * More random that doesn't really stand out
->
-> ----------------------------------------------------------------
-
-Thanks, pulled.
-
--- 
-Kalle Valo
+greg k-h
