@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:22981 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752190AbbHTTyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 15:54:54 -0400
-Date: Thu, 20 Aug 2015 21:54:24 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Robert Baldyga <r.baldyga@samsung.com>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nfc@lists.01.org,
-	m.szyprowski@samsung.com, pebolle@tiscali.nl
-Subject: Re: [PATCH v3 0/3] nfc: Add driver for Samsung S3FWRN5 NFC Chip
-Message-ID: <20150820195424.GA3102@zurbaran.home> (sfid-20150820_215521_092549_192DCA03)
-References: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:35754 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751873AbbHRF1v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 01:27:51 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
+In-Reply-To: <20150818042417.GA2941@sudip-pc>
+References: <20150817195542.GB6591@kroah.com> <b5c4c3dd4babd0cd4daef51626816e95c6d8ee9d.1439852779.git.raphael.beamonte@gmail.com>
+ <20150818042417.GA2941@sudip-pc>
+From: =?UTF-8?Q?Rapha=C3=ABl_Beamonte?= <raphael.beamonte@gmail.com>
+Date: Tue, 18 Aug 2015 01:27:31 -0400
+Message-ID: <CAE_Gge0YiZVQi66L3dNUoMg+W-K2KyJ0EJpgeia8=TJ57094QA@mail.gmail.com> (sfid-20150818_072810_872010_9488A2F4)
+Subject: Re: [PATCHv3] staging: wilc1000: use netdev_* instead of printk
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robert,
+2015-08-18 0:24 GMT-04:00 Sudip Mukherjee <sudipm.mukherjee@gmail.com>:
+>> +                             netdev_err("[Sendconfigpkt]Get Timed out\n");
+> This will not compile. you can not just replace printk with
+> netdev_*, you need to mention a net_device.
 
-On Thu, Aug 20, 2015 at 05:25:59PM +0200, Robert Baldyga wrote:
-> Hello,
-> 
-> This patchset adds driver for NFC chip Samsung S3FWRN5. First two patches
-> are touching NCI core due to some non-standard chip behaviour.
-> 
-> The first one adds post_setup() handler, which is called after NCI_CORE_INIT
-> request. It's because we need to read current firmware version from 
-> ndev->manufact_specific_info.
-> 
-> The second one adds nci_core_reset() and nci_core_init() functions which
-> are needed to reinit NCI core after updating firmware in pose_setup()
-> callback.
-> 
-> Best regards,
-> Robert Baldyga
-> 
-> Changelog:
-> 
-> v3:
-> - Addressed comments from Samuel Ortiz:
->   - Used nci_prop_cmd and nci_prop_ops to handle proprietary requests
->   - Refactorized s3fwrn5_i2c_nci_read and s3fwrn5_i2c_fw_read
->   - Miscellaneous minor fixes
-> - Added patch "NFC: nci: Add post_setup handler"
-> - Added patch "NFC: nci: export nci_core_reset and nci_core_init"
-> 
-> v2: http://www.spinics.net/lists/linux-wireless/msg139241.html
-> - Addressed comments from Paul Bolle
-> 
-> v1: http://www.spinics.net/lists/kernel/msg2044290.html
-> 
-> Robert Baldyga (3):
->   NFC: nci: Add post_setup handler
->   NFC: nci: export nci_core_reset and nci_core_init
->   nfc: s3fwrn5: Add driver for Samsung S3FWRN5 NFC Chip
-All 3 patches applied, thanks.
+You're right! I'm making a lot of mistakes. It seems I called the make
+command in the wrong git tree... Thanks for catching that, and taking
+time to review!
+I just saw there isn't any netdev_debug available. Do you know the
+reason for that? Is there a replacement besides pr_debug?
+Also, it seems that in all the functions where it's another netdev
+that's available that I could use, I don't have access to the
+net_device struct. Is there a general way to get that device
+information? I saw an old lkml post talking about dev_*() functions to
+do that? Would you have some hint on the matter?
 
-Cheers,
-Samuel.
+Thanks a lot!
+Raphaël
