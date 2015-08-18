@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56516 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752915AbbHMPlX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34402 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbbHRF61 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 11:41:23 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fill in wmi 10.4 command handlers for addba/delba debug commands
-Date: Thu, 13 Aug 2015 21:10:54 +0530
-Message-ID: <1439480454-31214-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150813_174126_620197_DFE50089)
+	Tue, 18 Aug 2015 01:58:27 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: rtlwifi: rtl8192cu: Remove and replace routine in hw.c and mac.c
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1428343980-13954-1-git-send-email-ap420073@gmail.com>
+To: Taehee Yoo <ap420073@gmail.com>
+Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
+	linux-wireless@vger.kernel.org
+Message-Id: <20150818055826.ED27A140302@smtp.codeaurora.org> (sfid-20150818_075830_319232_221F59D0)
+Date: Tue, 18 Aug 2015 05:58:26 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WMI 10.4 uses the same command interface as QCA988X for addba/delba
-debug wmi commands. Fill wmi_10_4_ops table with the functions used
-for QCA988X for these commands.
 
-With this change, the following debugfs entries can be used to
-configure the aggregation mode and to send addba request,
-addba response and delba respectively in manual aggregation mode
-for QCA99X0 chip.
+> I remove duplicated routines which related rtl92cu_set_hw_reg().
+> 
+> 1. rtl92c_set_qos() and HW_VAR_AC_PARAM routine are similar code.
+> so i replace code with rtlpriv->cfg->ops->set_hw_reg().
+> 
+> 2. rtl92c_set_mac_addr() and 'HW_VAR_ETHER_ADDR' case at
+> rtl92cu_set_hw_reg() routine are similar code.
+> so i removed rtl92c_set_mac_addr() function.
+> also it was not used anywhere.
+> 
+> 3. remove HW_VAR_ACM_CTRL routine in rtl92cu_set_hw_reg().
+> if rtl_usb->acm_method is not EACMWAY2_SW, HW_VAR_ACM_CTRL is called
+> from HW_VAR_AC_PARAM. but it never called. because acm_method is always
+> EACMWAY2_SW. so i remove acm_method check routine
+> and HW_VAR_ACM_CTRL routine.
+> 
+> both usb and pci interface is not used HW_VAR_ACM_CTRL.
+> but i can't test pci interface module, so i didn't modify pci code.
+> 
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 
-/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/aggr_mode
-/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/addba
-/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/addba_resp
-/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/delba
+Thanks, applied to wireless-drivers-next.git.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 36b8f71..9769936 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -6482,6 +6482,10 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.gen_pktlog_enable = ath10k_wmi_op_gen_pktlog_enable,
- 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
-+	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
-+	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
-+	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
-+	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
- 
- 	/* shared with 10.2 */
- 	.gen_peer_assoc = ath10k_wmi_10_2_op_gen_peer_assoc,
--- 
-1.9.1
-
+Kalle Valo
