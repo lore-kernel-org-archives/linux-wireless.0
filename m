@@ -1,107 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38707 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299AbbHSKE7 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:33943 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbbHRJik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 06:04:59 -0400
-Date: Wed, 19 Aug 2015 13:05:09 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, jude.lee@atmel.com,
-	Tony Cho <tony.cho@atmel.com>, leo.kim@atmel.com
-Subject: Re: [PATCH 5/5] staging: wilc1000: use id value as argument
-Message-ID: <20150819100509.GK5610@mwanda> (sfid-20150819_120502_750755_73906D8C)
-References: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
- <1439440883-16061-6-git-send-email-tony.cho@atmel.com>
- <20150813144907.GA4484@mwanda>
- <55D2A23D.2080209@atmel.com>
- <20150818091224.GM5558@mwanda>
- <55D43738.7000008@atmel.com>
+	Tue, 18 Aug 2015 05:38:40 -0400
+Received: by wicne3 with SMTP id ne3so95444179wic.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 02:38:38 -0700 (PDT)
+From: Sven Eckelmann <sven@open-mesh.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	simon@open-mesh.com, Marek Lindner <marek@open-mesh.com>
+Subject: Re: CT ath10k firmware now supports IBSS + RSN
+Date: Tue, 18 Aug 2015 11:38:33 +0200
+Message-ID: <4035168.MK6Xi4n7uL@bentobox> (sfid-20150818_113852_355096_2A268CD2)
+In-Reply-To: <55D1FEB2.4060205@candelatech.com>
+References: <55285D8D.6070703@candelatech.com> <1701816.PemaYpqoq5@bentobox> <55D1FEB2.4060205@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55D43738.7000008@atmel.com>
+Content-Type: multipart/signed; boundary="nextPart16744776.4JOd2HK7IN"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> Real ID value means the value mapped to an alive NIC handler.
+--nextPart16744776.4JOd2HK7IN
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Who is mapping it?  It's all within the driver so it is not "real"
-unless there external requirements.
+On Monday 17 August 2015 08:33:06 Ben Greear wrote:
+[...]
+> >  * IBSS/RSN isn't working between ath10k<->ath10k, ath9k<->ath10k
+> >    (works well between ath9k<->ath9k)
+> >    - the ath10k device doesn't seem to send its broadcast frames
+> >      after the handshake finished (ath9k already tries to transmit
+> >      bcast frames)
+> >    - also doesn't work with firmware-2-ct-non-commercial-full-14.bin
+> >      and nohwcrypt=1
+> 
+> I believe I had ath10k to ath9k + RSN work, but I did see problems with ath10k-ath10k + RSN.
 
-> And when the driver transmits and receives some data frame with chipset,
-> the ID is used to distinguish the data frame's owner. Just like the driver,
-> chipset uses the appointed identifier. the data frame always includes the
-> identifier.
+Yes, this was what I was reading in a different mail and also the reason
+why I've tried to get it working for ath9k<->ath10k. But unfortunately,
+I had no success.
 
-Yes.  But it uses whatever we give it, otherwise it will break when we
-change this.
+I have also tried to use your config without the overrides and with
+overrides without any success.
 
-> You know, current driver is using 32bit pointer address as the identifier.
-> So, this patch converts the address value to integer value. As mentioned
-> earlier, '0' value is the reserved value to terminate an alive NIC handler
-> and inform it to chipset.
+> I think sometimes it worked a bit, and then stopped.  Truth is, my customers
+> interested in IBSS are not doing encryption on the IBSS interface, so I have no plans to work on this
+> soon.  And, even if offered the opportunity, I'm not sure what I could do to
+> improve the problem.  Possibly someone at QCA would have ideas and might share
+> them with me...
+> 
+> 
+> >  * IBSS stops working everytime an AP interface is added to the same
+> >    PHY (it isn't importing whether it is using WPA/WPA2 or configured
+> >    as open AP)
+> >    - tested again with ath9k on the same OpenWrt version and it
+> >      working quite well with 1x IBSS + 2x AP
+> 
+> One of my customers is using AP + IBSS interface with no obvious problems
+> related to concurrency.  But, maybe they are doing things in a different
+> order.  Does it work for you if you bring up AP first and then add IBSS?
+> 
+> This is likely fixable.
 
-Ah... I see now.  In the original code we used pointers and NULL meant
-disconnect.  Now we are using integers but we still want zero to be
-disconnect.  Fine, just make the array one pointer larger, it's not
-worth the extra headache (the first version had off by one bugs, and the
-second version still had an off by one bug even after I pointed them out
-in the first version), just to save 8 bytes:
+I had to hack a little bit of OpenWrt away but it seems that it works for
+a simple setup to first create the adhoc interface and then sometimes later
+add the AP interface.
 
-/* Zero is not used, because a zero ID means disconnect */
-static tstrWILC_WFIDrv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
+[...]
 
-static int add_handler_in_list(tstrWILC_WFIDrv *handler)
-{
-	int i;
+Thanks for your feedback.
 
-	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
-		if (!wfidrv_list[i]) {
-			wfidrv_list[i] = handler;
-			return 0;
-		}
-	}
+Kind regards,
+	Sven
+--nextPart16744776.4JOd2HK7IN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-	return -ENOBUFS;
-}
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-static int remove_handler_in_list(tstrWILC_WFIDrv *handler)
-{
-	int i;
+iQIcBAABCgAGBQJV0v0cAAoJEF2HCgfBJntG+9IQAL1Qmy4DV3vpyRv1fatSFquP
+qCPTzZpb5Fn7Dr41J3HA8y2geE5jHX4UsXDlnz+i6jtkcfanXfPDjOw4RPkHeh28
+hWAlLlwgRaU+6Rm9bsPsuo2Vdf4ZkgHRToHZ56hZGwPaTvUXReNEYPL7VO0q/iJB
++1hr54L0G+j4JCWYMGUjTahyChA2lMJFP8dxM6QOWZah/gLn3hcwYfpCAWh9fVME
+b840s6N1yjKHQb44EMe4NENxBr85zDQZNuJoooYK1/WFHmUAOo4s7GtKDGfCyQTQ
+T/PoivNcqPATTp3AsHeqVwjgcFDMzlEGk62oItoZYXSWGXX55GImsfSuBA+4JAVb
+LRho2eqn1Y4SmmkYkMK1J9AOMhn/8c+xjRiQe6jz1L+n4wsz5nyNKYsmLlqCwJnL
+9gLQKkW9toueOqIRCwTzYmighmZDGFFNlxUfwFDvKcCUGsrfoxKNIqWPnajblcCz
+m1f9TVBXNk1kxkrz0QTEkeDtE6MaBGOMI3GmcExlrIpCM0i/CnkWeGOa46cW404k
+ihMG2385i7ypoo6WLvHLPZaeOEwt713psvG/mBhpL/1lZSqNXnG0XBo+4bQ6QlUG
+1vb0vhROthcbSjh76GAUMR5cjF+51G2RWSjTQeR07+enAod0uh/HvUyKl0ksVgNb
+Ur/LDPrLTh75+FAvbeUD
+=mtom
+-----END PGP SIGNATURE-----
 
-	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
-		if (wfidrv_list[i] == handler) {
-			wfidrv_list[i] = NULL;
-			return 0;
-		}
-	}
-
-	return -EINVAL;
-}
-
-static int get_id_from_handler(tstrWILC_WFIDrv *handler)
-{
-	int i;
-
-	if (!handler)
-		return 0;
-
-	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
-		if (wfidrv_list[i] == handler)
-			return i;
-	}
-
-	return 0;
-}
-
-static tstrWILC_WFIDrv *get_handler_from_id(int id)
-{
-	if (id <= 0 || id >= ARRAY_SIZE(wfidrv_list))
-		return NULL;
-
-	return wfidrv_list[id];
-}
+--nextPart16744776.4JOd2HK7IN--
 
