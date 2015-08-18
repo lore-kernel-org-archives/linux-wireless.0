@@ -1,117 +1,581 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54798 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:2924 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753680AbbH3Sp5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2015 14:45:57 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: [PATCH 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<55E3341C.2010009@lwfinger.net>
-Date: Sun, 30 Aug 2015 14:45:55 -0400
-In-Reply-To: <55E3341C.2010009@lwfinger.net> (Larry Finger's message of "Sun,
-	30 Aug 2015 11:49:32 -0500")
-Message-ID: <wrfja8t88vj0.fsf@redhat.com> (sfid-20150830_204600_039980_3D424691)
+	id S1751199AbbHRH5v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 03:57:51 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/26] iwlwifi: mvm: Add FW paging mechanism for the UMAC on PCI
+Date: Tue, 18 Aug 2015 10:57:11 +0300
+Message-Id: <1439884656-18146-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100109_314244_4BD7B00C)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 08/29/2015 04:18 PM, Jes.Sorensen@redhat.com wrote:
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> Hi,
->>
->> I finally found some time to work on rtl8xxxu again. Since the
->> previously version posted some months ago, I fixed up a number of
->> bugs. I also added support for a range of other Realtek based USB
->> devices. The driver now supports rtl8723au, rtl8188cu, rtl8188ru, and
->> rtl8192cu. It should work on rtl8191cu devices as well.
->>
->> Per default only devices I have actually tested will be enabled. If
->> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
->> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
->> test results back to me.
->>
->> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
->> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
->> to which module you load and/or use modprobe blacklists.
->>
->> This driver is still work in progress. I have used it as my primary
->> driver for the last six months, and I find it to be very stable. It
->> seems suitable for mainline inclusion at this point.
->
-> Jes,
->
-> The Edimax 7811 works on the new driver. The performance is a lot
-> better than I said in my previous post. Measuring with netperf for 3
-> second intervals, I get a maximum RX rate of 33.0 Mbps and a long-term
-> average (750 samples) of 20.8 Mbps. For TX, the max is 34.5 Mbps and
-> the average is 27.4.
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-Larry,
+Family 8000 products has 2 embedded processors, the first
+known as LMAC (lower MAC) and implements the functionality from
+previous products, the second one is known as UMAC (upper MAC)
+and is used mainly for driver offloads as well as new features.
+The UMAC is typically “less” real-time than the LMAC and is used
+for higher level controls.
+The UMAC's code/data size is estimated to be in the mega-byte arena,
+taking into account the code it needs to replace in the driver and
+the set of new features.
 
-Just to be sure I got it right, you're saying the gain issue is not an
-issue with this version of the code after all?
+In order to allow the UMAC to execute code that is bigger than its code
+memory, we allow the UMAC embedded processor to page out code pages on
+DRAM.
 
-Is the 7811 a 1T1R or a 2T2R part?
+When the device is master on the bus(PCI) the driver saves the UMAC's
+image pages in blocks of 32K in the DRAM and sends the layout of the
+pages to the FW. The FW can load / unload the pages on its own.
 
-> I am still getting one "scheduling while atomic" BUG splat as follows:
->
-> BUG: sleeping function called from invalid context at kernel/locking/mutex.c:616
-> in_atomic(): 0, irqs_disabled(): 0, pid: 19961, name: kworker/u16:0
-> INFO: lockdep is turned off.
-> CPU: 0 PID: 19961 Comm: kworker/u16:0 Tainted: G W O 4.2.0-rc7-wl+ #39
-> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.20   04/17/2014
-> Workqueue: phy9 ieee80211_iface_work [mac80211]
->  ffffffff81a3d470 ffff880102227508 ffffffff8174b6e1 0000000000000000
->  ffff880224e54b00 ffff880102227538 ffffffff81090117 ffff880102227578
->  ffffffff81a3d470 0000000000000268 0000000000000000 ffff880102227568
-> Call Trace:
->  [<ffffffff8174b6e1>] dump_stack+0x4c/0x6e
->  [<ffffffff81090117>] ___might_sleep+0x147/0x1f0
->
->  [<ffffffff8109020d>] __might_sleep+0x4d/0x90
->  [<ffffffff81750d88>] mutex_lock_nested+0x38/0x3c0
->  [<ffffffff814d9a56>] ? __dev_printk+0x46/0x90
->  [<ffffffffa07a553f>] rtl8723a_h2c_cmd+0x4f/0x180 [rtl8xxxu]
->  [<ffffffffa07aa977>] rtl8xxxu_bss_info_changed+0x367/0x6b1 [rtl8xxxu]
->  [<ffffffffa07aa89f>] ? rtl8xxxu_bss_info_changed+0x28f/0x6b1 [rtl8xxxu]
->  [<ffffffffa055fd84>] ieee80211_bss_info_change_notify+0x104/0x4e0 [mac80211]
->  [<ffffffffa05f5626>] ieee80211_assoc_success+0x90c/0xa98 [mac80211]
->  [<ffffffff8116b8ad>] ? irq_work_queue+0x7d/0xa0
->  [<ffffffff810d26d9>] ? wake_up_klogd+0x39/0x50
->  [<ffffffff810d28d7>] ? console_unlock+0x1e7/0x510
->  [<ffffffff810d2def>] ? vprintk_emit+0x1ef/0x540
->  [<ffffffff810d3299>] ? vprintk_default+0x29/0x40
->  [<ffffffffa05d311b>] ieee80211_rx_mgmt_assoc_resp+0x15b/0x310 [mac80211]
->  [<ffffffffa05d48da>] ieee80211_sta_rx_queued_mgmt+0x19a/0x6d0 [mac80211]
->  [<ffffffff810b8915>] ? cpuacct_charge+0x5/0x1a0
->  [<ffffffff815e8a91>] ? skb_dequeue+0x21/0x70
->  [<ffffffff810bca4d>] ? trace_hardirqs_on+0xd/0x10
->  [<ffffffffa05803b9>] ieee80211_iface_work+0x2d9/0x3e0 [mac80211]
->  [<ffffffff81082e7e>] ? process_one_work+0x14e/0x7d0
->  [<ffffffff81082f0f>] process_one_work+0x1df/0x7d0
->  [<ffffffff81082e7e>] ? process_one_work+0x14e/0x7d0
->  [<ffffffff8108361a>] worker_thread+0x11a/0x460
->  [<ffffffff817546bb>] ? _raw_spin_unlock_irqrestore+0x4b/0x60
->  [<ffffffff81083500>] ? process_one_work+0x7d0/0x7d0
->  [<ffffffff81089e9f>] kthread+0xef/0x110
->  [<ffffffff81089db0>] ? kthread_create_on_node+0x220/0x220
->  [<ffffffff8175530f>] ret_from_fork+0x3f/0x70
->  [<ffffffff81089db0>] ? kthread_create_on_node+0x220/0x220
-> wlp0s20u6: associated
->
-> This splat happened during the authentication/association phase. At
-> present, the connection has been up for almost 12 hours without a
-> single drop.
+The driver can support up to 1 MB of pages.
 
-That one is interesting, I don't think I have seen this one ever, but
-I'll look out for it. It seems to happen during h2c command
-processing. I'll have a look.
+Add paging mechanism for the UMAC on PCI in order to allow the program
+to use a larger virtual space while using less physical memory on the
+device.
 
-The uptime sounds pretty awesome, thanks again for testing!
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c     |  32 +++-
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h |   4 +-
+ drivers/net/wireless/iwlwifi/iwl-fw.h      |  40 +++++
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h  |  24 +++
+ drivers/net/wireless/iwlwifi/mvm/fw.c      | 258 +++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h     |   5 +
+ drivers/net/wireless/iwlwifi/mvm/ops.c     |   1 +
+ drivers/net/wireless/iwlwifi/pcie/trans.c  |  18 +-
+ 8 files changed, 378 insertions(+), 4 deletions(-)
 
-Jes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 6685259..721d3cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -573,10 +573,11 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 	size_t len = ucode_raw->size;
+ 	const u8 *data;
+ 	u32 tlv_len;
++	u32 usniffer_img;
+ 	enum iwl_ucode_tlv_type tlv_type;
+ 	const u8 *tlv_data;
+ 	char buildstr[25];
+-	u32 build;
++	u32 build, paging_mem_size;
+ 	int num_of_cpus;
+ 	bool usniffer_images = false;
+ 	bool usniffer_req = false;
+@@ -955,6 +956,35 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 					    IWL_UCODE_REGULAR_USNIFFER,
+ 					    tlv_len);
+ 			break;
++		case IWL_UCODE_TLV_PAGING:
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			paging_mem_size = le32_to_cpup((__le32 *)tlv_data);
++
++			IWL_DEBUG_FW(drv,
++				     "Paging: paging enabled (size = %u bytes)\n",
++				     paging_mem_size);
++
++			if (paging_mem_size > MAX_PAGING_IMAGE_SIZE) {
++				IWL_ERR(drv,
++					"Paging: driver supports up to %lu bytes for paging image\n",
++					MAX_PAGING_IMAGE_SIZE);
++				return -EINVAL;
++			}
++
++			if (paging_mem_size & (FW_PAGING_SIZE - 1)) {
++				IWL_ERR(drv,
++					"Paging: image isn't multiple %lu\n",
++					FW_PAGING_SIZE);
++				return -EINVAL;
++			}
++
++			drv->fw.img[IWL_UCODE_REGULAR].paging_mem_size =
++				paging_mem_size;
++			usniffer_img = IWL_UCODE_REGULAR_USNIFFER;
++			drv->fw.img[usniffer_img].paging_mem_size =
++				paging_mem_size;
++			break;
+ 		case IWL_UCODE_TLV_SDIO_ADMA_ADDR:
+ 			if (tlv_len != sizeof(u32))
+ 				goto invalid_tlv_len;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 926e456..5d7f2d9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -132,6 +132,7 @@ enum iwl_ucode_tlv_type {
+ 	IWL_UCODE_TLV_API_CHANGES_SET	= 29,
+ 	IWL_UCODE_TLV_ENABLED_CAPABILITIES	= 30,
+ 	IWL_UCODE_TLV_N_SCAN_CHANNELS		= 31,
++	IWL_UCODE_TLV_PAGING		= 32,
+ 	IWL_UCODE_TLV_SEC_RT_USNIFFER	= 34,
+ 	IWL_UCODE_TLV_SDIO_ADMA_ADDR	= 35,
+ 	IWL_UCODE_TLV_FW_VERSION	= 36,
+@@ -343,8 +344,9 @@ enum iwl_ucode_tlv_capa {
+  * For 16.0 uCode and above, there is no differentiation between sections,
+  * just an offset to the HW address.
+  */
+-#define IWL_UCODE_SECTION_MAX 12
++#define IWL_UCODE_SECTION_MAX 16
+ #define CPU1_CPU2_SEPARATOR_SECTION	0xFFFFCCCC
++#define PAGING_SEPARATOR_SECTION	0xAAAABBBB
+ 
+ /* uCode version contains 4 values: Major/Minor/API/Serial */
+ #define IWL_UCODE_MAJOR(ver)	(((ver) & 0xFF000000) >> 24)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 3e3c9d8..224c7f4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -133,6 +133,7 @@ struct fw_desc {
+ struct fw_img {
+ 	struct fw_desc sec[IWL_UCODE_SECTION_MAX];
+ 	bool is_dual_cpus;
++	u32 paging_mem_size;
+ };
+ 
+ struct iwl_sf_region {
+@@ -140,6 +141,45 @@ struct iwl_sf_region {
+ 	u32 size;
+ };
+ 
++/*
++ * Block paging calculations
++ */
++#define PAGE_2_EXP_SIZE 12 /* 4K == 2^12 */
++#define FW_PAGING_SIZE BIT(PAGE_2_EXP_SIZE) /* page size is 4KB */
++#define PAGE_PER_GROUP_2_EXP_SIZE 3
++/* 8 pages per group */
++#define NUM_OF_PAGE_PER_GROUP BIT(PAGE_PER_GROUP_2_EXP_SIZE)
++/* don't change, support only 32KB size */
++#define PAGING_BLOCK_SIZE (NUM_OF_PAGE_PER_GROUP * FW_PAGING_SIZE)
++/* 32K == 2^15 */
++#define BLOCK_2_EXP_SIZE (PAGE_2_EXP_SIZE + PAGE_PER_GROUP_2_EXP_SIZE)
++
++/*
++ * Image paging calculations
++ */
++#define BLOCK_PER_IMAGE_2_EXP_SIZE 5
++/* 2^5 == 32 blocks per image */
++#define NUM_OF_BLOCK_PER_IMAGE BIT(BLOCK_PER_IMAGE_2_EXP_SIZE)
++/* maximum image size 1024KB */
++#define MAX_PAGING_IMAGE_SIZE (NUM_OF_BLOCK_PER_IMAGE * PAGING_BLOCK_SIZE)
++
++#define PAGING_CMD_IS_SECURED BIT(9)
++#define PAGING_CMD_IS_ENABLED BIT(8)
++#define PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS	0
++#define PAGING_TLV_SECURE_MASK 1
++
++/**
++ * struct iwl_fw_paging
++ * @fw_paging_phys: page phy pointer
++ * @fw_paging_block: pointer to the allocated block
++ * @fw_paging_size: page size
++ */
++struct iwl_fw_paging {
++	dma_addr_t fw_paging_phys;
++	struct page *fw_paging_block;
++	u32 fw_paging_size;
++};
++
+ /**
+  * struct iwl_fw_cscheme_list - a cipher scheme list
+  * @size: a number of entries
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 4e29c11..9c6b153 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -149,6 +149,9 @@ enum {
+ 
+ 	LQ_CMD = 0x4e,
+ 
++	/* paging block to FW cpu2 */
++	FW_PAGING_BLOCK_CMD = 0x4f,
++
+ 	/* Scan offload */
+ 	SCAN_OFFLOAD_REQUEST_CMD = 0x51,
+ 	SCAN_OFFLOAD_ABORT_CMD = 0x52,
+@@ -370,6 +373,27 @@ struct iwl_nvm_access_cmd {
+ 	u8 data[];
+ } __packed; /* NVM_ACCESS_CMD_API_S_VER_2 */
+ 
++#define NUM_OF_FW_PAGING_BLOCKS	33 /* 32 for data and 1 block for CSS */
++
++/*
++ * struct iwl_fw_paging_cmd - paging layout
++ *
++ * (FW_PAGING_BLOCK_CMD = 0x4f)
++ *
++ * Send to FW the paging layout in the driver.
++ *
++ * @flags: various flags for the command
++ * @block_size: the block size in powers of 2
++ * @block_num: number of blocks specified in the command.
++ * @device_phy_addr: virtual addresses from device side
++*/
++struct iwl_fw_paging_cmd {
++	__le32 flags;
++	__le32 block_size;
++	__le32 block_num;
++	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
++} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
++
+ /**
+  * struct iwl_nvm_access_resp_ver2 - response to NVM_ACCESS_CMD
+  * @offset: offset in bytes into the section
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 106edc7..acb402b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -106,6 +106,244 @@ static int iwl_send_tx_ant_cfg(struct iwl_mvm *mvm, u8 valid_tx_ant)
+ 				    sizeof(tx_ant_cmd), &tx_ant_cmd);
+ }
+ 
++static void iwl_free_fw_paging(struct iwl_mvm *mvm)
++{
++	int i;
++
++	if (!mvm->fw_paging_db[0].fw_paging_block)
++		return;
++
++	for (i = 0; i < NUM_OF_FW_PAGING_BLOCKS; i++) {
++		if (!mvm->fw_paging_db[i].fw_paging_block) {
++			IWL_DEBUG_FW(mvm,
++				     "Paging: block %d already freed, continue to next page\n",
++				     i);
++
++			continue;
++		}
++
++		__free_pages(mvm->fw_paging_db[i].fw_paging_block,
++			     get_order(mvm->fw_paging_db[i].fw_paging_size));
++	}
++	memset(mvm->fw_paging_db, 0, sizeof(mvm->fw_paging_db));
++}
++
++static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
++{
++	int sec_idx, idx;
++	u32 offset = 0;
++
++	/*
++	 * find where is the paging image start point:
++	 * if CPU2 exist and it's in paging format, then the image looks like:
++	 * CPU1 sections (2 or more)
++	 * CPU1_CPU2_SEPARATOR_SECTION delimiter - separate between CPU1 to CPU2
++	 * CPU2 sections (not paged)
++	 * PAGING_SEPARATOR_SECTION delimiter - separate between CPU2
++	 * non paged to CPU2 paging sec
++	 * CPU2 paging CSS
++	 * CPU2 paging image (including instruction and data)
++	 */
++	for (sec_idx = 0; sec_idx < IWL_UCODE_SECTION_MAX; sec_idx++) {
++		if (image->sec[sec_idx].offset == PAGING_SEPARATOR_SECTION) {
++			sec_idx++;
++			break;
++		}
++	}
++
++	if (sec_idx >= IWL_UCODE_SECTION_MAX) {
++		IWL_ERR(mvm, "driver didn't find paging image\n");
++		iwl_free_fw_paging(mvm);
++		return -EINVAL;
++	}
++
++	/* copy the CSS block to the dram */
++	IWL_DEBUG_FW(mvm, "Paging: load paging CSS to FW, sec = %d\n",
++		     sec_idx);
++
++	memcpy(page_address(mvm->fw_paging_db[0].fw_paging_block),
++	       image->sec[sec_idx].data,
++	       mvm->fw_paging_db[0].fw_paging_size);
++
++	IWL_DEBUG_FW(mvm,
++		     "Paging: copied %d CSS bytes to first block\n",
++		     mvm->fw_paging_db[0].fw_paging_size);
++
++	sec_idx++;
++
++	/*
++	 * copy the paging blocks to the dram
++	 * loop index start from 1 since that CSS block already copied to dram
++	 * and CSS index is 0.
++	 * loop stop at num_of_paging_blk since that last block is not full.
++	 */
++	for (idx = 1; idx < mvm->num_of_paging_blk; idx++) {
++		memcpy(page_address(mvm->fw_paging_db[idx].fw_paging_block),
++		       image->sec[sec_idx].data + offset,
++		       mvm->fw_paging_db[idx].fw_paging_size);
++
++		IWL_DEBUG_FW(mvm,
++			     "Paging: copied %d paging bytes to block %d\n",
++			     mvm->fw_paging_db[idx].fw_paging_size,
++			     idx);
++
++		offset += mvm->fw_paging_db[idx].fw_paging_size;
++	}
++
++	/* copy the last paging block */
++	if (mvm->num_of_pages_in_last_blk > 0) {
++		memcpy(page_address(mvm->fw_paging_db[idx].fw_paging_block),
++		       image->sec[sec_idx].data + offset,
++		       FW_PAGING_SIZE * mvm->num_of_pages_in_last_blk);
++
++		IWL_DEBUG_FW(mvm,
++			     "Paging: copied %d pages in the last block %d\n",
++			     mvm->num_of_pages_in_last_blk, idx);
++	}
++
++	return 0;
++}
++
++static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
++				   const struct fw_img *image)
++{
++	struct page *block;
++	dma_addr_t phys = 0;
++	int blk_idx = 0;
++	int order, num_of_pages;
++	int dma_enabled;
++
++	if (mvm->fw_paging_db[0].fw_paging_block)
++		return 0;
++
++	dma_enabled = is_device_dma_capable(mvm->trans->dev);
++
++	/* ensure BLOCK_2_EXP_SIZE is power of 2 of PAGING_BLOCK_SIZE */
++	BUILD_BUG_ON(BIT(BLOCK_2_EXP_SIZE) != PAGING_BLOCK_SIZE);
++
++	num_of_pages = image->paging_mem_size / FW_PAGING_SIZE;
++	mvm->num_of_paging_blk = ((num_of_pages - 1) /
++				    NUM_OF_PAGE_PER_GROUP) + 1;
++
++	mvm->num_of_pages_in_last_blk =
++		num_of_pages -
++		NUM_OF_PAGE_PER_GROUP * (mvm->num_of_paging_blk - 1);
++
++	IWL_DEBUG_FW(mvm,
++		     "Paging: allocating mem for %d paging blocks, each block holds 8 pages, last block holds %d pages\n",
++		     mvm->num_of_paging_blk,
++		     mvm->num_of_pages_in_last_blk);
++
++	/* allocate block of 4Kbytes for paging CSS */
++	order = get_order(FW_PAGING_SIZE);
++	block = alloc_pages(GFP_KERNEL, order);
++	if (!block) {
++		/* free all the previous pages since we failed */
++		iwl_free_fw_paging(mvm);
++		return -ENOMEM;
++	}
++
++	mvm->fw_paging_db[blk_idx].fw_paging_block = block;
++	mvm->fw_paging_db[blk_idx].fw_paging_size = FW_PAGING_SIZE;
++
++	if (dma_enabled) {
++		phys = dma_map_page(mvm->trans->dev, block, 0,
++				    PAGE_SIZE << order, DMA_BIDIRECTIONAL);
++		if (dma_mapping_error(mvm->trans->dev, phys)) {
++			/*
++			 * free the previous pages and the current one since
++			 * we failed to map_page.
++			 */
++			iwl_free_fw_paging(mvm);
++			return -ENOMEM;
++		}
++		mvm->fw_paging_db[blk_idx].fw_paging_phys = phys;
++	}
++
++	IWL_DEBUG_FW(mvm,
++		     "Paging: allocated 4K(CSS) bytes (order %d) for firmware paging.\n",
++		     order);
++
++	/*
++	 * allocate blocks in dram.
++	 * since that CSS allocated in fw_paging_db[0] loop start from index 1
++	 */
++	for (blk_idx = 1; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
++		/* allocate block of PAGING_BLOCK_SIZE (32K) */
++		order = get_order(PAGING_BLOCK_SIZE);
++		block = alloc_pages(GFP_KERNEL, order);
++		if (!block) {
++			/* free all the previous pages since we failed */
++			iwl_free_fw_paging(mvm);
++			return -ENOMEM;
++		}
++
++		mvm->fw_paging_db[blk_idx].fw_paging_block = block;
++		mvm->fw_paging_db[blk_idx].fw_paging_size = PAGING_BLOCK_SIZE;
++
++		if (dma_enabled) {
++			phys = dma_map_page(mvm->trans->dev, block, 0,
++					    PAGE_SIZE << order,
++					    DMA_BIDIRECTIONAL);
++			if (dma_mapping_error(mvm->trans->dev, phys)) {
++				/*
++				 * free the previous pages and the current one
++				 * since we failed to map_page.
++				 */
++				iwl_free_fw_paging(mvm);
++				return -ENOMEM;
++			}
++			mvm->fw_paging_db[blk_idx].fw_paging_phys = phys;
++		}
++
++		IWL_DEBUG_FW(mvm,
++			     "Paging: allocated 32K bytes (order %d) for firmware paging.\n",
++			     order);
++	}
++
++	return 0;
++}
++
++static int iwl_save_fw_paging(struct iwl_mvm *mvm,
++			      const struct fw_img *fw)
++{
++	int ret;
++
++	ret = iwl_alloc_fw_paging_mem(mvm, fw);
++	if (ret)
++		return ret;
++
++	return iwl_fill_paging_mem(mvm, fw);
++}
++
++/* send paging cmd to FW in case CPU2 has paging image */
++static int iwl_send_paging_cmd(struct iwl_mvm *mvm, const struct fw_img *fw)
++{
++	int blk_idx;
++	__le32 dev_phy_addr;
++	struct iwl_fw_paging_cmd fw_paging_cmd = {
++		.flags =
++			cpu_to_le32(PAGING_CMD_IS_SECURED |
++				    PAGING_CMD_IS_ENABLED |
++				    (mvm->num_of_pages_in_last_blk <<
++				    PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS)),
++		.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
++		.block_num = cpu_to_le32(mvm->num_of_paging_blk),
++	};
++
++	/* loop for for all paging blocks + CSS block */
++	for (blk_idx = 0; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
++		dev_phy_addr =
++			cpu_to_le32(mvm->fw_paging_db[blk_idx].fw_paging_phys >>
++				    PAGE_2_EXP_SIZE);
++		fw_paging_cmd.device_phy_addr[blk_idx] = dev_phy_addr;
++	}
++
++	return iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(FW_PAGING_BLOCK_CMD,
++						    IWL_ALWAYS_LONG_GROUP, 0),
++				    0, sizeof(fw_paging_cmd), &fw_paging_cmd);
++}
++
+ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
+ 			 struct iwl_rx_packet *pkt, void *data)
+ {
+@@ -269,6 +507,26 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 	iwl_trans_fw_alive(mvm->trans, alive_data.scd_base_addr);
+ 
+ 	/*
++	 * configure and operate fw paging mechanism.
++	 * driver configures the paging flow only once, CPU2 paging image
++	 * included in the IWL_UCODE_INIT image.
++	 */
++	if (fw->paging_mem_size) {
++		ret = iwl_save_fw_paging(mvm, fw);
++		if (ret) {
++			IWL_ERR(mvm, "failed to save the FW paging image\n");
++			return ret;
++		}
++
++		ret = iwl_send_paging_cmd(mvm, fw);
++		if (ret) {
++			IWL_ERR(mvm, "failed to send the paging cmd\n");
++			iwl_free_fw_paging(mvm);
++			return ret;
++		}
++	}
++
++	/*
+ 	 * Note: all the queues are enabled as part of the interface
+ 	 * initialization, but in firmware restart scenarios they
+ 	 * could be stopped, so wake them up. In firmware restart,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 95f326d..fdf401b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -610,6 +610,11 @@ struct iwl_mvm {
+ 	/* NVM sections */
+ 	struct iwl_nvm_section nvm_sections[NVM_MAX_NUM_SECTIONS];
+ 
++	/* Paging section */
++	struct iwl_fw_paging fw_paging_db[NUM_OF_FW_PAGING_BLOCKS];
++	u16 num_of_paging_blk;
++	u16 num_of_pages_in_last_blk;
++
+ 	/* EEPROM MAC addresses */
+ 	struct mac_address addresses[IWL_MVM_MAX_ADDRESSES];
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 6957d02..ef09a05 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -288,6 +288,7 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
+ 	CMD(PHY_CONFIGURATION_CMD),
+ 	CMD(CALIB_RES_NOTIF_PHY_DB),
+ 	CMD(SET_CALIB_DEFAULT_CMD),
++	CMD(FW_PAGING_BLOCK_CMD),
+ 	CMD(ADD_STA_KEY),
+ 	CMD(ADD_STA),
+ 	CMD(REMOVE_STA),
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index cbc29cc..8cc8f2b 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -764,8 +764,15 @@ static int iwl_pcie_load_cpu_sections_8000(struct iwl_trans *trans,
+ 	for (i = *first_ucode_section; i < IWL_UCODE_SECTION_MAX; i++) {
+ 		last_read_idx = i;
+ 
++		/*
++		 * CPU1_CPU2_SEPARATOR_SECTION delimiter - separate between
++		 * CPU1 to CPU2.
++		 * PAGING_SEPARATOR_SECTION delimiter - separate between
++		 * CPU2 non paged to CPU2 paging sec.
++		 */
+ 		if (!image->sec[i].data ||
+-		    image->sec[i].offset == CPU1_CPU2_SEPARATOR_SECTION) {
++		    image->sec[i].offset == CPU1_CPU2_SEPARATOR_SECTION ||
++		    image->sec[i].offset == PAGING_SEPARATOR_SECTION) {
+ 			IWL_DEBUG_FW(trans,
+ 				     "Break since Data not valid or Empty section, sec = %d\n",
+ 				     i);
+@@ -813,8 +820,15 @@ static int iwl_pcie_load_cpu_sections(struct iwl_trans *trans,
+ 	for (i = *first_ucode_section; i < IWL_UCODE_SECTION_MAX; i++) {
+ 		last_read_idx = i;
+ 
++		/*
++		 * CPU1_CPU2_SEPARATOR_SECTION delimiter - separate between
++		 * CPU1 to CPU2.
++		 * PAGING_SEPARATOR_SECTION delimiter - separate between
++		 * CPU2 non paged to CPU2 paging sec.
++		 */
+ 		if (!image->sec[i].data ||
+-		    image->sec[i].offset == CPU1_CPU2_SEPARATOR_SECTION) {
++		    image->sec[i].offset == CPU1_CPU2_SEPARATOR_SECTION ||
++		    image->sec[i].offset == PAGING_SEPARATOR_SECTION) {
+ 			IWL_DEBUG_FW(trans,
+ 				     "Break since Data not valid or Empty section, sec = %d\n",
+ 				     i);
+-- 
+2.1.4
+
