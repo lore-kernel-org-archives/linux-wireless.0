@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26809 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752372AbbHTTe6 convert rfc822-to-8bit (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:27842 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501AbbHRTr3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 15:34:58 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
- TSO segment
-Date: Thu, 20 Aug 2015 19:34:53 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8266E6@hasmsx107.ger.corp.intel.com> (sfid-20150820_213503_133320_6121E66D)
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
-	 <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
- <1440076269.6610.39.camel@edumazet-glaptop2.roam.corp.google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32E82654B@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 18 Aug 2015 15:47:29 -0400
+Date: Tue, 18 Aug 2015 22:47:20 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: lorenzo.bianconi83@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: mac80211: add rate mask logic for vht rates
+Message-ID: <20150818194720.GB2606@mwanda> (sfid-20150818_214732_693024_077960A3)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Lorenzo Bianconi,
 
+The patch b119ad6e726c: "mac80211: add rate mask logic for vht rates"
+from Aug 6, 2015, leads to the following static checker warning:
 
-On 08/20/2015 04:53 PM, Grumbach, Emmanuel wrote:
-> 
-> 
-> On 08/20/2015 04:11 PM, Eric Dumazet wrote:
->> On Thu, 2015-08-20 at 06:21 +0000, Grumbach, Emmanuel wrote:
->>>
->>> On 08/19/2015 11:39 PM, Eric Dumazet wrote:
->>>> On Wed, 2015-08-19 at 19:17 +0000, Grumbach, Emmanuel wrote:
->>>>
->>>>> Hm.. how would net/core/tso.c avoid this?
->>>>
->>>> Because a driver using these helpers keep around the original LSO packet
->>>> and frees it normally at TX completion time.
->>>>
->>>
->>> Which is why I can't really use it. The complexity is that I have to
->>> (ieee802.11 specification) split an LSO is several 802.11 packets. The
->>> maximal 802.11 packet I can send under ideal condition is 11K long or
->>> so. So I *must* generate several 802.11 frames from one single LSO
->>> packet. OTOH, I can have more than MSS bytes in a 802.11 A-MSDU.
->>>
->>
->> Who said you had to free original packet ? Just keep it around.
->>
->> TCP will work better ( check skb_still_in_host_queue() helper if you
->> want to know why)
-> 
-> I do keep the original skb: it becomes the first 802.11 packet generated
-> from that LSO skb. Thing is that it will be freed first and I wanted the
-> *last packet* to release the pressure on the socket.
-> So I guess that skb_still_in_host_queue will still find it and avoid
-> retransmissions at least until the first skb of the LSO is freed.
-> But unless you are fine with releasing the pressing on the socket as
-> soon as the *first* 802.11 skb is freed, I need that code.
-> 
-> I'll try to look at dev->gso_max_size that you mentioned below. This can
-> really be a game changer for me.
-> 
+	net/mac80211/cfg.c:2520 ieee80211_set_bitrate_mask()
+	error: buffer overflow 'sdata->rc_rateidx_vht_mcs_mask[i]' 8 <= 9
 
+net/mac80211/cfg.c
+  2516                  for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++) {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+This is 10.
 
-Err... no :( It won't work for me because the MSS impacts the number of
-segments which in turns impact the number of time the headers have to be
-copied which impacts... the A-MSDU maximal size which must be bigger
-than gso_max_size. So basically, a connection parameter (MSS) impacts a
-device parameter (gso_max_size). Now, of course, I could give up on
-small MSS connections and skb_gso_segment() skbs whose MSS is smaller
-than the default. This means that I give up on LSO in certain cases...
+  2517                          if (~sdata->rc_rateidx_mcs_mask[i][j])
+  2518                                  sdata->rc_has_mcs_mask[i] = true;
+  2519  
+  2520                          if (~sdata->rc_rateidx_vht_mcs_mask[i][j])
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+This only has 8 elements.
 
-I will get back to the drawing board and check what I can do to use /
-enhance the core infra... But it will be hard to lose functionality /
-efficiency just to use the core infra...
+  2521                                  sdata->rc_has_vht_mcs_mask[i] = true;
+  2522  
+  2523                          if (sdata->rc_has_mcs_mask[i] &&
+  2524                              sdata->rc_has_vht_mcs_mask[i])
+  2525                                  break;
+
+Maybe we always break out before we get to the last two iterations?
+
+  2526                  }
+
+regards,
+dan carpenter
