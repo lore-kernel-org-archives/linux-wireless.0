@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:38109 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751910AbbHSUQC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55029 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752992AbbHROY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 16:16:02 -0400
-Received: by igfj19 with SMTP id j19so15254350igf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 13:16:02 -0700 (PDT)
+	Tue, 18 Aug 2015 10:24:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-08-18
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+Date: Tue, 18 Aug 2015 17:24:48 +0300
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Tue, 18 Aug 2015 07:55:24 +0000")
+Message-ID: <87wpwsbrnz.fsf@kamboji.qca.qualcomm.com> (sfid-20150818_162500_006476_87E637B9)
 MIME-Version: 1.0
-In-Reply-To: <20150818194720.GB2606@mwanda>
-References: <20150818194720.GB2606@mwanda>
-Date: Wed, 19 Aug 2015 22:16:02 +0200
-Message-ID: <CAA2SeNJEMAqgJkSKEzLeK6+6F=r+af-2NTtmkwZ0w9BcerYDHQ@mail.gmail.com> (sfid-20150819_221607_953999_7E271745)
-Subject: Re: mac80211: add rate mask logic for vht rates
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hello Lorenzo Bianconi,
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Hi Dan,
+> This is another pull request for 4.3. As usual, details in the tag. As
+> announced, this needs patches
+> from mac80211-next, so I merged Johanne's tag and you did so as well
+> upon my request (thank
+> you for that).
+>
+> Please pull and let me know if you have issues.
+>
+> The following changes since commit 8f9c98df949333f08b74e5df1caacf7e2c5e8552:
+>
+>   mac80211: fix BIT position for TDLS WIDE extended cap (2015-08-14
+> 17:49:53 +0200)
+>
+> are available in the git repository at:
+>
+>  
+> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+> tags/iwlwifi-next-for-kalle-2015-08-18
 
->
-> The patch b119ad6e726c: "mac80211: add rate mask logic for vht rates"
-> from Aug 6, 2015, leads to the following static checker warning:
->
->         net/mac80211/cfg.c:2520 ieee80211_set_bitrate_mask()
->         error: buffer overflow 'sdata->rc_rateidx_vht_mcs_mask[i]' 8 <= 9
->
-> net/mac80211/cfg.c
->   2516                  for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++) {
->                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
-> This is 10.
->
->   2517                          if (~sdata->rc_rateidx_mcs_mask[i][j])
->   2518                                  sdata->rc_has_mcs_mask[i] = true;
->   2519
->   2520                          if (~sdata->rc_rateidx_vht_mcs_mask[i][j])
->                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-> This only has 8 elements.
->
->   2521                                  sdata->rc_has_vht_mcs_mask[i] = true;
->   2522
->   2523                          if (sdata->rc_has_mcs_mask[i] &&
->   2524                              sdata->rc_has_vht_mcs_mask[i])
->   2525                                  break;
->
-> Maybe we always break out before we get to the last two iterations?
->
-
-you are right, this chunk is wrong. We have to use to different for
-loops to initialize rc_has_vht_mcs_mask array. I will send a patch in
-few days. Thanks.
-
->   2526                  }
->
-> regards,
-> dan carpenter
-
-Best regards,
-
-Lorenzo
+Thanks, pulled.
 
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+Kalle Valo
