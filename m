@@ -1,93 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:35108 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbbHJCdt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2015 22:33:49 -0400
-Received: by pacgr6 with SMTP id gr6so15836939pac.2
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:48 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/11] staging: wilc1000: remove WILC_strncmp function
-Date: Mon, 10 Aug 2015 11:33:18 +0900
-Message-Id: <1439174002-7365-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043357_763012_FF938BD8)
-In-Reply-To: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752225AbbHRH61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 03:58:27 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/26] iwlwifi: mvm: fix a range check in debugfs code
+Date: Tue, 18 Aug 2015 10:57:29 +0300
+Message-Id: <1439884656-18146-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100108_341035_91690293)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove WILC_strncmp function that is changed to strncmp.
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The &mvm->tof_data.range_req.ap[] array has IWL_MVM_TOF_MAX_APS elements
+so the check should be >= instead of >.  Also the test can underflow so
+I have changed "i" to unsigned.
+
+Fixes: ce7929186a39 ('wlwifi: mvm: add basic Time of Flight (802.11mc FTM) support')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/wilc_strutils.c | 21 ---------------------
- drivers/staging/wilc1000/wilc_strutils.h | 20 --------------------
- 2 files changed, 41 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
-index 337e62f..cc4e9fe 100644
---- a/drivers/staging/wilc1000/wilc_strutils.c
-+++ b/drivers/staging/wilc1000/wilc_strutils.c
-@@ -18,25 +18,4 @@ void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index ddb1c84..383a316 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -911,9 +911,9 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
+ 		int size = sizeof(struct iwl_tof_range_req_ap_entry);
+ 		u16 burst_period;
+ 		u8 *mac = ap.bssid;
+-		int i;
++		unsigned int i;
  
- 
- 
--s32 WILC_strncmp(const char *pcStr1, const char *pcStr2,
--			 u32 u32Count)
--{
--	s32 s32Result;
--
--	if (pcStr1 == NULL && pcStr2 == NULL)	{
--		s32Result = 0;
--	} else if (pcStr1 == NULL)	   {
--		s32Result = -1;
--	} else if (pcStr2 == NULL)	   {
--		s32Result = 1;
--	} else {
--		s32Result = strncmp(pcStr1, pcStr2, u32Count);
--		if (s32Result < 0)
--			s32Result = -1;
--		else if (s32Result > 0)
--			s32Result = 1;
--	}
--
--	return s32Result;
--}
- 
-diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
-index 86728d2..03f4938 100644
---- a/drivers/staging/wilc1000/wilc_strutils.h
-+++ b/drivers/staging/wilc1000/wilc_strutils.h
-@@ -60,26 +60,6 @@ static WILC_ErrNo WILC_memcpy(void *pvTarget, const void *pvSource, u32 u32Count
- 
- 
- 
--/*!
-- *  @brief	Compares two strings up to u32Count characters
-- *  @details	Compares 2 strings reporting which is bigger, NULL is considered
-- *              the smallest string, then a zero length string then all other
-- *              strings depending on thier ascii characters order with small case
-- *              converted to uppder case
-- *  @param[in]	pcStr1 the first string, NULL is valid and considered smaller
-- *              than any other non-NULL string (incliding zero lenght strings)
-- *  @param[in]	pcStr2 the second string, NULL is valid and considered smaller
-- *              than any other non-NULL string (incliding zero lenght strings)
-- *  @param[in]	u32Count copying will proceed until a null character in pcStr1 or
-- *              pcStr2 is encountered or u32Count of bytes copied
-- *  @return	0 if the 2 strings are equal, 1 if pcStr1 is bigger than pcStr2,
-- *              -1 if pcStr1 smaller than pcStr2
-- *  @author	aabozaeid
-- *  @date	7 Dec 2010
-- *  @version	1.0
-- */
--s32 WILC_strncmp(const char *pcStr1, const char *pcStr2,
--			 u32 u32Count);
- 
- 
- #endif
+-		if (sscanf(data, "%d %hhd %hhx %hhx"
++		if (sscanf(data, "%u %hhd %hhx %hhx"
+ 			   "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx"
+ 			   "%hhx %hhx %hx"
+ 			   "%hhx %hhx %x"
+@@ -929,7 +929,7 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
+-		if (i > IWL_MVM_TOF_MAX_APS) {
++		if (i >= IWL_MVM_TOF_MAX_APS) {
+ 			IWL_ERR(mvm, "Invalid AP index %d\n", i);
+ 			ret = -EINVAL;
+ 			goto out;
 -- 
-1.9.1
+2.1.4
 
