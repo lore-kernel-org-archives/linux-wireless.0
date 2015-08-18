@@ -1,84 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59564 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751906AbbHXHir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2015 03:38:47 -0400
-Message-ID: <1440401918.3735.0.camel@sipsolutions.net> (sfid-20150824_093908_699188_C30CE6B1)
-Subject: Re: [PATCH] net/wireless: enable wiphy device to suspend/resume
- asynchronously
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: David Miller <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Date: Mon, 24 Aug 2015 09:38:38 +0200
-In-Reply-To: <55DA9374.2060909@linux.intel.com>
-References: <55B9B3BA.6080406@linux.intel.com>
-		 <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com>
-		 <55D13D66.1050500@linux.intel.com>
-	 <1439796553.2451.1.camel@sipsolutions.net> <55D19F57.4070605@broadcom.com>
-	 <55DA9374.2060909@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33113 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752726AbbHRRCe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 13:02:34 -0400
+From: Chandra S Gorentla <csgorentla@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	dan.carpenter@oracle.com, Chandra S Gorentla <csgorentla@gmail.com>
+Subject: [PATCH] staging: wilc1000: Set all options in region debugfs file
+Date: Tue, 18 Aug 2015 22:32:17 +0530
+Message-Id: <1439917337-18473-1-git-send-email-csgorentla@gmail.com> (sfid-20150818_190253_969638_C2D17F5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-08-24 at 11:45 +0800, Fu, Zhonghui wrote:
-> 
-> On 2015/8/17 16:46, Arend van Spriel wrote:
-> > + Rafael
-> > 
-> > On 08/17/2015 09:29 AM, Johannes Berg wrote:
-> > > On Mon, 2015-08-17 at 09:48 +0800, Fu, Zhonghui wrote:
-> > > > 
-> > > > The suspend/resume timing of wiphy device and related devices 
-> > > > will be
-> > > > ensured by their parent/child relationship. So, enabling wiphy 
-> > > > device
-> > > > to suspend/resume asynchronously does not change any 
-> > > >  dependency. It
-> > > > can only take advantage of multicore and improve system
-> > > > suspend/resume speed.
-> > > > 
-> > > 
-> > > You're going to have to explain that to me, because I don't see 
-> > > that.
-> > > All I see is that when looking at a device, if async is possible, 
-> > > it
-> > > gets added to an async work, and if async is not possible then it 
-> > > gets
-> > > done immediately. Even putting aside the question of whether or 
-> > > not
-> > > async is ordered or not (I don't know), if the wiphy is async and 
-> > > the
-> > > PCI (or other bus) device isn't, then it seems they could get 
-> > > handled
-> > > out of order, no? Or is there some magic code somewhere that I'm
-> > > missing that explicitly waits for the async of the parent/child
-> > > relationship?
-> > 
-> > This patch got me worried as well. Can't find the magic either. 
-> > Maybe Rafael can give some hints here.
-> 
-> "dpm_wait_for_children" function will be invoked in 
-> "__device_suspend", "__device_suspend_late", and 
-> "__device_suspend_noirq" functions to synchronize the child 
-> relationship. "dpm_wait" function will be invoked in 
-> "device_resume_noirq", "device_resume_early", and "device_resume" 
-> functions to synchronize the parent relationship. If two devices have 
-> parent/child relationship, but different suspend/resume mode(sync or 
-> async), this will have no impact to PM timing order between them. 
-> Because all devices will use "__device_suspend", 
-> "__device_suspend_late" ... functions to complete their PM 
-> transition.
-> 
+This patch allows setting all options in the module's debug region
+options file 'wilc_debug_region'.  This functionality allows the user
+to enable logging from all regions (initialization, locks, firmware
+etc.) of the driver.  Logging from the following regions is enabled
+during the driver initialization:
 
-Ok, good point. For the unaware here, can you please resend with a
-commit message amended with some of this information?
+INIT_DBG, GENERIC_DBG, CFG80211_DBG, FIRM_DBG and HOSTAPD_DBG
 
-thanks,
-johannes
+Before this change, the numerical value set is equal first byte of 
+input minus 0x30 (ASCII value of '0').  Because of this, after a write 
+to this debugfs file, it is difficult to predict the regions on which
+logging is enabled.
+
+The DBG_REGION_ALL now includes 3 additional regions TCP_ENH, SPIN_DEBUG
+and FIRM_DBG.
+
+Before this change, the region flag FIRM_DBG is enabled during
+initialization but cleared after a write to the debugfs file.
+
+
+Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
+---
+
+It is verified by code walk that while generating logs for the flags
+TCP_ENH and SPIN_DEBUG code does not try to print strings that are not
+terminated by NULL and variables do not try to access invalid
+memory locations.
+
+ drivers/staging/wilc1000/wilc_debugfs.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index ae11186..70d98ee 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,7 +24,10 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | HOSTINF_DBG | CORECONFIG_DBG | CFG80211_DBG | INT_DBG | TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
++#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | HOSTINF_DBG |	\
++			CORECONFIG_DBG | CFG80211_DBG | INT_DBG |	\
++			TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG |		\
++			BUS_DBG | MEM_DBG | TCP_ENH | SPIN_DEBUG | FIRM_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+ atomic_t REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
+ atomic_t DEBUG_LEVEL = ATOMIC_INIT(ERR);
+@@ -87,23 +90,20 @@ static ssize_t wilc_debug_region_read(struct file *file, char __user *userbuf, s
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
+ 
+-static ssize_t wilc_debug_region_write(struct file *filp, const char *buf, size_t count, loff_t *ppos)
++static ssize_t wilc_debug_region_write(struct file *filp,
++					const char __user *buf,
++					size_t count, loff_t *ppos)
+ {
+-	char buffer[128] = {};
+ 	int flag;
++	int ret;
+ 
+-	if (count > sizeof(buffer))
+-		return -EINVAL;
+-
+-	if (copy_from_user(buffer, buf, count)) {
+-		return -EFAULT;
+-	}
+-
+-	flag = buffer[0] - '0';
++	ret = kstrtouint_from_user(buf, count, 16, &flag);
++	if (ret)
++		return ret;
+ 
+ 	if (flag > DBG_REGION_ALL) {
+ 		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&REGION));
+-		return -EFAULT;
++		return -EINVAL;
+ 	}
+ 
+ 	atomic_set(&REGION, (int)flag);
+-- 
+2.5.0
+
