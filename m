@@ -1,227 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:26870 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752681AbbHTUGa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 16:06:30 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V3 1/6] brcmfmac: correct interface combination info
-Date: Thu, 20 Aug 2015 22:06:03 +0200
-Message-ID: <1440101168-2252-2-git-send-email-arend@broadcom.com> (sfid-20150820_220634_790976_B505B198)
-In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:18327 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752555AbbHRNwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 09:52:12 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Avri Altman <avri.altman@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: protect non-HT BSS when HT TDLS traffic exists
+Date: Tue, 18 Aug 2015 16:52:07 +0300
+Message-Id: <1439905927-24620-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_155220_695549_7A13D658)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interface combination provided by brcmfmac did not truly reflect
-the combinations supported by driver and/or firmware.
+From: Avri Altman <avri.altman@intel.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Pontus Fuchs <pontusf@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+HT TDLS traffic should be protected in a non-HT BSS to avoid
+collisions. Therefore, when TDLS peers join/leave, check if
+protection is (now) needed and set the ht_operation_mode of
+the virtual interface according to the HT capabilities of the
+TDLS peer(s).
+
+This works because a non-HT BSS connection never sets (or
+otherwise uses) the ht_operation_mode; it just means that
+drivers must be aware that this field applies to all HT
+traffic for this virtual interface, not just the traffic
+within the BSS. Document that.
+
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 151 +++++++++++++++------
- 1 file changed, 112 insertions(+), 39 deletions(-)
+ include/net/mac80211.h |  4 ++-
+ net/mac80211/tdls.c    | 70 +++++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 70 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index ffe5260..17cf1bc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -5695,63 +5695,132 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
- 	}
- };
- 
-+/**
-+ * brcmf_setup_ifmodes() - determine interface modes and combinations.
-+ *
-+ * @wiphy: wiphy object.
-+ * @ifp: interface object needed for feat module api.
-+ *
-+ * The interface modes and combinations are determined dynamically here
-+ * based on firmware functionality.
-+ *
-+ * no p2p and no mbss:
-+ *
-+ *	#STA <= 1, #AP <= 1, channels = 1, 2 total
-+ *
-+ * no p2p and mbss:
-+ *
-+ *	#STA <= 1, #AP <= 1, channels = 1, 2 total
-+ *	#AP <= 4, matching BI, channels = 1, 4 total
-+ *
-+ * p2p, no mchan, and mbss:
-+ *
-+ *	#STA <= 1, #P2P-DEV <= 1, #{P2P-CL, P2P-GO} <= 1, channels = 1, 3 total
-+ *	#STA <= 1, #P2P-DEV <= 1, #AP <= 1, #P2P-CL <= 1, channels = 1, 4 total
-+ *	#AP <= 4, matching BI, channels = 1, 4 total
-+ *
-+ * p2p, mchan, and mbss:
-+ *
-+ *	#STA <= 1, #P2P-DEV <= 1, #{P2P-CL, P2P-GO} <= 1, channels = 2, 3 total
-+ *	#STA <= 1, #P2P-DEV <= 1, #AP <= 1, #P2P-CL <= 1, channels = 1, 4 total
-+ *	#AP <= 4, matching BI, channels = 1, 4 total
-+ */
- static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
- 	struct ieee80211_iface_combination *combo = NULL;
--	struct ieee80211_iface_limit *limits = NULL;
--	int i = 0, max_iface_cnt;
-+	struct ieee80211_iface_limit *c0_limits = NULL;
-+	struct ieee80211_iface_limit *p2p_limits = NULL;
-+	struct ieee80211_iface_limit *mbss_limits = NULL;
-+	bool mbss, p2p;
-+	int i, c, n_combos;
-+
-+	mbss = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS);
-+	p2p = brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P);
- 
--	combo = kzalloc(sizeof(*combo), GFP_KERNEL);
-+	n_combos = 1 + !!p2p + !!mbss;
-+	combo = kcalloc(n_combos, sizeof(*combo), GFP_KERNEL);
- 	if (!combo)
- 		goto err;
- 
--	limits = kzalloc(sizeof(*limits) * 4, GFP_KERNEL);
--	if (!limits)
-+	c0_limits = kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
-+	if (!c0_limits)
- 		goto err;
- 
-+	if (p2p) {
-+		p2p_limits = kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
-+		if (!p2p_limits)
-+			goto err;
-+	}
-+
-+	if (mbss) {
-+		mbss_limits = kcalloc(1, sizeof(*mbss_limits), GFP_KERNEL);
-+		if (!mbss_limits)
-+			goto err;
-+	}
-+
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				 BIT(NL80211_IFTYPE_ADHOC) |
- 				 BIT(NL80211_IFTYPE_AP);
- 
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
--		combo->num_different_channels = 2;
--	else
--		combo->num_different_channels = 1;
--
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) {
--		limits[i].max = 1;
--		limits[i++].types = BIT(NL80211_IFTYPE_STATION);
--		limits[i].max = 4;
--		limits[i++].types = BIT(NL80211_IFTYPE_AP);
--		max_iface_cnt = 5;
--	} else {
--		limits[i].max = 2;
--		limits[i++].types = BIT(NL80211_IFTYPE_STATION) |
--				    BIT(NL80211_IFTYPE_AP);
--		max_iface_cnt = 2;
--	}
--
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P)) {
-+	c = 0;
-+	i = 0;
-+	combo[c].num_different_channels = 1;
-+	c0_limits[i].max = 1;
-+	c0_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
-+	if (p2p) {
-+		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
-+			combo[c].num_different_channels = 2;
- 		wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 					  BIT(NL80211_IFTYPE_P2P_GO) |
- 					  BIT(NL80211_IFTYPE_P2P_DEVICE);
--		limits[i].max = 1;
--		limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
--				    BIT(NL80211_IFTYPE_P2P_GO);
--		limits[i].max = 1;
--		limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
--		max_iface_cnt += 2;
--	}
--	combo->max_interfaces = max_iface_cnt;
--	combo->limits = limits;
--	combo->n_limits = i;
--
-+		c0_limits[i].max = 1;
-+		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		c0_limits[i].max = 1;
-+		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				       BIT(NL80211_IFTYPE_P2P_GO);
-+	} else {
-+		c0_limits[i].max = 1;
-+		c0_limits[i++].types = BIT(NL80211_IFTYPE_AP);
-+	}
-+	combo[c].max_interfaces = i;
-+	combo[c].n_limits = i;
-+	combo[c].limits = c0_limits;
-+
-+	if (p2p) {
-+		c++;
-+		i = 0;
-+		combo[c].num_different_channels = 1;
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_AP);
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT);
-+		p2p_limits[i].max = 1;
-+		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		combo[c].max_interfaces = i;
-+		combo[c].n_limits = i;
-+		combo[c].limits = p2p_limits;
-+	}
-+
-+	if (mbss) {
-+		c++;
-+		combo[c].beacon_int_infra_match = true;
-+		combo[c].num_different_channels = 1;
-+		mbss_limits[0].max = 4;
-+		mbss_limits[0].types = BIT(NL80211_IFTYPE_AP);
-+		combo[c].max_interfaces = 4;
-+		combo[c].n_limits = 1;
-+		combo[c].limits = mbss_limits;
-+	}
-+	wiphy->n_iface_combinations = n_combos;
- 	wiphy->iface_combinations = combo;
--	wiphy->n_iface_combinations = 1;
- 	return 0;
- 
- err:
--	kfree(limits);
-+	kfree(c0_limits);
-+	kfree(p2p_limits);
-+	kfree(mbss_limits);
- 	kfree(combo);
- 	return -ENOMEM;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d37d6cd..a8f805b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -478,7 +478,9 @@ struct ieee80211_event {
+  * @chandef: Channel definition for this BSS -- the hardware might be
+  *	configured a higher bandwidth than this BSS uses, for example.
+  * @ht_operation_mode: HT operation mode like in &struct ieee80211_ht_operation.
+- *	This field is only valid when the channel type is one of the HT types.
++ *	This field is only valid when the channel is a wide HT/VHT channel.
++ *	Note that with TDLS this can be the case (channel is HT, protection must
++ *	be used from this field) even when the BSS association isn't using HT.
+  * @cqm_rssi_thold: Connection quality monitor RSSI threshold, a zero value
+  *	implies disabled
+  * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 8d656d3..c9eeb3f 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1258,6 +1258,58 @@ static void iee80211_tdls_recalc_chanctx(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&local->chanctx_mtx);
  }
-@@ -6073,11 +6142,15 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
  
- static void brcmf_free_wiphy(struct wiphy *wiphy)
- {
-+	int i;
++static int iee80211_tdls_have_ht_peers(struct ieee80211_sub_if_data *sdata)
++{
++	struct sta_info *sta;
++	bool result = false;
 +
- 	if (!wiphy)
- 		return;
- 
--	if (wiphy->iface_combinations)
--		kfree(wiphy->iface_combinations->limits);
-+	if (wiphy->iface_combinations) {
-+		for (i = 0; i < wiphy->n_iface_combinations; i++)
-+			kfree(wiphy->iface_combinations[i].limits);
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
++		if (!sta->sta.tdls || sta->sdata != sdata || !sta->uploaded ||
++		    !test_sta_flag(sta, WLAN_STA_AUTHORIZED) ||
++		    !test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH) ||
++		    !sta->sta.ht_cap.ht_supported)
++			continue;
++		result = true;
++		break;
 +	}
- 	kfree(wiphy->iface_combinations);
- 	if (wiphy->bands[IEEE80211_BAND_2GHZ]) {
- 		kfree(wiphy->bands[IEEE80211_BAND_2GHZ]->channels);
++	rcu_read_unlock();
++
++	return result;
++}
++
++static void
++iee80211_tdls_recalc_ht_protection(struct ieee80211_sub_if_data *sdata,
++				   struct sta_info *sta)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	bool tdls_ht;
++	u16 protection = IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED |
++			 IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
++			 IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT;
++	u16 opmode;
++
++	/* Nothing to do if the BSS connection uses HT */
++	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
++		return;
++
++	tdls_ht = (sta && sta->sta.ht_cap.ht_supported) ||
++		  iee80211_tdls_have_ht_peers(sdata);
++
++	opmode = sdata->vif.bss_conf.ht_operation_mode;
++
++	if (tdls_ht)
++		opmode |= protection;
++	else
++		opmode &= ~protection;
++
++	if (opmode == sdata->vif.bss_conf.ht_operation_mode)
++		return;
++
++	sdata->vif.bss_conf.ht_operation_mode = opmode;
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
++}
++
+ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 			const u8 *peer, enum nl80211_tdls_operation oper)
+ {
+@@ -1283,6 +1335,10 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 		return -ENOTSUPP;
+ 	}
+ 
++	/* protect possible bss_conf changes and avoid concurrency in
++	 * ieee80211_bss_info_change_notify()
++	 */
++	sdata_lock(sdata);
+ 	mutex_lock(&local->mtx);
+ 	tdls_dbg(sdata, "TDLS oper %d peer %pM\n", oper, peer);
+ 
+@@ -1296,16 +1352,18 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		iee80211_tdls_recalc_chanctx(sdata);
+ 
+-		rcu_read_lock();
++		mutex_lock(&local->sta_mtx);
+ 		sta = sta_info_get(sdata, peer);
+ 		if (!sta) {
+-			rcu_read_unlock();
++			mutex_unlock(&local->sta_mtx);
+ 			ret = -ENOLINK;
+ 			break;
+ 		}
+ 
++		iee80211_tdls_recalc_ht_protection(sdata, sta);
++
+ 		set_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH);
+-		rcu_read_unlock();
++		mutex_unlock(&local->sta_mtx);
+ 
+ 		WARN_ON_ONCE(is_zero_ether_addr(sdata->u.mgd.tdls_peer) ||
+ 			     !ether_addr_equal(sdata->u.mgd.tdls_peer, peer));
+@@ -1327,6 +1385,11 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 		ieee80211_flush_queues(local, sdata, false);
+ 
+ 		ret = sta_info_destroy_addr(sdata, peer);
++
++		mutex_lock(&local->sta_mtx);
++		iee80211_tdls_recalc_ht_protection(sdata, NULL);
++		mutex_unlock(&local->sta_mtx);
++
+ 		iee80211_tdls_recalc_chanctx(sdata);
+ 		break;
+ 	default:
+@@ -1344,6 +1407,7 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 				     &sdata->u.mgd.request_smps_work);
+ 
+ 	mutex_unlock(&local->mtx);
++	sdata_unlock(sdata);
+ 	return ret;
+ }
+ 
 -- 
-1.9.1
+2.1.4
 
