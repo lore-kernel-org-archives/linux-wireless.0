@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:33233 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752919AbbHMOcP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 10:32:15 -0400
-Received: by igfj19 with SMTP id j19so423083igf.0
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 07:32:14 -0700 (PDT)
-Date: Thu, 13 Aug 2015 09:31:54 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH] wireless-regdb: add 2.4GHz regulatory rules for Cuba (CU)
-Message-ID: <20150813143154.GA121347@ubuntu-hedt> (sfid-20150813_163221_758473_C5C0F9D2)
-References: <1439299795-17359-1-git-send-email-xose.vazquez@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1439299795-17359-1-git-send-email-xose.vazquez@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:63426 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751958AbbHRH6B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 03:58:01 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/26] iwlwifi: Add max TX aggregation size for 8260 SDIO devices series
+Date: Tue, 18 Aug 2015 10:57:15 +0300
+Message-Id: <1439884656-18146-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_095809_967395_2AC3B3AE)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 11, 2015 at 03:29:55PM +0200, Xose Vazquez Perez wrote:
-> Resolución 127, 2011 - Reglamento Banda 2,4 GHz.:
-> http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
-> 
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: wireless-regdb@lists.infradead.org
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> ---
->  db.txt | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/db.txt b/db.txt
-> index 982db34..2edbf90 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -275,6 +275,13 @@ country CR: DFS-FCC
->  	(5490 - 5730 @ 20), (24), DFS
->  	(5735 - 5835 @ 20), (30)
->  
-> +# http://www.mincom.gob.cu/?q=marcoregulatorio
-> +# - Redes Informáticas
-> +# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
-> +country CU: DFS-FCC
-> +	(2400 - 2456 @ 40), (200 mW)
-> +	(2456 - 2483.5 @ 40), (200 mW)
-> +
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-Based on the Google translation of the document you linked to, I don't
-see anything which would prevent merging these rules into one rule. Am I
-missing something?
+Set max TX aggregation size for 8260 SDIO devices series to 40 frames.
+Fine tune max RX aggregation size - change it to 21.
 
-Thanks,
-Seth
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 7caea69..92709ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -97,8 +97,9 @@
+ #define DEFAULT_NVM_FILE_FAMILY_8000B		"nvmData-8000B"
+ #define DEFAULT_NVM_FILE_FAMILY_8000C		"nvmData-8000C"
+ 
+-/* Max SDIO RX aggregation size of the ADDBA request/response */
+-#define MAX_RX_AGG_SIZE_8260_SDIO	28
++/* Max SDIO RX/TX aggregation sizes of the ADDBA request/response */
++#define MAX_RX_AGG_SIZE_8260_SDIO	21
++#define MAX_TX_AGG_SIZE_8260_SDIO	40
+ 
+ /* Max A-MPDU exponent for HT and VHT */
+ #define MAX_HT_AMPDU_EXPONENT_8260_SDIO	IEEE80211_HT_MAX_AMPDU_32K
+@@ -204,6 +205,7 @@ const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+ 	.max_rx_agg_size = MAX_RX_AGG_SIZE_8260_SDIO,
++	.max_tx_agg_size = MAX_TX_AGG_SIZE_8260_SDIO,
+ 	.disable_dummy_notification = true,
+ 	.max_ht_ampdu_exponent  = MAX_HT_AMPDU_EXPONENT_8260_SDIO,
+ 	.max_vht_ampdu_exponent = MAX_VHT_AMPDU_EXPONENT_8260_SDIO,
+@@ -217,6 +219,7 @@ const struct iwl_cfg iwl4165_2ac_sdio_cfg = {
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+ 	.max_rx_agg_size = MAX_RX_AGG_SIZE_8260_SDIO,
++	.max_tx_agg_size = MAX_TX_AGG_SIZE_8260_SDIO,
+ 	.bt_shared_single_ant = true,
+ 	.disable_dummy_notification = true,
+ 	.max_ht_ampdu_exponent  = MAX_HT_AMPDU_EXPONENT_8260_SDIO,
+-- 
+2.1.4
+
