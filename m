@@ -1,64 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:57774 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110AbbHTP0r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 11:26:47 -0400
-From: Robert Baldyga <r.baldyga@samsung.com>
-To: sameo@linux.intel.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nfc@lists.01.org,
-	m.szyprowski@samsung.com, pebolle@tiscali.nl,
-	Robert Baldyga <r.baldyga@samsung.com>
-Subject: [PATCH v3 1/3] NFC: nci: Add post_setup handler
-Date: Thu, 20 Aug 2015 17:26:00 +0200
-Message-id: <1440084362-27909-2-git-send-email-r.baldyga@samsung.com> (sfid-20150820_172759_843084_8FA12BF9)
-In-reply-to: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
-References: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
+Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752063AbbHRH6Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 03:58:24 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/26] iwlwifi: convert hex_dump_to_buffer() to %*ph
+Date: Tue, 18 Aug 2015 10:57:28 +0300
+Message-Id: <1439884656-18146-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100109_824615_9AFA9E11)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers require non-standard configuration after NCI_CORE_INIT
-request, because they need to know ndev->manufact_specific_info or
-ndev->manufact_id. This patch adds post_setup handler allowing to do
-such custom configuration.
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Signed-off-by: Robert Baldyga <r.baldyga@samsung.com>
+There is no need to use hex_dump_to_buffer() in the cases like this:
+
+	hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);	/* len <= 16 */
+	sprintf("%s\n", outbuf);
+
+since it maybe easily converted to simple:
+
+	sprintf("%*ph\n", len, buf);
+
+Note: it seems in one case the output is groupped by 2 bytes and looks like a
+typo. Thus, patch changes that to plain byte stream.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/net/nfc/nci_core.h | 1 +
- net/nfc/nci/core.c         | 4 ++++
- 2 files changed, 5 insertions(+)
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c | 8 ++------
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 7 +------
+ 2 files changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 01fc8c5..1bdaa5f 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -79,6 +79,7 @@ struct nci_ops {
- 	int   (*close)(struct nci_dev *ndev);
- 	int   (*send)(struct nci_dev *ndev, struct sk_buff *skb);
- 	int   (*setup)(struct nci_dev *ndev);
-+	int   (*post_setup)(struct nci_dev *ndev);
- 	int   (*fw_download)(struct nci_dev *ndev, const char *firmware_name);
- 	__u32 (*get_rfprotocol)(struct nci_dev *ndev, __u8 rf_protocol);
- 	int   (*discover_se)(struct nci_dev *ndev);
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 95af2d2..d9045ec 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -388,6 +388,10 @@ static int nci_open_device(struct nci_dev *ndev)
- 				   msecs_to_jiffies(NCI_INIT_TIMEOUT));
+diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+index 0ffb6ff..b15e44f 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+@@ -310,12 +310,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+ 	pos += scnprintf(buf + pos, buf_size - pos,
+ 			 "NVM version: 0x%x\n", nvm_ver);
+ 	for (ofs = 0 ; ofs < eeprom_len ; ofs += 16) {
+-		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x ", ofs);
+-		hex_dump_to_buffer(ptr + ofs, 16 , 16, 2, buf + pos,
+-				   buf_size - pos, 0);
+-		pos += strlen(buf + pos);
+-		if (buf_size - pos > 0)
+-			buf[pos++] = '\n';
++		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x %16ph\n",
++				 ofs, ptr + ofs);
  	}
  
-+	if (ndev->ops->post_setup) {
-+		rc = ndev->ops->post_setup(ndev);
-+	}
-+
- 	if (!rc) {
- 		rc = __nci_request(ndev, nci_init_complete_req, 0,
- 				   msecs_to_jiffies(NCI_INIT_TIMEOUT));
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 17d7a05..ca4a1f8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -1200,12 +1200,7 @@ static ssize_t iwl_dbgfs_d3_sram_read(struct file *file, char __user *user_buf,
+ 	if (ptr) {
+ 		for (ofs = 0; ofs < len; ofs += 16) {
+ 			pos += scnprintf(buf + pos, bufsz - pos,
+-					 "0x%.4x ", ofs);
+-			hex_dump_to_buffer(ptr + ofs, 16, 16, 1, buf + pos,
+-					   bufsz - pos, false);
+-			pos += strlen(buf + pos);
+-			if (bufsz - pos > 0)
+-				buf[pos++] = '\n';
++					 "0x%.4x %16ph\n", ofs, ptr + ofs);
+ 		}
+ 	} else {
+ 		pos += scnprintf(buf + pos, bufsz - pos,
 -- 
-1.9.1
+2.1.4
 
