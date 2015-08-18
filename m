@@ -1,15 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:25231 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752100AbbHRH6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 03:58:11 -0400
+	id S1752041AbbHRH5w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 03:57:52 -0400
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Avri Altman <avri.altman@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/26] iwlwifi: mvm: set different pm_timeout for action frames
-Date: Tue, 18 Aug 2015 10:57:22 +0300
-Message-Id: <1439884656-18146-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_095815_344116_A237AC77)
+Subject: [PATCH 04/26] iwlwifi: mvm: revert to our old skip over dtim policy
+Date: Tue, 18 Aug 2015 10:57:14 +0300
+Message-Id: <1439884656-18146-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_095803_784380_AC802017)
 In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
 References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -17,71 +17,62 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Avri Altman <avri.altman@intel.com>
 
-When building a Tx Command for management frames, we are lacking
-a check for action frames, for which we should set a different
-pm_timeout.  This cause the fw to stay awake for 100TU after each
-such frame is transmitted, resulting an excessive power consumption.
+Our firmware scheduler used to suffer from false wake-up on 500 time units.
+We had to came up with a formula to address this buggy behavior.
+Now that our firmware is fixed, we can go back to our old policy.
 
 Signed-off-by: Avri Altman <avri.altman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h | 12 ++++++++++++
- drivers/net/wireless/iwlwifi/mvm/tx.c        | 10 ++++++----
- 2 files changed, 18 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/power.c | 28 ++--------------------------
+ 1 file changed, 2 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
-index 81c4ea3..853698a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
-@@ -124,6 +124,18 @@ enum iwl_tx_flags {
- 	TX_CMD_FLG_HCCA_CHUNK		= BIT(31)
- }; /* TX_FLAGS_BITS_API_S_VER_1 */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 506294f..c4e0890 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -288,27 +288,6 @@ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
+ 	return true;
+ }
  
-+/**
-+ * enum iwl_tx_pm_timeouts - pm timeout values in TX command
-+ * @PM_FRAME_NONE: no need to suspend sleep mode
-+ * @PM_FRAME_MGMT: fw suspend sleep mode for 100TU
-+ * @PM_FRAME_ASSOC: fw suspend sleep mode for 10sec
-+ */
-+enum iwl_tx_pm_timeouts {
-+	PM_FRAME_NONE		= 0,
-+	PM_FRAME_MGMT		= 2,
-+	PM_FRAME_ASSOC		= 3,
-+};
-+
- /*
-  * TX command security control
-  */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 15bf36a..6df5aad 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -153,18 +153,20 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 	if (ieee80211_is_mgmt(fc)) {
- 		if (ieee80211_is_assoc_req(fc) || ieee80211_is_reassoc_req(fc))
--			tx_cmd->pm_frame_timeout = cpu_to_le16(3);
-+			tx_cmd->pm_frame_timeout = cpu_to_le16(PM_FRAME_ASSOC);
-+		else if (ieee80211_is_action(fc))
-+			tx_cmd->pm_frame_timeout = cpu_to_le16(PM_FRAME_NONE);
- 		else
--			tx_cmd->pm_frame_timeout = cpu_to_le16(2);
-+			tx_cmd->pm_frame_timeout = cpu_to_le16(PM_FRAME_MGMT);
- 
- 		/* The spec allows Action frames in A-MPDU, we don't support
- 		 * it
- 		 */
- 		WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_AMPDU);
- 	} else if (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO) {
--		tx_cmd->pm_frame_timeout = cpu_to_le16(2);
-+		tx_cmd->pm_frame_timeout = cpu_to_le16(PM_FRAME_MGMT);
- 	} else {
--		tx_cmd->pm_frame_timeout = 0;
-+		tx_cmd->pm_frame_timeout = cpu_to_le16(PM_FRAME_NONE);
+-static int iwl_mvm_power_get_skip_over_dtim(int dtimper, int bi)
+-{
+-	int numerator;
+-	int dtim_interval = dtimper * bi;
+-
+-	if (WARN_ON(!dtim_interval))
+-		return 0;
+-
+-	if (dtimper == 1) {
+-		if (bi > 100)
+-			numerator = 408;
+-		else
+-			numerator = 510;
+-	} else if (dtimper < 10) {
+-		numerator = 612;
+-	} else {
+-		return 0;
+-	}
+-	return max(1, (numerator / dtim_interval));
+-}
+-
+ static bool iwl_mvm_power_is_radar(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+@@ -378,11 +357,8 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 	if (!radar_detect && (dtimper < 10) &&
+ 	    (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_LP ||
+ 	     mvm->cur_ucode == IWL_UCODE_WOWLAN)) {
+-		cmd->skip_dtim_periods =
+-			iwl_mvm_power_get_skip_over_dtim(dtimper, bi);
+-		if (cmd->skip_dtim_periods)
+-			cmd->flags |=
+-				cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
++		cmd->flags |= cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
++		cmd->skip_dtim_periods = 3;
  	}
  
- 	if (ieee80211_is_data(fc) && len > mvm->rts_threshold &&
+ 	if (mvm->cur_ucode != IWL_UCODE_WOWLAN) {
 -- 
 2.1.4
 
