@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35046 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbbHJCdn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34707 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbbHRGCS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2015 22:33:43 -0400
-Received: by pacgr6 with SMTP id gr6so15835390pac.2
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:43 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/11] staging: wilc1000: remove WILC_strncpy function
-Date: Mon, 10 Aug 2015 11:33:16 +0900
-Message-Id: <1439174002-7365-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043353_122695_3CF8B2F6)
-In-Reply-To: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 18 Aug 2015 02:02:18 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: rtlwifi: rtl8192cu: Remove pci check routine
+ inrtl92c_enable_interrupt.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1428652199-28713-1-git-send-email-ap420073@gmail.com>
+To: Taehee Yoo <ap420073@gmail.com>
+Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
+	linux-wireless@vger.kernel.org
+Message-Id: <20150818060217.77A18140366@smtp.codeaurora.org> (sfid-20150818_080220_935697_2697623E)
+Date: Tue, 18 Aug 2015 06:02:17 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove WILC_strncpy function that is changed to strncpy.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_strutils.c | 10 ----------
- drivers/staging/wilc1000/wilc_strutils.h | 14 --------------
- 2 files changed, 24 deletions(-)
+> I change three things about below.
+> 
+> 1. remove pci interface check routine in rtl92c_enable_interrupt
+> because rtl8192cu chipset is always usb interface.
+> 
+> 2. rename rtl92c_xxx_interrupt to rtl92cu_xxx_interrupt.
+> rtl92c_xxx_interrupt functions can only be handled rtl8192cu chipset.
+> 
+> 3. remove rtl92c_init_interrupt wrapper function
+> because rtl92cu_enable_interrupt does not need to have the wrapper function anymore.
+> 
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 
-diff --git a/drivers/staging/wilc1000/wilc_strutils.c b/drivers/staging/wilc1000/wilc_strutils.c
-index 205a06a..337e62f 100644
---- a/drivers/staging/wilc1000/wilc_strutils.c
-+++ b/drivers/staging/wilc1000/wilc_strutils.c
-@@ -17,16 +17,6 @@ void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count)
- }
- 
- 
--/*!
-- *  @author	syounan
-- *  @date	18 Aug 2010
-- *  @version	1.0
-- */
--char *WILC_strncpy(char *pcTarget, const char *pcSource,
--			u32 u32Count)
--{
--	return strncpy(pcTarget, pcSource, u32Count);
--}
- 
- s32 WILC_strncmp(const char *pcStr1, const char *pcStr2,
- 			 u32 u32Count)
-diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
-index 7c38e14..86728d2 100644
---- a/drivers/staging/wilc1000/wilc_strutils.h
-+++ b/drivers/staging/wilc1000/wilc_strutils.h
-@@ -59,20 +59,6 @@ static WILC_ErrNo WILC_memcpy(void *pvTarget, const void *pvSource, u32 u32Count
- }
- 
- 
--/*!
-- *  @brief	copies the contents of source string into the target string
-- *  @param[in]	pcTarget the target string buffer
-- *  @param[in]	pcSource the source string the will be copied
-- *  @param[in]	u32Count copying will proceed until a null character in pcSource
-- *              is encountered or u32Count of bytes copied
-- *  @return	value of pcTarget
-- *  @note	this function repeats the functionality of standard strncpy
-- *  @author	syounan
-- *  @date	18 Aug 2010
-- *  @version	1.0
-- */
--char *WILC_strncpy(char *pcTarget, const char *pcSource,
--			u32 u32Count);
- 
- /*!
-  *  @brief	Compares two strings up to u32Count characters
--- 
-1.9.1
+This failed to apply:
 
+Applying: rtlwifi: rtl8192cu: Remove pci check routine in rtl92c_enable_interrupt.
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
+CONFLICT (content): Merge conflict in drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
+Auto-merging drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+Auto-merging drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+Failed to merge in the changes.
+Patch failed at 0001 rtlwifi: rtl8192cu: Remove pci check routine in rtl92c_enable_interrupt.
+
+Kalle
