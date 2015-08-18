@@ -1,60 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49636 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755679AbbHFSpp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 14:45:45 -0400
-Message-ID: <55C3AB2F.9030904@codeaurora.org> (sfid-20150806_204548_542749_F7FFE2B1)
-Date: Thu, 06 Aug 2015 11:45:03 -0700
-From: Peter Oh <poh@codeaurora.org>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org
-CC: Kalle Valo <kvalo@qca.qualcomm.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Add QCA99X0 to supported device list
-References: <1437478567-11339-1-git-send-email-vthiagar@qti.qualcomm.com> <55C1FFBC.7070905@openwrt.org> <55C31039.6030201@qti.qualcomm.com> <55C313D3.4080004@openwrt.org>
-In-Reply-To: <55C313D3.4080004@openwrt.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752100AbbHRH6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2015 03:58:17 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/26] iwlwifi: mvm: remove partial and full scan lists from lmac sched scan
+Date: Tue, 18 Aug 2015 10:57:25 +0300
+Message-Id: <1439884656-18146-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100108_824638_6550BC4E)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: David Spinadel <david.spinadel@intel.com>
 
-On 08/06/2015 12:59 AM, Felix Fietkau wrote:
-> On 2015-08-06 09:43, Vasanthakumar Thiagarajan wrote:
->> On Wednesday 05 August 2015 05:51 PM, Felix Fietkau wrote:
->>> On 2015-07-21 13:36, Vasanthakumar Thiagarajan wrote:
->>>> Add vendor/device id of QCA99X0 V2.0 to pci id table and
->>>> QCA99X0_HW_2_0_CHIP_ID_REV to ath10k_pci_supp_chips[] for
->>>> QCA99X0 to get detected by the driver.
->>>>
->>>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->>> I just tested a 99X0 card, and I'm getting this:
->>>
->>> [    8.742514] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142)
->>> [    8.747173] ath10k_pci 0000:01:00.0: pci irq msi interrupts 1
-> irq_mode 0 reset_mode 0
->>> [   11.793314] ath10k_pci 0000:01:00.0: failed to receive initialized
-> event from target: 00000000
->>> [   11.793344] ath10k_pci 0000:01:00.0: failed to wait for target after
-> cold reset: -110
->>> [   11.800814] ath10k_pci 0000:01:00.0: failed to reset chip: -110
->>> [   11.809228] ath10k_pci: probe of 0000:01:00.0 failed with error -110
->>>
->>> This is on an AP148 board with Linux 3.18, backports generated from
->>> latest wireless-testing (2015-08-03) + all patches from kvalo's ath
->>> tree.
->> Any idea about the version of AP148 that you are using?. By any chance
-> did
->> you check if QCA988X is working on the same board?.
-> No idea about the version, but QCA988X is working in the same slot.
-QCA99X0 uses a different version of firmware from QCA988X.
-Could you verify which firmware version or file name is using?
-> - Felix
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
-Thanks,
-Peter
+Lmac sched scan supports partial scans, so we can set some channels to be
+scanned on every scan iteration and others to be scanned only on some
+iterations. Currently we set all channels to be scanned every iteration,
+but still have some configuration of which iterations should be partial
+and which should be full.
+
+Remove all partial/full scan configuration to reduce confusions.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 28 +++++++++++-----------------
+ 1 file changed, 11 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 308a60e..f456aad 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -140,10 +140,7 @@ struct iwl_mvm_scan_params {
+ 	int n_match_sets;
+ 	struct iwl_scan_probe_req preq;
+ 	struct cfg80211_match_set *match_sets;
+-	struct {
+-		u8 iterations;
+-		u8 full_scan_mul; /* not used for UMAC */
+-	} schedule[2];
++	u8 iterations[2];
+ };
+ 
+ static u8 iwl_mvm_scan_rx_ant(struct iwl_mvm *mvm)
+@@ -750,7 +747,7 @@ static inline bool iwl_mvm_scan_use_ebs(struct iwl_mvm *mvm,
+ 
+ static int iwl_mvm_scan_total_iterations(struct iwl_mvm_scan_params *params)
+ {
+-	return params->schedule[0].iterations + params->schedule[1].iterations;
++	return params->iterations[0] + params->iterations[1];
+ }
+ 
+ static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
+@@ -817,11 +814,11 @@ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	ssid_bitmap <<= 1;
+ 
+ 	cmd->schedule[0].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[0].iterations = params->schedule[0].iterations;
+-	cmd->schedule[0].full_scan_mul = params->schedule[0].full_scan_mul;
++	cmd->schedule[0].iterations = params->iterations[0];
++	cmd->schedule[0].full_scan_mul = 1;
+ 	cmd->schedule[1].delay = cpu_to_le16(params->interval);
+-	cmd->schedule[1].iterations = params->schedule[1].iterations;
+-	cmd->schedule[1].full_scan_mul = params->schedule[1].iterations;
++	cmd->schedule[1].iterations = params->iterations[1];
++	cmd->schedule[1].full_scan_mul = 1;
+ 
+ 	if (iwl_mvm_scan_use_ebs(mvm, vif, n_iterations)) {
+ 		cmd->channel_opt[0].flags =
+@@ -1180,10 +1177,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	params.n_match_sets = 0;
+ 	params.match_sets = NULL;
+ 
+-	params.schedule[0].iterations = 1;
+-	params.schedule[0].full_scan_mul = 0;
+-	params.schedule[1].iterations = 0;
+-	params.schedule[1].full_scan_mul = 0;
++	params.iterations[0] = 1;
++	params.iterations[1] = 0;
+ 
+ 	params.type = iwl_mvm_get_scan_type(mvm, vif, &params);
+ 
+@@ -1263,10 +1258,9 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 	params.n_match_sets = req->n_match_sets;
+ 	params.match_sets = req->match_sets;
+ 
+-	params.schedule[0].iterations = IWL_FAST_SCHED_SCAN_ITERATIONS;
+-	params.schedule[0].full_scan_mul = 1;
+-	params.schedule[1].iterations = 0xff;
+-	params.schedule[1].full_scan_mul = IWL_FULL_SCAN_MULTIPLIER;
++	params.iterations[0] = 0;
++	params.iterations[1] = 0xff;
++
+ 	params.type = iwl_mvm_get_scan_type(mvm, vif, &params);
+ 
+ 	if (req->interval > U16_MAX) {
+-- 
+2.1.4
+
