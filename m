@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:34926 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690AbbHZRRT (ORCPT
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:36491 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871AbbHRRG7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 13:17:19 -0400
-Received: by labgv11 with SMTP id gv11so56401705lab.2
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2015 10:17:17 -0700 (PDT)
+	Tue, 18 Aug 2015 13:06:59 -0400
 MIME-Version: 1.0
-In-Reply-To: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
-Date: Wed, 26 Aug 2015 20:17:17 +0300
-Message-ID: <CANUX_P1B3ZtdcUKVczobuL_hYkesFEpMK92sNQTUNNexXtuBHA@mail.gmail.com> (sfid-20150826_191723_027951_4518F982)
-Subject: Re: [RFC 0/5] cfg80211 / mac80211: add support for Neighbor Awareness Networking
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Qiumin Hu <qiumin.hu@gmail.com>
+In-Reply-To: <20150818091530.GH5610@mwanda>
+References: <55D238D4.20800@broadcom.com> <ba3c67af8cbe5658154084a165785c637e5a2bc8.1439853139.git.raphael.beamonte@gmail.com>
+ <20150817234628.GK5558@mwanda> <20150818091530.GH5610@mwanda>
+From: =?UTF-8?Q?Rapha=C3=ABl_Beamonte?= <raphael.beamonte@gmail.com>
+Date: Tue, 18 Aug 2015 13:06:39 -0400
+Message-ID: <CAE_Gge0EDaE=zQp9YBDJSd_1VjU1a8-zoPkyKxqPc2THi2b=eQ@mail.gmail.com> (sfid-20150818_190728_576954_DD35C23C)
+Subject: Re: [PATCHv3] staging: wilc1000: replace MALLOC_WILC_BUFFER() macro
+ to avoid possible memory leak
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Arend van Spriel <arend@broadcom.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 30, 2015 at 5:14 PM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> This patch series add supports for a new WiFi feature called
-> Neighbor Awareness Networking a.k.a. NAN.
+2015-08-18 5:15 GMT-04:00 Dan Carpenter <dan.carpenter@oracle.com>:
+> To be honest, I have lost track of this patchset.  If you are planning
+> to redo the other patches can you send it in a new thread?
 
-Quite a few people contacted me on that matter. Several contacted me
-privately, others through IRC.
-I am not sending this series as PATCH since we are not ready on the
-driver level. And we typically don't want to have APIs that nobody
-uses. iwlwifi should start supporting NAN early next year (no
-commitment whatsoever of course).
-Since I had no comments on this, I think the API is pretty much ready
-which means that if some courageous application developer wants to
-start using NAN, I think he can that he can take a decently safe
-assumption that the API will look as described in this patch series.
+Actually, Greg already included the "return statement" and
+"DECLARE_WILC_BUFFER" ones.
+The replacement of printk by netdev_* needs more work on my side to
+get the net_device to be able to use the netdev_* functions.
+And apparently Greg already received another patch with the
+"FREE_WILC_BUFFER" replacement, though I don't see it in the
+staging-testing tree yet.
+
+So, I think this patch is the last one of this patchset that has to be
+treated! That's why I rebased it on top of the current staging-testing
+tree on my last send.
+
+Thanks,
+Raphaël
