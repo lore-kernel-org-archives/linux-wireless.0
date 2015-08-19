@@ -1,101 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:38052 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbbHMEmH (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:36492 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062AbbHSTQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 00:42:07 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <jude.lee@atmel.com>, <robin.hwang@atmel.com>
-Subject: [PATCH 4/5] staging: wilc1000: use the real data type
-Date: Thu, 13 Aug 2015 13:41:22 +0900
-Message-ID: <1439440883-16061-5-git-send-email-tony.cho@atmel.com> (sfid-20150813_064212_476602_C22DB52C)
-In-Reply-To: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
-References: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
+	Wed, 19 Aug 2015 15:16:37 -0400
+Received: by lbbpu9 with SMTP id pu9so9772275lbb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 12:16:35 -0700 (PDT)
+Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last TSO
+ segment
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
+ <55D4D495.9070705@cogentembedded.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E8253B0@hasmsx107.ger.corp.intel.com>
+Cc: "ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <55D4D611.1060201@cogentembedded.com> (sfid-20150819_211641_846598_ADCCBE0F)
+Date: Wed, 19 Aug 2015 22:16:33 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8253B0@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johnny Kim <johnny.kim@atmel.com>
+On 08/19/2015 10:12 PM, Grumbach, Emmanuel wrote:
 
-This patch changes the type of gu8FlushedJoinReqDrvHandler with his real
-data type becasue typecasting is not necessary. In result, typecasting
-which is not necessary and some building warnings is removed.
+>>> This allows to release the backpressure on the socket only
+>>> when the last segment is released.
+>>> Now the truesize looks like this:
+>>> if the truesize of the original skb is 65420, all the
+>>> segments will have a truesize of 704 (skb itself) and the
+>>> last one will have 65420.
+>>>
+>>> Change-Id: I3c894cf2afc0aedfe7b2a5b992ba41653ff79c0e
+>>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>>> ---
+>>>    drivers/net/wireless/iwlwifi/mvm/tx.c | 17 ++++++++++++++++-
+>>>    1 file changed, 16 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+>>> index 5046833..046e50d 100644
+>>> --- a/drivers/net/wireless/iwlwifi/mvm/tx.c
+>>> +++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+>> [...]
+>>> @@ -1034,6 +1035,20 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+>>>    		}
+>>>
+>>>    		__skb_queue_tail(mpdus_skb, skb);
+>>> +		sum_truesize += skb->truesize;
+>>> +	}
+>>> +
+>>> +	/* Release the backpressure on the socket only when
+>>> +	 * the last segment is released.
+>>> +	 */
+>>> +	if (skb_gso->destructor == sock_wfree) {
+>
+> I need to change the destructor function here as per Eric's comment.
+>
+>>> +		struct sk_buff *tail = mpdus_skb->prev;
+>>> +
+>>> +		swap(tail->truesize, skb_gso->truesize);
+>>> +		swap(tail->destructor, skb_gso->destructor);
+>>> +		swap(tail->sk, skb_gso->sk);
+>>> +                atomic_add(sum_truesize - skb_gso->truesize,
+>>
+>>      Please indent using tabs, not spaces.
+>
+> I am happy this is the only flaw you found ;)
 
-Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+    It just jumped into my eyes. :-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 1c2d924..c4e27c7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -578,7 +578,7 @@ u8 gu8Flushed11iMode;
- u8 gu8FlushedAuthType;
- u32 gu32FlushedJoinReqSize;
- u32 gu32FlushedInfoElemAsocSize;
--u32 gu8FlushedJoinReqDrvHandler;
-+tstrWILC_WFIDrv *gu8FlushedJoinReqDrvHandler;
- #define REAL_JOIN_REQ 0
- #define FLUSHED_JOIN_REQ 1
- #define FLUSHED_BYTE_POS 79     /* Position the byte indicating flushing in the flushed request */
-@@ -1940,7 +1940,7 @@ static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler, tstrHostIFconnectAttr *ps
- 	/*BugID_5137*/
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
- 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
--		gu8FlushedJoinReqDrvHandler = (u32)pstrWFIDrv;
-+		gu8FlushedJoinReqDrvHandler = pstrWFIDrv;
- 	}
- 
- 	PRINT_D(GENERIC_DBG, "send HOST_IF_WAITING_CONN_RESP\n");
-@@ -2191,11 +2191,11 @@ static s32 Handle_ConnectTimeout(tstrWILC_WFIDrv *drvHandler)
- 	memset(u8ConnectedSSID, 0, ETH_ALEN);
- 	/*BugID_5213*/
- 	/*Freeing flushed join request params on connect timeout*/
--	if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
-+	if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
- 		WILC_FREE(gu8FlushedJoinReq);
- 		gu8FlushedJoinReq = NULL;
- 	}
--	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
-+	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
- 		WILC_FREE(gu8FlushedInfoElemAsoc);
- 		gu8FlushedInfoElemAsoc = NULL;
- 	}
-@@ -2616,11 +2616,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
- 			/*BugID_5213*/
- 			/*Freeing flushed join request params on receiving*/
- 			/*MAC_DISCONNECTED while connected*/
--			if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
-+			if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
- 				WILC_FREE(gu8FlushedJoinReq);
- 				gu8FlushedJoinReq = NULL;
- 			}
--			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
-+			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
- 				WILC_FREE(gu8FlushedInfoElemAsoc);
- 				gu8FlushedInfoElemAsoc = NULL;
- 			}
-@@ -3116,11 +3116,11 @@ static void Handle_Disconnect(tstrWILC_WFIDrv *drvHandler)
- 
- 
- 		/*BugID_5137*/
--		if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
-+		if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
- 			WILC_FREE(gu8FlushedJoinReq);
- 			gu8FlushedJoinReq = NULL;
- 		}
--		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
-+		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
- 			WILC_FREE(gu8FlushedInfoElemAsoc);
- 			gu8FlushedInfoElemAsoc = NULL;
- 		}
--- 
-1.9.1
+> Sure - I'll fix. And I'll remove the Change-ID and checkpatch will be
+> happy.
+
+    DaveM allows that tag in the networking patches, IIRC.
+
+> No worries ;)
+
+>>
+>>> +                           &skb_gso->sk->sk_wmem_alloc);
+>>>    	}
+>>>
+>>>    	ret = 0;
+
+MBR, Sergei
 
