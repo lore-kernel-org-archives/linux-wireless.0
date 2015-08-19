@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27828 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773AbbHFHsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 03:48:53 -0400
-Date: Thu, 6 Aug 2015 10:48:48 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 1/5] device property: helper macros for property entry
- creation
-Message-ID: <20150806074848.GH7675@kuha.fi.intel.com> (sfid-20150806_094917_660545_19584352)
-References: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com>
- <1438781947-7952-2-git-send-email-heikki.krogerus@linux.intel.com>
- <1438783338.29746.172.camel@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438783338.29746.172.camel@linux.intel.com>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:33648 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753732AbbHSOWM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 10:22:12 -0400
+Message-ID: <1439994127.6610.12.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150819_162221_736435_FAB9A070)
+Subject: Re: [RFC v2 1/3] iwlwifi: mvm: add real TSO implementation
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, ido@wizery.com,
+	netdev@vger.kernel.org
+Date: Wed, 19 Aug 2015 07:22:07 -0700
+In-Reply-To: <1439993864.6610.11.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-2-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439993864.6610.11.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 05, 2015 at 05:02:18PM +0300, Andy Shevchenko wrote:
-> On Wed, 2015-08-05 at 16:39 +0300, Heikki Krogerus wrote:
-> > Marcos for easier creation of build-in property entries.
+On Wed, 2015-08-19 at 07:17 -0700, Eric Dumazet wrote:
+> On Wed, 2015-08-19 at 15:59 +0300, Emmanuel Grumbach wrote:
+> > The segmentation is done completely in software. The
+> > driver creates several MPDUs out of a single large send.
+> > Each MPDU is a newly allocated SKB.
+> > A page is allocated to create the headers that need to be
+> > duplicated (SNAP / IP / TCP). The WiFi header is in the
+> > header of the newly created SKBs.
 > > 
-> > Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> > type=feature
+> > 
+> > Change-Id: I238ffa79cacc5bbdacdfbf3e9673c8d4f02b462a
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 > > ---
-> >  include/linux/property.h | 35 +++++++++++++++++++++++++++++++++++
-> >  1 file changed, 35 insertions(+)
-> > 
-> > diff --git a/include/linux/property.h b/include/linux/property.h
-> > index 76ebde9..204d899 100644
-> > --- a/include/linux/property.h
-> > +++ b/include/linux/property.h
-> > @@ -152,6 +152,41 @@ struct property_entry {
-> >  	} value;
-> >  };
-> >  
-> > +#define PROP_ENTRY_U8(_name_, _val_) { \
+> >  drivers/net/wireless/iwlwifi/mvm/tx.c | 513 +++++++++++++++++++++++++++++++---
+> >  1 file changed, 481 insertions(+), 32 deletions(-)
 > 
-> PROP_ prefix is too generic.
-> Maybe DEVPROP_ ? At least for the latter no records in the current
-> sources.
+> Ouch dynamic allocations while doing xmit are certainly not needed.
+> Your driver should pre-allocated space for headers.
+> 
+> Drivers willing to implement tso have to use net/core/tso.c provided
+> helpers.
+> 
+> $ git grep -n tso_build_hdr
+> drivers/net/ethernet/cavium/thunder/nicvf_queues.c:1030:                tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> drivers/net/ethernet/freescale/fec_main.c:729:          tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> drivers/net/ethernet/marvell/mv643xx_eth.c:842:         tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> drivers/net/ethernet/marvell/mvneta.c:1650:             tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> include/net/tso.h:15:void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
+> net/core/tso.c:14:void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
+> net/core/tso.c:37:EXPORT_SYMBOL(tso_build_hdr);
+> 
 
-I disagree with that. IMO this kind of macros should ideally resemble
-the structure name they are used to fill (struct property_entry in
-this case). And there are already definitions for DEV_PROP_* to
-describe the types, so using something like DEVPROP_* here is just
-confusing.
-
-If PROP_ENTRY_* is really not good enough, we can change them
-PROPERTY_ENTRY_*. But is PROP_ENTRY_* really so bad?
-
-Rafael, what is your opinion?
+Look at commit 2adb719d74f6e174071e5c913290b9bbd8c2c0e8 for a typical
+use of these helpers.
 
 
-Thanks,
-
--- 
-heikki
