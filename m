@@ -1,28 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45083 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbbHQTvk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 15:51:40 -0400
-Date: Mon, 17 Aug 2015 12:51:39 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Subject: Re: [PATCH 1/4] staging: wilc1000: delete wilc_log.h
-Message-ID: <20150817195139.GA6381@kroah.com> (sfid-20150817_215143_657567_794CCFF6)
-References: <1439819071-30000-1-git-send-email-chaehyun.lim@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1439819071-30000-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59012 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751623AbbHSTxx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 15:53:53 -0400
+Message-ID: <1440014031.2089.14.camel@sipsolutions.net> (sfid-20150819_215356_967396_780AE303)
+Subject: Re: set channel from radiotap headers during injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Allan Matthew <allanm84@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Aug 2015 21:53:51 +0200
+In-Reply-To: <CAEnVuW21Ocie0RUGv-UZU1U=n=mTinJ_nJa2uHQqVZz-11AbWA@mail.gmail.com> (sfid-20150819_215111_116864_8760F707)
+References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
+	 <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com>
+	 <1439983495.2089.7.camel@sipsolutions.net>
+	 <CAEnVuW18e15hOjoMYRstjgu2cr5BFAtVHThAyZGqpMAdFUQrpQ@mail.gmail.com>
+	 <1440007745.2089.11.camel@sipsolutions.net>
+	 <CAEnVuW0m5jPMcQnC4inVF+8xubZbuyM-faP6Lebz26jvb4s-XA@mail.gmail.com>
+	 <1440013262.2089.13.camel@sipsolutions.net>
+	 <CAEnVuW21Ocie0RUGv-UZU1U=n=mTinJ_nJa2uHQqVZz-11AbWA@mail.gmail.com>
+	 (sfid-20150819_215111_116864_8760F707)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 10:44:28PM +0900, Chaehyun Lim wrote:
-> The macros in wilc_log.h are not referenced anywhere, so just delete it.
+On Wed, 2015-08-19 at 12:50 -0700, Allan Matthew wrote:
+> Regarding the AP clients, could the AP send a power save or sleep
+> notification telling clients its going away for awhile, then come 
+> back after the specified time?
+> 
 
-Oops, I just did this same thing before I saw your email, sorry about
-that.
+No, the protocol has no such provision for the AP.
 
-greg k-h
+[also, please try to format your emails more readable, instead of just
+tacking on something on the top]
+
+johannes
