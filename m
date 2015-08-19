@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18217 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbbHQOXq (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:37395 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435AbbHSXG1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 10:23:46 -0400
-Date: Mon, 17 Aug 2015 17:23:50 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
-	dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com
-Subject: Re: [PATCH 3/4] staging: wilc1000: remove WILC_ErrNo
-Message-ID: <20150817142350.GG5558@mwanda> (sfid-20150817_162349_397853_B3A197FC)
-References: <1439819071-30000-1-git-send-email-chaehyun.lim@gmail.com>
- <1439819071-30000-3-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 19 Aug 2015 19:06:27 -0400
+Received: by igui7 with SMTP id i7so18058873igu.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 16:06:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1439819071-30000-3-git-send-email-chaehyun.lim@gmail.com>
+In-Reply-To: <55CB0ACA.3000109@broadcom.com>
+References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
+	<CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>
+	<55AD2C8F.9010509@broadcom.com>
+	<CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>
+	<55CB0ACA.3000109@broadcom.com>
+Date: Thu, 20 Aug 2015 01:06:27 +0200
+Message-ID: <CACna6ryZ6qJY7t12CQjyD1kvkXa5kpQp3J+eyEq4Gn0DVR9TMA@mail.gmail.com> (sfid-20150820_010630_925218_3D03892B)
+Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hante Meuleman <meuleman@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 10:44:30PM +0900, Chaehyun Lim wrote:
-> WILC_ErrNo is replaced by s32, then WILC_ErrNo typedef is removed.
-> 
+On 12 August 2015 at 10:58, Arend van Spriel <arend@broadcom.com> wrote:
+> You did a warm reboot of the device, right? There seems to be an issue
+> because on OpenWrt the brcmfmac is not unloaded upon warm reboot, which
+> makes the device unaccessible. Because on OpenWrt the firmware request is
+> synchronous (OpenWrt patch on top of upstream brcmfmac) it results in probe
+> failing on invalid access making the issue OpenWrt specific. Hante created a
+> fix for the warm reboot issue.
 
-s32 is a weirdo type.  You should only specify the number of bit when it
-is something required by the hardware.  Just use int.
-
-regards,
-dan carpenter
-
+Hante could you share your fix?
