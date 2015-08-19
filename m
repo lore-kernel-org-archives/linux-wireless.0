@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:34323 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739AbbHPFak (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:43692 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115AbbHSV7f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2015 01:30:40 -0400
-From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/3] staging: wilc1000: code style patches
-Date: Sun, 16 Aug 2015 01:30:11 -0400
-Message-Id: <cover.1439702894.git.raphael.beamonte@gmail.com> (sfid-20150816_073150_810947_0579C3BA)
+	Wed, 19 Aug 2015 17:59:35 -0400
+Message-ID: <55D4FC40.4020905@broadcom.com> (sfid-20150819_235939_002090_05317C4D)
+Date: Wed, 19 Aug 2015 23:59:28 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 2/7] brcmfmac: correct interface combination info
+References: <1439708139-7527-1-git-send-email-arend@broadcom.com>	<1439708139-7527-3-git-send-email-arend@broadcom.com> <CACna6ryYkWOufztYgA6dhYkUUrLPC+05m2UX1J89uS8eha=YYQ@mail.gmail.com>
+In-Reply-To: <CACna6ryYkWOufztYgA6dhYkUUrLPC+05m2UX1J89uS8eha=YYQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 08/19/2015 11:49 PM, Rafał Miłecki wrote:
+> On 16 August 2015 at 08:55, Arend van Spriel <arend@broadcom.com> wrote:
+>> The interface combination provided by brcmfmac did not truly reflect
+>> the combinations supported by driver and/or firmware.
+>
+> This is OK in general but may conflict a bit with my recent:
+> brcmfmac: set wiphy's addresses to provide valid MACs
 
-Please find in following emails code style patches for the driver
-wilc1000 in staging.
+Actually had to dive into firmware and the mask on ea[5] is determined 
+by allowed number of AP interfaces by MBSS.
 
-Raphaël
+Regards,
+Arend
 
-
-Raphaël Beamonte (3):
-  staging: wilc1000: code style: fix macro with multiple statements
-  staging: wilc1000: code style: fix globals initialized to false
-  staging: wilc1000: code style: fix open brace { on wrong line
-
- drivers/staging/wilc1000/host_interface.c         |  4 ++--
- drivers/staging/wilc1000/linux_wlan.c             |  3 +--
- drivers/staging/wilc1000/wilc_exported_buf.c      | 14 ++++++++------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  3 +--
- drivers/staging/wilc1000/wilc_wlan.c              |  2 +-
- 5 files changed, 13 insertions(+), 13 deletions(-)
-
--- 
-2.1.4
+> My implementation was designed for a one combo only, I'll submit a fix for that.
+>
 
