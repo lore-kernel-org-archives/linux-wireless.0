@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752063AbbHRH6Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 03:58:24 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/26] iwlwifi: convert hex_dump_to_buffer() to %*ph
-Date: Tue, 18 Aug 2015 10:57:28 +0300
-Message-Id: <1439884656-18146-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100109_824615_9AFA9E11)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53479 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbbHSPFJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 11:05:09 -0400
+Date: Wed, 19 Aug 2015 07:50:28 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Chandra Gorentla <csgorentla@gmail.com>
+Cc: rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
+	dan.carpenter@oracle.com
+Subject: Re: [PATCH] staging: wilc1000: Set all options in region debugfs file
+Message-ID: <20150819145028.GA20702@kroah.com> (sfid-20150819_170608_031322_743A1FE7)
+References: <1439917337-18473-1-git-send-email-csgorentla@gmail.com>
+ <20150819030100.GE4588@kroah.com>
+ <20150819123012.GA20877@gcs-HP-Compaq-nx6320>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150819123012.GA20877@gcs-HP-Compaq-nx6320>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+On Wed, Aug 19, 2015 at 06:00:12PM +0530, Chandra Gorentla wrote:
+> On Tue, Aug 18, 2015 at 08:01:00PM -0700, Greg KH wrote:
+> > On Tue, Aug 18, 2015 at 10:32:17PM +0530, Chandra S Gorentla wrote:
+> > > This patch allows setting all options in the module's debug region
+> > > options file 'wilc_debug_region'.  This functionality allows the user
+> > > to enable logging from all regions (initialization, locks, firmware
+> > > etc.) of the driver.  Logging from the following regions is enabled
+> > > during the driver initialization:
+> > > 
+> > > INIT_DBG, GENERIC_DBG, CFG80211_DBG, FIRM_DBG and HOSTAPD_DBG
+> > > 
+> > > Before this change, the numerical value set is equal first byte of 
+> > > input minus 0x30 (ASCII value of '0').  Because of this, after a write 
+> > > to this debugfs file, it is difficult to predict the regions on which
+> > > logging is enabled.
+> > > 
+> > > The DBG_REGION_ALL now includes 3 additional regions TCP_ENH, SPIN_DEBUG
+> > > and FIRM_DBG.
+> > 
+> > Why did you add these extra ones?
+> I added them because there is code support them and to avoid a holes in
+> the range of the options.
 
-There is no need to use hex_dump_to_buffer() in the cases like this:
+But why do you need to debug such things?
 
-	hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);	/* len <= 16 */
-	sprintf("%s\n", outbuf);
+> > All of this should eventually just be deleted, as network drivers need
+> > to use the networking driver debug interfaces, not their own crazy ones.
+> In that case, can I assume that we are not going forward with this change?
 
-since it maybe easily converted to simple:
+I hope not, please work on fixing the driver up to work properly (i.e.
+not with this type of stuff...)
 
-	sprintf("%*ph\n", len, buf);
+thanks,
 
-Note: it seems in one case the output is groupped by 2 bytes and looks like a
-typo. Thus, patch changes that to plain byte stream.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/debugfs.c | 8 ++------
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 7 +------
- 2 files changed, 3 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-index 0ffb6ff..b15e44f 100644
---- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-@@ -310,12 +310,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
- 	pos += scnprintf(buf + pos, buf_size - pos,
- 			 "NVM version: 0x%x\n", nvm_ver);
- 	for (ofs = 0 ; ofs < eeprom_len ; ofs += 16) {
--		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x ", ofs);
--		hex_dump_to_buffer(ptr + ofs, 16 , 16, 2, buf + pos,
--				   buf_size - pos, 0);
--		pos += strlen(buf + pos);
--		if (buf_size - pos > 0)
--			buf[pos++] = '\n';
-+		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x %16ph\n",
-+				 ofs, ptr + ofs);
- 	}
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 17d7a05..ca4a1f8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -1200,12 +1200,7 @@ static ssize_t iwl_dbgfs_d3_sram_read(struct file *file, char __user *user_buf,
- 	if (ptr) {
- 		for (ofs = 0; ofs < len; ofs += 16) {
- 			pos += scnprintf(buf + pos, bufsz - pos,
--					 "0x%.4x ", ofs);
--			hex_dump_to_buffer(ptr + ofs, 16, 16, 1, buf + pos,
--					   bufsz - pos, false);
--			pos += strlen(buf + pos);
--			if (bufsz - pos > 0)
--				buf[pos++] = '\n';
-+					 "0x%.4x %16ph\n", ofs, ptr + ofs);
- 		}
- 	} else {
- 		pos += scnprintf(buf + pos, bufsz - pos,
--- 
-2.1.4
-
+greg k-h
