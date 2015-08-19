@@ -1,271 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:33961 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752822AbbHGAC0 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:38480 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751526AbbHSQhh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 20:02:26 -0400
-Received: by pdber20 with SMTP id er20so37831333pdb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 17:02:26 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/4] staging: wilc1000: use memcmp instead of WILC_memcmp
-Date: Fri,  7 Aug 2015 09:02:03 +0900
-Message-Id: <1438905724-26810-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150807_020230_117838_6CAB5DA6)
-In-Reply-To: <1438905724-26810-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1438905724-26810-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 19 Aug 2015 12:37:37 -0400
+Received: by wicja10 with SMTP id ja10so13458212wic.1
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 09:37:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1439983495.2089.7.camel@sipsolutions.net>
+References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
+ <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com> <1439983495.2089.7.camel@sipsolutions.net>
+From: Allan Matthew <allanm84@gmail.com>
+Date: Wed, 19 Aug 2015 09:37:16 -0700
+Message-ID: <CAEnVuW18e15hOjoMYRstjgu2cr5BFAtVHThAyZGqpMAdFUQrpQ@mail.gmail.com> (sfid-20150819_183740_141773_D951549A)
+Subject: Re: set channel from radiotap headers during injection
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use memcmp instead of WILC_memcmp.
+Thank you Johannes,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c         | 20 +++++++-------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 32 +++++++++++------------
- 2 files changed, 26 insertions(+), 26 deletions(-)
+It seems like the functionality for this (maybe not the monitor mode)
+must be available in order to support the multiple 802.11p channels in
+the 5.8ghz band.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0c06ac2..bc06d56 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -801,7 +801,7 @@ s32 Handle_get_IPAddress(void *drvHandler, u8 *pu8IPAddr, u8 idx)
- 	/*get the value by searching the local copy*/
- 	WILC_FREE(strWID.ps8WidVal);
- 
--	if (WILC_memcmp(gs8GetIP[idx], gs8SetIP[idx], IP_ALEN) != 0)
-+	if (memcmp(gs8GetIP[idx], gs8SetIP[idx], IP_ALEN) != 0)
- 		host_int_setup_ipaddress((WILC_WFIDrvHandle)pstrWFIDrv, gs8SetIP[idx], idx);
- 
- 	if (s32Error != WILC_SUCCESS) {
-@@ -1527,7 +1527,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 
- 
- 	for (i = 0; i < pstrWFIDrv->u32SurveyResultsCount; i++)	{
--		if (WILC_memcmp(pstrWFIDrv->astrSurveyResults[i].SSID,
-+		if (memcmp(pstrWFIDrv->astrSurveyResults[i].SSID,
- 				pstrHostIFconnectAttr->pu8ssid,
- 				pstrHostIFconnectAttr->ssidLen) == 0) {
- 			PRINT_INFO(HOSTINF_DBG, "Network with required SSID is found %s\n", pstrHostIFconnectAttr->pu8ssid);
-@@ -1540,7 +1540,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 				/* BSSID is also passed from the user, so decision of matching
- 				 * should consider also this passed BSSID */
- 
--				if (WILC_memcmp(pstrWFIDrv->astrSurveyResults[i].BSSID,
-+				if (memcmp(pstrWFIDrv->astrSurveyResults[i].BSSID,
- 						pstrHostIFconnectAttr->pu8bssid,
- 						6) == 0) {
- 					PRINT_INFO(HOSTINF_DBG, "BSSID is passed from the user and matched\n");
-@@ -1648,7 +1648,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 
- 	/* if we try to connect to an already connected AP then discard the request */
- 
--	if (WILC_memcmp(pstrHostIFconnectAttr->pu8bssid, u8ConnectedSSID, ETH_ALEN) == 0) {
-+	if (memcmp(pstrHostIFconnectAttr->pu8bssid, u8ConnectedSSID, ETH_ALEN) == 0) {
- 
- 		s32Error = WILC_SUCCESS;
- 		PRINT_ER("Trying to connect to an already connected AP, Discard connect request\n");
-@@ -1720,7 +1720,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 		u32WidsCount++;
- 
- 		/*BugID_5137*/
--		if (WILC_memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
-+		if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
- 
- 			gu32FlushedInfoElemAsocSize = pstrWFIDrv->strWILC_UsrConnReq.ConnReqIEsLen;
- 			gu8FlushedInfoElemAsoc =  WILC_MALLOC(gu32FlushedInfoElemAsocSize);
-@@ -1735,7 +1735,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 	u32WidsCount++;
- 
- 	/*BugID_5137*/
--	if (WILC_memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
- 		gu8Flushed11iMode = pstrWFIDrv->strWILC_UsrConnReq.u8security;
- 
- 	PRINT_INFO(HOSTINF_DBG, "Encrypt Mode = %x\n", pstrWFIDrv->strWILC_UsrConnReq.u8security);
-@@ -1748,7 +1748,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 	u32WidsCount++;
- 
- 	/*BugID_5137*/
--	if (WILC_memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7))
- 		gu8FlushedAuthType = (u8)pstrWFIDrv->strWILC_UsrConnReq.tenuAuth_type;
- 
- 	PRINT_INFO(HOSTINF_DBG, "Authentication Type = %x\n", pstrWFIDrv->strWILC_UsrConnReq.tenuAuth_type);
-@@ -1803,7 +1803,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 	strWIDList[u32WidsCount].ps8WidVal = WILC_MALLOC(strWIDList[u32WidsCount].s32ValueSize);
- 
- 	/*BugID_5137*/
--	if (WILC_memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
- 		gu32FlushedJoinReqSize = strWIDList[u32WidsCount].s32ValueSize;
- 		gu8FlushedJoinReq = WILC_MALLOC(gu32FlushedJoinReqSize);
- 	}
-@@ -1940,7 +1940,7 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 	/* ////////////////////// */
- 
- 	/*BugID_5137*/
--	if (WILC_memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
- 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
- 		gu8FlushedJoinReqDrvHandler = (u32)pstrWFIDrv;
- 	}
-@@ -2246,7 +2246,7 @@ static s32 Handle_RcvdNtwrkInfo(void *drvHandler, tstrRcvdNetworkInfo *pstrRcvdN
- 
- 			if ((pstrWFIDrv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid != NULL) &&
- 			    (pstrNetworkInfo->au8bssid != NULL)) {
--				if (WILC_memcmp(pstrWFIDrv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid,
-+				if (memcmp(pstrWFIDrv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].au8bssid,
- 						pstrNetworkInfo->au8bssid, 6) == 0) {
- 					if (pstrNetworkInfo->s8rssi <= pstrWFIDrv->strWILC_UsrScanReq.astrFoundNetworkInfo[i].s8rssi) {
- 						/*we have already found this network with better rssi, so keep the old cached one and don't
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e38aad0..060288a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -202,7 +202,7 @@ void refresh_scan(void *pUserVoid, uint8_t all, bool bDirectScan)
- 				channel = ieee80211_get_channel(wiphy, s32Freq);
- 
- 				rssi = get_rssi_avg(pstrNetworkInfo);
--				if (WILC_memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7) || bDirectScan)	{
-+				if (memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7) || bDirectScan)	{
- 					bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN, pstrNetworkInfo->au8bssid, pstrNetworkInfo->u64Tsf, pstrNetworkInfo->u16CapInfo,
- 								  pstrNetworkInfo->u16BeaconPeriod, (const u8 *)pstrNetworkInfo->pu8IEs,
- 								  (size_t)pstrNetworkInfo->u16IEsLen, (((s32)rssi) * 100), GFP_KERNEL);
-@@ -283,7 +283,7 @@ int8_t is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo, void *pUserVoid)
- 	} else {
- 		/* Linear search for now */
- 		for (i = 0; i < u32LastScannedNtwrksCountShadow; i++) {
--			if (WILC_memcmp(astrLastScannedNtwrksShadow[i].au8bssid,
-+			if (memcmp(astrLastScannedNtwrksShadow[i].au8bssid,
- 					pstrNetworkInfo->au8bssid, 6) == 0) {
- 				state = i;
- 				break;
-@@ -414,7 +414,7 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
- 
- 						/*P2P peers are sent to WPA supplicant and added to shadow table*/
- 
--						if (!(WILC_memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7))) {
-+						if (!(memcmp("DIRECT-", pstrNetworkInfo->au8ssid, 7))) {
- 							bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN,  pstrNetworkInfo->au8bssid, pstrNetworkInfo->u64Tsf, pstrNetworkInfo->u16CapInfo,
- 										  pstrNetworkInfo->u16BeaconPeriod, (const u8 *)pstrNetworkInfo->pu8IEs,
- 										  (size_t)pstrNetworkInfo->u16IEsLen, (((s32)pstrNetworkInfo->s8rssi) * 100), GFP_KERNEL);
-@@ -429,7 +429,7 @@ static void CfgScanResult(tenuScanEvent enuScanEvent, tstrNetworkInfo *pstrNetwo
- 					u32 i;
- 					/* So this network is discovered before, we'll just update its RSSI */
- 					for (i = 0; i < priv->u32RcvdChCount; i++) {
--						if (WILC_memcmp(astrLastScannedNtwrksShadow[i].au8bssid, pstrNetworkInfo->au8bssid, 6) == 0) {
-+						if (memcmp(astrLastScannedNtwrksShadow[i].au8bssid, pstrNetworkInfo->au8bssid, 6) == 0) {
- 							PRINT_D(CFG80211_DBG, "Update RSSI of %s \n", astrLastScannedNtwrksShadow[i].au8ssid);
- 
- 							astrLastScannedNtwrksShadow[i].s8rssi = pstrNetworkInfo->s8rssi;
-@@ -503,7 +503,7 @@ int WILC_WFI_Set_PMKSA(u8 *bssid, struct WILC_WFI_priv *priv)
- 
- 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
- 
--		if (!WILC_memcmp(bssid, priv->pmkid_list.pmkidlist[i].bssid,
-+		if (!memcmp(bssid, priv->pmkid_list.pmkidlist[i].bssid,
- 				 ETH_ALEN)) {
- 			PRINT_D(CFG80211_DBG, "PMKID successful comparison");
- 
-@@ -599,7 +599,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
- 			 *  Linux kernel warning generated at the nl80211 layer */
- 
- 			for (i = 0; i < u32LastScannedNtwrksCountShadow; i++) {
--				if (WILC_memcmp(astrLastScannedNtwrksShadow[i].au8bssid,
-+				if (memcmp(astrLastScannedNtwrksShadow[i].au8bssid,
- 						pstrConnectInfo->au8bssid, ETH_ALEN) == 0) {
- 					unsigned long now = jiffies;
- 
-@@ -845,7 +845,7 @@ static int WILC_WFI_CfgConnect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	for (i = 0; i < u32LastScannedNtwrksCountShadow; i++) {
- 		if ((sme->ssid_len == astrLastScannedNtwrksShadow[i].u8SsidLen) &&
--		    WILC_memcmp(astrLastScannedNtwrksShadow[i].au8ssid,
-+		    memcmp(astrLastScannedNtwrksShadow[i].au8ssid,
- 				sme->ssid,
- 				sme->ssid_len) == 0) {
- 			PRINT_INFO(CFG80211_DBG, "Network with required SSID is found %s\n", sme->ssid);
-@@ -857,7 +857,7 @@ static int WILC_WFI_CfgConnect(struct wiphy *wiphy, struct net_device *dev,
- 			} else {
- 				/* BSSID is also passed from the user, so decision of matching
- 				 * should consider also this passed BSSID */
--				if (WILC_memcmp(astrLastScannedNtwrksShadow[i].au8bssid,
-+				if (memcmp(astrLastScannedNtwrksShadow[i].au8bssid,
- 						sme->bssid,
- 						ETH_ALEN) == 0)	{
- 					PRINT_INFO(CFG80211_DBG, "BSSID is passed from the user and matched\n");
-@@ -1170,7 +1170,7 @@ static int WILC_WFI_add_key(struct wiphy *wiphy, struct net_device *netdev, u8 k
- 			break;
- 		}
- 				#endif
--		if (WILC_memcmp(params->key, priv->WILC_WFI_wep_key[key_index], params->key_len)) {
-+		if (memcmp(params->key, priv->WILC_WFI_wep_key[key_index], params->key_len)) {
- 			priv->WILC_WFI_wep_default = key_index;
- 			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
- 			WILC_memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
-@@ -1896,7 +1896,7 @@ static int WILC_WFI_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 
- 
- 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
--		if (!WILC_memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
-+		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
- 				 ETH_ALEN)) {
- 			/*If bssid already exists and pmkid value needs to reset*/
- 			flag = PMKID_FOUND;
-@@ -1946,7 +1946,7 @@ static int WILC_WFI_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
- 	PRINT_D(CFG80211_DBG, "Deleting PMKSA keys\n");
- 
- 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
--		if (!WILC_memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
-+		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
- 				 ETH_ALEN)) {
- 			/*If bssid is found, reset the values*/
- 			PRINT_D(CFG80211_DBG, "Reseting PMKID values\n");
-@@ -2257,11 +2257,11 @@ void WILC_WFI_p2p_rx (struct net_device *dev, uint8_t *buff, uint32_t size)
- 				case PUBLIC_ACT_VENDORSPEC:
- 					/*Now we have a public action vendor specific action frame, check if its a p2p public action frame
- 					 * based on the standard its should have the p2p_oui attribute with the following values 50 6f 9A 09*/
--					if (!WILC_memcmp(u8P2P_oui, &buff[ACTION_SUBTYPE_ID + 1], 4)) {
-+					if (!memcmp(u8P2P_oui, &buff[ACTION_SUBTYPE_ID + 1], 4)) {
- 						if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP))	{
- 							if (!bWilc_ie) {
- 								for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++)	{
--									if (!WILC_memcmp(u8P2P_vendorspec, &buff[i], 6)) {
-+									if (!memcmp(u8P2P_vendorspec, &buff[i], 6)) {
- 										u8P2Precvrandom = buff[i + 6];
- 										bWilc_ie = true;
- 										PRINT_D(GENERIC_DBG, "WILC Vendor specific IE:%02x\n", u8P2Precvrandom);
-@@ -2274,7 +2274,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, uint8_t *buff, uint32_t size)
- 							if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP
- 							      || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
- 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < size; i++) {
--									if (buff[i] == P2PELEM_ATTR_ID && !(WILC_memcmp(u8P2P_oui, &buff[i + 2], 4))) {
-+									if (buff[i] == P2PELEM_ATTR_ID && !(memcmp(u8P2P_oui, &buff[i + 2], 4))) {
- 										WILC_WFI_CfgParseRxAction(&buff[i + 6], size - (i + 6));
- 										break;
- 									}
-@@ -2570,7 +2570,7 @@ int WILC_WFI_mgmt_tx(struct wiphy *wiphy,
- 				{
- 					/*Now we have a public action vendor specific action frame, check if its a p2p public action frame
- 					 * based on the standard its should have the p2p_oui attribute with the following values 50 6f 9A 09*/
--					if (!WILC_memcmp(u8P2P_oui, &buf[ACTION_SUBTYPE_ID + 1], 4)) {
-+					if (!memcmp(u8P2P_oui, &buf[ACTION_SUBTYPE_ID + 1], 4)) {
- 						/*For the connection of two WILC's connection generate a rand number to determine who will be a GO*/
- 						if ((buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP)) {
- 							if (u8P2Plocalrandom == 1 && u8P2Precvrandom < u8P2Plocalrandom) {
-@@ -2587,7 +2587,7 @@ int WILC_WFI_mgmt_tx(struct wiphy *wiphy,
- 
- 								/*Search for the p2p information information element , after the Public action subtype theres a byte for teh dialog token, skip that*/
- 								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
--									if (buf[i] == P2PELEM_ATTR_ID && !(WILC_memcmp(u8P2P_oui, &buf[i + 2], 4))) {
-+									if (buf[i] == P2PELEM_ATTR_ID && !(memcmp(u8P2P_oui, &buf[i + 2], 4))) {
- 										if (buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buf[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)
- 											WILC_WFI_CfgParseTxAction(&mgmt_tx->buff[i + 6], len - (i + 6), true, nic->iftype);
- 
--- 
-1.9.1
+It sounds like what you are proposing is to create a non-monitor vif,
+select its channel, bitrate, bandwidth and then use the MAC address to
+select it as the transmitting interface.  Is that correct?  I'm
+guessing I could do this with raw sockets and prepend the ieee80211
+header (but not the radiotap header)?
 
+Thanks for the help!
+
+On Wed, Aug 19, 2015 at 4:24 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2015-08-14 at 14:39 -0700, Allan Matthew wrote:
+>> Anyone have any thoughts on this?
+>>
+>> Is it possible with channel context enabled somehow?
+>>
+>
+> I don't think it's possible - per-packet configuration would have to be
+> basically instantaneous (cannot sleep etc.) and setting the channel is
+> necessarily a much longer operation.
+>
+> If your device supports channel contexts, you might be able to *pick*
+> the channel you want to inject on, but you could probably achieve that
+> through the existing MAC address selection that picks an interface.
+> It's also not clear how monitor + chanctx would work at all, since
+> monitor expects to be on the channel all the time.
+>
+> You could possibly select other parameters like the bitrate, but the
+> channel width - especially 5/10 MHz - doesn't seem feasible.
+>
+> johannes
