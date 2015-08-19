@@ -1,22 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56381 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752687AbbHSHq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 03:46:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 0/4] average: convert users to inline implementation
-Date: Wed, 19 Aug 2015 09:46:18 +0200
-Message-Id: <1439970382-6170-1-git-send-email-johannes@sipsolutions.net> (sfid-20150819_094641_635968_E1EDC9B1)
+Received: from mail-io0-f179.google.com ([209.85.223.179]:35450 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbbHSO6Z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 10:58:25 -0400
+Received: by iodt126 with SMTP id t126so11892422iod.2
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 07:58:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rz0g8_F8VziRZXaPq-D0_zEmpiZkD6Xo0jwr8M6Nq+Q3A@mail.gmail.com>
+References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
+	<CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>
+	<55AD2C8F.9010509@broadcom.com>
+	<CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>
+	<55CB0ACA.3000109@broadcom.com>
+	<CACna6rz0g8_F8VziRZXaPq-D0_zEmpiZkD6Xo0jwr8M6Nq+Q3A@mail.gmail.com>
+Date: Wed, 19 Aug 2015 16:58:24 +0200
+Message-ID: <CACna6rxwKktji3sNj20WENk+t0RQucnQ5Av88ea_boKwBYwogA@mail.gmail.com> (sfid-20150819_165828_801171_1F73C74E)
+Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since there's very little benefit of the out-of-line implementation
-(a single byte of .text in one driver as far as I've seen), convert
-all drivers to the inline implementation, saving memory, and remove
-the out-of-line implementation.
+On 12 August 2015 at 16:07, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 12 August 2015 at 10:58, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 07/26/2015 05:40 PM, Rafał Miłecki wrote:
+>>>
+>>> On 20 July 2015 at 19:14, Arend van Spriel <arend@broadcom.com> wrote:
+>>>>
+>>>> On 07/19/2015 05:05 PM, Rafał Miłecki wrote:
+>>>>>
+>>>>>
+>>>>> On 10 July 2015 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
+>>>>>>
+>>>>>>
+>>>>>> This series comprises of following changes:
+>>>>>> - support NVRAM loading for bcm47xx platform.
+>>>>>> - revise announced interface combinations and validate against it.
+>>>>>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
+>>>>>> - couple of PCIe fixes.
+>>>>>> - rework dealing with interface instances.
+>>>>>
+>>>>>
+>>>>>
+>>>>> I'm not sure which patch has caused this (I applied all of them except
+>>>>> for the 1st one) but now brcmfmac fails totally:
+>>>>>>
+>>>>>>
+>>>>>> Unable to handle kernel NULL pointer dereference at virtual address
+>>>>>> 00000014
+>>>>>
+>>>>>
+>>>>>
+>>>>> I'm afraid I won't be able to spend any more time of this soon, so can
+>>>>> you try to reproduce this problem, please?
+>>
+>>
+>> You did a warm reboot of the device, right? There seems to be an issue
+>> because on OpenWrt the brcmfmac is not unloaded upon warm reboot, which
+>> makes the device unaccessible. Because on OpenWrt the firmware request is
+>> synchronous (OpenWrt patch on top of upstream brcmfmac) it results in probe
+>> failing on invalid access making the issue OpenWrt specific. Hante created a
+>> fix for the warm reboot issue.
+>
+> I'm not sure about this, it was too long time ago. I'm coming back
+> home on next Tuesday, so I should be able to work on this again soon.
 
-Perhaps the easiest would be for Dave to take all of these patches?
+I tested warm reboots today and indeed they are broken in OpenWrt.
+However warm reboot attempt result in next-boot hang with:
+brcmfmac: brcmf_fw_request_nvram_done: Found platform NVRAM (19204 B)
+being the last message.
 
-johannes
+This warm reboot issue is something different from the regression
+introduced by this patches which results in:
+Unable to handle kernel NULL pointer dereference at virtual address 00000014
 
+I'm focusing on V2 now.
+
+-- 
+Rafał
