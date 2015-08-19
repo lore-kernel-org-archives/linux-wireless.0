@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37362 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752976AbbHDU6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 16:58:55 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/37] iwlwifi: deprecate -10.ucode for 3160 / 7260 / 7265
-Date: Tue,  4 Aug 2015 23:42:53 +0300
-Message-Id: <1438721007-23283-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_225901_678765_CAE35C8A)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+Received: from mail-la0-f48.google.com ([209.85.215.48]:34458 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752384AbbHSWQy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 18:16:54 -0400
+Received: by laba3 with SMTP id a3so11800845lab.1
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 15:16:52 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: check all combinations when setting wiphy's addresses
+Date: Thu, 20 Aug 2015 00:16:42 +0200
+Message-Id: <1440022602-6943-1-git-send-email-zajec5@gmail.com> (sfid-20150820_001658_159971_61C3CE07)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Broadcom is working on better reflection of interface combinations. With
+upcoming patches we may have 1st combination supporting less interfaces
+than others.
+To don't run out of addresses check all combinations to find the one
+with the greatest max_interfaces value.
 
-This firmware is not supported anymore - stop loading this firmware.
-Remove code handling older versions.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-7000.c | 2 +-
- drivers/net/wireless/iwlwifi/iwl-8000.c | 2 +-
- drivers/net/wireless/iwlwifi/mvm/fw.c   | 3 +--
- 3 files changed, 3 insertions(+), 4 deletions(-)
+I believe this patch should be applied before:
+brcmfmac: correct interface combination info
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index cc35f79..fa35da4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -76,7 +76,7 @@
- #define IWL3165_UCODE_API_OK	13
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index ffe5260..c85e2db 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -5786,7 +5786,9 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy)
+ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ {
+ 	struct brcmf_pub *drvr = ifp->drvr;
++	const struct ieee80211_iface_combination *combo;
+ 	struct ieee80211_supported_band *band;
++	u16 max_interfaces = 0;
+ 	__le32 bandlist[3];
+ 	u32 n_bands;
+ 	int err, i;
+@@ -5799,8 +5801,13 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	if (err)
+ 		return err;
  
- /* Lowest firmware API version supported */
--#define IWL7260_UCODE_API_MIN	10
-+#define IWL7260_UCODE_API_MIN	12
- #define IWL3165_UCODE_API_MIN	13
+-	for (i = 0; i < wiphy->iface_combinations->max_interfaces &&
+-	     i < ARRAY_SIZE(drvr->addresses); i++) {
++	for (i = 0, combo = wiphy->iface_combinations;
++	     i < wiphy->n_iface_combinations; i++, combo++) {
++		max_interfaces = max(max_interfaces, combo->max_interfaces);
++	}
++
++	for (i = 0; i < max_interfaces && i < ARRAY_SIZE(drvr->addresses);
++	     i++) {
+ 		u8 *addr = drvr->addresses[i].addr;
  
- /* NVM versions */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index 72040cd..0de5751 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -75,7 +75,7 @@
- #define IWL8000_UCODE_API_OK	12
- 
- /* Lowest firmware API version supported */
--#define IWL8000_UCODE_API_MIN	10
-+#define IWL8000_UCODE_API_MIN	12
- 
- /* NVM versions */
- #define IWL8000_NVM_VERSION		0x0a1d
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index eb10c5e..a482ce6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -676,8 +676,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 		goto error;
- 	}
- 
--	if (IWL_UCODE_API(mvm->fw->ucode_ver) >= 10)
--		iwl_mvm_get_shared_mem_conf(mvm);
-+	iwl_mvm_get_shared_mem_conf(mvm);
- 
- 	ret = iwl_mvm_sf_update(mvm, NULL, false);
- 	if (ret)
+ 		memcpy(addr, drvr->mac, ETH_ALEN);
 -- 
-2.1.4
+1.8.4.5
 
