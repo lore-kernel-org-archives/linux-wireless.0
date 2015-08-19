@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38690 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753508AbbHaPna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 11:43:30 -0400
-Message-ID: <1441035810.2718.6.camel@redhat.com> (sfid-20150831_174350_700112_16797010)
-Subject: Re: NetworkManager crashing
-From: Dan Williams <dcbw@redhat.com>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 31 Aug 2015 10:43:30 -0500
-In-Reply-To: <55DF3E75.1080305@gmail.com>
-References: <55DF3E75.1080305@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:35737 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753871AbbHSMaa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 08:30:30 -0400
+Date: Wed, 19 Aug 2015 18:00:12 +0530
+From: Chandra Gorentla <csgorentla@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
+	dan.carpenter@oracle.com
+Subject: Re: [PATCH] staging: wilc1000: Set all options in region debugfs file
+Message-ID: <20150819123012.GA20877@gcs-HP-Compaq-nx6320> (sfid-20150819_143046_272448_A71AA0CF)
+References: <1439917337-18473-1-git-send-email-csgorentla@gmail.com>
+ <20150819030100.GE4588@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150819030100.GE4588@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-08-27 at 18:44 +0200, Arend van Spriel wrote:
-> Hi Dan,
+On Tue, Aug 18, 2015 at 08:01:00PM -0700, Greg KH wrote:
+> On Tue, Aug 18, 2015 at 10:32:17PM +0530, Chandra S Gorentla wrote:
+> > This patch allows setting all options in the module's debug region
+> > options file 'wilc_debug_region'.  This functionality allows the user
+> > to enable logging from all regions (initialization, locks, firmware
+> > etc.) of the driver.  Logging from the following regions is enabled
+> > during the driver initialization:
+> > 
+> > INIT_DBG, GENERIC_DBG, CFG80211_DBG, FIRM_DBG and HOSTAPD_DBG
+> > 
+> > Before this change, the numerical value set is equal first byte of 
+> > input minus 0x30 (ASCII value of '0').  Because of this, after a write 
+> > to this debugfs file, it is difficult to predict the regions on which
+> > logging is enabled.
+> > 
+> > The DBG_REGION_ALL now includes 3 additional regions TCP_ENH, SPIN_DEBUG
+> > and FIRM_DBG.
 > 
-> I ran into issue when NetworkManager keeps crashing/respawning. I have
-> no idea what happened. My laptop was rebooted (might been my sons work)
-> and this was the situation I stumbled upon. Running 4.1 kernel on Linux
-> Mint. NetworkManager version is 0.9.8.8.
+> Why did you add these extra ones?
+I added them because there is code support them and to avoid a holes in
+the range of the options.
+> 
+> All of this should eventually just be deleted, as network drivers need
+> to use the networking driver debug interfaces, not their own crazy ones.
+In that case, can I assume that we are not going forward with this change?
+> 
+> thanks,
+> 
+> greg k-h
 
-Odd, can you get any more log messages out of the machine?  Or perhaps a
-backtrace?  Looks like it's happening quite early in boot, before
-anything would really get configured...
-
-Dan
-
+Thank you,
+chandra
