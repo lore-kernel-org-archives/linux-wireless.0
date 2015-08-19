@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36439 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932990AbbHIPfg (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:33625 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752195AbbHSL2V convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2015 11:35:36 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH v2] staging: wilc1000: Remove pointer and integer comparision
-Date: Sun,  9 Aug 2015 21:05:11 +0530
-Message-Id: <1439134511-9931-1-git-send-email-csgorentla@gmail.com> (sfid-20150809_173613_380202_10A18F9B)
+	Wed, 19 Aug 2015 07:28:21 -0400
+Received: by lbbsx3 with SMTP id sx3so1072109lbb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 04:28:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87614ba5du.fsf@kamboji.qca.qualcomm.com>
+References: <1439982533-26824-1-git-send-email-michal.kazior@tieto.com>
+	<87614ba5du.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 19 Aug 2015 13:28:19 +0200
+Message-ID: <CA+BoTQ=GhE4zg-7_VXs8RAHzE-he8iP5kvfmci=5b1snJd+hXQ@mail.gmail.com> (sfid-20150819_132824_322241_433AB5D2)
+Subject: Re: [PATCH] ath10k: add missing mutex unlock on failpath
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed pointer check with integer; this fixes 'sparse' error -
-error: incompatible types for operation (>)
-   left side has type unsigned char [usertype] *[usertype] pu8Tail
-   right side has type int
+On 19 August 2015 at 13:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Kernel would complain about leaving a held lock
+>> after going back to userspace and would
+>> subsequently deadlock.
+>>
+>> Fixes: e04cafbc38c7 ("ath10k: fix peer limit enforcement")
+>> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> commit e04cafbc38c7 is currently going to 4.3-rc1 (it's in
+> wireless-drivers-next currently). I think we should send this to 4.3 as
+> well, right?
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
-Changes in v2: Subject line corrected wilc100 -> wilc1000
+It does make sense to do so, yes.
 
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index cc549c2..4ba1ad7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3471,7 +3471,7 @@ static void Handle_AddBeacon(void *drvHandler, tstrHostIFSetBeacon *pstrSetBeaco
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 24) & 0xFF);
- 
- 	/* Bug 4599 : if tail length = 0 skip copying */
--	if (pstrSetBeaconParam->pu8Tail > 0)
-+	if (pstrSetBeaconParam->pu8Tail != NULL)
- 		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->u32TailLen);
- 	pu8CurrByte += pstrSetBeaconParam->u32TailLen;
- 
--- 
-2.5.0
-
+Michał
