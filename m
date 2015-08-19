@@ -1,73 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:34334 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbbHPFao (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2015 01:30:44 -0400
-From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] staging: wilc1000: code style: fix globals initialized to false
-Date: Sun, 16 Aug 2015 01:30:13 -0400
-Message-Id: <f2aa32ae321011c30cb9af96ff32fcc56c5faf0e.1439702894.git.raphael.beamonte@gmail.com> (sfid-20150816_073110_825970_3BB29BF8)
-In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
-References: <cover.1439702894.git.raphael.beamonte@gmail.com>
-In-Reply-To: <cover.1439702894.git.raphael.beamonte@gmail.com>
-References: <cover.1439702894.git.raphael.beamonte@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56386 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752813AbbHSHq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 03:46:27 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] rt2x00: use DECLARE_EWMA
+Date: Wed, 19 Aug 2015 09:46:21 +0200
+Message-Id: <1439970382-6170-4-git-send-email-johannes@sipsolutions.net> (sfid-20150819_094659_009017_F7BF8921)
+In-Reply-To: <1439970382-6170-1-git-send-email-johannes@sipsolutions.net>
+References: <1439970382-6170-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Globals should not be initialized to 0 or NULL.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
+Instead of using the out-of-line EWMA calculation, use DECLARE_EWMA()
+to create static inlines. On x86/64 this results in code that's one
+byte larger (for me), but reduces struct link_ant and struct link
+size by the two unsigned long values that store the parameters each.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/wilc_wlan.c      | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rt2x00/Kconfig      |  1 -
+ drivers/net/wireless/rt2x00/rt2x00.h     |  6 ++++--
+ drivers/net/wireless/rt2x00/rt2x00link.c | 18 ++++++------------
+ 3 files changed, 10 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index bab5319..53c4ca9 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -536,7 +536,7 @@ typedef enum {
- tstrWILC_WFIDrv *terminated_handle;
- tstrWILC_WFIDrv *gWFiDrvHandle;
- #ifdef DISABLE_PWRSAVE_AND_SCAN_DURING_IP
--bool g_obtainingIP = false;
-+bool g_obtainingIP;
- #endif
- u8 P2P_LISTEN_STATE;
- static struct task_struct *HostIFthreadHandler;
-@@ -558,7 +558,7 @@ static u8 gapu8RcvdSurveyResults[2][MAX_SURVEY_RESULT_FRAG_SIZE];
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 2b4ef256c6b9..de62f5dcb62f 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -240,7 +240,6 @@ config RT2X00_LIB_USB
  
- static u8 gapu8RcvdAssocResp[MAX_ASSOC_RESP_FRAME_SIZE];
+ config RT2X00_LIB
+ 	tristate
+-	select AVERAGE
  
--bool gbScanWhileConnected = false;
-+bool gbScanWhileConnected;
+ config RT2X00_LIB_FIRMWARE
+ 	bool
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 9bb398bed9bb..3282ddb766f4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -254,6 +254,8 @@ struct link_qual {
+ 	int tx_failed;
+ };
  
- static s8 gs8Rssi;
- static s8 gs8lnkspd;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index fac16db..4c40955 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -482,7 +482,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(void)
- #endif
++DECLARE_EWMA(rssi, 1024, 8)
++
+ /*
+  * Antenna settings about the currently active link.
+  */
+@@ -285,7 +287,7 @@ struct link_ant {
+ 	 * Similar to the avg_rssi in the link_qual structure
+ 	 * this value is updated by using the walking average.
+ 	 */
+-	struct ewma rssi_ant;
++	struct ewma_rssi rssi_ant;
+ };
  
- #ifdef TCP_ENHANCEMENTS
--bool EnableTCPAckFilter = false;
-+bool EnableTCPAckFilter;
+ /*
+@@ -314,7 +316,7 @@ struct link {
+ 	/*
+ 	 * Currently active average RSSI value
+ 	 */
+-	struct ewma avg_rssi;
++	struct ewma_rssi avg_rssi;
  
- void Enable_TCP_ACK_Filter(bool value)
+ 	/*
+ 	 * Work structure for scheduling periodic link tuning.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+index 9b941c0c1264..017188e5a736 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+@@ -33,15 +33,11 @@
+  */
+ #define DEFAULT_RSSI		-128
+ 
+-/* Constants for EWMA calculations. */
+-#define RT2X00_EWMA_FACTOR	1024
+-#define RT2X00_EWMA_WEIGHT	8
+-
+-static inline int rt2x00link_get_avg_rssi(struct ewma *ewma)
++static inline int rt2x00link_get_avg_rssi(struct ewma_rssi *ewma)
  {
+ 	unsigned long avg;
+ 
+-	avg = ewma_read(ewma);
++	avg = ewma_rssi_read(ewma);
+ 	if (avg)
+ 		return -avg;
+ 
+@@ -76,8 +72,7 @@ static void rt2x00link_antenna_update_rssi_history(struct rt2x00_dev *rt2x00dev,
+ 
+ static void rt2x00link_antenna_reset(struct rt2x00_dev *rt2x00dev)
+ {
+-	ewma_init(&rt2x00dev->link.ant.rssi_ant, RT2X00_EWMA_FACTOR,
+-		  RT2X00_EWMA_WEIGHT);
++	ewma_rssi_init(&rt2x00dev->link.ant.rssi_ant);
+ }
+ 
+ static void rt2x00lib_antenna_diversity_sample(struct rt2x00_dev *rt2x00dev)
+@@ -225,12 +220,12 @@ void rt2x00link_update_stats(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Update global RSSI
+ 	 */
+-	ewma_add(&link->avg_rssi, -rxdesc->rssi);
++	ewma_rssi_add(&link->avg_rssi, -rxdesc->rssi);
+ 
+ 	/*
+ 	 * Update antenna RSSI
+ 	 */
+-	ewma_add(&ant->rssi_ant, -rxdesc->rssi);
++	ewma_rssi_add(&ant->rssi_ant, -rxdesc->rssi);
+ }
+ 
+ void rt2x00link_start_tuner(struct rt2x00_dev *rt2x00dev)
+@@ -285,8 +280,7 @@ void rt2x00link_reset_tuner(struct rt2x00_dev *rt2x00dev, bool antenna)
+ 	 */
+ 	rt2x00dev->link.count = 0;
+ 	memset(qual, 0, sizeof(*qual));
+-	ewma_init(&rt2x00dev->link.avg_rssi, RT2X00_EWMA_FACTOR,
+-		  RT2X00_EWMA_WEIGHT);
++	ewma_rssi_init(&rt2x00dev->link.avg_rssi);
+ 
+ 	/*
+ 	 * Restore the VGC level as stored in the registers,
 -- 
 2.1.4
 
