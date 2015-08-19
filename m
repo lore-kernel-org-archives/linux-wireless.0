@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:59524 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865AbbHYSZD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 14:25:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Anish Tondwalkar <twilightrook@gmail.com>,
-	Victor van Poppelen <vvanpo@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Oscar Rydberg <oscarrydberg@gmail.com>,
-	Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: Re: [PATCH/RFT 0/2] ath10k: add qca6164 support
-Date: Tue, 25 Aug 2015 20:24:57 +0200
-Message-ID: <1523365.YtEF2Ft7XC@wuerfel> (sfid-20150825_202508_896405_198C9F6B)
-In-Reply-To: <1901727.3ECHUBE5WW@wuerfel>
-References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com> <CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com> <1901727.3ECHUBE5WW@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58628 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751020AbbHSSCc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 14:02:32 -0400
+Message-ID: <1440007349.2089.8.camel@sipsolutions.net> (sfid-20150819_200235_261684_1DC4F736)
+Subject: Re: set channel from radiotap headers during injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	Allan Matthew <allanm84@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 19 Aug 2015 20:02:29 +0200
+In-Reply-To: <55D4C068.70607@candelatech.com>
+References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
+	 <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com>
+	 (sfid-20150814_234019_925894_43212D3A) <1439983495.2089.7.camel@sipsolutions.net>
+	 <55D4C068.70607@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 25 August 2015 15:47:45 Arnd Bergmann wrote:
-> On Tuesday 25 August 2015 15:09:45 Michal Kazior wrote:
-> > 
-> > This is some weird regression with MSI ranges and we still haven't
-> > figured this out.
-> > 
-> > For the time being add "irq_mode=1" parameter when loading ath10k_pci
-> > module, please.
+On Wed, 2015-08-19 at 10:44 -0700, Ben Greear wrote:
 > 
-> Ok, that gets the device to show up without errors. I have no
-> time to test whether I can actually use it at the moment, will
-> report back later.
+> At least with ath9k, it is possible to send HT20 frames
+> when the radio has other vifs on the same radio sending HT40 frames, 
+> for instance.
+> (And rate-ctrl will do the same thing even for an 'ht40' vif).
 
-I tested some more and everything seems fine now when using legacy
-interrupts. Thanks for all the work that went into this, I hope
-the patch can make it into 4.3.
+Yes, but that's pure rate control.
 
-	Arnd
+> ath10k hardware has same general ability, but you have no good way to
+> get radiotap info to the firmware at this time.
+> 
+> As long as the center freq is the same, it might also be possible to 
+> do smaller bandwith encodings as well.
+
+I don't think this is true - I believe the clock settings are different
+for 5 and 10 MHz (vs. each other and higher bandwidths)
+
+
+johannes
