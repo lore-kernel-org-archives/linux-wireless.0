@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29340 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751660AbbHNEcD convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:36418 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbbHSG7Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 00:32:03 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Adrien Schildknecht <adrien+dev@schischi.me>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: out-of-bounds access in iwl_init_sband_channels
-Date: Fri, 14 Aug 2015 04:31:55 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E7EA2CE@hasmsx107.ger.corp.intel.com> (sfid-20150814_063230_043172_C765F948)
-References: <1439512532-7901-1-git-send-email-adrien+dev@schischi.me>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 19 Aug 2015 02:59:25 -0400
+Received: by pawq9 with SMTP id q9so54082585paw.3
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:24 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/13] staging: wilc1000: wilc_msgqueue.c: remove multiple blank lines
+Date: Wed, 19 Aug 2015 15:58:58 +0900
+Message-Id: <1439967548-25876-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_085927_901058_F47AAB57)
+In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This patch removes multiple blank lines.
+CHECK: Please don't use multiple blank lines
 
-On 08/14/2015 03:36 AM, Adrien Schildknecht wrote:
-> Both loops of this function compare data from the 'chan' array and then
-> check if the index is valid.
-> 
-> The 2 conditions should be inverted to avoid an out-of-bounds access.
-> 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Was that found by a static analyzer or any other automated tool, or was
-that the result of your very careful review?
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 7718c481..e7c4a9a 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -76,7 +76,6 @@ WILC_ErrNo WILC_MsgQueueSend(WILC_MsgQueueHandle *pHandle,
+ 	WILC_NULLCHECK(s32RetStatus, pstrMessage->pvBuffer);
+ 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
+ 
+-
+ 	/* add it to the message queue */
+ 	if (pHandle->pstrMessageList == NULL) {
+ 		pHandle->pstrMessageList  = pstrMessage;
+@@ -107,8 +106,6 @@ WILC_ErrNo WILC_MsgQueueSend(WILC_MsgQueueHandle *pHandle,
+ 	return s32RetStatus;
+ }
+ 
+-
+-
+ /*!
+  *  @author		syounan
+  *  @date		1 Sep 2010
+-- 
+1.9.1
 
-> Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-> index 21302b6..acc3d18 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-> @@ -713,12 +713,12 @@ int iwl_init_sband_channels(struct iwl_nvm_data *data,
->  	struct ieee80211_channel *chan = &data->channels[0];
->  	int n = 0, idx = 0;
->  
-> -	while (chan->band != band && idx < n_channels)
-> +	while (idx < n_channels && chan->band != band)
->  		chan = &data->channels[++idx];
->  
->  	sband->channels = &data->channels[idx];
->  
-> -	while (chan->band == band && idx < n_channels) {
-> +	while (idx < n_channels && chan->band == band) {
->  		chan = &data->channels[++idx];
->  		n++;
->  	}
-> 
-
-Looks fine - I'll pick it up.
