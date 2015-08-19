@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53860 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:6684 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753755AbbHaSPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 14:15:09 -0400
-Message-ID: <1441044908.2718.20.camel@redhat.com> (sfid-20150831_201513_540417_19B2F8FC)
-Subject: Re: NetworkManager crashing
-From: Dan Williams <dcbw@redhat.com>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 31 Aug 2015 13:15:08 -0500
-In-Reply-To: <55E49334.5000103@gmail.com>
-References: <55DF3E75.1080305@gmail.com>
-	 <1441035810.2718.6.camel@redhat.com> <55E49334.5000103@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750839AbbHSRF1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 13:05:27 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [RFC v2 1/3] iwlwifi: mvm: add real TSO implementation
+Date: Wed, 19 Aug 2015 17:05:23 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E825194@hasmsx107.ger.corp.intel.com> (sfid-20150819_190549_296244_F81FC193)
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-2-git-send-email-emmanuel.grumbach@intel.com>
+ <1439993864.6610.11.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-08-31 at 19:47 +0200, Arend van Spriel wrote:
+
+
+On 08/19/2015 05:18 PM, Eric Dumazet wrote:
+> On Wed, 2015-08-19 at 15:59 +0300, Emmanuel Grumbach wrote:
+>> The segmentation is done completely in software. The
+>> driver creates several MPDUs out of a single large send.
+>> Each MPDU is a newly allocated SKB.
+>> A page is allocated to create the headers that need to be
+>> duplicated (SNAP / IP / TCP). The WiFi header is in the
+>> header of the newly created SKBs.
+>>
+>> type=feature
+>>
+>> Change-Id: I238ffa79cacc5bbdacdfbf3e9673c8d4f02b462a
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> ---
+>>  drivers/net/wireless/iwlwifi/mvm/tx.c | 513 +++++++++++++++++++++++++++++++---
+>>  1 file changed, 481 insertions(+), 32 deletions(-)
 > 
-> On 31-08-15 17:43, Dan Williams wrote:
-> > On Thu, 2015-08-27 at 18:44 +0200, Arend van Spriel wrote:
-> >> Hi Dan,
-> >>
-> >> I ran into issue when NetworkManager keeps crashing/respawning. I have
-> >> no idea what happened. My laptop was rebooted (might been my sons work)
-> >> and this was the situation I stumbled upon. Running 4.1 kernel on Linux
-> >> Mint. NetworkManager version is 0.9.8.8.
-> > 
-> > Odd, can you get any more log messages out of the machine?  Or perhaps a
-> > backtrace?  Looks like it's happening quite early in boot, before
-> > anything would really get configured...
+> Ouch dynamic allocations while doing xmit are certainly not needed.
+> Your driver should pre-allocated space for headers.
+
+This is right as long as you don't need *several* headers in one single
+skb. In the case of A-MSDU, I need to have several TCP / IP / SNAP
+headers in the same skb. At least that's how my HW layer in the driver
+is built. See the other thread.
+
 > 
-> Yikes. My mistake. I have two libnl-3 versions installed and
-> NetworkManager loaded the wrong one. Doing walk of shame here.
+> Drivers willing to implement tso have to use net/core/tso.c provided
+> helpers.
+> 
+> $ git grep -n tso_build_hdr
+> drivers/net/ethernet/cavium/thunder/nicvf_queues.c:1030:                tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> drivers/net/ethernet/freescale/fec_main.c:729:          tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> drivers/net/ethernet/marvell/mv643xx_eth.c:842:         tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> drivers/net/ethernet/marvell/mvneta.c:1650:             tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
+> include/net/tso.h:15:void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
+> net/core/tso.c:14:void tso_build_hdr(struct sk_buff *skb, char *hdr, struct tso_t *tso,
+> net/core/tso.c:37:EXPORT_SYMBOL(tso_build_hdr);
+> 
+> 
 
-Yeah, that'll do it...  glad to see it got figured out.
-
-Dan
-
+This looks promising indeed. I'll take a close look.
+Thanks a bunch.
