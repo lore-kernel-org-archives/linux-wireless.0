@@ -1,93 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:35664 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753500AbbHVK6u (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34025 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903AbbHSG7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2015 06:58:50 -0400
-Received: by pacdd16 with SMTP id dd16so61632124pac.2
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2015 03:58:49 -0700 (PDT)
-From: Shraddha Barke <shraddha.6596@gmail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Donald <gdonald@gmail.com>,
-	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>
-Cc: Shraddha Barke <shraddha.6596@gmail.com>
-Subject: [PATCH 4/4] Staging: rtl8723au: core: Remove unused variable
-Date: Sat, 22 Aug 2015 16:28:14 +0530
-Message-Id: <1440241094-5927-4-git-send-email-shraddha.6596@gmail.com> (sfid-20150822_125858_193385_EE4D202A)
-In-Reply-To: <1440241094-5927-1-git-send-email-shraddha.6596@gmail.com>
-References: <1440241094-5927-1-git-send-email-shraddha.6596@gmail.com>
+	Wed, 19 Aug 2015 02:59:53 -0400
+Received: by paccq16 with SMTP id cq16so107276168pac.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:53 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 13/13] staging: wilc1000: rename WILC_MsgQueueDestroy to wilc_mq_destroy
+Date: Wed, 19 Aug 2015 15:59:08 +0900
+Message-Id: <1439967548-25876-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_090108_328022_8D0B6A17)
+In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch discards the variable as it is not used anywhere throughout
-the kernel.
+This patch replaces WILC_MsgQueueDestroy to wilc_mq_destroy to
+shorten function name and avoid CamelCase.
 
-Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/wilc_msgqueue.c  | 2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.h  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 3d40bab..82518cd 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -608,7 +608,6 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 	u8 hw_hdr_offset = 0;
- 	struct arc4context mycontext;
- 	int curfragnum, length;
--	u32 prwskeylen;
- 	u8 *pframe, *payload, *iv, *prwskey;
- 	union pn48 dot11txpn;
- 	struct sta_info *stainfo;
-@@ -655,8 +654,6 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 	else
- 		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f0a1383..d411847 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6616,7 +6616,7 @@ _fail_timer_2:
+ 	del_timer_sync(&pstrWFIDrv->hScanTimer);
+ 	kthread_stop(HostIFthreadHandler);
+ _fail_mq_:
+-	WILC_MsgQueueDestroy(&gMsgQHostIF);
++	wilc_mq_destroy(&gMsgQHostIF);
+ _fail_:
+ 	return s32Error;
  
--	prwskeylen = 16;
--
- 	/* 4 start to encrypt each fragment */
- 	for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
- 		iv = pframe + pattrib->hdrlen;
-@@ -719,7 +716,6 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	u32 actual_crc, expected_crc;
- 	struct arc4context mycontext;
- 	int length;
--	u32 prwskeylen;
- 	u8 *pframe, *payload, *iv, *prwskey;
- 	union pn48 dot11txpn;
- 	struct sta_info *stainfo;
-@@ -749,12 +745,10 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 			goto exit;
- 		}
- 		prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
--		prwskeylen = 16;
- 	} else {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
- 			 "%s: stainfo!= NULL!!!\n", __func__);
- 		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
--		prwskeylen = 16;
+@@ -6717,7 +6717,7 @@ s32 host_int_deinit(tstrWILC_WFIDrv *hWFIDrv)
+ 
+ 		down(&hSemHostIFthrdEnd);
+ 
+-		WILC_MsgQueueDestroy(&gMsgQHostIF);
++		wilc_mq_destroy(&gMsgQHostIF);
+ 		msgQ_created = 0;
  	}
  
- 	iv = pframe + prxattrib->hdrlen;
-@@ -1288,7 +1282,6 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
- {	/* exclude ICV */
- 	/* Intermediate Buffers */
- 	int curfragnum, length;
--	u32 prwskeylen;
- 	u8 *pframe, *prwskey;
- 	u8 hw_hdr_offset = 0;
- 	struct sta_info *stainfo;
-@@ -1335,8 +1328,6 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
- 	else
- 		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 6015098..76d2e63 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -24,7 +24,7 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int WILC_MsgQueueDestroy(WILC_MsgQueueHandle *pHandle)
++int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+ {
+ 	pHandle->bExiting = true;
  
--	prwskeylen = 16;
--
- 	for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
- 		/* 4 the last fragment */
- 		if ((curfragnum + 1) == pattrib->nr_frags) {
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 143fba4..fc65dfe 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -76,6 +76,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int WILC_MsgQueueDestroy(WILC_MsgQueueHandle *pHandle);
++int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle);
+ 
+ #endif
 -- 
-2.1.4
+1.9.1
 
