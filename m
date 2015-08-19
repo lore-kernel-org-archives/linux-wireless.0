@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:34649 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792AbbH2RLF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Aug 2015 13:11:05 -0400
-Received: by iofe124 with SMTP id e124so56725178iof.1
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2015 10:11:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1440673024-13696-4-git-send-email-me@bobcopeland.com>
-References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
-	<1440673024-13696-4-git-send-email-me@bobcopeland.com>
-Date: Sat, 29 Aug 2015 13:11:03 -0400
-Message-ID: <CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com> (sfid-20150829_191109_298428_A5BC1B02)
-Subject: Re: [PATCH 3/3] ath10k: implement mesh support
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:11337 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753093AbbHSM74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 08:59:56 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: ido@wizery.com, netdev@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC v2 0/3] add TSO / A-MSDU TX for iwlwifi
+Date: Wed, 19 Aug 2015 15:59:38 +0300
+Message-Id: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150819_150050_329918_8FAC69B0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2015 at 6:57 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> @@ -1117,6 +1120,15 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
->         ar->htt.max_num_amsdu = ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT;
->         ar->htt.max_num_ampdu = ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT;
->
-> +       if (rawmode) {
-> +               if (!test_bit(ATH10K_FW_FEATURE_RAW_MODE_SUPPORT,
-> +                             ar->fw_features)) {
-> +                       ath10k_err(ar, "rawmode = 1 requires support from firmware");
-> +                       return -EINVAL;
-> +               }
-> +               set_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags);
-> +       }
-> +
+We enable TSO to get a lot of data at once to build A-MSDUs.
+Our hardware doesn't have (yet) TCP CSUM offload, so we do
+it manually. TSO won't be enabled on hardware that don't
+support CSUM offload in release code, computing TCP CSUM
+in the driver is just a way to start coding the flows.
+This is why the "CSUM offload" implementation in the driver
+in so bad in terms of efficiency. I preferred to have the
+flows as close as they will be when the hardware will be
+able to the CSUM than to try to seek efficiency.
+The hardware that will have CSUM offload will still require
+the driver to split the skb in software including the
+IP / TCP header copy and update etc...
 
-Is there a reason to hide rawmode behind a modparam, or should the
-modparam just be removed?  Just let the driver set
-ATH10K_FLAG_RAW_MODE when ATH10K_FW_FEATURE_RAW_MODE_SUPPORT is
-detected?
+We could have enabled A-MSDU based on xmit-more, but the
+rationale of using LSO is that when using pfifo-fast,
+the Qdisc gets one packet and dequeues is straight away
+which limits the possibility to get a lot of packets at
+once. (Am I right here?).
 
-> @@ -6708,7 +6729,8 @@ static const struct ieee80211_iface_limit ath10k_tlv_qcs_if_limit[] = {
->         {
->                 .max = 1,
->                 .types = BIT(NL80211_IFTYPE_AP) |
-> -                        BIT(NL80211_IFTYPE_P2P_GO),
-> +                        BIT(NL80211_IFTYPE_P2P_GO) |
-> +                        BIT(NL80211_IFTYPE_MESH_POINT),
->         },
->         {
->                 .max = 1,
+A note about A-MSDUs for non-wireless people:
+*********************************************
+An A-MSDU is a aggregated frame. It is one big 802.11
+packet that contains several subframes. Each subframe
+is a TCP segment. One A-MSDU is represented by one single
+skb which means that we need to copy / duplicate the TCP
+/ IP / SNAP headers in one single skb. This is why those
+headers are copied to a separate page: that page is added
+multiple times to the skb with different offsets. Each
+subframes needs at least 2 frags: 1 for the headers, 1 (or
+more) for the payload.
 
-Does struct ieee80211_iface_limit need to be conditional on firmware
-support as well or does interface_modes (below) gate use of
-MESH_POINT?
+I am quite a newbie in skb handling, so I guess that this
+code can be improved. I have tested it decently using iperf,
+but this doesn't mean that there are no issues using other
+applications. We are enabling pktgen on TCP (using patches
+that were sent a year ago or so) to test the different
+layouts of the skb (payload partition amongst the header
+and the different frags).
 
-> @@ -6998,7 +7020,8 @@ int ath10k_mac_register(struct ath10k *ar)
->
->         ar->hw->wiphy->interface_modes =
->                 BIT(NL80211_IFTYPE_STATION) |
-> -               BIT(NL80211_IFTYPE_AP);
-> +               BIT(NL80211_IFTYPE_AP) |
-> +               BIT(NL80211_IFTYPE_MESH_POINT);
+I'll be very happy to get comments on that code, this is
+why I am sending it to netdev as well since the TSO experts
+are there :)
 
-Set BIT(NL80211_IFTYPE_MESH_POINT) conditionally if ATH10K_FLAG_RAW_MODE is set?
+Emmanuel Grumbach (3):
+  iwlwifi: mvm: add real TSO implementation
+  iwlwifi: mvm: allow to create A-MSDUs from a large send
+  iwlwifi: mvm: transfer the truesize to the last TSO segment
 
-Regards,
-Jason
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |   3 +-
+ drivers/net/wireless/iwlwifi/mvm/sta.c      |   4 +-
+ drivers/net/wireless/iwlwifi/mvm/sta.h      |   6 +-
+ drivers/net/wireless/iwlwifi/mvm/tx.c       | 669 ++++++++++++++++++++++++++--
+ 4 files changed, 647 insertions(+), 35 deletions(-)
+
+-- 
+2.1.4
+
