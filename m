@@ -1,110 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0154.hostedemail.com ([216.40.44.154]:55678 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753755AbbHaRqt (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:36842 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753076AbbHSG7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 13:46:49 -0400
-Message-ID: <1441043205.3276.28.camel@perches.com> (sfid-20150831_194710_446164_64C570A6)
-Subject: [PATCH] mwifiex: Make mwifiex_dbg a function, reduce object size
-From: Joe Perches <joe@perches.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 31 Aug 2015 10:46:45 -0700
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 19 Aug 2015 02:59:44 -0400
+Received: by pdbmi9 with SMTP id mi9so36763903pdb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:44 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/13] staging: wilc1000: rename WILC_MsgQueueCreate to wilc_mq_create
+Date: Wed, 19 Aug 2015 15:59:05 +0900
+Message-Id: <1439967548-25876-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_085947_554919_88BF6E21)
+In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mwifiex_dbg macro has two tests that could be consolidated
-into a function reducing overall object size ~10KB (~4%).
+This patch replaces WILC_MsgQueueCreate with wilc_mq_create to
+shorten function name and avoid CamelCase.
 
-So convert the macro into a function.
-
-$ size drivers/net/wireless/mwifiex/built-in.o* (x86-64 defconfig)
-   text	   data	    bss	    dec	    hex	filename
- 233102	   8628	   4809	 246539	  3c30b	drivers/net/wireless/mwifiex/built-in.o.new
- 243949	   8628	   4809	 257386	  3ed6a	drivers/net/wireless/mwifiex/built-in.o.old
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/mwifiex/main.c | 20 ++++++++++++++++++++
- drivers/net/wireless/mwifiex/main.h | 17 ++++++++---------
- 2 files changed, 28 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.c  | 2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.h  | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 278dc94..4fa8ca3 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -1447,6 +1447,26 @@ exit_sem_err:
- }
- EXPORT_SYMBOL_GPL(mwifiex_remove_card);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 66fa677..159734f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6532,7 +6532,7 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+ 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
  
-+void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
-+		  const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	if (!adapter->dev || !(adapter->debug_mask & mask))
-+		return;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	dev_info(adapter->dev, "%pV", &vaf);
-+
-+	va_end(args);
-+}
-+EXPORT_SYMBOL_GPL(_mwifiex_dbg);
-+
- /*
-  * This function initializes the module.
-  *
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 6b95121..96663214 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -48,6 +48,9 @@
+ 	if (clients_count == 0)	{
+-		s32Error = WILC_MsgQueueCreate(&gMsgQHostIF);
++		s32Error = wilc_mq_create(&gMsgQHostIF);
  
- extern const char driver_version[];
+ 		if (s32Error < 0) {
+ 			PRINT_ER("Failed to creat MQ\n");
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index f528f98..0358099 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -8,7 +8,7 @@
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int WILC_MsgQueueCreate(WILC_MsgQueueHandle *pHandle)
++int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
+ {
+ 	spin_lock_init(&pHandle->strCriticalSection);
+ 	sema_init(&pHandle->hSem, 0);
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index a32c6db..555aa02 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -27,7 +27,7 @@
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int WILC_MsgQueueCreate(WILC_MsgQueueHandle *pHandle);
++int wilc_mq_create(WILC_MsgQueueHandle *pHandle);
  
-+struct mwifiex_adapter;
-+struct mwifiex_private;
-+
- enum {
- 	MWIFIEX_ASYNC_CMD,
- 	MWIFIEX_SYNC_CMD
-@@ -180,12 +183,11 @@ enum MWIFIEX_DEBUG_LEVEL {
- 					MWIFIEX_DBG_FATAL | \
- 					MWIFIEX_DBG_ERROR)
- 
--#define mwifiex_dbg(adapter, dbg_mask, fmt, args...)		\
--do {								\
--	if ((adapter)->debug_mask & MWIFIEX_DBG_##dbg_mask)	\
--		if ((adapter)->dev)				\
--			dev_info((adapter)->dev, fmt, ## args);	\
--} while (0)
-+__printf(3, 4)
-+void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
-+		  const char *fmt, ...);
-+#define mwifiex_dbg(adapter, mask, fmt, ...)				\
-+	_mwifiex_dbg(adapter, MWIFIEX_DBG_##mask, fmt, ##__VA_ARGS__)
- 
- #define DEBUG_DUMP_DATA_MAX_LEN		128
- #define mwifiex_dbg_dump(adapter, dbg_mask, str, buf, len)	\
-@@ -506,9 +508,6 @@ enum mwifiex_iface_work_flags {
- 	MWIFIEX_IFACE_WORK_CARD_RESET,
- };
- 
--struct mwifiex_adapter;
--struct mwifiex_private;
--
- struct mwifiex_private {
- 	struct mwifiex_adapter *adapter;
- 	u8 bss_type;
-
+ /*!
+  *  @brief		Sends a message
+-- 
+1.9.1
 
