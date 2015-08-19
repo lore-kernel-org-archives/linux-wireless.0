@@ -1,143 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35796 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbbHDFPc (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34763 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752962AbbHSG7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 01:15:32 -0400
-From: Vivek Natarajan <nataraja@qti.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH 1/2] ath10k: Support different txbf configuration schemes
-Date: Tue, 4 Aug 2015 10:45:11 +0530
-Message-ID: <1438665312-2768-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20150804_071547_155479_343A0E82)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 19 Aug 2015 02:59:33 -0400
+Received: by paccq16 with SMTP id cq16so107269817pac.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:33 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/13] staging: wilc1000: wilc_msgqueue.c: use ! operator instead of NULL comparison
+Date: Wed, 19 Aug 2015 15:59:01 +0900
+Message-Id: <1439967548-25876-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_085936_475865_A6A8D803)
+In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-qca61x4 uses the vdev param as a sole sufficient configuration
-for txbf while qca99x0 enables txbf during peer assoc by
-combining the vdev param value with peer assoc's vht capabilities
+This patch uses ! operator instead of NULL comparison.
 
-This patch gets the appropriate txbf configuration scheme
-before passing the wmi command to enable the same in the firmware.
-
-Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c     |  3 +++
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 10 ++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  6 ++++++
- drivers/net/wireless/ath/ath10k/wmi.c     |  6 ++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |  6 ++++++
- 5 files changed, 31 insertions(+)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index acd222f..4eb29aa 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2509,6 +2509,9 @@ static int ath10k_mac_vif_recalc_txbf(struct ath10k *ar,
- 	u32 param;
- 	u32 value;
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 53ce586..0770ff6 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -34,7 +34,7 @@ WILC_ErrNo WILC_MsgQueueDestroy(WILC_MsgQueueHandle *pHandle)
+ 		pHandle->u32ReceiversCount--;
+ 	}
  
-+	if (ath10k_wmi_get_txbf_conf_scheme(ar) != WMI_TXBF_CONF_AFTER_ASSOC)
-+		return 0;
-+
- 	if (!(ar->vht_cap_info &
- 	      (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
- 	       IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE |
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 47fe2e7..2591018 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -49,6 +49,7 @@ struct wmi_ops {
- 			    struct wmi_roam_ev_arg *arg);
- 	int (*pull_wow_event)(struct ath10k *ar, struct sk_buff *skb,
- 			      struct wmi_wow_ev_arg *arg);
-+	enum wmi_txbf_conf (*get_txbf_conf_scheme)(struct ath10k *ar);
+-	while (pHandle->pstrMessageList != NULL) {
++	while (pHandle->pstrMessageList) {
+ 		Message *pstrMessge = pHandle->pstrMessageList->pstrNext;
  
- 	struct sk_buff *(*gen_pdev_suspend)(struct ath10k *ar, u32 suspend_opt);
- 	struct sk_buff *(*gen_pdev_resume)(struct ath10k *ar);
-@@ -319,6 +320,15 @@ ath10k_wmi_pull_wow_event(struct ath10k *ar, struct sk_buff *skb,
- 	return ar->wmi.ops->pull_wow_event(ar, skb, arg);
- }
+ 		kfree(pHandle->pstrMessageList);
+@@ -57,7 +57,7 @@ WILC_ErrNo WILC_MsgQueueSend(WILC_MsgQueueHandle *pHandle,
+ 	unsigned long flags;
+ 	Message *pstrMessage = NULL;
  
-+static inline enum wmi_txbf_conf
-+ath10k_wmi_get_txbf_conf_scheme(struct ath10k *ar)
-+{
-+	if (!ar->wmi.ops->get_txbf_conf_scheme)
-+		return WMI_TXBF_CONF_UNSUPPORTED;
-+
-+	return ar->wmi.ops->get_txbf_conf_scheme(ar);
-+}
-+
- static inline int
- ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 567b797..357b5a2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1279,6 +1279,11 @@ ath10k_wmi_tlv_op_gen_pdev_set_rd(struct ath10k *ar,
- 	return skb;
- }
+-	if ((pHandle == NULL) || (u32SendBufferSize == 0) || (pvSendBuffer == NULL)) {
++	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
+ 		WILC_ERRORREPORT(s32RetStatus, WILC_INVALID_ARGUMENT);
+ 	}
  
-+static enum wmi_txbf_conf ath10k_wmi_tlv_txbf_conf_scheme(struct ath10k *ar)
-+{
-+	return WMI_TXBF_CONF_AFTER_ASSOC;
-+}
-+
- static struct sk_buff *
- ath10k_wmi_tlv_op_gen_pdev_set_param(struct ath10k *ar, u32 param_id,
- 				     u32 param_value)
-@@ -3408,6 +3413,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	.pull_fw_stats = ath10k_wmi_tlv_op_pull_fw_stats,
- 	.pull_roam_ev = ath10k_wmi_tlv_op_pull_roam_ev,
- 	.pull_wow_event = ath10k_wmi_tlv_op_pull_wow_ev,
-+	.get_txbf_conf_scheme = ath10k_wmi_tlv_txbf_conf_scheme,
+@@ -77,12 +77,12 @@ WILC_ErrNo WILC_MsgQueueSend(WILC_MsgQueueHandle *pHandle,
+ 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
  
- 	.gen_pdev_suspend = ath10k_wmi_tlv_op_gen_pdev_suspend,
- 	.gen_pdev_resume = ath10k_wmi_tlv_op_gen_pdev_resume,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index e6d6b42..36b8f71 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3122,6 +3122,11 @@ static int ath10k_wmi_10_4_op_pull_swba_ev(struct ath10k *ar,
- 	return 0;
- }
+ 	/* add it to the message queue */
+-	if (pHandle->pstrMessageList == NULL) {
++	if (!pHandle->pstrMessageList) {
+ 		pHandle->pstrMessageList  = pstrMessage;
+ 	} else {
+ 		Message *pstrTailMsg = pHandle->pstrMessageList;
  
-+static enum wmi_txbf_conf ath10k_wmi_10_4_txbf_conf_scheme(struct ath10k *ar)
-+{
-+	return WMI_TXBF_CONF_BEFORE_ASSOC;
-+}
-+
- void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_swba_ev_arg arg = {};
-@@ -6444,6 +6449,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.pull_swba = ath10k_wmi_10_4_op_pull_swba_ev,
- 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
- 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
-+	.get_txbf_conf_scheme = ath10k_wmi_10_4_txbf_conf_scheme,
+-		while (pstrTailMsg->pstrNext != NULL)
++		while (pstrTailMsg->pstrNext)
+ 			pstrTailMsg = pstrTailMsg->pstrNext;
  
- 	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
- 	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0d4efc9..754cc33 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6008,6 +6008,12 @@ struct wmi_tdls_peer_capab_arg {
- 	u32 pref_offchan_bw;
- };
+ 		pstrTailMsg->pstrNext = pstrMessage;
+@@ -95,8 +95,8 @@ WILC_ErrNo WILC_MsgQueueSend(WILC_MsgQueueHandle *pHandle,
+ 	WILC_CATCH(s32RetStatus)
+ 	{
+ 		/* error occured, free any allocations */
+-		if (pstrMessage != NULL) {
+-			if (pstrMessage->pvBuffer != NULL)
++		if (pstrMessage) {
++			if (pstrMessage->pvBuffer)
+ 				kfree(pstrMessage->pvBuffer);
  
-+enum wmi_txbf_conf {
-+	WMI_TXBF_CONF_UNSUPPORTED,
-+	WMI_TXBF_CONF_BEFORE_ASSOC,
-+	WMI_TXBF_CONF_AFTER_ASSOC,
-+};
-+
- struct ath10k;
- struct ath10k_vif;
- struct ath10k_fw_stats_pdev;
+ 			kfree(pstrMessage);
+@@ -120,8 +120,8 @@ WILC_ErrNo WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
+ 	WILC_ErrNo s32RetStatus = WILC_SUCCESS;
+ 	unsigned long flags;
+ 
+-	if ((pHandle == NULL) || (u32RecvBufferSize == 0)
+-	    || (pvRecvBuffer == NULL) || (pu32ReceivedLength == NULL)) {
++	if ((!pHandle) || (u32RecvBufferSize == 0)
++	    || (!pvRecvBuffer) || (!pu32ReceivedLength)) {
+ 		WILC_ERRORREPORT(s32RetStatus, WILC_INVALID_ARGUMENT);
+ 	}
+ 
+@@ -151,7 +151,7 @@ WILC_ErrNo WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
+ 		spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+ 
+ 		pstrMessage = pHandle->pstrMessageList;
+-		if (pstrMessage == NULL) {
++		if (!pstrMessage) {
+ 			spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+ 			WILC_ERRORREPORT(s32RetStatus, WILC_FAIL);
+ 		}
 -- 
 1.9.1
 
