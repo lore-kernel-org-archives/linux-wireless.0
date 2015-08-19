@@ -1,42 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37379 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56391 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754908AbbHDU7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 16:59:13 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 24/37] iwlwifi: mvm: update comment of power_scheme module parameter
-Date: Tue,  4 Aug 2015 23:43:14 +0300
-Message-Id: <1438721007-23283-24-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230716_236508_4715BEF7)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+	id S1752813AbbHSHsp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 03:48:45 -0400
+Message-ID: <1439970520.2089.1.camel@sipsolutions.net> (sfid-20150819_094852_508224_DBFE6C17)
+Subject: Re: [PATCH 1/4] virtio_net: use DECLARE_EWMA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	virtualization@lists.linux-foundation.org
+Date: Wed, 19 Aug 2015 09:48:40 +0200
+In-Reply-To: <1439970382-6170-2-git-send-email-johannes@sipsolutions.net> (sfid-20150819_094648_500906_0B582087)
+References: <1439970382-6170-1-git-send-email-johannes@sipsolutions.net>
+	 <1439970382-6170-2-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20150819_094648_500906_0B582087)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+Sorry, forgot to Cc Michael and the virt list - patch reproduced below
+in full.
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+johannes
+
+>From 22500fbcf722748fe3471b2e4c6156db47aade15 Mon Sep 17 00:00:00 2001
+From: Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 19 Aug 2015 09:25:18 +0200
+Subject: [PATCH] virtio_net: use DECLARE_EWMA
+
+Instead of using the out-of-line EWMA calculation, use DECLARE_EWMA()
+to create static inlines. On x86/64 this results in no change in code
+size for me, but reduces the struct receive_queue size by the two
+unsigned long values that store the parameters.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mvm.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/Kconfig      |  1 -
+ drivers/net/virtio_net.c | 22 +++++++++++-----------
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index d78af9f..767880b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -123,8 +123,7 @@ extern const struct ieee80211_ops iwl_mvm_hw_ops;
-  *	be up'ed after the INIT fw asserted. This is useful to be able to use
-  *	proprietary tools over testmode to debug the INIT fw.
-  * @tfd_q_hang_detect: enabled the detection of hung transmit queues
-- * @power_scheme: CAM(Continuous Active Mode)-1, BPS(Balanced Power
-- *	Save)-2(default), LP(Low Power)-3
-+ * @power_scheme: one of enum iwl_power_scheme
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index e58468b02987..f50373645ab4 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -282,7 +282,6 @@ config VETH
+ config VIRTIO_NET
+ 	tristate "Virtio network driver"
+ 	depends on VIRTIO
+-	select AVERAGE
+ 	---help---
+ 	  This is the virtual network driver for virtio.  It can be used with
+ 	  lguest or QEMU based VMMs (like KVM or Xen).  Say Y or M.
+diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
+index 546b669fbfdd..9b950f2db836 100644
+--- a/drivers/net/virtio_net.c
++++ b/drivers/net/virtio_net.c
+@@ -40,12 +40,12 @@ module_param(gso, bool, 0444);
+ #define GOOD_PACKET_LEN (ETH_HLEN + VLAN_HLEN + ETH_DATA_LEN)
+ #define GOOD_COPY_LEN	128
+ 
+-/* Weight used for the RX packet size EWMA. The average packet size is used to
+- * determine the packet buffer size when refilling RX rings. As the entire RX
+- * ring may be refilled at once, the weight is chosen so that the EWMA will be
+- * insensitive to short-term, transient changes in packet size.
++/* RX packet size EWMA. The average packet size is used to determine the packet
++ * buffer size when refilling RX rings. As the entire RX ring may be refilled
++ * at once, the weight is chosen so that the EWMA will be insensitive to short-
++ * term, transient changes in packet size.
   */
- struct iwl_mvm_mod_params {
- 	bool init_dbg;
--- 
-2.1.4
+-#define RECEIVE_AVG_WEIGHT 64
++DECLARE_EWMA(pkt_len, 1, 64)
+ 
+ /* Minimum alignment for mergeable packet buffers. */
+ #define MERGEABLE_BUFFER_ALIGN max(L1_CACHE_BYTES, 256)
+@@ -85,7 +85,7 @@ struct receive_queue {
+ 	struct page *pages;
+ 
+ 	/* Average packet length for mergeable receive buffers. */
+-	struct ewma mrg_avg_pkt_len;
++	struct ewma_pkt_len mrg_avg_pkt_len;
+ 
+ 	/* Page frag for packet buffer allocation. */
+ 	struct page_frag alloc_frag;
+@@ -407,7 +407,7 @@ static struct sk_buff *receive_mergeable(struct net_device *dev,
+ 		}
+ 	}
+ 
+-	ewma_add(&rq->mrg_avg_pkt_len, head_skb->len);
++	ewma_pkt_len_add(&rq->mrg_avg_pkt_len, head_skb->len);
+ 	return head_skb;
+ 
+ err_skb:
+@@ -600,12 +600,12 @@ static int add_recvbuf_big(struct virtnet_info *vi, struct receive_queue *rq,
+ 	return err;
+ }
+ 
+-static unsigned int get_mergeable_buf_len(struct ewma *avg_pkt_len)
++static unsigned int get_mergeable_buf_len(struct ewma_pkt_len *avg_pkt_len)
+ {
+ 	const size_t hdr_len = sizeof(struct virtio_net_hdr_mrg_rxbuf);
+ 	unsigned int len;
+ 
+-	len = hdr_len + clamp_t(unsigned int, ewma_read(avg_pkt_len),
++	len = hdr_len + clamp_t(unsigned int, ewma_pkt_len_read(avg_pkt_len),
+ 			GOOD_PACKET_LEN, PAGE_SIZE - hdr_len);
+ 	return ALIGN(len, MERGEABLE_BUFFER_ALIGN);
+ }
+@@ -1615,7 +1615,7 @@ static int virtnet_alloc_queues(struct virtnet_info *vi)
+ 		napi_hash_add(&vi->rq[i].napi);
+ 
+ 		sg_init_table(vi->rq[i].sg, ARRAY_SIZE(vi->rq[i].sg));
+-		ewma_init(&vi->rq[i].mrg_avg_pkt_len, 1, RECEIVE_AVG_WEIGHT);
++		ewma_pkt_len_init(&vi->rq[i].mrg_avg_pkt_len);
+ 		sg_init_table(vi->sq[i].sg, ARRAY_SIZE(vi->sq[i].sg));
+ 	}
+ 
+@@ -1658,7 +1658,7 @@ static ssize_t mergeable_rx_buffer_size_show(struct netdev_rx_queue *queue,
+ {
+ 	struct virtnet_info *vi = netdev_priv(queue->dev);
+ 	unsigned int queue_index = get_netdev_rx_queue_index(queue);
+-	struct ewma *avg;
++	struct ewma_pkt_len *avg;
+ 
+ 	BUG_ON(queue_index >= vi->max_queue_pairs);
+ 	avg = &vi->rq[queue_index].mrg_avg_pkt_len;
+
 
