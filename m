@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62124 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932106AbbHJSbG (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:35006 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbbHSG7W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 14:31:06 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: report per-chain RSSI
-In-Reply-To: <20150729121942.9c8c2ec02dfc0469163aa7aa@ubnt.com> (Dmitry
-	Ivanov's message of "Wed, 29 Jul 2015 12:19:42 +0300")
-References: <20150729121942.9c8c2ec02dfc0469163aa7aa@ubnt.com>
-Date: Mon, 10 Aug 2015 21:30:56 +0300
-Message-ID: <874mk7uhb3.fsf@kamboji.qca.qualcomm.com> (sfid-20150810_203115_094472_1325CE17)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 19 Aug 2015 02:59:22 -0400
+Received: by pacgr6 with SMTP id gr6so150830870pac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:22 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 02/13] staging: wilc1000: wilc_msgqueue.c: remove blank line after open brace
+Date: Wed, 19 Aug 2015 15:58:57 +0900
+Message-Id: <1439967548-25876-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_085925_697156_30E0C1E1)
+In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com> writes:
+This patch removes a blank line for open brace "{"
+CHECK: Blank lines aren't necessary after an open brace '{'
 
-> ath10k: report per-chain RSSI.
->
-> Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Please write a proper commit log. And CC ath10k mailing list when
-submitting ath10k patches:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/sources#submitting_patches
-
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -832,6 +832,20 @@ static void ath10k_htt_rx_h_signal(struct ath10k *ar,
->  				   struct ieee80211_rx_status *status,
->  				   struct htt_rx_desc *rxd)
->  {
-> +	{
-
-The extra block is not needed and can be remove, right?
-
-> +		/* Linux array has size IEEE80211_MAX_CHAINS, FW array has size 4 */
-> +		BUILD_BUG_ON(IEEE80211_MAX_CHAINS != 4);
-
-This is a bit evil, is this really necessary? Can't we just add a define
-for FW array size and use that?
-
-> +		u32 i = IEEE80211_MAX_CHAINS;
-
-Why u32? Wouldn't int be enough?
-
-> +		u8 signal_per_chain;
-> +		do {
-> +			i--;
-> +			signal_per_chain = rxd->ppdu_start.rssi_chains[i].pri20_mhz;
-> +			if (signal_per_chain != 0x80) {
-
-What's the magic number 0x80? Is there an existing define you could use
-or do we need to add a new one?
-
-> +				status->chains |= BIT(i);
-> +				status->chain_signal[i] = ATH10K_DEFAULT_NOISE_FLOOR + signal_per_chain;
-> +			}
-> +		} while (i);
-> +	}
-
-Wouldn't a normal for loop be simpler?
-
-for (i = 0; i < IEEE80211_MAX_CHAINS; i++)
-
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index fcf3a29..7718c481 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -26,7 +26,6 @@ WILC_ErrNo WILC_MsgQueueCreate(WILC_MsgQueueHandle *pHandle)
+  */
+ WILC_ErrNo WILC_MsgQueueDestroy(WILC_MsgQueueHandle *pHandle)
+ {
+-
+ 	pHandle->bExiting = true;
+ 
+ 	/* Release any waiting receiver thread. */
+@@ -120,7 +119,6 @@ WILC_ErrNo WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
+ 			     void *pvRecvBuffer, u32 u32RecvBufferSize,
+ 			     u32 *pu32ReceivedLength)
+ {
+-
+ 	Message *pstrMessage;
+ 	WILC_ErrNo s32RetStatus = WILC_SUCCESS;
+ 	unsigned long flags;
 -- 
-Kalle Valo
+1.9.1
+
