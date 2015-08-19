@@ -1,62 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49564 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753174AbbHMSdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 14:33:10 -0400
-Message-ID: <1439490787.2114.36.camel@sipsolutions.net> (sfid-20150813_203316_706932_3EAB1269)
-Subject: Re: [PATCH 0/2] iw: fixes to Android.mk to include "iw" in AOSP
- builds
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Filipe Brandenburger <filbranden@google.com>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Elliott Hughes <enh@google.com>,
-	Christopher Wiley <wiley@google.com>,
-	Ying Wang <wangying@google.com>
-Date: Thu, 13 Aug 2015 20:33:07 +0200
-In-Reply-To: <CADU+-uDS2C4w-dcbR8Rxx+jRfG7kNvu8JTncH-fxDnSp5NOBfQ@mail.gmail.com> (sfid-20150813_185558_560372_445AA122)
-References: <1438292115-39495-1-git-send-email-filbranden@google.com>
-	 <1439456484.2114.6.camel@sipsolutions.net>
-	 <CADU+-uDS2C4w-dcbR8Rxx+jRfG7kNvu8JTncH-fxDnSp5NOBfQ@mail.gmail.com>
-	 (sfid-20150813_185558_560372_445AA122)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:38707 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299AbbHSKE7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 06:04:59 -0400
+Date: Wed, 19 Aug 2015 13:05:09 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
+	chris.park@atmel.com, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, jude.lee@atmel.com,
+	Tony Cho <tony.cho@atmel.com>, leo.kim@atmel.com
+Subject: Re: [PATCH 5/5] staging: wilc1000: use id value as argument
+Message-ID: <20150819100509.GK5610@mwanda> (sfid-20150819_120502_750755_73906D8C)
+References: <1439440883-16061-1-git-send-email-tony.cho@atmel.com>
+ <1439440883-16061-6-git-send-email-tony.cho@atmel.com>
+ <20150813144907.GA4484@mwanda>
+ <55D2A23D.2080209@atmel.com>
+ <20150818091224.GM5558@mwanda>
+ <55D43738.7000008@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55D43738.7000008@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-08-13 at 09:55 -0700, Filipe Brandenburger wrote:
 
-> Long term, considering this is in AOSP and is part of eng/userdebug
-> builds, it's likely to be automatically available in future versions
-> of Android.
+> Real ID value means the value mapped to an alive NIC handler.
 
-Yeah, but most vendors don't actually build/run/ship AOSP nor
-necessarily an unmodified iw, so it's likely not all that helpful.
+Who is mapping it?  It's all within the driver so it is not "real"
+unless there external requirements.
 
-> We ended up having to tweak the Android.mk again in the AOSP tree,
-> since the current one is doing an "include" of the external Makefile,
-> which in turns overrides the default "clean" rule and leaks some
-> pattern rules such as %.o, etc. which affect the rest of Android
-> build. For more details, please take a look at this Gerrit:
-> https://android-review.googlesource.com/166104
-> 
-> I'm cc'ing Ying who spotted the problem and suggested the changes.
+> And when the driver transmits and receives some data frame with chipset,
+> the ID is used to distinguish the data frame's owner. Just like the driver,
+> chipset uses the appointed identifier. the data frame always includes the
+> identifier.
 
-Thanks, but I'm not going to apply that patch in my tree - I don't want
-to have to worry about the duplication of LOCAL_SRC_FILES.
+Yes.  But it uses whatever we give it, otherwise it will break when we
+change this.
 
-> One problem with the current approach is that there's duplication of
-> the names of the source files between Android.mk and Makefile, I was
-> thinking perhaps we could introduce a common.mk or sources.mk that's
-> included from both and only has the variables that can be used by
-> both? Suggestions are welcome.
+> You know, current driver is using 32bit pointer address as the identifier.
+> So, this patch converts the address value to integer value. As mentioned
+> earlier, '0' value is the reserved value to terminate an alive NIC handler
+> and inform it to chipset.
 
-That seems reasonable.
+Ah... I see now.  In the original code we used pointers and NULL meant
+disconnect.  Now we are using integers but we still want zero to be
+disconnect.  Fine, just make the array one pointer larger, it's not
+worth the extra headache (the first version had off by one bugs, and the
+second version still had an off by one bug even after I pointed them out
+in the first version), just to save 8 bytes:
 
-> As mentioned in the initial thread, one option is to drop Android.mk
-> from upstream altogether and maintain it in our AOSP downstream.
+/* Zero is not used, because a zero ID means disconnect */
+static tstrWILC_WFIDrv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
 
-Given what I just said above about vendor builds etc. not being AOSP,
-that probably wouldn't be all that helpful; I'm pretty sure it'd make
-our life more difficult so I don't really like that idea much.
+static int add_handler_in_list(tstrWILC_WFIDrv *handler)
+{
+	int i;
 
-johannes
+	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
+		if (!wfidrv_list[i]) {
+			wfidrv_list[i] = handler;
+			return 0;
+		}
+	}
+
+	return -ENOBUFS;
+}
+
+static int remove_handler_in_list(tstrWILC_WFIDrv *handler)
+{
+	int i;
+
+	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
+		if (wfidrv_list[i] == handler) {
+			wfidrv_list[i] = NULL;
+			return 0;
+		}
+	}
+
+	return -EINVAL;
+}
+
+static int get_id_from_handler(tstrWILC_WFIDrv *handler)
+{
+	int i;
+
+	if (!handler)
+		return 0;
+
+	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
+		if (wfidrv_list[i] == handler)
+			return i;
+	}
+
+	return 0;
+}
+
+static tstrWILC_WFIDrv *get_handler_from_id(int id)
+{
+	if (id <= 0 || id >= ARRAY_SIZE(wfidrv_list))
+		return NULL;
+
+	return wfidrv_list[id];
+}
+
