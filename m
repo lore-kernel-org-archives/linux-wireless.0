@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:34691 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932776AbbHDLw3 (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33983 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091AbbHSG7u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 07:52:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P3x1soE8PV9ZH4ObzgEzz9aEft6gS7mcVhbHRGy7H5mGw@mail.gmail.com>
-References: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1438685233.29746.156.camel@linux.intel.com>
-	<CANUX_P3x1soE8PV9ZH4ObzgEzz9aEft6gS7mcVhbHRGy7H5mGw@mail.gmail.com>
-Date: Tue, 4 Aug 2015 14:52:27 +0300
-Message-ID: <CANUX_P202HpnSGbkPA=OT9=5GykhJ1u9u_Y2VwA3wnLi7=48_g@mail.gmail.com> (sfid-20150804_135237_938375_0F364FDF)
-Subject: Re: [PATCH 1/2] iwlwifi: convert hex_dump_to_buffer() to %*ph
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 19 Aug 2015 02:59:50 -0400
+Received: by paccq16 with SMTP id cq16so107275234pac.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:50 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 12/13] staging: wilc1000: rename WILC_MsgQueueRecv to wilc_mq_recv
+Date: Wed, 19 Aug 2015 15:59:07 +0900
+Message-Id: <1439967548-25876-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_090108_460729_E0DDFDA4)
+In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 4, 2015 at 2:48 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Tue, Aug 4, 2015 at 1:47 PM, Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com> wrote:
->> On Thu, 2015-07-16 at 15:42 +0300, Andy Shevchenko wrote:
->>> There is no need to use hex_dump_to_buffer() in the cases like this:
->>>
->>>       hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);      > /* len <= 16
->>> */
->>>       sprintf("%s\n", outbuf);
->>>
->>> since it maybe easily converted to simple:
->>>
->>>       sprintf("%*ph\n", len, buf);
->>>
->>> Note: it seems in one case the output is groupped by 2 bytes and
->>> looks like a
->>> typo. Thus, patch changes that to plain byte stream.
->>
->>
->> Any comments on this, anyone?
->>
->> The idea is to minimize usage of hexdump_to_buffer(), i.e. not using it
->> when it's an obvious overkill.
->>
->
-> Sorry for the delay, since the buffer is small (less than 16 bytes, it
-> should be fine).
+This patch replaces WILC_MsgQueueRecv with wilc_mq_recv
+to shorten function name and avoid CamelCase.
 
-I applied it on our internal tree. Thank you.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.c  | 2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.h  | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6be2348..f0a1383 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4332,7 +4332,7 @@ static int hostIFthread(void *pvArg)
+ 	memset(&strHostIFmsg, 0, sizeof(tstrHostIFmsg));
+ 
+ 	while (1) {
+-		WILC_MsgQueueRecv(&gMsgQHostIF, &strHostIFmsg, sizeof(tstrHostIFmsg), &u32Ret);
++		wilc_mq_recv(&gMsgQHostIF, &strHostIFmsg, sizeof(tstrHostIFmsg), &u32Ret);
+ 		pstrWFIDrv = (tstrWILC_WFIDrv *)strHostIFmsg.drvHandler;
+ 		if (strHostIFmsg.u16MsgId == HOST_IF_MSG_EXIT) {
+ 			PRINT_D(GENERIC_DBG, "THREAD: Exiting HostIfThread\n");
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index b5d230b..6015098 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -110,7 +110,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
++int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+ 			     void *pvRecvBuffer, u32 u32RecvBufferSize,
+ 			     u32 *pu32ReceivedLength)
+ {
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 197b0a9..143fba4 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -63,7 +63,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
++int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+ 			     void *pvRecvBuffer, u32 u32RecvBufferSize,
+ 			     u32 *pu32ReceivedLength);
+ 
+-- 
+1.9.1
+
