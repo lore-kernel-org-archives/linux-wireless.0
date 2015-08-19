@@ -1,85 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50754 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751051AbbH0ThC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2015 15:37:02 -0400
-Date: Thu, 27 Aug 2015 21:37:00 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: David Howells <dhowells@redhat.com>
-Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Kees Cook <keescook@chromium.org>,
-	"Roberts, William C" <william.c.roberts@intel.com>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Paul Moore <paul@paul-moore.com>,
-	Eric Paris <eparis@parisplace.org>, selinux@tycho.nsa.gov,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	dwmw2@infradead.org, Ming Lei <ming.lei@canonical.com>,
-	Joey Lee <jlee@suse.de>,
-	=?utf-8?Q?Vojt=C4=9Bch_Pavl=C3=ADk?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Linux Firmware Signing
-Message-ID: <20150827193700.GE8051@wotan.suse.de> (sfid-20150827_213733_349985_0FE239D0)
-References: <476DC76E7D1DF2438D32BFADF679FC5601057D32@ORSMSX103.amr.corp.intel.com>
- <20150824225713.GJ8051@wotan.suse.de>
- <CAGXu5jLDHCgygaVNHpuvszN6SXNKAjRW83q3-D2ZfRpO4uAmdw@mail.gmail.com>
- <476DC76E7D1DF2438D32BFADF679FC5601058E78@ORSMSX103.amr.corp.intel.com>
- <CAGXu5jJuwPfnQhu9u4-90UkmjWTBF_GLpJ7J1VaaT2D0d_-Mhg@mail.gmail.com>
- <1440462367.2737.4.camel@linux.vnet.ibm.com>
- <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
- <1440464705.2737.36.camel@linux.vnet.ibm.com>
- <14540.1440599584@warthog.procyon.org.uk>
- <31228.1440671938@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <31228.1440671938@warthog.procyon.org.uk>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:35283 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbbHSRTj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 13:19:39 -0400
+Message-ID: <1440004777.6610.23.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150819_191947_002709_7BFA391B)
+Subject: Re: [RFC v2 0/3] add TSO / A-MSDU TX for iwlwifi
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Date: Wed, 19 Aug 2015 10:19:37 -0700
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E825167@hasmsx107.ger.corp.intel.com>
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439993647.6610.8.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8250B6@hasmsx107.ger.corp.intel.com>
+	 <1440000515.6610.20.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E825167@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2015 at 11:38:58AM +0100, David Howells wrote:
-> Luis R. Rodriguez <mcgrof@suse.com> wrote:
+On Wed, 2015-08-19 at 17:00 +0000, Grumbach, Emmanuel wrote:
 > 
-> > "PKCS#7: Add an optional authenticated attribute to hold firmware name"
-> > https://git.kernel.org/cgit/linux/kernel/git/dhowells/linux-fs.git/commit/?h=fwsign-pkcs7&id=1448377a369993f864915743cfb34772e730213good
+> On 08/19/2015 07:08 PM, Eric Dumazet wrote:
+> > On Wed, 2015-08-19 at 15:07 +0000, Grumbach, Emmanuel wrote:
 > > 
-> >         1.3.6.1.4.1.2312.16     Linux kernel
-> >         1.3.6.1.4.1.2312.16.2   - PKCS#7/CMS SignerInfo attribute types
-> >         1.3.6.1.4.1.2312.16.2.1   - firmwareName
+> >> I'll look at it.
+> >> I was almost starting to implement that but then I thought with another
+> >> (good?) reason to use LSO. LSO gives me the guarantee that the packet is
+> >> directed to one peer, which might not be the case with xmit_more since
+> >> we have one Qdisc for several clients in case we are in AP mode.
+> >> Building an A-MSDU for several clients is not possible, at least not for
+> >> several client in the L2 (different MAC addresses).
+> >> LSO avoids this problem completely.
 > > 
-> > I take it you are referring to this?
-> 
-> Yes.
-> 
-> > If we follow this model we'd then need something like:
+> > Then, simply calling skb_gso_segment() from the driver might be enough,
+> > and less work for you.
 > > 
-> >         1.3.6.1.4.1.2312.16.2.2   - seLinuxPolicyName
+> > This would even support TSO on IPv6
 > > 
-> > That should mean each OID that has different file names would need to be
-> > explicit about and have a similar entry on the registry. I find that pretty
-> > redundant and would like to avoid that if possible.
 > 
-> firmwareName is easy for people to understand - it's the name the kernel asks
-> for and the filename of the blob.  seLinuxPolicyName is, I think, a lot more
-> tricky since a lot of people don't use SELinux, and most that do don't
-> understand it (most people that use it aren't even really aware of it).
-> 
-> If you can use the firmwareName as the SELinux/LSM key, I would suggest doing
-> so - even if you dress it up as a path (/lib/firmware/<firmwareName>).
+> Well... I did take care of IPv6.
 
-It seems we don't have to worry about it now, and perhaps SELinux folks might
-go another route.
+net/core/tso.c does not yet handle IPv6
 
-  Luis
+
