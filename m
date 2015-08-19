@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:33156 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755471AbbHFMq1 (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:32792 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903AbbHSG72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 08:46:27 -0400
-Received: by lbbyj8 with SMTP id yj8so41981690lbb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 05:46:26 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: wake up offchannel queue properly
-Date: Thu,  6 Aug 2015 14:46:54 +0200
-Message-Id: <1438865214-1651-1-git-send-email-michal.kazior@tieto.com> (sfid-20150806_144632_006110_933CECE7)
+	Wed, 19 Aug 2015 02:59:28 -0400
+Received: by pabyb7 with SMTP id yb7so150982694pab.0
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:27 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
+	chris.park@atmel.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 04/13] staging: wilc1000: wilc_msgqueue.c: remove blank line before a close brace
+Date: Wed, 19 Aug 2015 15:58:59 +0900
+Message-Id: <1439967548-25876-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_085930_711404_F07A106F)
+In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Once HTT Tx queue got full offchannel queue was
-stopped and never woken up again. This broke, e.g.
-P2P. This could be reproduced after running a lot
-of traffic enough to saturate 100% of the driver
-Tx queue and then trying to send offchannel
-traffic.
+This patch removes blank line before a close brace "}"
+CHECK: Blank lines aren't necessary before a close brace '}'
 
-Fixes: 96d828d45e16 ("ath10k: rework tx queue locking")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index acd222f3b899..c7ff0c8a5bd4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3002,6 +3002,8 @@ void ath10k_mac_tx_unlock(struct ath10k *ar, int reason)
- 						   IEEE80211_IFACE_ITER_RESUME_ALL,
- 						   ath10k_mac_tx_unlock_iter,
- 						   ar);
-+
-+	ieee80211_wake_queue(ar->hw, ar->hw->offchannel_tx_hw_queue);
- }
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index e7c4a9a..8cb74d1 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -173,7 +173,6 @@ WILC_ErrNo WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
+ 		kfree(pstrMessage);
  
- void ath10k_mac_vif_tx_lock(struct ath10k_vif *arvif, int reason)
+ 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+-
+ 	}
+ 
+ 	WILC_CATCH(s32RetStatus)
 -- 
-2.1.4
+1.9.1
 
