@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:58828 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908AbbHMK3v (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21330 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945AbbHSJtw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 06:29:51 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NT0028OYNTMCO70@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Thu, 13 Aug 2015 19:29:46 +0900 (KST)
-Date: Thu, 13 Aug 2015 10:29:45 +0000 (GMT)
-From: Amit Khatri <amit.khatri@samsung.com>
-Subject: [PATCH 3/3] iw: Avoid possible memory leak for cb
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Rahul Jain <rahul.jain@samsung.com>,
-	HEMANSHU SRIVASTAVA <hemanshu.s@samsung.com>,
-	Nitin Jhanwar <nitin.j@samsung.com>
-Reply-to: amit.khatri@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0
-Message-id: <1629204510.56471439461785277.JavaMail.weblogic@ep2mlwas02d> (sfid-20150813_122955_425277_A22AC03C)
+	Wed, 19 Aug 2015 05:49:52 -0400
+From: <miaoqing@qti.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 2/2] ath9k: fix incorrect calibration initial for ar9561
+Date: Wed, 19 Aug 2015 17:49:37 +0800
+Message-ID: <1439977777-7642-2-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150819_114956_784741_60C9A7B9)
+In-Reply-To: <1439977777-7642-1-git-send-email-miaoqing@qca.qualcomm.com>
+References: <1439977777-7642-1-git-send-email-miaoqing@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Y2IgZ290IG1lbW9yeSBmcm9tIG5sX2NiX2FsbG9jKCkgYnV0IG5vdCBkb2luZyBmcmVlDQpkdXJp
-bmcgZXJyb3IgY2FzZSBhbmQgdXNlIHNhbWUgbGFibGUgdG8gZ28gb3V0IGZyb20gZnVuY3Rpb24u
-DQoNClNpZ25lZC1vZmYtYnk6IEFtaXQgS2hhdHJpIDxhbWl0LmtoYXRyaUBzYW1zdW5nLmNvbT4N
-ClNpZ25lZC1vZmYtYnk6IFJhaHVsIEphaW4gPHJhaHVsLmphaW5Ac2Ftc3VuZy5jb20+DQotLS0N
-CiBpdy5jIHwgOCArKysrLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDQg
-ZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9pdy5jIGIvaXcuYw0KaW5kZXggZWM1NjczNi4u
-YTJjMjc5NSAxMDA2NDQNCi0tLSBhL2l3LmMNCisrKyBiL2l3LmMNCkBAIC00NzYsMTMgKzQ3Niwx
-MyBAQCBzdGF0aWMgaW50IF9faGFuZGxlX2NtZChzdHJ1Y3Qgbmw4MDIxMV9zdGF0ZSAqc3RhdGUs
-IGVudW0gaWRfaW5wdXQgaWRieSwNCg0KICAgICAgICBlcnIgPSBjbWQtPmhhbmRsZXIoc3RhdGUs
-IG1zZywgYXJnYywgYXJndiwgaWRieSk7DQogICAgICAgIGlmIChlcnIpDQotICAgICAgICAgICAg
-ICAgZ290byBvdXQ7DQorICAgICAgICAgICAgICAgZ290byBvdXRfZnJlZV9tc2c7DQoNCiAgICAg
-ICAgbmxfc29ja2V0X3NldF9jYihzdGF0ZS0+bmxfc29jaywgc19jYik7DQoNCiAgICAgICAgZXJy
-ID0gbmxfc2VuZF9hdXRvX2NvbXBsZXRlKHN0YXRlLT5ubF9zb2NrLCBtc2cpOw0KICAgICAgICBp
-ZiAoZXJyIDwgMCkNCi0gICAgICAgICAgICAgICBnb3RvIG91dDsNCisgICAgICAgICAgICAgICBn
-b3RvIG91dF9mcmVlX21zZzsNCg0KICAgICAgICBlcnIgPSAxOw0KDQpAQCAtNDkzLDkgKzQ5Myw5
-IEBAIHN0YXRpYyBpbnQgX19oYW5kbGVfY21kKHN0cnVjdCBubDgwMjExX3N0YXRlICpzdGF0ZSwg
-ZW51bSBpZF9pbnB1dCBpZGJ5LA0KDQogICAgICAgIHdoaWxlIChlcnIgPiAwKQ0KICAgICAgICAg
-ICAgICAgIG5sX3JlY3Ztc2dzKHN0YXRlLT5ubF9zb2NrLCBjYik7DQotIG91dDoNCi0gICAgICAg
-bmxfY2JfcHV0KGNiKTsNCisNCiAgb3V0X2ZyZWVfbXNnOg0KKyAgICAgICBubF9jYl9wdXQoY2Ip
-Ow0KICAgICAgICBubG1zZ19mcmVlKG1zZyk7DQogICAgICAgIHJldHVybiBlcnI7DQogIG5sYV9w
-dXRfZmFpbHVyZToNCi0tDQoxLjkuMQ0K
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
+One stuck issue was found on AP152, the root cause is using wrong
+calibration initial function.
+
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 174442b..3880df7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1310,7 +1310,8 @@ static void ar9003_hw_do_pcoem_manual_peak_cal(struct ath_hw *ah,
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	int i;
+ 
+-	if (!AR_SREV_9462(ah) && !AR_SREV_9565(ah) && !AR_SREV_9485(ah))
++	if (!AR_SREV_9462(ah) && !AR_SREV_9565(ah) && !AR_SREV_9485(ah) &&
++	    !AR_SREV_9561(ah))
+ 		return;
+ 
+ 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_RTT) && !run_rtt_cal)
+@@ -1707,7 +1708,8 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah)
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+ 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 
+-	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9565(ah))
++	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9565(ah) ||
++	    AR_SREV_9561(ah))
+ 		priv_ops->init_cal = ar9003_hw_init_cal_pcoem;
+ 	else
+ 		priv_ops->init_cal = ar9003_hw_init_cal_soc;
+-- 
+1.9.1
 
