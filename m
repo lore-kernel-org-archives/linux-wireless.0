@@ -1,74 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:54300 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177AbbHTP04 (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:1739 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751308AbbHSTRr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 11:26:56 -0400
-From: Robert Baldyga <r.baldyga@samsung.com>
-To: sameo@linux.intel.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nfc@lists.01.org,
-	m.szyprowski@samsung.com, pebolle@tiscali.nl,
-	Robert Baldyga <r.baldyga@samsung.com>
-Subject: [PATCH v3 2/3] NFC: nci: export nci_core_reset and nci_core_init
-Date: Thu, 20 Aug 2015 17:26:01 +0200
-Message-id: <1440084362-27909-3-git-send-email-r.baldyga@samsung.com> (sfid-20150820_172739_455934_ECF0F561)
-In-reply-to: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
-References: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
+	Wed, 19 Aug 2015 15:17:47 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
+ TSO segment
+Date: Wed, 19 Aug 2015 19:17:37 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com> (sfid-20150819_211755_202918_95A4E3E8)
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
+ <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers needs to have ability to reinit NCI core, for example after
-updating firmware in setup() of post_setup() callback. This patch makes
-nci_core_reset() and nci_core_init() functions public, to make it possible.
 
-Signed-off-by: Robert Baldyga <r.baldyga@samsung.com>
----
- include/net/nfc/nci_core.h |  2 ++
- net/nfc/nci/core.c         | 14 ++++++++++++++
- 2 files changed, 16 insertions(+)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 1bdaa5f..d0d0f1e 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -278,6 +278,8 @@ int nci_request(struct nci_dev *ndev,
- 			    unsigned long opt),
- 		unsigned long opt, __u32 timeout);
- int nci_prop_cmd(struct nci_dev *ndev, __u8 oid, size_t len, __u8 *payload);
-+int nci_core_reset(struct nci_dev *ndev);
-+int nci_core_init(struct nci_dev *ndev);
- 
- int nci_recv_frame(struct nci_dev *ndev, struct sk_buff *skb);
- int nci_set_config(struct nci_dev *ndev, __u8 id, size_t len, __u8 *val);
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index d9045ec..943889b 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -351,6 +351,20 @@ int nci_prop_cmd(struct nci_dev *ndev, __u8 oid, size_t len, __u8 *payload)
- }
- EXPORT_SYMBOL(nci_prop_cmd);
- 
-+int nci_core_reset(struct nci_dev *ndev)
-+{
-+	return __nci_request(ndev, nci_reset_req, 0,
-+			     msecs_to_jiffies(NCI_RESET_TIMEOUT));
-+}
-+EXPORT_SYMBOL(nci_core_reset);
-+
-+int nci_core_init(struct nci_dev *ndev)
-+{
-+	return __nci_request(ndev, nci_init_req, 0,
-+			     msecs_to_jiffies(NCI_INIT_TIMEOUT));
-+}
-+EXPORT_SYMBOL(nci_core_init);
-+
- static int nci_open_device(struct nci_dev *ndev)
- {
- 	int rc = 0;
--- 
-1.9.1
+On 08/19/2015 05:24 PM, Eric Dumazet wrote:
+> On Wed, 2015-08-19 at 15:59 +0300, Emmanuel Grumbach wrote:
+>> This allows to release the backpressure on the socket only
+>> when the last segment is released.
+>> Now the truesize looks like this:
+>> if the truesize of the original skb is 65420, all the
+>> segments will have a truesize of 704 (skb itself) and the
+>> last one will have 65420.
+>>
+>> Change-Id: I3c894cf2afc0aedfe7b2a5b992ba41653ff79c0e
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> ---
+>>  drivers/net/wireless/iwlwifi/mvm/tx.c | 17 ++++++++++++++++-
+>>  1 file changed, 16 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+>> index 5046833..046e50d 100644
+>> --- a/drivers/net/wireless/iwlwifi/mvm/tx.c
+>> +++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+>> @@ -764,7 +764,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+>>  	bool ipv6 = skb_shinfo(skb_gso)->gso_type & SKB_GSO_TCPV6;
+>>  	struct iwl_lso_splitter s = {};
+>>  	struct page *hdr_page;
+>> -	unsigned int mpdu_sz;
+>> +	unsigned int mpdu_sz, sum_truesize = 0;
+>>  	u8 *hdr_page_pos, *qc, tid;
+>>  	int i, ret;
+>>  
+>> @@ -898,6 +898,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+>>  						mpdu_sz, tcp_hdrlen(skb_gso));
+>>  
+>>  	__skb_queue_tail(mpdus_skb, skb_gso);
+>> +	sum_truesize += skb_gso->truesize;
+>>  
+>>  	/* mss bytes have been consumed from the data */
+>>  	s.gso_payload_pos = s.mss;
+>> @@ -1034,6 +1035,20 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
+>>  		}
+>>  
+>>  		__skb_queue_tail(mpdus_skb, skb);
+>> +		sum_truesize += skb->truesize;
+>> +	}
+>> +
+>> +	/* Release the backpressure on the socket only when
+>> +	 * the last segment is released.
+>> +	 */
+>> +	if (skb_gso->destructor == sock_wfree) {
+>> +		struct sk_buff *tail = mpdus_skb->prev;
+>> +
+>> +		swap(tail->truesize, skb_gso->truesize);
+>> +		swap(tail->destructor, skb_gso->destructor);
+>> +		swap(tail->sk, skb_gso->sk);
+>> +                atomic_add(sum_truesize - skb_gso->truesize,
+>> +                           &skb_gso->sk->sk_wmem_alloc);
+>>  	}
+>>  
+>>  	ret = 0;
+> 
+> Using existing net/core/tso.c helpers would avoid using this.
 
+Hm.. how would net/core/tso.c avoid this?
+I can't see anything related to truesize there.
+Note that this work since it is guaranteed that we release the skbs in
+order.
+
+> 
+> (BTW TCP packets do not have sock_wfree as destructor but tcp_wfree(),
+> yet we want backpressure mostly for TCP stack (TCP Small Queues))
+> 
+> 
+
+I am not sure I follow here.
+You want me to test:
+if (skb_gso->destructor == tcp_wfree) ?
+
+I checked that code using iperf and saw that I don't get into this if,
+but I (probably wrongly) assumed that other applications would set a
+flag on the socket (forgive my ignorance) that would make this if be taken.
