@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.iliad.fr ([212.27.33.1]:53501 "EHLO ns.iliad.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754537AbbHDWJ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 18:09:59 -0400
-Date: Wed, 5 Aug 2015 00:09:56 +0200
-From: Maxime Bizon <mbizon@freebox.fr>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: David Lin <dlin@marvell.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	Pete Hsieh <peteh@marvell.com>
-Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
-Message-ID: <20150804220956.GA28583@sakura.staff.proxad.net> (sfid-20150805_001002_211073_08BA5F1A)
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
- <1436455659.36587.131.camel@sakura.staff.proxad.net>
- <87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:33340 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbbHSNwh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2015 09:52:37 -0400
+Received: by wijp15 with SMTP id p15so127534771wij.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 06:52:36 -0700 (PDT)
+From: Adrien Schildknecht <adrien+dev@schischi.me>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, linville@tuxdriver.com, marex@denx.de,
+	fzuuzf@googlemail.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Adrien Schildknecht <adrien+dev@schischi.me>
+Subject: [PATCH] rtlwifi: rtl8192cu: Add new device ID
+Date: Wed, 19 Aug 2015 15:51:31 +0200
+Message-Id: <1439992291-24912-1-git-send-email-adrien+dev@schischi.me> (sfid-20150819_155254_227589_E3D74C5C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The v2 of NetGear WNA1000M uses a different idProduct: USB ID 0846:9043
 
-On Tuesday 04 Aug 2015 à 20:02:23 (+0300), Kalle Valo wrote:
+Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> I haven't looked at the driver myself yet. Do you have any estimates how
-> much duplication there is?
-
-ok the thing is I happen to know a bit about the chipset internals and
-so it's easy for me to know that having a common driver is do-able.
-
-so I may be biased, and I guess someone else should have a quick
-glance at both driver code.
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+index 23806c2..8b4238a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -321,6 +321,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+ 	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
+ 	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
+ 	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
++	{RTL_USB_DEVICE(0x0846, 0x9043, rtl92cu_hal_cfg)}, /*NetGear WNA1000Mv2*/
+ 	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
+ 	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
+ 	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
 -- 
-Maxime
+2.5.0
+
