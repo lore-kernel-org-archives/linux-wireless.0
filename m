@@ -1,73 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:47424 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981AbbHAN7m (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:33494 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752442AbbHSDPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2015 09:59:42 -0400
-From: Guenter Roeck <linux@roeck-us.net>
-To: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
-	<clement.perrochaud@effinnov.com>
-Cc: Charles Gorand <charles.gorand@effinnov.com>,
-	linux-nfc@lists.01.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH] NFC: nxp-nci: Include unaligned.h instead of access_ok.h
-Date: Sat,  1 Aug 2015 06:59:29 -0700
-Message-Id: <1438437569-31472-1-git-send-email-linux@roeck-us.net> (sfid-20150801_155958_580222_2A8E1E7F)
+	Tue, 18 Aug 2015 23:15:53 -0400
+From: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: =?UTF-8?q?Rapha=C3=ABl=20Beamonte?= <raphael.beamonte@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCHv4 2/2] staging: wilc1000: replace MALLOC_WILC_BUFFER() macro to avoid possible memory leak
+Date: Tue, 18 Aug 2015 23:14:50 -0400
+Message-Id: <79afd7d7edd54219894f2d43de6bc50f4399213a.1439953865.git.raphael.beamonte@gmail.com> (sfid-20150819_051615_729156_DAF7FBAD)
+In-Reply-To: <cover.1439953865.git.raphael.beamonte@gmail.com>
+References: <cover.1439953865.git.raphael.beamonte@gmail.com>
+In-Reply-To: <cover.1439953865.git.raphael.beamonte@gmail.com>
+References: <20150819025942.GD4588@kroah.com> <cover.1439953865.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Directly including access_ok.h can result in the following compile errors
-if an architecture such as ia64 does not support direct unaligned accesses.
+The MALLOC_WILC_BUFFER() macro was using a return statement, and didn't
+take care of possible memory leaks and subsequent bugs when it was failing
+after succeeding some allocations. This patch corrects this behavior.
 
-include/linux/unaligned/access_ok.h:7:19: error:
-	redefinition of 'get_unaligned_le16'
-include/linux/unaligned/le_struct.h:6:19: note:
-	previous definition of 'get_unaligned_le16' was here
-include/linux/unaligned/access_ok.h:12:19: error:
-	redefinition of 'get_unaligned_le32'
-include/linux/unaligned/le_struct.h:11:19: note:
-	previous definition of 'get_unaligned_le32' was here
-
-Include asm/unaligned.h instead and let the architecture decide which
-access functions to use.
-
-Cc: Clément Perrochaud <clement.perrochaud@effinnov.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
 ---
- drivers/nfc/nxp-nci/firmware.c | 2 +-
- drivers/nfc/nxp-nci/i2c.c      | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_exported_buf.c | 31 +++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
-index 5291797324ba..553011f58339 100644
---- a/drivers/nfc/nxp-nci/firmware.c
-+++ b/drivers/nfc/nxp-nci/firmware.c
-@@ -24,7 +24,7 @@
- #include <linux/completion.h>
- #include <linux/firmware.h>
- #include <linux/nfc.h>
--#include <linux/unaligned/access_ok.h>
-+#include <asm/unaligned.h>
+diff --git a/drivers/staging/wilc1000/wilc_exported_buf.c b/drivers/staging/wilc1000/wilc_exported_buf.c
+index 44db496..e617b77 100644
+--- a/drivers/staging/wilc1000/wilc_exported_buf.c
++++ b/drivers/staging/wilc1000/wilc_exported_buf.c
+@@ -8,13 +8,6 @@
+ #define LINUX_TX_SIZE	(64 * 1024)
+ #define WILC1000_FW_SIZE (4 * 1024)
  
- #include "nxp-nci.h"
+-#define MALLOC_WILC_BUFFER(name, size)	\
+-	exported_ ## name = kmalloc(size, GFP_KERNEL);	  \
+-	if (!exported_ ## name) {   \
+-		printk("fail to alloc: %s memory\n", exported_ ## name);  \
+-		return -ENOBUFS;	\
+-	}
+-
+ /*
+  * Add necessary buffer pointers
+  */
+@@ -46,11 +39,29 @@ static int __init wilc_module_init(void)
+ 	/*
+ 	 * alloc necessary memory
+ 	 */
+-	MALLOC_WILC_BUFFER(g_tx_buf, LINUX_TX_SIZE)
+-	MALLOC_WILC_BUFFER(g_rx_buf, LINUX_RX_SIZE)
+-	MALLOC_WILC_BUFFER(g_fw_buf, WILC1000_FW_SIZE)
++	exported_g_tx_buf = kmalloc(LINUX_TX_SIZE, GFP_KERNEL);
++	if (!exported_g_tx_buf)
++		return -ENOMEM;
++
++	exported_g_rx_buf = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
++	if (!exported_g_rx_buf)
++		goto free_g_tx_buf;
++
++	exported_g_fw_buf = kmalloc(WILC1000_FW_SIZE, GFP_KERNEL);
++	if (!exported_g_fw_buf)
++		goto free_g_rx_buf;
  
-diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-index 2f77f1d03638..5907e7a727a1 100644
---- a/drivers/nfc/nxp-nci/i2c.c
-+++ b/drivers/nfc/nxp-nci/i2c.c
-@@ -36,7 +36,7 @@
- #include <linux/of_gpio.h>
- #include <linux/of_irq.h>
- #include <linux/platform_data/nxp-nci.h>
--#include <linux/unaligned/access_ok.h>
-+#include <asm/unaligned.h>
+ 	return 0;
++
++free_g_rx_buf:
++	kfree(exported_g_rx_buf);
++	exported_g_rx_buf = NULL;
++
++free_g_tx_buf:
++	kfree(exported_g_tx_buf);
++	exported_g_tx_buf = NULL;
++
++	return -ENOMEM;
+ }
  
- #include <net/nfc/nfc.h>
- 
+ static void __exit wilc_module_deinit(void)
 -- 
 2.1.4
 
