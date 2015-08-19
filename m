@@ -1,84 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:35450 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbbHSO6Z convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35706 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751558AbbHSUjY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 10:58:25 -0400
-Received: by iodt126 with SMTP id t126so11892422iod.2
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 07:58:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rz0g8_F8VziRZXaPq-D0_zEmpiZkD6Xo0jwr8M6Nq+Q3A@mail.gmail.com>
-References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
-	<CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>
-	<55AD2C8F.9010509@broadcom.com>
-	<CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>
-	<55CB0ACA.3000109@broadcom.com>
-	<CACna6rz0g8_F8VziRZXaPq-D0_zEmpiZkD6Xo0jwr8M6Nq+Q3A@mail.gmail.com>
-Date: Wed, 19 Aug 2015 16:58:24 +0200
-Message-ID: <CACna6rxwKktji3sNj20WENk+t0RQucnQ5Av88ea_boKwBYwogA@mail.gmail.com> (sfid-20150819_165828_801171_1F73C74E)
-Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 19 Aug 2015 16:39:24 -0400
+Message-ID: <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150819_223932_021416_2B657A7D)
+Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
+ TSO segment
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Date: Wed, 19 Aug 2015 13:39:22 -0700
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 August 2015 at 16:07, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 12 August 2015 at 10:58, Arend van Spriel <arend@broadcom.com> wrote:
->> On 07/26/2015 05:40 PM, Rafał Miłecki wrote:
->>>
->>> On 20 July 2015 at 19:14, Arend van Spriel <arend@broadcom.com> wrote:
->>>>
->>>> On 07/19/2015 05:05 PM, Rafał Miłecki wrote:
->>>>>
->>>>>
->>>>> On 10 July 2015 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
->>>>>>
->>>>>>
->>>>>> This series comprises of following changes:
->>>>>> - support NVRAM loading for bcm47xx platform.
->>>>>> - revise announced interface combinations and validate against it.
->>>>>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
->>>>>> - couple of PCIe fixes.
->>>>>> - rework dealing with interface instances.
->>>>>
->>>>>
->>>>>
->>>>> I'm not sure which patch has caused this (I applied all of them except
->>>>> for the 1st one) but now brcmfmac fails totally:
->>>>>>
->>>>>>
->>>>>> Unable to handle kernel NULL pointer dereference at virtual address
->>>>>> 00000014
->>>>>
->>>>>
->>>>>
->>>>> I'm afraid I won't be able to spend any more time of this soon, so can
->>>>> you try to reproduce this problem, please?
->>
->>
->> You did a warm reboot of the device, right? There seems to be an issue
->> because on OpenWrt the brcmfmac is not unloaded upon warm reboot, which
->> makes the device unaccessible. Because on OpenWrt the firmware request is
->> synchronous (OpenWrt patch on top of upstream brcmfmac) it results in probe
->> failing on invalid access making the issue OpenWrt specific. Hante created a
->> fix for the warm reboot issue.
->
-> I'm not sure about this, it was too long time ago. I'm coming back
-> home on next Tuesday, so I should be able to work on this again soon.
+On Wed, 2015-08-19 at 19:17 +0000, Grumbach, Emmanuel wrote:
 
-I tested warm reboots today and indeed they are broken in OpenWrt.
-However warm reboot attempt result in next-boot hang with:
-brcmfmac: brcmf_fw_request_nvram_done: Found platform NVRAM (19204 B)
-being the last message.
+> Hm.. how would net/core/tso.c avoid this?
 
-This warm reboot issue is something different from the regression
-introduced by this patches which results in:
-Unable to handle kernel NULL pointer dereference at virtual address 00000014
+Because a driver using these helpers keep around the original LSO packet
+and frees it normally at TX completion time.
 
-I'm focusing on V2 now.
+> I can't see anything related to truesize there.
+> Note that this work since it is guaranteed that we release the skbs in
+> order.
+> 
+> > 
+> > (BTW TCP packets do not have sock_wfree as destructor but tcp_wfree(),
+> > yet we want backpressure mostly for TCP stack (TCP Small Queues))
+> > 
+> > 
+> 
+> I am not sure I follow here.
+> You want me to test:
+> if (skb_gso->destructor == tcp_wfree) ?
 
--- 
-Rafał
+
+Yes.
+
+Look for example at tcp_gso_segment() (called from skb_gso_segment())
+
+copy_destructor = gso_skb->destructor == tcp_wfree;
+...
+        /* Following permits TCP Small Queues to work well with GSO :
+         * The callback to TCP stack will be called at the time last frag
+         * is freed at TX completion, and not right now when gso_skb
+         * is freed by GSO engine
+         */
+        if (copy_destructor) {
+                swap(gso_skb->sk, skb->sk);
+                swap(gso_skb->destructor, skb->destructor);
+                sum_truesize += skb->truesize;
+                atomic_add(sum_truesize - gso_skb->truesize,
+                           &skb->sk->sk_wmem_alloc);
+        }
+
+
+> 
+> I checked that code using iperf and saw that I don't get into this if,
+> but I (probably wrongly) assumed that other applications would set a
+> flag on the socket (forgive my ignorance) that would make this if be taken.
+
+If you do not see skb->destructor == tcp_wfree, then something is
+definitely wrong on your setup.
+
+
+
