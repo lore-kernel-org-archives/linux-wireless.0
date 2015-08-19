@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60147 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206AbbHNHOc (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:34067 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751687AbbHSP7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 03:14:32 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Adrien Schildknecht <adrien+dev@schischi.me>
-Cc: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"Berg\, Johannes" <johannes.berg@intel.com>,
-	"ilw\@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: out-of-bounds access in iwl_init_sband_channels
-References: <1439512532-7901-1-git-send-email-adrien+dev@schischi.me>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E7EA2CE@hasmsx107.ger.corp.intel.com>
-	<20150814090408.1521e8fe.adrien+dev@schischi.me>
-Date: Fri, 14 Aug 2015 10:14:23 +0300
-In-Reply-To: <20150814090408.1521e8fe.adrien+dev@schischi.me> (Adrien
-	Schildknecht's message of "Fri, 14 Aug 2015 09:04:08 +0200")
-Message-ID: <87h9o2l4ts.fsf@kamboji.qca.qualcomm.com> (sfid-20150814_091449_997000_2CE3D289)
+	Wed, 19 Aug 2015 11:59:06 -0400
+Subject: Re: [PATCH v2] rtlwifi: rtl8192cu: Add new device ID
+To: Adrien Schildknecht <adrien+dev@schischi.me>,
+	chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
+	linville@tuxdriver.com, marex@denx.de, fzuuzf@googlemail.com
+References: <55D495C8.6030906@lwfinger.net>
+ <1439998392-2979-1-git-send-email-adrien+dev@schischi.me>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Stable <stable@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <55D4A7C0.6050409@lwfinger.net> (sfid-20150819_175928_653410_4B1EF31B)
+Date: Wed, 19 Aug 2015 10:58:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439998392-2979-1-git-send-email-adrien+dev@schischi.me>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrien Schildknecht <adrien+dev@schischi.me> writes:
-
-> Hi,
+On 08/19/2015 10:33 AM, Adrien Schildknecht wrote:
+> The v2 of NetGear WNA1000M uses a different idProduct: USB ID 0846:9043
 >
->> On 08/14/2015 03:36 AM, Adrien Schildknecht wrote:
->> > Both loops of this function compare data from the 'chan' array and
->> > then check if the index is valid.
->> > 
->> > The 2 conditions should be inverted to avoid an out-of-bounds
->> > access.
->> > 
->> 
->> Was that found by a static analyzer or any other automated tool, or
->> was that the result of your very careful review?
+> Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
+> Cc: Stable <stable@vger.kernel.org>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
+>   1 file changed, 1 insertion(+)
+
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Thanks,
+
+Larry
+
 >
-> The error has been reported by KASan:
-> ==================================================================
-> BUG: KASan: out of bounds access in iwl_init_sband_channels+0x207/0x260 [iwlwifi] at addr ffff8800c2d0aac8
-> Read of size 4 by task modprobe/329
-> ==================================================================
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> index 23806c2..fd4a535 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> @@ -321,6 +321,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+>   	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
+>   	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
+>   	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
+> +	{RTL_USB_DEVICE(0x0846, 0x9043, rtl92cu_hal_cfg)}, /*NG WNA1000Mv2*/
+>   	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
+>   	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
+>   	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
+>
 
-Always try to add information like this to the commit log, it's very
-useful.
-
--- 
-Kalle Valo
