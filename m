@@ -1,68 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:33222 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754545AbbHCSy0 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:57214 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbbHTVKu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2015 14:54:26 -0400
-Received: by obdeg2 with SMTP id eg2so105999426obd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:54:26 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
-	shaofu <shaofu@realtek.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH NEXT 5/7] rtlwifi: rtl8192ee: Implement new rekey logic
-Date: Mon,  3 Aug 2015 13:53:50 -0500
-Message-Id: <1438628032-5865-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150803_205429_812732_D2A1FAFB)
-In-Reply-To: <1438628032-5865-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1438628032-5865-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 20 Aug 2015 17:10:50 -0400
+Date: Thu, 20 Aug 2015 14:10:49 -0700 (PDT)
+Message-Id: <20150820.141049.1751037490283869226.davem@davemloft.net> (sfid-20150820_231057_282150_CB691DF8)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 0/4] average: convert users to inline implementation
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1439970382-6170-1-git-send-email-johannes@sipsolutions.net>
+References: <1439970382-6170-1-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: pkshih <pkshih@realtek.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 19 Aug 2015 09:46:18 +0200
 
-Use the new capability in rtlwifi to prevent rekeying before EAPOL msg 4/4
-has been sent.
+> Since there's very little benefit of the out-of-line implementation
+> (a single byte of .text in one driver as far as I've seen), convert
+> all drivers to the inline implementation, saving memory, and remove
+> the out-of-line implementation.
+> 
+> Perhaps the easiest would be for Dave to take all of these patches?
 
-Signed-off-by: pkshih <pkshih@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  | 1 +
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 8 ++++++++
- 2 files changed, 9 insertions(+)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-index 232865c..4091430 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-@@ -859,6 +859,7 @@ static void _rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 	case C2H_8192E_TX_REPORT:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE ,
- 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
-+		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
- 	case C2H_8192E_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-index d39ee67..49aec97 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-@@ -731,6 +731,14 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 		}
- 
-+		/* tx report */
-+		if (ptcb_desc->use_spe_rpt) {
-+			u16 sn = rtl_get_tx_report_sn(hw);
-+
-+			SET_TX_DESC_SPE_RPT(pdesc, 1);
-+			SET_TX_DESC_SW_DEFINE(pdesc, sn);
-+		}
-+
- 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
- 
- 		if (ieee80211_is_mgmt(fc)) {
--- 
-2.1.4
-
+Ok, I'll applied this series to net-next, thanks.
