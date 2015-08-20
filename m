@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:37004 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253AbbHFQUX (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27331 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbbHTE7b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 12:20:23 -0400
-Received: by igbpg9 with SMTP id pg9so14923138igb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 09:20:22 -0700 (PDT)
-Date: Thu, 6 Aug 2015 12:19:59 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Brady Lyles <lyles.brady@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: lenovo t400 atheros ar242x ath5k bug
-Message-ID: <20150806161958.GA20514@localhost> (sfid-20150806_182026_314288_9868EB6A)
-References: <CANR9swOiEVT6PvKv0V1Ytwm0GsN0_2HXqFpdmGAPzFoQG5T2Cg@mail.gmail.com>
+	Thu, 20 Aug 2015 00:59:31 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Add spectral scan support for 10.4 fw
+Date: Thu, 20 Aug 2015 10:29:05 +0530
+Message-ID: <1440046745-428-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150820_065934_864921_7F49FF27)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANR9swOiEVT6PvKv0V1Ytwm0GsN0_2HXqFpdmGAPzFoQG5T2Cg@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 06, 2015 at 10:06:07AM -0600, Brady Lyles wrote:
-> Hello all,
-> I was recommended by the qubes-users list to ask here about an ath5k bug.
-> It looks like my fedora 20 networking virtual machine (netvm) is
-> trying to load the ath5k driver for the qualcomm atheros ar242x wifi
-> module in my lenovo t400, but is choking.
-> Here's an excerpt from netvm dmesg:
-> 
-> [    5.399092] ath5k 0000:00:01.0: Xen PCI mapped GSI17 to IRQ39
-> [    5.399311] ath5k 0000:00:01.0: registered as 'phy0'
-> [    5.401297] PGD 12536067 PUD 12537067 PMD 126f5067 PTE 8010000000000464
-> [    5.401309] Oops: 0003 [#1] SMP
-> [    5.401315] Modules linked in: ath5k(+) ath mac80211 cfg80211
-> rfkill e1000e ptp pps_core pcspkr coretemp hwmon dummy_hcd nfsd
-> udc_core usbcore auth_rpcgss oid_registry usb_common exportfs nfs_acl
-> lockd sunrpc u2mfn(O) xen_blkback binfmt_misc ext4 crc16 jbd2
-> dm_snapshot xen_blkfront autofs4
-> [    5.401356] CPU: 1 PID: 353 Comm: systemd-udevd Tainted: G
->  O 3.12.40-1.pvops.qubes.x86_64 #1
+To enable/configure spectral scan parameters in 10.4 firmware, existing
+wmi spectral related functions can be reused. Link those functions in
+10.4 wmi ops table.
 
-My wild guess (not being too familiar with qubes) is that passthrough is not
-working properly -- this:
+In addition, adjust bin size (only when size is 68 bytes) before reporting
+bin samples to user space. The background for this adjustment is that
+qca99x0 reports bin size as 68 bytes (64 bytes + 4 bytes) in report
+mode 2. First 64 bytes carries in-band tones (-32 to +31) and last 4 byte
+carries band edge detection data (+32) mainly used in radar detection
+purpose. Additional last 4 bytes are stripped to make bin size valid one.
 
-> [    5.401276] BUG: unable to handle kernel paging request at ffffc90000900014
-> [    5.401287] IP: [<ffffffff81268928>] iowrite32+0x38/0x40
+This bin size adjustment will happen only for qca99x0, all other chipsets
+will report proper bin sizes (64/128) without extra 4 bytes being added
+at the end. The changes are validated in qca99x0 using 10.4 firmware.
 
-...looks like a pci write to an unusual address.
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/spectral.c | 9 +++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c      | 2 ++
+ 2 files changed, 11 insertions(+)
 
-What does output of lspci -vnn look like, run as root in the guest?
-
+diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
+index e4219b1..4671cfb 100644
+--- a/drivers/net/wireless/ath/ath10k/spectral.c
++++ b/drivers/net/wireless/ath/ath10k/spectral.c
+@@ -73,6 +73,15 @@ int ath10k_spectral_process_fft(struct ath10k *ar,
+ 	if (bin_len < 64 || bin_len > SPECTRAL_ATH10K_MAX_NUM_BINS)
+ 		return -EINVAL;
+ 
++	/* qca99x0 reports bin size as 68 bytes (64 bytes + 4 bytes) in
++	 * report mode 2. First 64 bytes carries inband tones (-32 to +31)
++	 * and last 4 byte carries band edge detection data (+32) mainly
++	 * used in radar detection purpose. Strip last 4 byte to make bin
++	 * size is valid one.
++	 */
++	if (bin_len == 68)
++		bin_len -= 4;
++
+ 	reg0 = __le32_to_cpu(fftr->reg0);
+ 	reg1 = __le32_to_cpu(fftr->reg1);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 42c0aba..5d19c87 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -6581,6 +6581,8 @@ static const struct wmi_ops wmi_10_4_ops = {
+ 	.gen_vdev_down = ath10k_wmi_op_gen_vdev_down,
+ 	.gen_vdev_set_param = ath10k_wmi_op_gen_vdev_set_param,
+ 	.gen_vdev_install_key = ath10k_wmi_op_gen_vdev_install_key,
++	.gen_vdev_spectral_conf = ath10k_wmi_op_gen_vdev_spectral_conf,
++	.gen_vdev_spectral_enable = ath10k_wmi_op_gen_vdev_spectral_enable,
+ 	.gen_peer_create = ath10k_wmi_op_gen_peer_create,
+ 	.gen_peer_delete = ath10k_wmi_op_gen_peer_delete,
+ 	.gen_peer_flush = ath10k_wmi_op_gen_peer_flush,
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.8.1.2
+
