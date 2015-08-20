@@ -1,108 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58299 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753876AbbHJQPQ (ORCPT
+Received: from mail-io0-f171.google.com ([209.85.223.171]:35811 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbbHTPvW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 12:15:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mwl8k: refactor some conditionals for clarity
-Date: Mon, 10 Aug 2015 12:05:39 -0400
-Message-Id: <1439222739-24545-1-git-send-email-linville@tuxdriver.com> (sfid-20150810_181525_931540_024DA456)
+	Thu, 20 Aug 2015 11:51:22 -0400
+Received: by iodt126 with SMTP id t126so51020759iod.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2015 08:51:22 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <55D5AAA5.1080700@broadcom.com>
+References: <1436553071-32423-1-git-send-email-arend@broadcom.com>
+	<CACna6rwJwjiNKnfjV8cH9_fvE38SWLf5ng8ap15OktUZQhOedg@mail.gmail.com>
+	<55AD2C8F.9010509@broadcom.com>
+	<CACna6rzdE1GubDquszC3jqJjf_UbfPVNrt=oNKSrqj=t9HPBHg@mail.gmail.com>
+	<55CB0ACA.3000109@broadcom.com>
+	<CACna6ryZ6qJY7t12CQjyD1kvkXa5kpQp3J+eyEq4Gn0DVR9TMA@mail.gmail.com>
+	<55D5AAA5.1080700@broadcom.com>
+Date: Thu, 20 Aug 2015 17:51:21 +0200
+Message-ID: <CACna6rxVuhgea8C7KeWbfv31qGn=n=MxnJ+HBW2FHcVbviiYgQ@mail.gmail.com> (sfid-20150820_175125_894750_9947ABBF)
+Subject: Re: [PATCH 0/7] brcmfmac: nvram loading and code rework
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CC [M]  drivers/net/wireless/mwl8k.o
-drivers/net/wireless/mwl8k.c: In function ‘mwl8k_bss_info_changed’:
-drivers/net/wireless/mwl8k.c:3290:2: warning: ‘ap_mcs_rates’ may be used uninitialized in this function [-Wmaybe-uninitialized]
-  memcpy(cmd->mcs_set, mcs_rates, 16);
-  ^
-drivers/net/wireless/mwl8k.c:4987:5: note: ‘ap_mcs_rates’ was declared here
-  u8 ap_mcs_rates[16];
-     ^
+On 20 August 2015 at 12:23, Arend van Spriel <arend@broadcom.com> wrote:
+> On 08/20/2015 01:06 AM, Rafał Miłecki wrote:
+>>
+>> On 12 August 2015 at 10:58, Arend van Spriel <arend@broadcom.com> wrote:
+>>>
+>>> You did a warm reboot of the device, right? There seems to be an issue
+>>> because on OpenWrt the brcmfmac is not unloaded upon warm reboot, which
+>>> makes the device unaccessible. Because on OpenWrt the firmware request is
+>>> synchronous (OpenWrt patch on top of upstream brcmfmac) it results in
+>>> probe
+>>> failing on invalid access making the issue OpenWrt specific. Hante
+>>> created a
+>>> fix for the warm reboot issue.
+>>
+>>
+>> Hante could you share your fix?
+>
+>
+> Hi Rafał,
+>
+> Just sent you the patch privately.
 
-The warning was bogus.  But the conditionals were rather complicated,
-with multiple redundant checks.  This consolidates the checking and
-makes it more readable IMHO.
+Seems to be working nice, thanks! I hope you'll be able to publish it soon :)
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Compile tested only.  Sorry for any duplicates -- I sent the first
-one to the wrong list address!
-
- drivers/net/wireless/mwl8k.c | 49 ++++++++++++++++++++++----------------------
- 1 file changed, 25 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 77361af68b18..9420fc61c2e6 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -5019,35 +5019,36 @@ mwl8k_bss_info_changed_sta(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		memcpy(ap_mcs_rates, ap->ht_cap.mcs.rx_mask, 16);
- 
- 		rcu_read_unlock();
--	}
- 
--	if ((changed & BSS_CHANGED_ASSOC) && vif->bss_conf.assoc &&
--	    !priv->ap_fw) {
--		rc = mwl8k_cmd_set_rate(hw, vif, ap_legacy_rates, ap_mcs_rates);
--		if (rc)
--			goto out;
-+		if (changed & BSS_CHANGED_ASSOC) {
-+			if (!priv->ap_fw) {
-+				rc = mwl8k_cmd_set_rate(hw, vif,
-+							ap_legacy_rates,
-+							ap_mcs_rates);
-+				if (rc)
-+					goto out;
- 
--		rc = mwl8k_cmd_use_fixed_rate_sta(hw);
--		if (rc)
--			goto out;
--	} else {
--		if ((changed & BSS_CHANGED_ASSOC) && vif->bss_conf.assoc &&
--		    priv->ap_fw) {
--			int idx;
--			int rate;
-+				rc = mwl8k_cmd_use_fixed_rate_sta(hw);
-+				if (rc)
-+					goto out;
-+			} else {
-+				int idx;
-+				int rate;
- 
--			/* Use AP firmware specific rate command.
--			 */
--			idx = ffs(vif->bss_conf.basic_rates);
--			if (idx)
--				idx--;
-+				/* Use AP firmware specific rate command.
-+				 */
-+				idx = ffs(vif->bss_conf.basic_rates);
-+				if (idx)
-+					idx--;
- 
--			if (hw->conf.chandef.chan->band == IEEE80211_BAND_2GHZ)
--				rate = mwl8k_rates_24[idx].hw_value;
--			else
--				rate = mwl8k_rates_50[idx].hw_value;
-+				if (hw->conf.chandef.chan->band ==
-+				    IEEE80211_BAND_2GHZ)
-+					rate = mwl8k_rates_24[idx].hw_value;
-+				else
-+					rate = mwl8k_rates_50[idx].hw_value;
- 
--			mwl8k_cmd_use_fixed_rate_ap(hw, rate, rate);
-+				mwl8k_cmd_use_fixed_rate_ap(hw, rate, rate);
-+			}
- 		}
- 	}
- 
 -- 
-2.4.3
-
+Rafał
