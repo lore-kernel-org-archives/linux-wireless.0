@@ -1,39 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:52084 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698AbbHJE0r (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:26809 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752372AbbHTTe6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 00:26:47 -0400
-Date: Mon, 10 Aug 2015 14:19:57 +1000
-From: James Cameron <quozl@laptop.org>
-To: AceLan Kao <acelan.kao@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8723be: disable FW control power save
-Message-ID: <20150810041957.GA7681@us.netrek.org> (sfid-20150810_062702_565452_0808A06C)
-References: <1438917073-5720-1-git-send-email-acelan.kao@canonical.com>
- <55C4DDF5.6010901@lwfinger.net>
- <CAFv23Qk285G47pPVrfUn5izfZyrc-vCSPqJamnoxQMm6Ae9zpQ@mail.gmail.com>
+	Thu, 20 Aug 2015 15:34:58 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
+ TSO segment
+Date: Thu, 20 Aug 2015 19:34:53 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8266E6@hasmsx107.ger.corp.intel.com> (sfid-20150820_213503_133320_6121E66D)
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
+	 <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
+ <1440076269.6610.39.camel@edumazet-glaptop2.roam.corp.google.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E82654B@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFv23Qk285G47pPVrfUn5izfZyrc-vCSPqJamnoxQMm6Ae9zpQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 11:38:09AM +0800, AceLan Kao wrote:
-> I tried using "ips=0" today and found it's not working.
-> I ping 8.8.8.8 and got below message within one hour.
->    ping: sendmsg: No buffer space available
 
-I use both ips=0 and fwlps=0 with Ubuntu kernel and with 4.1, and the
-connection remains stable.
 
-fwlps=0 alone was not enough.
+On 08/20/2015 04:53 PM, Grumbach, Emmanuel wrote:
+> 
+> 
+> On 08/20/2015 04:11 PM, Eric Dumazet wrote:
+>> On Thu, 2015-08-20 at 06:21 +0000, Grumbach, Emmanuel wrote:
+>>>
+>>> On 08/19/2015 11:39 PM, Eric Dumazet wrote:
+>>>> On Wed, 2015-08-19 at 19:17 +0000, Grumbach, Emmanuel wrote:
+>>>>
+>>>>> Hm.. how would net/core/tso.c avoid this?
+>>>>
+>>>> Because a driver using these helpers keep around the original LSO packet
+>>>> and frees it normally at TX completion time.
+>>>>
+>>>
+>>> Which is why I can't really use it. The complexity is that I have to
+>>> (ieee802.11 specification) split an LSO is several 802.11 packets. The
+>>> maximal 802.11 packet I can send under ideal condition is 11K long or
+>>> so. So I *must* generate several 802.11 frames from one single LSO
+>>> packet. OTOH, I can have more than MSS bytes in a 802.11 A-MSDU.
+>>>
+>>
+>> Who said you had to free original packet ? Just keep it around.
+>>
+>> TCP will work better ( check skb_still_in_host_queue() helper if you
+>> want to know why)
+> 
+> I do keep the original skb: it becomes the first 802.11 packet generated
+> from that LSO skb. Thing is that it will be freed first and I wanted the
+> *last packet* to release the pressure on the socket.
+> So I guess that skb_still_in_host_queue will still find it and avoid
+> retransmissions at least until the first skb of the LSO is freed.
+> But unless you are fine with releasing the pressing on the socket as
+> soon as the *first* 802.11 skb is freed, I need that code.
+> 
+> I'll try to look at dev->gso_max_size that you mentioned below. This can
+> really be a game changer for me.
+> 
 
-ips=0 alone was not enough.
 
-Hope that helps.
+Err... no :( It won't work for me because the MSS impacts the number of
+segments which in turns impact the number of time the headers have to be
+copied which impacts... the A-MSDU maximal size which must be bigger
+than gso_max_size. So basically, a connection parameter (MSS) impacts a
+device parameter (gso_max_size). Now, of course, I could give up on
+small MSS connections and skb_gso_segment() skbs whose MSS is smaller
+than the default. This means that I give up on LSO in certain cases...
 
--- 
-James Cameron
-http://quozl.linux.org.au/
+I will get back to the drawing board and check what I can do to use /
+enhance the core infra... But it will be hard to lose functionality /
+efficiency just to use the core infra...
