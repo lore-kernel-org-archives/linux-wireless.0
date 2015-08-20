@@ -1,94 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44621 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753940AbbHJQ1y (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31589 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683AbbHTBVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 12:27:54 -0400
-Date: Mon, 10 Aug 2015 19:27:13 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Chandra Gorentla <csgorentla@gmail.com>
-Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
-	dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
-	sudipm.mukherjee@gmail.com
-Subject: Re: [PATCH] staging: wilc100: Remove pointer and integer comparision
-Message-ID: <20150810155614.GK5096@mwanda> (sfid-20150810_182807_614710_F8893A4F)
-References: <1439133602-9654-1-git-send-email-csgorentla@gmail.com>
- <20150810093943.GI5180@mwanda>
- <20150810152943.GA12993@gcs-HP-Compaq-nx6320>
+	Wed, 19 Aug 2015 21:21:54 -0400
+From: <miaoqing@qti.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH v2 1/2] ath9k: fix AR_RX_FILTER for ar9462/ar9565 when rx stopped
+Date: Thu, 20 Aug 2015 09:21:38 +0800
+Message-ID: <1440033699-11121-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150820_032157_881188_3843B317)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150810152943.GA12993@gcs-HP-Compaq-nx6320>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 08:59:43PM +0530, Chandra Gorentla wrote:
-> I agree with your suggestion
-> that we need to take a broader look.  Please help in understanding
-> how does that broader look is suggesting that the patch is not
-> addressing a right problem.  The gcc version I am using is - 4.8.2.
-> 
-> In the later part of your reply - you felt that there may be a
-> case in which more than the allocated number of bytes may be
-> copied in to the memory pointed to by 'pu8CurrByte' and memory
-> may get corrupted.  From the code in the function I am not seeing
-> that happening.  In the beginning of the function, this pointer
-> variable is assigned a block of memory whose size is
-> '->u32HeadLen' + '->u32TailLen' + 16.
-> 
-> The function is copying 16 individual bytes to this memory;
-> a smaller block of memory of size '->u32HeadLen' is being copied;
-> and an another smaller block of memory of size '->u32TailLen' may
-> be copied based on a condition.  After this last copy, the
-> function increments the pointer by '->u32TailLen' irrespective
-> of last copy takes place or not.  Hence I am not seeing any
-> corruption of the memory.
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-It is an integer overflow.  Try the test.c file I'll include below.
+When rx stopped, AR_RX_FILTER should be cleared, but in
+ath9k_hw_setrxfilter(), ATH9K_RX_FILTER_CONTROL_WRAPPER will always
+be set for ar9462/ar9565.
 
-> 
-> It looks like that the last increment is just an operation that
-> does no harm.  In addition to this the pointer variable
-> 'pu8CurrByte' is just a local variable and it is not being used
-> after the last increment operation of the pointer.
+Fix this by moving the code in ath9k_hw_setrxfilter() to
+ath_calcrxfilter().
 
-It's a pointer to allocated memory.  We call WILC_MALLOC().
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   | 3 ---
+ drivers/net/wireless/ath/ath9k/recv.c | 3 +++
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-This function allocates a buffer, then it copies memory over with the
-memcpy().  The "*pu8CurrByte++ = " statements are copying memory but
-doing endian conversion as well.  (This is not the correct way to do
-endian conversion).
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a31a680..0e2b28c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2760,9 +2760,6 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+-	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
+-		bits |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
+-
+ 	REG_WRITE(ah, AR_RX_FILTER, bits);
+ 
+ 	phybits = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index d3189da..0689f6b 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -424,6 +424,9 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	    AR_SREV_9561(sc->sc_ah))
+ 		rfilt |= ATH9K_RX_FILTER_4ADDRESS;
+ 
++	if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
++		rfilt |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
++
+ 	if (ath9k_is_chanctx_enabled() &&
+ 	    test_bit(ATH_OP_SCANNING, &common->op_flags))
+ 		rfilt |= ATH9K_RX_FILTER_BEACON;
+-- 
+1.9.1
 
-> 
-> After making the change in this patch I just did a 'make'.
-> I do not have the hardware which this driver supports.  So at
-> this point of time, I cannot test your suggestions on wilc1000
-> hardware.  Is there any way I can test this driver code on a
-> old notebook computer?
-
-Don't worry too much about testing this.  Just write small test programs
-to help you understand as much as possible.  We are good at reviewing so
-you aren't going to break the code.
-
-#include <stdio.h>
-
-int main(void)
-{
-	unsigned int u32HeadLen;
-	unsigned int u32TailLen;
-	int s32ValueSize;
-
-	u32HeadLen = 1000;
-	u32TailLen = -1U - 500 - 16 + 1;
-	s32ValueSize = u32HeadLen + u32TailLen + 16;
-
-	printf("Allocating %d bytes.\n", s32ValueSize);
-	printf("Copying %u bytes into a %d byte buffer will corrupt memory.\n",
-		u32HeadLen, s32ValueSize);
-
-	return 0;
-}
-
-regards,
-dan carpenter
