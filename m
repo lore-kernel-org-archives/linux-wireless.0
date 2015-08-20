@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:18432 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbbHTHdX (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:49971 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713AbbHTQjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 03:33:23 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <jude.lee@atmel.com>, <robin.hwang@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 0/5] staging: wilc1000: support 64bit machine and remove warnings
-Date: Thu, 20 Aug 2015 16:32:49 +0900
-Message-ID: <1440055974-9998-1-git-send-email-tony.cho@atmel.com> (sfid-20150820_093330_883204_C09EB767)
+	Thu, 20 Aug 2015 12:39:20 -0400
+Message-ID: <55D602B4.3000409@broadcom.com> (sfid-20150820_183923_990227_9BEBB340)
+Date: Thu, 20 Aug 2015 18:39:16 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH V2 3/7] brcmfmac: Increase nr of supported flowrings.
+References: <1439708139-7527-1-git-send-email-arend@broadcom.com>	<1439708139-7527-4-git-send-email-arend@broadcom.com> <CACna6rzrfGwpNS1nm1wDhGvu5voKMGH4BE1w5ZS0WeQUbgZUAQ@mail.gmail.com>
+In-Reply-To: <CACna6rzrfGwpNS1nm1wDhGvu5voKMGH4BE1w5ZS0WeQUbgZUAQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This includes the remaining patches for 64bits. The driver uses the redundant
-typecasting to communicate with the chipset, which causes several compile
-warnings.
+On 08/20/2015 06:16 PM, Rafał Miłecki wrote:
+> On 16 August 2015 at 08:55, Arend van Spriel <arend@broadcom.com> wrote:
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
+>> index 5551861..3a7d9c2 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.h
+>> @@ -16,7 +16,7 @@
+>>   #define BRCMFMAC_FLOWRING_H
+>>
+>>
+>> -#define BRCMF_FLOWRING_HASHSIZE                256
+>> +#define BRCMF_FLOWRING_HASHSIZE                512             /* has to be 2^x */
+>>   #define BRCMF_FLOWRING_INVALID_ID      0xFFFFFFFF
+>
+> Applying patch *and* switching back to 256 let brcmfmac work again
+> with my BCM43602. Not sure if it helps to understand the problem much.
 
-However, this patch uses the real data type and removes unnecessary typecasting.
-Also, the driver allocates the ID value to the pointer address representing
-the handlers and adds it into the data frames instead of the pointer address.
-In results, the driver sends and gets the data frame to/from the chipset
-together with ID value instead of pointer address as a handler. The ID value is
-vaild from 0 to NUM_CONCURRENT_IFC. Only 0 value is the reserved value to
-terminate a handler and to inform it to chipset.
+Not to me. Maybe Hante gets some ideas, but he is ooo till monday.
 
-This series of patch removes the warnings which 64 bit issue and the redundant
-typecasting cause as well.
-
-Johnny Kim (5):
-  staging: wilc1000: use the real data type
-  staging: wilc1000: add an argument for Handle_SetWfiDrvHandler
-  staging: wilc1000: use id value as argument
-  staging: wilc1000: change address to fixed value
-  staging: wilc1000: define undefined operation mode
-
- drivers/staging/wilc1000/host_interface.c     | 271 ++++++++++++++++++--------
- drivers/staging/wilc1000/host_interface.h     |   2 +
- drivers/staging/wilc1000/linux_wlan.c         |   4 +-
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |   1 -
- 4 files changed, 195 insertions(+), 83 deletions(-)
-
--- 
-1.9.1
+Regards,
+Arend
 
