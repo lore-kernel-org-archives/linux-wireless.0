@@ -1,42 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:35119 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752895AbbHFVrh (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:43604 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbbHTP0o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 17:47:37 -0400
-Received: by wibxm9 with SMTP id xm9so39046337wib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 14:47:36 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 0/4] mac80211: define VHT rate mask logic
-Date: Thu,  6 Aug 2015 23:47:29 +0200
-Message-Id: <1438897653-4629-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150806_234741_020314_8E4D5C3E)
+	Thu, 20 Aug 2015 11:26:44 -0400
+From: Robert Baldyga <r.baldyga@samsung.com>
+To: sameo@linux.intel.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org
+Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nfc@lists.01.org,
+	m.szyprowski@samsung.com, pebolle@tiscali.nl,
+	Robert Baldyga <r.baldyga@samsung.com>
+Subject: [PATCH v3 0/3] nfc: Add driver for Samsung S3FWRN5 NFC Chip
+Date: Thu, 20 Aug 2015 17:25:59 +0200
+Message-id: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com> (sfid-20150820_172800_659435_89F8C80A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to mask vht rates using ratemask configured by the user through
-iw command (e.g. iw dev wlan0 set bitrates vht-mcs-5 2:2,4).
-Remove ieee80211_tx_rate dependency in rate mask code in order to use
-mcs/legacy rate mask logic for station rate table as well.
-This patchset has been tested using mac80211/mt76 driver on
-Buffalo WHR-1166D router running OpenWrt trunk
+Hello,
 
-Lorenzo Bianconi (4):
-  mac80211: remove ieee80211_tx_info from rate_control_apply_mask
-    signature
-  mac80211: remove ieee80211_tx_rate dependency in rate mask code
-  mac80211: define rate_control_apply_mask_ratetbl()
-  mac80211: add rate mask logic for vht rates
+This patchset adds driver for NFC chip Samsung S3FWRN5. First two patches
+are touching NCI core due to some non-standard chip behaviour.
 
- net/mac80211/cfg.c            |  16 ++-
- net/mac80211/debugfs_netdev.c |  34 ++++++
- net/mac80211/ieee80211_i.h    |   5 +
- net/mac80211/iface.c          |  14 ++-
- net/mac80211/rate.c           | 251 ++++++++++++++++++++++++++++++------------
- net/mac80211/vht.c            |  27 +++++
- 6 files changed, 271 insertions(+), 76 deletions(-)
+The first one adds post_setup() handler, which is called after NCI_CORE_INIT
+request. It's because we need to read current firmware version from 
+ndev->manufact_specific_info.
+
+The second one adds nci_core_reset() and nci_core_init() functions which
+are needed to reinit NCI core after updating firmware in pose_setup()
+callback.
+
+Best regards,
+Robert Baldyga
+
+Changelog:
+
+v3:
+- Addressed comments from Samuel Ortiz:
+  - Used nci_prop_cmd and nci_prop_ops to handle proprietary requests
+  - Refactorized s3fwrn5_i2c_nci_read and s3fwrn5_i2c_fw_read
+  - Miscellaneous minor fixes
+- Added patch "NFC: nci: Add post_setup handler"
+- Added patch "NFC: nci: export nci_core_reset and nci_core_init"
+
+v2: http://www.spinics.net/lists/linux-wireless/msg139241.html
+- Addressed comments from Paul Bolle
+
+v1: http://www.spinics.net/lists/kernel/msg2044290.html
+
+Robert Baldyga (3):
+  NFC: nci: Add post_setup handler
+  NFC: nci: export nci_core_reset and nci_core_init
+  nfc: s3fwrn5: Add driver for Samsung S3FWRN5 NFC Chip
+
+ .../devicetree/bindings/net/nfc/s3fwrn5.txt        |  27 ++
+ MAINTAINERS                                        |   6 +
+ drivers/nfc/Kconfig                                |   1 +
+ drivers/nfc/Makefile                               |   1 +
+ drivers/nfc/s3fwrn5/Kconfig                        |  19 +
+ drivers/nfc/s3fwrn5/Makefile                       |  11 +
+ drivers/nfc/s3fwrn5/core.c                         | 219 +++++++++
+ drivers/nfc/s3fwrn5/firmware.c                     | 511 +++++++++++++++++++++
+ drivers/nfc/s3fwrn5/firmware.h                     | 111 +++++
+ drivers/nfc/s3fwrn5/i2c.c                          | 306 ++++++++++++
+ drivers/nfc/s3fwrn5/nci.c                          | 165 +++++++
+ drivers/nfc/s3fwrn5/nci.h                          |  89 ++++
+ drivers/nfc/s3fwrn5/s3fwrn5.h                      |  99 ++++
+ include/net/nfc/nci_core.h                         |   3 +
+ net/nfc/nci/core.c                                 |  18 +
+ 15 files changed, 1586 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/s3fwrn5.txt
+ create mode 100644 drivers/nfc/s3fwrn5/Kconfig
+ create mode 100644 drivers/nfc/s3fwrn5/Makefile
+ create mode 100644 drivers/nfc/s3fwrn5/core.c
+ create mode 100644 drivers/nfc/s3fwrn5/firmware.c
+ create mode 100644 drivers/nfc/s3fwrn5/firmware.h
+ create mode 100644 drivers/nfc/s3fwrn5/i2c.c
+ create mode 100644 drivers/nfc/s3fwrn5/nci.c
+ create mode 100644 drivers/nfc/s3fwrn5/nci.h
+ create mode 100644 drivers/nfc/s3fwrn5/s3fwrn5.h
 
 -- 
-2.1.4
+1.9.1
 
