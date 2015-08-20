@@ -1,59 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:35714 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932202AbbH0MrI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2015 08:47:08 -0400
-Received: by lbcbn3 with SMTP id bn3so10548315lbc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2015 05:47:07 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: change beamformee VHT STS capability
-Date: Thu, 27 Aug 2015 14:47:32 +0200
-Message-Id: <1440679653-20289-1-git-send-email-michal.kazior@tieto.com> (sfid-20150827_144714_708972_32842B02)
+Received: from lists.s-osg.org ([54.187.51.154]:58901 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751955AbbHTVvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2015 17:51:04 -0400
+Subject: Re: [PATCH 00/18] Export SPI and OF module aliases in missing drivers
+To: Brian Norris <computersforpeace@gmail.com>
+References: <1440054451-1223-1-git-send-email-javier@osg.samsung.com>
+ <20150820211152.GI74600@google.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: linux-kernel@vger.kernel.org, Andrzej Hajda <a.hajda@samsung.com>,
+	linux-fbdev@vger.kernel.org,
+	Michael Hennerich <Michael.Hennerich@analog.com>,
+	linux-iio@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Lee Jones <lee.jones@linaro.org>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	linux-mtd@lists.infradead.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	=?UTF-8?Q?S=c3=b8ren_Andersen?= <san@rosetechnology.dk>,
+	devel@driverdev.osuosl.org, Randy Dunlap <rdunlap@infradead.org>,
+	Masanari Iida <standby24x7@gmail.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Devendra Naga <devendra.aaru@gmail.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Stephen Warren <swarren@nvidia.com>,
+	=?UTF-8?Q?Urs_F=c3=a4ssler?= <urs.fassler@bytesatwork.ch>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Aya Mahfouz <mahfouz.saif.elyazal@gmail.com>,
+	George McCollister <george.mccollister@gmail.com>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Manfred Schlaegl <manfred.schlaegl@gmx.at>,
+	linux-omap@vger.kernel.org, Hartmut Knaack <knaack.h@gmx.de>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Antonio Borneo <borneo.antonio@gmail.com>,
+	Andrea Galbusera <gizero@gmail.com>,
+	Michael Welling <mwelling@ieee.org>,
+	Fabian Frederick <fabf@skynet.be>,
+	Mark Brown <broonie@kernel.org>, linux-mmc@vger.kernel.org,
+	linux-spi@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>,
+	David Woodhouse <dwmw2@infradead.org>, netdev@vger.kernel.org,
+	linux-media@vger.kernel.org, Peter Meerwald <pmeerw@pmeerw.net>
+Message-ID: <55D64BBA.7070802@osg.samsung.com> (sfid-20150820_235112_342367_B3FDD117)
+Date: Thu, 20 Aug 2015 23:50:50 +0200
+MIME-Version: 1.0
+In-Reply-To: <20150820211152.GI74600@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
+Hello Brian,
 
-All beamformee supporting chips have the ability to support
-VHT NDP in up to 4 STSs. Change the published beamformee
-STS cap accordingly to 3 as it should be Nsts-1.
+On 08/20/2015 11:11 PM, Brian Norris wrote:
+> On Thu, Aug 20, 2015 at 09:07:13AM +0200, Javier Martinez Canillas wrote:
+>> Patches #1 and #2 solves a), patches #3 to #8 solves b) and patches
+> 
+> ^^^ I'm dying to know how this sentence ends :)
+>
 
-This makes it possible to actually make full use
-of. e.g. a 4SS MU-MIMO capable AP.
+Sigh, I did some last minute restructuring of the cover letter and
+seems I missed a sentence. I meant to said:
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+"and patches #9 to #17 solves c)."
+ 
+>> Patch #18 changes the logic of spi_uevent() to report an OF modalias if
+>> the device was registered using OF. But this patch is included in the
+>> series only as an RFC for illustration purposes since changing that
+>> without first applying all the other patches in this series, will break
+>> module autoloading for the drivers of devices registered using OF but
+>> that lacks an of_match_table. I'll repost patch #18 once all the patches
+>> in this series have landed.
+> 
+> On a more productive note, the patches I've looked at look good to me.
+> The missing aliases are a problem enough that should be fixed (i.e.,
+> part (b)). I'll leave the SPI framework changes to others to comment on.
+>
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 64674c955d44..54ced30f5364 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4074,7 +4074,7 @@ static int ath10k_mac_set_txbf_conf(struct ath10k_vif *arvif)
+Great, thanks a lot for your feedback.
  
- 	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
- 				IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE))
--		value |= SM((ar->num_rf_chains - 1), WMI_TXBF_STS_CAP_OFFSET);
-+		value |= SM(3, WMI_TXBF_STS_CAP_OFFSET);
- 
- 	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
- 				IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE))
-@@ -6804,7 +6804,7 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- 
- 	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
- 				IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)) {
--		val = ar->num_rf_chains - 1;
-+		val = 3;
- 		val <<= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
- 		val &= IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
- 
+> Brian
+> 
+
+Best regards,
 -- 
-2.1.4
-
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
