@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:22981 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752225AbbHRH6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 03:58:33 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/26] iwlwifi: mvm: Enable power management on low-latency bss
-Date: Tue, 18 Aug 2015 10:57:31 +0300
-Message-Id: <1439884656-18146-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100109_662404_8E2061D2)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+	id S1752190AbbHTTyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2015 15:54:54 -0400
+Date: Thu, 20 Aug 2015 21:54:24 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Robert Baldyga <r.baldyga@samsung.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nfc@lists.01.org,
+	m.szyprowski@samsung.com, pebolle@tiscali.nl
+Subject: Re: [PATCH v3 0/3] nfc: Add driver for Samsung S3FWRN5 NFC Chip
+Message-ID: <20150820195424.GA3102@zurbaran.home> (sfid-20150820_215521_092549_192DCA03)
+References: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1440084362-27909-1-git-send-email-r.baldyga@samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+Hi Robert,
 
-Currently the driver disable power management on all low-latency
-interfaces, while it should disable it on WiDi interfaces only.
-Non-P2P interfaces that runs voice and video traffic should enable
-power management.
+On Thu, Aug 20, 2015 at 05:25:59PM +0200, Robert Baldyga wrote:
+> Hello,
+> 
+> This patchset adds driver for NFC chip Samsung S3FWRN5. First two patches
+> are touching NCI core due to some non-standard chip behaviour.
+> 
+> The first one adds post_setup() handler, which is called after NCI_CORE_INIT
+> request. It's because we need to read current firmware version from 
+> ndev->manufact_specific_info.
+> 
+> The second one adds nci_core_reset() and nci_core_init() functions which
+> are needed to reinit NCI core after updating firmware in pose_setup()
+> callback.
+> 
+> Best regards,
+> Robert Baldyga
+> 
+> Changelog:
+> 
+> v3:
+> - Addressed comments from Samuel Ortiz:
+>   - Used nci_prop_cmd and nci_prop_ops to handle proprietary requests
+>   - Refactorized s3fwrn5_i2c_nci_read and s3fwrn5_i2c_fw_read
+>   - Miscellaneous minor fixes
+> - Added patch "NFC: nci: Add post_setup handler"
+> - Added patch "NFC: nci: export nci_core_reset and nci_core_init"
+> 
+> v2: http://www.spinics.net/lists/linux-wireless/msg139241.html
+> - Addressed comments from Paul Bolle
+> 
+> v1: http://www.spinics.net/lists/kernel/msg2044290.html
+> 
+> Robert Baldyga (3):
+>   NFC: nci: Add post_setup handler
+>   NFC: nci: export nci_core_reset and nci_core_init
+>   nfc: s3fwrn5: Add driver for Samsung S3FWRN5 NFC Chip
+All 3 patches applied, thanks.
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/power.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index c4e0890..4645877 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -337,8 +337,8 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK);
- 
--	if (!vif->bss_conf.ps || iwl_mvm_vif_low_latency(mvmvif) ||
--	    !mvmvif->pm_enabled)
-+	if (!vif->bss_conf.ps || !mvmvif->pm_enabled ||
-+	    (iwl_mvm_vif_low_latency(mvmvif) && vif->p2p))
- 		return;
- 
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK);
--- 
-2.1.4
-
+Cheers,
+Samuel.
