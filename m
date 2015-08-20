@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:59537 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752200AbbH0IEy (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:33144 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057AbbHTONW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2015 04:04:54 -0400
-Message-ID: <55DEC4A3.5060001@broadcom.com> (sfid-20150827_100459_861383_00B3D675)
-Date: Thu, 27 Aug 2015 10:04:51 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/12] brcmfmac: multiple interface rework and cleanup
-References: <1440620104-2715-1-git-send-email-arend@broadcom.com> <87egipxkzi.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87egipxkzi.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 20 Aug 2015 10:13:22 -0400
+Message-ID: <1440079999.6610.48.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150820_161330_808162_39FEBC18)
+Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
+ TSO segment
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+Date: Thu, 20 Aug 2015 07:13:19 -0700
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E82654B@hasmsx107.ger.corp.intel.com>
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
+	 <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
+	 <1440076269.6610.39.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E82654B@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/27/2015 09:13 AM, Kalle Valo wrote:
-> Arend van Spriel <arend@broadcom.com> writes:
->
->> This patch series contains the following:
->> * rework code dealing with multiple interfaces.
->> * allow logging firmware console using debug level.
->> * fix crash in error path when probe fails.
->> * fix memory leak in free net devices.
->> * minor code cleanup.
->>
->> The patch series is intended for v4.3 and applies to the master
->> branch of the wireless-drivers-next repository.
->
-> Most likely the merge window starts on Sunday so I'm not able to send
-> these to 4.3 anymore. But if the merge window gets delayed again when
-> I'll send this.
+On Thu, 2015-08-20 at 13:53 +0000, Grumbach, Emmanuel wrote:
 
-Unlikely from what I read in -rc8 announcement, but thanks for the 
-incentive ;-)
+> I do keep the original skb: it becomes the first 802.11 packet generated
+> from that LSO skb. Thing is that it will be freed first and I wanted the
+> *last packet* to release the pressure on the socket.
 
-Regards,
-Arend
+Just change this to free it last. It is that simple.
+
+> So I guess that skb_still_in_host_queue will still find it and avoid
+> retransmissions at least until the first skb of the LSO is freed.
+> But unless you are fine with releasing the pressing on the socket as
+> soon as the *first* 802.11 skb is freed, I need that code.
+> 
+> I'll try to look at dev->gso_max_size that you mentioned below. This can
+> really be a game changer for me.
+
+Honestly, if your TSO patches do not use existing infra, I will NACK
+them.
+
+If existing infra is not good enough, you have the power to change it.
+
+Fully re-implementing TSO (or GRO) in a device driver is a non starter.
+
 
