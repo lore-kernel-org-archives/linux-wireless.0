@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhcavuit01.kulnet.kuleuven.be ([134.58.240.129]:58570 "EHLO
-	cavuit01.kulnet.kuleuven.be" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752162AbbHEOC7 (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:35574 "EHLO
+	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbbHTVUY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 10:02:59 -0400
-From: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
-Subject: [PATCH 5/5] mac80211: Make OCB mode set BSSID
-Date: Wed,  5 Aug 2015 16:02:50 +0200
-Message-Id: <1438783370-9442-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be> (sfid-20150805_160302_138181_B791C3D1)
+	Thu, 20 Aug 2015 17:20:24 -0400
+Received: by iodt126 with SMTP id t126so61454474iod.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2015 14:20:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+Date: Thu, 20 Aug 2015 23:20:23 +0200
+Message-ID: <CACna6rxtHaj-czX6z28UL8LL5VAyxVrEgimn5fVz8NpU5DOwgw@mail.gmail.com> (sfid-20150820_232027_166491_7ADA0632)
+Subject: Re: [PATCH V3 0/6] brcmfmac: nvram loading and code rework
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Perform the BSS_CHANGED_BSSID action when joining an OCB network.
-This is required to set the broadcast BSSID in some network drivers.
+On 20 August 2015 at 22:06, Arend van Spriel <arend@broadcom.com> wrote:
+> This series comprises of following changes:
+> - support NVRAM loading for bcm47xx platform.
+> - revise announced interface combinations and validate against it.
+> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
+> - PCIe fix for handling queue overflow.
+> - support more firmware events (for bcm4339 firmware).
+>
+> The series is intended for v4.3 kernel and applies to the master branch
+> of the wireless-drivers-next repository. Removed patch from this series
+> that reportedly has issue on OpenWrt platform.
 
-Signed-off-by: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>
----
- net/mac80211/ocb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Tested-by: Rafał Miłecki <zajec5@gmail.com>
 
-diff --git a/net/mac80211/ocb.c b/net/mac80211/ocb.c
-index 358d5f9..573b81a 100644
---- a/net/mac80211/ocb.c
-+++ b/net/mac80211/ocb.c
-@@ -179,7 +179,7 @@ int ieee80211_ocb_join(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_ocb *ifocb = &sdata->u.ocb;
--	u32 changed = BSS_CHANGED_OCB;
-+	u32 changed = BSS_CHANGED_OCB | BSS_CHANGED_BSSID;
- 	int err;
- 
- 	if (ifocb->joined == true)
--- 
-1.9.1
-
+No regression with this version, getting platform NVRAM works.
