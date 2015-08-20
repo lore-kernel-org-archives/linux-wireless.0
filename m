@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:35283 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823AbbHSRTj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:18587 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156AbbHTHeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 13:19:39 -0400
-Message-ID: <1440004777.6610.23.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150819_191947_002709_7BFA391B)
-Subject: Re: [RFC v2 0/3] add TSO / A-MSDU TX for iwlwifi
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Wed, 19 Aug 2015 10:19:37 -0700
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E825167@hasmsx107.ger.corp.intel.com>
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439993647.6610.8.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8250B6@hasmsx107.ger.corp.intel.com>
-	 <1440000515.6610.20.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E825167@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 20 Aug 2015 03:34:12 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 5/5] staging: wilc1000: define undefined operation mode
+Date: Thu, 20 Aug 2015 16:32:54 +0900
+Message-ID: <1440055974-9998-6-git-send-email-tony.cho@atmel.com> (sfid-20150820_093417_126817_87F0CEC9)
+In-Reply-To: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
+References: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-08-19 at 17:00 +0000, Grumbach, Emmanuel wrote:
-> 
-> On 08/19/2015 07:08 PM, Eric Dumazet wrote:
-> > On Wed, 2015-08-19 at 15:07 +0000, Grumbach, Emmanuel wrote:
-> > 
-> >> I'll look at it.
-> >> I was almost starting to implement that but then I thought with another
-> >> (good?) reason to use LSO. LSO gives me the guarantee that the packet is
-> >> directed to one peer, which might not be the case with xmit_more since
-> >> we have one Qdisc for several clients in case we are in AP mode.
-> >> Building an A-MSDU for several clients is not possible, at least not for
-> >> several client in the L2 (different MAC addresses).
-> >> LSO avoids this problem completely.
-> > 
-> > Then, simply calling skb_gso_segment() from the driver might be enough,
-> > and less work for you.
-> > 
-> > This would even support TSO on IPv6
-> > 
-> 
-> Well... I did take care of IPv6.
+From: Johnny Kim <johnny.kim@atmel.com>
 
-net/core/tso.c does not yet handle IPv6
+This patch adds new define, IDLE_MODE to change comparison statement which
+is wrong due to typecasting to null.
 
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/host_interface.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4b5e62a..17ecad2 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -754,7 +754,7 @@ static s32 Handle_SetOperationMode(tstrWILC_WFIDrv *drvHandler, tstrHostIfSetOpe
+ 				 get_id_from_handler(pstrWFIDrv));
+ 
+ 
+-	if ((pstrHostIfSetOperationMode->u32Mode) == (u32)NULL)
++	if ((pstrHostIfSetOperationMode->u32Mode) == IDLE_MODE)
+ 		up(&hSemDeinitDrvHandle);
+ 
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 349d5f5..a107377 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -23,6 +23,7 @@
+ #define BIT1                    ((u32)(1 << 1))
+ #define BIT0                    ((u32)(1 << 0))
+ 
++#define IDLE_MODE	0x00
+ #define AP_MODE		0x01
+ #define STATION_MODE	0x02
+ #define GO_MODE	0x03
+-- 
+1.9.1
 
