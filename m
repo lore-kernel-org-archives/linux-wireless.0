@@ -1,57 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:36805 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751803AbbHTTzd (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:18474 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbbHTHde (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 15:55:33 -0400
-Message-ID: <1440100531.6610.63.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150820_215544_212775_C9C57BE9)
-Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
- TSO segment
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Date: Thu, 20 Aug 2015 12:55:31 -0700
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8266E6@hasmsx107.ger.corp.intel.com>
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
-	 <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
-	 <1440076269.6610.39.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E82654B@hasmsx107.ger.corp.intel.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8266E6@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 20 Aug 2015 03:33:34 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <jude.lee@atmel.com>, <robin.hwang@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/5] staging: wilc1000: use the real data type
+Date: Thu, 20 Aug 2015 16:32:50 +0900
+Message-ID: <1440055974-9998-2-git-send-email-tony.cho@atmel.com> (sfid-20150820_093340_851519_CB6821DB)
+In-Reply-To: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
+References: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-08-20 at 19:34 +0000, Grumbach, Emmanuel wrote:
+From: Johnny Kim <johnny.kim@atmel.com>
 
-> 
-> Err... no :( It won't work for me because the MSS impacts the number of
-> segments which in turns impact the number of time the headers have to be
-> copied which impacts... the A-MSDU maximal size which must be bigger
-> than gso_max_size. So basically, a connection parameter (MSS) impacts a
-> device parameter (gso_max_size). Now, of course, I could give up on
-> small MSS connections and skb_gso_segment() skbs whose MSS is smaller
-> than the default. This means that I give up on LSO in certain cases...
-> 
+This patch changes the type of gu8FlushedJoinReqDrvHandler with his real
+data type becasue typecasting is not necessary. In result, typecasting
+which is not necessary and some building warnings is removed.
 
-We also have dev->gso_max_segs for this kind of problems.
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Really, you should take closer look.
-
-And _if_ some LSO packets must be segmented using skb_gso_segment()
-in some rare cases, who cares ?
-
-> I will get back to the drawing board and check what I can do to use /
-> enhance the core infra... But it will be hard to lose functionality /
-> efficiency just to use the core infra...
-
-Please take your time. Pushing hard some local hacks is not sustainable.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 66fa677..0913d18 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -578,7 +578,7 @@ u8 gu8Flushed11iMode;
+ u8 gu8FlushedAuthType;
+ u32 gu32FlushedJoinReqSize;
+ u32 gu32FlushedInfoElemAsocSize;
+-u32 gu8FlushedJoinReqDrvHandler;
++tstrWILC_WFIDrv *gu8FlushedJoinReqDrvHandler;
+ #define REAL_JOIN_REQ 0
+ #define FLUSHED_JOIN_REQ 1
+ #define FLUSHED_BYTE_POS 79     /* Position the byte indicating flushing in the flushed request */
+@@ -1940,7 +1940,7 @@ static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler, tstrHostIFconnectAttr *ps
+ 	/*BugID_5137*/
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->pu8ssid, 7)) {
+ 		memcpy(gu8FlushedJoinReq, pu8CurrByte, gu32FlushedJoinReqSize);
+-		gu8FlushedJoinReqDrvHandler = (u32)pstrWFIDrv;
++		gu8FlushedJoinReqDrvHandler = pstrWFIDrv;
+ 	}
+ 
+ 	PRINT_D(GENERIC_DBG, "send HOST_IF_WAITING_CONN_RESP\n");
+@@ -2191,11 +2191,11 @@ static s32 Handle_ConnectTimeout(tstrWILC_WFIDrv *drvHandler)
+ 	memset(u8ConnectedSSID, 0, ETH_ALEN);
+ 	/*BugID_5213*/
+ 	/*Freeing flushed join request params on connect timeout*/
+-	if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++	if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 		kfree(gu8FlushedJoinReq);
+ 		gu8FlushedJoinReq = NULL;
+ 	}
+-	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++	if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 		kfree(gu8FlushedInfoElemAsoc);
+ 		gu8FlushedInfoElemAsoc = NULL;
+ 	}
+@@ -2617,11 +2617,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler, tstrRcvdGnrlAsy
+ 			/*BugID_5213*/
+ 			/*Freeing flushed join request params on receiving*/
+ 			/*MAC_DISCONNECTED while connected*/
+-			if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++			if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 				kfree(gu8FlushedJoinReq);
+ 				gu8FlushedJoinReq = NULL;
+ 			}
+-			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++			if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 				kfree(gu8FlushedInfoElemAsoc);
+ 				gu8FlushedInfoElemAsoc = NULL;
+ 			}
+@@ -3117,11 +3117,11 @@ static void Handle_Disconnect(tstrWILC_WFIDrv *drvHandler)
+ 
+ 
+ 		/*BugID_5137*/
+-		if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++		if (gu8FlushedJoinReq != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 			kfree(gu8FlushedJoinReq);
+ 			gu8FlushedJoinReq = NULL;
+ 		}
+-		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == (u32)drvHandler) {
++		if (gu8FlushedInfoElemAsoc != NULL && gu8FlushedJoinReqDrvHandler == drvHandler) {
+ 			kfree(gu8FlushedInfoElemAsoc);
+ 			gu8FlushedInfoElemAsoc = NULL;
+ 		}
+-- 
+1.9.1
 
