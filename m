@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33496 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbbHQNpU (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:57227 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752679AbbHTVOb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 09:45:20 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: wake up queue upon vif creation
-References: <1438931301-27081-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 17 Aug 2015 16:45:08 +0300
-In-Reply-To: <1438931301-27081-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 7 Aug 2015 09:08:21 +0200")
-Message-ID: <87y4hado63.fsf@kamboji.qca.qualcomm.com> (sfid-20150817_154529_081458_D814B8CB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 20 Aug 2015 17:14:31 -0400
+Date: Thu, 20 Aug 2015 14:14:30 -0700 (PDT)
+Message-Id: <20150820.141430.1615778147705552773.davem@davemloft.net> (sfid-20150820_231438_697231_82751DDF)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2015-08-19
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87pp2ja6ar.fsf@kamboji.qca.qualcomm.com>
+References: <87pp2ja6ar.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Wed, 19 Aug 2015 14:03:56 +0300
 
-> Vif's vdev_id is used as queue number. However due
-> to the tx pausing design in ath10k it was possible
-> for a new interface to be created with its tx
-> queue stopped (via ieee80211_stop_queues). This
-> could in turn leave the interface inoperable until
-> ath10k_mac_tx_unlock() was called.
->
-> This problem only affected multi-vif scenarios when
-> new interfaces were created some time later after
-> other interfaces have been running for some time
-> and had Tx queue full at some point prior.
->
-> Possible manifestation of the bug was
-> authentication timeout for a client vif.
->
-> Fixes: 96d828d45e16 ("ath10k: rework tx queue locking")
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> here's one more pull request for 4.3. More info in the signed tag below.
+> 
+> This time I had to merge mac80211-next.git due to some iwlwifi
+> dependencies and apparently that broke git-request-pull's diffstat
+> again, it was showing changes which were not really coming from my tree.
+> I think that's just a bug in my old git and really should update the
+> tool. This time I just fixed the diffstat manually.
+> 
+> But please be extra careful with this pull request and please let me
+> know if you have any problems.
+> 
+> The following changes since commit 8f9c98df949333f08b74e5df1caacf7e2c5e8552:
+> 
+>   mac80211: fix BIT position for TDLS WIDE extended cap (2015-08-14 17:49:53 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2015-08-19
 
-Thanks, applied.
-
--- 
-Kalle Valo
+Pulled, thanks.  I'll double check what I got to make sure it isn't
+unexpected.
