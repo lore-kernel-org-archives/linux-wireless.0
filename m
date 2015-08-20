@@ -1,81 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:34025 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbbHSG7x (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36600 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbbHTNLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 02:59:53 -0400
-Received: by paccq16 with SMTP id cq16so107276168pac.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:53 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 13/13] staging: wilc1000: rename WILC_MsgQueueDestroy to wilc_mq_destroy
-Date: Wed, 19 Aug 2015 15:59:08 +0900
-Message-Id: <1439967548-25876-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_090108_328022_8D0B6A17)
-In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 20 Aug 2015 09:11:12 -0400
+Message-ID: <1440076269.6610.39.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150820_151120_465415_155D2EBB)
+Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
+ TSO segment
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+Date: Thu, 20 Aug 2015 06:11:09 -0700
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
+	 <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_MsgQueueDestroy to wilc_mq_destroy to
-shorten function name and avoid CamelCase.
+On Thu, 2015-08-20 at 06:21 +0000, Grumbach, Emmanuel wrote:
+> 
+> On 08/19/2015 11:39 PM, Eric Dumazet wrote:
+> > On Wed, 2015-08-19 at 19:17 +0000, Grumbach, Emmanuel wrote:
+> > 
+> >> Hm.. how would net/core/tso.c avoid this?
+> > 
+> > Because a driver using these helpers keep around the original LSO packet
+> > and frees it normally at TX completion time.
+> > 
+> 
+> Which is why I can't really use it. The complexity is that I have to
+> (ieee802.11 specification) split an LSO is several 802.11 packets. The
+> maximal 802.11 packet I can send under ideal condition is 11K long or
+> so. So I *must* generate several 802.11 frames from one single LSO
+> packet. OTOH, I can have more than MSS bytes in a 802.11 A-MSDU.
+> 
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/wilc_msgqueue.c  | 2 +-
- drivers/staging/wilc1000/wilc_msgqueue.h  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Who said you had to free original packet ? Just keep it around.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f0a1383..d411847 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6616,7 +6616,7 @@ _fail_timer_2:
- 	del_timer_sync(&pstrWFIDrv->hScanTimer);
- 	kthread_stop(HostIFthreadHandler);
- _fail_mq_:
--	WILC_MsgQueueDestroy(&gMsgQHostIF);
-+	wilc_mq_destroy(&gMsgQHostIF);
- _fail_:
- 	return s32Error;
- 
-@@ -6717,7 +6717,7 @@ s32 host_int_deinit(tstrWILC_WFIDrv *hWFIDrv)
- 
- 		down(&hSemHostIFthrdEnd);
- 
--		WILC_MsgQueueDestroy(&gMsgQHostIF);
-+		wilc_mq_destroy(&gMsgQHostIF);
- 		msgQ_created = 0;
- 	}
- 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 6015098..76d2e63 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -24,7 +24,7 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
-  *  @note		copied from FLO glue implementatuion
-  *  @version		1.0
-  */
--int WILC_MsgQueueDestroy(WILC_MsgQueueHandle *pHandle)
-+int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- {
- 	pHandle->bExiting = true;
- 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 143fba4..fc65dfe 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -76,6 +76,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
-  *  @date		30 Aug 2010
-  *  @version		1.0
-  */
--int WILC_MsgQueueDestroy(WILC_MsgQueueHandle *pHandle);
-+int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle);
- 
- #endif
--- 
-1.9.1
+TCP will work better ( check skb_still_in_host_queue() helper if you
+want to know why)
+
+> Maybe what would help would be to be able to dynamically change the
+> maximal size of an LSO packet. That would allow the wifi driver to
+> ensure that the LSO can fit in a single 802.11 packet. Note that since
+> the maximal length of the A-MSDU can vary based on link conditions
+> (since there is only one CRC for the whole A-MSDU, you don't want long
+> A-MSDUs in bad link conditions) the driver would need to be able to tell
+> the TCP stack to modify the length of an LSO packet.
+> To me, this sounds to be ... an overkill?
+
+It is already doable. Check dev->gso_max_size ( and
+netif_set_gso_max_size())
+
+Make sure you do not reinvent the wheel ;)
+
 
