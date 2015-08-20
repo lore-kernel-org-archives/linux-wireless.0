@@ -1,85 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58203 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbbHSTMg convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:61470 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbbHTNWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 15:12:36 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
- TSO segment
-Date: Wed, 19 Aug 2015 19:12:29 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8253B0@hasmsx107.ger.corp.intel.com> (sfid-20150819_211404_125862_09DD419F)
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
- <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
- <55D4D495.9070705@cogentembedded.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 20 Aug 2015 09:22:41 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Oscar Rydberg <oscarrydberg@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	ath10k@lists.infradead.org, twilightrook@gmail.com,
+	vvanpo@gmail.com, linux-wireless@vger.kernel.org,
+	joseph.salisbury@canonical.com
+Subject: Re: [PATCH/RFT 0/2] ath10k: add qca6164 support
+Date: Thu, 20 Aug 2015 15:22:11 +0200
+Message-ID: <2368480.ClS0E9V45b@wuerfel> (sfid-20150820_152245_249908_259669ED)
+In-Reply-To: <CAAay3RQ7N4CFpY3ffxc83Xh2rPDFxne9DZKi+Pay4-Z-+XQ5Bg@mail.gmail.com>
+References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com> <CAAay3RQ7N4CFpY3ffxc83Xh2rPDFxne9DZKi+Pay4-Z-+XQ5Bg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tuesday 18 August 2015 11:52:45 Oscar Rydberg wrote:
+> I can confirm this patch did it for my Lenovo Yoga 3 14 with QCA6164, the
+> WLAN interface is now alive, up and running perfectly fine!
+> (After running modprobe -r ideapad-laptop that is, should anyone have
+> trouble enabling it)
+> 
+> I had tried all the board.bin files from the windows drivers before, so the
+> added sanity check seems to be what finally solved it.
 
-On 08/19/2015 10:10 PM, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 08/19/2015 03:59 PM, Emmanuel Grumbach wrote:
-> 
->> This allows to release the backpressure on the socket only
->> when the last segment is released.
->> Now the truesize looks like this:
->> if the truesize of the original skb is 65420, all the
->> segments will have a truesize of 704 (skb itself) and the
->> last one will have 65420.
->>
->> Change-Id: I3c894cf2afc0aedfe7b2a5b992ba41653ff79c0e
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> ---
->>   drivers/net/wireless/iwlwifi/mvm/tx.c | 17 ++++++++++++++++-
->>   1 file changed, 16 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
->> index 5046833..046e50d 100644
->> --- a/drivers/net/wireless/iwlwifi/mvm/tx.c
->> +++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-> [...]
->> @@ -1034,6 +1035,20 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
->>   		}
->>
->>   		__skb_queue_tail(mpdus_skb, skb);
->> +		sum_truesize += skb->truesize;
->> +	}
->> +
->> +	/* Release the backpressure on the socket only when
->> +	 * the last segment is released.
->> +	 */
->> +	if (skb_gso->destructor == sock_wfree) {
+I hope to test it in my Yoga 3 11 (1170) in the next days. Meanwhile, what is
+the problem you see with the ideapad-laptop driver? I have recently submitted
+a couple of bug fixes for the Yoga 1170, can you try if the patch below
+fixes this for you?
 
-I need to change the destructor function here as per Eric's comment.
+	Arnd
+	
+commit 9d6d311add697014bdccb18d625db7e38676adbf
+Author: Arnd Bergmann <arnd@arndb.de>
+Date:   Sat Jun 13 15:13:11 2015 +0200
 
->> +		struct sk_buff *tail = mpdus_skb->prev;
->> +
->> +		swap(tail->truesize, skb_gso->truesize);
->> +		swap(tail->destructor, skb_gso->destructor);
->> +		swap(tail->sk, skb_gso->sk);
->> +                atomic_add(sum_truesize - skb_gso->truesize,
-> 
->     Please indent using tabs, not spaces.
+    ideapad: add rfkill whitelist entry for Yoga 3 1170
+    
+    This adds one more entry to the whitelist of machines that do not have
+    a physical rfkill switch. Unfortunately, the Yoga 3 generation seems
+    to use upper-case letters for the YOGA 3 Pro-1370, while it uses normal
+    capitalization for its Yoga 3 1170 sibling.
+    
+    In order to catch all variants of the Yoga 3, I'm now using both strings
+    as wildcards here, which should also cover the 1470 model, and possible
+    changes in the string that could happen in firmware updates.
+    
+    Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-I am happy this is the only flaw you found ;)
+diff --git a/drivers/platform/x86/ideapad-laptop.c b/drivers/platform/x86/ideapad-laptop.c
+index cb7cd8d79329..8e455c1429ee 100644
+--- a/drivers/platform/x86/ideapad-laptop.c
++++ b/drivers/platform/x86/ideapad-laptop.c
+@@ -855,7 +855,14 @@ static const struct dmi_system_id no_hw_rfkill_list[] = {
+ 		.ident = "Lenovo Yoga 3 Pro 1370",
+ 		.matches = {
+ 			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+-			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo YOGA 3 Pro-1370"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo YOGA 3"),
++		},
++	},
++	{
++		.ident = "Lenovo Yoga 3 1170 / 1470",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "Lenovo Yoga 3"),
+ 		},
+ 	},
+ 	{}
 
-Sure - I'll fix. And I'll remove the Change-ID and checkpatch will be
-happy. No worries ;)
-
-> 
->> +                           &skb_gso->sk->sk_wmem_alloc);
->>   	}
->>
->>   	ret = 0;
-> 
-> MBR, Sergei
-> 
-> 
