@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:34597 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398AbbHNJGD (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:46334 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752447AbbHTN14 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 05:06:03 -0400
-Received: by wicne3 with SMTP id ne3so12661032wic.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2015 02:06:00 -0700 (PDT)
-From: Adrien Schildknecht <adrien+dev@schischi.me>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com
-Cc: ilw@linux.intel.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Adrien Schildknecht <adrien+dev@schischi.me>
-Subject: [PATCH v2] iwlwifi: out-of-bounds access in iwl_init_sband_channels
-Date: Fri, 14 Aug 2015 11:05:46 +0200
-Message-Id: <1439543146-18938-1-git-send-email-adrien+dev@schischi.me> (sfid-20150814_110640_191108_23F8DD83)
-In-Reply-To: <87h9o2l4ts.fsf@kamboji.qca.qualcomm.com>
-References: <87h9o2l4ts.fsf@kamboji.qca.qualcomm.com>
+	Thu, 20 Aug 2015 09:27:56 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [RFC v3 1/3] iwlwifi: mvm: add real TSO implementation
+Date: Thu, 20 Aug 2015 13:27:48 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8264A2@hasmsx107.ger.corp.intel.com> (sfid-20150820_152803_523749_FD486BE2)
+References: <1440058544-20342-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1440058544-20342-2-git-send-email-emmanuel.grumbach@intel.com>
+ <1440076363.6610.40.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-KASan error report:
-==================================================================
-BUG: KASan: out of bounds access in iwl_init_sband_channels+0x207/0x260 [iwlwifi] at addr ffff8800c2d0aac8
-Read of size 4 by task modprobe/329
-==================================================================
 
-Both loops of this function compare data from the 'chan' array and then
-check if the index is valid.
 
-The 2 conditions should be inverted to avoid an out-of-bounds access.
+On 08/20/2015 04:13 PM, Eric Dumazet wrote:
+> On Thu, 2015-08-20 at 11:15 +0300, Emmanuel Grumbach wrote:
+>> The segmentation is done completely in software. The
+>> driver creates several MPDUs out of a single large send.
+>> Each MPDU is a newly allocated SKB.
+>> A page is allocated to create the headers that need to be
+>> duplicated (SNAP / IP / TCP). The WiFi header is in the
+>> header of the newly created SKBs.
+>>
+>> type=feature
+>>
+>> Change-Id: I238ffa79cacc5bbdacdfbf3e9673c8d4f02b462a
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> ---
+>>  drivers/net/wireless/iwlwifi/mvm/tx.c | 513 +++++++++++++++++++++++++++++++---
+>>  1 file changed, 481 insertions(+), 32 deletions(-)
+> 
+> 
+> Ouch again.
+> 
+> This will be a NACK. Sorry.
+> 
+> 
 
-Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+To be honest, I don't see why. No matter how you look at it, you need to
+add headers. And these headers need to sit on some memory that is not
+yet allocated. skb_gso_segment allocates new skb which is a memory
+allocation.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-index 21302b6..acc3d18 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-@@ -713,12 +713,12 @@ int iwl_init_sband_channels(struct iwl_nvm_data *data,
- 	struct ieee80211_channel *chan = &data->channels[0];
- 	int n = 0, idx = 0;
- 
--	while (chan->band != band && idx < n_channels)
-+	while (idx < n_channels && chan->band != band)
- 		chan = &data->channels[++idx];
- 
- 	sband->channels = &data->channels[idx];
- 
--	while (chan->band == band && idx < n_channels) {
-+	while (idx < n_channels && chan->band == band) {
- 		chan = &data->channels[++idx];
- 		n++;
- 	}
--- 
-2.5.0
-
+I looked at ethernet/marvell/mvneta.c (which uses net/core/tso.c) and
+they pre-allocate DMA coherent memory for the additional headers they
+create. I can have pre-allocated pages if you want.
