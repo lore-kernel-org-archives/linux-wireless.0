@@ -1,74 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:33947 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320AbbHMTsp (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:36196 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751284AbbHTGVt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 15:48:45 -0400
-Received: by oip136 with SMTP id 136so32597644oip.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 12:48:44 -0700 (PDT)
+	Thu, 20 Aug 2015 02:21:49 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ido@wizery.com" <ido@wizery.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+Subject: Re: [RFC v2 3/3] iwlwifi: mvm: transfer the truesize to the last
+ TSO segment
+Date: Thu, 20 Aug 2015 06:21:44 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E8257BD@hasmsx107.ger.corp.intel.com> (sfid-20150820_082156_596508_E52B873A)
+References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439989181-4444-4-git-send-email-emmanuel.grumbach@intel.com>
+	 <1439994266.6610.14.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32E8253CF@hasmsx107.ger.corp.intel.com>
+ <1440016762.6610.33.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1439490787.2114.36.camel@sipsolutions.net>
-References: <1438292115-39495-1-git-send-email-filbranden@google.com>
- <1439456484.2114.6.camel@sipsolutions.net> <CADU+-uDS2C4w-dcbR8Rxx+jRfG7kNvu8JTncH-fxDnSp5NOBfQ@mail.gmail.com>
- <1439490787.2114.36.camel@sipsolutions.net>
-From: enh <enh@google.com>
-Date: Thu, 13 Aug 2015 12:48:24 -0700
-Message-ID: <CAJgzZoo3ifnocO84uMLa1=LKQjGWm_J3WTsw0xO2skPG9gDtng@mail.gmail.com> (sfid-20150813_214848_214634_E98AA6D6)
-Subject: Re: [PATCH 0/2] iw: fixes to Android.mk to include "iw" in AOSP builds
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Filipe Brandenburger <filbranden@google.com>,
-	Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Christopher Wiley <wiley@google.com>,
-	Ying Wang <wangying@google.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 13, 2015 at 11:33 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2015-08-13 at 09:55 -0700, Filipe Brandenburger wrote:
->
->> Long term, considering this is in AOSP and is part of eng/userdebug
->> builds, it's likely to be automatically available in future versions
->> of Android.
->
-> Yeah, but most vendors don't actually build/run/ship AOSP nor
-> necessarily an unmodified iw, so it's likely not all that helpful.
 
-i think you misunderstand what AOSP is. this code is currently in AOSP
-master, and thus in internal master, and thus in a future release.
 
->> We ended up having to tweak the Android.mk again in the AOSP tree,
->> since the current one is doing an "include" of the external Makefile,
->> which in turns overrides the default "clean" rule and leaks some
->> pattern rules such as %.o, etc. which affect the rest of Android
->> build. For more details, please take a look at this Gerrit:
->> https://android-review.googlesource.com/166104
+On 08/19/2015 11:39 PM, Eric Dumazet wrote:
+> On Wed, 2015-08-19 at 19:17 +0000, Grumbach, Emmanuel wrote:
+> 
+>> Hm.. how would net/core/tso.c avoid this?
+> 
+> Because a driver using these helpers keep around the original LSO packet
+> and frees it normally at TX completion time.
+> 
+
+Which is why I can't really use it. The complexity is that I have to
+(ieee802.11 specification) split an LSO is several 802.11 packets. The
+maximal 802.11 packet I can send under ideal condition is 11K long or
+so. So I *must* generate several 802.11 frames from one single LSO
+packet. OTOH, I can have more than MSS bytes in a 802.11 A-MSDU.
+
+Maybe what would help would be to be able to dynamically change the
+maximal size of an LSO packet. That would allow the wifi driver to
+ensure that the LSO can fit in a single 802.11 packet. Note that since
+the maximal length of the A-MSDU can vary based on link conditions
+(since there is only one CRC for the whole A-MSDU, you don't want long
+A-MSDUs in bad link conditions) the driver would need to be able to tell
+the TCP stack to modify the length of an LSO packet.
+To me, this sounds to be ... an overkill?
+
+I'll sum up all this considerations in the v3 I'll send later today.
+
+>> I can't see anything related to truesize there.
+>> Note that this work since it is guaranteed that we release the skbs in
+>> order.
 >>
->> I'm cc'ing Ying who spotted the problem and suggested the changes.
->
-> Thanks, but I'm not going to apply that patch in my tree - I don't want
-> to have to worry about the duplication of LOCAL_SRC_FILES.
->
->> One problem with the current approach is that there's duplication of
->> the names of the source files between Android.mk and Makefile, I was
->> thinking perhaps we could introduce a common.mk or sources.mk that's
->> included from both and only has the variables that can be used by
->> both? Suggestions are welcome.
->
-> That seems reasonable.
->
->> As mentioned in the initial thread, one option is to drop Android.mk
->> from upstream altogether and maintain it in our AOSP downstream.
->
-> Given what I just said above about vendor builds etc. not being AOSP,
-> that probably wouldn't be all that helpful; I'm pretty sure it'd make
-> our life more difficult so I don't really like that idea much.
->
-> johannes
+>>>
+>>> (BTW TCP packets do not have sock_wfree as destructor but tcp_wfree(),
+>>> yet we want backpressure mostly for TCP stack (TCP Small Queues))
+>>>
+>>>
+>>
+>> I am not sure I follow here.
+>> You want me to test:
+>> if (skb_gso->destructor == tcp_wfree) ?
+> 
+> 
+> Yes.
+> 
+> Look for example at tcp_gso_segment() (called from skb_gso_segment())
+> 
+> copy_destructor = gso_skb->destructor == tcp_wfree;
+> ...
+>         /* Following permits TCP Small Queues to work well with GSO :
+>          * The callback to TCP stack will be called at the time last frag
+>          * is freed at TX completion, and not right now when gso_skb
+>          * is freed by GSO engine
+>          */
+>         if (copy_destructor) {
+>                 swap(gso_skb->sk, skb->sk);
+>                 swap(gso_skb->destructor, skb->destructor);
+>                 sum_truesize += skb->truesize;
+>                 atomic_add(sum_truesize - gso_skb->truesize,
+>                            &skb->sk->sk_wmem_alloc);
+>         }
+> 
+> 
+>>
+>> I checked that code using iperf and saw that I don't get into this if,
+>> but I (probably wrongly) assumed that other applications would set a
+>> flag on the socket (forgive my ignorance) that would make this if be taken.
+> 
+> If you do not see skb->destructor == tcp_wfree, then something is
+> definitely wrong on your setup.
+> 
 
+I'll check this today. Thanks.
 
-
--- 
-Elliott Hughes - http://who/enh - http://jessies.org/~enh/
-Android native code/tools questions? Mail me/drop by/add me as a reviewer.
+> 
+> 
+> 
