@@ -1,104 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61023 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753190AbbHOTkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2015 15:40:52 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 8/9] mac80211: avoid VHT usage with no 80MHz chans allowed
-Date: Sat, 15 Aug 2015 22:39:53 +0300
-Message-Id: <1439667594-13632-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150815_214055_356039_9F328248)
-In-Reply-To: <1439667594-13632-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1439667594-13632-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45942 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895AbbHTUGO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2015 16:06:14 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V3 6/6] brcmfmac: Add support for host platform NVRAM loading.
+Date: Thu, 20 Aug 2015 22:06:08 +0200
+Message-ID: <1440101168-2252-7-git-send-email-arend@broadcom.com> (sfid-20150820_220618_850268_062D38CF)
+In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Currently if 80MHz channels are not allowed for use, the VHT IE is not
-included in the probe request for an AP. This is not good enough if the
-AP is configured with the wrong regulatory and supports VHT even where
-prohibited or in TDLS scenarios.
-Mark the ifmgd with the DISABLE_VHT flag for the misbehaving-AP case, and
-unset VHT support from the peer-station entry for the TDLS case.
+Host platforms such as routers supported by OpenWRT can
+support NVRAM reading directly from internal NVRAM store.
+With this patch the nvram load routines will fall back to
+this method when there is no nvram file and support is
+available in the kernel.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/mlme.c | 16 ++++++++++++++++
- net/mac80211/vht.c  | 15 +++++++++++++++
- 2 files changed, 31 insertions(+)
+V2:
+ - addressed comments from Rafał.
+V3:
+ - remove redundant braces.
+ - move bcm47xx_release_contents() call.
+---
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 39 +++++++++++++---------
+ 1 file changed, 24 insertions(+), 15 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 705ef1d..cd7e55e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4267,6 +4267,8 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_supported_band *sband;
- 	struct cfg80211_chan_def chandef;
- 	int ret;
-+	u32 i;
-+	bool have_80mhz;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 743f16b..971920f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -19,6 +19,7 @@
+ #include <linux/device.h>
+ #include <linux/firmware.h>
+ #include <linux/module.h>
++#include <linux/bcm47xx_nvram.h>
  
- 	sband = local->hw.wiphy->bands[cbss->channel->band];
+ #include "debug.h"
+ #include "firmware.h"
+@@ -426,18 +427,32 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 	struct brcmf_fw *fwctx = ctx;
+ 	u32 nvram_length = 0;
+ 	void *nvram = NULL;
++	u8 *data = NULL;
++	size_t data_len;
++	bool raw_nvram;
  
-@@ -4317,6 +4319,20 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+	/* Allow VHT if at least one channel on the sband supports 80 MHz */
-+	have_80mhz = false;
-+	for (i = 0; i < sband->n_channels; i++) {
-+		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
-+						IEEE80211_CHAN_NO_80MHZ))
-+			continue;
-+
-+		have_80mhz = true;
-+		break;
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
+-	if (!fw && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+-		goto fail;
++	if (fw && fw->data) {
++		data = (u8 *)fw->data;
++		data_len = fw->size;
++		raw_nvram = false;
++	} else {
++		data = bcm47xx_nvram_get_contents(&data_len);
++		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
++			goto fail;
++		raw_nvram = true;
 +	}
-+
-+	if (!have_80mhz)
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
-+
- 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
- 						     cbss->channel,
- 						     ht_cap, ht_oper, vht_oper,
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 834ccdb..ff1c798 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -120,6 +120,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_sta_vht_cap *vht_cap = &sta->sta.vht_cap;
- 	struct ieee80211_sta_vht_cap own_cap;
- 	u32 cap_info, i;
-+	bool have_80mhz;
  
- 	memset(vht_cap, 0, sizeof(*vht_cap));
+-	if (fw) {
+-		nvram = brcmf_fw_nvram_strip(fw->data, fw->size, &nvram_length,
++	if (data)
++		nvram = brcmf_fw_nvram_strip(data, data_len, &nvram_length,
+ 					     fwctx->domain_nr, fwctx->bus_nr);
++
++	if (raw_nvram)
++		bcm47xx_nvram_release_contents(data);
++	if (fw)
+ 		release_firmware(fw);
+-		if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+-			goto fail;
+-	}
++	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
++		goto fail;
  
-@@ -129,6 +130,20 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
+ 	fwctx->done(fwctx->dev, fwctx->code, nvram, nvram_length);
+ 	kfree(fwctx);
+@@ -473,15 +488,9 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
+ 	if (!ret)
  		return;
  
-+	/* Allow VHT if at least one channel on the sband supports 80 MHz */
-+	have_80mhz = false;
-+	for (i = 0; i < sband->n_channels; i++) {
-+		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
-+						IEEE80211_CHAN_NO_80MHZ))
-+			continue;
-+
-+		have_80mhz = true;
-+		break;
-+	}
-+
-+	if (!have_80mhz)
-+		return;
-+
- 	/*
- 	 * A VHT STA must support 40 MHz, but if we verify that here
- 	 * then we break a few things - some APs (e.g. Netgear R6300v2
+-	/* when nvram is optional call .done() callback here */
+-	if (fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL) {
+-		fwctx->done(fwctx->dev, fw, NULL, 0);
+-		kfree(fwctx);
+-		return;
+-	}
++	brcmf_fw_request_nvram_done(NULL, fwctx);
++	return;
+ 
+-	/* failed nvram request */
+-	release_firmware(fw);
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+ 	device_release_driver(fwctx->dev);
 -- 
-2.1.4
+1.9.1
 
