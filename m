@@ -1,62 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:35320 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754301AbbHCSyK (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:53163 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbbHTUGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2015 14:54:10 -0400
-Received: by obbop1 with SMTP id op1so106251396obb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:54:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH NEXT 0/7] Make changes in rtlwifi and dependent drivers
-Date: Mon,  3 Aug 2015 13:53:45 -0500
-Message-Id: <1438628032-5865-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150803_205413_969564_8E91539E)
+	Thu, 20 Aug 2015 16:06:14 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V3 3/6] brcmfmac: make use of cfg80211_check_combinations()
+Date: Thu, 20 Aug 2015 22:06:05 +0200
+Message-ID: <1440101168-2252-4-git-send-email-arend@broadcom.com> (sfid-20150820_220621_317634_42693BC9)
+In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Realtek engineers have suggested several improvements to this family
-of drivers. The changes include:
+Use cfg80211_check_combinations() so we can bail out early when an
+interface add or change results in an invalid combination.
 
-1. Fix the 5G channel assignments to remove unused channels.
-2. Fix a potential race condition when updating CAM.
-3. Change retry limits to depend on vif type.
-4. Fix a race condition that could allow a change in the APOL key
-   before packet 4 of the handshaking sequence has been transmitted.
-   This problem affects rtl8192ee, rtl8723be, and rtl8821ae.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 44 +++++++++++++++++++++-
+ 1 file changed, 42 insertions(+), 2 deletions(-)
 
-Larry
-
-pkshih (6):
-  rtlwifi: Fix programming of CAM content
-  rtlwifi: Make retry limits depend on vif type
-  rtlwifi: Force disable key to wait until TX acked.
-  rtlwifi: rtl8192ee: Implement new rekey logic
-  rtlwifi: rtl8723be: Implement new rekey logic
-  rtlwifi: rtl8821ae: Implement new rekey logic
-
-timlee (1):
-  rtlwifi: rtl8821ae: Remove unsupported 5G channels
-
- drivers/net/wireless/rtlwifi/base.c          | 183 ++++++++++++++++++++++-----
- drivers/net/wireless/rtlwifi/base.h          |   7 +
- drivers/net/wireless/rtlwifi/cam.c           |   6 +-
- drivers/net/wireless/rtlwifi/core.c          |  22 +++-
- drivers/net/wireless/rtlwifi/debug.h         |   1 +
- drivers/net/wireless/rtlwifi/pci.c           |   8 +-
- drivers/net/wireless/rtlwifi/ps.c            |   3 +
- drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  |   1 +
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |   8 ++
- drivers/net/wireless/rtlwifi/rtl8723be/fw.c  |   1 +
- drivers/net/wireless/rtlwifi/rtl8723be/trx.c |   8 ++
- drivers/net/wireless/rtlwifi/rtl8723be/trx.h |  12 ++
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c  |  14 +-
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.c |   8 ++
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.h |  13 ++
- drivers/net/wireless/rtlwifi/wifi.h          |   9 ++
- 16 files changed, 255 insertions(+), 49 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 17cf1bc..9c7c061 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -469,6 +469,36 @@ brcmf_find_wpsie(const u8 *parse, u32 len)
+ 	return NULL;
+ }
+ 
++static int brcmf_vif_change_validate(struct brcmf_cfg80211_info *cfg,
++				     struct brcmf_cfg80211_vif *vif,
++				     enum nl80211_iftype new_type)
++{
++	int iftype_num[NUM_NL80211_IFTYPES];
++	struct brcmf_cfg80211_vif *pos;
++
++	memset(&iftype_num[0], 0, sizeof(iftype_num));
++	list_for_each_entry(pos, &cfg->vif_list, list)
++		if (pos == vif)
++			iftype_num[new_type]++;
++		else
++			iftype_num[pos->wdev.iftype]++;
++
++	return cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
++}
++
++static int brcmf_vif_add_validate(struct brcmf_cfg80211_info *cfg,
++				  enum nl80211_iftype new_type)
++{
++	int iftype_num[NUM_NL80211_IFTYPES];
++	struct brcmf_cfg80211_vif *pos;
++
++	memset(&iftype_num[0], 0, sizeof(iftype_num));
++	list_for_each_entry(pos, &cfg->vif_list, list)
++		iftype_num[pos->wdev.iftype]++;
++
++	iftype_num[new_type]++;
++	return cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
++}
+ 
+ static void convert_key_from_CPU(struct brcmf_wsec_key *key,
+ 				 struct brcmf_wsec_key_le *key_le)
+@@ -663,8 +693,14 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+ 						     struct vif_params *params)
+ {
+ 	struct wireless_dev *wdev;
++	int err;
+ 
+ 	brcmf_dbg(TRACE, "enter: %s type %d\n", name, type);
++	err = brcmf_vif_add_validate(wiphy_to_cfg(wiphy), type);
++	if (err) {
++		brcmf_err("iface validation failed: err=%d\n", err);
++		return ERR_PTR(err);
++	}
+ 	switch (type) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_STATION:
+@@ -823,8 +859,12 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
+ 	s32 ap = 0;
+ 	s32 err = 0;
+ 
+-	brcmf_dbg(TRACE, "Enter, ndev=%p, type=%d\n", ndev, type);
+-
++	brcmf_dbg(TRACE, "Enter, idx=%d, type=%d\n", ifp->bssidx, type);
++	err = brcmf_vif_change_validate(wiphy_to_cfg(wiphy), vif, type);
++	if (err) {
++		brcmf_err("iface validation failed: err=%d\n", err);
++		return err;
++	}
+ 	switch (type) {
+ 	case NL80211_IFTYPE_MONITOR:
+ 	case NL80211_IFTYPE_WDS:
 -- 
-2.1.4
+1.9.1
 
