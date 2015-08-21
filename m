@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:22171 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811AbbHLWO6 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42799 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752137AbbHUNN2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2015 18:14:58 -0400
-Message-ID: <55CBC55B.6020502@broadcom.com> (sfid-20150813_001523_965508_18E43183)
-Date: Thu, 13 Aug 2015 00:14:51 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 21 Aug 2015 09:13:28 -0400
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix compilation warnings in wmi phyerr pull function
+Date: Fri, 21 Aug 2015 18:42:36 +0530
+Message-ID: <1440162756-4025-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20150821_151331_501856_14A3803D)
 MIME-Version: 1.0
-To: Sean Richards <fuzzylr@icloud.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: "Richards, Sean" <srichards@gpo.gov>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ft86drifter@cox.net" <ft86drifter@cox.net>
-Subject: Re: Wireless driver issue
-References: <BY1PR09MB061612E4649D00B899E62DF9B57E0@BY1PR09MB0616.namprd09.prod.outlook.com> <55CB88DC.9070502@lwfinger.net> <BY1PR09MB0616CB744753A6CE34AA0DB2B57E0@BY1PR09MB0616.namprd09.prod.outlook.com> <3wfi1r0051B0Yuh01wiv6t@mac.com> <6FF30372-1A87-41BB-9BFC-1E92FE9FC51C@icloud.com>
-In-Reply-To: <6FF30372-1A87-41BB-9BFC-1E92FE9FC51C@icloud.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2015 10:51 PM, Sean Richards wrote:
-> On Aug 12, 2015, at 4:42 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>
->>> On 08/12/2015 02:15 PM, Richards, Sean wrote:
->>> No I am sorry it's not obvious.  I was told to report the bug to you.  I did so.  I honestly don't know much about Linux.  I like using it and reported the bug to help the community.  I am sure I won't be the only one to purchase this device and Put RedHat / Fedora on it.
->>
->> Since you are new, I will offer a little tutorial.
->>
->> Firstly, it is better if you do not post your response before the quoted material - called top posting.
->>
->> A. It puts the answer out of order and before the question.
->> Q. Why is top posting bad?
->>
->> The person that told you to report this problem to us did not know what they were saying. This mailing list is for open-source drivers. As I said in the first E-mail, and as I will explain a little more fully here, your device has no open-source driver available.
->>
->> A third point is that when you will be posting the output from lspci, always include the "-nn" switch in the command. That way the PCI IDs will be listed. Those are the codes used by the system to recognize what driver the device will use. There is always a possibility that the BCMXXXX designation may be misleading.
->>
->> There are three sources of drivers for Broadcom wireless devices:
->>
->> 1. Driver b43 is open source and mostly covers older devices. It has been written by the community based on clean-room reverse engineering. As stated earlier, the more complicated the wireless technology, the more difficult the reverse process.
+Below compilation warnings are observed in gcc version 4.8.2.
+Even though it's not seen in bit older gcc versions (for ex, 4.7.3),
+It's good to fix it by changing format specifier from %d to
+%zd in wmi pull phyerr functions.
 
-It may seem to people that b43 has a bug as it tries to probe devices it 
-does not support. Still I agree with Larry that the information in the 
-kernel log is pretty clear about what is going on.
+wmi.c: In function 'ath10k_wmi_op_pull_phyerr_ev':
+wmi.c:3567:8: warning: format '%d' expects argument of type 'int',
+              but argument 4 has type 'long unsigned int' [-Wformat=]
+              left_len, sizeof(*phyerr));
+                        ^
+wmi.c: In function 'ath10k_wmi_10_4_op_pull_phyerr_ev':
+wmi.c:3612:8: warning: format '%d' expects argument of type 'int',
+	      but argument 4 has type 'long unsigned int' [-Wformat=]
+              left_len, sizeof(*phyerr));
+                        ^
+Fixes: 991adf71a6cd ("ath10k: refactor phyerr event handlers")
+Fixes: 2b0a2e0d7c2f ("ath10k: handle 10.4 firmware phyerr event")
 
->> 2. Drivers brcmsmac and brcmfmac are open source and cover newer devices. These drivers have been written by Broadcom employees, thus they have access to the details of the internals of the wireless chips; however, not all new devices are supported.
->>
->> 3. Driver wl, which is partly closed source, has been written by a different set of Broadcom developers. It is a hybrid driver with two parts. The first is open-source code that handles the interfacing between the wireless chip control routines and the rest of Linux. The second part, which handles the actual operation of the wireless chip, is only provided as a binary blob. The probable reason for hiding this code is to preserve the "secrets" of the chips.
->>
->> The list of what drivers are available for the various devices is available at https://wireless.wiki.kernel.org/en/users/Drivers/b43. As shown there, driver wl is the only option for your device.
->>
->> Larry
->
-> I was wondering if you could answer one more question for me.  Would you mind expanding on this comment??
->
-> It will taint your kernel
->
-> I am curious what you mean by that.--
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-A kernel can be tainted for various reasons specified in 
-include/linux/kernel.h [1]. One of them is using an out-of-tree module. 
-The hybrid driver is such a driver module. It is built against the 
-kernel, but not part of it. Certain kernel features require an untainted 
-kernel. So those will not be available if using the hybrid driver. Not 
-sure if those features are listed somewhere.
-
-Regards,
-Arend
-
-[1] 
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/include/linux/kernel.h#n476
-
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 42c0aba..fe150e8 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3563,7 +3563,7 @@ int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar,
+ 	int i;
+ 
+ 	if (left_len < sizeof(*phyerr)) {
+-		ath10k_warn(ar, "wrong phyerr event head len %d (need: >=%d)\n",
++		ath10k_warn(ar, "wrong phyerr event head len %d (need: >=%zd)\n",
+ 			    left_len, sizeof(*phyerr));
+ 		return -EINVAL;
+ 	}
+@@ -3608,7 +3608,7 @@ static int ath10k_wmi_10_4_op_pull_phyerr_ev(struct ath10k *ar,
+ 	int i;
+ 
+ 	if (left_len < sizeof(*phyerr)) {
+-		ath10k_warn(ar, "wrong phyerr event head len %d (need: >=%d)\n",
++		ath10k_warn(ar, "wrong phyerr event head len %d (need: >=%zd)\n",
+ 			    left_len, sizeof(*phyerr));
+ 		return -EINVAL;
+ 	}
+-- 
+1.8.1.2
 
