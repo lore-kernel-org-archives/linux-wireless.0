@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37096 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755219AbbHZJoe (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:32824 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753099AbbHUIDI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 05:44:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Anish Tondwalkar <twilightrook@gmail.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Oscar Rydberg <oscarrydberg@gmail.com>,
-	Victor van Poppelen <vvanpo@gmail.com>,
-	Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: Re: [PATCH/RFT 0/2] ath10k: add qca6164 support
-References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com>
-	<1901727.3ECHUBE5WW@wuerfel> <1523365.YtEF2Ft7XC@wuerfel>
-Date: Wed, 26 Aug 2015 12:44:25 +0300
-In-Reply-To: <1523365.YtEF2Ft7XC@wuerfel> (Arnd Bergmann's message of "Tue, 25
-	Aug 2015 20:24:57 +0200")
-Message-ID: <87bndu1j0m.fsf@kamboji.qca.qualcomm.com> (sfid-20150826_114451_313323_93EDE7C2)
+	Fri, 21 Aug 2015 04:03:08 -0400
+Received: by lbbsx3 with SMTP id sx3so38806754lbb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2015 01:03:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAG8Fs=Nh+3zK1+tKzgi1UOomQzxQptr4MSCB4=Q=1rXtsSuDew@mail.gmail.com>
+References: <CAG8Fs=Nh+3zK1+tKzgi1UOomQzxQptr4MSCB4=Q=1rXtsSuDew@mail.gmail.com>
+Date: Fri, 21 Aug 2015 13:33:06 +0530
+Message-ID: <CAEUmHyaMb-rsrMX++v4TfL6QD7QBPwukWaP4965q3AYv=_1ABg@mail.gmail.com> (sfid-20150821_100355_986498_443E2601)
+Subject: Fwd: Memory leak issue in ath9k
+From: Varka Bhadram <varkabhadram@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+---------- Forwarded message ----------
+From: Raghavendra Rao <raghav3276@gmail.com>
+Date: Fri, Aug 21, 2015 at 1:05 PM
+Subject: Memory leak issue in ath9k
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@qca.qualcomm.com, Varka Bhadram <varkabhadram@gmail.com>
 
-> On Tuesday 25 August 2015 15:47:45 Arnd Bergmann wrote:
->> On Tuesday 25 August 2015 15:09:45 Michal Kazior wrote:
->> > 
->> > This is some weird regression with MSI ranges and we still haven't
->> > figured this out.
->> > 
->> > For the time being add "irq_mode=1" parameter when loading ath10k_pci
->> > module, please.
->> 
->> Ok, that gets the device to show up without errors. I have no
->> time to test whether I can actually use it at the moment, will
->> report back later.
->
-> I tested some more and everything seems fine now when using legacy
-> interrupts. Thanks for all the work that went into this, I hope
-> the patch can make it into 4.3.
 
-I'm planning to send a pull request to Dave later today so this patch
-should make it to 4.3. Sorry for taking so long to fix this.
+Hello,
+
+Currently we are facing a memory leak problem while receiving the
+packets over ath9k.
+
+Here is the setup:
+Board : Gateworks-54xx
+SoC : imx6q, 900MHz
+RAM : 1GB
+WiFi Module : ath9k (AR5BHB112)
+
+The board is currently receiving packets at the rate of 1 packet for
+every 1 ms. At this rate, after some time, the kernel panics and
+throws the following error:
+ath: skbuff alloc of size 1974 failed
+
+We have checked the same issue using kmemleak utility, and found the
+following as its output for every received packet:
+
+unreferenced object 0xa2bf1b40 (size 192):
+  comm "softirq", pid 0, jiffies 70621 (age 4074.356s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 0c e4 1c 27 43 65 fc 13  ...........'Ce..
+    00 00 00 00 00 a0 ae bd 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<80823bac>] kmemleak_alloc+0x68/0xcc
+    [<8013ce5c>] kmem_cache_alloc+0x1b4/0x2d4
+    [<8064f878>] build_skb+0x34/0xbc
+    [<80652a34>] __alloc_rx_skb+0x90/0xfc
+    [<80652b1c>] __netdev_alloc_skb+0x28/0x50
+    [<80525cf8>] ath_rxbuf_alloc+0x30/0x88
+    [<804f15b8>] ath_rx_tasklet+0x394/0xac0
+    [<804ef378>] ath9k_tasklet+0xf8/0x214
+    [<800316e8>] tasklet_action+0x8c/0x13c
+    [<80030900>] __do_softirq+0x114/0x454
+    [<80030fc4>] irq_exit+0xcc/0x140
+    [<8007b780>] __handle_domain_irq+0x7c/0xe8
+    [<800087e4>] gic_handle_irq+0x30/0x70
+    [<800140a4>] __irq_svc+0x44/0x5c
+    [<80010494>] arch_cpu_idle+0x30/0x4c
+    [<80065cc4>] cpu_startup_entry+0x17c/0x2f0
+
+and also the following in the dmesg :
+kmemleak: 104107 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+
+Kindly address this issue, and provide the cause and solution to this.
+
+Thanks and Regards,
+Raghavendra
+
+
 
 -- 
-Kalle Valo
+Thanks and Regards,
+Varka Bhadram.
