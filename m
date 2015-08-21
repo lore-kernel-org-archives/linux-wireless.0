@@ -1,38 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:35740 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751806AbbHNSFq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 14:05:46 -0400
-Received: by oiew67 with SMTP id w67so29795412oie.2
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2015 11:05:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1439414913.15847.1.camel@sipsolutions.net>
-References: <CAF7g2RHhY_aEHF7nr4VdzVrUf+_cdoKxXbUkajQcx_LxpvvFSA@mail.gmail.com>
- <1439413727.15847.0.camel@sipsolutions.net> <CAF7g2RGORavCuvoYzese0usNatsie5tjyN_7J_JgFDK9zurzLQ@mail.gmail.com>
- <1439414913.15847.1.camel@sipsolutions.net>
-From: Kobi Cohen-Arazi <kobi.cohenarazi@gmail.com>
-Date: Fri, 14 Aug 2015 11:05:05 -0700
-Message-ID: <CAF7g2RFfcrJD6M8oGKF3E-a4+fehdCOC=ocxdnDVww0nBiaPfQ@mail.gmail.com> (sfid-20150814_200551_302941_CCAB5604)
-Subject: Re: iw coalesce show - disabled at init?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:39812 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751728AbbHUH6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2015 03:58:42 -0400
+Message-ID: <1440143920.2107.3.camel@sipsolutions.net> (sfid-20150821_095845_267193_C26B2B01)
+Subject: Re: mac80211: When adding a new station, notify driver before
+ adding to hash
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marty Faltesek <mfaltesek@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 21 Aug 2015 09:58:40 +0200
+In-Reply-To: <1440143840.2107.2.camel@sipsolutions.net> (sfid-20150821_095727_697670_EF5C7C23)
+References: <CAOiWkA9iotcGij6wNeCUw+2iSfvWZGH+=vv_R2bwuDp92aXukw@mail.gmail.com>
+	 (sfid-20150820_233906_992240_4933DE3C) <1440143840.2107.2.camel@sipsolutions.net>
+	 (sfid-20150821_095727_697670_EF5C7C23)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 12, 2015 at 2:28 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2015-08-12 at 14:13 -0700, Kobi Cohen-Arazi wrote:
->>
->> So what you're saying is that at startup, drivers should have
->> coalesce _disabled_ (i.e. no rules for coalesce) ?
->>
->
-> I think so, yes. It's a service that should be actively enabled, with
-> user-configured rules. Mechanism vs. policy, and all that ...
+On Fri, 2015-08-21 at 09:57 +0200, Johannes Berg wrote:
+> On Thu, 2015-08-20 at 17:39 -0400, Marty Faltesek wrote:
+> > 
+> > I believe the following race occurs:
+> > 
+> > 1. mac80211 is processing a new station that just joined.
+> > 2. Before it's completed initializing the station, we take an 
+> > interrupt,
+> >    with a packet from the STA.
+> > 3. That interrupt is a management frame from the station which 
+> > causes
+> >    rate_control_rate_update to be called, which calls back into the 
+> > 
+> > ath10k
+> >    with the not-fully initialized station.
+> 
+> I'm a bit confused by the stack trace - is this IBSS and the stack
+> trace is just bad? I don't really see how we get from 
+> sta_ps_transition
+> to sta_rc_update?
+> 
+> > 4. It reaches ath10k_sta_rc_update before the interrupted thread 
+> > had
+> > reached ath10k_sta_state()
+> >    Therefore it has not yet initialized its workqueue. Still NULL.
+> > 5. When this NULL workqueue gets passed to queue_work, it passes
+> >    the first check that its not in use because of the NULL struct, 
+> > but fails the
+> >    next check in __queue_work because a NULL structure makes the 
+> > test
+> >    for an empty list fail.
+> > 
+> > 
+> > Proposed patch is to not add the new station in the hash until 
+> > after 
+> > the
+> > driver initializes it. But I'm not clear what implications this 
+> > has. 
+> > Could this
+> > cause other problems?
+> > 
+> 
+> I think the issue Michał pointed out is valid - but we can probably
+> check sta->uploaded in the relevant places?
+> 
 
-I think that in most (if not all) NICs, this specific service is
-enabled by default.
+Come to think of it though - we might cache & delay the call so drivers
+actually get the updated values.
 
-Kobi
+johannes
