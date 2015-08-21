@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:33340 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751239AbbHSNwh (ORCPT
+Received: from mail.bluebottle.com ([176.9.67.91]:38676 "EHLO
+	mail.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751769AbbHUJ1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 09:52:37 -0400
-Received: by wijp15 with SMTP id p15so127534771wij.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 06:52:36 -0700 (PDT)
-From: Adrien Schildknecht <adrien+dev@schischi.me>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linville@tuxdriver.com, marex@denx.de,
-	fzuuzf@googlemail.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Adrien Schildknecht <adrien+dev@schischi.me>
-Subject: [PATCH] rtlwifi: rtl8192cu: Add new device ID
-Date: Wed, 19 Aug 2015 15:51:31 +0200
-Message-Id: <1439992291-24912-1-git-send-email-adrien+dev@schischi.me> (sfid-20150819_155254_227589_E3D74C5C)
+	Fri, 21 Aug 2015 05:27:25 -0400
+Date: Fri, 21 Aug 2015 11:29:52 +0200
+From: Bastian Bittorf <bittorf@bluebottle.com>
+To: Varka Bhadram <varkabhadram@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: Memory leak issue in ath9k
+Message-ID: <20150821092952.GT19496@medion.lan> (sfid-20150821_112729_351865_8E543D5D)
+References: <CAG8Fs=Nh+3zK1+tKzgi1UOomQzxQptr4MSCB4=Q=1rXtsSuDew@mail.gmail.com>
+ <CAEUmHyaMb-rsrMX++v4TfL6QD7QBPwukWaP4965q3AYv=_1ABg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAEUmHyaMb-rsrMX++v4TfL6QD7QBPwukWaP4965q3AYv=_1ABg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The v2 of NetGear WNA1000M uses a different idProduct: USB ID 0846:9043
+* Varka Bhadram <varkabhadram@gmail.com> [21.08.2015 10:52]:
+> ath: skbuff alloc of size 1974 failed
 
-Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
- 1 file changed, 1 insertion(+)
+i have seen this issue some month ago:
+https://dev.openwrt.org/ticket/14782
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 23806c2..8b4238a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -321,6 +321,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
- 	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
- 	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
-+	{RTL_USB_DEVICE(0x0846, 0x9043, rtl92cu_hal_cfg)}, /*NetGear WNA1000Mv2*/
- 	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
- 	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
- 	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
--- 
-2.5.0
+how old - or better: which exact version
+(kernel/ath9k) you are running?
 
+bye, bastian
