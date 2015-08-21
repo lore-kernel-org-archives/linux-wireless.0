@@ -1,72 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:36762 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645AbbHJCdy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2015 22:33:54 -0400
-Received: by pdco4 with SMTP id o4so65831624pdc.3
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2015 19:33:54 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 09/11] staging: wilc1000: remove WILC_memcpy function
-Date: Mon, 10 Aug 2015 11:33:20 +0900
-Message-Id: <1439174002-7365-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150810_043400_730437_F9BD213B)
-In-Reply-To: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1439174002-7365-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mout.gmx.net ([212.227.15.18]:56353 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752460AbbHUVOx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2015 17:14:53 -0400
+From: Christian Engelmayer <cengelma@gmx.at>
+To: kvalo@codeaurora.org, mike.looijmans@topic.nl
+Cc: khoroshilov@ispras.ru, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christian Engelmayer <cengelma@gmx.at>
+Subject: [PATCH] rsi: Fix possible leak when loading firmware
+Date: Fri, 21 Aug 2015 23:14:26 +0200
+Message-Id: <1440191666-5104-1-git-send-email-cengelma@gmx.at> (sfid-20150821_231521_828462_9717FB7F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove WILC_memcpy function that is changed to memcpy.
+Commit 5d5cd85ff441 ("rsi: Fix failure to load firmware after memory
+leak fix and fix the leak") also added a check on the allocation of
+DMA-accessible memory that may directly return. In that case the
+already allocated firmware data is leaked. Make sure the data is
+always freed correctly. Detected by Coverity CID 1316519.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
 ---
- drivers/staging/wilc1000/wilc_strutils.h | 30 ------------------------------
- 1 file changed, 30 deletions(-)
+Compile tested only.
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 8 ++++++--
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 8 ++++++--
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_strutils.h b/drivers/staging/wilc1000/wilc_strutils.h
-index 03f4938..dbca73d 100644
---- a/drivers/staging/wilc1000/wilc_strutils.h
-+++ b/drivers/staging/wilc1000/wilc_strutils.h
-@@ -27,36 +27,6 @@
-  */
- void WILC_memcpy_INTERNAL(void *pvTarget, const void *pvSource, u32 u32Count);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 1c6788aecc62..40d72312f3df 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -203,8 +203,10 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
  
--/*!
-- *  @brief	Copies the contents of a memory buffer into another
-- *  @param[in]	pvTarget the target buffer to which the data is copied into
-- *  @param[in]	pvSource pointer to the second memory location
-- *  @param[in]	u32Count the size of the data to copy
-- *  @return	WILC_SUCCESS if copy is successfully handeled
-- *              WILC_FAIL if copy failed
-- *  @note	this function repeats the functionality of standard memcpy,
-- *              however memcpy is undefined if the two buffers overlap but this
-- *              implementation will check for overlap and report error
-- *  @author	syounan
-- *  @date	18 Aug 2010
-- *  @version	1.0
-- */
--static WILC_ErrNo WILC_memcpy(void *pvTarget, const void *pvSource, u32 u32Count)
--{
--	if (
--		(((u8 *)pvTarget <= (u8 *)pvSource)
--		 && (((u8 *)pvTarget + u32Count) > (u8 *)pvSource))
--
--		|| (((u8 *)pvSource <= (u8 *)pvTarget)
--		    && (((u8 *)pvSource + u32Count) > (u8 *)pvTarget))
--		) {
--		/* ovelapped memory, return Error */
--		return WILC_FAIL;
--	} else {
--		WILC_memcpy_INTERNAL(pvTarget, pvSource, u32Count);
--		return WILC_SUCCESS;
--	}
--}
+ 	/* Copy firmware into DMA-accessible memory */
+ 	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+-	if (!fw)
+-		return -ENOMEM;
++	if (!fw) {
++		status = -ENOMEM;
++		goto out;
++	}
+ 	len = fw_entry->size;
  
+ 	if (len % 4)
+@@ -217,6 +219,8 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
  
+ 	status = rsi_copy_to_card(common, fw, len, num_blocks);
+ 	kfree(fw);
++
++out:
+ 	release_firmware(fw_entry);
+ 	return status;
+ }
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+index 30c2cf7fa93b..de4900862836 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -148,8 +148,10 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
  
+ 	/* Copy firmware into DMA-accessible memory */
+ 	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+-	if (!fw)
+-		return -ENOMEM;
++	if (!fw) {
++		status = -ENOMEM;
++		goto out;
++	}
+ 	len = fw_entry->size;
+ 
+ 	if (len % 4)
+@@ -162,6 +164,8 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
+ 
+ 	status = rsi_copy_to_card(common, fw, len, num_blocks);
+ 	kfree(fw);
++
++out:
+ 	release_firmware(fw_entry);
+ 	return status;
+ }
 -- 
 1.9.1
 
