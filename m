@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:35124 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752557AbbH2WZd (ORCPT
+Received: from mx01.archerlogic.com ([203.211.140.115]:34276 "EHLO
+	mx01.archerlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058AbbHUDkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Aug 2015 18:25:33 -0400
-Received: by igcrd18 with SMTP id rd18so6053179igc.0
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2015 15:25:33 -0700 (PDT)
-Date: Sat, 29 Aug 2015 18:25:31 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Subject: Re: [PATCH 3/3] ath10k: implement mesh support
-Message-ID: <20150829222531.GA8604@localhost> (sfid-20150830_002538_049613_09FEBDA2)
-References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
- <1440673024-13696-4-git-send-email-me@bobcopeland.com>
- <CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com>
+	Thu, 20 Aug 2015 23:40:11 -0400
+Received: from localhost (unknown [127.0.0.1])
+	by mx01.archerlogic.com (Postfix) with ESMTP id 70EA54695
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2015 03:40:09 +0000 (UTC)
+Received: from mx01.archerlogic.com ([127.0.0.1])
+	by localhost (mx01.archerlogic.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id CCqWLG6e2Zc7 for <linux-wireless@vger.kernel.org>;
+	Fri, 21 Aug 2015 11:40:02 +0800 (SGT)
+Received: from MaouShengXPS (unknown [118.189.9.215])
+	(Authenticated sender: maousheng.lee@archerlogic.com)
+	by mx01.archerlogic.com (Postfix) with ESMTPA id 5717A4699
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2015 11:40:01 +0800 (SGT)
+From: "Lee Maou Sheng" <maousheng.lee@archerlogic.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: 8712U driver for CentOS 6.6
+Date: Fri, 21 Aug 2015 11:40:01 +0800
+Message-ID: <002c01d0dbc3$0fc94a20$2f5bde60$@archerlogic.com> (sfid-20150821_054017_096850_8F10A57F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com>
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 29, 2015 at 01:11:03PM -0400, Jason Andryuk wrote:
-> Is there a reason to hide rawmode behind a modparam, or should the
-> modparam just be removed?  Just let the driver set
-> ATH10K_FLAG_RAW_MODE when ATH10K_FW_FEATURE_RAW_MODE_SUPPORT is
-> detected?
+Hi sir,
 
-Yes: you don't want to enable raw mode TX / RX decap in the normal
-case because it's fairly inefficient compared to "native" wifi mode,
-according to my understanding.  The latter doesn't support mesh framing
-however.
+I am from Singapore and currently our company is trying to install Prolink
+WN2001 wireless adapter into Dell PowerEdge T20 with Centos 6.6 installed. I
+am using https://github.com/chunkeey/rtl8192su for the driver.
 
-> Does struct ieee80211_iface_limit need to be conditional on firmware
-> support as well or does interface_modes (below) gate use of
-> MESH_POINT?
+The information I have as below:
 
-If you advertise a combination that isn't supported by interface modes,
-I believe you'll get a kernel warning when the wiphy is registered.
+uname -a
+Linux ts41 2.6.32-573.3.1.el6.x86_64 #1 SMP Thu Aug 13 22:55:16 UTC 2015
+x86_64 x86_64 x86_64 GNU/Linux
 
-> 
-> > @@ -6998,7 +7020,8 @@ int ath10k_mac_register(struct ath10k *ar)
-> >
-> >         ar->hw->wiphy->interface_modes =
-> >                 BIT(NL80211_IFTYPE_STATION) |
-> > -               BIT(NL80211_IFTYPE_AP);
-> > +               BIT(NL80211_IFTYPE_AP) |
-> > +               BIT(NL80211_IFTYPE_MESH_POINT);
-> 
-> Set BIT(NL80211_IFTYPE_MESH_POINT) conditionally if ATH10K_FLAG_RAW_MODE is set?
+lsusb
+Bus 001 Device 003: ID 07b8:8179 AboCom Systems Inc
 
-Yes, this was discussed on the ath10k mailing list and I'll probably do
-it in a follow-up patch.  It is a little messy because it will involve
-casting away a const somewhere.
+make
+[root@ts41 rtl8192su]# make
+make -C /lib/modules/2.6.32-573.3.1.el6.x86_64/build
+M=/var/tmp/rtl8192su/rtlwifi CONFIG_RTL_CARDS=y CONFIG_RTLWIFI=m
+CONFIG_RTLWIFI_DEBUG=y CONFIG_RTLWIFI_DEBUGFS=y CONFIG_RTLWIFI_USB=m
+CONFIG_RTLWIFI_PCI=m CONFIG_RTL8192SU=m CONFIG_RTL8192SE=m
+CONFIG_RTL8192S_COMMON=m CONFIG_RTL8192CU=n CONFIG_RTL8192DE=n
+CONFIG_RTL8192CE=n CONFIG_RTL8192C_COMMON=n CONFIG_RTL8723AE=n
+CONFIG_RTL8188EE=n  EXTRA_CFLAGS="-DDEBUG -DCONFIG_RTLWIFI_DEBUGFS=m"
+make[1]: Entering directory `/usr/src/kernels/2.6.32-573.3.1.el6.x86_64'
+  CC [M]  /var/tmp/rtl8192su/rtlwifi/usb.o
+/var/tmp/rtl8192su/rtlwifi/usb.c: In function '_rtl_prep_rx_urb':
+/var/tmp/rtl8192su/rtlwifi/usb.c:437: error: implicit declaration of
+function 'usb_alloc_coherent'
+/var/tmp/rtl8192su/rtlwifi/usb.c:438: warning: assignment makes pointer from
+integer without a cast
+/var/tmp/rtl8192su/rtlwifi/usb.c: In function '_rtl_usb_cleanup_rx':
+/var/tmp/rtl8192su/rtlwifi/usb.c:688: error: implicit declaration of
+function 'usb_free_coherent'
+make[2]: *** [/var/tmp/rtl8192su/rtlwifi/usb.o] Error 1
+make[1]: *** [_module_/var/tmp/rtl8192su/rtlwifi] Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.32-573.3.1.el6.x86_64'
+make: *** [all] Error 2
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+
+Wish I can get some guidance from you.
+
+Thank you!
+
+Best Regards,
+
+Lee Maou Sheng
+Software Engineer
+Archer Logic (S) Pte. Ltd.
+
+6 Ubi Road 1, Wintech Centre
+#05-01, Singapore 408726
+Tel: (65) 6785 9007 ext. 109
+
