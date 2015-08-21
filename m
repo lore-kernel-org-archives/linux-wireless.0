@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50549 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40953 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754152AbbHXUAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2015 16:00:43 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S1752237AbbHUMNp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2015 08:13:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/6] iwlwifi: mvm: update wakeup reason enum
-Date: Mon, 24 Aug 2015 23:00:33 +0300
-Message-Id: <1440446437-29188-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150824_220046_461642_8702380F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wireless: make __freq_reg_info static
+Date: Fri, 21 Aug 2015 14:13:42 +0200
+Message-Id: <1440159222-21729-1-git-send-email-johannes@sipsolutions.net> (sfid-20150821_141348_162661_7E23F447)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-when waking from d0i3 there is a wakeup reason.
-Enum in driver is not up to date with FW api - fix it.
+As pointed out by sparse, this symbol should be static, make it so.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ net/wireless/reg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-index d7658d1..20521be 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-@@ -339,8 +339,13 @@ enum iwl_wowlan_wakeup_reason {
- 	IWL_WOWLAN_WAKEUP_BY_FOUR_WAY_HANDSHAKE			= BIT(8),
- 	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_LINK_LOSS			= BIT(9),
- 	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_SIGNATURE_TABLE		= BIT(10),
--	/* BIT(11) reserved */
-+	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_TCP_EXTERNAL		= BIT(11),
- 	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_WAKEUP_PACKET		= BIT(12),
-+	IWL_WOWLAN_WAKEUP_BY_IOAC_MAGIC_PACKET			= BIT(13),
-+	IWL_WOWLAN_WAKEUP_BY_D3_WAKEUP_HOST_TIMER		= BIT(14),
-+	IWL_WOWLAN_WAKEUP_BY_RXFRAME_FILTERED_IN		= BIT(15),
-+	IWL_WOWLAN_WAKEUP_BY_BEACON_FILTERED_IN			= BIT(16),
-+
- }; /* WOWLAN_WAKE_UP_REASON_API_E_VER_2 */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b144485946f2..70aef72c4ca2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1040,8 +1040,8 @@ freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+ 	return ERR_PTR(-EINVAL);
+ }
  
- struct iwl_wowlan_gtk_status {
+-const struct ieee80211_reg_rule *__freq_reg_info(struct wiphy *wiphy,
+-						 u32 center_freq, u32 min_bw)
++static const struct ieee80211_reg_rule *
++__freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 min_bw)
+ {
+ 	const struct ieee80211_regdomain *regd = reg_get_regdomain(wiphy);
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
 -- 
 2.1.4
 
