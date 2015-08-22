@@ -1,85 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:32920 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755209AbbHNRUc (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:12237 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751560AbbHVDCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 13:20:32 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	dan.carpenter@oracle.com, Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH v2] staging: wilc1000: Process WARN, INFO options of debug levels from user
-Date: Fri, 14 Aug 2015 22:50:07 +0530
-Message-Id: <1439572807-27772-1-git-send-email-csgorentla@gmail.com> (sfid-20150814_192104_604783_3B56AA86)
+	Fri, 21 Aug 2015 23:02:06 -0400
+From: David Lin <dlin@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: "dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	"Pete Hsieh" <peteh@marvell.com>
+Subject: RE: [PATCH] Add FW binary used by mwlwifi driver.
+Date: Sat, 22 Aug 2015 03:01:34 +0000
+Message-ID: <8fb777e5840b44a89ab2a5a92fefc979@SC-EXCH02.marvell.com> (sfid-20150822_050210_471139_E35FD817)
+References: <4e08f519e7fe485ca5c3a6a48fbaaf51@SC-EXCH02.marvell.com>
+ <CAGRGNgW8c9N_bYYKWbkSCTRkRBqDgFXQWxE4qq=BbomgoV7fQA@mail.gmail.com>
+In-Reply-To: <CAGRGNgW8c9N_bYYKWbkSCTRkRBqDgFXQWxE4qq=BbomgoV7fQA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables setting the module's debug options WARN and INFO in the
-debugfs file 'wilc_debug_level'.  This enables the user to enable logging
-of warning and other information.  Before this change writes to this
-debugfs file sets only one option DGB.  This is additional to the default
-option ERR. 
-
-As a side effect, this patch removes the 'sparse' warning -
-'warning: incorrect type in argument 2 (different address spaces)'.
-
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- drivers/staging/wilc1000/wilc_debugfs.c | 28 +++++++++-------------------
- 1 file changed, 9 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index be2e901..23419d9 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -48,29 +48,18 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf, si
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- 
--static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t count, loff_t *ppos)
-+static ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+					size_t count, loff_t *ppos)
- {
--	char buffer[128] = {};
- 	int flag = 0;
-+	int ret;
- 
--	if (count > sizeof(buffer))
--		return -EINVAL;
--
--	if (copy_from_user(buffer, buf, count)) {
--		return -EFAULT;
--	}
--
--	flag = buffer[0] - '0';
--
--	if (flag > 0)
--		flag = DEBUG | ERR;
--	else if (flag < 0)
--		flag = 100;
-+	ret = kstrtouint_from_user(buf, count, 16, &flag);
-+	if (ret)
-+		return ret;
- 
--	if (flag > DBG_LEVEL_ALL) {
--		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&DEBUG_LEVEL));
--		return -EFAULT;
--	}
-+	if (flag > DBG_LEVEL_ALL)
-+		return -EINVAL;
- 
- 	atomic_set(&DEBUG_LEVEL, (int)flag);
- 
-@@ -78,6 +67,7 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char *buf, size_t
- 		printk("Debug-level disabled\n");
- 	else
- 		printk("Debug-level enabled\n");
-+
- 	return count;
- }
- 
--- 
-2.5.0
-
+VGhhbmtzLiBJIGRvIGl0IG5vdy4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBG
+cm9tOiBKdWxpYW4gQ2FsYWJ5IFttYWlsdG86anVsaWFuLmNhbGFieUBnbWFpbC5jb21dDQo+IFNl
+bnQ6IFNhdHVyZGF5LCBBdWd1c3QgMjIsIDIwMTUgMTE6MDAgQU0NCj4gVG86IERhdmlkIExpbg0K
+PiBDYzogZHdtdzJAaW5mcmFkZWFkLm9yZzsgYmVuQGRlY2FkZW50Lm9yZy51azsNCj4gbGludXgt
+d2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBDaG9yIFRlY2sgTGF3OyBQZXRlIEhzaWVoDQo+IFN1
+YmplY3Q6IFJlOiBbUEFUQ0hdIEFkZCBGVyBiaW5hcnkgdXNlZCBieSBtd2x3aWZpIGRyaXZlci4N
+Cj4gDQo+IEhpIERhdmlkLA0KPiANCj4gT24gU2F0LCBBdWcgMjIsIDIwMTUgYXQgMTI6NTIgUE0s
+IERhdmlkIExpbiA8ZGxpbkBtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+ID4gTGljZW5zZSBpcyB0aGUg
+c2FtZSBhcyBwcmV2aW91cyBNYXJ2ZWxsJ3MgRlcgYmluYXJ5Lg0KPiANCj4gWW91IF9NVVNUXyB1
+cGRhdGUgdGhlIFdIRU5DRSBmaWxlLiBSZWFkIHRoZSBSRUFETUUgSSBsaW5rZWQgYmVmb3JlLg0K
+PiANCj4gVGhhbmtzLA0KPiANCj4gLS0NCj4gSnVsaWFuIENhbGFieQ0KPiANCj4gRW1haWw6IGp1
+bGlhbi5jYWxhYnlAZ21haWwuY29tDQo+IFByb2ZpbGU6IGh0dHA6Ly93d3cuZ29vZ2xlLmNvbS9w
+cm9maWxlcy9qdWxpYW4uY2FsYWJ5Lw0K
