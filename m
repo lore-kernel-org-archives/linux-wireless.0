@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:37984 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713AbbHMElg (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:33109 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbbHVK6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 00:41:36 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <jude.lee@atmel.com>, <robin.hwang@atmel.com>
-Subject: [PATCH 0/5] staging: wilc1000: 64bit build patch
-Date: Thu, 13 Aug 2015 13:41:18 +0900
-Message-ID: <1439440883-16061-1-git-send-email-tony.cho@atmel.com> (sfid-20150813_064153_794413_0CBABF86)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 22 Aug 2015 06:58:37 -0400
+Received: by pdrh1 with SMTP id h1so36038466pdr.0
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2015 03:58:37 -0700 (PDT)
+From: Shraddha Barke <shraddha.6596@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Donald <gdonald@gmail.com>,
+	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>
+Cc: Shraddha Barke <shraddha.6596@gmail.com>
+Subject: [PATCH 1/4] Staging: rtl8192e: rtl_core.c: Remove unused variable
+Date: Sat, 22 Aug 2015 16:28:11 +0530
+Message-Id: <1440241094-5927-1-git-send-email-shraddha.6596@gmail.com> (sfid-20150822_125854_572822_3EDBD82C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patch includes new design for 64 bits. The driver uses the
-redundant typecasting to communicate with the chipset, which causes several
-compile warnings.
+This patch discards the variable ResetThreshold as it is not used
+anywhere throughout the kernel.
 
-However, this patch uses the real data type and removes unnecessary typecasting.
-Also, the driver allocates the ID value to the pointer address representing
-the handlers and adds it into the data frames instead of the pointer address.
-In results, the driver sends and gets the data frame to/from the chipset
-together with ID value instead of pointer address as a handler. This series of
-patch removes the warnings which 64 bit issues cause as well.
+Build tested it.
 
-change log
+Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
+---
+ drivers/staging/rtl8192e/rtl8192e/rtl_core.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-- v2
- This version 2 updated only "use id value as argument" patch
- : Add return error code in newly added function.
- : Add error handling as the return error code
- : Remove ++ operrator
-
-Johnny Kim (5):
-  staging: wilc1000: replace WILC_WFIDrvHandle by tstrWILC_WFIDrv
-  staging: wilc1000: change void pointer type to real type
-  staging: wilc1000: clarify the argument type
-  staging: wilc1000: use the real data type
-  staging: wilc1000: use id value as argument
-
- drivers/staging/wilc1000/host_interface.c         | 471 ++++++++++++++--------
- drivers/staging/wilc1000/host_interface.h         | 109 ++---
- drivers/staging/wilc1000/linux_wlan.c             |  16 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  22 +-
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   5 +-
- 5 files changed, 372 insertions(+), 251 deletions(-)
-
+diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
+index d6b46df..52e1e27 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
++++ b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
+@@ -1131,7 +1131,6 @@ static enum reset_type rtl819x_TxCheckStuck(struct net_device *dev)
+ {
+ 	struct r8192_priv *priv = rtllib_priv(dev);
+ 	u8	QueueID;
+-	u8	ResetThreshold = NIC_SEND_HANG_THRESHOLD_POWERSAVE;
+ 	bool	bCheckFwTxCnt = false;
+ 	struct rtl8192_tx_ring  *ring = NULL;
+ 	struct sk_buff *skb = NULL;
+@@ -1140,13 +1139,10 @@ static enum reset_type rtl819x_TxCheckStuck(struct net_device *dev)
+ 
+ 	switch (priv->rtllib->ps) {
+ 	case RTLLIB_PS_DISABLED:
+-		ResetThreshold = NIC_SEND_HANG_THRESHOLD_NORMAL;
+ 		break;
+ 	case (RTLLIB_PS_MBCAST|RTLLIB_PS_UNICAST):
+-		ResetThreshold = NIC_SEND_HANG_THRESHOLD_POWERSAVE;
+ 		break;
+ 	default:
+-		ResetThreshold = NIC_SEND_HANG_THRESHOLD_POWERSAVE;
+ 		break;
+ 	}
+ 	spin_lock_irqsave(&priv->irq_th_lock, flags);
 -- 
-1.9.1
+2.1.4
 
