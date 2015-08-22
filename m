@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15050 "EHLO mga01.intel.com"
+Received: from isrv.corpit.ru ([86.62.121.231]:51769 "EHLO isrv.corpit.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751493AbbHENjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 09:39:12 -0400
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 0/5] net: rfkill: gpio: replace platform data with build-in property
-Date: Wed,  5 Aug 2015 16:39:02 +0300
-Message-Id: <1438781947-7952-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20150805_154308_532389_3D38DA24)
+	id S1753221AbbHVIjN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Aug 2015 04:39:13 -0400
+Message-ID: <55D8352E.9040702@msgid.tls.msk.ru> (sfid-20150822_103937_977913_CBD69912)
+Date: Sat, 22 Aug 2015 11:39:10 +0300
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: linux-only "freshness" auth problem??
+References: <55D6F0DB.5050505@msgid.tls.msk.ru>	 (sfid-20150821_114437_353307_BC6FA2E1) <1440152186.2107.14.camel@sipsolutions.net>
+In-Reply-To: <1440152186.2107.14.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+21.08.2015 13:16, Johannes Berg wrote:
+> On Fri, 2015-08-21 at 12:35 +0300, Michael Tokarev wrote:
+>>
+>> Aug 21 11:31:49 x200la kernel: wlan0: authenticated
+>> Aug 21 11:31:49 x200la kernel: wlan0: waiting for beacon from c0:4a:00:49:1b:f2
+>
+> Do you see any *kernel* messages after this? I'm half expecting to see
+> that the beacon never arrives, or something like that?
 
-The first patch adds a few helper macros for build-in property
-creation and the second makes it possible to get the rfkill type
-index based on name. The rest deal with rfkill-gpio.
+The kernel log is repeated.  The next log line is again scanning start,
+since NetworkManager (or wpa_supplicant, I'm not familiar with the machinery
+involved) request scan again.
 
-Cheers,
+> Are the hotels running similar equipment perhaps? If rebooting the AP
+> helps then perhaps the APs aren't actually beaconing quite properly -
+> maybe you could put the card into sniffer mode (monitor mode) and
+> capture what's going on over the air for a bit after this happened?
 
+Can you give some more specific comments please?  We just rebooted the
+AP the next time, it all started working again, and I need to install
+all the necessary tools while it is working ;)  Since I'm not familiar
+with wifi machinery, maybe you can give me specific command lines to
+run? :)
 
-Heikki Krogerus (5):
-  device property: helper macros for property entry creation
-  net: rfkill: add rfkill_find_type function
-  net: rfkill: gpio: get the name and type from device property
-  ARM: tegra: use build-in device properties with rfkill_gpio
-  net: rfkill: gpio: remove rfkill_gpio_platform_data
+Thank you!
 
- arch/arm/mach-tegra/board-paz00.c | 17 +++++++-----
- include/linux/property.h          | 35 ++++++++++++++++++++++++
- include/linux/rfkill-gpio.h       | 37 -------------------------
- include/linux/rfkill.h            | 15 +++++++++++
- net/rfkill/Kconfig                |  3 +--
- net/rfkill/core.c                 | 57 ++++++++++++++++++++-------------------
- net/rfkill/rfkill-gpio.c          | 24 ++++++++---------
- 7 files changed, 101 insertions(+), 87 deletions(-)
- delete mode 100644 include/linux/rfkill-gpio.h
-
--- 
-2.4.6
-
+/mjt
