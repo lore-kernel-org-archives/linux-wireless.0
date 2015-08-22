@@ -1,107 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25187 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753855AbbHYG4j convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2015 02:56:39 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [patch] mwifiex: fix mwifiex_rdeeprom_read()
-Date: Tue, 25 Aug 2015 06:56:34 +0000
-Message-ID: <e7bbd1bc72994d84a9c44e6a73c65ed5@SC-EXCH04.marvell.com> (sfid-20150825_085658_151757_F726015D)
-References: <20150820103037.GA5521@mwanda>
-In-Reply-To: <20150820103037.GA5521@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-io0-f179.google.com ([209.85.223.179]:33007 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbbHVDAq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2015 23:00:46 -0400
+Received: by iods203 with SMTP id s203so100643639iod.0
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2015 20:00:46 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4e08f519e7fe485ca5c3a6a48fbaaf51@SC-EXCH02.marvell.com>
+References: <4e08f519e7fe485ca5c3a6a48fbaaf51@SC-EXCH02.marvell.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 22 Aug 2015 13:00:26 +1000
+Message-ID: <CAGRGNgW8c9N_bYYKWbkSCTRkRBqDgFXQWxE4qq=BbomgoV7fQA@mail.gmail.com> (sfid-20150822_050049_151898_EFFC36DC)
+Subject: Re: [PATCH] Add FW binary used by mwlwifi driver.
+To: David Lin <dlin@marvell.com>
+Cc: "dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	Pete Hsieh <peteh@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Hi David,
 
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Thursday, August 20, 2015 4:01 PM
-> To: Amitkumar Karwar; Bing Zhao
-> Cc: Nishant Sarmukadam; Kalle Valo; linux-wireless@vger.kernel.org;
-> kernel-janitors@vger.kernel.org
-> Subject: [patch] mwifiex: fix mwifiex_rdeeprom_read()
-> 
-> There were several bugs here.
-> 
-> 1)  The done label was in the wrong place so we didn't copy any
->     information out when there was no command given.
-> 
-> 2)  We were using PAGE_SIZE as the size of the buffer instead of
->     "PAGE_SIZE - pos".
-> 
-> 3)  snprintf() returns the number of characters that would have been
->     printed if there were enough space.  If there was not enough space
->     (and we had fixed the memory corruption bug #2) then it would result
->     in an information leak when we do simple_read_from_buffer().  I've
->     changed it to use scnprintf() instead.
-> 
-> I also removed the initialization at the start of the function, because
-> I thought it made the code a little more clear.
-> 
-> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell
-> mwifiex driver')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/mwifiex/debugfs.c
-> b/drivers/net/wireless/mwifiex/debugfs.c
-> index 5a0636d4..bd2f5d2 100644
-> --- a/drivers/net/wireless/mwifiex/debugfs.c
-> +++ b/drivers/net/wireless/mwifiex/debugfs.c
-> @@ -731,7 +731,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
-> *ubuf,
->  		(struct mwifiex_private *) file->private_data;
->  	unsigned long addr = get_zeroed_page(GFP_KERNEL);
->  	char *buf = (char *) addr;
-> -	int pos = 0, ret = 0, i;
-> +	int pos, ret, i;
->  	u8 value[MAX_EEPROM_DATA];
-> 
->  	if (!buf)
-> @@ -739,7 +739,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
-> *ubuf,
-> 
->  	if (saved_offset == -1) {
->  		/* No command has been given */
-> -		pos += snprintf(buf, PAGE_SIZE, "0");
-> +		pos = snprintf(buf, PAGE_SIZE, "0");
->  		goto done;
->  	}
-> 
-> @@ -751,14 +751,14 @@ mwifiex_rdeeprom_read(struct file *file, char
-> __user *ubuf,
->  		goto done;
->  	}
-> 
-> -	pos += snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
-> saved_bytes);
-> +	pos = snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
-> saved_bytes);
-> 
->  	for (i = 0; i < saved_bytes; i++)
-> -		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ",
-> value[i]);
-> +		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "%d ",
-> value[i]);
-> 
-> +done:
->  	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
-> 
-> -done:
->  	free_page(addr);
->  	return ret;
->  }
+On Sat, Aug 22, 2015 at 12:52 PM, David Lin <dlin@marvell.com> wrote:
+> License is the same as previous Marvell's FW binary.
 
-Looks good.
+You _MUST_ update the WHENCE file. Read the README I linked before.
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Thanks,
 
-Regards,
-Amitkumar
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
