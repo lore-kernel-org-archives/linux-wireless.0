@@ -1,133 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44613 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751559AbbH1LUM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2015 07:20:12 -0400
-From: "Roberts, William C" <william.c.roberts@intel.com>
-To: Paul Moore <paul@paul-moore.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-CC: David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Kees Cook <keescook@chromium.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	"Vitaly Kuznetsov" <vkuznets@redhat.com>,
-	Eric Paris <eparis@parisplace.org>,
-	"selinux@tycho.nsa.gov" <selinux@tycho.nsa.gov>,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
-	=?utf-8?B?Vm9qdGVjaCBQYXZsw61r?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: RE: Linux Firmware Signing
-Date: Fri, 28 Aug 2015 11:20:10 +0000
-Message-ID: <476DC76E7D1DF2438D32BFADF679FC560105ABD6@ORSMSX103.amr.corp.intel.com> (sfid-20150828_132049_497018_8C23DD51)
-References: <20150824225713.GJ8051@wotan.suse.de>
-	<CAGXu5jLDHCgygaVNHpuvszN6SXNKAjRW83q3-D2ZfRpO4uAmdw@mail.gmail.com>
-	<476DC76E7D1DF2438D32BFADF679FC5601058E78@ORSMSX103.amr.corp.intel.com>
-	<CAGXu5jJuwPfnQhu9u4-90UkmjWTBF_GLpJ7J1VaaT2D0d_-Mhg@mail.gmail.com>
-	<1440462367.2737.4.camel@linux.vnet.ibm.com>
-	<CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
-	<1440464705.2737.36.camel@linux.vnet.ibm.com>
-	<14540.1440599584@warthog.procyon.org.uk>
-	<31228.1440671938@warthog.procyon.org.uk>
-	<36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
-	<20150827212907.GF8051@wotan.suse.de>
- <CAHC9VhQFDcMtvn1JU3E1rJ=9CCXT7ibUocgGS4tzfcy8oVUUMA@mail.gmail.com>
-In-Reply-To: <CAHC9VhQFDcMtvn1JU3E1rJ=9CCXT7ibUocgGS4tzfcy8oVUUMA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:33120 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbbHVK6l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Aug 2015 06:58:41 -0400
+Received: by pdrh1 with SMTP id h1so36038740pdr.0
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2015 03:58:40 -0700 (PDT)
+From: Shraddha Barke <shraddha.6596@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Donald <gdonald@gmail.com>,
+	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>
+Cc: Shraddha Barke <shraddha.6596@gmail.com>
+Subject: [PATCH 2/4] Staging: rtl8192e: r8192E_dev.c: Remove unused variable
+Date: Sat, 22 Aug 2015 16:28:12 +0530
+Message-Id: <1440241094-5927-2-git-send-email-shraddha.6596@gmail.com> (sfid-20150822_125856_676821_B573EE36)
+In-Reply-To: <1440241094-5927-1-git-send-email-shraddha.6596@gmail.com>
+References: <1440241094-5927-1-git-send-email-shraddha.6596@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUGF1bCBNb29yZSBbbWFp
-bHRvOnBhdWxAcGF1bC1tb29yZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBBdWd1c3QgMjcsIDIw
-MTUgNDo1NyBQTQ0KPiBUbzogTHVpcyBSLiBSb2RyaWd1ZXoNCj4gQ2M6IERhdmlkIFdvb2Rob3Vz
-ZTsgRGF2aWQgSG93ZWxsczsgTWltaSBab2hhcjsgQW5keSBMdXRvbWlyc2tpOyBLZWVzIENvb2s7
-DQo+IFJvYmVydHMsIFdpbGxpYW0gQzsgbGludXgtc2VjdXJpdHktbW9kdWxlQHZnZXIua2VybmVs
-Lm9yZzsgbGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXdpcmVsZXNzQHZn
-ZXIua2VybmVsLm9yZzsNCj4gamFtZXMubC5tb3JyaXNAb3JhY2xlLmNvbTsgc2VyZ2VAaGFsbHlu
-LmNvbTsgVml0YWx5IEt1em5ldHNvdjsgRXJpYyBQYXJpczsNCj4gc2VsaW51eEB0eWNoby5uc2Eu
-Z292OyBTdGVwaGVuIFNtYWxsZXk7IFNjaGF1ZmxlciwgQ2FzZXk7IEx1aXMgUi4gUm9kcmlndWV6
-Ow0KPiBEbWl0cnkgS2FzYXRraW47IEdyZWcgS3JvYWgtSGFydG1hbjsgUGV0ZXIgSm9uZXM7IFRh
-a2FzaGkgSXdhaTsgTWluZyBMZWk7IEpvZXkNCj4gTGVlOyBWb2p0xJtjaCBQYXZsw61rOyBLeWxl
-IE1jTWFydGluOyBTZXRoIEZvcnNoZWU7IE1hdHRoZXcgR2FycmV0dDsgSm9oYW5uZXMNCj4gQmVy
-Zw0KPiBTdWJqZWN0OiBSZTogTGludXggRmlybXdhcmUgU2lnbmluZw0KPiANCj4gT24gVGh1LCBB
-dWcgMjcsIDIwMTUgYXQgNToyOSBQTSwgTHVpcyBSLiBSb2RyaWd1ZXogPG1jZ3JvZkBzdXNlLmNv
-bT4gd3JvdGU6DQo+ID4gT24gVGh1LCBBdWcgMjcsIDIwMTUgYXQgMTA6NTc6MjNBTSAtMDAwMCwg
-RGF2aWQgV29vZGhvdXNlIHdyb3RlOg0KPiA+DQo+ID4gU0VMaW51eCB1c2VzOiBzZWN1cml0eV9s
-b2FkX3BvbGljeShkYXRhLCBsZW4pLCByZWZlciB0byBzZWxpbnV4ZnMgc2VsX2xvYWRfb3BzLg0K
-PiA+IFNpbmNlIGl0cyB3cml0ZSBvcGVyYXRpb24gb24gaXRzIGZpbGVfb3BlcmF0aW9uIGlzIHNl
-bF93cml0ZV9sb2FkKCkNCj4gPiBhbmQgdGhhdCBpcyBhcyBmb2xsb3dzOg0KPiA+DQo+ID4gc3Rh
-dGljIHNzaXplX3Qgc2VsX3dyaXRlX2xvYWQoc3RydWN0IGZpbGUgKmZpbGUsIGNvbnN0IGNoYXIg
-X191c2VyICpidWYsDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2l6ZV90IGNv
-dW50LCBsb2ZmX3QgKnBwb3MpIHsNCj4gPiAgICAgICAgIC4uLg0KPiA+IH0NCj4gPg0KPiA+IFdl
-IHNob3VsZCBiZSBhYmxlIHRvIGFkZCB5ZXQtYW5vdGhlciBMU00gaG9vayBoZXJlIHRvIGxldCB0
-aGUga2VybmVsIC8NCj4gPiBMU00gaGF2ZSBhY2Nlc3MgdG8gdGhlIGlub2RlLCBpcyB0aGF0IExT
-TSBob29rIGRlc2lyYWJsZSA/IEJ1dCBmb2xrcywNCj4gPiBiZWZvcmUgeW91IGFuc3dlciBub3Rl
-IHRoYXQgdGhlcmUncyBhIGdyb3dpbmcgdHJlbmQgaGVyZSEgSXRzIHBvaW50IDENCj4gPiBLZWVz
-IGhhZCBtYWRlIGVhcmxpZXIuICBJIHdhcyBoZXNpdGFudCB0byBnbyBpbnRvIGRldGFpbHMgYXMg
-SSB0aGluaw0KPiA+IGZ3IHNpZ25pbmcgbmVlZHMgdG8gYmUgYmFrZWQgZmlyc3QgYnV0Li4gc2lu
-Y2Ugd2UncmUgcmV2aWV3aW5nIGFsbA0KPiA+IHRoZXNlIGRldGFpbHMgbm93IGl0IHNlZW1zIGxv
-Z2ljYWwgdG8gZ28gZG93biB0aGUgcmFiYml0IGhvbGUgZnVydGhlci4NCj4gPg0KPiA+IEV2ZXJ5
-d2hlcmUgd2hlcmUgd2UgZmV0Y2ggYSBmaWxlIGZyb20gd2l0aGluIHRoZSBrZXJuZWwgZWl0aGVy
-DQo+ID4gZGlyZWN0bHkgKHNheSBmaXJtd2FyZSBsb2FkLCA4MDIuMTEgcmVndWxhdG9yeSByZXF1
-ZXN0KSBvciBmcm9tDQo+ID4gdXNlcnNwYWNlIHJlcXVlc3QgKFNFTGludXggcG9saWN5IGxvYWQg
-bm9kZSkgd2UgZW5kIHVwIGhhdmluZyB0bw0KPiA+IHNwcmlua2xlIGEgbmV3IExTTSBob29rLiBJ
-biBmYWN0IGZvciBtb2R1bGVzIGFuZCBrZXhlYyB0aGVyZSB3ZXJlDQo+ID4gc3lzY2FsbHMgYWRk
-ZWQgdG9vLiBUaGVyZSBtaWdodCBiZSBhIHBvc3NpYmxpdHkgZm9yIHNoYXJpbmcgc29tZSBvZiB0
-aGVzZQ0KPiByZXF1ZXN0cyAvIGNvZGUgc28gc29tZSByZXZpZXcgaXMgaW4gb3JkZXIgZm9yIGl0
-Lg0KPiA+DQo+ID4gSGVyZSdzIG15IHJldmlldyBpZiB3ZSB3YW50ZWQgdG8gdHJ5IHNoYXJpbmcg
-dGhpbmdzLCBpbiBjb25zaWRlcmF0aW9uDQo+ID4gYW5kIHJldmlldyBvZjoNCj4gPg0KPiA+ICAg
-KiBTRUxpbnV4IHBvbGljeSBmaWxlcw0KPiA+ICAgKiBtb2R1bGVzDQo+ID4gICAqIGZpcm13YXJl
-IC8gc3lzdGVtIGRhdGEgKGNvbnNpZGVyIHJlcGxhY2luZyBDUkRBKQ0KPiA+ICAgKiBrZXhlYw0K
-PiA+DQo+ID4gLS0tLQ0KPiA+DQo+ID4gICAqIFNFTGludXggcG9saWN5IGZpbGVzOg0KPiA+DQo+
-ID4gc2VsX3dyaXRlX2xvYWQoKSBpcyB2ZXJ5IHNwZWNpZmljLCBpdHMgcGFydCBvZiB0aGUgc2Vs
-aW51eGZzIGFuZCBpdA0KPiA+IGp1c3QgdXNlcyBjb3B5X2Zyb21fdXNlcigpIHRvIGR1bXAgdGhl
-IGRhdGEgZnJvbSB0aGUgZmlsZSBvbnRvIGENCj4gPiB2bWFsbG9jJ2QgcGllY2Ugb2YgbWVtb3J5
-LiBXZSBkb24ndCBleGFjdGx5IHJlYWQgYXJiaXRyYXJ5IGZpbGVzIGZyb20gdGhlIGZzDQo+IHRo
-ZW4uDQo+ID4gSWYgd2UgKnJlYWxseSogd2FudGVkIHRvIGdlbmVyYWxpemUgdGhpbmdzIGZ1cnRo
-ZXIgd2UgcHJvYmFibHkgY291bGQNCj4gPiBidXQgSSdtIG5vdCBnb2luZyB0byBsZWFkIGFueSBk
-aXNjdXNzaW9uIGFib3V0IGRlc2lnbiBvdmVyIHNlbGludXhmcywNCj4gPiBJJ2xsIGxldCB0aGUg
-Zm9sa3MgYmVoaW5kIGl0IHRoaW5rIGFib3V0IHRoYXQgdGhlbXNlbHZlcy4NCj4gDQo+IFdoaWxl
-IEkgcXVlc3Rpb24gdGhlIHVzZWZ1bG5lc3Mgb2YgYSBTRUxpbnV4IHBvbGljeSBzaWduYXR1cmUg
-aW4gdGhlIGdlbmVyYWwgY2FzZSwNCj4gdGhlcmUgYXJlIHNvbWUgc2l0dWF0aW9ucyB3aGVyZSBp
-dCBtaWdodCBtYWtlIHNlbnNlLCBlLmcuIGVtYmVkZGVkIHN5c3RlbXMNCj4gd2l0aCBubyBwb3N0
-LWJ1aWxkIGN1c3RvbWl6YXRpb25zLCBhbmQgSSdtIG5vdCBvcHBvc2VkIHRvIGFkZGVkIGEgc2ln
-bmF0dXJlIHRvDQo+IHRoZSBwb2xpY3kgZmlsZSBmb3IgdGhhdCByZWFzb24uDQoNCkV2ZW4gdHJp
-Z2dlcmVkIHVwZGF0ZXMgbWFrZSBzZW5zZSwgc2luY2UgeW91IGNhbiBhdCBsZWFzdCBoYXZlIHNv
-bWUgZm9ybSBvZiB0cnVzdA0Kb2Ygd2hlcmUgdGhhdCBiaW5hcnkgcG9saWN5IGNhbWUgZnJvbS4g
-DQoNCj4gSG93ZXZlciwgSSBoYXZlbid0IGdpdmVuIGFueSBzZXJpb3VzIHRob3VnaHQgeWV0IHRv
-IGhvdyB3ZSB3b3VsZCBzdHJ1Y3R1cmUgdGhlDQo+IG5ldyBibG9iIGZvcm1hdCBzbyBhcyB0byBz
-dXBwb3J0IGJvdGggc2lnbmVkL3Vuc2lnbmVkIHBvbGljaWVzIGFzIHdlbGwgYXMNCj4gZXhpc3Rp
-bmcgcG9saWNpZXMgd2hpY2ggcHJlZGF0ZSBhbnkgUEtDUyAjNyBjaGFuZ2VzLg0KPiANCg0KSHVo
-LCBub3QgZm9sbG93aW5nPyBQZXJoYXBzLCBJIGFtIG5vdCBmb2xsb3dpbmcgd2hhdCB5b3VyIGxh
-eWluZyBkb3duIGhlcmUuDQoNCiBSaWdodCBub3cgdGhlcmUgaXMgbm8gc2lnbmluZyBvbiB0aGUg
-c2VsaW51eCBwb2xpY3kgZmlsZS4gV2Ugc2hvdWxkIGJlIGFibGUNCnRvIGp1c3QgdXNlIHRoZSBm
-aXJtd2FyZSBzaWduaW5nIGFwaSdzIGFzIGlzIChJIGhhdmUgbm90IGxvb2tlZCBvbiBsaW51eC1u
-ZXh0IHlldCkNCnRvIHVucGFjayB0aGUgYmxvYi4gSW4gdGhlIGNhc2Ugb2YgZmFsbGluZyBiYWNr
-IHRvIGxvYWRpbmcgYW4gdW5zaWduZWQgYmxvYiwgd2UgY291bGQgZG8gaXQgYWxhIGtlcm5lbA0K
-bW9kdWxlIHN0eWxlLiBJZiBpdCBmYWlscyBkbyB0byBpbnZhbGlkIGZvcm1hdCBmYWxsIGJhY2sg
-dG8gYXR0ZW1wdGluZyB0byByZWFkIGl0IGFzIGEgc3RyYWlnaHQgcG9saWN5IGZpbGUuDQpJZiBp
-dCBmYWlscyBvbiBzaWduYXR1cmUgdmVyaWZpY2F0aW9uLCB3ZSBjb3VsZCBzdGlsbCB1bnBhY2sg
-aXQgYW5kIHBhc3MgaXQgb24uIFNvIHlvdSB3b3VsZCB3YW50IHRvIA0KYmUgYWJsZSB0byBjb250
-cm9sIGlmIHRoZSBzaWduZWQgdW5wYWNraW5nIGZyb20gcGtjczcgZmFpbHMsIHdoZXRoZXIgb3Ig
-bm90IGl0cyBmYXRhbC4NCg0KV2Ugd291bGQgYWxzbyBsaWtlbHkgd2FudCB0byBjb252ZXkgdGhp
-cyBzdGF0ZSwgdGhlIGFiaWxpdHkgdG8gY2hhbmdlIHRoaXMgc2V0dGluZyB0byB1c2Vyc3BhY2Ug
-aW4gYSANCkNvbnRyb2xsZWQgZmFzaGlvbiB2aWEgc2VsaW51eGZzLiBJZSBJIHdvdWxkIHdhbnQg
-dG8ga25vdyB0aGF0IEkgY2FuIGxvYWQgbW9kdWxlcyB3aXRob3V0IHZhbGlkIHNpZ25hdHVyZXMs
-DQpBbmQgdGhhdCBteSBjdXJyZW50IHBvbGljeSBmaWxlIGlzIGluIGZhY3QgaW52YWxpZCBvciB2
-YWxpZC4NCg0KDQo+IC0tDQo+IHBhdWwgbW9vcmUNCj4gd3d3LnBhdWwtbW9vcmUuY29tDQo=
+This patch discards the variable as it is not used anywhere throughout
+the kernel.
+
+Build tested it.
+
+Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
+---
+ drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+index c28cabc..353e3fe 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+@@ -108,7 +108,6 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
+ 	case HW_VAR_MEDIA_STATUS:
+ 	{
+ 		enum rt_op_mode OpMode = *((enum rt_op_mode *)(val));
+-		enum led_ctl_mode LedAction = LED_CTL_NO_LINK;
+ 		u8 btMsr = rtl92e_readb(dev, MSR);
+ 
+ 		btMsr &= 0xfc;
+@@ -116,7 +115,6 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
+ 		switch (OpMode) {
+ 		case RT_OP_MODE_INFRASTRUCTURE:
+ 			btMsr |= MSR_INFRA;
+-			LedAction = LED_CTL_LINK;
+ 			break;
+ 
+ 		case RT_OP_MODE_IBSS:
+@@ -125,7 +123,6 @@ void rtl92e_set_reg(struct net_device *dev, u8 variable, u8 *val)
+ 
+ 		case RT_OP_MODE_AP:
+ 			btMsr |= MSR_AP;
+-			LedAction = LED_CTL_LINK;
+ 			break;
+ 
+ 		default:
+-- 
+2.1.4
+
