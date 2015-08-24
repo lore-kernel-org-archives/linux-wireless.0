@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:42266 "EHLO arrakis.dune.hu"
+Received: from mga11.intel.com ([192.55.52.93]:50549 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754766AbbHFH7U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 03:59:20 -0400
-Subject: Re: [PATCH] ath10k: Add QCA99X0 to supported device list
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org
-References: <1437478567-11339-1-git-send-email-vthiagar@qti.qualcomm.com>
- <55C1FFBC.7070905@openwrt.org> <55C31039.6030201@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <55C313D3.4080004@openwrt.org> (sfid-20150806_095930_384056_2189D218)
-Date: Thu, 6 Aug 2015 09:59:15 +0200
-MIME-Version: 1.0
-In-Reply-To: <55C31039.6030201@qti.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+	id S1754152AbbHXUAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Aug 2015 16:00:43 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/6] iwlwifi: mvm: update wakeup reason enum
+Date: Mon, 24 Aug 2015 23:00:33 +0300
+Message-Id: <1440446437-29188-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150824_220046_461642_8702380F)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-08-06 09:43, Vasanthakumar Thiagarajan wrote:
-> On Wednesday 05 August 2015 05:51 PM, Felix Fietkau wrote:
->> On 2015-07-21 13:36, Vasanthakumar Thiagarajan wrote:
->>> Add vendor/device id of QCA99X0 V2.0 to pci id table and
->>> QCA99X0_HW_2_0_CHIP_ID_REV to ath10k_pci_supp_chips[] for
->>> QCA99X0 to get detected by the driver.
->>>
->>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->> I just tested a 99X0 card, and I'm getting this:
->>
->> [    8.742514] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142)
->> [    8.747173] ath10k_pci 0000:01:00.0: pci irq msi interrupts 1 irq_mode 0 reset_mode 0
->> [   11.793314] ath10k_pci 0000:01:00.0: failed to receive initialized event from target: 00000000
->> [   11.793344] ath10k_pci 0000:01:00.0: failed to wait for target after cold reset: -110
->> [   11.800814] ath10k_pci 0000:01:00.0: failed to reset chip: -110
->> [   11.809228] ath10k_pci: probe of 0000:01:00.0 failed with error -110
->>
->> This is on an AP148 board with Linux 3.18, backports generated from
->> latest wireless-testing (2015-08-03) + all patches from kvalo's ath
->> tree.
-> 
-> Any idea about the version of AP148 that you are using?. By any chance did
-> you check if QCA988X is working on the same board?.
-No idea about the version, but QCA988X is working in the same slot.
+From: Sara Sharon <sara.sharon@intel.com>
 
-- Felix
+when waking from d0i3 there is a wakeup reason.
+Enum in driver is not up to date with FW api - fix it.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+index d7658d1..20521be 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+@@ -339,8 +339,13 @@ enum iwl_wowlan_wakeup_reason {
+ 	IWL_WOWLAN_WAKEUP_BY_FOUR_WAY_HANDSHAKE			= BIT(8),
+ 	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_LINK_LOSS			= BIT(9),
+ 	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_SIGNATURE_TABLE		= BIT(10),
+-	/* BIT(11) reserved */
++	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_TCP_EXTERNAL		= BIT(11),
+ 	IWL_WOWLAN_WAKEUP_BY_REM_WAKE_WAKEUP_PACKET		= BIT(12),
++	IWL_WOWLAN_WAKEUP_BY_IOAC_MAGIC_PACKET			= BIT(13),
++	IWL_WOWLAN_WAKEUP_BY_D3_WAKEUP_HOST_TIMER		= BIT(14),
++	IWL_WOWLAN_WAKEUP_BY_RXFRAME_FILTERED_IN		= BIT(15),
++	IWL_WOWLAN_WAKEUP_BY_BEACON_FILTERED_IN			= BIT(16),
++
+ }; /* WOWLAN_WAKE_UP_REASON_API_E_VER_2 */
+ 
+ struct iwl_wowlan_gtk_status {
+-- 
+2.1.4
+
