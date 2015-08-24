@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:33239 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756098AbbHDNnr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 09:43:47 -0400
-Received: by obdeg2 with SMTP id eg2so7246806obd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2015 06:43:46 -0700 (PDT)
-Date: Tue, 4 Aug 2015 08:43:17 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: wireless-regdb <wireless-regdb@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 4/5] wireless-regdb: Update 5GHz rules for US
-Message-ID: <20150804134317.GB78399@ubuntu-hedt> (sfid-20150804_154350_718558_7737DF3B)
-References: <1437622380-4154-1-git-send-email-wens@csie.org>
- <1437622380-4154-5-git-send-email-wens@csie.org>
- <20150803183422.GD21180@ubuntu-hedt>
- <CAGb2v650TmbAtkvK8YWQvzcoxkgB21=Lr6LXZ4uOZe9OGzqSpw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGb2v650TmbAtkvK8YWQvzcoxkgB21=Lr6LXZ4uOZe9OGzqSpw@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:50549 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754152AbbHXUAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Aug 2015 16:00:45 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/6] iwlwifi: correctly size command string arrays
+Date: Mon, 24 Aug 2015 23:00:34 +0300
+Message-Id: <1440446437-29188-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150824_220048_266586_24DD8C1D)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E827CB7@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 04, 2015 at 09:31:58AM +0800, Chen-Yu Tsai wrote:
-> On Tue, Aug 4, 2015 at 2:34 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
-> > On Thu, Jul 23, 2015 at 11:32:59AM +0800, Chen-Yu Tsai wrote:
-> >> The FCC increased the maximum conducted transmission power for the
-> >> U-NII-1 (5150 ~ 5250 MHz) band to 30 dBm or 1 W for master devices
-> >> and 24 dBm or 250 mW for mobile/portable devices.
-> >>
-> >> Effective 6/2/2014.
-> >>
-> >> See FCC KDB 905462 D06.
-> >>
-> >> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-> >> ---
-> >>  db.txt | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/db.txt b/db.txt
-> >> index cadd52c..29ba4b6 100644
-> >> --- a/db.txt
-> >> +++ b/db.txt
-> >> @@ -1160,7 +1160,7 @@ country UG: DFS-FCC
-> >>
-> >>  country US: DFS-FCC
-> >>       (2402 - 2472 @ 40), (30)
-> >> -     (5170 - 5250 @ 80), (17), AUTO-BW
-> >> +     (5170 - 5250 @ 80), (30), AUTO-BW
-> >
-> > The 30 dB limit is for devices in master mode, for clients the limit
-> > seems to be 250 mW (about 24 dB). Given the TPC requirement for U-NII
-> > devices the most it could be bumped up to is 21 dB, unless there's some
-> > other reason I don't know about to keep it at 17 dB.
-> 
-> I suppose we have no way to differentiate between master mode and clients?
-> I'll drop it down to 24 dBm and add a comment above it.
+From: Johannes Berg <johannes.berg@intel.com>
 
-We don't have any way to specify differing rules for APs and clients
-today.
+The command string array is assumed to be indexable by a full u8, so it
+must have 256 entries (0-255), not just 255. A recent firmware change
+(apparently) started using the command 0xff for a notification to the
+host, causing the driver to crash in debug message/tracing code.
 
-Probably the limit should be 23 dBm instead, since 250 mW comes out to
-just less than 24 dBm. Better to be conservative, and besides that is
-consistent with other ranges which have a 250 mW limit.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/agn.h | 2 +-
+ drivers/net/wireless/iwlwifi/dvm/rx.c  | 2 +-
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-> As for 17 dB, that was the original limit prior to the bump, as seen in
-> the FCC KDB attachment "905462 D05 802.11 Channel Plans Old Rules v01".
+diff --git a/drivers/net/wireless/iwlwifi/dvm/agn.h b/drivers/net/wireless/iwlwifi/dvm/agn.h
+index edc3dd4..991def8 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/agn.h
++++ b/drivers/net/wireless/iwlwifi/dvm/agn.h
+@@ -473,7 +473,7 @@ do {									\
+ } while (0)
+ #endif				/* CONFIG_IWLWIFI_DEBUG */
+ 
+-extern const char *const iwl_dvm_cmd_strings[REPLY_MAX];
++extern const char *const iwl_dvm_cmd_strings[REPLY_MAX + 1];
+ 
+ static inline const char *iwl_dvm_get_cmd_string(u8 cmd)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
+index 4785203..4a45b0b 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+@@ -39,7 +39,7 @@
+ 
+ #define IWL_CMD_ENTRY(x) [x] = #x
+ 
+-const char *const iwl_dvm_cmd_strings[REPLY_MAX] = {
++const char *const iwl_dvm_cmd_strings[REPLY_MAX + 1] = {
+ 	IWL_CMD_ENTRY(REPLY_ALIVE),
+ 	IWL_CMD_ENTRY(REPLY_ERROR),
+ 	IWL_CMD_ENTRY(REPLY_ECHO),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 07e6892..a37de3f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -268,7 +268,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ #undef RX_HANDLER_GRP
+ #define CMD(x) [x] = #x
+ 
+-static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
++static const char *const iwl_mvm_cmd_strings[REPLY_MAX + 1] = {
+ 	CMD(MVM_ALIVE),
+ 	CMD(REPLY_ERROR),
+ 	CMD(INIT_COMPLETE_NOTIF),
+-- 
+2.1.4
 
-Ah, okay.
-
-Thanks,
-Seth
