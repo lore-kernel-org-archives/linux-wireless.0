@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57431 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752282AbbHTHHp convert rfc822-to-8bit (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35257 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbbHXQMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 03:07:45 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: "sujith@msujith.org" <sujith@msujith.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>
-Subject: RE: [PATCH v2 2/2] ath9k: fix incorrect calibration initial for
- ar9561
-Date: Thu, 20 Aug 2015 07:07:43 +0000
-Message-ID: <85a689635dfd4daf80947a946e7d4371@NASANEXM01E.na.qualcomm.com> (sfid-20150820_090749_173415_4627B7D7)
-References: <1440033699-11121-1-git-send-email-miaoqing@qca.qualcomm.com>
-	<1440033699-11121-2-git-send-email-miaoqing@qca.qualcomm.com>
- <21973.19910.496207.730546@gargle.gargle.HOWL>
-In-Reply-To: <21973.19910.496207.730546@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 24 Aug 2015 12:12:44 -0400
+Received: by qkbm65 with SMTP id m65so73873668qkb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2015 09:12:43 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1440419912.3735.16.camel@sipsolutions.net>
+References: <CAOiWkA9iotcGij6wNeCUw+2iSfvWZGH+=vv_R2bwuDp92aXukw@mail.gmail.com>
+	<1440143840.2107.2.camel@sipsolutions.net>
+	<1440143920.2107.3.camel@sipsolutions.net>
+	<CAOiWkA-rNVHiVZo5oSuEOk_o6ioPzfpd0qzw_QsekRSHQ1EeEw@mail.gmail.com>
+	<1440419912.3735.16.camel@sipsolutions.net>
+Date: Mon, 24 Aug 2015 12:12:43 -0400
+Message-ID: <CAOiWkA95hm3LWwNt3EP1-OESjx775BC8YAznwy48XorSERuiew@mail.gmail.com> (sfid-20150824_181247_928422_0DED893E)
+Subject: Re: mac80211: When adding a new station, notify driver before adding
+ to hash
+From: Marty Faltesek <mfaltesek@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Sujith.  You mentioned this before,  so need more investigation,  and this patch will be discarded. 
+Yes, that would address the issue in a simple way. Would this be
+applicable to any of the other ops vectors? I will create a patch.
 
-Miaoqing
-
------Original Message-----
-From: Sujith Manoharan [mailto:sujith@msujith.org] 
-Sent: Thursday, August 20, 2015 11:47 AM
-To: Pan, Miaoqing
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; ath9k-devel; Valo, Kalle
-Subject: Re: [PATCH v2 2/2] ath9k: fix incorrect calibration initial for ar9561
-
-miaoqing@qti.qualcomm.com wrote:
-> -	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9565(ah))
-> +	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9565(ah) ||
-> +	    AR_SREV_9561(ah))
->  		priv_ops->init_cal = ar9003_hw_init_cal_pcoem;
->  	else
->  		priv_ops->init_cal = ar9003_hw_init_cal_soc;
-
-Are you sure about this ? AR9561 is not a PCOEM chip, IIRC.
-Maybe the SoC routine is missing some code changes for AR956x ?
-
-Sujith
+On Mon, Aug 24, 2015 at 8:38 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2015-08-21 at 13:00 -0400, Marty Faltesek wrote:
+>> It's not IBSS and the stack is messed up, I guess because of statics.
+>> It's probably more likely this manually crafted stack:
+>>
+>> __queue_work    (fails BUG_ON(!list_empty(&work->entry));) NULL work
+>> causes this check fail.
+>> queue_work_on   WORK_STRUCT_PENDING_BIT check passes cause NULL work.
+>> queue_work
+>> ieee80211_queue_work
+>> ath10k_sta_rc_update
+>> drv_sta_rc_update
+>> rate_control_rate_update
+>> ieee80211_rx_h_action
+>> ieee80211_rx_handlers
+>> ieee80211_invoke_rx_handlers
+>> ieee80211_prepare_and_rx_handle
+>> __ieee80211_rx_handle_packet
+>> ieee80211_rx
+>
+> Ok. Still, I think the best solution would be to check sta->uploaded?
+>
+> johannes
