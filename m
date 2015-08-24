@@ -1,44 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34402 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbbHRF61 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60523 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753921AbbHXOPb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 01:58:27 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 24 Aug 2015 10:15:31 -0400
+Message-ID: <55DB26FC.1060707@broadcom.com> (sfid-20150824_161553_165681_098B28B0)
+Date: Mon, 24 Aug 2015 16:15:24 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8192cu: Remove and replace routine in hw.c and mac.c
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1428343980-13954-1-git-send-email-ap420073@gmail.com>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
-	linux-wireless@vger.kernel.org
-Message-Id: <20150818055826.ED27A140302@smtp.codeaurora.org> (sfid-20150818_075830_319232_221F59D0)
-Date: Tue, 18 Aug 2015 05:58:26 +0000 (UTC)
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH V2 3/7] brcmfmac: Increase nr of supported flowrings.
+References: <1439708139-7527-1-git-send-email-arend@broadcom.com>	<1439708139-7527-4-git-send-email-arend@broadcom.com> <CACna6ryL04p-cHptZnvYZ9fvnGn3FafN9PPNxsMPPfmdkSEjnA@mail.gmail.com>
+In-Reply-To: <CACna6ryL04p-cHptZnvYZ9fvnGn3FafN9PPNxsMPPfmdkSEjnA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 08/19/2015 11:56 PM, Rafał Miłecki wrote:
+> On 16 August 2015 at 08:55, Arend van Spriel <arend@broadcom.com> wrote:
+>> From: Hante Meuleman <meuleman@broadcom.com>
+>>
+>> Next generation devices will have firmware which will have more
+>> than 256 flowrings. This patch increases the maximum number of
+>> supported flowrings to 512.
+>>
+>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>
+> This is a patch that for my device triggers:
+> Unable to handle kernel NULL pointer dereference at virtual address 00000014
+>
+> It seems to happen even when using only 1 AP interface.
 
-> I remove duplicated routines which related rtl92cu_set_hw_reg().
-> 
-> 1. rtl92c_set_qos() and HW_VAR_AC_PARAM routine are similar code.
-> so i replace code with rtlpriv->cfg->ops->set_hw_reg().
-> 
-> 2. rtl92c_set_mac_addr() and 'HW_VAR_ETHER_ADDR' case at
-> rtl92cu_set_hw_reg() routine are similar code.
-> so i removed rtl92c_set_mac_addr() function.
-> also it was not used anywhere.
-> 
-> 3. remove HW_VAR_ACM_CTRL routine in rtl92cu_set_hw_reg().
-> if rtl_usb->acm_method is not EACMWAY2_SW, HW_VAR_ACM_CTRL is called
-> from HW_VAR_AC_PARAM. but it never called. because acm_method is always
-> EACMWAY2_SW. so i remove acm_method check routine
-> and HW_VAR_ACM_CTRL routine.
-> 
-> both usb and pci interface is not used HW_VAR_ACM_CTRL.
-> but i can't test pci interface module, so i didn't modify pci code.
-> 
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+Hi Rafał,
 
-Thanks, applied to wireless-drivers-next.git.
+What happens is that your platform has no memory to allocate a flowring 
+for tx and there is a bug in handling the returned error. Can you try it 
+with following applied. You will still have memory issue so for OpenWrt 
+you may need to limit to 256 anyway. Hante found another issue with 
+hash_id in struct brcmf_flowring so we are not entirely sure which issue 
+caused the null pointer deref so your feedback is appreciated.
 
-Kalle Valo
+Regards,
+Arend
+---
+  drivers/net/wireless/brcm80211/brcmfmac/flowring.c | 4 ++--
+  1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c 
+b/drivers/net/wi
+index 5b7a8ee..9fb50b3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+@@ -151,11 +151,11 @@ u32 brcmf_flowring_create(struct brcmf_flowring 
+*flow, u8
+                                 break;
+                 }
+                 if (i == flow->nrofrings)
+-                       return -ENOMEM;
++                       return BRCMF_FLOWRING_INVALID_ID;
+
+                 ring = kzalloc(sizeof(*ring), GFP_ATOMIC);
+                 if (!ring)
+-                       return -ENOMEM;
++                       return BRCMF_FLOWRING_INVALID_ID;
+
+                 memcpy(hash[hash_idx].mac, mac, ETH_ALEN);
+                 hash[hash_idx].fifo = fifo;
+-- 
+1.9.1
+
+
