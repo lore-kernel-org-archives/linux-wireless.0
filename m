@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11550 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbbHZJKA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47669 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153AbbHXT2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2015 05:10:00 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <arnd@arndb.de>,
-	<linux-wireless@vger.kernel.org>, <twilightrook@gmail.com>,
-	<oscarrydberg@gmail.com>, <vvanpo@gmail.com>,
-	<joseph.salisbury@canonical.com>
-Subject: Re: [PATCH/RFT 1/2] ath10k: add qca6164 support
-References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com>
-	<1439469147-9408-2-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 26 Aug 2015 12:09:51 +0300
-In-Reply-To: <1439469147-9408-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 13 Aug 2015 14:32:26 +0200")
-Message-ID: <87zj1e1km8.fsf@kamboji.qca.qualcomm.com> (sfid-20150826_111007_321528_7C1CB2E9)
+	Mon, 24 Aug 2015 15:28:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH V2 1/7] brcmfmac: Add support for host platform NVRAM loading.
+References: <1439708139-7527-1-git-send-email-arend@broadcom.com>
+	<1439708139-7527-2-git-send-email-arend@broadcom.com>
+	<CACna6rwGPgHKKKcP+SznWf=hDb+jLPnKvk+PjZbF9kxvsVDX_w@mail.gmail.com>
+	<55D4ED5E.8080504@broadcom.com> <55D62F91.8080501@broadcom.com>
+Date: Mon, 24 Aug 2015 22:28:25 +0300
+In-Reply-To: <55D62F91.8080501@broadcom.com> (Arend van Spriel's message of
+	"Thu, 20 Aug 2015 21:50:41 +0200")
+Message-ID: <878u907ag6.fsf@kamboji.qca.qualcomm.com> (sfid-20150824_212843_297909_5CE40949)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Arend van Spriel <arend@broadcom.com> writes:
 
-> This adds additional 0x0041 PCI Device ID
-> definition to ath10k for QCA6164 which is a 1
-> spatial stream sibling of the QCA6174 (which is 2
-> spatial stream chip).
+>> Can you remove this patch from the series and apply the rest. Just
+>> verified over here the remaining patches apply cleanly on
+>> wireless-drivers-next.
 >
-> The QCA6164 needs a dedicated board.bin file which
-> is different than the one used for QCA6174. If the
-> board.bin is wrong the device will crash early
-> while trying to boot firmware. The register dump
-> will look like this:
+> Hi Kalle,
 >
->  ath10k_pci 0000:02:00.0: firmware register dump:
->  ath10k_pci 0000:02:00.0: [00]: 0x05010000 0x000015B3 0x000A012D 0x00955B31
->  ...
->
-> Note the value 0x000A012D.
->
-> Special credit goes to Alan Liu
-> <alanliu@qca.qualcomm.com> for providing support
-> help which enabled me to come up with this patch.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Just drop this series. I will send a V3 shortly.
 
-Thanks, applied.
+Ok, v2 dropped.
 
 -- 
 Kalle Valo
