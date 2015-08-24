@@ -1,284 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:37373 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753992AbbHaSDt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 14:03:49 -0400
-Received: by wicmx12 with SMTP id mx12so6881955wic.0
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 11:03:48 -0700 (PDT)
-Message-ID: <55E49702.4090605@gmail.com> (sfid-20150831_200355_116603_1FFB646B)
-Date: Mon, 31 Aug 2015 20:03:46 +0200
-From: Arend van Spriel <aspriel@gmail.com>
-MIME-Version: 1.0
-To: Kuei Hao Liu <alanliu@qca.qualcomm.com>, kvalo@qca.qualcomm.com
-CC: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] Add wmi-tlv support in test mode
-References: <1441043051-14107-1-git-send-email-alanliu@qca.qualcomm.com> <1441043051-14107-2-git-send-email-alanliu@qca.qualcomm.com>
-In-Reply-To: <1441043051-14107-2-git-send-email-alanliu@qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:59564 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751906AbbHXHir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Aug 2015 03:38:47 -0400
+Message-ID: <1440401918.3735.0.camel@sipsolutions.net> (sfid-20150824_093908_699188_C30CE6B1)
+Subject: Re: [PATCH] net/wireless: enable wiphy device to suspend/resume
+ asynchronously
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: David Miller <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Date: Mon, 24 Aug 2015 09:38:38 +0200
+In-Reply-To: <55DA9374.2060909@linux.intel.com>
+References: <55B9B3BA.6080406@linux.intel.com>
+		 <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com>
+		 <55D13D66.1050500@linux.intel.com>
+	 <1439796553.2451.1.camel@sipsolutions.net> <55D19F57.4070605@broadcom.com>
+	 <55DA9374.2060909@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31-08-15 19:44, Kuei Hao Liu wrote:
-> From: alanliu <alanliu@qca.qualcomm.com>
-
-Would be good to start subject with driver name, ie.:
-
-ath10k: Add wmi-tlv support in test mode
-
-Regards,
-Arend
-
-> Add WMI-TLV and FW API support in ath10k testmode.
-> Ath10k can get right wmi command format from UTF image
-> to communicate UTF firmware.
+On Mon, 2015-08-24 at 11:45 +0800, Fu, Zhonghui wrote:
 > 
-> Signed-off-by: Kuei Hao Liu <alanliu@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c     |   4 +-
->  drivers/net/wireless/ath/ath10k/core.h     |   5 +-
->  drivers/net/wireless/ath/ath10k/testmode.c | 123 ++++++++++++++++++++++++++---
->  drivers/net/wireless/ath/ath10k/wmi-tlv.c  |  15 +++-
->  4 files changed, 131 insertions(+), 16 deletions(-)
+> On 2015/8/17 16:46, Arend van Spriel wrote:
+> > + Rafael
+> > 
+> > On 08/17/2015 09:29 AM, Johannes Berg wrote:
+> > > On Mon, 2015-08-17 at 09:48 +0800, Fu, Zhonghui wrote:
+> > > > 
+> > > > The suspend/resume timing of wiphy device and related devices 
+> > > > will be
+> > > > ensured by their parent/child relationship. So, enabling wiphy 
+> > > > device
+> > > > to suspend/resume asynchronously does not change any 
+> > > >  dependency. It
+> > > > can only take advantage of multicore and improve system
+> > > > suspend/resume speed.
+> > > > 
+> > > 
+> > > You're going to have to explain that to me, because I don't see 
+> > > that.
+> > > All I see is that when looking at a device, if async is possible, 
+> > > it
+> > > gets added to an async work, and if async is not possible then it 
+> > > gets
+> > > done immediately. Even putting aside the question of whether or 
+> > > not
+> > > async is ordered or not (I don't know), if the wiphy is async and 
+> > > the
+> > > PCI (or other bus) device isn't, then it seems they could get 
+> > > handled
+> > > out of order, no? Or is there some magic code somewhere that I'm
+> > > missing that explicitly waits for the async of the parent/child
+> > > relationship?
+> > 
+> > This patch got me worried as well. Can't find the magic either. 
+> > Maybe Rafael can give some hints here.
 > 
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index 2551067..b2210b9 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -489,8 +489,8 @@ static int ath10k_download_fw(struct ath10k *ar, enum ath10k_firmware_mode mode)
->  		}
->  		break;
->  	case ATH10K_FIRMWARE_MODE_UTF:
-> -		data = ar->testmode.utf->data;
-> -		data_len = ar->testmode.utf->size;
-> +		data = ar->testmode.utf_firmware_data;
-> +		data_len = ar->testmode.utf_firmware_len;
->  		mode_name = "utf";
->  		break;
->  	default:
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index 6a387ba..6b11a5c 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -768,9 +768,12 @@ struct ath10k {
->  	struct {
->  		/* protected by conf_mutex */
->  		const struct firmware *utf;
-> +		char fw_version[32];
-> +		const void *utf_firmware_data;
-> +		size_t utf_firmware_len;
->  		DECLARE_BITMAP(orig_fw_features, ATH10K_FW_FEATURE_COUNT);
->  		enum ath10k_fw_wmi_op_version orig_wmi_op_version;
-> -
-> +		enum ath10k_fw_wmi_op_version op_version;
->  		/* protected by data_lock */
->  		bool utf_monitor;
->  	} testmode;
-> diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-> index b084f88..a94c30c 100644
-> --- a/drivers/net/wireless/ath/ath10k/testmode.c
-> +++ b/drivers/net/wireless/ath/ath10k/testmode.c
-> @@ -35,6 +35,100 @@ static const struct nla_policy ath10k_tm_policy[ATH10K_TM_ATTR_MAX + 1] = {
->  	[ATH10K_TM_ATTR_VERSION_MINOR]	= { .type = NLA_U32 },
->  };
->  
-> +bool ath10k_tm_fetch_utf_firmware_api(struct ath10k *ar, const u8 *fw_data, size_t fw_len)
-> +{
-> +	size_t magic_len, ie_len;
-> +	int ie_id;
-> +	struct ath10k_fw_ie *hdr;
-> +	__le32 *version;
-> +	const u8 *data = fw_data;
-> +	size_t len = fw_len;
-> +	bool ret = false;
-> +
-> +	if(!data || len <= 0)
-> +		goto err;
-> +	/* magic also includes the null byte, check that as well */
-> +	magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
-> +
-> +	if (len < magic_len) {
-> +		ath10k_err(ar, "utf firmware file is too small to contain magic\n");
-> +		goto err;
-> +	}
-> +	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
-> +		ath10k_err(ar, "invalid firmware magic\n");
-> +		goto err;
-> +	}
-> +	/* jump over the padding */
-> +	magic_len = ALIGN(magic_len, 4);
-> +
-> +	len -= magic_len;
-> +	data += magic_len;
-> +
-> +	/* loop elements */
-> +	while (len > sizeof(struct ath10k_fw_ie)) {
-> +		hdr = (struct ath10k_fw_ie *)data;
-> +
-> +		ie_id = le32_to_cpu(hdr->id);
-> +		ie_len = le32_to_cpu(hdr->len);
-> +
-> +		len -= sizeof(*hdr);
-> +		data += sizeof(*hdr);
-> +
-> +		if (len < ie_len) {
-> +			ath10k_err(ar, "invalid length for FW IE %d (%zu < %zu)\n", ie_id, len, ie_len);
-> +			ret = -EINVAL;
-> +			goto err;
-> +		}
-> +
-> +		switch (ie_id) {
-> +		case ATH10K_FW_IE_FW_VERSION:
-> +			if (ie_len > sizeof(ar->testmode.fw_version) - 1)
-> +				break;
-> +
-> +			memcpy(ar->testmode.fw_version, data, ie_len);
-> +			ar->testmode.fw_version[ie_len] = '\0';
-> +
-> +			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
-> +				"found fw version %s\n",
-> +				ar->testmode.fw_version);
-> +			break;
-> +		case ATH10K_FW_IE_FW_IMAGE:
-> +			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
-> +				"found fw image ie (%zd B)\n",
-> +				ie_len);
-> +
-> +			ar->testmode.utf_firmware_data = data;
-> +			ar->testmode.utf_firmware_len = ie_len;
-> +			break;
-> +		case ATH10K_FW_IE_WMI_OP_VERSION:
-> +			if (ie_len != sizeof(u32))
-> +				break;
-> +			version = (__le32 *)data;
-> +			ar->testmode.op_version = le32_to_cpup(version);
-> +			ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "found fw ie wmi op version %d\n",
-> +			ar->testmode.op_version);
-> +			break;
-> +		default:
-> +			ath10k_warn(ar, "Unknown FW IE: %u\n",
-> +				le32_to_cpu(hdr->id));
-> +			break;
-> +		}
-> +		/* jump over the padding */
-> +		ie_len = ALIGN(ie_len, 4);
-> +
-> +		len -= ie_len;
-> +		data += ie_len;
-> +	}
-> +	if (!ar->testmode.utf_firmware_data || !ar->testmode.utf_firmware_len) {
-> +		ath10k_warn(ar, "No ATH10K_FW_IE_FW_IMAGE found\n");
-> +		goto err;
-> +	}
-> +        return true;
-> +err:
-> +    return ret;
-> +}
-> +
-> +
->  /* Returns true if callee consumes the skb and the skb should be discarded.
->   * Returns false if skb is not used. Does not sleep.
->   */
-> @@ -143,7 +237,6 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
->  {
->  	char filename[100];
->  	int ret;
-> -
->  	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode cmd utf start\n");
->  
->  	mutex_lock(&ar->conf_mutex);
-> @@ -166,36 +259,42 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
->  	}
->  
->  	snprintf(filename, sizeof(filename), "%s/%s",
-> -		 ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
-> +		ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
->  
->  	/* load utf firmware image */
->  	ret = request_firmware(&ar->testmode.utf, filename, ar->dev);
->  	if (ret) {
->  		ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
-> -			    filename, ret);
-> +			filename, ret);
->  		goto err;
->  	}
->  
->  	spin_lock_bh(&ar->data_lock);
-> -
->  	ar->testmode.utf_monitor = true;
-> -
->  	spin_unlock_bh(&ar->data_lock);
-> -
->  	BUILD_BUG_ON(sizeof(ar->fw_features) !=
->  		     sizeof(ar->testmode.orig_fw_features));
->  
->  	memcpy(ar->testmode.orig_fw_features, ar->fw_features,
->  	       sizeof(ar->fw_features));
->  	ar->testmode.orig_wmi_op_version = ar->wmi.op_version;
-> -
-> -	/* utf.bin firmware image does not advertise firmware features. Do
-> -	 * an ugly hack where we force the firmware features so that wmi.c
-> -	 * will use the correct WMI interface.
-> -	 */
->  	memset(ar->fw_features, 0, sizeof(ar->fw_features));
-> -	ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
->  
-> +	if(ath10k_tm_fetch_utf_firmware_api(ar,ar->testmode.utf->data, ar->testmode.utf->size)){
-> +		ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "utf firmware %s advertise firmware feature\n",filename);
-> +		ar->wmi.op_version = ar->testmode.op_version;
-> +	}else{
-> +		/* for utf.bin firmware image does not advertise firmware features. Do
-> +		* an ugly hack where we force the firmware features so that wmi.c
-> +		* will use the correct WMI interface.
-> +		*/
-> +		ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "utf firmware %s doesn't advertise firmware feature\n",filename);
-> +		ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
-> +		ar->testmode.utf_firmware_data = ar->testmode.utf->data;
-> +		ar->testmode.utf_firmware_len = ar->testmode.utf->size;
-> +	}
-> +	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode wmi version %d\n",
-> +		ar->wmi.op_version);
->  	ret = ath10k_hif_power_up(ar);
->  	if (ret) {
->  		ath10k_err(ar, "failed to power up hif (testmode): %d\n", ret);
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> index 567b797..cc3d993 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> @@ -23,6 +23,7 @@
->  #include "wmi-ops.h"
->  #include "wmi-tlv.h"
->  #include "p2p.h"
-> +#include "testmode.h"
->  
->  /***************/
->  /* TLV helpers */
-> @@ -419,7 +420,7 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
->  {
->  	struct wmi_cmd_hdr *cmd_hdr;
->  	enum wmi_tlv_event_id id;
-> -
-> +	bool consumed;
->  	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
->  	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
->  
-> @@ -428,6 +429,18 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
->  
->  	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
->  
-> +	consumed = ath10k_tm_event_wmi(ar, id, skb);
-> +
-> +	/* Ready event must be handled normally also in UTF mode so that we
-> +	 * know the UTF firmware has booted, others we are just bypass WMI
-> +	 * events to testmode.
-> +	 */
-> +	if (consumed && id != WMI_TLV_READY_EVENTID) {
-> +		ath10k_dbg(ar, ATH10K_DBG_WMI,
-> +			"wmi tlv testmode consumed 0x%x\n", id);
-> +		goto out;
-> +	}
-> +
->  	switch (id) {
->  	case WMI_TLV_MGMT_RX_EVENTID:
->  		ath10k_wmi_event_mgmt_rx(ar, skb);
+> "dpm_wait_for_children" function will be invoked in 
+> "__device_suspend", "__device_suspend_late", and 
+> "__device_suspend_noirq" functions to synchronize the child 
+> relationship. "dpm_wait" function will be invoked in 
+> "device_resume_noirq", "device_resume_early", and "device_resume" 
+> functions to synchronize the parent relationship. If two devices have 
+> parent/child relationship, but different suspend/resume mode(sync or 
+> async), this will have no impact to PM timing order between them. 
+> Because all devices will use "__device_suspend", 
+> "__device_suspend_late" ... functions to complete their PM 
+> transition.
 > 
+
+Ok, good point. For the unaware here, can you please resend with a
+commit message amended with some of this information?
+
+thanks,
+johannes
