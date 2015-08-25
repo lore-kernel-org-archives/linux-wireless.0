@@ -1,79 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:4691 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751257AbbHSR4u convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:61912 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbbHYNsO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 13:56:50 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC v2 0/3] add TSO / A-MSDU TX for iwlwifi
-Date: Wed, 19 Aug 2015 17:56:20 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E825252@hasmsx107.ger.corp.intel.com> (sfid-20150819_195657_786004_2081DA6C)
-References: <1439989181-4444-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1439993647.6610.8.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E8250B6@hasmsx107.ger.corp.intel.com>
-	 <1440000515.6610.20.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32E825167@hasmsx107.ger.corp.intel.com>
- <1440004777.6610.23.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 25 Aug 2015 09:48:14 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Anish Tondwalkar <twilightrook@gmail.com>,
+	Victor van Poppelen <vvanpo@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Oscar Rydberg <oscarrydberg@gmail.com>,
+	Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: Re: [PATCH/RFT 0/2] ath10k: add qca6164 support
+Date: Tue, 25 Aug 2015 15:47:45 +0200
+Message-ID: <1901727.3ECHUBE5WW@wuerfel> (sfid-20150825_154817_795224_F9A4CE48)
+In-Reply-To: <CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com>
+References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com> <1889302.bvZ6s0xNZC@wuerfel> <CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 08/19/2015 08:20 PM, Eric Dumazet wrote:
-> On Wed, 2015-08-19 at 17:00 +0000, Grumbach, Emmanuel wrote:
->>
->> On 08/19/2015 07:08 PM, Eric Dumazet wrote:
->>> On Wed, 2015-08-19 at 15:07 +0000, Grumbach, Emmanuel wrote:
->>>
->>>> I'll look at it.
->>>> I was almost starting to implement that but then I thought with another
->>>> (good?) reason to use LSO. LSO gives me the guarantee that the packet is
->>>> directed to one peer, which might not be the case with xmit_more since
->>>> we have one Qdisc for several clients in case we are in AP mode.
->>>> Building an A-MSDU for several clients is not possible, at least not for
->>>> several client in the L2 (different MAC addresses).
->>>> LSO avoids this problem completely.
->>>
->>> Then, simply calling skb_gso_segment() from the driver might be enough,
->>> and less work for you.
->>>
->>> This would even support TSO on IPv6
->>>
->>
->> Well... I did take care of IPv6.
+On Tuesday 25 August 2015 15:09:45 Michal Kazior wrote:
 > 
-> net/core/tso.c does not yet handle IPv6
+> This is some weird regression with MSI ranges and we still haven't
+> figured this out.
 > 
+> For the time being add "irq_mode=1" parameter when loading ath10k_pci
+> module, please.
 
-Yeah - I can see that now.
-I can teach him - that's not a big deal. The bigger problem is that
-net/core/tso.c doesn't do what I really need: it does only a small
-portion. Since I need to add one frag to several skbs, I need to
-refcount the frags' page. net/core/tso.c hides the page from me.
+Ok, that gets the device to show up without errors. I have no
+time to test whether I can actually use it at the moment, will
+report back later.
 
-I can try to use tso_build_hdr but it will copy the entire header where
-I need only SNAP / IP / TCP (and not 802.11).
-I am getting the feeling that net/core/tso.c is close to what I need,
-but not close enough to be usable without making changes that would make
-the implementation too complicated and changing net/core/tso.c in a way
-that would be much less readable for other users.
-I know that our device is quite "unique" in the sense that most other
-vendors do all the header twiddling in hardware. We unfortunately don't.
-The A-MSDU's format is also somewhat unusual:
+Thanks!
 
-<802.11 HDR>
-	<ETH><SNAP><IP><TCP><PAYLOAD><PAD (variable length)
-	<ETH><SNAP><IP><TCP><PAYLOAD><PAD (variable length)
-	<ETH><SNAP><IP><TCP><PAYLOAD><PAD (variable length)
-	etc...
-
-So I feel that making net/core/tso.c more complicated just because of
-our craziness seems an overkill to me.
-I'll try a bit harder to see how I can use net/core/tso.c, but I have to
-say I am pessimistic.
+	Arnd
