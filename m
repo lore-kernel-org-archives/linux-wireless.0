@@ -1,88 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:34863 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753125AbbHQCFi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39143 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753280AbbHYQxe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2015 22:05:38 -0400
-Received: by pacgr6 with SMTP id gr6so97255070pac.2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2015 19:05:37 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 6/6] staging: wilc1000: coreconfigurator.c: fix kmalloc error check
-Date: Mon, 17 Aug 2015 11:05:15 +0900
-Message-Id: <1439777115-25861-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150817_040540_882376_870F46E1)
-In-Reply-To: <1439777115-25861-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1439777115-25861-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 25 Aug 2015 12:53:34 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V3 0/6] brcmfmac: nvram loading and code rework
+References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+	<CACna6ryBL+bpBM4TekcNCotou-gey=k6_aYJVT+F-Sm0V0fuiw@mail.gmail.com>
+	<55DC9AF0.3040304@broadcom.com>
+Date: Tue, 25 Aug 2015 19:53:26 +0300
+In-Reply-To: <55DC9AF0.3040304@broadcom.com> (Arend van Spriel's message of
+	"Tue, 25 Aug 2015 18:42:24 +0200")
+Message-ID: <87h9nn48e1.fsf@kamboji.qca.qualcomm.com> (sfid-20150825_185337_837764_7D3E2C8D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is added and fixed error check when kmalloc is failed.
+Arend van Spriel <arend@broadcom.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+> On 08/25/2015 06:09 PM, Rafał Miłecki wrote:
+>> On 20 August 2015 at 22:06, Arend van Spriel <arend@broadcom.com> wrote:
+>>> This series comprises of following changes:
+>>> - support NVRAM loading for bcm47xx platform.
+>>> - revise announced interface combinations and validate against it.
+>>> - new debugfs entry for msgbuf protocol layer used with PCIe devices.
+>>> - PCIe fix for handling queue overflow.
+>>> - support more firmware events (for bcm4339 firmware).
+>>>
+>>> The series is intended for v4.3 kernel and applies to the master branch
+>>> of the wireless-drivers-next repository. Removed patch from this series
+>>> that reportedly has issue on OpenWrt platform.
+>>
+>> I believe that V3 also got following patch dropped:
+>> brcmfmac: consolidate ifp lookup in driver core
+>> https://patchwork.kernel.org/patch/6767991/
+>>
+>> As we tracked regressing patch to be "brcmfmac: Increase nr of
+>> supported flowrings.", I believe you can safely re-submit above (ifp
+>> lookup) one. I tested it on top of wireless-drivers-next brcmfmac and
+>> it works fine (no regressions).
+>
+> That patch was already dropped from V2 (if my memory is right). Let's
+> not confuse our maintainer. I will resubmit that patch. Hopefully it
+> will make it in 4.3. What is the deadline, Kalle.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index f44d2ce..64b57c0 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -801,6 +801,9 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
- 		u32 u32Tsf_Hi;
- 
- 		pstrNetworkInfo = kmalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
-+		if (!pstrNetworkInfo)
-+			return -ENOMEM;
-+
- 		memset((void *)(pstrNetworkInfo), 0, sizeof(tstrNetworkInfo));
- 
- 		pstrNetworkInfo->s8rssi = pu8WidVal[0];
-@@ -851,6 +854,9 @@ s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
- 
- 		if (u16IEsLen > 0) {
- 			pstrNetworkInfo->pu8IEs = kmalloc(u16IEsLen, GFP_KERNEL);
-+			if (!pstrNetworkInfo->pu8IEs)
-+				return -ENOMEM;
-+
- 			memset((void *)(pstrNetworkInfo->pu8IEs), 0, u16IEsLen);
- 
- 			memcpy(pstrNetworkInfo->pu8IEs, pu8IEs, u16IEsLen);
-@@ -918,6 +924,9 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
- 	u16 u16IEsLen = 0;
- 
- 	pstrConnectRespInfo = kmalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
-+	if (!pstrConnectRespInfo)
-+		return -ENOMEM;
-+
- 	memset((void *)(pstrConnectRespInfo), 0, sizeof(tstrConnectRespInfo));
- 
- 	/* u16AssocRespLen = pu8Buffer[0]; */
-@@ -938,6 +947,9 @@ s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
- 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
- 
- 		pstrConnectRespInfo->pu8RespIEs = kmalloc(u16IEsLen, GFP_KERNEL);
-+		if (!pstrConnectRespInfo->pu8RespIEs)
-+			return -ENOMEM;
-+
- 		memset((void *)(pstrConnectRespInfo->pu8RespIEs), 0, u16IEsLen);
- 
- 		memcpy(pstrConnectRespInfo->pu8RespIEs, pu8IEs, u16IEsLen);
-@@ -1008,10 +1020,8 @@ s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZ
- 
- 	pstrSurveyResults = kmalloc_array(u32SurveyResultsCount,
- 				sizeof(wid_site_survey_reslts_s), GFP_KERNEL);
--	if (pstrSurveyResults == NULL) {
--		u32SurveyResultsCount = 0;
--		WILC_ERRORREPORT(s32Error, WILC_NO_MEM);
--	}
-+	if (!pstrSurveyResults)
-+		return -ENOMEM;
- 
- 	memset((void *)(pstrSurveyResults), 0, u32SurveyResultsCount * sizeof(wid_site_survey_reslts_s));
- 
+Now :) And even when I can't promise anything...
+
 -- 
-1.9.1
-
+Kalle Valo
