@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:33200 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751919AbbHaUxS (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:59524 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865AbbHYSZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 16:53:18 -0400
-Received: by obcji4 with SMTP id ji4so7914932obc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 13:53:18 -0700 (PDT)
+	Tue, 25 Aug 2015 14:25:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Anish Tondwalkar <twilightrook@gmail.com>,
+	Victor van Poppelen <vvanpo@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Oscar Rydberg <oscarrydberg@gmail.com>,
+	Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: Re: [PATCH/RFT 0/2] ath10k: add qca6164 support
+Date: Tue, 25 Aug 2015 20:24:57 +0200
+Message-ID: <1523365.YtEF2Ft7XC@wuerfel> (sfid-20150825_202508_896405_198C9F6B)
+In-Reply-To: <1901727.3ECHUBE5WW@wuerfel>
+References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com> <CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com> <1901727.3ECHUBE5WW@wuerfel>
 MIME-Version: 1.0
-Date: Mon, 31 Aug 2015 15:53:18 -0500
-Message-ID: <CAAGWusB5n7=62VFdq-=h7BsP3fkwnG6dvjFdixL_SPBhw06S3A@mail.gmail.com> (sfid-20150831_225321_978979_D2ACDA83)
-Subject: How to set a scan on a given frequency
-From: Shengrong Yin <syin@uh.edu>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tuesday 25 August 2015 15:47:45 Arnd Bergmann wrote:
+> On Tuesday 25 August 2015 15:09:45 Michal Kazior wrote:
+> > 
+> > This is some weird regression with MSI ranges and we still haven't
+> > figured this out.
+> > 
+> > For the time being add "irq_mode=1" parameter when loading ath10k_pci
+> > module, please.
+> 
+> Ok, that gets the device to show up without errors. I have no
+> time to test whether I can actually use it at the moment, will
+> report back later.
 
-I was using iw to scan a given frequency.
-For example,
-iw wlan0 scan freq 2412 | grep freq:
-However, the result was scanned ssids with different frequencies
-across 2.4 GHz band, which is
-freq: 2462
-freq: 2462
-freq: 2437
-freq: 2412
-...
-Why this happened? Shouldn't it return only the ssid with 2412?
-I tried to debug iw using ddd. But failed to trace from iw to netlink
-library. I traced to
-listen_events(state,ARRAY_SIZE(cmds), cmds)
-and then I was expected to wait for the scanning result.
-The iw tool did only send out the scan request. The netlink library
-will handle the scan and call the API provided by mac80211.
-Then mac80211 will then request scan from the driver.
+I tested some more and everything seems fine now when using legacy
+interrupts. Thanks for all the work that went into this, I hope
+the patch can make it into 4.3.
 
-Please correct me if I was wrong about the scanning steps.
-Should I specify the given frequency for scanning directly in Mac80211?
-
-My goal was to write my own user space process that can handle scan on
-a given frequency within a shortest time. But only on one particular frequency.
-
-Thanks,
--Shengrong
+	Arnd
