@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:36732 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981AbbHBKwT (ORCPT
+Received: from mail-qk0-f177.google.com ([209.85.220.177]:36504 "EHLO
+	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974AbbHYXZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2015 06:52:19 -0400
-From: Shraddha Barke <shraddha.6596@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Cc: Shraddha Barke <shraddha.6596@gmail.com>
-Subject: [PATCH] Staging: wilc1000 :Insert blank line after declaration
-Date: Sun,  2 Aug 2015 16:21:59 +0530
-Message-Id: <1438512719-22877-1-git-send-email-shraddha.6596@gmail.com> (sfid-20150802_125257_997499_4F499838)
+	Tue, 25 Aug 2015 19:25:36 -0400
+Received: by qkda128 with SMTP id a128so60390975qkd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2015 16:25:36 -0700 (PDT)
+From: Sreenath Madasu <sreenath.madasu@gmail.com>
+Date: Tue, 25 Aug 2015 19:25:03 -0400
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Getting started on switching rtl8188eu staging driver to
+ LIB80211/MAC80211
+Message-ID: <20150825232503.GA3342@sreenath-gentoo.lan> (sfid-20150826_012540_001525_BB751571)
+References: <loom.20150824T013723-25@post.gmane.org>
+ <55DB2D62.6090002@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <55DB2D62.6090002@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following checkpatch.pl warning:
-
-WARNING: Missing a blank line after declarations
-
-Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 9cb46bb..a6d809f 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -1152,6 +1152,7 @@ void ProcessShortWid(char *pcPacket, s32 *ps32PktLen,
- 	u16 *pu16val = (u16 *)ps8WidVal;
- 	u16 u16val = 0;
- 	s32 s32PktLen = *ps32PktLen;
-+
- 	if (pstrWID == NULL) {
- 		PRINT_WRN(CORECONFIG_DBG, "Can't set SHORT val 0x%x ,NULL structure\n", u16val);
- 		return;
--- 
-2.1.0
-
+Thanks Larry,
+I will look at those drivers
+Sreenath
+On Mon, Aug 24, 2015 at 09:42:42AM -0500, Larry Finger wrote:
+> On 08/23/2015 06:40 PM, Sreenath Madasu wrote:
+> > Hi all,
+> > I want to work on the TODO tasks
+> >
+> > - switch to use LIB80211
+> > - switch to use MAC80211
+> >
+> > for staging driver rtl8188eu.
+> >
+> > How can I start? Where is the documentation?
+> 
+> There is no specific documentation for this device, only what is available in 
+> the mac80211, cfg80211, and nl80211 code. You could also look at the drivers in 
+> drivers/net/wireless/ for ideas. The driver must be rewritten. You could 
+> consider Jes Sorensen's work on producing a mac80211 driver for the RTL8723AU 
+> that has been posted on this mailing list. He started with a Realtek USB driver 
+> that is similar to r8188eu.
+> 
+> Larry
+> 
+> 
