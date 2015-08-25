@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:36477 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753040AbbHMRaD convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:34962 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937AbbHYKfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 13:30:03 -0400
-Received: by igxp17 with SMTP id p17so25436830igx.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2015 10:30:02 -0700 (PDT)
+	Tue, 25 Aug 2015 06:35:11 -0400
+Received: by wicne3 with SMTP id ne3so10740374wic.0
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2015 03:35:10 -0700 (PDT)
+Date: Tue, 25 Aug 2015 12:35:04 +0200 (CEST)
+From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+To: Sreenath Madasu <Sreenath.Madasu@gmail.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: Getting started on switching rtl8188eu staging driver to
+ LIB80211/MAC80211
+In-Reply-To: <loom.20150824T013723-25@post.gmane.org>
+Message-ID: <alpine.LNX.2.00.1508251226170.16623@T520.work> (sfid-20150825_123517_041593_D2EC0AD5)
+References: <loom.20150824T013723-25@post.gmane.org>
 MIME-Version: 1.0
-In-Reply-To: <55CCD13C.7010006@redhat.com>
-References: <55CCD13C.7010006@redhat.com>
-Date: Thu, 13 Aug 2015 19:30:02 +0200
-Message-ID: <CACna6rxm7MbEhnke91G8M+wPNfzCo6RkCm2OdyKrEshd1FN_EA@mail.gmail.com> (sfid-20150813_193014_898122_68E4B7CE)
-Subject: Re: b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 12, Type 11 (AC),
- Revision 1)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sean Richards <ft86drifter@cox.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 August 2015 at 19:17, Hans de Goede <hdegoede@redhat.com> wrote:
-> I'm trying to help a Fedora user to get his wifi to work on a
-> Lenovo Yoga 3 14, ad currently we are stuck with the
-> b43 driving giving the error from $subject,
-> is there anyone who can help with this ?
+Hi
 
-Well, the $subject says everything. There is noone really working on
-it right now.
+On Sun, 23 Aug 2015, Sreenath Madasu wrote:
 
--- 
-Rafał
+> Hi all,
+> I want to work on the TODO tasks
+> 
+> - switch to use LIB80211
+> - switch to use MAC80211
+> 
+> for staging driver rtl8188eu.
+> 
+> How can I start? Where is the documentation?
+> Thanks
+> Sreenath
+> 
+
+I have the same problems with my RTL8821AU driver.
+But I'm currently switching to rtlwifi-lib and of course 
+LIB80211/MAC80211.
+
+Take the rtl8188ee as an example to rewrite/rename all functions in 
+hal/
+os_dep/
+
+You can also look at my repo at
+github.com/ulli-kroll/rtl8821au.git
+
+Greeting form Cologne
+Hasn Ulli Kroll
+
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
