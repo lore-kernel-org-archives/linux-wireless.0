@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57233 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47579 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932256AbbHJSJN (ORCPT
+	with ESMTP id S1751978AbbHYM1H convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 14:09:13 -0400
+	Tue, 25 Aug 2015 08:27:07 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Guy Mishol <guym@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
-Subject: Re: [PATCH 1/2] wl18xx: update statistics acx and debugfs files
-References: <1437985215-20400-1-git-send-email-guym@ti.com>
-Date: Mon, 10 Aug 2015 21:09:04 +0300
-In-Reply-To: <1437985215-20400-1-git-send-email-guym@ti.com> (Guy Mishol's
-	message of "Mon, 27 Jul 2015 11:20:15 +0300")
-Message-ID: <87h9o7uibj.fsf@kamboji.qca.qualcomm.com> (sfid-20150810_200917_179291_11546918)
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH] brcmfmac: check all combinations when setting wiphy's addresses
+References: <1440022602-6943-1-git-send-email-zajec5@gmail.com>
+Date: Tue, 25 Aug 2015 15:27:01 +0300
+In-Reply-To: <1440022602-6943-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Thu, 20 Aug 2015
+ 00:16:42 +0200")
+Message-ID: <87pp2b5zai.fsf@kamboji.qca.qualcomm.com> (sfid-20150825_142711_263935_1FACEB47)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guy Mishol <guym@ti.com> writes:
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-> From: Eliad Peller <eliad@wizery.com>
+> Broadcom is working on better reflection of interface combinations. With
+> upcoming patches we may have 1st combination supporting less interfaces
+> than others.
+> To don't run out of addresses check all combinations to find the one
+> with the greatest max_interfaces value.
 >
-> Sync the driver statistics acx and debugfs representation
-> with the current fw api.
->
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-The patch 1 was submitted three times and I don't know which one to take
-and that's why I drop these. Please resubmit the whole series and mark
-it as v2.
+Thanks, applied manually.
 
 -- 
 Kalle Valo
