@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:37356 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483AbbHGIhK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47766 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486AbbHYM3O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 04:37:10 -0400
-Date: Fri, 7 Aug 2015 09:37:07 +0100
-From: Johannes Postma <jgmpostma@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warning: cast to
- restricted __le16
-Message-ID: <20150807083707.GA3923@goofy_linux.Home> (sfid-20150807_103746_866670_A93BB99C)
-References: <1438860112-1786-1-git-send-email-jgmpostma@gmail.com>
- <wrfjpp30bo9s.fsf@redhat.com>
+	Tue, 25 Aug 2015 08:29:14 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] mwifiex: fix mwifiex_rdeeprom_read()
+References: <20150820103037.GA5521@mwanda>
+Date: Tue, 25 Aug 2015 15:29:07 +0300
+In-Reply-To: <20150820103037.GA5521@mwanda> (Dan Carpenter's message of "Thu,
+	20 Aug 2015 13:30:37 +0300")
+Message-ID: <87lhcz5z70.fsf@kamboji.qca.qualcomm.com> (sfid-20150825_142919_050473_CBAFAC41)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <wrfjpp30bo9s.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/15 at 08:21am, Jes Sorensen wrote:
-> 
-> Looks OK to me. Probably worth changing the *(usPtr + index) to be
-> usPtr[index] as well to make the code easier to read.
-> 
-> Jes
-> 
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Thank you for reviewing.  I will make a seperate patch for that.  I will
-send it after this one is accepted.  Or should I combine them into a
-patch serie?
+> There were several bugs here.
+>
+> 1)  The done label was in the wrong place so we didn't copy any
+>     information out when there was no command given.
+>
+> 2)  We were using PAGE_SIZE as the size of the buffer instead of
+>     "PAGE_SIZE - pos".
+>
+> 3)  snprintf() returns the number of characters that would have been
+>     printed if there were enough space.  If there was not enough space
+>     (and we had fixed the memory corruption bug #2) then it would result
+>     in an information leak when we do simple_read_from_buffer().  I've
+>     changed it to use scnprintf() instead.
+>
+> I also removed the initialization at the start of the function, because
+> I thought it made the code a little more clear.
+>
+> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell mwifiex driver')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-	Johannes
+I see a new warning:
+
+drivers/net/wireless/mwifiex/debugfs.c:760:31: warning: pos may be used uninitialized in this function [-Wuninitialized]
+
+Is it a valid warning or should I apply the patch anyway?
+
+-- 
+Kalle Valo
