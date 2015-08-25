@@ -1,66 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:36248 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992459AbbHHQxr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2015 12:53:47 -0400
-Received: by obnw1 with SMTP id w1so98531714obn.3
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2015 09:53:46 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V3 NEXT 0/7] Make changes in rtlwifi and dependent drivers
-Date: Sat,  8 Aug 2015 11:53:32 -0500
-Message-Id: <1439052819-30196-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150808_185352_046773_FBA3FA4A)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25187 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753855AbbHYG4j convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Aug 2015 02:56:39 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: RE: [patch] mwifiex: fix mwifiex_rdeeprom_read()
+Date: Tue, 25 Aug 2015 06:56:34 +0000
+Message-ID: <e7bbd1bc72994d84a9c44e6a73c65ed5@SC-EXCH04.marvell.com> (sfid-20150825_085658_151757_F726015D)
+References: <20150820103037.GA5521@mwanda>
+In-Reply-To: <20150820103037.GA5521@mwanda>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Realtek engineers have suggested several improvements to this family
-of drivers. The changes include:
+Hi Dan,
 
-1. Fix the 5G channel assignments to remove unused channels.
-2. Fix a potential race condition when updating CAM.
-3. Change retry limits to depend on vif type.
-4. Fix a race condition that could allow a change in the APOL key
-   before packet 4 of the handshaking sequence has been transmitted.
-   This problem affects rtl8192ee, rtl8723be, and rtl8821ae.
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Thursday, August 20, 2015 4:01 PM
+> To: Amitkumar Karwar; Bing Zhao
+> Cc: Nishant Sarmukadam; Kalle Valo; linux-wireless@vger.kernel.org;
+> kernel-janitors@vger.kernel.org
+> Subject: [patch] mwifiex: fix mwifiex_rdeeprom_read()
+> 
+> There were several bugs here.
+> 
+> 1)  The done label was in the wrong place so we didn't copy any
+>     information out when there was no command given.
+> 
+> 2)  We were using PAGE_SIZE as the size of the buffer instead of
+>     "PAGE_SIZE - pos".
+> 
+> 3)  snprintf() returns the number of characters that would have been
+>     printed if there were enough space.  If there was not enough space
+>     (and we had fixed the memory corruption bug #2) then it would result
+>     in an information leak when we do simple_read_from_buffer().  I've
+>     changed it to use scnprintf() instead.
+> 
+> I also removed the initialization at the start of the function, because
+> I thought it made the code a little more clear.
+> 
+> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell
+> mwifiex driver')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/mwifiex/debugfs.c
+> b/drivers/net/wireless/mwifiex/debugfs.c
+> index 5a0636d4..bd2f5d2 100644
+> --- a/drivers/net/wireless/mwifiex/debugfs.c
+> +++ b/drivers/net/wireless/mwifiex/debugfs.c
+> @@ -731,7 +731,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
+> *ubuf,
+>  		(struct mwifiex_private *) file->private_data;
+>  	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+>  	char *buf = (char *) addr;
+> -	int pos = 0, ret = 0, i;
+> +	int pos, ret, i;
+>  	u8 value[MAX_EEPROM_DATA];
+> 
+>  	if (!buf)
+> @@ -739,7 +739,7 @@ mwifiex_rdeeprom_read(struct file *file, char __user
+> *ubuf,
+> 
+>  	if (saved_offset == -1) {
+>  		/* No command has been given */
+> -		pos += snprintf(buf, PAGE_SIZE, "0");
+> +		pos = snprintf(buf, PAGE_SIZE, "0");
+>  		goto done;
+>  	}
+> 
+> @@ -751,14 +751,14 @@ mwifiex_rdeeprom_read(struct file *file, char
+> __user *ubuf,
+>  		goto done;
+>  	}
+> 
+> -	pos += snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
+> saved_bytes);
+> +	pos = snprintf(buf, PAGE_SIZE, "%d %d ", saved_offset,
+> saved_bytes);
+> 
+>  	for (i = 0; i < saved_bytes; i++)
+> -		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ",
+> value[i]);
+> +		pos += scnprintf(buf + pos, PAGE_SIZE - pos, "%d ",
+> value[i]);
+> 
+> +done:
+>  	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
+> 
+> -done:
+>  	free_page(addr);
+>  	return ret;
+>  }
 
-Larry
----
+Looks good.
 
-V2 - Fix a merge error
-V3 - One array was missed in the 5G channel list fix.
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-pkshih (6):
-  rtlwifi: Fix programming of CAM content
-  rtlwifi: Make retry limits depend on vif type
-  rtlwifi: Force disable key to wait until TX acked.
-  rtlwifi: rtl8192ee: Implement new rekey logic
-  rtlwifi: rtl8723be: Implement new rekey logic
-  rtlwifi: rtl8821ae: Implement new rekey logic
-
-timlee (1):
-  rtlwifi: rtl8821ae: Remove unsupported 5G channels
-
- drivers/net/wireless/rtlwifi/base.c          | 183 ++++++++++++++++++++++-----
- drivers/net/wireless/rtlwifi/base.h          |   7 +
- drivers/net/wireless/rtlwifi/cam.c           |   6 +-
- drivers/net/wireless/rtlwifi/core.c          |  22 +++-
- drivers/net/wireless/rtlwifi/debug.h         |   1 +
- drivers/net/wireless/rtlwifi/pci.c           |   8 +-
- drivers/net/wireless/rtlwifi/ps.c            |   3 +
- drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  |   1 +
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |   8 ++
- drivers/net/wireless/rtlwifi/rtl8723be/fw.c  |   1 +
- drivers/net/wireless/rtlwifi/rtl8723be/trx.c |   8 ++
- drivers/net/wireless/rtlwifi/rtl8723be/trx.h |  12 ++
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c  |  14 +-
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.c |   8 ++
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.h |  13 ++
- drivers/net/wireless/rtlwifi/wifi.h          |   9 ++
- 16 files changed, 255 insertions(+), 49 deletions(-)
-
--- 
-2.1.4
-
+Regards,
+Amitkumar
