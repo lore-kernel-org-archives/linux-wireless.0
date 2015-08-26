@@ -1,78 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29273 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751686AbbHOTkL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2015 15:40:11 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 0/9] various patches from our internal tree
-Date: Sat, 15 Aug 2015 22:39:45 +0300
-Message-Id: <1439667594-13632-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150815_214019_913078_F819CA38)
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:11233 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752410AbbHZUPN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2015 16:15:13 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 03/12] brcmfmac: change parameters for brcmf_remove_interface()
+Date: Wed, 26 Aug 2015 22:14:55 +0200
+Message-ID: <1440620104-2715-4-git-send-email-arend@broadcom.com> (sfid-20150826_223108_640253_6D0DC078)
+In-Reply-To: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+References: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Just pass the interface to be removed, ie. the struct brcmf_if instance.
 
-Just came back from my vacation as well.
-Here are a few patches we have on our internal tree.
-I started to send the patch from Andrei (on HW scan vs.
-the iface work) and ended up with a quite a few, so
-here they are.
-You've seen all of them internally already.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/core.c     | 13 +++++++------
+ drivers/net/wireless/brcm80211/brcmfmac/core.h     |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  2 +-
+ 5 files changed, 11 insertions(+), 10 deletions(-)
 
-For those out there who would like to see what we
-have in our internal tree, I've started to push it
-on a weekly basis to korg:
-
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
-
-Note that patches can be rebased, squashed etc... before
-they are sent to the ML.
-
-Andrei Otcheretianski (1):
-  mac80211: Introduce per vif frame registration API
-
-Arik Nemtsov (4):
-  mac80211: debugfs: add file to disallow TDLS wider-bw
-  mac80211: TDLS: add proper HT-oper IE
-  mac80211: TDLS: check reg with IR-relax on chandef upgrade
-  mac80211: avoid VHT usage with no 80MHz chans allowed
-
-Emmanuel Grumbach (2):
-  mac80211: allow the driver to advertise A-MSDU within A-MPDU Rx
-    support
-  mac80211: allow to transmit A-MSDU within A-MPDU
-
-Johannes Berg (2):
-  nl80211: support vendor dumpit commands
-  mac80211: remove direct probe step before authentication
-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c |   2 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |   2 +-
- drivers/net/wireless/mac80211_hwsim.c       |   2 +-
- include/linux/ieee80211.h                   |   1 +
- include/net/cfg80211.h                      |   9 ++
- include/net/mac80211.h                      |  28 +++-
- net/mac80211/agg-rx.c                       |   8 +-
- net/mac80211/agg-tx.c                       |  15 ++-
- net/mac80211/cfg.c                          |  23 +++-
- net/mac80211/debugfs.c                      |   1 +
- net/mac80211/debugfs_netdev.c               |  29 +++++
- net/mac80211/driver-ops.h                   |  23 +++-
- net/mac80211/ibss.c                         |   2 +-
- net/mac80211/ieee80211_i.h                  |   3 +-
- net/mac80211/mesh.c                         |   3 +-
- net/mac80211/mlme.c                         |  98 ++++++--------
- net/mac80211/sta_info.h                     |   2 +
- net/mac80211/tdls.c                         |  21 ++-
- net/mac80211/trace.h                        |  40 +++++-
- net/mac80211/util.c                         |   5 +-
- net/mac80211/vht.c                          |  15 +++
- net/wireless/nl80211.c                      | 192 ++++++++++++++++++++++++++++
- 22 files changed, 432 insertions(+), 92 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index a293275..0c29bf6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -4983,7 +4983,7 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
+ 		brcmf_dbg(CONN, "AP mode link down\n");
+ 		complete(&cfg->vif_disabled);
+ 		if (ifp->vif->mbss)
+-			brcmf_remove_interface(ifp->drvr, ifp->bssidx);
++			brcmf_remove_interface(ifp);
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 1f65ce8..157f0d7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -887,12 +887,13 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
+ 	}
+ }
+ 
+-void brcmf_remove_interface(struct brcmf_pub *drvr, u32 bssidx)
++void brcmf_remove_interface(struct brcmf_if *ifp)
+ {
+-	if (drvr->iflist[bssidx]) {
+-		brcmf_fws_del_interface(drvr->iflist[bssidx]);
+-		brcmf_del_if(drvr, bssidx);
+-	}
++	if (!ifp || WARN_ON(ifp->drvr->iflist[ifp->bssidx] != ifp))
++		return;
++
++	brcmf_fws_del_interface(ifp);
++	brcmf_del_if(ifp->drvr, ifp->bssidx);
+ }
+ 
+ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
+@@ -1122,7 +1123,7 @@ void brcmf_detach(struct device *dev)
+ 
+ 	/* make sure primary interface removed last */
+ 	for (i = BRCMF_MAX_IFS-1; i > -1; i--)
+-		brcmf_remove_interface(drvr, i);
++		brcmf_remove_interface(drvr->iflist[i]);
+ 
+ 	brcmf_cfg80211_detach(drvr->config);
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+index 1dc5b96..eb0c177 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+@@ -206,7 +206,7 @@ struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
+ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
+ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
+ 			      char *name, u8 *mac_addr);
+-void brcmf_remove_interface(struct brcmf_pub *drvr, u32 bssidx);
++void brcmf_remove_interface(struct brcmf_if *ifp);
+ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
+ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ 			  enum brcmf_netif_stop_reason reason, bool state);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index ec62492..4d4cc2c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -222,7 +222,7 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+ 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
+ 
+ 	if (ifp && ifevent->action == BRCMF_E_IF_DEL)
+-		brcmf_remove_interface(drvr, ifevent->bssidx);
++		brcmf_remove_interface(ifp);
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index a9ba775..6a70c06 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -2140,7 +2140,7 @@ static void brcmf_p2p_delete_p2pdev(struct brcmf_p2p_info *p2p,
+ {
+ 	cfg80211_unregister_wdev(&vif->wdev);
+ 	p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
+-	brcmf_remove_interface(vif->ifp->drvr, vif->ifp->bssidx);
++	brcmf_remove_interface(vif->ifp);
+ 	brcmf_free_vif(vif);
+ }
+ 
 -- 
-2.1.4
+1.9.1
 
