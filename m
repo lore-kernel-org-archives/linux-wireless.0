@@ -1,68 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12254 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856AbbHLKy0 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:42579 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756079AbbHZUPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2015 06:54:26 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: Fix invalid survey reporting for QCA99X0
-Date: Wed, 12 Aug 2015 16:24:04 +0530
-Message-ID: <1439376845-17245-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150812_125430_690079_AC22FFC5)
+	Wed, 26 Aug 2015 16:15:18 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 09/12] brcmfmac: add dedicated debug level for firmware console logging
+Date: Wed, 26 Aug 2015 22:15:01 +0200
+Message-ID: <1440620104-2715-10-git-send-email-arend@broadcom.com> (sfid-20150826_221536_292908_062EC9CB)
+In-Reply-To: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+References: <1440620104-2715-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are three WMI_CHAN_INFO events reported per channel
-in QCA99X0 firmware. First one is a notification at the begining
-of the channel dwell time with cmd_flag as CHAN_INFO_START(cmd_flag = 0),
-second one is a notification at the end of the dwell time with cmd_flag
-CHAN_INFO_PRE_COMPLETE (cmd_flag = 2) and the third is the indication
-with CHAN_INFO_COMPLETE (cmd_flag = 1) which is the last indication for
-the channel. Since there is a new state before the completion, the handler
-is to fixed so that the counts are deducted from the ones reported with
-CHAN_INFO_START rather than the ones reported with CHAN_INFO_PRE_COMPLETE.
-Without this fix there will be lots of 0 msecs reported as active
-and busy time.
+Both PCIe and SDIO devices have the possibility to log the firmware
+console output in kernel log. For PCIe it is logged when PCIE debug
+level is enabled. For SDIO it is logged when user specifies a non-zero
+console interval through debugfs. This patch tries to make it a
+bit more consistent. The firmware console output is only logged when
+FWCON debug level is enabled.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Pontus Fuchs <pontusf@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 6 ++++--
- drivers/net/wireless/ath/ath10k/wmi.h | 1 +
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/debug.h | 3 +++
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c  | 7 +++++--
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c  | 5 ++++-
+ 3 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index e6d6b42..38e22e0 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2412,8 +2412,10 @@ void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
- 		ar->ch_info_can_report_survey = true;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/brcm80211/brcmfmac/debug.h
+index eb0b8c4..48648ca 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.h
+@@ -37,6 +37,7 @@
+ #define BRCMF_SDIO_VAL		0x00020000
+ #define BRCMF_MSGBUF_VAL	0x00040000
+ #define BRCMF_PCIE_VAL		0x00080000
++#define BRCMF_FWCON_VAL		0x00100000
+ 
+ /* set default print format */
+ #undef pr_fmt
+@@ -78,6 +79,7 @@ do {								\
+ #define BRCMF_GLOM_ON()		(brcmf_msg_level & BRCMF_GLOM_VAL)
+ #define BRCMF_EVENT_ON()	(brcmf_msg_level & BRCMF_EVENT_VAL)
+ #define BRCMF_FIL_ON()		(brcmf_msg_level & BRCMF_FIL_VAL)
++#define BRCMF_FWCON_ON()	(brcmf_msg_level & BRCMF_FWCON_VAL)
+ 
+ #else /* defined(DEBUG) || defined(CONFIG_BRCM_TRACING) */
+ 
+@@ -90,6 +92,7 @@ do {								\
+ #define BRCMF_GLOM_ON()		0
+ #define BRCMF_EVENT_ON()	0
+ #define BRCMF_FIL_ON()		0
++#define BRCMF_FWCON_ON()	0
+ 
+ #endif /* defined(DEBUG) || defined(CONFIG_BRCM_TRACING) */
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 3a98c43..e75d04e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -644,7 +644,7 @@ static void brcmf_pcie_bus_console_init(struct brcmf_pciedev_info *devinfo)
+ 	addr = console->base_addr + BRCMF_CONSOLE_BUFSIZE_OFFSET;
+ 	console->bufsize = brcmf_pcie_read_tcm32(devinfo, addr);
+ 
+-	brcmf_dbg(PCIE, "Console: base %x, buf %x, size %d\n",
++	brcmf_dbg(FWCON, "Console: base %x, buf %x, size %d\n",
+ 		  console->base_addr, console->buf_addr, console->bufsize);
+ }
+ 
+@@ -656,6 +656,9 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo)
+ 	u8 ch;
+ 	u32 newidx;
+ 
++	if (!BRCMF_FWCON_ON())
++		return;
++
+ 	console = &devinfo->shared.console;
+ 	addr = console->base_addr + BRCMF_CONSOLE_WRITEIDX_OFFSET;
+ 	newidx = brcmf_pcie_read_tcm32(devinfo, addr);
+@@ -677,7 +680,7 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo)
+ 		}
+ 		if (ch == '\n') {
+ 			console->log_str[console->log_idx] = 0;
+-			brcmf_dbg(PCIE, "CONSOLE: %s", console->log_str);
++			pr_debug("CONSOLE: %s", console->log_str);
+ 			console->log_idx = 0;
+ 		}
  	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index f990e3d..e41bf44 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -123,6 +123,7 @@ struct rte_console {
  
--	ar->survey_last_rx_clear_count = rx_clear_count;
--	ar->survey_last_cycle_count = cycle_count;
-+	if (!(cmd_flags & WMI_CHAN_INFO_FLAG_PRE_COMPLETE)) {
-+		ar->survey_last_rx_clear_count = rx_clear_count;
-+		ar->survey_last_cycle_count = cycle_count;
-+	}
+ #define BRCMF_FIRSTREAD	(1 << 6)
  
- exit:
- 	spin_unlock_bh(&ar->data_lock);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0d4efc9..5825c5c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -5585,6 +5585,7 @@ struct wmi_peer_sta_kickout_event {
- } __packed;
++#define BRCMF_CONSOLE	10	/* watchdog interval to poll console */
  
- #define WMI_CHAN_INFO_FLAG_COMPLETE BIT(0)
-+#define WMI_CHAN_INFO_FLAG_PRE_COMPLETE BIT(1)
+ /* SBSDIO_DEVICE_CTL */
  
- /* Beacon filter wmi command info */
- #define BCN_FLT_MAX_SUPPORTED_IES	256
+@@ -3204,6 +3205,8 @@ static void brcmf_sdio_debugfs_create(struct brcmf_sdio *bus)
+ 	if (IS_ERR_OR_NULL(dentry))
+ 		return;
+ 
++	bus->console_interval = BRCMF_CONSOLE;
++
+ 	brcmf_debugfs_add_entry(drvr, "forensics", brcmf_sdio_forensic_read);
+ 	brcmf_debugfs_add_entry(drvr, "counters",
+ 				brcmf_debugfs_sdio_count_read);
+@@ -3613,7 +3616,7 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 	}
+ #ifdef DEBUG
+ 	/* Poll for console output periodically */
+-	if (bus->sdiodev->state == BRCMF_SDIOD_DATA &&
++	if (bus->sdiodev->state == BRCMF_SDIOD_DATA && BRCMF_FWCON_ON() &&
+ 	    bus->console_interval != 0) {
+ 		bus->console.count += BRCMF_WD_POLL_MS;
+ 		if (bus->console.count >= bus->console_interval) {
 -- 
 1.9.1
 
