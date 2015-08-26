@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45942 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752634AbbHTUGO (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:36960 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754798AbbHZVyw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 16:06:14 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V3 5/6] brcmfmac: bump highest event number for 4339 firmware
-Date: Thu, 20 Aug 2015 22:06:07 +0200
-Message-ID: <1440101168-2252-6-git-send-email-arend@broadcom.com> (sfid-20150820_220622_655853_122FEB0A)
-In-Reply-To: <1440101168-2252-1-git-send-email-arend@broadcom.com>
-References: <1440101168-2252-1-git-send-email-arend@broadcom.com>
+	Wed, 26 Aug 2015 17:54:52 -0400
+Received: by igui7 with SMTP id i7so22823178igu.0
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2015 14:54:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+References: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+Date: Wed, 26 Aug 2015 23:54:51 +0200
+Message-ID: <CACna6rxG7ewu0G_MP1L_yS-3nbgNSB_Zo_Wapv0Lumjib=_QWw@mail.gmail.com> (sfid-20150826_235505_665937_8268DAE3)
+Subject: Re: [PATCH 00/12] brcmfmac: multiple interface rework and cleanup
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The event mask length is determined by the highest event number
-that is specified in the driver. When this length is shorter than
-firmware expects setting event mask will fail and device becomes
-pretty useless. This issue was reported with bcm4339 firmware that
-was recently released.
+On 26 August 2015 at 22:14, Arend van Spriel <arend@broadcom.com> wrote:
+> This patch series contains the following:
+> * rework code dealing with multiple interfaces.
+> * allow logging firmware console using debug level.
+> * fix crash in error path when probe fails.
+> * fix memory leak in free net devices.
+> * minor code cleanup.
+>
+> The patch series is intended for v4.3 and applies to the master
+> branch of the wireless-drivers-next repository.
 
-Reported-by: Pontus Fuchs <pontusf@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Pontus Fuchs <pontusf@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+This is a bulk of great work, thank you! I can finally use 3 AP
+interfaces without any problems and WARNINGs!
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-index cbf033f..1326898 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-@@ -85,7 +85,6 @@ struct brcmf_event;
- 	BRCMF_ENUM_DEF(IF, 54) \
- 	BRCMF_ENUM_DEF(P2P_DISC_LISTEN_COMPLETE, 55) \
- 	BRCMF_ENUM_DEF(RSSI, 56) \
--	BRCMF_ENUM_DEF(PFN_SCAN_COMPLETE, 57) \
- 	BRCMF_ENUM_DEF(EXTLOG_MSG, 58) \
- 	BRCMF_ENUM_DEF(ACTION_FRAME, 59) \
- 	BRCMF_ENUM_DEF(ACTION_FRAME_COMPLETE, 60) \
-@@ -103,8 +102,7 @@ struct brcmf_event;
- 	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74) \
- 	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75) \
- 	BRCMF_ENUM_DEF(TDLS_PEER_EVENT, 92) \
--	BRCMF_ENUM_DEF(BCMC_CREDIT_SUPPORT, 127) \
--	BRCMF_ENUM_DEF(PSTA_PRIMARY_INTF_IND, 128)
-+	BRCMF_ENUM_DEF(BCMC_CREDIT_SUPPORT, 127)
- 
- #define BRCMF_ENUM_DEF(id, val) \
- 	BRCMF_E_##id = (val),
-@@ -112,7 +110,11 @@ struct brcmf_event;
- /* firmware event codes sent by the dongle */
- enum brcmf_fweh_event_code {
- 	BRCMF_FWEH_EVENT_ENUM_DEFLIST
--	BRCMF_E_LAST
-+	/* this determines event mask length which must match
-+	 * minimum length check in device firmware so it is
-+	 * hard-coded here.
-+	 */
-+	BRCMF_E_LAST = 139
- };
- #undef BRCMF_ENUM_DEF
- 
--- 
-1.9.1
+I tested it on my SmartRG SR400ac with 2 x BCM43602, I did:
+1) Setup 3 AP interfaces on 2 GHz 20MHz HT with WPA2 PSK
+2) Switch my STA 25 times between APs
+3) Run iperf for 20 minutes (33.2 Mbits/sec)
+4) Switch my STA 25 times between APs
 
+Not a single failure noticed! My BCM43602 finally works stable! Great
+work, thanks again!
