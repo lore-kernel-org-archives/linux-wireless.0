@@ -1,119 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:36692 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397AbbHSLKR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37096 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755219AbbHZJoe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 07:10:17 -0400
-Received: by lagz9 with SMTP id z9so685263lag.3
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 04:10:16 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix dma_mapping_error() handling
-Date: Wed, 19 Aug 2015 13:10:43 +0200
-Message-Id: <1439982643-27031-1-git-send-email-michal.kazior@tieto.com> (sfid-20150819_131023_656797_4C85DA31)
+	Wed, 26 Aug 2015 05:44:34 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Anish Tondwalkar <twilightrook@gmail.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Oscar Rydberg <oscarrydberg@gmail.com>,
+	Victor van Poppelen <vvanpo@gmail.com>,
+	Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: Re: [PATCH/RFT 0/2] ath10k: add qca6164 support
+References: <1439469147-9408-1-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQ=STQ2jpMCjP7V=soPk=e4BMuq+3bO_F0UXK_EuJFqxfQ@mail.gmail.com>
+	<1901727.3ECHUBE5WW@wuerfel> <1523365.YtEF2Ft7XC@wuerfel>
+Date: Wed, 26 Aug 2015 12:44:25 +0300
+In-Reply-To: <1523365.YtEF2Ft7XC@wuerfel> (Arnd Bergmann's message of "Tue, 25
+	Aug 2015 20:24:57 +0200")
+Message-ID: <87bndu1j0m.fsf@kamboji.qca.qualcomm.com> (sfid-20150826_114451_313323_93EDE7C2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function returns 1 when DMA mapping fails. The
-driver would return bogus values and could
-possibly confuse itself if DMA failed.
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Fixes: 767d34fc67af ("ath10k: remove DMA mapping wrappers")
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htc.c    | 4 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 8 ++++++--
- drivers/net/wireless/ath/ath10k/pci.c    | 8 ++++++--
- drivers/net/wireless/ath/ath10k/wmi.c    | 1 +
- 4 files changed, 16 insertions(+), 5 deletions(-)
+> On Tuesday 25 August 2015 15:47:45 Arnd Bergmann wrote:
+>> On Tuesday 25 August 2015 15:09:45 Michal Kazior wrote:
+>> > 
+>> > This is some weird regression with MSI ranges and we still haven't
+>> > figured this out.
+>> > 
+>> > For the time being add "irq_mode=1" parameter when loading ath10k_pci
+>> > module, please.
+>> 
+>> Ok, that gets the device to show up without errors. I have no
+>> time to test whether I can actually use it at the moment, will
+>> report back later.
+>
+> I tested some more and everything seems fine now when using legacy
+> interrupts. Thanks for all the work that went into this, I hope
+> the patch can make it into 4.3.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 85bfa2acb801..32d9ff1b19dc 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -145,8 +145,10 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	skb_cb->eid = eid;
- 	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
- 	ret = dma_mapping_error(dev, skb_cb->paddr);
--	if (ret)
-+	if (ret) {
-+		ret = -EIO;
- 		goto err_credits;
-+	}
- 
- 	sg_item.transfer_id = ep->eid;
- 	sg_item.transfer_context = skb;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 704bb5e07193..43aa5e2d1b87 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -442,8 +442,10 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
- 				       DMA_TO_DEVICE);
- 	res = dma_mapping_error(dev, skb_cb->paddr);
--	if (res)
-+	if (res) {
-+		res = -EIO;
- 		goto err_free_txdesc;
-+	}
- 
- 	skb_put(txdesc, len);
- 	cmd = (struct htt_cmd *)txdesc->data;
-@@ -533,8 +535,10 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
- 				       DMA_TO_DEVICE);
- 	res = dma_mapping_error(dev, skb_cb->paddr);
--	if (res)
-+	if (res) {
-+		res = -EIO;
- 		goto err_free_txbuf;
-+	}
- 
- 	switch (skb_cb->txmode) {
- 	case ATH10K_HW_TXRX_RAW:
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index f00b251ec9ce..826220f795c7 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1667,8 +1667,10 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
- 
- 	req_paddr = dma_map_single(ar->dev, treq, req_len, DMA_TO_DEVICE);
- 	ret = dma_mapping_error(ar->dev, req_paddr);
--	if (ret)
-+	if (ret) {
-+		ret = -EIO;
- 		goto err_dma;
-+	}
- 
- 	if (resp && resp_len) {
- 		tresp = kzalloc(*resp_len, GFP_KERNEL);
-@@ -1680,8 +1682,10 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
- 		resp_paddr = dma_map_single(ar->dev, tresp, *resp_len,
- 					    DMA_FROM_DEVICE);
- 		ret = dma_mapping_error(ar->dev, resp_paddr);
--		if (ret)
-+		if (ret) {
-+			ret = EIO;
- 			goto err_req;
-+		}
- 
- 		xfer.wait_for_resp = true;
- 		xfer.resp_len = 0;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 42c0aba04fb2..6ac016dc28f8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3238,6 +3238,7 @@ void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 				ath10k_warn(ar, "failed to map beacon: %d\n",
- 					    ret);
- 				dev_kfree_skb_any(bcn);
-+				ret = -EIO;
- 				goto skip;
- 			}
- 
+I'm planning to send a pull request to Dave later today so this patch
+should make it to 4.3. Sorry for taking so long to fix this.
+
 -- 
-2.1.4
-
+Kalle Valo
