@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59012 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbbHSTxx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 15:53:53 -0400
-Message-ID: <1440014031.2089.14.camel@sipsolutions.net> (sfid-20150819_215356_967396_780AE303)
-Subject: Re: set channel from radiotap headers during injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Allan Matthew <allanm84@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Aug 2015 21:53:51 +0200
-In-Reply-To: <CAEnVuW21Ocie0RUGv-UZU1U=n=mTinJ_nJa2uHQqVZz-11AbWA@mail.gmail.com> (sfid-20150819_215111_116864_8760F707)
-References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
-	 <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com>
-	 <1439983495.2089.7.camel@sipsolutions.net>
-	 <CAEnVuW18e15hOjoMYRstjgu2cr5BFAtVHThAyZGqpMAdFUQrpQ@mail.gmail.com>
-	 <1440007745.2089.11.camel@sipsolutions.net>
-	 <CAEnVuW0m5jPMcQnC4inVF+8xubZbuyM-faP6Lebz26jvb4s-XA@mail.gmail.com>
-	 <1440013262.2089.13.camel@sipsolutions.net>
-	 <CAEnVuW21Ocie0RUGv-UZU1U=n=mTinJ_nJa2uHQqVZz-11AbWA@mail.gmail.com>
-	 (sfid-20150819_215111_116864_8760F707)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f44.google.com ([209.85.215.44]:34926 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690AbbHZRRT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2015 13:17:19 -0400
+Received: by labgv11 with SMTP id gv11so56401705lab.2
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2015 10:17:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Wed, 26 Aug 2015 20:17:17 +0300
+Message-ID: <CANUX_P1B3ZtdcUKVczobuL_hYkesFEpMK92sNQTUNNexXtuBHA@mail.gmail.com> (sfid-20150826_191723_027951_4518F982)
+Subject: Re: [RFC 0/5] cfg80211 / mac80211: add support for Neighbor Awareness Networking
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Qiumin Hu <qiumin.hu@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-08-19 at 12:50 -0700, Allan Matthew wrote:
-> Regarding the AP clients, could the AP send a power save or sleep
-> notification telling clients its going away for awhile, then come 
-> back after the specified time?
-> 
+On Mon, Mar 30, 2015 at 5:14 PM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> This patch series add supports for a new WiFi feature called
+> Neighbor Awareness Networking a.k.a. NAN.
 
-No, the protocol has no such provision for the AP.
-
-[also, please try to format your emails more readable, instead of just
-tacking on something on the top]
-
-johannes
+Quite a few people contacted me on that matter. Several contacted me
+privately, others through IRC.
+I am not sending this series as PATCH since we are not ready on the
+driver level. And we typically don't want to have APIs that nobody
+uses. iwlwifi should start supporting NAN early next year (no
+commitment whatsoever of course).
+Since I had no comments on this, I think the API is pretty much ready
+which means that if some courageous application developer wants to
+start using NAN, I think he can that he can take a decently safe
+assumption that the API will look as described in this patch series.
