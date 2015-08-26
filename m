@@ -1,44 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36446 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbbHIPUa (ORCPT
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:36290 "EHLO
+	mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751769AbbHZXFt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2015 11:20:30 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH] staging: wilc100: Remove pointer and integer comparision
-Date: Sun,  9 Aug 2015 20:50:02 +0530
-Message-Id: <1439133602-9654-1-git-send-email-csgorentla@gmail.com> (sfid-20150809_172046_965217_F31245BB)
+	Wed, 26 Aug 2015 19:05:49 -0400
+Received: by vkif69 with SMTP id f69so1111083vki.3
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2015 16:05:48 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 26 Aug 2015 18:59:51 -0400
+Message-ID: <CAJa-X96RZTQ_=dG+PDxu8x_AeMAXhyKiTc7CrNO=hqhnmYAN-Q@mail.gmail.com> (sfid-20150827_010552_191074_419E2117)
+Subject: CT firmware and linux kernel patches for OpenWRT( ar71xx - Tp-Link
+ 1750AC )
+From: s prasad <sprasad.kandregula@gmail.com>
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed pointer check with integer; this fixes 'sparse' error -
-error: incompatible types for operation (>)
-   left side has type unsigned char [usertype] *[usertype] pu8Tail
-   right side has type int
+Hi,
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Does anybody have patches for CT firmware testing using OpenWRT environment.
+I tried to create patch, however OpenWRT patches supporting only for
+kernel versions 3.18 and 4.1 at the same time CT Kernels supporting
+3.17_dev, 4.0.4 and 4.2.x. Both are miss matching.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index cc549c2..4ba1ad7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3471,7 +3471,7 @@ static void Handle_AddBeacon(void *drvHandler, tstrHostIFSetBeacon *pstrSetBeaco
- 	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 24) & 0xFF);
- 
- 	/* Bug 4599 : if tail length = 0 skip copying */
--	if (pstrSetBeaconParam->pu8Tail > 0)
-+	if (pstrSetBeaconParam->pu8Tail != NULL)
- 		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->u32TailLen);
- 	pu8CurrByte += pstrSetBeaconParam->u32TailLen;
- 
--- 
-2.5.0
+Can somebody help me if they have patches or to create patches.
 
+Thanks and Regards,
+S Prasad
