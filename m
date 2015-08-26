@@ -1,30 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34912 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063AbbHRGIE (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39009 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110AbbHZUPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 02:08:04 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 26 Aug 2015 16:15:18 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 04/12] brcmfmac: only call brcmf_cfg80211_detach() when attach was successful
+Date: Wed, 26 Aug 2015 22:14:56 +0200
+Message-ID: <1440620104-2715-5-git-send-email-arend@broadcom.com> (sfid-20150826_221533_024469_D3724E08)
+In-Reply-To: <1440620104-2715-1-git-send-email-arend@broadcom.com>
+References: <1440620104-2715-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Subject: Re: ath9k: add correct MAC/BB name for ar9561
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1439360446-31422-1-git-send-email-miaoqing@qca.qualcomm.com>
-To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@qca.qualcomm.com>, <kvalo@qca.qualcomm.com>,
-	Miaoqing Pan <miaoqing@qti.qualcomm.com>
-Message-Id: <20150818060804.1A07A1403D0@smtp.codeaurora.org> (sfid-20150818_080809_484223_CA356C75)
-Date: Tue, 18 Aug 2015 06:08:04 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In brcmf_bus_start() the function brcmf_cfg80211_attach() is called which
+may fail. If this happens we should not call brcmf_cfg80211_detach() in
+the failure path as it will result in NULL pointer dereference:
 
-> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-> 
-> MAC/BB name is"????" if the MAC/BB is unknown.
-> 
-> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+  brcmf_fweh_activate_events: Set event_msgs error (-5)
+  brcmf_bus_start: failed: -5
+  brcmf_sdio_firmware_callback: dongle is not responding
+  BUG: unable to handle kernel NULL pointer dereference at 0000000000000068
+  IP: [<ffffffff811e8f08>] kernfs_find_ns+0x18/0xd0
+  PGD 0
+  Oops: 0000 [#1] SMP
+  Modules linked in: brcmfmac(O) brcmutil(O) cfg80211 auth_rpcgss
+  CPU: 1 PID: 45 Comm: kworker/1:1 Tainted: G           O
+  Hardware name: Dell Inc. Latitude E6410/07XJP9, BIOS A07 02/15/2011
+  Workqueue: events request_firmware_work_func
+  task: ffff880036c09ac0 ti: ffff880036dd4000 task.ti: ffff880036dd4000
+  RIP: 0010:[<ffffffff811e8f08>]  [<ffffffff811e8f08>] kernfs_find_ns+0x18/0xd0
+  RSP: 0018:ffff880036dd7a28  EFLAGS: 00010246
+  RAX: ffff880036c09ac0 RBX: 0000000000000000 RCX: 000000007fffffff
+  RDX: 0000000000000000 RSI: ffffffff816578b9 RDI: 0000000000000000
+  RBP: ffff880036dd7a48 R08: 0000000000000000 R09: ffff880036c0b340
+  R10: 00000000000002ec R11: ffff880036dd7b08 R12: ffffffff816578b9
+  R13: 0000000000000000 R14: ffffffff816578b9 R15: ffff8800c6c87000
+  FS:  0000000000000000(0000) GS:ffff88012bc40000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+  CR2: 0000000000000068 CR3: 0000000001a0b000 CR4: 00000000000006e0
+  Stack:
+   0000000000000000 ffffffff816578b9 0000000000000000 ffff8800c0d003c8
+   ffff880036dd7a78 ffffffff811e8ff5 0000000ffffffff1 ffffffff81a9b060
+   ffff8800c789f880 ffff8800c0d00000 ffff880036dd7a98 ffffffff811ebe0d
+  Call Trace:
+   [<ffffffff811e8ff5>] kernfs_find_and_get_ns+0x35/0x60
+   [<ffffffff811ebe0d>] sysfs_unmerge_group+0x1d/0x60
+   [<ffffffff81404ef2>] dpm_sysfs_remove+0x22/0x60
+   [<ffffffff813f9db9>] device_del+0x49/0x240
+   [<ffffffff815da768>] rfkill_unregister+0x58/0xc0
+   [<ffffffffa06bd91b>] wiphy_unregister+0xab/0x2f0 [cfg80211]
+   [<ffffffffa0742fe3>] brcmf_cfg80211_detach+0x23/0x50 [brcmfmac]
+   [<ffffffffa074d986>] brcmf_detach+0x86/0xe0 [brcmfmac]
+   [<ffffffffa0757de8>] brcmf_sdio_remove+0x48/0x120 [brcmfmac]
+   [<ffffffffa0758ed9>] brcmf_sdiod_remove+0x29/0xd0 [brcmfmac]
+   [<ffffffffa0759031>] brcmf_ops_sdio_remove+0xb1/0x110 [brcmfmac]
+   [<ffffffffa001c267>] sdio_bus_remove+0x37/0x100 [mmc_core]
+   [<ffffffff813fe026>] __device_release_driver+0x96/0x130
+   [<ffffffff813fe0e3>] device_release_driver+0x23/0x30
+   [<ffffffffa0754bc8>] brcmf_sdio_firmware_callback+0x2a8/0x5d0 [brcmfmac]
+   [<ffffffffa074deaf>] brcmf_fw_request_nvram_done+0x15f/0x5e0 [brcmfmac]
+   [<ffffffff8140142f>] ? devres_add+0x3f/0x50
+   [<ffffffff810642b5>] ? usermodehelper_read_unlock+0x15/0x20
+   [<ffffffff81400000>] ? platform_match+0x70/0xa0
+   [<ffffffff8140f400>] request_firmware_work_func+0x30/0x60
+   [<ffffffff8106828c>] process_one_work+0x14c/0x3d0
+   [<ffffffff8106862a>] worker_thread+0x11a/0x450
+   [<ffffffff81068510>] ? process_one_work+0x3d0/0x3d0
+   [<ffffffff8106d692>] kthread+0xd2/0xf0
+   [<ffffffff8106d5c0>] ? kthread_create_on_node+0x180/0x180
+   [<ffffffff815ed35f>] ret_from_fork+0x3f/0x70
+   [<ffffffff8106d5c0>] ? kthread_create_on_node+0x180/0x180
+  Code: e9 40 fe ff ff 48 89 d8 eb 87 66 0f 1f 84 00 00 00 00 00 66 66 66 66
+	90 55 48 89 e5 41 56 49 89 f6 41 55 49 89 d5 31 d2 41 54 53 <0f> b7
+	47 68 48 8b 5f 48 66 c1 e8 05 83 e0 01 4d 85 ed 0f b6 c8
+  RIP  [<ffffffff811e8f08>] kernfs_find_ns+0x18/0xd0
+   RSP <ffff880036dd7a28>
+  CR2: 0000000000000068
+  ---[ end trace 87d6ec0d3fe46740 ]---
 
-Thanks, applied to wireless-drivers-next.git.
+Reported-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/core.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Kalle Valo
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 157f0d7..126081a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -1049,7 +1049,10 @@ int brcmf_bus_start(struct device *dev)
+ fail:
+ 	if (ret < 0) {
+ 		brcmf_err("failed: %d\n", ret);
+-		brcmf_cfg80211_detach(drvr->config);
++		if (drvr->config) {
++			brcmf_cfg80211_detach(drvr->config);
++			drvr->config = NULL;
++		}
+ 		if (drvr->fws) {
+ 			brcmf_fws_del_interface(ifp);
+ 			brcmf_fws_deinit(drvr);
+-- 
+1.9.1
+
