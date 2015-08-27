@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45654 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751481AbbHGKva (ORCPT
+Received: from mail-io0-f169.google.com ([209.85.223.169]:33081 "EHLO
+	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754354AbbH0OVX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 06:51:30 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Julien Cubizolles <j.cubizolles@free.fr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: firmware in a bad state (module mwifiex)
-Date: Fri, 7 Aug 2015 10:51:26 +0000
-Message-ID: <fcd8e2fce67542f8910108a6078dc123@SC-EXCH04.marvell.com> (sfid-20150807_125134_107827_E7DF7A32)
-References: <871tfzast5.fsf@free.fr>
-	<0e2dc4e2bd9f4486979cedb4c47e60f2@SC-EXCH04.marvell.com>
-	<87zj26z1pd.fsf_-_@free.fr>
-	<d74ef56802d24c8e90e1b82eb5003172@SC-EXCH04.marvell.com>
-	<87oaim85fq.fsf@free.fr>
-	<e4dd6d588a114db8894e0abbeb34fbc7@SC-EXCH04.marvell.com>
- <87wpx9nd3k.fsf@free.fr>
-In-Reply-To: <87wpx9nd3k.fsf@free.fr>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 27 Aug 2015 10:21:23 -0400
+Received: by iods203 with SMTP id s203so58625490iod.0
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2015 07:21:22 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1440684846-17214-1-git-send-email-arend@broadcom.com>
+References: <1440684846-17214-1-git-send-email-arend@broadcom.com>
+Date: Thu, 27 Aug 2015 16:21:22 +0200
+Message-ID: <CACna6rxaQE=LZ-vWzxidnsD7UkGjtV13m4GDnvH7R9MsfVk6UA@mail.gmail.com> (sfid-20150827_162133_630219_453570A0)
+Subject: Re: [PATCH] brcmfmac: Reset PCIE devices after recognition.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSnVsaWVuLA0KDQo+IA0KPiA+IFRoYW5rcyBmb3IgcmVwb3J0aW5nIHRoaXMuIFdlIHdpbGwg
-dGFrZSBhIGxvb2sgYXQgdGhpcyByaWdodCBhd2F5Lg0KPiA+IFdlIGRvbid0IGhhdmUgc2lnbmlm
-aWNhbnQgY2hhbmdlcyBhZnRlciA0LjIuMC1yYzMuDQo+IA0KPiBXZWxsIHRoZXJlIHdlcmUgdGhl
-IHR3byBwYXRjaGVzIHlvdSBwb2ludGVkIGF0IHRoYXQgZml4ZWQgYSB2ZXJ5IHNlcmlvdXMNCj4g
-cHJvYmxlbSBmb3IgbWUuIEFjdHVhbGx5IGFyZSB0aGVzZSBpbmNsdWRlZCBpbiBzb21lIGJyYW5j
-aCBvZiB0aGUgbWFpbg0KPiBrZXJuZWwgZ2l0IHRyZWXCoD8gSSBjb3VsZG4ndCBmaW5kIHRoZSBj
-b21taXQgZm9yDQo+IGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbmV0ZGV2L21zZzMzNDM2
-Ny5odG1sIGF0DQo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0
-L3RvcnZhbGRzL2xpbnV4LmdpdC8NCj4gDQo+ID4gWW91IGNhbiB0cnkgdG8gZmluZCBvbGRlciB3
-b3JraW5nIGNvbW1pdC4NCj4gDQo+IEknbSBhZnJhaWQgdGhhdCB3aWxsIGJlIGRpZmZpY3VsdCBz
-aW5jZSB0aGlzIGRyaXZlciBoYXMgYmVlbiBicm9rZW4gZm9yDQo+IG1lIHNpbmNlIHRoZSAzLjE5
-IHNlcmllcy4NCj4gDQo+IFRoYW5rcyBhZ2FpbiBmb3IgeW91ciB2ZXJ5IHByZWNpb3VzIGhlbHAu
-DQo+IA0KDQpXZSByYW4gb3Zlcm5pZ2h0IGRhdGEgcGF0aCBzdHJlc3MgdGVzdCwgYnV0IGNvdWxk
-IG5vdCBoaXQgYW55IGlzc3VlLiBEbyB5b3Ugc2VlIGNvbW1hbmQgdGltZW91dCBtZXNzYWdlIGV2
-ZXJ5IHRpbWUgd2hlbiB0aGUgcHJvYmxlbSBpcyBoaXQ/DQpDb3VsZCB5b3UgcHJvdmlkZSBzb21l
-IG1vcmUgbG9ncz8gV2UgaGFkIGZvbGxvd2luZyBmaXhlcyBmb3IgdGltZW91dCBpc3N1ZS4gTGlz
-dGluZyBoZXJlIGp1c3QgaW4gY2FzZSBpZiB5b3UgbWlzc2VkIHRoZW0obGVzcyBsaWtlbHkpLg0K
-aHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC13aXJlbGVzcy9tc2cxMjM5NTkuaHRt
-bA0KaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC13aXJlbGVzcy9tc2cxMjQzNjYu
-aHRtbA0KDQpTZXR1cCBpbmZvOg0KS2VybmVsIC0gNC4yLjAtcmM0DQpDaGlwIC0gVVNCODc5Nw0K
-RmlybXdhcmUgLSAxNC42OC4yOS5wMzgNCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
+On 27 August 2015 at 16:14, Arend van Spriel <arend@broadcom.com> wrote:
+> From: Hante Meuleman <meuleman@broadcom.com>
+>
+> When PCIE type devices are being FW reloaded without being properly
+> reset then the device ends up in a locked state, requiring the
+> device to be completely powered down. This patch adds a reset
+> through watchdog at the moment the device (cores) has been
+> recognized. This will solve warm reboot issues.
+>
+> Cc: Rafal Milecki <zajec5@gmail.com>
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Hi Kalle,
+>
+> One more patch (probably for 4.4) which has been tested by
+> Rafal. The post is mainly to make the patch publicly available
+> for him to use in OpenWrt.
+
+Thank you, I appreciate that!
