@@ -1,252 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37362 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754808AbbHDU7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 16:59:06 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/37] iwlwifi: remove command header flags field
-Date: Tue,  4 Aug 2015 23:43:07 +0300
-Message-Id: <1438721007-23283-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230006_265363_120610A4)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36179 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbbH0XqL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2015 19:46:11 -0400
+Received: by oibi18 with SMTP id i18so15873854oib.3
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2015 16:46:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150827193605.GD8051@wotan.suse.de>
+References: <20150824225713.GJ8051@wotan.suse.de>
+	<CAGXu5jLDHCgygaVNHpuvszN6SXNKAjRW83q3-D2ZfRpO4uAmdw@mail.gmail.com>
+	<476DC76E7D1DF2438D32BFADF679FC5601058E78@ORSMSX103.amr.corp.intel.com>
+	<CAGXu5jJuwPfnQhu9u4-90UkmjWTBF_GLpJ7J1VaaT2D0d_-Mhg@mail.gmail.com>
+	<1440462367.2737.4.camel@linux.vnet.ibm.com>
+	<CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
+	<1440464705.2737.36.camel@linux.vnet.ibm.com>
+	<14540.1440599584@warthog.procyon.org.uk>
+	<20150826232622.GC8051@wotan.suse.de>
+	<CAHC9VhR9z2WVp+Q1hBkr5jduAH-J1DW12-k7U1eaQGgrP4c1Yw@mail.gmail.com>
+	<20150827193605.GD8051@wotan.suse.de>
+Date: Thu, 27 Aug 2015 19:46:09 -0400
+Message-ID: <CAHC9VhRj4dRGVz9RmjxC9xsV_anKS+LHUW8f2UZ4H63N5J89Jw@mail.gmail.com> (sfid-20150828_014629_124434_5F53A26D)
+Subject: Re: Linux Firmware Signing
+From: Paul Moore <paul@paul-moore.com>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: David Howells <dhowells@redhat.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Kees Cook <keescook@chromium.org>,
+	"Roberts, William C" <william.c.roberts@intel.com>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Eric Paris <eparis@parisplace.org>, selinux@tycho.nsa.gov,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+	dwmw2@infradead.org, Ming Lei <ming.lei@canonical.com>,
+	Joey Lee <jlee@suse.de>,
+	=?UTF-8?B?Vm9qdMSbY2ggUGF2bMOtaw==?= <vojtech@suse.com>,
+	Gary Ching-Pang Lin <glin@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Aug 27, 2015 at 3:36 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Wed, Aug 26, 2015 at 10:35:19PM -0400, Paul Moore wrote:
+>> On Wed, Aug 26, 2015 at 7:26 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>> > On Wed, Aug 26, 2015 at 03:33:04PM +0100, David Howells wrote:
+>> > Now let's review the SELinux stuff before we jump back into firmware / system
+>> > data stuff again as there is a joint criteria to consider for all of these.
+>> > For other people's refrence the enum you quote above was added through your
+>> > patch pending on linux-next:
+>> >
+>> > "PKCS#7: Appropriately restrict authenticated attributes and content type"
+>> >
+>> > Based on what Roberts seems to want to do for SELinux policy files it would
+>> > seems we may also need VERIFYING_SELINUX_POLICY. SELinux policy loading is
+>> > unique in the at it uses its own fs and uses a load trigger node (sel_load_ops)
+>> > to kick off  security_load_policy(data, count), so its not exactly a
+>> > yet-another-API to read arbitrary files from the file system. Its policy files
+>> > are also very distribution specific. Because of all this its not really
+>> > suitable for /lib/firmware/ or sharing code even futher. It seems its a prime
+>> > candidate already to make use of the system_verify_data() APIs you added David,
+>> > provided the items below are taken care of as well.
+>>
+>> One thing to keep in mind is that not only are SELinux policy files
+>> distribution specific, they are machine specific as administrators
+>> can, and do, customize the policy for their usage.  I really like the
+>> idea of providing signed SELinux policies to the kernel but I question
+>> how practical it will be for normal users/admins.
+>
+> Yeah that makes it harder. Possible but harder.
+>
+>> Some of the Machine Owner Key (MOK) work would likely be necessary for
+>> signed SELinux policies to be even remotely practical.
+>
+> Matthew, Peter and Gary are Cc'd, so they can feel free to chime in.
+>
+> There are other alternatives as well:
+>
+>  * Is there wide use of SELinux + IMA ? If so that may be another option.
 
-The 'flags' field really has been reserved in the firmware API for a
-very long time, probably since 4965. As a consequence, the field is
-always 0 and checking for a IWL_CMD_FAILED_MSK flag makes no sense.
+I'm not aware of any large scale use of SELinux+IMA, although it is
+doubtful that IMA will be of use for protecting the SELinux policy
+since it is written into the kernel, the kernel doesn't load it
+directly.  There is also the issue that the SELinux userspace tends to
+manipulate the policy such that the blob that is written into the
+kernel isn't the same blob that is read from disk.
 
-Rename the field to 'reserved', get rid of IWL_CMD_FAILED_MSK and
-all the code for it.
+I imagine one could use IMA to protect the SELinux policy store, but
+that isn't the same as protecting the binary security policy that is
+written to the kernel.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/sta.c   | 44 ++++++++++++--------------------
- drivers/net/wireless/iwlwifi/iwl-trans.h |  6 +----
- drivers/net/wireless/iwlwifi/mvm/fw.c    |  7 -----
- drivers/net/wireless/iwlwifi/mvm/nvm.c   | 12 ---------
- drivers/net/wireless/iwlwifi/mvm/tdls.c  |  9 +------
- drivers/net/wireless/iwlwifi/mvm/utils.c |  5 ----
- drivers/net/wireless/iwlwifi/pcie/tx.c   |  2 +-
- 7 files changed, 19 insertions(+), 66 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/sta.c b/drivers/net/wireless/iwlwifi/dvm/sta.c
-index c18aa3e..0fa67d3 100644
---- a/drivers/net/wireless/iwlwifi/dvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/sta.c
-@@ -65,12 +65,6 @@ static void iwl_process_add_sta_resp(struct iwl_priv *priv,
- {
- 	struct iwl_add_sta_resp *add_sta_resp = (void *)pkt->data;
- 
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(priv, "Bad return from REPLY_ADD_STA (0x%08X)\n",
--			pkt->hdr.flags);
--		return;
--	}
--
- 	IWL_DEBUG_INFO(priv, "Processing response for adding station\n");
- 
- 	spin_lock_bh(&priv->sta_lock);
-@@ -136,8 +130,7 @@ int iwl_send_add_sta(struct iwl_priv *priv,
- 	add_sta_resp = (void *)pkt->data;
- 
- 	/* debug messages are printed in the handler */
--	if (!(pkt->hdr.flags & IWL_CMD_FAILED_MSK) &&
--	    add_sta_resp->status == ADD_STA_SUCCESS_MSK) {
-+	if (add_sta_resp->status == ADD_STA_SUCCESS_MSK) {
- 		spin_lock_bh(&priv->sta_lock);
- 		ret = iwl_sta_ucode_activate(priv, sta_id);
- 		spin_unlock_bh(&priv->sta_lock);
-@@ -431,6 +424,7 @@ static int iwl_send_remove_station(struct iwl_priv *priv,
- 	struct iwl_rx_packet *pkt;
- 	int ret;
- 	struct iwl_rem_sta_cmd rm_sta_cmd;
-+	struct iwl_rem_sta_resp *rem_sta_resp;
- 
- 	struct iwl_host_cmd cmd = {
- 		.id = REPLY_REMOVE_STA,
-@@ -450,29 +444,23 @@ static int iwl_send_remove_station(struct iwl_priv *priv,
- 		return ret;
- 
- 	pkt = cmd.resp_pkt;
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(priv, "Bad return from REPLY_REMOVE_STA (0x%08X)\n",
--			  pkt->hdr.flags);
--		ret = -EIO;
--	}
-+	rem_sta_resp = (void *)pkt->data;
- 
--	if (!ret) {
--		struct iwl_rem_sta_resp *rem_sta_resp = (void *)pkt->data;
--		switch (rem_sta_resp->status) {
--		case REM_STA_SUCCESS_MSK:
--			if (!temporary) {
--				spin_lock_bh(&priv->sta_lock);
--				iwl_sta_ucode_deactivate(priv, sta_id);
--				spin_unlock_bh(&priv->sta_lock);
--			}
--			IWL_DEBUG_ASSOC(priv, "REPLY_REMOVE_STA PASSED\n");
--			break;
--		default:
--			ret = -EIO;
--			IWL_ERR(priv, "REPLY_REMOVE_STA failed\n");
--			break;
-+	switch (rem_sta_resp->status) {
-+	case REM_STA_SUCCESS_MSK:
-+		if (!temporary) {
-+			spin_lock_bh(&priv->sta_lock);
-+			iwl_sta_ucode_deactivate(priv, sta_id);
-+			spin_unlock_bh(&priv->sta_lock);
- 		}
-+		IWL_DEBUG_ASSOC(priv, "REPLY_REMOVE_STA PASSED\n");
-+		break;
-+	default:
-+		ret = -EIO;
-+		IWL_ERR(priv, "REPLY_REMOVE_STA failed\n");
-+		break;
- 	}
-+
- 	iwl_free_resp(&cmd);
- 
- 	return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 7b6f095..64769e4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -130,7 +130,7 @@
-  */
- struct iwl_cmd_header {
- 	u8 cmd;		/* Command ID:  REPLY_RXON, etc. */
--	u8 flags;	/* 0:5 reserved, 6 abort, 7 internal */
-+	u8 reserved;
- 	/*
- 	 * The driver sets up the sequence number to values of its choosing.
- 	 * uCode does not use this value, but passes it back to the driver
-@@ -154,10 +154,6 @@ struct iwl_cmd_header {
- 	__le16 sequence;
- } __packed;
- 
--/* iwl_cmd_header flags value */
--#define IWL_CMD_FAILED_MSK 0x40
--
--
- #define FH_RSCSR_FRAME_SIZE_MSK		0x00003FFF	/* bits 0-13 */
- #define FH_RSCSR_FRAME_INVALID		0x55550000
- #define FH_RSCSR_FRAME_ALIGN		0x40
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index a5dae098..e905c07 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -444,12 +444,6 @@ static void iwl_mvm_get_shared_mem_conf(struct iwl_mvm *mvm)
- 		return;
- 
- 	pkt = cmd.resp_pkt;
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(mvm, "Bad return from SHARED_MEM_CFG (0x%08X)\n",
--			pkt->hdr.flags);
--		goto exit;
--	}
--
- 	mem_cfg = (void *)pkt->data;
- 
- 	mvm->shared_mem_cfg.shared_mem_addr =
-@@ -473,7 +467,6 @@ static void iwl_mvm_get_shared_mem_conf(struct iwl_mvm *mvm)
- 		le32_to_cpu(mem_cfg->page_buff_size);
- 	IWL_DEBUG_INFO(mvm, "SHARED MEM CFG: got memory offsets/sizes\n");
- 
--exit:
- 	iwl_free_resp(&cmd);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index 6dcdee7..328187d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -139,12 +139,6 @@ static int iwl_nvm_read_chunk(struct iwl_mvm *mvm, u16 section,
- 		return ret;
- 
- 	pkt = cmd.resp_pkt;
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(mvm, "Bad return from NVM_ACCES_COMMAND (0x%08X)\n",
--			pkt->hdr.flags);
--		ret = -EIO;
--		goto exit;
--	}
- 
- 	/* Extract NVM response */
- 	nvm_resp = (void *)pkt->data;
-@@ -652,12 +646,6 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
- 		return ERR_PTR(ret);
- 
- 	pkt = cmd.resp_pkt;
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(mvm, "Bad return from MCC_UPDATE_COMMAND (0x%08X)\n",
--			pkt->hdr.flags);
--		ret = -EIO;
--		goto exit;
--	}
- 
- 	/* Extract MCC response */
- 	mcc_resp = (void *)pkt->data;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tdls.c b/drivers/net/wireless/iwlwifi/mvm/tdls.c
-index 71802e7..d44d02d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tdls.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tdls.c
-@@ -169,18 +169,11 @@ static void iwl_mvm_tdls_config(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		return;
- 
- 	pkt = cmd.resp_pkt;
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(mvm, "Bad return from TDLS_CONFIG_COMMAND (0x%08X)\n",
--			pkt->hdr.flags);
--		goto exit;
--	}
- 
--	if (WARN_ON_ONCE(iwl_rx_packet_payload_len(pkt) != sizeof(*resp)))
--		goto exit;
-+	WARN_ON_ONCE(iwl_rx_packet_payload_len(pkt) != sizeof(*resp));
- 
- 	/* we don't really care about the response at this point */
- 
--exit:
- 	iwl_free_resp(&cmd);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index 3b016f9..f50ef82 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -166,11 +166,6 @@ int iwl_mvm_send_cmd_status(struct iwl_mvm *mvm, struct iwl_host_cmd *cmd,
- 		goto out_free_resp;
- 	}
- 
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		ret = -EIO;
--		goto out_free_resp;
--	}
--
- 	resp_len = iwl_rx_packet_payload_len(pkt);
- 	if (WARN_ON_ONCE(resp_len != sizeof(*resp))) {
- 		ret = -EIO;
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 90d02d5..553ae13 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -1420,7 +1420,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 	/* set up the header */
- 
- 	out_cmd->hdr.cmd = cmd->id;
--	out_cmd->hdr.flags = 0;
-+	out_cmd->hdr.reserved = 0;
- 	out_cmd->hdr.sequence =
- 		cpu_to_le16(QUEUE_TO_SEQ(trans_pcie->cmd_queue) |
- 					 INDEX_TO_SEQ(q->write_ptr));
 -- 
-2.1.4
-
+paul moore
+www.paul-moore.com
