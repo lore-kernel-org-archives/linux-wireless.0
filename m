@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:32792 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbbHSG72 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 02:59:28 -0400
-Received: by pabyb7 with SMTP id yb7so150982694pab.0
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2015 23:59:27 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 04/13] staging: wilc1000: wilc_msgqueue.c: remove blank line before a close brace
-Date: Wed, 19 Aug 2015 15:58:59 +0900
-Message-Id: <1439967548-25876-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150819_085930_711404_F07A106F)
-In-Reply-To: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1439967548-25876-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40002 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752525AbbH0NNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2015 09:13:02 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Alexander Kuleshov <kuleshovmail@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] staging/rtl8723au: Use %pM format specifier to print mac address
+References: <1440680785-9327-1-git-send-email-kuleshovmail@gmail.com>
+	<1440680967-9514-1-git-send-email-kuleshovmail@gmail.com>
+Date: Thu, 27 Aug 2015 09:13:01 -0400
+In-Reply-To: <1440680967-9514-1-git-send-email-kuleshovmail@gmail.com>
+	(Alexander Kuleshov's message of "Thu, 27 Aug 2015 19:09:27 +0600")
+Message-ID: <wrfj8u8wvpr6.fsf@redhat.com> (sfid-20150827_151307_264962_3290B06B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes blank line before a close brace "}"
-CHECK: Blank lines aren't necessary before a close brace '}'
+Alexander Kuleshov <kuleshovmail@gmail.com> writes:
+> printk() supports %pM format specifier for printing 6-byte MAC/FDDI
+> addresses in hex notation small buffers, let's use it intead of %x:%x...
+>
+> Signed-off-by: Alexander Kuleshov <kuleshovmail@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 1 -
- 1 file changed, 1 deletion(-)
+Works for me
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index e7c4a9a..8cb74d1 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -173,7 +173,6 @@ WILC_ErrNo WILC_MsgQueueRecv(WILC_MsgQueueHandle *pHandle,
- 		kfree(pstrMessage);
- 
- 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
--
- 	}
- 
- 	WILC_CATCH(s32RetStatus)
--- 
-1.9.1
-
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
