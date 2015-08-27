@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:35405 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159AbbHSOMO (ORCPT
+Received: from mail-io0-f180.google.com ([209.85.223.180]:35396 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738AbbH0K5c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 10:12:14 -0400
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new device ID
-To: Adrien Schildknecht <adrien+dev@schischi.me>,
-	chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-	linville@tuxdriver.com, marex@denx.de, fzuuzf@googlemail.com
-References: <1439992291-24912-1-git-send-email-adrien+dev@schischi.me>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55D48EB5.604@lwfinger.net> (sfid-20150819_161243_598330_E6137844)
-Date: Wed, 19 Aug 2015 09:12:05 -0500
-MIME-Version: 1.0
-In-Reply-To: <1439992291-24912-1-git-send-email-adrien+dev@schischi.me>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Thu, 27 Aug 2015 06:57:32 -0400
+Received: by iodt126 with SMTP id t126so52456818iod.2
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2015 03:57:31 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/3] ath10k: enable monitor when OTHER_BSS requested
+Date: Thu, 27 Aug 2015 06:57:02 -0400
+Message-Id: <1440673024-13696-2-git-send-email-me@bobcopeland.com> (sfid-20150827_125739_055624_809C05CB)
+In-Reply-To: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
+References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/19/2015 08:51 AM, Adrien Schildknecht wrote:
-> The v2 of NetGear WNA1000M uses a different idProduct: USB ID 0846:9043
->
-> Signed-off-by: Adrien Schildknecht <adrien+dev@schischi.me>
-> ---
+By default, ath10k restricts received frames to those matching BSSID.
+When other BSS frames are requested (e.g. in mesh mode), add an internal
+monitor device so those frames are not filtered.
 
-Has this ID been tested with the Netgear device?
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Larry
-
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> index 23806c2..8b4238a 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -321,6 +321,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->   	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
->   	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
->   	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
-> +	{RTL_USB_DEVICE(0x0846, 0x9043, rtl92cu_hal_cfg)}, /*NetGear WNA1000Mv2*/
->   	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
->   	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
->   	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
->
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 64674c9..7dfe37f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1070,6 +1070,7 @@ static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
+ 		return false;
+ 
+ 	return ar->monitor ||
++	       ar->filter_flags & FIF_OTHER_BSS ||
+ 	       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+ }
+ 
+-- 
+2.1.4
 
