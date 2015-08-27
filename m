@@ -1,59 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:33754 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753481AbbHaRvU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 13:51:20 -0400
-Received: by obcji4 with SMTP id ji4so3630856obc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 10:51:19 -0700 (PDT)
-Subject: Re: RTL8189ETV
-To: poma <pomidorabelisima@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hans de Goede <hdegoede@redhat.com>
-References: <55E47A27.4090703@gmail.com> <55E48988.1000803@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55E49415.7090807@lwfinger.net> (sfid-20150831_195123_579945_4BBE5054)
-Date: Mon, 31 Aug 2015 12:51:17 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50754 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751051AbbH0ThC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2015 15:37:02 -0400
+Date: Thu, 27 Aug 2015 21:37:00 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: David Howells <dhowells@redhat.com>
+Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Kees Cook <keescook@chromium.org>,
+	"Roberts, William C" <william.c.roberts@intel.com>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Paul Moore <paul@paul-moore.com>,
+	Eric Paris <eparis@parisplace.org>, selinux@tycho.nsa.gov,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+	dwmw2@infradead.org, Ming Lei <ming.lei@canonical.com>,
+	Joey Lee <jlee@suse.de>,
+	=?utf-8?Q?Vojt=C4=9Bch_Pavl=C3=ADk?= <vojtech@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Linux Firmware Signing
+Message-ID: <20150827193700.GE8051@wotan.suse.de> (sfid-20150827_213733_349985_0FE239D0)
+References: <476DC76E7D1DF2438D32BFADF679FC5601057D32@ORSMSX103.amr.corp.intel.com>
+ <20150824225713.GJ8051@wotan.suse.de>
+ <CAGXu5jLDHCgygaVNHpuvszN6SXNKAjRW83q3-D2ZfRpO4uAmdw@mail.gmail.com>
+ <476DC76E7D1DF2438D32BFADF679FC5601058E78@ORSMSX103.amr.corp.intel.com>
+ <CAGXu5jJuwPfnQhu9u4-90UkmjWTBF_GLpJ7J1VaaT2D0d_-Mhg@mail.gmail.com>
+ <1440462367.2737.4.camel@linux.vnet.ibm.com>
+ <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
+ <1440464705.2737.36.camel@linux.vnet.ibm.com>
+ <14540.1440599584@warthog.procyon.org.uk>
+ <31228.1440671938@warthog.procyon.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <55E48988.1000803@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <31228.1440671938@warthog.procyon.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/2015 12:06 PM, poma wrote:
-> On 31.08.2015 18:00, poma wrote:
->>
->> Hi Fi,
->>
->> What is this device, is it supported by
->> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
->>
->> $ modinfo rtl8189es
->> modinfo: ERROR: Module rtl8189es not found.
->>
->
-> or is it supported by
-> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8188eu
-> https://github.com/lwfinger/rtl8188eu
-> as RTL8188ETV is
->
-> $ modinfo rtl8188eu
-> modinfo: ERROR: Module rtl8188eu not found.
->
->
-> However RTL8188ETV is USB 2.0 device,
-> eeeeeeeeeeeeeeeeeee not again!
+On Thu, Aug 27, 2015 at 11:38:58AM +0100, David Howells wrote:
+> Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> 
+> > "PKCS#7: Add an optional authenticated attribute to hold firmware name"
+> > https://git.kernel.org/cgit/linux/kernel/git/dhowells/linux-fs.git/commit/?h=fwsign-pkcs7&id=1448377a369993f864915743cfb34772e730213good
+> > 
+> >         1.3.6.1.4.1.2312.16     Linux kernel
+> >         1.3.6.1.4.1.2312.16.2   - PKCS#7/CMS SignerInfo attribute types
+> >         1.3.6.1.4.1.2312.16.2.1   - firmwareName
+> > 
+> > I take it you are referring to this?
+> 
+> Yes.
+> 
+> > If we follow this model we'd then need something like:
+> > 
+> >         1.3.6.1.4.1.2312.16.2.2   - seLinuxPolicyName
+> > 
+> > That should mean each OID that has different file names would need to be
+> > explicit about and have a similar entry on the registry. I find that pretty
+> > redundant and would like to avoid that if possible.
+> 
+> firmwareName is easy for people to understand - it's the name the kernel asks
+> for and the filename of the blob.  seLinuxPolicyName is, I think, a lot more
+> tricky since a lot of people don't use SELinux, and most that do don't
+> understand it (most people that use it aren't even really aware of it).
+> 
+> If you can use the firmwareName as the SELinux/LSM key, I would suggest doing
+> so - even if you dress it up as a path (/lib/firmware/<firmwareName>).
 
-That last comment does not help.
+It seems we don't have to worry about it now, and perhaps SELinux folks might
+go another route.
 
-If rtl8188eu is not available, that is the fault of your distro, not anything 
-that driver maintainers can help. That driver is in the staging directory, and 
-some distros do not include any of those drivers in their kernels.
-
-eeeeeeeeeeeeeeeeeee not again! Someone posts about a USB device not found, and 
-they refuse/fail to provide the USB ID. Why, I do not know when the lsusb 
-command provides this info so easily.
-
-Larry
-
-
+  Luis
