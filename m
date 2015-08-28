@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36372 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbbHQVZv (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:33508 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751848AbbH1MsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 17:25:51 -0400
-Date: Mon, 17 Aug 2015 14:25:50 -0700 (PDT)
-Message-Id: <20150817.142550.609710668391335742.davem@davemloft.net> (sfid-20150817_232559_276473_B308C99B)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2015-08-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1439567676.2072.1.camel@sipsolutions.net>
-References: <1439567676.2072.1.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 28 Aug 2015 08:48:06 -0400
+Received: by wieo17 with SMTP id o17so14589648wie.0
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2015 05:48:04 -0700 (PDT)
+From: Sven Eckelmann <sven@open-mesh.com>
+To: s prasad <sprasad.kandregula@gmail.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: CT firmware and linux kernel patches for OpenWRT( ar71xx - Tp-Link 1750AC )
+Date: Fri, 28 Aug 2015 14:48:02 +0200
+Message-ID: <2249526.TmOlA3g2Uo@bentobox> (sfid-20150828_144816_190598_028D8BC8)
+In-Reply-To: <CAJa-X96RZTQ_=dG+PDxu8x_AeMAXhyKiTc7CrNO=hqhnmYAN-Q@mail.gmail.com>
+References: <CAJa-X96RZTQ_=dG+PDxu8x_AeMAXhyKiTc7CrNO=hqhnmYAN-Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 14 Aug 2015 17:54:36 +0200
+On Wednesday 26 August 2015 18:59:51 s prasad wrote:
+> Does anybody have patches for CT firmware testing using OpenWRT environment.
+> I tried to create patch, however OpenWRT patches supporting only for
+> kernel versions 3.18 and 4.1 at the same time CT Kernels supporting
+> 3.17_dev, 4.0.4 and 4.2.x. Both are miss matching.
 
-> And, in addition to the fix before, I have a -next pull request. It's
-> actually quite big since I hadn't wanted to send one just before my
-> vacation.
-> 
-> Let me know if there are any issues.
+You have to patch mac80211 and not the kernel. I can give you the patchset
+I've used with OpenWrt r46435.
 
-Pulled, thanks Johannes.
+You should get it in the next minutes via private mail (I don't want to
+send it over the mailing list due to its size). It is basically the
+patchset from Ben put on top of compat-wireless 2015-06-22 [1].
+
+You still need extra changes to get VHT working over IBSS (iw will
+otherwise only use HT). When you only want to test it then you can
+just hardcode a channel + a channel width in iw's ibss.c.
+
+Kind regards,
+	Sven
+
+
+[1] https://dev.cloudtrax.com/git/ath10k-ibss-test.git/shortlog/refs/heads/master-20150824
+
