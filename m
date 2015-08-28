@@ -1,73 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:36366 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932143AbbHGQeB (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:33289 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509AbbH1OGB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2015 12:34:01 -0400
-Received: by obnw1 with SMTP id w1so82675563obn.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2015 09:34:00 -0700 (PDT)
-Subject: Re: [PATCH] rtlwifi: rtl8723be: disable FW control power save
-To: AceLan Kao <acelan.kao@canonical.com>,
-	linux-wireless@vger.kernel.org
-References: <1438917073-5720-1-git-send-email-acelan.kao@canonical.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55C4DDF5.6010901@lwfinger.net> (sfid-20150807_183406_025213_C76731ED)
-Date: Fri, 7 Aug 2015 11:33:57 -0500
+	Fri, 28 Aug 2015 10:06:01 -0400
 MIME-Version: 1.0
-In-Reply-To: <1438917073-5720-1-git-send-email-acelan.kao@canonical.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20150524170747.GB15886@ribalta.ccr.corp.intel.com>
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+ <1424772112-27399-2-git-send-email-robert.dolca@intel.com>
+ <20150326002925.GA10954@ribalta.home> <CAFPB+Yc-+1s4Y1iWnnCHWjnk=U5Rq-6Wq-idtakCxju8pvYi4Q@mail.gmail.com>
+ <20150524170747.GB15886@ribalta.ccr.corp.intel.com>
+From: Robert Dolca <robert.dolca@gmail.com>
+Date: Fri, 28 Aug 2015 17:05:39 +0300
+Message-ID: <CAFPB+YfYBMd0Ubtt-EhuDuyAiy2orPnPNkwV_hs=JTmeKW_GaQ@mail.gmail.com> (sfid-20150828_160628_000102_5750EB32)
+Subject: Re: [linux-nfc] [PATCH 1/8] NFC: NCI: Allow connection close with dev down
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/06/2015 10:11 PM, AceLan Kao wrote:
-> There are many rtl8723be wifi unstable issues that wifi lost connection
-> after working for a while. The wifi signal and status it's show connected
-> also ifconfig have IP but can not connect to internet and filed to ping 8.8.8.8
-> The problem should result from the power saving controlled by firmware.
-> I'd suggest to disable it by default and re-enable it after firmware fixes
-> this issue.
+On Sun, May 24, 2015 at 8:07 PM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+> Hi Robert,
 >
-> BTW. the firmware I tested from linux-firmware git tree is
-> rtlwifi/rtl8723befw.bin
-> be225d6 Update firmware for rtl8723be
+> On Tue, Mar 31, 2015 at 05:03:42PM +0300, Robert Dolca wrote:
+>> On Thu, Mar 26, 2015 at 2:29 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+>> > Hi Robert,
+>> >
+>> > On Tue, Feb 24, 2015 at 12:01:45PM +0200, Robert Dolca wrote:
+>> >> By calling __nci_request instead of nci_request allows the driver to use
+>> >> the function while initializing the device (setup stage)
+>> >>
+>> >> Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+>> >> ---
+>> >>  net/nfc/nci/core.c | 2 +-
+>> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >>
+>> >> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+>> >> index 9575a18..c4dd5d8 100644
+>> >> --- a/net/nfc/nci/core.c
+>> >> +++ b/net/nfc/nci/core.c
+>> >> @@ -558,7 +558,7 @@ static void nci_core_conn_close_req(struct nci_dev *ndev, unsigned long opt)
+>> >>
+>> >>  int nci_core_conn_close(struct nci_dev *ndev, u8 conn_id)
+>> >>  {
+>> >> -     return nci_request(ndev, nci_core_conn_close_req, conn_id,
+>> >> +     return __nci_request(ndev, nci_core_conn_close_req, conn_id,
+>> >>                               msecs_to_jiffies(NCI_CMD_TIMEOUT));
+>> > You're fixing your problem by removing the NCI request serialization and
+>> > removing the check for your device being UP.
+>> > I assume you need to open and close a proprietary connection from your
+>> > setup hook ? Then please extend nci_request() to check for both NCI_UP
+>> > and NCI_INIT.
+>>
+>> You are right, I am opening and closing a connection from the setup
+>> function. The setup is called by nci_open_device. At the beginning of
+>> nci_open_device, req_lock is being acquired and it is release at the
+>> end of the function. That means that when setup is being called
+>> req_lock is acuired. As you said I can modify nci_request to check for
+>> NCI_INIT but it tries to acquire req_lock and it can not succeed.
+> I see, I thought the issue was only about checking the NCI_* flags.
 >
-> Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
-
-NACK for this patch. If you were to make this change, you should also change the 
-text in the MODULE_PARM_DESC() for this parameter. It shows a hard-coded default.
-
-I am not sure this is a firmware problem as some users report that they need to 
-run with the "ips=0" option, not with "fwlps=0" as your patch would force. 
-Conversely, the driver works fine as is with other AP/environment combinations.
-
-The Realtek engineer has told me that he is aware of problems with the dynamic 
-management for all the drivers, and that they are working on major replacements; 
-however, there is no timetable for the new code.
-
-If we make a change in the default power settings, I would prefer changing 
-inactiveps and its MODULE_PARM_DESC() text; however, that would have a negative 
-impact on power usage on the host.
-
-I have BCc'd the Realtek engineer and I hope to get his comments on this change.
-
-Larry
-
-> ---
->   drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> As a short term solution, I propose you do the following:
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-> index 1017f02..02fe2cc 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-> @@ -266,7 +266,7 @@ static struct rtl_mod_params rtl8723be_mod_params = {
->   	.sw_crypto = false,
->   	.inactiveps = true,
->   	.swctrl_lps = false,
-> -	.fwctrl_lps = true,
-> +	.fwctrl_lps = false,
->   };
+> a) Export nci_core_conn_create_req, nci_core_conn_close_req and
+> __nci_request.
+> b) Call __nci_request() directly from your fdp_nci_close_conn() and
+> fdp_nci_create_conn() routines.
 >
->   static struct rtl_hal_cfg rtl8723be_hal_cfg = {
->
+> The long term, scalable fix would be to implement and export an
+> __nci_send_cmd_sync() routine, that would transparently build an NCI
+> request and tail it to the ndev req skb queue, and put the caller on a
+> wait queue. The created request's response callback would then wake the
+> caller up.
 
+If nci_open_device would use another mutex instead of req_lock this
+wouldn't be necessary.
+I don't see any reason why nci_open_device should block the send
+queue. Of course, in nci_open_device all calls to __nci_request would
+have to be replaced with nci_request.
+
+Samuel, would that be an acceptable solution?
+
+Regards,
+Robert
