@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:33857 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925AbbHEKII (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 06:08:08 -0400
-Received: by labow3 with SMTP id ow3so25342235lab.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 03:08:06 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix hw reconfig on wow failure
-Date: Wed,  5 Aug 2015 12:08:38 +0200
-Message-Id: <1438769318-27373-1-git-send-email-michal.kazior@tieto.com> (sfid-20150805_120812_563536_A7C59148)
+Received: from s3.sipsolutions.net ([5.9.151.49]:57656 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751112AbbH1IoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Aug 2015 04:44:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: reject software RSSI CQM with beacon filtering
+Date: Fri, 28 Aug 2015 10:44:20 +0200
+Message-Id: <1440751460-6627-1-git-send-email-johannes@sipsolutions.net> (sfid-20150828_104430_681479_C94C1C22)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When WoWLAN resume fails with retval 1 mac80211
-will attempt to reconfig the device in a similar
-manner when hw restart is requested. This wasn't
-handled properly and yielded call trace warnings
-and the device ended up not working.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+When beacon filtering is enabled the mac80211 software implementation
+for RSSI CQM cannot work as beacons will not be available. Rather than
+accepting such a configuration without proper effect, reject it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wow.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ net/mac80211/cfg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
-index a68d8fd853a3..8e02b381990f 100644
---- a/drivers/net/wireless/ath/ath10k/wow.c
-+++ b/drivers/net/wireless/ath/ath10k/wow.c
-@@ -301,8 +301,26 @@ int ath10k_wow_op_resume(struct ieee80211_hw *hw)
- 		ath10k_warn(ar, "failed to wakeup from wow: %d\n", ret);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f4ed256c2d8e..a30ec3ce3d25 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2468,6 +2468,10 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
+ 	    rssi_hyst == bss_conf->cqm_rssi_hyst)
+ 		return 0;
  
- exit:
-+	if (ret) {
-+		switch (ar->state) {
-+		case ATH10K_STATE_ON:
-+			ar->state = ATH10K_STATE_RESTARTING;
-+			ret = 1;
-+			break;
-+		case ATH10K_STATE_OFF:
-+		case ATH10K_STATE_RESTARTING:
-+		case ATH10K_STATE_RESTARTED:
-+		case ATH10K_STATE_UTF:
-+		case ATH10K_STATE_WEDGED:
-+			ath10k_warn(ar, "encountered unexpected device state %d on resume, cannot recover\n",
-+				    ar->state);
-+			ret = -EIO;
-+			break;
-+		}
-+	}
++	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER &&
++	    !(sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI))
++		return -EOPNOTSUPP;
 +
- 	mutex_unlock(&ar->conf_mutex);
--	return ret ? 1 : 0;
-+	return ret;
- }
+ 	bss_conf->cqm_rssi_thold = rssi_thold;
+ 	bss_conf->cqm_rssi_hyst = rssi_hyst;
  
- int ath10k_wow_init(struct ath10k *ar)
 -- 
 2.1.4
 
