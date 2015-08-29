@@ -1,98 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29783 "EHLO mga02.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:56016 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932332AbbHDKtY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 06:49:24 -0400
-Message-ID: <1438685233.29746.156.camel@linux.intel.com> (sfid-20150804_124932_605442_5FBC6BAB)
-Subject: Re: [PATCH 1/2] iwlwifi: convert hex_dump_to_buffer() to %*ph
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Tue, 04 Aug 2015 13:47:13 +0300
-In-Reply-To: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1437050535-22858-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750896AbbH2B44 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Aug 2015 21:56:56 -0400
+Date: Sat, 29 Aug 2015 03:56:50 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: "Roberts, William C" <william.c.roberts@intel.com>
+Cc: Paul Moore <paul@paul-moore.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	David Howells <dhowells@redhat.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Kees Cook <keescook@chromium.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Eric Paris <eparis@parisplace.org>,
+	"selinux@tycho.nsa.gov" <selinux@tycho.nsa.gov>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
+	Vojtech =?iso-8859-1?Q?Pavl=EDk?= <vojtech@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Linux Firmware Signing
+Message-ID: <20150829015650.GL8051@wotan.suse.de> (sfid-20150829_035731_704416_5135E3AB)
+References: <CAGXu5jJuwPfnQhu9u4-90UkmjWTBF_GLpJ7J1VaaT2D0d_-Mhg@mail.gmail.com>
+ <1440462367.2737.4.camel@linux.vnet.ibm.com>
+ <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
+ <1440464705.2737.36.camel@linux.vnet.ibm.com>
+ <14540.1440599584@warthog.procyon.org.uk>
+ <31228.1440671938@warthog.procyon.org.uk>
+ <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
+ <20150827212907.GF8051@wotan.suse.de>
+ <CAHC9VhQFDcMtvn1JU3E1rJ=9CCXT7ibUocgGS4tzfcy8oVUUMA@mail.gmail.com>
+ <476DC76E7D1DF2438D32BFADF679FC560105ABD6@ORSMSX103.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <476DC76E7D1DF2438D32BFADF679FC560105ABD6@ORSMSX103.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-07-16 at 15:42 +0300, Andy Shevchenko wrote:
-> There is no need to use hex_dump_to_buffer() in the cases like this:
+On Fri, Aug 28, 2015 at 11:20:10AM +0000, Roberts, William C wrote:
+> > -----Original Message-----
+> > From: Paul Moore [mailto:paul@paul-moore.com]
+> > 
+> > While I question the usefulness of a SELinux policy signature in the general case,
+> > there are some situations where it might make sense, e.g. embedded systems
+> > with no post-build customizations, and I'm not opposed to added a signature to
+> > the policy file for that reason.
 > 
-> 	hexdump_to_buffer(buf, len, 16, 1, outbuf, outlen, false);	> /* len <= 16 
-> */
-> 	sprintf("%s\n", outbuf);
-> 
-> since it maybe easily converted to simple:
-> 
-> 	sprintf("%*ph\n", len, buf);
-> 
-> Note: it seems in one case the output is groupped by 2 bytes and 
-> looks like a
-> typo. Thus, patch changes that to plain byte stream.
+> Even triggered updates make sense, since you can at least have some form of trust
+> of where that binary policy came from. 
 
+The problem that Paul describes stems from the requirement of such trust
+needing post-boot / install / setup keys.  It may be possible for an
+environment to exist where there's a food chain that enables some CA's to
+easily hand out keys to each install, but that seems impractical. This is why
+Paul had mentioned the Machine Owner Key (MOK) thing.
 
-Any comments on this, anyone?
-
-The idea is to minimize usage of hexdump_to_buffer(), i.e. not using it
-when it's an obvious overkill.
-
+> > However, I haven't given any serious thought yet to how we would structure the
+> > new blob format so as to support both signed/unsigned policies as well as
+> > existing policies which predate any PKCS #7 changes.
+> > 
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/dvm/debugfs.c | 8 ++------
->  drivers/net/wireless/iwlwifi/mvm/debugfs.c | 7 +------
->  2 files changed, 3 insertions(+), 12 deletions(-)
+> Huh, not following? Perhaps, I am not following what your laying down here.
 > 
-> diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c 
-> b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-> index 0ffb6ff..b15e44f 100644
-> --- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-> +++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-> @@ -310,12 +310,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file 
-> *file,
->  	pos += scnprintf(buf + pos, buf_size - pos,
->  			 "NVM version: 0x%x\n", nvm_ver);
->  	for (ofs = 0 ; ofs < eeprom_len ; ofs += 16) {
-> -		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x 
-> ", ofs);
-> -		hex_dump_to_buffer(ptr + ofs, 16 , 16, 2, buf + pos,
-> -				   buf_size - pos, 0);
-> -		pos += strlen(buf + pos);
-> -		if (buf_size - pos > 0)
-> -			buf[pos++] = '\n';
-> +		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x 
-> %16ph\n",
-> +				 ofs, ptr + ofs);
->  	}
->  
->  	ret = simple_read_from_buffer(user_buf, count, ppos, buf, 
-> pos);
-> diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c 
-> b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-> index ffb4b5c..98abd31 100644
-> --- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-> +++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-> @@ -1200,12 +1200,7 @@ static ssize_t iwl_dbgfs_d3_sram_read(struct 
-> file *file, char __user *user_buf,
->  	if (ptr) {
->  		for (ofs = 0; ofs < len; ofs += 16) {
->  			pos += scnprintf(buf + pos, bufsz - pos,
-> -					 "0x%.4x ", ofs);
-> -			hex_dump_to_buffer(ptr + ofs, 16, 16, 1, buf 
-> + pos,
-> -					   bufsz - pos, false);
-> -			pos += strlen(buf + pos);
-> -			if (bufsz - pos > 0)
-> -				buf[pos++] = '\n';
-> +					 "0x%.4x %16ph\n", ofs, ptr 
-> + ofs);
->  		}
->  	} else {
->  		pos += scnprintf(buf + pos, bufsz - pos,
+>  Right now there is no signing on the selinux policy file. We should be able
+> to just use the firmware signing api's as is (I have not looked on linux-next yet)
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+Nitpick: its the system_verify_data() API, the fw signing stuff will make use
+of this API as well.
+
+> to unpack the blob.
+
+Nitpick: to verify the data.
+
+> In the case of falling back to loading an unsigned blob, we could do it ala kernel
+> module style. If it fails do to invalid format fall back to attempting to read it as a straight policy file.
+> If it fails on signature verification, we could still unpack it and pass it on. So you would want to 
+> be able to control if the signed unpacking from pkcs7 fails, whether or not its fatal.
+> 
+> We would also likely want to convey this state, the ability to change this setting to userspace in a 
+> Controlled fashion via selinuxfs. Ie I would want to know that I can load modules without valid signatures,
+> And that my current policy file is in fact invalid or valid.
+
+Sure that would work. Its how the module stuff can work in permissive mode.
+We'd embrace the same practice for permissive fw signing as well.
+
+  Luis
