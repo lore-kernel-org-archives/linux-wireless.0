@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:34458 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752384AbbHSWQy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 18:16:54 -0400
-Received: by laba3 with SMTP id a3so11800845lab.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 15:16:52 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] brcmfmac: check all combinations when setting wiphy's addresses
-Date: Thu, 20 Aug 2015 00:16:42 +0200
-Message-Id: <1440022602-6943-1-git-send-email-zajec5@gmail.com> (sfid-20150820_001658_159971_61C3CE07)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:43157 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752670AbbH2VSG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Aug 2015 17:18:06 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: jes.sorensen@redhat.com, kvalo@codeaurora.org,
+	Larry.Finger@lwfinger.net
+Subject: [PATCH 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au 
+Date: Sat, 29 Aug 2015 17:18:02 -0400
+Message-Id: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20150829_231811_030506_2A172918)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom is working on better reflection of interface combinations. With
-upcoming patches we may have 1st combination supporting less interfaces
-than others.
-To don't run out of addresses check all combinations to find the one
-with the greatest max_interfaces value.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-I believe this patch should be applied before:
-brcmfmac: correct interface combination info
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index ffe5260..c85e2db 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -5786,7 +5786,9 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy)
- static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
- 	struct brcmf_pub *drvr = ifp->drvr;
-+	const struct ieee80211_iface_combination *combo;
- 	struct ieee80211_supported_band *band;
-+	u16 max_interfaces = 0;
- 	__le32 bandlist[3];
- 	u32 n_bands;
- 	int err, i;
-@@ -5799,8 +5801,13 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	if (err)
- 		return err;
- 
--	for (i = 0; i < wiphy->iface_combinations->max_interfaces &&
--	     i < ARRAY_SIZE(drvr->addresses); i++) {
-+	for (i = 0, combo = wiphy->iface_combinations;
-+	     i < wiphy->n_iface_combinations; i++, combo++) {
-+		max_interfaces = max(max_interfaces, combo->max_interfaces);
-+	}
-+
-+	for (i = 0; i < max_interfaces && i < ARRAY_SIZE(drvr->addresses);
-+	     i++) {
- 		u8 *addr = drvr->addresses[i].addr;
- 
- 		memcpy(addr, drvr->mac, ETH_ALEN);
+I finally found some time to work on rtl8xxxu again. Since the
+previously version posted some months ago, I fixed up a number of
+bugs. I also added support for a range of other Realtek based USB
+devices. The driver now supports rtl8723au, rtl8188cu, rtl8188ru, and
+rtl8192cu. It should work on rtl8191cu devices as well.
+
+Per default only devices I have actually tested will be enabled. If
+you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+test results back to me.
+
+Note if you enable this driver, it may clash with CONFIG_RTL8192U,
+CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
+to which module you load and/or use modprobe blacklists.
+
+This driver is still work in progress. I have used it as my primary
+driver for the last six months, and I find it to be very stable. It
+seems suitable for mainline inclusion at this point.
+
+Cheers,
+Jes
+
+
+Jes Sorensen (1):
+  New driver: rtl8xxxu (mac80211)
+
+ MAINTAINERS                          |    7 +
+ drivers/net/wireless/Kconfig         |   32 +
+ drivers/net/wireless/Makefile        |    2 +
+ drivers/net/wireless/rtl8xxxu.c      | 5829 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtl8xxxu.h      |  597 ++++
+ drivers/net/wireless/rtl8xxxu_regs.h |  980 ++++++
+ 6 files changed, 7447 insertions(+)
+ create mode 100644 drivers/net/wireless/rtl8xxxu.c
+ create mode 100644 drivers/net/wireless/rtl8xxxu.h
+ create mode 100644 drivers/net/wireless/rtl8xxxu_regs.h
+
 -- 
-1.8.4.5
+2.1.0
 
