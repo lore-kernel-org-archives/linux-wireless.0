@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:38480 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526AbbHSQhh (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:48557 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047AbbH2Ks7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 12:37:37 -0400
-Received: by wicja10 with SMTP id ja10so13458212wic.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2015 09:37:36 -0700 (PDT)
+	Sat, 29 Aug 2015 06:48:59 -0400
+Message-ID: <55E18E18.8040608@broadcom.com> (sfid-20150829_124907_004724_91107C8C)
+Date: Sat, 29 Aug 2015 12:48:56 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1439983495.2089.7.camel@sipsolutions.net>
-References: <CAEnVuW0JnU5yuAYBWsRfOo_S=GUK5vZzr6XqnNHHOeufmT-uiQ@mail.gmail.com>
- <CAEnVuW1FcyBj2+ti8U8KF+rM0xO_Q+rw6PxXqgWy8WO0vRX6yg@mail.gmail.com> <1439983495.2089.7.camel@sipsolutions.net>
-From: Allan Matthew <allanm84@gmail.com>
-Date: Wed, 19 Aug 2015 09:37:16 -0700
-Message-ID: <CAEnVuW18e15hOjoMYRstjgu2cr5BFAtVHThAyZGqpMAdFUQrpQ@mail.gmail.com> (sfid-20150819_183740_141773_D951549A)
-Subject: Re: set channel from radiotap headers during injection
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH V2 3/7] brcmfmac: Increase nr of supported flowrings.
+References: <1439708139-7527-1-git-send-email-arend@broadcom.com>	<1439708139-7527-4-git-send-email-arend@broadcom.com>	<CACna6ryL04p-cHptZnvYZ9fvnGn3FafN9PPNxsMPPfmdkSEjnA@mail.gmail.com>	<55DB26FC.1060707@broadcom.com>	<CACna6ry3_4u_xAmeU8Hsoc96ZeVKFSq9zHL-yTFDT1hrgJa_BA@mail.gmail.com>	<55E169AB.3080309@broadcom.com> <CACna6rz88F6daCGtm5TgJ2hqb4FrnUX5-fqvNneePPdVb=q00w@mail.gmail.com>
+In-Reply-To: <CACna6rz88F6daCGtm5TgJ2hqb4FrnUX5-fqvNneePPdVb=q00w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you Johannes,
-
-It seems like the functionality for this (maybe not the monitor mode)
-must be available in order to support the multiple 802.11p channels in
-the 5.8ghz band.
-
-It sounds like what you are proposing is to create a non-monitor vif,
-select its channel, bitrate, bandwidth and then use the MAC address to
-select it as the transmitting interface.  Is that correct?  I'm
-guessing I could do this with raw sockets and prepend the ieee80211
-header (but not the radiotap header)?
-
-Thanks for the help!
-
-On Wed, Aug 19, 2015 at 4:24 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2015-08-14 at 14:39 -0700, Allan Matthew wrote:
->> Anyone have any thoughts on this?
->>
->> Is it possible with channel context enabled somehow?
->>
+On 08/29/2015 11:38 AM, Rafał Miłecki wrote:
+> On 29 August 2015 at 10:13, Arend van Spriel <arend@broadcom.com> wrote:
+>> First about the warnings in core.c:1144. I believe they are fixed by one of
+>> the patches submitted last week [1].
 >
-> I don't think it's possible - per-packet configuration would have to be
-> basically instantaneous (cannot sleep etc.) and setting the channel is
-> necessarily a much longer operation.
+> This is correct :)
 >
-> If your device supports channel contexts, you might be able to *pick*
-> the channel you want to inject on, but you could probably achieve that
-> through the existing MAC address selection that picks an interface.
-> It's also not clear how monitor + chanctx would work at all, since
-> monitor expects to be on the channel all the time.
 >
-> You could possibly select other parameters like the bitrate, but the
-> channel width - especially 5/10 MHz - doesn't seem feasible.
+>> Now about the problem upon start_xmit. The theory was that you had
+>> allocation failure leading to the null pointer deref. If you don't see any
+>> allocation failure on your setup that theory seems invalid. So there is
+>> another root cause that we need to find.
 >
-> johannes
+> Let me know if you have any patches (fixing or debugging) you want me
+> to test. I'll be happy to help.
+
+So can you indicate whether you have seen allocation failures or not.
+
+Regards,
+Arend
