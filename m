@@ -1,76 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34224 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933902AbbHKI3b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2015 04:29:31 -0400
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>
-From: poma <pomidorabelisima@gmail.com>
-Subject: WARNING: CPU: 3 PID: 827 at lib/dma-debug.c:1169
- check_for_stack+0x94/0xe0()
-Message-ID: <55C9B267.8000705@gmail.com> (sfid-20150811_103056_425815_1A4BB1CA)
-Date: Tue, 11 Aug 2015 10:29:27 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from plane.gmane.org ([80.91.229.3]:39829 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752533AbbH2FZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Aug 2015 01:25:09 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ZVYdU-0006BE-BF
+	for linux-wireless@vger.kernel.org; Sat, 29 Aug 2015 07:25:04 +0200
+Received: from 64.129.254.235 ([64.129.254.235])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2015 07:25:04 +0200
+Received: from keeler by 64.129.254.235 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2015 07:25:04 +0200
+To: linux-wireless@vger.kernel.org
+From: John Keeler <keeler@airintech.com>
+Subject: Ubuntu 14.04 and the intel 3160 chip monitor mode support 
+Date: Sat, 29 Aug 2015 05:20:44 +0000 (UTC)
+Message-ID: <loom.20150829T071838-73@post.gmane.org> (sfid-20150829_072514_374804_0B0816B0)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
+I am having issues with monitor mode with ubuntu 14.04 and the intel 3160
+chip. I am having similar issues with 3.13 and a 7265 chip on a intel NUC
+Monitor mode says it takes but it captures no packets 
 
-------------[ cut here ]------------
-WARNING: CPU: 3 PID: 827 at lib/dma-debug.c:1169 check_for_stack+0x94/0xe0()
-ehci-pci 0000:00:02.1: DMA-API: device driver maps memory from stack [addr=ffff8800bc6dfa3c]
-Modules linked in: ... mt7601u(+) mac80211 ... cfg80211 rfkill ...
-CPU: 3 PID: 827 Comm: systemd-udevd Not tainted 4.2.0-0.rc6.git0.1.fc24.x86_64+debug #1
-...
-Call Trace:
- [<ffffffff81868d8e>] dump_stack+0x4c/0x65
- [<ffffffff810ab406>] warn_slowpath_common+0x86/0xc0
- [<ffffffff810ab495>] warn_slowpath_fmt+0x55/0x70
- [<ffffffff81871e26>] ? _raw_spin_unlock_irqrestore+0x36/0x60
- [<ffffffff81450044>] check_for_stack+0x94/0xe0
- [<ffffffff8145062b>] debug_dma_map_page+0xfb/0x140
- [<ffffffff81614eb8>] usb_hcd_map_urb_for_dma+0x608/0x760
- [<ffffffff8161548d>] usb_hcd_submit_urb+0x1cd/0xab0
- [<ffffffff8110315f>] ? save_trace+0x3f/0xc0
- [<ffffffff81106edd>] ? mark_held_locks+0x7d/0xb0
- [<ffffffff8110ddd5>] ? __raw_spin_lock_init+0x25/0x60
- [<ffffffff81103b73>] ? lockdep_init_map+0x73/0x640
- [<ffffffff81107039>] ? trace_hardirqs_on_caller+0x129/0x1b0
- [<ffffffff8161707c>] usb_submit_urb+0x3fc/0x5a0
- [<ffffffff81617947>] usb_start_wait_urb+0x77/0x180
- [<ffffffff8124a83e>] ? __kmalloc+0x28e/0x360
- [<ffffffff81617b2c>] usb_control_msg+0xdc/0x130
- [<ffffffffa0850510>] mt7601u_vendor_request+0xf0/0x310 [mt7601u]
- [<ffffffff8186f4dc>] ? __mutex_unlock_slowpath+0xbc/0x180
- [<ffffffffa08507b9>] mt7601u_rr+0x59/0x280 [mt7601u]
- [<ffffffff8161b738>] ? usb_autosuspend_device+0x28/0x30
- [<ffffffffa0857c93>] mt7601u_wait_asic_ready+0x23/0x60 [mt7601u]
- [<ffffffffa0850ac0>] mt7601u_probe+0xe0/0x220 [mt7601u]
- [<ffffffff8161c03b>] usb_probe_interface+0x1bb/0x2e0
- [<ffffffff81579f26>] driver_probe_device+0x1f6/0x450
- [<ffffffff8157a214>] __driver_attach+0x94/0xa0
- [<ffffffff8157a180>] ? driver_probe_device+0x450/0x450
- [<ffffffff815778f3>] bus_for_each_dev+0x73/0xc0
- [<ffffffff815796fe>] driver_attach+0x1e/0x20
- [<ffffffff8157922e>] bus_add_driver+0x1ee/0x280
- [<ffffffff8157b0a0>] driver_register+0x60/0xe0
- [<ffffffff8161a87d>] usb_register_driver+0xad/0x160
- [<ffffffffa086e000>] ? 0xffffffffa086e000
- [<ffffffffa086e01e>] mt7601u_driver_init+0x1e/0x20 [mt7601u]
- [<ffffffff81002123>] do_one_initcall+0xb3/0x200
- [<ffffffff8124ac65>] ? kmem_cache_alloc_trace+0x355/0x380
- [<ffffffff81867c37>] ? do_init_module+0x28/0x1e9
- [<ffffffff81867c6f>] do_init_module+0x60/0x1e9
- [<ffffffff81154167>] load_module+0x21f7/0x28d0
- [<ffffffff8114f600>] ? m_show+0x1b0/0x1b0
- [<ffffffff81026d79>] ? sched_clock+0x9/0x10
- [<ffffffff810e6ddc>] ? local_clock+0x1c/0x20
- [<ffffffff811549b8>] SyS_init_module+0x178/0x1c0
- [<ffffffff8187282e>] entry_SYSCALL_64_fastpath+0x12/0x76
----[ end trace 0c0ff6cd25624338 ]---
+and help would be appreciated
+ 
+Thanks
+John
+ 
+Commands that trigger the crash :
+
+sudo ifconfig wlan0 down
+sudo iwconfig wlan0 mode monitor
+sudo ifconfig wlan0 up
+
+ 
+Ubuntu 14.04.3 LTS
+ 
+uname -a:
+Linux 3.13.0-62-generic #102-Ubuntu SMP Tue Aug 11 14:29:36 UTC 2015 x86_64
+x86_64 x86_64 GNU/Linux
+ 
+lspci -k :
+03:00.0 Network controller: Intel Corporation Wireless 3160 (rev 83)
+    Subsystem: Intel Corporation Dual Band Wireless-AC 3160
+    Kernel driver in use: iwlwifi
+
+ 
+ 
+ 
+dmesg:
+[ 2481.330395] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
+[ 2481.330722] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
+[ 2481.344124] iwlwifi 0000:03:00.0: Microcode SW error detected. 
+Restarting 0x2000000.
+[ 2481.344133] iwlwifi 0000:03:00.0: CSR values:
+[ 2481.344136] iwlwifi 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is
+CSR_INT_PERIODIC_REG)
+[ 2481.344143] iwlwifi 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00c89204
+[ 2481.344148] iwlwifi 0000:03:00.0:          CSR_INT_COALESCING: 0X8000ff40
+[ 2481.344154] iwlwifi 0000:03:00.0:                     CSR_INT: 0X00000000
+[ 2481.344160] iwlwifi 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[ 2481.344165] iwlwifi 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[ 2481.344170] iwlwifi 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[ 2481.344176] iwlwifi 0000:03:00.0:                   CSR_RESET: 0X00000000
+[ 2481.344182] iwlwifi 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[ 2481.344187] iwlwifi 0000:03:00.0:                  CSR_HW_REV: 0X00000164
+[ 2481.344193] iwlwifi 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[ 2481.344198] iwlwifi 0000:03:00.0:               CSR_EEPROM_GP: 0X80000000
+[ 2481.344204] iwlwifi 0000:03:00.0:              CSR_OTP_GP_REG: 0X803a0000
+[ 2481.344209] iwlwifi 0000:03:00.0:                 CSR_GIO_REG: 0X00080044
+[ 2481.344215] iwlwifi 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00000000
+[ 2481.344220] iwlwifi 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[ 2481.344225] iwlwifi 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[ 2481.344231] iwlwifi 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[ 2481.344236] iwlwifi 0000:03:00.0:                 CSR_LED_REG: 0X00000060
+[ 2481.344242] iwlwifi 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X881f6fb6
+[ 2481.344247] iwlwifi 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[ 2481.344253] iwlwifi 0000:03:00.0:             CSR_ANA_PLL_CFG: 0Xd55555d5
+[ 2481.344258] iwlwifi 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[ 2481.344263] iwlwifi 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[ 2481.344267] iwlwifi 0000:03:00.0: FH register values:
+[ 2481.344281] iwlwifi 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG:
+0X21084000
+[ 2481.344295] iwlwifi 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG:
+0X01f5c740
+[ 2481.344309] iwlwifi 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR:
+0X00000018
+[ 2481.344323] iwlwifi 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG:
+0X80801114
+[ 2481.344337] iwlwifi 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG:
+0X000000fc
+[ 2481.344351] iwlwifi 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG:
+0X07030000
+[ 2481.344365] iwlwifi 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV:
+0X00000000
+[ 2481.344379] iwlwifi 0000:03:00.0:                FH_TSSR_TX_STATUS_REG:
+0X07ff0001
+[ 2481.344394] iwlwifi 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG:
+0X00000000
+[ 2481.344507] iwlwifi 0000:03:00.0: Start IWL Error Log Dump:
+[ 2481.344511] iwlwifi 0000:03:00.0: Status: 0x00000000, count: 6
+[ 2481.344514] iwlwifi 0000:03:00.0: Loaded firmware version: 22.24.8.0
+[ 2481.344518] iwlwifi 0000:03:00.0: 0x00000103 | ADVANCED_SYSASSERT          
+[ 2481.344521] iwlwifi 0000:03:00.0: 0x000002F0 | uPc
+[ 2481.344524] iwlwifi 0000:03:00.0: 0x00000000 | branchlink1
+[ 2481.344527] iwlwifi 0000:03:00.0: 0x00000BEA | branchlink2
+[ 2481.344529] iwlwifi 0000:03:00.0: 0x00014218 | interruptlink1
+[ 2481.344532] iwlwifi 0000:03:00.0: 0x0029E0D2 | interruptlink2
+[ 2481.344535] iwlwifi 0000:03:00.0: 0xDEADBEEF | data1
+[ 2481.344538] iwlwifi 0000:03:00.0: 0xDEADBEEF | data2
+[ 2481.344541] iwlwifi 0000:03:00.0: 0xDEADBEEF | data3
+[ 2481.344543] iwlwifi 0000:03:00.0: 0x003FE7E9 | beacon time
+[ 2481.344546] iwlwifi 0000:03:00.0: 0x00001816 | tsf low
+[ 2481.344549] iwlwifi 0000:03:00.0: 0x00000000 | tsf hi
+[ 2481.344552] iwlwifi 0000:03:00.0: 0x00000000 | time gp1
+[ 2481.344555] iwlwifi 0000:03:00.0: 0x00001816 | time gp2
+[ 2481.344557] iwlwifi 0000:03:00.0: 0x00000000 | time gp3
+[ 2481.344560] iwlwifi 0000:03:00.0: 0x00041618 | uCode version
+[ 2481.344563] iwlwifi 0000:03:00.0: 0x00000164 | hw version
+[ 2481.344566] iwlwifi 0000:03:00.0: 0x00C89204 | board version
+[ 2481.344569] iwlwifi 0000:03:00.0: 0x091C002C | hcmd
+[ 2481.344571] iwlwifi 0000:03:00.0: 0x00022000 | isr0
+[ 2481.344574] iwlwifi 0000:03:00.0: 0x00000000 | isr1
+[ 2481.344577] iwlwifi 0000:03:00.0: 0x00000002 | isr2
+[ 2481.344580] iwlwifi 0000:03:00.0: 0x0040DCC0 | isr3
+[ 2481.344582] iwlwifi 0000:03:00.0: 0x00000000 | isr4
+[ 2481.344585] iwlwifi 0000:03:00.0: 0x00000110 | isr_pref
+[ 2481.344588] iwlwifi 0000:03:00.0: 0x00000000 | wait_event
+[ 2481.344591] iwlwifi 0000:03:00.0: 0x00000080 | l2p_control
+[ 2481.344594] iwlwifi 0000:03:00.0: 0x00000020 | l2p_duration
+[ 2481.344596] iwlwifi 0000:03:00.0: 0x00000000 | l2p_mhvalid
+[ 2481.344599] iwlwifi 0000:03:00.0: 0x00008000 | l2p_addr_match
+[ 2481.344602] iwlwifi 0000:03:00.0: 0x00000005 | lmpm_pmg_sel
+[ 2481.344605] iwlwifi 0000:03:00.0: 0x23021719 | timestamp
+[ 2481.344608] iwlwifi 0000:03:00.0: 0x00001828 | flow_handler
+[ 2481.344613] ieee80211 phy2: Hardware restart was requested
+[ 2481.345296] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
+[ 2481.345668] iwlwifi 0000:03:00.0: L1 Disabled - LTR Enabled
 
 
-Ref.
-https://bugzilla.redhat.com/show_bug.cgi?id=1252336
-https://bugzilla.kernel.org/show_bug.cgi?id=102661
