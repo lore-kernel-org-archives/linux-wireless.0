@@ -1,112 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0177.hostedemail.com ([216.40.44.177]:58107 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933545AbbHJVxM (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:35181 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753539AbbH3Qtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 17:53:12 -0400
-From: Joe Perches <joe@perches.com>
-To: devel@driverdev.osuosl.org, Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 18/19] staging: wilc1000: Remove unnecessary externs
-Date: Mon, 10 Aug 2015 14:51:33 -0700
-Message-Id: <5765f9db0d6829956e40e3c033b080e046c3492e.1439241826.git.joe@perches.com> (sfid-20150810_235357_020717_D33497BC)
-In-Reply-To: <cover.1439241825.git.joe@perches.com>
-References: <cover.1439241825.git.joe@perches.com>
+	Sun, 30 Aug 2015 12:49:35 -0400
+Received: by obcbp4 with SMTP id bp4so4494646obc.2
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2015 09:49:35 -0700 (PDT)
+Subject: Re: [PATCH 0/1] rtl8xxxu (mac80211) driver for
+ rtl8188[cr]u/rtl8192cu/rtl8723au
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: kvalo@codeaurora.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <55E3341C.2010009@lwfinger.net> (sfid-20150830_184940_079724_1ED065AF)
+Date: Sun, 30 Aug 2015 11:49:32 -0500
+MIME-Version: 1.0
+In-Reply-To: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using 'extern' is not necessary for function prototypes.
+On 08/29/2015 04:18 PM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> Hi,
+>
+> I finally found some time to work on rtl8xxxu again. Since the
+> previously version posted some months ago, I fixed up a number of
+> bugs. I also added support for a range of other Realtek based USB
+> devices. The driver now supports rtl8723au, rtl8188cu, rtl8188ru, and
+> rtl8192cu. It should work on rtl8191cu devices as well.
+>
+> Per default only devices I have actually tested will be enabled. If
+> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+> test results back to me.
+>
+> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
+> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
+> to which module you load and/or use modprobe blacklists.
+>
+> This driver is still work in progress. I have used it as my primary
+> driver for the last six months, and I find it to be very stable. It
+> seems suitable for mainline inclusion at this point.
 
-Miscellanea:
+Jes,
 
-o Reflow alignments
+The Edimax 7811 works on the new driver. The performance is a lot better than I 
+said in my previous post. Measuring with netperf for 3 second intervals, I get a 
+maximum RX rate of 33.0 Mbps and a long-term average (750 samples) of 20.8 Mbps. 
+For TX, the max is 34.5 Mbps and the average is 27.4.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/staging/wilc1000/coreconfigurator.h       | 30 +++++++++++------------
- drivers/staging/wilc1000/linux_wlan_common.h      |  4 +--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |  2 +-
- 3 files changed, 18 insertions(+), 18 deletions(-)
+I am still getting one "scheduling while atomic" BUG splat as follows:
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 56ff2ba..3af1935 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -163,27 +163,27 @@ typedef struct wid_site_survey_reslts {
- } wid_site_survey_reslts_s;
- #endif
- 
--extern s32 CoreConfiguratorInit(void);
--extern s32 CoreConfiguratorDeInit(void);
-+s32 CoreConfiguratorInit(void);
-+s32 CoreConfiguratorDeInit(void);
- 
--extern s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
--			 u32 u32WIDsCount, bool bRespRequired, u32 drvHandler);
--extern s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
--extern s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo);
-+s32 SendConfigPkt(u8 u8Mode, tstrWID *pstrWIDs,
-+		  u32 u32WIDsCount, bool bRespRequired, u32 drvHandler);
-+s32 ParseNetworkInfo(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
-+s32 DeallocateNetworkInfo(tstrNetworkInfo *pstrNetworkInfo);
- 
--extern s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
--			      tstrConnectRespInfo **ppstrConnectRespInfo);
--extern s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo);
-+s32 ParseAssocRespInfo(u8 *pu8Buffer, u32 u32BufferLen,
-+		       tstrConnectRespInfo **ppstrConnectRespInfo);
-+s32 DeallocateAssocRespInfo(tstrConnectRespInfo *pstrConnectRespInfo);
- 
- #ifndef CONNECT_DIRECT
--extern s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZE],
--			      wid_site_survey_reslts_s **ppstrSurveyResults,
--			      u32 *pu32SurveyResultsCount);
--extern s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults);
-+s32 ParseSurveyResults(u8 ppu8RcvdSiteSurveyResults[][MAX_SURVEY_RESULT_FRAG_SIZE],
-+		       wid_site_survey_reslts_s **ppstrSurveyResults,
-+		       u32 *pu32SurveyResultsCount);
-+s32 DeallocateSurveyResults(wid_site_survey_reslts_s *pstrSurveyResults);
- #endif
- 
--extern s32 SendRawPacket(s8 *pspacket, s32 s32PacketLen);
--extern void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length);
-+s32 SendRawPacket(s8 *pspacket, s32 s32PacketLen);
-+void NetworkInfoReceived(u8 *pu8Buffer, u32 u32Length);
- void GnrlAsyncInfoReceived(u8 *pu8Buffer, u32 u32Length);
- void host_int_ScanCompleteReceived(u8 *pu8Buffer, u32 u32Length);
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 2476bfd..e6ebf3e 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -39,8 +39,8 @@ enum debug_region {
- #define FIRM_DBG                (1 << Firmware_debug)
- 
- #if defined (WILC_DEBUGFS)
--extern int wilc_debugfs_init(void);
--extern void wilc_debugfs_remove(void);
-+int wilc_debugfs_init(void);
-+void wilc_debugfs_remove(void);
- 
- extern atomic_t REGION;
- extern atomic_t DEBUG_LEVEL;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index c25350c..97b663b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -123,7 +123,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- #ifdef TCP_ENHANCEMENTS
- #define TCP_ACK_FILTER_LINK_SPEED_THRESH 54
- #define DEFAULT_LINK_SPEED 72
--extern void Enable_TCP_ACK_Filter(bool value);
-+void Enable_TCP_ACK_Filter(bool value);
- #endif
- 
- #endif
--- 
-2.1.2
+BUG: sleeping function called from invalid context at kernel/locking/mutex.c:616
+in_atomic(): 0, irqs_disabled(): 0, pid: 19961, name: kworker/u16:0
+INFO: lockdep is turned off.
+CPU: 0 PID: 19961 Comm: kworker/u16:0 Tainted: G        W  O    4.2.0-rc7-wl+ #39
+Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.20   04/17/2014
+Workqueue: phy9 ieee80211_iface_work [mac80211]
+  ffffffff81a3d470 ffff880102227508 ffffffff8174b6e1 0000000000000000
+  ffff880224e54b00 ffff880102227538 ffffffff81090117 ffff880102227578
+  ffffffff81a3d470 0000000000000268 0000000000000000 ffff880102227568
+Call Trace:
+  [<ffffffff8174b6e1>] dump_stack+0x4c/0x6e
+  [<ffffffff81090117>] ___might_sleep+0x147/0x1f0
+
+  [<ffffffff8109020d>] __might_sleep+0x4d/0x90
+  [<ffffffff81750d88>] mutex_lock_nested+0x38/0x3c0
+  [<ffffffff814d9a56>] ? __dev_printk+0x46/0x90
+  [<ffffffffa07a553f>] rtl8723a_h2c_cmd+0x4f/0x180 [rtl8xxxu]
+  [<ffffffffa07aa977>] rtl8xxxu_bss_info_changed+0x367/0x6b1 [rtl8xxxu]
+  [<ffffffffa07aa89f>] ? rtl8xxxu_bss_info_changed+0x28f/0x6b1 [rtl8xxxu]
+  [<ffffffffa055fd84>] ieee80211_bss_info_change_notify+0x104/0x4e0 [mac80211]
+  [<ffffffffa05f5626>] ieee80211_assoc_success+0x90c/0xa98 [mac80211]
+  [<ffffffff8116b8ad>] ? irq_work_queue+0x7d/0xa0
+  [<ffffffff810d26d9>] ? wake_up_klogd+0x39/0x50
+  [<ffffffff810d28d7>] ? console_unlock+0x1e7/0x510
+  [<ffffffff810d2def>] ? vprintk_emit+0x1ef/0x540
+  [<ffffffff810d3299>] ? vprintk_default+0x29/0x40
+  [<ffffffffa05d311b>] ieee80211_rx_mgmt_assoc_resp+0x15b/0x310 [mac80211]
+  [<ffffffffa05d48da>] ieee80211_sta_rx_queued_mgmt+0x19a/0x6d0 [mac80211]
+  [<ffffffff810b8915>] ? cpuacct_charge+0x5/0x1a0
+  [<ffffffff815e8a91>] ? skb_dequeue+0x21/0x70
+  [<ffffffff810bca4d>] ? trace_hardirqs_on+0xd/0x10
+  [<ffffffffa05803b9>] ieee80211_iface_work+0x2d9/0x3e0 [mac80211]
+  [<ffffffff81082e7e>] ? process_one_work+0x14e/0x7d0
+  [<ffffffff81082f0f>] process_one_work+0x1df/0x7d0
+  [<ffffffff81082e7e>] ? process_one_work+0x14e/0x7d0
+  [<ffffffff8108361a>] worker_thread+0x11a/0x460
+  [<ffffffff817546bb>] ? _raw_spin_unlock_irqrestore+0x4b/0x60
+  [<ffffffff81083500>] ? process_one_work+0x7d0/0x7d0
+  [<ffffffff81089e9f>] kthread+0xef/0x110
+  [<ffffffff81089db0>] ? kthread_create_on_node+0x220/0x220
+  [<ffffffff8175530f>] ret_from_fork+0x3f/0x70
+  [<ffffffff81089db0>] ? kthread_create_on_node+0x220/0x220
+wlp0s20u6: associated
+
+This splat happened during the authentication/association phase. At present, the 
+connection has been up for almost 12 hours without a single drop.
+
+Larry
 
