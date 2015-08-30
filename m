@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55629 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141AbbHMMfY (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:34682 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753656AbbH3Rn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2015 08:35:24 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 30 Aug 2015 13:43:29 -0400
+Received: by oiex83 with SMTP id x83so53733577oie.1
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2015 10:43:28 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [v3,1/3] mwifiex: add support for 8997 chipset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1438780182-19320-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Zhaoyang Liu <liuzy@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20150813123524.1F31514056F@smtp.codeaurora.org> (sfid-20150813_143528_069320_13B3FBB7)
-Date: Thu, 13 Aug 2015 12:35:24 +0000 (UTC)
+In-Reply-To: <20150829222531.GA8604@localhost>
+References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
+	<1440673024-13696-4-git-send-email-me@bobcopeland.com>
+	<CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com>
+	<20150829222531.GA8604@localhost>
+Date: Mon, 31 Aug 2015 01:43:28 +0800
+Message-ID: <CAEFj987gvasYnRq8tiFeQitbBmoXAr77hXU2cUW_TsH+viUn8g@mail.gmail.com> (sfid-20150830_194333_659814_BD49353B)
+Subject: Re: [PATCH 3/3] ath10k: implement mesh support
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jason Andryuk <jandryuk@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi, Bob
 
-> From: Zhaoyang Liu <liuzy@marvell.com>
-> 
-> This patch adds support for 8997 chipset to mwifiex
-> with SDIO/PCIe/USB interface.
-> 
-> The corresponding firmware image files are located in:
-> "mrvl/sd8997_uapsta.bin"
-> "mrvl/pcie8997_uapsta.bin"
-> "mrvl/usb8997_uapsta.bin"
-> 
-> Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Yes: you don't want to enable raw mode TX / RX decap in the normal
+> case because it's fairly inefficient compared to "native" wifi mode,
+> according to my understanding.  The latter doesn't support mesh framing
+> however.
+>
 
-Thanks, 3 patches applied to wireless-drivers-next.git:
+The native WiFi mode doesn't support mesh framing. Can you elaborate
+more on this?
 
-6d85ef00d9df mwifiex: add support for 8997 chipset
-eee7f1961b9d mwifiex: add firmware dump support for SD8997
-2375fa2b36fe mwifiex: fix unable to connect hidden SSID AP on DFS channel
+Thanks
 
-Kalle Valo
+----
+Chun-Yeow
