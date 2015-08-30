@@ -1,286 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:34213 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756071AbbHFVrk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2015 17:47:40 -0400
-Received: by wicne3 with SMTP id ne3so38705576wic.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2015 14:47:39 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 2/4] mac80211: remove ieee80211_tx_rate dependency in rate mask code
-Date: Thu,  6 Aug 2015 23:47:31 +0200
-Message-Id: <1438897653-4629-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150806_234745_080258_FE06D091)
-In-Reply-To: <1438897653-4629-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1438897653-4629-1-git-send-email-lorenzo.bianconi83@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45319 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751991AbbHaNHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 09:07:49 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	<55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
+Date: Sun, 30 Aug 2015 17:02:10 -0400
+In-Reply-To: <wrfjegik8vqy.fsf@redhat.com> (Jes Sorensen's message of "Sun, 30
+	Aug 2015 14:41:09 -0400")
+Message-ID: <wrfjegik7anh.fsf@redhat.com> (sfid-20150831_150801_954321_4365C611)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove ieee80211_tx_rate dependency in rate_idx_match_legacy_mask(),
-rate_idx_match_mcs_mask() and rate_idx_match_mask() in order to use the
-previous logic to define a ratemask in rate_control_set_rates() for
-station rate table. Moreover move rate mask definition logic in
-rate_control_cap_mask()
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>>> +static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+>>> +			struct ieee80211_tx_control *control,
+>>> +			struct sk_buff *skb)
+>>> +{
+>>> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+>>> +	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+>>> +	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
+>>> +	struct rtl8xxxu_priv *priv = hw->priv;
+>>> +	struct rtl8xxxu_tx_desc *tx_desc;
+>>> +	struct ieee80211_sta *sta = NULL;
+>>> +	struct rtl8xxxu_sta_priv *sta_priv = NULL;
+>>> +	struct device *dev = &priv->udev->dev;
+>>> +	struct urb *urb;
+>>> +	u32 queue, rate;
+>>> +	u16 pktlen = skb->len;
+>>> +	u16 seq_number;
+>>> +	u16 rate_flag = tx_info->control.rates[0].flags;
+>>> +	int ret;
+>>> +
+>>> +	if (skb_headroom(skb) < sizeof(struct rtl8xxxu_tx_desc)) {
+>>> +		dev_warn(dev,
+>>> +			 "%s: Not enough headroom (%i) for tx descriptor\n",
+>>> +			 __func__, skb_headroom(skb));
+>>> +		goto error;
+>>> +	}
+>>> +
+>>> +	if (unlikely(skb->len > (65535 - sizeof(struct rtl8xxxu_tx_desc)))) {
+>>> +		dev_warn(dev, "%s: Trying to send over-sized skb (%i)\n",
+>>> +			 __func__, skb->len);
+>>> +		goto error;
+>>> +	}
+>>> +
+>>> +	urb = usb_alloc_urb(0, GFP_KERNEL);
+>>
+>> The above statement generated a "scheduling while atomic" splat. The
+>> gfp_t argument needs to be GFP_KERNEL.
+>
+> You are seeing scheduling while atomic in the TX path? That just seems
+> wrong to me - Johannes is the mac80211 TX path not meant to allow
+> sleeping?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- net/mac80211/rate.c | 139 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 71 insertions(+), 68 deletions(-)
+I went and checked include/net/mac80211.h and indeed you are right.
+Updated patch fixing these issues, and hopefully mutex issue, coming you
+way in a minute.
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 4f02e07..4f61ca0 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -353,39 +353,37 @@ bool rate_control_send_low(struct ieee80211_sta *pubsta,
- }
- EXPORT_SYMBOL(rate_control_send_low);
- 
--static bool rate_idx_match_legacy_mask(struct ieee80211_tx_rate *rate,
--				       int n_bitrates, u32 mask)
-+static bool rate_idx_match_legacy_mask(s8 *rate_idx, int n_bitrates, u32 mask)
- {
- 	int j;
- 
- 	/* See whether the selected rate or anything below it is allowed. */
--	for (j = rate->idx; j >= 0; j--) {
-+	for (j = *rate_idx; j >= 0; j--) {
- 		if (mask & (1 << j)) {
- 			/* Okay, found a suitable rate. Use it. */
--			rate->idx = j;
-+			*rate_idx = j;
- 			return true;
- 		}
- 	}
- 
- 	/* Try to find a higher rate that would be allowed */
--	for (j = rate->idx + 1; j < n_bitrates; j++) {
-+	for (j = *rate_idx + 1; j < n_bitrates; j++) {
- 		if (mask & (1 << j)) {
- 			/* Okay, found a suitable rate. Use it. */
--			rate->idx = j;
-+			*rate_idx = j;
- 			return true;
- 		}
- 	}
- 	return false;
- }
- 
--static bool rate_idx_match_mcs_mask(struct ieee80211_tx_rate *rate,
--				    u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
-+static bool rate_idx_match_mcs_mask(s8 *rate_idx, u8 *mcs_mask)
- {
- 	int i, j;
- 	int ridx, rbit;
- 
--	ridx = rate->idx / 8;
--	rbit = rate->idx % 8;
-+	ridx = *rate_idx / 8;
-+	rbit = *rate_idx % 8;
- 
- 	/* sanity check */
- 	if (ridx < 0 || ridx >= IEEE80211_HT_MCS_MASK_LEN)
-@@ -395,20 +393,20 @@ static bool rate_idx_match_mcs_mask(struct ieee80211_tx_rate *rate,
- 	for (i = ridx; i >= 0; i--) {
- 		for (j = rbit; j >= 0; j--)
- 			if (mcs_mask[i] & BIT(j)) {
--				rate->idx = i * 8 + j;
-+				*rate_idx = i * 8 + j;
- 				return true;
- 			}
- 		rbit = 7;
- 	}
- 
- 	/* Try to find a higher rate that would be allowed */
--	ridx = (rate->idx + 1) / 8;
--	rbit = (rate->idx + 1) % 8;
-+	ridx = (*rate_idx + 1) / 8;
-+	rbit = (*rate_idx + 1) % 8;
- 
- 	for (i = ridx; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
- 		for (j = rbit; j < 8; j++)
- 			if (mcs_mask[i] & BIT(j)) {
--				rate->idx = i * 8 + j;
-+				*rate_idx = i * 8 + j;
- 				return true;
- 			}
- 		rbit = 0;
-@@ -418,35 +416,30 @@ static bool rate_idx_match_mcs_mask(struct ieee80211_tx_rate *rate,
- 
- 
- 
--static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
-+static void rate_idx_match_mask(s8 *rate_idx, u16 *rate_flags,
- 				struct ieee80211_supported_band *sband,
- 				enum nl80211_chan_width chan_width,
- 				u32 mask,
- 				u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
- {
--	struct ieee80211_tx_rate alt_rate;
--
- 	/* handle HT rates */
--	if (rate->flags & IEEE80211_TX_RC_MCS) {
--		if (rate_idx_match_mcs_mask(rate, mcs_mask))
-+	if (*rate_flags & IEEE80211_TX_RC_MCS) {
-+		if (rate_idx_match_mcs_mask(rate_idx, mcs_mask))
- 			return;
- 
- 		/* also try the legacy rates. */
--		alt_rate.idx = 0;
-+		*rate_idx = 0;
- 		/* keep protection flags */
--		alt_rate.flags = rate->flags &
--				 (IEEE80211_TX_RC_USE_RTS_CTS |
--				  IEEE80211_TX_RC_USE_CTS_PROTECT |
--				  IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
--		alt_rate.count = rate->count;
--		if (rate_idx_match_legacy_mask(&alt_rate,
--					       sband->n_bitrates, mask)) {
--			*rate = alt_rate;
-+		*rate_flags &= (IEEE80211_TX_RC_USE_RTS_CTS |
-+				IEEE80211_TX_RC_USE_CTS_PROTECT |
-+				IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
-+		if (rate_idx_match_legacy_mask(rate_idx, sband->n_bitrates,
-+					       mask))
- 			return;
--		}
--	} else if (!(rate->flags & IEEE80211_TX_RC_VHT_MCS)) {
-+	} else if (!(*rate_flags & IEEE80211_TX_RC_VHT_MCS)) {
- 		/* handle legacy rates */
--		if (rate_idx_match_legacy_mask(rate, sband->n_bitrates, mask))
-+		if (rate_idx_match_legacy_mask(rate_idx, sband->n_bitrates,
-+					       mask))
- 			return;
- 
- 		/* if HT BSS, and we handle a data frame, also try HT rates */
-@@ -459,23 +452,19 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
- 			break;
- 		}
- 
--		alt_rate.idx = 0;
-+		*rate_idx = 0;
- 		/* keep protection flags */
--		alt_rate.flags = rate->flags &
--				 (IEEE80211_TX_RC_USE_RTS_CTS |
--				  IEEE80211_TX_RC_USE_CTS_PROTECT |
--				  IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
--		alt_rate.count = rate->count;
-+		*rate_flags &= (IEEE80211_TX_RC_USE_RTS_CTS |
-+				IEEE80211_TX_RC_USE_CTS_PROTECT |
-+				IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
- 
--		alt_rate.flags |= IEEE80211_TX_RC_MCS;
-+		*rate_flags |= IEEE80211_TX_RC_MCS;
- 
- 		if (chan_width == NL80211_CHAN_WIDTH_40)
--			alt_rate.flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+			*rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 
--		if (rate_idx_match_mcs_mask(&alt_rate, mcs_mask)) {
--			*rate = alt_rate;
-+		if (rate_idx_match_mcs_mask(rate_idx, mcs_mask))
- 			return;
--		}
- 	}
- 
- 	/*
-@@ -628,6 +617,40 @@ static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
- 	}
- }
- 
-+static bool rate_control_cap_mask(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_supported_band *sband,
-+				  struct ieee80211_sta *sta, u32 *mask,
-+				  u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
-+{
-+	u32 i, flags;
-+
-+	*mask = sdata->rc_rateidx_mask[sband->band];
-+	flags = ieee80211_chandef_rate_flags(&sdata->vif.bss_conf.chandef);
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if ((flags & sband->bitrates[i].flags) != flags)
-+			*mask &= ~BIT(i);
-+	}
-+
-+	if (*mask == (1 << sband->n_bitrates) - 1 &&
-+	    !sdata->rc_has_mcs_mask[sband->band])
-+		return false;
-+
-+	if (sdata->rc_has_mcs_mask[sband->band])
-+		memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[sband->band],
-+		       IEEE80211_HT_MCS_MASK_LEN);
-+	else
-+		memset(mcs_mask, 0xff, IEEE80211_HT_MCS_MASK_LEN);
-+
-+	if (sta) {
-+		/* Filter out rates that the STA does not support */
-+		*mask &= sta->supp_rates[sband->band];
-+		for (i = 0; i < sizeof(mcs_mask); i++)
-+			mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
-+	}
-+
-+	return true;
-+}
-+
- static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_sta *sta,
- 				    struct ieee80211_supported_band *sband,
-@@ -636,9 +659,8 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
- {
- 	enum nl80211_chan_width chan_width;
- 	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
--	bool has_mcs_mask;
- 	u32 mask;
--	u32 rate_flags;
-+	u16 rate_flags;
- 	int i;
- 
- 	/*
-@@ -646,30 +668,9 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
- 	 * default mask (allow all rates) is used to save some processing for
- 	 * the common case.
- 	 */
--	mask = sdata->rc_rateidx_mask[sband->band];
--	has_mcs_mask = sdata->rc_has_mcs_mask[sband->band];
--	rate_flags =
--		ieee80211_chandef_rate_flags(&sdata->vif.bss_conf.chandef);
--	for (i = 0; i < sband->n_bitrates; i++)
--		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
--			mask &= ~BIT(i);
--
--	if (mask == (1 << sband->n_bitrates) - 1 && !has_mcs_mask)
-+	if (!rate_control_cap_mask(sdata, sband, sta, &mask, mcs_mask))
- 		return;
- 
--	if (has_mcs_mask)
--		memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[sband->band],
--		       sizeof(mcs_mask));
--	else
--		memset(mcs_mask, 0xff, sizeof(mcs_mask));
--
--	if (sta) {
--		/* Filter out rates that the STA does not support */
--		mask &= sta->supp_rates[sband->band];
--		for (i = 0; i < sizeof(mcs_mask); i++)
--			mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
--	}
--
- 	/*
- 	 * Make sure the rate index selected for each TX rate is
- 	 * included in the configured mask and change the rate indexes
-@@ -681,8 +682,10 @@ static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
- 		if (rates[i].idx < 0)
- 			break;
- 
--		rate_idx_match_mask(&rates[i], sband, chan_width, mask,
--				    mcs_mask);
-+		rate_flags = rates[i].flags;
-+		rate_idx_match_mask(&rates[i].idx, &rate_flags, sband,
-+				    chan_width, mask, mcs_mask);
-+		rates[i].flags = rate_flags;
- 	}
- }
- 
--- 
-2.1.4
-
+Cheers,
+Jes
