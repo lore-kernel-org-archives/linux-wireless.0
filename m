@@ -1,84 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47951 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752100AbbHRH6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 03:58:20 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S1752054AbbHaNHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 09:07:49 -0400
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 16/26] iwlwifi: mvm: add debug info to schedule scan complete message.
-Date: Tue, 18 Aug 2015 10:57:26 +0300
-Message-Id: <1439884656-18146-16-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100108_649689_F6D11CA8)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+Cc: jes.sorensen@redhat.com, kvalo@codeaurora.org,
+	Larry.Finger@lwfinger.net
+Subject: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
+Date: Sun, 30 Aug 2015 17:02:53 -0400
+Message-Id: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20150831_150801_358390_16ADC529)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Add more information to schedule scan complete message.
+Hi,
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+I finally found some time to work on rtl8xxxu again. Since the
+previously version posted some months ago, I fixed up a number of
+bugs. I also added support for a range of other Realtek based USB
+devices. The driver now supports rtl8723au, rtl8188cu, rtl8188ru, and
+rtl8192cu. It should work on rtl8191cu devices as well.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index f456aad..1505546 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -349,9 +349,13 @@ void iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 	if (mvm->scan_status & IWL_MVM_SCAN_STOPPING_SCHED) {
- 		WARN_ON_ONCE(mvm->scan_status & IWL_MVM_SCAN_STOPPING_REGULAR);
- 
--		IWL_DEBUG_SCAN(mvm, "Scheduled scan %s, EBS status %s\n",
-+		IWL_DEBUG_SCAN(mvm,
-+			       "Scheduled scan %s, EBS status %s, Last line %d, Last iteration %d, Time after last iteration %d\n",
- 			       aborted ? "aborted" : "completed",
--			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
-+			       iwl_mvm_ebs_status_str(scan_notif->ebs_status),
-+			       scan_notif->last_schedule_line,
-+			       scan_notif->last_schedule_iteration,
-+			       __le32_to_cpu(scan_notif->time_after_last_iter));
- 
- 		mvm->scan_status &= ~IWL_MVM_SCAN_STOPPING_SCHED;
- 	} else if (mvm->scan_status & IWL_MVM_SCAN_STOPPING_REGULAR) {
-@@ -363,9 +367,13 @@ void iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 	} else if (mvm->scan_status & IWL_MVM_SCAN_SCHED) {
- 		WARN_ON_ONCE(mvm->scan_status & IWL_MVM_SCAN_REGULAR);
- 
--		IWL_DEBUG_SCAN(mvm, "Scheduled scan %s, EBS status %s (FW)\n",
-+		IWL_DEBUG_SCAN(mvm,
-+			       "Scheduled scan %s, EBS status %s, Last line %d, Last iteration %d, Time after last iteration %d (FW)\n",
- 			       aborted ? "aborted" : "completed",
--			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
-+			       iwl_mvm_ebs_status_str(scan_notif->ebs_status),
-+			       scan_notif->last_schedule_line,
-+			       scan_notif->last_schedule_iteration,
-+			       __le32_to_cpu(scan_notif->time_after_last_iter));
- 
- 		mvm->scan_status &= ~IWL_MVM_SCAN_SCHED;
- 		ieee80211_sched_scan_stopped(mvm->hw);
-@@ -1337,13 +1345,14 @@ void iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- 	}
- 
- 	mvm->scan_status &= ~mvm->scan_uid_status[uid];
--
- 	IWL_DEBUG_SCAN(mvm,
--		       "Scan completed, uid %u type %u, status %s, EBS status %s\n",
-+		       "Scan completed, uid %u type %u, status %s, EBS status %s, Last line %d, Last iteration %d, Time from last iteration %d\n",
- 		       uid, mvm->scan_uid_status[uid],
- 		       notif->status == IWL_SCAN_OFFLOAD_COMPLETED ?
- 				"completed" : "aborted",
--		       iwl_mvm_ebs_status_str(notif->ebs_status));
-+		       iwl_mvm_ebs_status_str(notif->ebs_status),
-+		       notif->last_schedule, notif->last_iter,
-+		       __le32_to_cpu(notif->time_from_last_iter));
- 
- 	if (notif->ebs_status != IWL_SCAN_EBS_SUCCESS &&
- 	    notif->ebs_status != IWL_SCAN_EBS_INACTIVE)
+Per default only devices I have actually tested will be enabled. If
+you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+test results back to me.
+
+Note if you enable this driver, it may clash with CONFIG_RTL8192U,
+CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
+to which module you load and/or use modprobe blacklists.
+
+This driver is still work in progress. I have used it as my primary
+driver for the last six months, and I find it to be very stable. It
+seems suitable for mainline inclusion at this point.
+
+v2 of this patch contains fixes for issues reported by Larry Finger.
+I checked include/net/mac80211.h and the .tx function does indeed have
+to be atomic. In addition I found a race condition in
+rtl8723a_h2c_cmd() which may explain the mutex issue Larry saw.
+
+Cheers,
+Jes
+
+
+Jes Sorensen (1):
+  New driver: rtl8xxxu (mac80211)
+
+ MAINTAINERS                          |    7 +
+ drivers/net/wireless/Kconfig         |   32 +
+ drivers/net/wireless/Makefile        |    2 +
+ drivers/net/wireless/rtl8xxxu.c      | 5829 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtl8xxxu.h      |  597 ++++
+ drivers/net/wireless/rtl8xxxu_regs.h |  980 ++++++
+ 6 files changed, 7447 insertions(+)
+ create mode 100644 drivers/net/wireless/rtl8xxxu.c
+ create mode 100644 drivers/net/wireless/rtl8xxxu.h
+ create mode 100644 drivers/net/wireless/rtl8xxxu_regs.h
+
 -- 
-2.1.4
+2.1.0
 
