@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41653 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874AbbHTCQb (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:36061 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753422AbbHaRGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 22:16:31 -0400
-To: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: CT firmware beta-15 now has better monitor mode.
-Message-ID: <55D5387D.9000509@candelatech.com> (sfid-20150820_041647_611370_0EE5A274)
-Date: Wed, 19 Aug 2015 19:16:29 -0700
+	Mon, 31 Aug 2015 13:06:19 -0400
+Received: by wibz8 with SMTP id z8so6677747wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 10:06:18 -0700 (PDT)
+Subject: Re: RTL8189ETV
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hans de Goede <hdegoede@redhat.com>
+References: <55E47A27.4090703@gmail.com>
+From: poma <pomidorabelisima@gmail.com>
+Message-ID: <55E48988.1000803@gmail.com> (sfid-20150831_190622_932183_F447251A)
+Date: Mon, 31 Aug 2015 19:06:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <55E47A27.4090703@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is the changelog note.  This particular improvement does not require
-any driver patches as far as I know.  I tested this on my 4.0.4+ kernel.
+On 31.08.2015 18:00, poma wrote:
+> 
+> Hi Fi,
+> 
+> What is this device, is it supported by
+> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
+> 
+> $ modinfo rtl8189es
+> modinfo: ERROR: Module rtl8189es not found.
+> 
 
-Should be useful for anyone doing sniffing with ath10k.
+or is it supported by
+https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8188eu
+https://github.com/lwfinger/rtl8188eu
+as RTL8188ETV is
 
-   *  Allow monitor mode to receive 'Association Request', block-ack action frames,
-      nodata frames, TYPE-CTL frames.  Previously, these were not delivered to
-      the WMI interface, and the kernel driver is configured to drop mgmt frames in
-      the normal RX htt datapath, so host never saw them.
+$ modinfo rtl8188eu
+modinfo: ERROR: Module rtl8188eu not found.
 
-      This makes sniffing with ath10k a lot more useful.  When no monitor devices are
-      active, the firmware reverts to the previous behaviour.  I guess the idea is that
-      this is an optimization and keeps some un-needed frames off the host.
 
-http://www.candelatech.com/ath10k.php
+However RTL8188ETV is USB 2.0 device,
+eeeeeeeeeeeeeeeeeee not again!
 
-I'd be curious to know if anyone finds any bugs with this.  It is possible
-that my changes could cause duplicate frames to be received in monitor mode,
-so please keep an eye out for that.
 
-Thanks,
-Ben
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
