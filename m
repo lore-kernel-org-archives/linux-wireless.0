@@ -1,95 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:36514 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752173AbbHaUbd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 16:31:33 -0400
-Received: by wibz8 with SMTP id z8so11712321wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 13:31:32 -0700 (PDT)
-Subject: Re: RTL8189ETV
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hans de Goede <hdegoede@redhat.com>
-References: <55E47A27.4090703@gmail.com> <55E48988.1000803@gmail.com>
- <55E49415.7090807@lwfinger.net>
-From: poma <pomidorabelisima@gmail.com>
-Message-ID: <55E4B9A2.8060109@gmail.com> (sfid-20150831_223147_573106_C3D333E2)
-Date: Mon, 31 Aug 2015 22:31:30 +0200
-MIME-Version: 1.0
-In-Reply-To: <55E49415.7090807@lwfinger.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:53860 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753755AbbHaSPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 14:15:09 -0400
+Message-ID: <1441044908.2718.20.camel@redhat.com> (sfid-20150831_201513_540417_19B2F8FC)
+Subject: Re: NetworkManager crashing
+From: Dan Williams <dcbw@redhat.com>
+To: Arend van Spriel <aspriel@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 31 Aug 2015 13:15:08 -0500
+In-Reply-To: <55E49334.5000103@gmail.com>
+References: <55DF3E75.1080305@gmail.com>
+	 <1441035810.2718.6.camel@redhat.com> <55E49334.5000103@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31.08.2015 19:51, Larry Finger wrote:
-> On 08/31/2015 12:06 PM, poma wrote:
->> On 31.08.2015 18:00, poma wrote:
->>>
->>> Hi Fi,
->>>
->>> What is this device, is it supported by
->>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
->>>
->>> $ modinfo rtl8189es
->>> modinfo: ERROR: Module rtl8189es not found.
->>>
->>
->> or is it supported by
->> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8188eu
->> https://github.com/lwfinger/rtl8188eu
->> as RTL8188ETV is
->>
->> $ modinfo rtl8188eu
->> modinfo: ERROR: Module rtl8188eu not found.
->>
->>
->> However RTL8188ETV is USB 2.0 device,
->> eeeeeeeeeeeeeeeeeee not again!
+On Mon, 2015-08-31 at 19:47 +0200, Arend van Spriel wrote:
 > 
-> That last comment does not help.
+> On 31-08-15 17:43, Dan Williams wrote:
+> > On Thu, 2015-08-27 at 18:44 +0200, Arend van Spriel wrote:
+> >> Hi Dan,
+> >>
+> >> I ran into issue when NetworkManager keeps crashing/respawning. I have
+> >> no idea what happened. My laptop was rebooted (might been my sons work)
+> >> and this was the situation I stumbled upon. Running 4.1 kernel on Linux
+> >> Mint. NetworkManager version is 0.9.8.8.
+> > 
+> > Odd, can you get any more log messages out of the machine?  Or perhaps a
+> > backtrace?  Looks like it's happening quite early in boot, before
+> > anything would really get configured...
 > 
-> If rtl8188eu is not available, that is the fault of your distro, not anything 
-> that driver maintainers can help. That driver is in the staging directory, and 
-> some distros do not include any of those drivers in their kernels.
-> 
-> eeeeeeeeeeeeeeeeeee not again! Someone posts about a USB device not found, and 
-> they refuse/fail to provide the USB ID. Why, I do not know when the lsusb 
-> command provides this info so easily.
-> 
-> Larry
-> 
-> 
+> Yikes. My mistake. I have two libnl-3 versions installed and
+> NetworkManager loaded the wrong one. Doing walk of shame here.
 
+Yeah, that'll do it...  glad to see it got figured out.
 
-What's the hurry, Larry.
-Let's see if Hans knows what type of this device is RTL8189ETV.
-
-According to what is written here
-http://linux-sunxi.org/Xunlong_Orange_Pi#Variants
-http://www.orangepi.org/orangepi2
-RTL8189ETV, whatever it is, is an integral part of some "O-Pi" variants.
-
-About rtl8188etv can be read here
-http://www.orangepi.org/orangepibbsen/forum.php?mod=viewthread&tid=25&highlight=wifi
-but there is no mention of RTL8189ETV.
-
-WikiDevi also returns nothing
-https://wikidevi.com/wiki/Main_Page
-  "Search results
-  ...
-  There were no results matching the query.
-
-  Create the page "RTL8189ETV" on this wiki!"
-
-I'm trying to determine in advance,
-what components are supported,
-what components are not supported,
-what components will never be supported,
-what components will never be supported in mainline kernel.
-
-Therefore, I can not show 'lsusb' output. :)
-
-"Distro" is not decisive in this matter, moreover dunno what are you referring with "your distro".
-
-eeeeeeeeeeeeeeeeeeeeee not again!
+Dan
 
