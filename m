@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:51894 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbbHTELv (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58660 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315AbbHaQbO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 00:11:51 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 31 Aug 2015 12:31:14 -0400
+Subject: Re: [PATCH] ath10k: Drop probe responses when too many are queued
+To: Vivek Natarajan <nataraja@qti.qualcomm.com>, kvalo@qca.qualcomm.com
+References: <1441019095-2364-1-git-send-email-nataraja@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <55E48151.9080609@candelatech.com> (sfid-20150831_183117_818252_72A081C1)
+Date: Mon, 31 Aug 2015 09:31:13 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21973.19910.496207.730546@gargle.gargle.HOWL> (sfid-20150820_061155_051278_0D6AFD7C)
-Date: Thu, 20 Aug 2015 09:17:18 +0530
-To: <miaoqing@qti.qualcomm.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@qca.qualcomm.com>, <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCH v2 2/2] ath9k: fix incorrect calibration initial for ar9561
-In-Reply-To: <1440033699-11121-2-git-send-email-miaoqing@qca.qualcomm.com>
-References: <1440033699-11121-1-git-send-email-miaoqing@qca.qualcomm.com>
-	<1440033699-11121-2-git-send-email-miaoqing@qca.qualcomm.com>
+In-Reply-To: <1441019095-2364-1-git-send-email-nataraja@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-miaoqing@qti.qualcomm.com wrote:
-> -	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9565(ah))
-> +	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9565(ah) ||
-> +	    AR_SREV_9561(ah))
->  		priv_ops->init_cal = ar9003_hw_init_cal_pcoem;
->  	else
->  		priv_ops->init_cal = ar9003_hw_init_cal_soc;
 
-Are you sure about this ? AR9561 is not a PCOEM chip, IIRC.
-Maybe the SoC routine is missing some code changes for AR956x ?
 
-Sujith
+On 08/31/2015 04:04 AM, Vivek Natarajan wrote:
+> In a noisy environment, when multiple interfaces are created,
+> the management tx descriptors are fully occupied by the probe
+> responses from all the interfaces. This prevents a new station
+> from a successful association.
+>
+> Fix this by limiting the probe responses when the specified
+> threshold limit is reached.
+
+Is this useful when firmware supports management-tx over HTT (instead of WMI)?
+
+Or just for WMI mgt?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
