@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39253 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48796 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752225AbbHRH61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2015 03:58:27 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/26] iwlwifi: mvm: fix a range check in debugfs code
-Date: Tue, 18 Aug 2015 10:57:29 +0300
-Message-Id: <1439884656-18146-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150818_100108_341035_91690293)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E8110F8@hasmsx107.ger.corp.intel.com>
+	id S1752967AbbHaNL2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 09:11:28 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	<55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
+	<1440983160.3276.18.camel@perches.com>
+Date: Mon, 31 Aug 2015 09:11:26 -0400
+In-Reply-To: <1440983160.3276.18.camel@perches.com> (Joe Perches's message of
+	"Sun, 30 Aug 2015 18:06:00 -0700")
+Message-ID: <wrfjd1y361s1.fsf@redhat.com> (sfid-20150831_151131_096584_E544A2DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+Joe Perches <joe@perches.com> writes:
+> On Sun, 2015-08-30 at 14:41 -0400, Jes Sorensen wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+> []
+>> >> +	dev_info(&priv->udev->dev, "%s: dumping efuse (0x%02lx bytes):\n",
+>> >> +		 __func__, sizeof(struct rtl8192cu_efuse));
+>> >
+>> > On a 32-bit PowerPC, the above line outputs the following:
+>> >
+>> > warning: format ‘%lx’ expects argument of type ‘long unsigned int’,
+>> > but argument 4 has type ‘unsigned int’ [-Wformat]
+>> >
+>> > This issue does not affect the object code, but it should be
+>> > fixed. Setting the format specifier to %02x and adding a cast of (int)
+>> > before the "size_of" will fix it on both sets of systems.
+>> 
+>> Ewww, I didn't realize PowerPC 32 was this ugly :( Adding (long) as a
+>> cast would have the same effect here, but we will end up with an ugly
+>> cast in either case.
+>
+> don't cast at all and use format specifier %zu instead
 
-The &mvm->tof_data.range_req.ap[] array has IWL_MVM_TOF_MAX_APS elements
-so the check should be >= instead of >.  Also the test can underflow so
-I have changed "i" to unsigned.
+Would be %zx in this case, but thanks, I updated that.
 
-Fixes: ce7929186a39 ('wlwifi: mvm: add basic Time of Flight (802.11mc FTM) support')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-index ddb1c84..383a316 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
-@@ -911,9 +911,9 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
- 		int size = sizeof(struct iwl_tof_range_req_ap_entry);
- 		u16 burst_period;
- 		u8 *mac = ap.bssid;
--		int i;
-+		unsigned int i;
- 
--		if (sscanf(data, "%d %hhd %hhx %hhx"
-+		if (sscanf(data, "%u %hhd %hhx %hhx"
- 			   "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx"
- 			   "%hhx %hhx %hx"
- 			   "%hhx %hhx %x"
-@@ -929,7 +929,7 @@ static ssize_t iwl_dbgfs_tof_range_request_write(struct ieee80211_vif *vif,
- 			ret = -EINVAL;
- 			goto out;
- 		}
--		if (i > IWL_MVM_TOF_MAX_APS) {
-+		if (i >= IWL_MVM_TOF_MAX_APS) {
- 			IWL_ERR(mvm, "Invalid AP index %d\n", i);
- 			ret = -EINVAL;
- 			goto out;
--- 
-2.1.4
-
+Jes
