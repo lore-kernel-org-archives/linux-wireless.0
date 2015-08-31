@@ -1,64 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33304 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbbHTHeM (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42438 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752110AbbHaLow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2015 03:34:12 -0400
-From: <miaoqing@qti.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<kvalo@qca.qualcomm.com>, Miaoqing Pan <miaoqing@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH v2] ath9k: fix AR_RX_FILTER for ar9462/ar9565 when rx stopped
-Date: Thu, 20 Aug 2015 15:34:04 +0800
-Message-ID: <1440056044-10045-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150820_093415_908144_650750E2)
+	Mon, 31 Aug 2015 07:44:52 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Belisko Marek <marek.belisko@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: kernel log flooded with GET_CMD_NODE: cmd node not available
+Date: Mon, 31 Aug 2015 11:44:49 +0000
+Message-ID: <26c3f35fd9e74b1d80e80077c19b6717@SC-EXCH04.marvell.com> (sfid-20150831_134455_809969_1FBF2CB8)
+References: <CAAfyv36YLsEVarY6J8H-=Vcox=ktgeCUkqurHnAXzj_UFfthYw@mail.gmail.com>
+In-Reply-To: <CAAfyv36YLsEVarY6J8H-=Vcox=ktgeCUkqurHnAXzj_UFfthYw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-
-When rx stopped, AR_RX_FILTER should be cleared, but in
-ath9k_hw_setrxfilter(), ATH9K_RX_FILTER_CONTROL_WRAPPER will always
-be set for ar9462/ar9565.
-
-Fix this by moving the code in ath9k_hw_setrxfilter() to
-ath_calcrxfilter().
-
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c   | 3 ---
- drivers/net/wireless/ath/ath9k/recv.c | 3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a31a680..0e2b28c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2760,9 +2760,6 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
--	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
--		bits |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
--
- 	REG_WRITE(ah, AR_RX_FILTER, bits);
- 
- 	phybits = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index d3189da..0689f6b 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -424,6 +424,9 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	    AR_SREV_9561(sc->sc_ah))
- 		rfilt |= ATH9K_RX_FILTER_4ADDRESS;
- 
-+	if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
-+		rfilt |= ATH9K_RX_FILTER_CONTROL_WRAPPER;
-+
- 	if (ath9k_is_chanctx_enabled() &&
- 	    test_bit(ATH_OP_SCANNING, &common->op_flags))
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
--- 
-1.9.1
-
+SGkgQmVsaXNrbywNCg0KPiBJJ20gcnVubmluZyBrZXJuZWwgNC4xIChubyBjb2RlIGNoYW5nZXMg
+aW4gbXdpZmlleCkgb24gY3VzdG9tIGJvYXJkIHdpdGgNCj4gbXdydmwgc2Q4Nzg3IHNkaW8gd2lm
+aSBjYXJkLiBFdmVyeXRoaW5nIHdvcmtzIGZpbmUgYnV0IHdoZW4gSSBzdGFydA0KPiBob3N0YXBk
+IGFuZCBjb25uZWN0IHRvIGRldmljZSBmcm9tIFBDICBhbmQgb3BlbiBkZXZpY2Ugd2VicGFnZSBJ
+IGNhbiBzZWUNCj4gaW4gbG9nIG1hbnkgb2Ygc3VjaCBtZXNzYWdlcyAofjEwMCBzYW1lIGxpbmVz
+KToNCj4gR0VUX0NNRF9OT0RFOiBjbWQgbm9kZSBub3QgYXZhaWxhYmxlDQo+IFBSRVBfQ01EOiBu
+byBmcmVlIGNtZCBub2RlDQoNCkNvdWxkIHlvdSBzaGFyZSBjb21wbGV0ZSBkbWVzZyBsb2c/DQoN
+ClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
