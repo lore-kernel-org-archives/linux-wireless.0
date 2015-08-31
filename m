@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:61450 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932955AbbIYT6J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 15:58:09 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Fri, 25 Sep 2015 22:26:22 +0200
-Message-ID: <4331507.W3ZDWldbWu@vostro.rjw.lan> (sfid-20150925_215817_136446_07065E5C)
-In-Reply-To: <20150925185256.GG5951@linux>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <1443206945.2161.9.camel@sipsolutions.net> <20150925185256.GG5951@linux>
+Received: from mx1.redhat.com ([209.132.183.28]:36708 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752351AbbHaXn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 19:43:58 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	<55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
+	<55E39707.60101@lwfinger.net> <wrfjy4gs5ggd.fsf@redhat.com>
+	<55E476A0.4080601@lwfinger.net>
+Date: Mon, 31 Aug 2015 19:43:57 -0400
+In-Reply-To: <55E476A0.4080601@lwfinger.net> (Larry Finger's message of "Mon,
+	31 Aug 2015 10:45:36 -0500")
+Message-ID: <wrfjio7v3txe.fsf@redhat.com> (sfid-20150901_014401_816613_A4A68566)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, September 25, 2015 11:52:56 AM Viresh Kumar wrote:
-> On 25-09-15, 20:49, Johannes Berg wrote:
-> > Ok, then, but that means Rafael is completely wrong ...
-> > debugfs_create_bool() takes a *pointer* and it needs to be long-lived,
-> > it can't be on the stack. You also don't get a call when it changes.
-> 
-> Ahh, ofcourse. My bad as well...
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 08/30/2015 09:39 PM, Jes Sorensen wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>>> On 08/30/2015 01:41 PM, Jes Sorensen wrote:
+>>>>>> +{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x817e, 0xff,
+>>>>> 0xff, 0xff),
+>>>>>> +	.driver_info = (unsigned long)&rtl8192cu_fops},
+>>>>>
+>>>>> I have tested a device with USB ID 0x0bda (USB_VENDOR_ID_REALTEK):0x817e.
+>>>>
+>>>> Were you happy with the results, or did it cause problems? Ie. did you
+>>>> try on x86 or on PPC32?
+>>>
+>>> As covered in the other mail, it works very well at G rates.
+>>
+>> I see - I am a little confused, it works well on G rates but not on N
+>> rates, or was this due to the AP used?
+>
+> The AP is AC1200. It supports full N rates on other devices.
 
-Well, sorry about the wrong suggestion.
+You only manage to make it work on G rates against this AP? Urgh, I
+don't like that at all.
 
-> I think we can change structure definition but will wait for Rafael's
-> comment before that.
+I thought you reported 30+Mbps performances though?, thats more than you
+get on G.
 
-OK, change the structure then.
+>>>> I don't think any of this is showstopper material for inclusion right
+>>>> now, albeit I do want to address them.
+>>>
+>>> The scheduling while atomic problems do need to be fixed, and I am
+>>> still working on the failure to get a wifi device on PPC.
+>>
+>> It's already fixed :)
+>
+> A full debug=0x3fff showed me one problem on the PPC. I will be
+> testing a patch later today.
 
-Thanks,
-Rafael
+Interesting, let me know what you find.
 
+Cheers,
+Jes
