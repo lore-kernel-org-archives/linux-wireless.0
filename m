@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23444 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932183AbbHXDqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2015 23:46:00 -0400
-Message-ID: <55DA9374.2060909@linux.intel.com> (sfid-20150824_054624_633947_5BC82CFA)
-Date: Mon, 24 Aug 2015 11:45:56 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:36656 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049AbbHaPpi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 11:45:38 -0400
+Received: by obkg7 with SMTP id g7so93927838obk.3
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 08:45:38 -0700 (PDT)
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+ <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+ <55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
+ <55E39707.60101@lwfinger.net> <wrfjy4gs5ggd.fsf@redhat.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	johannes@sipsolutions.net
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <55E476A0.4080601@lwfinger.net> (sfid-20150831_174541_249461_53FDF668)
+Date: Mon, 31 Aug 2015 10:45:36 -0500
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: David Miller <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] net/wireless: enable wiphy device to suspend/resume asynchronously
-References: <55B9B3BA.6080406@linux.intel.com>	 <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com>	 <55D13D66.1050500@linux.intel.com> <1439796553.2451.1.camel@sipsolutions.net> <55D19F57.4070605@broadcom.com>
-In-Reply-To: <55D19F57.4070605@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <wrfjy4gs5ggd.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 2015/8/17 16:46, Arend van Spriel wrote:
-> + Rafael
->
-> On 08/17/2015 09:29 AM, Johannes Berg wrote:
->> On Mon, 2015-08-17 at 09:48 +0800, Fu, Zhonghui wrote:
+On 08/30/2015 09:39 PM, Jes Sorensen wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>> On 08/30/2015 01:41 PM, Jes Sorensen wrote:
+>>>> The above statement generated a "scheduling while atomic" splat. The
+>>>> gfp_t argument needs to be GFP_KERNEL.
 >>>
->>> The suspend/resume timing of wiphy device and related devices will be
->>> ensured by their parent/child relationship. So, enabling wiphy device
->>> to suspend/resume asynchronously does not change any  dependency. It
->>> can only take advantage of multicore and improve system
->>> suspend/resume speed.
+>>> You are seeing scheduling while atomic in the TX path? That just seems
+>>> wrong to me - Johannes is the mac80211 TX path not meant to allow
+>>> sleeping?
 >>>
+>>> I have never seen this on x86 and I have been running the driver for a
+>>> long time. It is puzzling this causes a problem on PowerPC. It there
+>>> something special in the config for it? I am inclined to say there is
+>>> something wrong with the PPC32 setup rather than with my usage of
+>>> GFP_KERNEL in the TX path.
 >>
->> You're going to have to explain that to me, because I don't see that.
->> All I see is that when looking at a device, if async is possible, it
->> gets added to an async work, and if async is not possible then it gets
->> done immediately. Even putting aside the question of whether or not
->> async is ordered or not (I don't know), if the wiphy is async and the
->> PCI (or other bus) device isn't, then it seems they could get handled
->> out of order, no? Or is there some magic code somewhere that I'm
->> missing that explicitly waits for the async of the parent/child
->> relationship?
+>> The scheduling while atomic problem is on x86_64, not on PPC. I have
+>> lots of debugging/testing turned on in my configuration, but I cannot
+>> really identify which one might turn on the message. My config uses
+>> SLUB memory allocation, but that shouldn't matter either.
 >
-> This patch got me worried as well. Can't find the magic either. Maybe Rafael can give some hints here.
-
-"dpm_wait_for_children" function will be invoked in "__device_suspend", "__device_suspend_late", and "__device_suspend_noirq" functions to synchronize the child relationship. "dpm_wait" function will be invoked in "device_resume_noirq", "device_resume_early", and "device_resume" functions to synchronize the parent relationship. If two devices have parent/child relationship, but different suspend/resume mode(sync or async), this will have no impact to PM timing order between them. Because all devices will use "__device_suspend", "__device_suspend_late" ... functions to complete their PM transition.
-
-
-Thanks,
-Zhonghui 
+> I had some problems with mail delivery, so you may receive another
+> answer later - I checked up on it, and it was indeed a bug. You can
+> check my git branch for a version that won't suffer from this.
 >
-> Regards,
-> Arend
->
->> johannes
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>> +{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x817e, 0xff,
+>>>> 0xff, 0xff),
+>>>>> +	.driver_info = (unsigned long)&rtl8192cu_fops},
+>>>>
+>>>> I have tested a device with USB ID 0x0bda (USB_VENDOR_ID_REALTEK):0x817e.
+>>>
+>>> Were you happy with the results, or did it cause problems? Ie. did you
+>>> try on x86 or on PPC32?
 >>
+>> As covered in the other mail, it works very well at G rates.
 >
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I see - I am a little confused, it works well on G rates but not on N
+> rates, or was this due to the AP used?
+
+The AP is AC1200. It supports full N rates on other devices.
+>
+>>> I don't think any of this is showstopper material for inclusion right
+>>> now, albeit I do want to address them.
+>>
+>> The scheduling while atomic problems do need to be fixed, and I am
+>> still working on the failure to get a wifi device on PPC.
+>
+> It's already fixed :)
+
+A full debug=0x3fff showed me one problem on the PPC. I will be testing a patch 
+later today.
+
+Larry
+
 
