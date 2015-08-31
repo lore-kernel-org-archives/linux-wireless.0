@@ -1,72 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.10]:39853 "EHLO mx3.wp.pl"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51590 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbbHNMce convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2015 08:32:34 -0400
-Date: Fri, 14 Aug 2015 14:32:29 +0200
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Tuomas =?UTF-8?B?UsOkc8OkbmVu?= <tuomasjjrasanen@tjjr.fi>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	tuomasjjrasanen@opinsys.fi,
-	Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: About adding support for MT76x2U to Linux kernel
-Message-ID: <20150814143229.61440072@north> (sfid-20150814_143238_977676_4A1EF0CD)
-In-Reply-To: <20150814081526.GC20192@hackpad.Elisa>
-References: <20150814081526.GC20192@hackpad.Elisa>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	id S1752994AbbHaOsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 10:48:41 -0400
+Message-ID: <1441032517.13980.21.camel@sipsolutions.net> (sfid-20150831_164845_308810_A647F07B)
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Date: Mon, 31 Aug 2015 16:48:37 +0200
+In-Reply-To: <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20150829_231820_002785_12E86989)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	 <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	 (sfid-20150829_231820_002785_12E86989)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CC: Linus W who was hacking on mt7630e recently.
+> + * This driver was written as a replacement for the vendor provided
+> + * rtl8723au driver. As the Realtek 8xxx chips are very similar in
+> + * their programming interface, I have started adding support for
+> + * additional 8xxx chips like the 8192cu, 8188cus, etc.
 
-On Fri, 14 Aug 2015 11:15:26 +0300, Tuomas Räsänen wrote:
-> Hi
-> 
-> I'm very interested in adding support (especially AP mode) for MT76x2U
-> USB-dongles to Linux kernel. I'm aware of the work you both have done, Felix's
-> work on MT76x2 PCI-devices and Jakub's work to add support for MT7601U. So I
-> guess no one knows this exact problem domain better than you (perhaps excluding
-> MediaTek's subcontractors who wrote the original vendor driver), that is why I'm
-> writing specifically to you.
-> 
-> I have ASUS USB-N53_B1 adapter (0b05:180b) as a test device:
-> https://wikidevi.com/wiki/ASUS_USB-N53_B1
-> 
-> As far as I know, no one has been / is working on MT76x2U USB-dongles, please
-> correct me if I'm wrong.
-> 
-> I have a strong system programming background, some knowledge on 802.11 in
-> general, but no actual experience in Linux kernel programming. So I'm pretty
-> confident that I'll have many questions to throw at you before I have managed to
-> make anything functional.
-> 
-> So, to get started, I was wondering what would be the best way forward. I can
-> think of two reasonable approaches:
-> 
->   #1 Base the new driver on Felix's mt76 and modify it to work on USB-bus
->      instead of PCI.
-> 
->   #2 Base the new driver on Jakub's mt7601u and modify it to handle mt76x2u
->      devices by using Felix's mt76 and the vendor driver as a reference.
-> 
-> Of course there's the third option to write it from scratch based solely on the
-> vendor driver, but because you have already done such a great job in
-> interpreting the outdated and quite ugly (subjective view?) vendor driver code,
-> that would be foolish.
+That last sentence here seems like it might be more suitable in the
+commit message then here - you'll surely forget to update it ;)
 
-There is a fourth option: merge mt76 and mt7601u and add support for
-mt76x2u along the way ;)
+> +> 	> /*
+> +> 	>  * MBOX ready?
+> +> 	>  */
+> +> 	> retry = 100;
+> +> 	> do {
+> +> 	> 	> val8 = rtl8xxxu_read8(priv, REG_HMTFR);
+> +> 	> 	> if (!(val8 & BIT(mbox_nr)))
+> +> 	> 	> 	> break;
+> +> 	> } while (retry--);
 
-> At first I had a hunch that #1 would be the easiest way forward, but now that I
-> skimmed through the code, I'm beginning to think that approach #2 has the least
-> resistance. However, I'm not necessarily looking for the easiest way but *the
-> best/right* way. So any ideas, opinions and thoughts are more than welcome.
+Seems fishy without any delay in the loop?
 
-Hardware wise your chipsets will be closer to the ones Felix is
-supporting and mt76 has AP support as well (which mt7601u is lacking).
-But mt76 is not upstream and I don't think USB is a priority there...
+> +> 	> val32 = rtl8xxxu_read32(priv, REG_OFDM0_TRX_PATH_ENABLE);
+> +> 	> val32 &= ~OFDM_RF_PATH_TX_MASK;
+> +> 	> if (priv->tx_paths == 2)
 
-On my side, I won't be able to help you or do mentoring for next few
-months for contractual reasons :(
+
+"TX path" is very uncommon language for this... I'd suggest changing
+all that to "TX stream" or "TX chain"?
+
+> +> 	> if (priv->rf_paths == 2)
+
+Similar here - and should that be RX not RF?
+
+> +static int rtl8723a_channel_to_group(int channel)
+> +{
+> +> 	> int group;
+> +
+> +> 	> if (channel < 4)
+> +> 	> 	> group = 0;
+> +> 	> else if (channel < 10)
+> +> 	> 	> group = 1;
+> +> 	> else
+> +> 	> 	> group = 2;
+> +
+> +> 	> return group;
+> +}
+
+Could remove the group variable, it's kinda pointless - just return
+immediately?
+
+if (channel < 4)
+	return 0;
+if (channel < 10)
+	return 1;
+return 2;
+
+
+> +> 	> /* Poll for data read */
+> +> 	> val32 = rtl8xxxu_read32(priv, REG_EFUSE_CTRL);
+> +> 	> for (i = 0; i < RTL8XXXU_MAX_REG_POLL; i++) {
+> +> 	> 	> val32 = rtl8xxxu_read32(priv, REG_EFUSE_CTRL);
+> +> 	> 	> if (val32 & BIT(31))
+> +> 	> 	> 	> break;
+> +> 	> }
+> 
+
+Hmm, similar poll loop like above w/o any delay?
+A few more seem to exist too.
+
+> +> 	> 	> 	> for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++) {
+> +> 	> 	> 	> 	> /* Check word enable condition in the section */
+> +> 	> 	> 	> 	> if (!(word_mask & BIT(i))) {
+> +> 	> 	> 	> 	> 	> ret = rtl8xxxu_read_efuse8(priv,
+> +> 	> 	> 	> 	> 	> 	> 	> 	>    efuse_addr++,
+> +> 	> 	> 	> 	> 	> 	> 	> 	>    &val8);
+> +> 	> 	> 	> 	> 	> if (ret)
+> +> 	> 	> 	> 	> 	> 	> goto exit;
+> +> 	> 	> 	> 	> 	> priv->efuse_wifi.raw[map_addr++] = val8;
+> +
+> +> 	> 	> 	> 	> 	> ret = rtl8xxxu_read_efuse8(priv,
+> +> 	> 	> 	> 	> 	> 	> 	> 	>    efuse_addr++,
+> +> 	> 	> 	> 	> 	> 	> 	> 	>    &val8);
+> +> 	> 	> 	> 	> 	> if (ret)
+> +> 	> 	> 	> 	> 	> 	> goto exit;
+> +> 	> 	> 	> 	> 	> priv->efuse_wifi.raw[map_addr++] = val8;
+> +> 	> 	> 	> 	> } else
+> +> 	> 	> 	> 	> 	> map_addr += 2;
+> +> 	> 	> 	> }
+
+seems like it might better be in a helper function :)
+
+> +static int rtl8xxxu_init_phy_regs(struct rtl8xxxu_priv *priv,
+> +> 	> 	> 	> 	>   struct rtl8xxxu_reg32val *array)
+> +{
+> +> 	> int i, ret;
+> +> 	> u16 reg;
+> +> 	> u32 val;
+> +
+> +> 	> for (i = 0; ; i++) {
+> +> 	> 	> reg = array[i].reg;
+> +> 	> 	> val = array[i].val;
+> +
+> +> 	> 	> if (reg == 0xffff && val == 0xffffffff)
+> +> 	> 	> 	> break;
+
+
+Maybe passing ARRAY_SIZE to these would be nicer than having to they're
+terminated? Dunno though, might be a lot of infrastructure to do that.
+
+Ugh, getting too long for me - anything in particular I should look at?
+:)
+
+johannes
