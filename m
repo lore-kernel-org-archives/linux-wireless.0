@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53479 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbbHSPFJ (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:33754 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753481AbbHaRvU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2015 11:05:09 -0400
-Date: Wed, 19 Aug 2015 07:50:28 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chandra Gorentla <csgorentla@gmail.com>
-Cc: rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
-	dan.carpenter@oracle.com
-Subject: Re: [PATCH] staging: wilc1000: Set all options in region debugfs file
-Message-ID: <20150819145028.GA20702@kroah.com> (sfid-20150819_170608_031322_743A1FE7)
-References: <1439917337-18473-1-git-send-email-csgorentla@gmail.com>
- <20150819030100.GE4588@kroah.com>
- <20150819123012.GA20877@gcs-HP-Compaq-nx6320>
+	Mon, 31 Aug 2015 13:51:20 -0400
+Received: by obcji4 with SMTP id ji4so3630856obc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 10:51:19 -0700 (PDT)
+Subject: Re: RTL8189ETV
+To: poma <pomidorabelisima@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hans de Goede <hdegoede@redhat.com>
+References: <55E47A27.4090703@gmail.com> <55E48988.1000803@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <55E49415.7090807@lwfinger.net> (sfid-20150831_195123_579945_4BBE5054)
+Date: Mon, 31 Aug 2015 12:51:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150819123012.GA20877@gcs-HP-Compaq-nx6320>
+In-Reply-To: <55E48988.1000803@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2015 at 06:00:12PM +0530, Chandra Gorentla wrote:
-> On Tue, Aug 18, 2015 at 08:01:00PM -0700, Greg KH wrote:
-> > On Tue, Aug 18, 2015 at 10:32:17PM +0530, Chandra S Gorentla wrote:
-> > > This patch allows setting all options in the module's debug region
-> > > options file 'wilc_debug_region'.  This functionality allows the user
-> > > to enable logging from all regions (initialization, locks, firmware
-> > > etc.) of the driver.  Logging from the following regions is enabled
-> > > during the driver initialization:
-> > > 
-> > > INIT_DBG, GENERIC_DBG, CFG80211_DBG, FIRM_DBG and HOSTAPD_DBG
-> > > 
-> > > Before this change, the numerical value set is equal first byte of 
-> > > input minus 0x30 (ASCII value of '0').  Because of this, after a write 
-> > > to this debugfs file, it is difficult to predict the regions on which
-> > > logging is enabled.
-> > > 
-> > > The DBG_REGION_ALL now includes 3 additional regions TCP_ENH, SPIN_DEBUG
-> > > and FIRM_DBG.
-> > 
-> > Why did you add these extra ones?
-> I added them because there is code support them and to avoid a holes in
-> the range of the options.
+On 08/31/2015 12:06 PM, poma wrote:
+> On 31.08.2015 18:00, poma wrote:
+>>
+>> Hi Fi,
+>>
+>> What is this device, is it supported by
+>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
+>>
+>> $ modinfo rtl8189es
+>> modinfo: ERROR: Module rtl8189es not found.
+>>
+>
+> or is it supported by
+> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8188eu
+> https://github.com/lwfinger/rtl8188eu
+> as RTL8188ETV is
+>
+> $ modinfo rtl8188eu
+> modinfo: ERROR: Module rtl8188eu not found.
+>
+>
+> However RTL8188ETV is USB 2.0 device,
+> eeeeeeeeeeeeeeeeeee not again!
 
-But why do you need to debug such things?
+That last comment does not help.
 
-> > All of this should eventually just be deleted, as network drivers need
-> > to use the networking driver debug interfaces, not their own crazy ones.
-> In that case, can I assume that we are not going forward with this change?
+If rtl8188eu is not available, that is the fault of your distro, not anything 
+that driver maintainers can help. That driver is in the staging directory, and 
+some distros do not include any of those drivers in their kernels.
 
-I hope not, please work on fixing the driver up to work properly (i.e.
-not with this type of stuff...)
+eeeeeeeeeeeeeeeeeee not again! Someone posts about a USB device not found, and 
+they refuse/fail to provide the USB ID. Why, I do not know when the lsusb 
+command provides this info so easily.
 
-thanks,
+Larry
 
-greg k-h
+
