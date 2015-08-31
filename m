@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:34279 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433AbbHEQS5 (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37607 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753735AbbHaRKA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2015 12:18:57 -0400
-Received: by obre1 with SMTP id e1so35454783obr.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2015 09:18:56 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, pkshih <pkshih@realtek.com>,
-	shaofu <shaofu@realtek.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V2 NEXT 5/7] rtlwifi: rtl8192ee: Implement new rekey logic
-Date: Wed,  5 Aug 2015 11:18:38 -0500
-Message-Id: <1438791520-13216-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150805_181902_166136_570F4C04)
-In-Reply-To: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1438791520-13216-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 31 Aug 2015 13:10:00 -0400
+Received: by wicmx12 with SMTP id mx12so5636533wic.0
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 10:09:59 -0700 (PDT)
+Message-ID: <55E48A6A.8050109@gmail.com> (sfid-20150831_191005_801648_FA0F6E7D)
+Date: Mon, 31 Aug 2015 19:10:02 +0200
+From: Arend van Spriel <aspriel@gmail.com>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: NetworkManager crashing
+References: <55DF3E75.1080305@gmail.com> <1441035810.2718.6.camel@redhat.com> <55E489EC.3000209@gmail.com>
+In-Reply-To: <55E489EC.3000209@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: pkshih <pkshih@realtek.com>
 
-Use the new capability in rtlwifi to prevent rekeying before EAPOL msg 4/4
-has been sent.
 
-Signed-off-by: pkshih <pkshih@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-V2 - no changes
----
- drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  | 1 +
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 8 ++++++++
- 2 files changed, 9 insertions(+)
+On 31-08-15 19:07, Arend van Spriel wrote:
+> 
+> 
+> On 31-08-15 17:43, Dan Williams wrote:
+>> On Thu, 2015-08-27 at 18:44 +0200, Arend van Spriel wrote:
+>>> Hi Dan,
+>>>
+>>> I ran into issue when NetworkManager keeps crashing/respawning. I have
+>>> no idea what happened. My laptop was rebooted (might been my sons work)
+>>> and this was the situation I stumbled upon. Running 4.1 kernel on Linux
+>>> Mint. NetworkManager version is 0.9.8.8.
+>>
+>> Odd, can you get any more log messages out of the machine?  Or perhaps a
+>> backtrace?  Looks like it's happening quite early in boot, before
+>> anything would really get configured...
+> 
+> Ran NetworkManager manually on the machine. On every run the following
+> shows up in dmesg
+> 
+> [19456.972855] traps: NetworkManager[5497] general protection ip:469f8e
+> sp:7ffeab94c1f0 error:0 in NetworkManager[400000+10c000]
+> 
+> and in the terminal:
+> 
+> (NetworkManager:5508): GLib-WARNING **: GError set over the top of a
+> previous GError or uninitialized memory.
+> This indicates a bug in someone's code. You must ensure an error is NULL
+> before it's set.
+> The overwriting error message was: Key file does not have group
+> 'connectivity'
+> 
+> Not sure which key file it is talking about so no idea where to look.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-index 232865c..4091430 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
-@@ -859,6 +859,7 @@ static void _rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 	case C2H_8192E_TX_REPORT:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE ,
- 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
-+		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
- 	case C2H_8192E_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-index d39ee67..49aec97 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-@@ -731,6 +731,14 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 		}
- 
-+		/* tx report */
-+		if (ptcb_desc->use_spe_rpt) {
-+			u16 sn = rtl_get_tx_report_sn(hw);
-+
-+			SET_TX_DESC_SPE_RPT(pdesc, 1);
-+			SET_TX_DESC_SW_DEFINE(pdesc, sn);
-+		}
-+
- 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
- 
- 		if (ieee80211_is_mgmt(fc)) {
--- 
-2.1.4
+Is this about the keyfile plugin that is mentioned in my
+NetworkManager.conf:
+
+[main]
+plugins=ifupdown,keyfile,ofono
+dns=dnsmasq
+
+[ifupdown]
+managed=false
+
+Regards,
+Arend
 
