@@ -1,124 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:34565 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753245AbbHJPaJ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33187 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752456AbbHaLF3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2015 11:30:09 -0400
-Date: Mon, 10 Aug 2015 20:59:43 +0530
-From: Chandra Gorentla <csgorentla@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: gregkh@linuxfoundation.org, rachel.kim@atmel.com,
-	dean.lee@atmel.com, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, linux-kernel@vger.kernel.org,
-	sudipm.mukherjee@gmail.com
-Subject: Re: [PATCH] staging: wilc100: Remove pointer and integer comparision
-Message-ID: <20150810152943.GA12993@gcs-HP-Compaq-nx6320> (sfid-20150810_173014_290770_B243B8EF)
-References: <1439133602-9654-1-git-send-email-csgorentla@gmail.com>
- <20150810093943.GI5180@mwanda>
+	Mon, 31 Aug 2015 07:05:29 -0400
+From: Vivek Natarajan <nataraja@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH] ath10k: Drop probe responses when too many are queued
+Date: Mon, 31 Aug 2015 16:34:55 +0530
+Message-ID: <1441019095-2364-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20150831_130537_450262_3984C6B9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150810093943.GI5180@mwanda>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 12:39:43PM +0300, Dan Carpenter wrote:
-> On Sun, Aug 09, 2015 at 08:50:02PM +0530, Chandra S Gorentla wrote:
-> > Removed pointer check with integer; this fixes 'sparse' error -
-> > error: incompatible types for operation (>)
-> >    left side has type unsigned char [usertype] *[usertype] pu8Tail
-> >    right side has type int
-> > 
-> > Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> > index cc549c2..4ba1ad7 100644
-> > --- a/drivers/staging/wilc1000/host_interface.c
-> > +++ b/drivers/staging/wilc1000/host_interface.c
-> > @@ -3471,7 +3471,7 @@ static void Handle_AddBeacon(void *drvHandler, tstrHostIFSetBeacon *pstrSetBeaco
-> >  	*pu8CurrByte++ = ((pstrSetBeaconParam->u32TailLen >> 24) & 0xFF);
-> >  
-> >  	/* Bug 4599 : if tail length = 0 skip copying */
-> > -	if (pstrSetBeaconParam->pu8Tail > 0)
-> > +	if (pstrSetBeaconParam->pu8Tail != NULL)
-> >  		memcpy(pu8CurrByte, pstrSetBeaconParam->pu8Tail, pstrSetBeaconParam->u32TailLen);
-> >  	pu8CurrByte += pstrSetBeaconParam->u32TailLen;
-> 
-> Warnings are a precious thing, because they show you where people are
-> lost.  It's better to take a broader look at the code instead of *just*
-> silencing the warning.
-> 
-> For example, the comment is nonsense.  memcpy(anything, anything, 0);
-> is a no-op so it already would skip copying in that case.  I wonder what
-> bug 4599 actually means...
-> 
-> Also the next line is quite suspect.  Even though we don't copy then we
-> are still incrementing the pu8CurrByte count?  That seems wrong.
-> 
-> So now let's consider if the memcpy() is correct.  pu8CurrByte is
-> allocated at the start of the function.  It should have space for
-> ->u32TailLen bytes, except for they seem to have forgotten about integer
-> overflow.  I think ->u32TailLen is not trusted data so this could be a
-> security bug.  Maybe you could exploit it by setting ->u32HeadLen to the
-> amount of memory you want to corrupt.  Set ->u32TailLen to a high
-> number so it triggers an integer overflow.  Set >pu8Tail to NULL so it
-> is doesn't just corrupt everything (DoS attack instead of privilege
-> escalation).
-> 
-> I have just looked at the code so I don't know if this is true, but this
-> is how I read that warning.
-> 
-> regards,
-> dan carpenter
-Hello Dan and Sudip,
+In a noisy environment, when multiple interfaces are created,
+the management tx descriptors are fully occupied by the probe
+responses from all the interfaces. This prevents a new station
+from a successful association.
 
-Thank you for reviewing the patch.
+Fix this by limiting the probe responses when the specified
+threshold limit is reached.
 
-At the outset - two points that happened outside this mail chain.
+Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c   |  5 +++
+ drivers/net/wireless/ath/ath10k/core.h   |  5 +++
+ drivers/net/wireless/ath/ath10k/htt.h    |  3 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 52 +++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/txrx.c   | 14 +++++++--
+ 5 files changed, 68 insertions(+), 11 deletions(-)
 
-1. I sent a Version 2 of this Patch before I received your comments.  I
-   corrected subject line word wilc100 -> wilc1000.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 7e378c2..c8dde43 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -54,6 +54,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.has_shifted_cc_wraparound = true,
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+@@ -70,6 +71,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 6,
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
+ 		.fw = {
+ 			.dir = QCA6174_HW_2_1_FW_DIR,
+ 			.fw = QCA6174_HW_2_1_FW_FILE,
+@@ -86,6 +88,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 6,
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
+ 		.fw = {
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+ 			.fw = QCA6174_HW_3_0_FW_FILE,
+@@ -102,6 +105,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 6,
+ 		.otp_exe_param = 0,
+ 		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
+ 		.fw = {
+ 			/* uses same binaries as hw3.0 */
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+@@ -120,6 +124,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.otp_exe_param = 0x00000700,
+ 		.continuous_frag_desc = true,
+ 		.channel_counters_freq_hz = 150000,
++		.max_probe_resp_desc_thres = 24,
+ 		.fw = {
+ 			.dir = QCA99X0_HW_2_0_FW_DIR,
+ 			.fw = QCA99X0_HW_2_0_FW_FILE,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 862f6d0..713c7ff 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -611,6 +611,11 @@ struct ath10k {
+ 
+ 		u32 channel_counters_freq_hz;
+ 
++		/* Mgmt tx descriptors threshold for limiting probe response
++		 * frames.
++		 */
++		u32 max_probe_resp_desc_thres;
++
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+ 			const char *fw;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 5731875..5a8e4ea 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1485,6 +1485,7 @@ struct ath10k_htt {
+ 	spinlock_t tx_lock;
+ 	int max_num_pending_tx;
+ 	int num_pending_tx;
++	int num_pending_mgmt_tx;
+ 	struct idr pending_tx;
+ 	wait_queue_head_t empty_tx_wq;
+ 	struct dma_pool *tx_pool;
+@@ -1587,7 +1588,7 @@ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
+ 
+-void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt);
++void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
+ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 704bb5e..1837fd8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -22,22 +22,28 @@
+ #include "txrx.h"
+ #include "debug.h"
+ 
+-void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
++void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc)
+ {
++	if (limit_mgmt_desc)
++		htt->num_pending_mgmt_tx--;
++
+ 	htt->num_pending_tx--;
+ 	if (htt->num_pending_tx == htt->max_num_pending_tx - 1)
+ 		ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
+ }
+ 
+-static void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
++static void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
++				      bool limit_mgmt_desc)
+ {
+ 	spin_lock_bh(&htt->tx_lock);
+-	__ath10k_htt_tx_dec_pending(htt);
++	__ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ 	spin_unlock_bh(&htt->tx_lock);
+ }
+ 
+-static int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
++static int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
++				     bool limit_mgmt_desc, bool is_probe_resp)
+ {
++	struct ath10k *ar = htt->ar;
+ 	int ret = 0;
+ 
+ 	spin_lock_bh(&htt->tx_lock);
+@@ -47,6 +53,15 @@ static int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
+ 		goto exit;
+ 	}
+ 
++	if (limit_mgmt_desc) {
++		if (is_probe_resp && (htt->num_pending_mgmt_tx >
++		    ar->hw_params.max_probe_resp_desc_thres)) {
++			ret = -EBUSY;
++			goto exit;
++		}
++		htt->num_pending_mgmt_tx++;
++	}
++
+ 	htt->num_pending_tx++;
+ 	if (htt->num_pending_tx == htt->max_num_pending_tx)
+ 		ath10k_mac_tx_lock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
+@@ -417,8 +432,19 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	int len = 0;
+ 	int msdu_id = -1;
+ 	int res;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
++	bool limit_mgmt_desc = false;
++	bool is_probe_resp = false;
++
++	if (ar->hw_params.max_probe_resp_desc_thres) {
++		limit_mgmt_desc = true;
++
++		if (ieee80211_is_probe_resp(hdr->frame_control))
++			is_probe_resp = true;
++	}
++
++	res = ath10k_htt_tx_inc_pending(htt, limit_mgmt_desc, is_probe_resp);
+ 
+-	res = ath10k_htt_tx_inc_pending(htt);
+ 	if (res)
+ 		goto err;
+ 
+@@ -474,7 +500,7 @@ err_free_msdu_id:
+ 	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
+ 	spin_unlock_bh(&htt->tx_lock);
+ err_tx_dec:
+-	ath10k_htt_tx_dec_pending(htt);
++	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ err:
+ 	return res;
+ }
+@@ -496,8 +522,18 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	dma_addr_t paddr = 0;
+ 	u32 frags_paddr = 0;
+ 	struct htt_msdu_ext_desc *ext_desc = NULL;
++	bool limit_mgmt_desc = false;
++	bool is_probe_resp = false;
++
++	if (unlikely(ieee80211_is_mgmt(hdr->frame_control)) &&
++	    ar->hw_params.max_probe_resp_desc_thres) {
++		limit_mgmt_desc = true;
++
++		if (ieee80211_is_probe_resp(hdr->frame_control))
++			is_probe_resp = true;
++	}
+ 
+-	res = ath10k_htt_tx_inc_pending(htt);
++	res = ath10k_htt_tx_inc_pending(htt, limit_mgmt_desc, is_probe_resp);
+ 	if (res)
+ 		goto err;
+ 
+@@ -674,7 +710,7 @@ err_free_msdu_id:
+ 	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
+ 	spin_unlock_bh(&htt->tx_lock);
+ err_tx_dec:
+-	ath10k_htt_tx_dec_pending(htt);
++	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ err:
+ 	return res;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index e4a9c4c..7db7d50 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -52,6 +52,9 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	struct ieee80211_tx_info *info;
+ 	struct ath10k_skb_cb *skb_cb;
+ 	struct sk_buff *msdu;
++	struct ieee80211_hdr *hdr;
++	__le16 fc;
++	bool limit_mgmt_desc = false;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+ 		   "htt tx completion msdu_id %u discard %d no_ack %d success %d\n",
+@@ -72,14 +75,21 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		spin_unlock_bh(&htt->tx_lock);
+ 		return;
+ 	}
++
++	hdr = (struct ieee80211_hdr *)msdu->data;
++	fc = hdr->frame_control;
++
++	if (unlikely(ieee80211_is_mgmt(fc)) &&
++	    ar->hw_params.max_probe_resp_desc_thres)
++		limit_mgmt_desc = true;
++
+ 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+-	__ath10k_htt_tx_dec_pending(htt);
++	__ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ 	if (htt->num_pending_tx == 0)
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	skb_cb = ATH10K_SKB_CB(msdu);
+-
+ 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+ 	if (skb_cb->htt.txbuf)
+-- 
+1.9.1
 
-2. Sudip Mucherjee (sudipm.mukherjee@gmail.com) replied to the V2
-   of this patch and suggested to remove the '!=NULL'.
-
-In the current patch, I tried to fix (or silence) a 'sparse' error,
-it is not a warning.  As you pointed out there may be some more
-problems in the function but can you explain why the error thrown
-by the 'sparse' should not be fixed?  I agree with your suggestion
-that we need to take a broader look.  Please help in understanding
-how does that broader look is suggesting that the patch is not
-addressing a right problem.  The gcc version I am using is - 4.8.2.
-
-In the later part of your reply - you felt that there may be a
-case in which more than the allocated number of bytes may be
-copied in to the memory pointed to by 'pu8CurrByte' and memory
-may get corrupted.  From the code in the function I am not seeing
-that happening.  In the beginning of the function, this pointer
-variable is assigned a block of memory whose size is
-'->u32HeadLen' + '->u32TailLen' + 16.
-
-The function is copying 16 individual bytes to this memory;
-a smaller block of memory of size '->u32HeadLen' is being copied;
-and an another smaller block of memory of size '->u32TailLen' may
-be copied based on a condition.  After this last copy, the
-function increments the pointer by '->u32TailLen' irrespective
-of last copy takes place or not.  Hence I am not seeing any
-corruption of the memory.
-
-It looks like that the last increment is just an operation that
-does no harm.  In addition to this the pointer variable
-'pu8CurrByte' is just a local variable and it is not being used
-after the last increment operation of the pointer.
-
-After making the change in this patch I just did a 'make'.
-I do not have the hardware which this driver supports.  So at
-this point of time, I cannot test your suggestions on wilc1000
-hardware.  Is there any way I can test this driver code on a
-old notebook computer?
-
-Thank you,
-chandra
