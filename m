@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36632 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754608AbbHQOtT (ORCPT
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:35291 "EHLO
+	mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751433AbbHaLjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2015 10:49:19 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fill in wmi 10.4 command handlers for addba/delba debug commands
-References: <1439480454-31214-1-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Mon, 17 Aug 2015 17:49:13 +0300
-In-Reply-To: <1439480454-31214-1-git-send-email-vthiagar@qti.qualcomm.com>
-	(Vasanthakumar Thiagarajan's message of "Thu, 13 Aug 2015 21:10:54
-	+0530")
-Message-ID: <87a8tqdl7a.fsf@kamboji.qca.qualcomm.com> (sfid-20150817_164924_353304_220F850D)
+	Mon, 31 Aug 2015 07:39:08 -0400
+Received: by vkaw128 with SMTP id w128so36465413vka.2
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 04:39:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Mon, 31 Aug 2015 13:39:07 +0200
+Message-ID: <CAAfyv36YLsEVarY6J8H-=Vcox=ktgeCUkqurHnAXzj_UFfthYw@mail.gmail.com> (sfid-20150831_133912_387342_AE08C919)
+Subject: kernel log flooded with GET_CMD_NODE: cmd node not available
+From: Belisko Marek <marek.belisko@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+Hi,
 
-> WMI 10.4 uses the same command interface as QCA988X for addba/delba
-> debug wmi commands. Fill wmi_10_4_ops table with the functions used
-> for QCA988X for these commands.
->
-> With this change, the following debugfs entries can be used to
-> configure the aggregation mode and to send addba request,
-> addba response and delba respectively in manual aggregation mode
-> for QCA99X0 chip.
->
-> /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/aggr_mode
-> /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/addba
-> /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/addba_resp
-> /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/XX:XX:XX:XX:XX:XX/delba
->
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+I'm running kernel 4.1 (no code changes in mwifiex) on custom board
+with mwrvl sd8787 sdio wifi card. Everything works fine but when I
+start hostapd and connect to device from PC  and open device webpage I
+can see in log many of such messages (~100 same lines):
+GET_CMD_NODE: cmd node not available
+PREP_CMD: no free cmd node
 
-Thanks, applied.
+I'm using fw: 14.66.35.p25
 
+With 3.19 kernel I cannot see any of such messages. Any ideas? Thanks.
+
+BR,
+
+marek
 -- 
-Kalle Valo
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
+
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
