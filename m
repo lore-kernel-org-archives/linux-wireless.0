@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:36820 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753557AbbHCSko (ORCPT
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:54183 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451AbbHaQpz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2015 14:40:44 -0400
-Received: by obnw1 with SMTP id w1so105442255obn.3
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2015 11:40:43 -0700 (PDT)
-Date: Mon, 3 Aug 2015 13:40:15 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 3/5] wireless-regdb: Add U-NII-1 (5150 ~ 5250 MHz)
- band for Taiwan (TW)
-Message-ID: <20150803184015.GE21180@ubuntu-hedt> (sfid-20150803_204047_544548_4DD65954)
-References: <1437622380-4154-1-git-send-email-wens@csie.org>
- <1437622380-4154-4-git-send-email-wens@csie.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437622380-4154-4-git-send-email-wens@csie.org>
+	Mon, 31 Aug 2015 12:45:55 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+	Mon, 31 Aug 2015 22:15:52 +0530
+Message-ID: <1441039536.2647.73.camel@linux.vnet.ibm.com> (sfid-20150831_184618_938244_C29DF8BD)
+Subject: Re: Linux Firmware Signing
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Kees Cook <keescook@chromium.org>,
+	"Roberts, William C" <william.c.roberts@intel.com>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Paul Moore <paul@paul-moore.com>,
+	Eric Paris <eparis@parisplace.org>, selinux@tycho.nsa.gov,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
+	=?UTF-8?Q?=22Vojt=C4=9Bch_Pavl=C3=ADk=22?= <vojtech@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Date: Mon, 31 Aug 2015 12:45:36 -0400
+In-Reply-To: <1441037120.4453.93.camel@infradead.org>
+References: <476DC76E7D1DF2438D32BFADF679FC5601058E78@ORSMSX103.amr.corp.intel.com>
+	 <CAGXu5jJuwPfnQhu9u4-90UkmjWTBF_GLpJ7J1VaaT2D0d_-Mhg@mail.gmail.com>
+	 <1440462367.2737.4.camel@linux.vnet.ibm.com>
+	 <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
+	 <1440464705.2737.36.camel@linux.vnet.ibm.com>
+	 <14540.1440599584@warthog.procyon.org.uk>
+	 <31228.1440671938@warthog.procyon.org.uk>
+	 <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
+	 <20150827212907.GF8051@wotan.suse.de>
+	 <1440719673.2118.84.camel@linux.vnet.ibm.com>
+	 <20150829021659.GN8051@wotan.suse.de>
+	 <1441030735.2647.70.camel@linux.vnet.ibm.com>
+	 <1441037120.4453.93.camel@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 23, 2015 at 11:32:58AM +0800, Chen-Yu Tsai wrote:
-> Taiwan's Ministry of Transportation and Communications revised its
-> frequency allocation rules [1] on 2014/11/17, opening up 5150 ~ 5250
-> MHz to U-NII applications.
+On Mon, 2015-08-31 at 17:05 +0100, David Woodhouse wrote:
+> On Mon, 2015-08-31 at 10:18 -0400, Mimi Zohar wrote:
+> > I'm not real happy about it, but since we can't break the existing ABI
+> > of loading data into the kernel via a buffer, a stop gap method of
+> > signing and verifying a buffer would be needed.
 > 
-> Taiwan's regulatory body, NCC, officially stated [3][4] that until
-> the technical regulatory standard [2] are updated to cover this part
-> of the spectrum, FCC rules (part 15E, 15.407, effective 2014/06/02)
-> shall serve in its place.
-> 
-> Also add AUTO-BW to this and the next (5250 ~ 5350 MHz) rule, so the
-> system can actually use VHT160 channels spanning these two rules.
-> 
-> [1] http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc&filedisplay=Table+of+radio+frequency+allocation.doc
-> [2] http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
-> [3] http://www.rheintech.com/our-blog/item/585-taiwan-ncc-opens-5150-5250-mhz-for-wireless-devices
-> [4] Proposal #10312260 (p.6, Chinese),
->     http://www.etc.org.tw/_library/K00/%E9%9B%BB%E4%BF%A1%E7%B5%82%E7%AB%AF%E8%A8%AD%E5%82%99%E5%AF%A9%E9%A9%97/1031223_nccqa56.pdf
-> 
-> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
-> ---
->  db.txt | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/db.txt b/db.txt
-> index 8a05c57..cadd52c 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -1127,7 +1127,8 @@ country TT: DFS-FCC
->  #   (section 3.10.1, 4.7)
->  country TW: DFS-JP
->  	(2400 - 2483.5 @ 40), (30)
-> -	(5250 - 5350 @ 80), (17), DFS
-> +	(5150 - 5250 @ 80), (30), AUTO-BW
-> +	(5250 - 5350 @ 80), (17), DFS, AUTO-BW
+> Actually I think we can. The usermode helper is already being phased
+> out.
 
-It would really make more sense for an update to the US power limit in
-5150-5250 to precede this one if you're using the US rules as the
-justification for the power limit here. Going through these patches in
-order, I was initially confused here why it didn't match the US rule
-until I looked at the next patch.
+Right.  The discussion has moved beyond just firmware, but to policies
+and other things the kernel consumes.
 
-But, as I mentioned in the reply to that patch, I think the change to
-the US power limit is incorrect, thus this one would be incorrect as
-well.
+Mimi
+
