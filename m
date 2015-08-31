@@ -1,147 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37379 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754879AbbHDU7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2015 16:59:10 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 22/37] Revert "iwlwifi: mvm: move deferred d0i3 exit to resume_complete op"
-Date: Tue,  4 Aug 2015 23:43:12 +0300
-Message-Id: <1438721007-23283-22-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150804_230031_811913_B80E0044)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E7E11FA@hasmsx107.ger.corp.intel.com>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:36514 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173AbbHaUbd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2015 16:31:33 -0400
+Received: by wibz8 with SMTP id z8so11712321wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 13:31:32 -0700 (PDT)
+Subject: Re: RTL8189ETV
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hans de Goede <hdegoede@redhat.com>
+References: <55E47A27.4090703@gmail.com> <55E48988.1000803@gmail.com>
+ <55E49415.7090807@lwfinger.net>
+From: poma <pomidorabelisima@gmail.com>
+Message-ID: <55E4B9A2.8060109@gmail.com> (sfid-20150831_223147_573106_C3D333E2)
+Date: Mon, 31 Aug 2015 22:31:30 +0200
+MIME-Version: 1.0
+In-Reply-To: <55E49415.7090807@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On 31.08.2015 19:51, Larry Finger wrote:
+> On 08/31/2015 12:06 PM, poma wrote:
+>> On 31.08.2015 18:00, poma wrote:
+>>>
+>>> Hi Fi,
+>>>
+>>> What is this device, is it supported by
+>>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8189es
+>>>
+>>> $ modinfo rtl8189es
+>>> modinfo: ERROR: Module rtl8189es not found.
+>>>
+>>
+>> or is it supported by
+>> https://github.com/orangepi-xunlong/linux-sunxi/tree/orangepi-3.4/drivers/net/wireless/rtl8188eu
+>> https://github.com/lwfinger/rtl8188eu
+>> as RTL8188ETV is
+>>
+>> $ modinfo rtl8188eu
+>> modinfo: ERROR: Module rtl8188eu not found.
+>>
+>>
+>> However RTL8188ETV is USB 2.0 device,
+>> eeeeeeeeeeeeeeeeeee not again!
+> 
+> That last comment does not help.
+> 
+> If rtl8188eu is not available, that is the fault of your distro, not anything 
+> that driver maintainers can help. That driver is in the staging directory, and 
+> some distros do not include any of those drivers in their kernels.
+> 
+> eeeeeeeeeeeeeeeeeee not again! Someone posts about a USB device not found, and 
+> they refuse/fail to provide the USB ID. Why, I do not know when the lsusb 
+> command provides this info so easily.
+> 
+> Larry
+> 
+> 
 
-This reverts commit 088070a2f6575402d3dd82e1c5a4a8e1941805f6.
 
-When working in d0i3_on_idle mode, we explicitly go out
-of d0i3 on resume (so other potential commands could
-be sent).
+What's the hurry, Larry.
+Let's see if Hans knows what type of this device is RTL8189ETV.
 
-However, D0I3_DEFER_WAKEUP is currently cleared on
-resume complete (which happens only later on), causing
-d0i3 exit to timeout.
+According to what is written here
+http://linux-sunxi.org/Xunlong_Orange_Pi#Variants
+http://www.orangepi.org/orangepi2
+RTL8189ETV, whatever it is, is an integral part of some "O-Pi" variants.
 
-Since mac80211 was modified to accept incoming frames
-once drv_resume was called, we can safely revert this
-patch, and handle the pending work on iwl_mvm_resume().
+About rtl8188etv can be read here
+http://www.orangepi.org/orangepibbsen/forum.php?mod=viewthread&tid=25&highlight=wifi
+but there is no mention of RTL8189ETV.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c       | 58 +++++++++++++++++++++--------
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 13 -------
- 2 files changed, 43 insertions(+), 28 deletions(-)
+WikiDevi also returns nothing
+https://wikidevi.com/wiki/Main_Page
+  "Search results
+  ...
+  There were no results matching the query.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 4165d10..246e60a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1935,28 +1935,56 @@ out:
- 	return 1;
- }
- 
--int iwl_mvm_resume(struct ieee80211_hw *hw)
-+static int iwl_mvm_resume_d3(struct iwl_mvm *mvm)
- {
--	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	iwl_trans_resume(mvm->trans);
-+
-+	return __iwl_mvm_resume(mvm, false);
-+}
-+
-+static int iwl_mvm_resume_d0i3(struct iwl_mvm *mvm)
-+{
-+	bool exit_now;
-+
-+	/*
-+	 * make sure to clear D0I3_DEFER_WAKEUP before
-+	 * calling iwl_trans_resume(), which might wait
-+	 * for d0i3 exit completion.
-+	 */
-+	mutex_lock(&mvm->d0i3_suspend_mutex);
-+	__clear_bit(D0I3_DEFER_WAKEUP, &mvm->d0i3_suspend_flags);
-+	exit_now = __test_and_clear_bit(D0I3_PENDING_WAKEUP,
-+					&mvm->d0i3_suspend_flags);
-+	mutex_unlock(&mvm->d0i3_suspend_mutex);
-+	if (exit_now) {
-+		IWL_DEBUG_RPM(mvm, "Run deferred d0i3 exit\n");
-+		_iwl_mvm_exit_d0i3(mvm);
-+	}
- 
- 	iwl_trans_resume(mvm->trans);
- 
--	if (mvm->hw->wiphy->wowlan_config->any) {
--		/* 'any' trigger means d0i3 usage */
--		if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND) {
--			int ret = iwl_mvm_exit_d0i3(hw->priv);
-+	if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND) {
-+		int ret = iwl_mvm_exit_d0i3(mvm->hw->priv);
- 
--			if (ret)
--				return ret;
--			/*
--			 * d0i3 exit will be deferred until reconfig_complete.
--			 * make sure there we are out of d0i3.
--			 */
--		}
--		return 0;
-+		if (ret)
-+			return ret;
-+		/*
-+		 * d0i3 exit will be deferred until reconfig_complete.
-+		 * make sure there we are out of d0i3.
-+		 */
- 	}
-+	return 0;
-+}
- 
--	return __iwl_mvm_resume(mvm, false);
-+int iwl_mvm_resume(struct ieee80211_hw *hw)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+
-+	/* 'any' trigger means d0i3 was used */
-+	if (hw->wiphy->wowlan_config->any)
-+		return iwl_mvm_resume_d0i3(mvm);
-+	else
-+		return iwl_mvm_resume_d3(mvm);
- }
- 
- void iwl_mvm_set_wakeup(struct ieee80211_hw *hw, bool enabled)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index dfdab38..45e9913 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1433,22 +1433,9 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
- 
- static void iwl_mvm_resume_complete(struct iwl_mvm *mvm)
- {
--	bool exit_now;
--
- 	if (!iwl_mvm_is_d0i3_supported(mvm))
- 		return;
- 
--	mutex_lock(&mvm->d0i3_suspend_mutex);
--	__clear_bit(D0I3_DEFER_WAKEUP, &mvm->d0i3_suspend_flags);
--	exit_now = __test_and_clear_bit(D0I3_PENDING_WAKEUP,
--					&mvm->d0i3_suspend_flags);
--	mutex_unlock(&mvm->d0i3_suspend_mutex);
--
--	if (exit_now) {
--		IWL_DEBUG_RPM(mvm, "Run deferred d0i3 exit\n");
--		_iwl_mvm_exit_d0i3(mvm);
--	}
--
- 	if (mvm->trans->d0i3_mode == IWL_D0I3_MODE_ON_SUSPEND)
- 		if (!wait_event_timeout(mvm->d0i3_exit_waitq,
- 					!test_bit(IWL_MVM_STATUS_IN_D0I3,
--- 
-2.1.4
+  Create the page "RTL8189ETV" on this wiki!"
+
+I'm trying to determine in advance,
+what components are supported,
+what components are not supported,
+what components will never be supported,
+what components will never be supported in mainline kernel.
+
+Therefore, I can not show 'lsusb' output. :)
+
+"Distro" is not decisive in this matter, moreover dunno what are you referring with "your distro".
+
+eeeeeeeeeeeeeeeeeeeeee not again!
 
