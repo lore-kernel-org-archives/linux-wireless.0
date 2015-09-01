@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45314 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbbIRJNV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52600 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276AbbIAPrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:13:21 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 14/34] staging: wilc1000: remove typedef from the struct tstrHostIFGetChan
-Date: Fri, 18 Sep 2015 18:11:16 +0900
-Message-ID: <1442567496-29331-14-git-send-email-tony.cho@atmel.com> (sfid-20150918_111654_255700_C911D52C)
-In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
+	Tue, 1 Sep 2015 11:47:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH] fixup! wil6210: system power management
+References: <1441121050-8796-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Tue, 01 Sep 2015 18:47:47 +0300
+In-Reply-To: <1441121050-8796-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Tue, 1 Sep 2015 18:24:10 +0300")
+Message-ID: <87a8t6nnto.fsf@kamboji.qca.qualcomm.com> (sfid-20150901_174804_977601_BC1CD48A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFGetChan and renames
-it to get_channel in order to comply with the Linux coding style.
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> Fix compilation warning where CONFIG_PM defined while
+> CONFIG_PM_SLEEP is not defined
+>
+> Report follows:
+>
+> tree:   git://github.com/kvalo/ath pending
+> head:   941145fc5e5afbb120271e5dfaf37213ddb55807
+> commit: df596be39294d9712e5d568063a48448031e0a9f [37/39] wil6210: system power management
+> config: xtensa-allyesconfig (attached as .config)
+> reproduce:
+>   wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>   chmod +x ~/bin/make.cross
+>   git checkout df596be39294d9712e5d568063a48448031e0a9f
+>   # save the attached .config to linux build tree
+>   make.cross ARCH=xtensa
+>
+> All warnings (new ones prefixed by >>):
+>
+>>> drivers/net/wireless/ath/wil6210/pcie_bus.c:264:12: warning: 'wil6210_suspend' defined but not used [-Wunused-function]
+>     static int wil6210_suspend(struct device *dev, bool is_runtime)
+>                ^
+>>> drivers/net/wireless/ath/wil6210/pcie_bus.c:291:12: warning: 'wil6210_resume' defined but not used [-Wunused-function]
+>     static int wil6210_resume(struct device *dev, bool is_runtime)
+>                ^
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2f86a3b..58f138b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -230,7 +230,7 @@ struct set_channel {
- };
- 
- /*!
-- *  @struct             tstrHostIFSetChan
-+ *  @struct             get_channel
-  *  @brief		Get Channel  message body
-  *  @details
-  *  @todo
-@@ -239,9 +239,9 @@ struct set_channel {
-  *  @date		01 Jule 2012
-  *  @version		1.0
-  */
--typedef struct _tstrHostIFGetChan {
-+struct get_channel {
- 	u8 u8GetChan;
--} tstrHostIFGetChan;
-+};
- 
- /*bug3819: Add Scan acomplete notification to host*/
- /*!
-@@ -424,7 +424,7 @@ union message_body {
- 	struct key_attr strHostIFkeyAttr;                             /*!<>*/
- 	struct cfg_param_attr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
- 	struct set_channel strHostIFSetChan;
--	tstrHostIFGetChan strHostIFGetChan;
-+	struct get_channel strHostIFGetChan;
- 	tstrHostIFSetBeacon strHostIFSetBeacon;                 /*!< Set beacon message body */
- 	tstrHostIFDelBeacon strHostIFDelBeacon;                 /*!< Del beacon message body */
- 	tstrWILC_AddStaParam strAddStaParam;                    /*!< Add station message body */
+BTW, that "fixup!" line won't work with public trees as I cannot rebase
+them. Actually I didn't know about this git feature before. I'll fix the
+title this time, but in the future don't use it.
+
 -- 
-1.9.1
-
+Kalle Valo
