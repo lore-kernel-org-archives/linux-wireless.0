@@ -1,66 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14142 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606AbbI3JtO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:49:14 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 16/32] staging: wilc1000: rename strDelStaParam
-Date: Wed, 30 Sep 2015 18:44:33 +0900
-Message-ID: <1443606289-25407-16-git-send-email-tony.cho@atmel.com> (sfid-20150930_121654_630868_52C5B7DB)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+Received: from mga03.intel.com ([134.134.136.65]:5556 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754398AbbIAOyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2015 10:54:37 -0400
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v2 0/9] Adds Intel FieldsPeak NFC solution driver
+Date: Tue,  1 Sep 2015 17:54:19 +0300
+Message-Id: <1441119268-30654-1-git-send-email-robert.dolca@intel.com> (sfid-20150901_165459_571916_793DE67A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strDelStaParam to del_sta_info to avoid CamelCase
-naming convention.
+These patches add support for Intel's FieldsPeak NFC solution.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Fields Peak complies with the ISO/IEC 14443A/B, 15693, 18092,
+and JIS X 6319-4. It is an NCI based controller.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d9d0b2d..94559bd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -393,7 +393,7 @@ union message_body {
- 	struct channel_attr channel_info;
- 	struct beacon_attr beacon_info;
- 	struct add_sta_param add_sta_info;
--	struct del_sta strDelStaParam;
-+	struct del_sta del_sta_info;
- 	struct add_sta_param strEditStaParam;
- 	struct timer_cb strTimerCb;
- 	struct power_mgmt_param strPowerMgmtparam;
-@@ -4146,7 +4146,7 @@ static int hostIFthread(void *pvArg)
- 			break;
- 
- 		case HOST_IF_MSG_DEL_STATION:
--			Handle_DelStation(msg.drvHandler, &msg.body.strDelStaParam);
-+			Handle_DelStation(msg.drvHandler, &msg.body.del_sta_info);
- 			break;
- 
- 		case HOST_IF_MSG_EDIT_STATION:
-@@ -6700,7 +6700,7 @@ s32 host_int_del_station(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8MacAddr)
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	struct del_sta *pstrDelStationMsg = &msg.body.strDelStaParam;
-+	struct del_sta *pstrDelStationMsg = &msg.body.del_sta_info;
- 
- 	if (pstrWFIDrv == NULL) {
- 		PRINT_ER("driver is null\n");
+RF Protocols supported:
+ - NFC Forum Type 1 Tags (Jewel, Topaz)
+ - NFC Forum Type 2 Tags (Mifare UL)
+ - NFC Forum Type 3 Tags (FeliCa)
+ - NFC Forum Type 4A (ISO/IEC 14443 A-4 106kbps to 848kbps)
+ - NFC Forum Type 4B (ISO/IEC 14443 B-4 106kbps to 848kbps)
+ - NFCIP in passive and active modes (ISO/IEC 18092 106kbps to 424kbps)
+ - B’ (based on ISO/IEC 14443 B-2)
+ - iCLASS (based on ISO/IEC 15693-2)
+ - Vicinity cards (ISO/IEC 15693-3)
+ - Kovio tags (NFC Forum Type 2)
+
+The device can be enumerated using ACPI using the id INT339A.
+The 1st GPIO is the IRQ and the 2nd is the RESET pin.
+
+Changes since v1:
+ - removed .owner
+ - made local functions static
+ - replaced nfc_info with dev_dbg
+ - make controller setup possible without OTP patch
+ - removed the commint that was adding nci_init/reset and start using
+   the newly added functions nci_core_init/reset
+ - fixed typo and use full controller name instead of abreviation in Kconfig
+ - added more info about the controller in the commit message
+ - moved NCI_OP_CORE_RESET_NTF, NCI_OP_CORE_GET_CONFIG_RSP and
+   NCI_OP_CORE_GET_CONFIG_CMD into the core header files
+ - added MODULE_DEVICE_TABLE for ACPI
+ - defined FDP_FW_UPDATE_DEST 0xC2
+ - release the firmware buffers
+ - settings the vendor configuration and clock on post setup
+ - platform data enumerations removed (ACPI enumeration left)
+ - packet reception intercept logic remove
+ - nci: removed "NFC: NCI: Adds NCI init and reset API for drivers"
+ - nci: removed nci_send_cmd symbol export
+ - nci: removed nci_request_driver and nci_req_complete_driver
+ - removed mutex from driver (no need for it)
+ - nci: check the setup return code before callig post_setup
+ - nci: add function to allow sending core commands from driver
+ - nci: Use a separate mutex for nci open and close
+ - nci: mutex for: Adds a way to get the new connection ID
+ - nci: Allow the driver to set handler for core nci ops
+
+Robert Dolca (9):
+  nfc: nci: Exporting nci data send API
+  nfc: nci: Add function to get max packet size for conn
+  nfc: nci: Define new core opcodes
+  nfc: nci: Allow the driver to set handler for core nci ops
+  nfc: nci: Do not call post_setup when setup fails
+  nfc: nci: Add function to allow sending core commands from driver
+  nfc: nci: Use a separate mutex for nci open and close
+  nfc: nci: Adds a way to get the new connection ID
+  nfc: Add Intel Fields Peak NFC solution driver
+
+ drivers/nfc/Kconfig            |   1 +
+ drivers/nfc/Makefile           |   1 +
+ drivers/nfc/fdp/Kconfig        |  23 ++
+ drivers/nfc/fdp/Makefile       |   9 +
+ drivers/nfc/fdp/fdp.c          | 777 +++++++++++++++++++++++++++++++++++++++++
+ drivers/nfc/fdp/fdp.h          |  52 +++
+ drivers/nfc/fdp/i2c.c          | 416 ++++++++++++++++++++++
+ drivers/nfc/st-nci/st-nci_se.c |   2 +-
+ include/net/nfc/nci.h          |   7 +
+ include/net/nfc/nci_core.h     |  29 +-
+ net/nfc/nci/core.c             | 108 +++---
+ net/nfc/nci/data.c             |  13 +
+ net/nfc/nci/ntf.c              |   6 +-
+ net/nfc/nci/rsp.c              |  12 +-
+ 14 files changed, 1403 insertions(+), 53 deletions(-)
+ create mode 100644 drivers/nfc/fdp/Kconfig
+ create mode 100644 drivers/nfc/fdp/Makefile
+ create mode 100644 drivers/nfc/fdp/fdp.c
+ create mode 100644 drivers/nfc/fdp/fdp.h
+ create mode 100644 drivers/nfc/fdp/i2c.c
+
 -- 
 1.9.1
 
