@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:50352 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751707AbbI1IZS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 04:25:18 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>, linaro-kernel@lists.linaro.org,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Mon, 28 Sep 2015 10:24:58 +0200
-Message-ID: <2003030.YkVHTCZahK@wuerfel> (sfid-20150928_102539_405367_C30289B2)
-In-Reply-To: <1578470.DLzaBp4j3T@vostro.rjw.lan>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <1540878.9slRi6Q7xb@wuerfel> <1578470.DLzaBp4j3T@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga03.intel.com ([134.134.136.65]:28681 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752402AbbIAOzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2015 10:55:12 -0400
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v2 3/9] nfc: nci: Introduce new core opcodes
+Date: Tue,  1 Sep 2015 17:54:22 +0300
+Message-Id: <1441119268-30654-4-git-send-email-robert.dolca@intel.com> (sfid-20150901_165523_489297_28D6E6D9)
+In-Reply-To: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
+References: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 27 September 2015 16:10:48 Rafael J. Wysocki wrote:
-> On Saturday, September 26, 2015 09:33:56 PM Arnd Bergmann wrote:
-> > On Saturday 26 September 2015 11:40:00 Viresh Kumar wrote:
-> > > On 25 September 2015 at 15:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> > > > So if you allow something like debugfs to update your structure, how
-> > > > do you make sure there is the proper locking?
-> > > 
-> > > Not really sure at all.. Isn't there some debugfs locking that will
-> > > jump in, to avoid updation of fields to the same device?
-> > 
-> > No, if you need any locking to access variable, you cannot use the
-> > simple debugfs helpers but have to provide your own functions.
-> > 
-> > > >> Anyway, that problem isn't here for sure as its between two
-> > > >> unsigned-longs. So, should I just move it to bool and resend ?
-> > > >
-> > > > I guess it might be more convenient to fold this into the other patch,
-> > > > because we seem to be splitting hairs here.
-> > > 
-> > > I can and that's what I did. But then Arnd asked me to separate it
-> > > out. I can fold it back if that's what you want.
-> > 
-> > It still makes sense to keep it separate I think, the patch is clearly
-> > different from the other parts.
-> 
-> I just don't see much point in going from unsigned long to u32 and then
-> from 32 to bool if we can go directly to bool in one go.
+Add NCI_OP_CORE_GET_CONFIG_CMD, NCI_OP_CORE_GET_CONFIG_RSP
+and NCI_OP_CORE_RESET_NTF.
 
-It's only important to keep the 34-file multi-subsystem trivial cleanup
-that doesn't change any functionality separate from the bugfix. If you
-like to avoid patching one of the files twice, the alternative would
-be to first change the API for all other instances from u32 to bool
-and leave ACPI alone, and then do the second patch that changes ACPI
-from long to bool.
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+---
+ include/net/nfc/nci.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-	Arnd
+diff --git a/include/net/nfc/nci.h b/include/net/nfc/nci.h
+index 75d2e18..b495825 100644
+--- a/include/net/nfc/nci.h
++++ b/include/net/nfc/nci.h
+@@ -315,6 +315,8 @@ struct nci_nfcee_mode_set_cmd {
+ 	__u8	nfcee_mode;
+ } __packed;
+ 
++#define NCI_OP_CORE_GET_CONFIG_CMD	nci_opcode_pack(NCI_GID_CORE, 0x03)
++
+ /* ----------------------- */
+ /* ---- NCI Responses ---- */
+ /* ----------------------- */
+@@ -375,6 +377,9 @@ struct nci_nfcee_discover_rsp {
+ } __packed;
+ 
+ #define NCI_OP_NFCEE_MODE_SET_RSP nci_opcode_pack(NCI_GID_NFCEE_MGMT, 0x01)
++
++#define NCI_OP_CORE_GET_CONFIG_RSP	nci_opcode_pack(NCI_GID_CORE, 0x03)
++
+ /* --------------------------- */
+ /* ---- NCI Notifications ---- */
+ /* --------------------------- */
+@@ -528,4 +533,6 @@ struct nci_nfcee_discover_ntf {
+ 	struct nci_nfcee_information_tlv	information_tlv;
+ } __packed;
+ 
++#define NCI_OP_CORE_RESET_NTF		nci_opcode_pack(NCI_GID_CORE, 0x00)
++
+ #endif /* __NCI_H */
+-- 
+1.9.1
+
