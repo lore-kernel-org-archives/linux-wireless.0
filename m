@@ -1,243 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:36154 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752247AbbI1SOU (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:53246 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750969AbbIAUIr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2015 14:14:20 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: dan.carpenter@oracle.com, johnny.kim@atmel.com,
-	rachel.kim@atmel.com, dean.lee@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, sudipm.mukherjee@gmail.com,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH 1/2] drivers: staging: wilc1000: Replace message queue with standard Linux lists
-Date: Mon, 28 Sep 2015 23:43:55 +0530
-Message-Id: <1443464037-3591-1-git-send-email-csgorentla@gmail.com> (sfid-20150928_201524_801474_B779BF40)
+	Tue, 1 Sep 2015 16:08:47 -0400
+From: "Roberts, William C" <william.c.roberts@intel.com>
+To: Joshua Brindle <brindle@quarksecurity.com>,
+	Paul Moore <paul@paul-moore.com>
+CC: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Ming Lei <ming.lei@canonical.com>,
+	David Howells <dhowells@redhat.com>,
+	Peter Jones <pjones@redhat.com>,
+	"selinux@tycho.nsa.gov" <selinux@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Kees Cook <keescook@chromium.org>,
+	=?iso-8859-1?Q?Vojtech_Pavl=EDk?= <vojtech@suse.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joey Lee <jlee@suse.de>, Kyle McMartin <kyle@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Andy Lutomirski" <luto@amacapital.net>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	"David Woodhouse" <dwmw2@infradead.org>
+Subject: RE: Linux Firmware Signing
+Date: Tue, 1 Sep 2015 20:08:45 +0000
+Message-ID: <476DC76E7D1DF2438D32BFADF679FC560105E5D3@ORSMSX103.amr.corp.intel.com> (sfid-20150901_220901_646712_77255FF8)
+References: <1440462367.2737.4.camel@linux.vnet.ibm.com>
+ <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
+ <1440464705.2737.36.camel@linux.vnet.ibm.com>
+ <14540.1440599584@warthog.procyon.org.uk>
+ <31228.1440671938@warthog.procyon.org.uk>
+ <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
+ <20150827212907.GF8051@wotan.suse.de>
+ <CAHC9VhQFDcMtvn1JU3E1rJ=9CCXT7ibUocgGS4tzfcy8oVUUMA@mail.gmail.com>
+ <476DC76E7D1DF2438D32BFADF679FC560105ABD6@ORSMSX103.amr.corp.intel.com>
+ <CAHC9VhRF-39ZbwawkM-aR+th2nRPEVF9-nR1NEHDPDmakpt4FQ@mail.gmail.com>
+ <20150829020301.GM8051@wotan.suse.de>
+ <CAHC9VhTTRr7N2bqU-7jm2oG72t5wgqH_SmXk4icqs3h3_=EMzg@mail.gmail.com>
+ <55E5B257.6070205@quarksecurity.com>
+In-Reply-To: <55E5B257.6070205@quarksecurity.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- - The message queue is replaced with standard Linux linked list
- - kmem_cache is used for list members
- - A check for return value of receive method is added
- - GFP_ATOMIC is changed to GFP_KERNEL
- - A few other related minor changes
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
- - Comments of Dan Carpenter are taken care
-   - If receive method return value not checked, case statement for previous
-     message may get executed if not done
-   - Indication of usage of 'kmem_cache' is added to the description
-   - Memory allocation donw outside spin_lock; GFP_ATOMIC replaced
-     with GFP_KERNEL
-   - spin_lock, spin_unlock are matched
-   - goto statements removed
-   - Unrelated changes moved to a different patch
-   - PRINT_ERR can be taken up in a seperate patch
 
- drivers/staging/wilc1000/host_interface.c |  7 ++-
- drivers/staging/wilc1000/wilc_msgqueue.c  | 73 +++++++++++++------------------
- drivers/staging/wilc1000/wilc_platform.h  |  5 ++-
- 3 files changed, 40 insertions(+), 45 deletions(-)
+> -----Original Message-----
+> From: owner-linux-security-module@vger.kernel.org [mailto:owner-linux-
+> security-module@vger.kernel.org] On Behalf Of Joshua Brindle
+> Sent: Tuesday, September 1, 2015 7:13 AM
+> To: Paul Moore
+> Cc: Luis R. Rodriguez; Takashi Iwai; Ming Lei; David Howells; Peter Jones;
+> selinux@tycho.nsa.gov; Schaufler, Casey; Stephen Smalley; Matthew Garrett;
+> Kees Cook; Vojtech Pavlík; Seth Forshee; james.l.morris@oracle.com; Dmitry
+> Kasatkin; Johannes Berg; Joey Lee; Kyle McMartin; linux-
+> wireless@vger.kernel.org; linux-kernel@vger.kernel.org; Andy Lutomirski; linux-
+> security-module@vger.kernel.org; Greg Kroah-Hartman; Vitaly Kuznetsov; David
+> Woodhouse
+> Subject: Re: Linux Firmware Signing
+> 
+> Paul Moore wrote:
+> <snip>
+> >
+> > Yes, there are lots of way we could solve the signed policy format
+> > issue, I just don't have one in mind at this moment.  Also, to be
+> > honest, there are enough limitations to signing SELinux policies that
+> > this isn't very high onmy personal SELinux priority list.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 62f4a8a..954656d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4304,11 +4304,16 @@ static int hostIFthread(void *pvArg)
- 	u32 u32Ret;
- 	struct host_if_msg msg;
- 	tstrWILC_WFIDrv *pstrWFIDrv;
-+	int ret;
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	while (1) {
--		wilc_mq_recv(&gMsgQHostIF, &msg, sizeof(struct host_if_msg), &u32Ret);
-+		ret = wilc_mq_recv(&gMsgQHostIF, &msg,
-+					sizeof(struct host_if_msg), &u32Ret);
-+		if (ret)
-+			continue;
-+
- 		pstrWFIDrv = (tstrWILC_WFIDrv *)msg.drvHandler;
- 		if (msg.id == HOST_IF_MSG_EXIT) {
- 			PRINT_D(GENERIC_DBG, "THREAD: Exiting HostIfThread\n");
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 869736a..a01ada4 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -12,9 +12,15 @@
-  */
- int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
- {
-+	pHandle->msg_cache = kmem_cache_create("wilc_message_queue",
-+						sizeof(Message),
-+						0, SLAB_POISON, NULL);
-+	if (!pHandle->msg_cache)
-+		return -ENOMEM;
-+
- 	spin_lock_init(&pHandle->strCriticalSection);
- 	sema_init(&pHandle->hSem, 0);
--	pHandle->pstrMessageList = NULL;
-+	INIT_LIST_HEAD(&pHandle->msg_list_head);
- 	pHandle->u32ReceiversCount = 0;
- 	pHandle->bExiting = false;
- 	return 0;
-@@ -28,6 +34,7 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
-  */
- int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- {
-+	Message *msg;
- 	pHandle->bExiting = true;
- 
- 	/* Release any waiting receiver thread. */
-@@ -36,13 +43,16 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- 		pHandle->u32ReceiversCount--;
- 	}
- 
--	while (pHandle->pstrMessageList) {
--		Message *pstrMessge = pHandle->pstrMessageList->pstrNext;
--
--		kfree(pHandle->pstrMessageList);
--		pHandle->pstrMessageList = pstrMessge;
-+	while (!list_empty(&pHandle->msg_list_head)) {
-+		msg = list_first_entry(&pHandle->msg_list_head,
-+					Message, link);
-+		list_del(&msg->link);
-+		kfree(msg->pvBuffer);
-+		kmem_cache_free(pHandle->msg_cache, msg);
- 	}
- 
-+	kmem_cache_destroy(pHandle->msg_cache);
-+
- 	return 0;
- }
- 
-@@ -55,61 +65,40 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 			     const void *pvSendBuffer, u32 u32SendBufferSize)
- {
--	int result = 0;
- 	unsigned long flags;
- 	Message *pstrMessage = NULL;
- 
- 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
- 		PRINT_ER("pHandle or pvSendBuffer is null\n");
--		result = -EFAULT;
--		goto ERRORHANDLER;
-+		return -EFAULT;
- 	}
- 
- 	if (pHandle->bExiting) {
- 		PRINT_ER("pHandle fail\n");
--		result = -EFAULT;
--		goto ERRORHANDLER;
-+		return -EFAULT;
- 	}
- 
--	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
--
- 	/* construct a new message */
--	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
-+	pstrMessage = kmem_cache_zalloc(pHandle->msg_cache, GFP_KERNEL);
- 	if (!pstrMessage)
- 		return -ENOMEM;
-+
- 	pstrMessage->u32Length = u32SendBufferSize;
--	pstrMessage->pstrNext = NULL;
--	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_ATOMIC);
-+	pstrMessage->pvBuffer = kmalloc(u32SendBufferSize, GFP_KERNEL);
- 	if (!pstrMessage->pvBuffer) {
--		result = -ENOMEM;
--		goto ERRORHANDLER;
-+		kmem_cache_free(pHandle->msg_cache, pstrMessage);
-+		return -ENOMEM;
- 	}
- 	memcpy(pstrMessage->pvBuffer, pvSendBuffer, u32SendBufferSize);
- 
- 	/* add it to the message queue */
--	if (!pHandle->pstrMessageList) {
--		pHandle->pstrMessageList  = pstrMessage;
--	} else {
--		Message *pstrTailMsg = pHandle->pstrMessageList;
--
--		while (pstrTailMsg->pstrNext)
--			pstrTailMsg = pstrTailMsg->pstrNext;
--
--		pstrTailMsg->pstrNext = pstrMessage;
--	}
--
-+	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-+	list_add_tail(&pstrMessage->link, &pHandle->msg_list_head);
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 
- 	up(&pHandle->hSem);
- 
--ERRORHANDLER:
--	/* error occured, free any allocations */
--	if (pstrMessage) {
--		kfree(pstrMessage->pvBuffer);
--		kfree(pstrMessage);
--	}
--
--	return result;
-+	return 0;
- }
- 
- /*!
-@@ -156,12 +145,13 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 
- 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
- 
--	pstrMessage = pHandle->pstrMessageList;
--	if (!pstrMessage) {
-+	if (list_empty(&pHandle->msg_list_head)) {
- 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 		PRINT_ER("pstrMessage is null\n");
- 		return -EFAULT;
- 	}
-+
-+	pstrMessage = list_first_entry(&pHandle->msg_list_head, Message, link);
- 	/* check buffer size */
- 	if (u32RecvBufferSize < pstrMessage->u32Length)	{
- 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-@@ -175,10 +165,9 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 	memcpy(pvRecvBuffer, pstrMessage->pvBuffer, pstrMessage->u32Length);
- 	*pu32ReceivedLength = pstrMessage->u32Length;
- 
--	pHandle->pstrMessageList = pstrMessage->pstrNext;
--
-+	list_del(&pstrMessage->link);
- 	kfree(pstrMessage->pvBuffer);
--	kfree(pstrMessage);
-+	kmem_cache_free(pHandle->msg_cache, pstrMessage);
- 
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 
-diff --git a/drivers/staging/wilc1000/wilc_platform.h b/drivers/staging/wilc1000/wilc_platform.h
-index b763616..3871658 100644
---- a/drivers/staging/wilc1000/wilc_platform.h
-+++ b/drivers/staging/wilc1000/wilc_platform.h
-@@ -20,7 +20,7 @@
- typedef struct __Message_struct {
- 	void *pvBuffer;
- 	u32 u32Length;
--	struct __Message_struct *pstrNext;
-+	struct list_head link;
- } Message;
- 
- typedef struct __MessageQueue_struct {
-@@ -28,7 +28,8 @@ typedef struct __MessageQueue_struct {
- 	spinlock_t strCriticalSection;
- 	bool bExiting;
- 	u32 u32ReceiversCount;
--	Message *pstrMessageList;
-+	struct list_head msg_list_head;
-+	struct kmem_cache *msg_cache;
- } WILC_MsgQueueHandle;
- 
- 
--- 
-2.1.4
+Yes I would say this is low on my end. Especially if we can kill off
+Reloadable policy support on Android, my need for this goes away 100%.
 
+> >
+> 
+> The fact that there are so many userspace specific parts of the policy that never
+> make it into the kernel precludes any meaningful verification anyway.
+
+Yes and no. On Android, if I was able to load a policy I could grant myself capabilities that
+We're not possible via the userspace portions, i.e. relabeling, etc. Granted, not checking the
+userspace portions Is not great. In an ideal world, everything is checked. However, the main
+reason to doing it in the kernel is where you want your trust to be. For instance, If I trust that
+userspace Loader, then I need to trust that + the kernel. In the case of verifying the policy signature
+In the kernel, I need to trust only the kernel.
+
+As far as the desktop environment, I claim ignorance and have no input there.
+
+> 
+> And SELinux already has a mechanism for raising the integrity of a process to do
+> things like signature checking in userspace, the domain transition. If someone
+> wants validation of the SELinux policy they just need to eliminate every domains
+> ability to load policy except for a trusted policy loader that does signature
+> checking.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-security-module" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
