@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:33599 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbbIEQZ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Sep 2015 12:25:57 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51390 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753120AbbIAF0s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2015 01:26:48 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	<55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
+	<55E39707.60101@lwfinger.net> <wrfjy4gs5ggd.fsf@redhat.com>
+	<55E476A0.4080601@lwfinger.net> <wrfjio7v3txe.fsf@redhat.com>
+	<55E4EE6F.2010008@lwfinger.net> <wrfjwpwa3fkc.fsf@redhat.com>
+	<55E534EA.9090605@lwfinger.net>
+Date: Tue, 01 Sep 2015 01:26:46 -0400
+In-Reply-To: <55E534EA.9090605@lwfinger.net> (Larry Finger's message of "Tue,
+	1 Sep 2015 00:17:30 -0500")
+Message-ID: <wrfjk2sa3e21.fsf@redhat.com> (sfid-20150901_072701_847188_5D71220D)
 MIME-Version: 1.0
-In-Reply-To: <20150903011926.GA30914@kroah.com>
-References: <20150819025942.GD4588@kroah.com> <cover.1439953865.git.raphael.beamonte@gmail.com>
- <98b8f344a4c610b9273a0c753a1ec470dee10153.1439953865.git.raphael.beamonte@gmail.com>
- <20150903011926.GA30914@kroah.com>
-From: =?UTF-8?Q?Rapha=C3=ABl_Beamonte?= <raphael.beamonte@gmail.com>
-Date: Sat, 5 Sep 2015 12:25:37 -0400
-Message-ID: <CAE_Gge2iu1m_h4CZNjHJRd7HeGzejnBQQEs+xtH0niHHx9x8zg@mail.gmail.com> (sfid-20150905_182636_586870_8255A846)
-Subject: Re: [PATCHv4 1/2] staging: wilc1000: remove FREE_WILC_BUFFER()
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	lkml <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-09-02 21:19 GMT-04:00 Greg Kroah-Hartman <gregkh@linuxfoundation.org>:
-> Turns out this file is never even built, you should just remove it :)
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 08/31/2015 11:54 PM, Jes Sorensen wrote:
+>> As I mentioned in a direct email - calling writeN from slow_writeN is
+>> not a solution. I found some devices fail if you try to use the fast
+>> writeN routine. Maybe rtl8xxxu_raw_write32() - without the byteswap
+>> would be a better approach, or simply putting the relevant code into the
+>> slow_writeN function.
+>>
+>> I am flying back to New York tomorrow, and I'll have some time on the
+>> plane, so I'll try to have a look at that.
+>
+> I also found that trying to write all N bytes at once failed, but
+> writing 64 at a time is OK. I will add the USB calls to slow_writeN.
 
-You're right, although it seems that is one of the "To-dos" of that
-module, as the references I find about the config variable to allow
-the compiling of that file is the following:
+I see, it's possible we need to add it as a parameter to writeN or add
+the size to the fops struct for the different device types. In fact the
+latter might be a cleaner approach, especially if it works for 8192/8188
+devices with 64 byte writes. Getting rid of slow_writeN altogether would
+be nice.
 
-config WILC1000_PREALLOCATE_DURING_SYSTEM_BOOT
-          bool "Preallocate memory pool during system boot"
-          ---help---
-                    To do.
-
-Found on https://github.com/linux4sc/wireless-driver/blob/master/wilc1000/Kconfig
-However, it seems that entry of the Kconfig has been removed in the
-kernel. It thus can probably be safe to remove all occurences linked
-to that option from the driver in the kernel, while the authors will
-be able to add them back when it will be a working configuration
-option. I'll do that!
+Jes
