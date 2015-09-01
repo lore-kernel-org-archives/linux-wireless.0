@@ -1,78 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57772 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:58367 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751834AbbINTtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 15:49:50 -0400
-Message-ID: <1442260188.2075.21.camel@sipsolutions.net> (sfid-20150914_214953_685804_9B84CAAB)
-Subject: Re: Firmware works only if kernel source drivers are built as
- modules.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>, rhubarbpieguy@gmail.com,
-	linux-wireless@vger.kernel.org
-Date: Mon, 14 Sep 2015 21:49:48 +0200
-In-Reply-To: <55F6E7B1.3070209@lwfinger.net> (sfid-20150914_172856_237038_D2C7754F)
-References: <55F6E028.9010809@gmail.com> <55F6E7B1.3070209@lwfinger.net>
-	 (sfid-20150914_172856_237038_D2C7754F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754332AbbIAIoA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2015 04:44:00 -0400
+Subject: Re: RTL8189ETV
+To: poma <pomidorabelisima@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <55E47A27.4090703@gmail.com> <55E48988.1000803@gmail.com>
+ <55E49415.7090807@lwfinger.net> <55E4B9A2.8060109@gmail.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <55E5654D.2030607@redhat.com> (sfid-20150901_104405_987833_1C5400AD)
+Date: Tue, 1 Sep 2015 10:43:57 +0200
+MIME-Version: 1.0
+In-Reply-To: <55E4B9A2.8060109@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-09-14 at 10:28 -0500, Larry Finger wrote:
-> On 09/14/2015 09:56 AM, rhubarbpieguy@gmail.com wrote:
-> > 
-> > I'm attempting to load iwlwifi-3160 firmware.  It works only if I build the
-> > following drivers as modules.
-> > 
-> >      Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate
-> > 
-> >       Intel Wireless WiFi MVM Firmware Support
-> > 
-> > If I compile them into the kernel the firmware is not found.  This is my first
-> > experience with firmware.  Does firmware require drivers built as modules?  I
-> > see nothing at https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi stating
-> > modules must be used.
-> 
-> No, having firmware does not require the driver to be a module; however, user 
-> space may cause a problem.
-> 
-> To load firmware, the user-space portions needed to read a file must be running. 
-> If the driver is a module *not in the initrd image*, then one is assured that a 
-> file can be loaded as those routines were used to get the driver file. For the 
-> case where the driver is built-in, it is possible for a synchronous 
-> request_firmware() call to timeout before user space is ready to deliver the 
-> file. The safe way is to request an asynchronous load of at least the first 
-> firmware file using request_firmware_nowait(). When the load completes, the 
-> callback routine will set a completion event with all other operations held 
-> until that event is set.
-> 
-> Note that iwlwifi is correctly coded. It does load a second firmware file 
-> synchronously, but only after the first one is available.
-> 
-> The built-in driver will also fail unless the dependent drivers are also built 
-> in, but the kernel build process should take care of that.
-> 
-> The bottom line is that I do not know why your system is failing. It should 
-> work. (TM) :)
-> 
+Hi,
 
-I have very little to add to this - except note that as far as I know,
-initramfs (or similar) userspace was never actually changed to take the
-async into account to defer loading. My original idea with this had
-been that whatever application was loading firmware would see an async
-request and if the file isn't available, it would check if it's running
-in initramfs, and in that case would simply not respond to the firmware
-load at all but check again after the root filesystem was mounted. This
-was, for all I know, never implemented.
+On 31-08-15 22:31, poma wrote:
 
-Now with the in-kernel loading, that's no longer a possibility. You'll
-probably see a number of messages during boot indicating that firmware
-isn't available.
+> Let's see if Hans knows what type of this device is RTL8189ETV.
 
-There are essentially two ways out of this:
- 1) build the firmware file into initramfs - Debian for example makes 
-    this very easy
- 2) if you built the kernel yourself, you can also build firmware
-    files into the kernel image
+Assuming you are talking about the wifi module of the Allwinner H3
+based Orangepi2 as shown here:
 
-johannes
+http://linux-sunxi.org/images/9/96/Xunlong_OrangePi2_front.jpg
+
+Then we are talking about a realtek sdio wifi module, not usb but sdio!
+
+These wifi modules are not supported at all by upstream kernels atm.
+
+The path to getting these supported is:
+
+1) Find the latest out of tree code for them
+2) Get it to build and work with mainline
+3) Get it added to staging
+4) Clean it up, clean it up more, clean it up even more
+5) Repeat 4
+6) At one future point hopefully the driver can be moved from staging
+    to drivers/net/wifi
+
+Good luck with this!
+
+Regards,
+
+Hans
+
+
+p.s.
+
+I agree with Larry that the way you express yourself in your communications
+is not really helpful. Please remember to be excellent to each other.
