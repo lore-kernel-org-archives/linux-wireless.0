@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58352 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbbIJRhD (ORCPT
+Received: from mail-io0-f173.google.com ([209.85.223.173]:35266 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754737AbbIADCd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 13:37:03 -0400
-Message-ID: <55F1BFBF.5060901@candelatech.com> (sfid-20150910_193707_477924_B028EE5A)
-Date: Thu, 10 Sep 2015 10:37:03 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 31 Aug 2015 23:02:33 -0400
+Received: by iog7 with SMTP id 7so57163678iog.2
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 20:02:32 -0700 (PDT)
 MIME-Version: 1.0
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Ath10K issue
-References: <773DB8A82AB6A046AE0195C68612A31901BBD213@sbs2003.acksys.local>
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901BBD213@sbs2003.acksys.local>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20150829222531.GA8604@localhost>
+References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
+	<1440673024-13696-4-git-send-email-me@bobcopeland.com>
+	<CAKf6xpsaygeFJyX_LKH2r82P2Xvih1GGBTAspKtCsZbBcVO9Ug@mail.gmail.com>
+	<20150829222531.GA8604@localhost>
+Date: Mon, 31 Aug 2015 23:02:32 -0400
+Message-ID: <CAKf6xptqMZiqSyr3mOH_uotxa=JtHmtm2STBfDxdK5MBThaixA@mail.gmail.com> (sfid-20150901_050236_163027_B71FD46B)
+Subject: Re: [PATCH 3/3] ath10k: implement mesh support
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You probably need a firmware with mgt over htt.  CT firmware has this, but you have to run our
-kernel patches to allow CT htt-mgt firmware to work.
-
-Upstream may have it as well in latest firmware...I'm not sure exactly what versions
-do support that though.
-
-Thanks,
-Ben
-
-
-On 09/09/2015 10:13 AM, Cedric VONCKEN wrote:
-> 	I'm using compat-wireless 2015-03-09 from openwrt.
+On Sat, Aug 29, 2015 at 6:25 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Sat, Aug 29, 2015 at 01:11:03PM -0400, Jason Andryuk wrote:
+>> Is there a reason to hide rawmode behind a modparam, or should the
+>> modparam just be removed?  Just let the driver set
+>> ATH10K_FLAG_RAW_MODE when ATH10K_FW_FEATURE_RAW_MODE_SUPPORT is
+>> detected?
 >
-> 	At the power up, these equipments worked in AP mode and several sta can do an association.
-> 	Randomly it is not possible to make association to several AP.
+> Yes: you don't want to enable raw mode TX / RX decap in the normal
+> case because it's fairly inefficient compared to "native" wifi mode,
+> according to my understanding.  The latter doesn't support mesh framing
+> however.
 >
-> 	If I look the log file I see cyclically these error messages.
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.116104] ath10k_warn: 186 callbacks suppressed
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.133185] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.153058] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.157255] ath10k_pci 0001:02:00.0: reached WMI management transmit queue limit
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.157260] ath10k_pci 0001:02:00.0: failed to transmit packet, dropping: -16
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.212297] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.232087] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.252874] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.286774] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.320914] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-> Wed Sep  9 10:29:49 2015 kern.warn kernel: [17654.355043] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.167694] ath10k_warn: 193 callbacks suppressed
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.184778] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.204514] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.225098] ath10k_pci 0001:02:00.0: reached WMI management transmit queue limit
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.235968] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 3, skipped old beacon
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.264524] ath10k_pci 0001:02:00.0: failed to transmit packet, dropping: -16
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.270094] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 0, skipped old beacon
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.303945] ath10k_pci 0001:02:00.0: failed to transmit management frame via WMI: -11
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.304408] ath10k_pci 0001:02:00.0: reached WMI management transmit queue limit
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.304414] ath10k_pci 0001:02:00.0: failed to transmit packet, dropping: -16
-> Wed Sep  9 10:29:54 2015 kern.warn kernel: [17659.363876] ath10k_pci 0001:02:00.0: SWBA overrun on vdev 2, skipped old beacon
-> Wed Sep  9 10:29:59 2015 kern.warn kernel: [17664.219316] ath10k_warn: 208 callbacks suppressed
+>> Does struct ieee80211_iface_limit need to be conditional on firmware
+>> support as well or does interface_modes (below) gate use of
+>> MESH_POINT?
 >
-> 	To reestablish my access point I need to restart the Wifi (wifi up in openwrt).
+> If you advertise a combination that isn't supported by interface modes,
+> I believe you'll get a kernel warning when the wiphy is registered.
 >
-> 	Have you any idea of this issue?
+>>
+>> > @@ -6998,7 +7020,8 @@ int ath10k_mac_register(struct ath10k *ar)
+>> >
+>> >         ar->hw->wiphy->interface_modes =
+>> >                 BIT(NL80211_IFTYPE_STATION) |
+>> > -               BIT(NL80211_IFTYPE_AP);
+>> > +               BIT(NL80211_IFTYPE_AP) |
+>> > +               BIT(NL80211_IFTYPE_MESH_POINT);
+>>
+>> Set BIT(NL80211_IFTYPE_MESH_POINT) conditionally if ATH10K_FLAG_RAW_MODE is set?
 >
-> 	Regards.
->
-> Cédric Voncken.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Yes, this was discussed on the ath10k mailing list and I'll probably do
+> it in a follow-up patch.  It is a little messy because it will involve
+> casting away a const somewhere.
 
+Great.  Glad you've already considered all these things.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+-Jason
