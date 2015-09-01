@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36358 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186AbbIVJfX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18605 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754291AbbIAPYr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 05:35:23 -0400
-Received: by pacgz1 with SMTP id gz1so2040703pac.3
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:22 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 06/16] staging: wilc1000: make mgmt_tx static
-Date: Tue, 22 Sep 2015 18:34:51 +0900
-Message-Id: <1442914501-2315-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_113529_479341_BAB300E0)
-In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 1 Sep 2015 11:24:47 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] fixup! wil6210: system power management
+Date: Tue,  1 Sep 2015 18:24:10 +0300
+Message-Id: <1441121050-8796-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150901_172452_965491_ECC6E85B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes mgmt_tx static. This function is used only at
-wilc_wfi_cfgoperation.c file.
+Fix compilation warning where CONFIG_PM defined while
+CONFIG_PM_SLEEP is not defined
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Report follows:
+
+tree:   git://github.com/kvalo/ath pending
+head:   941145fc5e5afbb120271e5dfaf37213ddb55807
+commit: df596be39294d9712e5d568063a48448031e0a9f [37/39] wil6210: system power management
+config: xtensa-allyesconfig (attached as .config)
+reproduce:
+  wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+  chmod +x ~/bin/make.cross
+  git checkout df596be39294d9712e5d568063a48448031e0a9f
+  # save the attached .config to linux build tree
+  make.cross ARCH=xtensa
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/net/wireless/ath/wil6210/pcie_bus.c:264:12: warning: 'wil6210_suspend' defined but not used [-Wunused-function]
+    static int wil6210_suspend(struct device *dev, bool is_runtime)
+               ^
+>> drivers/net/wireless/ath/wil6210/pcie_bus.c:291:12: warning: 'wil6210_resume' defined but not used [-Wunused-function]
+    static int wil6210_resume(struct device *dev, bool is_runtime)
+               ^
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
-v2: rebase latest staging-testing
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0c72c5e..0becefb 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2354,10 +2354,10 @@ void WILC_WFI_add_wilcvendorspec(u8 *buff)
-  */
- extern linux_wlan_t *g_linux_wlan;
- extern bool bEnablePS;
--int mgmt_tx(struct wiphy *wiphy,
--	    struct wireless_dev *wdev,
--	    struct cfg80211_mgmt_tx_params *params,
--	    u64 *cookie)
-+static int mgmt_tx(struct wiphy *wiphy,
-+		   struct wireless_dev *wdev,
-+		   struct cfg80211_mgmt_tx_params *params,
-+		   u64 *cookie)
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index feff1ef..1a3142c3 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -260,6 +260,7 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
+ MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
+ 
+ #ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ 
+ static int wil6210_suspend(struct device *dev, bool is_runtime)
  {
- 	struct ieee80211_channel *chan = params->chan;
- 	unsigned int wait = params->wait;
+@@ -307,7 +308,6 @@ static int wil6210_resume(struct device *dev, bool is_runtime)
+ 	return rc;
+ }
+ 
+-#ifdef CONFIG_PM_SLEEP
+ static int wil6210_pm_suspend(struct device *dev)
+ {
+ 	return wil6210_suspend(dev, false);
 -- 
-2.5.1
+2.1.4
 
