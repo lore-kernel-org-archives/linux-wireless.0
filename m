@@ -1,98 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:15590 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754046AbbIRUIZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 16:08:25 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 04/16] brcmfmac: Only assign primary netdev to if2bss array.
-Date: Fri, 18 Sep 2015 22:08:07 +0200
-Message-ID: <1442606899-31872-5-git-send-email-arend@broadcom.com> (sfid-20150918_221654_014954_7D53D291)
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:28681 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753960AbbIAOzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2015 10:55:22 -0400
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v2 7/9] nfc: nci: Use a separate mutex for nci open and close
+Date: Tue,  1 Sep 2015 17:54:26 +0300
+Message-Id: <1441119268-30654-8-git-send-email-robert.dolca@intel.com> (sfid-20150901_165705_795194_7E969216)
+In-Reply-To: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
+References: <1441119268-30654-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+The functions were using req_lock for serialization. Doing so it
+prevented the driver from calling nci_request during setup because it uses
+the same mutex.
 
-The if2bss allows for translation of ifidx to bssidx which has a 1:n
-relation. Therefor only the first (primary) netdev should be
-assigned in this array. This fixes the p2pon=1 module param usage.
+In the open and close functions __nci_request was replaced with nci_request
+because it acquires req_lock.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Add test for NCI_INIT bit in nci_request to allow calling the function
+during setup.
+
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/core.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ include/net/nfc/nci_core.h |  3 +++
+ net/nfc/nci/core.c         | 30 ++++++++++++++++--------------
+ 2 files changed, 19 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index 17658b5..571c305 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -53,6 +53,8 @@ MODULE_LICENSE("Dual BSD/GPL");
- #define BRCMF_RXREORDER_EXPIDX_VALID		0x08
- #define BRCMF_RXREORDER_NEW_HOLE		0x10
- 
-+#define BRCMF_BSSIDX_INVALID			-1
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index d28b7a3..61dcaf2 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -266,6 +266,9 @@ struct nci_dev {
+ 	/* stored during intf_activated_ntf */
+ 	__u8 remote_gb[NFC_MAX_GT_LEN];
+ 	__u8 remote_gb_len;
 +
- /* Error bits */
- int brcmf_msg_level;
- module_param_named(debug, brcmf_msg_level, int, S_IRUSR | S_IWUSR);
-@@ -837,7 +839,8 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bssidx, s32 ifidx,
- 		ifp = netdev_priv(ndev);
- 		ifp->ndev = ndev;
- 		/* store mapping ifidx to bssidx */
--		drvr->if2bss[ifidx] = bssidx;
-+		if (drvr->if2bss[ifidx] == BRCMF_BSSIDX_INVALID)
-+			drvr->if2bss[ifidx] = bssidx;
- 	}
++	/* lock used for setup and other nci_ops serialization */
++	struct mutex op_lock;
+ };
  
- 	ifp->drvr = drvr;
-@@ -862,15 +865,15 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx)
- 	struct brcmf_if *ifp;
- 
- 	ifp = drvr->iflist[bssidx];
--	drvr->if2bss[ifp->ifidx] = -1;
- 	drvr->iflist[bssidx] = NULL;
- 	if (!ifp) {
- 		brcmf_err("Null interface, idx=%d\n", bssidx);
- 		return;
- 	}
- 	brcmf_dbg(TRACE, "Enter, idx=%d, ifidx=%d\n", bssidx, ifp->ifidx);
-+	if (drvr->if2bss[ifp->ifidx] == bssidx)
-+		drvr->if2bss[ifp->ifidx] = BRCMF_BSSIDX_INVALID;
- 	if (ifp->ndev) {
--		drvr->if2bss[ifp->ifidx] = -1;
- 		if (bssidx == 0) {
- 			if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
- 				rtnl_lock();
-@@ -926,6 +929,7 @@ int brcmf_attach(struct device *dev)
+ /* ----- NCI Devices ----- */
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 6f173cd..5d61b6e 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -136,7 +136,8 @@ inline int nci_request(struct nci_dev *ndev,
  {
- 	struct brcmf_pub *drvr = NULL;
- 	int ret = 0;
-+	int i;
+ 	int rc;
  
- 	brcmf_dbg(TRACE, "Enter\n");
+-	if (!test_bit(NCI_UP, &ndev->flags))
++	if (!test_bit(NCI_UP, &ndev->flags) &&
++	    !test_bit(NCI_INIT, &ndev->flags))
+ 		return -ENETDOWN;
  
-@@ -934,7 +938,9 @@ int brcmf_attach(struct device *dev)
- 	if (!drvr)
- 		return -ENOMEM;
+ 	/* Serialize all requests */
+@@ -383,7 +384,7 @@ static int nci_open_device(struct nci_dev *ndev)
+ {
+ 	int rc = 0;
  
--	memset(drvr->if2bss, 0xFF, sizeof(drvr->if2bss));
-+	for (i = 0; i < ARRAY_SIZE(drvr->if2bss); i++)
-+		drvr->if2bss[i] = BRCMF_BSSIDX_INVALID;
-+
- 	mutex_init(&drvr->proto_block);
+-	mutex_lock(&ndev->req_lock);
++	mutex_lock(&ndev->op_lock);
  
- 	/* Link to bus module */
+ 	if (test_bit(NCI_UP, &ndev->flags)) {
+ 		rc = -EALREADY;
+@@ -403,8 +404,8 @@ static int nci_open_device(struct nci_dev *ndev)
+ 		rc = ndev->ops->init(ndev);
+ 
+ 	if (!rc) {
+-		rc = __nci_request(ndev, nci_reset_req, 0,
+-				   msecs_to_jiffies(NCI_RESET_TIMEOUT));
++		rc = nci_request(ndev, nci_reset_req, 0,
++				 msecs_to_jiffies(NCI_RESET_TIMEOUT));
+ 	}
+ 
+ 	if (!rc && ndev->ops->setup) {
+@@ -412,16 +413,16 @@ static int nci_open_device(struct nci_dev *ndev)
+ 	}
+ 
+ 	if (!rc) {
+-		rc = __nci_request(ndev, nci_init_req, 0,
+-				   msecs_to_jiffies(NCI_INIT_TIMEOUT));
++		rc = nci_request(ndev, nci_init_req, 0,
++				 msecs_to_jiffies(NCI_INIT_TIMEOUT));
+ 	}
+ 
+ 	if (!rc && ndev->ops->post_setup)
+ 		rc = ndev->ops->post_setup(ndev);
+ 
+ 	if (!rc) {
+-		rc = __nci_request(ndev, nci_init_complete_req, 0,
+-				   msecs_to_jiffies(NCI_INIT_TIMEOUT));
++		rc = nci_request(ndev, nci_init_complete_req, 0,
++				 msecs_to_jiffies(NCI_INIT_TIMEOUT));
+ 	}
+ 
+ 	clear_bit(NCI_INIT, &ndev->flags);
+@@ -441,19 +442,19 @@ static int nci_open_device(struct nci_dev *ndev)
+ 	}
+ 
+ done:
+-	mutex_unlock(&ndev->req_lock);
++	mutex_unlock(&ndev->op_lock);
+ 	return rc;
+ }
+ 
+ static int nci_close_device(struct nci_dev *ndev)
+ {
+ 	nci_req_cancel(ndev, ENODEV);
+-	mutex_lock(&ndev->req_lock);
++	mutex_lock(&ndev->op_lock);
+ 
+ 	if (!test_and_clear_bit(NCI_UP, &ndev->flags)) {
+ 		del_timer_sync(&ndev->cmd_timer);
+ 		del_timer_sync(&ndev->data_timer);
+-		mutex_unlock(&ndev->req_lock);
++		mutex_unlock(&ndev->op_lock);
+ 		return 0;
+ 	}
+ 
+@@ -470,8 +471,8 @@ static int nci_close_device(struct nci_dev *ndev)
+ 	atomic_set(&ndev->cmd_cnt, 1);
+ 
+ 	set_bit(NCI_INIT, &ndev->flags);
+-	__nci_request(ndev, nci_reset_req, 0,
+-		      msecs_to_jiffies(NCI_RESET_TIMEOUT));
++	nci_request(ndev, nci_reset_req, 0,
++		    msecs_to_jiffies(NCI_RESET_TIMEOUT));
+ 
+ 	/* After this point our queues are empty
+ 	 * and no works are scheduled.
+@@ -488,7 +489,7 @@ static int nci_close_device(struct nci_dev *ndev)
+ 	/* Clear flags */
+ 	ndev->flags = 0;
+ 
+-	mutex_unlock(&ndev->req_lock);
++	mutex_unlock(&ndev->op_lock);
+ 
+ 	return 0;
+ }
+@@ -1123,6 +1124,7 @@ int nci_register_device(struct nci_dev *ndev)
+ 		    (unsigned long) ndev);
+ 
+ 	mutex_init(&ndev->req_lock);
++	mutex_init(&ndev->op_lock);
+ 	INIT_LIST_HEAD(&ndev->conn_info_list);
+ 
+ 	rc = nfc_register_device(ndev->nfc_dev);
 -- 
 1.9.1
 
