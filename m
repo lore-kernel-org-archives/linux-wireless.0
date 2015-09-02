@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:8858 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756325AbbIXOBc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44560 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750760AbbIBEsl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 10:01:32 -0400
-From: Andrzej Hajda <a.hajda@samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Andrzej Hajda <a.hajda@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 18/19] mac80211: make ieee80211_new_mesh_header return unsigned
-Date: Thu, 24 Sep 2015 16:00:26 +0200
-Message-id: <1443103227-25612-19-git-send-email-a.hajda@samsung.com> (sfid-20150924_160621_498089_1D951B4A)
-In-reply-to: <1443103227-25612-1-git-send-email-a.hajda@samsung.com>
-References: <1443103227-25612-1-git-send-email-a.hajda@samsung.com>
+	Wed, 2 Sep 2015 00:48:41 -0400
+Message-ID: <1441169316.25005.135.camel@coelho.fi> (sfid-20150902_064845_001679_9F522815)
+From: Luca Coelho <luca@coelho.fi>
+To: James Cameron <quozl@laptop.org>, Shengrong Yin <syin@uh.edu>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 02 Sep 2015 07:48:36 +0300
+In-Reply-To: <20150901025307.GE1329@us.netrek.org>
+References: <CAAGWusB5n7=62VFdq-=h7BsP3fkwnG6dvjFdixL_SPBhw06S3A@mail.gmail.com>
+	 <20150901025307.GE1329@us.netrek.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: How to set a scan on a given frequency
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function returns always non-negative values.
+On Tue, 2015-09-01 at 12:53 +1000, James Cameron wrote:
+> On Mon, Aug 31, 2015 at 03:53:18PM -0500, Shengrong Yin wrote:
+> > Hello,
+> > 
+> > I was using iw to scan a given frequency.
+> > For example,
+> > iw wlan0 scan freq 2412 | grep freq:
+> > However, the result was scanned ssids with different frequencies
+> > across 2.4 GHz band, which is
+> > freq: 2462
+> > freq: 2462
+> > freq: 2437
+> > freq: 2412
+> > ...
+> > Why this happened? Shouldn't it return only the ssid with 2412?
+> 
+> No.  A radio receiver in a wireless device can receive beacons on
+> adjacent frequencies to the frequency it is tuned for.  The signal
+> strength will be lower, but not low enough to prevent receive.
+> 
+> If you want to restrict results to the frequency you are interested
+> in, then filter the data after you have received it from the kernel.
+> 
+> But the data returned to you isn't the frequency of the received 
+> radio
+> burst, but is the frequency value in the beacon packet.  Usually this
+> is the same, but faulty devices, deceptive devices, or high speed
+> movement could make it different.
+> 
+> You should specify a frequency in your scan request if you can,
+> because it shortens the time taken by the scan.  If you do not 
+> specify
+> a frequency, then the scan must be repeated for every channel.  There
+> is a time cost for switching, and a time spent listening on each
+> channel.
 
-The problem has been detected using proposed semantic patch
-scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
+Yes, the results found in a scan are not filtered.  It's the same thing
+if you specify an SSID in the scan command.  That only causes a
+probe_req with the SSID to be sent out (instead of the default
+"wildcard" SSID).  If other APs happen to beacon on the channels you're
+scanning, you'll receive those results too (even if they are from other
+SSIDs).
 
-[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
+Additionally, you will also get results that were in the cache (which
+lasts ~15 seconds).  This means that if you issue a full scan followed
+by a scan on a single scan within 15 seconds of each other, the latter
+will also return all the results found in the first one.
 
-Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
----
-Hi,
-
-To avoid problems with too many mail recipients I have sent whole
-patchset only to LKML. Anyway patches have no dependencies.
-
-Regards
-Andrzej
----
- net/mac80211/mesh.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e06a5ca..09de65a 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -540,7 +540,7 @@ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-  *
-  * Return the header length.
-  */
--int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
-+unsigned int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
- 			      struct ieee80211s_hdr *meshhdr,
- 			      const char *addr4or5, const char *addr6)
- {
--- 
-1.9.1
-
+--
+Luca.
