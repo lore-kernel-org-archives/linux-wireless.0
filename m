@@ -1,84 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21396 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755911AbbIUDTv (ORCPT
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:36224 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755142AbbIBSgO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:19:51 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 22/34] staging: wilc1000: remove typedef from the struct tstrHostIfSetDrvHandler
-Date: Mon, 21 Sep 2015 12:16:51 +0900
-Message-ID: <1442805423-3711-23-git-send-email-tony.cho@atmel.com> (sfid-20150921_054656_939789_263B13FD)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
+	Wed, 2 Sep 2015 14:36:14 -0400
+Received: by ykcf206 with SMTP id f206so19443038ykc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2015 11:36:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1441218485.2565.4.camel@sipsolutions.net>
+References: <1440462512.2670.83.camel@perches.com> <1440507403-9695-1-git-send-email-jprvita@endlessm.com>
+ <4CA6A223-16CD-4A0F-A671-6B4BB026CB82@holtmann.org> <CA+A7VXVwmDEboDq-nACJH2n-UquTkO1i-+xgEm32OD5EDVfQfg@mail.gmail.com>
+ <87B673AF-9598-42D6-B77E-1F2F08A579FC@holtmann.org> <1441218485.2565.4.camel@sipsolutions.net>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Wed, 2 Sep 2015 14:35:33 -0400
+Message-ID: <CA+A7VXWyzO9U8TOrzJSZtWrj2NQHZgH0vw60UZFQYtY_ffVi7A@mail.gmail.com> (sfid-20150902_203616_900099_A1AED6E9)
+Subject: Re: [PATCH] rfkill: Copy "all" global state to other types
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIfSetDrvHandler and
-renames it to drv_handler in order to comply with the Linux coding
-style.
+On 2 September 2015 at 14:28, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2015-09-02 at 10:42 -0700, Marcel Holtmann wrote:
+>>
+>> > Any feedback or any plans to pick this for mac80211-next (which I
+>> > understand is where it should go to be sent upstream)?
+>>
+>> I can take this through bluetooth-next tree if there are no
+>> objections.
+>>
+>
+> I'm going to to take it, but we're in the middle of release/merge
+> -window time, so there was no point in doing that just yet.
+>
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 7 ++++---
- drivers/staging/wilc1000/host_interface.h | 4 ++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+All right, thanks for the feedback!
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 689832a..9824b00 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -432,7 +432,7 @@ union message_body {
- 	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
- 	struct sta_inactive_t strHostIfStaInactiveT;
- 	struct set_ip_addr strHostIfSetIP;
--	tstrHostIfSetDrvHandler strHostIfSetDrvHandler;
-+	struct drv_handler strHostIfSetDrvHandler;
- 	tstrHostIFSetMulti strHostIfSetMulti;
- 	tstrHostIfSetOperationMode strHostIfSetOperationMode;
- 	tstrHostIfSetMacAddress strHostIfSetMacAddress;
-@@ -665,14 +665,15 @@ static s32 Handle_SetChannel(tstrWILC_WFIDrv *drvHandler,
- /**
-  *  @brief Handle_SetWfiDrvHandler
-  *  @details    Sending config packet to firmware to set driver handler
-- *  @param[in]   void * drvHandler,tstrHostIfSetDrvHandler* pstrHostIfSetDrvHandler
-+ *  @param[in]   void * drvHandler,
-+ *		 struct drv_handler *pstrHostIfSetDrvHandler
-  *  @return     Error code.
-  *  @author
-  *  @date
-  *  @version	1.0
-  */
- static s32 Handle_SetWfiDrvHandler(tstrWILC_WFIDrv *drvHandler,
--				   tstrHostIfSetDrvHandler *pstrHostIfSetDrvHandler)
-+				   struct drv_handler *pstrHostIfSetDrvHandler)
- {
- 
- 	s32 s32Error = 0;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index b24eeb6..dc6fe73 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -255,9 +255,9 @@ typedef struct {
- 	void *u32UserConnectPvoid;
- } tstrWILC_UsrConnReq;
- 
--typedef struct {
-+struct drv_handler {
- 	u32 u32Address;
--} tstrHostIfSetDrvHandler;
-+};
- 
- typedef struct {
- 	u32 u32Mode;
--- 
-1.9.1
-
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
