@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35900 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753780AbbIWJEH (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:46850 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615AbbIBRmL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 05:04:07 -0400
-Received: by pacgz1 with SMTP id gz1so1188689pac.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2015 02:04:06 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/6] staging: wilc1000: remove WILC_OSW_INTERFACE_VER define
-Date: Wed, 23 Sep 2015 18:03:48 +0900
-Message-Id: <1442999030-31934-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20150923_110417_973374_AEC33F5A)
-In-Reply-To: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 2 Sep 2015 13:42:11 -0400
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Subject: Re: [PATCH] rfkill: Copy "all" global state to other types
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <CA+A7VXVwmDEboDq-nACJH2n-UquTkO1i-+xgEm32OD5EDVfQfg@mail.gmail.com>
+Date: Wed, 2 Sep 2015 10:42:04 -0700
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?utf-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Message-Id: <87B673AF-9598-42D6-B77E-1F2F08A579FC@holtmann.org> (sfid-20150902_194214_616396_54676BE3)
+References: <1440462512.2670.83.camel@perches.com> <1440507403-9695-1-git-send-email-jprvita@endlessm.com> <4CA6A223-16CD-4A0F-A671-6B4BB026CB82@holtmann.org> <CA+A7VXVwmDEboDq-nACJH2n-UquTkO1i-+xgEm32OD5EDVfQfg@mail.gmail.com>
+To: =?utf-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes WILC_OSW_INTERFACE_VER define that is not used
-anywhere.
+Hi Joao,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_oswrapper.h | 2 --
- 1 file changed, 2 deletions(-)
+>>> When switching the state of all RFKill switches of type all we need to
+>>> replicate the RFKILL_TYPE_ALL global state to all the other types global
+>>> state, so it is used to initialize persistent RFKill switches on
+>>> register.
+>>> 
+>>> Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+>>> ---
+>>> net/rfkill/core.c | 9 ++++++++-
+>>> 1 file changed, 8 insertions(+), 1 deletion(-)
+>> 
+>> Acked-by: Marcel Holtmann <marcel@holtmann.org>
+>> 
+> 
+> Any feedback or any plans to pick this for mac80211-next (which I
+> understand is where it should go to be sent upstream)?
 
-diff --git a/drivers/staging/wilc1000/wilc_oswrapper.h b/drivers/staging/wilc1000/wilc_oswrapper.h
-index 4f7bd89..5456c96 100644
---- a/drivers/staging/wilc1000/wilc_oswrapper.h
-+++ b/drivers/staging/wilc1000/wilc_oswrapper.h
-@@ -10,8 +10,6 @@
-  *  @version	1.0
-  */
- 
--/* OS Wrapper interface version */
--#define WILC_OSW_INTERFACE_VER 2
- 
- /* Os Configuration File */
- #include "wilc_platform.h"
--- 
-2.5.1
+I can take this through bluetooth-next tree if there are no objections.
+
+Regards
+
+Marcel
 
