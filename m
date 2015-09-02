@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:32891 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209AbbIJTPi (ORCPT
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:34574 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853AbbIBLZG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:15:38 -0400
-Received: by pacex6 with SMTP id ex6so51117050pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:37 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 19/31] staging: wilc1000: rename WILC_WFI_dump_station
-Date: Fri, 11 Sep 2015 04:14:18 +0900
-Message-Id: <1441912470-3371-19-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211545_884971_49FDD658)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 2 Sep 2015 07:25:06 -0400
+Received: by ykdg206 with SMTP id g206so5915078ykd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2015 04:25:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACKGw+FU0tQ4HZ0O=AB8uo-HyNshr0zjd-Hb+4NytpzsOH4TdQ@mail.gmail.com>
+References: <1440679653-20289-1-git-send-email-michal.kazior@tieto.com>
+	<CACKGw+FU0tQ4HZ0O=AB8uo-HyNshr0zjd-Hb+4NytpzsOH4TdQ@mail.gmail.com>
+Date: Wed, 2 Sep 2015 13:25:04 +0200
+Message-ID: <CACKGw+GQKt3frfGxU=M8XLg6adM5GVBasPd5OrwrGMaCvNsvzA@mail.gmail.com> (sfid-20150902_132512_951722_C50A9C94)
+Subject: Re: [PATCH 1/2] ath10k: change beamformee VHT STS capability
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k <ath10k@lists.infradead.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_dump_station with wilc_dump_station to
-avoid CamelCase.
+On 28 August 2015 at 14:56, Bartosz Markowski
+<bartosz.markowski@tieto.com> wrote:
+> On 27 August 2015 at 14:47, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> From: Bartosz Markowski <bartosz.markowski@tieto.com>
+>>
+>> All beamformee supporting chips have the ability to support
+>> VHT NDP in up to 4 STSs. Change the published beamformee
+>> STS cap accordingly to 3 as it should be Nsts-1.
+>>
+>> This makes it possible to actually make full use
+>> of. e.g. a 4SS MU-MIMO capable AP.
+>>
+>> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>
+> Kalle, please drop this one for now. It looks like we need to discuss
+> about this a bit more still.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
+I have sent a follow up on this, splitting it into 2 patches (vht nsts
+and sounding dimensions), addressing the concerns raised about the
+lack of firmware passing the needed bits in vht_cap_info.
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index afacda5..06276de 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2760,7 +2760,7 @@ static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
- 
- }
- /**
-- *  @brief      WILC_WFI_dump_station
-+ *  @brief      wilc_dump_station
-  *  @details    Configure connection quality monitor RSSI threshold.
-  *  @param[in]   struct wiphy *wiphy:
-  *  @param[in]	struct net_device *dev
-@@ -2772,8 +2772,8 @@ static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int WILC_WFI_dump_station(struct wiphy *wiphy, struct net_device *dev,
--				 int idx, u8 *mac, struct station_info *sinfo)
-+static int wilc_dump_station(struct wiphy *wiphy, struct net_device *dev,
-+			     int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct WILC_WFI_priv *priv;
- 
-@@ -3579,7 +3579,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.change_station = wilc_change_station,
- 	#endif /* WILC_AP_EXTERNAL_MLME*/
- 	.get_station = wilc_get_station,
--	.dump_station = WILC_WFI_dump_station,
-+	.dump_station = wilc_dump_station,
- 	.change_bss = WILC_WFI_change_bss,
- 	.set_wiphy_params = WILC_WFI_set_wiphy_params,
- 
--- 
-2.5.1
-
+Bartosz
