@@ -1,72 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33152 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859AbbIJTP5 (ORCPT
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:48712 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbbIBDp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:15:57 -0400
-Received: by pacex6 with SMTP id ex6so51123501pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:56 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 25/31] staging: wilc1000: rename WILC_WFI_remain_on_channel
-Date: Fri, 11 Sep 2015 04:14:24 +0900
-Message-Id: <1441912470-3371-25-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211603_593862_A1CF35B8)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 1 Sep 2015 23:45:28 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+	Wed, 2 Sep 2015 13:45:25 +1000
+Message-ID: <1441165462.17898.94.camel@linux.vnet.ibm.com> (sfid-20150902_054558_406658_92E3C86B)
+Subject: Re: Linux Firmware Signing
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	"Roberts, William C" <william.c.roberts@intel.com>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Paul Moore <paul@paul-moore.com>,
+	Eric Paris <eparis@parisplace.org>,
+	SE Linux <selinux@tycho.nsa.gov>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
+	=?UTF-8?Q?Vojt=C4=9Bch_Pavl=C3=ADk?= <vojtech@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Jay Schulist <jschlst@samba.org>,
+	Daniel Borkmann <dborkman@redhat.com>,
+	Alexei Starovoitov <ast@plumgrid.com>
+Date: Tue, 01 Sep 2015 23:44:22 -0400
+In-Reply-To: <CAGXu5j+_yHc1wbubzw4h=QFM=uyn1pCraGYCWS6LvgtS3-A+Qw@mail.gmail.com>
+References: <1440462367.2737.4.camel@linux.vnet.ibm.com>
+	 <CALCETrXWBBdOKz-fSdM7YVu_sWQbA3YsHPeZAkRmtj+eawqZGQ@mail.gmail.com>
+	 <1440464705.2737.36.camel@linux.vnet.ibm.com>
+	 <14540.1440599584@warthog.procyon.org.uk>
+	 <31228.1440671938@warthog.procyon.org.uk>
+	 <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
+	 <20150827212907.GF8051@wotan.suse.de>
+	 <1440719673.2118.84.camel@linux.vnet.ibm.com>
+	 <20150829021659.GN8051@wotan.suse.de>
+	 <1441030735.2647.70.camel@linux.vnet.ibm.com>
+	 <20150901234305.GU8051@wotan.suse.de>
+	 <CAGXu5j+_yHc1wbubzw4h=QFM=uyn1pCraGYCWS6LvgtS3-A+Qw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_remain_on_channel with
-wilc_remain_on_channel to avoid CamelCase.
+On Tue, 2015-09-01 at 20:08 -0700, Kees Cook wrote:
+> On Tue, Sep 1, 2015 at 4:43 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> > On Mon, Aug 31, 2015 at 10:18:55AM -0400, Mimi Zohar wrote:
+> >> > > eBPF/seccomp
+> >
+> > OK I knew nothing about this but I just looked into it, here are my notes:
+> >
+> >   * old BPF - how far do we want to go? This goes so far as to parsing
+> >     user passed void __user *arg data through ioctls which typically
+> >     gets copy_from_user()'d and eventually gets BPF_PROG_RUN().
+> >
+> >   * eBPF:
+> >                              seccomp() & prctl_set_seccomp()
+> >                                         |
+> >                                         V
+> >                              do_seccomp()
+> >                                         |
+> >                                         V
+> >                              seccomp_set_mode_filter()
+> >                                         |
+> >                                         V
+> >                              seccomp_prepare_user_filter()
+> >                                         |
+> >                                         V
+> >         bpf_prog_create_from_user() (seccomp) \
+> >         bpf_prog_create()                      > bpf_prepare_filter()
+> >         sk_attach_filter()                    /
+> >
+> >     All approaches come from user passed data, nothing fd based.
+> >
+> >     For both old BPF and eBPF then:
+> >
+> >     If we wanted to be paranoid I suppose the Machine Owner Key (MOK)
+> >     Paul had mentioned up could be used to vet for passed filters, or
+> >     a new interface to enable fd based filters. This really would limit
+> >     the dynamic nature of these features though.
+> >
+> >     eBPF / secccomp would not be the only place in the kernel that would have
+> >     issues with user passed data, we have tons of places the same applies so
+> >     implicating the old BPF / eBPF / seccomp approaches can easily implicate
+> >     many other areas of the kernel, that's pretty huge but from the looks of
+> >     it below you seem to enable that to be a possibility for us to consider.
+> 
+> At the time (LSS 2014?) I argued that seccomp policies come from
+> binaries, which are already being measured. And that policies only
+> further restrict a process, so there seems to be to be little risk in
+> continuing to leave them unmeasured.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
+What do you mean by "measured"?  Who is doing the measurement?  Could
+someone detect a change in measurement?
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c7cc1a2..824fba0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2391,7 +2391,7 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
- 
- 
- /**
-- *  @brief      WILC_WFI_remain_on_channel
-+ *  @brief      wilc_remain_on_channel
-  *  @details    Request the driver to remain awake on the specified
-  *                      channel for the specified duration to complete an off-channel
-  *                      operation (e.g., public action frame exchange). When the driver is
-@@ -2403,10 +2403,10 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int  WILC_WFI_remain_on_channel(struct wiphy *wiphy,
--				       struct wireless_dev *wdev,
--				       struct ieee80211_channel *chan,
--				       unsigned int duration, u64 *cookie)
-+static int  wilc_remain_on_channel(struct wiphy *wiphy,
-+				   struct wireless_dev *wdev,
-+				   struct ieee80211_channel *chan,
-+				   unsigned int duration, u64 *cookie)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	struct WILC_WFI_priv *priv;
-@@ -3587,7 +3587,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.del_pmksa = wilc_del_pmksa,
- 	.flush_pmksa = wilc_flush_pmksa,
- #ifdef WILC_P2P
--	.remain_on_channel = WILC_WFI_remain_on_channel,
-+	.remain_on_channel = wilc_remain_on_channel,
- 	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
- 	.mgmt_tx_cancel_wait = WILC_WFI_mgmt_tx_cancel_wait,
- 	.mgmt_tx = WILC_WFI_mgmt_tx,
--- 
-2.5.1
+Mimi
 
