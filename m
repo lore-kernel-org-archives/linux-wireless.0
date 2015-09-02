@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45198 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754771AbbISE7c (ORCPT
+Received: from bombadil.infradead.org ([198.137.202.9]:43029 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753786AbbIBX4o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2015 00:59:32 -0400
-Date: Fri, 18 Sep 2015 20:00:06 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, rachel.kim@atmel.com,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
-	leo.kim@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 03/34] staging: wilc1000: rename strHostIFmsg
-Message-ID: <20150919030006.GA28582@kroah.com> (sfid-20150919_070201_664788_706D744B)
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
- <1442567496-29331-3-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442567496-29331-3-git-send-email-tony.cho@atmel.com>
+	Wed, 2 Sep 2015 19:56:44 -0400
+Message-ID: <1441238202.13198.5.camel@infradead.org> (sfid-20150903_015647_038887_8FE56C81)
+Subject: [PATCH] net/wireless/wl18xx: Add missing MODULE_FIRMWARE
+From: Geoff Levand <geoff@infradead.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	Dev@lists.96boards.org
+Date: Wed, 02 Sep 2015 16:56:42 -0700
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 18, 2015 at 06:11:05PM +0900, Tony Cho wrote:
-> This patch changes the name, strHostIFmsg simply to msg because the
-> camelcase notation is not recommended in Linux.
-> 
-> Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Fixes the output of 'modinfo --field firmware'.
 
-Because of the other patches I didn't accept, and I think because of
-patches that community members sent in, this patch doesn't apply
-(patches 1 and 2 I had to do by hand, but I don't want to keep doing
-that...)
+Signed-off-by: Geoff Levand <geoff@infradead.org>
+---
+ drivers/net/wireless/ti/wl18xx/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-So can you rebase this series on my staging-testing branch and resend
-them?
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 49aca2c..3bbf624 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -2062,3 +2062,4 @@ MODULE_PARM_DESC(num_rx_desc_param,
+ MODULE_LICENSE("GPL v2");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_FIRMWARE(WL18XX_FW_NAME);
++MODULE_FIRMWARE(WL18XX_CONF_FILE_NAME);
+-- 
+2.1.0
 
-thanks,
 
-greg k-h
+
