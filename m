@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33610 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932377AbbIZWEm (ORCPT
+Received: from mx1.redhat.com ([209.132.183.28]:32965 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752914AbbIBMzx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2015 18:04:42 -0400
-Received: by pacex6 with SMTP id ex6so137743249pac.0
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2015 15:04:41 -0700 (PDT)
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Subject: [PATCH V5 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Sat, 26 Sep 2015 15:04:06 -0700
-Message-Id: <8d3d3428c3a36f821e4c3d8563d094ca4b4763fd.1443304934.git.viresh.kumar@linaro.org> (sfid-20150927_000459_309339_83BD3125)
+	Wed, 2 Sep 2015 08:55:53 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: =?utf-8?Q?Micha=C5=82?= Bartoszkiewicz <mbartoszkiewicz@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: remove unnecessary le32_to_cpu
+References: <1441150500-14023-1-git-send-email-mbartoszkiewicz@gmail.com>
+Date: Wed, 02 Sep 2015 08:55:50 -0400
+In-Reply-To: <1441150500-14023-1-git-send-email-mbartoszkiewicz@gmail.com>
+	(=?utf-8?Q?=22Micha=C5=82?= Bartoszkiewicz"'s message of "Wed, 2 Sep 2015
+ 01:35:00
+	+0200")
+Message-ID: <wrfj1tehvv3d.fsf@redhat.com> (sfid-20150902_145613_547098_27D942FE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-global_lock is defined as an unsigned long and accessing only its lower
-32 bits from sysfs is incorrect, as we need to consider other 32 bits
-for big endian 64-bit systems. There are no such platforms yet, but the
-code needs to be robust for such a case.
+Michał Bartoszkiewicz <mbartoszkiewicz@gmail.com> writes:
+> The values passed to le32_to_cpu are already in the correct byte order.
+> This fixes four "cast to restricted __le32" sparse warnings.
+>
+> Signed-off-by: Michał Bartoszkiewicz <mbartoszkiewicz@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_security.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 
-Fix that by changing type of 'global_lock' to u32.
+Sounds OK to me - the fact we never hit problems with this is a good
+indicator the hw crypt functions work.
 
-Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
----
-BCC'd a lot of people (rather than cc'ing them) to make sure
-- the series reaches them
-- mailing lists do not block the patchset due to long cc list
-- and we don't spam the BCC'd people for every reply
+Cheers,
+Jes
 
-V4->V5:
-- Switch back to the original solution of making global_lock u32.
----
- drivers/acpi/ec_sys.c   | 2 +-
- drivers/acpi/internal.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/ec_sys.c b/drivers/acpi/ec_sys.c
-index b4c216bab22b..bea8e425a8de 100644
---- a/drivers/acpi/ec_sys.c
-+++ b/drivers/acpi/ec_sys.c
-@@ -128,7 +128,7 @@ static int acpi_ec_add_debugfs(struct acpi_ec *ec, unsigned int ec_device_count)
- 	if (!debugfs_create_x32("gpe", 0444, dev_dir, (u32 *)&first_ec->gpe))
- 		goto error;
- 	if (!debugfs_create_bool("use_global_lock", 0444, dev_dir,
--				 (u32 *)&first_ec->global_lock))
-+				 &first_ec->global_lock))
- 		goto error;
- 
- 	if (write_support)
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 9e426210c2a8..9db196de003c 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -138,7 +138,7 @@ struct acpi_ec {
- 	unsigned long gpe;
- 	unsigned long command_addr;
- 	unsigned long data_addr;
--	unsigned long global_lock;
-+	u32 global_lock;
- 	unsigned long flags;
- 	unsigned long reference_count;
- 	struct mutex mutex;
--- 
-2.4.0
-
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+> index 3d40bab..9d1cce1 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_security.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_security.c
+> @@ -245,8 +245,8 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
+>  	arcfour_encrypt(&mycontext, payload, payload, length);
+>  
+>  	/* calculate icv and compare the icv */
+> -	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
+> -	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
+> +	actual_crc = getcrc32(payload, length - 4);
+> +	expected_crc = get_unaligned_le32(&payload[length - 4]);
+>  
+>  	if (actual_crc != expected_crc) {
+>  		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+> @@ -773,8 +773,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+>  	arcfour_init(&mycontext, rc4key, 16);
+>  	arcfour_encrypt(&mycontext, payload, payload, length);
+>  
+> -	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
+> -	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
+> +	actual_crc = getcrc32(payload, length - 4);
+> +	expected_crc = get_unaligned_le32(&payload[length - 4]);
+>  
+>  	if (actual_crc != expected_crc) {
+>  		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
