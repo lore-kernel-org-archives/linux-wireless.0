@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49750 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752571AbbIDSCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2015 14:02:43 -0400
-Message-ID: <1441389753.1971.16.camel@sipsolutions.net> (sfid-20150904_200246_604278_0EB1F61D)
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Date: Fri, 04 Sep 2015 20:02:33 +0200
-In-Reply-To: <wrfjr3megjoi.fsf@redhat.com>
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	 <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	 <1441032517.13980.21.camel@sipsolutions.net> <wrfjmvx73u0l.fsf@redhat.com>
-	 <1441120044.2441.9.camel@sipsolutions.net> <wrfj4mjcqn3x.fsf@redhat.com>
-	 <1441275442.2565.17.camel@sipsolutions.net> <wrfjr3megjoi.fsf@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:45371 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750708AbbICFp1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2015 01:45:27 -0400
+Message-ID: <1441259121.10665.12.camel@coelho.fi> (sfid-20150903_074530_724538_97A1A849)
+From: Luca Coelho <luca@coelho.fi>
+To: Jes Sorensen <jes.sorensen@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Date: Thu, 03 Sep 2015 08:45:21 +0300
+In-Reply-To: <55E71A60.9010608@gmail.com>
+References: <55E71A60.9010608@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: iwlwifi lockup problems
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-09-04 at 13:48 -0400, Jes Sorensen wrote:
-> 
-> Gotcha, now you mention it, that rings a bell! I'll put that on my todo
-> list. One of the biggest things puzzling me is how much the firmware
-> does with AMPDU - there is a break bit I can set in the TX descriptor to
-> say 'don't AMPDU this packet' but do not actually know if it will do all
-> of this behind my back. I need to dig more into the vendor driver (and
-> their 80211 stack) to see if I can figure that out.
-> 
+Hi,
 
-That also seems possibly like something you'd set within an existing
-aggregation session - you can still send non-aggregated frames, and
-might decide to do that for example for EAPOL frames.
+Emmanuel replied to this offline, accidentally.  Just for the record,
+I'll add the information here too.
 
-johannes
+On Wed, 2015-09-02 at 11:48 -0400, Jes Sorensen wrote:
+> Since a while I have been experiencing issues with iwlwifi locking up
+> requiring me to reconnect to my home AP. This happens both when
+> connecting on 2.4GHz and on 5GHz.
+> 
+> This is a Fedora kernel 4.1.6-200.fc22.x86_64, but checking
+> linux-2.6.git I see no updates to the driver since late July, so I
+> suspect it's uptodate on that front. I have been experiencing this issue
+> for about a month or so.
+> 
+> Attached dmesg output and the relevant portion of iw scan for the AP I
+> was connected to at the time.
+
+There are some known problems of the queues getting stuck with version 
+-12 of our firmware.  The recommendation when this problem is observed
+is to upgrade to version -13, which should probably be provided by your
+distro already, but if not, it can be taken from the linux-firmware git
+tree:
+
+http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git
+
+--
+Cheers,
+Luca.
