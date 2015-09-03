@@ -1,76 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:35011 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752046AbbI0Sb5 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44749 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932163AbbICBhm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 14:31:57 -0400
-Received: by igbkq10 with SMTP id kq10so39769298igb.0
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2015 11:31:56 -0700 (PDT)
+	Wed, 2 Sep 2015 21:37:42 -0400
+Date: Wed, 2 Sep 2015 18:37:41 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Alexander Kuleshov <kuleshovmail@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] staging/wilc1000: Use %pM format specifier to print
+ mac address
+Message-ID: <20150903013741.GA8330@kroah.com> (sfid-20150903_033756_549755_282E36C4)
+References: <1440680785-9327-1-git-send-email-kuleshovmail@gmail.com>
+ <1440681048-9574-1-git-send-email-kuleshovmail@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
-References: <1437554563-11712-1-git-send-email-martin.blumenstingl@googlemail.com>
-Date: Sun, 27 Sep 2015 11:31:56 -0700
-Message-ID: <CAJ-VmokjZRaTuNuSna5PR09qnKky=7RJSUWzM3=TnjzWkQhCAg@mail.gmail.com> (sfid-20150927_203200_434462_417638F2)
-Subject: Re: [PATCH RESEND] ath9k: Fix NF CCA limits for AR9287 and AR9227
-From: Adrian Chadd <adrian@freebsd.org>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1440681048-9574-1-git-send-email-kuleshovmail@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hiya,
-
-for what it's worth - this looks okay to me. His noise floor looks
-about as low as I'd expect on his plots.
-
-
--adrian
-
-
-On 22 July 2015 at 01:42, Martin Blumenstingl
-<martin.blumenstingl@googlemail.com> wrote:
-> The FreeBSD driver [0] uses the same 2G values as for the AR9280 chips.
-> Using the same values in ath9k results in much better throughput for me.
->
-> Before this patch I had a huge amount of packet loss (sometimes up to
-> 40%) and the max transfer speed was somewhere around 5Mbit/s. With this
-> patch applied I have zero packet loss and ten times the throughput.
-> My device uses a AR9227 which is the PCI variant of the AR9287.
->
-> [0] http://bxr.su/FreeBSD/sys/dev/ath/ath_hal/ar9002/ar9287.h
->
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+On Thu, Aug 27, 2015 at 07:10:48PM +0600, Alexander Kuleshov wrote:
+> printk() supports %pM format specifier for printing 6-byte MAC/FDDI
+> addresses in hex notation small buffers, let's use it intead of %x:%x...
+> 
+> Signed-off-by: Alexander Kuleshov <kuleshovmail@gmail.com>
 > ---
-> Patch has not changed, I am just CC'ing @linux-wireless (instead of
-> @ath9k-devel only).
->
->  drivers/net/wireless/ath/ath9k/ar9002_phy.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> index 6314ae2..9d17a53 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> @@ -610,8 +610,8 @@
->  #define AR_PHY_CCA_MIN_GOOD_VAL_9271_2GHZ      -127
->  #define AR_PHY_CCA_MAX_GOOD_VAL_9271_2GHZ      -116
->
-> -#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -120
-> +#define AR_PHY_CCA_NOM_VAL_9287_2GHZ           -112
->  #define AR_PHY_CCA_MIN_GOOD_VAL_9287_2GHZ    -127
-> -#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -110
-> +#define AR_PHY_CCA_MAX_GOOD_VAL_9287_2GHZ    -97
->
->  #endif
-> --
-> 2.4.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/staging/wilc1000/host_interface.c | 6 +++---
+>  drivers/staging/wilc1000/linux_mon.c      | 2 +-
+>  drivers/staging/wilc1000/linux_wlan.c     | 3 +--
+>  3 files changed, 5 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 6b10bbb..48ee908 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -854,7 +854,7 @@ static s32 Handle_SetMacAddress(void *drvHandler, tstrHostIfSetMacAddress *pstrH
+>  	strWID.enuWIDtype = WID_STR;
+>  	strWID.ps8WidVal = mac_buf;
+>  	strWID.s32ValueSize = ETH_ALEN;
+> -	PRINT_D(GENERIC_DBG, "mac addr = :%x:%x:%x:%x:%x:%x\n", strWID.ps8WidVal[0], strWID.ps8WidVal[1], strWID.ps8WidVal[2], strWID.ps8WidVal[3], strWID.ps8WidVal[4], strWID.ps8WidVal[5]);
+> +	PRINT_D(GENERIC_DBG, "mac addr = :%pM\n", strWID.ps8WidVal);
+>  	/*Sending Cfg*/
+>  	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, (u32)pstrWFIDrv);
+>  	if (s32Error) {
+> @@ -1965,8 +1965,8 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
+>  	if (pstrHostIFconnectAttr->pu8bssid != NULL) {
+>  		WILC_memcpy(u8ConnectedSSID, pstrHostIFconnectAttr->pu8bssid, ETH_ALEN);
+>  
+> -		PRINT_D(GENERIC_DBG, "save Bssid = %x:%x:%x:%x:%x:%x\n", (pstrHostIFconnectAttr->pu8bssid[0]), (pstrHostIFconnectAttr->pu8bssid[1]), (pstrHostIFconnectAttr->pu8bssid[2]), (pstrHostIFconnectAttr->pu8bssid[3]), (pstrHostIFconnectAttr->pu8bssid[4]), (pstrHostIFconnectAttr->pu8bssid[5]));
+> -		PRINT_D(GENERIC_DBG, "save bssid = %x:%x:%x:%x:%x:%x\n", (u8ConnectedSSID[0]), (u8ConnectedSSID[1]), (u8ConnectedSSID[2]), (u8ConnectedSSID[3]), (u8ConnectedSSID[4]), (u8ConnectedSSID[5]));
+> +		PRINT_D(GENERIC_DBG, "save Bssid = %pM\n", pstrHostIFconnectAttr->pu8bssid);
+> +		PRINT_D(GENERIC_DBG, "save bssid = %pM\n", u8ConnectedSSID);
+>  	}
+>  
+>  	s32Error = SendConfigPkt(SET_CFG, strWIDList, u32WidsCount, false, (u32)pstrWFIDrv);
+> diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+> index f5296f5..c039898 100644
+> --- a/drivers/staging/wilc1000/linux_mon.c
+> +++ b/drivers/staging/wilc1000/linux_mon.c
+> @@ -336,7 +336,7 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+>  	skb_pull(skb, rtap_len);
+>  
+>  	if (skb->data[0] == 0xc0)
+> -		PRINT_INFO(HOSTAPD_DBG, "%x:%x:%x:%x:%x%x\n", skb->data[4], skb->data[5], skb->data[6], skb->data[7], skb->data[8], skb->data[9]);
+> +		PRINT_INFO(HOSTAPD_DBG, "%pM\n", skb->data[4]);
+
+This conversion isn't correct :(
