@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52335 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932965AbbIYUFL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 16:05:11 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linaro-kernel@lists.linaro.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, iommu@lists.linux-foundation.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-edac@vger.kernel.org, linux-mm@kvack.org,
-	alsa-devel@alsa-project.org
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Fri, 25 Sep 2015 22:33:24 +0200
-Message-ID: <4357538.Wlf88yQie6@vostro.rjw.lan> (sfid-20150925_220606_885498_90EE8133)
-In-Reply-To: <4331507.W3ZDWldbWu@vostro.rjw.lan>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <20150925185256.GG5951@linux> <4331507.W3ZDWldbWu@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40412 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753795AbbICKR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2015 06:17:27 -0400
+Message-ID: <1441275442.2565.17.camel@sipsolutions.net> (sfid-20150903_121753_260910_EC3B2004)
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	Larry.Finger@lwfinger.net
+Date: Thu, 03 Sep 2015 12:17:22 +0200
+In-Reply-To: <wrfj4mjcqn3x.fsf@redhat.com>
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	 <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	 <1441032517.13980.21.camel@sipsolutions.net> <wrfjmvx73u0l.fsf@redhat.com>
+	 <1441120044.2441.9.camel@sipsolutions.net> <wrfj4mjcqn3x.fsf@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, September 25, 2015 10:26:22 PM Rafael J. Wysocki wrote:
-> On Friday, September 25, 2015 11:52:56 AM Viresh Kumar wrote:
-> > On 25-09-15, 20:49, Johannes Berg wrote:
-> > > Ok, then, but that means Rafael is completely wrong ...
-> > > debugfs_create_bool() takes a *pointer* and it needs to be long-lived,
-> > > it can't be on the stack. You also don't get a call when it changes.
+On Wed, 2015-09-02 at 21:59 -0400, Jes Sorensen wrote:
+> 
+> The code mimics what the vendor driver does - part of the bringup of the
+> chip sets a bunch of parameters from an register value array. Rather
+> than guessing what their default is, I feel it's safer to just shut 
+> it down here and stick with that.
+
+Ok, fair enough. Might be worth putting that into start() rather than
+add_interface() though? Anyway, it's not a big deal, I just wasn't sure
+if that was intentional.
+
+> > I'd be extremely surprised if any of this worked - perhaps you're 
+> > not advertising A-MPDU support (yet)?
 > > 
-> > Ahh, ofcourse. My bad as well...
+> > You're not calling ieee80211_start_tx_ba_cb_irqsafe() or
+> > ieee80211_stop_tx_ba_cb_irqsafe(), so this can't really work. The
+> > session might be set up but will never actually start.
+> > 
+> > That said, the code also looks incomplete. Perhaps better to just
+> > remove it entirely for now?
 > 
-> Well, sorry about the wrong suggestion.
-> 
-> > I think we can change structure definition but will wait for Rafael's
-> > comment before that.
-> 
-> OK, change the structure then.
+> I started working on this, but I guess I didn't finish it. One thing I
+> haven't figured out yet is why I see AMPDU_RX_START events, but I never
+> see AMPDU_TX_START events show in the log.
 
-But here's a question.
+Nothing in your system is calling ieee80211_start_tx_ba_session() then.
 
-You're going to change that into bool in the next patch, right?
 
-So what if bool is a byte and the field is not word-aligned and changing
-that byte requires a read-modify-write.  How do we ensure that things remain
-consistent in that case?
-
-Thanks,
-Rafael
-
+johannes
