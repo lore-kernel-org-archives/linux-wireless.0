@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57274 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753607AbbIRNTp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 09:19:45 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/6] mac80211: Deinline large functions in driver-ops.h
-Date: Fri, 18 Sep 2015 15:19:33 +0200
-Message-Id: <1442582379-10342-1-git-send-email-dvlasenk@redhat.com> (sfid-20150918_152212_883153_32910567)
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:36391 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757700AbbICVvV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2015 17:51:21 -0400
+Received: by ykcf206 with SMTP id f206so3242139ykc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2015 14:51:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAAfyv36Xf4f33wZvKMeTomyr_T-LKKMYkpYQwWt6B83UthFr8Q@mail.gmail.com>
+References: <CAAfyv36YLsEVarY6J8H-=Vcox=ktgeCUkqurHnAXzj_UFfthYw@mail.gmail.com>
+	<26c3f35fd9e74b1d80e80077c19b6717@SC-EXCH04.marvell.com>
+	<CAAfyv36Xf4f33wZvKMeTomyr_T-LKKMYkpYQwWt6B83UthFr8Q@mail.gmail.com>
+Date: Thu, 3 Sep 2015 17:51:20 -0400
+Message-ID: <CAOiWkA92XpC8jNq1SY_CDzNEbxNL=zrdAGMHQTs=CeLoYjSU4A@mail.gmail.com> (sfid-20150903_235125_442468_22B76F17)
+Subject: Re: kernel log flooded with GET_CMD_NODE: cmd node not available
+From: Marty Faltesek <mfaltesek@google.com>
+To: Belisko Marek <marek.belisko@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After measuring size of inlines, these functions were found to be largest.
-These patches reduce code size by about 21 kbytes.
+On Mon, Aug 31, 2015 at 7:54 AM, Belisko Marek <marek.belisko@gmail.com> wrote:
+> [  182.069146] mwifiex_sdio mmc0:0001:1: GET_CMD_NODE: cmd node not available
+> [  182.076350] mwifiex_sdio mmc0:0001:1: PREP_CMD: no free cmd node
+> [  182.085102] mwifiex_sdio mmc0:0001:1: GET_CMD_NODE: cmd node not available
+> [  182.092297] mwifiex_sdio mmc0:0001:1: PREP_CMD: no free cmd node
+> [  182.103276] mwifiex_sdio mmc0:0001:1: GET_CMD_NODE: cmd node not available
+> [  182.110478] mwifiex_sdio mmc0:0001:1: PREP_CMD: no free cmd node
+> [  182.121156] mwifiex_sdio mmc0:0001:1: GET_CMD_NODE: cmd node not available
+> [  182.128360] mwifiex_sdio mmc0:0001:1: PREP_CMD: no free cmd node
+> [  182.134750] mwifiex_sdio mmc0:0001:1: GET_CMD_NODE: cmd node not available
+> [  182.141927] mwifiex_sdio mmc0:0001:1: PREP_CMD: no free cmd node
 
-CC: John Linville <linville@tuxdriver.com>
-CC: Michal Kazior <michal.kazior@tieto.com>
-CC: Johannes Berg <johannes.berg@intel.com>
-CC: linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-
-Denys Vlasenko (6):
-  mac80211: Deinline drv_conf_tx()
-  mac80211: Deinline drv_sta_rc_update()
-  mac80211: Deinline drv_ampdu_action()
-  mac80211: Deinline drv_get/set/reset_tsf()
-  mac80211: Deinline drv_add/remove/change_interface()
-  mac80211: Deinline drv_switch_vif_chanctx()
-
- net/mac80211/driver-ops.c | 223 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/driver-ops.h | 237 ++++++----------------------------------------
- 2 files changed, 250 insertions(+), 210 deletions(-)
-
--- 
-1.8.1.4
-
+We are also seeing these messages after recently switching to more
+recent drivers.
