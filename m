@@ -1,217 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:32801 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468AbbIOFHF (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:37324 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756623AbbICVOT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 01:07:05 -0400
-Received: by pacex6 with SMTP id ex6so165313074pac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 22:07:05 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/18] staging: wilc1000: use u16 instead of uint16_t
-Date: Tue, 15 Sep 2015 14:06:15 +0900
-Message-Id: <1442293588-15323-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20150915_071652_137853_E6BDA803)
-In-Reply-To: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442293588-15323-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 3 Sep 2015 17:14:19 -0400
+Received: by igbni9 with SMTP id ni9so1882421igb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2015 14:14:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150902213717.GJ8051@wotan.suse.de>
+References: <1440464705.2737.36.camel@linux.vnet.ibm.com>
+	<14540.1440599584@warthog.procyon.org.uk>
+	<31228.1440671938@warthog.procyon.org.uk>
+	<36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
+	<20150827212907.GF8051@wotan.suse.de>
+	<CAGXu5jKF6CBAADoybZHRCzYAepcZYqpbck1gTAeV1p7iuOVAvw@mail.gmail.com>
+	<20150902000915.GW8051@wotan.suse.de>
+	<1441164905.17898.86.camel@linux.vnet.ibm.com>
+	<20150902184604.GB8051@wotan.suse.de>
+	<CAGXu5jKGbb3M-qhodp1DVzhxn3ckae+mD9_HBNp2PdVHXb893A@mail.gmail.com>
+	<20150902213717.GJ8051@wotan.suse.de>
+Date: Thu, 3 Sep 2015 14:14:18 -0700
+Message-ID: <CAGXu5jLCNaBd8GsVwCn_9jqnz247X6wG1dqyaSsLbc9DQ05kXQ@mail.gmail.com> (sfid-20150903_231424_827731_D0DC5EDC)
+Subject: Re: Linux Firmware Signing
+From: Kees Cook <keescook@chromium.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	"Roberts, William C" <william.c.roberts@intel.com>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Paul Moore <paul@paul-moore.com>,
+	Eric Paris <eparis@parisplace.org>,
+	SE Linux <selinux@tycho.nsa.gov>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
+	=?UTF-8?B?Vm9qdMSbY2ggUGF2bMOtaw==?= <vojtech@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Alexei Starovoitov <ast@plumgrid.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces uint16_t with u16 that is preferred kernel type.
+[removed bounced email addresses]
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_spi.c      |  2 +-
- drivers/staging/wilc1000/wilc_wlan.c     | 12 ++++++------
- drivers/staging/wilc1000/wilc_wlan.h     |  6 +++---
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 18 +++++++++---------
- drivers/staging/wilc1000/wilc_wlan_cfg.h |  8 ++++----
- 5 files changed, 23 insertions(+), 23 deletions(-)
+On Wed, Sep 2, 2015 at 2:37 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Wed, Sep 02, 2015 at 01:54:43PM -0700, Kees Cook wrote:
+>> On Wed, Sep 2, 2015 at 11:46 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>> > On Tue, Sep 01, 2015 at 11:35:05PM -0400, Mimi Zohar wrote:
+>> >> > OK great, I think that instead of passing the actual routine name we should
+>> >> > instead pass an enum type for to the LSM, that'd be easier to parse and we'd
+>> >> > then have each case well documented. Each LSM then could add its own
+>> >> > documetnation for this and can switch on it. If we went with a name we'd have
+>> >> > to to use something like __func__ and then parse that, its not clear if we need
+>> >> > to get that specific.
+>> >>
+>> >> Agreed.  IMA already defines an enumeration.
+>> >>
+>> >> /* IMA policy related functions */
+>> >> enum ima_hooks { FILE_CHECK = 1, MMAP_CHECK, BPRM_CHECK, MODULE_CHECK,
+>> >>                  FIRMWARE_CHECK, POLICY_CHECK, POST_SETATTR };
+>> >>
+>> >
+>> > We want something that is not only useful for IMA but any other LSM,
+>> > and FILE_CHECK seems very broad, not sure what BPRM_CHECK is even upon
+>> > inspecting kernel code. Likewise for POST_SETATTR. POLICY_CHECK might
+>> > be broad, perhaps its best we define then a generic set of enums to
+>> > which IMA can map them to then and let it decide. This would ensure
+>> > that the kernel defines each use caes for file inspection carefully,
+>> > documents and defines them and if an LSM wants to bunch a set together
+>> > it can do so easily with a switch statement to map set of generic
+>> > file checks in kernel to a group it already handles.
+>> >
+>> > For instance at least in the short term we'd try to unify:
+>> >
+>> > security_kernel_fw_from_file()
+>> > security_kernel_module_from_file()
+>> >
+>> > to perhaps:
+>> >
+>> > security_kernel_from_file()
+>> >
+>> > As far, as far as I can tell, the only ones we'd be ready to start
+>> > grouping immediately or with small amount of work rather soon:
+>> >
+>> > /**
+>> >  *
+>> >  * enum security_filecheck - known kernel security file checks types
+>> >  *
+>> >  * @__SECURITY_FILECHECK_UNSPEC: attribute 0 reserved
+>> >  * @SECURITY_FILECHECK_MODULE: the file being processed is a Linux kernel module
+>> >  * @SECURITY_FILECHECK_SYSDATA: the file being processed is either a firmware
+>> >  *      file or a system data file read from /lib/firmware/* by firmware_class
+>>
+>> I'd prefer a distinct category for firmware, as it carries an
+>> implication that it is an executable blob of some sort (I know not all
+>> are, though).
+>
+> The ship has sailed in terms of folks using frimrware API for things
+> that are not-firmware per se. The first one I am aware of was the
+> EEPROM override for the p54 driver. The other similar one was CPU
+> microcode, but that's a bit more close to home with "firmware". We
+> could ask users on the new system data request API I am building
+> to describe the type of file being used, as I agree differentiating
+> this for security purposes might be important. So other than just
+> file type we could have sub type category, then we could have,
+>
+> SECURITY_FILECHECK_SYSDATA, and then:
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index d600417..c31e17a 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -453,7 +453,7 @@ static int spi_cmd_complete(u8 cmd, uint32_t adr, u8 *b, uint32_t sz, u8 clockle
- 	if ((cmd == CMD_INTERNAL_READ) || (cmd == CMD_SINGLE_READ)
- 	    || (cmd == CMD_DMA_READ) || (cmd == CMD_DMA_EXT_READ)) {
- 		int retry;
--		/* uint16_t crc1, crc2; */
-+		/* u16 crc1, crc2; */
- 		u8 crc[2];
- 		/**
- 		 * Data Respnose header
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c287301..c76134a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -285,9 +285,9 @@ struct Ack_session_info;
- struct Ack_session_info {
- 	uint32_t Ack_seq_num;
- 	uint32_t Bigger_Ack_num;
--	uint16_t src_port;
--	uint16_t dst_port;
--	uint16_t status;
-+	u16 src_port;
-+	u16 dst_port;
-+	u16 status;
- };
- 
- typedef struct {
-@@ -1848,7 +1848,7 @@ static int wilc_wlan_cfg_set(int start, uint32_t wid, u8 *buffer, uint32_t buffe
- 		p->cfg_frame_offset = 0;
- 
- 	offset = p->cfg_frame_offset;
--	ret_size = p->cif_func.cfg_wid_set(p->cfg_frame.frame, offset, (uint16_t)wid, buffer, buffer_size);
-+	ret_size = p->cif_func.cfg_wid_set(p->cfg_frame.frame, offset, (u16)wid, buffer, buffer_size);
- 	offset += ret_size;
- 	p->cfg_frame_offset = offset;
- 
-@@ -1887,7 +1887,7 @@ static int wilc_wlan_cfg_get(int start, uint32_t wid, int commit, uint32_t drvHa
- 		p->cfg_frame_offset = 0;
- 
- 	offset = p->cfg_frame_offset;
--	ret_size = p->cif_func.cfg_wid_get(p->cfg_frame.frame, offset, (uint16_t)wid);
-+	ret_size = p->cif_func.cfg_wid_get(p->cfg_frame.frame, offset, (u16)wid);
- 	offset += ret_size;
- 	p->cfg_frame_offset = offset;
- 
-@@ -1917,7 +1917,7 @@ static int wilc_wlan_cfg_get_val(uint32_t wid, u8 *buffer, uint32_t buffer_size)
- 	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
- 	int ret;
- 
--	ret = p->cif_func.cfg_wid_get_val((uint16_t)wid, buffer, buffer_size);
-+	ret = p->cif_func.cfg_wid_get_val((u16)wid, buffer, buffer_size);
- 
- 	return ret;
- }
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index d7fd07b..0f26c13 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -304,9 +304,9 @@ typedef struct {
- } wilc_cfg_rsp_t;
- 
- typedef struct {
--	int (*cfg_wid_set)(u8 *, uint32_t, uint16_t, u8 *, int);
--	int (*cfg_wid_get)(u8 *, uint32_t, uint16_t);
--	int (*cfg_wid_get_val)(uint16_t, u8 *, uint32_t);
-+	int (*cfg_wid_set)(u8 *, uint32_t, u16, u8 *, int);
-+	int (*cfg_wid_get)(u8 *, uint32_t, u16);
-+	int (*cfg_wid_get_val)(u16, u8 *, uint32_t);
- 	int (*rx_indicate)(u8 *, int, wilc_cfg_rsp_t *);
- 	int (*cfg_init)(wilc_debug_func);
- } wilc_cfg_func_t;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 8223b5f..f5bbbe8 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -160,7 +160,7 @@ static wilc_cfg_str_t g_cfg_str[] = {
-  *
-  ********************************************/
- 
--static int wilc_wlan_cfg_set_byte(u8 *frame, uint32_t offset, uint16_t id, u8 val8)
-+static int wilc_wlan_cfg_set_byte(u8 *frame, uint32_t offset, u16 id, u8 val8)
- {
- 	u8 *buf;
- 
-@@ -176,7 +176,7 @@ static int wilc_wlan_cfg_set_byte(u8 *frame, uint32_t offset, uint16_t id, u8 va
- 	return 4;
- }
- 
--static int wilc_wlan_cfg_set_hword(u8 *frame, uint32_t offset, uint16_t id, uint16_t val16)
-+static int wilc_wlan_cfg_set_hword(u8 *frame, uint32_t offset, u16 id, u16 val16)
- {
- 	u8 *buf;
- 
-@@ -194,7 +194,7 @@ static int wilc_wlan_cfg_set_hword(u8 *frame, uint32_t offset, uint16_t id, uint
- 	return 5;
- }
- 
--static int wilc_wlan_cfg_set_word(u8 *frame, uint32_t offset, uint16_t id, uint32_t val32)
-+static int wilc_wlan_cfg_set_word(u8 *frame, uint32_t offset, u16 id, uint32_t val32)
- {
- 	u8 *buf;
- 
-@@ -214,7 +214,7 @@ static int wilc_wlan_cfg_set_word(u8 *frame, uint32_t offset, uint16_t id, uint3
- 	return 7;
- }
- 
--static int wilc_wlan_cfg_set_str(u8 *frame, uint32_t offset, uint16_t id, u8 *str, uint32_t size)
-+static int wilc_wlan_cfg_set_str(u8 *frame, uint32_t offset, u16 id, u8 *str, uint32_t size)
- {
- 	u8 *buf;
- 
-@@ -233,7 +233,7 @@ static int wilc_wlan_cfg_set_str(u8 *frame, uint32_t offset, uint16_t id, u8 *st
- 	return (size + 3);
- }
- 
--static int wilc_wlan_cfg_set_bin(u8 *frame, uint32_t offset, uint16_t id, u8 *b, uint32_t size)
-+static int wilc_wlan_cfg_set_bin(u8 *frame, uint32_t offset, u16 id, u8 *b, uint32_t size)
- {
- 	u8 *buf;
- 	uint32_t i;
-@@ -385,7 +385,7 @@ static int wilc_wlan_parse_info_frame(u8 *info, int size)
-  *
-  ********************************************/
- 
--static int wilc_wlan_cfg_set_wid(u8 *frame, uint32_t offset, uint16_t id, u8 *buf, int size)
-+static int wilc_wlan_cfg_set_wid(u8 *frame, uint32_t offset, u16 id, u8 *buf, int size)
- {
- 	u8 type = (id >> 12) & 0xf;
- 	int ret = 0;
-@@ -395,7 +395,7 @@ static int wilc_wlan_cfg_set_wid(u8 *frame, uint32_t offset, uint16_t id, u8 *bu
- 			ret = wilc_wlan_cfg_set_byte(frame, offset, id, *buf);
- 	} else if (type == 1) {                 /* half word command */
- 		if (size >= 2)
--			ret = wilc_wlan_cfg_set_hword(frame, offset, id, *((uint16_t *)buf));
-+			ret = wilc_wlan_cfg_set_hword(frame, offset, id, *((u16 *)buf));
- 	} else if (type == 2) {                 /* word command */
- 		if (size >= 4)
- 			ret = wilc_wlan_cfg_set_word(frame, offset, id, *((uint32_t *)buf));
-@@ -410,7 +410,7 @@ static int wilc_wlan_cfg_set_wid(u8 *frame, uint32_t offset, uint16_t id, u8 *bu
- 	return ret;
- }
- 
--static int wilc_wlan_cfg_get_wid(u8 *frame, uint32_t offset, uint16_t id)
-+static int wilc_wlan_cfg_get_wid(u8 *frame, uint32_t offset, u16 id)
- {
- 	u8 *buf;
- 
-@@ -425,7 +425,7 @@ static int wilc_wlan_cfg_get_wid(u8 *frame, uint32_t offset, uint16_t id)
- 	return 2;
- }
- 
--static int wilc_wlan_cfg_get_wid_value(uint16_t wid, u8 *buffer, uint32_t buffer_size)
-+static int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, uint32_t buffer_size)
- {
- 	uint32_t type = (wid >> 12) & 0xf;
- 	int i, ret = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index bcff29c..5af0617 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -11,13 +11,13 @@
- #define WILC_WLAN_CFG_H
- 
- typedef struct {
--	uint16_t id;
--	uint16_t val;
-+	u16 id;
-+	u16 val;
- } wilc_cfg_byte_t;
- 
- typedef struct {
--	uint16_t id;
--	uint16_t val;
-+	u16 id;
-+	u16 val;
- } wilc_cfg_hword_t;
- 
- typedef struct {
+I object to executable code being called data. :)
+
+> SECURITY_FILE_SYSDATA_FW
+> SECURITY_FILE_SYSDATA_MICROCODE
+> SECURITY_FILE_SYSDATA_EEPROM
+> SECURITY_FILE_SYSDATA_POLICY (for 802.11 regulatory I suppose)
+
+The exception to the firmware loading is data, so the primary name
+should be firmware. Regardless, if we want distinct objects, just name
+them:
+
+SECURITY_FILE_FIRMWARE
+SECURITY_FILE_SYSDATA
+
+Do we need finer-grain sub types?
+
+>
+> If we do this then we could juse have:
+>
+> SECURITY_FILECHECK_KEXEC and on that have substypes:
+>
+> SECURITY_FILE_KEXEC_KERNEL
+> SECURITY_FILE_KEXEC_INITRAMFS
+>
+> Would that be desirable and help grow this to be easily extensible?
+>
+>   Luis
+
+-Kees
+
 -- 
-2.5.1
-
+Kees Cook
+Chrome OS Security
