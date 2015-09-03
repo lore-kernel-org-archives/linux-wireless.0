@@ -1,142 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:55082 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755443AbbI3L1J (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:34282 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885AbbICIo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 07:27:09 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: netdev@vger.kernel.org
-Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Arnd Bergmann <arnd@arndb.de>, coreteam@netfilter.org,
-	intel-wired-lan@lists.osuosl.org, linux-api@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net, linux-can@vger.kernel.org,
-	linux-sctp@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org
-Subject: [PATCH 00/12] net: assorted y2038 changes
-Date: Wed, 30 Sep 2015 13:26:30 +0200
-Message-Id: <1443612402-3000775-1-git-send-email-arnd@arndb.de> (sfid-20150930_133101_461087_3C2479BF)
+	Thu, 3 Sep 2015 04:44:29 -0400
+Received: by laeb10 with SMTP id b10so24075541lae.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2015 01:44:28 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: split switch_vif_chanctx guts
+Date: Thu,  3 Sep 2015 10:44:51 +0200
+Message-Id: <1441269892-438-1-git-send-email-michal.kazior@tieto.com> (sfid-20150903_104434_291307_EF304D4C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+This is necessary to make vdev restarting logic
+reusable later.
 
-This is a set of changes for network drivers and core code to
-get rid of the use of time_t and derived data structures.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 168 ++++++++++++++++++----------------
+ 1 file changed, 89 insertions(+), 79 deletions(-)
 
-I have a longer set of patches that enables me to build kernels
-with the time_t definition removed completely as a help to find
-y2038 overflow issues. This is the subset for networking that
-contains all code that has a reasonable way of fixing at the
-moment and that is either commonly used (in one of the defconfigs)
-or that blocks building a whole subsystem.
-
-Most of the patches in this series should be noncontroversial,
-but the last two that I marked [RFC] are a bit tricky and
-need input from people that are more familiar with the code than
-I am. All 12 patches are independent of one another and can
-be applied in any order, so feel free to pick all that look
-good.
-
-Patches that are not included here are:
-
- - disabling less common device drivers that I don't have a fix
-   for yet, this includes
-	drivers/net/ethernet/brocade/bna/bfa_ioc.c
-	drivers/net/ethernet/qlogic/netxen/netxen_nic_hw.c
-	drivers/net/ethernet/tile/tilegx.c
-	drivers/net/hamradio/baycom_ser_fdx.c
-	drivers/net/wireless/ath/ath10k/core.h
-	drivers/net/wireless/ath/ath9k/
-	drivers/net/wireless/ath/ath9k/
-	drivers/net/wireless/atmel.c
-	drivers/net/wireless/prism54/isl_38xx.c
-	drivers/net/wireless/rt2x00/rt2x00debug.c
-	drivers/net/wireless/rtlwifi/
-	drivers/net/wireless/ti/wlcore/
-	drivers/staging/ozwpan/
-	net/atm/mpoa_caches.c
-	net/atm/mpoa_proc.c
-	net/dccp/probe.c
-	net/ipv4/tcp_probe.c
-	net/netfilter/nfnetlink_queue_core.c
-	net/netfilter/nfnetlink_queue_core.c
-	net/netfilter/xt_time.c
-	net/openvswitch/flow.c
-	net/sctp/probe.c
-	net/sunrpc/auth_gss/
-	net/sunrpc/svcauth_unix.c
-	net/vmw_vsock/af_vsock.c
-   We'll get there eventually, or we an add a dependency to ensure
-   they are not built on 32-bit kernels that need to survive
-   beyond 2038. Most of these should be really easy to fix.
-
- - recvmmsg/sendmmsg system calls: patches have been sent out
-   as part of the syscall series, need a little more work and
-   review
-
- - SIOCGSTAMP/SIOCGSTAMPNS/ ioctl calls: tricky, need to discuss
-   with some folks at kernel summit
-
- - SO_RCVTIMEO/SO_SNDTIMEO/SO_TIMESTAMP/SO_TIMESTAMPNS socket
-   opt: similar and related to the ioctl
-
- - mmapped packet socket: need to create v4 of the API, nontrivial
-
- - pktgen: sends 32-bit timestamps over network, need to find out
-   if using unsigned stamps is good enough
-
- - af_rxpc: similar to pktgen, uses 32-bit times for deadlines
-
- - ppp ioctl: patch is being worked on, nontrivial but doable
-
-	Arnd
-
-Arnd Bergmann (12):
-  net: fec: avoid timespec use
-  net: stmmac: avoid using timespec
-  net: igb: avoid using timespec
-  mwifiex: use ktime_get_real for timestamping
-  mwifiex: avoid gettimeofday in ba_threshold setting
-  mac80211: use ktime_get_seconds
-  atm: hide 'struct zatm_t_hist'
-  nfnetlink: use y2038 safe timestamp
-  ipv6: use ktime_t for internal timestamps
-  net: sctp: avoid incorrect time_t use
-  [RFC] ipv4: avoid timespec in timestamp computation
-  [RFC] can: avoid using timeval for uapi
-
- drivers/net/ethernet/freescale/fec_ptp.c          |  6 ++--
- drivers/net/ethernet/intel/igb/igb.h              |  4 +--
- drivers/net/ethernet/intel/igb/igb_main.c         | 15 +++++-----
- drivers/net/ethernet/intel/igb/igb_ptp.c          |  8 +++---
- drivers/net/ethernet/stmicro/stmmac/stmmac_main.c |  8 ++++--
- drivers/net/wireless/mwifiex/11n_aggr.c           |  4 +--
- drivers/net/wireless/mwifiex/wmm.c                | 15 +++-------
- include/linux/timekeeping.h                       |  2 ++
- include/uapi/linux/atm_zatm.h                     |  3 +-
- include/uapi/linux/can/bcm.h                      |  7 ++++-
- kernel/time/timekeeping.c                         | 34 +++++++++++++++++++++++
- net/can/bcm.c                                     | 15 ++++++----
- net/ipv4/icmp.c                                   |  8 ++----
- net/ipv4/ip_options.c                             |  9 ++----
- net/ipv6/mip6.c                                   | 16 +++++------
- net/mac80211/sta_info.c                           |  8 ++----
- net/netfilter/nfnetlink_log.c                     |  6 ++--
- net/sctp/sm_make_chunk.c                          |  2 +-
- net/sctp/sm_statefuns.c                           |  2 +-
- 19 files changed, 99 insertions(+), 73 deletions(-)
-
-Cc: coreteam@netfilter.org
-Cc: intel-wired-lan@lists.osuosl.org
-Cc: linux-api@vger.kernel.org
-Cc: linux-atm-general@lists.sourceforge.net
-Cc: linux-can@vger.kernel.org
-Cc: linux-sctp@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netfilter-devel@vger.kernel.org
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 64674c955d44..13e9d5659e96 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6218,6 +6218,94 @@ ath10k_mac_update_rx_channel(struct ath10k *ar,
+ 	rcu_read_unlock();
+ }
+ 
++static void
++ath10k_mac_update_vif_chan(struct ath10k *ar,
++			   struct ieee80211_vif_chanctx_switch *vifs,
++			   int n_vifs)
++{
++	struct ath10k_vif *arvif;
++	int ret;
++	int i;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	/* First stop monitor interface. Some FW versions crash if there's a
++	 * lone monitor interface.
++	 */
++	if (ar->monitor_started)
++		ath10k_monitor_stop(ar);
++
++	for (i = 0; i < n_vifs; i++) {
++		arvif = ath10k_vif_to_arvif(vifs[i].vif);
++
++		ath10k_dbg(ar, ATH10K_DBG_MAC,
++			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d\n",
++			   arvif->vdev_id,
++			   vifs[i].old_ctx->def.chan->center_freq,
++			   vifs[i].new_ctx->def.chan->center_freq,
++			   vifs[i].old_ctx->def.width,
++			   vifs[i].new_ctx->def.width);
++
++		if (WARN_ON(!arvif->is_started))
++			continue;
++
++		if (WARN_ON(!arvif->is_up))
++			continue;
++
++		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
++		if (ret) {
++			ath10k_warn(ar, "failed to down vdev %d: %d\n",
++				    arvif->vdev_id, ret);
++			continue;
++		}
++	}
++
++	/* All relevant vdevs are downed and associated channel resources
++	 * should be available for the channel switch now.
++	 */
++
++	spin_lock_bh(&ar->data_lock);
++	ath10k_mac_update_rx_channel(ar, NULL, vifs, n_vifs);
++	spin_unlock_bh(&ar->data_lock);
++
++	for (i = 0; i < n_vifs; i++) {
++		arvif = ath10k_vif_to_arvif(vifs[i].vif);
++
++		if (WARN_ON(!arvif->is_started))
++			continue;
++
++		if (WARN_ON(!arvif->is_up))
++			continue;
++
++		ret = ath10k_mac_setup_bcn_tmpl(arvif);
++		if (ret)
++			ath10k_warn(ar, "failed to update bcn tmpl during csa: %d\n",
++				    ret);
++
++		ret = ath10k_mac_setup_prb_tmpl(arvif);
++		if (ret)
++			ath10k_warn(ar, "failed to update prb tmpl during csa: %d\n",
++				    ret);
++
++		ret = ath10k_vdev_restart(arvif, &vifs[i].new_ctx->def);
++		if (ret) {
++			ath10k_warn(ar, "failed to restart vdev %d: %d\n",
++				    arvif->vdev_id, ret);
++			continue;
++		}
++
++		ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
++					 arvif->bssid);
++		if (ret) {
++			ath10k_warn(ar, "failed to bring vdev up %d: %d\n",
++				    arvif->vdev_id, ret);
++			continue;
++		}
++	}
++
++	ath10k_monitor_recalc(ar);
++}
++
+ static int
+ ath10k_mac_op_add_chanctx(struct ieee80211_hw *hw,
+ 			  struct ieee80211_chanctx_conf *ctx)
+@@ -6402,91 +6490,13 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 				 enum ieee80211_chanctx_switch_mode mode)
+ {
+ 	struct ath10k *ar = hw->priv;
+-	struct ath10k_vif *arvif;
+-	int ret;
+-	int i;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC,
+ 		   "mac chanctx switch n_vifs %d mode %d\n",
+ 		   n_vifs, mode);
+-
+-	/* First stop monitor interface. Some FW versions crash if there's a
+-	 * lone monitor interface.
+-	 */
+-	if (ar->monitor_started)
+-		ath10k_monitor_stop(ar);
+-
+-	for (i = 0; i < n_vifs; i++) {
+-		arvif = ath10k_vif_to_arvif(vifs[i].vif);
+-
+-		ath10k_dbg(ar, ATH10K_DBG_MAC,
+-			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d\n",
+-			   arvif->vdev_id,
+-			   vifs[i].old_ctx->def.chan->center_freq,
+-			   vifs[i].new_ctx->def.chan->center_freq,
+-			   vifs[i].old_ctx->def.width,
+-			   vifs[i].new_ctx->def.width);
+-
+-		if (WARN_ON(!arvif->is_started))
+-			continue;
+-
+-		if (WARN_ON(!arvif->is_up))
+-			continue;
+-
+-		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
+-		if (ret) {
+-			ath10k_warn(ar, "failed to down vdev %d: %d\n",
+-				    arvif->vdev_id, ret);
+-			continue;
+-		}
+-	}
+-
+-	/* All relevant vdevs are downed and associated channel resources
+-	 * should be available for the channel switch now.
+-	 */
+-
+-	spin_lock_bh(&ar->data_lock);
+-	ath10k_mac_update_rx_channel(ar, NULL, vifs, n_vifs);
+-	spin_unlock_bh(&ar->data_lock);
+-
+-	for (i = 0; i < n_vifs; i++) {
+-		arvif = ath10k_vif_to_arvif(vifs[i].vif);
+-
+-		if (WARN_ON(!arvif->is_started))
+-			continue;
+-
+-		if (WARN_ON(!arvif->is_up))
+-			continue;
+-
+-		ret = ath10k_mac_setup_bcn_tmpl(arvif);
+-		if (ret)
+-			ath10k_warn(ar, "failed to update bcn tmpl during csa: %d\n",
+-				    ret);
+-
+-		ret = ath10k_mac_setup_prb_tmpl(arvif);
+-		if (ret)
+-			ath10k_warn(ar, "failed to update prb tmpl during csa: %d\n",
+-				    ret);
+-
+-		ret = ath10k_vdev_restart(arvif, &vifs[i].new_ctx->def);
+-		if (ret) {
+-			ath10k_warn(ar, "failed to restart vdev %d: %d\n",
+-				    arvif->vdev_id, ret);
+-			continue;
+-		}
+-
+-		ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-					 arvif->bssid);
+-		if (ret) {
+-			ath10k_warn(ar, "failed to bring vdev up %d: %d\n",
+-				    arvif->vdev_id, ret);
+-			continue;
+-		}
+-	}
+-
+-	ath10k_monitor_recalc(ar);
++	ath10k_mac_update_vif_chan(ar, vifs, n_vifs);
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return 0;
 -- 
-2.1.0.rc2
+2.1.4
 
