@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41221 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33499 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752915AbbIGBp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 21:45:28 -0400
+	id S1752185AbbICCjd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Sep 2015 22:39:33 -0400
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
-	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
-Date: Sun, 06 Sep 2015 21:45:26 -0400
-In-Reply-To: <87y4gjfw10.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Sun, 06 Sep 2015 17:43:39 +0300")
-Message-ID: <wrfjfv2rf1e1.fsf@redhat.com> (sfid-20150907_034541_821779_963D95B7)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	<1441032517.13980.21.camel@sipsolutions.net>
+	<wrfjmvx73u0l.fsf@redhat.com>
+	<1441120044.2441.9.camel@sipsolutions.net>
+	<wrfj4mjcqn3x.fsf@redhat.com>
+Date: Wed, 02 Sep 2015 22:39:30 -0400
+In-Reply-To: <wrfj4mjcqn3x.fsf@redhat.com> (Jes Sorensen's message of "Wed, 02
+	Sep 2015 21:59:30 -0400")
+Message-ID: <wrfjvbbsp6ot.fsf@redhat.com> (sfid-20150903_043952_111387_C77D0374)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes.Sorensen@redhat.com writes:
->
->> Per default only devices I have actually tested will be enabled. If
->> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
->> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
->> test results back to me.
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>         sta_priv->short_preamble = false;
 >>
->> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
->> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
->> to which module you load and/or use modprobe blacklists.
+>> I don't think there's any need to track it, especially since you only
+>> use it in TX where you have the TX info data about it.
 >
-> May clash? So how does this work in practise? Is the clash referring
-> CONFIG_RTL8XXXU_UNTESTED enabled or disabled?
->
-> I think we should only have one driver automatically supporting certain
-> hardware, and not have a driver randomly chosen and forcing users to use
-> a blacklist.
+> Oh, I hadn't spotted that information in struct tx_info - in that case I
+> ought to be able to get rid of this one.
 
-We already have the clash, if you enable CONFIG_RTL8192U in staging it
-clashes with rtlwifi's CONFIG_RTL8192CU. Ripping out the above two
-drivers at this point isn't going to do users any good.
+I went back and looked at this, and now I remember why I wrote the code
+the way I did. The Realtek firmware handles rate control, so once I set
+IEEE80211_HW_HAS_RATE_CONTROL, I never see
+rate_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE nor
+tx_info->control_short_preamble.  In order to know whether to tell the
+firmware to request short preamble or not, I needed to track whether the
+sta supports it.
 
-> Also how do we make sure that distros don't enable
-> CONFIG_RTL8XXXU_UNTESTED? They are notarious of enabling kconfig options
-> without thinking.
-
-Some distros enable staging whether you ask them or not. I think
-CONFIG_RTL8XXXYU_UNTESTED is pretty safe and will most likely just work
-for the devices on that list, but the driver will spit out a warning
-asking the person to report test results to me.
+Do you have a suggestion for how to handle this in a better way?
 
 Cheers,
 Jes
