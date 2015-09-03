@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54202 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:42168 "EHLO
 	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752869AbbIUEiQ (ORCPT
+	with ESMTP id S1751233AbbICBT1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 00:38:16 -0400
-Date: Sun, 20 Sep 2015 19:00:24 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: rachel.kim@atmel.com, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH 07/18] staging: wilc1000: replaces PRINT_D with netdev_err
-Message-ID: <20150921020024.GB22262@kroah.com> (sfid-20150921_063823_267238_2178940E)
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
- <1442731885-4344-7-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 2 Sep 2015 21:19:27 -0400
+Date: Wed, 2 Sep 2015 18:19:26 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: =?iso-8859-1?Q?Rapha=EBl?= Beamonte <raphael.beamonte@gmail.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Rachel Kim <rachel.kim@atmel.com>,
+	Dean Lee <dean.lee@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCHv4 1/2] staging: wilc1000: remove FREE_WILC_BUFFER()
+Message-ID: <20150903011926.GA30914@kroah.com> (sfid-20150903_032005_498697_71191178)
+References: <20150819025942.GD4588@kroah.com>
+ <cover.1439953865.git.raphael.beamonte@gmail.com>
+ <98b8f344a4c610b9273a0c753a1ec470dee10153.1439953865.git.raphael.beamonte@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442731885-4344-7-git-send-email-chaehyun.lim@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <98b8f344a4c610b9273a0c753a1ec470dee10153.1439953865.git.raphael.beamonte@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 20, 2015 at 03:51:14PM +0900, Chaehyun Lim wrote:
-> This patch replaces PRINT_D with netdev_err which is used at error
-> checking.
+On Tue, Aug 18, 2015 at 11:14:49PM -0400, Raphaël Beamonte wrote:
+> It was just a wrapper around kfree(), so call that instead.
 > 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> Signed-off-by: Raphaël Beamonte <raphael.beamonte@gmail.com>
 > ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index 216da0c..bf9d9ee 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -3694,17 +3694,17 @@ void wilc_free_wiphy(struct net_device *net)
->  	netdev_info(net, "Unregistering wiphy\n");
->  
->  	if (!net) {
-> -		PRINT_D(INIT_DBG, "net_device is NULL\n");
-> +		netdev_err(net, "net_device is NULL\n");
+>  drivers/staging/wilc1000/wilc_exported_buf.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
 
-Same comment as the previous one, this conversion is not correct.
+Turns out this file is never even built, you should just remove it :)
 
-thanks,
-
-greg k-h
