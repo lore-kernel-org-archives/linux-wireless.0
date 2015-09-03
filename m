@@ -1,43 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53251 "EHLO sipsolutions.net"
+Received: from mx2.suse.de ([195.135.220.15]:53839 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752899AbbIRJIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:08:00 -0400
-Message-ID: <1442567277.2168.7.camel@sipsolutions.net> (sfid-20150918_110805_664486_283E5058)
-Subject: Re: [PATCHv2] mac80211: Copy tx'ed beacons to monitor mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org
-Date: Fri, 18 Sep 2015 11:07:57 +0200
-In-Reply-To: <1441784792-8847-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20150909_094823_520248_88378E64)
-References: <1441193011-2040-2-git-send-email-helmut.schaa@googlemail.com>
-	 <1441784792-8847-1-git-send-email-helmut.schaa@googlemail.com>
-	 (sfid-20150909_094823_520248_88378E64)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1755189AbbICA3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Sep 2015 20:29:17 -0400
+Date: Thu, 3 Sep 2015 02:29:14 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Cc: Kees Cook <keescook@chromium.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	"Roberts, William C" <william.c.roberts@intel.com>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
+	"serge@hallyn.com" <serge@hallyn.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Paul Moore <paul@paul-moore.com>,
+	Eric Paris <eparis@parisplace.org>,
+	SE Linux <selinux@tycho.nsa.gov>,
+	Stephen Smalley <sds@tycho.nsa.gov>,
+	"Schaufler, Casey" <casey.schaufler@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
+	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
+	=?utf-8?Q?Vojt=C4=9Bch_Pavl=C3=ADk?= <vojtech@suse.com>,
+	Kyle McMartin <kyle@kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jay Schulist <jschlst@samba.org>,
+	Daniel Borkmann <dborkman@redhat.com>,
+	Alexei Starovoitov <ast@plumgrid.com>
+Subject: Re: Linux Firmware Signing
+Message-ID: <20150903002914.GM8051@wotan.suse.de> (sfid-20150903_022933_580350_5D10A110)
+References: <1440464705.2737.36.camel@linux.vnet.ibm.com>
+ <14540.1440599584@warthog.procyon.org.uk>
+ <31228.1440671938@warthog.procyon.org.uk>
+ <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
+ <20150827212907.GF8051@wotan.suse.de>
+ <CAGXu5jKF6CBAADoybZHRCzYAepcZYqpbck1gTAeV1p7iuOVAvw@mail.gmail.com>
+ <20150902000915.GW8051@wotan.suse.de>
+ <1441164905.17898.86.camel@linux.vnet.ibm.com>
+ <20150902184604.GB8051@wotan.suse.de>
+ <1441238736.4172.12.camel@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441238736.4172.12.camel@linux.vnet.ibm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-09 at 09:46 +0200, Helmut Schaa wrote:
-> When debugging wireless powersave issues on the AP side it's quite 
-> helpful
-> to see our own beacons that are transmitted by the hardware/driver. 
-> However,
-> this is not that easy since beacons don't pass through the regular TX 
-> queues.
+On Wed, Sep 02, 2015 at 08:05:36PM -0400, Mimi Zohar wrote:
+> On Wed, 2015-09-02 at 20:46 +0200, Luis R. Rodriguez wrote:
+> > On Tue, Sep 01, 2015 at 11:35:05PM -0400, Mimi Zohar wrote:
+> > > > OK great, I think that instead of passing the actual routine name we should
+> > > > instead pass an enum type for to the LSM, that'd be easier to parse and we'd
+> > > > then have each case well documented. Each LSM then could add its own
+> > > > documetnation for this and can switch on it. If we went with a name we'd have
+> > > > to to use something like __func__ and then parse that, its not clear if we need
+> > > > to get that specific.
+> > > 
+> > > Agreed.  IMA already defines an enumeration.
+> > > 
+> > > /* IMA policy related functions */
+> > > enum ima_hooks { FILE_CHECK = 1, MMAP_CHECK, BPRM_CHECK, MODULE_CHECK,
+> > >                  FIRMWARE_CHECK, POLICY_CHECK, POST_SETATTR };
+> > > 
+> > 
+> > We want something that is not only useful for IMA but any other LSM,
+> > and FILE_CHECK seems very broad, not sure what BPRM_CHECK is even upon
+> > inspecting kernel code. Likewise for POST_SETATTR. POLICY_CHECK might
+> > be broad, perhaps its best we define then a generic set of enums to
+> > which IMA can map them to then and let it decide. This would ensure
+> > that the kernel defines each use caes for file inspection carefully,
+> > documents and defines them and if an LSM wants to bunch a set together
+> > it can do so easily with a switch statement to map set of generic
+> > file checks in kernel to a group it already handles.
 > 
-> Preferably drivers would call ieee80211_tx_status also for tx'ed 
-> beacons
-> but that's not always possible. Hence, just send a copy of each 
-> beacon
-> generated by ieee80211_beacon_get_tim to monitor devices when they 
-> are
-> getting fetched by the driver.
-> 
-> Also add a HW flag IEEE80211_HW_BEACON_TX_STATUS that can be used by
-> drivers to indicate that they report TX status for beacons.
-> 
-Applied.
+> The names are based on the calling security hook.   For a description of
+> each of these security hooks refer to include/linux/lsm_hooks.h.
 
-johannes
+I see, thanks, ok so BPRM_CHECK = for binary loading, are you folks
+really wanting to unify LSM hooks for firmware, modules, and binary
+data ?
+
+POST_SETATTR seems to be for inode_post_setxattr, so that as well?
+
+POLICY_CHECK seems broad, not sure what to relate that to exactly.
+Is this just SELinux polify files? Or is this something more broad?
+
+> > For instance at least in the short term we'd try to unify:
+> > 
+> > security_kernel_fw_from_file()
+> > security_kernel_module_from_file()
+> > 
+> > to perhaps:
+> > 
+> > security_kernel_from_file()
+> > 
+> > As far, as far as I can tell, the only ones we'd be ready to start
+> > grouping immediately or with small amount of work rather soon:
+> > 
+> > /**
+> >  *
+> >  * enum security_filecheck - known kernel security file checks types
+> >  *
+> >  * @__SECURITY_FILECHECK_UNSPEC: attribute 0 reserved
+> >  * @SECURITY_FILECHECK_MODULE: the file being processed is a Linux kernel module
+> >  * @SECURITY_FILECHECK_SYSDATA: the file being processed is either a firmware
+> >  *	file or a system data file read from /lib/firmware/* by firmware_class
+> >  * @SECURITY_FILECHECK_KEXEC_KERNEL: the file being processed is a kernel file
+> >  * 	used by kexec
+> >  * @SECURITY_FILECHECK_KEXEC_INITRAMFS: the file being processed is an initramfs
+> >  * 	used by kexec
+> > 
+> >  * The kernel reads files directly from the filesystem for a series of
+> >  * operations.  The list of files the kernel reads from the filesystem are
+> >  * limited and each type of file consumed may have a different format and
+> >  * security vetting procedures. The kernel enables LSMs to vet for these files
+> >  * through a shared LSM hook prior to consumption. This list documents the
+> >  * different special kernel file types read by the kernel, it enables LSMs
+> >  * to vet for each differently if needed.
+> > enum security_filecheck {
+> > 	SECURITY_FILECHECK_UNSPEC,
+> > 	SECURITY_FILECHECK_MODULE,
+> > 	SECURITY_FILECHECK_SYSDATA,
+> > 	SECURITY_FILECHECK_KEXEC_KERNEL,
+> > 	SECURITY_FILECHECK_KEXEC_INITRAMFS,
+> > };
+> > 
+> > Provided the MOK thing or alternative gets addressed we could also soon add
+> > something for SELinux policy files but that needs to be discussed further
+> > it seems. If MOK is used would SECURITY_FILECHECK_POLICY_MOK be OK? Again
+> > this would likely need further discussion, its why I didn't list it above.
+> 
+> Oh, I'm really confused as to why MOK would be a separate hook.  I
+> thought the discussion was about using a key in the UEFI MOK DB for
+> verifying locally signed files.
+
+That's correct, and no I was not thinking of a separate hook but rather
+a type that lets the LSM know that MOK was used to sign the file consumed.
+
+  Luis
