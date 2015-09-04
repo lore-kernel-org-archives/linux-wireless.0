@@ -1,72 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34033 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbbIJTPH (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43254 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758620AbbIDQYA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:15:07 -0400
-Received: by padhy16 with SMTP id hy16so50953437pad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:07 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 09/31] staging: wilc1000: rename WILC_WFI_add_virt_intf
-Date: Fri, 11 Sep 2015 04:14:08 +0900
-Message-Id: <1441912470-3371-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211512_129887_80933964)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 4 Sep 2015 12:24:00 -0400
+Date: Fri, 4 Sep 2015 09:24:00 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "johnny.kim" <johnny.kim@atmel.com>
+Cc: Tony Cho <tony.cho@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, chris.park@atmel.com,
+	rachel.kim@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	jude.lee@atmel.com, robin.hwang@atmel.com, austin.shin@atmel.com,
+	adel.noureldin@atmel.com, adham.abozaeid@atmel.com,
+	Nicolas.FERRE@atmel.com
+Subject: Re: [PATCH 3/5] staging: wilc1000: use id value as argument
+Message-ID: <20150904162400.GA9753@kroah.com> (sfid-20150904_182415_667802_91350B64)
+References: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
+ <1440055974-9998-4-git-send-email-tony.cho@atmel.com>
+ <20150903013331.GA19804@kroah.com>
+ <55E7EFF8.2060705@atmel.com>
+ <20150903154718.GA27860@kroah.com>
+ <55E90EED.5010502@atmel.com>
+ <20150904035156.GA7793@kroah.com>
+ <55E933D3.4060302@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <55E933D3.4060302@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_add_virt_intf with wilc_add_virt_intf to
-avoid CamelCase.
+On Fri, Sep 04, 2015 at 03:01:55PM +0900, johnny.kim wrote:
+> 
+> 
+> On 2015년 09월 04일 12:51, Greg KH wrote:
+> >On Fri, Sep 04, 2015 at 12:24:29PM +0900, johnny.kim wrote:
+> >>
+> >>On 2015년 09월 04일 00:47, Greg KH wrote:
+> >>>On Thu, Sep 03, 2015 at 04:00:08PM +0900, johnny.kim wrote:
+> >>>>Hello Greg.
+> >>>>
+> >>>>On 2015년 09월 03일 10:33, Greg KH wrote:
+> >>>>>On Thu, Aug 20, 2015 at 04:32:52PM +0900, Tony Cho wrote:
+> >>>>>>From: Johnny Kim <johnny.kim@atmel.com>
+> >>>>>>
+> >>>>>>The driver communicates with the chipset via the address of handlers
+> >>>>>>to distinguish async data frame. The SendConfigPkt function gets the
+> >>>>>>pointer address indicating the handlers as the last argument, but this
+> >>>>>>requires redundant typecasting and does not support the 64 bit machine.
+> >>>>>>
+> >>>>>>This patch adds the function which assigns ID values instead of pointer
+> >>>>>>representing the driver handler to the address and then uses the ID
+> >>>>>>instead of pointer as the last argument of SendConfigPkt. The driver
+> >>>>>>also gets the handler's address from the ID in the data frame when it
+> >>>>>>receives them.
+> >>>>>>
+> >>>>>I don't understand this code at all.  You are randomly adding values to
+> >>>>>a list, and then assuming that you can use the index into that list for
+> >>>>>some type of representation?  As this is a local list, why not just use
+> >>>>>the real variables instead of having a list and dealing with them in
+> >>>>>this very ackward manner?
+> >>>>>
+> >>>>>In other words, I don't see the need for the list at all, just use the
+> >>>>>real types here, you have all the needed information (hint, if you know
+> >>>>>the index, you really know the data as well...)
+> >>>>>
+> >>>>The value is needed to send it to chipset and to distinguish async data
+> >>>>packet mutually.
+> >>>What is the value, the index or some random pointer?
+> >>The value of current patch substitutes the corresponding index for
+> >>some random pointer(= address of device handler).
+> >Ok.
+> >
+> >>>>The length of the data field is 4byte and the data field has been
+> >>>>filled with the address of pointer so far.
+> >>>So the data field can just be any random number, as long as it is
+> >>>consistent?  What does the chip do with the random number?
+> >>Current driver normally create a couple of network interface.
+> >Multiple network interfaces for the same hardware?
+> Yes. A chipset supports multiple network interface.
+> >>The driver can send some commands(data frame) to the network
+> >>interfaces at the same time and wait the results. Both driver and
+> >>chipset need unique value to distinguish whom the interface owner
+> >>of the commands is.
+> >>And the value always has same value while the interface is alive.
+> >But as you created the interfaces, just use a unique number for each.
+> >It could be a #define, as you know how many interfaces you will create,
+> >that's not a dynamic thing.  No need to keep looking up something in an
+> >index and converting to a structure.
+> I think your opinion is right only if the driver send some commands to
+> chipset. The driver should look for the network interface corresponding
+> to the #define value to know owner of data frame which received from
+> chipset. Network interface structure dynamically is allocated as 'ifconfig
+> up'
+> command of shell. As a result, look-up table is needed.
+> 
+> >>>>But this patch changes it to unique index value corresponding to the address
+> >>>>for 64bit address machine. If real type is used as your opinion, new patch
+> >>>>will have the same meaning with current code.
+> >>>index now, but was using a pointer before?  That sounds like you are
+> >>>changing the functionality.
+> >>>
+> >>>confused,
+> >>There is a reserved field to distinguish the data frames in chipset.
+> >>Because the field has 4byte space, this patch creates the index
+> >>corresponding to the pointer and uses the index to input the identifier
+> >>in the size instead of the pointer value.
+> >>
+> >>I'm sorry, too. It's not easy to explain it in English.
+> >It's not easy to explain that in any language :)
+> Thanks for your generous mind.
+> >As you "know" the interfaces you create, just use a "fixed" number for
+> >them, and refer to them that way.  No need to have an array and iterate
+> >over the whole array every time.
+> >
+> >There are lots of wrapper functions and pointers in this driver that
+> >need to be stripped away.  I think you will find the end result of all
+> >of that work to be much simpler, and smaller.  See the patches that I
+> >did for the driver this evening as an example, it removed code, and in
+> >doing so, also fixed a long-time bug.  There's a lot of work to be done
+> >here still...
+> >
+> >
+> I know current driver has a lot of stripping code and is heavy . My members
+> is waiting to send patches after x64bit issue is closed. And I improve this
+> driver continuously.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
+Ok, I really think this can be solved in a "cleaner" way, but due to all
+of the different layers in the code, it's hard to see how to do that at
+the moment.  I'll apply the patch, but note that I do think this needs
+to be fixed "properly" later on before the code is merged out of
+staging.
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+With this patch applied, there are still 2 build errors on x86_64, can
+you fix those up and send patches for them, and then we can turn off the
+CONFIG_BROKEN dependency.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ca7a36f..01d6e4d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3498,7 +3498,7 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 
- /**
-- *  @brief      WILC_WFI_add_virt_intf
-+ *  @brief      wilc_add_virt_intf
-  *  @details
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -3506,10 +3506,10 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 JUL 2012
-  *  @version	1.0
-  */
--struct wireless_dev *WILC_WFI_add_virt_intf(struct wiphy *wiphy, const char *name,
--						unsigned char name_assign_type,
--						enum nl80211_iftype type, u32 *flags,
--						struct vif_params *params)
-+struct wireless_dev *wilc_add_virt_intf(struct wiphy *wiphy, const char *name,
-+					unsigned char name_assign_type,
-+					enum nl80211_iftype type, u32 *flags,
-+					struct vif_params *params)
- {
- 	perInterface_wlan_t *nic;
- 	struct WILC_WFI_priv *priv;
-@@ -3567,7 +3567,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.get_key = wilc_get_key,
- 	.set_default_key = wilc_set_default_key,
- 	#ifdef WILC_AP_EXTERNAL_MLME
--	.add_virtual_intf = WILC_WFI_add_virt_intf,
-+	.add_virtual_intf = wilc_add_virt_intf,
- 	.del_virtual_intf = WILC_WFI_del_virt_intf,
- 	.change_virtual_intf = WILC_WFI_change_virt_intf,
- 
--- 
-2.5.1
+thanks,
 
+greg k-h
