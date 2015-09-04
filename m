@@ -1,80 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:33002 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbbICSs5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 14:48:57 -0400
-From: Alexander Kuleshov <kuleshovmail@gmail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Rachel Kim <rachel.kim@atmel.com>,
-	Dean Lee <dean.lee@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Alexander Kuleshov <kuleshovmail@gmail.com>
-Subject: [PATCH v2] staging/wilc1000: Use %pM format specifier to print mac address
-Date: Fri,  4 Sep 2015 00:48:14 +0600
-Message-Id: <1441306094-11162-1-git-send-email-kuleshovmail@gmail.com> (sfid-20150903_204919_263527_E4A3699F)
-In-Reply-To: <20150903184150.GA31230@kroah.com>
-References: <20150903184150.GA31230@kroah.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:48977 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758517AbbIDOiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2015 10:38:01 -0400
+Message-ID: <1441377476.1971.14.camel@sipsolutions.net> (sfid-20150904_163811_124987_F0D91096)
+Subject: pull-request: mac80211 2015-09-04
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Date: Fri, 04 Sep 2015 16:37:56 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-printk() supports %pM format specifier for printing 6-byte MAC/FDDI
-addresses in hex notation small buffers, let's use it intead of %x:%x...
+Hi,
 
-Signed-off-by: Alexander Kuleshov <kuleshovmail@gmail.com>
----
-Changelog:
+First pull request for this cycle, and the fix for the pointer issue is
+the first patch in it :) Since nobody really has devices with enough
+streams where this matters, it was pretty harmless though.
 
-v1 -> v2:
+Other than that, there are a few fixes all over - let me know if you
+see any issues.
 
-* In the first version of the patch was instruduced incorrect conversion,
-now there is previous formatting in the WILC_WFI_mon_xmit().
- 
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/linux_wlan.c     | 3 +--
- 2 files changed, 4 insertions(+), 5 deletions(-)
+johannes
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6b10bbb..48ee908 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -854,7 +854,7 @@ static s32 Handle_SetMacAddress(void *drvHandler, tstrHostIfSetMacAddress *pstrH
- 	strWID.enuWIDtype = WID_STR;
- 	strWID.ps8WidVal = mac_buf;
- 	strWID.s32ValueSize = ETH_ALEN;
--	PRINT_D(GENERIC_DBG, "mac addr = :%x:%x:%x:%x:%x:%x\n", strWID.ps8WidVal[0], strWID.ps8WidVal[1], strWID.ps8WidVal[2], strWID.ps8WidVal[3], strWID.ps8WidVal[4], strWID.ps8WidVal[5]);
-+	PRINT_D(GENERIC_DBG, "mac addr = :%pM\n", strWID.ps8WidVal);
- 	/*Sending Cfg*/
- 	s32Error = SendConfigPkt(SET_CFG, &strWID, 1, true, (u32)pstrWFIDrv);
- 	if (s32Error) {
-@@ -1965,8 +1965,8 @@ static s32 Handle_Connect(void *drvHandler, tstrHostIFconnectAttr *pstrHostIFcon
- 	if (pstrHostIFconnectAttr->pu8bssid != NULL) {
- 		WILC_memcpy(u8ConnectedSSID, pstrHostIFconnectAttr->pu8bssid, ETH_ALEN);
- 
--		PRINT_D(GENERIC_DBG, "save Bssid = %x:%x:%x:%x:%x:%x\n", (pstrHostIFconnectAttr->pu8bssid[0]), (pstrHostIFconnectAttr->pu8bssid[1]), (pstrHostIFconnectAttr->pu8bssid[2]), (pstrHostIFconnectAttr->pu8bssid[3]), (pstrHostIFconnectAttr->pu8bssid[4]), (pstrHostIFconnectAttr->pu8bssid[5]));
--		PRINT_D(GENERIC_DBG, "save bssid = %x:%x:%x:%x:%x:%x\n", (u8ConnectedSSID[0]), (u8ConnectedSSID[1]), (u8ConnectedSSID[2]), (u8ConnectedSSID[3]), (u8ConnectedSSID[4]), (u8ConnectedSSID[5]));
-+		PRINT_D(GENERIC_DBG, "save Bssid = %pM\n", pstrHostIFconnectAttr->pu8bssid);
-+		PRINT_D(GENERIC_DBG, "save bssid = %pM\n", u8ConnectedSSID);
- 	}
- 
- 	s32Error = SendConfigPkt(SET_CFG, strWIDList, u32WidsCount, false, (u32)pstrWFIDrv);
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index b352c50..b65e0ae 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2071,8 +2071,7 @@ int mac_open(struct net_device *ndev)
- 	Set_machw_change_vir_if(false);
- 
- 	host_int_get_MacAddress(priv->hWILCWFIDrv, mac_add);
--	PRINT_D(INIT_DBG, "Mac address: %x:%x:%x:%x:%x:%x\n", mac_add[0], mac_add[1], mac_add[2],
--		mac_add[3], mac_add[4], mac_add[5]);
-+	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
- 
- 	/* loop through the NUM of supported devices and set the MAC address */
- 	for (i = 0; i < g_linux_wlan->u8NoIfcs; i++) {
--- 
-2.5.0
+The following changes since commit dd5cdb48edfd34401799056a9acf61078d773f90:
 
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2015-09-03 08:08:17 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-09-04
+
+for you to fetch changes up to ef9be10c8c999e00b239eec24cf01952a308f8e7:
+
+  mac80211: reject software RSSI CQM with beacon filtering (2015-09-04 15:23:22 +0200)
+
+----------------------------------------------------------------
+For the first round of fixes, we have this:
+ * fix for the sizeof() pointer type issue
+ * a fix for regulatory getting into a restore loop
+ * a fix for rfkill global 'all' state, it needs to be stored
+   everywhere to apply correctly to new rfkill instances
+ * properly refuse CQM RSSI when it cannot actually be used
+ * protect HT TDLS traffic properly in non-HT networks
+ * don't incorrectly advertise 80 MHz support when not allowed
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      mac80211: avoid VHT usage with no 80MHz chans allowed
+
+Avri Altman (1):
+      mac80211: protect non-HT BSS when HT TDLS traffic exists
+
+Johannes Berg (1):
+      mac80211: reject software RSSI CQM with beacon filtering
+
+João Paulo Rechi Vita (1):
+      rfkill: Copy "all" global state to other types
+
+Maciej S. Szmigiero (1):
+      cfg80211: regulatory: restore proper user alpha2
+
+Thierry Reding (1):
+      mac80211: Do not use sizeof() on pointer type
+
+ include/net/mac80211.h |  4 ++-
+ net/mac80211/cfg.c     |  4 +++
+ net/mac80211/mlme.c    | 16 ++++++++++++
+ net/mac80211/rate.c    |  2 +-
+ net/mac80211/tdls.c    | 70 +++++++++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/vht.c     | 15 +++++++++++
+ net/rfkill/core.c      | 10 +++++++-
+ net/wireless/reg.c     |  2 +-
+ 8 files changed, 116 insertions(+), 7 deletions(-)
