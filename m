@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55214 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950AbbIFO7N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2015 10:59:13 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440968574-29490-2-git-send-email-Jes.Sorensen@redhat.com>
-Date: Sun, 06 Sep 2015 17:59:04 +0300
-In-Reply-To: <1440968574-29490-2-git-send-email-Jes.Sorensen@redhat.com> (Jes
-	Sorensen's message of "Sun, 30 Aug 2015 17:02:54 -0400")
-Message-ID: <87twr7fvbb.fsf@kamboji.qca.qualcomm.com> (sfid-20150906_165930_436177_0B6F7C1F)
+Received: from mout2.freenet.de ([195.4.92.92]:36419 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756867AbbIDGQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2015 02:16:40 -0400
+Subject: Re: FCC's new regulations on 5Ghz Wifi
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <55CE61E2.6050809@gmail.com>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55E9351C.1020209@maya.org> (sfid-20150904_081643_306025_DA36A7E0)
+Date: Fri, 4 Sep 2015 08:07:24 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55CE61E2.6050809@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes.Sorensen@redhat.com writes:
+On 08/14/2015 at 11:47 PM, Xose Vazquez Perez wrote:
+> Hi,
+> 
+> The FCC wants to require manufacturers to lock down devices
+> with radio (wifi, bluetooth, etc) with DRM.
+> 
+> More info:
+> http://wiki.prplfoundation.org/wiki/Complying_with_FCC_rules_on_Wifi
+> http://libreplanet.org/wiki/Save_WiFi
+> 
+> FCC Wifi Regulation List:
+> http://lists.prplfoundation.org/cgi-bin/mailman/listinfo/fcc
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> This is an alternate driver for a number of Realtek WiFi USB devices,
-> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
-> It was written from scratch utilizing the Linux mac80211 stack.
->
-> After spending months cleaning up the vendor provided rtl8723au
-> driver, which comes with it's own 802.11 stack included, I decided to
-> rewrite this driver from the bottom up.
->
-> Many thanks to Johannes Berg for 802.11 insights and help and Larry
-> Finger for help with the vendor driver.
->
-> The full git log for the development of this driver can be found here:
-> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
->     branch rtl8723au-mac80211
->
-> This driver is still under development, but has proven to be very
-> stable for me. It currently supports station mode only. It has support
-> for OFDM and CCK rates, as well as AMPDU. It does lack certain
-> features found in the staging driver, such as power management and
-> 40MHz channel support. In addition it does not support AD-HOC, AP, and
-> monitor mode support at this point.
->
-> The driver is known to work with the following devices:
-> Lenovo Yoga (rtl8723au)
-> TP-Link TL-WN823N (rtl8192cu)
-> Etekcity 6R (rtl8188cu)
-> Daffodil LAN03 (rtl8188cu)
-> Alfa AWUS036NHR (rtl8188ru)
->
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+That's not all:
 
-You forgot v2 from the subject.
+In Europe, it has been ratified in 2014 - but nobody noticed it:
 
-> v2: Contains fixes for problems reported by Larry Finger
-> ---
+http://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex:32014L0053
 
-Changelog should be under "---" line.
+German version:
+http://eur-lex.europa.eu/legal-content/DE/TXT/HTML/?uri=CELEX%3A32014L0053&from=EN
 
-> +static int rtl8xxxu_debug /* = 0 */; /* Avoid pointless checkpatch noise */
 
-Either assign it to zero or ignore the checkpatch warning, but please
-don't do this.
-
--- 
-Kalle Valo
+Regards,
+Andreas
