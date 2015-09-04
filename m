@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.polytechnique.org ([129.104.30.34]:55502 "EHLO
-	mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754345AbbILKM3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 06:12:29 -0400
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: [PATCH] iwlwifi: mvm: fix tof.h header guard
-Date: Sat, 12 Sep 2015 12:04:51 +0200
-Message-Id: <1442052291-2328-1-git-send-email-nicolas.iooss_linux@m4x.org> (sfid-20150912_121249_388301_136F5B59)
+Received: from mx1.redhat.com ([209.132.183.28]:41706 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753601AbbIDRsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2015 13:48:16 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	<1441032517.13980.21.camel@sipsolutions.net>
+	<wrfjmvx73u0l.fsf@redhat.com>
+	<1441120044.2441.9.camel@sipsolutions.net>
+	<wrfj4mjcqn3x.fsf@redhat.com>
+	<1441275442.2565.17.camel@sipsolutions.net>
+Date: Fri, 04 Sep 2015 13:48:13 -0400
+In-Reply-To: <1441275442.2565.17.camel@sipsolutions.net> (Johannes Berg's
+	message of "Thu, 03 Sep 2015 12:17:22 +0200")
+Message-ID: <wrfjr3megjoi.fsf@redhat.com> (sfid-20150904_194820_110007_EF2D5594)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit ce7929186a39 ("iwlwifi: mvm: add basic Time of Flight (802.11mc
-FTM) support") created drivers/net/wireless/iwlwifi/mvm/tof.h with a
-broken header guard:
+Johannes Berg <johannes@sipsolutions.net> writes:
+> On Wed, 2015-09-02 at 21:59 -0400, Jes Sorensen wrote:
+>> 
+>> The code mimics what the vendor driver does - part of the bringup of the
+>> chip sets a bunch of parameters from an register value array. Rather
+>> than guessing what their default is, I feel it's safer to just shut 
+>> it down here and stick with that.
+>
+> Ok, fair enough. Might be worth putting that into start() rather than
+> add_interface() though? Anyway, it's not a big deal, I just wasn't sure
+> if that was intentional.
 
-    #ifndef __tof
-    #define __tof_h__
+OK, I'll probably just leave it there for now then.
 
-    ...
+>> > I'd be extremely surprised if any of this worked - perhaps you're 
+>> > not advertising A-MPDU support (yet)?
+>> > 
+>> > You're not calling ieee80211_start_tx_ba_cb_irqsafe() or
+>> > ieee80211_stop_tx_ba_cb_irqsafe(), so this can't really work. The
+>> > session might be set up but will never actually start.
+>> > 
+>> > That said, the code also looks incomplete. Perhaps better to just
+>> > remove it entirely for now?
+>> 
+>> I started working on this, but I guess I didn't finish it. One thing I
+>> haven't figured out yet is why I see AMPDU_RX_START events, but I never
+>> see AMPDU_TX_START events show in the log.
+>
+> Nothing in your system is calling ieee80211_start_tx_ba_session() then.
 
-    #endif /* __tof_h__ */
+Gotcha, now you mention it, that rings a bell! I'll put that on my todo
+list. One of the biggest things puzzling me is how much the firmware
+does with AMPDU - there is a break bit I can set in the TX descriptor to
+say 'don't AMPDU this packet' but do not actually know if it will do all
+of this behind my back. I need to dig more into the vendor driver (and
+their 80211 stack) to see if I can figure that out.
 
-Use __tof_h__ in the first line.
+Cheers,
+Jes
 
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
----
- drivers/net/wireless/iwlwifi/mvm/tof.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tof.h b/drivers/net/wireless/iwlwifi/mvm/tof.h
-index 50ae8adaaa6e..9beebc33cb8d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tof.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/tof.h
-@@ -60,7 +60,7 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
--#ifndef __tof
-+#ifndef __tof_h__
- #define __tof_h__
- 
- #include "fw-api-tof.h"
--- 
-2.5.1
 
