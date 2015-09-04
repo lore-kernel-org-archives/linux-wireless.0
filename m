@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33395 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754053AbbIJTQP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:16:15 -0400
-Received: by pacex6 with SMTP id ex6so51129655pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:16:15 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 31/31] staging: wilc1000: rename WILC_WFI_set_cqm_rssi_config
-Date: Fri, 11 Sep 2015 04:14:30 +0900
-Message-Id: <1441912470-3371-31-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211621_830025_14F20736)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:48508 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752963AbbIDM0C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2015 08:26:02 -0400
+Message-ID: <1441369560.1971.2.camel@sipsolutions.net> (sfid-20150904_142606_753115_A232E9AF)
+Subject: Re: [PATCH] mac80211: protect non-HT BSS when HT TDLS traffic exists
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Avri Altman <avri.altman@intel.com>
+Date: Fri, 04 Sep 2015 14:26:00 +0200
+In-Reply-To: <1439905927-24620-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1439905927-24620-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_set_cqm_rssi_config with
-wilc_set_cqm_rssi_config to avoid CamelCase.
+On Tue, 2015-08-18 at 16:52 +0300, Emmanuel Grumbach wrote:
+> From: Avri Altman <avri.altman@intel.com>
+> 
+> HT TDLS traffic should be protected in a non-HT BSS to avoid
+> collisions. Therefore, when TDLS peers join/leave, check if
+> protection is (now) needed and set the ht_operation_mode of
+> the virtual interface according to the HT capabilities of the
+> TDLS peer(s).
+> 
+> This works because a non-HT BSS connection never sets (or
+> otherwise uses) the ht_operation_mode; it just means that
+> drivers must be aware that this field applies to all HT
+> traffic for this virtual interface, not just the traffic
+> within the BSS. Document that.
+> 
+Applied.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 4967306..ec11f82 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2741,7 +2741,7 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy,
- #endif /*WILC_P2P*/
- 
- /**
-- *  @brief      WILC_WFI_set_cqm_rssi_config
-+ *  @brief      wilc_set_cqm_rssi_config
-  *  @details    Configure connection quality monitor RSSI threshold.
-  *  @param[in]   struct wiphy *wiphy:
-  *  @param[in]	struct net_device *dev:
-@@ -2752,7 +2752,7 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
-+static int    wilc_set_cqm_rssi_config(struct wiphy *wiphy,
- 					   struct net_device *dev,  s32 rssi_thold, u32 rssi_hyst)
- {
- 	PRINT_D(CFG80211_DBG, "Setting CQM RSSi Function\n");
-@@ -3593,7 +3593,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.mgmt_tx = wilc_mgmt_tx,
- 	.mgmt_frame_register = wilc_mgmt_frame_register,
- 	.set_power_mgmt = wilc_set_power_mgmt,
--	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
-+	.set_cqm_rssi_config = wilc_set_cqm_rssi_config,
- #endif
- 
- };
--- 
-2.5.1
-
+johannes
