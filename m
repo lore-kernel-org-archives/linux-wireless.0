@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34773 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbbITGvk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 02:51:40 -0400
-Received: by padhy16 with SMTP id hy16so87429572pad.1
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:51:39 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 01/18] staging: wilc1000: rename WILC_WFI_WiphyFree
-Date: Sun, 20 Sep 2015 15:51:08 +0900
-Message-Id: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_085203_695712_C0EE0688)
+Received: from mx1.redhat.com ([209.132.183.28]:53349 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760308AbbIDSYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2015 14:24:12 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
+	<1441032517.13980.21.camel@sipsolutions.net>
+	<wrfjmvx73u0l.fsf@redhat.com>
+	<1441120044.2441.9.camel@sipsolutions.net>
+	<wrfj4mjcqn3x.fsf@redhat.com> <wrfjvbbsp6ot.fsf@redhat.com>
+	<1441275474.2565.18.camel@sipsolutions.net>
+Date: Fri, 04 Sep 2015 14:24:09 -0400
+In-Reply-To: <1441275474.2565.18.camel@sipsolutions.net> (Johannes Berg's
+	message of "Thu, 03 Sep 2015 12:17:54 +0200")
+Message-ID: <wrfjmvx2gi0m.fsf@redhat.com> (sfid-20150904_202415_877129_470DFED2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_WiphyFree with wilc_free_wiphy to avoid
-CamelCase.
+Johannes Berg <johannes@sipsolutions.net> writes:
+> On Wed, 2015-09-02 at 22:39 -0400, Jes Sorensen wrote:
+>> 
+>> I went back and looked at this, and now I remember why I wrote the code
+>> the way I did. The Realtek firmware handles rate control, so once I set
+>> IEEE80211_HW_HAS_RATE_CONTROL, I never see
+>> rate_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE nor
+>> tx_info->control_short_preamble.  In order to know whether to tell the
+>> firmware to request short preamble or not, I needed to track whether the
+>> sta supports it.
+>> 
+>> Do you have a suggestion for how to handle this in a better way?
+>> 
+>
+> Ah, this makes sense. There's an rc_update call or something like that,
+> that might have the requisite information. Not really sure off the top
+> of my head.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c             | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+I'll add a comment to the code explaining why it is done this way. I had
+a peak at the rate_control code earlier, but it wasn't obvious to me
+whether I should be using that API at all. Is there an explanation of
+the API and it's usage somewhere?
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 6791012..ed6044e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -2006,7 +2006,7 @@ static void __exit exit_wilc_driver(void)
- 			PRINT_D(INIT_DBG, "Unregistering netdev %p\n", g_linux_wlan->strInterfaceInfo[i].wilc_netdev);
- 			unregister_netdev(g_linux_wlan->strInterfaceInfo[i].wilc_netdev);
- 			PRINT_D(INIT_DBG, "Freeing Wiphy...\n");
--			WILC_WFI_WiphyFree(g_linux_wlan->strInterfaceInfo[i].wilc_netdev);
-+			wilc_free_wiphy(g_linux_wlan->strInterfaceInfo[i].wilc_netdev);
- 			PRINT_D(INIT_DBG, "Freeing netdev...\n");
- 			free_netdev(g_linux_wlan->strInterfaceInfo[i].wilc_netdev);
- 		}
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5a95b95..239d0fc 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3689,7 +3689,7 @@ int WILC_WFI_DeInitHostInt(struct net_device *net)
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--void WILC_WFI_WiphyFree(struct net_device *net)
-+void wilc_free_wiphy(struct net_device *net)
- {
- 
- 	PRINT_D(CFG80211_DBG, "Unregistering wiphy\n");
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index 4d37c4e..67b8de3 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -93,7 +93,7 @@ static const struct ieee80211_txrx_stypes
- 
- struct wireless_dev *WILC_WFI_CfgAlloc(void);
- struct wireless_dev *WILC_WFI_WiphyRegister(struct net_device *net);
--void WILC_WFI_WiphyFree(struct net_device *net);
-+void wilc_free_wiphy(struct net_device *net);
- int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
- int WILC_WFI_DeInitHostInt(struct net_device *net);
- int WILC_WFI_InitHostInt(struct net_device *net);
--- 
-2.5.1
+Cheers,
+Jes
+
 
