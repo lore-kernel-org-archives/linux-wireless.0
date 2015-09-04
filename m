@@ -1,63 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:36857 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754924AbbIHP4c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:56:32 -0400
-Received: by padhk3 with SMTP id hk3so42523778pad.3
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:31 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 08/30] staging: wilc1000: rename WILC_WFI_add_virt_intf
-Date: Wed,  9 Sep 2015 00:55:45 +0900
-Message-Id: <1441727767-26026-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175634_538476_D0E735A3)
-In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:49757 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756270AbbIDSD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2015 14:03:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: handle fragmented IEs in splitting
+Date: Fri,  4 Sep 2015 20:03:23 +0200
+Message-Id: <1441389803-26148-1-git-send-email-johannes@sipsolutions.net> (sfid-20150904_200329_633564_8325C993)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_add_virt_intf with
-wilc_cfg80211_add_virtual_intf to avoid CamelCase.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The IEs "output" can sometimes combine IEs coming from userspace
+with IEs generated in the kernel - in particular mac80211 does
+this for association frames.
+
+Add support in this code for the 802.11 IE fragmentation.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ include/linux/ieee80211.h |  1 +
+ net/wireless/util.c       | 25 ++++++++++++++++++++++---
+ 2 files changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0ac9acb..9c22c19 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3543,7 +3543,7 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index cfa906f28b7a..2fe22b44b682 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1919,6 +1919,7 @@ enum ieee80211_eid {
  
+ 	WLAN_EID_VENDOR_SPECIFIC = 221,
+ 	WLAN_EID_QOS_PARAMETER = 222,
++	WLAN_EID_FRAGMENT = 242,
+ };
  
- /**
-- *  @brief      WILC_WFI_add_virt_intf
-+ *  @brief      wilc_cfg80211_add_virtual_intf
-  *  @details
-  *  @param[in]
-  *  @return     int : Return 0 on Success.
-@@ -3551,7 +3551,7 @@ static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 JUL 2012
-  *  @version	1.0
-  */
--struct wireless_dev *WILC_WFI_add_virt_intf(struct wiphy *wiphy, const char *name,
-+struct wireless_dev *wilc_cfg80211_add_virtual_intf(struct wiphy *wiphy, const char *name,
- 						unsigned char name_assign_type,
- 						enum nl80211_iftype type, u32 *flags,
- 						struct vif_params *params)
-@@ -3612,7 +3612,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.get_key = wilc_cfg80211_get_key,
- 	.set_default_key = wilc_cfg80211_set_default_key,
- 	#ifdef WILC_AP_EXTERNAL_MLME
--	.add_virtual_intf = WILC_WFI_add_virt_intf,
-+	.add_virtual_intf = wilc_cfg80211_add_virtual_intf,
- 	.del_virtual_intf = WILC_WFI_del_virt_intf,
- 	.change_virtual_intf = WILC_WFI_change_virt_intf,
+ /* Action category code */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index baf7218cec15..f52fbda56467 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1301,6 +1301,25 @@ static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
+ 	return false;
+ }
+ 
++static size_t skip_ie(const u8 *ies, size_t ielen, size_t pos)
++{
++	/* we assume a validly formed IEs buffer */
++	u8 len = ies[pos + 1];
++
++	pos += 2 + len;
++
++	/* the IE itself must have 255 bytes for fragments to follow */
++	if (len < 255)
++		return pos;
++
++	while (pos < ielen && ies[pos] == WLAN_EID_FRAGMENT) {
++		len = ies[pos + 1];
++		pos += 2 + len;
++	}
++
++	return pos;
++}
++
+ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
+ 			      const u8 *ids, int n_ids,
+ 			      const u8 *after_ric, int n_after_ric,
+@@ -1310,14 +1329,14 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
+ 
+ 	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos])) {
+ 		if (ies[pos] == WLAN_EID_RIC_DATA && n_after_ric) {
+-			pos += 2 + ies[pos + 1];
++			pos = skip_ie(ies, ielen, pos);
+ 
+ 			while (pos < ielen &&
+ 			       !ieee80211_id_in_list(after_ric, n_after_ric,
+ 						     ies[pos]))
+-				pos += 2 + ies[pos + 1];
++				pos = skip_ie(ies, ielen, pos);
+ 		} else {
+-			pos += 2 + ies[pos + 1];
++			pos = skip_ie(ies, ielen, pos);
+ 		}
+ 	}
  
 -- 
-2.5.1
+2.1.4
 
