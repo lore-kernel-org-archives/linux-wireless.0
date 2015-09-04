@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:34762 "EHLO arrakis.dune.hu"
+Received: from mout2.freenet.de ([195.4.92.92]:49357 "EHLO mout2.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750801AbbINHMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 03:12:36 -0400
-Subject: Re: [PATCH 4.3] ath10k: fix DMA related firmware crashes on multiple
- devices
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-References: <1442176540-34973-1-git-send-email-nbd@openwrt.org>
- <87si6h1o4q.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <55F6733B.9030106@openwrt.org> (sfid-20150914_091240_640711_0617254A)
-Date: Mon, 14 Sep 2015 09:11:55 +0200
+	id S1750712AbbIDHPj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2015 03:15:39 -0400
+Subject: Re: FCC's new regulations on 5Ghz Wifi
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <55CE61E2.6050809@gmail.com> <55E9351C.1020209@maya.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55E9449B.6000800@maya.org> (sfid-20150904_091542_396795_81185E30)
+Date: Fri, 4 Sep 2015 09:13:31 +0200
 MIME-Version: 1.0
-In-Reply-To: <87si6h1o4q.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <55E9351C.1020209@maya.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-09-14 09:00, Kalle Valo wrote:
-> Felix Fietkau <nbd@openwrt.org> writes:
-> 
->> Some platforms really don't like DMA bursts of 256 bytes, and this
->> causes the firmware to crash when sending beacons.
->> Also, changing this based on the firmware version does not seem to make
->> much sense, so use 128 bytes for all versions.
+On 09/04/2015 at 08:07 AM, Andreas Hartmann wrote:
+> On 08/14/2015 at 11:47 PM, Xose Vazquez Perez wrote:
+>> Hi,
 >>
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> The FCC wants to require manufacturers to lock down devices
+>> with radio (wifi, bluetooth, etc) with DRM.
+>>
+>> More info:
+>> http://wiki.prplfoundation.org/wiki/Complying_with_FCC_rules_on_Wifi
+>> http://libreplanet.org/wiki/Save_WiFi
+>>
+>> FCC Wifi Regulation List:
+>> http://lists.prplfoundation.org/cgi-bin/mailman/listinfo/fcc
 > 
-> Nice, good catch! Just to make sure, this fixes the issues some people
-> have reported that 10.1 firmware works but 10.2 firmware crashes when
-> starting beaconing?
-Yes. I was able to reproduce that issue myself on a Gateworks Laguna
-device, which is among the affected devices reported in that email
-thread. This patch fixes it for me.
+> That's not all:
+> 
+> In Europe, it has been ratified in 2014 - but nobody noticed it:
+> 
+> http://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex:32014L0053
+> 
+> German version:
+> http://eur-lex.europa.eu/legal-content/DE/TXT/HTML/?uri=CELEX%3A32014L0053&from=EN
 
-- Felix
+Forgot to say: New products sold in EU must be compliant as per June 2016.
+
+> 
+> 
+> Regards,
+> Andreas
+
