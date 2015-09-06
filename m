@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33352 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755441AbbITGwc (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:62631 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871AbbIFQFm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 02:52:32 -0400
-Received: by pacex6 with SMTP id ex6so87545505pac.0
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Sep 2015 23:52:31 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 18/18] staging: wilc1000: rename WILC_WFI_InitHostInt
-Date: Sun, 20 Sep 2015 15:51:25 +0900
-Message-Id: <1442731885-4344-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20150920_091655_139070_029B6294)
-In-Reply-To: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442731885-4344-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 6 Sep 2015 12:05:42 -0400
+Message-ID: <55EC6453.3000601@broadcom.com> (sfid-20150906_180547_311447_B221A592)
+Date: Sun, 6 Sep 2015 18:05:39 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: David Lin <dlin@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>,
+	"Chor Teck Law" <ctlaw@marvell.com>
+Subject: Re: [PATCH] Add new mac80211 driver mwlwifi.
+References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>	<1433598191.2467.65.camel@sipsolutions.net> <877fo3he8y.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877fo3he8y.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_InitHostInt with wilc_init_host_int to
-avoid CamelCase.
+On 09/06/2015 03:24 PM, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>
+>> On Thu, 2015-06-04 at 04:57 +0000, David Lin wrote:
+>>
+>>>   drivers/net/wireless/mwlwifi/Kconfig        |   17 +
+>>
+>> Does this driver has any relation to mwifiex? Perhaps the same
+>> maintainer team, etc.? Could consider moving all the Marvell drivers
+>> into one directory, but not really necessary I guess.
+>
+> Actually I would want to start adding vendor directories for wireless
+> drivers, just like drivers/net/ethernet has, to cleanup the directory
+> structure. So for example this driver we would have
+> drivers/net/wireless/marvell/mwlwifi and later we would start moving
+> existing drivers to vendor drivers as well. Thoughts?
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c             | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Right now our umbrella folder is brcm80211. I am fine changing it to 
+broadcom if explicit vendor names are preferred although brcm80211 still 
+has my personal preference.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 181459f..7857ad2 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1422,7 +1422,7 @@ int mac_open(struct net_device *ndev)
- 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
- 	PRINT_D(INIT_DBG, "MAC OPEN[%p]\n", ndev);
- 
--	ret = WILC_WFI_InitHostInt(ndev);
-+	ret = wilc_init_host_int(ndev);
- 	if (ret < 0) {
- 		PRINT_ER("Failed to initialize host interface\n");
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 50e03f1..a44d8a0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -3599,7 +3599,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net)
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--int WILC_WFI_InitHostInt(struct net_device *net)
-+int wilc_init_host_int(struct net_device *net)
- {
- 
- 	int s32Error = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index 859d62a..b240a79 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -96,7 +96,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net);
- void wilc_free_wiphy(struct net_device *net);
- int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed);
- int wilc_deinit_host_int(struct net_device *net);
--int WILC_WFI_InitHostInt(struct net_device *net);
-+int wilc_init_host_int(struct net_device *net);
- void WILC_WFI_monitor_rx(u8 *buff, u32 size);
- int WILC_WFI_deinit_mon_interface(void);
- struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
--- 
-2.5.1
+Regards,
+Arend
 
