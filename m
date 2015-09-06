@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:36157 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755192AbbIUHdn convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:33973 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751138AbbIFRG5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 03:33:43 -0400
-Received: by wicgb1 with SMTP id gb1so101815996wic.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 00:33:42 -0700 (PDT)
+	Sun, 6 Sep 2015 13:06:57 -0400
+Received: by oiev17 with SMTP id v17so34213118oie.1
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2015 10:06:57 -0700 (PDT)
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+To: Kalle Valo <kvalo@codeaurora.org>, Jes.Sorensen@redhat.com
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+ <1440968574-29490-2-git-send-email-Jes.Sorensen@redhat.com>
+ <87twr7fvbb.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <55EC72AF.2050803@lwfinger.net> (sfid-20150906_190700_990811_980DE298)
+Date: Sun, 6 Sep 2015 12:06:55 -0500
 MIME-Version: 1.0
-In-Reply-To: <1442362098-24859-1-git-send-email-greearb@candelatech.com>
-References: <1442362098-24859-1-git-send-email-greearb@candelatech.com>
-Date: Mon, 21 Sep 2015 09:33:42 +0200
-Message-ID: <CA+BoTQkXma5KXpGa3XnnFw=13GRVoTEth0_=K-YNEKru1CpaOA@mail.gmail.com> (sfid-20150921_093346_625594_78C2F7AA)
-Subject: Re: [PATCH] ath10k: Fix CCK rate definitions.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <87twr7fvbb.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 September 2015 at 02:08,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On 09/06/2015 09:59 AM, Kalle Valo wrote:
+> Jes.Sorensen@redhat.com writes:
 >
-> The old values did NOT match what is found in 10.1.467
-> firmware.  I figure it is likely it is wrong for the others
-> as well.
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> This is an alternate driver for a number of Realtek WiFi USB devices,
+>> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
+>> It was written from scratch utilizing the Linux mac80211 stack.
+>>
+>> After spending months cleaning up the vendor provided rtl8723au
+>> driver, which comes with it's own 802.11 stack included, I decided to
+>> rewrite this driver from the bottom up.
+>>
+>> Many thanks to Johannes Berg for 802.11 insights and help and Larry
+>> Finger for help with the vendor driver.
+>>
+>> The full git log for the development of this driver can be found here:
+>> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+>>      branch rtl8723au-mac80211
+>>
+>> This driver is still under development, but has proven to be very
+>> stable for me. It currently supports station mode only. It has support
+>> for OFDM and CCK rates, as well as AMPDU. It does lack certain
+>> features found in the staging driver, such as power management and
+>> 40MHz channel support. In addition it does not support AD-HOC, AP, and
+>> monitor mode support at this point.
+>>
+>> The driver is known to work with the following devices:
+>> Lenovo Yoga (rtl8723au)
+>> TP-Link TL-WN823N (rtl8192cu)
+>> Etekcity 6R (rtl8188cu)
+>> Daffodil LAN03 (rtl8188cu)
+>> Alfa AWUS036NHR (rtl8188ru)
 
-Does this fix anything at all?
+One other comment is that using lower case such as rtl8723au indicates a driver, 
+whereas RTL8723AU is a device. There are no drivers rtl8188cu or rtl8188ru.
 
-
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/hw.h | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-> index 4c5eee4..710ca32 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -202,13 +202,13 @@ enum ath10k_hw_rate_ofdm {
->  };
->
->  enum ath10k_hw_rate_cck {
-> -       ATH10K_HW_RATE_CCK_LP_11M = 0,
-> -       ATH10K_HW_RATE_CCK_LP_5_5M,
-> -       ATH10K_HW_RATE_CCK_LP_2M,
-> -       ATH10K_HW_RATE_CCK_LP_1M,
-> -       ATH10K_HW_RATE_CCK_SP_11M,
-> -       ATH10K_HW_RATE_CCK_SP_5_5M,
-> -       ATH10K_HW_RATE_CCK_SP_2M,
-> +       ATH10K_HW_RATE_CCK_LP_11M = 0x40,
-> +       ATH10K_HW_RATE_CCK_LP_5_5M = 0x41,
-> +       ATH10K_HW_RATE_CCK_LP_2M = 0x42,
-> +       ATH10K_HW_RATE_CCK_LP_1M = 0x43,
-> +       ATH10K_HW_RATE_CCK_SP_11M = ATH10K_HW_RATE_CCK_LP_11M | 0x4,
-> +       ATH10K_HW_RATE_CCK_SP_5_5M = ATH10K_HW_RATE_CCK_LP_5_5M | 0x4,
-> +       ATH10K_HW_RATE_CCK_SP_2M = ATH10K_HW_RATE_CCK_LP_2M | 0x4,
->  };
-
-This breaks Rx CCK rate decoding/reporting. See code associated with
-ath10k_mac_hw_rate_to_idx().
-
-
-Michał
+Larry
