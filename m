@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33499 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752185AbbICCjd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2015 22:39:33 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	<1441032517.13980.21.camel@sipsolutions.net>
-	<wrfjmvx73u0l.fsf@redhat.com>
-	<1441120044.2441.9.camel@sipsolutions.net>
-	<wrfj4mjcqn3x.fsf@redhat.com>
-Date: Wed, 02 Sep 2015 22:39:30 -0400
-In-Reply-To: <wrfj4mjcqn3x.fsf@redhat.com> (Jes Sorensen's message of "Wed, 02
-	Sep 2015 21:59:30 -0400")
-Message-ID: <wrfjvbbsp6ot.fsf@redhat.com> (sfid-20150903_043952_111387_C77D0374)
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:7092 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbbIFQOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2015 12:14:48 -0400
+Message-ID: <55EC6676.9050906@broadcom.com> (sfid-20150906_181452_708267_65A4AF3A)
+Date: Sun, 6 Sep 2015 18:14:46 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: David Lin <dlin@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>,
+	"Chor Teck Law" <ctlaw@marvell.com>
+Subject: Re: [PATCH] Add new mac80211 driver mwlwifi.
+References: <6d9f23a4a8bf4315b0c7630a9a1c37ad@SC-EXCH02.marvell.com>	<1433598191.2467.65.camel@sipsolutions.net> <877fo3he8y.fsf@kamboji.qca.qualcomm.com> <55EC6453.3000601@broadcom.com>
+In-Reply-To: <55EC6453.3000601@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->>>         sta_priv->short_preamble = false;
+On 09/06/2015 06:05 PM, Arend van Spriel wrote:
+> On 09/06/2015 03:24 PM, Kalle Valo wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
 >>
->> I don't think there's any need to track it, especially since you only
->> use it in TX where you have the TX info data about it.
+>>> On Thu, 2015-06-04 at 04:57 +0000, David Lin wrote:
+>>>
+>>>>   drivers/net/wireless/mwlwifi/Kconfig        |   17 +
+>>>
+>>> Does this driver has any relation to mwifiex? Perhaps the same
+>>> maintainer team, etc.? Could consider moving all the Marvell drivers
+>>> into one directory, but not really necessary I guess.
+>>
+>> Actually I would want to start adding vendor directories for wireless
+>> drivers, just like drivers/net/ethernet has, to cleanup the directory
+>> structure. So for example this driver we would have
+>> drivers/net/wireless/marvell/mwlwifi and later we would start moving
+>> existing drivers to vendor drivers as well. Thoughts?
+
+Another remark on this. Do you propose to add a vendor Kconfig level as 
+well?
+
+Regards,
+Arend
+
+> Right now our umbrella folder is brcm80211. I am fine changing it to
+> broadcom if explicit vendor names are preferred although brcm80211 still
+> has my personal preference.
 >
-> Oh, I hadn't spotted that information in struct tx_info - in that case I
-> ought to be able to get rid of this one.
+> Regards,
+> Arend
+>
 
-I went back and looked at this, and now I remember why I wrote the code
-the way I did. The Realtek firmware handles rate control, so once I set
-IEEE80211_HW_HAS_RATE_CONTROL, I never see
-rate_flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE nor
-tx_info->control_short_preamble.  In order to know whether to tell the
-firmware to request short preamble or not, I needed to track whether the
-sta supports it.
-
-Do you have a suggestion for how to handle this in a better way?
-
-Cheers,
-Jes
