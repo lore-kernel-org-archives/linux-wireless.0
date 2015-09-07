@@ -1,100 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33661 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbbIUM7P (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34011 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbbIGKhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:59:15 -0400
-Received: by pacex6 with SMTP id ex6so116417581pac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:59:15 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 14/16] staging: wilc1000: host_int_init: replace s32Error with result
-Date: Mon, 21 Sep 2015 21:58:24 +0900
-Message-Id: <1442840306-9657-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_145919_843903_53C0B439)
-In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 7 Sep 2015 06:37:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maxime Bizon <mbizon@freebox.fr>
+Cc: Chor Teck Law <ctlaw@marvell.com>, David Lin <dlin@marvell.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pete Hsieh <peteh@marvell.com>
+Subject: Re: [PATCH v5] Add new mac80211 driver mwlwifi.
+References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
+	<1436455659.36587.131.camel@sakura.staff.proxad.net>
+	<87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
+	<db9a0d4afa9b435d8efa380715955bee@SC-EXCH03.marvell.com>
+	<20150804224951.GA31383@sakura.staff.proxad.net>
+Date: Mon, 07 Sep 2015 13:37:04 +0300
+In-Reply-To: <20150804224951.GA31383@sakura.staff.proxad.net> (Maxime Bizon's
+	message of "Wed, 5 Aug 2015 00:49:51 +0200")
+Message-ID: <874mj6frcf.fsf@kamboji.qca.qualcomm.com> (sfid-20150907_123715_475649_3AADF6C6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces s32Error with result in host_int_init function to
-avoid camelcase.
+Maxime Bizon <mbizon@freebox.fr> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+> but from my POV, your pattern is: build new chipset, obsolete previous
+> chipset, fork current firmware, make uncompatible changes to both
+> firmware & host driver to accomodate new chipset peculiarities.
+>
+> and eventually, if a customer requests a mainline linux driver, then
+> write one... this is what I'd call "dumping"
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ce7bb0f..ee4f169 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6358,7 +6358,7 @@ static u32 clients_count;
- 
- s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- {
--	s32 s32Error = 0;
-+	s32 result = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv;
- 	int err;
- 
-@@ -6371,13 +6371,13 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- 	/*Allocate host interface private structure*/
- 	pstrWFIDrv  = kzalloc(sizeof(tstrWILC_WFIDrv), GFP_KERNEL);
- 	if (!pstrWFIDrv) {
--		s32Error = -ENOMEM;
-+		result = -ENOMEM;
- 		goto _fail_timer_2;
- 	}
- 	*phWFIDrv = pstrWFIDrv;
- 	err = add_handler_in_list(pstrWFIDrv);
- 	if (err) {
--		s32Error = -EFAULT;
-+		result = -EFAULT;
- 		goto _fail_timer_2;
- 	}
- 
-@@ -6403,16 +6403,16 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- 	PRINT_D(HOSTINF_DBG, "INIT: CLIENT COUNT %d\n", clients_count);
- 
- 	if (clients_count == 0)	{
--		s32Error = wilc_mq_create(&gMsgQHostIF);
-+		result = wilc_mq_create(&gMsgQHostIF);
- 
--		if (s32Error < 0) {
-+		if (result < 0) {
- 			PRINT_ER("Failed to creat MQ\n");
- 			goto _fail_;
- 		}
- 		HostIFthreadHandler = kthread_run(hostIFthread, NULL, "WILC_kthread");
- 		if (IS_ERR(HostIFthreadHandler)) {
- 			PRINT_ER("Failed to creat Thread\n");
--			s32Error = -EFAULT;
-+			result = -EFAULT;
- 			goto _fail_mq_;
- 		}
- 		setup_timer(&g_hPeriodicRSSI, GetPeriodicRSSI,
-@@ -6452,7 +6452,7 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
- 
- 	clients_count++; /* increase number of created entities */
- 
--	return s32Error;
-+	return result;
- 
- _fail_timer_2:
- 	up(&(pstrWFIDrv->gtOsCfgValuesSem));
-@@ -6462,7 +6462,7 @@ _fail_timer_2:
- _fail_mq_:
- 	wilc_mq_destroy(&gMsgQHostIF);
- _fail_:
--	return s32Error;
-+	return result;
- 
- }
- /**
+BTW, this is exactly what I meant with "dumping" as well. Having
+multiple drivers with similar functionality is difficult for everyone.
+Creating a new driver with new bugs is much worse than making smaller,
+incremental changes to the existing driver. And of course code sharing
+is always preferred, but not a hard requirement for drivers.
+
 -- 
-2.5.1
-
+Kalle Valo
