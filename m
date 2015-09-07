@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41278 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36033 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755817AbbI2JDV (ORCPT
+	with ESMTP id S1750969AbbIGLUK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 05:03:21 -0400
+	Mon, 7 Sep 2015 07:20:10 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
 To: Chor Teck Law <ctlaw@marvell.com>
 Cc: David Lin <dlin@marvell.com>,
@@ -16,46 +16,53 @@ References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
 	<87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
 	<20150804220956.GA28583@sakura.staff.proxad.net>
 	<1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
-	<87vbbmeasb.fsf@kamboji.qca.qualcomm.com>
-	<5743c7447a834df1bf719dfa3444e9cd@SC-EXCH03.marvell.com>
-Date: Tue, 29 Sep 2015 12:03:14 +0300
-In-Reply-To: <5743c7447a834df1bf719dfa3444e9cd@SC-EXCH03.marvell.com> (Chor
-	Teck Law's message of "Fri, 11 Sep 2015 13:43:37 +0000")
-Message-ID: <87eghh7g30.fsf@kamboji.qca.qualcomm.com> (sfid-20150929_110327_063803_B3F601BE)
+Date: Mon, 07 Sep 2015 14:20:04 +0300
+In-Reply-To: <1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com> (Chor
+	Teck Law's message of "Wed, 5 Aug 2015 08:39:28 +0000")
+Message-ID: <87vbbmeasb.fsf@kamboji.qca.qualcomm.com> (sfid-20150907_132014_185676_1F642CAB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Chor Teck Law <ctlaw@marvell.com> writes:
 
->> You have named the new driver as mwlwifi, which is a really generic
->> name. Does that imply that mwlwifi will start supporting more Marvell
->> devices in the future? 
->
-> Yes, that is the plan on same generation of 11ac chipset that support
-> host-based mac80211.
->
->> Or will be in the situation that you fork the
->> driver again and we end up having mwlwifi2, mwlwifi3 and so on?
+>> On Tuesday 04 Aug 2015 à 20:02:23 (+0300), Kalle Valo wrote:
+>> 
+>> > I haven't looked at the driver myself yet. Do you have any estimates
+>> > how much duplication there is?
 >> 
 >
-> We do intend to add interface HAL spec version to mwlwifi in case the
-> lower HAL becomes unavoidably changed in future, so that we can
-> continue to maintain mwlwifi.
+> I do think that someone interested in this thread should compare the
+> two drivers to decide if they want to accept mwlwifi (or we let it
+> develop closed door).
+>
+> You will find the differences with some leverage. To make your
+> comparison easier, here is the summary (excluding the patch1-patch6
+> improvements as per review feedbacks from Johannes and community):
+>
+> mwlwifi functions leveraged from mwl8k:
+> - 802.11n setting for mac80211
+> - Functions needed to hook up to mac80211
+> - Interactions with mac80211 to establish BA streams
+> - Partial firmware APIs, some data fields
+> - Method to pass rx packets to mac80211 (but added with 11ac rate map/reports)
+>
+> All others are different/new. Including some listed below:
+> - Different/new 11ac chipsets, including combo BT devices
+> - Added support for 11ac related settings and functions
+> - Added support for concurrent AP+STA functionalities with single firmware per chip
+> - Additional firmware APIs 
+> - Added functions to convert newly supported settings from mac80211 to firmware
+> - Different Tx datapath 
+> - Different Rx low level datapath (though data structure for receiving is same)
+> - Reorganized the files for future scalability and features addition (more to come)
+> - Addressed all (sort of) review feedbacks from patch1-patch6 of this submission
 
-Very good.
-
-> But for different generation of future chipsets/new technology, when
-> the hardware no longer permit us to use same driver, we will have to
-> re-evaluate our options. We cannot guarantee something way out into
-> the future.
-
-Yeah, that's understandable. But the community really dislikes having
-duplicated code/functionality, so please keep this in mind.
-
-If you can submit the next version soon we could try to get this driver
-to 4.4. We have few more weeks.
+You have named the new driver as mwlwifi, which is a really generic
+name. Does that imply that mwlwifi will start supporting more Marvell
+devices in the future? Or will be in the situation that you fork the
+driver again and we end up having mwlwifi2, mwlwifi3 and so on?
 
 -- 
 Kalle Valo
