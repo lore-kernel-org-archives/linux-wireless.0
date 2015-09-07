@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:34431 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753123AbbIQBny (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53199 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752392AbbIGOxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 21:43:54 -0400
-Received: by oiev17 with SMTP id v17so2204884oie.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2015 18:43:53 -0700 (PDT)
-Subject: Re: [PATCH RFC] rtlwifi: rtl8192cu: Add missing case in
- rtl92cu_get_hw_reg
-To: Priit Laes <plaes@plaes.org>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Taehee Yoo <ap420073@gmail.com>
-References: <1442296916-24336-1-git-send-email-plaes@plaes.org>
-Cc: linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55FA1AD6.9000105@lwfinger.net> (sfid-20150917_034357_477659_524275A8)
-Date: Wed, 16 Sep 2015 20:43:50 -0500
+	Mon, 7 Sep 2015 10:53:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Lin <dlin@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>
+Subject: Re: [PATCH v6] Add new mac80211 driver mwlwifi.
+References: <20456de5ab0b43b69441b19abb282c31@SC-EXCH02.marvell.com>
+Date: Mon, 07 Sep 2015 17:53:26 +0300
+In-Reply-To: <20456de5ab0b43b69441b19abb282c31@SC-EXCH02.marvell.com> (David
+	Lin's message of "Thu, 9 Jul 2015 23:19:27 +0000")
+Message-ID: <87zj0yb7rt.fsf@kamboji.qca.qualcomm.com> (sfid-20150907_165335_507237_C79F4158)
 MIME-Version: 1.0
-In-Reply-To: <1442296916-24336-1-git-send-email-plaes@plaes.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2015 01:01 AM, Priit Laes wrote:
-> Driver was reporting 'switch case not processed' after association,
-> so HW_VAR_KEEP_ALIVE was added and filled similarily to other drivers.
+David Lin <dlin@marvell.com> writes:
+
+> The Linux driver for WRT1900AC. The work was initially developed as part of
+> openwrt effort and maintained on https://github.com/kaloz/mwlwifi.
 >
-> Positive side effect to this seems to be a bit more stable connection.
+> This is still work in progress, with 8864 chipset more mature and tested,
+> while 8897 for the similar use case is added recently.
 >
-> Signed-off-by: Priit Laes <plaes@plaes.org>
-> ---
+> Signed-off-by: David Lin <dlin@marvell.com>
 
-This patch looks good to me. Thanks.
+The commit log is really short. For a new driver you should explain a
+lot more, for example what works and what doesn't. Also it should
+contained detailed info about how and why (!) this conflicts with
+mwifiex and the way that problem was solved.
 
-Cc: Stable <stable@vger.kernel.org> 3.4+
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Also no new BUG_ON() calls in drivers, please:
 
-Larry
+fwcmd.c:        BUG_ON(tid >= SYSADPT_MAX_TID);
+mac80211.c:     BUG_ON(queue > SYSADPT_TX_WMM_QUEUES - 1);
+mac80211.c:             BUG_ON(stream->state != AMPDU_STREAM_IN_PROGRESS);
+tx.c:   BUG_ON(tid > 7);
+tx.c:   BUG_ON(tid >= SYSADPT_MAX_TID);
+tx.c:   BUG_ON(!tx_skb);
 
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 8 ++++++++
->   1 file changed, 8 insertions(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> index 25db369..34ce064 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> @@ -1946,6 +1946,14 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
->   		rtl_write_word(rtlpriv, REG_RXFLTMAP2, *(u16 *)val);
->   		mac->rx_data_filter = *(u16 *)val;
->   		break;
-> +	case HW_VAR_KEEP_ALIVE:{
-> +			u8 array[2];
-> +			array[0] = 0xff;
-> +			array[1] = *((u8 *)val);
-> +			rtl92c_fill_h2c_cmd(hw, H2C_92C_KEEP_ALIVE_CTRL, 2,
-> +					    array);
-> +			break;
-> +		}
->   	default:
->   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
->   			 "switch case not processed\n");
->
+We should start to get rid of all 200+ calls we already have, wireless
+drivers should never call BUG_ON(). Instead use descriptive error
+message (WARN_ON() etc) and bail out nicely with an error. That's much
+more user friendly than crashing the kernel.
 
+-- 
+Kalle Valo
