@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40412 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753795AbbICKR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2015 06:17:27 -0400
-Message-ID: <1441275442.2565.17.camel@sipsolutions.net> (sfid-20150903_121753_260910_EC3B2004)
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Larry.Finger@lwfinger.net
-Date: Thu, 03 Sep 2015 12:17:22 +0200
-In-Reply-To: <wrfj4mjcqn3x.fsf@redhat.com>
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	 <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	 <1441032517.13980.21.camel@sipsolutions.net> <wrfjmvx73u0l.fsf@redhat.com>
-	 <1441120044.2441.9.camel@sipsolutions.net> <wrfj4mjcqn3x.fsf@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:40764 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbbIGNtH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2015 09:49:07 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] ath6kl: remove redundant null pointer check on send_pkt
+Date: Mon,  7 Sep 2015 14:49:05 +0100
+Message-Id: <1441633745-5755-1-git-send-email-colin.king@canonical.com> (sfid-20150907_154926_345732_F3C56D61)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-09-02 at 21:59 -0400, Jes Sorensen wrote:
-> 
-> The code mimics what the vendor driver does - part of the bringup of the
-> chip sets a bunch of parameters from an register value array. Rather
-> than guessing what their default is, I feel it's safer to just shut 
-> it down here and stick with that.
+From: Colin Ian King <colin.king@canonical.com>
 
-Ok, fair enough. Might be worth putting that into start() rather than
-add_interface() though? Anyway, it's not a big deal, I just wasn't sure
-if that was intentional.
+The check for send_pkt being NULL is redundant before the call
+to htc_reclaim_txctrl_buf, therefore it should be removed. This was
+detected by static analysis by cppcheck.
 
-> > I'd be extremely surprised if any of this worked - perhaps you're 
-> > not advertising A-MPDU support (yet)?
-> > 
-> > You're not calling ieee80211_start_tx_ba_cb_irqsafe() or
-> > ieee80211_stop_tx_ba_cb_irqsafe(), so this can't really work. The
-> > session might be set up but will never actually start.
-> > 
-> > That said, the code also looks incomplete. Perhaps better to just
-> > remove it entirely for now?
-> 
-> I started working on this, but I guess I didn't finish it. One thing I
-> haven't figured out yet is why I see AMPDU_RX_START events, but I never
-> see AMPDU_TX_START events show in the log.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Nothing in your system is calling ieee80211_start_tx_ba_session() then.
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+index e481f14..fffb65b 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+@@ -1085,9 +1085,7 @@ static int htc_setup_tx_complete(struct htc_target *target)
+ 	send_pkt->completion = NULL;
+ 	ath6kl_htc_tx_prep_pkt(send_pkt, 0, 0, 0);
+ 	status = ath6kl_htc_tx_issue(target, send_pkt);
+-
+-	if (send_pkt != NULL)
+-		htc_reclaim_txctrl_buf(target, send_pkt);
++	htc_reclaim_txctrl_buf(target, send_pkt);
+ 
+ 	return status;
+ }
+-- 
+2.5.0
 
-
-johannes
