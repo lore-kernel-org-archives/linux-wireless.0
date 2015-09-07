@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37026 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49445 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932731AbbI2H6p (ORCPT
+	with ESMTP id S1750988AbbIGNVG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 03:58:45 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: include linux/atomic.h
+	Mon, 7 Sep 2015 09:21:06 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1442659640-11835-1-git-send-email-hauke@hauke-m.de>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Message-Id: <20150929075845.3F224140FA5@smtp.codeaurora.org> (sfid-20150929_095849_025351_19D1BB16)
-Date: Tue, 29 Sep 2015 07:58:45 +0000 (UTC)
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440968574-29490-2-git-send-email-Jes.Sorensen@redhat.com>
+	<87twr7fvbb.fsf@kamboji.qca.qualcomm.com>
+	<wrfjoahff1mg.fsf@redhat.com>
+Date: Mon, 07 Sep 2015 16:20:58 +0300
+In-Reply-To: <wrfjoahff1mg.fsf@redhat.com> (Jes Sorensen's message of "Sun, 06
+	Sep 2015 21:40:23 -0400")
+Message-ID: <87io7me56t.fsf@kamboji.qca.qualcomm.com> (sfid-20150907_152115_362161_0EAD4B22)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
 
-> brcmfmac uses atomic_or() and other atomic_* functions, but does not
-> include linux/atomic.h. This file gets included by some other header
-> file so this normally does not cause problems.
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> Acked-by: Arend van Spriel <arend@broadcom.com>
+>>> +static int rtl8xxxu_debug /* = 0 */; /* Avoid pointless checkpatch noise */
+>>
+>> Either assign it to zero or ignore the checkpatch warning, but please
+>> don't do this.
+>
+> Problem is if I leave the = 0 some people will send pointless patches to
+> change it. The above gets checkpatch to shut up while leaving the
+> indication in place.
 
-Thanks, applied to wireless-drivers-next.git.
+Yeah, I guessed that but this is just silly. If it annoys so much fix
+the checkpatch script or really assign it to zero, not this kind of
+comment trickery.
 
+-- 
 Kalle Valo
