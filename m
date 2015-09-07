@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7393 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753483AbbIYIB1 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:45692 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbbIGKJS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 04:01:27 -0400
-From: Vivek Natarajan <nataraja@qti.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH v2] ath10k: Use station's current operating mode from assoc request
-Date: Fri, 25 Sep 2015 13:31:08 +0530
-Message-ID: <1443168068-5719-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20150925_100131_433048_C5253BF4)
+	Mon, 7 Sep 2015 06:09:18 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 2/3] staging: wilc1000: remove unused preprocessor definition
+Date: Mon, 7 Sep 2015 19:09:30 +0900
+Message-ID: <1441620571-23033-2-git-send-email-tony.cho@atmel.com> (sfid-20150907_120921_045467_8A52AB70)
+In-Reply-To: <1441620571-23033-1-git-send-email-tony.cho@atmel.com>
+References: <1441620571-23033-1-git-send-email-tony.cho@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current number of spatial streams used by the client is advertised
-as a separate IE in assoc request. Use this information to set
-the NSS operating mode.
+This patch removes a preprocessor definition, SWITCH_LOG_TERMINAL,
+which is not used. Enabling this definition affects the performance.
 
-Fixes: 45c9abc059fa ("ath10k: implement more versatile set_bitrate_mask").
-Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
-v2: Fix commit message
+ drivers/staging/wilc1000/linux_wlan.c    | 6 ------
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 8 --------
+ 2 files changed, 14 deletions(-)
 
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index bb44161..5acebf5 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2169,7 +2169,7 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
- 			arg->peer_ht_rates.rates[i] = i;
- 	} else {
- 		arg->peer_ht_rates.num_rates = n;
--		arg->peer_num_spatial_streams = max_nss;
-+		arg->peer_num_spatial_streams = min(sta->rx_nss, max_nss);
- 	}
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4187c7c..59c9b44 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -926,12 +926,6 @@ static int linux_wlan_init_test_config(struct net_device *dev, linux_wlan_t *p_n
+ 	if (!g_linux_wlan->oup.wlan_cfg_set(0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
+ 		goto _fail_;
  
- 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac ht peer %pM mcs cnt %d nss %d\n",
+-#ifdef SWITCH_LOG_TERMINAL
+-	c_val[0] = AUTO_PROT;
+-	if (!g_linux_wlan->oup.wlan_cfg_set(0, WID_LOGTerminal_Switch, c_val, 1, 0, 0))
+-		goto _fail_;
+-#endif
+-
+ 	c_val[0] = ACTIVE_SCAN;
+ 	if (!g_linux_wlan->oup.wlan_cfg_set(0, WID_SCAN_TYPE, c_val, 1, 0, 0))
+ 		goto _fail_;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index d503799..21ed14d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -534,14 +534,6 @@ static int wilc_wlan_cfg_indicate_rx(uint8_t *frame, int size, wilc_cfg_rsp_t *r
+ 		GnrlAsyncInfoReceived(frame - 4, size + 4);
+ 		break;
+ 
+-	case 'L':
+-#ifndef SWITCH_LOG_TERMINAL
+-		PRINT_ER("Unexpected firmware log message received\n");
+-#else
+-		PRINT_D(FIRM_DBG, "\nFIRMWARE LOGS :\n<<\n%s\n>>\n", frame);
+-		break;
+-
+-#endif
+ #if 1
+ 	case 'N':
+ 		NetworkInfoReceived(frame - 4, size + 4);
 -- 
 1.9.1
 
