@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37778 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932496AbbI2IJJ (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:34544 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135AbbIGSuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2015 04:09:09 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 7 Sep 2015 14:50:23 -0400
+Received: by oiev17 with SMTP id v17so47361288oie.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2015 11:50:23 -0700 (PDT)
+Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
+ <1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
+ <87383kps0o.fsf@kamboji.qca.qualcomm.com> <wrfjvbggfhuj.fsf@redhat.com>
+ <8737yrhdm0.fsf@kamboji.qca.qualcomm.com> <wrfjlhcidq9b.fsf@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <55EDDC6D.80000@lwfinger.net> (sfid-20150907_205026_889091_F7BD7D96)
+Date: Mon, 7 Sep 2015 13:50:21 -0500
 MIME-Version: 1.0
-Subject: Re: [v2] mwifiex: fix mwifiex_rdeeprom_read()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20150921161953.GQ5004@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20150929080908.CC1F813F7C4@smtp.codeaurora.org> (sfid-20150929_100917_467239_2C752D85)
-Date: Tue, 29 Sep 2015 08:09:08 +0000 (UTC)
+In-Reply-To: <wrfjlhcidq9b.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 09/07/2015 01:43 PM, Jes Sorensen wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>> Hi,
+>>
+>> replying to an old thread first.
+>>
+>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>>
+>>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>>> Jes.Sorensen@redhat.com writes:
+>>>>
+>>>>>   MAINTAINERS                          |    8 +
+>>>>>   drivers/net/wireless/Kconfig         |   19 +
+>>>>>   drivers/net/wireless/Makefile        |    2 +
+>>>>>   drivers/net/wireless/rtl8xxxu.c | 4500
+>>>>> ++++++++++++++++++++++++++++++++++
+>>>>>   drivers/net/wireless/rtl8xxxu.h      |  497 ++++
+>>>>>   drivers/net/wireless/rtl8xxxu_regs.h |  941 +++++++
+>>>>
+>>>> I think someone else already mentioned, but it would be better that has
+>>>> it's own directory. Or should this actually be under rtlwifi
+>>>> directory?
+>>>
+>>> I didn't see the need here - it's just 3 files, as long as it doesn't
+>>> have a huge hierachy of files, a new directory doesn't add much
+>>> value. If it becomes an issue later, we can move it into a
+>>> subdirectory.
+>>
+>> It's easier that the driver has it's on directory as everything
+>> (makefile, kconfig etc) is cleanly separated. And actually I would like
+>> to create a new vendor directory for realtek and have this in
+>> drivers/net/wireless/realtek/rtl8xxxu/. And later we could move rtlwifi
+>> under realtek directory as well.
+>
+> If you want to create drivers/net/wireless/realtek, that is fine with
+> me, but maybe you can go ahead and create that first and move the
+> existing drivers in there?
 
-> There were several bugs here.
-> 
-> 1)  The done label was in the wrong place so we didn't copy any
->     information out when there was no command given.
-> 
-> 2)  We were using PAGE_SIZE as the size of the buffer instead of
->     "PAGE_SIZE - pos".
-> 
-> 3)  snprintf() returns the number of characters that would have been
->     printed if there were enough space.  If there was not enough space
->     (and we had fixed the memory corruption bug #2) then it would result
->     in an information leak when we do simple_read_from_buffer().  I've
->     changed it to use scnprintf() instead.
-> 
-> I also removed the initialization at the start of the function, because
-> I thought it made the code a little more clear.
-> 
-> Fixes: 5e6e3a92b9a4 ('wireless: mwifiex: initial commit for Marvell mwifiex driver')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+I will submit a patch to do that.
 
-Thanks, applied to wireless-drivers-next.git.
+Larry
 
-Kalle Valo
+
