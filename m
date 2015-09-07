@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35191 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859AbbIJTPf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:15:35 -0400
-Received: by pacfv12 with SMTP id fv12so51864195pac.2
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:34 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 18/31] staging: wilc1000: rename WILC_WFI_get_station
-Date: Fri, 11 Sep 2015 04:14:17 +0900
-Message-Id: <1441912470-3371-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211541_412825_3CBF624C)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56469 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750933AbbIGEYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2015 00:24:42 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
+	<wrfjfv2rf1e1.fsf@redhat.com>
+Date: Mon, 07 Sep 2015 00:24:38 -0400
+In-Reply-To: <wrfjfv2rf1e1.fsf@redhat.com> (Jes Sorensen's message of "Sun, 06
+	Sep 2015 21:45:26 -0400")
+Message-ID: <wrfj37yqg8l5.fsf@redhat.com> (sfid-20150907_062445_605072_229861AD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_get_station with wilc_get_station to avoid
-CamelCase.
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>> Jes.Sorensen@redhat.com writes:
+>>
+>>> Per default only devices I have actually tested will be enabled. If
+>>> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+>>> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+>>> test results back to me.
+>>>
+>>> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
+>>> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
+>>> to which module you load and/or use modprobe blacklists.
+>>
+>> May clash? So how does this work in practise? Is the clash referring
+>> CONFIG_RTL8XXXU_UNTESTED enabled or disabled?
+>>
+>> I think we should only have one driver automatically supporting certain
+>> hardware, and not have a driver randomly chosen and forcing users to use
+>> a blacklist.
+>
+> We already have the clash, if you enable CONFIG_RTL8192U in staging it
+> clashes with rtlwifi's CONFIG_RTL8192CU. Ripping out the above two
+> drivers at this point isn't going to do users any good.
+>
+>> Also how do we make sure that distros don't enable
+>> CONFIG_RTL8XXXU_UNTESTED? They are notarious of enabling kconfig options
+>> without thinking.
+>
+> Some distros enable staging whether you ask them or not. I think
+> CONFIG_RTL8XXXYU_UNTESTED is pretty safe and will most likely just work
+> for the devices on that list, but the driver will spit out a warning
+> asking the person to report test results to me.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
+Just one more note - we could put UNTESTED under EXPERIMENTAL
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 76556a0..afacda5 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1619,7 +1619,7 @@ static int WILC_WFI_dump_survey(struct wiphy *wiphy, struct net_device *netdev,
- 
- 
- /**
-- *  @brief      WILC_WFI_get_station
-+ *  @brief      wilc_get_station
-  *  @details    Get station information for the station identified by @mac
-  *  @param[in]   NONE
-  *  @return     int : Return 0 on Success.
-@@ -1628,8 +1628,8 @@ static int WILC_WFI_dump_survey(struct wiphy *wiphy, struct net_device *netdev,
-  *  @version	1.0
-  */
- 
--static int WILC_WFI_get_station(struct wiphy *wiphy, struct net_device *dev,
--				const u8 *mac, struct station_info *sinfo)
-+static int wilc_get_station(struct wiphy *wiphy, struct net_device *dev,
-+			    const u8 *mac, struct station_info *sinfo)
- {
- 	s32 s32Error = WILC_SUCCESS;
- 	struct WILC_WFI_priv *priv;
-@@ -3578,7 +3578,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	.del_station = wilc_del_station,
- 	.change_station = wilc_change_station,
- 	#endif /* WILC_AP_EXTERNAL_MLME*/
--	.get_station = WILC_WFI_get_station,
-+	.get_station = wilc_get_station,
- 	.dump_station = WILC_WFI_dump_station,
- 	.change_bss = WILC_WFI_change_bss,
- 	.set_wiphy_params = WILC_WFI_set_wiphy_params,
--- 
-2.5.1
-
+Cheers,
+Jes
