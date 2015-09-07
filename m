@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44194 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752846AbbICBdc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2015 21:33:32 -0400
-Date: Wed, 2 Sep 2015 18:33:31 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Tony Cho <tony.cho@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, chris.park@atmel.com, rachel.kim@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com, jude.lee@atmel.com,
-	robin.hwang@atmel.com, austin.shin@atmel.com,
-	adel.noureldin@atmel.com, adham.abozaeid@atmel.com,
-	Nicolas.FERRE@atmel.com
-Subject: Re: [PATCH 3/5] staging: wilc1000: use id value as argument
-Message-ID: <20150903013331.GA19804@kroah.com> (sfid-20150903_033335_671481_514EE46D)
-References: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
- <1440055974-9998-4-git-send-email-tony.cho@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41291 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752978AbbIGBkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2015 21:40:25 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440968574-29490-2-git-send-email-Jes.Sorensen@redhat.com>
+	<87twr7fvbb.fsf@kamboji.qca.qualcomm.com>
+Date: Sun, 06 Sep 2015 21:40:23 -0400
+In-Reply-To: <87twr7fvbb.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Sun, 06 Sep 2015 17:59:04 +0300")
+Message-ID: <wrfjoahff1mg.fsf@redhat.com> (sfid-20150907_034044_601790_9556E757)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440055974-9998-4-git-send-email-tony.cho@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 20, 2015 at 04:32:52PM +0900, Tony Cho wrote:
-> From: Johnny Kim <johnny.kim@atmel.com>
-> 
-> The driver communicates with the chipset via the address of handlers
-> to distinguish async data frame. The SendConfigPkt function gets the
-> pointer address indicating the handlers as the last argument, but this
-> requires redundant typecasting and does not support the 64 bit machine.
-> 
-> This patch adds the function which assigns ID values instead of pointer
-> representing the driver handler to the address and then uses the ID
-> instead of pointer as the last argument of SendConfigPkt. The driver
-> also gets the handler's address from the ID in the data frame when it
-> receives them.
-> 
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes.Sorensen@redhat.com writes:
+>
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> This is an alternate driver for a number of Realtek WiFi USB devices,
+>> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
+>> It was written from scratch utilizing the Linux mac80211 stack.
+>>
+>> After spending months cleaning up the vendor provided rtl8723au
+>> driver, which comes with it's own 802.11 stack included, I decided to
+>> rewrite this driver from the bottom up.
+>>
+>> Many thanks to Johannes Berg for 802.11 insights and help and Larry
+>> Finger for help with the vendor driver.
+>>
+>> The full git log for the development of this driver can be found here:
+>> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+>>     branch rtl8723au-mac80211
+>>
+>> This driver is still under development, but has proven to be very
+>> stable for me. It currently supports station mode only. It has support
+>> for OFDM and CCK rates, as well as AMPDU. It does lack certain
+>> features found in the staging driver, such as power management and
+>> 40MHz channel support. In addition it does not support AD-HOC, AP, and
+>> monitor mode support at this point.
+>>
+>> The driver is known to work with the following devices:
+>> Lenovo Yoga (rtl8723au)
+>> TP-Link TL-WN823N (rtl8192cu)
+>> Etekcity 6R (rtl8188cu)
+>> Daffodil LAN03 (rtl8188cu)
+>> Alfa AWUS036NHR (rtl8188ru)
+>>
+>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> You forgot v2 from the subject.
 
-I don't understand this code at all.  You are randomly adding values to
-a list, and then assuming that you can use the index into that list for
-some type of representation?  As this is a local list, why not just use
-the real variables instead of having a list and dealing with them in
-this very ackward manner?
+I'llk send a v3 later fixing up some of the problems people have
+reported.
 
-In other words, I don't see the need for the list at all, just use the
-real types here, you have all the needed information (hint, if you know
-the index, you really know the data as well...)
+>> v2: Contains fixes for problems reported by Larry Finger
+>> ---
+>
+> Changelog should be under "---" line.
+>
+>> +static int rtl8xxxu_debug /* = 0 */; /* Avoid pointless checkpatch noise */
+>
+> Either assign it to zero or ignore the checkpatch warning, but please
+> don't do this.
 
-thanks,
+Problem is if I leave the = 0 some people will send pointless patches to
+change it. The above gets checkpatch to shut up while leaving the
+indication in place.
 
-greg k-h
+Jes
