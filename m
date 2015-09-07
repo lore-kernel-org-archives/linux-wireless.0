@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35275 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753915AbbIJTPl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 15:15:41 -0400
-Received: by pacfv12 with SMTP id fv12so51866263pac.2
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:41 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 20/31] staging: wilc1000: rename WILC_WFI_change_bss
-Date: Fri, 11 Sep 2015 04:14:19 +0900
-Message-Id: <1441912470-3371-20-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211551_828314_804EEA5D)
-In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50008 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752915AbbIGBlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2015 21:41:06 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1440968574-29490-2-git-send-email-Jes.Sorensen@redhat.com>
+	<87twr7fvbb.fsf@kamboji.qca.qualcomm.com>
+	<55EC72AF.2050803@lwfinger.net>
+Date: Sun, 06 Sep 2015 21:41:05 -0400
+In-Reply-To: <55EC72AF.2050803@lwfinger.net> (Larry Finger's message of "Sun,
+	6 Sep 2015 12:06:55 -0500")
+Message-ID: <wrfjk2s3f1la.fsf@redhat.com> (sfid-20150907_034110_083933_C7C40332)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_change_bss with wilc_change_bss to avoid
-CamelCase.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 09/06/2015 09:59 AM, Kalle Valo wrote:
+>> Jes.Sorensen@redhat.com writes:
+>>
+>>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>
+>>> This is an alternate driver for a number of Realtek WiFi USB devices,
+>>> including RTL8723AU, RTL8188CU, RTL8188RU, RTL8191CU, and RTL8192CU.
+>>> It was written from scratch utilizing the Linux mac80211 stack.
+>>>
+>>> After spending months cleaning up the vendor provided rtl8723au
+>>> driver, which comes with it's own 802.11 stack included, I decided to
+>>> rewrite this driver from the bottom up.
+>>>
+>>> Many thanks to Johannes Berg for 802.11 insights and help and Larry
+>>> Finger for help with the vendor driver.
+>>>
+>>> The full git log for the development of this driver can be found here:
+>>> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+>>>      branch rtl8723au-mac80211
+>>>
+>>> This driver is still under development, but has proven to be very
+>>> stable for me. It currently supports station mode only. It has support
+>>> for OFDM and CCK rates, as well as AMPDU. It does lack certain
+>>> features found in the staging driver, such as power management and
+>>> 40MHz channel support. In addition it does not support AD-HOC, AP, and
+>>> monitor mode support at this point.
+>>>
+>>> The driver is known to work with the following devices:
+>>> Lenovo Yoga (rtl8723au)
+>>> TP-Link TL-WN823N (rtl8192cu)
+>>> Etekcity 6R (rtl8188cu)
+>>> Daffodil LAN03 (rtl8188cu)
+>>> Alfa AWUS036NHR (rtl8188ru)
+>
+> One other comment is that using lower case such as rtl8723au indicates
+> a driver, whereas RTL8723AU is a device. There are no drivers
+> rtl8188cu or rtl8188ru.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V2: to make function name simple
+I don't see this in general - I had upper case in some places in the
+driver but it was awful to look at, especially in the dmesg output.
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 06276de..8a71027 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1710,7 +1710,7 @@ static int wilc_get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 
- /**
-- *  @brief      WILC_WFI_change_bss
-+ *  @brief      wilc_change_bss
-  *  @details    Modify parameters for a given BSS.
-  *  @param[in]
-  *   -use_cts_prot: Whether to use CTS protection
-@@ -1730,8 +1730,8 @@ static int wilc_get_station(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int  WILC_WFI_change_bss(struct wiphy *wiphy, struct net_device *dev,
--				struct bss_parameters *params)
-+static int  wilc_change_bss(struct wiphy *wiphy, struct net_device *dev,
-+			    struct bss_parameters *params)
- {
- 	PRINT_D(CFG80211_DBG, "Changing Bss parametrs\n");
- 	return 0;
-@@ -3580,7 +3580,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	#endif /* WILC_AP_EXTERNAL_MLME*/
- 	.get_station = wilc_get_station,
- 	.dump_station = wilc_dump_station,
--	.change_bss = WILC_WFI_change_bss,
-+	.change_bss = wilc_change_bss,
- 	.set_wiphy_params = WILC_WFI_set_wiphy_params,
- 
- 	.set_pmksa = WILC_WFI_set_pmksa,
--- 
-2.5.1
-
+Cheers,
+Jes
