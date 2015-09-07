@@ -1,121 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.184]:60636 "EHLO
-	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751535AbbIAPUI convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:33901 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752021AbbIGUmB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 11:20:08 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Joe Perches' <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] mwifiex: Make mwifiex_dbg a function, reduce object size
-Date: Tue, 1 Sep 2015 15:09:57 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CB8B595@AcuExch.aculab.com> (sfid-20150901_172012_803499_0E87EA46)
-References: <1441043205.3276.28.camel@perches.com>
-In-Reply-To: <1441043205.3276.28.camel@perches.com>
-Content-Type: text/plain; charset="Windows-1252"
+	Mon, 7 Sep 2015 16:42:01 -0400
+Received: by laeb10 with SMTP id b10so57864040lae.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2015 13:42:00 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CANfLQraZAkw0Eqt-Mog5t4ZfGFx3xm_8-6nJoJ68Mim18bW3Tg@mail.gmail.com>
+References: <CANfLQrbXn2pLjVY8DVC=xs9oWZC2nX3VcEZQMLh1zQa7i4EHCg@mail.gmail.com>
+	<55DAD0FD.3070807@broadcom.com>
+	<CANfLQrYQnk6bUjPEKxucxBhLvsRsqpfydvAkvsvKdg0nnte3iA@mail.gmail.com>
+	<CAG8K7gRdXqpfA3_HPoaM+ivgxH4eiPRWkD238QwMMbNigYHDBw@mail.gmail.com>
+	<CANfLQraZAkw0Eqt-Mog5t4ZfGFx3xm_8-6nJoJ68Mim18bW3Tg@mail.gmail.com>
+Date: Mon, 7 Sep 2015 23:41:59 +0300
+Message-ID: <CANfLQrYVq_eMa-CLJhqVthbm_h7yLBhZN5nm0_f70eEob+rUdw@mail.gmail.com> (sfid-20150907_224209_313698_21CC3608)
+Subject: Fwd: bcmdhd: Concurrent use of wlan0 and virtual interface in managed mode
+From: Gucea Doru <gucea.doru@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches
-> Sent: 31 August 2015 18:47
-> 
-> The mwifiex_dbg macro has two tests that could be consolidated
-> into a function reducing overall object size ~10KB (~4%).
-> 
-> So convert the macro into a function.
+Hello,
 
-This looks like it will slow things down somewhat.
-Maybe inline the tests and then do a call for the dev_info().
-Or at least inline the test for the debug flag.
-So you end up with something like:
+Thanks for helping me. I have some more questions related to parallel
+usage of p2p and STA (station) interface.
 
-#define mwifiex_dbg(adapter, dbg_mask, fmt, args...)		\
-do {								\
-	if ((adapter)->debug_mask & MWIFIEX_DBG_##dbg_mask)	\
-		_mwifiex_dbg(adapter, fmt, ##__VA_ARGS__)
-} while (0)
+I use a Nexus 5 device which has a BCM4339 [1] chip and it seems that
+it's possible to transfer data in parallel using two connections: one
+based on Wi-Fi direct(p2p, 2.4Ghz) and the other one based on a
+connection to AP (wlan0, 5Ghz).
 
-	David
+This is done by _time-sharing_ the wireless interface radio? From my
+understanding the mac80211 layer have support for multiple virtual
+interfaces and the switching between this interfaces is done inside
+mac80211. Does the driver creates multiple virtual interfaces (one for
+p2p and one for the connection to the AP) and the mac80211 manages the
+time-sharing between them?
 
-> 
-> $ size drivers/net/wireless/mwifiex/built-in.o* (x86-64 defconfig)
->    text	   data	    bss	    dec	    hex	filename
->  233102	   8628	   4809	 246539	  3c30b	drivers/net/wireless/mwifiex/built-
-> in.o.new
->  243949	   8628	   4809	 257386	  3ed6a	drivers/net/wireless/mwifiex/built-
-> in.o.old
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/mwifiex/main.c | 20 ++++++++++++++++++++
->  drivers/net/wireless/mwifiex/main.h | 17 ++++++++---------
->  2 files changed, 28 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-> index 278dc94..4fa8ca3 100644
-> --- a/drivers/net/wireless/mwifiex/main.c
-> +++ b/drivers/net/wireless/mwifiex/main.c
-> @@ -1447,6 +1447,26 @@ exit_sem_err:
->  }
->  EXPORT_SYMBOL_GPL(mwifiex_remove_card);
-> 
-> +void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
-> +		  const char *fmt, ...)
-> +{
-> +	struct va_format vaf;
-> +	va_list args;
-> +
-> +	if (!adapter->dev || !(adapter->debug_mask & mask))
-> +		return;
-> +
-> +	va_start(args, fmt);
-> +
-> +	vaf.fmt = fmt;
-> +	vaf.va = &args;
-> +
-> +	dev_info(adapter->dev, "%pV", &vaf);
-> +
-> +	va_end(args);
-> +}
-> +EXPORT_SYMBOL_GPL(_mwifiex_dbg);
-> +
->  /*
->   * This function initializes the module.
->   *
-> diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-> index 6b95121..96663214 100644
-> --- a/drivers/net/wireless/mwifiex/main.h
-> +++ b/drivers/net/wireless/mwifiex/main.h
-> @@ -48,6 +48,9 @@
-> 
->  extern const char driver_version[];
-> 
-> +struct mwifiex_adapter;
-> +struct mwifiex_private;
-> +
->  enum {
->  	MWIFIEX_ASYNC_CMD,
->  	MWIFIEX_SYNC_CMD
-> @@ -180,12 +183,11 @@ enum MWIFIEX_DEBUG_LEVEL {
->  					MWIFIEX_DBG_FATAL | \
->  					MWIFIEX_DBG_ERROR)
-> 
-> -#define mwifiex_dbg(adapter, dbg_mask, fmt, args...)		\
-> -do {								\
-> -	if ((adapter)->debug_mask & MWIFIEX_DBG_##dbg_mask)	\
-> -		if ((adapter)->dev)				\
-> -			dev_info((adapter)->dev, fmt, ## args);	\
-> -} while (0)
-> +__printf(3, 4)
-> +void _mwifiex_dbg(const struct mwifiex_adapter *adapter, int mask,
-> +		  const char *fmt, ...);
-> +#define mwifiex_dbg(adapter, mask, fmt, ...)				\
-> +	_mwifiex_dbg(adapter, MWIFIEX_DBG_##mask, fmt, ##__VA_ARGS__)
-> 
-...
+I am interested in understanding the code that decides how much the
+radio should stay on a specific channel. I would be really grateful if
+you could give me some details about the architecture.
+
+[1] http://www.broadcom.com/press/release.php?id=s766879
+
+Thanks,
+Doru
