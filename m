@@ -1,57 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14161 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606AbbI3JtU (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:36772 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083AbbIGRoo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:49:20 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 17/32] staging: wilc1000: rename strEditStaParam
-Date: Wed, 30 Sep 2015 18:44:34 +0900
-Message-ID: <1443606289-25407-17-git-send-email-tony.cho@atmel.com> (sfid-20150930_121655_192504_87277FEF)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+	Mon, 7 Sep 2015 13:44:44 -0400
+Received: by wicgb1 with SMTP id gb1so52851097wic.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2015 10:44:43 -0700 (PDT)
+Received: from ?IPv6:2001:40b0:7c00:97:222:faff:fe5d:5ef2? ([2001:40b0:7c00:97:222:faff:fe5d:5ef2])
+        by smtp.googlemail.com with ESMTPSA id gt4sm1426014wib.21.2015.09.07.10.44.42
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1/SSLv3 cipher=OTHER);
+        Mon, 07 Sep 2015 10:44:42 -0700 (PDT)
+Message-ID: <55EDCD0A.4030503@gmail.com> (sfid-20150907_194448_104233_F39CE44B)
+Date: Mon, 07 Sep 2015 19:44:42 +0200
+From: ferran <ranker72@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+Subject: [question] panic when calling drv_get_tsf
+References: <55E9A07E.8070005@gmail.com>
+In-Reply-To: <55E9A07E.8070005@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strEditStaParam to edit_sta_info to avoid CamelCase
-naming convention.
+Dear all,
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I'm having some issues in a modified version of mac80211, which I hope
+you will help me with.
+I want to report a lower bound of the channel utilization to which a
+mesh device is tuned in for a research project. So far, I can read
+successfully from debugfs this new statistic updated periodically,
+targeting mesh interfaces and tested only with atheros cards. However, I
+would like to improve it as I describe at the end. The strategy is to
+keep adding the rx and tx used time until a [mesh] beacon is sent, and
+then, trigger a custom function that derives the utilization for that
+given interval. This one reads the elapsed time since the previous
+beacon (should be 1000 TU in mesh mode) and resets the counters. Caller
+function:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 94559bd..da8e589 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -394,7 +394,7 @@ union message_body {
- 	struct beacon_attr beacon_info;
- 	struct add_sta_param add_sta_info;
- 	struct del_sta del_sta_info;
--	struct add_sta_param strEditStaParam;
-+	struct add_sta_param edit_sta_info;
- 	struct timer_cb strTimerCb;
- 	struct power_mgmt_param strPowerMgmtparam;
- 	struct sta_inactive_t strHostIfStaInactiveT;
-@@ -4150,7 +4150,7 @@ static int hostIFthread(void *pvArg)
- 			break;
- 
- 		case HOST_IF_MSG_EDIT_STATION:
--			Handle_EditStation(msg.drvHandler, &msg.body.strEditStaParam);
-+			Handle_EditStation(msg.drvHandler, &msg.body.edit_sta_info);
- 			break;
- 
- 		case HOST_IF_MSG_GET_INACTIVETIME:
--- 
-1.9.1
+    --- tx.c ---
+    struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+                                             struct ieee80211_vif *vif,
+                                             u16 *tim_offset, u16
+    *tim_length)
+    {
+            struct ieee80211_local *local = hw_to_local(hw);
+    ...
+
+            rcu_read_lock();
+            sdata = vif_to_sdata(vif);
+    ...
+
+     out:
+            rcu_read_unlock();       
+
+            /* HERE */
+            my_function(local, sdata->name, sdata);
+
+            return skb;
+    }
+
+My function. Note that I've modified ieee80211_local to share data
+between "rx", "tx status" and "beacon tx" contexts. The line comments
+fix the error.
+
+    --- tx.c ---
+    static void my_function(struct ieee80211_local *local, char
+    *if_name, struct ieee80211_sub_if_data *sdata){
+            u64 beacon_interval = 1000 * 1024 // 1.024 seconds.
+            /* Retrieve counters and add them up */
+
+            /* ↓ KERNEL PANIC HERE ↓ */
+            // current_tsf = drv_get_tsf(local, sdata);
+            // beacon_interval = current_tsf -
+    local->ch_load.last_tsf_channel_load_update;
+
+            rem = do_div(total_used_time, beacon_interval); // compute
+    utilization
+
+            /* do some averaging and save */
+            /* reset counters */
+    }
+
+So firstly, why can't I call drv_get_tsf from there? Is it because TSF
+is exactly then being reset? Secondly, I feel unsafe about
+synchronization. Should I rcu-protect all operations on
+ieee80211_sub_if_data, ieee80211_hw and sk_buff? Worker functions on
+rx.c and status.c do read values from those structures.
+
+Finally, I would be interested on using TSF to measure the time passed
+since a packet is scheduled to transmit in tx.c and its report is
+received at status.c. Do you think that TSF be usable for this?
+
+Thanks for your help!
+Ferran
+
 
