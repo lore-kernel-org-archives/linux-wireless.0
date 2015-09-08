@@ -1,133 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60075 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753305AbbIWImb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 04:42:31 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: allow writing TX PN in debugfs
-Date: Wed, 23 Sep 2015 10:42:28 +0200
-Message-Id: <1442997748-13741-1-git-send-email-johannes@sipsolutions.net> (sfid-20150923_104247_640158_5B3D926C)
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35805 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbbIHP4w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2015 11:56:52 -0400
+Received: by pacfv12 with SMTP id fv12so130446548pac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:52 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 16/30] staging: wilc1000: rename WILC_WFI_change_station
+Date: Wed,  9 Sep 2015 00:55:53 +0900
+Message-Id: <1441727767-26026-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180159_421619_5B65E141)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch replaces WILC_WFI_change_station with
+wilc_cfg80211_change_station to avoid CamelCase.
 
-For certain tests, for example replay detection, it can be useful
-to be able to influence/set the PN used in outgoing packets. Make
-it possible to change the TX PN in debugfs.
-
-For now, this doesn't support TKIP since I haven't needed it, but
-there's no reason it couldn't be added if necessary.
-
-Note that this must be used very carefully: it could, for example,
-be used to make "valid replays" where the PN reuse happens on a
-different TID. This couldn't be done by an attacker since the TID
-is protected as part of the AAD.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/mac80211/debugfs_key.c | 51 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 49 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
-index 702ca122c498..7961e7d0b61e 100644
---- a/net/mac80211/debugfs_key.c
-+++ b/net/mac80211/debugfs_key.c
-@@ -2,6 +2,7 @@
-  * Copyright 2003-2005	Devicescape Software, Inc.
-  * Copyright (c) 2006	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright (C) 2015	Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -34,6 +35,14 @@ static const struct file_operations key_ ##name## _ops = {		\
- 	.llseek = generic_file_llseek,					\
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 02ab135..4a46aea 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3464,7 +3464,7 @@ static int wilc_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev
  }
  
-+#define KEY_OPS_W(name)							\
-+static const struct file_operations key_ ##name## _ops = {		\
-+	.read = key_##name##_read,					\
-+	.write = key_##name##_write,					\
-+	.open = simple_open,						\
-+	.llseek = generic_file_llseek,					\
-+}
-+
- #define KEY_FILE(name, format)						\
- 		 KEY_READ_##format(name)				\
- 		 KEY_OPS(name)
-@@ -74,6 +83,41 @@ static ssize_t key_algorithm_read(struct file *file,
- }
- KEY_OPS(algorithm);
- 
-+static ssize_t key_tx_spec_write(struct file *file, const char __user *userbuf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_key *key = file->private_data;
-+	u64 pn;
-+	int ret;
-+
-+	switch (key->conf.cipher) {
-+	case WLAN_CIPHER_SUITE_WEP40:
-+	case WLAN_CIPHER_SUITE_WEP104:
-+		return -EINVAL;
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		/* not supported yet */
-+		return -EOPNOTSUPP;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+	case WLAN_CIPHER_SUITE_CCMP_256:
-+	case WLAN_CIPHER_SUITE_AES_CMAC:
-+	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
-+	case WLAN_CIPHER_SUITE_GCMP:
-+	case WLAN_CIPHER_SUITE_GCMP_256:
-+		ret = kstrtou64_from_user(userbuf, count, 16, &pn);
-+		if (ret)
-+			return ret;
-+		/* PN is a 48-bit counter */
-+		if (pn >= (1ULL << 48))
-+			return -ERANGE;
-+		atomic64_set(&key->conf.tx_pn, pn);
-+		return count;
-+	default:
-+		return 0;
-+	}
-+}
-+
- static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
- 				size_t count, loff_t *ppos)
+ /**
+- *  @brief      WILC_WFI_change_station
++ *  @brief      wilc_cfg80211_change_station
+  *  @details    Modify a given station.
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -3472,7 +3472,7 @@ static int wilc_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_change_station(struct wiphy *wiphy, struct net_device *dev,
++static int wilc_cfg80211_change_station(struct wiphy *wiphy, struct net_device *dev,
+ 				   const u8 *mac, struct station_parameters *params)
  {
-@@ -110,7 +154,7 @@ static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
- 	}
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
- }
--KEY_OPS(tx_spec);
-+KEY_OPS_W(tx_spec);
- 
- static ssize_t key_rx_spec_read(struct file *file, char __user *userbuf,
- 				size_t count, loff_t *ppos)
-@@ -278,6 +322,9 @@ KEY_OPS(key);
- #define DEBUGFS_ADD(name) \
- 	debugfs_create_file(#name, 0400, key->debugfs.dir, \
- 			    key, &key_##name##_ops);
-+#define DEBUGFS_ADD_W(name) \
-+	debugfs_create_file(#name, 0600, key->debugfs.dir, \
-+			    key, &key_##name##_ops);
- 
- void ieee80211_debugfs_key_add(struct ieee80211_key *key)
- {
-@@ -310,7 +357,7 @@ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
- 	DEBUGFS_ADD(keyidx);
- 	DEBUGFS_ADD(hw_key_idx);
- 	DEBUGFS_ADD(algorithm);
--	DEBUGFS_ADD(tx_spec);
-+	DEBUGFS_ADD_W(tx_spec);
- 	DEBUGFS_ADD(rx_spec);
- 	DEBUGFS_ADD(replays);
- 	DEBUGFS_ADD(icverrors);
+ 	s32 s32Error = WILC_SUCCESS;
+@@ -3621,7 +3621,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.stop_ap = wilc_cfg80211_stop_ap,
+ 	.add_station = wilc_cfg80211_add_station,
+ 	.del_station = wilc_cfg80211_del_station,
+-	.change_station = WILC_WFI_change_station,
++	.change_station = wilc_cfg80211_change_station,
+ 	#endif /* WILC_AP_EXTERNAL_MLME*/
+ 	#ifndef WILC_FULLY_HOSTING_AP
+ 	.get_station = WILC_WFI_get_station,
 -- 
 2.5.1
 
