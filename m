@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17839 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751988AbbIRNdH (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35289 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755091AbbIHP4T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 09:33:07 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDPBmU030912
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:33:07 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1wy3qm7eqm-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:33:07 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 10/16] mwifiex: Suppress -ENOSR error for data traffic on USB
-Date: Fri, 18 Sep 2015 06:32:12 -0700
-Message-ID: <1442583138-2979-11-git-send-email-akarwar@marvell.com> (sfid-20150918_153316_658076_FCC7069F)
-In-Reply-To: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
-References: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 Sep 2015 11:56:19 -0400
+Received: by pacfv12 with SMTP id fv12so130433825pac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:19 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/30] staging: wilc1000: rename WILC_WFI_CfgConnect
+Date: Wed,  9 Sep 2015 00:55:40 +0900
+Message-Id: <1441727767-26026-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175621_753442_F2334CDE)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have preallocated buffer pool for Tx data. During high
-data traffic, all buffers are submitted to USB and driver needs
-to wait until one of the buffers get available for next Tx
-packet.
+This patch replaces WILC_WFI_CfgConnect with wilc_cfg80211_connect to
+avoid CamelCase.
 
-"data: -ENOSR is returned" errors is expected in this case. Let's
-lower the priority of this message.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/mwifiex/txrx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index 8b1e5b5..98f097d 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -130,7 +130,7 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 087f36e..563841f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -806,7 +806,7 @@ static int wilc_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request
+ }
  
- 	switch (ret) {
- 	case -ENOSR:
--		mwifiex_dbg(adapter, ERROR, "data: -ENOSR is returned\n");
-+		mwifiex_dbg(adapter, DATA, "data: -ENOSR is returned\n");
- 		break;
- 	case -EBUSY:
- 		if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
+ /**
+- *  @brief      WILC_WFI_CfgConnect
++ *  @brief      wilc_cfg80211_connect
+  *  @details    Connect to the ESS with the specified parameters. When connected,
+  *                      call cfg80211_connect_result() with status code %WLAN_STATUS_SUCCESS.
+  *                      If the connection fails for some reason, call cfg80211_connect_result()
+@@ -817,7 +817,7 @@ static int wilc_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_CfgConnect(struct wiphy *wiphy, struct net_device *dev,
++static int wilc_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 			       struct cfg80211_connect_params *sme)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+@@ -3605,7 +3605,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 
+ 	.set_monitor_channel = wilc_cfg80211_set_monitor_channel,
+ 	.scan = wilc_cfg80211_scan,
+-	.connect = WILC_WFI_CfgConnect,
++	.connect = wilc_cfg80211_connect,
+ 	.disconnect = WILC_WFI_disconnect,
+ 	.add_key = WILC_WFI_add_key,
+ 	.del_key = WILC_WFI_del_key,
 -- 
-1.8.1.4
+2.5.1
 
