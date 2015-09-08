@@ -1,140 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43254 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758620AbbIDQYA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2015 12:24:00 -0400
-Date: Fri, 4 Sep 2015 09:24:00 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "johnny.kim" <johnny.kim@atmel.com>
-Cc: Tony Cho <tony.cho@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, chris.park@atmel.com,
-	rachel.kim@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	jude.lee@atmel.com, robin.hwang@atmel.com, austin.shin@atmel.com,
-	adel.noureldin@atmel.com, adham.abozaeid@atmel.com,
-	Nicolas.FERRE@atmel.com
-Subject: Re: [PATCH 3/5] staging: wilc1000: use id value as argument
-Message-ID: <20150904162400.GA9753@kroah.com> (sfid-20150904_182415_667802_91350B64)
-References: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
- <1440055974-9998-4-git-send-email-tony.cho@atmel.com>
- <20150903013331.GA19804@kroah.com>
- <55E7EFF8.2060705@atmel.com>
- <20150903154718.GA27860@kroah.com>
- <55E90EED.5010502@atmel.com>
- <20150904035156.GA7793@kroah.com>
- <55E933D3.4060302@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33963 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972AbbIHVBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2015 17:01:33 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
+	<55EC71DB.7060007@lwfinger.net>
+Date: Tue, 08 Sep 2015 17:01:31 -0400
+In-Reply-To: <55EC71DB.7060007@lwfinger.net> (Larry Finger's message of "Sun,
+	6 Sep 2015 12:03:23 -0500")
+Message-ID: <wrfjvbbkaams.fsf@redhat.com> (sfid-20150908_230136_579262_E54F5FA0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55E933D3.4060302@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 04, 2015 at 03:01:55PM +0900, johnny.kim wrote:
-> 
-> 
-> On 2015년 09월 04일 12:51, Greg KH wrote:
-> >On Fri, Sep 04, 2015 at 12:24:29PM +0900, johnny.kim wrote:
-> >>
-> >>On 2015년 09월 04일 00:47, Greg KH wrote:
-> >>>On Thu, Sep 03, 2015 at 04:00:08PM +0900, johnny.kim wrote:
-> >>>>Hello Greg.
-> >>>>
-> >>>>On 2015년 09월 03일 10:33, Greg KH wrote:
-> >>>>>On Thu, Aug 20, 2015 at 04:32:52PM +0900, Tony Cho wrote:
-> >>>>>>From: Johnny Kim <johnny.kim@atmel.com>
-> >>>>>>
-> >>>>>>The driver communicates with the chipset via the address of handlers
-> >>>>>>to distinguish async data frame. The SendConfigPkt function gets the
-> >>>>>>pointer address indicating the handlers as the last argument, but this
-> >>>>>>requires redundant typecasting and does not support the 64 bit machine.
-> >>>>>>
-> >>>>>>This patch adds the function which assigns ID values instead of pointer
-> >>>>>>representing the driver handler to the address and then uses the ID
-> >>>>>>instead of pointer as the last argument of SendConfigPkt. The driver
-> >>>>>>also gets the handler's address from the ID in the data frame when it
-> >>>>>>receives them.
-> >>>>>>
-> >>>>>I don't understand this code at all.  You are randomly adding values to
-> >>>>>a list, and then assuming that you can use the index into that list for
-> >>>>>some type of representation?  As this is a local list, why not just use
-> >>>>>the real variables instead of having a list and dealing with them in
-> >>>>>this very ackward manner?
-> >>>>>
-> >>>>>In other words, I don't see the need for the list at all, just use the
-> >>>>>real types here, you have all the needed information (hint, if you know
-> >>>>>the index, you really know the data as well...)
-> >>>>>
-> >>>>The value is needed to send it to chipset and to distinguish async data
-> >>>>packet mutually.
-> >>>What is the value, the index or some random pointer?
-> >>The value of current patch substitutes the corresponding index for
-> >>some random pointer(= address of device handler).
-> >Ok.
-> >
-> >>>>The length of the data field is 4byte and the data field has been
-> >>>>filled with the address of pointer so far.
-> >>>So the data field can just be any random number, as long as it is
-> >>>consistent?  What does the chip do with the random number?
-> >>Current driver normally create a couple of network interface.
-> >Multiple network interfaces for the same hardware?
-> Yes. A chipset supports multiple network interface.
-> >>The driver can send some commands(data frame) to the network
-> >>interfaces at the same time and wait the results. Both driver and
-> >>chipset need unique value to distinguish whom the interface owner
-> >>of the commands is.
-> >>And the value always has same value while the interface is alive.
-> >But as you created the interfaces, just use a unique number for each.
-> >It could be a #define, as you know how many interfaces you will create,
-> >that's not a dynamic thing.  No need to keep looking up something in an
-> >index and converting to a structure.
-> I think your opinion is right only if the driver send some commands to
-> chipset. The driver should look for the network interface corresponding
-> to the #define value to know owner of data frame which received from
-> chipset. Network interface structure dynamically is allocated as 'ifconfig
-> up'
-> command of shell. As a result, look-up table is needed.
-> 
-> >>>>But this patch changes it to unique index value corresponding to the address
-> >>>>for 64bit address machine. If real type is used as your opinion, new patch
-> >>>>will have the same meaning with current code.
-> >>>index now, but was using a pointer before?  That sounds like you are
-> >>>changing the functionality.
-> >>>
-> >>>confused,
-> >>There is a reserved field to distinguish the data frames in chipset.
-> >>Because the field has 4byte space, this patch creates the index
-> >>corresponding to the pointer and uses the index to input the identifier
-> >>in the size instead of the pointer value.
-> >>
-> >>I'm sorry, too. It's not easy to explain it in English.
-> >It's not easy to explain that in any language :)
-> Thanks for your generous mind.
-> >As you "know" the interfaces you create, just use a "fixed" number for
-> >them, and refer to them that way.  No need to have an array and iterate
-> >over the whole array every time.
-> >
-> >There are lots of wrapper functions and pointers in this driver that
-> >need to be stripped away.  I think you will find the end result of all
-> >of that work to be much simpler, and smaller.  See the patches that I
-> >did for the driver this evening as an example, it removed code, and in
-> >doing so, also fixed a long-time bug.  There's a lot of work to be done
-> >here still...
-> >
-> >
-> I know current driver has a lot of stripping code and is heavy . My members
-> is waiting to send patches after x64bit issue is closed. And I improve this
-> driver continuously.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 09/06/2015 09:43 AM, Kalle Valo wrote:
+>> Jes.Sorensen@redhat.com writes:
+>>
+>>> Per default only devices I have actually tested will be enabled. If
+>>> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+>>> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+>>> test results back to me.
+>>>
+>>> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
+>>> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
+>>> to which module you load and/or use modprobe blacklists.
+>>
+>> May clash? So how does this work in practise? Is the clash referring
+>> CONFIG_RTL8XXXU_UNTESTED enabled or disabled?
+>>
+>> I think we should only have one driver automatically supporting certain
+>> hardware, and not have a driver randomly chosen and forcing users to use
+>> a blacklist.
+>
+> I agree, in principle, but there will be difficulties in the
+> implementation, at least in the short term.
+>
+> At the moment, the only driver that has a conflict with rtl8xxxu is
+> rtl8192cu. Although rtl8xxxu is surprisingly more stable that
+> rtl8192cu, the latter has more features, which is may be the reason
+> for better stability. Driver rtl8xxxu does not handle any 40 MHz
+> channels, nor can it become an AP either with hostapd or with
+> NetworkManager. For those reasons, rtl819cu has to remain the standard
+> driver for RTL81{88,92}CU devices until rtl8xxxu is improved. Anyone
+> that wants to try the new driver will need to use blacklists.
 
-Ok, I really think this can be solved in a "cleaner" way, but due to all
-of the different layers in the code, it's hard to see how to do that at
-the moment.  I'll apply the patch, but note that I do think this needs
-to be fixed "properly" later on before the code is merged out of
-staging.
+I do not fully agree on this. In my testing I found rtl8192cu rather
+unstable, to the point of not being usable. It would lock up for me
+after a short while. I have seen this happen with mulitple different
+adapters. I suspect this is the reason why drivers/staging/rtl8192u is
+still sitting in the kernel tree.
 
-With this patch applied, there are still 2 build errors on x86_64, can
-you fix those up and send patches for them, and then we can turn off the
-CONFIG_BROKEN dependency.
+It is true the rtl8xxxu doesn't support 40MHz channels, but reality is
+few people actually use them since it's almost impossible to get free
+channel access without clashes these days. Now I still intend to add
+support for 40MHz, it has just not been on the top of the priority list
+so far. Finding a place to test it is kinda hard when you live in the
+middle of a city like New York :)
 
-thanks,
+My take is that the majority of users mostly care about station support
+and for them rtl8xxxu will be much preferred to rtl8192cu.
 
-greg k-h
+Basically I don't think there is a one solution fits all to this.
+Whether we like it, we will have to accept that there are going to be
+multiple drivers around for these chips for a while.
+
+Cheers,
+Jes
