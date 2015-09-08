@@ -1,96 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:25662 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234AbbIXJOY (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36582 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779AbbIHP4O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 05:14:24 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 15/15] staging: wilc1000: remove variable cif_func
-Date: Thu, 24 Sep 2015 18:15:06 +0900
-Message-ID: <1443086106-20482-15-git-send-email-glen.lee@atmel.com> (sfid-20150924_111426_995614_197CBD7D)
-In-Reply-To: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
-References: <1443086106-20482-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 Sep 2015 11:56:14 -0400
+Received: by padhk3 with SMTP id hk3so42517044pad.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:13 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/30] staging: wilc1000: rename WILC_WFI_CfgSetChannel
+Date: Wed,  9 Sep 2015 00:55:38 +0900
+Message-Id: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175617_481363_B42F74DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes variable cif_func and use mac_cfg directly. No need to have
-another pointer variable.
+This patch replaces WILC_WFI_CfgSetChannel with
+wilc_cfg80211_set_monitor_channel to avoid CamelCase.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 24a3aa1..1937d7d 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -40,7 +40,6 @@ typedef struct {
- 	/**
- 	 *      configuration interface functions
- 	 **/
--	wilc_cfg_func_t cif_func;
- 	int cfg_frame_in_use;
- 	wilc_cfg_frame_t cfg_frame;
- 	u32 cfg_frame_offset;
-@@ -1199,7 +1198,7 @@ static void wilc_wlan_handle_rxq(void)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 75e1687..585ea5e 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -677,7 +677,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
  
  
- 
--					p->cif_func.rx_indicate(&buffer[pkt_offset + offset], pkt_len, &rsp);
-+					mac_cfg.rx_indicate(&buffer[pkt_offset + offset], pkt_len, &rsp);
- 					if (rsp.type == WILC_CFG_RSP) {
- 						/**
- 						 *      wake up the waiting task...
-@@ -1764,7 +1763,8 @@ static int wilc_wlan_cfg_set(int start, u32 wid, u8 *buffer, u32 buffer_size, in
- 		p->cfg_frame_offset = 0;
- 
- 	offset = p->cfg_frame_offset;
--	ret_size = p->cif_func.cfg_wid_set(p->cfg_frame.frame, offset, (u16)wid, buffer, buffer_size);
-+	ret_size = mac_cfg.cfg_wid_set(p->cfg_frame.frame, offset, (u16)wid,
-+				       buffer, buffer_size);
- 	offset += ret_size;
- 	p->cfg_frame_offset = offset;
- 
-@@ -1803,7 +1803,7 @@ static int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
- 		p->cfg_frame_offset = 0;
- 
- 	offset = p->cfg_frame_offset;
--	ret_size = p->cif_func.cfg_wid_get(p->cfg_frame.frame, offset, (u16)wid);
-+	ret_size = mac_cfg.cfg_wid_get(p->cfg_frame.frame, offset, (u16)wid);
- 	offset += ret_size;
- 	p->cfg_frame_offset = offset;
- 
-@@ -1830,10 +1830,9 @@ static int wilc_wlan_cfg_get(int start, u32 wid, int commit, u32 drvHandler)
- 
- static int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size)
+ /**
+- *  @brief      WILC_WFI_CfgSetChannel
++ *  @brief      wilc_cfg80211_set_monitor_channel
+  *  @details    Set channel for a given wireless interface. Some devices
+  *                      may support multi-channel operation (by channel hopping) so cfg80211
+  *                      doesn't verify much. Note, however, that the passed netdev may be
+@@ -689,7 +689,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_CfgSetChannel(struct wiphy *wiphy,
++static int wilc_cfg80211_set_monitor_channel(struct wiphy *wiphy,
+ 				  struct cfg80211_chan_def *chandef)
  {
--	wilc_wlan_dev_t *p = (wilc_wlan_dev_t *)&g_wlan;
- 	int ret;
  
--	ret = p->cif_func.cfg_wid_get_val((u16)wid, buffer, buffer_size);
-+	ret = mac_cfg.cfg_wid_get_val((u16)wid, buffer, buffer_size);
+@@ -3229,7 +3229,7 @@ static int WILC_WFI_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	PRINT_D(HOSTAPD_DBG, "Interval = %d\n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
+ 		settings->beacon_interval, settings->dtim_period, beacon->head_len, beacon->tail_len);
  
- 	return ret;
- }
-@@ -1999,8 +1998,6 @@ int wilc_wlan_init(wilc_wlan_inp_t *inp, wilc_wlan_oup_t *oup)
- 		ret = -105;
- 		goto _fail_;
- 	}
--	memcpy((void *)&g_wlan.cif_func, &mac_cfg, sizeof(wilc_cfg_func_t));
--
+-	s32Error = WILC_WFI_CfgSetChannel(wiphy, &settings->chandef);
++	s32Error = wilc_cfg80211_set_monitor_channel(wiphy, &settings->chandef);
  
- 	/**
- 	 *      alloc tx, rx buffer
+ 	if (s32Error != WILC_SUCCESS)
+ 		PRINT_ER("Error in setting channel\n");
+@@ -3603,7 +3603,7 @@ int WILC_WFI_del_virt_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ #endif /*WILC_AP_EXTERNAL_MLME*/
+ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 
+-	.set_monitor_channel = WILC_WFI_CfgSetChannel,
++	.set_monitor_channel = wilc_cfg80211_set_monitor_channel,
+ 	.scan = WILC_WFI_CfgScan,
+ 	.connect = WILC_WFI_CfgConnect,
+ 	.disconnect = WILC_WFI_disconnect,
 -- 
-1.9.1
+2.5.1
 
