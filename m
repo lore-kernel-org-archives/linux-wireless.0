@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33529 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbbIUM7G (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21393 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753406AbbIHIHt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:59:06 -0400
-Received: by pacex6 with SMTP id ex6so116414188pac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2015 05:59:05 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/16] staging: wilc1000: host_int_init: fix kzalloc error check
-Date: Mon, 21 Sep 2015 21:58:21 +0900
-Message-Id: <1442840306-9657-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20150921_151653_816078_5AE68E49)
-In-Reply-To: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442840306-9657-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 8 Sep 2015 04:07:49 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 2/5] staging: wilc1000: remove meaningless line
+Date: Tue, 8 Sep 2015 17:08:00 +0900
+Message-ID: <1441699683-31463-2-git-send-email-tony.cho@atmel.com> (sfid-20150908_100753_295144_BBD19565)
+In-Reply-To: <1441699683-31463-1-git-send-email-tony.cho@atmel.com>
+References: <1441699683-31463-1-git-send-email-tony.cho@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes error check when kzalloc is failed.
-NULL comparison style is changed to use ! operator and
-PRINT_ER is also removed.
+From: Johnny Kim <johnny.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The current driver is calling skb_reserve function to align memory in
+frmw_to_linux function. However, the wrong value is used as the input argument.
+Besides, the process is not necessary because the address already is algined
+in dev_alloc_skb function. So, this patch removes the line for dummy headroom.
+
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8c0c478..2150c89 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6372,9 +6372,8 @@ s32 host_int_init(tstrWILC_WFIDrv **phWFIDrv)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 59c9b44..dc297fc 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -2161,8 +2161,6 @@ void frmw_to_linux(uint8_t *buff, uint32_t size, uint32_t pkt_offset)
+ 			return;
+ 		}
  
- 	/*Allocate host interface private structure*/
- 	pstrWFIDrv  = kzalloc(sizeof(tstrWILC_WFIDrv), GFP_KERNEL);
--	if (pstrWFIDrv == NULL) {
-+	if (!pstrWFIDrv) {
- 		s32Error = -ENOMEM;
--		PRINT_ER("Failed to allocate memory\n");
- 		goto _fail_timer_2;
- 	}
- 	*phWFIDrv = pstrWFIDrv;
+-		skb_reserve(skb, (unsigned int)skb->data & 0x3);
+-
+ 		if (g_linux_wlan == NULL || wilc_netdev == NULL)
+ 			PRINT_ER("wilc_netdev in g_linux_wlan is NULL");
+ 		skb->dev = wilc_netdev;
 -- 
-2.5.1
+1.9.1
 
