@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5774 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752474AbbIRNcq (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:32852 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754900AbbIHN7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 09:32:46 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8IDPaEx031584
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:45 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1wy3qm7eps-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2015 06:32:45 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 01/16] mwifiex: fix typo in del_virtual_intf() function
-Date: Fri, 18 Sep 2015 06:32:03 -0700
-Message-ID: <1442583138-2979-2-git-send-email-akarwar@marvell.com> (sfid-20150918_153248_929701_BC88B4E3)
-In-Reply-To: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
-References: <1442583138-2979-1-git-send-email-akarwar@marvell.com>
+	Tue, 8 Sep 2015 09:59:44 -0400
+Received: by wiclk2 with SMTP id lk2so121634467wic.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 06:59:42 -0700 (PDT)
+Subject: Re: [PATCH] wireless-regdb: add 2.4GHz regulatory rules for Cuba (CU)
+To: Seth Forshee <seth.forshee@canonical.com>
+References: <1439299795-17359-1-git-send-email-xose.vazquez@gmail.com>
+ <20150813143154.GA121347@ubuntu-hedt>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wireless-regdb@lists.infradead.org
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Message-ID: <55EEE9CA.5010309@gmail.com> (sfid-20150908_155952_031705_DC90975E)
+Date: Tue, 8 Sep 2015 15:59:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150813143154.GA121347@ubuntu-hedt>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 08/13/2015 04:31 PM, Seth Forshee wrote:
 
-Interface counters should be incremented in add_virtual_intf()
-and decremented in del_virtual_intf() function. This patch
-corrects it.
+> On Tue, Aug 11, 2015 at 03:29:55PM +0200, Xose Vazquez Perez wrote:
+>> Resolución 127, 2011 - Reglamento Banda 2,4 GHz.:
+>> http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
+>>
+>> Cc: Seth Forshee <seth.forshee@canonical.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: wireless-regdb@lists.infradead.org
+>> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+>> ---
+>>  db.txt | 7 +++++++
+>>  1 file changed, 7 insertions(+)
+>>
+>> diff --git a/db.txt b/db.txt
+>> index 982db34..2edbf90 100644
+>> --- a/db.txt
+>> +++ b/db.txt
+>> @@ -275,6 +275,13 @@ country CR: DFS-FCC
+>>  	(5490 - 5730 @ 20), (24), DFS
+>>  	(5735 - 5835 @ 20), (30)
+>>  
+>> +# http://www.mincom.gob.cu/?q=marcoregulatorio
+>> +# - Redes Informáticas
+>> +# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
+>> +country CU: DFS-FCC
+>> +	(2400 - 2456 @ 40), (200 mW)
+>> +	(2456 - 2483.5 @ 40), (200 mW)
+>> +
+> 
+> Based on the Google translation of the document you linked to, I don't
+> see anything which would prevent merging these rules into one rule. Am I
+> missing something?
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+from http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
+page 7:
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 7e71dd7..4e06e98 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2862,14 +2862,14 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
--		adapter->curr_iface_comb.sta_intf++;
-+		adapter->curr_iface_comb.sta_intf--;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		adapter->curr_iface_comb.uap_intf++;
-+		adapter->curr_iface_comb.uap_intf--;
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_P2P_GO:
--		adapter->curr_iface_comb.p2p_intf++;
-+		adapter->curr_iface_comb.p2p_intf--;
- 		break;
- 	default:
- 		mwifiex_dbg(adapter, ERROR,
--- 
-1.8.1.4
+Artículo 4: Disposiciones de carácter técnico
+[..]
+4.3.- No obstante lo anterior, los equipos que operen en las frecuencias entre 2456 y
+2483,5 MHz pueden emplear valores de p.i.r.e superiores, cuando ello se justifique en
+beneficio de objetivos de interés nacional [...]
+4.4.- Para estos casos es necesario obtener una autorización expresa de la Agencia
+[...]
+
+If you grant an authorization, for 2456-2483.5 pire can be increased.
 
