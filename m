@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:36470 "EHLO lists.s-osg.org"
+Received: from mx1.redhat.com ([209.132.183.28]:36385 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753387AbbIPJIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 05:08:54 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Javier Martinez Canillas <javier@osg.samsung.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [RESEND PATCH] NFC: trf7970a: Add OF match table
-Date: Wed, 16 Sep 2015 11:08:42 +0200
-Message-Id: <1442394522-12883-1-git-send-email-javier@osg.samsung.com> (sfid-20150916_110925_191660_803797CB)
+	id S1752180AbbIHVYS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2015 17:24:18 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for rtl8188[cr]u/rtl8192cu/rtl8723au
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+	<87y4gjfw10.fsf@kamboji.qca.qualcomm.com>
+	<wrfjfv2rf1e1.fsf@redhat.com>
+	<878u8ifv1o.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 08 Sep 2015 17:24:17 -0400
+In-Reply-To: <878u8ifv1o.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Mon, 07 Sep 2015 12:17:07 +0300")
+Message-ID: <wrfjfv2oa9ku.fsf@redhat.com> (sfid-20150908_232422_328722_B9FBBD5E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Documentation/devicetree/bindings/net/nfc/trf7970a.txt DT binding doc
-lists "ti,trf7970a" as a compatible string but the corresponding driver
-does not have an OF match table. Add the table to the driver so the SPI
-core can do an OF style match.
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>> Jes.Sorensen@redhat.com writes:
+>>>
+>>>> Per default only devices I have actually tested will be enabled. If
+>>>> you are interested in trying it out with other 8188cu/8188ru/819[12]cu
+>>>> dongles, you need to enable CONFIG_RTL8XXXU_UNTESTED. Please report
+>>>> test results back to me.
+>>>>
+>>>> Note if you enable this driver, it may clash with CONFIG_RTL8192U,
+>>>> CONFIG_R8723AU, and CONFIG_RTL8192CU (rtlwifi). Please pay attention
+>>>> to which module you load and/or use modprobe blacklists.
+>>>
+>>> May clash? So how does this work in practise? Is the clash referring
+>>> CONFIG_RTL8XXXU_UNTESTED enabled or disabled?
+>>>
+>>> I think we should only have one driver automatically supporting certain
+>>> hardware, and not have a driver randomly chosen and forcing users to use
+>>> a blacklist.
+>>
+>> We already have the clash, if you enable CONFIG_RTL8192U in staging it
+>> clashes with rtlwifi's CONFIG_RTL8192CU. Ripping out the above two
+>> drivers at this point isn't going to do users any good.
+>
+> I'm not saying about we should remove drivers, my worry is only that we
+> don't have two drivers competing about same devices in a normal distro
+> kernel. We should _by default_ not have two drivers claiming support for
+> the same device, developer's can of course enable this via experimental
+> options etc.
+>
+>>> Also how do we make sure that distros don't enable
+>>> CONFIG_RTL8XXXU_UNTESTED? They are notarious of enabling kconfig options
+>>> without thinking.
+>>
+>> Some distros enable staging whether you ask them or not.
+>
+> Sure, that's up to them. I don't care what's in staging so I can't
+> really comment about that, this is only in context of
+> drivers/net/wireless/.
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+I'm with you, my point is just that we already have multiple drivers
+claming this. It is not a new situation :( Right now the distros enable
+the rtl drivers in staging because it is the only way to get support for
+a number of realtek devices. At least OpenSuSE and Debian seem to be
+enabling CONFIG_RTL8192U right now, while Fedora doesn't.
 
----
-
- drivers/nfc/trf7970a.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 70b0707fd9a9..123aa981c9d8 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2211,6 +2211,12 @@ static const struct dev_pm_ops trf7970a_pm_ops = {
- 			trf7970a_pm_runtime_resume, NULL)
- };
- 
-+static const struct of_device_id trf7970a_of_match[] = {
-+	{ .compatible = "ti,trf7970a", },
-+	{ /* sentinel */ },
-+};
-+MODULE_DEVICE_TABLE(of, trf7970a_of_match);
-+
- static const struct spi_device_id trf7970a_id_table[] = {
- 	{ "trf7970a", 0 },
- 	{ }
-@@ -2223,6 +2229,7 @@ static struct spi_driver trf7970a_spi_driver = {
- 	.id_table	= trf7970a_id_table,
- 	.driver		= {
- 		.name	= "trf7970a",
-+		.of_match_table = of_match_ptr(trf7970a_of_match),
- 		.owner	= THIS_MODULE,
- 		.pm	= &trf7970a_pm_ops,
- 	},
--- 
-2.4.3
-
+Cheers,
+Jes
