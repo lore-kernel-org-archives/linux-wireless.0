@@ -1,84 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18752 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752196AbbISCpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 22:45:15 -0400
-Message-ID: <55FCCC37.9000503@linux.intel.com> (sfid-20150919_044541_949693_B44D7C14)
-Date: Sat, 19 Sep 2015 10:45:11 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: David Miller <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] net/wireless: enable wiphy device to suspend/resume asynchronously
-References: <55B9B3BA.6080406@linux.intel.com>		 <CANUX_P3PMsvWCWWciwCsRvf5PqLVEK9d9S=2Gbq+EotVGffEow@mail.gmail.com>		 <55D13D66.1050500@linux.intel.com>	 <1439796553.2451.1.camel@sipsolutions.net> <55D19F57.4070605@broadcom.com>	 <55DA9374.2060909@linux.intel.com> <1440401918.3735.0.camel@sipsolutions.net>
-In-Reply-To: <1440401918.3735.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:34703 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754924AbbIHP40 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2015 11:56:26 -0400
+Received: by padhy16 with SMTP id hy16so125288828pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:26 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/30] staging: wilc1000: rename WILC_WFI_get_key
+Date: Wed,  9 Sep 2015 00:55:43 +0900
+Message-Id: <1441727767-26026-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175629_763747_722412B1)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch replaces WILC_WFI_get_key with wilc_cfg80211_get_key to avoid
+CamelCase.
 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-On 2015/8/24 15:38, Johannes Berg wrote:
-> On Mon, 2015-08-24 at 11:45 +0800, Fu, Zhonghui wrote:
->> On 2015/8/17 16:46, Arend van Spriel wrote:
->>> + Rafael
->>>
->>> On 08/17/2015 09:29 AM, Johannes Berg wrote:
->>>> On Mon, 2015-08-17 at 09:48 +0800, Fu, Zhonghui wrote:
->>>>> The suspend/resume timing of wiphy device and related devices 
->>>>> will be
->>>>> ensured by their parent/child relationship. So, enabling wiphy 
->>>>> device
->>>>> to suspend/resume asynchronously does not change any 
->>>>>  dependency. It
->>>>> can only take advantage of multicore and improve system
->>>>> suspend/resume speed.
->>>>>
->>>> You're going to have to explain that to me, because I don't see 
->>>> that.
->>>> All I see is that when looking at a device, if async is possible, 
->>>> it
->>>> gets added to an async work, and if async is not possible then it 
->>>> gets
->>>> done immediately. Even putting aside the question of whether or 
->>>> not
->>>> async is ordered or not (I don't know), if the wiphy is async and 
->>>> the
->>>> PCI (or other bus) device isn't, then it seems they could get 
->>>> handled
->>>> out of order, no? Or is there some magic code somewhere that I'm
->>>> missing that explicitly waits for the async of the parent/child
->>>> relationship?
->>> This patch got me worried as well. Can't find the magic either. 
->>> Maybe Rafael can give some hints here.
->> "dpm_wait_for_children" function will be invoked in 
->> "__device_suspend", "__device_suspend_late", and 
->> "__device_suspend_noirq" functions to synchronize the child 
->> relationship. "dpm_wait" function will be invoked in 
->> "device_resume_noirq", "device_resume_early", and "device_resume" 
->> functions to synchronize the parent relationship. If two devices have 
->> parent/child relationship, but different suspend/resume mode(sync or 
->> async), this will have no impact to PM timing order between them. 
->> Because all devices will use "__device_suspend", 
->> "__device_suspend_late" ... functions to complete their PM 
->> transition.
->>
-> Ok, good point. For the unaware here, can you please resend with a
-> commit message amended with some of this information?
-I take some leaves these days, so very sorry for late reply.
-
-I have resent this patch with your advices - "[PATCH v2] net/wireless: enable wiphy device to suspend/resume asynchronously".
-
-
-Thanks,
-Zhonghui
->
-> thanks,
-> johannes
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1e08b0c..67a6cfb 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1511,7 +1511,7 @@ static int wilc_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
+ }
+ 
+ /**
+- *  @brief      WILC_WFI_get_key
++ *  @brief      wilc_cfg80211_get_key
+  *  @details    Get information about the key with the given parameters.
+  *                      @mac_addr will be %NULL when requesting information for a group
+  *                      key. All pointers given to the @callback function need not be valid
+@@ -1523,7 +1523,7 @@ static int wilc_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
++static int wilc_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 			    bool pairwise,
+ 			    const u8 *mac_addr, void *cookie, void (*callback)(void *cookie, struct key_params *))
+ {
+@@ -3609,7 +3609,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.disconnect = WILC_WFI_disconnect,
+ 	.add_key = wilc_cfg80211_add_key,
+ 	.del_key = wilc_cfg80211_del_key,
+-	.get_key = WILC_WFI_get_key,
++	.get_key = wilc_cfg80211_get_key,
+ 	.set_default_key = WILC_WFI_set_default_key,
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+ 	.add_virtual_intf = WILC_WFI_add_virt_intf,
+-- 
+2.5.1
 
