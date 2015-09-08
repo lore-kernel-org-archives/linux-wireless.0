@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22007 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbbIBGvd (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34140 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755353AbbIHP45 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2015 02:51:33 -0400
-From: <c_mpubbi@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
-Subject: [PATCH] ath10k: invalid mcs reported in rx descriptor
-Date: Wed, 2 Sep 2015 12:21:05 +0530
-Message-ID: <1441176665-3365-1-git-send-email-c_mpubbi@qti.qualcomm.com> (sfid-20150902_085136_783761_D11B8F1B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 Sep 2015 11:56:57 -0400
+Received: by padhy16 with SMTP id hy16so125300411pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:57 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 18/30] staging: wilc1000: rename WILC_WFI_dump_station
+Date: Wed,  9 Sep 2015 00:55:55 +0900
+Message-Id: <1441727767-26026-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180151_560454_FD3E5648)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
+This patch replaces WILC_WFI_dump_station with
+wilc_cfg80211_dump_station to avoid CamelCase.
 
-Sometimes hardware reports invalid mcs index in rx descriptor
-when operating in VHT80 mode and all packets with invalid mcs
-will be eventually dropped in mac80211. This issue is observerd during
-testing on QCA99X0 chipsets.
-
-This patch adds a warn message for dumping the rx desc info which helps
-in analysing the issue when invalid mcs is received.
-
-Signed-off-by: Manikanta Pubbisetty <c_mpubbi@qti.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 1b7a043..9985772 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -697,6 +697,29 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
- 		bw = info2 & 3;
- 		sgi = info3 & 1;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1db8b8d..d448df5 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2759,7 +2759,7 @@ static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
  
-+		if (mcs > 0x09) {
-+			ath10k_warn(ar, "invalid MCS received %u\n", mcs);
-+			ath10k_warn(ar, "rxd %08x mpdu start %08x %08x msdu start %08x %08x ppdu start %08x %08x %08x %08x %08x\n",
-+				    __le32_to_cpu(rxd->attention.flags),
-+				    __le32_to_cpu(rxd->mpdu_start.info0),
-+				    __le32_to_cpu(rxd->mpdu_start.info1),
-+				    __le32_to_cpu(rxd->msdu_start.common.info0),
-+				    __le32_to_cpu(rxd->msdu_start.common.info1),
-+				    rxd->ppdu_start.info0,
-+				    __le32_to_cpu(rxd->ppdu_start.info1),
-+				    __le32_to_cpu(rxd->ppdu_start.info2),
-+				    __le32_to_cpu(rxd->ppdu_start.info3),
-+				    __le32_to_cpu(rxd->ppdu_start.info4));
-+
-+			ath10k_warn(ar, "msdu end %08x mpdu end %08x\n",
-+				    __le32_to_cpu(rxd->msdu_end.common.info0),
-+				    __le32_to_cpu(rxd->mpdu_end.info0));
-+
-+			ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL,
-+					"rx desc msdu payload: ",
-+					rxd->msdu_payload, 50);
-+		}
-+
- 		status->rate_idx = mcs;
- 		status->vht_nss = nss;
+ }
+ /**
+- *  @brief      WILC_WFI_dump_station
++ *  @brief      wilc_cfg80211_dump_station
+  *  @details    Configure connection quality monitor RSSI threshold.
+  *  @param[in]   struct wiphy *wiphy:
+  *  @param[in]	struct net_device *dev
+@@ -2771,7 +2771,7 @@ static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_dump_station(struct wiphy *wiphy, struct net_device *dev,
++static int wilc_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 int idx, u8 *mac, struct station_info *sinfo)
+ {
+ 	struct WILC_WFI_priv *priv;
+@@ -3626,7 +3626,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	#ifndef WILC_FULLY_HOSTING_AP
+ 	.get_station = wilc_cfg80211_get_station,
+ 	#endif
+-	.dump_station = WILC_WFI_dump_station,
++	.dump_station = wilc_cfg80211_dump_station,
+ 	.change_bss = WILC_WFI_change_bss,
+ 	.set_wiphy_params = WILC_WFI_set_wiphy_params,
  
 -- 
-1.9.1
+2.5.1
 
