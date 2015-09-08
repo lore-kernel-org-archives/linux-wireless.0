@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45773 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932229AbbIUVBb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 17:01:31 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 21 Sep 2015 23:58:51 +0300
-Message-Id: <1442869141-31637-11-git-send-email-luca@coelho.fi> (sfid-20150921_230136_343119_1FA44B2C)
-In-Reply-To: <1442868938.27148.361.camel@coelho.fi>
-References: <1442868938.27148.361.camel@coelho.fi>
-Subject: [PATCH 11/21] iwlwifi: mvm: remove IWL_UCODE_TLV_API_TX_POWER_DEV TLV flag
+Received: from s3.sipsolutions.net ([5.9.151.49]:46640 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753551AbbIHQD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2015 12:03:27 -0400
+Message-ID: <1441728204.1906.18.camel@sipsolutions.net> (sfid-20150908_180331_040793_149E139D)
+Subject: Re: [PATCH] mac80211: Fix oops in OCB mode when receiving data when
+ not joined
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bertold Van den Bergh <bertold.vandenbergh@esat.kuleuven.be>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 08 Sep 2015 18:03:24 +0200
+In-Reply-To: <1439456956.2114.8.camel@sipsolutions.net> (sfid-20150813_110943_152676_58A412B6)
+References: <1438781899-600-1-git-send-email-bertold.vandenbergh@esat.kuleuven.be>
+	 <1439456956.2114.8.camel@sipsolutions.net>
+	 (sfid-20150813_110943_152676_58A412B6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Thu, 2015-08-13 at 11:09 +0200, Johannes Berg wrote:
+> On Wed, 2015-08-05 at 15:38 +0200, Bertold Van den Bergh wrote:
+> > The current implementation in ocb.c can cause a kernel oops when 
+> > the
+> > interface is up, but no ocb has been joined. When data is received
+> > with the broadcast BSSID rx_no_sta is called. This function uses
+> > uninitialized variables because the join function has not yet been 
+> > used.
+> > 
+> > Signed-off-by: Bertold Van den Bergh <
+> > bertold.vandenbergh@esat.kuleuven.be>
+> > ---
+> >  net/mac80211/ocb.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/net/mac80211/ocb.c b/net/mac80211/ocb.c
+> > index 573b81a..5da2bd3 100644
+> > --- a/net/mac80211/ocb.c
+> > +++ b/net/mac80211/ocb.c
+> > @@ -50,6 +50,9 @@ void ieee80211_ocb_rx_no_sta(struct 
+> > ieee80211_sub_if_data *sdata,
+> >  	struct sta_info *sta;
+> >  	int band;
+> >  
+> > +	if (!ifocb->joined)
+> > +		return;
+> > 
+> Wouldn't it make more sense to put this check into
+> ieee80211_accept_frame() and, in addition to not doing any station
+> processing, simply dropping the frame completely? Like such:
+> 
 
-All the supported firmwares use the new API.
+Reminder? I'm not sure what to do with this patch - I don't
+particularly like processing the frame at all.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw-file.h  |  2 --
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 17 -----------------
- 2 files changed, 19 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 55ff72e..7af0ec2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -247,7 +247,6 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_FRAGMENTED_SCAN: This ucode supports active dwell time
-  *	longer than the passive one, which is essential for fragmented scan.
-  * @IWL_UCODE_TLV_API_WIFI_MCC_UPDATE: ucode supports MCC updates with source.
-- * @IWL_UCODE_TLV_API_TX_POWER_DEV: new API for tx power.
-  * @IWL_UCODE_TLV_API_WIDE_CMD_HDR: ucode supports wide command header
-  * @IWL_UCODE_TLV_API_SINGLE_SCAN_EBS: EBS is supported for single scans too.
-  * @IWL_UCODE_TLV_API_ASYNC_DTM: Async temperature notifications are supported.
-@@ -263,7 +262,6 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_BT_COEX_SPLIT         = (__force iwl_ucode_tlv_api_t)3,
- 	IWL_UCODE_TLV_API_FRAGMENTED_SCAN	= (__force iwl_ucode_tlv_api_t)8,
- 	IWL_UCODE_TLV_API_WIFI_MCC_UPDATE	= (__force iwl_ucode_tlv_api_t)9,
--	IWL_UCODE_TLV_API_TX_POWER_DEV		= (__force iwl_ucode_tlv_api_t)11,
- 	IWL_UCODE_TLV_API_WIDE_CMD_HDR		= (__force iwl_ucode_tlv_api_t)14,
- 	IWL_UCODE_TLV_API_SINGLE_SCAN_EBS	= (__force iwl_ucode_tlv_api_t)16,
- 	IWL_UCODE_TLV_API_ASYNC_DTM		= (__force iwl_ucode_tlv_api_t)17,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index f9f88e9..4c497fe 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1577,20 +1577,6 @@ static struct iwl_mvm_phy_ctxt *iwl_mvm_get_free_phy_ctxt(struct iwl_mvm *mvm)
- 	return NULL;
- }
- 
--static int iwl_mvm_set_tx_power_old(struct iwl_mvm *mvm,
--				    struct ieee80211_vif *vif, s8 tx_power)
--{
--	/* FW is in charge of regulatory enforcement */
--	struct iwl_reduce_tx_power_cmd reduce_txpwr_cmd = {
--		.mac_context_id = iwl_mvm_vif_from_mac80211(vif)->id,
--		.pwr_restriction = cpu_to_le16(tx_power),
--	};
--
--	return iwl_mvm_send_cmd_pdu(mvm, REDUCE_TX_POWER_CMD, 0,
--				    sizeof(reduce_txpwr_cmd),
--				    &reduce_txpwr_cmd);
--}
--
- static int iwl_mvm_set_tx_power(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				s16 tx_power)
- {
-@@ -1602,9 +1588,6 @@ static int iwl_mvm_set_tx_power(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	};
- 	int len = sizeof(cmd);
- 
--	if (!fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_TX_POWER_DEV))
--		return iwl_mvm_set_tx_power_old(mvm, vif, tx_power);
--
- 	if (tx_power == IWL_DEFAULT_MAX_TX_POWER)
- 		cmd.v2.pwr_restriction = cpu_to_le16(IWL_DEV_MAX_TX_POWER);
- 
--- 
-2.5.1
-
+johannes
