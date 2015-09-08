@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:7312 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003AbbISJn2 (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34509 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755373AbbIHP5U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2015 05:43:28 -0400
-Message-ID: <55FD2E3E.4020804@broadcom.com> (sfid-20150919_114331_037954_F156B168)
-Date: Sat, 19 Sep 2015 11:43:26 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 01/16] brcmfmac: Fix exception handling.
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com> <1442606899-31872-2-git-send-email-arend@broadcom.com>
-In-Reply-To: <1442606899-31872-2-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Tue, 8 Sep 2015 11:57:20 -0400
+Received: by padhy16 with SMTP id hy16so125309465pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:20 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 27/30] staging: wilc1000: rename WILC_WFI_mgmt_tx
+Date: Wed,  9 Sep 2015 00:56:04 +0900
+Message-Id: <1441727767-26026-27-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180158_447253_AC95BE6F)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/18/2015 10:08 PM, Arend van Spriel wrote:
-> From: Hante Meuleman <meuleman@broadcom.com>
->
-> In some exception situations the ifp->vif was not properly assigned
-> which could result in crash.
+This patch replaces WILC_WFI_mgmt_tx with wilc_cfg80211_mgmt_tx to avoid
+CamelCase.
 
-Tested-by: Rafał Miłecki <zajec5@gmail.com>
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-> index 600098d..da24bf0 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-> @@ -6332,6 +6332,7 @@ wiphy_unreg_out:
->   priv_out:
->   	wl_deinit_priv(cfg);
->   	brcmf_free_vif(vif);
-> +	ifp->vif = NULL;
->   wiphy_out:
->   	brcmf_free_wiphy(wiphy);
->   	return NULL;
->
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e65c18a..5f56f8b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2496,7 +2496,7 @@ void WILC_WFI_add_wilcvendorspec(u8 *buff)
+  */
+ extern linux_wlan_t *g_linux_wlan;
+ extern bool bEnablePS;
+-int WILC_WFI_mgmt_tx(struct wiphy *wiphy,
++int wilc_cfg80211_mgmt_tx(struct wiphy *wiphy,
+ 			struct wireless_dev *wdev,
+ 			struct cfg80211_mgmt_tx_params *params,
+ 			u64 *cookie)
+@@ -3637,7 +3637,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.remain_on_channel = wilc_cfg80211_remain_on_channel,
+ 	.cancel_remain_on_channel = wilc_cfg80211_cancel_remain_on_channel,
+ 	.mgmt_tx_cancel_wait = wilc_cfg80211_mgmt_tx_cancel_wait,
+-	.mgmt_tx = WILC_WFI_mgmt_tx,
++	.mgmt_tx = wilc_cfg80211_mgmt_tx,
+ 	.mgmt_frame_register = WILC_WFI_frame_register,
+ 	.set_power_mgmt = WILC_WFI_set_power_mgmt,
+ 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
+-- 
+2.5.1
 
