@@ -1,91 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:45484 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbbIRJNy (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33454 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755393AbbIHP5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 05:13:54 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 19/34] staging: wilc1000: remove typedef from the struct tstrHostIfPowerMgmtParam
-Date: Fri, 18 Sep 2015 18:11:21 +0900
-Message-ID: <1442567496-29331-19-git-send-email-tony.cho@atmel.com> (sfid-20150918_111409_373830_37ABB190)
-In-Reply-To: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-References: <1442567496-29331-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 Sep 2015 11:57:25 -0400
+Received: by pacex6 with SMTP id ex6so127507772pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:25 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 29/30] staging: wilc1000: rename WILC_WFI_set_power_mgmt
+Date: Wed,  9 Sep 2015 00:56:06 +0900
+Message-Id: <1441727767-26026-29-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180200_038312_8C62EEC2)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIfPowerMgmtParam and
-renames it to power_mgmt_param in order to comply with the Linux coding
-style.
+This patch replaces WILC_WFI_set_power_mgmt with
+wilc_cfg80211_set_power_mgmt to avoid CamelCase.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5f546e5..12adb03 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -360,7 +360,7 @@ struct timer_cb {
- };
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 55ca2db..078220f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2793,7 +2793,7 @@ static int wilc_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *de
  
- /*!
-- *  @struct     tstrHostIfPowerMgmtParam
-+ *  @struct     power_mgmt_param
-  *  @brief		Power management message body
+ 
+ /**
+- *  @brief      WILC_WFI_set_power_mgmt
++ *  @brief      wilc_cfg80211_set_power_mgmt
   *  @details
-  *  @todo
-@@ -369,11 +369,11 @@ struct timer_cb {
-  *  @date		24 November 2012
-  *  @version		1.0
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -2801,7 +2801,7 @@ static int wilc_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *de
+  *  @date	01 JUL 2012
+  *  @version	1.0WILC_WFI_set_cqmWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_configWILC_WFI_set_cqm_rssi_config_rssi_config
   */
--typedef struct {
-+struct power_mgmt_param {
- 
- 	bool bIsEnabled;
- 	u32 u32Timeout;
--} tstrHostIfPowerMgmtParam;
-+};
- 
- /*!
-  *  @struct             tstrHostIFSetIPAddr
-@@ -432,7 +432,7 @@ union message_body {
- 	struct add_sta_param strEditStaParam;                           /*!< Edit station message body */
- 	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
- 	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
--	tstrHostIfPowerMgmtParam strPowerMgmtparam;     /*!< Power Management message body */
-+	struct power_mgmt_param strPowerMgmtparam;     /*!< Power Management message body */
- 	tstrHostIfStaInactiveT strHostIfStaInactiveT;
- 	tstrHostIFSetIPAddr strHostIfSetIP;
- 	tstrHostIfSetDrvHandler strHostIfSetDrvHandler;
-@@ -4020,7 +4020,8 @@ static void ListenTimerCB(unsigned long arg)
-  *  @date
-  *  @version	1.0
-  */
--static void Handle_PowerManagement(tstrWILC_WFIDrv *drvHandler, tstrHostIfPowerMgmtParam *strPowerMgmtParam)
-+static void Handle_PowerManagement(tstrWILC_WFIDrv *drvHandler,
-+				   struct power_mgmt_param *strPowerMgmtParam)
+-int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
++int wilc_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 			    bool enabled, int timeout)
  {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
-@@ -7266,7 +7267,7 @@ s32 host_int_set_power_mgmt(tstrWILC_WFIDrv *hWFIDrv, bool bIsEnabled, u32 u32Ti
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	tstrHostIfPowerMgmtParam *pstrPowerMgmtParam = &msg.body.strPowerMgmtparam;
-+	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.strPowerMgmtparam;
- 
- 	PRINT_INFO(HOSTINF_DBG, "\n\n>> Setting PS to %d <<\n\n", bIsEnabled);
+ 	struct WILC_WFI_priv *priv;
+@@ -3639,7 +3639,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.mgmt_tx_cancel_wait = wilc_cfg80211_mgmt_tx_cancel_wait,
+ 	.mgmt_tx = wilc_cfg80211_mgmt_tx,
+ 	.mgmt_frame_register = wilc_cfg80211_mgmt_frame_register,
+-	.set_power_mgmt = WILC_WFI_set_power_mgmt,
++	.set_power_mgmt = wilc_cfg80211_set_power_mgmt,
+ 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
+ #endif
  
 -- 
-1.9.1
+2.5.1
 
