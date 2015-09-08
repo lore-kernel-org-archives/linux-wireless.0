@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4398 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755574AbbI0MuW (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35359 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755393AbbIHP52 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 08:50:22 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath: fix incorrect PPB on JAPAN chirp radar
-References: <1441819724-25344-1-git-send-email-poh@qca.qualcomm.com>
-Date: Sun, 27 Sep 2015 15:50:09 +0300
-In-Reply-To: <1441819724-25344-1-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Wed, 9 Sep 2015 10:28:44 -0700")
-Message-ID: <87oagoc9ha.fsf@kamboji.qca.qualcomm.com> (sfid-20150927_145046_213173_BD226429)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 8 Sep 2015 11:57:28 -0400
+Received: by pacfv12 with SMTP id fv12so130460750pac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:27 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 30/30] staging: wilc1000: rename WILC_WFI_set_cqm_rssi_config
+Date: Wed,  9 Sep 2015 00:56:07 +0900
+Message-Id: <1441727767-26026-30-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180159_900165_94F15178)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+This patch replaces WILC_WFI_set_cqm_rssi_config with
+wilc_cfg80211_set_cqm_rssi_config to avoid CamelCase.
 
-> The number of pulses per burst on Japan chirp radar is
-> between 1 and 3. The previous value, 20, is representing
-> number of bursts, but since current DFS detector is using
-> pulse detection other than bursts, use the pulse number
-> for correct radar detection.
-> Also using the highest number helps to avoid false detection.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks, applied.
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 078220f..ee29be7 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2740,7 +2740,7 @@ void    wilc_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
+ #endif /*WILC_P2P*/
+ 
+ /**
+- *  @brief      WILC_WFI_set_cqm_rssi_config
++ *  @brief      wilc_cfg80211_set_cqm_rssi_config
+  *  @details    Configure connection quality monitor RSSI threshold.
+  *  @param[in]   struct wiphy *wiphy:
+  *  @param[in]	struct net_device *dev:
+@@ -2751,7 +2751,7 @@ void    wilc_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int    WILC_WFI_set_cqm_rssi_config(struct wiphy *wiphy,
++static int    wilc_cfg80211_set_cqm_rssi_config(struct wiphy *wiphy,
+ 					   struct net_device *dev,  s32 rssi_thold, u32 rssi_hyst)
+ {
+ 	PRINT_D(CFG80211_DBG, "Setting CQM RSSi Function\n");
+@@ -3640,7 +3640,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.mgmt_tx = wilc_cfg80211_mgmt_tx,
+ 	.mgmt_frame_register = wilc_cfg80211_mgmt_frame_register,
+ 	.set_power_mgmt = wilc_cfg80211_set_power_mgmt,
+-	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
++	.set_cqm_rssi_config = wilc_cfg80211_set_cqm_rssi_config,
+ #endif
+ 
+ };
 -- 
-Kalle Valo
+2.5.1
+
