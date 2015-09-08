@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44774 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754626AbbISQdA (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:33957 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754103AbbIHJYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2015 12:33:00 -0400
-Message-ID: <55FD8E39.2010104@broadcom.com> (sfid-20150919_183304_746764_F5CE1ED7)
-Date: Sat, 19 Sep 2015 18:32:57 +0200
+	Tue, 8 Sep 2015 05:24:44 -0400
+Message-ID: <55EEA958.4060300@broadcom.com> (sfid-20150908_112453_130768_50994F98)
+Date: Tue, 8 Sep 2015 11:24:40 +0200
 From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>	<CACna6rz6P4==K=fVr=Vnn8fkwvFJppEqub6dCEcZ8DyK5Bpa=Q@mail.gmail.com>	<55FD7000.7070305@broadcom.com> <CACna6rxqZ08iFRwjaEpa4fLY8MCNU-tRm6X74y=FVCha2i7cig@mail.gmail.com>
-In-Reply-To: <CACna6rxqZ08iFRwjaEpa4fLY8MCNU-tRm6X74y=FVCha2i7cig@mail.gmail.com>
+To: Gucea Doru <gucea.doru@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: bcmdhd: Concurrent use of wlan0 and virtual interface in
+ managed mode
+References: <CANfLQrbXn2pLjVY8DVC=xs9oWZC2nX3VcEZQMLh1zQa7i4EHCg@mail.gmail.com>	<55DAD0FD.3070807@broadcom.com>	<CANfLQrYQnk6bUjPEKxucxBhLvsRsqpfydvAkvsvKdg0nnte3iA@mail.gmail.com>	<CAG8K7gRdXqpfA3_HPoaM+ivgxH4eiPRWkD238QwMMbNigYHDBw@mail.gmail.com>	<CANfLQraZAkw0Eqt-Mog5t4ZfGFx3xm_8-6nJoJ68Mim18bW3Tg@mail.gmail.com>	<CANfLQrYVq_eMa-CLJhqVthbm_h7yLBhZN5nm0_f70eEob+rUdw@mail.gmail.com>	<55EDFB26.8000708@broadcom.com> <CANfLQrbX4GmTbEuvnm+25bwCknB6DR2aQZN=0ZrHqdjCKXYYcw@mail.gmail.com>
+In-Reply-To: <CANfLQrbX4GmTbEuvnm+25bwCknB6DR2aQZN=0ZrHqdjCKXYYcw@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/19/2015 05:05 PM, Rafał Miłecki wrote:
-> On 19 September 2015 at 16:24, Arend van Spriel <arend@broadcom.com> wrote:
->> On 09/18/2015 11:29 PM, Rafał Miłecki wrote:
->>> On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com>
->>> wrote:
->>>>
->>>> * correct set and get tx-power.
->>>
->>>
->>> Oh, I got a similar patch, you were faster :)
->>>
->>>
->>>> The series should be applied to master branch of the
->>>> wireless-drivers-next
->>>> repository after the series sent earlier with
->>>> Message-ID: <1440620104-2715-1-git-send-email-arend@broadcom.com>
->>>> and patch "brcmfmac: Reset PCIE devices after recognition." with
->>>> Message-ID: <1440684846-17214-1-git-send-email-arend@broadcom.com>.
->>>
->>>
->>> Applied and tested with SR400ac (2 * BCM43602), no regressions
->>> noticed. Nice work!o
->>
->>
->> I replied to first and last patch so you are acknowledged for testing. Doing
->> it for each patch in the series was too much trouble for me :-p
+On 09/08/2015 09:50 AM, Gucea Doru wrote:
+> On Tue, Sep 8, 2015 at 12:01 AM, Arend van Spriel <arend@broadcom.com> wrote:
 >
-> Sure. I didn't really bother because of old patchwork installed on
-> kernel.org. It doesn't understand UTF and malforms my name forcing
-> Kalle to fixup patches manually:
-> https://patchwork.kernel.org/patch/7220471/
-> https://patchwork.kernel.org/patch/7220401/
+>> The BCM4339 chip does not rely on mac80211. Instead, there is an
+>> 802.11 stack running on the device, ie. in firmware. The driver creates the
+>> primary interface, ie. wlan0. Additional P2P interfaces are created by
+>> wpa_supplicant.
+>>
+>
+> Hm, BCM4339 uses the bcmdhd driver.
+> So the bcmdhd driver is not a softmac[1] driver and the the 802.11
+> processing is not done in software, right?
 
-So the patchwork upgrade request did not get through yet ;-)
+Sure it is done in software. Just not on the host, ie. in linux kernel, 
+but on the device.
 
 Regards,
 Arend
+
+> [1] https://wireless.wiki.kernel.org/en/developers/documentation/glossary#softmac
+>
+> Regards,
+> Doru
+>
 
