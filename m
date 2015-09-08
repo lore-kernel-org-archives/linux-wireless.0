@@ -1,61 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33106 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753422AbbIWJEA (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52733 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071AbbIHSFt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 05:04:00 -0400
-Received: by pacex6 with SMTP id ex6so35315135pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2015 02:04:00 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/6] staging: wilc1000: remove wilc_platform.h include file
-Date: Wed, 23 Sep 2015 18:03:46 +0900
-Message-Id: <1442999030-31934-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150923_110436_339659_B6478A2E)
-In-Reply-To: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442999030-31934-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 8 Sep 2015 14:05:49 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id 5421640A0D9
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2015 11:05:49 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Question rate-mask and iw
+Message-ID: <55EF237D.9070608@candelatech.com> (sfid-20150908_200601_068095_74DD24ED)
+Date: Tue, 8 Sep 2015 11:05:49 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes wilc_platform.h include file that is defined in
-wilc_msgqueue.h file. After removing it, compilation error occurs so
-that it is included two header files as <linux/semaphore.h> and
-<linux/slab.h> at wilc_msgqueue.h and wilc_msgqueue.c
+I'm trying to add ability to ath10k to set an arbitrary tx-rate mask.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 1 +
- drivers/staging/wilc1000/wilc_msgqueue.h | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+(ie, enable rates 6 64 vht 3 4 9, etc)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 869736a..d5ebd6d 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -3,6 +3,7 @@
- #include <linux/spinlock.h>
- #include "linux_wlan_common.h"
- #include <linux/errno.h>
-+#include <linux/slab.h>
- 
- /*!
-  *  @author		syounan
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 982628e..d231c33 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -10,7 +10,7 @@
-  *  @version	1.0
-  */
- 
--#include "wilc_platform.h"
-+#include <linux/semaphore.h>
- 
- /* Message Queue type is a structure */
- typedef struct __Message_struct {
+I know firmware will need to be modified...that is not the issue currently.
+
+My problem is that I seem not be mis-understanding how the code to set
+rates work.
+
+I have this code:
+
+static void ath10k_peer_assoc_h_rate_overrides(struct ath10k *ar,
+					       struct ieee80211_vif *vif,
+					       struct ieee80211_sta *sta,
+					       struct wmi_peer_assoc_complete_arg *arg)
+{
+	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+	const struct ieee80211_supported_band *sband;
+	const struct ieee80211_rate *rates;
+	u32 ratemask;
+	int i, j;
+	int band = ar->hw->conf.chandef.chan->band;
+
+	if (! test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
+		return;
+
+	lockdep_assert_held(&ar->conf_mutex);
+	
+	sband = ar->hw->wiphy->bands[band];
+	ratemask = sta->supp_rates[band];
+	rates = sband->bitrates;
+
+	ath10k_warn(ar, "band: %d  ratemask: 0x%x\n", band, ratemask);
+
+
+It is called when I run the command below:
+
+iw wlan0 set bitrates legacy-5 6 12
+
+But, rate-mask has all bits set...I would expect only bits corresponding
+to rate 6 and 12 to be set.
+
+[ 7487.627841] ath10k_pci 0000:05:00.0: band: 1  ratemask: 0xff
+
+
+I'll go dig through the stack next..but if anyone has pointers, they would be welcome.
+
+Thanks,
+Ben
+
+
 -- 
-2.5.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
