@@ -1,72 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:45817 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932967AbbI3TEv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 15:04:51 -0400
-Subject: Re: Can we ignore frames with invalid BSSID in IBSS mode?
-To: Ben Greear <greearb@candelatech.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-References: <5605D228.7050609@candelatech.com>
- (sfid-20150926_010105_789618_F93D668E)
- <1443595615.1859.2.camel@sipsolutions.net> <560BFABC.8090504@candelatech.com>
- <1443626224.1859.9.camel@sipsolutions.net> <560C036C.7000401@candelatech.com>
- <1443633267.1859.11.camel@sipsolutions.net>
- <560C19F3.6070903@candelatech.com>
- <1443637830.1859.17.camel@sipsolutions.net>
- <560C2B46.2040200@candelatech.com>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <560C324A.2000002@openwrt.org> (sfid-20150930_210459_936564_77E4A197)
-Date: Wed, 30 Sep 2015 21:04:42 +0200
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:26312 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754537AbbIHRFH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2015 13:05:07 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] ath: use PRI value given by spec for fixed PRI
+Date: Tue, 8 Sep 2015 10:04:41 -0700
+Message-ID: <f9db7f54d12e2589bcbb39215049d51a762d5d75.1441731619.git.poh@qca.qualcomm.com> (sfid-20150908_190511_970169_2D90B2E1)
 MIME-Version: 1.0
-In-Reply-To: <560C2B46.2040200@candelatech.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-09-30 20:34, Ben Greear wrote:
-> On 09/30/2015 11:30 AM, Johannes Berg wrote:
->> On Wed, 2015-09-30 at 10:20 -0700, Ben Greear wrote:
->>>
->>> Yes, it is a transmitter side problem, and A-MSDU on IBSS
->>> is disabled by default in all ath10k firmware versions that I am aware of.
->>
->> Right.
->>
->>> I was hoping there might be a way to allow A-MSDU + IBSS + ath10k
->>> to work in future kernels without applying out-of-tree
->>> kernel hacks.  This would let people with appropriate firmware
->>> enable IBSS + A-MSDU for added performance in cases where they
->>> knew the peer could support the needed work-around.
->>>
->>> I don't think it is worth a lot of effort, but if it were relatively
->>> simple to fix, then maybe it is worth it.
->>>
->>
->> Had it been a receiver-side issue, then it'd seem reasonable to work
->> around it. But it being a transmitter-side issue it doesn't really seem
->> so - *every* possible peer would have to be adjusted, and some might
->> not even be able to get adjusted (e.g. devices that have A-MSDU
->> deaggregation in hardware/firmware) ...
->>
->> So to do that properly you'd have to advertise some sort of quirk
->> vendor IE, and all that, which seems excessive given the limited use.
-> 
-> I was figuring the main users of this would be people rolling out
-> IBSS mesh networks and such, and they might have good knowledge of exactly
-> what peers will be used.
-> 
-> It is a small enough hack to the stack to just ignore the BSSID for
-> adhoc, and since CT firmware related patches are not accepted upstream
-> anyway, I guess anyone doing this is likely running custom patches
-> already.
-I think instead of making a bunch of assumptions about who is going to
-use this for what, you should just leave A-MSDU disabled for IBSS.
+PRI value is used as divider when DFS detector analyzes candidate
+radar pulses.
+If PRI deviation is big from its origin PRI, DFS detector could miss
+valid radar reports since HW often misses detecting radar pulses and
+causes long interval value of pulses.
 
-If you present this as a way to improve performance, users will probably
-mindlessly enable it without trying to understand why it wasn't enabled
-by default. Afterwards, they will create annoying and hard-to-debug bug
-reports for you and other people to waste time on.
+For instance from practical results, if runtime PRI is calculated as
+1431 for fixed PRI value of 1428 and delta timestamp logs 15719,
+the modular remainder will be 1409 and the delta between the remainder
+and runtime PRI is 22 that is bigger than PRI tolerance which is 16.
+As a result this radar report will be ignored even though it's valid.
 
-- Felix
+By using spec defined PRI for fixed PRI, we can correct this error.
+
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 6 ------
+ drivers/net/wireless/ath/dfs_pattern_detector.h | 5 +++++
+ drivers/net/wireless/ath/dfs_pri_detector.c     | 6 +++++-
+ 3 files changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 656ce42..0cc89fd 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -21,12 +21,6 @@
+ #include "dfs_pri_detector.h"
+ #include "ath.h"
+ 
+-/*
+- * tolerated deviation of radar time stamp in usecs on both sides
+- * TODO: this might need to be HW-dependent
+- */
+-#define PRI_TOLERANCE	16
+-
+ /**
+  * struct radar_types - contains array of patterns defined for one DFS domain
+  * @domain: DFS regulatory domain
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.h b/drivers/net/wireless/ath/dfs_pattern_detector.h
+index 25a43d6..92be353 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.h
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.h
+@@ -21,6 +21,11 @@
+ #include <linux/list.h>
+ #include <linux/nl80211.h>
+ 
++/* tolerated deviation of radar time stamp in usecs on both sides
++ * TODO: this might need to be HW-dependent
++ */
++#define PRI_TOLERANCE	16
++
+ /**
+  * struct ath_dfs_pool_stats - DFS Statistics for global pools
+  */
+diff --git a/drivers/net/wireless/ath/dfs_pri_detector.c b/drivers/net/wireless/ath/dfs_pri_detector.c
+index cc5c592..05b0464 100644
+--- a/drivers/net/wireless/ath/dfs_pri_detector.c
++++ b/drivers/net/wireless/ath/dfs_pri_detector.c
+@@ -25,6 +25,9 @@ struct ath_dfs_pool_stats global_dfs_pool_stats = {};
+ 
+ #define DFS_POOL_STAT_INC(c) (global_dfs_pool_stats.c++)
+ #define DFS_POOL_STAT_DEC(c) (global_dfs_pool_stats.c--)
++#define GET_PRI_TO_USE(MIN, MAX, RUNTIME) \
++	(MIN + PRI_TOLERANCE == MAX - PRI_TOLERANCE ? \
++	MIN + PRI_TOLERANCE : RUNTIME)
+ 
+ /**
+  * struct pulse_elem - elements in pulse queue
+@@ -243,7 +246,8 @@ static bool pseq_handler_create_sequences(struct pri_detector *pde,
+ 		ps.count_falses = 0;
+ 		ps.first_ts = p->ts;
+ 		ps.last_ts = ts;
+-		ps.pri = ts - p->ts;
++		ps.pri = GET_PRI_TO_USE(pde->rs->pri_min,
++			pde->rs->pri_max, ts - p->ts);
+ 		ps.dur = ps.pri * (pde->rs->ppb - 1)
+ 				+ 2 * pde->rs->max_pri_tolerance;
+ 
+-- 
+1.9.1
+
