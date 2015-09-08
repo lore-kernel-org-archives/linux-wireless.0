@@ -1,74 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41226 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753094AbbIKNnn (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36072 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbbIHP4r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2015 09:43:43 -0400
-From: Chor Teck Law <ctlaw@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: David Lin <dlin@marvell.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pete Hsieh <peteh@marvell.com>
-Subject: RE: [PATCH v5] Add new mac80211 driver mwlwifi.
-Date: Fri, 11 Sep 2015 13:43:37 +0000
-Message-ID: <5743c7447a834df1bf719dfa3444e9cd@SC-EXCH03.marvell.com> (sfid-20150911_154349_291103_FFE6824A)
-References: <92d77d0990b94d23ae66fb69fb55a6fb@SC-EXCH02.marvell.com>
-	<1436455659.36587.131.camel@sakura.staff.proxad.net>
-	<87vbcvyokg.fsf@kamboji.qca.qualcomm.com>
-	<20150804220956.GA28583@sakura.staff.proxad.net>
-	<1d5d24295c1c45ec856c908c60dab13b@SC-EXCH03.marvell.com>
- <87vbbmeasb.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87vbbmeasb.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 8 Sep 2015 11:56:47 -0400
+Received: by padhk3 with SMTP id hk3so42529615pad.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:46 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 14/30] staging: wilc1000: rename WILC_WFI_add_station
+Date: Wed,  9 Sep 2015 00:55:51 +0900
+Message-Id: <1441727767-26026-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180158_917205_0E39D48F)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2FsbGUg
-VmFsbyBbbWFpbHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiBNb25kYXksIFNlcHRl
-bWJlciAwNywgMjAxNSA0OjIwIEFNDQo+IA0KPiA+IENob3IgVGVjayBMYXcgPGN0bGF3QG1hcnZl
-bGwuY29tPiB3cml0ZXM6DQo+IA0KPiA+PiBPbiBUdWVzZGF5IDA0IEF1ZyAyMDE1IMOgIDIwOjAy
-OjIzICgrMDMwMCksIEthbGxlIFZhbG8gd3JvdGU6DQo+ID4+DQo+ID4+ID4gSSBoYXZlbid0IGxv
-b2tlZCBhdCB0aGUgZHJpdmVyIG15c2VsZiB5ZXQuIERvIHlvdSBoYXZlIGFueQ0KPiA+PiA+IGVz
-dGltYXRlcyBob3cgbXVjaCBkdXBsaWNhdGlvbiB0aGVyZSBpcz8NCj4gPj4NCj4gPg0KPiA+IEkg
-ZG8gdGhpbmsgdGhhdCBzb21lb25lIGludGVyZXN0ZWQgaW4gdGhpcyB0aHJlYWQgc2hvdWxkIGNv
-bXBhcmUgdGhlDQo+ID4gdHdvIGRyaXZlcnMgdG8gZGVjaWRlIGlmIHRoZXkgd2FudCB0byBhY2Nl
-cHQgbXdsd2lmaSAob3Igd2UgbGV0IGl0DQo+ID4gZGV2ZWxvcCBjbG9zZWQgZG9vcikuDQo+ID4N
-Cj4gPiBZb3Ugd2lsbCBmaW5kIHRoZSBkaWZmZXJlbmNlcyB3aXRoIHNvbWUgbGV2ZXJhZ2UuIFRv
-IG1ha2UgeW91cg0KPiA+IGNvbXBhcmlzb24gZWFzaWVyLCBoZXJlIGlzIHRoZSBzdW1tYXJ5IChl
-eGNsdWRpbmcgdGhlIHBhdGNoMS1wYXRjaDYNCj4gPiBpbXByb3ZlbWVudHMgYXMgcGVyIHJldmll
-dyBmZWVkYmFja3MgZnJvbSBKb2hhbm5lcyBhbmQgY29tbXVuaXR5KToNCj4gPg0KPiA+IG13bHdp
-ZmkgZnVuY3Rpb25zIGxldmVyYWdlZCBmcm9tIG13bDhrOg0KPiA+IC0gODAyLjExbiBzZXR0aW5n
-IGZvciBtYWM4MDIxMQ0KPiA+IC0gRnVuY3Rpb25zIG5lZWRlZCB0byBob29rIHVwIHRvIG1hYzgw
-MjExDQo+ID4gLSBJbnRlcmFjdGlvbnMgd2l0aCBtYWM4MDIxMSB0byBlc3RhYmxpc2ggQkEgc3Ry
-ZWFtcw0KPiA+IC0gUGFydGlhbCBmaXJtd2FyZSBBUElzLCBzb21lIGRhdGEgZmllbGRzDQo+ID4g
-LSBNZXRob2QgdG8gcGFzcyByeCBwYWNrZXRzIHRvIG1hYzgwMjExIChidXQgYWRkZWQgd2l0aCAx
-MWFjIHJhdGUNCj4gPiBtYXAvcmVwb3J0cykNCj4gPg0KPiA+IEFsbCBvdGhlcnMgYXJlIGRpZmZl
-cmVudC9uZXcuIEluY2x1ZGluZyBzb21lIGxpc3RlZCBiZWxvdzoNCj4gPiAtIERpZmZlcmVudC9u
-ZXcgMTFhYyBjaGlwc2V0cywgaW5jbHVkaW5nIGNvbWJvIEJUIGRldmljZXMNCj4gPiAtIEFkZGVk
-IHN1cHBvcnQgZm9yIDExYWMgcmVsYXRlZCBzZXR0aW5ncyBhbmQgZnVuY3Rpb25zDQo+ID4gLSBB
-ZGRlZCBzdXBwb3J0IGZvciBjb25jdXJyZW50IEFQK1NUQSBmdW5jdGlvbmFsaXRpZXMgd2l0aCBz
-aW5nbGUNCj4gPiBmaXJtd2FyZSBwZXIgY2hpcA0KPiA+IC0gQWRkaXRpb25hbCBmaXJtd2FyZSBB
-UElzDQo+ID4gLSBBZGRlZCBmdW5jdGlvbnMgdG8gY29udmVydCBuZXdseSBzdXBwb3J0ZWQgc2V0
-dGluZ3MgZnJvbSBtYWM4MDIxMQ0KPiB0bw0KPiA+IGZpcm13YXJlDQo+ID4gLSBEaWZmZXJlbnQg
-VHggZGF0YXBhdGgNCj4gPiAtIERpZmZlcmVudCBSeCBsb3cgbGV2ZWwgZGF0YXBhdGggKHRob3Vn
-aCBkYXRhIHN0cnVjdHVyZSBmb3INCj4gcmVjZWl2aW5nDQo+ID4gaXMgc2FtZSkNCj4gPiAtIFJl
-b3JnYW5pemVkIHRoZSBmaWxlcyBmb3IgZnV0dXJlIHNjYWxhYmlsaXR5IGFuZCBmZWF0dXJlcyBh
-ZGRpdGlvbg0KPiA+IChtb3JlIHRvIGNvbWUpDQo+ID4gLSBBZGRyZXNzZWQgYWxsIChzb3J0IG9m
-KSByZXZpZXcgZmVlZGJhY2tzIGZyb20gcGF0Y2gxLXBhdGNoNiBvZiB0aGlzDQo+ID4gc3VibWlz
-c2lvbg0KPiANCj4gWW91IGhhdmUgbmFtZWQgdGhlIG5ldyBkcml2ZXIgYXMgbXdsd2lmaSwgd2hp
-Y2ggaXMgYSByZWFsbHkgZ2VuZXJpYw0KPiBuYW1lLiBEb2VzIHRoYXQgaW1wbHkgdGhhdCBtd2x3
-aWZpIHdpbGwgc3RhcnQgc3VwcG9ydGluZyBtb3JlIE1hcnZlbGwNCj4gZGV2aWNlcyBpbiB0aGUg
-ZnV0dXJlPyANCg0KWWVzLCB0aGF0IGlzIHRoZSBwbGFuIG9uIHNhbWUgZ2VuZXJhdGlvbiBvZiAx
-MWFjIGNoaXBzZXQgdGhhdCBzdXBwb3J0IGhvc3QtYmFzZWQgbWFjODAyMTEuDQoNCj4gT3Igd2ls
-bCBiZSBpbiB0aGUgc2l0dWF0aW9uIHRoYXQgeW91IGZvcmsgdGhlDQo+IGRyaXZlciBhZ2FpbiBh
-bmQgd2UgZW5kIHVwIGhhdmluZyBtd2x3aWZpMiwgbXdsd2lmaTMgYW5kIHNvIG9uPw0KPiANCg0K
-V2UgZG8gaW50ZW5kIHRvIGFkZCBpbnRlcmZhY2UgSEFMIHNwZWMgdmVyc2lvbiB0byBtd2x3aWZp
-IGluIGNhc2UgdGhlIGxvd2VyIEhBTCBiZWNvbWVzIHVuYXZvaWRhYmx5IGNoYW5nZWQgaW4gZnV0
-dXJlLCBzbyB0aGF0IHdlIGNhbiBjb250aW51ZSB0byBtYWludGFpbiBtd2x3aWZpLiBCdXQgZm9y
-IGRpZmZlcmVudCBnZW5lcmF0aW9uIG9mIGZ1dHVyZSBjaGlwc2V0cy9uZXcgdGVjaG5vbG9neSwg
-d2hlbiB0aGUgaGFyZHdhcmUgbm8gbG9uZ2VyIHBlcm1pdCB1cyB0byB1c2Ugc2FtZSBkcml2ZXIs
-IHdlIHdpbGwgaGF2ZSB0byByZS1ldmFsdWF0ZSBvdXIgb3B0aW9ucy4gV2UgY2Fubm90IGd1YXJh
-bnRlZSBzb21ldGhpbmcgd2F5IG91dCBpbnRvIHRoZSBmdXR1cmUuDQoNClRoYW5rcw0KQ2hvci1U
-ZWNrDQo=
+This patch replaces WILC_WFI_add_station with wilc_cfg80211_add_station
+to avoid CamelCase.
+
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c190d8b..ccfd4c6 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -3332,7 +3332,7 @@ static int  wilc_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ }
+ 
+ /**
+- *  @brief      WILC_WFI_add_station
++ *  @brief      wilc_cfg80211_add_station
+  *  @details    Add a new station.
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -3340,7 +3340,7 @@ static int  wilc_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int  WILC_WFI_add_station(struct wiphy *wiphy, struct net_device *dev,
++static int  wilc_cfg80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 const u8 *mac, struct station_parameters *params)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+@@ -3619,7 +3619,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.start_ap = wilc_cfg80211_start_ap,
+ 	.change_beacon = wilc_cfg80211_change_beacon,
+ 	.stop_ap = wilc_cfg80211_stop_ap,
+-	.add_station = WILC_WFI_add_station,
++	.add_station = wilc_cfg80211_add_station,
+ 	.del_station = WILC_WFI_del_station,
+ 	.change_station = WILC_WFI_change_station,
+ 	#endif /* WILC_AP_EXTERNAL_MLME*/
+-- 
+2.5.1
+
