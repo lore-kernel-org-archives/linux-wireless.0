@@ -1,239 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:18640 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622AbbIWHI4 (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:34541 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754990AbbIHP4Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 03:08:56 -0400
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 3/4] staging: wilc1000: remove define WILC_PARSE_SCAN_IN_HOST
-Date: Wed, 23 Sep 2015 16:10:54 +0900
-Message-ID: <1442992255-23005-3-git-send-email-glen.lee@atmel.com> (sfid-20150923_090858_964634_ED312132)
-In-Reply-To: <1442992255-23005-1-git-send-email-glen.lee@atmel.com>
-References: <1442992255-23005-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 Sep 2015 11:56:16 -0400
+Received: by padhy16 with SMTP id hy16so125284728pad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:56:16 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 02/30] staging: wilc1000: rename WILC_WFI_CfgScan
+Date: Wed,  9 Sep 2015 00:55:39 +0900
+Message-Id: <1441727767-26026-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_175619_490906_B17849EF)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The define WILC_PARSE_SCAN_IN_HOST is always used in the driver, so just
-delete ifdef WILC_PARSE_SCAN_IN_HOST line, ifndef WILC_PARSE_SCAN_IN_HOST
-line and it's related codes. Finally, remove define in Makefile.
+This patch replaces WILC_WFI_CfgScan with wilc_cfg80211_scan to avoid
+CamelCase.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/Makefile         |  1 -
- drivers/staging/wilc1000/host_interface.c | 62 -------------------------------
- drivers/staging/wilc1000/wilc_wlan_if.h   |  3 +-
- 3 files changed, 1 insertion(+), 65 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index afae7d6..ac15e5a 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -10,7 +10,6 @@ ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
- 
- ccflags-y += -I$(src)/ -D__CHECK_ENDIAN__ -DWILC_ASIC_A0 \
- 		-DPLL_WORKAROUND -DCONNECT_DIRECT  -DAGING_ALG \
--		-DWILC_PARSE_SCAN_IN_HOST \
- 		-Wno-unused-function -DWILC_DEBUGFS
- #ccflags-y += -DTCP_ACK_FILTER
- 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5d1c7f4..98a99d6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -462,7 +462,6 @@ typedef struct _tstrWidJoinReqExt {
- } tstrWidJoinReqExt;
- #endif
- 
--#ifdef WILC_PARSE_SCAN_IN_HOST
- /*Struct containg joinParam of each AP*/
- typedef struct _tstrJoinBssParam {
- 	BSSTYPE_T bss_type;
-@@ -499,7 +498,6 @@ typedef struct _tstrBssTable {
- 	tstrJoinBssParam *head;
- 	tstrJoinBssParam *tail;
- } tstrBssTable;
--#endif /*WILC_PARSE_SCAN_IN_HOST*/
- 
- typedef enum {
- 	SCAN_TIMER = 0,
-@@ -559,9 +557,7 @@ tstrWILC_WFIDrv *gu8FlushedJoinReqDrvHandler;
- #define FLUSHED_JOIN_REQ 1
- #define FLUSHED_BYTE_POS 79     /* Position the byte indicating flushing in the flushed request */
- 
--#ifdef WILC_PARSE_SCAN_IN_HOST
- static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo);
--#endif /*WILC_PARSE_SCAN_IN_HOST*/
- 
- extern void chip_sleep_manually(u32 u32SleepTime);
- extern int linux_wlan_get_num_conn_ifcs(void);
-@@ -1516,10 +1512,7 @@ static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler,
- 	wid_site_survey_reslts_s *pstrSurveyResults = NULL;
- 	#else
- 	u8 *pu8CurrByte = NULL;
--	#ifdef WILC_PARSE_SCAN_IN_HOST
- 	tstrJoinBssParam *ptstrJoinBssParam;
--	#endif /*WILC_PARSE_SCAN_IN_HOST*/
--
- 	#endif
- 
- 	PRINT_D(GENERIC_DBG, "Handling connect request\n");
-@@ -1691,14 +1684,12 @@ static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler,
- 
- 	PRINT_INFO(HOSTINF_DBG, "Saving connection parameters in global structure\n");
- 
--	#ifdef WILC_PARSE_SCAN_IN_HOST
- 	ptstrJoinBssParam = (tstrJoinBssParam *)pstrHostIFconnectAttr->pJoinParams;
- 	if (ptstrJoinBssParam == NULL) {
- 		PRINT_ER("Required BSSID not found\n");
- 		s32Error = -ENOENT;
- 		goto ERRORHANDLER;
- 	}
--	#endif /*WILC_PARSE_SCAN_IN_HOST*/
- 
- 	if (pstrHostIFconnectAttr->pu8bssid != NULL) {
- 		pstrWFIDrv->strWILC_UsrConnReq.pu8bssid = kmalloc(6, GFP_KERNEL);
-@@ -1794,40 +1785,6 @@ static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler,
- 	PRINT_D(HOSTINF_DBG, "Connecting to network of SSID %s on channel %d\n",
- 		pstrWFIDrv->strWILC_UsrConnReq.pu8ssid, pstrHostIFconnectAttr->u8channel);
- 
--
--#ifndef WILC_PARSE_SCAN_IN_HOST
--	strWIDList[u32WidsCount].u16WIDid = (u16)WID_JOIN_REQ_EXTENDED;
--	strWIDList[u32WidsCount].enuWIDtype = WID_STR;
--	strWIDList[u32WidsCount].s32ValueSize = MAX_SSID_LEN + 7;
--	strWIDList[u32WidsCount].ps8WidVal = kmalloc(strWIDList[u32WidsCount].s32ValueSize, GFP_KERNEL);
--
--	if (strWIDList[u32WidsCount].ps8WidVal == NULL) {
--		s32Error = -EFAULT;
--		goto ERRORHANDLER;
--	}
--
--	pu8CurrByte = strWIDList[u32WidsCount].ps8WidVal;
--
--	if (pstrHostIFconnectAttr->pu8ssid != NULL) {
--		memcpy(pu8CurrByte, pstrHostIFconnectAttr->pu8ssid, pstrHostIFconnectAttr->ssidLen);
--		pu8CurrByte[pstrHostIFconnectAttr->ssidLen] = '\0';
--	}
--	pu8CurrByte += MAX_SSID_LEN;
--	if ((pstrHostIFconnectAttr->u8channel >= 1) && (pstrHostIFconnectAttr->u8channel <= 14)) {
--		*(pu8CurrByte++) = pstrHostIFconnectAttr->u8channel;
--	} else {
--		PRINT_ER("Channel out of range\n");
--		*(pu8CurrByte++) = 0xFF;
--	}
--	if (pstrHostIFconnectAttr->pu8bssid != NULL)
--		memcpy(pu8CurrByte, pstrHostIFconnectAttr->pu8bssid, 6);
--	pu8CurrByte += 6;
--
--	/* keep the buffer at the start of the allocated pointer to use it with the free*/
--	pu8CurrByte = strWIDList[u32WidsCount].ps8WidVal;
--
--	#else
--
- 	strWIDList[u32WidsCount].u16WIDid = (u16)WID_JOIN_REQ_EXTENDED;
- 	strWIDList[u32WidsCount].enuWIDtype = WID_STR;
- 
-@@ -1957,9 +1914,6 @@ static s32 Handle_Connect(tstrWILC_WFIDrv *drvHandler,
- 
- 	/* keep the buffer at the start of the allocated pointer to use it with the free*/
- 	pu8CurrByte = strWIDList[u32WidsCount].ps8WidVal;
--
--
--	#endif /* #ifdef WILC_PARSE_SCAN_IN_HOST*/
- 	u32WidsCount++;
- 
- 	/* A temporary workaround to avoid handling the misleading MAC_DISCONNECTED raised from the
-@@ -2099,8 +2053,6 @@ static s32 Handle_FlushConnect(tstrWILC_WFIDrv *drvHandler)
- 	strWIDList[u32WidsCount].ps8WidVal = (s8 *)(&gu8FlushedAuthType);
- 	u32WidsCount++;
- 
--
--	#ifdef WILC_PARSE_SCAN_IN_HOST
- 	strWIDList[u32WidsCount].u16WIDid = (u16)WID_JOIN_REQ_EXTENDED;
- 	strWIDList[u32WidsCount].enuWIDtype = WID_STR;
- 	strWIDList[u32WidsCount].s32ValueSize = gu32FlushedJoinReqSize;
-@@ -2112,8 +2064,6 @@ static s32 Handle_FlushConnect(tstrWILC_WFIDrv *drvHandler)
- 
- 	u32WidsCount++;
- 
--	#endif
--
- 	s32Error = SendConfigPkt(SET_CFG, strWIDList, u32WidsCount, false,
- 				 get_id_from_handler(gu8FlushedJoinReqDrvHandler));
- 	if (s32Error) {
-@@ -2313,9 +2263,7 @@ static s32 Handle_RcvdNtwrkInfo(tstrWILC_WFIDrv *drvHandler,
- 
- 					pstrNetworkInfo->bNewNetwork = true;
- 					/* add new BSS to JoinBssTable */
--				#ifdef WILC_PARSE_SCAN_IN_HOST
- 					pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
--				#endif /*WILC_PARSE_SCAN_IN_HOST*/
- 
- 					pstrWFIDrv->strWILC_UsrScanReq.pfUserScanResult(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
- 											pstrWFIDrv->strWILC_UsrScanReq.u32UserScanPvoid,
-@@ -2529,12 +2477,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(tstrWILC_WFIDrv *drvHandler,
- 				mod_timer(&hDuringIpTimer,
- 					  jiffies + msecs_to_jiffies(10000));
- 
--				#ifdef WILC_PARSE_SCAN_IN_HOST
- 				/* open a BA session if possible */
- 				/* if(pstrWFIDrv->strWILC_UsrConnReq.IsHTCapable) */
--
--				#endif
--
- 				/* host_int_addBASession(pstrWFIDrv->strWILC_UsrConnReq.pu8bssid,0, */
- 				/* BA_SESSION_DEFAULT_BUFFER_SIZE,BA_SESSION_DEFAULT_TIMEOUT); */
- 			} else {
-@@ -7249,10 +7193,6 @@ s32 host_int_setup_multicast_filter(tstrWILC_WFIDrv *hWFIDrv, bool bIsEnabled, u
- 	return s32Error;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 585ea5e..087f36e 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -712,7 +712,7 @@ static int wilc_cfg80211_set_monitor_channel(struct wiphy *wiphy,
  }
  
--
--
--#ifdef WILC_PARSE_SCAN_IN_HOST
--
  /**
-  *  @brief              host_int_ParseJoinBssParam
-  *  @details            Parse Needed Join Parameters and save it in a new JoinBssParam entry
-@@ -7470,8 +7410,6 @@ void host_int_freeJoinParams(void *pJoinParams)
- 	else
- 		PRINT_ER("Unable to FREE null pointer\n");
- }
--#endif  /*WILC_PARSE_SCAN_IN_HOST*/
--
+- *  @brief      WILC_WFI_CfgScan
++ *  @brief      wilc_cfg80211_scan
+  *  @details    Request to do a scan. If returning zero, the scan request is given
+  *                      the driver, and will be valid until passed to cfg80211_scan_done().
+  *                      For scan results, call cfg80211_inform_bss(); you can call this outside
+@@ -728,7 +728,7 @@ static int wilc_cfg80211_set_monitor_channel(struct wiphy *wiphy,
+  *	kernel version 3.8.8 supported
+  *	tony, sswd, WILC-KR, 2013-10-29
+  */
+-static int WILC_WFI_CfgScan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
++static int wilc_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ {
+ 	struct WILC_WFI_priv *priv;
+ 	u32 i;
+@@ -3604,7 +3604,7 @@ int WILC_WFI_del_virt_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
  
- /**
-  *  @brief              host_int_addBASession
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 7a1b943..8652cf6 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -180,7 +180,6 @@ typedef struct {
- 
- #define INFINITE_SLEEP_TIME	((u32)0xFFFFFFFF)
- 
--#ifdef WILC_PARSE_SCAN_IN_HOST
- typedef enum {
- 	SUPP_RATES_IE		= 1,
- 	EXT_SUPP_RATES_IE	= 50,
-@@ -190,7 +189,7 @@ typedef enum {
- 	WMM_IE			= 221,
- 	P2P_IE			= 221,
- } BEACON_IE;
--#endif
-+
- typedef enum {
- 	INFRASTRUCTURE		= 0,
- 	INDEPENDENT,
+ 	.set_monitor_channel = wilc_cfg80211_set_monitor_channel,
+-	.scan = WILC_WFI_CfgScan,
++	.scan = wilc_cfg80211_scan,
+ 	.connect = WILC_WFI_CfgConnect,
+ 	.disconnect = WILC_WFI_disconnect,
+ 	.add_key = WILC_WFI_add_key,
 -- 
-1.9.1
+2.5.1
 
