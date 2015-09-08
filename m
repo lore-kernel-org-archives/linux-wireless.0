@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:16663 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21353 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751640AbbIOGuE (ORCPT
+	with ESMTP id S1753949AbbIHIHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 02:50:04 -0400
-Subject: Re: [PATCH 0/7] remove wilc_errorsupport.h from the wilc driver
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-References: <1442285621-29457-1-git-send-email-tony.cho@atmel.com>
- <20150915062715.GG12611@sudip-pc>
-CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<rachel.kim@atmel.com>, <chris.park@atmel.com>,
-	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	<adel.noureldin@atmel.com>, <leo.kim@atmel.com>,
-	<adham.abozaeid@atmel.com>
+	Tue, 8 Sep 2015 04:07:41 -0400
 From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <55F7BF9A.6070600@atmel.com> (sfid-20150915_085009_578568_38E58759)
-Date: Tue, 15 Sep 2015 15:50:02 +0900
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/5] staging: wilc1000: define undefined operation mode
+Date: Tue, 8 Sep 2015 17:07:59 +0900
+Message-ID: <1441699683-31463-1-git-send-email-tony.cho@atmel.com> (sfid-20150908_100747_130542_865375AA)
 MIME-Version: 1.0
-In-Reply-To: <20150915062715.GG12611@sudip-pc>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johnny Kim <johnny.kim@atmel.com>
 
+This patch adds new define, IDLE_MODE to change comparison statement which
+is wrong due to typecasting to null.
 
-On 2015년 09월 15일 15:27, Sudip Mukherjee wrote:
-> On Tue, Sep 15, 2015 at 11:53:34AM +0900, Tony Cho wrote:
->> This patch aims to remove the wilc_errorsupport.h which is unnecessary in the
->> wilc driver. This patch replaces the error types defined by wilc driver with
->> kernel generic error types and removes macros which handles the errors.
-> Patch 2/7 and 4/7 are introducing new checkpatch warnings which again
-> some has to fix in a separate patch. Better to fix it while you are
-> sending. And instead of printk it should be pr_err or much better if you
-> can use netev_err. Looks like it can be used in some of the functions.
->
-> regards
-> sudip
+Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/host_interface.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-I will check patch warnings and resend v2. I'm designing new debug functions and it will be
-introduced in the next patch.
-
-Thanks for your advice,
-Tony.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8458d8d..8033205 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -754,7 +754,7 @@ static s32 Handle_SetOperationMode(tstrWILC_WFIDrv *drvHandler, tstrHostIfSetOpe
+ 				 get_id_from_handler(pstrWFIDrv));
+ 
+ 
+-	if ((pstrHostIfSetOperationMode->u32Mode) == (u32)NULL)
++	if ((pstrHostIfSetOperationMode->u32Mode) == IDLE_MODE)
+ 		up(&hSemDeinitDrvHandle);
+ 
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 349d5f5..a107377 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -23,6 +23,7 @@
+ #define BIT1                    ((u32)(1 << 1))
+ #define BIT0                    ((u32)(1 << 0))
+ 
++#define IDLE_MODE	0x00
+ #define AP_MODE		0x01
+ #define STATION_MODE	0x02
+ #define GO_MODE	0x03
+-- 
+1.9.1
 
