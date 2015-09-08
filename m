@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34702 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbbIOMkG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2015 08:40:06 -0400
-From: Chandra S Gorentla <csgorentla@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, dean.lee@atmel.com,
-	chris.park@atmel.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Chandra S Gorentla <csgorentla@gmail.com>
-Subject: [PATCH v2] drivers: staging: wilc1000: Add check for SPI availability
-Date: Tue, 15 Sep 2015 18:09:51 +0530
-Message-Id: <1442320791-4155-1-git-send-email-csgorentla@gmail.com> (sfid-20150915_144031_370327_4F020DCD)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15783 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751746AbbIHB2t convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2015 21:28:49 -0400
+From: David Lin <dlin@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>
+Subject: RE: [PATCH v6] Add new mac80211 driver mwlwifi.
+Date: Tue, 8 Sep 2015 01:28:44 +0000
+Message-ID: <8b2f365955774ddea9d6e99c40c8a892@SC-EXCH02.marvell.com> (sfid-20150908_032852_167400_93CD9541)
+References: <20456de5ab0b43b69441b19abb282c31@SC-EXCH02.marvell.com>
+ <87zj0yb7rt.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87zj0yb7rt.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NULL pointer deference is observed in the wilc1000.ko module
-with bus type SPI and when SPI is not ready.
+> Kalle Valo [mailto:kvalo@codeaurora.org] writes:
+> 
+> David Lin <dlin@marvell.com> writes:
+> 
+> > The Linux driver for WRT1900AC. The work was initially developed as
+> > part of openwrt effort and maintained on https://github.com/kaloz/mwlwifi.
+> >
+> > This is still work in progress, with 8864 chipset more mature and
+> > tested, while 8897 for the similar use case is added recently.
+> >
+> > Signed-off-by: David Lin <dlin@marvell.com>
+> 
+> The commit log is really short. For a new driver you should explain a lot more,
+> for example what works and what doesn't. Also it should contained detailed
+> info about how and why (!) this conflicts with mwifiex and the way that
+> problem was solved.
+> 
+> Also no new BUG_ON() calls in drivers, please:
+> 
+> fwcmd.c:        BUG_ON(tid >= SYSADPT_MAX_TID);
+> mac80211.c:     BUG_ON(queue > SYSADPT_TX_WMM_QUEUES - 1);
+> mac80211.c:             BUG_ON(stream->state !=
+> AMPDU_STREAM_IN_PROGRESS);
+> tx.c:   BUG_ON(tid > 7);
+> tx.c:   BUG_ON(tid >= SYSADPT_MAX_TID);
+> tx.c:   BUG_ON(!tx_skb);
+> 
+> We should start to get rid of all 200+ calls we already have, wireless drivers
+> should never call BUG_ON(). Instead use descriptive error message
+> (WARN_ON() etc) and bail out nicely with an error. That's much more user
+> friendly than crashing the kernel.
+> 
+> --
+> Kalle Valo
 
-Signed-off-by: Chandra S Gorentla <csgorentla@gmail.com>
----
+I will change BUG_ON() to WARN_ON() for next patch.
 
-v2 - Subject corrected 'stating:' -> 'staging:'
-
-Following are the steps to reproduce.
-
-$ sudo insmod drivers/staging/wilc1000/wilc1000.ko
-$ sudo ifconfig wlan1 up
-
-wlan1 in the above command is the device controlled by 'wilc1000.ko'.
-
- drivers/staging/wilc1000/linux_wlan.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 63f44f8..48f063d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1634,6 +1634,12 @@ int mac_open(struct net_device *ndev)
- 	int i = 0;
- 	struct WILC_WFI_priv *priv;
- 
-+#ifdef WILC_SPI
-+	if (!g_linux_wlan || !g_linux_wlan->wilc_spidev) {
-+		netdev_err(ndev, "wilc1000: SPI device not ready\n");
-+		return -ENODEV;
-+	}
-+#endif
- 	nic = netdev_priv(ndev);
- 	priv = wiphy_priv(nic->wilc_netdev->ieee80211_ptr->wiphy);
- 	PRINT_D(INIT_DBG, "MAC OPEN[%p]\n", ndev);
--- 
-2.5.0
-
+Thanks,
+David
