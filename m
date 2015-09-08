@@ -1,39 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52166 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbbIQCWJ (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33262 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755373AbbIHP5M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 22:22:09 -0400
-Date: Wed, 16 Sep 2015 19:22:07 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Ronit Halder <ronit.crj@gmail.com>
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com,
-	linux-wireless@vger.kernel.org, chris.park@atmel.com,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH v2 1/2] Staging: wilc1000: Use NULL instead of zero
-Message-ID: <20150917022207.GA1753@kroah.com> (sfid-20150917_042251_687836_AAAC22DF)
-References: <1442309698-12393-1-git-send-email-ronit.crj@gmail.com>
- <20150915135424.GA29308@kroah.com>
- <CAAm8cU6AvgQ5xYjbxZHd0bZ=sU6zwuqJYFbfC9VUF1YUh3AfxA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAAm8cU6AvgQ5xYjbxZHd0bZ=sU6zwuqJYFbfC9VUF1YUh3AfxA@mail.gmail.com>
+	Tue, 8 Sep 2015 11:57:12 -0400
+Received: by pacex6 with SMTP id ex6so127503062pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 08:57:12 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 24/30] staging: wilc1000: rename WILC_WFI_remain_on_channel
+Date: Wed,  9 Sep 2015 00:56:01 +0900
+Message-Id: <1441727767-26026-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20150908_180159_287110_1524DCBB)
+In-Reply-To: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441727767-26026-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch replaces WILC_WFI_remain_on_channel with
+wilc_cfg80211_remain_on_channel to avoid CamelCase.
 
-A: No.
-Q: Should I include quotations after my reply?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3c49412..f071389 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2391,7 +2391,7 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
+ 
+ 
+ /**
+- *  @brief      WILC_WFI_remain_on_channel
++ *  @brief      wilc_cfg80211_remain_on_channel
+  *  @details    Request the driver to remain awake on the specified
+  *                      channel for the specified duration to complete an off-channel
+  *                      operation (e.g., public action frame exchange). When the driver is
+@@ -2403,7 +2403,7 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int  WILC_WFI_remain_on_channel(struct wiphy *wiphy,
++static int  wilc_cfg80211_remain_on_channel(struct wiphy *wiphy,
+ 				       struct wireless_dev *wdev,
+ 				       struct ieee80211_channel *chan,
+ 				       unsigned int duration, u64 *cookie)
+@@ -3634,7 +3634,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.del_pmksa = wilc_cfg80211_del_pmksa,
+ 	.flush_pmksa = wilc_cfg80211_flush_pmksa,
+ #ifdef WILC_P2P
+-	.remain_on_channel = WILC_WFI_remain_on_channel,
++	.remain_on_channel = wilc_cfg80211_remain_on_channel,
+ 	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
+ 	.mgmt_tx_cancel_wait = WILC_WFI_mgmt_tx_cancel_wait,
+ 	.mgmt_tx = WILC_WFI_mgmt_tx,
+-- 
+2.5.1
 
-http://daringfireball.net/2007/07/on_top
-
-On Thu, Sep 17, 2015 at 07:13:39AM +0530, Ronit Halder wrote:
-> Why not the second one?
-
-Second what?
-
-> None of the line edited in first patch haven't changed after that.
-
-I don't understand what you are asking here :(
