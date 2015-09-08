@@ -1,100 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:15590 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754156AbbIRUIZ (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:36475 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754068AbbIHROX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 16:08:25 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 08/16] brcmfmac: Workaround in change vif for wpa_supplicant support.
-Date: Fri, 18 Sep 2015 22:08:11 +0200
-Message-ID: <1442606899-31872-9-git-send-email-arend@broadcom.com> (sfid-20150918_220847_688869_5C9EAE2B)
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	Tue, 8 Sep 2015 13:14:23 -0400
+Received: by igcrk20 with SMTP id rk20so79738269igc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 10:14:22 -0700 (PDT)
+Date: Tue, 8 Sep 2015 13:14:06 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Jesse Jones <jjones@cococorp.com>
+Cc: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: mesh - always do every discovery retry
+Message-ID: <20150908171406.GE18335@localhost> (sfid-20150908_191426_644588_0CB5D315)
+References: <CAEFj986a0b9r4qia-CFXsm_aiD8P5gLeJJqxS2NYcSjKcspLNw@mail.gmail.com>
+ <4bd697c41f2bb66593c849246bde7b00@mail.gmail.com>
+ <CAEFj9878gNnDViLYh+TW6GPUvJBbSn4Y=tDBmdp3NwBHymqxRg@mail.gmail.com>
+ <b193de6c0b11af0193414a217f0ea56b@mail.gmail.com>
+ <CAEFj986Jt-1rymgARCvDe+2Tb1R0PqsDfSELC7WbAXfkC+9xPw@mail.gmail.com>
+ <fff70f4adca53a929cda056a21f4d3ad@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fff70f4adca53a929cda056a21f4d3ad@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Fri, Jun 26, 2015 at 01:05:06PM -0700, Jesse Jones wrote:
+> > > My big worry is that we will select bad paths. And this *will* happen.
+> > > I've seen it many times. And if it does happen the effects are not
+> > > theoretical; they are by definition bad. We *have* selected a bad path
+> > > after all. And when we select a bad path it will be very apparent to
+> > > end users. Bandwidth will be lower than it should be and loss may go up
+> > > as
+> > well.
+> >
+> > Agreed with your point. How about adding nl80211 command for this?
+> 
+> I'm not keen on the idea. I still think it's the right thing to do and I
+> don't much like the idea of having to turn it on. And it will become an even
+> better idea if we don't refresh as often (eventually I'll send a patch for
+> that though I think I may have to massage what we're using now).
 
-Different wpa_supplicants have different behavior and expectations
-regarding the change_virtual_intf behavior. This patch implements
-a workaround for the different versions and possible brcmfmac
-configuration.
+At the very least I think this is a change in semantics around
+dot11MeshHWMPmaxPREQretries -- the intent as far as I know is to limit
+total attempts to determine whether target is reachable at all, and I
+don't think there is enough evidence in the standard to support the
+other interpretation.  In my opinion it's also somewhat confusing that a 'max'
+parameter is used as a 'min'.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 43 ++++++++++++++++------
- 1 file changed, 31 insertions(+), 12 deletions(-)
+I could also see some users wanting different behavior here depending on
+node density.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 3e1c8fc..891f4ed 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -777,6 +777,37 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
- 	s32 err = 0;
- 
- 	brcmf_dbg(TRACE, "Enter, idx=%d, type=%d\n", ifp->bssidx, type);
-+
-+	/* WAR: There are a number of p2p interface related problems which
-+	 * need to be handled initially (before doing the validate).
-+	 * wpa_supplicant tends to do iface changes on p2p device/client/go
-+	 * which are not always possible/allowed. However we need to return
-+	 * OK otherwise the wpa_supplicant wont start. The situation differs
-+	 * on configuration and setup (p2pon=1 module param). The first check
-+	 * is to see if the request is a change to station for p2p iface.
-+	 */
-+	if ((type == NL80211_IFTYPE_STATION) &&
-+	    ((vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT) ||
-+	     (vif->wdev.iftype == NL80211_IFTYPE_P2P_GO) ||
-+	     (vif->wdev.iftype == NL80211_IFTYPE_P2P_DEVICE))) {
-+		brcmf_dbg(TRACE, "Ignoring cmd for p2p if\n");
-+		/* Now depending on whether module param p2pon=1 was used the
-+		 * response needs to be either 0 or EOPNOTSUPP. The reason is
-+		 * that if p2pon=1 is used, but a newer supplicant is used then
-+		 * we should return an error, as this combination wont work.
-+		 * In other situations 0 is returned and supplicant will start
-+		 * normally. It will give a trace in cfg80211, but it is the
-+		 * only way to get it working. Unfortunately this will result
-+		 * in situation where we wont support new supplicant in
-+		 * combination with module param p2pon=1, but that is the way
-+		 * it is. If the user tries this then unloading of driver might
-+		 * fail/lock.
-+		 */
-+		if (cfg->p2p.p2pdev_dynamically)
-+			return -EOPNOTSUPP;
-+		else
-+			return 0;
-+	}
- 	err = brcmf_vif_change_validate(wiphy_to_cfg(wiphy), vif, type);
- 	if (err) {
- 		brcmf_err("iface validation failed: err=%d\n", err);
-@@ -792,18 +823,6 @@ brcmf_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
- 		infra = 0;
- 		break;
- 	case NL80211_IFTYPE_STATION:
--		/* Ignore change for p2p IF. Unclear why supplicant does this */
--		if ((vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT) ||
--		    (vif->wdev.iftype == NL80211_IFTYPE_P2P_GO)) {
--			brcmf_dbg(TRACE, "Ignoring cmd for p2p if\n");
--			/* WAR: It is unexpected to get a change of VIF for P2P
--			 * IF, but it happens. The request can not be handled
--			 * but returning EPERM causes a crash. Returning 0
--			 * without setting ieee80211_ptr->iftype causes trace
--			 * (WARN_ON) but it works with wpa_supplicant
--			 */
--			return 0;
--		}
- 		infra = 1;
- 		break;
- 	case NL80211_IFTYPE_AP:
+So, at the risk of having too many knobs, could we perhaps add another
+tunable for this, call it min_preq_attempts or something, and fix it to the
+interval [1, dot11MeshHWMPmaxPREQretries]?  My preference would be to
+maintain the default value of 1.
+
 -- 
-1.9.1
-
+Bob Copeland %% http://bobcopeland.com/
