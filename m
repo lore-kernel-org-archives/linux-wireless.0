@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34468 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753826AbbIVJfu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2015 05:35:50 -0400
-Received: by padhy16 with SMTP id hy16so4762534pad.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2015 02:35:49 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 15/16] staging: wilc1000: host_int_init: remove blank line before a close brace.
-Date: Tue, 22 Sep 2015 18:35:00 +0900
-Message-Id: <1442914501-2315-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20150922_114655_352938_4E81DF25)
-In-Reply-To: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442914501-2315-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from smtp.gentoo.org ([140.211.166.183]:41021 "EHLO smtp.gentoo.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752780AbbIIU5N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Sep 2015 16:57:13 -0400
+From: Sergei Trofimovich <slyich@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Sergei Trofimovich <siarheit@google.com>,
+	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net/mac80211/rate.c: fix wrong sizeof()
+Date: Wed,  9 Sep 2015 21:56:54 +0100
+Message-Id: <1441832214-6939-1-git-send-email-slyich@gmail.com> (sfid-20150909_225731_557833_8C07F16B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes blank line before a close brace.
-CHECK: Blank lines aren't necessary before a close brace '}'
+From: Sergei Trofimovich <siarheit@google.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Noticed by gcc-5.2.0:
+
+    net/mac80211/rate.c: In function 'rate_control_cap_mask':
+    net/mac80211/rate.c:719:25: warning: 'sizeof' on array function parameter 'mcs_mask' will return size of 'u8 * {aka unsigned char *}' [-Wsizeof-array-argument]
+       for (i = 0; i < sizeof(mcs_mask); i++)
+                             ^
+
+CC: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>
+CC: "David S. Miller" <davem@davemloft.net>
+CC: linux-wireless@vger.kernel.org
+CC: netdev@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+Signed-off-by: Sergei Trofimovich <siarheit@google.com>
 ---
-v2: rebase latest staging-testing
+ net/mac80211/rate.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/staging/wilc1000/host_interface.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ee4f169..82db248 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -6463,7 +6463,6 @@ _fail_mq_:
- 	wilc_mq_destroy(&gMsgQHostIF);
- _fail_:
- 	return result;
--
- }
- /**
-  *  @brief              host_int_deinit
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 9857693..9ce8883 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -716,7 +716,7 @@ static bool rate_control_cap_mask(struct ieee80211_sub_if_data *sdata,
+ 
+ 		/* Filter out rates that the STA does not support */
+ 		*mask &= sta->supp_rates[sband->band];
+-		for (i = 0; i < sizeof(mcs_mask); i++)
++		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
+ 			mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
+ 
+ 		sta_vht_cap = sta->vht_cap.vht_mcs.rx_mcs_map;
 -- 
-2.5.1
+2.5.0
 
