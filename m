@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:35126 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454AbbINRuQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62188 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755093AbbIIR2w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2015 13:50:16 -0400
-Received: by ykdu9 with SMTP id u9so161240067ykd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2015 10:50:15 -0700 (PDT)
+	Wed, 9 Sep 2015 13:28:52 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath: fix incorrect PPB on JAPAN chirp radar
+Date: Wed, 9 Sep 2015 10:28:44 -0700
+Message-ID: <1441819724-25344-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150909_192859_121165_A583F872)
 MIME-Version: 1.0
-In-Reply-To: <1442218015.2075.0.camel@sipsolutions.net>
-References: <CAB6w8ekO7YW224ujkEH34D-qyvoHe3p6bWwZcBTd_tovRMraxw@mail.gmail.com>
- <1442218015.2075.0.camel@sipsolutions.net>
-From: Ramprasad Vempati <ramprasad.vempati@gmail.com>
-Date: Mon, 14 Sep 2015 23:19:56 +0530
-Message-ID: <CAB6w8ekP96__u4m-rqV-LUJE2irBew+3OS2TpfdvuUQsz=ohqQ@mail.gmail.com> (sfid-20150914_195044_641624_7E327345)
-Subject: Re: How to use hwsim?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Johannes. But can I use hwsim tests under wpa_supplicant with
-actual hardware as well ?  If yes, is there some README for me to
-understand it better and start using it?
+The number of pulses per burst on Japan chirp radar is
+between 1 and 3. The previous value, 20, is representing
+number of bursts, but since current DFS detector is using
+pulse detection other than bursts, use the pulse number
+for correct radar detection.
+Also using the highest number helps to avoid false detection.
 
--ram
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Mon, Sep 14, 2015 at 1:36 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2015-09-13 at 22:38 +0530, Ramprasad Vempati wrote:
->> Hi,
->>
->> I've got hwsim source code from:
->> http://git.sipsolutions.net/hwsim.git. I could compile it.
->>
->>  And I see binary-hwsim is created after compilation.
->>
->> But there isn't any help on how do I use this. Can someone help me
->> with these details?
->>
->
-> This tool is practically irrelevant.
->
-> Look at the hwsim tests in wpa_supplicant instead.
->
-> johannes
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 656ce42..5aa053a 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -121,7 +121,7 @@ static const struct radar_detector_specs jp_radar_ref_types[] = {
+ 	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
+ 	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
+ 	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
+-	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, 50, false),
++	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 3, 50, false),
+ 	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, 50, false),
+ };
+ 
+-- 
+1.9.1
+
