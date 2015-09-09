@@ -1,173 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47542 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21391 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756062AbbIXRyh (ORCPT
+	with ESMTP id S1752112AbbIIJfQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2015 13:54:37 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: use pre-allocated DMA buffer in Tx
-Date: Thu, 24 Sep 2015 10:54:30 -0700
-Message-ID: <1443117270-16790-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150924_195441_223164_E31CD851)
+	Wed, 9 Sep 2015 05:35:16 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Fix DMA alloc failure for target requested memory chunks
+References: <1440762694-11578-1-git-send-email-vthiagar@qti.qualcomm.com>
+Date: Wed, 9 Sep 2015 12:35:00 +0300
+In-Reply-To: <1440762694-11578-1-git-send-email-vthiagar@qti.qualcomm.com>
+	(Vasanthakumar Thiagarajan's message of "Fri, 28 Aug 2015 17:21:34
+	+0530")
+Message-ID: <8737yo9bqz.fsf@kamboji.qca.qualcomm.com> (sfid-20150909_113520_206783_9922B45B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k driver is using dma_pool_alloc per packet and dma_pool_free
-in coresponding at Tx completion.
-Use of pre-allocated DMA buffer in Tx will improve saving CPU resource
-by 5% while it consumes about 56KB memory more as trade off.
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |  6 ++++-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 43 +++++++++++++++++---------------
- drivers/net/wireless/ath/ath10k/txrx.c   |  5 ----
- 3 files changed, 28 insertions(+), 26 deletions(-)
+> During long hours of stress testing like AP interface up/down along
+> with continuous ping flood from a station doing connect/disconnect,
+> it is observed that the system is not able to allocate DMA consistent
+> memory of size > 512KB chunks as requested by firmware in WMI_SERVICE_EVENTID.
+> With the system memory getting fragmented during the run based on the
+> size of the memory requested, the failure to return physically continguous
+> memory of high order can happen. Once the system gets to this situation,
+> bringing up the wifi interface will fail and a system reboot may be needed
+> to make it work again. This problem is obseved with QCA99X0.
+>
+> To fix this issue, allocate the DMA memory requested by firmware during
+> device probe time and keep it during the life time of the device. WMI service
+> ready event handler is changed to allocate the memory chunks if it is
+> not already allocated or if the memory allocated for the previous ready
+> event is not same as the current requested ones. After this patch the
+> memory usage when wifi is inactive will be inceased by few 100KB to
+> 3MB based on the target type.
+>
+> Failure happens with the following stack trace
+>
+> [29557.488773] kworker/u4:1: page allocation failure: order:8, mode:0xd0
+> [29557.494297] CPU: 0 PID: 8402 Comm: kworker/u4:1 Not tainted 3.14.43 #7
+> [29557.500793] Workqueue: ath10k_aux_wq ath10k_wmi_event_service_ready_work [ath10k_core]
+> [29557.508602] [<c021e9b0>] (unwind_backtrace) from [<c021ba90>] (show_stack+0x10/0x14)
+> [29557.516580] [<c021ba90>] (show_stack) from [<c03bdddc>] (dump_stack+0x88/0xcc)
+> [29557.523612] [<c03bdddc>] (dump_stack) from [<c0290e34>] (warn_alloc_failed+0xdc/0x108)
+> [29557.531515] [<c0290e34>] (warn_alloc_failed) from [<c0292d88>] (__alloc_pages_nodemask+0x4f0/0x654)
+> [29557.540485] [<c0292d88>] (__alloc_pages_nodemask) from [<c0222b48>] (__dma_alloc_buffer.isra.20+0x2c/0x104)
+> [29557.550260] [<c0222b48>] (__dma_alloc_buffer.isra.20) from [<c0222c34>] (__alloc_remap_buffer.isra.23+0x14/0xb8)
+> [29557.560413] [<c0222c34>] (__alloc_remap_buffer.isra.23) from [<c022305c>] (__dma_alloc+0x224/0x2b8)
+> [29557.569490] [<c022305c>] (__dma_alloc) from [<c0223208>] (arm_dma_alloc+0x84/0x90)
+> [29557.577010] [<c0223208>] (arm_dma_alloc) from [<bf5159d0>] (ath10k_wmi_event_service_ready_work+0x2f8/0x420 [ath10k_core])
+> [29557.588055] [<bf5159d0>] (ath10k_wmi_event_service_ready_work [ath10k_core]) from [<c024260c>] (process_one_work+0x20c/0x328)
+> [29557.599305] [<c024260c>] (process_one_work) from [<c02432d0>] (worker_thread+0x228/0x360)
+> [29557.607470] [<c02432d0>] (worker_thread) from [<c0247f88>] (kthread+0xd8/0xec)
+> [29557.614750] [<c0247f88>] (kthread) from [<c0208d18>] (ret_from_fork+0x14/0x3c)
+> [29557.712751] Normal: 696*4kB (UEMR) 512*8kB (UEMR) 367*16kB (UEMR) 404*32kB (UEMR) 455*64kB (UEMR) 424*128kB (UEMR) 379*256kB (UMR) 327*512kB (UMR) 1*1024kB (R) 0*2048kB 0*4096kB = 374544kB
+>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 5a8e4ea..db0a99b 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1488,7 +1488,6 @@ struct ath10k_htt {
- 	int num_pending_mgmt_tx;
- 	struct idr pending_tx;
- 	wait_queue_head_t empty_tx_wq;
--	struct dma_pool *tx_pool;
- 
- 	/* set if host-fw communication goes haywire
- 	 * used to avoid further failures */
-@@ -1509,6 +1508,11 @@ struct ath10k_htt {
- 		dma_addr_t paddr;
- 		struct htt_msdu_ext_desc *vaddr;
- 	} frag_desc;
-+
-+	struct {
-+		dma_addr_t paddr;
-+		struct ath10k_htt_txbuf *vaddr;
-+	} txbuf;
- };
- 
- #define RX_HTT_HDR_STATUS_LEN 64
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index eb5ba9b..5bed087 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -108,9 +108,12 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
- 	spin_lock_init(&htt->tx_lock);
- 	idr_init(&htt->pending_tx);
- 
--	htt->tx_pool = dma_pool_create("ath10k htt tx pool", htt->ar->dev,
--				       sizeof(struct ath10k_htt_txbuf), 4, 0);
--	if (!htt->tx_pool) {
-+	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
-+	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size,
-+						  &htt->txbuf.paddr,
-+						  GFP_DMA);
-+	if (!htt->txbuf.vaddr) {
-+		ath10k_err(ar, "failed to alloc tx buffer\n");
- 		ret = -ENOMEM;
- 		goto free_idr_pending_tx;
- 	}
-@@ -125,14 +128,17 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
- 	if (!htt->frag_desc.vaddr) {
- 		ath10k_warn(ar, "failed to alloc fragment desc memory\n");
- 		ret = -ENOMEM;
--		goto free_tx_pool;
-+		goto free_txbuf;
- 	}
- 
- skip_frag_desc_alloc:
- 	return 0;
- 
--free_tx_pool:
--	dma_pool_destroy(htt->tx_pool);
-+free_txbuf:
-+	size = htt->max_num_pending_tx *
-+			  sizeof(struct ath10k_htt_txbuf);
-+	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
-+		  htt->txbuf.paddr);
- free_idr_pending_tx:
- 	idr_destroy(&htt->pending_tx);
- 	return ret;
-@@ -160,7 +166,13 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
- 
- 	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
- 	idr_destroy(&htt->pending_tx);
--	dma_pool_destroy(htt->tx_pool);
-+
-+	if (htt->txbuf.vaddr) {
-+		size = htt->max_num_pending_tx *
-+				  sizeof(struct ath10k_htt_txbuf);
-+		dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
-+				  htt->txbuf.paddr);
-+	}
- 
- 	if (htt->frag_desc.vaddr) {
- 		size = htt->max_num_pending_tx *
-@@ -521,7 +533,6 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	int res;
- 	u8 flags0 = 0;
- 	u16 msdu_id, flags1 = 0;
--	dma_addr_t paddr = 0;
- 	u32 frags_paddr = 0;
- 	struct htt_msdu_ext_desc *ext_desc = NULL;
- 	bool limit_mgmt_desc = false;
-@@ -550,13 +561,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	prefetch_len = min(htt->prefetch_len, msdu->len);
- 	prefetch_len = roundup(prefetch_len, 4);
- 
--	skb_cb->htt.txbuf = dma_pool_alloc(htt->tx_pool, GFP_ATOMIC,
--					   &paddr);
--	if (!skb_cb->htt.txbuf) {
--		res = -ENOMEM;
--		goto err_free_msdu_id;
--	}
--	skb_cb->htt.txbuf_paddr = paddr;
-+	skb_cb->htt.txbuf = &htt->txbuf.vaddr[msdu_id];
-+	skb_cb->htt.txbuf_paddr = htt->txbuf.paddr +
-+		(sizeof(struct ath10k_htt_txbuf) * msdu_id);
- 
- 	if ((ieee80211_is_action(hdr->frame_control) ||
- 	     ieee80211_is_deauth(hdr->frame_control) ||
-@@ -574,7 +581,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	res = dma_mapping_error(dev, skb_cb->paddr);
- 	if (res) {
- 		res = -EIO;
--		goto err_free_txbuf;
-+		goto err_free_msdu_id;
- 	}
- 
- 	switch (skb_cb->txmode) {
-@@ -706,10 +713,6 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 
- err_unmap_msdu:
- 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
--err_free_txbuf:
--	dma_pool_free(htt->tx_pool,
--		      skb_cb->htt.txbuf,
--		      skb_cb->htt.txbuf_paddr);
- err_free_msdu_id:
- 	spin_lock_bh(&htt->tx_lock);
- 	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 7db7d50..6d1105a 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -92,11 +92,6 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 	skb_cb = ATH10K_SKB_CB(msdu);
- 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
--	if (skb_cb->htt.txbuf)
--		dma_pool_free(htt->tx_pool,
--			      skb_cb->htt.txbuf,
--			      skb_cb->htt.txbuf_paddr);
--
- 	ath10k_report_offchan_tx(htt->ar, msdu);
- 
- 	info = IEEE80211_SKB_CB(msdu);
+Thanks, applied.
+
 -- 
-1.9.1
-
+Kalle Valo
