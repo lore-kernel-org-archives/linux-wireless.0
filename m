@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47107 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751989AbbI3J4S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:56:18 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 30/32] staging: wilc1000: rename pUserData
-Date: Wed, 30 Sep 2015 18:55:12 +0900
-Message-ID: <1443606914-25563-8-git-send-email-tony.cho@atmel.com> (sfid-20150930_115625_000340_CF3A588D)
-In-Reply-To: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
-References: <1443606914-25563-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plane.gmane.org ([80.91.229.3]:45033 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753371AbbIIRAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Sep 2015 13:00:21 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ZZij7-00061U-Gj
+	for linux-wireless@vger.kernel.org; Wed, 09 Sep 2015 19:00:05 +0200
+Received: from 0896237200.static.corbina.ru ([95.31.14.169])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2015 19:00:05 +0200
+Received: from olegk by 0896237200.static.corbina.ru with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2015 19:00:05 +0200
+To: linux-wireless@vger.kernel.org
+From: Oleg Kostyuchenko <olegk@developermail.io>
+Subject: Re: 
+Date: Wed, 9 Sep 2015 16:55:36 +0000 (UTC)
+Message-ID: <loom.20150909T184105-450@post.gmane.org> (sfid-20150909_190034_353881_F3CD0B52)
+References: <54C88C7D.707@m-labs.hk> <54CB97CC.2050001@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pUserData to data to avoid CamelCase naming
-convention.
+Hi Arend,
+I am still experiencing the issue Sebastien initially described (no wlan0 device,
+"SDIO drive strength" warnings etc) on a Thinkpad Tablet 10 for the latest
+kernel release, 4.2. Doesn't the 4.2 kernel include the required fix?
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks,
+Oleg
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 79957f9..3769595 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -392,7 +392,7 @@ union message_body {
- 	struct ba_session_info session_info;
- 	struct remain_ch remain_on_ch;
- 	struct reg_frame reg_f;
--	char *pUserData;
-+	char *data;
- 	struct del_all_sta strHostIFDelAllSta;
- };
- 
-@@ -4111,7 +4111,7 @@ static int hostIFthread(void *pvArg)
- 			break;
- 
- 		case HOST_IF_MSG_GET_STATISTICS:
--			Handle_GetStatistics(msg.drvHandler, (tstrStatistics *)msg.body.pUserData);
-+			Handle_GetStatistics(msg.drvHandler, (tstrStatistics *)msg.body.data);
- 			break;
- 
- 		case HOST_IF_MSG_GET_CHNL:
-@@ -5689,7 +5689,7 @@ s32 host_int_get_statistics(tstrWILC_WFIDrv *hWFIDrv, tstrStatistics *pstrStatis
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	msg.id = HOST_IF_MSG_GET_STATISTICS;
--	msg.body.pUserData = (char *)pstrStatistics;
-+	msg.body.data = (char *)pstrStatistics;
- 	msg.drvHandler = hWFIDrv;
- 	/* send the message */
- 	s32Error = wilc_mq_send(&gMsgQHostIF, &msg, sizeof(struct host_if_msg));
--- 
-1.9.1
 
