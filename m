@@ -1,142 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp02.atmel.com ([204.2.163.16]:40976 "EHLO
-	SJOEDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750843AbbIJLeI (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:36407 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752780AbbIILJO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2015 07:34:08 -0400
-From: "Shin, Austin" <Austin.Shin@atmel.com>
-To: Greg KH <gregkh@linuxfoundation.org>,
-	"Kim, Johnny" <johnny.kim@atmel.com>
-CC: "Cho, Tony" <Tony.Cho@atmel.com>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Kim, Rachel" <Rachel.Kim@atmel.com>,
-	"Lee, Glen" <Glen.Lee@atmel.com>, "Kim, Leo" <Leo.Kim@atmel.com>,
-	"Lee, Jude" <Jude.Lee@atmel.com>,
-	"Hwang, Robin" <Robin.hwang@atmel.com>,
-	"Noureldin, Adel" <Adel.Noureldin@atmel.com>,
-	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>,
-	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
-Subject: RE: [PATCH 3/5] staging: wilc1000: use id value as argument
-Date: Thu, 10 Sep 2015 11:34:03 +0000
-Message-ID: <5247AA876FDD144FBABB0100CA55BC8568BE4027@penmbx02.corp.atmel.com> (sfid-20150910_133412_279172_A06C3EA9)
-References: <1440055974-9998-1-git-send-email-tony.cho@atmel.com>
- <1440055974-9998-4-git-send-email-tony.cho@atmel.com>
- <20150903013331.GA19804@kroah.com> <55E7EFF8.2060705@atmel.com>
- <20150903154718.GA27860@kroah.com> <55E90EED.5010502@atmel.com>
- <20150904035156.GA7793@kroah.com> <55E933D3.4060302@atmel.com>
- <20150904162400.GA9753@kroah.com>
-In-Reply-To: <20150904162400.GA9753@kroah.com>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 9 Sep 2015 07:09:14 -0400
+Received: by igcrk20 with SMTP id rk20so96992976igc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2015 04:09:13 -0700 (PDT)
+Date: Wed, 9 Sep 2015 07:08:55 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 3/3] ath10k: implement mesh support
+Message-ID: <20150909110855.GA27466@localhost> (sfid-20150909_130917_960264_973276A0)
+References: <1440673024-13696-1-git-send-email-me@bobcopeland.com>
+ <1440673024-13696-4-git-send-email-me@bobcopeland.com>
+ <87oahc9g9h.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87oahc9g9h.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGVhbSwgVGhhbmtzIGZvciBhbGwgeW91IGhhcmR3b3JraW5nIG9uIGNvbXBsZXggcHJvYmxlbS4g
-VGhhbmtzIEpvaG5ueSwgVG9ueSwgTmljb2xhcywgYW5kIGVzcGVjaWFsbHkgR3JlZy4NCkJlc3Qg
-cmVnYXJkcywNCkF1c3Rpbg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR3Jl
-ZyBLSCBbbWFpbHRvOmdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnXSANClNlbnQ6IFNhdHVyZGF5
-LCBTZXB0ZW1iZXIgMDUsIDIwMTUgMToyNCBBTQ0KVG86IEtpbSwgSm9obm55DQpDYzogQ2hvLCBU
-b255OyBkZXZlbEBkcml2ZXJkZXYub3N1b3NsLm9yZzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnOyBQYXJrLCBDaHJpczsgS2ltLCBSYWNoZWw7IExlZSwgR2xlbjsgS2ltLCBMZW87IExl
-ZSwgSnVkZTsgSHdhbmcsIFJvYmluOyBTaGluLCBBdXN0aW47IE5vdXJlbGRpbiwgQWRlbDsgQWJv
-emFlaWQsIEFkaGFtOyBGZXJyZSwgTmljb2xhcw0KU3ViamVjdDogUmU6IFtQQVRDSCAzLzVdIHN0
-YWdpbmc6IHdpbGMxMDAwOiB1c2UgaWQgdmFsdWUgYXMgYXJndW1lbnQNCg0KT24gRnJpLCBTZXAg
-MDQsIDIwMTUgYXQgMDM6MDE6NTVQTSArMDkwMCwgam9obm55LmtpbSB3cm90ZToNCj4gDQo+IA0K
-PiBPbiAyMDE164WEIDA57JuUIDA07J28IDEyOjUxLCBHcmVnIEtIIHdyb3RlOg0KPiA+T24gRnJp
-LCBTZXAgMDQsIDIwMTUgYXQgMTI6MjQ6MjlQTSArMDkwMCwgam9obm55LmtpbSB3cm90ZToNCj4g
-Pj4NCj4gPj5PbiAyMDE164WEIDA57JuUIDA07J28IDAwOjQ3LCBHcmVnIEtIIHdyb3RlOg0KPiA+
-Pj5PbiBUaHUsIFNlcCAwMywgMjAxNSBhdCAwNDowMDowOFBNICswOTAwLCBqb2hubnkua2ltIHdy
-b3RlOg0KPiA+Pj4+SGVsbG8gR3JlZy4NCj4gPj4+Pg0KPiA+Pj4+T24gMjAxNeuFhCAwOeyblCAw
-M+ydvCAxMDozMywgR3JlZyBLSCB3cm90ZToNCj4gPj4+Pj5PbiBUaHUsIEF1ZyAyMCwgMjAxNSBh
-dCAwNDozMjo1MlBNICswOTAwLCBUb255IENobyB3cm90ZToNCj4gPj4+Pj4+RnJvbTogSm9obm55
-IEtpbSA8am9obm55LmtpbUBhdG1lbC5jb20+DQo+ID4+Pj4+Pg0KPiA+Pj4+Pj5UaGUgZHJpdmVy
-IGNvbW11bmljYXRlcyB3aXRoIHRoZSBjaGlwc2V0IHZpYSB0aGUgYWRkcmVzcyBvZiANCj4gPj4+
-Pj4+aGFuZGxlcnMgdG8gZGlzdGluZ3Vpc2ggYXN5bmMgZGF0YSBmcmFtZS4gVGhlIFNlbmRDb25m
-aWdQa3QgDQo+ID4+Pj4+PmZ1bmN0aW9uIGdldHMgdGhlIHBvaW50ZXIgYWRkcmVzcyBpbmRpY2F0
-aW5nIHRoZSBoYW5kbGVycyBhcyB0aGUgDQo+ID4+Pj4+Pmxhc3QgYXJndW1lbnQsIGJ1dCB0aGlz
-IHJlcXVpcmVzIHJlZHVuZGFudCB0eXBlY2FzdGluZyBhbmQgZG9lcyBub3Qgc3VwcG9ydCB0aGUg
-NjQgYml0IG1hY2hpbmUuDQo+ID4+Pj4+Pg0KPiA+Pj4+Pj5UaGlzIHBhdGNoIGFkZHMgdGhlIGZ1
-bmN0aW9uIHdoaWNoIGFzc2lnbnMgSUQgdmFsdWVzIGluc3RlYWQgb2YgDQo+ID4+Pj4+PnBvaW50
-ZXIgcmVwcmVzZW50aW5nIHRoZSBkcml2ZXIgaGFuZGxlciB0byB0aGUgYWRkcmVzcyBhbmQgdGhl
-biANCj4gPj4+Pj4+dXNlcyB0aGUgSUQgaW5zdGVhZCBvZiBwb2ludGVyIGFzIHRoZSBsYXN0IGFy
-Z3VtZW50IG9mIA0KPiA+Pj4+Pj5TZW5kQ29uZmlnUGt0LiBUaGUgZHJpdmVyIGFsc28gZ2V0cyB0
-aGUgaGFuZGxlcidzIGFkZHJlc3MgZnJvbSANCj4gPj4+Pj4+dGhlIElEIGluIHRoZSBkYXRhIGZy
-YW1lIHdoZW4gaXQgcmVjZWl2ZXMgdGhlbS4NCj4gPj4+Pj4+DQo+ID4+Pj4+SSBkb24ndCB1bmRl
-cnN0YW5kIHRoaXMgY29kZSBhdCBhbGwuICBZb3UgYXJlIHJhbmRvbWx5IGFkZGluZyANCj4gPj4+
-Pj52YWx1ZXMgdG8gYSBsaXN0LCBhbmQgdGhlbiBhc3N1bWluZyB0aGF0IHlvdSBjYW4gdXNlIHRo
-ZSBpbmRleCANCj4gPj4+Pj5pbnRvIHRoYXQgbGlzdCBmb3Igc29tZSB0eXBlIG9mIHJlcHJlc2Vu
-dGF0aW9uPyAgQXMgdGhpcyBpcyBhIA0KPiA+Pj4+PmxvY2FsIGxpc3QsIHdoeSBub3QganVzdCB1
-c2UgdGhlIHJlYWwgdmFyaWFibGVzIGluc3RlYWQgb2YgaGF2aW5nIA0KPiA+Pj4+PmEgbGlzdCBh
-bmQgZGVhbGluZyB3aXRoIHRoZW0gaW4gdGhpcyB2ZXJ5IGFja3dhcmQgbWFubmVyPw0KPiA+Pj4+
-Pg0KPiA+Pj4+PkluIG90aGVyIHdvcmRzLCBJIGRvbid0IHNlZSB0aGUgbmVlZCBmb3IgdGhlIGxp
-c3QgYXQgYWxsLCBqdXN0IA0KPiA+Pj4+PnVzZSB0aGUgcmVhbCB0eXBlcyBoZXJlLCB5b3UgaGF2
-ZSBhbGwgdGhlIG5lZWRlZCBpbmZvcm1hdGlvbiANCj4gPj4+Pj4oaGludCwgaWYgeW91IGtub3cg
-dGhlIGluZGV4LCB5b3UgcmVhbGx5IGtub3cgdGhlIGRhdGEgYXMgDQo+ID4+Pj4+d2VsbC4uLikN
-Cj4gPj4+Pj4NCj4gPj4+PlRoZSB2YWx1ZSBpcyBuZWVkZWQgdG8gc2VuZCBpdCB0byBjaGlwc2V0
-IGFuZCB0byBkaXN0aW5ndWlzaCBhc3luYyANCj4gPj4+PmRhdGEgcGFja2V0IG11dHVhbGx5Lg0K
-PiA+Pj5XaGF0IGlzIHRoZSB2YWx1ZSwgdGhlIGluZGV4IG9yIHNvbWUgcmFuZG9tIHBvaW50ZXI/
-DQo+ID4+VGhlIHZhbHVlIG9mIGN1cnJlbnQgcGF0Y2ggc3Vic3RpdHV0ZXMgdGhlIGNvcnJlc3Bv
-bmRpbmcgaW5kZXggZm9yIA0KPiA+PnNvbWUgcmFuZG9tIHBvaW50ZXIoPSBhZGRyZXNzIG9mIGRl
-dmljZSBoYW5kbGVyKS4NCj4gPk9rLg0KPiA+DQo+ID4+Pj5UaGUgbGVuZ3RoIG9mIHRoZSBkYXRh
-IGZpZWxkIGlzIDRieXRlIGFuZCB0aGUgZGF0YSBmaWVsZCBoYXMgYmVlbiANCj4gPj4+PmZpbGxl
-ZCB3aXRoIHRoZSBhZGRyZXNzIG9mIHBvaW50ZXIgc28gZmFyLg0KPiA+Pj5TbyB0aGUgZGF0YSBm
-aWVsZCBjYW4ganVzdCBiZSBhbnkgcmFuZG9tIG51bWJlciwgYXMgbG9uZyBhcyBpdCBpcyANCj4g
-Pj4+Y29uc2lzdGVudD8gIFdoYXQgZG9lcyB0aGUgY2hpcCBkbyB3aXRoIHRoZSByYW5kb20gbnVt
-YmVyPw0KPiA+PkN1cnJlbnQgZHJpdmVyIG5vcm1hbGx5IGNyZWF0ZSBhIGNvdXBsZSBvZiBuZXR3
-b3JrIGludGVyZmFjZS4NCj4gPk11bHRpcGxlIG5ldHdvcmsgaW50ZXJmYWNlcyBmb3IgdGhlIHNh
-bWUgaGFyZHdhcmU/DQo+IFllcy4gQSBjaGlwc2V0IHN1cHBvcnRzIG11bHRpcGxlIG5ldHdvcmsg
-aW50ZXJmYWNlLg0KPiA+PlRoZSBkcml2ZXIgY2FuIHNlbmQgc29tZSBjb21tYW5kcyhkYXRhIGZy
-YW1lKSB0byB0aGUgbmV0d29yayANCj4gPj5pbnRlcmZhY2VzIGF0IHRoZSBzYW1lIHRpbWUgYW5k
-IHdhaXQgdGhlIHJlc3VsdHMuIEJvdGggZHJpdmVyIGFuZCANCj4gPj5jaGlwc2V0IG5lZWQgdW5p
-cXVlIHZhbHVlIHRvIGRpc3Rpbmd1aXNoIHdob20gdGhlIGludGVyZmFjZSBvd25lciBvZiANCj4g
-Pj50aGUgY29tbWFuZHMgaXMuDQo+ID4+QW5kIHRoZSB2YWx1ZSBhbHdheXMgaGFzIHNhbWUgdmFs
-dWUgd2hpbGUgdGhlIGludGVyZmFjZSBpcyBhbGl2ZS4NCj4gPkJ1dCBhcyB5b3UgY3JlYXRlZCB0
-aGUgaW50ZXJmYWNlcywganVzdCB1c2UgYSB1bmlxdWUgbnVtYmVyIGZvciBlYWNoLg0KPiA+SXQg
-Y291bGQgYmUgYSAjZGVmaW5lLCBhcyB5b3Uga25vdyBob3cgbWFueSBpbnRlcmZhY2VzIHlvdSB3
-aWxsIA0KPiA+Y3JlYXRlLCB0aGF0J3Mgbm90IGEgZHluYW1pYyB0aGluZy4gIE5vIG5lZWQgdG8g
-a2VlcCBsb29raW5nIHVwIA0KPiA+c29tZXRoaW5nIGluIGFuIGluZGV4IGFuZCBjb252ZXJ0aW5n
-IHRvIGEgc3RydWN0dXJlLg0KPiBJIHRoaW5rIHlvdXIgb3BpbmlvbiBpcyByaWdodCBvbmx5IGlm
-IHRoZSBkcml2ZXIgc2VuZCBzb21lIGNvbW1hbmRzIHRvIA0KPiBjaGlwc2V0LiBUaGUgZHJpdmVy
-IHNob3VsZCBsb29rIGZvciB0aGUgbmV0d29yayBpbnRlcmZhY2UgDQo+IGNvcnJlc3BvbmRpbmcg
-dG8gdGhlICNkZWZpbmUgdmFsdWUgdG8ga25vdyBvd25lciBvZiBkYXRhIGZyYW1lIHdoaWNoIA0K
-PiByZWNlaXZlZCBmcm9tIGNoaXBzZXQuIE5ldHdvcmsgaW50ZXJmYWNlIHN0cnVjdHVyZSBkeW5h
-bWljYWxseSBpcyANCj4gYWxsb2NhdGVkIGFzICdpZmNvbmZpZyB1cCcNCj4gY29tbWFuZCBvZiBz
-aGVsbC4gQXMgYSByZXN1bHQsIGxvb2stdXAgdGFibGUgaXMgbmVlZGVkLg0KPiANCj4gPj4+PkJ1
-dCB0aGlzIHBhdGNoIGNoYW5nZXMgaXQgdG8gdW5pcXVlIGluZGV4IHZhbHVlIGNvcnJlc3BvbmRp
-bmcgdG8gDQo+ID4+Pj50aGUgYWRkcmVzcyBmb3IgNjRiaXQgYWRkcmVzcyBtYWNoaW5lLiBJZiBy
-ZWFsIHR5cGUgaXMgdXNlZCBhcyANCj4gPj4+PnlvdXIgb3BpbmlvbiwgbmV3IHBhdGNoIHdpbGwg
-aGF2ZSB0aGUgc2FtZSBtZWFuaW5nIHdpdGggY3VycmVudCBjb2RlLg0KPiA+Pj5pbmRleCBub3cs
-IGJ1dCB3YXMgdXNpbmcgYSBwb2ludGVyIGJlZm9yZT8gIFRoYXQgc291bmRzIGxpa2UgeW91IA0K
-PiA+Pj5hcmUgY2hhbmdpbmcgdGhlIGZ1bmN0aW9uYWxpdHkuDQo+ID4+Pg0KPiA+Pj5jb25mdXNl
-ZCwNCj4gPj5UaGVyZSBpcyBhIHJlc2VydmVkIGZpZWxkIHRvIGRpc3Rpbmd1aXNoIHRoZSBkYXRh
-IGZyYW1lcyBpbiBjaGlwc2V0Lg0KPiA+PkJlY2F1c2UgdGhlIGZpZWxkIGhhcyA0Ynl0ZSBzcGFj
-ZSwgdGhpcyBwYXRjaCBjcmVhdGVzIHRoZSBpbmRleCANCj4gPj5jb3JyZXNwb25kaW5nIHRvIHRo
-ZSBwb2ludGVyIGFuZCB1c2VzIHRoZSBpbmRleCB0byBpbnB1dCB0aGUgDQo+ID4+aWRlbnRpZmll
-ciBpbiB0aGUgc2l6ZSBpbnN0ZWFkIG9mIHRoZSBwb2ludGVyIHZhbHVlLg0KPiA+Pg0KPiA+Pkkn
-bSBzb3JyeSwgdG9vLiBJdCdzIG5vdCBlYXN5IHRvIGV4cGxhaW4gaXQgaW4gRW5nbGlzaC4NCj4g
-Pkl0J3Mgbm90IGVhc3kgdG8gZXhwbGFpbiB0aGF0IGluIGFueSBsYW5ndWFnZSA6KQ0KPiBUaGFu
-a3MgZm9yIHlvdXIgZ2VuZXJvdXMgbWluZC4NCj4gPkFzIHlvdSAia25vdyIgdGhlIGludGVyZmFj
-ZXMgeW91IGNyZWF0ZSwganVzdCB1c2UgYSAiZml4ZWQiIG51bWJlciANCj4gPmZvciB0aGVtLCBh
-bmQgcmVmZXIgdG8gdGhlbSB0aGF0IHdheS4gIE5vIG5lZWQgdG8gaGF2ZSBhbiBhcnJheSBhbmQg
-DQo+ID5pdGVyYXRlIG92ZXIgdGhlIHdob2xlIGFycmF5IGV2ZXJ5IHRpbWUuDQo+ID4NCj4gPlRo
-ZXJlIGFyZSBsb3RzIG9mIHdyYXBwZXIgZnVuY3Rpb25zIGFuZCBwb2ludGVycyBpbiB0aGlzIGRy
-aXZlciB0aGF0IA0KPiA+bmVlZCB0byBiZSBzdHJpcHBlZCBhd2F5LiAgSSB0aGluayB5b3Ugd2ls
-bCBmaW5kIHRoZSBlbmQgcmVzdWx0IG9mIA0KPiA+YWxsIG9mIHRoYXQgd29yayB0byBiZSBtdWNo
-IHNpbXBsZXIsIGFuZCBzbWFsbGVyLiAgU2VlIHRoZSBwYXRjaGVzIA0KPiA+dGhhdCBJIGRpZCBm
-b3IgdGhlIGRyaXZlciB0aGlzIGV2ZW5pbmcgYXMgYW4gZXhhbXBsZSwgaXQgcmVtb3ZlZCANCj4g
-PmNvZGUsIGFuZCBpbiBkb2luZyBzbywgYWxzbyBmaXhlZCBhIGxvbmctdGltZSBidWcuICBUaGVy
-ZSdzIGEgbG90IG9mIA0KPiA+d29yayB0byBiZSBkb25lIGhlcmUgc3RpbGwuLi4NCj4gPg0KPiA+
-DQo+IEkga25vdyBjdXJyZW50IGRyaXZlciBoYXMgYSBsb3Qgb2Ygc3RyaXBwaW5nIGNvZGUgYW5k
-IGlzIGhlYXZ5IC4gTXkgDQo+IG1lbWJlcnMgaXMgd2FpdGluZyB0byBzZW5kIHBhdGNoZXMgYWZ0
-ZXIgeDY0Yml0IGlzc3VlIGlzIGNsb3NlZC4gQW5kIEkgDQo+IGltcHJvdmUgdGhpcyBkcml2ZXIg
-Y29udGludW91c2x5Lg0KDQpPaywgSSByZWFsbHkgdGhpbmsgdGhpcyBjYW4gYmUgc29sdmVkIGlu
-IGEgImNsZWFuZXIiIHdheSwgYnV0IGR1ZSB0byBhbGwgb2YgdGhlIGRpZmZlcmVudCBsYXllcnMg
-aW4gdGhlIGNvZGUsIGl0J3MgaGFyZCB0byBzZWUgaG93IHRvIGRvIHRoYXQgYXQgdGhlIG1vbWVu
-dC4gIEknbGwgYXBwbHkgdGhlIHBhdGNoLCBidXQgbm90ZSB0aGF0IEkgZG8gdGhpbmsgdGhpcyBu
-ZWVkcyB0byBiZSBmaXhlZCAicHJvcGVybHkiIGxhdGVyIG9uIGJlZm9yZSB0aGUgY29kZSBpcyBt
-ZXJnZWQgb3V0IG9mIHN0YWdpbmcuDQoNCldpdGggdGhpcyBwYXRjaCBhcHBsaWVkLCB0aGVyZSBh
-cmUgc3RpbGwgMiBidWlsZCBlcnJvcnMgb24geDg2XzY0LCBjYW4geW91IGZpeCB0aG9zZSB1cCBh
-bmQgc2VuZCBwYXRjaGVzIGZvciB0aGVtLCBhbmQgdGhlbiB3ZSBjYW4gdHVybiBvZmYgdGhlIENP
-TkZJR19CUk9LRU4gZGVwZW5kZW5jeS4NCg0KdGhhbmtzLA0KDQpncmVnIGstaA0K
+On Wed, Sep 09, 2015 at 10:57:30AM +0300, Kalle Valo wrote:
+> I did a quick smoke test and saw the splat below. It's this warning from
+> cfg80211:
+> 
+> 			/*
+> 			 * Don't advertise an unsupported type
+> 			 * in a combination.
+> 			 */
+> 			if (WARN_ON((wiphy->interface_modes & types) != types))
+> 				return -EINVAL;
+> 
+> I didn't immeaditely figure out what's causing this, the interface types
+> looked correct to me. Unfortunately I don't have time to investigate
+> more at the moment, but will look later.
+
+Doh!  Yeah this warning is exactly why I marked it supported even if you
+couldn't use it due to missing rawmode support.   Obviously I missed one
+of the cases, I'll take a look.
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
