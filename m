@@ -1,138 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:33484 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753082AbbIAAQt (ORCPT
+Received: from out22.sjc.mx.trendmicro.com ([216.99.131.79]:62845 "EHLO
+	out22.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752187AbbIILRz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2015 20:16:49 -0400
-Received: by obcji4 with SMTP id ji4so11422315obc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2015 17:16:49 -0700 (PDT)
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
- <1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
- <55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
- <55E39707.60101@lwfinger.net> <wrfjy4gs5ggd.fsf@redhat.com>
- <55E476A0.4080601@lwfinger.net> <wrfjio7v3txe.fsf@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	johannes@sipsolutions.net
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <55E4EE6F.2010008@lwfinger.net> (sfid-20150901_021653_604875_1FAE31A8)
-Date: Mon, 31 Aug 2015 19:16:47 -0500
+	Wed, 9 Sep 2015 07:17:55 -0400
+Received: from out03.sjc.mx.trendmicro.com (unknown [216.99.131.7])
+	by out22.sjc.mx.trendmicro.com (Postfix) with ESMTP id 68D7FB015B2
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2015 10:51:28 +0000 (UTC)
+Received: from relay09.sjc.mx.trendmicro.com (unknown [10.30.239.24])
+	by out03.sjc.mx.trendmicro.com (Postfix) with ESMTP id 9C77998042A
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2015 10:51:27 +0000 (UTC)
+Received: from thinktube.com (unknown [111.68.225.247])
+	by relay09.sjc.mx.trendmicro.com (Postfix) with ESMTP id 0B082980436
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Sep 2015 10:51:26 +0000 (UTC)
+Received: from unknown (HELO [192.168.5.9]) (br1@[188.86.86.230])
+          (envelope-sender <br1@thinktube.com>)
+          by 111.68.225.247 (qmail-ldap-1.03) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 9 Sep 2015 10:51:26 -0000
+Subject: Re: [PATCH v2 0/1] rtl8xxxu (mac80211) driver for
+ rtl8188[cr]u/rtl8192cu/rtl8723au
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <1440968574-29490-1-git-send-email-Jes.Sorensen@redhat.com>
+ <87y4gjfw10.fsf@kamboji.qca.qualcomm.com> <55EC71DB.7060007@lwfinger.net>
+ <wrfjvbbkaams.fsf@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+From: Bruno Randolf <br1@thinktube.com>
+Message-ID: <55F00F29.2090608@thinktube.com> (sfid-20150909_131758_558936_D4A72006)
+Date: Wed, 9 Sep 2015 11:51:21 +0100
 MIME-Version: 1.0
-In-Reply-To: <wrfjio7v3txe.fsf@redhat.com>
-Content-Type: multipart/mixed;
- boundary="------------050700010904090003020502"
+In-Reply-To: <wrfjvbbkaams.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050700010904090003020502
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+On 09/08/2015 10:01 PM, Jes Sorensen wrote:
+> I do not fully agree on this. In my testing I found rtl8192cu rather
+> unstable, to the point of not being usable. It would lock up for me
+> after a short while. I have seen this happen with mulitple different
+> adapters. I suspect this is the reason why drivers/staging/rtl8192u is
+> still sitting in the kernel tree.
 
-On 08/31/2015 06:43 PM, Jes Sorensen wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->> On 08/30/2015 09:39 PM, Jes Sorensen wrote:
->>> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>>> On 08/30/2015 01:41 PM, Jes Sorensen wrote:
->>>>>>> +{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x817e, 0xff,
->>>>>> 0xff, 0xff),
->>>>>>> +	.driver_info = (unsigned long)&rtl8192cu_fops},
->>>>>>
->>>>>> I have tested a device with USB ID 0x0bda (USB_VENDOR_ID_REALTEK):0x817e.
->>>>>
->>>>> Were you happy with the results, or did it cause problems? Ie. did you
->>>>> try on x86 or on PPC32?
->>>>
->>>> As covered in the other mail, it works very well at G rates.
->>>
->>> I see - I am a little confused, it works well on G rates but not on N
->>> rates, or was this due to the AP used?
->>
->> The AP is AC1200. It supports full N rates on other devices.
->
-> You only manage to make it work on G rates against this AP? Urgh, I
-> don't like that at all.
->
-> I thought you reported 30+Mbps performances though?, thats more than you
-> get on G.
+I second this. Problems with rtc8192cu have been mentioned on this list
+before: http://www.spinics.net/lists/linux-wireless/msg138538.html
+I recently saw similar problems in STA mode as well.
 
-OK, I get a bit better than the top G rate of 27 Mbps, but the connection 
-reports a 54 Mbps raw rate. My Intel 7260 gets RX of 95 and TX of 53 Mbps from 
-the same location relative to the AP. For the Intel, the listed raw rate is 300 
-Mbps.
+> My take is that the majority of users mostly care about station support
+> and for them rtl8xxxu will be much preferred to rtl8192cu.
 
->>>>> I don't think any of this is showstopper material for inclusion right
->>>>> now, albeit I do want to address them.
->>>>
->>>> The scheduling while atomic problems do need to be fixed, and I am
->>>> still working on the failure to get a wifi device on PPC.
->>>
->>> It's already fixed :)
->>
->> A full debug=0x3fff showed me one problem on the PPC. I will be
->> testing a patch later today.
->
-> Interesting, let me know what you find.
+Right. Users who need AP or IBSS mode can usually be expected to be able
+to change kernel configurations or blacklist modules.
 
-Thanks for the fixes. I'm still getting the sleeping while atomic BUG splat from 
-rtl8723a_h2c_cmd+0x48. Today I know that is not a lock dependency issue. I have 
-one in VirtualBox that fires and disables further checking, but that driver is 
-not loading now.
+Also we hope that rtl8xxxu will be extended in the future to support
+IBSS and AP mode as well! :)
 
-I have made some progress on the big-endian issues. When the firmware file is 
-read from disk, the first byte read must be the first byte written to the 
-device. In the slow write N routine, four bytes are picked and written using the 
-write32 routine, which does a cpu_to_32() byte swap. As a result, the order of 
-bytes to the device is 03, 02, 01, 00! Rather than byte swap twice, I am calling 
-the regular writeN routine with each hunk. After a bit of thinking about the 
-best blocksize to use, I settled on 64. That reduces the number of full-size 
-hunks that are written without unduly increasing the worst-case number of writes 
-needed for the remainder.
+bruno
 
-On PPC, I now get a device registered; however, the scan data are garbled. That 
-shouldn't be too difficult to debug, but just in case, I have attached the patch 
-for rtl8xxxu_slow_writeN().
-
-Larry
-
-
-
-
---------------050700010904090003020502
-Content-Type: text/x-patch;
- name="fix_big_endian_fw_download.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="fix_big_endian_fw_download.patch"
-
-diff --git a/drivers/net/wireless/rtl8xxxu.c b/drivers/net/wireless/rtl8xxxu.c
-index 8773884..80602b8 100644
---- a/drivers/net/wireless/rtl8xxxu.c
-+++ b/drivers/net/wireless/rtl8xxxu.c
-@@ -1099,17 +1099,18 @@ rtl8xxxu_writeN(struct rtl8xxxu_priv *priv, u16 addr, u8 *buf, u16 len)
- static int
- rtl8xxxu_slow_writeN(struct rtl8xxxu_priv *priv, u16 addr, u8 *buf, u16 len)
- {
--	u32 blocksize = sizeof(u32);
--	u32 *buf4 = (u32 *)buf;
-+	u32 blocksize = 64;
- 	int i, offset, count, remainder;
- 
-+	/* This routine does not do any btye swapping on big-endian machines.
-+	 * It should be used for writing firmware, and nothing else */
- 	count = len / blocksize;
- 	remainder = len % blocksize;
- 
- 	for (i = 0; i < count; i++) {
- 		offset = i * blocksize;
--		rtl8xxxu_write32(priv, (REG_FW_START_ADDRESS + offset),
--				 buf4[i]);
-+		rtl8xxxu_writeN(priv, (REG_FW_START_ADDRESS + offset),
-+				(buf + offset), blocksize);
- 	}
- 
- 	if (remainder) {
-
-
---------------050700010904090003020502--
