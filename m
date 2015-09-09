@@ -1,92 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45179 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756490AbbIUMuE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26023 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754921AbbIIJdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2015 08:50:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Ayala Beker <ayala.beker@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 21 Sep 2015 15:49:53 +0300
-Message-Id: <1442839793-26164-1-git-send-email-luca@coelho.fi> (sfid-20150921_145008_211228_809256EA)
-Subject: [PATCH] cfg80211: allow changing station capabilities for unassociated stations
+	Wed, 9 Sep 2015 05:33:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: fix mu-mimo rx status reporting
+References: <1440679653-20289-1-git-send-email-michal.kazior@tieto.com>
+	<1440679653-20289-2-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 9 Sep 2015 12:33:23 +0300
+In-Reply-To: <1440679653-20289-2-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 27 Aug 2015 14:47:33 +0200")
+Message-ID: <877fo09bto.fsf@kamboji.qca.qualcomm.com> (sfid-20150909_113352_566656_E12A9B30)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Currently, cfg80211 rejects capability updates for existing entries
-and as a result it's impossible to update entries that were added
-unassociated, but that is necessary to go through the full station
-states from userspace, adding a station before authentication etc.
+> MU-MIMO Rx involves different interpretation of
+> the VHT-SIG-A compared to SU-MIMO.
+>
+> The incorrect interpretation led ath10k to report
+> VHT MCS values greater than 9 which subsequently
+> prompted mac80211 to drop such frames. This
+> effectively broke Rx with MU-MIMO in many cases
+> and manifested with a kernel warning in the log
+> which looked like this:
+>
+>   [   14.552520] WARNING: CPU: 2 PID: 0 at net/mac80211/rx.c:3578 ieee80211_rx+0x26c/0x940 [mac80211]()
+>   [   14.552522] Rate marked as a VHT rate but data is invalid: MCS: 10, NSS: 2
+>   ... call trace follows ...
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Fix this by allowing updates to capabilities for stations that the
-driver (or mac80211) assigned unassociated state. Drivers setting
-the full station state support flag must use the new station type
-for proper operation.
+Thanks, patch 2 applied.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h | 3 +++
- net/wireless/nl80211.c | 7 +++++--
- 2 files changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bfafa7d..a5b86d0 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -859,6 +859,8 @@ struct station_del_parameters {
- /**
-  * enum cfg80211_station_type - the type of station being modified
-  * @CFG80211_STA_AP_CLIENT: client of an AP interface
-+ * @CFG80211_STA_AP_CLIENT_UNASSOC: client of an AP interface that is still
-+ *	unassociated (update properties for this type of client is permitted)
-  * @CFG80211_STA_AP_MLME_CLIENT: client of an AP interface that has
-  *	the AP MLME in the device
-  * @CFG80211_STA_AP_STA: AP station on managed interface
-@@ -874,6 +876,7 @@ struct station_del_parameters {
-  */
- enum cfg80211_station_type {
- 	CFG80211_STA_AP_CLIENT,
-+	CFG80211_STA_AP_CLIENT_UNASSOC,
- 	CFG80211_STA_AP_MLME_CLIENT,
- 	CFG80211_STA_AP_STA,
- 	CFG80211_STA_IBSS,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5b64bba..2b007b9 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4021,7 +4021,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 		params->sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
- 	}
- 
--	if (statype != CFG80211_STA_TDLS_PEER_SETUP) {
-+	if (statype != CFG80211_STA_TDLS_PEER_SETUP &&
-+	    statype != CFG80211_STA_AP_CLIENT_UNASSOC) {
- 		/* reject other things that can't change */
- 		if (params->sta_modify_mask & STATION_PARAM_APPLY_UAPSD)
- 			return -EINVAL;
-@@ -4033,7 +4034,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 			return -EINVAL;
- 	}
- 
--	if (statype != CFG80211_STA_AP_CLIENT) {
-+	if (statype != CFG80211_STA_AP_CLIENT &&
-+	    statype != CFG80211_STA_AP_CLIENT_UNASSOC) {
- 		if (params->vlan)
- 			return -EINVAL;
- 	}
-@@ -4045,6 +4047,7 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 			return -EOPNOTSUPP;
- 		break;
- 	case CFG80211_STA_AP_CLIENT:
-+	case CFG80211_STA_AP_CLIENT_UNASSOC:
- 		/* accept only the listed bits */
- 		if (params->sta_flags_mask &
- 				~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
 -- 
-2.5.1
-
+Kalle Valo
