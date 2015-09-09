@@ -1,97 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13714 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932185AbbI3JqR (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:44362 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753977AbbIIInc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:46:17 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/32] staging: wilc1000: rename strHostIFscanAttr
-Date: Wed, 30 Sep 2015 18:44:20 +0900
-Message-ID: <1443606289-25407-3-git-send-email-tony.cho@atmel.com> (sfid-20150930_114620_153248_4DD7CDA1)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
+	Wed, 9 Sep 2015 04:43:32 -0400
+Subject: [PATCH] ath10k: add ATH10K_FW_FEATURE_RAW_MODE_SUPPORT to
+ ath10k_core_fw_feature_str[]
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 09 Sep 2015 11:34:37 +0300
+Message-ID: <20150909083437.12465.89335.stgit@potku.adurom.net> (sfid-20150909_104355_405490_A2219202)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strHostIFscanAttr to scan_info in order to avoid
-CamelCase naming convention.
+This was missed in the original commit adding the flag and ath10k only printed "bit10":
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+ath10k_pci 0000:02:00.0: qca988x hw2.0 (0x4100016c, 0x043202ff) fw 10.2.4.70.6-2 api 3
+htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1 features no-p2p,bit10
+
+Also add a build test to avoid this happening again.
+
+Fixes: ccec9038c721 ("ath10k: enable raw encap mode and software crypto engine")
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index be01de5..a039f04 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -414,7 +414,7 @@ struct sta_inactive_t {
-  *  @version		1.0
-  */
- union message_body {
--	struct scan_attr strHostIFscanAttr;
-+	struct scan_attr scan_info;
- 	struct connect_attr strHostIFconnectAttr;
- 	struct rcvd_net_info strRcvdNetworkInfo;
- 	struct rcvd_async_info strRcvdGnrlAsyncInfo;
-@@ -4099,7 +4099,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index b87b98617073..9e3d89d06445 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -142,12 +142,17 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_IGNORE_OTP_RESULT] = "ignore-otp",
+ 	[ATH10K_FW_FEATURE_NO_NWIFI_DECAP_4ADDR_PADDING] = "no-4addr-pad",
+ 	[ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT] = "skip-clock-init",
++	[ATH10K_FW_FEATURE_RAW_MODE_SUPPORT] = "raw-mode",
+ };
  
- 		case HOST_IF_MSG_SCAN:
--			Handle_Scan(msg.drvHandler, &msg.body.strHostIFscanAttr);
-+			Handle_Scan(msg.drvHandler, &msg.body.scan_info);
- 			break;
- 
- 		case HOST_IF_MSG_CONNECT:
-@@ -5789,26 +5789,26 @@ s32 host_int_scan(tstrWILC_WFIDrv *hWFIDrv, u8 u8ScanSource,
- 	msg.id = HOST_IF_MSG_SCAN;
- 
- 	if (pstrHiddenNetwork != NULL) {
--		msg.body.strHostIFscanAttr.strHiddenNetwork.pstrHiddenNetworkInfo = pstrHiddenNetwork->pstrHiddenNetworkInfo;
--		msg.body.strHostIFscanAttr.strHiddenNetwork.u8ssidnum = pstrHiddenNetwork->u8ssidnum;
-+		msg.body.scan_info.strHiddenNetwork.pstrHiddenNetworkInfo = pstrHiddenNetwork->pstrHiddenNetworkInfo;
-+		msg.body.scan_info.strHiddenNetwork.u8ssidnum = pstrHiddenNetwork->u8ssidnum;
- 
- 	} else
- 		PRINT_D(HOSTINF_DBG, "pstrHiddenNetwork IS EQUAL TO NULL\n");
- 
- 	msg.drvHandler = hWFIDrv;
--	msg.body.strHostIFscanAttr.u8ScanSource = u8ScanSource;
--	msg.body.strHostIFscanAttr.u8ScanType = u8ScanType;
--	msg.body.strHostIFscanAttr.pfScanResult = ScanResult;
--	msg.body.strHostIFscanAttr.pvUserArg = pvUserArg;
--
--	msg.body.strHostIFscanAttr.u8ChnlListLen = u8ChnlListLen;
--	msg.body.strHostIFscanAttr.pu8ChnlFreqList = kmalloc(u8ChnlListLen, GFP_KERNEL);        /* will be deallocated by the receiving thread */
--	memcpy(msg.body.strHostIFscanAttr.pu8ChnlFreqList,
-+	msg.body.scan_info.u8ScanSource = u8ScanSource;
-+	msg.body.scan_info.u8ScanType = u8ScanType;
-+	msg.body.scan_info.pfScanResult = ScanResult;
-+	msg.body.scan_info.pvUserArg = pvUserArg;
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+ 						   size_t buf_len,
+ 						   enum ath10k_fw_features feat)
+ {
++	/* make sure that ath10k_core_fw_feature_str[] gets updated */
++	BUILD_BUG_ON(ARRAY_SIZE(ath10k_core_fw_feature_str) !=
++		     ATH10K_FW_FEATURE_COUNT);
 +
-+	msg.body.scan_info.u8ChnlListLen = u8ChnlListLen;
-+	msg.body.scan_info.pu8ChnlFreqList = kmalloc(u8ChnlListLen, GFP_KERNEL);        /* will be deallocated by the receiving thread */
-+	memcpy(msg.body.scan_info.pu8ChnlFreqList,
- 		    pu8ChnlFreqList, u8ChnlListLen);
- 
--	msg.body.strHostIFscanAttr.IEsLen = IEsLen;
--	msg.body.strHostIFscanAttr.pu8IEs = kmalloc(IEsLen, GFP_KERNEL);        /* will be deallocated by the receiving thread */
--	memcpy(msg.body.strHostIFscanAttr.pu8IEs,
-+	msg.body.scan_info.IEsLen = IEsLen;
-+	msg.body.scan_info.pu8IEs = kmalloc(IEsLen, GFP_KERNEL);        /* will be deallocated by the receiving thread */
-+	memcpy(msg.body.scan_info.pu8IEs,
- 		    pu8IEs, IEsLen);
- 
- 	/* send the message */
--- 
-1.9.1
+ 	if (feat >= ARRAY_SIZE(ath10k_core_fw_feature_str) ||
+ 	    WARN_ON(!ath10k_core_fw_feature_str[feat])) {
+ 		return scnprintf(buf, buf_len, "bit%d", feat);
 
