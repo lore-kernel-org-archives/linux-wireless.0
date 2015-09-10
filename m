@@ -1,166 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51797 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754686AbbIWMSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2015 08:18:47 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] mac80211: Deinline drv_get/set/reset_tsf()
-Date: Wed, 23 Sep 2015 14:18:36 +0200
-Message-Id: <1443010716-32651-3-git-send-email-dvlasenk@redhat.com> (sfid-20150923_141916_752131_747B0D68)
-In-Reply-To: <1443010716-32651-1-git-send-email-dvlasenk@redhat.com>
-References: <1443010716-32651-1-git-send-email-dvlasenk@redhat.com>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:34715 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760AbbIJTOm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2015 15:14:42 -0400
+Received: by padhy16 with SMTP id hy16so50944979pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:14:42 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 01/31] staging: wilc1000: rename WILC_WFI_CfgSetChannel
+Date: Fri, 11 Sep 2015 04:14:00 +0900
+Message-Id: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211446_081498_45111E00)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this .config: http://busybox.net/~vda/kernel_config_ALLYES_Os,
-after deinlining these functions have sizes and callsite counts
-as follows:
+This patch replaces WILC_WFI_CfgSetChannel with
+wilc_set_channel to avoid CamelCase.
 
-drv_get_tsf: 634 bytes, 6 calls
-drv_set_tsf: 626 bytes, 2 calls
-drv_reset_tsf: 617 bytes, 2 calls
-
-Total size reduction is about 4.2 kbytes.
-
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-CC: Johannes Berg <johannes.berg@intel.com>
-CC: John Linville <linville@tuxdriver.com>
-CC: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
+V2: to make function name simple
 
-Rediffed against mac80211-next
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- net/mac80211/driver-ops.c | 46 +++++++++++++++++++++++++++++++++++++++++
- net/mac80211/driver-ops.h | 52 +++++++----------------------------------------
- 2 files changed, 53 insertions(+), 45 deletions(-)
-
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index 4f7c81d..5d51a5d 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -139,6 +139,52 @@ int drv_conf_tx(struct ieee80211_local *local,
- 	return ret;
- }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index cf76a33..3149fd8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -677,7 +677,7 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
  
-+u64 drv_get_tsf(struct ieee80211_local *local,
-+		struct ieee80211_sub_if_data *sdata)
-+{
-+	u64 ret = -1ULL;
-+
-+	might_sleep();
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return ret;
-+
-+	trace_drv_get_tsf(local, sdata);
-+	if (local->ops->get_tsf)
-+		ret = local->ops->get_tsf(&local->hw, &sdata->vif);
-+	trace_drv_return_u64(local, ret);
-+	return ret;
-+}
-+
-+void drv_set_tsf(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 u64 tsf)
-+{
-+	might_sleep();
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return;
-+
-+	trace_drv_set_tsf(local, sdata, tsf);
-+	if (local->ops->set_tsf)
-+		local->ops->set_tsf(&local->hw, &sdata->vif, tsf);
-+	trace_drv_return_void(local);
-+}
-+
-+void drv_reset_tsf(struct ieee80211_local *local,
-+		   struct ieee80211_sub_if_data *sdata)
-+{
-+	might_sleep();
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return;
-+
-+	trace_drv_reset_tsf(local, sdata);
-+	if (local->ops->reset_tsf)
-+		local->ops->reset_tsf(&local->hw, &sdata->vif);
-+	trace_drv_return_void(local);
-+}
-+
- int
- drv_switch_vif_chanctx(struct ieee80211_local *local,
- 		       struct ieee80211_vif_chanctx_switch *vifs,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 7f08d82..5ef28af 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -590,51 +590,13 @@ int drv_conf_tx(struct ieee80211_local *local,
- 		struct ieee80211_sub_if_data *sdata, u16 ac,
- 		const struct ieee80211_tx_queue_params *params);
  
--static inline u64 drv_get_tsf(struct ieee80211_local *local,
--			      struct ieee80211_sub_if_data *sdata)
--{
--	u64 ret = -1ULL;
--
--	might_sleep();
--
--	if (!check_sdata_in_driver(sdata))
--		return ret;
--
--	trace_drv_get_tsf(local, sdata);
--	if (local->ops->get_tsf)
--		ret = local->ops->get_tsf(&local->hw, &sdata->vif);
--	trace_drv_return_u64(local, ret);
--	return ret;
--}
--
--static inline void drv_set_tsf(struct ieee80211_local *local,
--			       struct ieee80211_sub_if_data *sdata,
--			       u64 tsf)
--{
--	might_sleep();
--
--	if (!check_sdata_in_driver(sdata))
--		return;
--
--	trace_drv_set_tsf(local, sdata, tsf);
--	if (local->ops->set_tsf)
--		local->ops->set_tsf(&local->hw, &sdata->vif, tsf);
--	trace_drv_return_void(local);
--}
--
--static inline void drv_reset_tsf(struct ieee80211_local *local,
--				 struct ieee80211_sub_if_data *sdata)
--{
--	might_sleep();
--
--	if (!check_sdata_in_driver(sdata))
--		return;
--
--	trace_drv_reset_tsf(local, sdata);
--	if (local->ops->reset_tsf)
--		local->ops->reset_tsf(&local->hw, &sdata->vif);
--	trace_drv_return_void(local);
--}
-+u64 drv_get_tsf(struct ieee80211_local *local,
-+		struct ieee80211_sub_if_data *sdata);
-+void drv_set_tsf(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 u64 tsf);
-+void drv_reset_tsf(struct ieee80211_local *local,
-+		   struct ieee80211_sub_if_data *sdata);
- 
- static inline int drv_tx_last_beacon(struct ieee80211_local *local)
+ /**
+- *  @brief      WILC_WFI_CfgSetChannel
++ *  @brief      wilc_set_channel
+  *  @details    Set channel for a given wireless interface. Some devices
+  *                      may support multi-channel operation (by channel hopping) so cfg80211
+  *                      doesn't verify much. Note, however, that the passed netdev may be
+@@ -689,8 +689,8 @@ static void CfgConnectResult(tenuConnDisconnEvent enuConnDisconnEvent,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_CfgSetChannel(struct wiphy *wiphy,
+-				  struct cfg80211_chan_def *chandef)
++static int wilc_set_channel(struct wiphy *wiphy,
++			    struct cfg80211_chan_def *chandef)
  {
+ 
+ 	u32 channelnum = 0;
+@@ -3230,7 +3230,7 @@ static int WILC_WFI_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	PRINT_D(HOSTAPD_DBG, "Interval = %d\n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
+ 		settings->beacon_interval, settings->dtim_period, beacon->head_len, beacon->tail_len);
+ 
+-	s32Error = WILC_WFI_CfgSetChannel(wiphy, &settings->chandef);
++	s32Error = wilc_set_channel(wiphy, &settings->chandef);
+ 
+ 	if (s32Error != WILC_SUCCESS)
+ 		PRINT_ER("Error in setting channel\n");
+@@ -3558,7 +3558,7 @@ int WILC_WFI_del_virt_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ #endif /*WILC_AP_EXTERNAL_MLME*/
+ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 
+-	.set_monitor_channel = WILC_WFI_CfgSetChannel,
++	.set_monitor_channel = wilc_set_channel,
+ 	.scan = WILC_WFI_CfgScan,
+ 	.connect = WILC_WFI_CfgConnect,
+ 	.disconnect = WILC_WFI_disconnect,
 -- 
-1.8.1.4
+2.5.1
 
