@@ -1,85 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36954 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750717AbbIBAAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 20:00:18 -0400
-Date: Wed, 2 Sep 2015 02:00:15 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Kees Cook <keescook@chromium.org>,
-	"Roberts, William C" <william.c.roberts@intel.com>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"james.l.morris@oracle.com" <james.l.morris@oracle.com>,
-	"serge@hallyn.com" <serge@hallyn.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Paul Moore <paul@paul-moore.com>,
-	Eric Paris <eparis@parisplace.org>, selinux@tycho.nsa.gov,
-	Stephen Smalley <sds@tycho.nsa.gov>,
-	"Schaufler, Casey" <casey.schaufler@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Peter Jones <pjones@redhat.com>, Takashi Iwai <tiwai@suse.de>,
-	Ming Lei <ming.lei@canonical.com>, Joey Lee <jlee@suse.de>,
-	=?utf-8?B?IlZvanTEm2NoIFBhdmzDrWsi?= <vojtech@suse.com>,
-	Kyle McMartin <kyle@kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Jay Schulist <jschlst@samba.org>,
-	Daniel Borkmann <dborkman@redhat.com>,
-	Alexei Starovoitov <ast@plumgrid.com>
-Subject: Re: Linux Firmware Signing
-Message-ID: <20150902000015.GV8051@wotan.suse.de> (sfid-20150902_020059_428272_3B03BB6C)
-References: <1440464705.2737.36.camel@linux.vnet.ibm.com>
- <14540.1440599584@warthog.procyon.org.uk>
- <31228.1440671938@warthog.procyon.org.uk>
- <36ddb60c1d22756234392a2d065a02cb.squirrel@twosheds.infradead.org>
- <20150827212907.GF8051@wotan.suse.de>
- <1440719673.2118.84.camel@linux.vnet.ibm.com>
- <20150829021659.GN8051@wotan.suse.de>
- <1441030735.2647.70.camel@linux.vnet.ibm.com>
- <1441037120.4453.93.camel@infradead.org>
- <1441039536.2647.73.camel@linux.vnet.ibm.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:28991 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752227AbbIJO3H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2015 10:29:07 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id t8AEIRXD002000
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 07:29:06 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1wqwrk6ymy-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 07:29:06 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>
+Subject: [PATCH 2/2] mwifiex: correction in USB8997 chipset's product ID
+Date: Thu, 10 Sep 2015 07:27:34 -0700
+Message-ID: <1441895254-28890-2-git-send-email-akarwar@marvell.com> (sfid-20150910_162911_914401_38CBDDE5)
+In-Reply-To: <1441895254-28890-1-git-send-email-akarwar@marvell.com>
+References: <1441895254-28890-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1441039536.2647.73.camel@linux.vnet.ibm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 31, 2015 at 12:45:36PM -0400, Mimi Zohar wrote:
-> On Mon, 2015-08-31 at 17:05 +0100, David Woodhouse wrote:
-> > On Mon, 2015-08-31 at 10:18 -0400, Mimi Zohar wrote:
-> > > I'm not real happy about it, but since we can't break the existing ABI
-> > > of loading data into the kernel via a buffer, a stop gap method of
-> > > signing and verifying a buffer would be needed.
-> > 
-> > Actually I think we can. The usermode helper is already being phased
-> > out.
->
-> Right.  The discussion has moved beyond just firmware, but to policies
-> and other things the kernel consumes.
+For 8897 chipset, mwifiex_usb unnecessarily used to
+come into picture when wlan is supposed to be used
+via PCIe interface and USB interface is for
+bluetooth.
 
-And I'm saying that if the pitch here is we should be vetting *all* buffers
-passed to the kernel I'd agree a generic interface is desriable but more
-importantly I think we should get everyone on board first and its not clear
-to me that has yet happened.
+This problem has been resolved for newer chipset by
+having separate USB product ids for USB-USB8997 and
+PCIe-USB8997 chipset variants. This patch ensures to
+use wlan specific product id.
 
-For the other interfaces were discussing that *did* have an obvious file
-descriptor (struct fd), or file (struct file) use it would seem obvious
-to try to streamline that and share the code there (modules, firmware, kexec,
-initramfs, SELinux policy files), our only issues there were what to do about
-file that some distros require to be generated by machines and are machine
-specific (SELinux policy file in some cases, initramfs in some others) and
-for that Paul had suggested to consider the Machine Owner Key (MOK) -- but now
-for buffers.... its news to me we had everyone up in arms in agreement on that
-crusade. I didn't even know such crusade existed. I can see why, but was just
-not aware there was an effort to streamline a solution.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Frank Huang <frankh@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/usb.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  Luis
+diff --git a/drivers/net/wireless/mwifiex/usb.h b/drivers/net/wireless/mwifiex/usb.h
+index 1be82d3..6029a68 100644
+--- a/drivers/net/wireless/mwifiex/usb.h
++++ b/drivers/net/wireless/mwifiex/usb.h
+@@ -30,7 +30,7 @@
+ #define USB8797_PID_2		0x2044
+ #define USB8801_PID_1		0x2049
+ #define USB8801_PID_2		0x204a
+-#define USB8997_PID_1		0x204d
++#define USB8997_PID_1		0x2052
+ #define USB8997_PID_2		0x204e
+ 
+ 
+-- 
+1.8.1.4
+
