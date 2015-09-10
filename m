@@ -1,54 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:26790 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016AbbIPJgF (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:36321 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741AbbIJKEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2015 05:36:05 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 0/6] removing wilc_errorsupport.h file
-Date: Wed, 16 Sep 2015 18:35:58 +0900
-Message-ID: <1442396164-18728-1-git-send-email-tony.cho@atmel.com> (sfid-20150916_113614_820071_2E636CE5)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 Sep 2015 06:04:49 -0400
+Received: by lbcao8 with SMTP id ao8so20179257lbc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 03:04:48 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ibss: add VHT80 support for IBSS
+Date: Thu, 10 Sep 2015 12:04:13 +0200
+Message-Id: <1441879453-6391-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150910_120453_422997_31C76776)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patch is resent in total 6 patches as version 2. This version
-fixes the warnings reported by checkpatch.pl not to make additional warnings.
-The concern for the memory leak issue is checked again in this version.
+Add VHT80 support for IBSS.
 
-The error types provided by wilc driver are being replaced by the ones provided
-by Linux kernel and the macros which checking errors are being deleted in these
-patches becasue they are not helpful to code readability.
+eg. iw wlan0 ibss join 5180 80MHZ
+    iw wlan0 ibbs join 5220 80MHZ
 
-Leo Kim (6):
-  staging: wilc1000: remove a macro WILC_NULLCHECK
-  staging: wilc1000: remove the macro WILC_ERRORCHECK
-  staging: wilc1000: remove the macro WILC_ERRORREPORT
-  staging: wilc1000: remove definitions unused
-  staging: wilc1000: replace wilc error types with the generic error
-    types
-  staging: wilc1000: remove wilc_errorsupport.h
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ ibss.c | 48 ++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 40 insertions(+), 8 deletions(-)
 
- drivers/staging/wilc1000/coreconfigurator.c       |   28 +-
- drivers/staging/wilc1000/host_interface.c         | 1115 +++++++++------------
- drivers/staging/wilc1000/linux_mon.c              |   14 +-
- drivers/staging/wilc1000/linux_wlan.c             |    2 +-
- drivers/staging/wilc1000/wilc_errorsupport.h      |   64 --
- drivers/staging/wilc1000/wilc_msgqueue.c          |  113 ++-
- drivers/staging/wilc1000/wilc_msgqueue.h          |    1 -
- drivers/staging/wilc1000/wilc_oswrapper.h         |    3 -
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  133 ++-
- 9 files changed, 616 insertions(+), 857 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_errorsupport.h
-
+diff --git a/ibss.c b/ibss.c
+index 7a0b707..460f549 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -16,6 +16,38 @@
+ 
+ SECTION(ibss);
+ 
++struct chanmode {
++	const char *name;
++	unsigned int width;
++	int freq1_diff;
++	int chantype; /* for older kernel */
++};
++
++static int get_cf1(const struct chanmode *chanmode, unsigned long freq) {
++	int cf1 = freq, j;
++	int vht80[] = { 5180, 5260, 5500, 5580, 5660, 5745 };
++
++	switch (chanmode->width) {
++	case NL80211_CHAN_WIDTH_80:
++	        /* setup center_freq1 */
++		for (j = 0; j < ARRAY_SIZE(vht80); j++) {
++			if (freq >= vht80[j] && freq < vht80[j] + 80)
++				break;
++		}
++
++		if (j == ARRAY_SIZE(vht80))
++			break;
++
++		cf1 = vht80[j] + 30;
++		break;
++	default:
++		cf1 = freq + chanmode->freq1_diff;
++		break;
++	}
++
++	return cf1;
++}
++
+ static int join_ibss(struct nl80211_state *state,
+ 		     struct nl_msg *msg,
+ 		     int argc, char **argv,
+@@ -30,12 +62,8 @@ static int join_ibss(struct nl80211_state *state,
+ 	int bintval;
+ 	int i;
+ 	unsigned long freq;
+-	static const struct {
+-		const char *name;
+-		unsigned int width;
+-		int freq1_diff;
+-		int chantype; /* for older kernel */
+-	} *chanmode_selected = NULL, chanmode[] = {
++	const struct chanmode *chanmode_selected = NULL;
++	static const struct chanmode chanmode[] = {
+ 		{ .name = "HT20",
+ 		  .width = NL80211_CHAN_WIDTH_20,
+ 		  .freq1_diff = 0,
+@@ -60,6 +88,10 @@ static int join_ibss(struct nl80211_state *state,
+ 		  .width = NL80211_CHAN_WIDTH_10,
+ 		  .freq1_diff = 0,
+ 		  .chantype = -1 },
++		{ .name = "80MHZ",
++		  .width = NL80211_CHAN_WIDTH_80,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
+ 	};
+ 
+ 	if (argc < 2)
+@@ -90,7 +122,7 @@ static int join_ibss(struct nl80211_state *state,
+ 			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
+ 				    chanmode_selected->width);
+ 			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
+-				    freq + chanmode_selected->freq1_diff);
++				    get_cf1(chanmode_selected, freq));
+ 			if (chanmode_selected->chantype != -1)
+ 				NLA_PUT_U32(msg,
+ 					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+@@ -192,7 +224,7 @@ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+ COMMAND(ibss, join,
+-	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT|5MHZ|10MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
++	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT|5MHZ|10MHZ|80MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
+ 	" [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] "
+ 	"[key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
 -- 
 1.9.1
 
