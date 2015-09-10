@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:33553 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159AbbIIFQy (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:27917 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438AbbIJC6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2015 01:16:54 -0400
-Received: by lbcjc2 with SMTP id jc2so64706116lbc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2015 22:16:52 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: probe bcma core (device) rev 0x15
-Date: Wed,  9 Sep 2015 07:16:42 +0200
-Message-Id: <1441775802-1230-1-git-send-email-zajec5@gmail.com> (sfid-20150909_071703_499096_D1EEF246)
+	Wed, 9 Sep 2015 22:58:48 -0400
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH] staging: wilc1000: remove BROKEN status
+Date: Thu, 10 Sep 2015 11:59:11 +0900
+Message-ID: <1441853951-10523-1-git-send-email-tony.cho@atmel.com> (sfid-20150910_045851_858713_53BE9254)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OpenWrt user reported b43 doesn't probe wireless core on SoC BCM5356A1:
-[    0.000000] bcma: bus0: Found chip with id 0x5356, rev 0x01 and package 0x04
-it is because this chip uses different 802.11 core revison than others:
-[    0.000000] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x15, class 0x0)
+This patch removes BROKEN status from the Kconfig.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/b43/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 2849070..71d3e9a 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -120,6 +120,7 @@ MODULE_PARM_DESC(allhwsupport, "Enable support for all hardware (even it if over
- #ifdef CONFIG_B43_BCMA
- static const struct bcma_device_id b43_bcma_tbl[] = {
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x11, BCMA_ANY_CLASS),
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x15, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1C, BCMA_ANY_CLASS),
+diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kconfig
+index 51bbf46..59ccecc 100644
+--- a/drivers/staging/wilc1000/Kconfig
++++ b/drivers/staging/wilc1000/Kconfig
+@@ -1,6 +1,5 @@
+ config WILC1000
+ 	tristate "WILC1000 support (WiFi only)"
+-	depends on BROKEN
+ 	depends on !S390
+ 	depends on CFG80211 && WEXT_CORE && INET
+ 	depends on MMC || SPI
 -- 
-1.8.4.5
+1.9.1
 
