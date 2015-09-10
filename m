@@ -1,75 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14129 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754579AbbI3JtI (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34732 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbbIJTQA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2015 05:49:08 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH 15/32] staging: wilc1000: rename strAddStaParam
-Date: Wed, 30 Sep 2015 18:44:32 +0900
-Message-ID: <1443606289-25407-15-git-send-email-tony.cho@atmel.com> (sfid-20150930_121654_026687_A2401BC1)
-In-Reply-To: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-References: <1443606289-25407-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 Sep 2015 15:16:00 -0400
+Received: by padhy16 with SMTP id hy16so50970929pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:59 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 26/31] staging: wilc1000: rename WILC_WFI_cancel_remain_on_channel
+Date: Fri, 11 Sep 2015 04:14:25 +0900
+Message-Id: <1441912470-3371-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211853_816351_30E62DFA)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strAddStaParam to add_sta_info to avoid CamelCase
-naming convention.
+This patch replaces WILC_WFI_cancel_remain_on_channel with
+wilc_cancel_remain_on_channel to avoid CamelCase.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+V2: to make function name simple
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7e53aa9..d9d0b2d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -392,7 +392,7 @@ union message_body {
- 	struct cfg_param_attr cfg_info;
- 	struct channel_attr channel_info;
- 	struct beacon_attr beacon_info;
--	struct add_sta_param strAddStaParam;
-+	struct add_sta_param add_sta_info;
- 	struct del_sta strDelStaParam;
- 	struct add_sta_param strEditStaParam;
- 	struct timer_cb strTimerCb;
-@@ -4142,7 +4142,7 @@ static int hostIFthread(void *pvArg)
- 			break;
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 824fba0..6b84821 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2444,7 +2444,7 @@ static int  wilc_remain_on_channel(struct wiphy *wiphy,
+ }
  
- 		case HOST_IF_MSG_ADD_STATION:
--			Handle_AddStation(msg.drvHandler, &msg.body.strAddStaParam);
-+			Handle_AddStation(msg.drvHandler, &msg.body.add_sta_info);
- 			break;
- 
- 		case HOST_IF_MSG_DEL_STATION:
-@@ -6651,7 +6651,7 @@ s32 host_int_add_station(tstrWILC_WFIDrv *hWFIDrv,
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	struct add_sta_param *pstrAddStationMsg = &msg.body.strAddStaParam;
-+	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
- 
- 
- 	if (pstrWFIDrv == NULL) {
-@@ -6802,7 +6802,7 @@ s32 host_int_edit_station(tstrWILC_WFIDrv *hWFIDrv,
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	struct add_sta_param *pstrAddStationMsg = &msg.body.strAddStaParam;
-+	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
- 
- 	if (pstrWFIDrv == NULL) {
- 		PRINT_ER("driver is null\n");
+ /**
+- *  @brief      WILC_WFI_cancel_remain_on_channel
++ *  @brief      wilc_cancel_remain_on_channel
+  *  @details    Cancel an on-going remain-on-channel operation.
+  *                      This allows the operation to be terminated prior to timeout based on
+  *                      the duration value.
+@@ -2456,9 +2456,9 @@ static int  wilc_remain_on_channel(struct wiphy *wiphy,
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int   WILC_WFI_cancel_remain_on_channel(struct wiphy *wiphy,
+-					       struct wireless_dev *wdev,
+-					       u64 cookie)
++static int   wilc_cancel_remain_on_channel(struct wiphy *wiphy,
++					   struct wireless_dev *wdev,
++					   u64 cookie)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+@@ -3588,7 +3588,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.flush_pmksa = wilc_flush_pmksa,
+ #ifdef WILC_P2P
+ 	.remain_on_channel = wilc_remain_on_channel,
+-	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
++	.cancel_remain_on_channel = wilc_cancel_remain_on_channel,
+ 	.mgmt_tx_cancel_wait = WILC_WFI_mgmt_tx_cancel_wait,
+ 	.mgmt_tx = WILC_WFI_mgmt_tx,
+ 	.mgmt_frame_register = WILC_WFI_frame_register,
 -- 
-1.9.1
+2.5.1
 
