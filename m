@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:34825 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751914AbbILSLH (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:34759 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950AbbIJTOp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2015 14:11:07 -0400
-Received: by wicge5 with SMTP id ge5so96621858wic.0
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2015 11:11:05 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
+	Thu, 10 Sep 2015 15:14:45 -0400
+Received: by padhy16 with SMTP id hy16so50946081pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:14:45 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/11] staging: vt6655: remove get_chip_name and info message.
-Date: Sat, 12 Sep 2015 19:10:29 +0100
-Message-Id: <1442081438-3485-2-git-send-email-tvboxspy@gmail.com> (sfid-20150912_201127_011064_C1EE3EE7)
-In-Reply-To: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
-References: <1442081438-3485-1-git-send-email-tvboxspy@gmail.com>
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 02/31] staging: wilc1000: rename WILC_WFI_CfgScan
+Date: Fri, 11 Sep 2015 04:14:01 +0900
+Message-Id: <1441912470-3371-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211453_134156_77790EE5)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prints "VIA Networking Solomon-A/B/G Wireless LAN Adapter"
-which has already printed once in vt6655_probe.
+This patch replaces WILC_WFI_CfgScan with wilc_scan to avoid CamelCase.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/vt6655/device_main.c | 12 ------------
- 1 file changed, 12 deletions(-)
+V2: to make function name simple
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 2584d17..99191d9 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -168,16 +168,6 @@ static void device_free_rings(struct vnt_private *pDevice);
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3149fd8..8adc26a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -712,7 +712,7 @@ static int wilc_set_channel(struct wiphy *wiphy,
+ }
  
- /*---------------------  Export Functions  --------------------------*/
- 
--static char *get_chip_name(int chip_id)
--{
--	int i;
--
--	for (i = 0; chip_info_table[i].name != NULL; i++)
--		if (chip_info_table[i].chip_id == chip_id)
--			break;
--	return chip_info_table[i].name;
--}
--
- static void vt6655_remove(struct pci_dev *pcid)
+ /**
+- *  @brief      WILC_WFI_CfgScan
++ *  @brief      wilc_scan
+  *  @details    Request to do a scan. If returning zero, the scan request is given
+  *                      the driver, and will be valid until passed to cfg80211_scan_done().
+  *                      For scan results, call cfg80211_inform_bss(); you can call this outside
+@@ -728,7 +728,7 @@ static int wilc_set_channel(struct wiphy *wiphy,
+  *	kernel version 3.8.8 supported
+  *	tony, sswd, WILC-KR, 2013-10-29
+  */
+-static int WILC_WFI_CfgScan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
++static int wilc_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
  {
- 	struct vnt_private *pDevice = pci_get_drvdata(pcid);
-@@ -447,8 +437,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	struct WILC_WFI_priv *priv;
+ 	u32 i;
+@@ -3559,7 +3559,7 @@ int WILC_WFI_del_virt_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
  
- static void device_print_info(struct vnt_private *pDevice)
- {
--	dev_info(&pDevice->pcid->dev, "%s\n", get_chip_name(pDevice->chip_id));
--
- 	dev_info(&pDevice->pcid->dev, "MAC=%pM IO=0x%lx Mem=0x%lx IRQ=%d\n",
- 		 pDevice->abyCurrentNetAddr, (unsigned long)pDevice->ioaddr,
- 		 (unsigned long)pDevice->PortOffset, pDevice->pcid->irq);
+ 	.set_monitor_channel = wilc_set_channel,
+-	.scan = WILC_WFI_CfgScan,
++	.scan = wilc_scan,
+ 	.connect = WILC_WFI_CfgConnect,
+ 	.disconnect = WILC_WFI_disconnect,
+ 	.add_key = WILC_WFI_add_key,
 -- 
-2.5.0
+2.5.1
 
