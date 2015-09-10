@@ -1,101 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51284 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750931AbbIAEyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 00:54:13 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH 1/1] New driver: rtl8xxxu (mac80211)
-References: <1440883083-32498-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1440883083-32498-2-git-send-email-Jes.Sorensen@redhat.com>
-	<55E289A3.6030001@lwfinger.net> <wrfjegik8vqy.fsf@redhat.com>
-	<55E39707.60101@lwfinger.net> <wrfjy4gs5ggd.fsf@redhat.com>
-	<55E476A0.4080601@lwfinger.net> <wrfjio7v3txe.fsf@redhat.com>
-	<55E4EE6F.2010008@lwfinger.net>
-Date: Tue, 01 Sep 2015 00:54:11 -0400
-In-Reply-To: <55E4EE6F.2010008@lwfinger.net> (Larry Finger's message of "Mon,
-	31 Aug 2015 19:16:47 -0500")
-Message-ID: <wrfjwpwa3fkc.fsf@redhat.com> (sfid-20150901_065416_874037_DC0322FE)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33152 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbbIJTP5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2015 15:15:57 -0400
+Received: by pacex6 with SMTP id ex6so51123501pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:56 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 25/31] staging: wilc1000: rename WILC_WFI_remain_on_channel
+Date: Fri, 11 Sep 2015 04:14:24 +0900
+Message-Id: <1441912470-3371-25-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211603_593862_A1CF35B8)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 08/31/2015 06:43 PM, Jes Sorensen wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>> On 08/30/2015 09:39 PM, Jes Sorensen wrote:
->>>> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>>>> On 08/30/2015 01:41 PM, Jes Sorensen wrote:
->>>>>>>> +{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x817e, 0xff,
->>>>>>> 0xff, 0xff),
->>>>>>>> +	.driver_info = (unsigned long)&rtl8192cu_fops},
->>>>>>>
->>>>>>> I have tested a device with USB ID 0x0bda (USB_VENDOR_ID_REALTEK):0x817e.
->>>>>>
->>>>>> Were you happy with the results, or did it cause problems? Ie. did you
->>>>>> try on x86 or on PPC32?
->>>>>
->>>>> As covered in the other mail, it works very well at G rates.
->>>>
->>>> I see - I am a little confused, it works well on G rates but not on N
->>>> rates, or was this due to the AP used?
->>>
->>> The AP is AC1200. It supports full N rates on other devices.
->>
->> You only manage to make it work on G rates against this AP? Urgh, I
->> don't like that at all.
->>
->> I thought you reported 30+Mbps performances though?, thats more than you
->> get on G.
->
-> OK, I get a bit better than the top G rate of 27 Mbps, but the
-> connection reports a 54 Mbps raw rate. My Intel 7260 gets RX of 95 and
-> TX of 53 Mbps from the same location relative to the AP. For the
-> Intel, the listed raw rate is 300 Mbps.
+This patch replaces WILC_WFI_remain_on_channel with
+wilc_remain_on_channel to avoid CamelCase.
 
-It's possible the connection reporting I am doing is wrong. I haven't
-figured out how to report the actual transmission speed, which is what
-the mac80211 stack wants. Some of the other drivers fake it or repor RX
-speeds, but that isn't what one is meant to report.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: to make function name simple
 
->>> A full debug=0x3fff showed me one problem on the PPC. I will be
->>> testing a patch later today.
->>
->> Interesting, let me know what you find.
->
-> Thanks for the fixes. I'm still getting the sleeping while atomic BUG
-> splat from rtl8723a_h2c_cmd+0x48. Today I know that is not a lock
-> dependency issue. I have one in VirtualBox that fires and disables
-> further checking, but that driver is not loading now.
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-This is bothersome, I'll have to dig futher into this.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c7cc1a2..824fba0 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2391,7 +2391,7 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
+ 
+ 
+ /**
+- *  @brief      WILC_WFI_remain_on_channel
++ *  @brief      wilc_remain_on_channel
+  *  @details    Request the driver to remain awake on the specified
+  *                      channel for the specified duration to complete an off-channel
+  *                      operation (e.g., public action frame exchange). When the driver is
+@@ -2403,10 +2403,10 @@ static void WILC_WFI_RemainOnChannelExpired(void *pUserVoid, u32 u32SessionID)
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int  WILC_WFI_remain_on_channel(struct wiphy *wiphy,
+-				       struct wireless_dev *wdev,
+-				       struct ieee80211_channel *chan,
+-				       unsigned int duration, u64 *cookie)
++static int  wilc_remain_on_channel(struct wiphy *wiphy,
++				   struct wireless_dev *wdev,
++				   struct ieee80211_channel *chan,
++				   unsigned int duration, u64 *cookie)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+@@ -3587,7 +3587,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.del_pmksa = wilc_del_pmksa,
+ 	.flush_pmksa = wilc_flush_pmksa,
+ #ifdef WILC_P2P
+-	.remain_on_channel = WILC_WFI_remain_on_channel,
++	.remain_on_channel = wilc_remain_on_channel,
+ 	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
+ 	.mgmt_tx_cancel_wait = WILC_WFI_mgmt_tx_cancel_wait,
+ 	.mgmt_tx = WILC_WFI_mgmt_tx,
+-- 
+2.5.1
 
-> I have made some progress on the big-endian issues. When the firmware
-> file is read from disk, the first byte read must be the first byte
-> written to the device. In the slow write N routine, four bytes are
-> picked and written using the write32 routine, which does a cpu_to_32()
-> byte swap. As a result, the order of bytes to the device is 03, 02,
-> 01, 00! Rather than byte swap twice, I am calling the regular writeN
-> routine with each hunk. After a bit of thinking about the best
-> blocksize to use, I settled on 64. That reduces the number of
-> full-size hunks that are written without unduly increasing the
-> worst-case number of writes needed for the remainder.
->
-> On PPC, I now get a device registered; however, the scan data are
-> garbled. That shouldn't be too difficult to debug, but just in case, I
-> have attached the patch for rtl8xxxu_slow_writeN().
-
-As I mentioned in a direct email - calling writeN from slow_writeN is
-not a solution. I found some devices fail if you try to use the fast
-writeN routine. Maybe rtl8xxxu_raw_write32() - without the byteswap
-would be a better approach, or simply putting the relevant code into the
-slow_writeN function.
-
-I am flying back to New York tomorrow, and I'll have some time on the
-plane, so I'll try to have a look at that.
-
-Cheers,
-Jes
