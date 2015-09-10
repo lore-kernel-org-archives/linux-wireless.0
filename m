@@ -1,122 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46823 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853AbbIRVCS (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:34889 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752256AbbIJTPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2015 17:02:18 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] nl80211:  Print reasons for errors in setting bitrates.
-Date: Fri, 18 Sep 2015 14:02:15 -0700
-Message-Id: <1442610135-8696-1-git-send-email-greearb@candelatech.com> (sfid-20150918_230221_739029_1B62934D)
+	Thu, 10 Sep 2015 15:15:13 -0400
+Received: by pacfv12 with SMTP id fv12so51856590pac.2
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:13 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 11/31] staging: wilc1000: rename WILC_WFI_change_virt_intf
+Date: Fri, 11 Sep 2015 04:14:10 +0900
+Message-Id: <1441912470-3371-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211519_005989_79B78020)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+This patch replaces WILC_WFI_change_virt_intf with
+wilc_change_virt_intf to avoid CamelCase.
 
-Makes it easier to figure out why user-space calls are
-failing.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/wireless/nl80211.c | 37 +++++++++++++++++++++++++++++--------
- 1 file changed, 29 insertions(+), 8 deletions(-)
+V2: to make function name simple
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ba73def..94c9ad8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8287,44 +8287,60 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 		enum ieee80211_band band = nla_type(tx_rates);
- 		int err;
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f014811..3c82f2a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2827,7 +2827,7 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ }
+ #ifdef WILC_AP_EXTERNAL_MLME
+ /**
+- *  @brief      WILC_WFI_change_virt_intf
++ *  @brief      wilc_change_virt_intf
+  *  @details    Change type/configuration of virtual interface,
+  *                      keep the struct wireless_dev's iftype updated.
+  *  @param[in]   NONE
+@@ -2839,8 +2839,8 @@ int WILC_WFI_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ void wilc1000_wlan_deinit(linux_wlan_t *nic);
+ int wilc1000_wlan_init(struct net_device *dev, perInterface_wlan_t *p_nic);
  
--		if (band < 0 || band >= IEEE80211_NUM_BANDS)
-+		if (band < 0 || band >= IEEE80211_NUM_BANDS) {
-+			pr_err("band: %d is out of range, num-bands: %d\n",
-+			       band, IEEE80211_NUM_BANDS);
- 			return -EINVAL;
-+		}
- 		sband = rdev->wiphy.bands[band];
--		if (sband == NULL)
-+		if (!sband) {
-+			pr_err("sband[%d] is null\n", band);
- 			return -EINVAL;
-+		}
- 		err = nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
- 				nla_len(tx_rates), nl80211_txattr_policy);
--		if (err)
-+		if (err) {
-+			pr_err("Error parsing tx_rates, band: %d\n", band);
- 			return err;
-+		}
- 		if (tb[NL80211_TXRATE_LEGACY]) {
- 			mask.control[band].legacy = rateset_to_mask(
- 				sband,
- 				nla_data(tb[NL80211_TXRATE_LEGACY]),
- 				nla_len(tb[NL80211_TXRATE_LEGACY]));
- 			if ((mask.control[band].legacy == 0) &&
--			    nla_len(tb[NL80211_TXRATE_LEGACY]))
-+			    nla_len(tb[NL80211_TXRATE_LEGACY])) {
-+				pr_err("Legacy rates invalid, band: %d.\n",
-+				       band);
- 				return -EINVAL;
-+			}
- 		}
- 		if (tb[NL80211_TXRATE_HT]) {
- 			if (!ht_rateset_to_mask(
- 					sband,
- 					nla_data(tb[NL80211_TXRATE_HT]),
- 					nla_len(tb[NL80211_TXRATE_HT]),
--					mask.control[band].ht_mcs))
-+					mask.control[band].ht_mcs)) {
-+				pr_err("HT rates invalid, band: %d\n", band);
- 				return -EINVAL;
-+			}
- 		}
- 		if (tb[NL80211_TXRATE_VHT]) {
- 			if (!vht_set_mcs_mask(
- 					sband,
- 					nla_data(tb[NL80211_TXRATE_VHT]),
--					mask.control[band].vht_mcs))
-+					mask.control[band].vht_mcs)) {
-+				pr_err("VHT rates invalid, band: %d\n", band);
- 				return -EINVAL;
-+			}
- 		}
- 		if (tb[NL80211_TXRATE_GI]) {
- 			mask.control[band].gi =
- 				nla_get_u8(tb[NL80211_TXRATE_GI]);
--			if (mask.control[band].gi > NL80211_TXRATE_FORCE_LGI)
-+			if (mask.control[band].gi > NL80211_TXRATE_FORCE_LGI) {
-+				pr_err("FORCE-LGI invalid, band: %d\n", band);
- 				return -EINVAL;
-+			}
- 		}
+-static int WILC_WFI_change_virt_intf(struct wiphy *wiphy, struct net_device *dev,
+-				     enum nl80211_iftype type, u32 *flags, struct vif_params *params)
++static int wilc_change_virt_intf(struct wiphy *wiphy, struct net_device *dev,
++				 enum nl80211_iftype type, u32 *flags, struct vif_params *params)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+@@ -3569,7 +3569,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+ 	.add_virtual_intf = wilc_add_virt_intf,
+ 	.del_virtual_intf = wilc_del_virt_intf,
+-	.change_virtual_intf = WILC_WFI_change_virt_intf,
++	.change_virtual_intf = wilc_change_virt_intf,
  
- 		if (mask.control[band].legacy == 0) {
-@@ -8332,8 +8348,11 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 			 * are not even supported.
- 			 */
- 			if (!(rdev->wiphy.bands[band]->ht_cap.ht_supported ||
--			      rdev->wiphy.bands[band]->vht_cap.vht_supported))
-+			      rdev->wiphy.bands[band]->vht_cap.vht_supported)) {
-+				pr_err("Legacy is empty, as is ht, vht, band: %d\n",
-+				       band);
- 				return -EINVAL;
-+			}
- 
- 			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
- 				if (mask.control[band].ht_mcs[i])
-@@ -8344,6 +8363,8 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 					goto out;
- 
- 			/* legacy and mcs rates may not be both empty */
-+			pr_err("Legacy and MCS both empty sets, band: %d\n",
-+			       band);
- 			return -EINVAL;
- 		}
- 	}
+ 	.start_ap = WILC_WFI_start_ap,
+ 	.change_beacon = WILC_WFI_change_beacon,
 -- 
-2.4.3
+2.5.1
 
