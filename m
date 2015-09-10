@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27052 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540AbbIAGYB (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33985 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752256AbbIJTPE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2015 02:24:01 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Disable PCI power save for QCA99X0
-Date: Tue, 1 Sep 2015 11:53:32 +0530
-Message-ID: <1441088612-9517-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20150901_082405_858501_3B8F10A2)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 Sep 2015 15:15:04 -0400
+Received: by padhy16 with SMTP id hy16so50952268pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:04 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 08/31] staging: wilc1000: rename WILC_WFI_set_default_key
+Date: Fri, 11 Sep 2015 04:14:07 +0900
+Message-Id: <1441912470-3371-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211507_555261_2CF5D2AC)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+This patch replaces WILC_WFI_set_default_key with wilc_set_default_key
+to avoid CamelCase.
 
-Frequent failures in waking up the target is observed during
-interface (mostly observed with AP and Monitor mode) bring up
-on x86, this failures lead to firmware crash. Disabling PCI
-power save fixes this issue. Disabling ASPM also does not help,
-as a work around disable PCI power save for QCA99X0.
-
-The following kernel log is seen when this issue happens
-
-kworker/dying (667) used greatest stack depth: 12208 bytes left
-ath10k_pci 0000:07:00.0: failed to wake target for read32 at 0x00040050: -110
-ath10k_pci 0000:07:00.0: failed to wake target for read32 at 0x0004a02c: -110
-ath10k_pci 0000:07:00.0: failed to wake target for write32 of 0xfffffffe at 0x0004a02c: -110
-ath10k_pci 0000:07:00.0: failed to wake target for read32 at 0x0004a034: -110
-ath10k_pci 0000:07:00.0: failed to wake target for write32 of 0xfffff81f at 0x0004a034: -110
-ath10k_pci 0000:07:00.0: failed to wake target for read32 at 0x0004a02c: -110
-ath10k_pci 0000:07:00.0: failed to wake target for write32 of 0xffffffe1 at 0x0004a02c: -110
-ath10k_pci 0000:07:00.0: failed to wake target for read32 at 0x0004a42c: -110
-ath10k_pci 0000:07:00.0: failed to wake target for write32 of 0xfffffffe at 0x0004a42c: -110
-ath10k_pci 0000:07:00.0: failed to wake target for read32 at 0x0004a434: -110
-ath10k_pci 0000:07:00.0: firmware crashed! (uuid 40b345f1-db3d-4b97-bc54-6572994e02d5)
-
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+V2: to make function name simple
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 1046ab6..1ab4ee7 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1640,6 +1640,10 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
- 	ath10k_pci_safe_chip_reset(ar);
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 8f90e48..ca7a36f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1566,7 +1566,7 @@ static int wilc_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_i
+ }
  
- 	ath10k_pci_irq_disable(ar);
-+
-+	if (QCA_REV_99X0(ar))
-+		ath10k_pci_sleep(ar);
-+
- 	ath10k_pci_irq_sync(ar);
- 	ath10k_pci_flush(ar);
- 
-@@ -2315,6 +2319,14 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
- 
-+	if (QCA_REV_99X0(ar)) {
-+		ret = ath10k_pci_wake(ar);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to wake target for qca99x0: %d\n", ret);
-+			return ret;
-+		}
-+	}
-+
- 	pcie_capability_read_word(ar_pci->pdev, PCI_EXP_LNKCTL,
- 				  &ar_pci->link_ctl);
- 	pcie_capability_write_word(ar_pci->pdev, PCI_EXP_LNKCTL,
+ /**
+- *  @brief      WILC_WFI_set_default_key
++ *  @brief      wilc_set_default_key
+  *  @details    Set the default management frame key on an interface
+  *  @param[in]
+  *  @return     int : Return 0 on Success.
+@@ -1574,8 +1574,8 @@ static int wilc_get_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_i
+  *  @date	01 MAR 2012
+  *  @version	1.0
+  */
+-static int WILC_WFI_set_default_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+-				    bool unicast, bool multicast)
++static int wilc_set_default_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
++				bool unicast, bool multicast)
+ {
+ 	s32 s32Error = WILC_SUCCESS;
+ 	struct WILC_WFI_priv *priv;
+@@ -3565,7 +3565,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.add_key = wilc_add_key,
+ 	.del_key = wilc_del_key,
+ 	.get_key = wilc_get_key,
+-	.set_default_key = WILC_WFI_set_default_key,
++	.set_default_key = wilc_set_default_key,
+ 	#ifdef WILC_AP_EXTERNAL_MLME
+ 	.add_virtual_intf = WILC_WFI_add_virt_intf,
+ 	.del_virtual_intf = WILC_WFI_del_virt_intf,
 -- 
-1.9.1
+2.5.1
 
