@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:36224 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755142AbbIBSgO convert rfc822-to-8bit (ORCPT
+Received: from nasmtp01.atmel.com ([192.199.1.245]:58462 "EHLO
+	DVREDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751429AbbIJCIF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2015 14:36:14 -0400
-Received: by ykcf206 with SMTP id f206so19443038ykc.3
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2015 11:36:13 -0700 (PDT)
+	Wed, 9 Sep 2015 22:08:05 -0400
+Subject: Re: [PATCH 3/4] staging: wilc1000: delete wilc_oswrapper.h and
+ wilc_platform.h
+To: Greg KH <gregkh@linuxfoundation.org>
+References: <1441782493-11338-1-git-send-email-tony.cho@atmel.com>
+ <1441782493-11338-3-git-send-email-tony.cho@atmel.com>
+ <20150909181912.GA30669@kroah.com>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
+	<rachel.kim@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <55F0E619.5000808@atmel.com> (sfid-20150910_040828_971951_BF8308ED)
+Date: Thu, 10 Sep 2015 11:08:25 +0900
 MIME-Version: 1.0
-In-Reply-To: <1441218485.2565.4.camel@sipsolutions.net>
-References: <1440462512.2670.83.camel@perches.com> <1440507403-9695-1-git-send-email-jprvita@endlessm.com>
- <4CA6A223-16CD-4A0F-A671-6B4BB026CB82@holtmann.org> <CA+A7VXVwmDEboDq-nACJH2n-UquTkO1i-+xgEm32OD5EDVfQfg@mail.gmail.com>
- <87B673AF-9598-42D6-B77E-1F2F08A579FC@holtmann.org> <1441218485.2565.4.camel@sipsolutions.net>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Wed, 2 Sep 2015 14:35:33 -0400
-Message-ID: <CA+A7VXWyzO9U8TOrzJSZtWrj2NQHZgH0vw60UZFQYtY_ffVi7A@mail.gmail.com> (sfid-20150902_203616_900099_A1AED6E9)
-Subject: Re: [PATCH] rfkill: Copy "all" global state to other types
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20150909181912.GA30669@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 September 2015 at 14:28, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-09-02 at 10:42 -0700, Marcel Holtmann wrote:
->>
->> > Any feedback or any plans to pick this for mac80211-next (which I
->> > understand is where it should go to be sent upstream)?
->>
->> I can take this through bluetooth-next tree if there are no
->> objections.
->>
->
-> I'm going to to take it, but we're in the middle of release/merge
-> -window time, so there was no point in doing that just yet.
->
+Hi Greg,
 
-All right, thanks for the feedback!
+I want to make sure one thing before moving further. Are you saying the errorsupport.h file as the os wrapper remaining in the oswrapper.h file?
+If not, can you let me know what you point out as remaining os wrapper in the oswrapper.h file?
+If yes, I have been already replacing all of error values defined in the errorsupport.h file so that I send you the next patch when done.
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+Thanks,
+Tony.
+
+On 2015년 09월 10일 03:19, Greg KH wrote:
+> On Wed, Sep 09, 2015 at 04:08:12PM +0900, Tony Cho wrote:
+>> From: Glen Lee <glen.lee@atmel.com>
+>>
+>> wilc1000 driver runs on Linux. No need to have oswrapper or platform
+>> dependent files.
+>> Before delete two header files, move two structures in wilc_platform.h to
+>> wilc_msgqueue.h where it is used. Include linux header files where is needs
+>> since wilc_platform is deleted.
+>> Finally, remove wilc_oswrapper.h and wilc_platform.h.
+> That's a lot of different things to be doing all in one patch.  Please
+> break this up into individual patches.
+>
+> And you can't just delete the oswrapper.h file, you still have things in
+> it, don't move it for no reason, get rid of those wrapper functions
+> properly first, making the file empty, and then you can delete it.
+> Moving them to a different .h file just hides the fact that this work
+> still needs to be done.
+>
+> thanks,
+>
+> greg k-h
+
