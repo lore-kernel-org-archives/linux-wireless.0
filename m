@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:47084 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755836AbbI0Nmc (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33273 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754022AbbIJTQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2015 09:42:32 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linaro-kernel@lists.linaro.org,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	"open list:NETWORKING DRIVERS (WIRELESS)"
-	<linux-wireless@vger.kernel.org>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..."
-	<alsa-devel@alsa-project.org>,
-	"open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:"
-	<linux-usb@vger.kernel.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"open list:EDAC-CORE" <linux-edac@vger.kernel.org>
-Subject: Re: [PATCH V4 1/2] ACPI / EC: Fix broken 64bit big-endian users of 'global_lock'
-Date: Sun, 27 Sep 2015 16:10:48 +0200
-Message-ID: <1578470.DLzaBp4j3T@vostro.rjw.lan> (sfid-20150927_154242_753412_0328C71B)
-In-Reply-To: <1540878.9slRi6Q7xb@wuerfel>
-References: <e28c4b4deaf766910c366ab87b64325da59c8ad6.1443198783.git.viresh.kumar@linaro.org> <CAKohpok0A3JRhVCabscfJGuhJerWmypsQnwdqJcmvBBWdpvPwQ@mail.gmail.com> <1540878.9slRi6Q7xb@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 10 Sep 2015 15:16:06 -0400
+Received: by pacex6 with SMTP id ex6so51126535pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:16:06 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 28/31] staging: wilc1000: rename WILC_WFI_mgmt_tx
+Date: Fri, 11 Sep 2015 04:14:27 +0900
+Message-Id: <1441912470-3371-28-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211853_558367_9700CB91)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, September 26, 2015 09:33:56 PM Arnd Bergmann wrote:
-> On Saturday 26 September 2015 11:40:00 Viresh Kumar wrote:
-> > On 25 September 2015 at 15:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> > > So if you allow something like debugfs to update your structure, how
-> > > do you make sure there is the proper locking?
-> > 
-> > Not really sure at all.. Isn't there some debugfs locking that will
-> > jump in, to avoid updation of fields to the same device?
-> 
-> No, if you need any locking to access variable, you cannot use the
-> simple debugfs helpers but have to provide your own functions.
-> 
-> > >> Anyway, that problem isn't here for sure as its between two
-> > >> unsigned-longs. So, should I just move it to bool and resend ?
-> > >
-> > > I guess it might be more convenient to fold this into the other patch,
-> > > because we seem to be splitting hairs here.
-> > 
-> > I can and that's what I did. But then Arnd asked me to separate it
-> > out. I can fold it back if that's what you want.
-> 
-> It still makes sense to keep it separate I think, the patch is clearly
-> different from the other parts.
+This patch replaces WILC_WFI_mgmt_tx with wilc_mgmt_tx to avoid
+CamelCase.
 
-I just don't see much point in going from unsigned long to u32 and then
-from 32 to bool if we can go directly to bool in one go.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+V2: to make function name simple
 
-Thanks,
-Rafael
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 8ce6721..dc935cb 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2496,10 +2496,10 @@ void WILC_WFI_add_wilcvendorspec(u8 *buff)
+  */
+ extern linux_wlan_t *g_linux_wlan;
+ extern bool bEnablePS;
+-int WILC_WFI_mgmt_tx(struct wiphy *wiphy,
+-			struct wireless_dev *wdev,
+-			struct cfg80211_mgmt_tx_params *params,
+-			u64 *cookie)
++int wilc_mgmt_tx(struct wiphy *wiphy,
++		 struct wireless_dev *wdev,
++		 struct cfg80211_mgmt_tx_params *params,
++		 u64 *cookie)
+ {
+ 	struct ieee80211_channel *chan = params->chan;
+ 	unsigned int wait = params->wait;
+@@ -3590,7 +3590,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.remain_on_channel = wilc_remain_on_channel,
+ 	.cancel_remain_on_channel = wilc_cancel_remain_on_channel,
+ 	.mgmt_tx_cancel_wait = wilc_mgmt_tx_cancel_wait,
+-	.mgmt_tx = WILC_WFI_mgmt_tx,
++	.mgmt_tx = wilc_mgmt_tx,
+ 	.mgmt_frame_register = WILC_WFI_frame_register,
+ 	.set_power_mgmt = WILC_WFI_set_power_mgmt,
+ 	.set_cqm_rssi_config = WILC_WFI_set_cqm_rssi_config,
+-- 
+2.5.1
 
