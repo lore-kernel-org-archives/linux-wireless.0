@@ -1,86 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21233 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885AbbIUDSv (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:33031 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbbIJTPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:18:51 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 13/34] staging: wilc1000: remove typedef from the struct tstrHostIFSetChan
-Date: Mon, 21 Sep 2015 12:16:42 +0900
-Message-ID: <1442805423-3711-14-git-send-email-tony.cho@atmel.com> (sfid-20150921_054656_698123_E5897154)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 Sep 2015 15:15:47 -0400
+Received: by pacex6 with SMTP id ex6so51120513pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:47 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 22/31] staging: wilc1000: rename WILC_WFI_set_pmksa
+Date: Fri, 11 Sep 2015 04:14:21 +0900
+Message-Id: <1441912470-3371-22-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211553_683280_EF205B7B)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFSetChan and ranames
-it to set_channel in order to comply with the Linux coding style.
+This patch replaces WILC_WFI_set_pmksa with wilc_set_pmksa to avoid
+CamelCase.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+V2: to make function name simple
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2fdef1e..8058f38 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -215,7 +215,7 @@ struct rcvd_async_info {
- };
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index fb98534..3bac541 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1880,7 +1880,7 @@ static int WILC_WFI_set_bitrate_mask(struct wiphy *wiphy,
+ }
  
- /*!
-- *  @struct             tstrHostIFSetChan
-+ *  @struct             set_channel
-  *  @brief		Set Channel  message body
-  *  @details
-  *  @todo
-@@ -224,9 +224,9 @@ struct rcvd_async_info {
-  *  @date		25 March 2012
-  *  @version		1.0
-  */
--typedef struct _tstrHostIFSetChan {
-+struct set_channel {
- 	u8 u8SetChan;
--} tstrHostIFSetChan;
-+};
- 
- /*!
-  *  @struct             tstrHostIFSetChan
-@@ -422,7 +422,7 @@ union message_body {
- 	struct rcvd_async_info strRcvdGnrlAsyncInfo;     /*!< Received General Asynchronous Info message body */
- 	struct key_attr strHostIFkeyAttr;                             /*!<>*/
- 	struct cfg_param_attr strHostIFCfgParamAttr;            /*! <CFG Parameter message Body> */
--	tstrHostIFSetChan strHostIFSetChan;
-+	struct set_channel strHostIFSetChan;
- 	tstrHostIFGetChan strHostIFGetChan;
- 	tstrHostIFSetBeacon strHostIFSetBeacon;                 /*!< Set beacon message body */
- 	tstrHostIFDelBeacon strHostIFDelBeacon;                 /*!< Del beacon message body */
-@@ -633,13 +633,14 @@ static tstrWILC_WFIDrv *get_handler_from_id(int id)
  /**
-  *  @brief Handle_SetChannel
-  *  @details    Sending config packet to firmware to set channel
-- *  @param[in]   tstrHostIFSetChan* pstrHostIFSetChan
-+ *  @param[in]   struct set_channel *pstrHostIFSetChan
-  *  @return     Error code.
-  *  @author
-  *  @date
+- *  @brief      WILC_WFI_set_pmksa
++ *  @brief      wilc_set_pmksa
+  *  @details    Cache a PMKID for a BSSID. This is mostly useful for fullmac
+  *                      devices running firmwares capable of generating the (re) association
+  *                      RSN IE. It allows for faster roaming between WPA2 BSSIDs.
+@@ -1890,8 +1890,8 @@ static int WILC_WFI_set_bitrate_mask(struct wiphy *wiphy,
+  *  @date	01 MAR 2012
   *  @version	1.0
   */
--static s32 Handle_SetChannel(tstrWILC_WFIDrv *drvHandler, tstrHostIFSetChan *pstrHostIFSetChan)
-+static s32 Handle_SetChannel(tstrWILC_WFIDrv *drvHandler,
-+			     struct set_channel *pstrHostIFSetChan)
+-static int WILC_WFI_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+-			      struct cfg80211_pmksa *pmksa)
++static int wilc_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
++			  struct cfg80211_pmksa *pmksa)
  {
+ 	u32 i;
+ 	s32 s32Error = WILC_SUCCESS;
+@@ -3583,7 +3583,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 	.change_bss = wilc_change_bss,
+ 	.set_wiphy_params = wilc_set_wiphy_params,
  
- 	s32 s32Error = 0;
+-	.set_pmksa = WILC_WFI_set_pmksa,
++	.set_pmksa = wilc_set_pmksa,
+ 	.del_pmksa = WILC_WFI_del_pmksa,
+ 	.flush_pmksa = WILC_WFI_flush_pmksa,
+ #ifdef WILC_P2P
 -- 
-1.9.1
+2.5.1
 
