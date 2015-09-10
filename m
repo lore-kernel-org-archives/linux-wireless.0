@@ -1,86 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24989 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754557AbbIYGyh (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35589 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbbIJJEx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2015 02:54:37 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/7] ath10k: export htc tx rx handlers
-Date: Fri, 25 Sep 2015 12:23:30 +0530
-Message-ID: <1443164016-3612-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150925_085440_253938_0E6A56E6)
-In-Reply-To: <1443164016-3612-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1443164016-3612-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 Sep 2015 05:04:53 -0400
+Received: by pacfv12 with SMTP id fv12so38214715pac.2
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 02:04:53 -0700 (PDT)
+From: Hiroaki KAWAI <hiroaki.kawai@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Hiroaki KAWAI <hiroaki.kawai@gmail.com>
+Subject: [PATCH] carl9170: fix bad rssi reading
+Date: Thu, 10 Sep 2015 18:04:45 +0000
+Message-Id: <1441908285-606-1-git-send-email-hiroaki.kawai@gmail.com> (sfid-20150910_110457_247921_519D7E63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Export HTC layer tx and rx handlers. This will be used by HIF layer
-for per-CE data processing. Instead of callback mechanism, HIF will
-call appropriate upper layers API directly.
+Fix rssi calculation error which was introduced in otus to ar9170
+porting.
 
-Reviewed-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Hiroaki KAWAI <hiroaki.kawai@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htc.c | 8 ++++----
- drivers/net/wireless/ath/ath10k/htc.h | 2 ++
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/carl9170/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 32d9ff1..97c24b2 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -181,8 +181,7 @@ err_pull:
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index 924135b..d66533c 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -453,7 +453,7 @@ static void carl9170_rx_phy_status(struct ar9170 *ar,
+ 	/* post-process RSSI */
+ 	for (i = 0; i < 7; i++)
+ 		if (phy->rssi[i] & 0x80)
+-			phy->rssi[i] = ((phy->rssi[i] & 0x7f) + 1) & 0x7f;
++			phy->rssi[i] = ((~phy->rssi[i] & 0x7f) + 1) & 0x7f;
  
--static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
--					    struct sk_buff *skb)
-+int ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ath10k_htc *htc = &ar->htc;
- 	struct ath10k_skb_cb *skb_cb;
-@@ -199,6 +198,7 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath10k_htc_tx_completion_handler);
- 
- /***********/
- /* Receive */
-@@ -304,8 +304,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 	return status;
- }
- 
--static int ath10k_htc_rx_completion_handler(struct ath10k *ar,
--					    struct sk_buff *skb)
-+int ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- {
- 	int status = 0;
- 	struct ath10k_htc *htc = &ar->htc;
-@@ -442,6 +441,7 @@ out:
- 
- 	return status;
- }
-+EXPORT_SYMBOL(ath10k_htc_rx_completion_handler);
- 
- static void ath10k_htc_control_rx_complete(struct ath10k *ar,
- 					   struct sk_buff *skb)
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 527179c..d1fc8e7 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -355,5 +355,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- 		    struct sk_buff *packet);
- struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
-+int ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
-+int ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- 
- #endif
+ 	/* TODO: we could do something with phy_errors */
+ 	status->signal = ar->noise[0] + phy->rssi_combined;
 -- 
-2.5.2
+2.5.1
 
