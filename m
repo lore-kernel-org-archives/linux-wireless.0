@@ -1,96 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21516 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755878AbbIUDUc (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34650 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbbIJTPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2015 23:20:32 -0400
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<johnny.kim@atmel.com>, <chris.park@atmel.com>,
-	<rachel.kim@atmel.com>, <tony.cho@atmel.com>, <glen.lee@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH v2 28/34] staging: wilc1000: remove typedef from the struct tstrHostIFDelSta
-Date: Mon, 21 Sep 2015 12:16:57 +0900
-Message-ID: <1442805423-3711-29-git-send-email-tony.cho@atmel.com> (sfid-20150921_052034_230820_0BD9E226)
-In-Reply-To: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-References: <1442805423-3711-1-git-send-email-tony.cho@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 Sep 2015 15:15:53 -0400
+Received: by padhy16 with SMTP id hy16so50968825pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 12:15:53 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 24/31] staging: wilc1000: rename WILC_WFI_flush_pmksa
+Date: Fri, 11 Sep 2015 04:14:23 +0900
+Message-Id: <1441912470-3371-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20150910_211558_460752_B4AF41F9)
+In-Reply-To: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1441912470-3371-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from the struct tstrHostIFDelSta and renames
-it del_sta in order to comply with the Linux coding style.
+This patch replaces WILC_WFI_flush_pmksa with wilc_flush_pmksa to avoid
+CamelCase.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+V2: to make function name simple
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d405d03..be8b152 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -330,7 +330,7 @@ typedef struct {
- } tstrHostIFDelAllSta;
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 96c94e59..c7cc1a2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1981,7 +1981,7 @@ static int wilc_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ }
  
- /*!
-- *  @struct             tstrHostIFDelSta
-+ *  @struct             del_sta
-  *  @brief		Delete station message body
-  *  @details
-  *  @todo
-@@ -339,10 +339,9 @@ typedef struct {
-  *  @date		15 July 2012
-  *  @version		1.0 Description
-  */
--
--typedef struct {
-+struct del_sta {
- 	u8 au8MacAddr[ETH_ALEN];
--} tstrHostIFDelSta;
-+};
- 
- /*!
-  *  @struct             timer_cb
-@@ -425,7 +424,7 @@ union message_body {
- 	struct set_beacon strHostIFSetBeacon;                 /*!< Set beacon message body */
- 	struct del_beacon strHostIFDelBeacon;                 /*!< Del beacon message body */
- 	struct add_sta_param strAddStaParam;                    /*!< Add station message body */
--	tstrHostIFDelSta strDelStaParam;                                /*!< Del Station message body */
-+	struct del_sta strDelStaParam;                                /*!< Del Station message body */
- 	struct add_sta_param strEditStaParam;                           /*!< Edit station message body */
- 	/* tstrScanComplete		strScanComplete;		/ *Received Async. Scan Complete message body* / */
- 	struct timer_cb strTimerCb;                                                 /*!< Timer callback message body */
-@@ -3697,13 +3696,14 @@ ERRORHANDLER:
  /**
-  *  @brief Handle_DelStation
-  *  @details        Sending config packet to delete station
-- *  @param[in]   tstrHostIFDelSta* pstrDelStaParam
-+ *  @param[in]   struct del_sta *pstrDelStaParam
-  *  @return         NONE
-  *  @author
-  *  @date
+- *  @brief      WILC_WFI_flush_pmksa
++ *  @brief      wilc_flush_pmksa
+  *  @details    Flush all cached PMKIDs.
+  *  @param[in]
+  *  @return     int : Return 0 on Success
+@@ -1989,7 +1989,7 @@ static int wilc_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+  *  @date	01 MAR 2012
   *  @version	1.0
   */
--static void Handle_DelStation(tstrWILC_WFIDrv *drvHandler, tstrHostIFDelSta *pstrDelStaParam)
-+static void Handle_DelStation(tstrWILC_WFIDrv *drvHandler,
-+			      struct del_sta *pstrDelStaParam)
+-static int  WILC_WFI_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
++static int  wilc_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
  {
- 	s32 s32Error = 0;
- 	tstrWID strWID;
-@@ -7096,7 +7096,7 @@ s32 host_int_del_station(tstrWILC_WFIDrv *hWFIDrv, const u8 *pu8MacAddr)
- 	s32 s32Error = 0;
- 	tstrWILC_WFIDrv *pstrWFIDrv = (tstrWILC_WFIDrv *)hWFIDrv;
- 	struct host_if_msg msg;
--	tstrHostIFDelSta *pstrDelStationMsg = &msg.body.strDelStaParam;
-+	struct del_sta *pstrDelStationMsg = &msg.body.strDelStaParam;
+ 	struct WILC_WFI_priv *priv = wiphy_priv(wiphy);
  
- 	if (pstrWFIDrv == NULL) {
- 		PRINT_ER("driver is null\n");
+@@ -3585,7 +3585,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
+ 
+ 	.set_pmksa = wilc_set_pmksa,
+ 	.del_pmksa = wilc_del_pmksa,
+-	.flush_pmksa = WILC_WFI_flush_pmksa,
++	.flush_pmksa = wilc_flush_pmksa,
+ #ifdef WILC_P2P
+ 	.remain_on_channel = WILC_WFI_remain_on_channel,
+ 	.cancel_remain_on_channel = WILC_WFI_cancel_remain_on_channel,
 -- 
-1.9.1
+2.5.1
 
