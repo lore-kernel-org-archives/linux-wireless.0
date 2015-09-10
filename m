@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:36288 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754490AbbINDZi (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:34213 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751536AbbIJNHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2015 23:25:38 -0400
-Received: by padhk3 with SMTP id hk3so129797543pad.3
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2015 20:25:37 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, rachel.kim@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V3 20/31] staging: wilc1000: rename WILC_WFI_change_bss
-Date: Mon, 14 Sep 2015 12:24:20 +0900
-Message-Id: <1442201071-16155-20-git-send-email-chaehyun.lim@gmail.com> (sfid-20150914_054654_168622_D2C26DC8)
-In-Reply-To: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1442201071-16155-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 10 Sep 2015 09:07:31 -0400
+Received: by wicfx3 with SMTP id fx3so27451958wic.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2015 06:07:30 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Hiroaki KAWAI <hiroaki.kawai@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] carl9170: fix bad rssi reading
+Date: Thu, 10 Sep 2015 15:07:26 +0200
+Message-ID: <1738409.B3jGDQ6NWL@debian64> (sfid-20150910_150734_213600_29431C73)
+In-Reply-To: <1441908285-606-1-git-send-email-hiroaki.kawai@gmail.com>
+References: <1441908285-606-1-git-send-email-hiroaki.kawai@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces WILC_WFI_change_bss with change_bss to avoid
-CamelCase.
+On Thursday, September 10, 2015 06:04:45 PM Hiroaki KAWAI wrote:
+> Fix rssi calculation error which was introduced in otus to ar9170
+> porting.
+> 
+> Signed-off-by: Hiroaki KAWAI <hiroaki.kawai@gmail.com>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-V3: remove "wilc_" prefix
+For reference: Here's the line in the original otus code:
+<http://lxr.free-electrons.com/source/drivers/staging/otus/hal/hpusb.c?v=2.6.33#L818>
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+This value/result isn't used anywhere, so we could also remove it. 
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e932e64..e1514db 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1710,7 +1710,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 
- /**
-- *  @brief      WILC_WFI_change_bss
-+ *  @brief      change_bss
-  *  @details    Modify parameters for a given BSS.
-  *  @param[in]
-  *   -use_cts_prot: Whether to use CTS protection
-@@ -1730,8 +1730,8 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
-  *  @date	01 MAR 2012
-  *  @version	1.0
-  */
--static int  WILC_WFI_change_bss(struct wiphy *wiphy, struct net_device *dev,
--				struct bss_parameters *params)
-+static int change_bss(struct wiphy *wiphy, struct net_device *dev,
-+		      struct bss_parameters *params)
- {
- 	PRINT_D(CFG80211_DBG, "Changing Bss parametrs\n");
- 	return 0;
-@@ -3580,7 +3580,7 @@ static struct cfg80211_ops WILC_WFI_cfg80211_ops = {
- 	#endif /* WILC_AP_EXTERNAL_MLME*/
- 	.get_station = get_station,
- 	.dump_station = dump_station,
--	.change_bss = WILC_WFI_change_bss,
-+	.change_bss = change_bss,
- 	.set_wiphy_params = WILC_WFI_set_wiphy_params,
- 
- 	.set_pmksa = WILC_WFI_set_pmksa,
--- 
-2.5.1
+> ---
+>  drivers/net/wireless/ath/carl9170/rx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+> index 924135b..d66533c 100644
+> --- a/drivers/net/wireless/ath/carl9170/rx.c
+> +++ b/drivers/net/wireless/ath/carl9170/rx.c
+> @@ -453,7 +453,7 @@ static void carl9170_rx_phy_status(struct ar9170 *ar,
+>  	/* post-process RSSI */
+>  	for (i = 0; i < 7; i++)
+>  		if (phy->rssi[i] & 0x80)
+> -			phy->rssi[i] = ((phy->rssi[i] & 0x7f) + 1) & 0x7f;
+> +			phy->rssi[i] = ((~phy->rssi[i] & 0x7f) + 1) & 0x7f;
+>  
+>  	/* TODO: we could do something with phy_errors */
+>  	status->signal = ar->noise[0] + phy->rssi_combined;
+> 
 
